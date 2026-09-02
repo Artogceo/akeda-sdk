@@ -1,0 +1,13 @@
+{
+  "$comment": "Описание проверяемого расширения для akeda conformance run. Секрета подписи здесь НЕТ: он читается из AKEDA_CONFORMANCE_SIGNING_SECRET. Если всё же кладёте его сюда — держите файл с правами 600 и не коммитьте.",
+
+  "webhookUrl": "http://127.0.0.1:8081/events",
+  "effectProbeUrl": "http://127.0.0.1:8081/applied",
+
+  "installationId": "0199a1f0-0000-7000-8000-000000000001",
+  "tenantId": "0199a1f0-0000-7000-8000-000000000003",
+  "signingKeyId": "whk_0123456789abcdef",
+
+  "topic": "core.document.posted.v1",
+  "timeoutSeconds": 5
+}

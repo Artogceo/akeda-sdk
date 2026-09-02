@@ -1,0 +1,128 @@
+# Проверки SDK.
+#
+# ПУБЛИКАЦИИ ЗДЕСЬ НЕТ И НЕ ПОЯВИТСЯ. Ни npm publish, ни twine, ни тега релиза,
+# который что-то запускает. Собрать — можно, опубликовать — нет: репозиторий
+# приватный, пакеты партнёр берёт отсюда, а не из публичного реестра.
+#
+# Действия закреплены КОММИТОМ, а не тегом: тег переставляется владельцем
+# действия в любой момент, и вчерашняя сборка перестаёт быть той же сборкой.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    name: Снимок и генерация
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+        with:
+          go-version: '1.23'
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: '3.11'
+
+      # Опись снимка сходится, и файлов вне описи нет.
+      - run: python3 scripts/snapshot.py --check
+
+      # Generated-файлы совпадают с тем, что сгенерировалось бы из снимка сейчас.
+      # Расхождение означает правку руками либо забытый прогон генератора.
+      - run: python3 scripts/generate.py --check
+
+      # Генерация детерминирована: прогон поверх закоммиченного не меняет ни
+      # байта. git diff, а не свой список файлов: он не проспит новый выходной
+      # файл генератора и не заглянет в dist или __pycache__.
+      - name: Генерация повторяема
+        run: |
+          python3 scripts/generate.py
+          git diff --exit-code -- clients snapshot
+
+      - run: python3 scripts/scan_secrets.py
+
+  go:
+    name: Go
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+        with:
+          go-version: '1.23'
+      - name: gofmt
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then echo "$unformatted"; exit 1; fi
+      - run: go build ./...
+      - run: go vet ./...
+      - run: go test ./...
+
+  typescript:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: clients/typescript
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: '22'
+      # npm ci, а не npm install: пакет закрепляется содержимым из lock-файла,
+      # а не только номером версии.
+      - run: npm ci
+      - run: npm test
+      - name: Примеры компилируются
+        run: npx tsc -p ../../examples/typescript/tsconfig.json
+
+  python:
+    name: Python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: '3.11'
+      - run: python3 -m pip install --disable-pip-version-check pytest
+      - name: Пакет импортируется без зависимостей
+        working-directory: clients/python
+        run: python3 -c "import akeda; print(akeda.__version__, len(akeda.OPERATIONS))"
+      - working-directory: clients/python
+        run: python3 -m pytest -q
+      - name: Примеры разбираются
+        run: python3 -m py_compile examples/quickstart-python/first_call.py examples/webhook-receiver-python/receiver.py
+
+  conformance:
+    name: Приёмник проходит собственный набор
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+        with:
+          go-version: '1.23'
+      # Сквозная проверка без живой Akeda: пример-приёмник поднимается локально,
+      # CLI бьёт по нему полным набором. Красный шаг означает поломку в подписи,
+      # в наборе или в примере — и ни одна из трёх не должна доехать до партнёра.
+      - name: Пример-приёмник против CLI
+        env:
+          AKEDA_WEBHOOK_SECRET: whs_00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
+          AKEDA_WEBHOOK_KEY_ID: whk_0123456789abcdef
+          AKEDA_INSTALLATION_ID: 0199a1f0-0000-7000-8000-000000000001
+          AKEDA_TENANT_ID: 0199a1f0-0000-7000-8000-000000000003
+          AKEDA_EFFECT_PROBE: '1'
+        run: |
+          go build -o /tmp/akeda-receiver ./examples/webhook-receiver-go
+          go build -o /tmp/akeda ./cmd/akeda
+          /tmp/akeda-receiver &
+          for _ in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:8081/health && break; sleep 1; done
+          AKEDA_CONFORMANCE_SIGNING_SECRET="$AKEDA_WEBHOOK_SECRET" \
+            /tmp/akeda conformance run examples/extension/target.json
+      - name: Пример-манифест проходит линт формы
+        run: go run ./cmd/akeda manifest lint examples/extension/app.json

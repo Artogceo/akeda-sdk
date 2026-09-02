@@ -1,0 +1,165 @@
+{
+  "apiVersion": "apps.akeda.ru/v1",
+  "kind": "Extension",
+
+  "metadata": {
+    "publisher": "acme",
+    "key": "statement-import",
+    "id": "app.acme.statement-import",
+    "version": "1.0.0",
+    "name": {
+      "ru": "Разбор банковских выписок",
+      "en": "Bank statement import"
+    },
+    "description": {
+      "ru": "Забирает выписки из банка партнёра и складывает операции черновиками в раздел «Финансы». Проводит их человек.",
+      "en": "Fetches statements from the partner bank and stores transactions as drafts in Finance. A person posts them."
+    },
+    "homepage": "https://acme.example.test/akeda"
+  },
+
+  "compatibility": {
+    "platform": ">=1.50 <2.0",
+    "publicApi": "v1"
+  },
+
+  "runtime": {
+    "mode": "hosted",
+    "webhookUrl": "https://akeda.acme.example.test/events",
+    "healthUrl": "https://akeda.acme.example.test/health",
+    "allowedOrigins": ["https://akeda.acme.example.test"]
+  },
+
+  "permissions": {
+    "required": [
+      {
+        "scope": "finance.transactions:write",
+        "riskClass": "medium",
+        "explanation": {
+          "ru": "Создавать операции по строкам выписки. Категоризацию и проведение выполняет человек.",
+          "en": "Create transactions from statement rows. A person categorises and posts them."
+        }
+      },
+      {
+        "scope": "core.contacts:read",
+        "riskClass": "low",
+        "explanation": {
+          "ru": "Сопоставлять плательщика из выписки с контрагентом кабинета.",
+          "en": "Match the payer in the statement against a counterparty of the workspace."
+        }
+      }
+    ],
+    "optional": []
+  },
+
+  "subscriptions": [
+    {
+      "topic": "core.document.posted.v1",
+      "delivery": "webhook",
+      "filters": {
+        "aggregateType": "core_document"
+      },
+      "maxEventsPerMinute": 120,
+      "timeoutSeconds": 5,
+      "retry": {
+        "maxAttempts": 8,
+        "backoff": "exponential"
+      },
+      "ordering": "none",
+      "replay": true,
+      "deadLetter": "park"
+    }
+  ],
+
+  "extensionPoints": [],
+
+  "ui": [],
+
+  "referenceData": {
+    "requires": [
+      {
+        "key": "core.contacts",
+        "schemaVersion": "v1",
+        "capabilities": ["read", "resolve"]
+      }
+    ],
+    "provides": [
+      {
+        "key": "app.acme.statement-import.statement_sources",
+        "kind": "code_list",
+        "schemaVersion": "v1",
+        "mutability": "app_managed",
+        "lifecycle": "stable",
+        "name": {
+          "ru": "Источники выписок",
+          "en": "Statement sources"
+        },
+        "itemSchema": {
+          "type": "object",
+          "properties": {
+            "code": { "type": "string" },
+            "title": { "type": "string" }
+          }
+        },
+        "uninstall": "archive"
+      }
+    ]
+  },
+
+  "configSchema": {
+    "type": "object",
+    "required": ["account_number"],
+    "properties": {
+      "account_number": {
+        "type": "string",
+        "title": { "ru": "Номер счёта", "en": "Account number" },
+        "help": {
+          "ru": "Счёт, выписку по которому забирает расширение.",
+          "en": "The account whose statement the extension fetches."
+        },
+        "maxLength": 34
+      },
+      "since": {
+        "type": "string",
+        "title": { "ru": "Забирать с даты", "en": "Fetch from date" },
+        "maxLength": 10
+      }
+    }
+  },
+
+  "secrets": [
+    {
+      "key": "bank_api_credentials",
+      "provider": "user_input",
+      "required": true,
+      "title": { "ru": "Доступ к API банка", "en": "Bank API access" },
+      "help": {
+        "ru": "Вводится администратором кабинета в Akeda; расширению значение не показывается.",
+        "en": "Entered by the workspace administrator inside Akeda; the value is never shown to the extension."
+      },
+      "rotationDays": 90
+    }
+  ],
+
+  "data": {
+    "categories": ["operational", "documents"],
+    "regions": ["ru"],
+    "retentionDays": 14,
+    "uninstall": "purge"
+  },
+
+  "support": {
+    "email": "support@acme.example.test",
+    "url": "https://acme.example.test/akeda/support",
+    "incidentEmail": "incident@acme.example.test",
+    "responseHours": 24
+  },
+
+  "lifecycle": {
+    "channel": "private",
+    "rolloutPercent": 100,
+    "minSupportedVersion": "1.0.0",
+    "dataMigrationVersion": 1,
+    "killSwitch": true
+  }
+}
