@@ -1,0 +1,1001 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://developers.akeda.ru/schemas/extension-manifest/v1/manifest.schema.json",
+  "title": "Akeda Extension Manifest v1",
+  "description": "Декларация внешнего приложения Akeda: чем оно является, с какими версиями платформы совместимо, какие права просит, на какие события подписано, какие точки расширения и слоты интерфейса использует, как настраивается и как удаляет данные. Manifest НЕ ДАЁТ прав: фактический доступ появляется после политики публикации, ревью и согласия администратора конкретного кабинета Схема описывает форму; смысловые правила, которые формой не выражаются, проверяются при подаче версии на публикацию.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "compatibility",
+    "runtime",
+    "permissions",
+    "subscriptions",
+    "extensionPoints",
+    "ui",
+    "referenceData",
+    "configSchema",
+    "secrets",
+    "data",
+    "support",
+    "lifecycle"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "apps.akeda.ru/v1",
+      "description": "Версия контракта самого manifest. Ломающее изменение формы — это новый apiVersion, живущий рядом со старым, а не правка v1 на месте."
+    },
+    "kind": {
+      "const": "Extension",
+      "description": "Вид декларации. Поле существует затем, чтобы рядом мог появиться другой вид (например, набор приложений) без переизобретения конверта."
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "compatibility": {
+      "$ref": "#/$defs/compatibility"
+    },
+    "runtime": {
+      "$ref": "#/$defs/runtime"
+    },
+    "permissions": {
+      "$ref": "#/$defs/permissions"
+    },
+    "subscriptions": {
+      "type": "array",
+      "description": "Подписки на события платформы. Пустой список обязателен и означает «событий не слушаю»: отсутствие раздела — не ответ, а умолчание, о котором никто не договаривался.",
+      "items": {
+        "$ref": "#/$defs/subscription"
+      }
+    },
+    "extensionPoints": {
+      "type": "array",
+      "description": "Точки расширения, которые приложение исполняет. Каждый ключ обязан существовать в опубликованном реестре точек расширения: точка существует ровно тогда, когда платформа объявила её контракт.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*\\.v[1-9][0-9]*$"
+      },
+      "uniqueItems": true
+    },
+    "ui": {
+      "type": "array",
+      "description": "Слоты интерфейса. Слот — это та же точка расширения, только её владелец — модуль platform: оболочка, меню и состав разделов принадлежат ему.",
+      "items": {
+        "$ref": "#/$defs/uiSlot"
+      }
+    },
+    "referenceData": {
+      "$ref": "#/$defs/referenceData"
+    },
+    "configSchema": {
+      "$ref": "#/$defs/configSchema"
+    },
+    "secrets": {
+      "type": "array",
+      "description": "ОБЪЯВЛЕНИЯ секретов без значений. Значение вводит пользователь в Akeda или выдаёт OAuth-провайдер; оно хранится зашифрованным и приложению не возвращается. Секрет в manifest — запрещённый путь.",
+      "items": {
+        "$ref": "#/$defs/secretDeclaration"
+      }
+    },
+    "data": {
+      "$ref": "#/$defs/dataPolicy"
+    },
+    "support": {
+      "$ref": "#/$defs/support"
+    },
+    "lifecycle": {
+      "$ref": "#/$defs/lifecycle"
+    },
+    "artifacts": {
+      "$ref": "#/$defs/artifacts"
+    }
+  },
+  "$defs": {
+    "filterMatch": {
+      "description": "Значение отбора: строка либо массив строк, соединяемых ИЛИ. Длина значения ограничена: точное совпадение с человеческим текстом не работает — он меняется вместе с языком интерфейса.",
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        }
+      ]
+    },
+
+    "identifier": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,62}$",
+      "description": "Алфавит идентичности приложения: строчные латинские буквы, цифры и дефисы. Он узкий, потому что из пары «издатель + ключ» собирается пространство имён справочников app.<издатель>.<ключ>, и точка в составляющей развалила бы разбор пространства обратно."
+    },
+    "localizedText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ru",
+        "en"
+      ],
+      "description": "Текст на русском и английском. Оба обязательны: этот текст попадает на системные экраны согласия, каталога и ошибок, а их Akeda локализует на двух языках.",
+      "properties": {
+        "ru": {
+          "type": "string",
+          "minLength": 1
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "httpsUrl": {
+      "type": "string",
+      "pattern": "^https://[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:[0-9]{1,5})?(/.*)?$",
+      "description": "Только HTTPS. Событие несёт данные кабинета, а запуск слота — одноразовый токен; открытым каналом ни то, ни другое не ходит."
+    },
+    "scopeName": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_.-]*:[a-z0-9][a-z0-9_.-]*$",
+      "description": "Право вида <область>:<действие> — та же форма, что у ключей кабинета. Звёздочка алфавитом не предусмотрена: wildcard просит неизвестно что, и показать такое на экране согласия нечем."
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$",
+      "description": "Строгая семантическая версия без префикса v и без диапазона. Версия immutable: та же версия не может получить другой digest."
+    },
+    "versionedTopic": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+\\.v[1-9][0-9]*$",
+      "description": "Тема события с версией схемы в самом имени. Ломающее изменение конверта — это новая тема рядом со старой, а не тихая подмена формы под тем же именем."
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "publisher",
+        "key",
+        "id",
+        "version",
+        "name",
+        "description",
+        "homepage"
+      ],
+      "description": "Идентичность приложения. Идентификатор — пара «издатель + ключ»: из неё собирается пространство имён, и второго места, где приложение называет себя, нет.",
+      "properties": {
+        "publisher": {
+          "$ref": "#/$defs/identifier",
+          "description": "Издатель. Часть идентичности, а не подпись в каталоге."
+        },
+        "key": {
+          "$ref": "#/$defs/identifier",
+          "description": "Ключ приложения, уникальный внутри издателя."
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^app\\.[a-z0-9][a-z0-9-]{0,62}\\.[a-z0-9][a-z0-9-]{0,62}$",
+          "description": "Глобальный идентификатор и он же пространство имён приложения: app.<издатель>.<ключ>. Ровно три части: всё, что не начинается с app., принадлежит платформе."
+        },
+        "version": {
+          "$ref": "#/$defs/semver"
+        },
+        "name": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "description": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "homepage": {
+          "$ref": "#/$defs/httpsUrl"
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "publicApi"
+      ],
+      "description": "Две оси, которые объявляются здесь. Версии схем событий и версии точек расширения здесь не дублируются: они уже названы в самих подписках и в ключах точек, а второе место для того же числа — это место, где числа разойдутся.",
+      "properties": {
+        "platform": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Диапазон выпусков платформы, например \">=1.50 <2.0\". Для публичного приложения диапазон не может быть пустым или без верхней границы: открытый сверху диапазон обещает совместимость с версиями, которых ещё нет и которые никто не проверял."
+        },
+        "publicApi": {
+          "type": "string",
+          "pattern": "^v[1-9][0-9]*$",
+          "description": "Мажорная линия публичного API, к которой приложение обращается."
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode"
+      ],
+      "description": "Где исполняется приложение.",
+      "properties": {
+        "mode": {
+          "enum": [
+            "hosted",
+            "managed",
+            "declarative"
+          ],
+          "description": "hosted — приложение работает на инфраструктуре разработчика; declarative — схемы, соответствия и формы без произвольного кода; managed — пакет в изолированном пуле воркеров Akeda Apps."
+        },
+        "webhookUrl": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "healthUrl": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "allowedOrigins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/httpsUrl"
+          },
+          "uniqueItems": true,
+          "description": "Источники, которым мост сообщений отвечает. Список разрешённых источников, а не «любой»."
+        },
+        "handler": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ABI обработчика для режима managed: что именно пул воркеров запускает."
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "timeoutSeconds",
+            "memoryMb",
+            "egress"
+          ],
+          "description": "Заявленные лимиты режима managed. Платформа вправе их только сузить: заявка — это потолок обещания, а не разрешение.",
+          "properties": {
+            "timeoutSeconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 300
+            },
+            "memoryMb": {
+              "type": "integer",
+              "minimum": 32,
+              "maximum": 2048
+            },
+            "egress": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$",
+                "description": "Хост, а не маска. Звёздочка в списке исходящих означает «куда угодно» и списком не является."
+              },
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "permission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "riskClass",
+        "explanation"
+      ],
+      "description": "Запрошенное право вместе с классом риска и объяснением для человека. Объяснение обязательно на обоих языках: его читает администратор кабинета на экране согласия, и «no explanation» там показать нечего.",
+      "dependentRequired": {
+        "purpose": [
+          "retentionDays"
+        ],
+        "retentionDays": [
+          "purpose"
+        ]
+      },
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/scopeName"
+        },
+        "riskClass": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "restricted"
+          ],
+          "description": "low — чтение неперсональных справочников; medium — запись черновиков и чтение операционных данных; high — финансовые операции, документы, персональные данные, файлы, почта; restricted — массовая выгрузка, банковские доступы, проведение, администрирование."
+        },
+        "explanation": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "purpose": {
+          "$ref": "#/$defs/localizedText",
+          "description": "Назначение: зачем приложению именно это право. Объяснение отвечает «что приложение делает», назначение — «ради какой задачи кабинета ему нужны эти данные». Обязательно у права чувствительного яруса: версия без назначения не проходит ворота публикации. Проверяет обязательность manifest-lint, а не схема: чувствительность объявляет таксономия областей платформы, и схема о ней не знает."
+        },
+        "retentionDays": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3650,
+          "description": "Срок хранения данных, полученных ЭТИМ правом. Ноль означает «не храню, обрабатываю на лету»; бессрочного варианта нет. Отдельно от data.retentionDays: политика данных отвечает за приложение целиком, а согласие даётся на каждое право по отдельности, и срок «три года по всему приложению» не отвечает на вопрос «сколько у вас лежит мой зарплатный журнал»."
+        }
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required",
+        "optional"
+      ],
+      "description": "Обязательные права показываются до установки, необязательные запрашиваются отдельным согласием по ходу работы. Оба списка обязательны; пустой список — это ответ.",
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/permission"
+          }
+        },
+        "optional": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/permission"
+          }
+        }
+      }
+    },
+    "subscription": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "topic",
+        "delivery",
+        "maxEventsPerMinute",
+        "timeoutSeconds",
+        "retry",
+        "ordering",
+        "replay",
+        "deadLetter"
+      ],
+      "description": "Одна подписка на событие. Доставка повторяется, поэтому потребитель обязан быть идемпотентным; ожидания по частоте, сроку, повторам и мёртвой очереди объявляются здесь, а не выясняются в инциденте.",
+      "properties": {
+        "topic": {
+          "$ref": "#/$defs/versionedTopic"
+        },
+        "delivery": {
+          "enum": [
+            "webhook"
+          ],
+          "description": "Единственный транспорт первой версии: подписанный webhook. Доставка «хотя бы один раз», поэтому получатель обязан быть идемпотентным."
+        },
+        "filters": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Отбор на стороне платформы. Фильтр не раскрывает чужих данных: он сужает поток, а не расширяет видимость. Условия соединяются И, значения внутри условия — ИЛИ. Незнакомый ключ отклоняется при публикации: опечатка иначе молча расширила бы поток до всей темы.",
+          "properties": {
+            "aggregateType": {
+              "description": "Вид агрегата, породившего факт. Фильтр по нему не зависит от размера тела события.",
+              "$ref": "#/$defs/filterMatch"
+            },
+            "payload": {
+              "type": "object",
+              "description": "Точное совпадение по ПЛОСКИМ скалярным полям верхнего уровня тела. Путей внутрь тела, масок и регулярных выражений нет намеренно: путь потребовал бы разбирать тело целиком, маску нечем показать на экране согласия, а чужое регулярное выражение исполнялось бы на нашей стороне на каждом событии.",
+              "maxProperties": 8,
+              "propertyNames": {
+                "description": "Имя плоского поля тела. Точек и скобок в нём нет намеренно: путь внутрь тела означал бы, что для решения «везти или не везти» платформа обязана разобрать событие целиком.",
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,62}$"
+              },
+              "additionalProperties": {
+                "$ref": "#/$defs/filterMatch"
+              }
+            }
+          }
+        },
+        "maxEventsPerMinute": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000,
+          "description": "Желаемая частота доставки. Платформа применяет строгейшее из двух: объявленного здесь и своего потолка на установку. Число выше потолка не отклоняется, но и не действует."
+        },
+        "timeoutSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "retry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maxAttempts",
+            "backoff"
+          ],
+          "properties": {
+            "maxAttempts": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20
+            },
+            "backoff": {
+              "enum": [
+                "exponential",
+                "linear"
+              ]
+            }
+          }
+        },
+        "ordering": {
+          "enum": [
+            "none",
+            "per_aggregate"
+          ],
+          "description": "per_aggregate объявляется, только если порядок действительно гарантирован. Обещанный и не выполняемый порядок хуже честного none: на него напишут код."
+        },
+        "replay": {
+          "type": "boolean"
+        },
+        "deadLetter": {
+          "enum": [
+            "park",
+            "drop"
+          ],
+          "description": "park — событие ложится в мёртвую очередь и доступно для повтора; drop — теряется молча."
+        }
+      }
+    },
+    "uiSlot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot",
+        "type",
+        "locales",
+        "themeAware",
+        "keyboardAccessible"
+      ],
+      "dependentRequired": {
+        "url": [
+          "minWidth",
+          "minHeight",
+          "bridge"
+        ]
+      },
+      "description": "Использование одного слота интерфейса. Расширение не получает DOM основного приложения, сессионную куку и полный пользовательский токен: запуск идёт по краткосрочному одноразовому токену, привязанному к установке, кабинету, пользователю, слоту и nonce. Объявленный адрес означает отдельный источник, а у него обязаны быть размер и мост сообщений: без размера оболочка решает, поместится ли слот, уже нарисованным экраном, а без моста рамке некуда получить контекст запуска.",
+      "properties": {
+        "slot": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*\\.v[1-9][0-9]*$"
+        },
+        "type": {
+          "enum": [
+            "action",
+            "iframe",
+            "panel",
+            "settings",
+            "declarative"
+          ],
+          "description": "action — пункт, который рисует сама оболочка; iframe и panel — отдельный источник со своей политикой безопасности содержимого; settings — форма настройки установки по схеме конфигурации; declarative — форма или таблица, описанная схемой и исполняемая платформой. Произвольный код расширения в основной фронтовый бандл не попадает ни при одном из них."
+        },
+        "url": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "minWidth": {
+          "type": "integer",
+          "minimum": 120,
+          "maximum": 4096
+        },
+        "minHeight": {
+          "type": "integer",
+          "minimum": 80,
+          "maximum": 4096
+        },
+        "context": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true,
+          "description": "Поля контекста запуска, которые слот просит. Список, а не «весь контекст»: иначе объём переданного менялся бы вместе с реализацией оболочки, а согласие кабинета оставалось бы прежним. Словарь закрыт и объявлен платформой; человека он называет ПСЕВДОНИМОМ (actor_subject), своим у каждой установки. Имени, почты, числового идентификатора и ролей сотрудника в нём нет и не будет; поле вне словаря отклоняется с указанием причины."
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/scopeName"
+          },
+          "uniqueItems": true
+        },
+        "title": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "locales": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]{2}$"
+          },
+          "minItems": 2,
+          "uniqueItems": true,
+          "description": "Языки, на которых слот показывает свой текст. ru и en обязательны: экран кабинета живёт на двух языках, и половина интерфейса на третьем — это дыра в переводе, а не выбор разработчика."
+        },
+        "themeAware": {
+          "type": "boolean",
+          "description": "Слот следует теме кабинета. Объявленное false — основание не пустить слот в публикацию, а не мелочь оформления."
+        },
+        "keyboardAccessible": {
+          "type": "boolean"
+        },
+        "bridge": {
+          "$ref": "#/$defs/slotBridge"
+        }
+      }
+    },
+    "slotBridge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sends",
+        "receives"
+      ],
+      "description": "Мост сообщений между оболочкой Akeda и рамкой расширения. Оба списка обязательны и оба закрыты: мост, пропускающий что угодно, — это не список разрешённых типов, а его отсутствие. Оболочка адресует сообщения ровно тому источнику, который собран из url слота, и принимает их только от него. Чего в мосте нет намеренно: сообщения «покажи текст» (хром Akeda не рисует слова стороннего приложения — человек читает их как слова системы), сообщения «перейди по адресу» (руль сессии человека недоверенной странице не отдаётся) и сообщения «позови за меня API» (это и есть та красная линия, ради которой расширение не получает сессионную куку).",
+      "properties": {
+        "sends": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 8,
+          "description": "Сообщения, которые расширение шлёт оболочке. Пустой список означает «молчу»: рамка без akeda.slot.ready не получит контекст запуска вовсе.",
+          "items": {
+            "type": "string",
+            "pattern": "^akeda\\.slot\\.[a-z][a-z0-9_]*$"
+          }
+        },
+        "receives": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 8,
+          "description": "Сообщения, которые расширение принимает от оболочки. Оболочка не шлёт того, что слот не объявил.",
+          "items": {
+            "type": "string",
+            "pattern": "^akeda\\.slot\\.[a-z][a-z0-9_]*$"
+          }
+        }
+      }
+    },
+    "referenceData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requires",
+        "provides"
+      ],
+      "description": "Справочники, которые приложение читает, и справочники, которые оно заводит. Ссылка на значение — это ключ справочника вместе с id или стабильным кодом, а не голый UUID.",
+      "properties": {
+        "requires": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "schemaVersion",
+              "capabilities"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+              },
+              "schemaVersion": {
+                "type": "string",
+                "pattern": "^v[1-9][0-9]*$"
+              },
+              "capabilities": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "read",
+                    "resolve",
+                    "search"
+                  ]
+                },
+                "minItems": 1,
+                "uniqueItems": true,
+                "description": "Минимум, без которого приложение не работает. Записи здесь нет: чужой справочник приложение не правит."
+              }
+            }
+          },
+          "uniqueItems": true
+        },
+        "provides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/providedDirectory"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "providedDirectory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "kind",
+        "schemaVersion",
+        "mutability",
+        "lifecycle",
+        "name",
+        "itemSchema",
+        "uninstall"
+      ],
+      "description": "Справочник, который заводит приложение. Только в собственном пространстве имён app.<издатель>.<ключ>.<справочник>: ключ в core.*, finance.*, stock.* и любом другом чужом пространстве занять нельзя.",
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^app\\.[a-z0-9][a-z0-9-]{0,62}\\.[a-z0-9][a-z0-9-]{0,62}\\.[a-z][a-z0-9_]*$"
+        },
+        "kind": {
+          "enum": [
+            "code_list",
+            "entity",
+            "classifier"
+          ],
+          "description": "code_list — простой список кодов; entity — типизированная сущность со своими полями; classifier — внешний классификатор с контрактом источника. Вид определяет, что платформа обещает про строки, поэтому сменить его у живого справочника нельзя."
+        },
+        "schemaVersion": {
+          "type": "string",
+          "pattern": "^v[1-9][0-9]*$"
+        },
+        "mutability": {
+          "enum": [
+            "app_managed",
+            "tenant_managed",
+            "shared"
+          ],
+          "description": "Кто правит записи: приложение, кабинет или оба. Это и есть источник правды по строкам, а не общее слово «справочник»."
+        },
+        "lifecycle": {
+          "enum": [
+            "stable",
+            "beta",
+            "deprecated"
+          ]
+        },
+        "name": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "itemSchema": {
+          "type": "object"
+        },
+        "uninstall": {
+          "enum": [
+            "archive",
+            "orphan",
+            "transfer"
+          ],
+          "description": "Что происходит со справочником при удалении приложения. Удаления здесь нет: на строки справочника ссылаются документы кабинета, и снести их вместе с приложением значит порвать его учёт."
+        }
+      }
+    },
+    "configKey": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,62}$",
+      "description": "Имя настройки. Поля configSchema и объявления secrets[] живут в ОДНОМ пространстве имён, потому что значение хранится по этому имени и второго дома у имени быть не может: одно и то же имя в обоих списках делает неопределимым, показывать значение владельцу или прятать. Длина ограничена затем же, зачем ограничена длина всего остального: имя уезжает в ключ строки хранилища и в журнал обращений."
+    },
+    "configField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "title"
+      ],
+      "description": "Объявление одного поля настройки. Значение такого поля владелец кабинета видит ОБРАТНО — на экране и в ответе API, — поэтому секретному полю здесь места нет: секрет объявляется в secrets[]. Поля «секретное» в этом объявлении нет намеренно, а не забыто: два способа объявить секрет означали бы два места, где решается, показывать значение или прятать, и разошлись бы они молча.",
+      "properties": {
+        "type": {
+          "enum": [
+            "string",
+            "integer",
+            "number",
+            "boolean"
+          ],
+          "description": "Тип значения. Объект и массив сюда не входят: настройку заполняет человек в форме, а поле, которого нельзя набрать одной строкой, — это не настройка, а конфигурационный файл, за который никто в кабинете не отвечает."
+        },
+        "title": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "help": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "default": {
+          "description": "Значение, предложенное приложением до первого ввода. Скаляр и только: умолчание показывается человеку в форме, а не собирается из вложенной структуры. Секрет умолчанием не задаётся никогда — manifest уезжает в каталог, и попавшее сюда значение считается скомпрометированным с момента публикации.",
+          "oneOf": [
+            {
+              "type": "string",
+              "maxLength": 4096
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "enum": {
+          "type": "array",
+          "description": "Замкнутый список допустимых значений. Объявляется только у строкового поля: у числа и признака список значений означал бы, что тип объявлен не тот.",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "minLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "maxLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "pattern": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "minimum": {
+          "type": "number"
+        },
+        "maximum": {
+          "type": "number"
+        }
+      }
+    },
+    "configSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "properties"
+      ],
+      "description": "Схема настройки установки: поля, проверки, умолчания и подсказки. ЗНАЧЕНИЙ здесь нет ни у настройки, ни тем более у секрета: значение вводит человек в Akeda или выдаёт OAuth-провайдер, оно хранится у установки и приложению через интерфейс или API не возвращается. Форма полей описана до конца, а не оставлена «объектом»: платформа рисует по ней форму и проверяет введённое, и слово, которое она прочитать не умеет, было бы обещанием проверки, которой нет.",
+      "properties": {
+        "type": {
+          "const": "object"
+        },
+        "properties": {
+          "type": "object",
+          "description": "Поля настройки: имя → объявление. Набор имён задаёт приложение, поэтому имена проверяются подсхемой имени, а не перечислением. Потолок в 64 поля — не запас прочности: форму настройки заполняет человек, и список, который не помещается на экран, он заполняет наугад.",
+          "maxProperties": 64,
+          "propertyNames": {
+            "$ref": "#/$defs/configKey"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/configField"
+          }
+        },
+        "required": {
+          "type": "array",
+          "description": "Поля, без которых приложение не работает. Имя, которого нет в properties, — обещание проверки, выполнить которую платформе нечем, и такой манифест отклоняется.",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/configKey"
+          }
+        }
+      }
+    },
+    "secretDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "provider",
+        "required",
+        "title"
+      ],
+      "description": "Объявление секрета. Полей значения тут нет намеренно: additionalProperties запрещены, поэтому value, token или default рядом с ключом — это нарушение формы, а не вопрос вкуса. Объявить секрет можно ТОЛЬКО здесь: поля настройки в configSchema возвращаются владельцу обратно, а секрет не возвращается никогда и ничем.",
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/configKey"
+        },
+        "provider": {
+          "enum": [
+            "user_input",
+            "oauth",
+            "certificate"
+          ],
+          "description": "Откуда берётся значение: вводит пользователь в Akeda, выдаёт OAuth-провайдер или загружает администратор."
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "title": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "help": {
+          "$ref": "#/$defs/localizedText"
+        },
+        "rotationDays": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3650
+        }
+      }
+    },
+    "dataPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "categories",
+        "regions",
+        "retentionDays",
+        "uninstall"
+      ],
+      "description": "Какие данные приложение уносит к себе, где хранит, сколько держит и что делает при удалении. Удаление приложения запускает объявленную здесь политику — значит, объявлять её нужно до установки, а не после инцидента.",
+      "properties": {
+        "categories": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "reference",
+              "operational",
+              "documents",
+              "financial",
+              "personal",
+              "files",
+              "email",
+              "credentials"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]{2}$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "retentionDays": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3650,
+          "description": "Сколько приложение держит данные у себя. Ноль означает «не храню»; бессрочного варианта нет."
+        },
+        "uninstall": {
+          "enum": [
+            "purge",
+            "export_then_purge",
+            "archive"
+          ]
+        }
+      }
+    },
+    "support": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "email",
+        "url",
+        "incidentEmail",
+        "responseHours"
+      ],
+      "description": "Куда идти кабинету, когда приложение сломалось. Отдельный адрес для инцидента существует затем, чтобы авария не стояла в общей очереди поддержки.",
+      "properties": {
+        "email": {
+          "type": "string",
+          "pattern": "^[^@\\s]+@[a-z0-9]([a-z0-9.-]*[a-z0-9])?\\.[a-z]{2,}$"
+        },
+        "url": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "incidentEmail": {
+          "type": "string",
+          "pattern": "^[^@\\s]+@[a-z0-9]([a-z0-9.-]*[a-z0-9])?\\.[a-z]{2,}$"
+        },
+        "responseHours": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 168
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "channel",
+        "rolloutPercent",
+        "minSupportedVersion",
+        "dataMigrationVersion",
+        "killSwitch"
+      ],
+      "description": "Как версия выкатывается и как её выключают. Выключатель объявлен заранее, потому что решение об инциденте принимают тогда, когда договариваться уже поздно.",
+      "properties": {
+        "channel": {
+          "enum": [
+            "sandbox",
+            "private",
+            "public"
+          ],
+          "description": "sandbox — изолированный контур разработчика с синтетическими данными; private — установка по приглашению у названных кабинетов; public — каталог. Канал решает строгость проверок: диапазон совместимости и класс риска прав спрашиваются с публичного приложения жёстче, чем с песочницы."
+        },
+        "rolloutPercent": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "deprecationDate": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "minSupportedVersion": {
+          "$ref": "#/$defs/semver"
+        },
+        "rollbackTarget": {
+          "$ref": "#/$defs/semver"
+        },
+        "dataMigrationVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "killSwitch": {
+          "type": "boolean",
+          "description": "Приложение переживает принудительное отключение платформой без потери данных кабинета."
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "digest",
+        "sbom",
+        "signature",
+        "signatureAlgorithm"
+      ],
+      "description": "Пакет приложения для режима managed. Для hosted раздела нет: у приложения, работающего на своей инфраструктуре, нет пакета, который платформа могла бы посчитать и подписать.",
+      "properties": {
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "sbom": {
+          "$ref": "#/$defs/httpsUrl"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9+/]{64,}={0,2}$"
+        },
+        "signatureAlgorithm": {
+          "enum": [
+            "ed25519",
+            "ecdsa-p256"
+          ]
+        }
+      }
+    }
+  }
+}

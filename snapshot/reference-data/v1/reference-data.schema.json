@@ -1,0 +1,402 @@
+{
+  "$defs": {
+    "CoreDirectory": {
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "$ref": "#/$defs/CoreDirectoryContract"
+        },
+        "deeplink": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "dictionary_id": {
+          "type": "string"
+        },
+        "group": {
+          "description": "Группа раздела в меню и каталоге",
+          "type": "string"
+        },
+        "icon": {
+          "description": "Значок из общего набора",
+          "type": "string"
+        },
+        "is_system": {
+          "type": "boolean"
+        },
+        "item_count": {
+          "format": "int64",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "key": {
+          "description": "Ключ кабинета: одинаков во всех кабинетах, без пространства имён. У справочника приложения совпадает с полным именем",
+          "type": "string"
+        },
+        "kind": {
+          "description": "Природа справочника: сущность, список кодов, таксономия, стандарт или зеркало внешнего источника",
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "label_key": {
+          "description": "Ключ словаря для перевода названия",
+          "type": "string"
+        },
+        "module": {
+          "description": "Модуль, чей код пишет и проверяет записи: у объявленного справочника — владелец, у списка кабинета и справочника приложения — core как хозяин конструктора",
+          "type": "string"
+        },
+        "mounts": {
+          "description": "Дополнительные входы. Владение не переносят: справочник остаётся у своего модуля",
+          "items": {
+            "$ref": "#/$defs/CoreDirectoryMount"
+          },
+          "type": "array"
+        },
+        "origin": {
+          "description": "Откуда записи: штатный посев (system), ввод клиента (tenant), интеграция (integration) или установленное приложение (app)",
+          "type": "string"
+        },
+        "reference": {
+          "description": "Полное имя для внешнего кода: пространство имён владельца плюс ключ — core.units, marketplace.mp_expense_item, app.acme.crm.regions. Его называет manifest приложения, его же принимают операции /api/v1/reference наравне с ключом",
+          "type": "string"
+        },
+        "setup_step": {
+          "description": "Порядок в чек-листе первичного заполнения кабинета",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "storage": {
+          "description": "Где лежат записи: своя типизированная таблица или универсальный конструктор",
+          "type": "string"
+        },
+        "visibility": {
+          "description": "Кому виден справочник: только своему модулю, всему продукту или наружу",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "description",
+        "kind",
+        "module",
+        "storage",
+        "origin",
+        "visibility",
+        "deeplink",
+        "is_system",
+        "reference",
+        "contract"
+      ],
+      "type": "object"
+    },
+    "CoreDirectoryContract": {
+      "additionalProperties": false,
+      "description": "Дескриптор справочника для внешнего кода (Reference Data SDK). У штатного справочника приходит из объявления модуля-владельца, у списка кабинета выводится из его природы, у справочника приложения снимается с манифеста при установке. Форма дескриптора — preview: набор полей может расшириться",
+      "properties": {
+        "authority": {
+          "description": "Чьё слово последнее по записям: кабинет, сеятель Akeda, внешний источник или установленное приложение",
+          "enum": [
+            "tenant",
+            "platform",
+            "provider",
+            "app"
+          ],
+          "type": "string"
+        },
+        "compatibility": {
+          "description": "Объём обещания про форму записи: те же стадии, что у операции public API",
+          "enum": [
+            "preview",
+            "public"
+          ],
+          "type": "string"
+        },
+        "item_schema": {
+          "description": "Идентификатор формы записи с версией: core.contact.v1 у типизированного, core.dictionary_item.v1 у любого справочника конструктора, <полное имя>.v<N> у справочника приложения",
+          "type": "string"
+        },
+        "lifecycle": {
+          "description": "Этап жизни: форма держится; форма меняется; выдавать перестали, существующие не трогают; владелец удалён, справочник остался ради ссылок",
+          "enum": [
+            "stable",
+            "beta",
+            "deprecated",
+            "retired"
+          ],
+          "type": "string"
+        },
+        "mutability": {
+          "description": "Что кабинет вправе делать с записями: править любые, только читать (записи держит владелец) или заводить свои рядом с записями владельца",
+          "enum": [
+            "tenant_managed",
+            "owner_managed",
+            "shared"
+          ],
+          "type": "string"
+        },
+        "namespace": {
+          "description": "Пространство имён: ключ модуля-владельца или app.<издатель>.<ключ> у приложения. Выводится из владельца, объявить иначе нельзя",
+          "type": "string"
+        },
+        "permission": {
+          "description": "Право, открывающее справочник: <модуль>:read. Им же витрина отбирает строки",
+          "type": "string"
+        },
+        "reference": {
+          "description": "Полное имя: namespace плюс ключ. То же, что reference у строки",
+          "type": "string"
+        },
+        "schema_version": {
+          "description": "Версия формы записи из суффикса item_schema. Ломающее изменение формы — новая версия рядом со старой, а не тихая подмена",
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "namespace",
+        "reference",
+        "item_schema",
+        "schema_version",
+        "authority",
+        "mutability",
+        "lifecycle",
+        "compatibility",
+        "permission"
+      ],
+      "type": "object"
+    },
+    "CoreDirectoryMount": {
+      "additionalProperties": false,
+      "properties": {
+        "module": {
+          "description": "Модуль, из раздела которого открывается этот справочник",
+          "type": "string"
+        },
+        "path": {
+          "description": "Экран второго входа",
+          "type": "string"
+        }
+      },
+      "required": [
+        "module",
+        "path"
+      ],
+      "type": "object"
+    },
+    "CoreDirectoryPage": {
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "limit": {
+          "description": "Потолок каталога — сколько справочников конструктора он читает за раз. Параметра запроса у него нет: каталог отдаётся целиком, и число названо здесь, чтобы предел был виден, а не подразумевался",
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "results": {
+          "items": {
+            "$ref": "#/$defs/CoreDirectory"
+          },
+          "type": "array"
+        },
+        "truncated": {
+          "description": "Справочников в кабинете больше потолка, и часть в каталог не попала. Считается по кабинету точно, а не по длине ответа: после чтения набор ещё раз сужают права, и короткий ответ ничего об усечении не говорит. true означает ошибку моделирования на стороне кабинета, а не нормальный режим",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "count",
+        "limit",
+        "truncated",
+        "results"
+      ],
+      "type": "object"
+    },
+    "CoreReferenceItem": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "description": "Стабильная ссылка на значение: код переживает перенос данных, идентификатор — нет",
+          "type": "string"
+        },
+        "id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "code",
+        "label",
+        "is_active"
+      ],
+      "type": "object"
+    },
+    "CoreReferenceItemPage": {
+      "additionalProperties": false,
+      "properties": {
+        "api": {
+          "description": "Адрес собственного API типизированного справочника. Приходит вместе с пустым списком: общий список значений такой справочник не заменяет",
+          "type": "string"
+        },
+        "count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "detail": {
+          "description": "Пояснение к пустому ответу типизированного справочника",
+          "type": "string"
+        },
+        "results": {
+          "items": {
+            "$ref": "#/$defs/CoreReferenceItem"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "count",
+        "results"
+      ],
+      "type": "object"
+    },
+    "CoreReferenceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "description": "Код значения. Указывается код или идентификатор; без обоих ссылка не разрешается",
+          "type": "string"
+        },
+        "directory_key": {
+          "description": "Ключ справочника из каталога (units) либо его полное имя (core.units, app.acme.crm.regions). Полное имя отличает справочник приложения от штатного с тем же последним сегментом",
+          "type": "string"
+        },
+        "id": {
+          "$ref": "#/$defs/UUID"
+        }
+      },
+      "required": [
+        "directory_key"
+      ],
+      "type": "object"
+    },
+    "CoreReferenceResolveRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "refs": {
+          "items": {
+            "$ref": "#/$defs/CoreReferenceRef"
+          },
+          "maxItems": 200,
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "refs"
+      ],
+      "type": "object"
+    },
+    "CoreReferenceResolveResult": {
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "results": {
+          "items": {
+            "$ref": "#/$defs/CoreReferenceVerdict"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "count",
+        "results"
+      ],
+      "type": "object"
+    },
+    "CoreReferenceVerdict": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "directory_key": {
+          "type": "string"
+        },
+        "id": {
+          "$ref": "#/$defs/UUID"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string"
+        },
+        "reason": {
+          "description": "Причина отказа словом. «Справочник не найден или недоступен» и «Значение не найдено в этом справочнике» — разные ошибки",
+          "type": "string"
+        },
+        "resolved": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "directory_key",
+        "resolved"
+      ],
+      "type": "object"
+    },
+    "UUID": {
+      "format": "uuid",
+      "type": "string"
+    }
+  },
+  "$id": "https://developers.akeda.ru/schemas/reference-data/v1/reference-data.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Схемы слоя ссылок на справочники Akeda: каталог, значения по ключу и серверное разрешение пакета ссылок. Ссылка — это пара «ключ справочника плюс код», а не голый идентификатор. Собрано из опубликованного контракта замыканием по $ref; руками не правится.",
+  "title": "Akeda Reference Data v1",
+  "x-akeda-contract-version": "0.21.0-core-public",
+  "x-akeda-operations": {
+    "coreReferenceCatalog": {
+      "method": "GET",
+      "path": "/api/v1/reference/catalog",
+      "permission": "core:read",
+      "stage": "public",
+      "summary": "Получить каталог справочников, доступных в кабинете"
+    },
+    "coreReferenceItems": {
+      "method": "GET",
+      "path": "/api/v1/reference/{key}/items",
+      "permission": "core:read",
+      "stage": "public",
+      "summary": "Получить значения справочника по ключу"
+    },
+    "coreReferenceResolve": {
+      "method": "POST",
+      "path": "/api/v1/reference/resolve",
+      "permission": "core:write",
+      "stage": "public",
+      "summary": "Разрешить пакет ссылок на значения справочников"
+    }
+  }
+}

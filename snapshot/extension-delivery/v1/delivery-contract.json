@@ -1,0 +1,75 @@
+{
+  "$comment": "Машинный контракт подписанной доставки Akeda. Собирается из живых констант диспетчера и руками не правится. Векторы синтетические: секреты в них поддельные.",
+  "version": 1,
+  "signature": {
+    "version": "v1",
+    "algorithm": "HMAC-SHA256",
+    "windowSeconds": 300,
+    "headers": {
+      "eventId": "Akeda-Event-Id",
+      "installationId": "Akeda-Installation-Id",
+      "keyId": "Akeda-Signature-Key-Id",
+      "signature": "Akeda-Signature",
+      "timestamp": "Akeda-Signature-Timestamp"
+    },
+    "headerValue": "<version>=<hex(hmac)>",
+    "signingBase": [
+      "<version>",
+      "<keyId>",
+      "<timestampUnixSeconds>",
+      "<installationId>",
+      "<eventId>",
+      "<sha256HexOfRawBody>"
+    ],
+    "bodyDigest": "sha256, шестнадцатеричный, по сырым байтам тела запроса"
+  },
+  "envelope": {
+    "requiredFields": [
+      "event_id",
+      "installation_id",
+      "tenant_id",
+      "occurred_at",
+      "schema_version",
+      "trace_id",
+      "type",
+      "idempotency_key"
+    ],
+    "headerMustMatchBody": [
+      "event_id",
+      "installation_id"
+    ]
+  },
+  "delivery": {
+    "requestTimeoutSeconds": 10,
+    "maxAttempts": 15,
+    "acceptedStatusFrom": 200,
+    "acceptedStatusTo": 299,
+    "retryableStatuses": [
+      408,
+      429
+    ],
+    "retryableStatusFrom": 500
+  },
+  "vectors": [
+    {
+      "name": "минимальный конверт",
+      "keyId": "whk_0123456789abcdef",
+      "secret": "whs_00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+      "installationId": "0199a1f0-0000-7000-8000-000000000001",
+      "eventId": "0199a1f0-0000-7000-8000-000000000002",
+      "timestampUnix": 1767225600,
+      "body": "{\"event_id\":\"0199a1f0-0000-7000-8000-000000000002\",\"installation_id\":\"0199a1f0-0000-7000-8000-000000000001\",\"tenant_id\":\"0199a1f0-0000-7000-8000-000000000003\",\"occurred_at\":\"2026-01-01T00:00:00Z\",\"schema_version\":1,\"trace_id\":\"0123456789abcdef0123456789abcdef\",\"type\":\"core.document.posted\",\"idempotency_key\":\"doc-1\",\"payload\":{}}",
+      "signature": "affb4e1aae6bd784dfd9deadbe738dc261df2e9e3a11dc4469776a3717320684"
+    },
+    {
+      "name": "тело с полезной нагрузкой и не-ASCII",
+      "keyId": "whk_fedcba9876543210",
+      "secret": "whs_ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100",
+      "installationId": "0199a1f0-0000-7000-8000-00000000000a",
+      "eventId": "0199a1f0-0000-7000-8000-00000000000b",
+      "timestampUnix": 1767312000,
+      "body": "{\"event_id\":\"0199a1f0-0000-7000-8000-00000000000b\",\"installation_id\":\"0199a1f0-0000-7000-8000-00000000000a\",\"tenant_id\":\"0199a1f0-0000-7000-8000-00000000000c\",\"occurred_at\":\"2026-01-02T00:00:00Z\",\"schema_version\":2,\"trace_id\":\"fedcba9876543210fedcba9876543210\",\"type\":\"core.document.posted\",\"idempotency_key\":\"док-2\",\"payload\":{\"aggregate_type\":\"document\",\"kind\":\"продажа\"}}",
+      "signature": "ea340a62b367383e6614e1c0831101d70d0f127719f82b4a11c402ff99e30969"
+    }
+  ]
+}
