@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "akeda-sdk"
+version = "0.1.0"
+description = "Akeda ERP SDK: типы контракта, тонкий рантайм, проверка подписи вебхука"
+requires-python = ">=3.9"
+license = { text = "LicenseRef-Akeda-SDK-1.0" }
+# Зависимостей нет намеренно: партнёр ставит SDK в свой контур, и каждая
+# зависимость здесь — чужой код на его машине.
+dependencies = []
+classifiers = ["Private :: Do Not Upload"]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+include = ["akeda*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
