@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <title>ABC-XYZ</title>
+    <link rel="stylesheet" href="/static/app.css" />
+  </head>
+  <body>
+    <!-- Разметка пустая намеренно: содержимое собирается узлами в panel.js.
+         innerHTML с именем товара из чужого кабинета — ровно тот случай, ради
+         которого страница расширения живёт в отдельной рамке. -->
+    <div id="state" class="state">Считаю…</div>
+    <div id="root" hidden></div>
+
+    <script src="/static/i18n.js"></script>
+    <script src="/static/bridge.js"></script>
+    <script src="/static/panel.js"></script>
+  </body>
+</html>

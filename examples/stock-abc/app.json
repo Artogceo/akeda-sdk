@@ -1,0 +1,261 @@
+{
+  "apiVersion": "apps.akeda.ru/v1",
+  "kind": "Extension",
+
+  "metadata": {
+    "publisher": "akeda",
+    "key": "stock-abc",
+    "id": "app.akeda.stock-abc",
+    "version": "1.0.0",
+    "name": {
+      "ru": "ABC-XYZ анализ запасов",
+      "en": "Stock ABC-XYZ analysis"
+    },
+    "description": {
+      "ru": "Делит номенклатуру на классы по величине расхода (ABC) и по его ровности (XYZ). Пороги и период задаёт кабинет: у одного A — это 80% расхода в деньгах, у другого 70% в штуках. Показывает сводку на своей странице настройки и класс товара на его карточке. Ничего не пишет.",
+      "en": "Splits stock items into classes by volume of issues (ABC) and by how steady those issues are (XYZ). Thresholds and the period belong to the workspace: for one company A means 80% of cost, for another 70% of quantity. Shows a summary on its settings page and the class of an item on its card. Writes nothing."
+    },
+    "homepage": "https://stock-abc.example.test"
+  },
+
+  "compatibility": {
+    "platform": ">=1.50 <2.0",
+    "publicApi": "v1"
+  },
+
+  "runtime": {
+    "mode": "hosted",
+    "webhookUrl": "https://stock-abc.example.test/events",
+    "healthUrl": "https://stock-abc.example.test/healthz",
+    "allowedOrigins": ["https://stock-abc.example.test"],
+    "egress": []
+  },
+
+  "permissions": {
+    "required": [
+      {
+        "scope": "core:read",
+        "riskClass": "medium",
+        "explanation": {
+          "ru": "Читать обороты и остатки регистра склада и карточку товара, на которой открыта панель. Расход берётся из движений регистра, а не из строк документов: документ бывает черновиком и отменённым, регистр показывает то, что действительно случилось со складом.",
+          "en": "Read the turnovers and balances of the stock register and the card of the item whose panel is open. Consumption comes from register movements rather than document lines: a document can be a draft or cancelled, while the register shows what actually happened to the stock."
+        }
+      },
+      {
+        "scope": "stock:read",
+        "riskClass": "low",
+        "explanation": {
+          "ru": "Читать справочник складов, чтобы сопоставить коды из настройки с вашими складами и назвать их человеку по имени.",
+          "en": "Read the warehouse directory so the codes from the configuration can be matched against your warehouses and shown by name."
+        }
+      },
+      {
+        "scope": "app:self",
+        "riskClass": "low",
+        "explanation": {
+          "ru": "Читать собственную настройку установки: период, пороги и коды складов. Значения вводите вы; записи в этот контур у приложения нет.",
+          "en": "Read its own installation configuration: the period, the thresholds and the warehouse codes. You enter the values; the application has no way to write them."
+        }
+      },
+      {
+        "scope": "app:launch",
+        "riskClass": "low",
+        "explanation": {
+          "ru": "Обменивать одноразовый токен открытой панели на контекст запуска. Из него приложение узнаёт язык, тему и товар карточки; человек назван псевдонимом, своим у каждой установки.",
+          "en": "Redeem the one-time token of an opened panel for its launch context. From it the application learns the language, the theme and the item of the card; the person is named by a pseudonym unique to each installation."
+        }
+      }
+    ],
+    "optional": []
+  },
+
+  "subscriptions": [],
+
+  "extensionPoints": [],
+
+  "ui": [
+    {
+      "slot": "platform.settings_page.v1",
+      "placements": ["settings.page"],
+      "type": "settings",
+      "url": "https://stock-abc.example.test/ui/settings",
+      "minWidth": 640,
+      "minHeight": 480,
+      "context": ["tenant_id", "installation_id", "actor_subject", "locale", "theme"],
+      "scopes": [],
+      "title": {
+        "ru": "Настройка ABC-XYZ",
+        "en": "ABC-XYZ settings"
+      },
+      "locales": ["ru", "en"],
+      "themeAware": true,
+      "keyboardAccessible": true,
+      "bridge": {
+        "sends": ["akeda.slot.ready", "akeda.slot.resize", "akeda.slot.close"],
+        "receives": ["akeda.slot.launch", "akeda.slot.theme"]
+      }
+    },
+    {
+      "slot": "platform.embedded_panel.v1",
+      "placements": ["core.product.card"],
+      "type": "panel",
+      "url": "https://stock-abc.example.test/ui/panel",
+      "minWidth": 320,
+      "minHeight": 220,
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "scopes": [],
+      "title": {
+        "ru": "Класс ABC-XYZ",
+        "en": "ABC-XYZ class"
+      },
+      "locales": ["ru", "en"],
+      "themeAware": true,
+      "keyboardAccessible": true,
+      "bridge": {
+        "sends": ["akeda.slot.ready", "akeda.slot.resize", "akeda.slot.close"],
+        "receives": ["akeda.slot.launch", "akeda.slot.theme"]
+      }
+    }
+  ],
+
+  "referenceData": {
+    "requires": [],
+    "provides": []
+  },
+
+  "configSchema": {
+    "type": "object",
+    "required": [],
+    "properties": {
+      "period_months": {
+        "type": "integer",
+        "title": { "ru": "Период анализа, месяцев", "en": "Analysis period, months" },
+        "help": {
+          "ru": "Сколько целых календарных месяцев берём. Текущий месяц не считается: он короче остальных и завысил бы разброс.",
+          "en": "How many whole calendar months to take. The running month is excluded: it is shorter than the rest and would inflate the variation."
+        },
+        "default": 6,
+        "minimum": 1,
+        "maximum": 36
+      },
+      "metric": {
+        "type": "string",
+        "title": { "ru": "Мера ABC", "en": "ABC measure" },
+        "help": {
+          "ru": "Чем меряем важность товара: amount — себестоимость расхода, qty — количество. Выручки и маржи на складе нет, они живут в продажах.",
+          "en": "What ranks an item: amount — the cost of issues, qty — the quantity. Revenue and margin do not live in stock; they belong to sales."
+        },
+        "default": "amount",
+        "enum": ["amount", "qty"]
+      },
+      "abc_a_percent": {
+        "type": "number",
+        "title": { "ru": "Порог A, % расхода", "en": "A threshold, % of issues" },
+        "help": {
+          "ru": "Первые столько процентов накопленного расхода — класс A. Товар, переступающий порог, остаётся в верхнем классе.",
+          "en": "The first this many percent of cumulative issues form class A. The item that crosses the boundary stays in the upper class."
+        },
+        "default": 80,
+        "minimum": 0,
+        "maximum": 100
+      },
+      "abc_b_percent": {
+        "type": "number",
+        "title": { "ru": "Порог B, % расхода", "en": "B threshold, % of issues" },
+        "help": {
+          "ru": "Следующие столько процентов — класс B, остальное — C. Отдельного порога у C нет: он остаток.",
+          "en": "The next this many percent form class B; the rest is C. C has no threshold of its own: it is the remainder."
+        },
+        "default": 15,
+        "minimum": 0,
+        "maximum": 100
+      },
+      "xyz_x_max_percent": {
+        "type": "number",
+        "title": { "ru": "Порог X, % вариации", "en": "X threshold, % variation" },
+        "help": {
+          "ru": "Коэффициент вариации не выше этого — класс X, спрос ровный. Значение ровно на пороге относится к X.",
+          "en": "A coefficient of variation at or below this is class X, a steady demand. A value exactly on the threshold belongs to X."
+        },
+        "default": 10,
+        "minimum": 0,
+        "maximum": 1000
+      },
+      "xyz_y_max_percent": {
+        "type": "number",
+        "title": { "ru": "Порог Y, % вариации", "en": "Y threshold, % variation" },
+        "help": {
+          "ru": "До этого значения — класс Y, выше — Z. Порог Y обязан быть шире порога X.",
+          "en": "Up to this value the class is Y, above it Z. The Y threshold must be wider than the X threshold."
+        },
+        "default": 25,
+        "minimum": 0,
+        "maximum": 1000
+      },
+      "min_periods": {
+        "type": "integer",
+        "title": { "ru": "Минимум периодов для XYZ", "en": "Minimum periods for XYZ" },
+        "help": {
+          "ru": "Короче этого ряда буква XYZ не ставится вовсе: по одному месяцу вариация равна нулю, то есть «идеально ровный спрос» по одной отгрузке.",
+          "en": "With a shorter series no XYZ letter is assigned at all: over a single month the variation is zero, that is «perfectly steady demand» from one shipment."
+        },
+        "default": 3,
+        "minimum": 1,
+        "maximum": 36
+      },
+      "dead_days": {
+        "type": "integer",
+        "title": { "ru": "Неподвижен после, дней", "en": "Dormant after, days" },
+        "help": {
+          "ru": "Сколько дней без расхода означают, что товар лежит. Считается по дням до сегодняшнего, а не по окну анализа.",
+          "en": "How many days without issues mean the item is lying idle. Counted in days up to today, not by the analysis window."
+        },
+        "default": 90,
+        "minimum": 1,
+        "maximum": 3650
+      },
+      "warehouse_codes": {
+        "type": "string",
+        "title": { "ru": "Коды складов", "en": "Warehouse codes" },
+        "help": {
+          "ru": "Через запятую. Пусто означает все склады кабинета. Код, которого нет в справочнике, страница настройки называет отдельно — иначе опечатка превращается в пустой отчёт без единого слова о причине.",
+          "en": "Comma separated. Empty means every warehouse of the workspace. A code absent from the directory is named separately on the settings page — otherwise a typo turns into an empty report without a word about the cause."
+        },
+        "maxLength": 500
+      }
+    }
+  },
+
+  "secrets": [],
+
+  "data": {
+    "categories": ["reference", "operational"],
+    "regions": ["ru"],
+    "retentionDays": 0,
+    "uninstall": "purge"
+  },
+
+  "support": {
+    "email": "support@stock-abc.example.test",
+    "url": "https://stock-abc.example.test/support",
+    "incidentEmail": "incident@stock-abc.example.test",
+    "responseHours": 24
+  },
+
+  "lifecycle": {
+    "channel": "private",
+    "rolloutPercent": 100,
+    "minSupportedVersion": "1.0.0",
+    "dataMigrationVersion": 0,
+    "killSwitch": true
+  }
+}
