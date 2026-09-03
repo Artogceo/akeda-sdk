@@ -3,8 +3,8 @@
 Всё, что нужно партнёру, чтобы написать расширение Akeda ERP: снимок контракта,
 типизированные клиенты для TypeScript, Python и Go, CLI и работающие примеры.
 
-Репозиторий **приватный** и остаётся приватным. Пакеты отсюда никуда не
-публикуются: ни в npm, ни в PyPI, ни в pkg.go.dev. Права — [LICENSE](LICENSE):
+Репозиторий **открытый**, но пакеты отсюда никуда не публикуются: ни в npm, ни
+в PyPI, ни в pkg.go.dev — берите исходники. Права — [LICENSE](LICENSE):
 использовать и поставлять В СОСТАВЕ своего расширения, пока действует договор.
 
 ---
@@ -146,10 +146,10 @@ gofmt -l . && go vet ./... && go test ./...
 Akeda ERP partner SDK: a snapshot of the published API contract, typed clients
 for TypeScript, Python and Go, a CLI, and runnable examples.
 
-This repository is **private and stays private**; nothing here is published to
-npm, PyPI or pkg.go.dev. See [LICENSE](LICENSE): you may use and ship these
-materials **as part of your own Akeda extension** while your agreement with
-Akeda is in force.
+This repository is **public**, but nothing here is published to npm, PyPI or
+pkg.go.dev — take the sources. See [LICENSE](LICENSE): you may use and ship
+these materials **as part of your own Akeda extension** while your agreement
+with Akeda is in force.
 
 The contract snapshot is taken **only from Akeda's published artifacts**, by a
 deterministic script — never from the internal source of the contract, which
