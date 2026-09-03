@@ -1,0 +1,322 @@
+/* Оформление страниц расширения.
+ *
+ * Ни одного внешнего адреса: ни шрифта, ни иконки, ни таблицы стилей с CDN.
+ * Страница живёт в рамке внутри Akeda, и запрос на чужой хост из этой рамки —
+ * это адрес, который кабинет не одобрял и не видел на экране согласия.
+ *
+ * Тема приезжает контекстом запуска и меняется сообщением моста, поэтому цвета
+ * заданы переменными на :root, а переключается один атрибут data-theme.
+ * До запуска действует системная тема: пустая белая рамка в тёмном кабинете
+ * выглядит поломкой. */
+
+:root {
+  color-scheme: light;
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-soft: #f0f2f5;
+  --text: #151a21;
+  --muted: #5c6673;
+  --line: #e0e4ea;
+  --accent: #2f6feb;
+  --a: #1f8a4c;
+  --b: #b0761a;
+  --c: #6b7280;
+  --warn-bg: #fdf3e2;
+  --warn-line: #e8c98a;
+  --warn-text: #7a5310;
+  --radius: 10px;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #14171c;
+  --surface: #1c2027;
+  --surface-soft: #232832;
+  --text: #e6eaf1;
+  --muted: #98a2b1;
+  --line: #2b313b;
+  --accent: #7aa5ff;
+  --a: #4ec27f;
+  --b: #d9a545;
+  --c: #8b94a3;
+  --warn-bg: #2e2718;
+  --warn-line: #5c4a1f;
+  --warn-text: #e3c583;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #14171c;
+    --surface: #1c2027;
+    --surface-soft: #232832;
+    --text: #e6eaf1;
+    --muted: #98a2b1;
+    --line: #2b313b;
+    --accent: #7aa5ff;
+    --a: #4ec27f;
+    --b: #d9a545;
+    --c: #8b94a3;
+    --warn-bg: #2e2718;
+    --warn-line: #5c4a1f;
+    --warn-text: #e3c583;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.card + .card {
+  margin-top: 12px;
+}
+
+h1 {
+  margin: 0 0 2px;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+p {
+  margin: 0;
+}
+
+.sub {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+/* Класс товара: две буквы и подпись под ними. Крупно намеренно — это главный
+   и единственный ответ панели, всё остальное на экране его объясняет. */
+.verdict {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.verdict .abc-A { color: var(--a); }
+.verdict .abc-B { color: var(--b); }
+.verdict .abc-C { color: var(--c); }
+.verdict .xyz { color: var(--muted); font-size: 26px; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge.alarm {
+  background: var(--warn-bg);
+  border-color: var(--warn-line);
+  color: var(--warn-text);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.stat {
+  background: var(--surface-soft);
+  border-radius: 8px;
+  padding: 9px 10px;
+}
+
+.stat dt {
+  margin: 0 0 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.stat dd {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 620;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat dd small {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.share {
+  margin-top: 12px;
+}
+
+.share svg {
+  display: block;
+  width: 100%;
+  height: 6px;
+}
+
+/* Ширина полосы задаётся атрибутом SVG, а не свойством style: политика
+   безопасности содержимого этой страницы запрещает встроенные стили, и
+   геометрия фигуры — единственный способ нарисовать долю, не ослабляя её. */
+.share rect.track {
+  fill: var(--surface-soft);
+}
+
+.share rect.fill.abc-A { fill: var(--a); }
+.share rect.fill.abc-B { fill: var(--b); }
+.share rect.fill.abc-C { fill: var(--c); }
+
+.share p {
+  margin-top: 5px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+th,
+td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+th {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+td.num,
+th.num {
+  text-align: right;
+}
+
+td.key {
+  color: var(--muted);
+}
+
+td.code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.matrix td.cell {
+  text-align: center;
+  font-weight: 620;
+}
+
+.matrix td.zero {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.matrix th.corner {
+  color: var(--muted);
+}
+
+.notes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notes li {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
+  color: var(--warn-text);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.notes li + li {
+  margin-top: 6px;
+}
+
+.notes code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.foot {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.state.fail {
+  color: var(--warn-text);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: block;
+}
+
+.state.fail .why {
+  color: var(--muted);
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+[hidden] {
+  display: none !important;
+}
