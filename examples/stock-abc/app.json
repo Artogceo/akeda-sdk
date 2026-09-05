@@ -124,6 +124,21 @@
         "sends": ["akeda.slot.ready", "akeda.slot.resize", "akeda.slot.close"],
         "receives": ["akeda.slot.launch", "akeda.slot.theme"]
       }
+    },
+    {
+      "slot": "platform.context_action.v1",
+      "placements": ["stock.document.toolbar"],
+      "type": "action",
+      "url": "https://stock-abc.example.test/actions/document-classes",
+      "context": ["tenant_id", "installation_id", "module", "entity", "entity_id", "locale"],
+      "scopes": [],
+      "title": {
+        "ru": "Классы позиций документа",
+        "en": "Classes of the document rows"
+      },
+      "locales": ["ru", "en"],
+      "themeAware": true,
+      "keyboardAccessible": true
     }
   ],
 

@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3b4e5818e72cb98786a0f06776813205755d9e95e5752df061d59d58c0db6522).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a3e3b6127a35366107149251fc907a51b367bf2372bddd27c6782299b61707e).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -52,6 +52,47 @@ export interface AppFinanceDirectoryRef {
   /** Полное имя справочника: core.items или core.contacts */
   "directory_key": string;
   "id": UUID;
+}
+
+export interface AppReferenceItem {
+  "id": UUID;
+  /** Ссылка на запись в смысле SDK: её присылает и по ней адресуется приложение */
+  "code": string;
+  "label": string;
+  "parent_id"?: UUID;
+  /** Дополнительные поля записи в том виде, в каком их прислало приложение */
+  "attrs"?: { [key: string]: unknown };
+  "sort_order": number;
+  /** Погашенная запись остаётся разрешимой по ссылке и не предлагается в новых */
+  "is_active": boolean;
+}
+
+export interface AppReferenceItemPage {
+  "count": number;
+  "results": Array<AppReferenceItem>;
+}
+
+export interface AppReferenceUpsertInput {
+  "items": Array<AppReferenceUpsertItem>;
+}
+
+export interface AppReferenceUpsertItem {
+  /** Ключ идемпотентности: тот же код обновляет ту же запись */
+  "code": string;
+  /** Подпись для человека кабинета. Пустая заменяется кодом: строка без подписи в отчёте нечитаема */
+  "label"?: string;
+  "parent_id"?: UUID;
+  "attrs"?: { [key: string]: unknown };
+  "sort_order"?: number;
+  /** Пропущенное поле значит «запись жива»: молча гасить присланное было бы ловушкой */
+  "is_active"?: boolean;
+}
+
+export interface AppReferenceUpsertResult {
+  /** Сколько записей заведено впервые */
+  "created": number;
+  /** Сколько существующих кодов обновлено */
+  "updated": number;
 }
 
 export interface AppRuntimeConfig {
@@ -1760,6 +1801,12 @@ export interface ChatEnsureDirectResult {
   "created": boolean;
 }
 
+export interface ChatEntityConversation {
+  "conversation_id": UUID;
+  "title": string;
+  "deep_link": string;
+}
+
 export interface ChatFolder {
   "id": UUID;
   "name": string;
@@ -1924,6 +1971,10 @@ export interface ChatMobileDeviceRegistration {
   "preview"?: boolean;
   /** Звук уведомления. Поле отсутствует — со звуком. */
   "sound"?: boolean;
+  /** Совместимый псевдоним preview. Если любое из двух полей false, текст скрыт. */
+  "push_preview"?: boolean;
+  /** Совместимый псевдоним sound. Если любое из двух полей false, звук выключен. */
+  "push_sound"?: boolean;
 }
 
 export interface ChatMobileDeviceRegistrationState {
@@ -1945,6 +1996,9 @@ export interface ChatNotificationModeResult {
 
 export interface ChatPeoplePage {
   "items": Array<ChatPerson>;
+  "has_more": boolean;
+  /** Присутствует только когда есть следующая страница коллег */
+  "next_offset"?: number;
 }
 
 export interface ChatPerson {
@@ -1952,6 +2006,19 @@ export interface ChatPerson {
   "display_name": string;
   "avatar_url": string;
   "is_self": boolean;
+}
+
+export interface ChatPresenceInput {
+  "typing"?: boolean;
+}
+
+export interface ChatPresencePage {
+  "items": Array<ChatPresencePageItemsItem>;
+}
+
+export interface ChatPresencePageItemsItem {
+  "user_id": number;
+  "typing": boolean;
 }
 
 export interface ChatReactionResult {
@@ -2155,6 +2222,31 @@ export interface CoreCabinetPreferences {
   "date_format": string;
   "number_format": string;
 }
+
+export interface CoreChange {
+  /** Имя сущности из реестра ленты (core.contact) */
+  "entity": string;
+  /** Идентификатор объекта в его собственном API */
+  "id": string;
+  "op": CoreChangeOp;
+  /** Момент изменения. Для человека и для журнала; порядок ленты задаёт не он, а фиксация транзакции, поэтому фильтровать по нему на своей стороне нельзя */
+  "changed_at": string;
+}
+
+export interface CoreChangeFeedPage {
+  /** Сущности, которые эта лента обслуживает предъявителю */
+  "entities": Array<string>;
+  /** Число строк, а не прогонов */
+  "count": number;
+  "limit": number;
+  /** «В этом прогоне есть ещё». Ложь закрывает прогон, а не кабинет: следующий запрос увидит случившееся после */
+  "has_more": boolean;
+  /** Непрозрачная строка. Возвращается как есть; разбирать и собирать её нельзя */
+  "cursor": string;
+  "changes": Array<CoreChange>;
+}
+
+export type CoreChangeOp = "upsert" | "delete";
 
 export interface CoreConflictingRegistrar {
   "id": UUID;
@@ -3539,6 +3631,14 @@ export interface CoreUIState {
   "screens": { [key: string]: unknown };
 }
 
+/** Окно, в котором обращения были, а записей о них нет: очередь писателя переполнилась либо база кабинета не приняла пачку. Признание в НАШЕЙ аварии, и печатается оно обеим сторонам — страница без него читалась бы как полная история. Кабинета в окне нет ни у одной из дверей. */
+export interface CredentialRequestGap {
+  "started_at": string;
+  "ended_at": string;
+  /** Сколько обращений потеряно в этом окне */
+  "dropped": number;
+}
+
 export interface Customer {
   "id": UUID;
   "name": string;
@@ -3680,6 +3780,36 @@ export interface CycleUpdate {
   "is_archived"?: boolean;
 }
 
+/**
+ * То же обращение глазами издателя. Правило отбора одно: издателю видно только то, что его собственный сервер уже держал в руках — он сам сформировал этот запрос и сам получил этот ответ.
+ * 
+ * Чего нет: кабинета ни одним полем, идентификатора строки журнала, идентификатора выданного токена (нить в журнал установки, который принадлежит кабинету) и обращений кабинетными ключами.
+ */
+export interface DeveloperAPICall {
+  "installation_id": UUID;
+  "method": string;
+  /** Шаблон маршрута, который издатель же и звал */
+  "route": string;
+  "entity": string;
+  "shape": "collection" | "record";
+  "rows"?: number;
+  "bytes": number;
+  "status": number;
+  /** Машинный код исхода, тот же, что уехал в теле отказа: одно событие не называется в двух местах разными словами */
+  "outcome": string;
+  /** Сколько отвечали МЫ. Своё время издатель видит с сетью, наше — без */
+  "duration_ms": number;
+  "occurred_at": string;
+}
+
+export interface DeveloperAPICallPage {
+  "calls": Array<DeveloperAPICall>;
+  "gaps": Array<CredentialRequestGap>;
+  "limit": number;
+  "offset": number;
+  "has_more": boolean;
+}
+
 export interface DeveloperAccepted {
   /** Единственное значение: исход не различается снаружи ни телом, ни кодом */
   "status": "accepted";
@@ -3705,6 +3835,85 @@ export interface DeveloperAccount {
 }
 
 export type DeveloperAccountStatus = "pending" | "active" | "suspended" | "revoked";
+
+export interface DeveloperAppBlockList {
+  "blocks": Array<DeveloperManifestBlock>;
+}
+
+export interface DeveloperAppInput {
+  /** Ключ приложения: строчные латинские буквы, цифры и дефисы. Издатель приезжает из владельца пространства имён и в теле не называется */
+  "key": string;
+  /** Название, которое увидит администратор кабинета на экране согласия */
+  "title"?: string;
+}
+
+export interface DeveloperAppKey {
+  "id": UUID;
+  "app_id": UUID;
+  /** Человеческое имя ключа: вежливость, а не учётные данные */
+  "name": string;
+  /** Последние знаки значения. Не секрет: по ним ключ не восстанавливается, а без них список не отвечает на вопрос «какой из них отзывать» */
+  "hint": string;
+  "issued_at": string;
+  "issued_by"?: UUID;
+  "rotated_from_id"?: UUID;
+  "rotated_at"?: string;
+  /** Конец перекрытия. Пусто у текущего ключа: он живёт до собственной ротации или отзыва */
+  "expires_at"?: string;
+  "revoked_at"?: string;
+  "revoke_reason": string;
+  /** Когда этим ключом ходили в последний раз: единственный ответ на вопрос «можно ли уже отозвать вон тот» */
+  "last_used_at"?: string;
+}
+
+export interface DeveloperAppKeyInput {
+  /** Человеческое имя ключа для списка */
+  "name"?: string;
+}
+
+export interface DeveloperAppKeyPage {
+  "keys": Array<DeveloperAppKey>;
+}
+
+export interface DeveloperAppKeyRevocationInput {
+  /** Почему ключ погашен */
+  "reason"?: string;
+}
+
+export interface DeveloperAppKeyRotationInput {
+  /** Сколько часов доживает вытесненный ключ. Ноль — умолчание в сутки, а не «без перекрытия» */
+  "overlap_hours"?: number;
+}
+
+export interface DeveloperAppPage {
+  "apps": Array<PlatformApp>;
+}
+
+export interface DeveloperAppResult {
+  "app": PlatformApp;
+}
+
+export interface DeveloperAppVersionInput {
+  /** Номер версии */
+  "version": string;
+  /** Манифест версии целиком */
+  "manifest": { [key: string]: unknown };
+  /** Digest пакета: без него подмену артефакта не с чем сравнить */
+  "manifest_digest"?: string;
+  /** Что версия просит; одобряет кабинет при установке */
+  "requested_scopes"?: Array<string>;
+  /** Отправить версию на ревью вместо черновика. Опубликовать этим полем нельзя: публикация идёт через ворота */
+  "review"?: boolean;
+}
+
+export interface DeveloperAppVersionPage {
+  "app": PlatformApp;
+  "versions": Array<PlatformAppVersion>;
+}
+
+export interface DeveloperAppVersionResult {
+  "version": PlatformAppVersion;
+}
 
 export interface DeveloperApplication {
   "id": UUID;
@@ -3748,11 +3957,114 @@ export interface DeveloperApplicationResult {
 
 export type DeveloperApplicationStatus = "submitted" | "approved" | "rejected" | "withdrawn";
 
+export interface DeveloperDelivery {
+  "id": UUID;
+  "event_id": UUID;
+  "installation_id": UUID;
+  /** Тема подписки, объявленная манифестом самого издателя */
+  "topic": string;
+  "schema_version": number;
+  /** Когда произошёл факт, а не когда его отправили */
+  "occurred_at": string;
+  "status": "pending" | "delivered" | "failed" | "dead";
+  "attempts": number;
+  "next_attempt_at": string;
+  "delivered_at"?: string;
+  "dead_at"?: string;
+  /** Код ответа приёмника. Пусто означает, что ответа не было вовсе */
+  "last_status_code"?: number;
+  /** Адрес установки. Его называет издатель, а не кабинет, поэтому данных кабинета в нём нет по определению */
+  "endpoint_url": string;
+  /** Каким ключом подписано. Не секрет: по нему приёмник выбирает, чем проверять, во время перекрытия */
+  "signature_key_id": string;
+  "replay_of_id"?: UUID;
+}
+
+export interface DeveloperDeliveryPage {
+  "deliveries": Array<DeveloperDelivery>;
+  /** Глубина, которая реально применилась */
+  "limit": number;
+  "offset": number;
+  /** Признак, а не общее число: счёт по журналу — полный проход по истории кабинета ради числа, которое никому не нужно точным */
+  "has_more": boolean;
+}
+
+export interface DeveloperGateCheck {
+  /** Какое ворот */
+  "gate": "publisher" | "scopes" | "sensitivity" | "endpoints" | "egress" | "manifest" | "scope_review" | "blocklist";
+  /** `awaiting_review` — ход за персоналом платформы: результат внешнего ворота либо не приносили вовсе, либо приносили для другого документа. Своё состояние, а не `failed`: чинить издателю там нечего, и общий ответ отправил бы его править исправный манифест. */
+  "status": "passed" | "failed" | "awaiting_review";
+  /** Результат приносит не сервер — по нему видно, чинится ли отказ правкой манифеста */
+  "external": boolean;
+  /** Машинный код отказа: текст на двух языках собирает портал */
+  "reason"?: string;
+  /** Что именно не подошло: имена прав, адреса, режим, отпечаток. Всё это издатель подал сам */
+  "values"?: Array<string>;
+  /** Когда внешнее ворот смотрели в последний раз; у несмотренного его нет */
+  "checked_at"?: string;
+}
+
+export interface DeveloperInstallation {
+  "id": UUID;
+  /** Версия, на которой стоит установка */
+  "version": string;
+  "status": PlatformAppInstallationStatus;
+  /** Приёмник признан мёртвым, и данные кабинета встали. Самое важное поле для издателя */
+  "parked": boolean;
+  "parked_at"?: string;
+  "installed_at": string;
+  "updated_at": string;
+}
+
+export interface DeveloperInstallationPage {
+  "installations": Array<DeveloperInstallation>;
+}
+
+export interface DeveloperIssuedAppKey {
+  "key": DeveloperAppKey;
+  /** Значение ключа. Показывается ОДИН РАЗ и больше никогда: в хранилище лежит хеш, и второго способа его узнать не существует */
+  "secret": string;
+}
+
+/** Тот же запрет, что видит оператор, без одного поля: идентификатора сотрудника платформы, принявшего решение. Внешний контур — не место для наших внутренних идентификаторов, а имя решавшего превращает решение платформы в решение конкретного лица, с которым можно «договориться». */
+export interface DeveloperManifestBlock {
+  /** sha256 компактной формы документа — тот же отпечаток, который печатает отчёт готовности версии */
+  "manifest_fingerprint": string;
+  /** Где документ впервые увидели. Улика, а не предмет запрета: тот же отпечаток у другого приложения закрыт этим же запретом */
+  "publisher": string;
+  "app_key": string;
+  "reason_code": "malicious" | "vulnerable" | "data_exfiltration" | "supply_chain" | "publisher_request";
+  /** Объяснение словами. Наш текст, а не эхо чьих-то слов: его же читает кабинет в карточке уведомления */
+  "summary": string;
+  /** Внешний https-адрес разбора: CVE, бюллетень, тикет */
+  "advisory"?: string;
+  "blocked_at": string;
+}
+
 export interface DeveloperProfile {
   "account": DeveloperAccount;
   "application"?: DeveloperApplication;
   /** Издатели, которыми распоряжается аккаунт */
   "publishers": Array<PlatformAppPublisher>;
+}
+
+export interface DeveloperPublicationReport {
+  "version": string;
+  /** Состояние версии: черновик, на ревью, опубликована */
+  "status": string;
+  /** Канал, объявленный манифестом этой версии */
+  "channel": string;
+  /** Состояние СВОЕГО издателя: оно объясняет ворот publisher */
+  "publisher_status": string;
+  /** Отпечаток текущего манифеста: им запрет называет предмет, и по нему видно, что документ поменялся после проверки */
+  "manifest_fingerprint": string;
+  /** Все обязательные ворота пройдены. Отдельным полем: выводить готовность из списка — ошибиться в пользу разрешения */
+  "ready": boolean;
+  "checks": Array<DeveloperGateCheck>;
+}
+
+export interface DeveloperPublicationResult {
+  "publication": DeveloperPublicationReport;
 }
 
 export interface DeveloperRegistrationInput {
@@ -3874,6 +4186,195 @@ export interface Error {
 
 export interface FileUpload {
   "file": string;
+}
+
+export interface FilesAccessInput {
+  "restricted"?: boolean;
+  "break_inheritance"?: boolean;
+  "grants": Array<FilesGrant>;
+}
+
+export interface FilesAccessPolicy {
+  "folder_id": UUID;
+  "root_id": UUID;
+  "is_root": boolean;
+  "restricted": boolean;
+  "break_inheritance": boolean;
+  "grants": Array<FilesGrant>;
+  /** Права, действующие сверху по дереву */
+  "inherited": Array<FilesGrant>;
+}
+
+export interface FilesBreadcrumb {
+  "id": UUID;
+  "name": string;
+}
+
+export interface FilesEntry {
+  "kind": "folder" | "file";
+  "folder"?: FilesFolder;
+  "file"?: FilesFile;
+}
+
+export interface FilesFile {
+  "id": UUID;
+  "folder_id": UUID;
+  "root_id": UUID;
+  "name": string;
+  "extension": string;
+  "mime_type": string;
+  "size_bytes": number;
+  "version_no": number;
+  "version_id"?: UUID;
+  "owner_id": number;
+  "created_by": number;
+  "updated_by"?: number;
+  "trashed_at"?: string;
+  "created_at": string;
+  "updated_at": string;
+  /** skipped — содержимое крупнее порога проверки: оно выдаётся, но честно помечено непроверенным */
+  "scan_status": "pending" | "scanning" | "clean" | "infected" | "skipped" | "error";
+  "scan_verdict"?: string;
+  "preview_status": "pending" | "processing" | "ready" | "unsupported" | "error";
+  "has_thumbnail": boolean;
+  "is_favorite": boolean;
+  "folder_name"?: string;
+  "path"?: Array<FilesBreadcrumb>;
+}
+
+export interface FilesFolder {
+  "id": UUID;
+  "parent_id"?: UUID;
+  "root_id": UUID;
+  "depth": number;
+  "name": string;
+  /** Личное хранилище принадлежит своему владельцу целиком */
+  "kind": "shared" | "personal";
+  "icon": string;
+  "color": string;
+  "description": string;
+  /** Закрытое хранилище видно только участникам его списка */
+  "is_restricted": boolean;
+  /** Права хранилища на эту папку не действуют */
+  "break_inheritance": boolean;
+  "owner_id": number;
+  "created_by": number;
+  "trashed_at"?: string;
+  "created_at": string;
+  "updated_at": string;
+  "can_read": boolean;
+  "can_write": boolean;
+  /** Право выпускать внешние ссылки; из открытости хранилища не следует */
+  "can_share": boolean;
+  "can_manage": boolean;
+  "is_favorite": boolean;
+  "folder_count": number;
+  "file_count": number;
+  "size_bytes": number;
+}
+
+export interface FilesFolderInput {
+  "parent_id"?: UUID;
+  "name": string;
+  "icon"?: string;
+  "color"?: string;
+  "description"?: string;
+  "kind"?: "shared";
+  "is_restricted"?: boolean;
+}
+
+export interface FilesGrant {
+  "id"?: UUID;
+  "principal_type": "everyone" | "user" | "role" | "department";
+  "principal_key": string;
+  "can_read": boolean;
+  "can_write": boolean;
+  "can_share": boolean;
+  "can_manage": boolean;
+}
+
+export interface FilesListing {
+  "folder": FilesFolder;
+  "path": Array<FilesBreadcrumb>;
+  "entries": Array<FilesEntry>;
+  "total": number;
+}
+
+export interface FilesSearchHit {
+  "file": FilesFile;
+  "snippet"?: string;
+  "matched": "name" | "content";
+}
+
+export interface FilesShare {
+  "id": UUID;
+  "folder_id"?: UUID;
+  "file_id"?: UUID;
+  "root_id": UUID;
+  /** upload — приёмник файлов: получатель кладёт своё и не видит чужого */
+  "mode": "view" | "download" | "upload";
+  "title": string;
+  "has_password": boolean;
+  "expires_at"?: string;
+  "max_downloads"?: number;
+  "download_count": number;
+  "last_access_at"?: string;
+  "revoked_at"?: string;
+  "created_by": number;
+  "created_at": string;
+  "target_name"?: string;
+  /** Показывается один раз при создании; в базе лежит только его хэш */
+  "token"?: string;
+  "url"?: string;
+}
+
+export interface FilesShareInput {
+  "folder_id"?: UUID;
+  "file_id"?: UUID;
+  "mode": "view" | "download" | "upload";
+  "title"?: string;
+  "password"?: string;
+  /** Момент, после которого ссылка перестаёт открываться */
+  "expires_at"?: string | null;
+  "max_downloads"?: number | null;
+}
+
+export interface FilesUpload {
+  "id": UUID;
+  "folder_id": UUID;
+  "root_id": UUID;
+  "file_id"?: UUID;
+  "name": string;
+  "mime_type": string;
+  "size_bytes": number;
+  "part_bytes": number;
+  "part_count": number;
+  "status": "pending" | "uploading" | "completed" | "failed" | "aborted";
+  "error_code"?: string;
+  "expires_at": string;
+  "created_at": string;
+  /** Уже принятые части; на них держится докачка */
+  "uploaded"?: Array<FilesUploadedPart>;
+  /** Подписанные адреса частей для прямой записи в объектное хранилище */
+  "direct_urls"?: { [key: string]: string };
+}
+
+export interface FilesUploadInput {
+  "folder_id": UUID;
+  /** Задан при загрузке новой версии существующего файла */
+  "file_id"?: UUID;
+  "name": string;
+  /** Путь файла внутри загружаемой папки; недостающие папки создаются по нему */
+  "relative_path"?: string;
+  "mime_type"?: string;
+  "size_bytes": number;
+  "comment"?: string;
+}
+
+export interface FilesUploadedPart {
+  "number": number;
+  "etag": string;
+  "size": number;
 }
 
 export interface FinanceAccount {
@@ -7684,8 +8185,73 @@ export interface PlatformApp {
   "updated_at": string;
 }
 
-export interface PlatformAppBlockList {
-  "blocks": Array<PlatformAppManifestBlock>;
+export interface PlatformAppConfigDeclaration {
+  "fields": Array<PlatformAppConfigField>;
+}
+
+export interface PlatformAppConfigField {
+  /** Имя настройки; поля configSchema и ключи secrets[] живут в одном пространстве имён */
+  "key": string;
+  /** Тип значения; объекта и массива у настройки не бывает — её заполняет человек в форме */
+  "type": "string" | "integer" | "number" | "boolean";
+  /** Без этого поля приложение не работает */
+  "required": boolean;
+  /** Значение не возвращается владельцу никогда; объявляется только списком secrets[] манифеста */
+  "secret": boolean;
+  /** Откуда берётся значение секрета; у обычной настройки отсутствует */
+  "provider"?: "user_input" | "oauth" | "certificate";
+  "title"?: PlatformAppConfigText;
+  "help"?: PlatformAppConfigText;
+  /** Замкнутый список допустимых значений строкового поля */
+  "enum"?: Array<string>;
+  /** Значение, предложенное приложением. Платформа его не хранит: умолчание принадлежит приложению и меняется вместе с версией */
+  "default"?: unknown;
+  "min_length"?: number;
+  "max_length"?: number;
+  /** Шаблон строки из манифеста; некомпилируемый шаблон не применяется, а не отклоняет ввод */
+  "pattern"?: string;
+  "minimum"?: number;
+  "maximum"?: number;
+  /** Как часто издатель рекомендует менять секрет; платформа его не меняет сама */
+  "rotation_days"?: number;
+}
+
+export interface PlatformAppConfigSummary {
+  "declaration": PlatformAppConfigDeclaration;
+  "values": Array<PlatformAppConfigValue>;
+  /** Обязательные поля без значения. Приложение с непустым списком не сломано — оно не настроено */
+  "missing": Array<string>;
+}
+
+/** Подпись поля на двух языках, как её написал разработчик приложения. Текст чужой: Akeda его не переводит, но показывает на своём экране, поэтому манифест требует обе половины. */
+export interface PlatformAppConfigText {
+  "ru"?: string;
+  "en"?: string;
+}
+
+export interface PlatformAppConfigValue {
+  "key": string;
+  /** Как значение ХРАНИТСЯ. Истина означает, что value пуст и пустым останется */
+  "secret": boolean;
+  /** Просит ли эту настройку версия, которая стоит сейчас; ложь означает осиротевшее значение */
+  "declared": boolean;
+  /** Считает ли сегодняшнее объявление это имя секретом; расхождение с secret означает, что приложение передумало */
+  "declared_secret": boolean;
+  /** Значение задано */
+  "set": boolean;
+  /** Значение ОБЫЧНОЙ настройки. У секрета отсутствует всегда */
+  "value"?: string;
+  "updated_by"?: number;
+  "updated_at"?: string;
+}
+
+export interface PlatformAppConfigValueInput {
+  /** Значение как есть. По краям не обрезается: пробел на конце пароля — часть пароля */
+  "value": string;
+}
+
+export interface PlatformAppConfigValueResult {
+  "value": PlatformAppConfigValue;
 }
 
 export interface PlatformAppConsentDiff {
@@ -7708,12 +8274,14 @@ export interface PlatformAppConsentDiff {
 
 export interface PlatformAppConsentRequired {
   "detail": string;
-  /** platform.app_consent_required, когда обновление остановлено новым обязательным правом */
+  /** platform.app_consent_required, когда обновление остановлено новым обязательным правом либо новым внешним адресом */
   "code"?: string;
   /** Версия, которая просит */
   "version"?: string;
   /** Права, которых кабинет не одобрял; только они, чтобы решающее не утонуло в списке */
   "scopes"?: Array<string>;
+  /** Внешние адреса, которых не было у установленной версии. Останавливают наравне с обязательным правом: право открывает доступ к данным, адрес называет того, кому приложение передаст их дальше. Перечислены отдельно от прав, потому что чинятся по-разному: право включают галочкой, адрес снимают из манифеста */
+  "destinations"?: Array<string>;
 }
 
 export interface PlatformAppDataPolicy {
@@ -7723,6 +8291,51 @@ export interface PlatformAppDataPolicy {
   "regions"?: Array<string>;
   "retention_days": number;
   "uninstall"?: "purge" | "export_then_purge" | "archive";
+}
+
+export interface PlatformAppDelivery {
+  "id": UUID;
+  "event_id": UUID;
+  "installation_id": UUID;
+  /** Имя факта в формате модуль.сущность.факт */
+  "type": string;
+  /** Версия формы события */
+  "schema_version": number;
+  /** Тема так, как её объявляет манифест приложения: имя факта и версия схемы одной строкой */
+  "topic": string;
+  /** Вид объекта, о котором событие */
+  "aggregate_type": string;
+  /** Идентификатор объекта; содержимого объекта в журнале нет */
+  "aggregate_id": string;
+  /** Когда произошёл факт, а не когда его отправили */
+  "occurred_at": string;
+  /** Сквозная трассировка Akeda: по ней инцидент расширения сводится с операцией */
+  "trace_id": string;
+  "status": "pending" | "delivered" | "failed" | "dead";
+  /** Сколько попыток сделано */
+  "attempts": number;
+  /** Когда наряд созреет; у завершённого осталось от последней попытки и решением уже не является */
+  "next_attempt_at": string;
+  /** Аренда воркера: значение в будущем означает, что попытка идёт прямо сейчас */
+  "claimed_until"?: string;
+  "delivered_at"?: string;
+  /** Момент мёртвого письма; DLQ — состояние наряда, а не отдельное хранилище */
+  "dead_at"?: string;
+  /** Код ответа приёмника; отсутствие означает, что HTTP-ответа не было вовсе — сеть, дедлайн или отказ до отправки */
+  "last_status_code"?: number;
+  /** Последняя причина: либо отказ Akeda, либо обрезанный ответ приёмника. Заполненный last_status_code означает, что хвост причины — слова приёмника. Текст приёмника недоверен, машинно не разбирается, и фильтра по нему у операции нет */
+  "last_error": string;
+  /** Куда уехала попытка. Снимок на её момент: установка сменит адрес, а журнал остаётся доказательством */
+  "endpoint_url": string;
+  /** Чем было подписано. Идентификатор ключа, а не его значение: значение подписи не сохраняется вовсе */
+  "signature_key_id": string;
+  "replay_of_id"?: UUID;
+  /** Кто потребовал повтор */
+  "replay_actor"?: string;
+  /** Зачем потребовали повтор */
+  "replay_reason"?: string;
+  "created_at": string;
+  "updated_at": string;
 }
 
 /** Сводка доставки событий установке. Только числа, которые считает Akeda: ни тела события, ни ответа приёмника здесь нет и быть не может — текст приёмника недоверен, а сводку читает кабинетный экран. */
@@ -7744,6 +8357,52 @@ export interface PlatformAppDeliveryHealth {
   "window_failures": number;
   /** Проекция парковки в базе кабинета: очередь проходит мимо этой установки. Правда о парковке — parked_at самой установки */
   "paused_at"?: string;
+}
+
+export interface PlatformAppDeliveryPage {
+  "deliveries": Array<PlatformAppDelivery>;
+  /** Применённая глубина выборки, а не запрошенная */
+  "limit": number;
+  /** С какого места отдана страница */
+  "offset": number;
+  /** За страницей есть ещё записи. Признак, а не общее число: счёт по журналу — полный проход по истории кабинета */
+  "has_more": boolean;
+  "health"?: PlatformAppDeliveryHealth;
+}
+
+/** Отбор внутри установки. Хотя бы один из delivery_ids, event_id или пары aggregate_type и aggregate_id обязателен; названные отборы складываются по И */
+export interface PlatformAppDeliveryReplayInput {
+  /** Конкретные наряды журнала — самый частый повтор */
+  "delivery_ids"?: Array<UUID>;
+  "event_id"?: UUID;
+  /** Вид объекта; без aggregate_id отбором не является */
+  "aggregate_type"?: string;
+  /** Идентификатор объекта; без aggregate_type отбором не является */
+  "aggregate_id"?: string;
+  /** Какие наряды переигрывать. Пусто — только мёртвые письма. Живой наряд не переигрывается: он уедет сам */
+  "statuses"?: Array<"delivered" | "dead">;
+  /** Потолок одного вызова — столько нарядов человек в состоянии посмотреть после того, как повтор отработал. Ноль и отсутствие означают умолчание, значение сверх потолка зажимается до него */
+  "limit"?: number;
+  /** Зачем переигрываем. Уезжает в журнал доставки рядом с актором */
+  "reason"?: string;
+}
+
+export interface PlatformAppDeliveryReplayResult {
+  "deliveries": Array<PlatformAppReplayedDelivery>;
+  /** Сколько нарядов заведено. Ноль законен: переигрывать было нечего либо всё найденное уже живо */
+  "replayed": number;
+}
+
+/** Разница ВНЕШНИХ АДРЕСОВ между установленной и целевой версией. Отдельно от разницы прав: у адресов нет отдельного одобренного кабинетом списка — их одобряют вместе с версией, и что одобрено, записано в манифесте установленной */
+export interface PlatformAppEgressDiff {
+  /** Адреса целевой версии */
+  "requested": Array<string>;
+  /** Адреса, которых у установленной версии не было; ровно они требуют нового согласия — кабинет их не видел */
+  "new": Array<string>;
+  /** Адреса, которые отпадают; сужение согласия не требует */
+  "dropped": Array<string>;
+  /** Адреса, которые остаются как были */
+  "kept": Array<string>;
 }
 
 export interface PlatformAppHealthCheck {
@@ -7879,6 +8538,13 @@ export interface PlatformAppReasonInput {
   "reason"?: string;
 }
 
+export interface PlatformAppReplayedDelivery {
+  "id": UUID;
+  "replay_of_id": UUID;
+  "event_id": UUID;
+  "installation_id": UUID;
+}
+
 export interface PlatformAppRollbackResult {
   "installation": PlatformAppInstallation;
   "from": PlatformAppVersion;
@@ -7931,6 +8597,7 @@ export interface PlatformAppUpdateResult {
   "from": PlatformAppVersion;
   "to": PlatformAppVersion;
   "diff": PlatformAppConsentDiff;
+  "egress": PlatformAppEgressDiff;
   /** Обновление прошло по новому согласию, а не по прежнему */
   "consented": boolean;
   "health"?: PlatformAppHealthCheck;
@@ -8317,6 +8984,19 @@ export interface SettingsAppCatalogEntry {
   "installed_version"?: SettingsAppVersion;
 }
 
+/** Один внешний получатель данных кабинета: куда, зачем и что именно туда уходит. Ответ «приложение ходит наружу» не является ни одним из трёх */
+export interface SettingsAppConsentEgress {
+  /** Имя хоста целиком и точно; совпадение точное, поддомены не входят */
+  "host": string;
+  "scheme": "https" | "http";
+  /** Канал открытый: данные читает всякий по дороге, и одобренный адрес перестаёт быть единственным получателем */
+  "insecure": boolean;
+  "insecure_reason"?: SettingsAppLocalizedText;
+  "purpose": SettingsAppLocalizedText;
+  /** Категории политики данных, которые уезжают по этому адресу; пусто означает «только запрашиваю» */
+  "sends": Array<string>;
+}
+
 export interface SettingsAppConsentPermission {
   "scope": string;
   /** Без этого права приложение не работает; необъяснённое манифестом право считается обязательным */
@@ -8349,6 +9029,7 @@ export interface SettingsAppConsentPreview {
   "installation"?: PlatformAppInstallation;
   "current_version"?: SettingsAppVersion;
   "diff": PlatformAppConsentDiff;
+  "egress": PlatformAppEgressDiff;
   "data_policy": PlatformAppDataPolicy;
   "publisher": SettingsAppPublisherCard;
   "sheet": SettingsAppConsentSheet;
@@ -8374,6 +9055,12 @@ export interface SettingsAppConsentSheet {
   "person_facts": Array<"actor_subject" | "locale" | "theme">;
   "data_policy": PlatformAppDataPolicy;
   "support": SettingsAppConsentSupport;
+  /** Внешние получатели данных кабинета поимённо */
+  "egress": Array<SettingsAppConsentEgress>;
+  /** Издатель ответил на вопрос вообще. Пустой список — это ОТВЕТ («никуда»), молчание — нет, и подавать молчание как «никуда» значило бы придумать обещание за издателя */
+  "egress_declared": boolean;
+  /** Список исполняет платформа, а не только обещает издатель. У режима managed рантайм держит контейнер без маршрута наружу и пускает ровно перечисленное; у hosted приложение живёт на чужой инфраструктуре, и проверить обещание платформа не может ничем */
+  "egress_enforced": boolean;
 }
 
 export interface SettingsAppConsentSlot {
@@ -8417,6 +9104,20 @@ export interface SettingsAppDeclaredSlot {
   "bridge_receives": Array<string>;
 }
 
+export interface SettingsAppExposureCall {
+  /** Сущность, вычисленная из шаблона маршрута: core.contacts, app.config.lease */
+  "entity": string;
+  /** Назвал ли предъявитель конкретную запись в адресе (record) или обратился к выборке (collection). Это НЕ «одна строка против многих»: сколько строк унесли, говорит rows. Выборка с фильтром, вернувшая одну строку, остаётся выборкой. */
+  "shape": "collection" | "record";
+  /** Сколько обращений к этому предмету */
+  "calls": number;
+  /** Сколько строк унесли всего там, где число называлось. Пусто означает «ни одно обращение числа не назвало», а не ноль */
+  "rows"?: number;
+  /** Объём ответов. Единственный измеритель там, где строк не назвали */
+  "bytes": number;
+  "last_at": string;
+}
+
 export interface SettingsAppExposureReport {
   "installation_id": string;
   "app"?: string;
@@ -8442,7 +9143,19 @@ export interface SettingsAppExposureReport {
   "delivery_window_failures"?: number;
   /** Куда уезжали события. Адрес называет издатель, данных кабинета в нём нет по определению */
   "delivery_endpoint_url"?: string;
-  /** Чего отчёт назвать не может. api_calls — какие операции расширение вызывало своим токеном: есть момент предъявления, нет предмета. event_bodies — что лежало в телах уехавших событий: тела в журнале доставки нет намеренно. delivery_summary — сводку доставки не спросили или она не ответила; это пропуск, а не нули, потому что «мёртвых писем ноль» читается как «всё доезжало». Первые две позиции стоят в списке ВСЕГДА: непроговорённый пропуск читается как хорошая новость. */
+  /**
+   * ЧТО расширение читало и писало своим токеном, свёрнутое по предмету. Собирается из журнала обращений по учётным данным.
+   * 
+   * Предмет — сущность и форма, а не перечень прочитанных строк. Идентификаторы строк не хранятся нигде: журнал стал бы теневой копией базы, читаемой по оси платформы, мимо видимости записей. Радиус поражения отчёт поэтому даёт ВЕРХНЕЙ ГРАНИЦЕЙ: «сущность core.contacts, 12 выборок, 4200 строк» означает «считайте скомпрометированными всех контрагентов в пределах одобренных областей». Для решения «что перевыпустить и кого предупредить» нужна именно она.
+   * 
+   * Пустой список означает «оно ничего не звало» — настоящий ответ, а не молчание; «мы не знаем» говорится позицией api_calls в unknown.
+   */
+  "api_calls": Array<SettingsAppExposureCall>;
+  /**
+   * Чего отчёт назвать не может. event_bodies — что лежало в телах уехавших событий: тела в журнале доставки нет намеренно, и эта позиция стоит в списке ВСЕГДА, потому что закрыта устройством системы, а не обстоятельствами. api_calls — журнал обращений не ответил: его нет в этой сборке, его база не отозвалась либо в его истории есть окно потери; рядом с непустым api_calls эта позиция означает «свод неполон». delivery_summary — сводку доставки не спросили или она не ответила; это пропуск, а не нули, потому что «мёртвых писем ноль» читается как «всё доезжало».
+   * 
+   * Непроговорённый пропуск читается как хорошая новость, поэтому список печатается всегда и пустым не бывает.
+   */
   "unknown": Array<"api_calls" | "event_bodies" | "delivery_summary">;
 }
 
@@ -8478,10 +9191,44 @@ export interface SettingsAppInstallation {
   /** Места на экране, которые занимает текущая версия установки: адрес рамки, источник, размер и мост сообщений. Оболочка строит рамку до запроса токена запуска, поэтому объявление приезжает вместе со списком установок */
   "slots"?: Array<SettingsAppDeclaredSlot>;
   "health": PlatformAppDeliveryHealth;
+  "update"?: SettingsAppInstallationUpdate;
+}
+
+/** Права и активность установки: что кабинет одобрил и чем из этого расширение пользовалось за окно. Уровня отдельных записей здесь нет и не будет — только верхняя граница по областям. */
+export interface SettingsAppInstallationActivity {
+  "installation_id": UUID;
+  /** ПРИМЕНЁННОЕ окно в сутках, а не запрошенное */
+  "window_days": number;
+  /** Начало окна. Отдаётся вместе с window_days: «0 обращений» без окна читается как «оно ничего не делало», а не как «за неделю ничего не делало» */
+  "since": string;
+  /** Одобренные области и области собственного контура, которыми пользовались; самые «горячие» первыми */
+  "scopes": Array<SettingsAppScopeActivity>;
+  /** Одобрено, но за окно не пригодилось ни разу. Отдельным списком, а не отбором на экране: это единственное, ради чего отчёт открывают дважды */
+  "unused_scopes": Array<string>;
+  /** Все обращения окна, включая неклассифицированные */
+  "total_calls": number;
+  /** Первое обращение в окне; отсутствует, если обращений не было */
+  "first_call_at"?: string;
+  /** Последнее обращение в окне; отсутствует, если обращений не было */
+  "last_call_at"?: string;
+  /** Обращения, которым правило достижимости не назвало области. Печатается всегда, даже нулём: молчаливо приписать их соседней области значило бы соврать в отчёте о правах */
+  "unclassified_calls": number;
+  /** В окне есть признанная потеря записи: журнал пишется мимо горячего пути, и на аварии строки теряются. Свод с дырой выглядит полным, поэтому дыра называется отдельно */
+  "has_gap": boolean;
 }
 
 export interface SettingsAppInstallationPage {
   "installations": Array<SettingsAppInstallation>;
+}
+
+/** Обновление, ждущее кабинет: самая свежая версия из updates и цена перехода на неё. Отдельным полем, а не выводом из updates: там перечислено всё, на что кабинет вправе перейти, включая версии СТАРШЕ установленной — откат тоже переход. Отсутствует, когда переходить не на что: свежих версий нет, издатель выключен, установка удалена. */
+export interface SettingsAppInstallationUpdate {
+  "version_id": UUID;
+  "version": string;
+  /** Перейти без нового согласия нельзя. Считается тем же правилом, что применит сама операция обновления: новое обязательное право либо расширившийся список внешних получателей данных. Иначе список обещал бы «жми обновить», а обновление отвечало бы 409 */
+  "requires_consent": boolean;
+  /** Почему нужно согласие, машинными кодами закрытого списка. Пусто, когда согласие не нужно. Кодами, а не фразой: фразу, собранную сервером, не перевести на второй язык, а перечень прав и адресов человек читает на экране согласия, где решает */
+  "reasons": Array<"scopes_required" | "egress_expanded">;
 }
 
 /** Текст на двух языках, как он объявлен в манифесте; пустая половина означает, что издатель её не заполнил */
@@ -8501,6 +9248,23 @@ export interface SettingsAppPublisherCard {
   "verified": boolean;
   /** Издатель не выключен платформой */
   "live": boolean;
+}
+
+/** Одна область в отчёте «права и активность» */
+export interface SettingsAppScopeActivity {
+  "scope": string;
+  /** Ярус чувствительности из таксономии платформы. У необъявленной области ложь — вместе с declared=false это означает «о ней не известно ничего, кроме имени», а не «она безобидна» */
+  "sensitive": boolean;
+  /** Платформа объявляла такую область */
+  "declared": boolean;
+  /** Область одобрена кабинетом. Ложь у собственных дверей установки (app:self, app:secrets, app:launch, finance:suggest): они есть у каждой установки и согласия не требуют, но обращения по ним — факт */
+  "granted": boolean;
+  /** Сколько обращений пришлось на область за окно */
+  "calls": number;
+  /** Когда областью пользовались в последний раз В ОКНЕ. Отсутствие означает «за окно ни разу», а не «никогда»: журнал живёт 90 суток, а окно бывает короче */
+  "last_used_at"?: string;
+  /** Обращения были. Отдельным полем, а не выводом из calls: читатель не должен выводить признак из числа и ошибаться в пользу разрешения */
+  "used": boolean;
 }
 
 /** Версия глазами кабинета: без манифеста целиком; лист согласия по версии отдаёт экран согласия */
@@ -10037,6 +10801,38 @@ export interface TemplateRunResult {
   "reason"?: string;
 }
 
+/** Одно обращение по машинному ключу глазами кабинета. Тела запроса, тела ответа, значения секрета, фактического пути и идентификаторов прочитанных строк здесь нет — и не потому, что кабинету не доверяют, а потому, что этих данных нет в самом журнале. */
+export interface TenantCredentialRequest {
+  "id": UUID;
+  /** Установка расширения или ключ кабинета. Человеческих сессий в этом журнале нет вовсе: у человека своё имя, своя роль и свой аудит */
+  "principal": "installation" | "api_key";
+  "installation_id"?: UUID;
+  "token_id"?: UUID;
+  "api_key_id"?: UUID;
+  "method": string;
+  /** ШАБЛОН маршрута, а не путь: путь несёт идентификаторы прочитанных строк, а строка запроса — значения фильтров */
+  "route": string;
+  /** Сущность, вычисленная из шаблона */
+  "entity": string;
+  "shape": "collection" | "record";
+  /** Сколько строк унёс ответ. Пусто означает «неизвестно», а не «ноль» */
+  "rows"?: number;
+  "bytes": number;
+  "status": number;
+  /** Машинный код исхода из закрытого списка: класс ответа либо названная причина отказа внешнего контура. Свободного текста в журнале нет ни одного поля */
+  "outcome": string;
+  "duration_ms": number;
+  "occurred_at": string;
+}
+
+export interface TenantCredentialRequestPage {
+  "requests": Array<TenantCredentialRequest>;
+  "gaps": Array<CredentialRequestGap>;
+  "limit": number;
+  "offset": number;
+  "has_more": boolean;
+}
+
 export type UUID = string;
 
 export interface WorkflowStatusUpdate {
@@ -10058,6 +10854,51 @@ export interface CoreSetBusinessActiveRequest {
 
 export interface CoreListBusinessOwnershipResponse {
   "results": Array<CoreOwnershipVersion>;
+}
+
+export interface FilesAccessCheckRequest {
+  "file_ids": Array<UUID>;
+}
+
+export interface FilesAccessCheckResponse {
+  "items": Array<FilesAccessCheckResponseItemsItem>;
+}
+
+export interface FilesAccessCheckResponseItemsItem {
+  "id": UUID;
+  "allowed": boolean;
+  /** Причина отказа. «Нет прав» может смениться, «нет файла» — окончательно. */
+  "reason"?: "forbidden" | "not_found";
+  "version_id"?: UUID;
+  "name"?: string;
+  "size_bytes"?: number;
+  "scan_status"?: string;
+}
+
+export interface FilesContentLinkResponse {
+  "url": string;
+  /** true — адрес ведёт прямо в хранилище; false — на этот API, с заголовком авторизации */
+  "direct": boolean;
+  "expires_at"?: string;
+  "name": string;
+  "mime_type": string;
+  "size_bytes"?: number;
+}
+
+export interface FilesListRootsResponse {
+  "roots": Array<FilesFolder>;
+}
+
+export interface FilesSearchResponse {
+  "results": Array<FilesSearchHit>;
+}
+
+export interface FilesListSharesResponse {
+  "shares": Array<FilesShare>;
+}
+
+export interface FilesPurgeTrashResponse {
+  "purged": number;
 }
 
 export interface FinanceListDividendAccessUsersResponse {

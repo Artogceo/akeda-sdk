@@ -126,3 +126,16 @@ jobs:
             /tmp/akeda conformance run examples/extension/target.json
       - name: Пример-манифест проходит линт формы
         run: go run ./cmd/akeda manifest lint examples/extension/app.json
+      # Живое расширение репозитория обязано проходить линт целиком — вместе с
+      # каталогом точек, слотов и мест. Оно единственное объявляет слоты, и без
+      # этого шага правило мест не проверялось бы вовсе ни на одном манифесте.
+      - name: Расширение stock-abc проходит линт по каталогу
+        run: go run ./cmd/akeda manifest lint examples/stock-abc/app.json
+      # Место, которого в каталоге нет, обязано ОТКЛОНЯТЬСЯ. Линтер, который
+      # всегда молчит, выглядит так же зелено, как правильный манифест.
+      - name: Несуществующее место отклоняется
+        run: |
+          python3 -c 'import json; m = json.load(open("examples/stock-abc/app.json")); m["ui"][1]["placements"] = ["crm.deal.sidebar"]; json.dump(m, open("/tmp/unknown-placement.json", "w"), ensure_ascii=False)'
+          if go run ./cmd/akeda manifest lint /tmp/unknown-placement.json; then
+            echo "линт принял место, которого нет в каталоге"; exit 1
+          fi

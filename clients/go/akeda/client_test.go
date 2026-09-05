@@ -13,6 +13,7 @@ import (
 
 	"github.com/Artogceo/akeda-sdk/clients/go/akeda"
 	"github.com/Artogceo/akeda-sdk/clients/go/akeda/generated"
+	"github.com/Artogceo/akeda-sdk/snapshot"
 )
 
 const testKey = "ak_0000000000000000000000000000000000000000000000000000000000000000"
@@ -298,21 +299,44 @@ func TestPaginationRefusesForeignSchemes(t *testing.T) {
 }
 
 func TestContractFactsMatchDocumentation(t *testing.T) {
-	if len(generated.Operations) != 770 {
-		t.Fatalf("операций %d, в снимке ожидается 770", len(generated.Operations))
+	// Числа берутся из описи снимка, а не из литерала: литерал устаревает на
+	// первом же пересъёме, и правят его тогда механически, не глядя, — то есть
+	// проверка перестаёт что-либо значить раньше, чем ломается. Опись же ловит
+	// то, ради чего проверка и стоит: типы, собранные не из этого снимка.
+	manifest, err := snapshot.ReadManifest()
+	if err != nil {
+		t.Fatalf("опись снимка: %v", err)
 	}
-	public := 0
+	if len(generated.Operations) != manifest.Contract.Operations.Total {
+		t.Fatalf("операций в типах %d, в описи снимка %d: типы собраны не из этого снимка",
+			len(generated.Operations), manifest.Contract.Operations.Total)
+	}
+	public, reachable := 0, 0
 	for _, operation := range generated.Operations {
 		if operation.Stage == "public" {
 			public++
 		}
+		if operation.Installation {
+			reachable++
+		}
 	}
-	if public != 30 {
-		t.Fatalf("операций стадии public %d, ожидалось 30", public)
+	if public != manifest.Contract.Operations.ByStage["public"] {
+		t.Fatalf("операций стадии public %d, в описи %d", public, manifest.Contract.Operations.ByStage["public"])
+	}
+	// Достижимость установкой — ось, которой у контракта раньше не было вовсе.
+	// Разъедется она между описью и типами — расширение узнает об этом по 401 у
+	// клиента, а не здесь.
+	if reachable != manifest.Contract.Operations.InstallationReachable {
+		t.Fatalf("достижимо установкой в типах %d, в описи %d",
+			reachable, manifest.Contract.Operations.InstallationReachable)
+	}
+	if public == 0 || reachable == 0 {
+		t.Fatalf("в снимке нет ни одной публичной (%d) или достижимой установкой (%d) операции", public, reachable)
 	}
 	want := []string{
 		"coreCreateContact", "coreCreateDocument", "coreCreateProduct",
-		"corePostDocument", "tasksCreateTask",
+		"corePostDocument", "financeCreateDividendDecision", "financeCreateSettlementDocument",
+		"stockCreateDocument", "stockCreatePurchaseOrder", "tasksCreateTask",
 	}
 	got := akeda.IdempotentOperations()
 	if strings.Join(got, ",") != strings.Join(want, ",") {

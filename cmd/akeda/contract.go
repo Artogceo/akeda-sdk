@@ -44,9 +44,44 @@ func commandContract(options globals, args []string) error {
 		return contractFind(options, args[1])
 	case "modules":
 		return contractModules(options)
+	case "reach":
+		return contractReach(options)
 	default:
 		return fmt.Errorf("неизвестная подкоманда contract %q", args[0])
 	}
+}
+
+// contractReach — что из контракта вообще доступно расширению.
+//
+// Первый вопрос партнёра после выдачи токена — «а это я могу?». Отвечать на
+// него перебором восьмисот операций руками нельзя, а угадывать по стадии и
+// праву — неверно: достижимость установкой ось отдельная, и операция открыта
+// токену `ai_…` ровно тогда, когда назвала installationToken в своём security.
+func contractReach(options globals) error {
+	manifest, err := snapshot.ReadManifest()
+	if err != nil {
+		return err
+	}
+	total := manifest.Contract.Operations.Total
+	reachable := manifest.Contract.Operations.InstallationReachable
+	if options.asJSON {
+		return printJSON(map[string]any{
+			"total":       total,
+			"reachable":   reachable,
+			"by_module":   manifest.Contract.Operations.InstallationByModule,
+			"credentials": "installation token ai_live_… / ai_test_…",
+		})
+	}
+	fmt.Printf("операций в контракте          %d\n", total)
+	fmt.Printf("достижимо токеном установки   %d\n", reachable)
+	fmt.Println()
+	for _, module := range sortedCounts(manifest.Contract.Operations.InstallationByModule) {
+		fmt.Printf("  %-14s %d\n", module.name, module.count)
+	}
+	fmt.Println()
+	fmt.Println("Модуля нет в списке — токену установки его операции закрыты целиком, каким бы")
+	fmt.Println("одобренным ни был scope. Проверить одну операцию: akeda contract op <id>.")
+	return nil
 }
 
 func contractSummary(options globals) error {
@@ -106,6 +141,13 @@ func contractOperation(options globals, operationID string) error {
 	fmt.Printf("  модуль        %s\n", operation.Module)
 	fmt.Printf("  стадия        %s\n", operation.Stage)
 	fmt.Printf("  право         %s\n", operation.Permission)
+	if operation.Installation {
+		fmt.Println("  установка     открыта токену ai_live_… / ai_test_…")
+	} else {
+		// Молчание здесь читалось бы как «можно»: расширение узнало бы правду
+		// по 401 в проде, а до того считало бы отказ своей ошибкой.
+		fmt.Println("  установка     ЗАКРЫТА: операция доступна только ключу кабинета или человеку")
+	}
 	if len(operation.PathParams) > 0 {
 		fmt.Printf("  путь          %s\n", strings.Join(operation.PathParams, ", "))
 	}

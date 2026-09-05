@@ -12,6 +12,14 @@
 скрипт его не читает НИКОГДА — и не просто «не читает», а падает, если ему
 подсунули путь к исходнику (см. refuse_source_contract).
 
+КАТАЛОГ ТОЧЕК, СЛОТОВ И МЕСТ — ЕДИНСТВЕННОЕ ИСКЛЮЧЕНИЕ, И ОНО НАЗВАНО ВСЛУХ.
+Машинного артефакта с каталогом Akeda наружу не публикует, а без него проверка
+манифеста знает про место только форму ключа и принимает `crm.deal.sidebar`,
+которого нет. Поэтому каталог собирается разбором объявлений модуля `platform`
+(scripts/gocatalog.py) — только имена и словари, которые платформа и так
+называет разработчику. Это не контракт и не его исходник: маршрутов, имён
+обработчиков и конфигурации в каталоге нет.
+
 Скрипт детерминирован и не хранит времени снятия. Метка времени сделала бы два
 прогона на одном входе разными файлами, то есть уничтожила бы единственное
 свойство, ради которого снимок вообще скриптуется: одинаковый вход — одинаковый
@@ -25,6 +33,10 @@ import hashlib
 import json
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+import gocatalog  # noqa: E402  — сосед по каталогу, а не пакет
 
 SNAPSHOT_VERSION = 1
 
@@ -54,6 +66,11 @@ COPIES: list[tuple[str, str]] = [
 # замыканием по $ref, а не переписывается руками.
 REFERENCE_DATA = "reference-data/v1/reference-data.schema.json"
 REFERENCE_PATH_PREFIX = "/api/v1/reference"
+
+# Производный артефакт: каталог точек расширения, слотов и именованных мест
+# интерфейса. Собирается разбором объявлений платформы, а не копированием файла,
+# — см. заголовок модуля и scripts/gocatalog.py.
+PLATFORM_CATALOG = "platform-catalog/v1/platform-catalog.json"
 
 MANIFEST_FILE = "SNAPSHOT.json"
 
@@ -109,7 +126,9 @@ def collect_contract_facts(contract: dict) -> dict:
     stages: dict[str, int] = {}
     audiences: dict[str, int] = {}
     modules: dict[str, int] = {}
+    reach_modules: dict[str, int] = {}
     total = 0
+    reachable = 0
     methods = ("get", "post", "put", "patch", "delete", "head", "options")
     for item in contract.get("paths", {}).values():
         for method, operation in item.items():
@@ -123,6 +142,15 @@ def collect_contract_facts(contract: dict) -> dict:
             audiences[audience] = audiences.get(audience, 0) + 1
             if module:
                 modules[module] = modules.get(module, 0) + 1
+            # Достижимость установкой — это НЕ область и не стадия, а отдельная
+            # ось: операция открыта токену `ai_…` ровно тогда, когда назвала
+            # installationToken в своём security. Считается здесь, потому что
+            # «какие операции вообще доступны приложению» — первый вопрос
+            # партнёра, и отвечать на него перебором 800 операций руками нельзя.
+            if any("installationToken" in scheme for scheme in operation.get("security") or []):
+                reachable += 1
+                if module:
+                    reach_modules[module] = reach_modules.get(module, 0) + 1
     return {
         "title": contract.get("info", {}).get("title", ""),
         "version": contract.get("info", {}).get("version", ""),
@@ -133,6 +161,8 @@ def collect_contract_facts(contract: dict) -> dict:
             "by_stage": dict(sorted(stages.items())),
             "by_audience": dict(sorted(audiences.items())),
             "by_module": dict(sorted(modules.items())),
+            "installation_reachable": reachable,
+            "installation_by_module": dict(sorted(reach_modules.items())),
         },
         "schemas": len(contract.get("components", {}).get("schemas", {})),
     }
@@ -287,6 +317,14 @@ def take(source: Path) -> dict[str, bytes]:
     bundle = build_reference_bundle(contract)
     audit_text(REFERENCE_DATA, bundle)
     produced[REFERENCE_DATA] = bundle
+
+    schema = json.loads(produced["extension-manifest/v1/manifest.schema.json"].decode("utf-8"))
+    try:
+        catalog = canonical_json(gocatalog.build(source, schema))
+    except gocatalog.CatalogError as failure:
+        raise SystemExit(f"каталог точек и мест: {failure}") from failure
+    audit_text(PLATFORM_CATALOG, catalog)
+    produced[PLATFORM_CATALOG] = catalog
 
     produced[MANIFEST_FILE] = snapshot_manifest(list(produced.items()), facts)
     return produced

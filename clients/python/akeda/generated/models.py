@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3b4e5818e72cb98786a0f06776813205755d9e95e5752df061d59d58c0db6522).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a3e3b6127a35366107149251fc907a51b367bf2372bddd27c6782299b61707e).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -14,6 +14,11 @@ __all__ = [
     "AppFinanceClassificationSuggestionInputCashflowItem",
     "AppFinanceClassificationSuggestionInputExplanation",
     "AppFinanceDirectoryRef",
+    "AppReferenceItem",
+    "AppReferenceItemPage",
+    "AppReferenceUpsertInput",
+    "AppReferenceUpsertItem",
+    "AppReferenceUpsertResult",
     "AppRuntimeConfig",
     "AppRuntimeConfigValue",
     "AppRuntimeInstallation",
@@ -183,6 +188,7 @@ __all__ = [
     "ChatEditMessage",
     "ChatEnsureDirect",
     "ChatEnsureDirectResult",
+    "ChatEntityConversation",
     "ChatFolder",
     "ChatFolderPage",
     "ChatForwardMessage",
@@ -210,6 +216,9 @@ __all__ = [
     "ChatNotificationModeResult",
     "ChatPeoplePage",
     "ChatPerson",
+    "ChatPresenceInput",
+    "ChatPresencePage",
+    "ChatPresencePageItemsItem",
     "ChatReactionResult",
     "ChatReceiptInput",
     "ChatReceiptState",
@@ -240,6 +249,9 @@ __all__ = [
     "CoreBusinessOwner",
     "CoreBusinessOwnerInput",
     "CoreCabinetPreferences",
+    "CoreChange",
+    "CoreChangeFeedPage",
+    "CoreChangeOp",
     "CoreConflictingRegistrar",
     "CoreContact",
     "CoreContactBulkPatch",
@@ -404,6 +416,7 @@ __all__ = [
     "CoreTrialBalanceRow",
     "CoreTrialBalanceTotals",
     "CoreUIState",
+    "CredentialRequestGap",
     "Customer",
     "CustomerCreate",
     "CustomerNeed",
@@ -418,14 +431,37 @@ __all__ = [
     "CyclePage",
     "CycleStatus",
     "CycleUpdate",
+    "DeveloperAPICall",
+    "DeveloperAPICallPage",
     "DeveloperAccepted",
     "DeveloperAccount",
     "DeveloperAccountStatus",
+    "DeveloperAppBlockList",
+    "DeveloperAppInput",
+    "DeveloperAppKey",
+    "DeveloperAppKeyInput",
+    "DeveloperAppKeyPage",
+    "DeveloperAppKeyRevocationInput",
+    "DeveloperAppKeyRotationInput",
+    "DeveloperAppPage",
+    "DeveloperAppResult",
+    "DeveloperAppVersionInput",
+    "DeveloperAppVersionPage",
+    "DeveloperAppVersionResult",
     "DeveloperApplication",
     "DeveloperApplicationInput",
     "DeveloperApplicationResult",
     "DeveloperApplicationStatus",
+    "DeveloperDelivery",
+    "DeveloperDeliveryPage",
+    "DeveloperGateCheck",
+    "DeveloperInstallation",
+    "DeveloperInstallationPage",
+    "DeveloperIssuedAppKey",
+    "DeveloperManifestBlock",
     "DeveloperProfile",
+    "DeveloperPublicationReport",
+    "DeveloperPublicationResult",
     "DeveloperRegistrationInput",
     "DeveloperSession",
     "DeveloperSessionInput",
@@ -443,6 +479,21 @@ __all__ = [
     "EmptyObject",
     "Error",
     "FileUpload",
+    "FilesAccessInput",
+    "FilesAccessPolicy",
+    "FilesBreadcrumb",
+    "FilesEntry",
+    "FilesFile",
+    "FilesFolder",
+    "FilesFolderInput",
+    "FilesGrant",
+    "FilesListing",
+    "FilesSearchHit",
+    "FilesShare",
+    "FilesShareInput",
+    "FilesUpload",
+    "FilesUploadInput",
+    "FilesUploadedPart",
     "FinanceAccount",
     "FinanceAccountCreate",
     "FinanceAccountPage",
@@ -795,11 +846,22 @@ __all__ = [
     "MilestoneUpdate",
     "OK",
     "PlatformApp",
-    "PlatformAppBlockList",
+    "PlatformAppConfigDeclaration",
+    "PlatformAppConfigField",
+    "PlatformAppConfigSummary",
+    "PlatformAppConfigText",
+    "PlatformAppConfigValue",
+    "PlatformAppConfigValueInput",
+    "PlatformAppConfigValueResult",
     "PlatformAppConsentDiff",
     "PlatformAppConsentRequired",
     "PlatformAppDataPolicy",
+    "PlatformAppDelivery",
     "PlatformAppDeliveryHealth",
+    "PlatformAppDeliveryPage",
+    "PlatformAppDeliveryReplayInput",
+    "PlatformAppDeliveryReplayResult",
+    "PlatformAppEgressDiff",
     "PlatformAppHealthCheck",
     "PlatformAppInstallResult",
     "PlatformAppInstallation",
@@ -811,6 +873,7 @@ __all__ = [
     "PlatformAppPublisher",
     "PlatformAppPublisherStatus",
     "PlatformAppReasonInput",
+    "PlatformAppReplayedDelivery",
     "PlatformAppRollbackResult",
     "PlatformAppStatus",
     "PlatformAppSwitchResult",
@@ -861,6 +924,7 @@ __all__ = [
     "SettingsApiKeyPage",
     "SettingsAppCatalog",
     "SettingsAppCatalogEntry",
+    "SettingsAppConsentEgress",
     "SettingsAppConsentPermission",
     "SettingsAppConsentPreview",
     "SettingsAppConsentResult",
@@ -869,14 +933,18 @@ __all__ = [
     "SettingsAppConsentSubscription",
     "SettingsAppConsentSupport",
     "SettingsAppDeclaredSlot",
+    "SettingsAppExposureCall",
     "SettingsAppExposureReport",
     "SettingsAppIncident",
     "SettingsAppIncidentList",
     "SettingsAppInstallInput",
     "SettingsAppInstallation",
+    "SettingsAppInstallationActivity",
     "SettingsAppInstallationPage",
+    "SettingsAppInstallationUpdate",
     "SettingsAppLocalizedText",
     "SettingsAppPublisherCard",
+    "SettingsAppScopeActivity",
     "SettingsAppVersion",
     "SettingsCompany",
     "SettingsCompanyAccountingMethodInput",
@@ -1033,11 +1101,21 @@ __all__ = [
     "TemplateRecurrence",
     "TemplateRunPage",
     "TemplateRunResult",
+    "TenantCredentialRequest",
+    "TenantCredentialRequestPage",
     "UUID",
     "WorkflowStatusUpdate",
     "CoreListBusinessesResponse",
     "CoreSetBusinessActiveRequest",
     "CoreListBusinessOwnershipResponse",
+    "FilesAccessCheckRequest",
+    "FilesAccessCheckResponse",
+    "FilesAccessCheckResponseItemsItem",
+    "FilesContentLinkResponse",
+    "FilesListRootsResponse",
+    "FilesSearchResponse",
+    "FilesListSharesResponse",
+    "FilesPurgeTrashResponse",
     "FinanceListDividendAccessUsersResponse",
     "FinanceListDividendAccessUsersResponseResultsItem",
     "FinanceListDividendAutomationRunsResponse",
@@ -1098,6 +1176,46 @@ class AppFinanceDirectoryRef(TypedDict):
     #: Полное имя справочника: core.items или core.contacts
     directory_key: str
     id: "UUID"
+
+class _AppReferenceItemRequired(TypedDict):
+    id: "UUID"
+    #: Ссылка на запись в смысле SDK: её присылает и по ней адресуется приложение
+    code: str
+    label: str
+    sort_order: int
+    #: Погашенная запись остаётся разрешимой по ссылке и не предлагается в новых
+    is_active: bool
+
+class AppReferenceItem(_AppReferenceItemRequired, total=False):
+    parent_id: "UUID"
+    #: Дополнительные поля записи в том виде, в каком их прислало приложение
+    attrs: Dict[str, Any]
+
+class AppReferenceItemPage(TypedDict):
+    count: int
+    results: List["AppReferenceItem"]
+
+class AppReferenceUpsertInput(TypedDict):
+    items: List["AppReferenceUpsertItem"]
+
+class _AppReferenceUpsertItemRequired(TypedDict):
+    #: Ключ идемпотентности: тот же код обновляет ту же запись
+    code: str
+
+class AppReferenceUpsertItem(_AppReferenceUpsertItemRequired, total=False):
+    #: Подпись для человека кабинета. Пустая заменяется кодом: строка без подписи в отчёте нечитаема
+    label: str
+    parent_id: "UUID"
+    attrs: Dict[str, Any]
+    sort_order: int
+    #: Пропущенное поле значит «запись жива»: молча гасить присланное было бы ловушкой
+    is_active: bool
+
+class AppReferenceUpsertResult(TypedDict):
+    #: Сколько записей заведено впервые
+    created: int
+    #: Сколько существующих кодов обновлено
+    updated: int
 
 class AppRuntimeConfig(TypedDict):
     values: List["AppRuntimeConfigValue"]
@@ -2803,6 +2921,11 @@ class ChatEnsureDirectResult(TypedDict):
     conversation_id: "UUID"
     created: bool
 
+class ChatEntityConversation(TypedDict):
+    conversation_id: "UUID"
+    title: str
+    deep_link: str
+
 class ChatFolder(TypedDict):
     id: "UUID"
     name: str
@@ -2953,6 +3076,10 @@ class ChatMobileDeviceRegistration(_ChatMobileDeviceRegistrationRequired, total=
     preview: bool
     #: Звук уведомления. Поле отсутствует — со звуком.
     sound: bool
+    #: Совместимый псевдоним preview. Если любое из двух полей false, текст скрыт.
+    push_preview: bool
+    #: Совместимый псевдоним sound. Если любое из двух полей false, звук выключен.
+    push_sound: bool
 
 class ChatMobileDeviceRegistrationState(TypedDict):
     enabled: bool
@@ -2967,14 +3094,29 @@ class ChatNotificationModeResult(TypedDict):
     mode: Literal['all', 'mentions', 'muted']
     changed: bool
 
-class ChatPeoplePage(TypedDict):
+class _ChatPeoplePageRequired(TypedDict):
     items: List["ChatPerson"]
+    has_more: bool
+
+class ChatPeoplePage(_ChatPeoplePageRequired, total=False):
+    #: Присутствует только когда есть следующая страница коллег
+    next_offset: int
 
 class ChatPerson(TypedDict):
     user_id: int
     display_name: str
     avatar_url: str
     is_self: bool
+
+class ChatPresenceInput(TypedDict, total=False):
+    typing: bool
+
+class ChatPresencePage(TypedDict):
+    items: List["ChatPresencePageItemsItem"]
+
+class ChatPresencePageItemsItem(TypedDict):
+    user_id: int
+    typing: bool
 
 class ChatReactionResult(TypedDict):
     message_id: "UUID"
@@ -3164,6 +3306,29 @@ class CoreCabinetPreferences(TypedDict):
     timezone: str
     date_format: str
     number_format: str
+
+class CoreChange(TypedDict):
+    #: Имя сущности из реестра ленты (core.contact)
+    entity: str
+    #: Идентификатор объекта в его собственном API
+    id: str
+    op: "CoreChangeOp"
+    #: Момент изменения. Для человека и для журнала; порядок ленты задаёт не он, а фиксация транзакции, поэтому фильтровать по нему на своей стороне нельзя
+    changed_at: str
+
+class CoreChangeFeedPage(TypedDict):
+    #: Сущности, которые эта лента обслуживает предъявителю
+    entities: List[str]
+    #: Число строк, а не прогонов
+    count: int
+    limit: int
+    #: «В этом прогоне есть ещё». Ложь закрывает прогон, а не кабинет: следующий запрос увидит случившееся после
+    has_more: bool
+    #: Непрозрачная строка. Возвращается как есть; разбирать и собирать её нельзя
+    cursor: str
+    changes: List["CoreChange"]
+
+CoreChangeOp = Literal['upsert', 'delete']
 
 class CoreConflictingRegistrar(TypedDict):
     id: "UUID"
@@ -4506,6 +4671,14 @@ class CoreTrialBalanceTotals(TypedDict):
 class CoreUIState(TypedDict):
     screens: Dict[str, Any]
 
+class CredentialRequestGap(TypedDict):
+    """Окно, в котором обращения были, а записей о них нет: очередь писателя переполнилась либо база кабинета не приняла пачку. Признание в НАШЕЙ аварии, и печатается оно обеим сторонам — страница без него читалась бы как полная история. Кабинета в окне нет ни у одной из дверей."""
+
+    started_at: str
+    ended_at: str
+    #: Сколько обращений потеряно в этом окне
+    dropped: int
+
 class Customer(TypedDict):
     id: "UUID"
     name: str
@@ -4642,6 +4815,33 @@ class CycleUpdate(TypedDict, total=False):
     order: int
     is_archived: bool
 
+class _DeveloperAPICallRequired(TypedDict):
+    installation_id: "UUID"
+    method: str
+    #: Шаблон маршрута, который издатель же и звал
+    route: str
+    entity: str
+    shape: Literal['collection', 'record']
+    bytes: int
+    status: int
+    #: Машинный код исхода, тот же, что уехал в теле отказа: одно событие не называется в двух местах разными словами
+    outcome: str
+    #: Сколько отвечали МЫ. Своё время издатель видит с сетью, наше — без
+    duration_ms: int
+    occurred_at: str
+
+class DeveloperAPICall(_DeveloperAPICallRequired, total=False):
+    """То же обращение глазами издателя. Правило отбора одно: издателю видно только то, что его собственный сервер уже держал в руках — он сам сформировал этот запрос и сам получил этот ответ. Чего нет: кабинета ни одним полем, идентификатора строки журнала, идентификатора выданного токена (нить в журнал установки, который принадлежит кабинету) и обращений кабинетными ключами."""
+
+    rows: int
+
+class DeveloperAPICallPage(TypedDict):
+    calls: List["DeveloperAPICall"]
+    gaps: List["CredentialRequestGap"]
+    limit: int
+    offset: int
+    has_more: bool
+
 class DeveloperAccepted(TypedDict):
     #: Единственное значение: исход не различается снаружи ни телом, ни кодом
     status: Literal['accepted']
@@ -4667,6 +4867,79 @@ class DeveloperAccount(_DeveloperAccountRequired, total=False):
     revoked_at: str
 
 DeveloperAccountStatus = Literal['pending', 'active', 'suspended', 'revoked']
+
+class DeveloperAppBlockList(TypedDict):
+    blocks: List["DeveloperManifestBlock"]
+
+class _DeveloperAppInputRequired(TypedDict):
+    #: Ключ приложения: строчные латинские буквы, цифры и дефисы. Издатель приезжает из владельца пространства имён и в теле не называется
+    key: str
+
+class DeveloperAppInput(_DeveloperAppInputRequired, total=False):
+    #: Название, которое увидит администратор кабинета на экране согласия
+    title: str
+
+class _DeveloperAppKeyRequired(TypedDict):
+    id: "UUID"
+    app_id: "UUID"
+    #: Человеческое имя ключа: вежливость, а не учётные данные
+    name: str
+    #: Последние знаки значения. Не секрет: по ним ключ не восстанавливается, а без них список не отвечает на вопрос «какой из них отзывать»
+    hint: str
+    issued_at: str
+    revoke_reason: str
+
+class DeveloperAppKey(_DeveloperAppKeyRequired, total=False):
+    issued_by: "UUID"
+    rotated_from_id: "UUID"
+    rotated_at: str
+    #: Конец перекрытия. Пусто у текущего ключа: он живёт до собственной ротации или отзыва
+    expires_at: str
+    revoked_at: str
+    #: Когда этим ключом ходили в последний раз: единственный ответ на вопрос «можно ли уже отозвать вон тот»
+    last_used_at: str
+
+class DeveloperAppKeyInput(TypedDict, total=False):
+    #: Человеческое имя ключа для списка
+    name: str
+
+class DeveloperAppKeyPage(TypedDict):
+    keys: List["DeveloperAppKey"]
+
+class DeveloperAppKeyRevocationInput(TypedDict, total=False):
+    #: Почему ключ погашен
+    reason: str
+
+class DeveloperAppKeyRotationInput(TypedDict, total=False):
+    #: Сколько часов доживает вытесненный ключ. Ноль — умолчание в сутки, а не «без перекрытия»
+    overlap_hours: int
+
+class DeveloperAppPage(TypedDict):
+    apps: List["PlatformApp"]
+
+class DeveloperAppResult(TypedDict):
+    app: "PlatformApp"
+
+class _DeveloperAppVersionInputRequired(TypedDict):
+    #: Номер версии
+    version: str
+    #: Манифест версии целиком
+    manifest: Dict[str, Any]
+
+class DeveloperAppVersionInput(_DeveloperAppVersionInputRequired, total=False):
+    #: Digest пакета: без него подмену артефакта не с чем сравнить
+    manifest_digest: str
+    #: Что версия просит; одобряет кабинет при установке
+    requested_scopes: List[str]
+    #: Отправить версию на ревью вместо черновика. Опубликовать этим полем нельзя: публикация идёт через ворота
+    review: bool
+
+class DeveloperAppVersionPage(TypedDict):
+    app: "PlatformApp"
+    versions: List["PlatformAppVersion"]
+
+class DeveloperAppVersionResult(TypedDict):
+    version: "PlatformAppVersion"
 
 class _DeveloperApplicationRequired(TypedDict):
     id: "UUID"
@@ -4711,6 +4984,92 @@ class DeveloperApplicationResult(TypedDict):
 
 DeveloperApplicationStatus = Literal['submitted', 'approved', 'rejected', 'withdrawn']
 
+class _DeveloperDeliveryRequired(TypedDict):
+    id: "UUID"
+    event_id: "UUID"
+    installation_id: "UUID"
+    #: Тема подписки, объявленная манифестом самого издателя
+    topic: str
+    schema_version: int
+    #: Когда произошёл факт, а не когда его отправили
+    occurred_at: str
+    status: Literal['pending', 'delivered', 'failed', 'dead']
+    attempts: int
+    next_attempt_at: str
+    #: Адрес установки. Его называет издатель, а не кабинет, поэтому данных кабинета в нём нет по определению
+    endpoint_url: str
+    #: Каким ключом подписано. Не секрет: по нему приёмник выбирает, чем проверять, во время перекрытия
+    signature_key_id: str
+
+class DeveloperDelivery(_DeveloperDeliveryRequired, total=False):
+    delivered_at: str
+    dead_at: str
+    #: Код ответа приёмника. Пусто означает, что ответа не было вовсе
+    last_status_code: int
+    replay_of_id: "UUID"
+
+class DeveloperDeliveryPage(TypedDict):
+    deliveries: List["DeveloperDelivery"]
+    #: Глубина, которая реально применилась
+    limit: int
+    offset: int
+    #: Признак, а не общее число: счёт по журналу — полный проход по истории кабинета ради числа, которое никому не нужно точным
+    has_more: bool
+
+class _DeveloperGateCheckRequired(TypedDict):
+    #: Какое ворот
+    gate: Literal['publisher', 'scopes', 'sensitivity', 'endpoints', 'egress', 'manifest', 'scope_review', 'blocklist']
+    #: `awaiting_review` — ход за персоналом платформы: результат внешнего ворота либо не приносили вовсе, либо приносили для другого документа. Своё состояние, а не `failed`: чинить издателю там нечего, и общий ответ отправил бы его править исправный манифест.
+    status: Literal['passed', 'failed', 'awaiting_review']
+    #: Результат приносит не сервер — по нему видно, чинится ли отказ правкой манифеста
+    external: bool
+
+class DeveloperGateCheck(_DeveloperGateCheckRequired, total=False):
+    #: Машинный код отказа: текст на двух языках собирает портал
+    reason: str
+    #: Что именно не подошло: имена прав, адреса, режим, отпечаток. Всё это издатель подал сам
+    values: List[str]
+    #: Когда внешнее ворот смотрели в последний раз; у несмотренного его нет
+    checked_at: str
+
+class _DeveloperInstallationRequired(TypedDict):
+    id: "UUID"
+    #: Версия, на которой стоит установка
+    version: str
+    status: "PlatformAppInstallationStatus"
+    #: Приёмник признан мёртвым, и данные кабинета встали. Самое важное поле для издателя
+    parked: bool
+    installed_at: str
+    updated_at: str
+
+class DeveloperInstallation(_DeveloperInstallationRequired, total=False):
+    parked_at: str
+
+class DeveloperInstallationPage(TypedDict):
+    installations: List["DeveloperInstallation"]
+
+class DeveloperIssuedAppKey(TypedDict):
+    key: "DeveloperAppKey"
+    #: Значение ключа. Показывается ОДИН РАЗ и больше никогда: в хранилище лежит хеш, и второго способа его узнать не существует
+    secret: str
+
+class _DeveloperManifestBlockRequired(TypedDict):
+    #: sha256 компактной формы документа — тот же отпечаток, который печатает отчёт готовности версии
+    manifest_fingerprint: str
+    #: Где документ впервые увидели. Улика, а не предмет запрета: тот же отпечаток у другого приложения закрыт этим же запретом
+    publisher: str
+    app_key: str
+    reason_code: Literal['malicious', 'vulnerable', 'data_exfiltration', 'supply_chain', 'publisher_request']
+    #: Объяснение словами. Наш текст, а не эхо чьих-то слов: его же читает кабинет в карточке уведомления
+    summary: str
+    blocked_at: str
+
+class DeveloperManifestBlock(_DeveloperManifestBlockRequired, total=False):
+    """Тот же запрет, что видит оператор, без одного поля: идентификатора сотрудника платформы, принявшего решение. Внешний контур — не место для наших внутренних идентификаторов, а имя решавшего превращает решение платформы в решение конкретного лица, с которым можно «договориться»."""
+
+    #: Внешний https-адрес разбора: CVE, бюллетень, тикет
+    advisory: str
+
 class _DeveloperProfileRequired(TypedDict):
     account: "DeveloperAccount"
     #: Издатели, которыми распоряжается аккаунт
@@ -4718,6 +5077,23 @@ class _DeveloperProfileRequired(TypedDict):
 
 class DeveloperProfile(_DeveloperProfileRequired, total=False):
     application: "DeveloperApplication"
+
+class DeveloperPublicationReport(TypedDict):
+    version: str
+    #: Состояние версии: черновик, на ревью, опубликована
+    status: str
+    #: Канал, объявленный манифестом этой версии
+    channel: str
+    #: Состояние СВОЕГО издателя: оно объясняет ворот publisher
+    publisher_status: str
+    #: Отпечаток текущего манифеста: им запрет называет предмет, и по нему видно, что документ поменялся после проверки
+    manifest_fingerprint: str
+    #: Все обязательные ворота пройдены. Отдельным полем: выводить готовность из списка — ошибиться в пользу разрешения
+    ready: bool
+    checks: List["DeveloperGateCheck"]
+
+class DeveloperPublicationResult(TypedDict):
+    publication: "DeveloperPublicationReport"
 
 class _DeveloperRegistrationInputRequired(TypedDict):
     email: str
@@ -4835,6 +5211,202 @@ class Error(_ErrorRequired, total=False):
 
 class FileUpload(TypedDict):
     file: str
+
+class _FilesAccessInputRequired(TypedDict):
+    grants: List["FilesGrant"]
+
+class FilesAccessInput(_FilesAccessInputRequired, total=False):
+    restricted: bool
+    break_inheritance: bool
+
+class FilesAccessPolicy(TypedDict):
+    folder_id: "UUID"
+    root_id: "UUID"
+    is_root: bool
+    restricted: bool
+    break_inheritance: bool
+    grants: List["FilesGrant"]
+    #: Права, действующие сверху по дереву
+    inherited: List["FilesGrant"]
+
+class FilesBreadcrumb(TypedDict):
+    id: "UUID"
+    name: str
+
+class _FilesEntryRequired(TypedDict):
+    kind: Literal['folder', 'file']
+
+class FilesEntry(_FilesEntryRequired, total=False):
+    folder: "FilesFolder"
+    file: "FilesFile"
+
+class _FilesFileRequired(TypedDict):
+    id: "UUID"
+    folder_id: "UUID"
+    root_id: "UUID"
+    name: str
+    extension: str
+    mime_type: str
+    size_bytes: int
+    version_no: int
+    owner_id: int
+    created_by: int
+    created_at: str
+    updated_at: str
+    #: skipped — содержимое крупнее порога проверки: оно выдаётся, но честно помечено непроверенным
+    scan_status: Literal['pending', 'scanning', 'clean', 'infected', 'skipped', 'error']
+    preview_status: Literal['pending', 'processing', 'ready', 'unsupported', 'error']
+    has_thumbnail: bool
+    is_favorite: bool
+
+class FilesFile(_FilesFileRequired, total=False):
+    version_id: "UUID"
+    updated_by: int
+    trashed_at: str
+    scan_verdict: str
+    folder_name: str
+    path: List["FilesBreadcrumb"]
+
+class _FilesFolderRequired(TypedDict):
+    id: "UUID"
+    root_id: "UUID"
+    depth: int
+    name: str
+    #: Личное хранилище принадлежит своему владельцу целиком
+    kind: Literal['shared', 'personal']
+    icon: str
+    color: str
+    description: str
+    #: Закрытое хранилище видно только участникам его списка
+    is_restricted: bool
+    #: Права хранилища на эту папку не действуют
+    break_inheritance: bool
+    owner_id: int
+    created_by: int
+    created_at: str
+    updated_at: str
+    can_read: bool
+    can_write: bool
+    #: Право выпускать внешние ссылки; из открытости хранилища не следует
+    can_share: bool
+    can_manage: bool
+    is_favorite: bool
+    folder_count: int
+    file_count: int
+    size_bytes: int
+
+class FilesFolder(_FilesFolderRequired, total=False):
+    parent_id: "UUID"
+    trashed_at: str
+
+class _FilesFolderInputRequired(TypedDict):
+    name: str
+
+class FilesFolderInput(_FilesFolderInputRequired, total=False):
+    parent_id: "UUID"
+    icon: str
+    color: str
+    description: str
+    kind: Literal['shared']
+    is_restricted: bool
+
+class _FilesGrantRequired(TypedDict):
+    principal_type: Literal['everyone', 'user', 'role', 'department']
+    principal_key: str
+    can_read: bool
+    can_write: bool
+    can_share: bool
+    can_manage: bool
+
+class FilesGrant(_FilesGrantRequired, total=False):
+    id: "UUID"
+
+class FilesListing(TypedDict):
+    folder: "FilesFolder"
+    path: List["FilesBreadcrumb"]
+    entries: List["FilesEntry"]
+    total: int
+
+class _FilesSearchHitRequired(TypedDict):
+    file: "FilesFile"
+    matched: Literal['name', 'content']
+
+class FilesSearchHit(_FilesSearchHitRequired, total=False):
+    snippet: str
+
+class _FilesShareRequired(TypedDict):
+    id: "UUID"
+    root_id: "UUID"
+    #: upload — приёмник файлов: получатель кладёт своё и не видит чужого
+    mode: Literal['view', 'download', 'upload']
+    title: str
+    has_password: bool
+    download_count: int
+    created_by: int
+    created_at: str
+
+class FilesShare(_FilesShareRequired, total=False):
+    folder_id: "UUID"
+    file_id: "UUID"
+    expires_at: str
+    max_downloads: int
+    last_access_at: str
+    revoked_at: str
+    target_name: str
+    #: Показывается один раз при создании; в базе лежит только его хэш
+    token: str
+    url: str
+
+class _FilesShareInputRequired(TypedDict):
+    mode: Literal['view', 'download', 'upload']
+
+class FilesShareInput(_FilesShareInputRequired, total=False):
+    folder_id: "UUID"
+    file_id: "UUID"
+    title: str
+    password: str
+    #: Момент, после которого ссылка перестаёт открываться
+    expires_at: Optional[str]
+    max_downloads: Optional[int]
+
+class _FilesUploadRequired(TypedDict):
+    id: "UUID"
+    folder_id: "UUID"
+    root_id: "UUID"
+    name: str
+    mime_type: str
+    size_bytes: int
+    part_bytes: int
+    part_count: int
+    status: Literal['pending', 'uploading', 'completed', 'failed', 'aborted']
+    expires_at: str
+    created_at: str
+
+class FilesUpload(_FilesUploadRequired, total=False):
+    file_id: "UUID"
+    error_code: str
+    #: Уже принятые части; на них держится докачка
+    uploaded: List["FilesUploadedPart"]
+    #: Подписанные адреса частей для прямой записи в объектное хранилище
+    direct_urls: Dict[str, str]
+
+class _FilesUploadInputRequired(TypedDict):
+    folder_id: "UUID"
+    name: str
+    size_bytes: int
+
+class FilesUploadInput(_FilesUploadInputRequired, total=False):
+    #: Задан при загрузке новой версии существующего файла
+    file_id: "UUID"
+    #: Путь файла внутри загружаемой папки; недостающие папки создаются по нему
+    relative_path: str
+    mime_type: str
+    comment: str
+
+class FilesUploadedPart(TypedDict):
+    number: int
+    etag: str
+    size: int
 
 class FinanceAccount(TypedDict):
     id: "UUID"
@@ -8345,8 +8917,72 @@ class PlatformApp(_PlatformAppRequired, total=False):
     #: Сотрудник платформы, заведший приложение
     created_by: int
 
-class PlatformAppBlockList(TypedDict):
-    blocks: List["PlatformAppManifestBlock"]
+class PlatformAppConfigDeclaration(TypedDict):
+    fields: List["PlatformAppConfigField"]
+
+class _PlatformAppConfigFieldRequired(TypedDict):
+    #: Имя настройки; поля configSchema и ключи secrets[] живут в одном пространстве имён
+    key: str
+    #: Тип значения; объекта и массива у настройки не бывает — её заполняет человек в форме
+    type: Literal['string', 'integer', 'number', 'boolean']
+    #: Без этого поля приложение не работает
+    required: bool
+    #: Значение не возвращается владельцу никогда; объявляется только списком secrets[] манифеста
+    secret: bool
+
+class PlatformAppConfigField(_PlatformAppConfigFieldRequired, total=False):
+    #: Откуда берётся значение секрета; у обычной настройки отсутствует
+    provider: Literal['user_input', 'oauth', 'certificate']
+    title: "PlatformAppConfigText"
+    help: "PlatformAppConfigText"
+    #: Замкнутый список допустимых значений строкового поля
+    enum: List[str]
+    #: Значение, предложенное приложением. Платформа его не хранит: умолчание принадлежит приложению и меняется вместе с версией
+    default: Any
+    min_length: int
+    max_length: int
+    #: Шаблон строки из манифеста; некомпилируемый шаблон не применяется, а не отклоняет ввод
+    pattern: str
+    minimum: float
+    maximum: float
+    #: Как часто издатель рекомендует менять секрет; платформа его не меняет сама
+    rotation_days: int
+
+class PlatformAppConfigSummary(TypedDict):
+    declaration: "PlatformAppConfigDeclaration"
+    values: List["PlatformAppConfigValue"]
+    #: Обязательные поля без значения. Приложение с непустым списком не сломано — оно не настроено
+    missing: List[str]
+
+class PlatformAppConfigText(TypedDict, total=False):
+    """Подпись поля на двух языках, как её написал разработчик приложения. Текст чужой: Akeda его не переводит, но показывает на своём экране, поэтому манифест требует обе половины."""
+
+    ru: str
+    en: str
+
+class _PlatformAppConfigValueRequired(TypedDict):
+    key: str
+    #: Как значение ХРАНИТСЯ. Истина означает, что value пуст и пустым останется
+    secret: bool
+    #: Просит ли эту настройку версия, которая стоит сейчас; ложь означает осиротевшее значение
+    declared: bool
+    #: Считает ли сегодняшнее объявление это имя секретом; расхождение с secret означает, что приложение передумало
+    declared_secret: bool
+    #: Значение задано
+    set: bool
+
+class PlatformAppConfigValue(_PlatformAppConfigValueRequired, total=False):
+    #: Значение ОБЫЧНОЙ настройки. У секрета отсутствует всегда
+    value: str
+    updated_by: int
+    updated_at: str
+
+class PlatformAppConfigValueInput(TypedDict):
+    #: Значение как есть. По краям не обрезается: пробел на конце пароля — часть пароля
+    value: str
+
+class PlatformAppConfigValueResult(TypedDict):
+    value: "PlatformAppConfigValue"
 
 class PlatformAppConsentDiff(TypedDict):
     #: Что просит целевая версия
@@ -8369,12 +9005,14 @@ class _PlatformAppConsentRequiredRequired(TypedDict):
     detail: str
 
 class PlatformAppConsentRequired(_PlatformAppConsentRequiredRequired, total=False):
-    #: platform.app_consent_required, когда обновление остановлено новым обязательным правом
+    #: platform.app_consent_required, когда обновление остановлено новым обязательным правом либо новым внешним адресом
     code: str
     #: Версия, которая просит
     version: str
     #: Права, которых кабинет не одобрял; только они, чтобы решающее не утонуло в списке
     scopes: List[str]
+    #: Внешние адреса, которых не было у установленной версии. Останавливают наравне с обязательным правом: право открывает доступ к данным, адрес называет того, кому приложение передаст их дальше. Перечислены отдельно от прав, потому что чинятся по-разному: право включают галочкой, адрес снимают из манифеста
+    destinations: List[str]
 
 class _PlatformAppDataPolicyRequired(TypedDict):
     #: false означает, что версия ничего не обещала о данных при удалении
@@ -8385,6 +9023,52 @@ class PlatformAppDataPolicy(_PlatformAppDataPolicyRequired, total=False):
     categories: List[str]
     regions: List[str]
     uninstall: Literal['purge', 'export_then_purge', 'archive']
+
+class _PlatformAppDeliveryRequired(TypedDict):
+    id: "UUID"
+    event_id: "UUID"
+    installation_id: "UUID"
+    #: Имя факта в формате модуль.сущность.факт
+    type: str
+    #: Версия формы события
+    schema_version: int
+    #: Тема так, как её объявляет манифест приложения: имя факта и версия схемы одной строкой
+    topic: str
+    #: Вид объекта, о котором событие
+    aggregate_type: str
+    #: Идентификатор объекта; содержимого объекта в журнале нет
+    aggregate_id: str
+    #: Когда произошёл факт, а не когда его отправили
+    occurred_at: str
+    #: Сквозная трассировка Akeda: по ней инцидент расширения сводится с операцией
+    trace_id: str
+    status: Literal['pending', 'delivered', 'failed', 'dead']
+    #: Сколько попыток сделано
+    attempts: int
+    #: Когда наряд созреет; у завершённого осталось от последней попытки и решением уже не является
+    next_attempt_at: str
+    #: Последняя причина: либо отказ Akeda, либо обрезанный ответ приёмника. Заполненный last_status_code означает, что хвост причины — слова приёмника. Текст приёмника недоверен, машинно не разбирается, и фильтра по нему у операции нет
+    last_error: str
+    #: Куда уехала попытка. Снимок на её момент: установка сменит адрес, а журнал остаётся доказательством
+    endpoint_url: str
+    #: Чем было подписано. Идентификатор ключа, а не его значение: значение подписи не сохраняется вовсе
+    signature_key_id: str
+    created_at: str
+    updated_at: str
+
+class PlatformAppDelivery(_PlatformAppDeliveryRequired, total=False):
+    #: Аренда воркера: значение в будущем означает, что попытка идёт прямо сейчас
+    claimed_until: str
+    delivered_at: str
+    #: Момент мёртвого письма; DLQ — состояние наряда, а не отдельное хранилище
+    dead_at: str
+    #: Код ответа приёмника; отсутствие означает, что HTTP-ответа не было вовсе — сеть, дедлайн или отказ до отправки
+    last_status_code: int
+    replay_of_id: "UUID"
+    #: Кто потребовал повтор
+    replay_actor: str
+    #: Зачем потребовали повтор
+    replay_reason: str
 
 class _PlatformAppDeliveryHealthRequired(TypedDict):
     installation_id: "UUID"
@@ -8408,6 +9092,52 @@ class PlatformAppDeliveryHealth(_PlatformAppDeliveryHealthRequired, total=False)
     last_delivered_at: str
     #: Проекция парковки в базе кабинета: очередь проходит мимо этой установки. Правда о парковке — parked_at самой установки
     paused_at: str
+
+class _PlatformAppDeliveryPageRequired(TypedDict):
+    deliveries: List["PlatformAppDelivery"]
+    #: Применённая глубина выборки, а не запрошенная
+    limit: int
+    #: С какого места отдана страница
+    offset: int
+    #: За страницей есть ещё записи. Признак, а не общее число: счёт по журналу — полный проход по истории кабинета
+    has_more: bool
+
+class PlatformAppDeliveryPage(_PlatformAppDeliveryPageRequired, total=False):
+    health: "PlatformAppDeliveryHealth"
+
+class PlatformAppDeliveryReplayInput(TypedDict, total=False):
+    """Отбор внутри установки. Хотя бы один из delivery_ids, event_id или пары aggregate_type и aggregate_id обязателен; названные отборы складываются по И"""
+
+    #: Конкретные наряды журнала — самый частый повтор
+    delivery_ids: List["UUID"]
+    event_id: "UUID"
+    #: Вид объекта; без aggregate_id отбором не является
+    aggregate_type: str
+    #: Идентификатор объекта; без aggregate_type отбором не является
+    aggregate_id: str
+    #: Какие наряды переигрывать. Пусто — только мёртвые письма. Живой наряд не переигрывается: он уедет сам
+    statuses: List[Literal['delivered', 'dead']]
+    #: Потолок одного вызова — столько нарядов человек в состоянии посмотреть после того, как повтор отработал. Ноль и отсутствие означают умолчание, значение сверх потолка зажимается до него
+    limit: int
+    #: Зачем переигрываем. Уезжает в журнал доставки рядом с актором
+    reason: str
+
+class PlatformAppDeliveryReplayResult(TypedDict):
+    deliveries: List["PlatformAppReplayedDelivery"]
+    #: Сколько нарядов заведено. Ноль законен: переигрывать было нечего либо всё найденное уже живо
+    replayed: int
+
+class PlatformAppEgressDiff(TypedDict):
+    """Разница ВНЕШНИХ АДРЕСОВ между установленной и целевой версией. Отдельно от разницы прав: у адресов нет отдельного одобренного кабинетом списка — их одобряют вместе с версией, и что одобрено, записано в манифесте установленной"""
+
+    #: Адреса целевой версии
+    requested: List[str]
+    #: Адреса, которых у установленной версии не было; ровно они требуют нового согласия — кабинет их не видел
+    new: List[str]
+    #: Адреса, которые отпадают; сужение согласия не требует
+    dropped: List[str]
+    #: Адреса, которые остаются как были
+    kept: List[str]
 
 class _PlatformAppHealthCheckRequired(TypedDict):
     #: skipped — спрашивать некого: у декларативного расширения нет своего приёмника
@@ -8543,6 +9273,12 @@ class PlatformAppReasonInput(TypedDict, total=False):
     #: Причина перехода; уезжает в журнал установки и в причину отзыва токенов
     reason: str
 
+class PlatformAppReplayedDelivery(TypedDict):
+    id: "UUID"
+    replay_of_id: "UUID"
+    event_id: "UUID"
+    installation_id: "UUID"
+
 PlatformAppRollbackResult = TypedDict("PlatformAppRollbackResult", {"installation": "PlatformAppInstallation", "from": "PlatformAppVersion", "to": "PlatformAppVersion", "diff": "PlatformAppConsentDiff"}, total=False)
 
 PlatformAppStatus = Literal['draft', 'published', 'suspended', 'retired']
@@ -8585,7 +9321,7 @@ class PlatformAppUpdateInput(TypedDict, total=False):
     approved: List[str]
     reason: str
 
-PlatformAppUpdateResult = TypedDict("PlatformAppUpdateResult", {"installation": "PlatformAppInstallation", "from": "PlatformAppVersion", "to": "PlatformAppVersion", "diff": "PlatformAppConsentDiff", "consented": bool, "health": "PlatformAppHealthCheck"}, total=False)
+PlatformAppUpdateResult = TypedDict("PlatformAppUpdateResult", {"installation": "PlatformAppInstallation", "from": "PlatformAppVersion", "to": "PlatformAppVersion", "diff": "PlatformAppConsentDiff", "egress": "PlatformAppEgressDiff", "consented": bool, "health": "PlatformAppHealthCheck"}, total=False)
 
 class _PlatformAppVersionRequired(TypedDict):
     id: "UUID"
@@ -8949,6 +9685,21 @@ class SettingsAppCatalogEntry(_SettingsAppCatalogEntryRequired, total=False):
     installation: "PlatformAppInstallation"
     installed_version: "SettingsAppVersion"
 
+class _SettingsAppConsentEgressRequired(TypedDict):
+    #: Имя хоста целиком и точно; совпадение точное, поддомены не входят
+    host: str
+    scheme: Literal['https', 'http']
+    #: Канал открытый: данные читает всякий по дороге, и одобренный адрес перестаёт быть единственным получателем
+    insecure: bool
+    purpose: "SettingsAppLocalizedText"
+    #: Категории политики данных, которые уезжают по этому адресу; пусто означает «только запрашиваю»
+    sends: List[str]
+
+class SettingsAppConsentEgress(_SettingsAppConsentEgressRequired, total=False):
+    """Один внешний получатель данных кабинета: куда, зачем и что именно туда уходит. Ответ «приложение ходит наружу» не является ни одним из трёх"""
+
+    insecure_reason: "SettingsAppLocalizedText"
+
 class SettingsAppConsentPermission(TypedDict):
     scope: str
     #: Без этого права приложение не работает; необъяснённое манифестом право считается обязательным
@@ -8978,6 +9729,7 @@ class _SettingsAppConsentPreviewRequired(TypedDict):
     #: true означает, что это предпросмотр обновления
     installed: bool
     diff: "PlatformAppConsentDiff"
+    egress: "PlatformAppEgressDiff"
     data_policy: "PlatformAppDataPolicy"
     publisher: "SettingsAppPublisherCard"
     sheet: "SettingsAppConsentSheet"
@@ -9006,6 +9758,12 @@ class SettingsAppConsentSheet(TypedDict):
     person_facts: List[Literal['actor_subject', 'locale', 'theme']]
     data_policy: "PlatformAppDataPolicy"
     support: "SettingsAppConsentSupport"
+    #: Внешние получатели данных кабинета поимённо
+    egress: List["SettingsAppConsentEgress"]
+    #: Издатель ответил на вопрос вообще. Пустой список — это ОТВЕТ («никуда»), молчание — нет, и подавать молчание как «никуда» значило бы придумать обещание за издателя
+    egress_declared: bool
+    #: Список исполняет платформа, а не только обещает издатель. У режима managed рантайм держит контейнер без маршрута наружу и пускает ровно перечисленное; у hosted приложение живёт на чужой инфраструктуре, и проверить обещание платформа не может ничем
+    egress_enforced: bool
 
 class SettingsAppConsentSlot(TypedDict):
     slot: str
@@ -9046,6 +9804,21 @@ class SettingsAppDeclaredSlot(_SettingsAppDeclaredSlotRequired, total=False):
     min_width: int
     min_height: int
 
+class _SettingsAppExposureCallRequired(TypedDict):
+    #: Сущность, вычисленная из шаблона маршрута: core.contacts, app.config.lease
+    entity: str
+    #: Назвал ли предъявитель конкретную запись в адресе (record) или обратился к выборке (collection). Это НЕ «одна строка против многих»: сколько строк унесли, говорит rows. Выборка с фильтром, вернувшая одну строку, остаётся выборкой.
+    shape: Literal['collection', 'record']
+    #: Сколько обращений к этому предмету
+    calls: int
+    #: Объём ответов. Единственный измеритель там, где строк не назвали
+    bytes: int
+    last_at: str
+
+class SettingsAppExposureCall(_SettingsAppExposureCallRequired, total=False):
+    #: Сколько строк унесли всего там, где число называлось. Пусто означает «ни одно обращение числа не назвало», а не ноль
+    rows: int
+
 class _SettingsAppExposureReportRequired(TypedDict):
     installation_id: str
     #: Верхняя граница ущерба: на что кабинет соглашался и чем расширение имело право пользоваться
@@ -9058,7 +9831,9 @@ class _SettingsAppExposureReportRequired(TypedDict):
     token_issues: int
     #: Сколько фактов кабинета не доехало и ждёт повтора
     dead_letters: int
-    #: Чего отчёт назвать не может. api_calls — какие операции расширение вызывало своим токеном: есть момент предъявления, нет предмета. event_bodies — что лежало в телах уехавших событий: тела в журнале доставки нет намеренно. delivery_summary — сводку доставки не спросили или она не ответила; это пропуск, а не нули, потому что «мёртвых писем ноль» читается как «всё доезжало». Первые две позиции стоят в списке ВСЕГДА: непроговорённый пропуск читается как хорошая новость.
+    #: ЧТО расширение читало и писало своим токеном, свёрнутое по предмету. Собирается из журнала обращений по учётным данным. Предмет — сущность и форма, а не перечень прочитанных строк. Идентификаторы строк не хранятся нигде: журнал стал бы теневой копией базы, читаемой по оси платформы, мимо видимости записей. Радиус поражения отчёт поэтому даёт ВЕРХНЕЙ ГРАНИЦЕЙ: «сущность core.contacts, 12 выборок, 4200 строк» означает «считайте скомпрометированными всех контрагентов в пределах одобренных областей». Для решения «что перевыпустить и кого предупредить» нужна именно она. Пустой список означает «оно ничего не звало» — настоящий ответ, а не молчание; «мы не знаем» говорится позицией api_calls в unknown.
+    api_calls: List["SettingsAppExposureCall"]
+    #: Чего отчёт назвать не может. event_bodies — что лежало в телах уехавших событий: тела в журнале доставки нет намеренно, и эта позиция стоит в списке ВСЕГДА, потому что закрыта устройством системы, а не обстоятельствами. api_calls — журнал обращений не ответил: его нет в этой сборке, его база не отозвалась либо в его истории есть окно потери; рядом с непустым api_calls эта позиция означает «свод неполон». delivery_summary — сводку доставки не спросили или она не ответила; это пропуск, а не нули, потому что «мёртвых писем ноль» читается как «всё доезжало». Непроговорённый пропуск читается как хорошая новость, поэтому список печатается всегда и пустым не бывает.
     unknown: List[Literal['api_calls', 'event_bodies', 'delivery_summary']]
 
 class SettingsAppExposureReport(_SettingsAppExposureReportRequired, total=False):
@@ -9109,9 +9884,45 @@ class _SettingsAppInstallationRequired(TypedDict):
 class SettingsAppInstallation(_SettingsAppInstallationRequired, total=False):
     #: Места на экране, которые занимает текущая версия установки: адрес рамки, источник, размер и мост сообщений. Оболочка строит рамку до запроса токена запуска, поэтому объявление приезжает вместе со списком установок
     slots: List["SettingsAppDeclaredSlot"]
+    update: "SettingsAppInstallationUpdate"
+
+class _SettingsAppInstallationActivityRequired(TypedDict):
+    installation_id: "UUID"
+    #: ПРИМЕНЁННОЕ окно в сутках, а не запрошенное
+    window_days: int
+    #: Начало окна. Отдаётся вместе с window_days: «0 обращений» без окна читается как «оно ничего не делало», а не как «за неделю ничего не делало»
+    since: str
+    #: Одобренные области и области собственного контура, которыми пользовались; самые «горячие» первыми
+    scopes: List["SettingsAppScopeActivity"]
+    #: Одобрено, но за окно не пригодилось ни разу. Отдельным списком, а не отбором на экране: это единственное, ради чего отчёт открывают дважды
+    unused_scopes: List[str]
+    #: Все обращения окна, включая неклассифицированные
+    total_calls: int
+    #: Обращения, которым правило достижимости не назвало области. Печатается всегда, даже нулём: молчаливо приписать их соседней области значило бы соврать в отчёте о правах
+    unclassified_calls: int
+    #: В окне есть признанная потеря записи: журнал пишется мимо горячего пути, и на аварии строки теряются. Свод с дырой выглядит полным, поэтому дыра называется отдельно
+    has_gap: bool
+
+class SettingsAppInstallationActivity(_SettingsAppInstallationActivityRequired, total=False):
+    """Права и активность установки: что кабинет одобрил и чем из этого расширение пользовалось за окно. Уровня отдельных записей здесь нет и не будет — только верхняя граница по областям."""
+
+    #: Первое обращение в окне; отсутствует, если обращений не было
+    first_call_at: str
+    #: Последнее обращение в окне; отсутствует, если обращений не было
+    last_call_at: str
 
 class SettingsAppInstallationPage(TypedDict):
     installations: List["SettingsAppInstallation"]
+
+class SettingsAppInstallationUpdate(TypedDict):
+    """Обновление, ждущее кабинет: самая свежая версия из updates и цена перехода на неё. Отдельным полем, а не выводом из updates: там перечислено всё, на что кабинет вправе перейти, включая версии СТАРШЕ установленной — откат тоже переход. Отсутствует, когда переходить не на что: свежих версий нет, издатель выключен, установка удалена."""
+
+    version_id: "UUID"
+    version: str
+    #: Перейти без нового согласия нельзя. Считается тем же правилом, что применит сама операция обновления: новое обязательное право либо расширившийся список внешних получателей данных. Иначе список обещал бы «жми обновить», а обновление отвечало бы 409
+    requires_consent: bool
+    #: Почему нужно согласие, машинными кодами закрытого списка. Пусто, когда согласие не нужно. Кодами, а не фразой: фразу, собранную сервером, не перевести на второй язык, а перечень прав и адресов человек читает на экране согласия, где решает
+    reasons: List[Literal['scopes_required', 'egress_expanded']]
 
 class SettingsAppLocalizedText(TypedDict):
     """Текст на двух языках, как он объявлен в манифесте; пустая половина означает, что издатель её не заполнил"""
@@ -9131,6 +9942,25 @@ class SettingsAppPublisherCard(TypedDict):
     verified: bool
     #: Издатель не выключен платформой
     live: bool
+
+class _SettingsAppScopeActivityRequired(TypedDict):
+    scope: str
+    #: Ярус чувствительности из таксономии платформы. У необъявленной области ложь — вместе с declared=false это означает «о ней не известно ничего, кроме имени», а не «она безобидна»
+    sensitive: bool
+    #: Платформа объявляла такую область
+    declared: bool
+    #: Область одобрена кабинетом. Ложь у собственных дверей установки (app:self, app:secrets, app:launch, finance:suggest): они есть у каждой установки и согласия не требуют, но обращения по ним — факт
+    granted: bool
+    #: Сколько обращений пришлось на область за окно
+    calls: int
+    #: Обращения были. Отдельным полем, а не выводом из calls: читатель не должен выводить признак из числа и ошибаться в пользу разрешения
+    used: bool
+
+class SettingsAppScopeActivity(_SettingsAppScopeActivityRequired, total=False):
+    """Одна область в отчёте «права и активность»"""
+
+    #: Когда областью пользовались в последний раз В ОКНЕ. Отсутствие означает «за окно ни разу», а не «никогда»: журнал живёт 90 суток, а окно бывает короче
+    last_used_at: str
 
 class _SettingsAppVersionRequired(TypedDict):
     id: "UUID"
@@ -10618,6 +11448,39 @@ class _TemplateRunResultRequired(TypedDict):
 class TemplateRunResult(_TemplateRunResultRequired, total=False):
     reason: str
 
+class _TenantCredentialRequestRequired(TypedDict):
+    id: "UUID"
+    #: Установка расширения или ключ кабинета. Человеческих сессий в этом журнале нет вовсе: у человека своё имя, своя роль и свой аудит
+    principal: Literal['installation', 'api_key']
+    method: str
+    #: ШАБЛОН маршрута, а не путь: путь несёт идентификаторы прочитанных строк, а строка запроса — значения фильтров
+    route: str
+    #: Сущность, вычисленная из шаблона
+    entity: str
+    shape: Literal['collection', 'record']
+    bytes: int
+    status: int
+    #: Машинный код исхода из закрытого списка: класс ответа либо названная причина отказа внешнего контура. Свободного текста в журнале нет ни одного поля
+    outcome: str
+    duration_ms: int
+    occurred_at: str
+
+class TenantCredentialRequest(_TenantCredentialRequestRequired, total=False):
+    """Одно обращение по машинному ключу глазами кабинета. Тела запроса, тела ответа, значения секрета, фактического пути и идентификаторов прочитанных строк здесь нет — и не потому, что кабинету не доверяют, а потому, что этих данных нет в самом журнале."""
+
+    installation_id: "UUID"
+    token_id: "UUID"
+    api_key_id: "UUID"
+    #: Сколько строк унёс ответ. Пусто означает «неизвестно», а не «ноль»
+    rows: int
+
+class TenantCredentialRequestPage(TypedDict):
+    requests: List["TenantCredentialRequest"]
+    gaps: List["CredentialRequestGap"]
+    limit: int
+    offset: int
+    has_more: bool
+
 UUID = str
 
 class WorkflowStatusUpdate(TypedDict, total=False):
@@ -10636,6 +11499,47 @@ class CoreSetBusinessActiveRequest(TypedDict):
 
 class CoreListBusinessOwnershipResponse(TypedDict):
     results: List["CoreOwnershipVersion"]
+
+class FilesAccessCheckRequest(TypedDict):
+    file_ids: List["UUID"]
+
+class FilesAccessCheckResponse(TypedDict):
+    items: List["FilesAccessCheckResponseItemsItem"]
+
+class _FilesAccessCheckResponseItemsItemRequired(TypedDict):
+    id: "UUID"
+    allowed: bool
+
+class FilesAccessCheckResponseItemsItem(_FilesAccessCheckResponseItemsItemRequired, total=False):
+    #: Причина отказа. «Нет прав» может смениться, «нет файла» — окончательно.
+    reason: Literal['forbidden', 'not_found']
+    version_id: "UUID"
+    name: str
+    size_bytes: int
+    scan_status: str
+
+class _FilesContentLinkResponseRequired(TypedDict):
+    url: str
+    #: true — адрес ведёт прямо в хранилище; false — на этот API, с заголовком авторизации
+    direct: bool
+    name: str
+    mime_type: str
+
+class FilesContentLinkResponse(_FilesContentLinkResponseRequired, total=False):
+    expires_at: str
+    size_bytes: int
+
+class FilesListRootsResponse(TypedDict):
+    roots: List["FilesFolder"]
+
+class FilesSearchResponse(TypedDict):
+    results: List["FilesSearchHit"]
+
+class FilesListSharesResponse(TypedDict):
+    shares: List["FilesShare"]
+
+class FilesPurgeTrashResponse(TypedDict):
+    purged: int
 
 class FinanceListDividendAccessUsersResponse(TypedDict, total=False):
     results: List["FinanceListDividendAccessUsersResponseResultsItem"]

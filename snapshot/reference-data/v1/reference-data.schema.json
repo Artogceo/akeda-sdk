@@ -1,5 +1,86 @@
 {
   "$defs": {
+    "CoreChange": {
+      "additionalProperties": false,
+      "properties": {
+        "changed_at": {
+          "description": "Момент изменения. Для человека и для журнала; порядок ленты задаёт не он, а фиксация транзакции, поэтому фильтровать по нему на своей стороне нельзя",
+          "format": "date-time",
+          "type": "string"
+        },
+        "entity": {
+          "description": "Имя сущности из реестра ленты (core.contact)",
+          "type": "string"
+        },
+        "id": {
+          "description": "Идентификатор объекта в его собственном API",
+          "type": "string"
+        },
+        "op": {
+          "$ref": "#/$defs/CoreChangeOp"
+        }
+      },
+      "required": [
+        "entity",
+        "id",
+        "op",
+        "changed_at"
+      ],
+      "type": "object"
+    },
+    "CoreChangeFeedPage": {
+      "additionalProperties": false,
+      "properties": {
+        "changes": {
+          "items": {
+            "$ref": "#/$defs/CoreChange"
+          },
+          "type": "array"
+        },
+        "count": {
+          "description": "Число строк, а не прогонов",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "cursor": {
+          "description": "Непрозрачная строка. Возвращается как есть; разбирать и собирать её нельзя",
+          "type": "string"
+        },
+        "entities": {
+          "description": "Сущности, которые эта лента обслуживает предъявителю",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "has_more": {
+          "description": "«В этом прогоне есть ещё». Ложь закрывает прогон, а не кабинет: следующий запрос увидит случившееся после",
+          "type": "boolean"
+        },
+        "limit": {
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "entities",
+        "count",
+        "limit",
+        "has_more",
+        "cursor",
+        "changes"
+      ],
+      "type": "object"
+    },
+    "CoreChangeOp": {
+      "description": "Что случилось со СТРОКОЙ. `upsert` — строка есть: заведена или изменена. `delete` — строки больше нет в кабинете. Архив, скрытие и пометка на удаление — это `upsert`: строка на месте, поменялось её состояние, и увидит его читатель штатным чтением объекта. Если это чтение отвечает 404, объект читателю больше не доступен, и копию он снимает так же, как по `delete`.",
+      "enum": [
+        "upsert",
+        "delete"
+      ],
+      "type": "string"
+    },
     "CoreDirectory": {
       "additionalProperties": false,
       "properties": {
@@ -383,6 +464,13 @@
       "permission": "core:read",
       "stage": "public",
       "summary": "Получить каталог справочников, доступных в кабинете"
+    },
+    "coreReferenceChanges": {
+      "method": "GET",
+      "path": "/api/v1/reference/changes",
+      "permission": "core:read",
+      "stage": "preview",
+      "summary": "Получить изменения, случившиеся после момента, названного курсором"
     },
     "coreReferenceItems": {
       "method": "GET",

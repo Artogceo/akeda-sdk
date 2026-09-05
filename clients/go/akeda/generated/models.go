@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3b4e5818e72cb98786a0f06776813205755d9e95e5752df061d59d58c0db6522).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a3e3b6127a35366107149251fc907a51b367bf2372bddd27c6782299b61707e).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -54,6 +54,47 @@ type AppFinanceDirectoryRef struct {
 	// DirectoryKey — Полное имя справочника: core.items или core.contacts
 	DirectoryKey string `json:"directory_key"`
 	ID           UUID   `json:"id"`
+}
+
+type AppReferenceItem struct {
+	ID UUID `json:"id"`
+	// Code — Ссылка на запись в смысле SDK: её присылает и по ней адресуется приложение
+	Code     string `json:"code"`
+	Label    string `json:"label"`
+	ParentID *UUID  `json:"parent_id,omitempty"`
+	// Attrs — Дополнительные поля записи в том виде, в каком их прислало приложение
+	Attrs     map[string]json.RawMessage `json:"attrs,omitempty"`
+	SortOrder int64                      `json:"sort_order"`
+	// IsActive — Погашенная запись остаётся разрешимой по ссылке и не предлагается в новых
+	IsActive bool `json:"is_active"`
+}
+
+type AppReferenceItemPage struct {
+	Count   int64              `json:"count"`
+	Results []AppReferenceItem `json:"results"`
+}
+
+type AppReferenceUpsertInput struct {
+	Items []AppReferenceUpsertItem `json:"items"`
+}
+
+type AppReferenceUpsertItem struct {
+	// Code — Ключ идемпотентности: тот же код обновляет ту же запись
+	Code string `json:"code"`
+	// Label — Подпись для человека кабинета. Пустая заменяется кодом: строка без подписи в отчёте нечитаема
+	Label     *string                    `json:"label,omitempty"`
+	ParentID  *UUID                      `json:"parent_id,omitempty"`
+	Attrs     map[string]json.RawMessage `json:"attrs,omitempty"`
+	SortOrder *int64                     `json:"sort_order,omitempty"`
+	// IsActive — Пропущенное поле значит «запись жива»: молча гасить присланное было бы ловушкой
+	IsActive *bool `json:"is_active,omitempty"`
+}
+
+type AppReferenceUpsertResult struct {
+	// Created — Сколько записей заведено впервые
+	Created int64 `json:"created"`
+	// Updated — Сколько существующих кодов обновлено
+	Updated int64 `json:"updated"`
 }
 
 type AppRuntimeConfig struct {
@@ -1762,6 +1803,12 @@ type ChatEnsureDirectResult struct {
 	Created        bool `json:"created"`
 }
 
+type ChatEntityConversation struct {
+	ConversationID UUID   `json:"conversation_id"`
+	Title          string `json:"title"`
+	DeepLink       string `json:"deep_link"`
+}
+
 type ChatFolder struct {
 	ID       UUID   `json:"id"`
 	Name     string `json:"name"`
@@ -1926,6 +1973,10 @@ type ChatMobileDeviceRegistration struct {
 	Preview *bool `json:"preview,omitempty"`
 	// Sound — Звук уведомления. Поле отсутствует — со звуком.
 	Sound *bool `json:"sound,omitempty"`
+	// PushPreview — Совместимый псевдоним preview. Если любое из двух полей false, текст скрыт.
+	PushPreview *bool `json:"push_preview,omitempty"`
+	// PushSound — Совместимый псевдоним sound. Если любое из двух полей false, звук выключен.
+	PushSound *bool `json:"push_sound,omitempty"`
 }
 
 type ChatMobileDeviceRegistrationState struct {
@@ -1946,7 +1997,10 @@ type ChatNotificationModeResult struct {
 }
 
 type ChatPeoplePage struct {
-	Items []ChatPerson `json:"items"`
+	Items   []ChatPerson `json:"items"`
+	HasMore bool         `json:"has_more"`
+	// NextOffset — Присутствует только когда есть следующая страница коллег
+	NextOffset *int64 `json:"next_offset,omitempty"`
 }
 
 type ChatPerson struct {
@@ -1954,6 +2008,19 @@ type ChatPerson struct {
 	DisplayName string `json:"display_name"`
 	AvatarURL   string `json:"avatar_url"`
 	IsSelf      bool   `json:"is_self"`
+}
+
+type ChatPresenceInput struct {
+	Typing *bool `json:"typing,omitempty"`
+}
+
+type ChatPresencePage struct {
+	Items []ChatPresencePageItemsItem `json:"items"`
+}
+
+type ChatPresencePageItemsItem struct {
+	UserID int64 `json:"user_id"`
+	Typing bool  `json:"typing"`
 }
 
 type ChatReactionResult struct {
@@ -2154,6 +2221,31 @@ type CoreCabinetPreferences struct {
 	DateFormat   string `json:"date_format"`
 	NumberFormat string `json:"number_format"`
 }
+
+type CoreChange struct {
+	// Entity — Имя сущности из реестра ленты (core.contact)
+	Entity string `json:"entity"`
+	// ID — Идентификатор объекта в его собственном API
+	ID string       `json:"id"`
+	Op CoreChangeOp `json:"op"`
+	// ChangedAt — Момент изменения. Для человека и для журнала; порядок ленты задаёт не он, а фиксация транзакции, поэтому фильтровать по нему на своей стороне нельзя
+	ChangedAt string `json:"changed_at"`
+}
+
+type CoreChangeFeedPage struct {
+	// Entities — Сущности, которые эта лента обслуживает предъявителю
+	Entities []string `json:"entities"`
+	// Count — Число строк, а не прогонов
+	Count int64 `json:"count"`
+	Limit int64 `json:"limit"`
+	// HasMore — «В этом прогоне есть ещё». Ложь закрывает прогон, а не кабинет: следующий запрос увидит случившееся после
+	HasMore bool `json:"has_more"`
+	// Cursor — Непрозрачная строка. Возвращается как есть; разбирать и собирать её нельзя
+	Cursor  string       `json:"cursor"`
+	Changes []CoreChange `json:"changes"`
+}
+
+type CoreChangeOp = string
 
 type CoreConflictingRegistrar struct {
 	ID       UUID               `json:"id"`
@@ -3538,6 +3630,14 @@ type CoreUIState struct {
 	Screens map[string]json.RawMessage `json:"screens"`
 }
 
+// CredentialRequestGap — Окно, в котором обращения были, а записей о них нет: очередь писателя переполнилась либо база кабинета не приняла пачку. Признание в НАШЕЙ аварии, и печатается оно обеим сторонам — страница без него читалась бы как полная история. Кабинета в окне нет ни у одной из дверей.
+type CredentialRequestGap struct {
+	StartedAt string `json:"started_at"`
+	EndedAt   string `json:"ended_at"`
+	// Dropped — Сколько обращений потеряно в этом окне
+	Dropped int64 `json:"dropped"`
+}
+
 type Customer struct {
 	ID          UUID     `json:"id"`
 	Name        string   `json:"name"`
@@ -3679,6 +3779,32 @@ type CycleUpdate struct {
 	IsArchived  *bool           `json:"is_archived,omitempty"`
 }
 
+// DeveloperAPICall — То же обращение глазами издателя. Правило отбора одно: издателю видно только то, что его собственный сервер уже держал в руках — он сам сформировал этот запрос и сам получил этот ответ. Чего нет: кабинета ни одним полем, идентификатора строки журнала, идентификатора выданного токена (нить в журнал установки, который принадлежит кабинету) и обращений кабинетными ключами.
+type DeveloperAPICall struct {
+	InstallationID UUID   `json:"installation_id"`
+	Method         string `json:"method"`
+	// Route — Шаблон маршрута, который издатель же и звал
+	Route  string `json:"route"`
+	Entity string `json:"entity"`
+	Shape  string `json:"shape"`
+	Rows   *int64 `json:"rows,omitempty"`
+	Bytes  int64  `json:"bytes"`
+	Status int64  `json:"status"`
+	// Outcome — Машинный код исхода, тот же, что уехал в теле отказа: одно событие не называется в двух местах разными словами
+	Outcome string `json:"outcome"`
+	// DurationMs — Сколько отвечали МЫ. Своё время издатель видит с сетью, наше — без
+	DurationMs int64  `json:"duration_ms"`
+	OccurredAt string `json:"occurred_at"`
+}
+
+type DeveloperAPICallPage struct {
+	Calls   []DeveloperAPICall     `json:"calls"`
+	Gaps    []CredentialRequestGap `json:"gaps"`
+	Limit   int64                  `json:"limit"`
+	Offset  int64                  `json:"offset"`
+	HasMore bool                   `json:"has_more"`
+}
+
 type DeveloperAccepted struct {
 	// Status — Единственное значение: исход не различается снаружи ни телом, ни кодом
 	Status string `json:"status"`
@@ -3704,6 +3830,85 @@ type DeveloperAccount struct {
 }
 
 type DeveloperAccountStatus = string
+
+type DeveloperAppBlockList struct {
+	Blocks []DeveloperManifestBlock `json:"blocks"`
+}
+
+type DeveloperAppInput struct {
+	// Key — Ключ приложения: строчные латинские буквы, цифры и дефисы. Издатель приезжает из владельца пространства имён и в теле не называется
+	Key string `json:"key"`
+	// Title — Название, которое увидит администратор кабинета на экране согласия
+	Title *string `json:"title,omitempty"`
+}
+
+type DeveloperAppKey struct {
+	ID    UUID `json:"id"`
+	AppID UUID `json:"app_id"`
+	// Name — Человеческое имя ключа: вежливость, а не учётные данные
+	Name string `json:"name"`
+	// Hint — Последние знаки значения. Не секрет: по ним ключ не восстанавливается, а без них список не отвечает на вопрос «какой из них отзывать»
+	Hint          string  `json:"hint"`
+	IssuedAt      string  `json:"issued_at"`
+	IssuedBy      *UUID   `json:"issued_by,omitempty"`
+	RotatedFromID *UUID   `json:"rotated_from_id,omitempty"`
+	RotatedAt     *string `json:"rotated_at,omitempty"`
+	// ExpiresAt — Конец перекрытия. Пусто у текущего ключа: он живёт до собственной ротации или отзыва
+	ExpiresAt    *string `json:"expires_at,omitempty"`
+	RevokedAt    *string `json:"revoked_at,omitempty"`
+	RevokeReason string  `json:"revoke_reason"`
+	// LastUsedAt — Когда этим ключом ходили в последний раз: единственный ответ на вопрос «можно ли уже отозвать вон тот»
+	LastUsedAt *string `json:"last_used_at,omitempty"`
+}
+
+type DeveloperAppKeyInput struct {
+	// Name — Человеческое имя ключа для списка
+	Name *string `json:"name,omitempty"`
+}
+
+type DeveloperAppKeyPage struct {
+	Keys []DeveloperAppKey `json:"keys"`
+}
+
+type DeveloperAppKeyRevocationInput struct {
+	// Reason — Почему ключ погашен
+	Reason *string `json:"reason,omitempty"`
+}
+
+type DeveloperAppKeyRotationInput struct {
+	// OverlapHours — Сколько часов доживает вытесненный ключ. Ноль — умолчание в сутки, а не «без перекрытия»
+	OverlapHours *int64 `json:"overlap_hours,omitempty"`
+}
+
+type DeveloperAppPage struct {
+	Apps []PlatformApp `json:"apps"`
+}
+
+type DeveloperAppResult struct {
+	App PlatformApp `json:"app"`
+}
+
+type DeveloperAppVersionInput struct {
+	// Version — Номер версии
+	Version string `json:"version"`
+	// Manifest — Манифест версии целиком
+	Manifest map[string]json.RawMessage `json:"manifest"`
+	// ManifestDigest — Digest пакета: без него подмену артефакта не с чем сравнить
+	ManifestDigest *string `json:"manifest_digest,omitempty"`
+	// RequestedScopes — Что версия просит; одобряет кабинет при установке
+	RequestedScopes []string `json:"requested_scopes,omitempty"`
+	// Review — Отправить версию на ревью вместо черновика. Опубликовать этим полем нельзя: публикация идёт через ворота
+	Review *bool `json:"review,omitempty"`
+}
+
+type DeveloperAppVersionPage struct {
+	App      PlatformApp          `json:"app"`
+	Versions []PlatformAppVersion `json:"versions"`
+}
+
+type DeveloperAppVersionResult struct {
+	Version PlatformAppVersion `json:"version"`
+}
 
 type DeveloperApplication struct {
 	ID        UUID `json:"id"`
@@ -3747,11 +3952,114 @@ type DeveloperApplicationResult struct {
 
 type DeveloperApplicationStatus = string
 
+type DeveloperDelivery struct {
+	ID             UUID `json:"id"`
+	EventID        UUID `json:"event_id"`
+	InstallationID UUID `json:"installation_id"`
+	// Topic — Тема подписки, объявленная манифестом самого издателя
+	Topic         string `json:"topic"`
+	SchemaVersion int64  `json:"schema_version"`
+	// OccurredAt — Когда произошёл факт, а не когда его отправили
+	OccurredAt    string  `json:"occurred_at"`
+	Status        string  `json:"status"`
+	Attempts      int64   `json:"attempts"`
+	NextAttemptAt string  `json:"next_attempt_at"`
+	DeliveredAt   *string `json:"delivered_at,omitempty"`
+	DeadAt        *string `json:"dead_at,omitempty"`
+	// LastStatusCode — Код ответа приёмника. Пусто означает, что ответа не было вовсе
+	LastStatusCode *int64 `json:"last_status_code,omitempty"`
+	// EndpointURL — Адрес установки. Его называет издатель, а не кабинет, поэтому данных кабинета в нём нет по определению
+	EndpointURL string `json:"endpoint_url"`
+	// SignatureKeyID — Каким ключом подписано. Не секрет: по нему приёмник выбирает, чем проверять, во время перекрытия
+	SignatureKeyID string `json:"signature_key_id"`
+	ReplayOfID     *UUID  `json:"replay_of_id,omitempty"`
+}
+
+type DeveloperDeliveryPage struct {
+	Deliveries []DeveloperDelivery `json:"deliveries"`
+	// Limit — Глубина, которая реально применилась
+	Limit  int64 `json:"limit"`
+	Offset int64 `json:"offset"`
+	// HasMore — Признак, а не общее число: счёт по журналу — полный проход по истории кабинета ради числа, которое никому не нужно точным
+	HasMore bool `json:"has_more"`
+}
+
+type DeveloperGateCheck struct {
+	// Gate — Какое ворот
+	Gate string `json:"gate"`
+	// Status — `awaiting_review` — ход за персоналом платформы: результат внешнего ворота либо не приносили вовсе, либо приносили для другого документа. Своё состояние, а не `failed`: чинить издателю там нечего, и общий ответ отправил бы его править исправный манифест.
+	Status string `json:"status"`
+	// External — Результат приносит не сервер — по нему видно, чинится ли отказ правкой манифеста
+	External bool `json:"external"`
+	// Reason — Машинный код отказа: текст на двух языках собирает портал
+	Reason *string `json:"reason,omitempty"`
+	// Values — Что именно не подошло: имена прав, адреса, режим, отпечаток. Всё это издатель подал сам
+	Values []string `json:"values,omitempty"`
+	// CheckedAt — Когда внешнее ворот смотрели в последний раз; у несмотренного его нет
+	CheckedAt *string `json:"checked_at,omitempty"`
+}
+
+type DeveloperInstallation struct {
+	ID UUID `json:"id"`
+	// Version — Версия, на которой стоит установка
+	Version string                        `json:"version"`
+	Status  PlatformAppInstallationStatus `json:"status"`
+	// Parked — Приёмник признан мёртвым, и данные кабинета встали. Самое важное поле для издателя
+	Parked      bool    `json:"parked"`
+	ParkedAt    *string `json:"parked_at,omitempty"`
+	InstalledAt string  `json:"installed_at"`
+	UpdatedAt   string  `json:"updated_at"`
+}
+
+type DeveloperInstallationPage struct {
+	Installations []DeveloperInstallation `json:"installations"`
+}
+
+type DeveloperIssuedAppKey struct {
+	Key DeveloperAppKey `json:"key"`
+	// Secret — Значение ключа. Показывается ОДИН РАЗ и больше никогда: в хранилище лежит хеш, и второго способа его узнать не существует
+	Secret string `json:"secret"`
+}
+
+// DeveloperManifestBlock — Тот же запрет, что видит оператор, без одного поля: идентификатора сотрудника платформы, принявшего решение. Внешний контур — не место для наших внутренних идентификаторов, а имя решавшего превращает решение платформы в решение конкретного лица, с которым можно «договориться».
+type DeveloperManifestBlock struct {
+	// ManifestFingerprint — sha256 компактной формы документа — тот же отпечаток, который печатает отчёт готовности версии
+	ManifestFingerprint string `json:"manifest_fingerprint"`
+	// Publisher — Где документ впервые увидели. Улика, а не предмет запрета: тот же отпечаток у другого приложения закрыт этим же запретом
+	Publisher  string `json:"publisher"`
+	AppKey     string `json:"app_key"`
+	ReasonCode string `json:"reason_code"`
+	// Summary — Объяснение словами. Наш текст, а не эхо чьих-то слов: его же читает кабинет в карточке уведомления
+	Summary string `json:"summary"`
+	// Advisory — Внешний https-адрес разбора: CVE, бюллетень, тикет
+	Advisory  *string `json:"advisory,omitempty"`
+	BlockedAt string  `json:"blocked_at"`
+}
+
 type DeveloperProfile struct {
 	Account     DeveloperAccount      `json:"account"`
 	Application *DeveloperApplication `json:"application,omitempty"`
 	// Publishers — Издатели, которыми распоряжается аккаунт
 	Publishers []PlatformAppPublisher `json:"publishers"`
+}
+
+type DeveloperPublicationReport struct {
+	Version string `json:"version"`
+	// Status — Состояние версии: черновик, на ревью, опубликована
+	Status string `json:"status"`
+	// Channel — Канал, объявленный манифестом этой версии
+	Channel string `json:"channel"`
+	// PublisherStatus — Состояние СВОЕГО издателя: оно объясняет ворот publisher
+	PublisherStatus string `json:"publisher_status"`
+	// ManifestFingerprint — Отпечаток текущего манифеста: им запрет называет предмет, и по нему видно, что документ поменялся после проверки
+	ManifestFingerprint string `json:"manifest_fingerprint"`
+	// Ready — Все обязательные ворота пройдены. Отдельным полем: выводить готовность из списка — ошибиться в пользу разрешения
+	Ready  bool                 `json:"ready"`
+	Checks []DeveloperGateCheck `json:"checks"`
+}
+
+type DeveloperPublicationResult struct {
+	Publication DeveloperPublicationReport `json:"publication"`
 }
 
 type DeveloperRegistrationInput struct {
@@ -3873,6 +4181,195 @@ type Error struct {
 
 type FileUpload struct {
 	File string `json:"file"`
+}
+
+type FilesAccessInput struct {
+	Restricted       *bool        `json:"restricted,omitempty"`
+	BreakInheritance *bool        `json:"break_inheritance,omitempty"`
+	Grants           []FilesGrant `json:"grants"`
+}
+
+type FilesAccessPolicy struct {
+	FolderID         UUID         `json:"folder_id"`
+	RootID           UUID         `json:"root_id"`
+	IsRoot           bool         `json:"is_root"`
+	Restricted       bool         `json:"restricted"`
+	BreakInheritance bool         `json:"break_inheritance"`
+	Grants           []FilesGrant `json:"grants"`
+	// Inherited — Права, действующие сверху по дереву
+	Inherited []FilesGrant `json:"inherited"`
+}
+
+type FilesBreadcrumb struct {
+	ID   UUID   `json:"id"`
+	Name string `json:"name"`
+}
+
+type FilesEntry struct {
+	Kind   string       `json:"kind"`
+	Folder *FilesFolder `json:"folder,omitempty"`
+	File   *FilesFile   `json:"file,omitempty"`
+}
+
+type FilesFile struct {
+	ID        UUID    `json:"id"`
+	FolderID  UUID    `json:"folder_id"`
+	RootID    UUID    `json:"root_id"`
+	Name      string  `json:"name"`
+	Extension string  `json:"extension"`
+	MimeType  string  `json:"mime_type"`
+	SizeBytes int64   `json:"size_bytes"`
+	VersionNo int64   `json:"version_no"`
+	VersionID *UUID   `json:"version_id,omitempty"`
+	OwnerID   int64   `json:"owner_id"`
+	CreatedBy int64   `json:"created_by"`
+	UpdatedBy *int64  `json:"updated_by,omitempty"`
+	TrashedAt *string `json:"trashed_at,omitempty"`
+	CreatedAt string  `json:"created_at"`
+	UpdatedAt string  `json:"updated_at"`
+	// ScanStatus — skipped — содержимое крупнее порога проверки: оно выдаётся, но честно помечено непроверенным
+	ScanStatus    string            `json:"scan_status"`
+	ScanVerdict   *string           `json:"scan_verdict,omitempty"`
+	PreviewStatus string            `json:"preview_status"`
+	HasThumbnail  bool              `json:"has_thumbnail"`
+	IsFavorite    bool              `json:"is_favorite"`
+	FolderName    *string           `json:"folder_name,omitempty"`
+	Path          []FilesBreadcrumb `json:"path,omitempty"`
+}
+
+type FilesFolder struct {
+	ID       UUID   `json:"id"`
+	ParentID *UUID  `json:"parent_id,omitempty"`
+	RootID   UUID   `json:"root_id"`
+	Depth    int64  `json:"depth"`
+	Name     string `json:"name"`
+	// Kind — Личное хранилище принадлежит своему владельцу целиком
+	Kind        string `json:"kind"`
+	Icon        string `json:"icon"`
+	Color       string `json:"color"`
+	Description string `json:"description"`
+	// IsRestricted — Закрытое хранилище видно только участникам его списка
+	IsRestricted bool `json:"is_restricted"`
+	// BreakInheritance — Права хранилища на эту папку не действуют
+	BreakInheritance bool    `json:"break_inheritance"`
+	OwnerID          int64   `json:"owner_id"`
+	CreatedBy        int64   `json:"created_by"`
+	TrashedAt        *string `json:"trashed_at,omitempty"`
+	CreatedAt        string  `json:"created_at"`
+	UpdatedAt        string  `json:"updated_at"`
+	CanRead          bool    `json:"can_read"`
+	CanWrite         bool    `json:"can_write"`
+	// CanShare — Право выпускать внешние ссылки; из открытости хранилища не следует
+	CanShare    bool  `json:"can_share"`
+	CanManage   bool  `json:"can_manage"`
+	IsFavorite  bool  `json:"is_favorite"`
+	FolderCount int64 `json:"folder_count"`
+	FileCount   int64 `json:"file_count"`
+	SizeBytes   int64 `json:"size_bytes"`
+}
+
+type FilesFolderInput struct {
+	ParentID     *UUID   `json:"parent_id,omitempty"`
+	Name         string  `json:"name"`
+	Icon         *string `json:"icon,omitempty"`
+	Color        *string `json:"color,omitempty"`
+	Description  *string `json:"description,omitempty"`
+	Kind         *string `json:"kind,omitempty"`
+	IsRestricted *bool   `json:"is_restricted,omitempty"`
+}
+
+type FilesGrant struct {
+	ID            *UUID  `json:"id,omitempty"`
+	PrincipalType string `json:"principal_type"`
+	PrincipalKey  string `json:"principal_key"`
+	CanRead       bool   `json:"can_read"`
+	CanWrite      bool   `json:"can_write"`
+	CanShare      bool   `json:"can_share"`
+	CanManage     bool   `json:"can_manage"`
+}
+
+type FilesListing struct {
+	Folder  FilesFolder       `json:"folder"`
+	Path    []FilesBreadcrumb `json:"path"`
+	Entries []FilesEntry      `json:"entries"`
+	Total   int64             `json:"total"`
+}
+
+type FilesSearchHit struct {
+	File    FilesFile `json:"file"`
+	Snippet *string   `json:"snippet,omitempty"`
+	Matched string    `json:"matched"`
+}
+
+type FilesShare struct {
+	ID       UUID  `json:"id"`
+	FolderID *UUID `json:"folder_id,omitempty"`
+	FileID   *UUID `json:"file_id,omitempty"`
+	RootID   UUID  `json:"root_id"`
+	// Mode — upload — приёмник файлов: получатель кладёт своё и не видит чужого
+	Mode          string  `json:"mode"`
+	Title         string  `json:"title"`
+	HasPassword   bool    `json:"has_password"`
+	ExpiresAt     *string `json:"expires_at,omitempty"`
+	MaxDownloads  *int64  `json:"max_downloads,omitempty"`
+	DownloadCount int64   `json:"download_count"`
+	LastAccessAt  *string `json:"last_access_at,omitempty"`
+	RevokedAt     *string `json:"revoked_at,omitempty"`
+	CreatedBy     int64   `json:"created_by"`
+	CreatedAt     string  `json:"created_at"`
+	TargetName    *string `json:"target_name,omitempty"`
+	// Token — Показывается один раз при создании; в базе лежит только его хэш
+	Token *string `json:"token,omitempty"`
+	URL   *string `json:"url,omitempty"`
+}
+
+type FilesShareInput struct {
+	FolderID *UUID   `json:"folder_id,omitempty"`
+	FileID   *UUID   `json:"file_id,omitempty"`
+	Mode     string  `json:"mode"`
+	Title    *string `json:"title,omitempty"`
+	Password *string `json:"password,omitempty"`
+	// ExpiresAt — Момент, после которого ссылка перестаёт открываться
+	ExpiresAt    *string `json:"expires_at,omitempty"`
+	MaxDownloads *int64  `json:"max_downloads,omitempty"`
+}
+
+type FilesUpload struct {
+	ID        UUID    `json:"id"`
+	FolderID  UUID    `json:"folder_id"`
+	RootID    UUID    `json:"root_id"`
+	FileID    *UUID   `json:"file_id,omitempty"`
+	Name      string  `json:"name"`
+	MimeType  string  `json:"mime_type"`
+	SizeBytes int64   `json:"size_bytes"`
+	PartBytes int64   `json:"part_bytes"`
+	PartCount int64   `json:"part_count"`
+	Status    string  `json:"status"`
+	ErrorCode *string `json:"error_code,omitempty"`
+	ExpiresAt string  `json:"expires_at"`
+	CreatedAt string  `json:"created_at"`
+	// Uploaded — Уже принятые части; на них держится докачка
+	Uploaded []FilesUploadedPart `json:"uploaded,omitempty"`
+	// DirectUrls — Подписанные адреса частей для прямой записи в объектное хранилище
+	DirectUrls map[string]string `json:"direct_urls,omitempty"`
+}
+
+type FilesUploadInput struct {
+	FolderID UUID `json:"folder_id"`
+	// FileID — Задан при загрузке новой версии существующего файла
+	FileID *UUID  `json:"file_id,omitempty"`
+	Name   string `json:"name"`
+	// RelativePath — Путь файла внутри загружаемой папки; недостающие папки создаются по нему
+	RelativePath *string `json:"relative_path,omitempty"`
+	MimeType     *string `json:"mime_type,omitempty"`
+	SizeBytes    int64   `json:"size_bytes"`
+	Comment      *string `json:"comment,omitempty"`
+}
+
+type FilesUploadedPart struct {
+	Number int64  `json:"number"`
+	Etag   string `json:"etag"`
+	Size   int64  `json:"size"`
 }
 
 type FinanceAccount struct {
@@ -7664,8 +8161,73 @@ type PlatformApp struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-type PlatformAppBlockList struct {
-	Blocks []PlatformAppManifestBlock `json:"blocks"`
+type PlatformAppConfigDeclaration struct {
+	Fields []PlatformAppConfigField `json:"fields"`
+}
+
+type PlatformAppConfigField struct {
+	// Key — Имя настройки; поля configSchema и ключи secrets[] живут в одном пространстве имён
+	Key string `json:"key"`
+	// Type — Тип значения; объекта и массива у настройки не бывает — её заполняет человек в форме
+	Type string `json:"type"`
+	// Required — Без этого поля приложение не работает
+	Required bool `json:"required"`
+	// Secret — Значение не возвращается владельцу никогда; объявляется только списком secrets[] манифеста
+	Secret bool `json:"secret"`
+	// Provider — Откуда берётся значение секрета; у обычной настройки отсутствует
+	Provider *string                `json:"provider,omitempty"`
+	Title    *PlatformAppConfigText `json:"title,omitempty"`
+	Help     *PlatformAppConfigText `json:"help,omitempty"`
+	// Enum — Замкнутый список допустимых значений строкового поля
+	Enum []string `json:"enum,omitempty"`
+	// Default — Значение, предложенное приложением. Платформа его не хранит: умолчание принадлежит приложению и меняется вместе с версией
+	Default   json.RawMessage `json:"default,omitempty"`
+	MinLength *int64          `json:"min_length,omitempty"`
+	MaxLength *int64          `json:"max_length,omitempty"`
+	// Pattern — Шаблон строки из манифеста; некомпилируемый шаблон не применяется, а не отклоняет ввод
+	Pattern *string  `json:"pattern,omitempty"`
+	Minimum *float64 `json:"minimum,omitempty"`
+	Maximum *float64 `json:"maximum,omitempty"`
+	// RotationDays — Как часто издатель рекомендует менять секрет; платформа его не меняет сама
+	RotationDays *int64 `json:"rotation_days,omitempty"`
+}
+
+type PlatformAppConfigSummary struct {
+	Declaration PlatformAppConfigDeclaration `json:"declaration"`
+	Values      []PlatformAppConfigValue     `json:"values"`
+	// Missing — Обязательные поля без значения. Приложение с непустым списком не сломано — оно не настроено
+	Missing []string `json:"missing"`
+}
+
+// PlatformAppConfigText — Подпись поля на двух языках, как её написал разработчик приложения. Текст чужой: Akeda его не переводит, но показывает на своём экране, поэтому манифест требует обе половины.
+type PlatformAppConfigText struct {
+	Ru *string `json:"ru,omitempty"`
+	En *string `json:"en,omitempty"`
+}
+
+type PlatformAppConfigValue struct {
+	Key string `json:"key"`
+	// Secret — Как значение ХРАНИТСЯ. Истина означает, что value пуст и пустым останется
+	Secret bool `json:"secret"`
+	// Declared — Просит ли эту настройку версия, которая стоит сейчас; ложь означает осиротевшее значение
+	Declared bool `json:"declared"`
+	// DeclaredSecret — Считает ли сегодняшнее объявление это имя секретом; расхождение с secret означает, что приложение передумало
+	DeclaredSecret bool `json:"declared_secret"`
+	// Set — Значение задано
+	Set bool `json:"set"`
+	// Value — Значение ОБЫЧНОЙ настройки. У секрета отсутствует всегда
+	Value     *string `json:"value,omitempty"`
+	UpdatedBy *int64  `json:"updated_by,omitempty"`
+	UpdatedAt *string `json:"updated_at,omitempty"`
+}
+
+type PlatformAppConfigValueInput struct {
+	// Value — Значение как есть. По краям не обрезается: пробел на конце пароля — часть пароля
+	Value string `json:"value"`
+}
+
+type PlatformAppConfigValueResult struct {
+	Value PlatformAppConfigValue `json:"value"`
 }
 
 type PlatformAppConsentDiff struct {
@@ -7688,12 +8250,14 @@ type PlatformAppConsentDiff struct {
 
 type PlatformAppConsentRequired struct {
 	Detail string `json:"detail"`
-	// Code — platform.app_consent_required, когда обновление остановлено новым обязательным правом
+	// Code — platform.app_consent_required, когда обновление остановлено новым обязательным правом либо новым внешним адресом
 	Code *string `json:"code,omitempty"`
 	// Version — Версия, которая просит
 	Version *string `json:"version,omitempty"`
 	// Scopes — Права, которых кабинет не одобрял; только они, чтобы решающее не утонуло в списке
 	Scopes []string `json:"scopes,omitempty"`
+	// Destinations — Внешние адреса, которых не было у установленной версии. Останавливают наравне с обязательным правом: право открывает доступ к данным, адрес называет того, кому приложение передаст их дальше. Перечислены отдельно от прав, потому что чинятся по-разному: право включают галочкой, адрес снимают из манифеста
+	Destinations []string `json:"destinations,omitempty"`
 }
 
 type PlatformAppDataPolicy struct {
@@ -7703,6 +8267,51 @@ type PlatformAppDataPolicy struct {
 	Regions       []string `json:"regions,omitempty"`
 	RetentionDays int64    `json:"retention_days"`
 	Uninstall     *string  `json:"uninstall,omitempty"`
+}
+
+type PlatformAppDelivery struct {
+	ID             UUID `json:"id"`
+	EventID        UUID `json:"event_id"`
+	InstallationID UUID `json:"installation_id"`
+	// Type — Имя факта в формате модуль.сущность.факт
+	Type string `json:"type"`
+	// SchemaVersion — Версия формы события
+	SchemaVersion int64 `json:"schema_version"`
+	// Topic — Тема так, как её объявляет манифест приложения: имя факта и версия схемы одной строкой
+	Topic string `json:"topic"`
+	// AggregateType — Вид объекта, о котором событие
+	AggregateType string `json:"aggregate_type"`
+	// AggregateID — Идентификатор объекта; содержимого объекта в журнале нет
+	AggregateID string `json:"aggregate_id"`
+	// OccurredAt — Когда произошёл факт, а не когда его отправили
+	OccurredAt string `json:"occurred_at"`
+	// TraceID — Сквозная трассировка Akeda: по ней инцидент расширения сводится с операцией
+	TraceID string `json:"trace_id"`
+	Status  string `json:"status"`
+	// Attempts — Сколько попыток сделано
+	Attempts int64 `json:"attempts"`
+	// NextAttemptAt — Когда наряд созреет; у завершённого осталось от последней попытки и решением уже не является
+	NextAttemptAt string `json:"next_attempt_at"`
+	// ClaimedUntil — Аренда воркера: значение в будущем означает, что попытка идёт прямо сейчас
+	ClaimedUntil *string `json:"claimed_until,omitempty"`
+	DeliveredAt  *string `json:"delivered_at,omitempty"`
+	// DeadAt — Момент мёртвого письма; DLQ — состояние наряда, а не отдельное хранилище
+	DeadAt *string `json:"dead_at,omitempty"`
+	// LastStatusCode — Код ответа приёмника; отсутствие означает, что HTTP-ответа не было вовсе — сеть, дедлайн или отказ до отправки
+	LastStatusCode *int64 `json:"last_status_code,omitempty"`
+	// LastError — Последняя причина: либо отказ Akeda, либо обрезанный ответ приёмника. Заполненный last_status_code означает, что хвост причины — слова приёмника. Текст приёмника недоверен, машинно не разбирается, и фильтра по нему у операции нет
+	LastError string `json:"last_error"`
+	// EndpointURL — Куда уехала попытка. Снимок на её момент: установка сменит адрес, а журнал остаётся доказательством
+	EndpointURL string `json:"endpoint_url"`
+	// SignatureKeyID — Чем было подписано. Идентификатор ключа, а не его значение: значение подписи не сохраняется вовсе
+	SignatureKeyID string `json:"signature_key_id"`
+	ReplayOfID     *UUID  `json:"replay_of_id,omitempty"`
+	// ReplayActor — Кто потребовал повтор
+	ReplayActor *string `json:"replay_actor,omitempty"`
+	// ReplayReason — Зачем потребовали повтор
+	ReplayReason *string `json:"replay_reason,omitempty"`
+	CreatedAt    string  `json:"created_at"`
+	UpdatedAt    string  `json:"updated_at"`
 }
 
 // PlatformAppDeliveryHealth — Сводка доставки событий установке. Только числа, которые считает Akeda: ни тела события, ни ответа приёмника здесь нет и быть не может — текст приёмника недоверен, а сводку читает кабинетный экран.
@@ -7724,6 +8333,52 @@ type PlatformAppDeliveryHealth struct {
 	WindowFailures int64 `json:"window_failures"`
 	// PausedAt — Проекция парковки в базе кабинета: очередь проходит мимо этой установки. Правда о парковке — parked_at самой установки
 	PausedAt *string `json:"paused_at,omitempty"`
+}
+
+type PlatformAppDeliveryPage struct {
+	Deliveries []PlatformAppDelivery `json:"deliveries"`
+	// Limit — Применённая глубина выборки, а не запрошенная
+	Limit int64 `json:"limit"`
+	// Offset — С какого места отдана страница
+	Offset int64 `json:"offset"`
+	// HasMore — За страницей есть ещё записи. Признак, а не общее число: счёт по журналу — полный проход по истории кабинета
+	HasMore bool                       `json:"has_more"`
+	Health  *PlatformAppDeliveryHealth `json:"health,omitempty"`
+}
+
+// PlatformAppDeliveryReplayInput — Отбор внутри установки. Хотя бы один из delivery_ids, event_id или пары aggregate_type и aggregate_id обязателен; названные отборы складываются по И
+type PlatformAppDeliveryReplayInput struct {
+	// DeliveryIds — Конкретные наряды журнала — самый частый повтор
+	DeliveryIds []UUID `json:"delivery_ids,omitempty"`
+	EventID     *UUID  `json:"event_id,omitempty"`
+	// AggregateType — Вид объекта; без aggregate_id отбором не является
+	AggregateType *string `json:"aggregate_type,omitempty"`
+	// AggregateID — Идентификатор объекта; без aggregate_type отбором не является
+	AggregateID *string `json:"aggregate_id,omitempty"`
+	// Statuses — Какие наряды переигрывать. Пусто — только мёртвые письма. Живой наряд не переигрывается: он уедет сам
+	Statuses []string `json:"statuses,omitempty"`
+	// Limit — Потолок одного вызова — столько нарядов человек в состоянии посмотреть после того, как повтор отработал. Ноль и отсутствие означают умолчание, значение сверх потолка зажимается до него
+	Limit *int64 `json:"limit,omitempty"`
+	// Reason — Зачем переигрываем. Уезжает в журнал доставки рядом с актором
+	Reason *string `json:"reason,omitempty"`
+}
+
+type PlatformAppDeliveryReplayResult struct {
+	Deliveries []PlatformAppReplayedDelivery `json:"deliveries"`
+	// Replayed — Сколько нарядов заведено. Ноль законен: переигрывать было нечего либо всё найденное уже живо
+	Replayed int64 `json:"replayed"`
+}
+
+// PlatformAppEgressDiff — Разница ВНЕШНИХ АДРЕСОВ между установленной и целевой версией. Отдельно от разницы прав: у адресов нет отдельного одобренного кабинетом списка — их одобряют вместе с версией, и что одобрено, записано в манифесте установленной
+type PlatformAppEgressDiff struct {
+	// Requested — Адреса целевой версии
+	Requested []string `json:"requested"`
+	// New — Адреса, которых у установленной версии не было; ровно они требуют нового согласия — кабинет их не видел
+	New []string `json:"new"`
+	// Dropped — Адреса, которые отпадают; сужение согласия не требует
+	Dropped []string `json:"dropped"`
+	// Kept — Адреса, которые остаются как были
+	Kept []string `json:"kept"`
 }
 
 type PlatformAppHealthCheck struct {
@@ -7859,6 +8514,13 @@ type PlatformAppReasonInput struct {
 	Reason *string `json:"reason,omitempty"`
 }
 
+type PlatformAppReplayedDelivery struct {
+	ID             UUID `json:"id"`
+	ReplayOfID     UUID `json:"replay_of_id"`
+	EventID        UUID `json:"event_id"`
+	InstallationID UUID `json:"installation_id"`
+}
+
 type PlatformAppRollbackResult struct {
 	Installation PlatformAppInstallation `json:"installation"`
 	From         PlatformAppVersion      `json:"from"`
@@ -7911,6 +8573,7 @@ type PlatformAppUpdateResult struct {
 	From         PlatformAppVersion      `json:"from"`
 	To           PlatformAppVersion      `json:"to"`
 	Diff         PlatformAppConsentDiff  `json:"diff"`
+	Egress       PlatformAppEgressDiff   `json:"egress"`
 	// Consented — Обновление прошло по новому согласию, а не по прежнему
 	Consented bool                    `json:"consented"`
 	Health    *PlatformAppHealthCheck `json:"health,omitempty"`
@@ -8297,6 +8960,19 @@ type SettingsAppCatalogEntry struct {
 	InstalledVersion *SettingsAppVersion      `json:"installed_version,omitempty"`
 }
 
+// SettingsAppConsentEgress — Один внешний получатель данных кабинета: куда, зачем и что именно туда уходит. Ответ «приложение ходит наружу» не является ни одним из трёх
+type SettingsAppConsentEgress struct {
+	// Host — Имя хоста целиком и точно; совпадение точное, поддомены не входят
+	Host   string `json:"host"`
+	Scheme string `json:"scheme"`
+	// Insecure — Канал открытый: данные читает всякий по дороге, и одобренный адрес перестаёт быть единственным получателем
+	Insecure       bool                      `json:"insecure"`
+	InsecureReason *SettingsAppLocalizedText `json:"insecure_reason,omitempty"`
+	Purpose        SettingsAppLocalizedText  `json:"purpose"`
+	// Sends — Категории политики данных, которые уезжают по этому адресу; пусто означает «только запрашиваю»
+	Sends []string `json:"sends"`
+}
+
 type SettingsAppConsentPermission struct {
 	Scope string `json:"scope"`
 	// Required — Без этого права приложение не работает; необъяснённое манифестом право считается обязательным
@@ -8329,6 +9005,7 @@ type SettingsAppConsentPreview struct {
 	Installation   *PlatformAppInstallation `json:"installation,omitempty"`
 	CurrentVersion *SettingsAppVersion      `json:"current_version,omitempty"`
 	Diff           PlatformAppConsentDiff   `json:"diff"`
+	Egress         PlatformAppEgressDiff    `json:"egress"`
 	DataPolicy     PlatformAppDataPolicy    `json:"data_policy"`
 	Publisher      SettingsAppPublisherCard `json:"publisher"`
 	Sheet          SettingsAppConsentSheet  `json:"sheet"`
@@ -8354,6 +9031,12 @@ type SettingsAppConsentSheet struct {
 	PersonFacts []string                  `json:"person_facts"`
 	DataPolicy  PlatformAppDataPolicy     `json:"data_policy"`
 	Support     SettingsAppConsentSupport `json:"support"`
+	// Egress — Внешние получатели данных кабинета поимённо
+	Egress []SettingsAppConsentEgress `json:"egress"`
+	// EgressDeclared — Издатель ответил на вопрос вообще. Пустой список — это ОТВЕТ («никуда»), молчание — нет, и подавать молчание как «никуда» значило бы придумать обещание за издателя
+	EgressDeclared bool `json:"egress_declared"`
+	// EgressEnforced — Список исполняет платформа, а не только обещает издатель. У режима managed рантайм держит контейнер без маршрута наружу и пускает ровно перечисленное; у hosted приложение живёт на чужой инфраструктуре, и проверить обещание платформа не может ничем
+	EgressEnforced bool `json:"egress_enforced"`
 }
 
 type SettingsAppConsentSlot struct {
@@ -8397,6 +9080,20 @@ type SettingsAppDeclaredSlot struct {
 	BridgeReceives []string `json:"bridge_receives"`
 }
 
+type SettingsAppExposureCall struct {
+	// Entity — Сущность, вычисленная из шаблона маршрута: core.contacts, app.config.lease
+	Entity string `json:"entity"`
+	// Shape — Назвал ли предъявитель конкретную запись в адресе (record) или обратился к выборке (collection). Это НЕ «одна строка против многих»: сколько строк унесли, говорит rows. Выборка с фильтром, вернувшая одну строку, остаётся выборкой.
+	Shape string `json:"shape"`
+	// Calls — Сколько обращений к этому предмету
+	Calls int64 `json:"calls"`
+	// Rows — Сколько строк унесли всего там, где число называлось. Пусто означает «ни одно обращение числа не назвало», а не ноль
+	Rows *int64 `json:"rows,omitempty"`
+	// Bytes — Объём ответов. Единственный измеритель там, где строк не назвали
+	Bytes  int64  `json:"bytes"`
+	LastAt string `json:"last_at"`
+}
+
 type SettingsAppExposureReport struct {
 	InstallationID string  `json:"installation_id"`
 	App            *string `json:"app,omitempty"`
@@ -8422,7 +9119,9 @@ type SettingsAppExposureReport struct {
 	DeliveryWindowFailures *int64 `json:"delivery_window_failures,omitempty"`
 	// DeliveryEndpointURL — Куда уезжали события. Адрес называет издатель, данных кабинета в нём нет по определению
 	DeliveryEndpointURL *string `json:"delivery_endpoint_url,omitempty"`
-	// Unknown — Чего отчёт назвать не может. api_calls — какие операции расширение вызывало своим токеном: есть момент предъявления, нет предмета. event_bodies — что лежало в телах уехавших событий: тела в журнале доставки нет намеренно. delivery_summary — сводку доставки не спросили или она не ответила; это пропуск, а не нули, потому что «мёртвых писем ноль» читается как «всё доезжало». Первые две позиции стоят в списке ВСЕГДА: непроговорённый пропуск читается как хорошая новость.
+	// APICalls — ЧТО расширение читало и писало своим токеном, свёрнутое по предмету. Собирается из журнала обращений по учётным данным. Предмет — сущность и форма, а не перечень прочитанных строк. Идентификаторы строк не хранятся нигде: журнал стал бы теневой копией базы, читаемой по оси платформы, мимо видимости записей. Радиус поражения отчёт поэтому даёт ВЕРХНЕЙ ГРАНИЦЕЙ: «сущность core.contacts, 12 выборок, 4200 строк» означает «считайте скомпрометированными всех контрагентов в пределах одобренных областей». Для решения «что перевыпустить и кого предупредить» нужна именно она. Пустой список означает «оно ничего не звало» — настоящий ответ, а не молчание; «мы не знаем» говорится позицией api_calls в unknown.
+	APICalls []SettingsAppExposureCall `json:"api_calls"`
+	// Unknown — Чего отчёт назвать не может. event_bodies — что лежало в телах уехавших событий: тела в журнале доставки нет намеренно, и эта позиция стоит в списке ВСЕГДА, потому что закрыта устройством системы, а не обстоятельствами. api_calls — журнал обращений не ответил: его нет в этой сборке, его база не отозвалась либо в его истории есть окно потери; рядом с непустым api_calls эта позиция означает «свод неполон». delivery_summary — сводку доставки не спросили или она не ответила; это пропуск, а не нули, потому что «мёртвых писем ноль» читается как «всё доезжало». Непроговорённый пропуск читается как хорошая новость, поэтому список печатается всегда и пустым не бывает.
 	Unknown []string `json:"unknown"`
 }
 
@@ -8456,12 +9155,46 @@ type SettingsAppInstallation struct {
 	// Updates — Версии, на которые кабинет вправе перейти сам, свежие первыми
 	Updates []SettingsAppVersion `json:"updates"`
 	// Slots — Места на экране, которые занимает текущая версия установки: адрес рамки, источник, размер и мост сообщений. Оболочка строит рамку до запроса токена запуска, поэтому объявление приезжает вместе со списком установок
-	Slots  []SettingsAppDeclaredSlot `json:"slots,omitempty"`
-	Health PlatformAppDeliveryHealth `json:"health"`
+	Slots  []SettingsAppDeclaredSlot      `json:"slots,omitempty"`
+	Health PlatformAppDeliveryHealth      `json:"health"`
+	Update *SettingsAppInstallationUpdate `json:"update,omitempty"`
+}
+
+// SettingsAppInstallationActivity — Права и активность установки: что кабинет одобрил и чем из этого расширение пользовалось за окно. Уровня отдельных записей здесь нет и не будет — только верхняя граница по областям.
+type SettingsAppInstallationActivity struct {
+	InstallationID UUID `json:"installation_id"`
+	// WindowDays — ПРИМЕНЁННОЕ окно в сутках, а не запрошенное
+	WindowDays int64 `json:"window_days"`
+	// Since — Начало окна. Отдаётся вместе с window_days: «0 обращений» без окна читается как «оно ничего не делало», а не как «за неделю ничего не делало»
+	Since string `json:"since"`
+	// Scopes — Одобренные области и области собственного контура, которыми пользовались; самые «горячие» первыми
+	Scopes []SettingsAppScopeActivity `json:"scopes"`
+	// UnusedScopes — Одобрено, но за окно не пригодилось ни разу. Отдельным списком, а не отбором на экране: это единственное, ради чего отчёт открывают дважды
+	UnusedScopes []string `json:"unused_scopes"`
+	// TotalCalls — Все обращения окна, включая неклассифицированные
+	TotalCalls int64 `json:"total_calls"`
+	// FirstCallAt — Первое обращение в окне; отсутствует, если обращений не было
+	FirstCallAt *string `json:"first_call_at,omitempty"`
+	// LastCallAt — Последнее обращение в окне; отсутствует, если обращений не было
+	LastCallAt *string `json:"last_call_at,omitempty"`
+	// UnclassifiedCalls — Обращения, которым правило достижимости не назвало области. Печатается всегда, даже нулём: молчаливо приписать их соседней области значило бы соврать в отчёте о правах
+	UnclassifiedCalls int64 `json:"unclassified_calls"`
+	// HasGap — В окне есть признанная потеря записи: журнал пишется мимо горячего пути, и на аварии строки теряются. Свод с дырой выглядит полным, поэтому дыра называется отдельно
+	HasGap bool `json:"has_gap"`
 }
 
 type SettingsAppInstallationPage struct {
 	Installations []SettingsAppInstallation `json:"installations"`
+}
+
+// SettingsAppInstallationUpdate — Обновление, ждущее кабинет: самая свежая версия из updates и цена перехода на неё. Отдельным полем, а не выводом из updates: там перечислено всё, на что кабинет вправе перейти, включая версии СТАРШЕ установленной — откат тоже переход. Отсутствует, когда переходить не на что: свежих версий нет, издатель выключен, установка удалена.
+type SettingsAppInstallationUpdate struct {
+	VersionID UUID   `json:"version_id"`
+	Version   string `json:"version"`
+	// RequiresConsent — Перейти без нового согласия нельзя. Считается тем же правилом, что применит сама операция обновления: новое обязательное право либо расширившийся список внешних получателей данных. Иначе список обещал бы «жми обновить», а обновление отвечало бы 409
+	RequiresConsent bool `json:"requires_consent"`
+	// Reasons — Почему нужно согласие, машинными кодами закрытого списка. Пусто, когда согласие не нужно. Кодами, а не фразой: фразу, собранную сервером, не перевести на второй язык, а перечень прав и адресов человек читает на экране согласия, где решает
+	Reasons []string `json:"reasons"`
 }
 
 // SettingsAppLocalizedText — Текст на двух языках, как он объявлен в манифесте; пустая половина означает, что издатель её не заполнил
@@ -8481,6 +9214,23 @@ type SettingsAppPublisherCard struct {
 	Verified bool `json:"verified"`
 	// Live — Издатель не выключен платформой
 	Live bool `json:"live"`
+}
+
+// SettingsAppScopeActivity — Одна область в отчёте «права и активность»
+type SettingsAppScopeActivity struct {
+	Scope string `json:"scope"`
+	// Sensitive — Ярус чувствительности из таксономии платформы. У необъявленной области ложь — вместе с declared=false это означает «о ней не известно ничего, кроме имени», а не «она безобидна»
+	Sensitive bool `json:"sensitive"`
+	// Declared — Платформа объявляла такую область
+	Declared bool `json:"declared"`
+	// Granted — Область одобрена кабинетом. Ложь у собственных дверей установки (app:self, app:secrets, app:launch, finance:suggest): они есть у каждой установки и согласия не требуют, но обращения по ним — факт
+	Granted bool `json:"granted"`
+	// Calls — Сколько обращений пришлось на область за окно
+	Calls int64 `json:"calls"`
+	// LastUsedAt — Когда областью пользовались в последний раз В ОКНЕ. Отсутствие означает «за окно ни разу», а не «никогда»: журнал живёт 90 суток, а окно бывает короче
+	LastUsedAt *string `json:"last_used_at,omitempty"`
+	// Used — Обращения были. Отдельным полем, а не выводом из calls: читатель не должен выводить признак из числа и ошибаться в пользу разрешения
+	Used bool `json:"used"`
 }
 
 // SettingsAppVersion — Версия глазами кабинета: без манифеста целиком; лист согласия по версии отдаёт экран согласия
@@ -10017,6 +10767,38 @@ type TemplateRunResult struct {
 	Reason   *string      `json:"reason,omitempty"`
 }
 
+// TenantCredentialRequest — Одно обращение по машинному ключу глазами кабинета. Тела запроса, тела ответа, значения секрета, фактического пути и идентификаторов прочитанных строк здесь нет — и не потому, что кабинету не доверяют, а потому, что этих данных нет в самом журнале.
+type TenantCredentialRequest struct {
+	ID UUID `json:"id"`
+	// Principal — Установка расширения или ключ кабинета. Человеческих сессий в этом журнале нет вовсе: у человека своё имя, своя роль и свой аудит
+	Principal      string `json:"principal"`
+	InstallationID *UUID  `json:"installation_id,omitempty"`
+	TokenID        *UUID  `json:"token_id,omitempty"`
+	APIKeyID       *UUID  `json:"api_key_id,omitempty"`
+	Method         string `json:"method"`
+	// Route — ШАБЛОН маршрута, а не путь: путь несёт идентификаторы прочитанных строк, а строка запроса — значения фильтров
+	Route string `json:"route"`
+	// Entity — Сущность, вычисленная из шаблона
+	Entity string `json:"entity"`
+	Shape  string `json:"shape"`
+	// Rows — Сколько строк унёс ответ. Пусто означает «неизвестно», а не «ноль»
+	Rows   *int64 `json:"rows,omitempty"`
+	Bytes  int64  `json:"bytes"`
+	Status int64  `json:"status"`
+	// Outcome — Машинный код исхода из закрытого списка: класс ответа либо названная причина отказа внешнего контура. Свободного текста в журнале нет ни одного поля
+	Outcome    string `json:"outcome"`
+	DurationMs int64  `json:"duration_ms"`
+	OccurredAt string `json:"occurred_at"`
+}
+
+type TenantCredentialRequestPage struct {
+	Requests []TenantCredentialRequest `json:"requests"`
+	Gaps     []CredentialRequestGap    `json:"gaps"`
+	Limit    int64                     `json:"limit"`
+	Offset   int64                     `json:"offset"`
+	HasMore  bool                      `json:"has_more"`
+}
+
 type UUID = string
 
 type WorkflowStatusUpdate struct {
@@ -10038,6 +10820,51 @@ type CoreSetBusinessActiveRequest struct {
 
 type CoreListBusinessOwnershipResponse struct {
 	Results []CoreOwnershipVersion `json:"results"`
+}
+
+type FilesAccessCheckRequest struct {
+	FileIds []UUID `json:"file_ids"`
+}
+
+type FilesAccessCheckResponse struct {
+	Items []FilesAccessCheckResponseItemsItem `json:"items"`
+}
+
+type FilesAccessCheckResponseItemsItem struct {
+	ID      UUID `json:"id"`
+	Allowed bool `json:"allowed"`
+	// Reason — Причина отказа. «Нет прав» может смениться, «нет файла» — окончательно.
+	Reason     *string `json:"reason,omitempty"`
+	VersionID  *UUID   `json:"version_id,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	SizeBytes  *int64  `json:"size_bytes,omitempty"`
+	ScanStatus *string `json:"scan_status,omitempty"`
+}
+
+type FilesContentLinkResponse struct {
+	URL string `json:"url"`
+	// Direct — true — адрес ведёт прямо в хранилище; false — на этот API, с заголовком авторизации
+	Direct    bool    `json:"direct"`
+	ExpiresAt *string `json:"expires_at,omitempty"`
+	Name      string  `json:"name"`
+	MimeType  string  `json:"mime_type"`
+	SizeBytes *int64  `json:"size_bytes,omitempty"`
+}
+
+type FilesListRootsResponse struct {
+	Roots []FilesFolder `json:"roots"`
+}
+
+type FilesSearchResponse struct {
+	Results []FilesSearchHit `json:"results"`
+}
+
+type FilesListSharesResponse struct {
+	Shares []FilesShare `json:"shares"`
+}
+
+type FilesPurgeTrashResponse struct {
+	Purged int64 `json:"purged"`
 }
 
 type FinanceListDividendAccessUsersResponse struct {

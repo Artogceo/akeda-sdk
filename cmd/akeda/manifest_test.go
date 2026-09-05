@@ -55,7 +55,121 @@ func lint(t *testing.T, document map[string]any) []schemaIssue {
 	if err != nil {
 		t.Fatalf("схема манифеста: %v", err)
 	}
-	return append(checker.validate(document), localManifestRules(document)...)
+	catalog, err := snapshot.ReadPlatformCatalog()
+	if err != nil {
+		t.Fatalf("каталог снимка: %v", err)
+	}
+	issues := append(checker.validate(document), localManifestRules(document)...)
+	return append(issues, catalogManifestRules(document, catalog)...)
+}
+
+// manifestFrom читает манифест по пути от корня репозитория.
+func manifestFrom(t *testing.T, parts ...string) map[string]any {
+	t.Helper()
+	whole := append([]string{repositoryRoot(t)}, parts...)
+	data, err := os.ReadFile(filepath.Join(whole...))
+	if err != nil {
+		t.Fatalf("манифест: %v", err)
+	}
+	var document map[string]any
+	if err := json.Unmarshal(data, &document); err != nil {
+		t.Fatalf("манифест не разбирается: %v", err)
+	}
+	return document
+}
+
+// Каталог обязан быть непустым: пустой превратил бы правила мест в проверку,
+// которая всегда молчит, — и выглядела бы она ровно так же зелено.
+func TestCatalogIsNotEmpty(t *testing.T) {
+	catalog, err := snapshot.ReadPlatformCatalog()
+	if err != nil {
+		t.Fatalf("каталог снимка: %v", err)
+	}
+	if len(catalog.UIPlacements) == 0 || len(catalog.UISlots) == 0 || len(catalog.ExtensionPoints) == 0 {
+		t.Fatalf("каталог пуст: точек %d, слотов %d, мест %d",
+			len(catalog.ExtensionPoints), len(catalog.UISlots), len(catalog.UIPlacements))
+	}
+}
+
+// Живое расширение репозитория обязано проходить линт целиком, а не «в
+// основном»: это единственный манифест SDK, у которого есть слоты, места и
+// контекст запуска.
+func TestStockABCManifestPasses(t *testing.T) {
+	for _, issue := range lint(t, manifestFrom(t, "examples", "stock-abc", "app.json")) {
+		t.Errorf("манифест stock-abc: %s", issue)
+	}
+}
+
+func TestCatalogRulesCatchUnknownPlacementsAndPoints(t *testing.T) {
+	cases := []struct {
+		name    string
+		break_  func(map[string]any)
+		expects string
+	}{
+		{
+			name: "места нет в каталоге",
+			break_: func(m map[string]any) {
+				slot := m["ui"].([]any)[1].(map[string]any)
+				slot["placements"] = []any{"crm.deal.sidebar"}
+			},
+			expects: `места "crm.deal.sidebar" в каталоге нет`,
+		},
+		{
+			name: "место не принимает вид слота",
+			break_: func(m map[string]any) {
+				slot := m["ui"].([]any)[0].(map[string]any)
+				slot["placements"] = []any{"core.product.list"}
+			},
+			expects: "не принимает вид",
+		},
+		{
+			name: "место не даёт запрошенного поля",
+			break_: func(m map[string]any) {
+				slot := m["ui"].([]any)[2].(map[string]any)
+				slot["placements"] = []any{"core.document.list"}
+			},
+			expects: "не даёт поля",
+		},
+		{
+			name: "место названо дважды",
+			break_: func(m map[string]any) {
+				slot := m["ui"].([]any)[1].(map[string]any)
+				slot["placements"] = []any{"core.product.card", "core.product.card"}
+			},
+			expects: "названо второй раз",
+		},
+		{
+			name: "слота нет в каталоге",
+			break_: func(m map[string]any) {
+				slot := m["ui"].([]any)[1].(map[string]any)
+				slot["slot"] = "platform.side_panel.v1"
+			},
+			expects: `слота "platform.side_panel.v1" в каталоге нет`,
+		},
+		{
+			name: "удалённая точка расширения",
+			break_: func(m map[string]any) {
+				m["extensionPoints"] = []any{"stock.price_list_source.v1"}
+			},
+			expects: `точки "stock.price_list_source.v1" в каталоге нет`,
+		},
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			document := manifestFrom(t, "examples", "stock-abc", "app.json")
+			testCase.break_(document)
+			found := false
+			for _, issue := range lint(t, document) {
+				if strings.Contains(issue.Message, testCase.expects) {
+					found = true
+				}
+			}
+			if !found {
+				t.Fatalf("подсаженная ошибка %q не поймана", testCase.name)
+			}
+		})
+	}
 }
 
 func TestExampleManifestPasses(t *testing.T) {

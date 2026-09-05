@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3b4e5818e72cb98786a0f06776813205755d9e95e5752df061d59d58c0db6522).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a3e3b6127a35366107149251fc907a51b367bf2372bddd27c6782299b61707e).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -15,6 +15,8 @@ export interface OperationSpec {
   readonly permission: string;
   /** Операция читает заголовок Idempotency-Key. */
   readonly idempotent: boolean;
+  /** Операция открыта токену установки (ai_live_… / ai_test_…). */
+  readonly installation: boolean;
   /** Схема листания: limit_offset | limit | page | cursor | none. */
   readonly pagination: string;
   /** Объявленный контрактом потолок размера страницы. */
@@ -31,6 +33,27 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.AppFinanceClassificationSuggestionInput;
     response: models.AppFinanceClassificationSuggestionAccepted;
+  };
+  /** DELETE /api/v1/app/reference/{key}/items/{code} — Погасить запись собственного справочника приложения */
+  appReferenceDeactivateItem: {
+    params: { "code": string; "key": string };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** GET /api/v1/app/reference/{key}/items — Прочитать записи собственного справочника приложения */
+  appReferenceItems: {
+    params: { "key": string };
+    query: { "limit"?: number; "offset"?: number; "q"?: string };
+    body: never;
+    response: models.AppReferenceItemPage;
+  };
+  /** PUT /api/v1/app/reference/{key}/items — Записать пачку записей в собственный справочник приложения */
+  appReferenceUpsertItems: {
+    params: { "key": string };
+    query: Record<string, never>;
+    body: models.AppReferenceUpsertInput;
+    response: models.AppReferenceUpsertResult;
   };
   /** GET /api/v1/app/config — Прочитать собственную настройку установки */
   appRuntimeConfig: {
@@ -382,6 +405,20 @@ export interface OperationTypes {
     body: models.ChatEnsureDirect;
     response: models.ChatEnsureDirectResult;
   };
+  /** POST /api/v1/chat/entities/{module}/{entity}/{entityId}/conversation — Найти или создать каноническое обсуждение доступного объекта */
+  chatEnsureEntityConversation: {
+    params: { "entity": "task"; "entityId": models.UUID; "module": "tasks" };
+    query: Record<string, never>;
+    body: { [key: string]: unknown };
+    response: models.ChatEntityConversation;
+  };
+  /** GET /api/v1/chat/entities/{module}/{entity}/{entityId}/conversation — Найти каноническое обсуждение доступного объекта */
+  chatFindEntityConversation: {
+    params: { "entity": "task"; "entityId": models.UUID; "module": "tasks" };
+    query: Record<string, never>;
+    body: never;
+    response: models.ChatEntityConversation;
+  };
   /** POST /api/v1/chat/conversations/{id}/messages/{messageId}/forward — Идемпотентно переслать сообщение в доступный чат */
   chatForwardMessage: {
     params: { "id": models.UUID; "messageId": models.UUID };
@@ -441,14 +478,14 @@ export interface OperationTypes {
   /** GET /api/v1/chat/conversations/{id}/messages — Получить окно сообщений */
   chatListMessages: {
     params: { "id": models.UUID };
-    query: { "after_seq"?: number; "around_seq"?: number; "before_seq"?: number; "limit"?: number };
+    query: { "after_seq"?: number; "around_seq"?: number; "before_seq"?: number; "limit"?: number; "q"?: string };
     body: never;
     response: models.ChatMessagePage;
   };
   /** GET /api/v1/chat/people — Получить безопасный picker людей кабинета */
   chatListPeople: {
     params: Record<string, never>;
-    query: Record<string, never>;
+    query: { "offset"?: number; "q"?: string };
     body: never;
     response: models.ChatPeoplePage;
   };
@@ -458,6 +495,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.ChatMessagePinPage;
+  };
+  /** GET /api/v1/chat/conversations/{id}/presence — Получить присутствие других участников доступного чата */
+  chatListPresence: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.ChatPresencePage;
   };
   /** GET /api/v1/chat/conversations/{id}/mentions/unread — Получить непрочитанные точные упоминания текущего пользователя */
   chatListUnreadMentions: {
@@ -514,6 +558,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.ChatChangePinResult;
+  };
+  /** POST /api/v1/chat/conversations/{id}/typing — Обновить присутствие и состояние набора текста */
+  chatPulsePresence: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.ChatPresenceInput;
+    response: void;
   };
   /** POST /api/v1/chat/mobile/devices — Подключить iPhone к чатовым push-уведомлениям */
   chatRegisterMobileDevice: {
@@ -1390,6 +1441,13 @@ export interface OperationTypes {
     body: never;
     response: models.CoreDirectoryPage;
   };
+  /** GET /api/v1/reference/changes — Получить изменения, случившиеся после момента, названного курсором */
+  coreReferenceChanges: {
+    params: Record<string, never>;
+    query: { "cursor"?: string; "entity"?: string; "limit"?: number };
+    body: never;
+    response: models.CoreChangeFeedPage;
+  };
   /** GET /api/v1/reference/{key}/items — Получить значения справочника по ключу */
   coreReferenceItems: {
     params: { "key": string };
@@ -2251,12 +2309,61 @@ export interface OperationTypes {
     body: never;
     response: models.CRMInboxOutboundUpload;
   };
+  /** GET /api/v1/developer/apps/{key}/installations/{id}/api-calls — Прочитать, что делал мой ключ */
+  developerAppAPICalls: {
+    params: { "id": models.UUID; "key": string };
+    query: { "limit"?: number; "offset"?: number };
+    body: never;
+    response: models.DeveloperAPICallPage;
+  };
   /** GET /api/v1/developer/app-blocks — Прочитать запреты своих документов */
   developerAppBlocks: {
     params: Record<string, never>;
     query: { "limit"?: number };
     body: never;
-    response: models.PlatformAppBlockList;
+    response: models.DeveloperAppBlockList;
+  };
+  /** GET /api/v1/developer/apps/{key}/installations/{id}/deliveries — Прочитать журнал доставки своей установки */
+  developerAppDeliveries: {
+    params: { "id": models.UUID; "key": string };
+    query: { "limit"?: number; "offset"?: number; "status"?: "pending" | "delivered" | "failed" | "dead" };
+    body: never;
+    response: models.DeveloperDeliveryPage;
+  };
+  /** GET /api/v1/developer/apps/{key}/installations — Прочитать установки своего приложения */
+  developerAppInstallations: {
+    params: { "key": string };
+    query: Record<string, never>;
+    body: never;
+    response: models.DeveloperInstallationPage;
+  };
+  /** GET /api/v1/developer/apps/{key}/keys — Прочитать учётные данные своего приложения */
+  developerAppKeys: {
+    params: { "key": string };
+    query: Record<string, never>;
+    body: never;
+    response: models.DeveloperAppKeyPage;
+  };
+  /** GET /api/v1/developer/apps/{key}/versions/{version}/publication — Прочитать готовность своей версии к публикации */
+  developerAppVersionPublicationReport: {
+    params: { "key": string; "version": string };
+    query: Record<string, never>;
+    body: never;
+    response: models.DeveloperPublicationResult;
+  };
+  /** GET /api/v1/developer/apps/{key}/versions — Прочитать версии своего приложения */
+  developerAppVersions: {
+    params: { "key": string };
+    query: Record<string, never>;
+    body: never;
+    response: models.DeveloperAppVersionPage;
+  };
+  /** GET /api/v1/developer/apps — Прочитать свои приложения */
+  developerApps: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.DeveloperAppPage;
   };
   /** DELETE /api/v1/developer/sessions/current — Выйти из контура разработчика */
   developerCloseSession: {
@@ -2264,6 +2371,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: void;
+  };
+  /** POST /api/v1/developer/apps/{key}/keys — Выпустить учётные данные приложения */
+  developerIssueAppKey: {
+    params: { "key": string };
+    query: Record<string, never>;
+    body: models.DeveloperAppKeyInput;
+    response: models.DeveloperIssuedAppKey;
   };
   /** POST /api/v1/developer/sessions — Обменять одноразовую ссылку на сессию */
   developerOpenSession: {
@@ -2300,12 +2414,180 @@ export interface OperationTypes {
     body: models.DeveloperSignInLinkInput;
     response: models.DeveloperAccepted;
   };
+  /** POST /api/v1/developer/apps/{key}/keys/{id}/revocation — Отозвать учётные данные приложения */
+  developerRevokeAppKey: {
+    params: { "id": models.UUID; "key": string };
+    query: Record<string, never>;
+    body: models.DeveloperAppKeyRevocationInput;
+    response: void;
+  };
+  /** POST /api/v1/developer/apps/{key}/keys/{id}/rotation — Заменить учётные данные приложения с перекрытием */
+  developerRotateAppKey: {
+    params: { "id": models.UUID; "key": string };
+    query: Record<string, never>;
+    body: models.DeveloperAppKeyRotationInput;
+    response: models.DeveloperIssuedAppKey;
+  };
+  /** POST /api/v1/developer/apps — Завести своё приложение или переименовать его */
+  developerSaveApp: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.DeveloperAppInput;
+    response: models.DeveloperAppResult;
+  };
+  /** POST /api/v1/developer/apps/{key}/versions — Завести версию своего приложения */
+  developerSaveAppVersion: {
+    params: { "key": string };
+    query: Record<string, never>;
+    body: models.DeveloperAppVersionInput;
+    response: models.DeveloperAppVersionResult;
+  };
   /** POST /api/v1/developer/publisher-application — Подать заявку на имя издателя */
   developerSubmitPublisherApplication: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.DeveloperApplicationInput;
     response: models.DeveloperApplicationResult;
+  };
+  /** DELETE /api/v1/files/uploads/{id} — Отменить загрузку */
+  filesAbortUpload: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** POST /api/v1/files/items/access-check — Проверить доступ к пачке файлов */
+  filesAccessCheck: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FilesAccessCheckRequest;
+    response: models.FilesAccessCheckResponse;
+  };
+  /** POST /api/v1/files/uploads/{id}/complete — Завершить загрузку */
+  filesCompleteUpload: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.FilesFile;
+  };
+  /** GET /api/v1/files/items/{id}/content-url — Временный адрес содержимого */
+  filesContentLink: {
+    params: { "id": models.UUID };
+    query: { "kind"?: "content" | "preview" | "thumbnail" };
+    body: never;
+    response: models.FilesContentLinkResponse;
+  };
+  /** POST /api/v1/files/folders — Создать папку */
+  filesCreateFolder: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FilesFolderInput;
+    response: models.FilesFolder;
+  };
+  /** POST /api/v1/files/roots — Создать хранилище */
+  filesCreateRoot: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FilesFolderInput;
+    response: models.FilesFolder;
+  };
+  /** POST /api/v1/files/shares — Выпустить внешнюю ссылку */
+  filesCreateShare: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FilesShareInput;
+    response: models.FilesShare;
+  };
+  /** GET /api/v1/files/items/{id}/content — Скачать файл */
+  filesDownloadFile: {
+    params: { "id": models.UUID };
+    query: { "inline"?: boolean };
+    body: never;
+    response: void;
+  };
+  /** GET /api/v1/files/folders/{id}/archive — Скачать папку архивом */
+  filesDownloadFolderArchive: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** GET /api/v1/files/folders/{id}/access — Получить состав участников папки */
+  filesFolderAccess: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.FilesAccessPolicy;
+  };
+  /** GET /api/v1/files/items/{id} — Получить карточку файла */
+  filesGetFile: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.FilesFile;
+  };
+  /** GET /api/v1/files/folders/{id}/entries — Получить содержимое папки */
+  filesListEntries: {
+    params: { "id": models.UUID };
+    query: { "limit"?: number; "offset"?: number; "order"?: "asc" | "desc"; "q"?: string; "sort"?: "name" | "size" | "updated" | "type" };
+    body: never;
+    response: models.FilesListing;
+  };
+  /** GET /api/v1/files/roots — Получить доступные хранилища */
+  filesListRoots: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.FilesListRootsResponse;
+  };
+  /** GET /api/v1/files/shares — Получить внешние ссылки цели */
+  filesListShares: {
+    params: Record<string, never>;
+    query: { "file_id"?: models.UUID; "folder_id"?: models.UUID };
+    body: never;
+    response: models.FilesListSharesResponse;
+  };
+  /** DELETE /api/v1/files/trash — Очистить корзину */
+  filesPurgeTrash: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.FilesPurgeTrashResponse;
+  };
+  /** PUT /api/v1/files/folders/{id}/access — Переписать состав участников папки */
+  filesReplaceFolderAccess: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.FilesAccessInput;
+    response: models.FilesAccessPolicy;
+  };
+  /** DELETE /api/v1/files/shares/{id} — Отозвать внешнюю ссылку */
+  filesRevokeShare: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** GET /api/v1/files/search — Найти файлы */
+  filesSearch: {
+    params: Record<string, never>;
+    query: { "limit"?: number; "offset"?: number; "q": string; "root_id"?: models.UUID };
+    body: never;
+    response: models.FilesSearchResponse;
+  };
+  /** POST /api/v1/files/uploads — Открыть загрузку файла */
+  filesStartUpload: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FilesUploadInput;
+    response: models.FilesUpload;
+  };
+  /** GET /api/v1/files/uploads/{id} — Узнать принятые части загрузки */
+  filesUploadStatus: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.FilesUpload;
   };
   /** POST /api/v1/finance/connectors/accounts/{accountId}/adopt — Создать счёт Akeda из внешнего банковского счёта */
   financeAdoptConnectorAccount: {
@@ -3770,12 +4052,33 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
+  /** GET /api/v1/settings/app-installations/{id}/deliveries — Получить журнал доставки событий своей установке */
+  settingsAppDeliveries: {
+    params: { "id": models.UUID };
+    query: { "limit"?: number; "offset"?: number; "status"?: "pending" | "delivered" | "failed" | "dead" };
+    body: never;
+    response: models.PlatformAppDeliveryPage;
+  };
   /** GET /api/v1/settings/app-incidents — Узнать, что заблокировали у себя и что оно видело */
   settingsAppIncidents: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: never;
     response: models.SettingsAppIncidentList;
+  };
+  /** GET /api/v1/settings/app-installations/{id}/activity — Получить права и активность своей установки */
+  settingsAppInstallationActivity: {
+    params: { "id": models.UUID };
+    query: { "days"?: number };
+    body: never;
+    response: models.SettingsAppInstallationActivity;
+  };
+  /** GET /api/v1/settings/app-installations/{id}/config — Получить настройку своей установки */
+  settingsAppInstallationConfig: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.PlatformAppConfigSummary;
   };
   /** GET /api/v1/settings/app-installations/{id}/events — Получить журнал своей установки */
   settingsAppInstallationEvents: {
@@ -3819,9 +4122,23 @@ export interface OperationTypes {
     body: models.SettingsRoleInput;
     response: models.SettingsRole;
   };
+  /** GET /api/v1/settings/credential-requests — Прочитать, что читали у меня машинными ключами */
+  settingsCredentialRequests: {
+    params: Record<string, never>;
+    query: { "api_key_id"?: models.UUID; "installation_id"?: models.UUID; "limit"?: number; "offset"?: number; "since"?: string };
+    body: never;
+    response: models.TenantCredentialRequestPage;
+  };
   /** DELETE /api/v1/settings/api-keys/{id} — Удалить свой API-ключ */
   settingsDeleteApiKey: {
     params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** DELETE /api/v1/settings/app-installations/{id}/config/{key} — Убрать значение настройки своей установки */
+  settingsDeleteAppInstallationConfigValue: {
+    params: { "id": models.UUID; "key": string };
     query: Record<string, never>;
     body: never;
     response: void;
@@ -3952,6 +4269,13 @@ export interface OperationTypes {
     body: never;
     response: models.SettingsAppConsentResult;
   };
+  /** POST /api/v1/settings/app-installations/{id}/deliveries/replay — Переиграть доставки своей установки */
+  settingsReplayAppDeliveries: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.PlatformAppDeliveryReplayInput;
+    response: models.PlatformAppDeliveryReplayResult;
+  };
   /** POST /api/v1/settings/api-keys/{id}/restore — Вернуть отозванный API-ключ в работу */
   settingsRestoreApiKey: {
     params: { "id": models.UUID };
@@ -3972,6 +4296,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.PlatformAppReasonInput;
     response: models.PlatformAppRollbackResult;
+  };
+  /** PUT /api/v1/settings/app-installations/{id}/config/{key} — Ввести или заменить значение настройки своей установки */
+  settingsSetAppInstallationConfigValue: {
+    params: { "id": models.UUID; "key": string };
+    query: Record<string, never>;
+    body: models.PlatformAppConfigValueInput;
+    response: models.PlatformAppConfigValueResult;
   };
   /** POST /api/v1/settings/companies/{id}/accounting-method — Переключить метод учёта юрлица */
   settingsSetCompanyAccountingMethod: {
@@ -5420,774 +5751,821 @@ export interface OperationTypes {
 export type OperationId = keyof OperationTypes;
 
 export const operationSpecs: Record<OperationId, OperationSpec> = {
-  appFinanceSuggestTransactionClassification: { method: "POST", path: "/api/v1/app/finance/transactions/{id}/classification-suggestions", module: "finance", stage: "preview", permission: "finance:suggest", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  appRuntimeConfig: { method: "GET", path: "/api/v1/app/config", module: "platform", stage: "preview", permission: "app:self", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  appRuntimeInstallation: { method: "GET", path: "/api/v1/app/installation", module: "platform", stage: "preview", permission: "app:self", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  appRuntimeLeaseSecret: { method: "POST", path: "/api/v1/app/config/{key}/lease", module: "platform", stage: "preview", permission: "app:secrets", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  appRuntimeRedeemSlotLaunch: { method: "POST", path: "/api/v1/app/slot-launch", module: "platform", stage: "preview", permission: "app:launch", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarBookPublicSlot: { method: "POST", path: "/api/v1/calendar/public/{slug}/book", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarCompleteGoogleOAuth: { method: "POST", path: "/api/v1/calendar/connectors/google/oauth/complete", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarCompleteOffice365OAuth: { method: "POST", path: "/api/v1/calendar/connectors/office365/oauth/complete", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarCreateAvailability: { method: "POST", path: "/api/v1/calendar/availability", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarCreateBookingLink: { method: "POST", path: "/api/v1/calendar/booking-links", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarCreateConnector: { method: "POST", path: "/api/v1/calendar/connectors", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarCreateEvent: { method: "POST", path: "/api/v1/calendar/events", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarDeleteAvailability: { method: "DELETE", path: "/api/v1/calendar/availability/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarDeleteBookingLink: { method: "DELETE", path: "/api/v1/calendar/booking-links/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarDeleteConnector: { method: "DELETE", path: "/api/v1/calendar/connectors/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarDeleteEvent: { method: "DELETE", path: "/api/v1/calendar/events/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarGetBookingLinkSlots: { method: "GET", path: "/api/v1/calendar/booking-links/{id}/slots", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarGetBusy: { method: "GET", path: "/api/v1/calendar/busy", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarGetEvent: { method: "GET", path: "/api/v1/calendar/events/{id}", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarGetPublicBookingLink: { method: "GET", path: "/api/v1/calendar/public/{slug}", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarGetPublicBookingSlots: { method: "GET", path: "/api/v1/calendar/public/{slug}/slots", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarGetPushConfig: { method: "GET", path: "/api/v1/calendar/push/config", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarGetSettings: { method: "GET", path: "/api/v1/calendar/settings", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarListAvailability: { method: "GET", path: "/api/v1/calendar/availability", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarListBookingLinks: { method: "GET", path: "/api/v1/calendar/booking-links", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarListConnectors: { method: "GET", path: "/api/v1/calendar/connectors", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarListEvents: { method: "GET", path: "/api/v1/calendar/events", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarListInvitations: { method: "GET", path: "/api/v1/calendar/invitations", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarListMembers: { method: "GET", path: "/api/v1/calendar/members", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
-  calendarPutSettings: { method: "PUT", path: "/api/v1/calendar/settings", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarRespondToEvent: { method: "POST", path: "/api/v1/calendar/events/{id}/response", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarStartGoogleOAuth: { method: "GET", path: "/api/v1/calendar/connectors/google/oauth/start", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarStartOffice365OAuth: { method: "GET", path: "/api/v1/calendar/connectors/office365/oauth/start", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarSubscribePush: { method: "POST", path: "/api/v1/calendar/push/subscriptions", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarSyncConnector: { method: "POST", path: "/api/v1/calendar/connectors/{id}/sync", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarUnsubscribePush: { method: "DELETE", path: "/api/v1/calendar/push/subscriptions", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarUpdateAvailability: { method: "PATCH", path: "/api/v1/calendar/availability/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarUpdateBookingLink: { method: "PATCH", path: "/api/v1/calendar/booking-links/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarUpdateConnector: { method: "PATCH", path: "/api/v1/calendar/connectors/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarUpdateEvent: { method: "PATCH", path: "/api/v1/calendar/events/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatChangeNotificationMode: { method: "PATCH", path: "/api/v1/chat/conversations/{id}/notification-mode", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatClearManualUnread: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/manual-unread", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatCreateFolder: { method: "POST", path: "/api/v1/chat/folders", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatCreateGroup: { method: "POST", path: "/api/v1/chat/conversations", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatDeleteFolder: { method: "DELETE", path: "/api/v1/chat/folders/{id}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatDeleteMessage: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/messages/{messageId}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatDisableMobileDevice: { method: "DELETE", path: "/api/v1/chat/mobile/devices/{deviceId}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatDownloadAttachment: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments/{attachmentId}/content", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatDownloadConversationAvatar: { method: "GET", path: "/api/v1/chat/conversations/{id}/avatar/content", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatEditMessage: { method: "PATCH", path: "/api/v1/chat/conversations/{id}/messages/{messageId}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatEnsureDirect: { method: "POST", path: "/api/v1/chat/conversations/direct", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatForwardMessage: { method: "POST", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/forward", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatGetAttachment: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments/{attachmentId}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatGetConversation: { method: "GET", path: "/api/v1/chat/conversations/{id}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatListAttachments: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
-  chatListConversationMembers: { method: "GET", path: "/api/v1/chat/conversations/{id}/members", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatListConversations: { method: "GET", path: "/api/v1/chat/conversations", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "cursor", pageSizeMax: 100, pageSizeDefault: 50 },
-  chatListFolders: { method: "GET", path: "/api/v1/chat/folders", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatListMentionCandidates: { method: "GET", path: "/api/v1/chat/conversations/{id}/mentions/candidates", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatListMessages: { method: "GET", path: "/api/v1/chat/conversations/{id}/messages", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
-  chatListPeople: { method: "GET", path: "/api/v1/chat/people", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatListPins: { method: "GET", path: "/api/v1/chat/conversations/{id}/pins", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatListUnreadMentions: { method: "GET", path: "/api/v1/chat/conversations/{id}/mentions/unread", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatMarkAllConversationsRead: { method: "POST", path: "/api/v1/chat/conversations/read-all", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatMarkDelivered: { method: "POST", path: "/api/v1/chat/conversations/{id}/delivered", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatMarkManualUnread: { method: "POST", path: "/api/v1/chat/conversations/{id}/manual-unread", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatMarkMentionRead: { method: "POST", path: "/api/v1/chat/conversations/{id}/mentions/{messageId}/read", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatMarkRead: { method: "POST", path: "/api/v1/chat/conversations/{id}/read", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatOpenMedia: { method: "GET", path: "/api/v1/chat/attachments/{attachmentId}/content", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatPinMessage: { method: "PUT", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/pin", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatRegisterMobileDevice: { method: "POST", path: "/api/v1/chat/mobile/devices", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatRemoveReaction: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/reaction", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatSendMedia: { method: "POST", path: "/api/v1/chat/conversations/{id}/media", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatSendMessage: { method: "POST", path: "/api/v1/chat/conversations/{id}/messages", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatSendMobilePushTest: { method: "POST", path: "/api/v1/chat/mobile/devices/test", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatSetReaction: { method: "PUT", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/reaction", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatStreamRealtime: { method: "GET", path: "/api/v1/chat/realtime/stream", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatUnpinMessage: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/pin", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatUpdateFolder: { method: "PATCH", path: "/api/v1/chat/folders/{id}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatUploadAttachment: { method: "POST", path: "/api/v1/chat/conversations/{id}/attachments", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatUploadConversationAvatar: { method: "POST", path: "/api/v1/chat/conversations/{id}/avatar", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreApplyProductImport: { method: "POST", path: "/api/v1/core/product-imports/{id}/apply", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreArchiveContact: { method: "POST", path: "/api/v1/core/contacts/{id}/archive", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreArchiveEmployee: { method: "DELETE", path: "/api/v1/core/employees/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreArchiveProduct: { method: "POST", path: "/api/v1/core/products/{id}/archive", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreBulkUpdateContacts: { method: "POST", path: "/api/v1/core/contacts/bulk", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreBulkUpdateProducts: { method: "POST", path: "/api/v1/core/products/bulk", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCancelDocument: { method: "POST", path: "/api/v1/core/documents/{id}/cancel", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCloseAccountingPeriod: { method: "POST", path: "/api/v1/core/accounting-periods/close", module: "core", stage: "preview", permission: "core:period_close", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateBusiness: { method: "POST", path: "/api/v1/core/businesses", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateBusinessOwnership: { method: "POST", path: "/api/v1/core/businesses/{id}/ownership", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateContact: { method: "POST", path: "/api/v1/core/contacts", module: "core", stage: "preview", permission: "core:write", idempotent: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateCurrencyRate: { method: "POST", path: "/api/v1/core/currency-rates", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateDictionary: { method: "POST", path: "/api/v1/core/dictionaries", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateDictionaryItem: { method: "POST", path: "/api/v1/core/dictionaries/{id}/items", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateDocument: { method: "POST", path: "/api/v1/core/documents", module: "core", stage: "preview", permission: "core:write", idempotent: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateDocumentType: { method: "POST", path: "/api/v1/core/document-types", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateEmployee: { method: "POST", path: "/api/v1/core/employees", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateEmployeeEquipment: { method: "POST", path: "/api/v1/core/employee-equipment", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateEmployeeLifecycleTemplate: { method: "POST", path: "/api/v1/core/employee-lifecycle-templates", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateFolder: { method: "POST", path: "/api/v1/core/folders", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateGLAccount: { method: "POST", path: "/api/v1/core/gl-accounts", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateGLMapping: { method: "POST", path: "/api/v1/core/gl-mappings", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateGLOpeningImport: { method: "POST", path: "/api/v1/core/gl-opening-imports", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateItem: { method: "POST", path: "/api/v1/core/items", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateProduct: { method: "POST", path: "/api/v1/core/products", module: "core", stage: "preview", permission: "core:write", idempotent: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateProductExport: { method: "POST", path: "/api/v1/core/product-exports", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateProductIdentifier: { method: "POST", path: "/api/v1/core/products/{id}/identifiers", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateProductImport: { method: "POST", path: "/api/v1/core/product-imports", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateProductImportUploadSession: { method: "POST", path: "/api/v1/core/product-import-upload-sessions", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateRegister: { method: "POST", path: "/api/v1/core/registers", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeactivateProductIdentifier: { method: "POST", path: "/api/v1/core/products/{id}/identifiers/{identifierId}/deactivate", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteDictionary: { method: "DELETE", path: "/api/v1/core/dictionaries/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteDictionaryItem: { method: "DELETE", path: "/api/v1/core/dictionaries/{id}/items/{itemId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteDocumentType: { method: "DELETE", path: "/api/v1/core/document-types/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteEmployeePhoto: { method: "DELETE", path: "/api/v1/core/employees/{id}/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteFolder: { method: "DELETE", path: "/api/v1/core/folders/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteGLAccount: { method: "DELETE", path: "/api/v1/core/gl-accounts/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteGLMapping: { method: "DELETE", path: "/api/v1/core/gl-mappings/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteItem: { method: "DELETE", path: "/api/v1/core/items/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteRegister: { method: "DELETE", path: "/api/v1/core/registers/{key}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteSelfEmployeePhoto: { method: "DELETE", path: "/api/v1/core/self/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetAccountingPeriodState: { method: "GET", path: "/api/v1/core/accounting-periods", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetAccountingSettings: { method: "GET", path: "/api/v1/core/accounting-settings", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetBusiness: { method: "GET", path: "/api/v1/core/businesses/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetCabinetPreferences: { method: "GET", path: "/api/v1/core/cabinet-preferences", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetContact: { method: "GET", path: "/api/v1/core/contacts/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetContactUsage: { method: "GET", path: "/api/v1/core/contacts/{id}/usage", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetDictionary: { method: "GET", path: "/api/v1/core/dictionaries/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetDictionaryItemUsage: { method: "GET", path: "/api/v1/core/dictionaries/{id}/items/{itemId}/usage", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetDocument: { method: "GET", path: "/api/v1/core/documents/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetDocumentBlockers: { method: "GET", path: "/api/v1/core/documents/{id}/blockers", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetDocumentLinks: { method: "GET", path: "/api/v1/core/documents/{id}/links", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetDocumentType: { method: "GET", path: "/api/v1/core/document-types/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetEmployee: { method: "GET", path: "/api/v1/core/employees/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetEmployeePhotoContent: { method: "GET", path: "/api/v1/core/employees/{id}/photo/content", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetEmployeeUsage: { method: "GET", path: "/api/v1/core/employees/{id}/usage", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetExternalRef: { method: "GET", path: "/api/v1/core/external-refs/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetGLOpeningImport: { method: "GET", path: "/api/v1/core/gl-opening-imports/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetGLOpeningImportSource: { method: "GET", path: "/api/v1/core/gl-opening-imports/{id}/source", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetProduct: { method: "GET", path: "/api/v1/core/products/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetProductCustomFieldSchema: { method: "GET", path: "/api/v1/core/products/custom-fields/schema", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetProductExport: { method: "GET", path: "/api/v1/core/product-exports/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetProductExportContent: { method: "GET", path: "/api/v1/core/product-exports/{id}/content", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetProductImport: { method: "GET", path: "/api/v1/core/product-imports/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetProductImportErrors: { method: "GET", path: "/api/v1/core/product-imports/{id}/errors", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetProductImportSource: { method: "GET", path: "/api/v1/core/product-imports/{id}/source", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetProductImportTemplate: { method: "GET", path: "/api/v1/core/product-import-templates/{kind}", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetProductUsage: { method: "GET", path: "/api/v1/core/products/{id}/usage", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetRegister: { method: "GET", path: "/api/v1/core/registers/{key}", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetRegisterBalance: { method: "GET", path: "/api/v1/core/registers/{key}/balance", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
-  coreGetRegisterTurnovers: { method: "GET", path: "/api/v1/core/registers/{key}/turnovers", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
-  coreGetSelfEmployeePhoto: { method: "GET", path: "/api/v1/core/self/photo", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetSelfPreferences: { method: "GET", path: "/api/v1/core/self/preferences", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetTrialBalance: { method: "GET", path: "/api/v1/core/ledger/trial-balance", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetUIState: { method: "GET", path: "/api/v1/core/ui-state", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreImportDictionaryItems: { method: "POST", path: "/api/v1/core/dictionaries/{id}/items/import", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreImportExternalContacts: { method: "POST", path: "/api/v1/core/external-refs/contacts/import", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreInspectProductImport: { method: "POST", path: "/api/v1/core/product-imports/{id}/inspect", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreLinkExternalRef: { method: "POST", path: "/api/v1/core/external-refs/{id}/link", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListAccountingDimensions: { method: "GET", path: "/api/v1/core/accounting-dimensions", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListBusinessOwnership: { method: "GET", path: "/api/v1/core/businesses/{id}/ownership", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListBusinesses: { method: "GET", path: "/api/v1/core/businesses", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListCashflowItems: { method: "GET", path: "/api/v1/core/cashflow-items", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListContacts: { method: "GET", path: "/api/v1/core/contacts", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
-  coreListCurrencyRateSources: { method: "GET", path: "/api/v1/core/currency-rate-sources", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListCurrencyRates: { method: "GET", path: "/api/v1/core/currency-rates", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListDictionaries: { method: "GET", path: "/api/v1/core/dictionaries", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 100 },
-  coreListDictionaryItems: { method: "GET", path: "/api/v1/core/dictionaries/{id}/items", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 500 },
-  coreListDirectories: { method: "GET", path: "/api/v1/core/directories", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListDocumentEntries: { method: "GET", path: "/api/v1/core/documents/{id}/entries", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
-  coreListDocumentTypes: { method: "GET", path: "/api/v1/core/document-types", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListDocuments: { method: "GET", path: "/api/v1/core/documents", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
-  coreListEmployeeEquipment: { method: "GET", path: "/api/v1/core/employee-equipment", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListEmployeeLifecycleTemplates: { method: "GET", path: "/api/v1/core/employee-lifecycle-templates", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListEmployees: { method: "GET", path: "/api/v1/core/employees", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 200 },
-  coreListExternalRefs: { method: "GET", path: "/api/v1/core/external-refs", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 50 },
-  coreListFolders: { method: "GET", path: "/api/v1/core/folders", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListGLAccounts: { method: "GET", path: "/api/v1/core/gl-accounts", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListGLMappings: { method: "GET", path: "/api/v1/core/gl-mappings", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListGLOpeningImports: { method: "GET", path: "/api/v1/core/gl-opening-imports", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 20 },
-  coreListItems: { method: "GET", path: "/api/v1/core/items", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListPnlItems: { method: "GET", path: "/api/v1/core/pnl-items", module: "core", stage: "preview", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListProductIdentifiers: { method: "GET", path: "/api/v1/core/products/{id}/identifiers", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListProductVariants: { method: "GET", path: "/api/v1/core/products/{id}/variants", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListProducts: { method: "GET", path: "/api/v1/core/products", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
-  coreListRegisterEntries: { method: "GET", path: "/api/v1/core/registers/{key}/entries", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
-  coreListRegisters: { method: "GET", path: "/api/v1/core/registers", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 200 },
-  coreMarkDocumentDeleted: { method: "POST", path: "/api/v1/core/documents/{id}/mark-deleted", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreMarkGLOpeningImportApplied: { method: "POST", path: "/api/v1/core/gl-opening-imports/{id}/applied", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreMatchExternalContacts: { method: "POST", path: "/api/v1/core/external-refs/contacts/match", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreMoveItem: { method: "POST", path: "/api/v1/core/items/{id}/move", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  corePostDocument: { method: "POST", path: "/api/v1/core/documents/{id}/post", module: "core", stage: "preview", permission: "core:write", idempotent: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  corePreviewProductImport: { method: "POST", path: "/api/v1/core/product-imports/{id}/preview", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreReferenceCatalog: { method: "GET", path: "/api/v1/reference/catalog", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreReferenceItems: { method: "GET", path: "/api/v1/reference/{key}/items", module: "core", stage: "public", permission: "core:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreReferenceResolve: { method: "POST", path: "/api/v1/reference/resolve", module: "core", stage: "public", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreRefreshCurrencyRates: { method: "POST", path: "/api/v1/core/currency-rates/refresh", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreRememberExternalRefs: { method: "POST", path: "/api/v1/core/external-refs", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreReopenAccountingPeriod: { method: "POST", path: "/api/v1/core/accounting-periods/reopen", module: "core", stage: "preview", permission: "core:period_reopen", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreResolveExternalRefs: { method: "POST", path: "/api/v1/core/external-refs/resolve", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreRestoreContact: { method: "POST", path: "/api/v1/core/contacts/{id}/restore", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreRestoreProduct: { method: "POST", path: "/api/v1/core/products/{id}/restore", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreSaveUIState: { method: "PUT", path: "/api/v1/core/ui-state/{screen}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreSetBusinessActive: { method: "POST", path: "/api/v1/core/businesses/{id}/activation", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUnlinkExternalRef: { method: "POST", path: "/api/v1/core/external-refs/{id}/unlink", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateAccountingDimension: { method: "PATCH", path: "/api/v1/core/accounting-dimensions/{key}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateAccountingSettings: { method: "PATCH", path: "/api/v1/core/accounting-settings", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateBusiness: { method: "PATCH", path: "/api/v1/core/businesses/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateCabinetPreferences: { method: "PATCH", path: "/api/v1/core/cabinet-preferences", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateContact: { method: "PATCH", path: "/api/v1/core/contacts/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateDictionary: { method: "PATCH", path: "/api/v1/core/dictionaries/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateDictionaryItem: { method: "PATCH", path: "/api/v1/core/dictionaries/{id}/items/{itemId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateDocument: { method: "PATCH", path: "/api/v1/core/documents/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateDocumentType: { method: "PATCH", path: "/api/v1/core/document-types/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateEmployee: { method: "PATCH", path: "/api/v1/core/employees/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateEmployeeEquipment: { method: "PATCH", path: "/api/v1/core/employee-equipment/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateEmployeeLifecycleTemplate: { method: "PATCH", path: "/api/v1/core/employee-lifecycle-templates/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateFolder: { method: "PATCH", path: "/api/v1/core/folders/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateGLAccount: { method: "PATCH", path: "/api/v1/core/gl-accounts/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateItem: { method: "PATCH", path: "/api/v1/core/items/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateProduct: { method: "PATCH", path: "/api/v1/core/products/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateProductCustom: { method: "PATCH", path: "/api/v1/core/products/{id}/custom", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateProductIdentifier: { method: "PATCH", path: "/api/v1/core/products/{id}/identifiers/{identifierId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateProductImportMapping: { method: "PATCH", path: "/api/v1/core/product-imports/{id}/mapping", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateRegister: { method: "PATCH", path: "/api/v1/core/registers/{key}", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUploadEmployeePhoto: { method: "POST", path: "/api/v1/core/employees/{id}/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUploadProductImportContent: { method: "PUT", path: "/api/v1/core/product-import-upload-sessions/{id}/content", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUploadSelfEmployeePhoto: { method: "POST", path: "/api/v1/core/self/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmAddNote: { method: "POST", path: "/api/v1/crm/{entity}/{id}/notes", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmArchivePipeline: { method: "POST", path: "/api/v1/crm/pipelines/{id}/archive", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmAssignInboxConversation: { method: "PATCH", path: "/api/v1/crm/inbox/conversations/{id}/assign", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCheckInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/check", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmConvertLead: { method: "POST", path: "/api/v1/crm/leads/{id}/convert", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateAutomationRule: { method: "POST", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateCustomer: { method: "POST", path: "/api/v1/crm/customers", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateDeal: { method: "POST", path: "/api/v1/crm/deals", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateDealFromConversation: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/deals", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateEngagement: { method: "POST", path: "/api/v1/crm/{entity}/{id}/engagements", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateEventLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/events", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateHubMeetingLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/hub-meetings", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateLead: { method: "POST", path: "/api/v1/crm/leads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateLeadFromConversation: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/leads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateLossReason: { method: "POST", path: "/api/v1/crm/loss-reasons", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreatePipeline: { method: "POST", path: "/api/v1/crm/pipelines", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateStage: { method: "POST", path: "/api/v1/crm/pipelines/{id}/stages", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateTaskLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/tasks", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmDisableInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/disable", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmEnableInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/enable", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmFindCustomerDuplicates: { method: "GET", path: "/api/v1/crm/customers/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetAnalytics: { method: "GET", path: "/api/v1/crm/analytics", module: "crm", stage: "preview", permission: "crm:team_read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetAutomationRule: { method: "GET", path: "/api/v1/crm/automation/rules/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetAutomationRunActions: { method: "GET", path: "/api/v1/crm/automation/runs/{id}/actions", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetCustomer: { method: "GET", path: "/api/v1/crm/customers/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetDeal: { method: "GET", path: "/api/v1/crm/deals/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetDealBoard: { method: "GET", path: "/api/v1/crm/deals/board", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
-  crmGetDealStageHistory: { method: "GET", path: "/api/v1/crm/deals/{id}/stage-history", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetDirectoryContact: { method: "GET", path: "/api/v1/crm/contacts/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetInboxAttachmentContent: { method: "GET", path: "/api/v1/crm/inbox/attachments/{id}/content", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetInboxConversation: { method: "GET", path: "/api/v1/crm/inbox/conversations/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetLead: { method: "GET", path: "/api/v1/crm/leads/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetLeadHistory: { method: "GET", path: "/api/v1/crm/leads/{id}/history", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetOverview: { method: "GET", path: "/api/v1/crm/overview", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetPipeline: { method: "GET", path: "/api/v1/crm/pipelines/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetTimeline: { method: "GET", path: "/api/v1/crm/{entity}/{id}/timeline", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmLeadDuplicates: { method: "GET", path: "/api/v1/crm/leads/{id}/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmLinkEntityConversation: { method: "POST", path: "/api/v1/crm/inbox/entities/{entity}/{id}/conversations", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListAutomationRules: { method: "GET", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListAutomationRuns: { method: "GET", path: "/api/v1/crm/automation/runs", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListCustomers: { method: "GET", path: "/api/v1/crm/customers", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
-  crmListDealActivities: { method: "GET", path: "/api/v1/crm/deals/{id}/activities", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListDealContacts: { method: "GET", path: "/api/v1/crm/deals/{id}/contacts", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListDealItems: { method: "GET", path: "/api/v1/crm/deals/{id}/items", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListDeals: { method: "GET", path: "/api/v1/crm/deals", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
-  crmListDirectoryContacts: { method: "GET", path: "/api/v1/crm/contacts", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListEngagements: { method: "GET", path: "/api/v1/crm/{entity}/{id}/engagements", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListEntityConversations: { method: "GET", path: "/api/v1/crm/inbox/entities/{entity}/{id}/conversations", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListEntityMessages: { method: "GET", path: "/api/v1/crm/inbox/entities/{entity}/{id}/messages", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 100 },
-  crmListExternalLinks: { method: "GET", path: "/api/v1/crm/{entity}/{id}/links", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListInboxConnections: { method: "GET", path: "/api/v1/crm/inbox/connections", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListInboxConversationLinks: { method: "GET", path: "/api/v1/crm/inbox/conversations/{id}/links", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListInboxConversations: { method: "GET", path: "/api/v1/crm/inbox/conversations", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
-  crmListInboxMessageAttachments: { method: "GET", path: "/api/v1/crm/inbox/messages/{id}/attachments", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListInboxMessages: { method: "GET", path: "/api/v1/crm/inbox/conversations/{id}/messages", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
-  crmListInboxProviders: { method: "GET", path: "/api/v1/crm/inbox/providers", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListInboxTemplates: { method: "GET", path: "/api/v1/crm/inbox/templates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListLeadActivities: { method: "GET", path: "/api/v1/crm/leads/{id}/activities", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListLeads: { method: "GET", path: "/api/v1/crm/leads", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
-  crmListLossReasons: { method: "GET", path: "/api/v1/crm/loss-reasons", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListMembers: { method: "GET", path: "/api/v1/crm/members", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListPipelineDeals: { method: "GET", path: "/api/v1/crm/pipelines/{id}/deals", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
-  crmListPipelines: { method: "GET", path: "/api/v1/crm/pipelines", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmMarkInboxConversationRead: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/read", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmMergeLeads: { method: "POST", path: "/api/v1/crm/leads/{id}/merge", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmMoveDeal: { method: "POST", path: "/api/v1/crm/deals/{id}/move", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmPromoteCustomer: { method: "POST", path: "/api/v1/crm/customers/{id}/promote", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmQualifyLead: { method: "POST", path: "/api/v1/crm/leads/{id}/qualify", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmReopenDeal: { method: "POST", path: "/api/v1/crm/deals/{id}/reopen", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmReorderPipelines: { method: "PATCH", path: "/api/v1/crm/pipelines/reorder", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmReorderStages: { method: "PATCH", path: "/api/v1/crm/pipelines/{id}/stages/reorder", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmReplaceDealContacts: { method: "PUT", path: "/api/v1/crm/deals/{id}/contacts", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmReplaceDealItems: { method: "PUT", path: "/api/v1/crm/deals/{id}/items", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmRetryAutomationRun: { method: "POST", path: "/api/v1/crm/automation/runs/{id}/retry", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmSalesPlans: { method: "GET", path: "/api/v1/crm/sales-plans", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmSaveInboxTemplate: { method: "POST", path: "/api/v1/crm/inbox/templates", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmSaveSalesPlans: { method: "PUT", path: "/api/v1/crm/sales-plans", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmSendInboxMessage: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/messages", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUpdateAutomationRule: { method: "PUT", path: "/api/v1/crm/automation/rules/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUpdateCustomer: { method: "PATCH", path: "/api/v1/crm/customers/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUpdateDeal: { method: "PATCH", path: "/api/v1/crm/deals/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUpdateEngagement: { method: "PATCH", path: "/api/v1/crm/engagements/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUpdateInboxConnection: { method: "PATCH", path: "/api/v1/crm/inbox/connections/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUpdateLead: { method: "PATCH", path: "/api/v1/crm/leads/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUpdatePipeline: { method: "PATCH", path: "/api/v1/crm/pipelines/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUpdateStage: { method: "PATCH", path: "/api/v1/crm/stages/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUploadInboxMessageAttachment: { method: "POST", path: "/api/v1/crm/inbox/messages/{id}/attachments", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUploadInboxOutboundFile: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/uploads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  developerAppBlocks: { method: "GET", path: "/api/v1/developer/app-blocks", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: null },
-  developerCloseSession: { method: "DELETE", path: "/api/v1/developer/sessions/current", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  developerOpenSession: { method: "POST", path: "/api/v1/developer/sessions", module: "developer", stage: "preview", permission: "developer:anonymous", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  developerProfile: { method: "GET", path: "/api/v1/developer/profile", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  developerPublisherApplication: { method: "GET", path: "/api/v1/developer/publisher-application", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  developerRegister: { method: "POST", path: "/api/v1/developer/registrations", module: "developer", stage: "preview", permission: "developer:anonymous", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  developerRequestSignInLink: { method: "POST", path: "/api/v1/developer/sign-in-links", module: "developer", stage: "preview", permission: "developer:anonymous", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  developerSubmitPublisherApplication: { method: "POST", path: "/api/v1/developer/publisher-application", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeAdoptConnectorAccount: { method: "POST", path: "/api/v1/finance/connectors/accounts/{accountId}/adopt", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeApplyExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items/{id}/apply", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeApplyImport: { method: "POST", path: "/api/v1/finance/imports/{id}/apply", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeApproveDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions/{id}/approve", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeApproveDividendPolicy: { method: "POST", path: "/api/v1/finance/dividends/policies/{id}/approve", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCancelPaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans/{id}/cancel", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCancelPayrollDocument: { method: "POST", path: "/api/v1/finance/payroll/documents/{id}/cancel", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCancelSettlementDocument: { method: "POST", path: "/api/v1/finance/settlements/documents/{id}/cancel", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCashflowEntries: { method: "GET", path: "/api/v1/finance/reports/cashflow/entries", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCategorizeCashOperation: { method: "POST", path: "/api/v1/finance/cash-operations/{id}/categorize", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCategorizeTransaction: { method: "POST", path: "/api/v1/finance/transactions/{id}/categorize", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCheckConnectorStatement: { method: "POST", path: "/api/v1/finance/connectors/{id}/accounts/{accountId}/check-statement", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeClassificationSuggestions: { method: "GET", path: "/api/v1/finance/classification-suggestions", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
-  financeConfigureConnectorMTLS: { method: "PUT", path: "/api/v1/finance/connectors/{id}/mtls", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreateAccount: { method: "POST", path: "/api/v1/finance/accounts", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreateConnector: { method: "POST", path: "/api/v1/finance/connectors", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreateCounterpartyTerms: { method: "POST", path: "/api/v1/finance/counterparties/{contactId}/terms", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreateDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreateDividendPolicy: { method: "POST", path: "/api/v1/finance/dividends/policies", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreatePaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreatePayrollDocument: { method: "POST", path: "/api/v1/finance/payroll/documents", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreatePnlLayout: { method: "POST", path: "/api/v1/finance/pnl-layouts", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreateSettlementDocument: { method: "POST", path: "/api/v1/finance/settlements/documents", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreateStatement: { method: "POST", path: "/api/v1/finance/statements", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreateTransaction: { method: "POST", path: "/api/v1/finance/transactions", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeDeleteAccountStatement: { method: "DELETE", path: "/api/v1/finance/accounts/{id}/statements/{statementId}", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeDeletePnlLayout: { method: "DELETE", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeDeleteSettlementDocument: { method: "DELETE", path: "/api/v1/finance/settlements/documents/{id}", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeExecutePaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans/{id}/execute", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetAccount: { method: "GET", path: "/api/v1/finance/accounts/{id}", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetAccountReconciliation: { method: "GET", path: "/api/v1/finance/accounts/{id}/reconciliation", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetBalanceReport: { method: "GET", path: "/api/v1/finance/reports/balance", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetCashflowReport: { method: "GET", path: "/api/v1/finance/reports/cashflow", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetConnector: { method: "GET", path: "/api/v1/finance/connectors/{id}", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetConnectorSyncSettings: { method: "GET", path: "/api/v1/finance/connectors/sync-settings", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetCounterpartyTerms: { method: "GET", path: "/api/v1/finance/counterparties/{contactId}/terms", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetDividendSummary: { method: "GET", path: "/api/v1/finance/dividends/summary", module: "finance", stage: "preview", permission: "finance.dividends:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetImport: { method: "GET", path: "/api/v1/finance/imports/{id}", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetPaymentCalendar: { method: "GET", path: "/api/v1/finance/payment-calendar", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetPayrollJournal: { method: "GET", path: "/api/v1/finance/reports/payroll", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetPeriodCloseChecks: { method: "GET", path: "/api/v1/finance/period-checks", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetPnlLayout: { method: "GET", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetPnlReport: { method: "GET", path: "/api/v1/finance/reports/pnl", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetProjectBudgetHistory: { method: "GET", path: "/api/v1/finance/project-budgets", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetProjectEconomics: { method: "GET", path: "/api/v1/finance/reports/projects", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetReconciliation: { method: "GET", path: "/api/v1/finance/transactions/reconciliation", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetSettlementDocument: { method: "GET", path: "/api/v1/finance/settlements/documents/{id}", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetSettlementPosition: { method: "GET", path: "/api/v1/finance/settlements/position", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetTradeAdvance: { method: "GET", path: "/api/v1/finance/trade-journal/advance", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetTradeJournal: { method: "GET", path: "/api/v1/finance/trade-journal", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 500 },
-  financeGetTransaction: { method: "GET", path: "/api/v1/finance/transactions/{id}", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeInspectImport: { method: "POST", path: "/api/v1/finance/imports/{id}/inspect", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeLinkStatementTransactions: { method: "POST", path: "/api/v1/finance/statements/{id}/transactions", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListAccountStatements: { method: "GET", path: "/api/v1/finance/accounts/{id}/statements", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListAccounts: { method: "GET", path: "/api/v1/finance/accounts", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListConnectorAccounts: { method: "GET", path: "/api/v1/finance/connectors/{id}/accounts", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListConnectorProviders: { method: "GET", path: "/api/v1/finance/connectors/providers", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListConnectorRuns: { method: "GET", path: "/api/v1/finance/connectors/{id}/runs", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 20 },
-  financeListConnectors: { method: "GET", path: "/api/v1/finance/connectors", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListDividendAccessUsers: { method: "GET", path: "/api/v1/finance/dividends/access-users", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListDividendAutomationRuns: { method: "GET", path: "/api/v1/finance/dividends/automation/runs", module: "finance", stage: "preview", permission: "finance.dividends:read", idempotent: false, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 100 },
-  financeListDividendDecisions: { method: "GET", path: "/api/v1/finance/dividends/decisions", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 100 },
-  financeListDividendOwners: { method: "GET", path: "/api/v1/finance/dividends/owners", module: "finance", stage: "preview", permission: "finance.dividends:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListDividendPolicies: { method: "GET", path: "/api/v1/finance/dividends/policies", module: "finance", stage: "preview", permission: "finance.dividends:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListExchangeJournal: { method: "GET", path: "/api/v1/finance/exchange/journal", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
-  financeListPaymentFacts: { method: "GET", path: "/api/v1/finance/payment-calendar/operations", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListPnlLayoutItems: { method: "GET", path: "/api/v1/finance/pnl-layouts/items", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListPnlLayouts: { method: "GET", path: "/api/v1/finance/pnl-layouts", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListSettlementBalances: { method: "GET", path: "/api/v1/finance/settlements/balances", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListSettlementDocuments: { method: "GET", path: "/api/v1/finance/settlements/documents", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
-  financeListSettlementPayments: { method: "GET", path: "/api/v1/finance/settlements/payments", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListSettlementSources: { method: "GET", path: "/api/v1/finance/settlements/sources", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListStatements: { method: "GET", path: "/api/v1/finance/statements", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 100 },
-  financeListTransactions: { method: "GET", path: "/api/v1/finance/transactions", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 500 },
-  financeLookupCompany: { method: "GET", path: "/api/v1/finance/lookup/company", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeLookupRequisites: { method: "GET", path: "/api/v1/finance/lookup/requisites", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeMapImport: { method: "PATCH", path: "/api/v1/finance/imports/{id}/mapping", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeMapImportItems: { method: "PATCH", path: "/api/v1/finance/imports/{id}/item-mapping", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePayoutRegisters: { method: "GET", path: "/api/v1/finance/payroll/registers", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 100 },
-  financePayrollDocuments: { method: "GET", path: "/api/v1/finance/payroll/documents", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
-  financePayrollImportInspect: { method: "POST", path: "/api/v1/finance/payroll/import/inspect", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePayrollImportPreview: { method: "POST", path: "/api/v1/finance/payroll/import/preview", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePayrollPayoutSheet: { method: "POST", path: "/api/v1/finance/payroll/payout-sheet", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePnlEntries: { method: "GET", path: "/api/v1/finance/reports/pnl/entries", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePostDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions/{id}/post", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePostPayrollDocument: { method: "POST", path: "/api/v1/finance/payroll/documents/{id}/post", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePostSettlementDocument: { method: "POST", path: "/api/v1/finance/settlements/documents/{id}/post", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePreviewDividendDecision: { method: "GET", path: "/api/v1/finance/dividends/decisions/preview", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePreviewImport: { method: "POST", path: "/api/v1/finance/imports/{id}/preview", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeQuarantineExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items/{id}/quarantine", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeReconcileRegisters: { method: "GET", path: "/api/v1/finance/registers/reconcile", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeRecordExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeRefreshConnectorAccounts: { method: "POST", path: "/api/v1/finance/connectors/{id}/accounts/refresh", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeRejectClassificationSuggestion: { method: "POST", path: "/api/v1/finance/classification-suggestions/{id}/reject", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeRepairRegisters: { method: "POST", path: "/api/v1/finance/registers/repair", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeRestorePaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans/{id}/restore", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeResyncRegisters: { method: "POST", path: "/api/v1/finance/registers/resync", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeRunDividendAutomation: { method: "POST", path: "/api/v1/finance/dividends/automation/run", module: "finance", stage: "preview", permission: "finance.dividends:auto", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeSavePnlLayout: { method: "PUT", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeSaveProjectBudget: { method: "POST", path: "/api/v1/finance/project-budgets", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeSetAccountOpeningBalance: { method: "POST", path: "/api/v1/finance/accounts/{id}/opening-balance", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeSetConnectorSyncSettings: { method: "PUT", path: "/api/v1/finance/connectors/sync-settings", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeSetWalletOpeningBalance: { method: "POST", path: "/api/v1/finance/wallets/{id}/opening-balance", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeStartConnectorConsent: { method: "POST", path: "/api/v1/finance/connectors/{id}/consent", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeSyncConnector: { method: "POST", path: "/api/v1/finance/connectors/{id}/sync", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeTestConnectorCredentials: { method: "POST", path: "/api/v1/finance/connectors/test", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeTransactionPayoutRegisters: { method: "GET", path: "/api/v1/finance/transactions/{id}/payout-registers", module: "finance", stage: "preview", permission: "finance:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeUpdateAccount: { method: "PATCH", path: "/api/v1/finance/accounts/{id}", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeUpdateCashOperationResponsible: { method: "PATCH", path: "/api/v1/finance/cash-operations/{id}/responsible", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeUpdateConnector: { method: "PATCH", path: "/api/v1/finance/connectors/{id}", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeUpdateConnectorAccount: { method: "PATCH", path: "/api/v1/finance/connectors/accounts/{accountId}", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeUpdatePaymentPlan: { method: "PATCH", path: "/api/v1/finance/payment-calendar/plans/{id}", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeUpdateTransactionResponsible: { method: "PATCH", path: "/api/v1/finance/transactions/{id}/responsible", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeUploadImport: { method: "POST", path: "/api/v1/finance/imports", module: "finance", stage: "preview", permission: "finance:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeAnswer: { method: "POST", path: "/api/v1/knowledge/answer", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeCreatePage: { method: "POST", path: "/api/v1/knowledge/nodes", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeCreateSpace: { method: "POST", path: "/api/v1/knowledge/spaces", module: "knowledge", stage: "preview", permission: "knowledge:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeCreateTag: { method: "POST", path: "/api/v1/knowledge/tags", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeDeleteAsset: { method: "DELETE", path: "/api/v1/knowledge/assets/{id}", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeDeleteSpace: { method: "DELETE", path: "/api/v1/knowledge/spaces/{id}", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeDeleteSpaceCover: { method: "DELETE", path: "/api/v1/knowledge/spaces/{id}/cover", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeGetAnswerQuality: { method: "GET", path: "/api/v1/knowledge/quality", module: "knowledge", stage: "preview", permission: "knowledge:admin", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeGetAssetContent: { method: "GET", path: "/api/v1/knowledge/assets/{id}/content", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeGetPage: { method: "GET", path: "/api/v1/knowledge/nodes/{id}", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeGetPageAccess: { method: "GET", path: "/api/v1/knowledge/nodes/{id}/access", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeGetPageHistory: { method: "GET", path: "/api/v1/knowledge/nodes/{id}/history", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeGetSpaceAccess: { method: "GET", path: "/api/v1/knowledge/spaces/{id}/access", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeGetSpaceCover: { method: "GET", path: "/api/v1/knowledge/spaces/{id}/cover", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeGetSpaceTree: { method: "GET", path: "/api/v1/knowledge/spaces/{id}/tree", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeListAccessOptions: { method: "GET", path: "/api/v1/knowledge/access-options", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeListPageAssets: { method: "GET", path: "/api/v1/knowledge/nodes/{id}/assets", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeListSpaces: { method: "GET", path: "/api/v1/knowledge/spaces", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeListTags: { method: "GET", path: "/api/v1/knowledge/tags", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeListTrashedPages: { method: "GET", path: "/api/v1/knowledge/archive", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeMovePage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/move", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgePublishPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/publish", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeReindexAsset: { method: "POST", path: "/api/v1/knowledge/assets/{id}/reindex", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeRejectPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/reject", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeReplacePageAccess: { method: "PUT", path: "/api/v1/knowledge/nodes/{id}/access", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeReplacePageTags: { method: "PUT", path: "/api/v1/knowledge/nodes/{id}/tags", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeReplaceSpaceAccess: { method: "PUT", path: "/api/v1/knowledge/spaces/{id}/access", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeRestorePage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/restore", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeRestorePageRevision: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/history/restore", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeSaveAnswerFeedback: { method: "POST", path: "/api/v1/knowledge/answers/{id}/feedback", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeSavePageRevision: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/revisions", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeSearch: { method: "GET", path: "/api/v1/knowledge/search", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 20 },
-  knowledgeSubmitPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/submit", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeTrashPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/archive", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeUpdateSpace: { method: "PUT", path: "/api/v1/knowledge/spaces/{id}", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeUploadPageAsset: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/assets", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeUploadSpaceCover: { method: "POST", path: "/api/v1/knowledge/spaces/{id}/cover", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeVerifyPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/verify", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceAddOzonProductGroupItems: { method: "POST", path: "/api/v1/marketplace/ozon/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceAddWbProductGroupItems: { method: "POST", path: "/api/v1/marketplace/wb/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceCreateOzonProductGroup: { method: "POST", path: "/api/v1/marketplace/ozon/product-groups", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceCreateOzonStore: { method: "POST", path: "/api/v1/marketplace/ozon/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceCreateWbProductGroup: { method: "POST", path: "/api/v1/marketplace/wb/product-groups", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceCreateWbStore: { method: "POST", path: "/api/v1/marketplace/wb/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceCreateYandexStore: { method: "POST", path: "/api/v1/marketplace/yandex/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceDeleteOzonProductGroup: { method: "DELETE", path: "/api/v1/marketplace/ozon/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceDeleteWbProductGroup: { method: "DELETE", path: "/api/v1/marketplace/wb/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceEconQuote: { method: "POST", path: "/api/v1/marketplace/econ/quote", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonDecomposition: { method: "GET", path: "/api/v1/marketplace/ozon/decomposition", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonDecompositionOther: { method: "GET", path: "/api/v1/marketplace/ozon/decomposition-other", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonFbs: { method: "GET", path: "/api/v1/marketplace/ozon/fbs", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonFunnel: { method: "GET", path: "/api/v1/marketplace/ozon/funnel", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonFunnelDaily: { method: "GET", path: "/api/v1/marketplace/ozon/funnel-daily", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonOrdersOverview: { method: "GET", path: "/api/v1/marketplace/ozon/orders/overview", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonPnl: { method: "GET", path: "/api/v1/marketplace/ozon/pnl", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonPricing: { method: "GET", path: "/api/v1/marketplace/ozon/pricing", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonProductFacets: { method: "GET", path: "/api/v1/marketplace/ozon/product-facets", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonProductGroupItems: { method: "GET", path: "/api/v1/marketplace/ozon/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonProductGroups: { method: "GET", path: "/api/v1/marketplace/ozon/product-groups", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonProducts: { method: "GET", path: "/api/v1/marketplace/ozon/products", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "page", pageSizeMax: 10000, pageSizeDefault: 50 },
-  marketplaceOzonPromotions: { method: "GET", path: "/api/v1/marketplace/ozon/promotions", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonSetCost: { method: "POST", path: "/api/v1/marketplace/ozon/cost", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonStocks: { method: "GET", path: "/api/v1/marketplace/ozon/stocks", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonStores: { method: "GET", path: "/api/v1/marketplace/ozon/stores", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonSyncJobs: { method: "GET", path: "/api/v1/marketplace/ozon/sync-jobs", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceRemoveOzonProductGroupItem: { method: "DELETE", path: "/api/v1/marketplace/ozon/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceRemoveWbProductGroupItem: { method: "DELETE", path: "/api/v1/marketplace/wb/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceSetYandexCost: { method: "POST", path: "/api/v1/marketplace/yandex/cost", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceUpdateOzonProductGroup: { method: "PATCH", path: "/api/v1/marketplace/ozon/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceUpdateOzonStore: { method: "PATCH", path: "/api/v1/marketplace/ozon/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceUpdateWbProductGroup: { method: "PATCH", path: "/api/v1/marketplace/wb/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceUpdateWbStore: { method: "PATCH", path: "/api/v1/marketplace/wb/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceUpdateYandexStore: { method: "PATCH", path: "/api/v1/marketplace/yandex/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbCardBoard: { method: "GET", path: "/api/v1/marketplace/wb/card/board", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbCardOptions: { method: "GET", path: "/api/v1/marketplace/wb/card/options", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbDecomposition: { method: "GET", path: "/api/v1/marketplace/wb/decomposition", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbDecompositionOther: { method: "GET", path: "/api/v1/marketplace/wb/decomposition-other", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbFunnel: { method: "GET", path: "/api/v1/marketplace/wb/funnel", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbFunnelDaily: { method: "GET", path: "/api/v1/marketplace/wb/funnel-daily", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbOrdersOverview: { method: "GET", path: "/api/v1/marketplace/wb/orders/overview", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbPnl: { method: "GET", path: "/api/v1/marketplace/wb/pnl", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbPricing: { method: "GET", path: "/api/v1/marketplace/wb/pricing", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbProductFacets: { method: "GET", path: "/api/v1/marketplace/wb/product-facets", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbProductGroupItems: { method: "GET", path: "/api/v1/marketplace/wb/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbProductGroups: { method: "GET", path: "/api/v1/marketplace/wb/product-groups", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbProducts: { method: "GET", path: "/api/v1/marketplace/wb/products", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "page", pageSizeMax: 10000, pageSizeDefault: 50 },
-  marketplaceWbPromotions: { method: "GET", path: "/api/v1/marketplace/wb/promotions", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbSetCost: { method: "POST", path: "/api/v1/marketplace/wb/cost", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbStocks: { method: "GET", path: "/api/v1/marketplace/wb/stocks", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbStores: { method: "GET", path: "/api/v1/marketplace/wb/stores", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceYandexOrdersOverview: { method: "GET", path: "/api/v1/marketplace/yandex/orders/overview", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceYandexPnl: { method: "GET", path: "/api/v1/marketplace/yandex/pnl", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceYandexProducts: { method: "GET", path: "/api/v1/marketplace/yandex/products", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "page", pageSizeMax: 10000, pageSizeDefault: 50 },
-  marketplaceYandexStores: { method: "GET", path: "/api/v1/marketplace/yandex/stores", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsActivateCompany: { method: "POST", path: "/api/v1/settings/companies/{id}/activate", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsAppIncidents: { method: "GET", path: "/api/v1/settings/app-incidents", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsAppInstallationEvents: { method: "GET", path: "/api/v1/settings/app-installations/{id}/events", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 100 },
-  settingsCreateApiKey: { method: "POST", path: "/api/v1/settings/api-keys", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsCreateCompany: { method: "POST", path: "/api/v1/settings/companies", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsCreateFieldDefinition: { method: "POST", path: "/api/v1/settings/field-definitions", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsCreateMember: { method: "POST", path: "/api/v1/settings/members", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsCreateRole: { method: "POST", path: "/api/v1/settings/roles", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsDeleteApiKey: { method: "DELETE", path: "/api/v1/settings/api-keys/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsDeleteCompany: { method: "DELETE", path: "/api/v1/settings/companies/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsDeleteFieldDefinition: { method: "DELETE", path: "/api/v1/settings/field-definitions/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsDisableAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/disable", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsEnableAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/enable", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsGetFieldSchema: { method: "GET", path: "/api/v1/settings/field-schema", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsInstallApp: { method: "POST", path: "/api/v1/settings/apps/{publisher}/{key}/installation", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListApiKeyAccess: { method: "GET", path: "/api/v1/settings/api-keys/{id}/access", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListApiKeys: { method: "GET", path: "/api/v1/settings/api-keys", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListAppInstallations: { method: "GET", path: "/api/v1/settings/app-installations", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListApps: { method: "GET", path: "/api/v1/settings/apps", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListCompanies: { method: "GET", path: "/api/v1/settings/companies", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListFieldDefinitions: { method: "GET", path: "/api/v1/settings/field-definitions", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListMembers: { method: "GET", path: "/api/v1/settings/members", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListRoleMembers: { method: "GET", path: "/api/v1/settings/roles/{id}/members", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListRoles: { method: "GET", path: "/api/v1/settings/roles", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListSelectableCompanies: { method: "GET", path: "/api/v1/settings/companies/selectable", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListVatRates: { method: "GET", path: "/api/v1/settings/vat-rates", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsPreviewAppConsent: { method: "GET", path: "/api/v1/settings/apps/{publisher}/{key}/consent", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsRestoreApiKey: { method: "POST", path: "/api/v1/settings/api-keys/{id}/restore", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsRevokeApiKey: { method: "POST", path: "/api/v1/settings/api-keys/{id}/revoke", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsRollbackAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/rollback", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsSetCompanyAccountingMethod: { method: "POST", path: "/api/v1/settings/companies/{id}/accounting-method", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsSetRoleActive: { method: "POST", path: "/api/v1/settings/roles/{id}/activation", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsTransferRoleMembers: { method: "POST", path: "/api/v1/settings/roles/{id}/transfer", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUninstallAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/uninstall", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUnparkAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/unpark", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUpdateAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/update", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUpdateCompany: { method: "PATCH", path: "/api/v1/settings/companies/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUpdateFieldDefinition: { method: "PATCH", path: "/api/v1/settings/field-definitions/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUpdateMember: { method: "PATCH", path: "/api/v1/settings/members/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUpdateRole: { method: "PATCH", path: "/api/v1/settings/roles/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockActivateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses/{id}/activate", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockApplyImport: { method: "POST", path: "/api/v1/stock/imports/{id}/apply", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockCancelDocument: { method: "POST", path: "/api/v1/stock/documents/{id}/cancel", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockCreateDocument: { method: "POST", path: "/api/v1/stock/documents", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockCreateExport: { method: "POST", path: "/api/v1/stock/exports", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockCreateImport: { method: "POST", path: "/api/v1/stock/imports", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockCreatePurchaseOrder: { method: "POST", path: "/api/v1/stock/purchasing/orders", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockCreateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockDeactivateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses/{id}/deactivate", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockDeriveInventoryActs: { method: "POST", path: "/api/v1/stock/documents/{id}/derive", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockFinishInventoryCount: { method: "POST", path: "/api/v1/stock/documents/{id}/inventory-finish", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetBatch: { method: "GET", path: "/api/v1/stock/batches/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetCompanyPolicy: { method: "GET", path: "/api/v1/stock/company-policies/{companyId}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetDocument: { method: "GET", path: "/api/v1/stock/documents/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetDocumentBlockers: { method: "GET", path: "/api/v1/stock/documents/{id}/blockers", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetDocumentFulfillment: { method: "GET", path: "/api/v1/stock/documents/{id}/fulfillment", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetDocumentLinks: { method: "GET", path: "/api/v1/stock/documents/{id}/links", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetExport: { method: "GET", path: "/api/v1/stock/exports/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetExportContent: { method: "GET", path: "/api/v1/stock/exports/{id}/content", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetHandlingUnit: { method: "GET", path: "/api/v1/stock/handling-units/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 200 },
-  stockGetImport: { method: "GET", path: "/api/v1/stock/imports/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetImportErrors: { method: "GET", path: "/api/v1/stock/imports/{id}/errors", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetImportSource: { method: "GET", path: "/api/v1/stock/imports/{id}/source", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetImportTemplate: { method: "GET", path: "/api/v1/stock/import-templates/{kind}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetInventoryCountSheet: { method: "GET", path: "/api/v1/stock/documents/{id}/count-sheet", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetOverdueReservations: { method: "GET", path: "/api/v1/stock/report/reservations/overdue", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 200 },
-  stockGetPurchasingReport: { method: "GET", path: "/api/v1/stock/report/purchasing", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
-  stockGetReorderRule: { method: "GET", path: "/api/v1/stock/reorder-rules/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetReservationSummaries: { method: "GET", path: "/api/v1/stock/report/reservations", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 500 },
-  stockGetSettings: { method: "GET", path: "/api/v1/stock/settings", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetStockDrilldown: { method: "GET", path: "/api/v1/stock/report/stocks/{productId}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
-  stockGetStocksReport: { method: "GET", path: "/api/v1/stock/report/stocks", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
-  stockGetValuationRun: { method: "GET", path: "/api/v1/stock/valuation/rebuild/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetWarehouse: { method: "GET", path: "/api/v1/stock/warehouses/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetWarehouseBlockers: { method: "GET", path: "/api/v1/stock/warehouses/{id}/blockers", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockInspectImport: { method: "POST", path: "/api/v1/stock/imports/{id}/inspect", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockListBatches: { method: "GET", path: "/api/v1/stock/batches", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
-  stockListCompanies: { method: "GET", path: "/api/v1/stock/companies", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockListCompanyPolicies: { method: "GET", path: "/api/v1/stock/company-policies", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockListDocumentFulfillments: { method: "GET", path: "/api/v1/stock/documents/fulfillments", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockListDocuments: { method: "GET", path: "/api/v1/stock/documents", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
-  stockListHandlingUnits: { method: "GET", path: "/api/v1/stock/handling-units", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
-  stockListInventoryChanges: { method: "GET", path: "/api/v1/stock/documents/{id}/inventory-changes", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockListProductUOMs: { method: "GET", path: "/api/v1/stock/products/{productId}/uoms", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockListReorderRules: { method: "GET", path: "/api/v1/stock/reorder-rules", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 50 },
-  stockListSuppliers: { method: "GET", path: "/api/v1/stock/suppliers", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockListWarehouses: { method: "GET", path: "/api/v1/stock/warehouses", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockPostDocument: { method: "POST", path: "/api/v1/stock/documents/{id}/post", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockPreviewImport: { method: "POST", path: "/api/v1/stock/imports/{id}/preview", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockPreviewValuation: { method: "POST", path: "/api/v1/stock/valuation/preview", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockRebuildValuation: { method: "POST", path: "/api/v1/stock/valuation/rebuild", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockRefreshInventorySnapshot: { method: "POST", path: "/api/v1/stock/documents/{id}/inventory-refresh", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockReleaseReservation: { method: "POST", path: "/api/v1/stock/documents/{id}/release", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockSaveInventoryCounts: { method: "PATCH", path: "/api/v1/stock/documents/{id}/inventory-counts", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockSaveProductUOM: { method: "PUT", path: "/api/v1/stock/product-uoms", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockSaveReorderRule: { method: "PUT", path: "/api/v1/stock/reorder-rules", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockScanProduct: { method: "GET", path: "/api/v1/stock/products/scan", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockSuggestHandlingUnits: { method: "GET", path: "/api/v1/stock/handling-units/suggestions", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockUpdateCompanyPolicy: { method: "PATCH", path: "/api/v1/stock/company-policies/{companyId}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockUpdateDocument: { method: "PATCH", path: "/api/v1/stock/documents/{id}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockUpdateHandlingUnitStatus: { method: "PATCH", path: "/api/v1/stock/handling-units/{id}/status", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockUpdateImportMapping: { method: "PATCH", path: "/api/v1/stock/imports/{id}/mapping", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockUpdateReorderRule: { method: "PATCH", path: "/api/v1/stock/reorder-rules/{id}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockUpdateSettings: { method: "PATCH", path: "/api/v1/stock/settings", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockUpdateWarehouse: { method: "PATCH", path: "/api/v1/stock/warehouses/{id}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksAddProjectMember: { method: "POST", path: "/api/v1/tasks/projects/{id}/members", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksAddSectionMember: { method: "POST", path: "/api/v1/tasks/sections/{id}/members", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksArchiveProject: { method: "DELETE", path: "/api/v1/tasks/projects/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksArchiveSection: { method: "DELETE", path: "/api/v1/tasks/sections/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksArchiveTask: { method: "DELETE", path: "/api/v1/tasks/tasks/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksArchiveTemplate: { method: "DELETE", path: "/api/v1/tasks/templates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksAttachTaskTag: { method: "POST", path: "/api/v1/tasks/tasks/{id}/tags", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateAgentJournalEntry: { method: "POST", path: "/api/v1/tasks/tasks/{id}/agent-journal", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateAttachmentDownloadSession: { method: "GET", path: "/api/v1/tasks/attachments/{id}/download-session", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateAttachmentReplacementSession: { method: "POST", path: "/api/v1/tasks/attachments/{id}/replace-sessions", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateAttachmentUploadSession: { method: "POST", path: "/api/v1/tasks/attachments/upload-sessions", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateComment: { method: "POST", path: "/api/v1/tasks/tasks/{id}/comments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateCustomer: { method: "POST", path: "/api/v1/tasks/customers", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateCustomerNeed: { method: "POST", path: "/api/v1/tasks/customer-needs", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateCycle: { method: "POST", path: "/api/v1/tasks/cycles", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateDiscussionComment: { method: "POST", path: "/api/v1/tasks/discussion-comments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateDocument: { method: "POST", path: "/api/v1/tasks/documents", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateLink: { method: "POST", path: "/api/v1/tasks/tasks/{id}/links", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateMeeting: { method: "POST", path: "/api/v1/tasks/hub/meetings", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateMilestone: { method: "POST", path: "/api/v1/tasks/milestones", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateProject: { method: "POST", path: "/api/v1/tasks/projects", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateProjectFileFolder: { method: "POST", path: "/api/v1/tasks/projects/{id}/file-folders", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreatePullRequest: { method: "POST", path: "/api/v1/tasks/pull-requests", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateRelation: { method: "POST", path: "/api/v1/tasks/tasks/{id}/relations", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateSection: { method: "POST", path: "/api/v1/tasks/sections", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateStatus: { method: "POST", path: "/api/v1/tasks/statuses", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateStatusUpdate: { method: "POST", path: "/api/v1/tasks/status-updates", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateTag: { method: "POST", path: "/api/v1/tasks/tags", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateTask: { method: "POST", path: "/api/v1/tasks/tasks", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateTemplate: { method: "POST", path: "/api/v1/tasks/templates", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateView: { method: "POST", path: "/api/v1/tasks/views", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteAttachment: { method: "DELETE", path: "/api/v1/tasks/attachments/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteComment: { method: "DELETE", path: "/api/v1/tasks/comments/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteCustomer: { method: "DELETE", path: "/api/v1/tasks/customers/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteCustomerNeed: { method: "DELETE", path: "/api/v1/tasks/customer-needs/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteCycle: { method: "DELETE", path: "/api/v1/tasks/cycles/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteDiscussionComment: { method: "DELETE", path: "/api/v1/tasks/discussion-comments/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteDocument: { method: "DELETE", path: "/api/v1/tasks/documents/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteLink: { method: "DELETE", path: "/api/v1/tasks/links/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteMeeting: { method: "DELETE", path: "/api/v1/tasks/hub/meetings/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteMilestone: { method: "DELETE", path: "/api/v1/tasks/milestones/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteProjectFileFolder: { method: "DELETE", path: "/api/v1/tasks/projects/{id}/file-folders/{folderID}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteProjectMember: { method: "DELETE", path: "/api/v1/tasks/projects/{id}/members/{userID}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeletePullRequest: { method: "DELETE", path: "/api/v1/tasks/pull-requests/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteRelation: { method: "DELETE", path: "/api/v1/tasks/relations/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteSectionMember: { method: "DELETE", path: "/api/v1/tasks/section-members/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteStatus: { method: "DELETE", path: "/api/v1/tasks/statuses/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteStatusUpdate: { method: "DELETE", path: "/api/v1/tasks/status-updates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteTag: { method: "DELETE", path: "/api/v1/tasks/tags/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteView: { method: "DELETE", path: "/api/v1/tasks/views/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksFinishAttachmentUploadSession: { method: "POST", path: "/api/v1/tasks/attachments/upload-sessions/{id}/finish", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetAttachmentContent: { method: "GET", path: "/api/v1/tasks/attachments/{id}/content", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetCustomer: { method: "GET", path: "/api/v1/tasks/customers/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetCustomerNeed: { method: "GET", path: "/api/v1/tasks/customer-needs/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetCycle: { method: "GET", path: "/api/v1/tasks/cycles/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetDiscussionComment: { method: "GET", path: "/api/v1/tasks/discussion-comments/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetDocument: { method: "GET", path: "/api/v1/tasks/documents/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetHubOverview: { method: "GET", path: "/api/v1/tasks/hub/overview", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetMeeting: { method: "GET", path: "/api/v1/tasks/hub/meetings/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetMilestone: { method: "GET", path: "/api/v1/tasks/milestones/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetPullRequest: { method: "GET", path: "/api/v1/tasks/pull-requests/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetScrumSettings: { method: "GET", path: "/api/v1/tasks/scrum/settings/{project}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetSnapshot: { method: "GET", path: "/api/v1/tasks/snapshot", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 200 },
-  tasksGetSprintMetrics: { method: "GET", path: "/api/v1/tasks/scrum/metrics/{cycle}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetStatusMetrics: { method: "GET", path: "/api/v1/tasks/tasks/{id}/status-metrics", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetStatusUpdate: { method: "GET", path: "/api/v1/tasks/status-updates/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetTask: { method: "GET", path: "/api/v1/tasks/tasks/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListActivity: { method: "GET", path: "/api/v1/tasks/tasks/{id}/activity", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListAgentJournal: { method: "GET", path: "/api/v1/tasks/tasks/{id}/agent-journal", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListCommentAttachments: { method: "GET", path: "/api/v1/tasks/comments/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListComments: { method: "GET", path: "/api/v1/tasks/tasks/{id}/comments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListCustomerNeeds: { method: "GET", path: "/api/v1/tasks/customer-needs", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListCustomers: { method: "GET", path: "/api/v1/tasks/customers", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListCycles: { method: "GET", path: "/api/v1/tasks/cycles", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListDiscussionComments: { method: "GET", path: "/api/v1/tasks/discussion-comments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListDocumentAttachments: { method: "GET", path: "/api/v1/tasks/documents/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListDocuments: { method: "GET", path: "/api/v1/tasks/documents", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListHubSections: { method: "GET", path: "/api/v1/tasks/hub/sections", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListLinks: { method: "GET", path: "/api/v1/tasks/tasks/{id}/links", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListMeetingAttachments: { method: "GET", path: "/api/v1/tasks/hub/meetings/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListMeetings: { method: "GET", path: "/api/v1/tasks/hub/meetings", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListMembers: { method: "GET", path: "/api/v1/tasks/members", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListMilestones: { method: "GET", path: "/api/v1/tasks/milestones", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListProjectAttachments: { method: "GET", path: "/api/v1/tasks/projects/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListProjectFileFolders: { method: "GET", path: "/api/v1/tasks/projects/{id}/file-folders", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListProjectMembers: { method: "GET", path: "/api/v1/tasks/projects/{id}/members", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListProjects: { method: "GET", path: "/api/v1/tasks/projects", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListPullRequests: { method: "GET", path: "/api/v1/tasks/pull-requests", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListRelations: { method: "GET", path: "/api/v1/tasks/tasks/{id}/relations", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListScrumSettings: { method: "GET", path: "/api/v1/tasks/scrum/settings", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListSectionAttachments: { method: "GET", path: "/api/v1/tasks/sections/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListSectionMembers: { method: "GET", path: "/api/v1/tasks/sections/{id}/members", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListSections: { method: "GET", path: "/api/v1/tasks/sections", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListStatusUpdates: { method: "GET", path: "/api/v1/tasks/status-updates", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListStatuses: { method: "GET", path: "/api/v1/tasks/statuses", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListTagCatalog: { method: "GET", path: "/api/v1/tasks/tags", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListTaskAttachments: { method: "GET", path: "/api/v1/tasks/tasks/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListTaskTags: { method: "GET", path: "/api/v1/tasks/tasks/{id}/tags", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListTasks: { method: "GET", path: "/api/v1/tasks/tasks", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: null },
-  tasksListTemplates: { method: "GET", path: "/api/v1/tasks/templates", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListViews: { method: "GET", path: "/api/v1/tasks/views", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksMoveProjectAttachment: { method: "PATCH", path: "/api/v1/tasks/projects/{id}/attachments/{attachmentID}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksMoveTask: { method: "POST", path: "/api/v1/tasks/tasks/{id}/move", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksRenameProjectFileFolder: { method: "PATCH", path: "/api/v1/tasks/projects/{id}/file-folders/{folderID}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksReorderStatuses: { method: "PATCH", path: "/api/v1/tasks/statuses/reorder", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksReplaceAttachment: { method: "POST", path: "/api/v1/tasks/attachments/{id}/replace", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksRunDueTemplates: { method: "POST", path: "/api/v1/tasks/templates/run-due", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksRunTemplate: { method: "POST", path: "/api/v1/tasks/templates/{id}/run", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateCustomer: { method: "PATCH", path: "/api/v1/tasks/customers/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateCustomerNeed: { method: "PATCH", path: "/api/v1/tasks/customer-needs/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateCycle: { method: "PATCH", path: "/api/v1/tasks/cycles/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateDiscussionComment: { method: "PATCH", path: "/api/v1/tasks/discussion-comments/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateDocument: { method: "PATCH", path: "/api/v1/tasks/documents/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateHubSection: { method: "PATCH", path: "/api/v1/tasks/hub/sections/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateMeeting: { method: "PATCH", path: "/api/v1/tasks/hub/meetings/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateMilestone: { method: "PATCH", path: "/api/v1/tasks/milestones/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateProject: { method: "PATCH", path: "/api/v1/tasks/projects/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdatePullRequest: { method: "PATCH", path: "/api/v1/tasks/pull-requests/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateScrumSettings: { method: "PATCH", path: "/api/v1/tasks/scrum/settings/{project}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateSection: { method: "PATCH", path: "/api/v1/tasks/sections/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateStatus: { method: "PATCH", path: "/api/v1/tasks/statuses/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateStatusUpdate: { method: "PATCH", path: "/api/v1/tasks/status-updates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateTag: { method: "PATCH", path: "/api/v1/tasks/tags/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateTask: { method: "PATCH", path: "/api/v1/tasks/tasks/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateTemplate: { method: "PATCH", path: "/api/v1/tasks/templates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUploadCommentAttachment: { method: "POST", path: "/api/v1/tasks/comments/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUploadDocumentAttachment: { method: "POST", path: "/api/v1/tasks/documents/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUploadMeetingAttachment: { method: "POST", path: "/api/v1/tasks/hub/meetings/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUploadProjectAttachment: { method: "POST", path: "/api/v1/tasks/projects/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUploadSectionAttachment: { method: "POST", path: "/api/v1/tasks/sections/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUploadTaskAttachment: { method: "POST", path: "/api/v1/tasks/tasks/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  appFinanceSuggestTransactionClassification: { method: "POST", path: "/api/v1/app/finance/transactions/{id}/classification-suggestions", module: "finance", stage: "preview", permission: "finance:suggest", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  appReferenceDeactivateItem: { method: "DELETE", path: "/api/v1/app/reference/{key}/items/{code}", module: "core", stage: "preview", permission: "app:reference", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  appReferenceItems: { method: "GET", path: "/api/v1/app/reference/{key}/items", module: "core", stage: "preview", permission: "app:reference", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: null },
+  appReferenceUpsertItems: { method: "PUT", path: "/api/v1/app/reference/{key}/items", module: "core", stage: "preview", permission: "app:reference", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  appRuntimeConfig: { method: "GET", path: "/api/v1/app/config", module: "platform", stage: "preview", permission: "app:self", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  appRuntimeInstallation: { method: "GET", path: "/api/v1/app/installation", module: "platform", stage: "preview", permission: "app:self", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  appRuntimeLeaseSecret: { method: "POST", path: "/api/v1/app/config/{key}/lease", module: "platform", stage: "preview", permission: "app:secrets", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  appRuntimeRedeemSlotLaunch: { method: "POST", path: "/api/v1/app/slot-launch", module: "platform", stage: "preview", permission: "app:launch", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarBookPublicSlot: { method: "POST", path: "/api/v1/calendar/public/{slug}/book", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarCompleteGoogleOAuth: { method: "POST", path: "/api/v1/calendar/connectors/google/oauth/complete", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarCompleteOffice365OAuth: { method: "POST", path: "/api/v1/calendar/connectors/office365/oauth/complete", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarCreateAvailability: { method: "POST", path: "/api/v1/calendar/availability", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarCreateBookingLink: { method: "POST", path: "/api/v1/calendar/booking-links", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarCreateConnector: { method: "POST", path: "/api/v1/calendar/connectors", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarCreateEvent: { method: "POST", path: "/api/v1/calendar/events", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarDeleteAvailability: { method: "DELETE", path: "/api/v1/calendar/availability/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarDeleteBookingLink: { method: "DELETE", path: "/api/v1/calendar/booking-links/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarDeleteConnector: { method: "DELETE", path: "/api/v1/calendar/connectors/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarDeleteEvent: { method: "DELETE", path: "/api/v1/calendar/events/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarGetBookingLinkSlots: { method: "GET", path: "/api/v1/calendar/booking-links/{id}/slots", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarGetBusy: { method: "GET", path: "/api/v1/calendar/busy", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarGetEvent: { method: "GET", path: "/api/v1/calendar/events/{id}", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarGetPublicBookingLink: { method: "GET", path: "/api/v1/calendar/public/{slug}", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarGetPublicBookingSlots: { method: "GET", path: "/api/v1/calendar/public/{slug}/slots", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarGetPushConfig: { method: "GET", path: "/api/v1/calendar/push/config", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarGetSettings: { method: "GET", path: "/api/v1/calendar/settings", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarListAvailability: { method: "GET", path: "/api/v1/calendar/availability", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarListBookingLinks: { method: "GET", path: "/api/v1/calendar/booking-links", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarListConnectors: { method: "GET", path: "/api/v1/calendar/connectors", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarListEvents: { method: "GET", path: "/api/v1/calendar/events", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarListInvitations: { method: "GET", path: "/api/v1/calendar/invitations", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarListMembers: { method: "GET", path: "/api/v1/calendar/members", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
+  calendarPutSettings: { method: "PUT", path: "/api/v1/calendar/settings", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarRespondToEvent: { method: "POST", path: "/api/v1/calendar/events/{id}/response", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarStartGoogleOAuth: { method: "GET", path: "/api/v1/calendar/connectors/google/oauth/start", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarStartOffice365OAuth: { method: "GET", path: "/api/v1/calendar/connectors/office365/oauth/start", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarSubscribePush: { method: "POST", path: "/api/v1/calendar/push/subscriptions", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarSyncConnector: { method: "POST", path: "/api/v1/calendar/connectors/{id}/sync", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarUnsubscribePush: { method: "DELETE", path: "/api/v1/calendar/push/subscriptions", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarUpdateAvailability: { method: "PATCH", path: "/api/v1/calendar/availability/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarUpdateBookingLink: { method: "PATCH", path: "/api/v1/calendar/booking-links/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarUpdateConnector: { method: "PATCH", path: "/api/v1/calendar/connectors/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarUpdateEvent: { method: "PATCH", path: "/api/v1/calendar/events/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatChangeNotificationMode: { method: "PATCH", path: "/api/v1/chat/conversations/{id}/notification-mode", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatClearManualUnread: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/manual-unread", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatCreateFolder: { method: "POST", path: "/api/v1/chat/folders", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatCreateGroup: { method: "POST", path: "/api/v1/chat/conversations", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatDeleteFolder: { method: "DELETE", path: "/api/v1/chat/folders/{id}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatDeleteMessage: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/messages/{messageId}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatDisableMobileDevice: { method: "DELETE", path: "/api/v1/chat/mobile/devices/{deviceId}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatDownloadAttachment: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments/{attachmentId}/content", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatDownloadConversationAvatar: { method: "GET", path: "/api/v1/chat/conversations/{id}/avatar/content", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatEditMessage: { method: "PATCH", path: "/api/v1/chat/conversations/{id}/messages/{messageId}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatEnsureDirect: { method: "POST", path: "/api/v1/chat/conversations/direct", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatEnsureEntityConversation: { method: "POST", path: "/api/v1/chat/entities/{module}/{entity}/{entityId}/conversation", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatFindEntityConversation: { method: "GET", path: "/api/v1/chat/entities/{module}/{entity}/{entityId}/conversation", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatForwardMessage: { method: "POST", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/forward", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatGetAttachment: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments/{attachmentId}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatGetConversation: { method: "GET", path: "/api/v1/chat/conversations/{id}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatListAttachments: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
+  chatListConversationMembers: { method: "GET", path: "/api/v1/chat/conversations/{id}/members", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatListConversations: { method: "GET", path: "/api/v1/chat/conversations", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "cursor", pageSizeMax: 100, pageSizeDefault: 50 },
+  chatListFolders: { method: "GET", path: "/api/v1/chat/folders", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatListMentionCandidates: { method: "GET", path: "/api/v1/chat/conversations/{id}/mentions/candidates", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatListMessages: { method: "GET", path: "/api/v1/chat/conversations/{id}/messages", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
+  chatListPeople: { method: "GET", path: "/api/v1/chat/people", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatListPins: { method: "GET", path: "/api/v1/chat/conversations/{id}/pins", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatListPresence: { method: "GET", path: "/api/v1/chat/conversations/{id}/presence", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatListUnreadMentions: { method: "GET", path: "/api/v1/chat/conversations/{id}/mentions/unread", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatMarkAllConversationsRead: { method: "POST", path: "/api/v1/chat/conversations/read-all", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatMarkDelivered: { method: "POST", path: "/api/v1/chat/conversations/{id}/delivered", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatMarkManualUnread: { method: "POST", path: "/api/v1/chat/conversations/{id}/manual-unread", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatMarkMentionRead: { method: "POST", path: "/api/v1/chat/conversations/{id}/mentions/{messageId}/read", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatMarkRead: { method: "POST", path: "/api/v1/chat/conversations/{id}/read", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatOpenMedia: { method: "GET", path: "/api/v1/chat/attachments/{attachmentId}/content", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatPinMessage: { method: "PUT", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/pin", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatPulsePresence: { method: "POST", path: "/api/v1/chat/conversations/{id}/typing", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatRegisterMobileDevice: { method: "POST", path: "/api/v1/chat/mobile/devices", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatRemoveReaction: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/reaction", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatSendMedia: { method: "POST", path: "/api/v1/chat/conversations/{id}/media", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatSendMessage: { method: "POST", path: "/api/v1/chat/conversations/{id}/messages", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatSendMobilePushTest: { method: "POST", path: "/api/v1/chat/mobile/devices/test", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatSetReaction: { method: "PUT", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/reaction", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatStreamRealtime: { method: "GET", path: "/api/v1/chat/realtime/stream", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatUnpinMessage: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/pin", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatUpdateFolder: { method: "PATCH", path: "/api/v1/chat/folders/{id}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatUploadAttachment: { method: "POST", path: "/api/v1/chat/conversations/{id}/attachments", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatUploadConversationAvatar: { method: "POST", path: "/api/v1/chat/conversations/{id}/avatar", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreApplyProductImport: { method: "POST", path: "/api/v1/core/product-imports/{id}/apply", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreArchiveContact: { method: "POST", path: "/api/v1/core/contacts/{id}/archive", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreArchiveEmployee: { method: "DELETE", path: "/api/v1/core/employees/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreArchiveProduct: { method: "POST", path: "/api/v1/core/products/{id}/archive", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreBulkUpdateContacts: { method: "POST", path: "/api/v1/core/contacts/bulk", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreBulkUpdateProducts: { method: "POST", path: "/api/v1/core/products/bulk", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCancelDocument: { method: "POST", path: "/api/v1/core/documents/{id}/cancel", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCloseAccountingPeriod: { method: "POST", path: "/api/v1/core/accounting-periods/close", module: "core", stage: "preview", permission: "core:period_close", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateBusiness: { method: "POST", path: "/api/v1/core/businesses", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateBusinessOwnership: { method: "POST", path: "/api/v1/core/businesses/{id}/ownership", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateContact: { method: "POST", path: "/api/v1/core/contacts", module: "core", stage: "preview", permission: "core:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateCurrencyRate: { method: "POST", path: "/api/v1/core/currency-rates", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateDictionary: { method: "POST", path: "/api/v1/core/dictionaries", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateDictionaryItem: { method: "POST", path: "/api/v1/core/dictionaries/{id}/items", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateDocument: { method: "POST", path: "/api/v1/core/documents", module: "core", stage: "preview", permission: "core:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateDocumentType: { method: "POST", path: "/api/v1/core/document-types", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateEmployee: { method: "POST", path: "/api/v1/core/employees", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateEmployeeEquipment: { method: "POST", path: "/api/v1/core/employee-equipment", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateEmployeeLifecycleTemplate: { method: "POST", path: "/api/v1/core/employee-lifecycle-templates", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateFolder: { method: "POST", path: "/api/v1/core/folders", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateGLAccount: { method: "POST", path: "/api/v1/core/gl-accounts", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateGLMapping: { method: "POST", path: "/api/v1/core/gl-mappings", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateGLOpeningImport: { method: "POST", path: "/api/v1/core/gl-opening-imports", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateItem: { method: "POST", path: "/api/v1/core/items", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateProduct: { method: "POST", path: "/api/v1/core/products", module: "core", stage: "preview", permission: "core:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateProductExport: { method: "POST", path: "/api/v1/core/product-exports", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateProductIdentifier: { method: "POST", path: "/api/v1/core/products/{id}/identifiers", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateProductImport: { method: "POST", path: "/api/v1/core/product-imports", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateProductImportUploadSession: { method: "POST", path: "/api/v1/core/product-import-upload-sessions", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateRegister: { method: "POST", path: "/api/v1/core/registers", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreDeactivateProductIdentifier: { method: "POST", path: "/api/v1/core/products/{id}/identifiers/{identifierId}/deactivate", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreDeleteDictionary: { method: "DELETE", path: "/api/v1/core/dictionaries/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreDeleteDictionaryItem: { method: "DELETE", path: "/api/v1/core/dictionaries/{id}/items/{itemId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreDeleteDocumentType: { method: "DELETE", path: "/api/v1/core/document-types/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreDeleteEmployeePhoto: { method: "DELETE", path: "/api/v1/core/employees/{id}/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreDeleteFolder: { method: "DELETE", path: "/api/v1/core/folders/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreDeleteGLAccount: { method: "DELETE", path: "/api/v1/core/gl-accounts/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreDeleteGLMapping: { method: "DELETE", path: "/api/v1/core/gl-mappings/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreDeleteItem: { method: "DELETE", path: "/api/v1/core/items/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreDeleteRegister: { method: "DELETE", path: "/api/v1/core/registers/{key}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreDeleteSelfEmployeePhoto: { method: "DELETE", path: "/api/v1/core/self/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetAccountingPeriodState: { method: "GET", path: "/api/v1/core/accounting-periods", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetAccountingSettings: { method: "GET", path: "/api/v1/core/accounting-settings", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetBusiness: { method: "GET", path: "/api/v1/core/businesses/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetCabinetPreferences: { method: "GET", path: "/api/v1/core/cabinet-preferences", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetContact: { method: "GET", path: "/api/v1/core/contacts/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetContactUsage: { method: "GET", path: "/api/v1/core/contacts/{id}/usage", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetDictionary: { method: "GET", path: "/api/v1/core/dictionaries/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetDictionaryItemUsage: { method: "GET", path: "/api/v1/core/dictionaries/{id}/items/{itemId}/usage", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetDocument: { method: "GET", path: "/api/v1/core/documents/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetDocumentBlockers: { method: "GET", path: "/api/v1/core/documents/{id}/blockers", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetDocumentLinks: { method: "GET", path: "/api/v1/core/documents/{id}/links", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetDocumentType: { method: "GET", path: "/api/v1/core/document-types/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetEmployee: { method: "GET", path: "/api/v1/core/employees/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetEmployeePhotoContent: { method: "GET", path: "/api/v1/core/employees/{id}/photo/content", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetEmployeeUsage: { method: "GET", path: "/api/v1/core/employees/{id}/usage", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetExternalRef: { method: "GET", path: "/api/v1/core/external-refs/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetGLOpeningImport: { method: "GET", path: "/api/v1/core/gl-opening-imports/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetGLOpeningImportSource: { method: "GET", path: "/api/v1/core/gl-opening-imports/{id}/source", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetProduct: { method: "GET", path: "/api/v1/core/products/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetProductCustomFieldSchema: { method: "GET", path: "/api/v1/core/products/custom-fields/schema", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetProductExport: { method: "GET", path: "/api/v1/core/product-exports/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetProductExportContent: { method: "GET", path: "/api/v1/core/product-exports/{id}/content", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetProductImport: { method: "GET", path: "/api/v1/core/product-imports/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetProductImportErrors: { method: "GET", path: "/api/v1/core/product-imports/{id}/errors", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetProductImportSource: { method: "GET", path: "/api/v1/core/product-imports/{id}/source", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetProductImportTemplate: { method: "GET", path: "/api/v1/core/product-import-templates/{kind}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetProductUsage: { method: "GET", path: "/api/v1/core/products/{id}/usage", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetRegister: { method: "GET", path: "/api/v1/core/registers/{key}", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetRegisterBalance: { method: "GET", path: "/api/v1/core/registers/{key}/balance", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
+  coreGetRegisterTurnovers: { method: "GET", path: "/api/v1/core/registers/{key}/turnovers", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
+  coreGetSelfEmployeePhoto: { method: "GET", path: "/api/v1/core/self/photo", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetSelfPreferences: { method: "GET", path: "/api/v1/core/self/preferences", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetTrialBalance: { method: "GET", path: "/api/v1/core/ledger/trial-balance", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetUIState: { method: "GET", path: "/api/v1/core/ui-state", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreImportDictionaryItems: { method: "POST", path: "/api/v1/core/dictionaries/{id}/items/import", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreImportExternalContacts: { method: "POST", path: "/api/v1/core/external-refs/contacts/import", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreInspectProductImport: { method: "POST", path: "/api/v1/core/product-imports/{id}/inspect", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreLinkExternalRef: { method: "POST", path: "/api/v1/core/external-refs/{id}/link", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListAccountingDimensions: { method: "GET", path: "/api/v1/core/accounting-dimensions", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListBusinessOwnership: { method: "GET", path: "/api/v1/core/businesses/{id}/ownership", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListBusinesses: { method: "GET", path: "/api/v1/core/businesses", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListCashflowItems: { method: "GET", path: "/api/v1/core/cashflow-items", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListContacts: { method: "GET", path: "/api/v1/core/contacts", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
+  coreListCurrencyRateSources: { method: "GET", path: "/api/v1/core/currency-rate-sources", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListCurrencyRates: { method: "GET", path: "/api/v1/core/currency-rates", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListDictionaries: { method: "GET", path: "/api/v1/core/dictionaries", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 100 },
+  coreListDictionaryItems: { method: "GET", path: "/api/v1/core/dictionaries/{id}/items", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 500 },
+  coreListDirectories: { method: "GET", path: "/api/v1/core/directories", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListDocumentEntries: { method: "GET", path: "/api/v1/core/documents/{id}/entries", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
+  coreListDocumentTypes: { method: "GET", path: "/api/v1/core/document-types", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListDocuments: { method: "GET", path: "/api/v1/core/documents", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
+  coreListEmployeeEquipment: { method: "GET", path: "/api/v1/core/employee-equipment", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListEmployeeLifecycleTemplates: { method: "GET", path: "/api/v1/core/employee-lifecycle-templates", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListEmployees: { method: "GET", path: "/api/v1/core/employees", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 200 },
+  coreListExternalRefs: { method: "GET", path: "/api/v1/core/external-refs", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 50 },
+  coreListFolders: { method: "GET", path: "/api/v1/core/folders", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListGLAccounts: { method: "GET", path: "/api/v1/core/gl-accounts", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListGLMappings: { method: "GET", path: "/api/v1/core/gl-mappings", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListGLOpeningImports: { method: "GET", path: "/api/v1/core/gl-opening-imports", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 20 },
+  coreListItems: { method: "GET", path: "/api/v1/core/items", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListPnlItems: { method: "GET", path: "/api/v1/core/pnl-items", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListProductIdentifiers: { method: "GET", path: "/api/v1/core/products/{id}/identifiers", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListProductVariants: { method: "GET", path: "/api/v1/core/products/{id}/variants", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListProducts: { method: "GET", path: "/api/v1/core/products", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
+  coreListRegisterEntries: { method: "GET", path: "/api/v1/core/registers/{key}/entries", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
+  coreListRegisters: { method: "GET", path: "/api/v1/core/registers", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 200 },
+  coreMarkDocumentDeleted: { method: "POST", path: "/api/v1/core/documents/{id}/mark-deleted", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreMarkGLOpeningImportApplied: { method: "POST", path: "/api/v1/core/gl-opening-imports/{id}/applied", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreMatchExternalContacts: { method: "POST", path: "/api/v1/core/external-refs/contacts/match", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreMoveItem: { method: "POST", path: "/api/v1/core/items/{id}/move", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  corePostDocument: { method: "POST", path: "/api/v1/core/documents/{id}/post", module: "core", stage: "preview", permission: "core:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  corePreviewProductImport: { method: "POST", path: "/api/v1/core/product-imports/{id}/preview", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreReferenceCatalog: { method: "GET", path: "/api/v1/reference/catalog", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreReferenceChanges: { method: "GET", path: "/api/v1/reference/changes", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "cursor", pageSizeMax: 1000, pageSizeDefault: 100 },
+  coreReferenceItems: { method: "GET", path: "/api/v1/reference/{key}/items", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreReferenceResolve: { method: "POST", path: "/api/v1/reference/resolve", module: "core", stage: "public", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreRefreshCurrencyRates: { method: "POST", path: "/api/v1/core/currency-rates/refresh", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreRememberExternalRefs: { method: "POST", path: "/api/v1/core/external-refs", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreReopenAccountingPeriod: { method: "POST", path: "/api/v1/core/accounting-periods/reopen", module: "core", stage: "preview", permission: "core:period_reopen", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreResolveExternalRefs: { method: "POST", path: "/api/v1/core/external-refs/resolve", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreRestoreContact: { method: "POST", path: "/api/v1/core/contacts/{id}/restore", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreRestoreProduct: { method: "POST", path: "/api/v1/core/products/{id}/restore", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreSaveUIState: { method: "PUT", path: "/api/v1/core/ui-state/{screen}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreSetBusinessActive: { method: "POST", path: "/api/v1/core/businesses/{id}/activation", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUnlinkExternalRef: { method: "POST", path: "/api/v1/core/external-refs/{id}/unlink", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateAccountingDimension: { method: "PATCH", path: "/api/v1/core/accounting-dimensions/{key}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateAccountingSettings: { method: "PATCH", path: "/api/v1/core/accounting-settings", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateBusiness: { method: "PATCH", path: "/api/v1/core/businesses/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateCabinetPreferences: { method: "PATCH", path: "/api/v1/core/cabinet-preferences", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateContact: { method: "PATCH", path: "/api/v1/core/contacts/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateDictionary: { method: "PATCH", path: "/api/v1/core/dictionaries/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateDictionaryItem: { method: "PATCH", path: "/api/v1/core/dictionaries/{id}/items/{itemId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateDocument: { method: "PATCH", path: "/api/v1/core/documents/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateDocumentType: { method: "PATCH", path: "/api/v1/core/document-types/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateEmployee: { method: "PATCH", path: "/api/v1/core/employees/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateEmployeeEquipment: { method: "PATCH", path: "/api/v1/core/employee-equipment/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateEmployeeLifecycleTemplate: { method: "PATCH", path: "/api/v1/core/employee-lifecycle-templates/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateFolder: { method: "PATCH", path: "/api/v1/core/folders/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateGLAccount: { method: "PATCH", path: "/api/v1/core/gl-accounts/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateItem: { method: "PATCH", path: "/api/v1/core/items/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateProduct: { method: "PATCH", path: "/api/v1/core/products/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateProductCustom: { method: "PATCH", path: "/api/v1/core/products/{id}/custom", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateProductIdentifier: { method: "PATCH", path: "/api/v1/core/products/{id}/identifiers/{identifierId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateProductImportMapping: { method: "PATCH", path: "/api/v1/core/product-imports/{id}/mapping", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateRegister: { method: "PATCH", path: "/api/v1/core/registers/{key}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUploadEmployeePhoto: { method: "POST", path: "/api/v1/core/employees/{id}/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUploadProductImportContent: { method: "PUT", path: "/api/v1/core/product-import-upload-sessions/{id}/content", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUploadSelfEmployeePhoto: { method: "POST", path: "/api/v1/core/self/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmAddNote: { method: "POST", path: "/api/v1/crm/{entity}/{id}/notes", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmArchivePipeline: { method: "POST", path: "/api/v1/crm/pipelines/{id}/archive", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmAssignInboxConversation: { method: "PATCH", path: "/api/v1/crm/inbox/conversations/{id}/assign", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCheckInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/check", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmConvertLead: { method: "POST", path: "/api/v1/crm/leads/{id}/convert", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateAutomationRule: { method: "POST", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateCustomer: { method: "POST", path: "/api/v1/crm/customers", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateDeal: { method: "POST", path: "/api/v1/crm/deals", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateDealFromConversation: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/deals", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateEngagement: { method: "POST", path: "/api/v1/crm/{entity}/{id}/engagements", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateEventLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/events", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateHubMeetingLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/hub-meetings", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateLead: { method: "POST", path: "/api/v1/crm/leads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateLeadFromConversation: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/leads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateLossReason: { method: "POST", path: "/api/v1/crm/loss-reasons", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreatePipeline: { method: "POST", path: "/api/v1/crm/pipelines", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateStage: { method: "POST", path: "/api/v1/crm/pipelines/{id}/stages", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateTaskLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/tasks", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmDisableInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/disable", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmEnableInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/enable", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmFindCustomerDuplicates: { method: "GET", path: "/api/v1/crm/customers/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetAnalytics: { method: "GET", path: "/api/v1/crm/analytics", module: "crm", stage: "preview", permission: "crm:team_read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetAutomationRule: { method: "GET", path: "/api/v1/crm/automation/rules/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetAutomationRunActions: { method: "GET", path: "/api/v1/crm/automation/runs/{id}/actions", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetCustomer: { method: "GET", path: "/api/v1/crm/customers/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetDeal: { method: "GET", path: "/api/v1/crm/deals/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetDealBoard: { method: "GET", path: "/api/v1/crm/deals/board", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
+  crmGetDealStageHistory: { method: "GET", path: "/api/v1/crm/deals/{id}/stage-history", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetDirectoryContact: { method: "GET", path: "/api/v1/crm/contacts/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetInboxAttachmentContent: { method: "GET", path: "/api/v1/crm/inbox/attachments/{id}/content", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetInboxConversation: { method: "GET", path: "/api/v1/crm/inbox/conversations/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetLead: { method: "GET", path: "/api/v1/crm/leads/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetLeadHistory: { method: "GET", path: "/api/v1/crm/leads/{id}/history", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetOverview: { method: "GET", path: "/api/v1/crm/overview", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetPipeline: { method: "GET", path: "/api/v1/crm/pipelines/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetTimeline: { method: "GET", path: "/api/v1/crm/{entity}/{id}/timeline", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmLeadDuplicates: { method: "GET", path: "/api/v1/crm/leads/{id}/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmLinkEntityConversation: { method: "POST", path: "/api/v1/crm/inbox/entities/{entity}/{id}/conversations", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListAutomationRules: { method: "GET", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListAutomationRuns: { method: "GET", path: "/api/v1/crm/automation/runs", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListCustomers: { method: "GET", path: "/api/v1/crm/customers", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
+  crmListDealActivities: { method: "GET", path: "/api/v1/crm/deals/{id}/activities", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListDealContacts: { method: "GET", path: "/api/v1/crm/deals/{id}/contacts", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListDealItems: { method: "GET", path: "/api/v1/crm/deals/{id}/items", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListDeals: { method: "GET", path: "/api/v1/crm/deals", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
+  crmListDirectoryContacts: { method: "GET", path: "/api/v1/crm/contacts", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListEngagements: { method: "GET", path: "/api/v1/crm/{entity}/{id}/engagements", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListEntityConversations: { method: "GET", path: "/api/v1/crm/inbox/entities/{entity}/{id}/conversations", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListEntityMessages: { method: "GET", path: "/api/v1/crm/inbox/entities/{entity}/{id}/messages", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 100 },
+  crmListExternalLinks: { method: "GET", path: "/api/v1/crm/{entity}/{id}/links", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListInboxConnections: { method: "GET", path: "/api/v1/crm/inbox/connections", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListInboxConversationLinks: { method: "GET", path: "/api/v1/crm/inbox/conversations/{id}/links", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListInboxConversations: { method: "GET", path: "/api/v1/crm/inbox/conversations", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
+  crmListInboxMessageAttachments: { method: "GET", path: "/api/v1/crm/inbox/messages/{id}/attachments", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListInboxMessages: { method: "GET", path: "/api/v1/crm/inbox/conversations/{id}/messages", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
+  crmListInboxProviders: { method: "GET", path: "/api/v1/crm/inbox/providers", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListInboxTemplates: { method: "GET", path: "/api/v1/crm/inbox/templates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListLeadActivities: { method: "GET", path: "/api/v1/crm/leads/{id}/activities", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListLeads: { method: "GET", path: "/api/v1/crm/leads", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
+  crmListLossReasons: { method: "GET", path: "/api/v1/crm/loss-reasons", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListMembers: { method: "GET", path: "/api/v1/crm/members", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListPipelineDeals: { method: "GET", path: "/api/v1/crm/pipelines/{id}/deals", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
+  crmListPipelines: { method: "GET", path: "/api/v1/crm/pipelines", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmMarkInboxConversationRead: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/read", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmMergeLeads: { method: "POST", path: "/api/v1/crm/leads/{id}/merge", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmMoveDeal: { method: "POST", path: "/api/v1/crm/deals/{id}/move", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmPromoteCustomer: { method: "POST", path: "/api/v1/crm/customers/{id}/promote", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmQualifyLead: { method: "POST", path: "/api/v1/crm/leads/{id}/qualify", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmReopenDeal: { method: "POST", path: "/api/v1/crm/deals/{id}/reopen", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmReorderPipelines: { method: "PATCH", path: "/api/v1/crm/pipelines/reorder", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmReorderStages: { method: "PATCH", path: "/api/v1/crm/pipelines/{id}/stages/reorder", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmReplaceDealContacts: { method: "PUT", path: "/api/v1/crm/deals/{id}/contacts", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmReplaceDealItems: { method: "PUT", path: "/api/v1/crm/deals/{id}/items", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmRetryAutomationRun: { method: "POST", path: "/api/v1/crm/automation/runs/{id}/retry", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmSalesPlans: { method: "GET", path: "/api/v1/crm/sales-plans", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmSaveInboxTemplate: { method: "POST", path: "/api/v1/crm/inbox/templates", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmSaveSalesPlans: { method: "PUT", path: "/api/v1/crm/sales-plans", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmSendInboxMessage: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/messages", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUpdateAutomationRule: { method: "PUT", path: "/api/v1/crm/automation/rules/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUpdateCustomer: { method: "PATCH", path: "/api/v1/crm/customers/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUpdateDeal: { method: "PATCH", path: "/api/v1/crm/deals/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUpdateEngagement: { method: "PATCH", path: "/api/v1/crm/engagements/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUpdateInboxConnection: { method: "PATCH", path: "/api/v1/crm/inbox/connections/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUpdateLead: { method: "PATCH", path: "/api/v1/crm/leads/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUpdatePipeline: { method: "PATCH", path: "/api/v1/crm/pipelines/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUpdateStage: { method: "PATCH", path: "/api/v1/crm/stages/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUploadInboxMessageAttachment: { method: "POST", path: "/api/v1/crm/inbox/messages/{id}/attachments", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUploadInboxOutboundFile: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/uploads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerAppAPICalls: { method: "GET", path: "/api/v1/developer/apps/{key}/installations/{id}/api-calls", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
+  developerAppBlocks: { method: "GET", path: "/api/v1/developer/app-blocks", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: null },
+  developerAppDeliveries: { method: "GET", path: "/api/v1/developer/apps/{key}/installations/{id}/deliveries", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
+  developerAppInstallations: { method: "GET", path: "/api/v1/developer/apps/{key}/installations", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerAppKeys: { method: "GET", path: "/api/v1/developer/apps/{key}/keys", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerAppVersionPublicationReport: { method: "GET", path: "/api/v1/developer/apps/{key}/versions/{version}/publication", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerAppVersions: { method: "GET", path: "/api/v1/developer/apps/{key}/versions", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerApps: { method: "GET", path: "/api/v1/developer/apps", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerCloseSession: { method: "DELETE", path: "/api/v1/developer/sessions/current", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerIssueAppKey: { method: "POST", path: "/api/v1/developer/apps/{key}/keys", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerOpenSession: { method: "POST", path: "/api/v1/developer/sessions", module: "developer", stage: "preview", permission: "developer:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerProfile: { method: "GET", path: "/api/v1/developer/profile", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerPublisherApplication: { method: "GET", path: "/api/v1/developer/publisher-application", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerRegister: { method: "POST", path: "/api/v1/developer/registrations", module: "developer", stage: "preview", permission: "developer:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerRequestSignInLink: { method: "POST", path: "/api/v1/developer/sign-in-links", module: "developer", stage: "preview", permission: "developer:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerRevokeAppKey: { method: "POST", path: "/api/v1/developer/apps/{key}/keys/{id}/revocation", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerRotateAppKey: { method: "POST", path: "/api/v1/developer/apps/{key}/keys/{id}/rotation", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerSaveApp: { method: "POST", path: "/api/v1/developer/apps", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerSaveAppVersion: { method: "POST", path: "/api/v1/developer/apps/{key}/versions", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  developerSubmitPublisherApplication: { method: "POST", path: "/api/v1/developer/publisher-application", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesAbortUpload: { method: "DELETE", path: "/api/v1/files/uploads/{id}", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesAccessCheck: { method: "POST", path: "/api/v1/files/items/access-check", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesCompleteUpload: { method: "POST", path: "/api/v1/files/uploads/{id}/complete", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesContentLink: { method: "GET", path: "/api/v1/files/items/{id}/content-url", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesCreateFolder: { method: "POST", path: "/api/v1/files/folders", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesCreateRoot: { method: "POST", path: "/api/v1/files/roots", module: "files", stage: "preview", permission: "files:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesCreateShare: { method: "POST", path: "/api/v1/files/shares", module: "files", stage: "preview", permission: "files:share", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesDownloadFile: { method: "GET", path: "/api/v1/files/items/{id}/content", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesDownloadFolderArchive: { method: "GET", path: "/api/v1/files/folders/{id}/archive", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesFolderAccess: { method: "GET", path: "/api/v1/files/folders/{id}/access", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesGetFile: { method: "GET", path: "/api/v1/files/items/{id}", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesListEntries: { method: "GET", path: "/api/v1/files/folders/{id}/entries", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
+  filesListRoots: { method: "GET", path: "/api/v1/files/roots", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesListShares: { method: "GET", path: "/api/v1/files/shares", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesPurgeTrash: { method: "DELETE", path: "/api/v1/files/trash", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesReplaceFolderAccess: { method: "PUT", path: "/api/v1/files/folders/{id}/access", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesRevokeShare: { method: "DELETE", path: "/api/v1/files/shares/{id}", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesSearch: { method: "GET", path: "/api/v1/files/search", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 25 },
+  filesStartUpload: { method: "POST", path: "/api/v1/files/uploads", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesUploadStatus: { method: "GET", path: "/api/v1/files/uploads/{id}", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeAdoptConnectorAccount: { method: "POST", path: "/api/v1/finance/connectors/accounts/{accountId}/adopt", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeApplyExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items/{id}/apply", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeApplyImport: { method: "POST", path: "/api/v1/finance/imports/{id}/apply", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeApproveDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions/{id}/approve", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeApproveDividendPolicy: { method: "POST", path: "/api/v1/finance/dividends/policies/{id}/approve", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCancelPaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans/{id}/cancel", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCancelPayrollDocument: { method: "POST", path: "/api/v1/finance/payroll/documents/{id}/cancel", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCancelSettlementDocument: { method: "POST", path: "/api/v1/finance/settlements/documents/{id}/cancel", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCashflowEntries: { method: "GET", path: "/api/v1/finance/reports/cashflow/entries", module: "finance", stage: "preview", permission: "finance.reports.cashflow:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCategorizeCashOperation: { method: "POST", path: "/api/v1/finance/cash-operations/{id}/categorize", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCategorizeTransaction: { method: "POST", path: "/api/v1/finance/transactions/{id}/categorize", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCheckConnectorStatement: { method: "POST", path: "/api/v1/finance/connectors/{id}/accounts/{accountId}/check-statement", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeClassificationSuggestions: { method: "GET", path: "/api/v1/finance/classification-suggestions", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
+  financeConfigureConnectorMTLS: { method: "PUT", path: "/api/v1/finance/connectors/{id}/mtls", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateAccount: { method: "POST", path: "/api/v1/finance/accounts", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateConnector: { method: "POST", path: "/api/v1/finance/connectors", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateCounterpartyTerms: { method: "POST", path: "/api/v1/finance/counterparties/{contactId}/terms", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateDividendPolicy: { method: "POST", path: "/api/v1/finance/dividends/policies", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreatePaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreatePayrollDocument: { method: "POST", path: "/api/v1/finance/payroll/documents", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreatePnlLayout: { method: "POST", path: "/api/v1/finance/pnl-layouts", module: "finance", stage: "preview", permission: "finance.pnl_layouts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateSettlementDocument: { method: "POST", path: "/api/v1/finance/settlements/documents", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateStatement: { method: "POST", path: "/api/v1/finance/statements", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateTransaction: { method: "POST", path: "/api/v1/finance/transactions", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeDeleteAccountStatement: { method: "DELETE", path: "/api/v1/finance/accounts/{id}/statements/{statementId}", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeDeletePnlLayout: { method: "DELETE", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance.pnl_layouts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeDeleteSettlementDocument: { method: "DELETE", path: "/api/v1/finance/settlements/documents/{id}", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeExecutePaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans/{id}/execute", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetAccount: { method: "GET", path: "/api/v1/finance/accounts/{id}", module: "finance", stage: "preview", permission: "finance.accounts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetAccountReconciliation: { method: "GET", path: "/api/v1/finance/accounts/{id}/reconciliation", module: "finance", stage: "preview", permission: "finance.accounts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetBalanceReport: { method: "GET", path: "/api/v1/finance/reports/balance", module: "finance", stage: "preview", permission: "finance.reports.balance:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetCashflowReport: { method: "GET", path: "/api/v1/finance/reports/cashflow", module: "finance", stage: "preview", permission: "finance.reports.cashflow:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetConnector: { method: "GET", path: "/api/v1/finance/connectors/{id}", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetConnectorSyncSettings: { method: "GET", path: "/api/v1/finance/connectors/sync-settings", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetCounterpartyTerms: { method: "GET", path: "/api/v1/finance/counterparties/{contactId}/terms", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetDividendSummary: { method: "GET", path: "/api/v1/finance/dividends/summary", module: "finance", stage: "preview", permission: "finance.dividends:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetImport: { method: "GET", path: "/api/v1/finance/imports/{id}", module: "finance", stage: "preview", permission: "finance.imports:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetPaymentCalendar: { method: "GET", path: "/api/v1/finance/payment-calendar", module: "finance", stage: "preview", permission: "finance.payment_calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetPayrollJournal: { method: "GET", path: "/api/v1/finance/reports/payroll", module: "finance", stage: "preview", permission: "finance.reports.payroll:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetPeriodCloseChecks: { method: "GET", path: "/api/v1/finance/period-checks", module: "finance", stage: "preview", permission: "finance.period:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetPnlLayout: { method: "GET", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance.pnl_layouts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetPnlReport: { method: "GET", path: "/api/v1/finance/reports/pnl", module: "finance", stage: "preview", permission: "finance.reports.pnl:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetProjectBudgetHistory: { method: "GET", path: "/api/v1/finance/project-budgets", module: "finance", stage: "preview", permission: "finance.project_budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetProjectEconomics: { method: "GET", path: "/api/v1/finance/reports/projects", module: "finance", stage: "preview", permission: "finance.reports.projects:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetReconciliation: { method: "GET", path: "/api/v1/finance/transactions/reconciliation", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetSettlementDocument: { method: "GET", path: "/api/v1/finance/settlements/documents/{id}", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetSettlementPosition: { method: "GET", path: "/api/v1/finance/settlements/position", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetTradeAdvance: { method: "GET", path: "/api/v1/finance/trade-journal/advance", module: "finance", stage: "preview", permission: "finance.reports.trade:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetTradeJournal: { method: "GET", path: "/api/v1/finance/trade-journal", module: "finance", stage: "preview", permission: "finance.reports.trade:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 500 },
+  financeGetTransaction: { method: "GET", path: "/api/v1/finance/transactions/{id}", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeInspectImport: { method: "POST", path: "/api/v1/finance/imports/{id}/inspect", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeLinkStatementTransactions: { method: "POST", path: "/api/v1/finance/statements/{id}/transactions", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListAccountStatements: { method: "GET", path: "/api/v1/finance/accounts/{id}/statements", module: "finance", stage: "preview", permission: "finance.statements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListAccounts: { method: "GET", path: "/api/v1/finance/accounts", module: "finance", stage: "preview", permission: "finance.accounts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListConnectorAccounts: { method: "GET", path: "/api/v1/finance/connectors/{id}/accounts", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListConnectorProviders: { method: "GET", path: "/api/v1/finance/connectors/providers", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListConnectorRuns: { method: "GET", path: "/api/v1/finance/connectors/{id}/runs", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 20 },
+  financeListConnectors: { method: "GET", path: "/api/v1/finance/connectors", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListDividendAccessUsers: { method: "GET", path: "/api/v1/finance/dividends/access-users", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListDividendAutomationRuns: { method: "GET", path: "/api/v1/finance/dividends/automation/runs", module: "finance", stage: "preview", permission: "finance.dividends:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 100 },
+  financeListDividendDecisions: { method: "GET", path: "/api/v1/finance/dividends/decisions", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 100 },
+  financeListDividendOwners: { method: "GET", path: "/api/v1/finance/dividends/owners", module: "finance", stage: "preview", permission: "finance.dividends:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListDividendPolicies: { method: "GET", path: "/api/v1/finance/dividends/policies", module: "finance", stage: "preview", permission: "finance.dividends:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListExchangeJournal: { method: "GET", path: "/api/v1/finance/exchange/journal", module: "finance", stage: "preview", permission: "finance.exchange:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
+  financeListPaymentFacts: { method: "GET", path: "/api/v1/finance/payment-calendar/operations", module: "finance", stage: "preview", permission: "finance.payment_calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListPnlLayoutItems: { method: "GET", path: "/api/v1/finance/pnl-layouts/items", module: "finance", stage: "preview", permission: "finance.pnl_layouts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListPnlLayouts: { method: "GET", path: "/api/v1/finance/pnl-layouts", module: "finance", stage: "preview", permission: "finance.pnl_layouts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListSettlementBalances: { method: "GET", path: "/api/v1/finance/settlements/balances", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListSettlementDocuments: { method: "GET", path: "/api/v1/finance/settlements/documents", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
+  financeListSettlementPayments: { method: "GET", path: "/api/v1/finance/settlements/payments", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListSettlementSources: { method: "GET", path: "/api/v1/finance/settlements/sources", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListStatements: { method: "GET", path: "/api/v1/finance/statements", module: "finance", stage: "preview", permission: "finance.statements:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 100 },
+  financeListTransactions: { method: "GET", path: "/api/v1/finance/transactions", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 500 },
+  financeLookupCompany: { method: "GET", path: "/api/v1/finance/lookup/company", module: "finance", stage: "preview", permission: "finance.lookup:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeLookupRequisites: { method: "GET", path: "/api/v1/finance/lookup/requisites", module: "finance", stage: "preview", permission: "finance.lookup:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeMapImport: { method: "PATCH", path: "/api/v1/finance/imports/{id}/mapping", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeMapImportItems: { method: "PATCH", path: "/api/v1/finance/imports/{id}/item-mapping", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financePayoutRegisters: { method: "GET", path: "/api/v1/finance/payroll/registers", module: "finance", stage: "preview", permission: "finance.payroll:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 100 },
+  financePayrollDocuments: { method: "GET", path: "/api/v1/finance/payroll/documents", module: "finance", stage: "preview", permission: "finance.payroll:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
+  financePayrollImportInspect: { method: "POST", path: "/api/v1/finance/payroll/import/inspect", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financePayrollImportPreview: { method: "POST", path: "/api/v1/finance/payroll/import/preview", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financePayrollPayoutSheet: { method: "POST", path: "/api/v1/finance/payroll/payout-sheet", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financePnlEntries: { method: "GET", path: "/api/v1/finance/reports/pnl/entries", module: "finance", stage: "preview", permission: "finance.reports.pnl:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financePostDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions/{id}/post", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financePostPayrollDocument: { method: "POST", path: "/api/v1/finance/payroll/documents/{id}/post", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financePostSettlementDocument: { method: "POST", path: "/api/v1/finance/settlements/documents/{id}/post", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financePreviewDividendDecision: { method: "GET", path: "/api/v1/finance/dividends/decisions/preview", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financePreviewImport: { method: "POST", path: "/api/v1/finance/imports/{id}/preview", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeQuarantineExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items/{id}/quarantine", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeReconcileRegisters: { method: "GET", path: "/api/v1/finance/registers/reconcile", module: "finance", stage: "preview", permission: "finance.registers:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeRecordExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeRefreshConnectorAccounts: { method: "POST", path: "/api/v1/finance/connectors/{id}/accounts/refresh", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeRejectClassificationSuggestion: { method: "POST", path: "/api/v1/finance/classification-suggestions/{id}/reject", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeRepairRegisters: { method: "POST", path: "/api/v1/finance/registers/repair", module: "finance", stage: "preview", permission: "finance.registers:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeRestorePaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans/{id}/restore", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeResyncRegisters: { method: "POST", path: "/api/v1/finance/registers/resync", module: "finance", stage: "preview", permission: "finance.registers:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeRunDividendAutomation: { method: "POST", path: "/api/v1/finance/dividends/automation/run", module: "finance", stage: "preview", permission: "finance.dividends:auto", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeSavePnlLayout: { method: "PUT", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance.pnl_layouts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeSaveProjectBudget: { method: "POST", path: "/api/v1/finance/project-budgets", module: "finance", stage: "preview", permission: "finance.project_budgets:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeSetAccountOpeningBalance: { method: "POST", path: "/api/v1/finance/accounts/{id}/opening-balance", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeSetConnectorSyncSettings: { method: "PUT", path: "/api/v1/finance/connectors/sync-settings", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeSetWalletOpeningBalance: { method: "POST", path: "/api/v1/finance/wallets/{id}/opening-balance", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeStartConnectorConsent: { method: "POST", path: "/api/v1/finance/connectors/{id}/consent", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeSyncConnector: { method: "POST", path: "/api/v1/finance/connectors/{id}/sync", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeTestConnectorCredentials: { method: "POST", path: "/api/v1/finance/connectors/test", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeTransactionPayoutRegisters: { method: "GET", path: "/api/v1/finance/transactions/{id}/payout-registers", module: "finance", stage: "preview", permission: "finance.payroll:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeUpdateAccount: { method: "PATCH", path: "/api/v1/finance/accounts/{id}", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeUpdateCashOperationResponsible: { method: "PATCH", path: "/api/v1/finance/cash-operations/{id}/responsible", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeUpdateConnector: { method: "PATCH", path: "/api/v1/finance/connectors/{id}", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeUpdateConnectorAccount: { method: "PATCH", path: "/api/v1/finance/connectors/accounts/{accountId}", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeUpdatePaymentPlan: { method: "PATCH", path: "/api/v1/finance/payment-calendar/plans/{id}", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeUpdateTransactionResponsible: { method: "PATCH", path: "/api/v1/finance/transactions/{id}/responsible", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeUploadImport: { method: "POST", path: "/api/v1/finance/imports", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeAnswer: { method: "POST", path: "/api/v1/knowledge/answer", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeCreatePage: { method: "POST", path: "/api/v1/knowledge/nodes", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeCreateSpace: { method: "POST", path: "/api/v1/knowledge/spaces", module: "knowledge", stage: "preview", permission: "knowledge:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeCreateTag: { method: "POST", path: "/api/v1/knowledge/tags", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeDeleteAsset: { method: "DELETE", path: "/api/v1/knowledge/assets/{id}", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeDeleteSpace: { method: "DELETE", path: "/api/v1/knowledge/spaces/{id}", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeDeleteSpaceCover: { method: "DELETE", path: "/api/v1/knowledge/spaces/{id}/cover", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeGetAnswerQuality: { method: "GET", path: "/api/v1/knowledge/quality", module: "knowledge", stage: "preview", permission: "knowledge:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeGetAssetContent: { method: "GET", path: "/api/v1/knowledge/assets/{id}/content", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeGetPage: { method: "GET", path: "/api/v1/knowledge/nodes/{id}", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeGetPageAccess: { method: "GET", path: "/api/v1/knowledge/nodes/{id}/access", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeGetPageHistory: { method: "GET", path: "/api/v1/knowledge/nodes/{id}/history", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeGetSpaceAccess: { method: "GET", path: "/api/v1/knowledge/spaces/{id}/access", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeGetSpaceCover: { method: "GET", path: "/api/v1/knowledge/spaces/{id}/cover", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeGetSpaceTree: { method: "GET", path: "/api/v1/knowledge/spaces/{id}/tree", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeListAccessOptions: { method: "GET", path: "/api/v1/knowledge/access-options", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeListPageAssets: { method: "GET", path: "/api/v1/knowledge/nodes/{id}/assets", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeListSpaces: { method: "GET", path: "/api/v1/knowledge/spaces", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeListTags: { method: "GET", path: "/api/v1/knowledge/tags", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeListTrashedPages: { method: "GET", path: "/api/v1/knowledge/archive", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeMovePage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/move", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgePublishPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/publish", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeReindexAsset: { method: "POST", path: "/api/v1/knowledge/assets/{id}/reindex", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeRejectPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/reject", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeReplacePageAccess: { method: "PUT", path: "/api/v1/knowledge/nodes/{id}/access", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeReplacePageTags: { method: "PUT", path: "/api/v1/knowledge/nodes/{id}/tags", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeReplaceSpaceAccess: { method: "PUT", path: "/api/v1/knowledge/spaces/{id}/access", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeRestorePage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/restore", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeRestorePageRevision: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/history/restore", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeSaveAnswerFeedback: { method: "POST", path: "/api/v1/knowledge/answers/{id}/feedback", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeSavePageRevision: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/revisions", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeSearch: { method: "GET", path: "/api/v1/knowledge/search", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 20 },
+  knowledgeSubmitPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/submit", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeTrashPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/archive", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeUpdateSpace: { method: "PUT", path: "/api/v1/knowledge/spaces/{id}", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeUploadPageAsset: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/assets", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeUploadSpaceCover: { method: "POST", path: "/api/v1/knowledge/spaces/{id}/cover", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  knowledgeVerifyPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/verify", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceAddOzonProductGroupItems: { method: "POST", path: "/api/v1/marketplace/ozon/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceAddWbProductGroupItems: { method: "POST", path: "/api/v1/marketplace/wb/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceCreateOzonProductGroup: { method: "POST", path: "/api/v1/marketplace/ozon/product-groups", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceCreateOzonStore: { method: "POST", path: "/api/v1/marketplace/ozon/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceCreateWbProductGroup: { method: "POST", path: "/api/v1/marketplace/wb/product-groups", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceCreateWbStore: { method: "POST", path: "/api/v1/marketplace/wb/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceCreateYandexStore: { method: "POST", path: "/api/v1/marketplace/yandex/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceDeleteOzonProductGroup: { method: "DELETE", path: "/api/v1/marketplace/ozon/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceDeleteWbProductGroup: { method: "DELETE", path: "/api/v1/marketplace/wb/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceEconQuote: { method: "POST", path: "/api/v1/marketplace/econ/quote", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonDecomposition: { method: "GET", path: "/api/v1/marketplace/ozon/decomposition", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonDecompositionOther: { method: "GET", path: "/api/v1/marketplace/ozon/decomposition-other", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonFbs: { method: "GET", path: "/api/v1/marketplace/ozon/fbs", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonFunnel: { method: "GET", path: "/api/v1/marketplace/ozon/funnel", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonFunnelDaily: { method: "GET", path: "/api/v1/marketplace/ozon/funnel-daily", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonOrdersOverview: { method: "GET", path: "/api/v1/marketplace/ozon/orders/overview", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonPnl: { method: "GET", path: "/api/v1/marketplace/ozon/pnl", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonPricing: { method: "GET", path: "/api/v1/marketplace/ozon/pricing", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonProductFacets: { method: "GET", path: "/api/v1/marketplace/ozon/product-facets", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonProductGroupItems: { method: "GET", path: "/api/v1/marketplace/ozon/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonProductGroups: { method: "GET", path: "/api/v1/marketplace/ozon/product-groups", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonProducts: { method: "GET", path: "/api/v1/marketplace/ozon/products", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "page", pageSizeMax: 10000, pageSizeDefault: 50 },
+  marketplaceOzonPromotions: { method: "GET", path: "/api/v1/marketplace/ozon/promotions", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonSetCost: { method: "POST", path: "/api/v1/marketplace/ozon/cost", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonStocks: { method: "GET", path: "/api/v1/marketplace/ozon/stocks", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonStores: { method: "GET", path: "/api/v1/marketplace/ozon/stores", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonSyncJobs: { method: "GET", path: "/api/v1/marketplace/ozon/sync-jobs", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceRemoveOzonProductGroupItem: { method: "DELETE", path: "/api/v1/marketplace/ozon/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceRemoveWbProductGroupItem: { method: "DELETE", path: "/api/v1/marketplace/wb/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceSetYandexCost: { method: "POST", path: "/api/v1/marketplace/yandex/cost", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceUpdateOzonProductGroup: { method: "PATCH", path: "/api/v1/marketplace/ozon/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceUpdateOzonStore: { method: "PATCH", path: "/api/v1/marketplace/ozon/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceUpdateWbProductGroup: { method: "PATCH", path: "/api/v1/marketplace/wb/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceUpdateWbStore: { method: "PATCH", path: "/api/v1/marketplace/wb/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceUpdateYandexStore: { method: "PATCH", path: "/api/v1/marketplace/yandex/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbCardBoard: { method: "GET", path: "/api/v1/marketplace/wb/card/board", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbCardOptions: { method: "GET", path: "/api/v1/marketplace/wb/card/options", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbDecomposition: { method: "GET", path: "/api/v1/marketplace/wb/decomposition", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbDecompositionOther: { method: "GET", path: "/api/v1/marketplace/wb/decomposition-other", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbFunnel: { method: "GET", path: "/api/v1/marketplace/wb/funnel", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbFunnelDaily: { method: "GET", path: "/api/v1/marketplace/wb/funnel-daily", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbOrdersOverview: { method: "GET", path: "/api/v1/marketplace/wb/orders/overview", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbPnl: { method: "GET", path: "/api/v1/marketplace/wb/pnl", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbPricing: { method: "GET", path: "/api/v1/marketplace/wb/pricing", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbProductFacets: { method: "GET", path: "/api/v1/marketplace/wb/product-facets", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbProductGroupItems: { method: "GET", path: "/api/v1/marketplace/wb/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbProductGroups: { method: "GET", path: "/api/v1/marketplace/wb/product-groups", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbProducts: { method: "GET", path: "/api/v1/marketplace/wb/products", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "page", pageSizeMax: 10000, pageSizeDefault: 50 },
+  marketplaceWbPromotions: { method: "GET", path: "/api/v1/marketplace/wb/promotions", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbSetCost: { method: "POST", path: "/api/v1/marketplace/wb/cost", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbStocks: { method: "GET", path: "/api/v1/marketplace/wb/stocks", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbStores: { method: "GET", path: "/api/v1/marketplace/wb/stores", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceYandexOrdersOverview: { method: "GET", path: "/api/v1/marketplace/yandex/orders/overview", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceYandexPnl: { method: "GET", path: "/api/v1/marketplace/yandex/pnl", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceYandexProducts: { method: "GET", path: "/api/v1/marketplace/yandex/products", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "page", pageSizeMax: 10000, pageSizeDefault: 50 },
+  marketplaceYandexStores: { method: "GET", path: "/api/v1/marketplace/yandex/stores", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsActivateCompany: { method: "POST", path: "/api/v1/settings/companies/{id}/activate", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsAppDeliveries: { method: "GET", path: "/api/v1/settings/app-installations/{id}/deliveries", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
+  settingsAppIncidents: { method: "GET", path: "/api/v1/settings/app-incidents", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsAppInstallationActivity: { method: "GET", path: "/api/v1/settings/app-installations/{id}/activity", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsAppInstallationConfig: { method: "GET", path: "/api/v1/settings/app-installations/{id}/config", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsAppInstallationEvents: { method: "GET", path: "/api/v1/settings/app-installations/{id}/events", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 100 },
+  settingsCreateApiKey: { method: "POST", path: "/api/v1/settings/api-keys", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsCreateCompany: { method: "POST", path: "/api/v1/settings/companies", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsCreateFieldDefinition: { method: "POST", path: "/api/v1/settings/field-definitions", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsCreateMember: { method: "POST", path: "/api/v1/settings/members", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsCreateRole: { method: "POST", path: "/api/v1/settings/roles", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsCredentialRequests: { method: "GET", path: "/api/v1/settings/credential-requests", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
+  settingsDeleteApiKey: { method: "DELETE", path: "/api/v1/settings/api-keys/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsDeleteAppInstallationConfigValue: { method: "DELETE", path: "/api/v1/settings/app-installations/{id}/config/{key}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsDeleteCompany: { method: "DELETE", path: "/api/v1/settings/companies/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsDeleteFieldDefinition: { method: "DELETE", path: "/api/v1/settings/field-definitions/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsDisableAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/disable", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsEnableAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/enable", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsGetFieldSchema: { method: "GET", path: "/api/v1/settings/field-schema", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsInstallApp: { method: "POST", path: "/api/v1/settings/apps/{publisher}/{key}/installation", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsListApiKeyAccess: { method: "GET", path: "/api/v1/settings/api-keys/{id}/access", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsListApiKeys: { method: "GET", path: "/api/v1/settings/api-keys", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsListAppInstallations: { method: "GET", path: "/api/v1/settings/app-installations", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsListApps: { method: "GET", path: "/api/v1/settings/apps", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsListCompanies: { method: "GET", path: "/api/v1/settings/companies", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsListFieldDefinitions: { method: "GET", path: "/api/v1/settings/field-definitions", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsListMembers: { method: "GET", path: "/api/v1/settings/members", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsListRoleMembers: { method: "GET", path: "/api/v1/settings/roles/{id}/members", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsListRoles: { method: "GET", path: "/api/v1/settings/roles", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsListSelectableCompanies: { method: "GET", path: "/api/v1/settings/companies/selectable", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsListVatRates: { method: "GET", path: "/api/v1/settings/vat-rates", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsPreviewAppConsent: { method: "GET", path: "/api/v1/settings/apps/{publisher}/{key}/consent", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsReplayAppDeliveries: { method: "POST", path: "/api/v1/settings/app-installations/{id}/deliveries/replay", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsRestoreApiKey: { method: "POST", path: "/api/v1/settings/api-keys/{id}/restore", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsRevokeApiKey: { method: "POST", path: "/api/v1/settings/api-keys/{id}/revoke", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsRollbackAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/rollback", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsSetAppInstallationConfigValue: { method: "PUT", path: "/api/v1/settings/app-installations/{id}/config/{key}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsSetCompanyAccountingMethod: { method: "POST", path: "/api/v1/settings/companies/{id}/accounting-method", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsSetRoleActive: { method: "POST", path: "/api/v1/settings/roles/{id}/activation", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsTransferRoleMembers: { method: "POST", path: "/api/v1/settings/roles/{id}/transfer", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsUninstallAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/uninstall", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsUnparkAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/unpark", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsUpdateAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/update", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsUpdateCompany: { method: "PATCH", path: "/api/v1/settings/companies/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsUpdateFieldDefinition: { method: "PATCH", path: "/api/v1/settings/field-definitions/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsUpdateMember: { method: "PATCH", path: "/api/v1/settings/members/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsUpdateRole: { method: "PATCH", path: "/api/v1/settings/roles/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockActivateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses/{id}/activate", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockApplyImport: { method: "POST", path: "/api/v1/stock/imports/{id}/apply", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockCancelDocument: { method: "POST", path: "/api/v1/stock/documents/{id}/cancel", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockCreateDocument: { method: "POST", path: "/api/v1/stock/documents", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockCreateExport: { method: "POST", path: "/api/v1/stock/exports", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockCreateImport: { method: "POST", path: "/api/v1/stock/imports", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockCreatePurchaseOrder: { method: "POST", path: "/api/v1/stock/purchasing/orders", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockCreateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockDeactivateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses/{id}/deactivate", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockDeriveInventoryActs: { method: "POST", path: "/api/v1/stock/documents/{id}/derive", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockFinishInventoryCount: { method: "POST", path: "/api/v1/stock/documents/{id}/inventory-finish", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetBatch: { method: "GET", path: "/api/v1/stock/batches/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetCompanyPolicy: { method: "GET", path: "/api/v1/stock/company-policies/{companyId}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetDocument: { method: "GET", path: "/api/v1/stock/documents/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetDocumentBlockers: { method: "GET", path: "/api/v1/stock/documents/{id}/blockers", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetDocumentFulfillment: { method: "GET", path: "/api/v1/stock/documents/{id}/fulfillment", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetDocumentLinks: { method: "GET", path: "/api/v1/stock/documents/{id}/links", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetExport: { method: "GET", path: "/api/v1/stock/exports/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetExportContent: { method: "GET", path: "/api/v1/stock/exports/{id}/content", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetHandlingUnit: { method: "GET", path: "/api/v1/stock/handling-units/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 200 },
+  stockGetImport: { method: "GET", path: "/api/v1/stock/imports/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetImportErrors: { method: "GET", path: "/api/v1/stock/imports/{id}/errors", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetImportSource: { method: "GET", path: "/api/v1/stock/imports/{id}/source", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetImportTemplate: { method: "GET", path: "/api/v1/stock/import-templates/{kind}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetInventoryCountSheet: { method: "GET", path: "/api/v1/stock/documents/{id}/count-sheet", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetOverdueReservations: { method: "GET", path: "/api/v1/stock/report/reservations/overdue", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 200 },
+  stockGetPurchasingReport: { method: "GET", path: "/api/v1/stock/report/purchasing", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
+  stockGetReorderRule: { method: "GET", path: "/api/v1/stock/reorder-rules/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetReservationSummaries: { method: "GET", path: "/api/v1/stock/report/reservations", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 500 },
+  stockGetSettings: { method: "GET", path: "/api/v1/stock/settings", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetStockDrilldown: { method: "GET", path: "/api/v1/stock/report/stocks/{productId}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
+  stockGetStocksReport: { method: "GET", path: "/api/v1/stock/report/stocks", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
+  stockGetValuationRun: { method: "GET", path: "/api/v1/stock/valuation/rebuild/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetWarehouse: { method: "GET", path: "/api/v1/stock/warehouses/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetWarehouseBlockers: { method: "GET", path: "/api/v1/stock/warehouses/{id}/blockers", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockInspectImport: { method: "POST", path: "/api/v1/stock/imports/{id}/inspect", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockListBatches: { method: "GET", path: "/api/v1/stock/batches", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
+  stockListCompanies: { method: "GET", path: "/api/v1/stock/companies", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockListCompanyPolicies: { method: "GET", path: "/api/v1/stock/company-policies", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockListDocumentFulfillments: { method: "GET", path: "/api/v1/stock/documents/fulfillments", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockListDocuments: { method: "GET", path: "/api/v1/stock/documents", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
+  stockListHandlingUnits: { method: "GET", path: "/api/v1/stock/handling-units", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
+  stockListInventoryChanges: { method: "GET", path: "/api/v1/stock/documents/{id}/inventory-changes", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockListProductUOMs: { method: "GET", path: "/api/v1/stock/products/{productId}/uoms", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockListReorderRules: { method: "GET", path: "/api/v1/stock/reorder-rules", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 50 },
+  stockListSuppliers: { method: "GET", path: "/api/v1/stock/suppliers", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockListWarehouses: { method: "GET", path: "/api/v1/stock/warehouses", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockPostDocument: { method: "POST", path: "/api/v1/stock/documents/{id}/post", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockPreviewImport: { method: "POST", path: "/api/v1/stock/imports/{id}/preview", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockPreviewValuation: { method: "POST", path: "/api/v1/stock/valuation/preview", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockRebuildValuation: { method: "POST", path: "/api/v1/stock/valuation/rebuild", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockRefreshInventorySnapshot: { method: "POST", path: "/api/v1/stock/documents/{id}/inventory-refresh", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockReleaseReservation: { method: "POST", path: "/api/v1/stock/documents/{id}/release", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockSaveInventoryCounts: { method: "PATCH", path: "/api/v1/stock/documents/{id}/inventory-counts", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockSaveProductUOM: { method: "PUT", path: "/api/v1/stock/product-uoms", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockSaveReorderRule: { method: "PUT", path: "/api/v1/stock/reorder-rules", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockScanProduct: { method: "GET", path: "/api/v1/stock/products/scan", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockSuggestHandlingUnits: { method: "GET", path: "/api/v1/stock/handling-units/suggestions", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockUpdateCompanyPolicy: { method: "PATCH", path: "/api/v1/stock/company-policies/{companyId}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockUpdateDocument: { method: "PATCH", path: "/api/v1/stock/documents/{id}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockUpdateHandlingUnitStatus: { method: "PATCH", path: "/api/v1/stock/handling-units/{id}/status", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockUpdateImportMapping: { method: "PATCH", path: "/api/v1/stock/imports/{id}/mapping", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockUpdateReorderRule: { method: "PATCH", path: "/api/v1/stock/reorder-rules/{id}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockUpdateSettings: { method: "PATCH", path: "/api/v1/stock/settings", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockUpdateWarehouse: { method: "PATCH", path: "/api/v1/stock/warehouses/{id}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksAddProjectMember: { method: "POST", path: "/api/v1/tasks/projects/{id}/members", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksAddSectionMember: { method: "POST", path: "/api/v1/tasks/sections/{id}/members", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksArchiveProject: { method: "DELETE", path: "/api/v1/tasks/projects/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksArchiveSection: { method: "DELETE", path: "/api/v1/tasks/sections/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksArchiveTask: { method: "DELETE", path: "/api/v1/tasks/tasks/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksArchiveTemplate: { method: "DELETE", path: "/api/v1/tasks/templates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksAttachTaskTag: { method: "POST", path: "/api/v1/tasks/tasks/{id}/tags", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateAgentJournalEntry: { method: "POST", path: "/api/v1/tasks/tasks/{id}/agent-journal", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateAttachmentDownloadSession: { method: "GET", path: "/api/v1/tasks/attachments/{id}/download-session", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateAttachmentReplacementSession: { method: "POST", path: "/api/v1/tasks/attachments/{id}/replace-sessions", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateAttachmentUploadSession: { method: "POST", path: "/api/v1/tasks/attachments/upload-sessions", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateComment: { method: "POST", path: "/api/v1/tasks/tasks/{id}/comments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateCustomer: { method: "POST", path: "/api/v1/tasks/customers", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateCustomerNeed: { method: "POST", path: "/api/v1/tasks/customer-needs", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateCycle: { method: "POST", path: "/api/v1/tasks/cycles", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateDiscussionComment: { method: "POST", path: "/api/v1/tasks/discussion-comments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateDocument: { method: "POST", path: "/api/v1/tasks/documents", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateLink: { method: "POST", path: "/api/v1/tasks/tasks/{id}/links", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateMeeting: { method: "POST", path: "/api/v1/tasks/hub/meetings", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateMilestone: { method: "POST", path: "/api/v1/tasks/milestones", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateProject: { method: "POST", path: "/api/v1/tasks/projects", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateProjectFileFolder: { method: "POST", path: "/api/v1/tasks/projects/{id}/file-folders", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreatePullRequest: { method: "POST", path: "/api/v1/tasks/pull-requests", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateRelation: { method: "POST", path: "/api/v1/tasks/tasks/{id}/relations", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateSection: { method: "POST", path: "/api/v1/tasks/sections", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateStatus: { method: "POST", path: "/api/v1/tasks/statuses", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateStatusUpdate: { method: "POST", path: "/api/v1/tasks/status-updates", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateTag: { method: "POST", path: "/api/v1/tasks/tags", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateTask: { method: "POST", path: "/api/v1/tasks/tasks", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateTemplate: { method: "POST", path: "/api/v1/tasks/templates", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateView: { method: "POST", path: "/api/v1/tasks/views", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteAttachment: { method: "DELETE", path: "/api/v1/tasks/attachments/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteComment: { method: "DELETE", path: "/api/v1/tasks/comments/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteCustomer: { method: "DELETE", path: "/api/v1/tasks/customers/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteCustomerNeed: { method: "DELETE", path: "/api/v1/tasks/customer-needs/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteCycle: { method: "DELETE", path: "/api/v1/tasks/cycles/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteDiscussionComment: { method: "DELETE", path: "/api/v1/tasks/discussion-comments/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteDocument: { method: "DELETE", path: "/api/v1/tasks/documents/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteLink: { method: "DELETE", path: "/api/v1/tasks/links/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteMeeting: { method: "DELETE", path: "/api/v1/tasks/hub/meetings/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteMilestone: { method: "DELETE", path: "/api/v1/tasks/milestones/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteProjectFileFolder: { method: "DELETE", path: "/api/v1/tasks/projects/{id}/file-folders/{folderID}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteProjectMember: { method: "DELETE", path: "/api/v1/tasks/projects/{id}/members/{userID}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeletePullRequest: { method: "DELETE", path: "/api/v1/tasks/pull-requests/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteRelation: { method: "DELETE", path: "/api/v1/tasks/relations/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteSectionMember: { method: "DELETE", path: "/api/v1/tasks/section-members/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteStatus: { method: "DELETE", path: "/api/v1/tasks/statuses/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteStatusUpdate: { method: "DELETE", path: "/api/v1/tasks/status-updates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteTag: { method: "DELETE", path: "/api/v1/tasks/tags/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteView: { method: "DELETE", path: "/api/v1/tasks/views/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksFinishAttachmentUploadSession: { method: "POST", path: "/api/v1/tasks/attachments/upload-sessions/{id}/finish", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetAttachmentContent: { method: "GET", path: "/api/v1/tasks/attachments/{id}/content", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetCustomer: { method: "GET", path: "/api/v1/tasks/customers/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetCustomerNeed: { method: "GET", path: "/api/v1/tasks/customer-needs/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetCycle: { method: "GET", path: "/api/v1/tasks/cycles/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetDiscussionComment: { method: "GET", path: "/api/v1/tasks/discussion-comments/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetDocument: { method: "GET", path: "/api/v1/tasks/documents/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetHubOverview: { method: "GET", path: "/api/v1/tasks/hub/overview", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetMeeting: { method: "GET", path: "/api/v1/tasks/hub/meetings/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetMilestone: { method: "GET", path: "/api/v1/tasks/milestones/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetPullRequest: { method: "GET", path: "/api/v1/tasks/pull-requests/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetScrumSettings: { method: "GET", path: "/api/v1/tasks/scrum/settings/{project}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetSnapshot: { method: "GET", path: "/api/v1/tasks/snapshot", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 200 },
+  tasksGetSprintMetrics: { method: "GET", path: "/api/v1/tasks/scrum/metrics/{cycle}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetStatusMetrics: { method: "GET", path: "/api/v1/tasks/tasks/{id}/status-metrics", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetStatusUpdate: { method: "GET", path: "/api/v1/tasks/status-updates/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetTask: { method: "GET", path: "/api/v1/tasks/tasks/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListActivity: { method: "GET", path: "/api/v1/tasks/tasks/{id}/activity", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListAgentJournal: { method: "GET", path: "/api/v1/tasks/tasks/{id}/agent-journal", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListCommentAttachments: { method: "GET", path: "/api/v1/tasks/comments/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListComments: { method: "GET", path: "/api/v1/tasks/tasks/{id}/comments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListCustomerNeeds: { method: "GET", path: "/api/v1/tasks/customer-needs", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListCustomers: { method: "GET", path: "/api/v1/tasks/customers", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListCycles: { method: "GET", path: "/api/v1/tasks/cycles", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListDiscussionComments: { method: "GET", path: "/api/v1/tasks/discussion-comments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListDocumentAttachments: { method: "GET", path: "/api/v1/tasks/documents/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListDocuments: { method: "GET", path: "/api/v1/tasks/documents", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListHubSections: { method: "GET", path: "/api/v1/tasks/hub/sections", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListLinks: { method: "GET", path: "/api/v1/tasks/tasks/{id}/links", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListMeetingAttachments: { method: "GET", path: "/api/v1/tasks/hub/meetings/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListMeetings: { method: "GET", path: "/api/v1/tasks/hub/meetings", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListMembers: { method: "GET", path: "/api/v1/tasks/members", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListMilestones: { method: "GET", path: "/api/v1/tasks/milestones", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListProjectAttachments: { method: "GET", path: "/api/v1/tasks/projects/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListProjectFileFolders: { method: "GET", path: "/api/v1/tasks/projects/{id}/file-folders", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListProjectMembers: { method: "GET", path: "/api/v1/tasks/projects/{id}/members", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListProjects: { method: "GET", path: "/api/v1/tasks/projects", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListPullRequests: { method: "GET", path: "/api/v1/tasks/pull-requests", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListRelations: { method: "GET", path: "/api/v1/tasks/tasks/{id}/relations", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListScrumSettings: { method: "GET", path: "/api/v1/tasks/scrum/settings", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListSectionAttachments: { method: "GET", path: "/api/v1/tasks/sections/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListSectionMembers: { method: "GET", path: "/api/v1/tasks/sections/{id}/members", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListSections: { method: "GET", path: "/api/v1/tasks/sections", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListStatusUpdates: { method: "GET", path: "/api/v1/tasks/status-updates", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListStatuses: { method: "GET", path: "/api/v1/tasks/statuses", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListTagCatalog: { method: "GET", path: "/api/v1/tasks/tags", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListTaskAttachments: { method: "GET", path: "/api/v1/tasks/tasks/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListTaskTags: { method: "GET", path: "/api/v1/tasks/tasks/{id}/tags", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListTasks: { method: "GET", path: "/api/v1/tasks/tasks", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: null },
+  tasksListTemplates: { method: "GET", path: "/api/v1/tasks/templates", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListViews: { method: "GET", path: "/api/v1/tasks/views", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksMoveProjectAttachment: { method: "PATCH", path: "/api/v1/tasks/projects/{id}/attachments/{attachmentID}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksMoveTask: { method: "POST", path: "/api/v1/tasks/tasks/{id}/move", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksRenameProjectFileFolder: { method: "PATCH", path: "/api/v1/tasks/projects/{id}/file-folders/{folderID}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksReorderStatuses: { method: "PATCH", path: "/api/v1/tasks/statuses/reorder", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksReplaceAttachment: { method: "POST", path: "/api/v1/tasks/attachments/{id}/replace", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksRunDueTemplates: { method: "POST", path: "/api/v1/tasks/templates/run-due", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksRunTemplate: { method: "POST", path: "/api/v1/tasks/templates/{id}/run", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateCustomer: { method: "PATCH", path: "/api/v1/tasks/customers/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateCustomerNeed: { method: "PATCH", path: "/api/v1/tasks/customer-needs/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateCycle: { method: "PATCH", path: "/api/v1/tasks/cycles/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateDiscussionComment: { method: "PATCH", path: "/api/v1/tasks/discussion-comments/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateDocument: { method: "PATCH", path: "/api/v1/tasks/documents/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateHubSection: { method: "PATCH", path: "/api/v1/tasks/hub/sections/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateMeeting: { method: "PATCH", path: "/api/v1/tasks/hub/meetings/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateMilestone: { method: "PATCH", path: "/api/v1/tasks/milestones/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateProject: { method: "PATCH", path: "/api/v1/tasks/projects/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdatePullRequest: { method: "PATCH", path: "/api/v1/tasks/pull-requests/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateScrumSettings: { method: "PATCH", path: "/api/v1/tasks/scrum/settings/{project}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateSection: { method: "PATCH", path: "/api/v1/tasks/sections/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateStatus: { method: "PATCH", path: "/api/v1/tasks/statuses/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateStatusUpdate: { method: "PATCH", path: "/api/v1/tasks/status-updates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateTag: { method: "PATCH", path: "/api/v1/tasks/tags/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateTask: { method: "PATCH", path: "/api/v1/tasks/tasks/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateTemplate: { method: "PATCH", path: "/api/v1/tasks/templates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUploadCommentAttachment: { method: "POST", path: "/api/v1/tasks/comments/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUploadDocumentAttachment: { method: "POST", path: "/api/v1/tasks/documents/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUploadMeetingAttachment: { method: "POST", path: "/api/v1/tasks/hub/meetings/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUploadProjectAttachment: { method: "POST", path: "/api/v1/tasks/projects/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUploadSectionAttachment: { method: "POST", path: "/api/v1/tasks/sections/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUploadTaskAttachment: { method: "POST", path: "/api/v1/tasks/tasks/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
 };

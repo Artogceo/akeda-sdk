@@ -330,6 +330,15 @@ def build_operations(contract: dict, registry: Registry) -> list[dict]:
                     "permission": operation.get("x-akeda-permission", ""),
                     "summary": operation.get("summary", ""),
                     "idempotent": idempotent,
+                    # Открыта ли операция ТОКЕНУ УСТАНОВКИ. Ось отдельная: из
+                    # стадии и области она не выводится — операция достижима
+                    # ровно тогда, когда назвала installationToken в своём
+                    # security. Без этого поля расширение узнаёт о том, что
+                    # операция ему закрыта, по 401 в проде.
+                    "installation": any(
+                        "installationToken" in scheme
+                        for scheme in operation.get("security") or []
+                    ),
                     "params": sorted(path_params, key=lambda p: p["name"]),
                     "query": sorted(query_params, key=lambda p: p["name"]),
                     "body": body,
@@ -419,6 +428,8 @@ def emit_typescript(registry: Registry, operations: list[dict], header: str) -> 
     lines.append("  readonly permission: string;")
     lines.append("  /** Операция читает заголовок Idempotency-Key. */")
     lines.append("  readonly idempotent: boolean;")
+    lines.append("  /** Операция открыта токену установки (ai_live_… / ai_test_…). */")
+    lines.append("  readonly installation: boolean;")
     lines.append('  /** Схема листания: limit_offset | limit | page | cursor | none. */')
     lines.append("  readonly pagination: string;")
     lines.append("  /** Объявленный контрактом потолок размера страницы. */")
@@ -452,6 +463,7 @@ def emit_typescript(registry: Registry, operations: list[dict], header: str) -> 
                 f'stage: "{operation["stage"]}"',
                 f'permission: {json.dumps(operation["permission"])}',
                 f'idempotent: {"true" if operation["idempotent"] else "false"}',
+                f'installation: {"true" if operation["installation"] else "false"}',
                 f'pagination: "{operation["pagination"]}"',
                 f'pageSizeMax: {operation["page_size_max"] if operation["page_size_max"] is not None else "null"}',
                 f'pageSizeDefault: {operation["page_size_default"] if operation["page_size_default"] is not None else "null"}',
@@ -577,6 +589,8 @@ def emit_python(registry: Registry, operations: list[dict], header: str) -> dict
         "    permission: str",
         "    #: операция читает заголовок Idempotency-Key",
         "    idempotent: bool",
+        "    #: операция открыта токену установки (ai_live_… / ai_test_…)",
+        "    installation: bool",
         "    #: имена параметров пути в порядке появления",
         "    path_params: Tuple[str, ...]",
         "    #: схема листания: limit_offset | limit | page | cursor | none",
@@ -597,6 +611,7 @@ def emit_python(registry: Registry, operations: list[dict], header: str) -> dict
             f"    {operation['id']!r}: OperationSpec("
             f"{operation['method']!r}, {operation['path']!r}, {operation['module']!r}, "
             f"{operation['stage']!r}, {operation['permission']!r}, {operation['idempotent']!r}, "
+            f"{operation['installation']!r}, "
             f"({path_params}), {operation['pagination']!r}, "
             f"{operation['page_size_max']!r}, {operation['page_size_default']!r}),"
         )
@@ -730,6 +745,9 @@ def emit_go(registry: Registry, operations: list[dict], header: str) -> dict[Pat
         "\tPermission string",
         "\t// Idempotent — операция читает заголовок Idempotency-Key.",
         "\tIdempotent bool",
+        "\t// Installation — операция открыта токену установки (ai_live_… / ai_test_…).",
+        "\t// Ось отдельная: из стадии и права она не выводится.",
+        "\tInstallation bool",
         "\t// PathParams — имена параметров пути.",
         "\tPathParams []string",
         "\t// Pagination — схема листания: limit_offset, limit, page, cursor, none.",
@@ -755,6 +773,7 @@ def emit_go(registry: Registry, operations: list[dict], header: str) -> dict[Pat
             f"Stage: {json.dumps(operation['stage'])}, "
             f"Permission: {json.dumps(operation['permission'])}, "
             f"Idempotent: {str(operation['idempotent']).lower()}, "
+            f"Installation: {str(operation['installation']).lower()}, "
             f"PathParams: {params_literal}, "
             f"Pagination: {json.dumps(operation['pagination'])}, "
             f"PageSizeMax: {operation['page_size_max'] or 0}, "

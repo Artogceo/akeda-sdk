@@ -27,6 +27,17 @@ def repository_root() -> Path:
 
 
 @pytest.fixture(scope="session")
+def snapshot_manifest() -> dict:
+    """Опись снимка: по ней сверяются числа контракта.
+
+    Литерал вместо описи устаревал бы на первом же пересъёме, и правили бы его
+    механически, не глядя, — то есть проверка переставала бы что-либо значить
+    раньше, чем ломалась.
+    """
+    return json.loads((repository_root() / "snapshot" / "SNAPSHOT.json").read_text("utf-8"))
+
+
+@pytest.fixture(scope="session")
 def delivery_contract() -> dict:
     path = repository_root() / "snapshot" / "extension-delivery" / "v1" / "delivery-contract.json"
     return json.loads(path.read_text("utf-8"))

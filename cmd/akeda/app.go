@@ -4,42 +4,55 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sort"
+	"strings"
 
 	"github.com/Artogceo/akeda-sdk/clients/go/akeda"
+	"github.com/Artogceo/akeda-sdk/clients/go/akeda/generated"
 )
 
 // Приложения и версии.
 //
-// ЗДЕСЬ CLI ГОВОРИТ «НЕТ». Каталог «Akeda Apps» существует, но внешней двери к
-// нему нет: завести приложение, опубликовать версию, установить, обновить,
-// откатить и удалить умеет персонал платформы своими операторскими операциями,
-// а их в опубликованном контракте нет вовсе — и не должно быть. Команда,
-// которая делала бы вид, что умеет это, врала бы дважды: про существование
-// вызова и про то, что у партнёра есть право его сделать.
-//
-// Что доступно на самом деле, перечислено ниже, и именно это команда и
-// показывает.
+// КОМАНДА ЧИТАЕТ СНИМОК, А НЕ ПАМЯТЬ АВТОРА. Состав дверей к каталогу меняется
+// от релиза к релизу, и список, выписанный здесь словами, разошёлся бы с
+// контрактом молча — то есть CLI обещал бы партнёру вызов, которого нет, либо
+// молчал бы о появившемся. Поэтому доступное выводится из карты операций
+// снимка, а словами названо только то, чего в контракте НЕТ: этого из карты не
+// выведешь, а знать это надо раньше, чем начнёшь планировать.
 
 func commandApps(options globals) error {
-	fmt.Println("Приложения и версии сегодня ведёт персонал платформы.")
+	developer := operationsUnder("/api/v1/developer")
+	workspace := operationsUnder("/api/v1/settings/app")
+
+	if options.asJSON {
+		return printJSON(map[string]any{
+			"developer_operations": developer,
+			"workspace_operations": workspace,
+			"absent": []string{
+				"публикация версии: снаружи виден только отчёт о её готовности",
+				"обмен учётных данных на токен установки: токен выдаёт человек",
+				"самообслуживаемая ротация токена установки",
+			},
+		})
+	}
+
+	fmt.Println("Контур разработчика: что открыто снаружи по снимку контракта")
 	fmt.Println()
-	fmt.Println("Внешней двери к каталогу в опубликованном контракте нет: завести приложение,")
-	fmt.Println("выпустить версию, поставить её кабинету, обновить, откатить и удалить —")
-	fmt.Println("операторские операции, и наружу они не выходят. Это состояние контура, а не")
-	fmt.Println("ограничение CLI.")
+	printOperations(developer)
 	fmt.Println()
-	fmt.Println("Что разработчику доступно уже сейчас:")
-	fmt.Println("  akeda login link <почта>     завести вход в контур разработчика")
-	fmt.Println("  akeda whoami                 свой аккаунт и своих издателей")
-	fmt.Println("  akeda publisher submit       заявка на имя издателя (решает человек)")
-	fmt.Println("  akeda manifest lint <файл>   проверить форму манифеста версии до подачи")
-	fmt.Println("  akeda app installation       прочитать установку токеном ai_… (когда он выдан)")
-	fmt.Println("  akeda app config             прочитать свою настройку установки")
-	fmt.Println("  akeda conformance run        проверить приёмник событий, ничего не поднимая у нас")
+	fmt.Println("Кабинет ставит и ведёт приложение сам — ключом кабинета с settings:write:")
 	fmt.Println()
-	fmt.Println("Токен установки выдаёт человек: публичного обмена учётных данных на токен нет")
-	fmt.Println("и не будет, пока нет брокера долгой половины секрета, асимметричного")
-	fmt.Println("подтверждения и ограничителя частоты с аудитом НЕУДАЧНЫХ попыток.")
+	printOperations(workspace)
+	fmt.Println()
+	fmt.Println("Чего в контракте НЕТ, и это состояние контура, а не ограничение CLI:")
+	fmt.Println("  · публикации версии. Завести приложение и версию можно самому, а открывает")
+	fmt.Println("    её платформа: снаружи виден только отчёт о готовности версии к публикации;")
+	fmt.Println("  · обмена учётных данных на токен установки. Токен выдаёт человек. Обмену")
+	fmt.Println("    нужен второй, долгоживущий секрет, и он в ту же секунду становится дороже")
+	fmt.Println("    всего, что им выпускается;")
+	fmt.Println("  · самообслуживаемой ротации токена установки — по той же причине.")
+	fmt.Println()
+	fmt.Println("Начать: akeda login link <почта>, дальше akeda whoami и akeda publisher submit.")
 
 	profile := loadConfig()
 	if profile.DeveloperToken != "" {
@@ -49,6 +62,29 @@ func commandApps(options globals) error {
 	return nil
 }
 
+// operationsUnder — операции снимка, чей путь начинается с префикса.
+func operationsUnder(prefix string) []generated.Operation {
+	found := make([]generated.Operation, 0, 16)
+	for _, operation := range generated.Operations {
+		if strings.HasPrefix(operation.Path, prefix) {
+			found = append(found, operation)
+		}
+	}
+	sort.Slice(found, func(a, b int) bool {
+		if found[a].Path == found[b].Path {
+			return found[a].Method < found[b].Method
+		}
+		return found[a].Path < found[b].Path
+	})
+	return found
+}
+
+func printOperations(operations []generated.Operation) {
+	for _, operation := range operations {
+		fmt.Printf("  %-6s %-58s %s\n", operation.Method, operation.Path, operation.ID)
+	}
+}
+
 func commandApp(options globals, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("нужна подкоманда: installation или config")
@@ -56,9 +92,9 @@ func commandApp(options globals, args []string) error {
 	token := os.Getenv("AKEDA_INSTALLATION_TOKEN")
 	if token == "" {
 		return fmt.Errorf(
-			"нужен токен установки в AKEDA_INSTALLATION_TOKEN (значение вида ai_…). " +
-				"Во флаге его нет намеренно: argv виден любому пользователю машины через ps. " +
-				"Токен выдаёт персонал платформы и живёт он минуты")
+			"нужен токен установки в AKEDA_INSTALLATION_TOKEN (значение вида ai_live_… либо " +
+				"ai_test_…). Во флаге его нет намеренно: argv виден любому пользователю машины " +
+				"через ps. Токен выдаёт человек; на бою он живёт до часа, в песочнице — до суток")
 	}
 	credentials, err := akeda.InstallationToken(token)
 	if err != nil {

@@ -1,0 +1,609 @@
+{
+  "bridge": {
+    "from_extension": [
+      "akeda.slot.ready",
+      "akeda.slot.resize",
+      "akeda.slot.close"
+    ],
+    "to_extension": [
+      "akeda.slot.launch",
+      "akeda.slot.theme"
+    ]
+  },
+  "catalog_version": 1,
+  "extension_points": [
+    {
+      "key": "core.document_lifecycle.v1",
+      "model": "async",
+      "owner": "core",
+      "request_schema": "core.document_event.v1",
+      "response_schema": "platform.delivery_ack.v1",
+      "scopes": [
+        "core:read"
+      ],
+      "summary": "Подписка на жизненный цикл документа: создан, обновлён, проведён, отменён, помечен удалённым"
+    },
+    {
+      "errors": [
+        "transaction_not_found",
+        "directory_mismatch",
+        "directory_entry_unknown",
+        "confidence_out_of_range",
+        "explanation_incomplete",
+        "transaction_already_classified"
+      ],
+      "key": "finance.classification_provider.v1",
+      "model": "async",
+      "owner": "finance",
+      "request_schema": "finance.classification_request.v1",
+      "request_topic": "finance.transaction.uncategorized.v1",
+      "response_operation": "appFinanceSuggestTransactionClassification",
+      "response_schema": "finance.classification_suggestion.v1",
+      "scopes": [
+        "finance:read",
+        "core:read",
+        "finance:suggest"
+      ],
+      "summary": "Поставщик классификации операции: статья и контрагент приходят рекомендацией, которую оператор принимает или отклоняет"
+    },
+    {
+      "key": "platform.context_action.v1",
+      "model": "sync",
+      "owner": "platform",
+      "request_schema": "platform.slot_launch.v1",
+      "response_schema": "platform.context_action_result.v1",
+      "scopes": [],
+      "summary": "Контекстное действие: пункт расширения на экране записи, запускаемый по одноразовому токену"
+    },
+    {
+      "key": "platform.embedded_panel.v1",
+      "model": "sync",
+      "owner": "platform",
+      "request_schema": "platform.slot_launch.v1",
+      "response_schema": "platform.embedded_panel_descriptor.v1",
+      "scopes": [],
+      "summary": "Изолированная панель: iframe со своим источником и мостом сообщений по списку разрешённых типов"
+    },
+    {
+      "key": "platform.settings_page.v1",
+      "model": "sync",
+      "owner": "platform",
+      "request_schema": "platform.slot_launch.v1",
+      "response_schema": "platform.settings_page_descriptor.v1",
+      "scopes": [],
+      "summary": "Страница настройки установки: форма по схеме конфигурации из manifest, без значений секретов"
+    }
+  ],
+  "launch_context_fields": [
+    "actor_subject",
+    "entity",
+    "entity_id",
+    "installation_id",
+    "locale",
+    "module",
+    "tenant_id",
+    "theme"
+  ],
+  "slot_types": [
+    "action",
+    "declarative",
+    "iframe",
+    "panel",
+    "settings"
+  ],
+  "surfaces": [
+    "card",
+    "list",
+    "page",
+    "toolbar"
+  ],
+  "ui_placements": [
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "contact",
+      "module": "core",
+      "placement": "core.contact.card",
+      "summary": "Карточка контрагента: панель или действие рядом с реквизитами",
+      "surface": "card",
+      "types": [
+        "action",
+        "iframe",
+        "panel",
+        "declarative"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity"
+      ],
+      "entity": "contact",
+      "module": "core",
+      "placement": "core.contact.list",
+      "summary": "Список контрагентов: действие над разделом, а не над строкой",
+      "surface": "list",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "contact",
+      "module": "core",
+      "placement": "core.contact.toolbar",
+      "summary": "Панель действий контрагента: кнопка в шапке карточки",
+      "surface": "toolbar",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "document",
+      "module": "core",
+      "placement": "core.document.card",
+      "summary": "Карточка документа: панель или действие рядом с самим документом",
+      "surface": "card",
+      "types": [
+        "action",
+        "iframe",
+        "panel",
+        "declarative"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity"
+      ],
+      "entity": "document",
+      "module": "core",
+      "placement": "core.document.list",
+      "summary": "Журнал документов: действие над разделом, а не над строкой",
+      "surface": "list",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "document",
+      "module": "core",
+      "placement": "core.document.toolbar",
+      "summary": "Панель действий документа: кнопка в одном ряду с проведением и отменой",
+      "surface": "toolbar",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "product",
+      "module": "core",
+      "placement": "core.product.card",
+      "summary": "Карточка товара: панель или действие рядом с номенклатурой",
+      "surface": "card",
+      "types": [
+        "action",
+        "iframe",
+        "panel",
+        "declarative"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity"
+      ],
+      "entity": "product",
+      "module": "core",
+      "placement": "core.product.list",
+      "summary": "Список номенклатуры: действие над разделом, а не над строкой",
+      "surface": "list",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "product",
+      "module": "core",
+      "placement": "core.product.toolbar",
+      "summary": "Панель действий товара: кнопка в шапке карточки номенклатуры",
+      "surface": "toolbar",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "deal",
+      "module": "crm",
+      "placement": "crm.deal.card",
+      "summary": "Карточка сделки: панель или действие рядом со сделкой и её этапами",
+      "surface": "card",
+      "types": [
+        "action",
+        "iframe",
+        "panel",
+        "declarative"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity"
+      ],
+      "entity": "deal",
+      "module": "crm",
+      "placement": "crm.deal.list",
+      "summary": "Воронка сделок: действие над разделом, а не над строкой",
+      "surface": "list",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "deal",
+      "module": "crm",
+      "placement": "crm.deal.toolbar",
+      "summary": "Панель действий сделки: кнопка в одном ряду с переносом по этапам",
+      "surface": "toolbar",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "settlement_document",
+      "module": "finance",
+      "placement": "finance.settlement_document.card",
+      "summary": "Карточка расчётного документа: панель или действие рядом с долгом",
+      "surface": "card",
+      "types": [
+        "action",
+        "iframe",
+        "panel",
+        "declarative"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "settlement_document",
+      "module": "finance",
+      "placement": "finance.settlement_document.toolbar",
+      "summary": "Панель действий расчётного документа: кнопка рядом с проведением",
+      "surface": "toolbar",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "transaction",
+      "module": "finance",
+      "placement": "finance.transaction.card",
+      "summary": "Карточка банковской операции: панель или действие рядом с платежом",
+      "surface": "card",
+      "types": [
+        "action",
+        "iframe",
+        "panel",
+        "declarative"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity"
+      ],
+      "entity": "transaction",
+      "module": "finance",
+      "placement": "finance.transaction.list",
+      "summary": "Выписка: действие над разделом, а не над отдельной операцией",
+      "surface": "list",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "transaction",
+      "module": "finance",
+      "placement": "finance.transaction.toolbar",
+      "summary": "Панель действий банковской операции: кнопка рядом с категоризацией",
+      "surface": "toolbar",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module"
+      ],
+      "entity": "",
+      "module": "settings",
+      "placement": "settings.page",
+      "summary": "Раздел приложений кабинета: страница настройки установки",
+      "surface": "page",
+      "types": [
+        "settings",
+        "iframe",
+        "panel"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "document",
+      "module": "stock",
+      "placement": "stock.document.card",
+      "summary": "Карточка складского документа: панель или действие рядом со строками",
+      "surface": "card",
+      "types": [
+        "action",
+        "iframe",
+        "panel",
+        "declarative"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity"
+      ],
+      "entity": "document",
+      "module": "stock",
+      "placement": "stock.document.list",
+      "summary": "Журнал складских документов: действие над разделом, а не над строкой",
+      "surface": "list",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "entity": "document",
+      "module": "stock",
+      "placement": "stock.document.toolbar",
+      "summary": "Панель действий складского документа: кнопка рядом с проведением",
+      "surface": "toolbar",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity"
+      ],
+      "entity": "report",
+      "module": "stock",
+      "placement": "stock.report.list",
+      "summary": "Остатки на складах: действие над отчётом, у которого нет записи",
+      "surface": "list",
+      "types": [
+        "action"
+      ]
+    }
+  ],
+  "ui_slots": [
+    {
+      "action": "read",
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "module",
+        "entity",
+        "entity_id",
+        "locale"
+      ],
+      "framed": false,
+      "slot": "platform.context_action.v1",
+      "types": [
+        "action"
+      ]
+    },
+    {
+      "action": "read",
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module",
+        "entity",
+        "entity_id"
+      ],
+      "framed": true,
+      "slot": "platform.embedded_panel.v1",
+      "types": [
+        "iframe",
+        "panel"
+      ]
+    },
+    {
+      "action": "admin",
+      "context": [
+        "tenant_id",
+        "installation_id",
+        "actor_subject",
+        "locale",
+        "theme",
+        "module"
+      ],
+      "framed": true,
+      "slot": "platform.settings_page.v1",
+      "types": [
+        "settings"
+      ]
+    }
+  ]
+}

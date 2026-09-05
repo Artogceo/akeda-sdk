@@ -18,10 +18,16 @@ import (
 // значение секрета внутри манифеста, назначение и срок хранения рядом с
 // областью, wildcard в областях.
 //
-// НЕ проверяет то, для чего нужны исходники Akeda: существование точки
-// расширения и слота в живом реестре, объявленность области в таксономии,
-// ярус чувствительности области. Эти проверки делает `tools/manifest-lint` при
-// подаче версии, и зелёный ответ здесь НЕ означает «версию примут». Команда
+// Проверяет и то, для чего формы мало, а нужен САМ СПИСОК: существование точки
+// расширения, слота и именованного места, вид слота, уместный в этом месте, и
+// поля контекста, которые место действительно даёт. Списки берутся из каталога
+// в снимке (catalog.go), а не из кода этой команды: копия, набранная руками,
+// разошлась бы с платформой молча — и принимала бы место, которого оболочка не
+// знает.
+//
+// НЕ проверяет то, для чего нужна живая таксономия Akeda: объявленность области
+// доступа и её ярус чувствительности. Эти проверки делает `tools/manifest-lint`
+// при подаче версии, и зелёный ответ здесь НЕ означает «версию примут». Команда
 // говорит это вслух: молчание читалось бы как обещание.
 
 func commandManifest(options globals, args []string) error {
@@ -43,8 +49,14 @@ func commandManifest(options globals, args []string) error {
 	}
 	issues := checker.validate(document)
 
+	catalog, err := snapshot.ReadPlatformCatalog()
+	if err != nil {
+		return err
+	}
+
 	object, _ := document.(map[string]any)
 	issues = append(issues, localManifestRules(object)...)
+	issues = append(issues, catalogManifestRules(object, catalog)...)
 
 	if options.asJSON {
 		payload := make([]map[string]string, 0, len(issues))
@@ -61,7 +73,8 @@ func commandManifest(options globals, args []string) error {
 	}
 
 	if len(issues) == 0 {
-		fmt.Println("форма манифеста принята.")
+		fmt.Printf("манифест принят: форма по схеме снимка, точки, слоты и места — по каталогу (%d мест).\n",
+			len(catalog.UIPlacements))
 	} else {
 		for _, issue := range issues {
 			fmt.Printf("  %s\n", issue)
@@ -69,10 +82,10 @@ func commandManifest(options globals, args []string) error {
 		fmt.Printf("\nнайдено замечаний: %d\n", len(issues))
 	}
 	fmt.Println()
-	fmt.Println("Проверена ФОРМА. Существование точки расширения, слота и области, а также")
-	fmt.Println("ярус чувствительности проверяются при подаче версии линтером Akeda: ему нужен")
-	fmt.Println("живой реестр из исходников, которого здесь нет. Зелёный ответ не означает,")
-	fmt.Println("что версию опубликуют.")
+	fmt.Println("Проверены форма и каталог точек, слотов и мест на момент снятия снимка.")
+	fmt.Println("Объявленность области доступа и её ярус чувствительности проверяются при подаче")
+	fmt.Println("версии линтером Akeda: ему нужна живая таксономия, которой здесь нет. Зелёный")
+	fmt.Println("ответ не означает, что версию опубликуют.")
 	if len(issues) > 0 {
 		os.Exit(1)
 	}

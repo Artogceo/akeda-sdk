@@ -34,6 +34,10 @@ const usageText = `akeda — CLI разработчика расширений A
   akeda contract op <operationId>    форма одной операции
   akeda contract find <подстрока>    поиск операций по имени, пути и модулю
   akeda contract modules             покрытие по модулям
+  akeda contract reach               что из контракта открыто токену установки
+
+  akeda catalog                      точки расширения, слоты и места интерфейса
+  akeda catalog placements           только именованные места
 
   akeda login register <почта>       завести аккаунт разработчика
   akeda login link <почта>           запросить ссылку входа письмом
@@ -47,7 +51,7 @@ const usageText = `akeda — CLI разработчика расширений A
   akeda app installation             прочитать свою установку (токен ai_…)
   akeda app config                   прочитать свою настройку установки
 
-  akeda manifest lint <файл>         проверить ФОРМУ манифеста по схеме снимка
+  akeda manifest lint <файл>         проверить манифест по схеме и каталогу снимка
   akeda receiver check <файл>        одна законная доставка в приёмник
   akeda conformance run <файл>       весь набор проверок приёмника
 
@@ -115,6 +119,8 @@ func run(args []string) error {
 	switch rest[0] {
 	case "contract":
 		return commandContract(options, rest[1:])
+	case "catalog":
+		return commandCatalog(options, rest[1:])
 	case "login":
 		return commandLogin(options, rest[1:])
 	case "whoami":

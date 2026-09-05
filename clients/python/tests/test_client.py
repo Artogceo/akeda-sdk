@@ -207,14 +207,32 @@ def test_pagination_refuses_foreign_schemes() -> None:
         next(paginate(client(transport), "chatListConversations"))
 
 
-def test_contract_facts_match_documentation() -> None:
-    """Числа контракта, на которые опирается рантайм."""
-    assert len(OPERATIONS) == 770
-    assert len(public_operations()) == 30
+def test_contract_facts_match_snapshot(snapshot_manifest: dict) -> None:
+    """Числа контракта, на которые опирается рантайм.
+
+    Сверяются с описью снимка, а не с литералом: литерал ловил бы только свою
+    собственную устарелость, а опись ловит то, ради чего проверка стоит, — типы,
+    собранные не из этого снимка.
+    """
+    facts = snapshot_manifest["contract"]["operations"]
+    assert len(OPERATIONS) == facts["total"]
+    assert len(public_operations()) == facts["by_stage"]["public"]
+
+    reachable = [name for name, spec in OPERATIONS.items() if spec.installation]
+    assert len(reachable) == facts["installation_reachable"]
+    # Достижимость установкой — ось, которой у контракта раньше не было вовсе:
+    # ноль здесь означал бы, что расширение не может позвать НИЧЕГО, и узнало бы
+    # об этом по 401 у клиента.
+    assert reachable, "ни одна операция не открыта токену установки"
+
     assert sorted(name for name, spec in OPERATIONS.items() if spec.idempotent) == [
         "coreCreateContact",
         "coreCreateDocument",
         "coreCreateProduct",
         "corePostDocument",
+        "financeCreateDividendDecision",
+        "financeCreateSettlementDocument",
+        "stockCreateDocument",
+        "stockCreatePurchaseOrder",
         "tasksCreateTask",
     ]
