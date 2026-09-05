@@ -100,6 +100,191 @@ func TestStockABCManifestPasses(t *testing.T) {
 	}
 }
 
+// Каталог обязан знать хотя бы одну песочничную точку. Без неё проверка
+// раздела `functions` отвергала бы ЛЮБУЮ функцию — и выглядела бы это ровно так
+// же зелено, как правильный манифест без функций.
+func TestCatalogHasSandboxPoint(t *testing.T) {
+	catalog, err := snapshot.ReadPlatformCatalog()
+	if err != nil {
+		t.Fatalf("каталог снимка: %v", err)
+	}
+	if len(catalog.SandboxPointKeys()) == 0 {
+		t.Fatal("ни одна точка каталога не песочничная: раздел functions стал бы непроходимым для всех")
+	}
+	if len(catalog.PointModels) == 0 {
+		t.Fatal("в каталоге нет списка моделей ответа: разбор объявлений платформы сломался")
+	}
+}
+
+// Разделы `fields` и `functions` проверяются на блоке, собранном ЗДЕСЬ, а не на
+// примере репозитория: ни один пример SDK их не объявляет. `stock-abc` ничего не
+// пишет в карточки кабинета и не исполняет кода внутри Akeda, а отпечаток
+// артефакта, придуманный ради примера, обещал бы байты, которых нет ни в одном
+// хранилище. Обе стороны проверки от этого не страдают: сначала правильный блок
+// проходит без замечаний, потом каждая подсаженная ошибка ловится поимённо.
+const fieldsAndFunctionsBlock = `{
+  "referenceData": {
+    "requires": [],
+    "provides": [
+      {
+        "key": "app.akeda.stock-abc.abc_classes",
+        "kind": "code_list",
+        "schemaVersion": "v1",
+        "mutability": "app_managed",
+        "lifecycle": "stable",
+        "name": { "ru": "Классы ABC", "en": "ABC classes" },
+        "itemSchema": { "type": "object" },
+        "uninstall": "archive"
+      }
+    ]
+  },
+  "fields": [
+    {
+      "entity": "core.product",
+      "key": "abc_class",
+      "type": "reference",
+      "label": { "ru": "Класс ABC", "en": "ABC class" },
+      "reference": { "directory": "app.akeda.stock-abc.abc_classes" },
+      "required": false
+    },
+    {
+      "entity": "core.product",
+      "key": "abc_review",
+      "type": "enum",
+      "label": { "ru": "Решение по позиции", "en": "Decision on the item" },
+      "options": [
+        { "code": "keep", "label": { "ru": "Держать", "en": "Keep" } },
+        { "code": "drop", "label": { "ru": "Вывести", "en": "Drop" } }
+      ],
+      "required": false
+    }
+  ],
+  "functions": [
+    {
+      "key": "class_guard",
+      "point": "core.document.before_post.v1",
+      "artifact": {
+        "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "filter": { "document_type": "stock_issue" }
+    }
+  ]
+}`
+
+func manifestWithFieldsAndFunctions(t *testing.T) map[string]any {
+	t.Helper()
+	document := manifestFrom(t, "examples", "stock-abc", "app.json")
+	var block map[string]any
+	if err := json.Unmarshal([]byte(fieldsAndFunctionsBlock), &block); err != nil {
+		t.Fatalf("блок разделов не разбирается: %v", err)
+	}
+	for key, value := range block {
+		document[key] = value
+	}
+	return document
+}
+
+func TestFieldsAndFunctionsPass(t *testing.T) {
+	for _, issue := range lint(t, manifestWithFieldsAndFunctions(t)) {
+		t.Errorf("правильный блок fields и functions: %s", issue)
+	}
+}
+
+func TestBrokenFieldsAndFunctionsAreCaught(t *testing.T) {
+	cases := []struct {
+		name    string
+		break_  func(map[string]any)
+		expects string
+	}{
+		{
+			name: "функция стоит на сетевой точке",
+			break_: func(m map[string]any) {
+				m["functions"].([]any)[0].(map[string]any)["point"] = "core.document_lifecycle.v1"
+			},
+			expects: "не исполняет код расширения",
+		},
+		{
+			name: "точки функции в каталоге нет",
+			break_: func(m map[string]any) {
+				m["functions"].([]any)[0].(map[string]any)["point"] = "core.document.before_save.v1"
+			},
+			expects: `точки "core.document.before_save.v1" в каталоге нет`,
+		},
+		{
+			name: "песочничная точка названа в extensionPoints",
+			break_: func(m map[string]any) {
+				m["extensionPoints"] = []any{"core.document.before_post.v1"}
+			},
+			expects: "её объявляют разделом functions",
+		},
+		{
+			name: "точка требует права, которого манифест не просит",
+			break_: func(m map[string]any) {
+				permissions := m["permissions"].(map[string]any)
+				required := permissions["required"].([]any)
+				permissions["required"] = required[1:] // без core:read
+			},
+			expects: `требует право "core:read"`,
+		},
+		{
+			name: "имя функции объявлено дважды",
+			break_: func(m map[string]any) {
+				first := m["functions"].([]any)[0]
+				m["functions"] = []any{first, first}
+			},
+			expects: "объявлено дважды",
+		},
+		{
+			name: "графа объявлена у сущности дважды",
+			break_: func(m map[string]any) {
+				m["fields"].([]any)[1].(map[string]any)["key"] = "abc_class"
+			},
+			expects: "дважды",
+		},
+		{
+			name: "ссылка на справочник, которого приложение не заводит",
+			break_: func(m map[string]any) {
+				field := m["fields"].([]any)[0].(map[string]any)
+				field["reference"] = map[string]any{"directory": "app.akeda.stock-abc.foreign_list"}
+			},
+			expects: "которого приложение не заводит",
+		},
+		{
+			name: "подпись графы из одних пробелов",
+			break_: func(m map[string]any) {
+				field := m["fields"].([]any)[0].(map[string]any)
+				field["label"] = map[string]any{"ru": "   ", "en": "ABC class"}
+			},
+			expects: "пуста на языке",
+		},
+		{
+			name: "код значения перечисления повторяется",
+			break_: func(m map[string]any) {
+				options := m["fields"].([]any)[1].(map[string]any)["options"].([]any)
+				options[1].(map[string]any)["code"] = "keep"
+			},
+			expects: "повторяется",
+		},
+	}
+
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			document := manifestWithFieldsAndFunctions(t)
+			testCase.break_(document)
+			issues := lint(t, document)
+			found := false
+			for _, issue := range issues {
+				if strings.Contains(issue.Message, testCase.expects) {
+					found = true
+				}
+			}
+			if !found {
+				t.Fatalf("подсаженная ошибка %q не поймана; замечания: %v", testCase.name, issues)
+			}
+		})
+	}
+}
+
 func TestCatalogRulesCatchUnknownPlacementsAndPoints(t *testing.T) {
 	cases := []struct {
 		name    string

@@ -1,10 +1,12 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a3e3b6127a35366107149251fc907a51b367bf2372bddd27c6782299b61707e).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a255440df951ca637e056f0155498f67bc7b34723eac197148cf9cab8906c7c3).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
 
 import "encoding/json"
+
+type AccountingBasis = string
 
 type Activity struct {
 	ID        UUID    `json:"id"`
@@ -1749,6 +1751,7 @@ type ChatConversation struct {
 	UpdatedAt        string                        `json:"updated_at"`
 	Capabilities     *ChatConversationCapabilities `json:"capabilities,omitempty"`
 	UnreadCount      int64                         `json:"unread_count"`
+	FirstUnreadSeq   *int64                        `json:"first_unread_seq"`
 	ManualUnreadSeq  *int64                        `json:"manual_unread_seq"`
 	NotificationMode string                        `json:"notification_mode"`
 	MentionCount     int64                         `json:"mention_count"`
@@ -1813,6 +1816,8 @@ type ChatFolder struct {
 	ID       UUID   `json:"id"`
 	Name     string `json:"name"`
 	Position int64  `json:"position"`
+	// Space — Верхний уровень списка; папка не может одновременно принадлежать обычным чатам и чатам задач.
+	Space string `json:"space"`
 	// Scopes — Разделы всегда возвращаются в порядке direct, group, task независимо от порядка в запросе.
 	Scopes                 []string `json:"scopes"`
 	IncludeConversationIds []UUID   `json:"include_conversation_ids"`
@@ -2045,6 +2050,7 @@ type ChatReceiptState struct {
 type ChatSaveFolder struct {
 	Name     string `json:"name"`
 	Position *int64 `json:"position,omitempty"`
+	Space    string `json:"space"`
 	// Scopes — Повтор раздела отвергается.
 	Scopes                 []string `json:"scopes,omitempty"`
 	IncludeConversationIds []UUID   `json:"include_conversation_ids,omitempty"`
@@ -2190,6 +2196,17 @@ type CoreBusiness struct {
 	ID       UUID   `json:"id"`
 	Name     string `json:"name"`
 	IsActive bool   `json:"is_active"`
+	// AccountingMethod — Что считать выручкой — cash это деньги, accrual это сделка
+	AccountingMethod string `json:"accounting_method"`
+	// AccrualFrom — Дата перехода на начисление; отсутствует у кассового бизнеса
+	AccrualFrom *string `json:"accrual_from,omitempty"`
+}
+
+type CoreBusinessAccountingMethodInput struct {
+	// Method — Значение приводится к нижнему регистру
+	Method string `json:"method"`
+	// AccrualFrom — Дата перехода на начисление; обязательна при accrual и не используется при cash
+	AccrualFrom *string `json:"accrual_from,omitempty"`
 }
 
 type CoreBusinessInput struct {
@@ -2258,32 +2275,49 @@ type CoreConflictingRegistrar struct {
 }
 
 type CoreContact struct {
-	ID          UUID                       `json:"id"`
-	Name        string                     `json:"name"`
-	Kind        CoreContactKind            `json:"kind"`
-	IsCustomer  bool                       `json:"is_customer"`
-	IsSupplier  bool                       `json:"is_supplier"`
-	FolderID    *UUID                      `json:"folder_id"`
-	EntityType  CoreContactEntityType      `json:"entity_type"`
-	LegalName   string                     `json:"legal_name"`
-	Phone       string                     `json:"phone"`
-	Email       string                     `json:"email"`
-	Position    string                     `json:"position"`
-	Tags        []json.RawMessage          `json:"tags"`
-	Messengers  map[string]json.RawMessage `json:"messengers"`
-	Source      string                     `json:"source"`
-	INN         string                     `json:"inn"`
-	KPP         string                     `json:"kpp"`
-	Ogrn        string                     `json:"ogrn"`
-	Address     string                     `json:"address"`
-	BankName    string                     `json:"bank_name"`
-	BankBIC     string                     `json:"bank_bic"`
-	BankAccount string                     `json:"bank_account"`
-	ExternalID  string                     `json:"external_id"`
-	Custom      map[string]json.RawMessage `json:"custom"`
-	IsActive    bool                       `json:"is_active"`
-	CreatedAt   string                     `json:"created_at"`
-	UpdatedAt   string                     `json:"updated_at"`
+	ID           UUID                       `json:"id"`
+	Name         string                     `json:"name"`
+	Kind         CoreContactKind            `json:"kind"`
+	IsCustomer   bool                       `json:"is_customer"`
+	IsSupplier   bool                       `json:"is_supplier"`
+	FolderID     *UUID                      `json:"folder_id"`
+	EntityType   CoreContactEntityType      `json:"entity_type"`
+	LegalName    string                     `json:"legal_name"`
+	Phone        string                     `json:"phone"`
+	Email        string                     `json:"email"`
+	Position     string                     `json:"position"`
+	Tags         []json.RawMessage          `json:"tags"`
+	Messengers   map[string]json.RawMessage `json:"messengers"`
+	Source       string                     `json:"source"`
+	INN          string                     `json:"inn"`
+	KPP          string                     `json:"kpp"`
+	Ogrn         string                     `json:"ogrn"`
+	Address      string                     `json:"address"`
+	LegalAddress CoreContactAddress         `json:"legal_address"`
+	BankName     string                     `json:"bank_name"`
+	BankBIC      string                     `json:"bank_bic"`
+	BankAccount  string                     `json:"bank_account"`
+	ExternalID   string                     `json:"external_id"`
+	Custom       map[string]json.RawMessage `json:"custom"`
+	IsActive     bool                       `json:"is_active"`
+	CreatedAt    string                     `json:"created_at"`
+	UpdatedAt    string                     `json:"updated_at"`
+}
+
+type CoreContactAddress struct {
+	PostalCode string `json:"postal_code"`
+	// RegionCode — Код субъекта РФ для формализованного документа
+	RegionCode string `json:"region_code"`
+	RegionName string `json:"region_name"`
+	District   string `json:"district"`
+	City       string `json:"city"`
+	Settlement string `json:"settlement"`
+	Street     string `json:"street"`
+	Building   string `json:"building"`
+	Block      string `json:"block"`
+	// Flat — Офис или помещение
+	Flat string `json:"flat"`
+	Info string `json:"info"`
 }
 
 type CoreContactBulkPatch struct {
@@ -2294,25 +2328,26 @@ type CoreContactBulkPatch struct {
 }
 
 type CoreContactCreate struct {
-	Name        string                     `json:"name"`
-	Kind        *CoreContactKind           `json:"kind,omitempty"`
-	EntityType  *CoreContactEntityType     `json:"entity_type,omitempty"`
-	LegalName   *string                    `json:"legal_name,omitempty"`
-	Phone       *string                    `json:"phone,omitempty"`
-	Email       *string                    `json:"email,omitempty"`
-	Position    *string                    `json:"position,omitempty"`
-	Tags        []json.RawMessage          `json:"tags,omitempty"`
-	Messengers  map[string]json.RawMessage `json:"messengers,omitempty"`
-	Source      *string                    `json:"source,omitempty"`
-	INN         *string                    `json:"inn,omitempty"`
-	KPP         *string                    `json:"kpp,omitempty"`
-	Ogrn        *string                    `json:"ogrn,omitempty"`
-	Address     *string                    `json:"address,omitempty"`
-	BankName    *string                    `json:"bank_name,omitempty"`
-	BankBIC     *string                    `json:"bank_bic,omitempty"`
-	BankAccount *string                    `json:"bank_account,omitempty"`
-	ExternalID  *string                    `json:"external_id,omitempty"`
-	Custom      map[string]json.RawMessage `json:"custom,omitempty"`
+	Name         string                     `json:"name"`
+	Kind         *CoreContactKind           `json:"kind,omitempty"`
+	EntityType   *CoreContactEntityType     `json:"entity_type,omitempty"`
+	LegalName    *string                    `json:"legal_name,omitempty"`
+	Phone        *string                    `json:"phone,omitempty"`
+	Email        *string                    `json:"email,omitempty"`
+	Position     *string                    `json:"position,omitempty"`
+	Tags         []json.RawMessage          `json:"tags,omitempty"`
+	Messengers   map[string]json.RawMessage `json:"messengers,omitempty"`
+	Source       *string                    `json:"source,omitempty"`
+	INN          *string                    `json:"inn,omitempty"`
+	KPP          *string                    `json:"kpp,omitempty"`
+	Ogrn         *string                    `json:"ogrn,omitempty"`
+	Address      *string                    `json:"address,omitempty"`
+	LegalAddress *CoreContactAddress        `json:"legal_address,omitempty"`
+	BankName     *string                    `json:"bank_name,omitempty"`
+	BankBIC      *string                    `json:"bank_bic,omitempty"`
+	BankAccount  *string                    `json:"bank_account,omitempty"`
+	ExternalID   *string                    `json:"external_id,omitempty"`
+	Custom       map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
 type CoreContactEntityType = string
@@ -2325,28 +2360,29 @@ type CoreContactPage struct {
 }
 
 type CoreContactPatch struct {
-	Name        *string                    `json:"name,omitempty"`
-	Kind        *CoreContactKind           `json:"kind,omitempty"`
-	EntityType  *CoreContactEntityType     `json:"entity_type,omitempty"`
-	LegalName   *string                    `json:"legal_name,omitempty"`
-	Phone       *string                    `json:"phone,omitempty"`
-	Email       *string                    `json:"email,omitempty"`
-	Position    *string                    `json:"position,omitempty"`
-	Tags        []json.RawMessage          `json:"tags,omitempty"`
-	Messengers  map[string]json.RawMessage `json:"messengers,omitempty"`
-	Source      *string                    `json:"source,omitempty"`
-	INN         *string                    `json:"inn,omitempty"`
-	KPP         *string                    `json:"kpp,omitempty"`
-	Ogrn        *string                    `json:"ogrn,omitempty"`
-	Address     *string                    `json:"address,omitempty"`
-	BankName    *string                    `json:"bank_name,omitempty"`
-	BankBIC     *string                    `json:"bank_bic,omitempty"`
-	BankAccount *string                    `json:"bank_account,omitempty"`
-	ExternalID  *string                    `json:"external_id,omitempty"`
-	Custom      map[string]json.RawMessage `json:"custom,omitempty"`
-	IsCustomer  *bool                      `json:"is_customer,omitempty"`
-	IsSupplier  *bool                      `json:"is_supplier,omitempty"`
-	FolderID    *UUID                      `json:"folder_id,omitempty"`
+	Name         *string                    `json:"name,omitempty"`
+	Kind         *CoreContactKind           `json:"kind,omitempty"`
+	EntityType   *CoreContactEntityType     `json:"entity_type,omitempty"`
+	LegalName    *string                    `json:"legal_name,omitempty"`
+	Phone        *string                    `json:"phone,omitempty"`
+	Email        *string                    `json:"email,omitempty"`
+	Position     *string                    `json:"position,omitempty"`
+	Tags         []json.RawMessage          `json:"tags,omitempty"`
+	Messengers   map[string]json.RawMessage `json:"messengers,omitempty"`
+	Source       *string                    `json:"source,omitempty"`
+	INN          *string                    `json:"inn,omitempty"`
+	KPP          *string                    `json:"kpp,omitempty"`
+	Ogrn         *string                    `json:"ogrn,omitempty"`
+	Address      *string                    `json:"address,omitempty"`
+	LegalAddress *CoreContactAddress        `json:"legal_address,omitempty"`
+	BankName     *string                    `json:"bank_name,omitempty"`
+	BankBIC      *string                    `json:"bank_bic,omitempty"`
+	BankAccount  *string                    `json:"bank_account,omitempty"`
+	ExternalID   *string                    `json:"external_id,omitempty"`
+	Custom       map[string]json.RawMessage `json:"custom,omitempty"`
+	IsCustomer   *bool                      `json:"is_customer,omitempty"`
+	IsSupplier   *bool                      `json:"is_supplier,omitempty"`
+	FolderID     *UUID                      `json:"folder_id,omitempty"`
 }
 
 type CoreCurrencyRate struct {
@@ -3595,11 +3631,12 @@ type CoreRegisterTurnoverRow struct {
 }
 
 type CoreTrialBalance struct {
-	DateFrom string                 `json:"date_from"`
-	DateTo   string                 `json:"date_to"`
-	Currency string                 `json:"currency"`
-	Rows     []CoreTrialBalanceRow  `json:"rows"`
-	Totals   CoreTrialBalanceTotals `json:"totals"`
+	DateFrom        string                 `json:"date_from"`
+	DateTo          string                 `json:"date_to"`
+	Currency        string                 `json:"currency"`
+	Rows            []CoreTrialBalanceRow  `json:"rows"`
+	Totals          CoreTrialBalanceTotals `json:"totals"`
+	AccountingBasis *AccountingBasis       `json:"accounting_basis,omitempty"`
 }
 
 type CoreTrialBalanceRow struct {
@@ -4126,6 +4163,1044 @@ type DiscussionCommentUpdate struct {
 
 type DiscussionOwnerType = string
 
+// DocflowAcceptedDocument — Учётный документ кабинета, заведённый приёмкой.
+type DocflowAcceptedDocument struct {
+	ID UUID `json:"id"`
+	// Number — Наш номер из нумератора кабинета. Номер продавца лежит в содержимом документа: занять им наш сквозной счётчик значит однажды получить два своих документа с одним номером от двух разных поставщиков
+	Number string `json:"number"`
+	// Date — Дата документа ГГГГ-ММ-ДД. По умолчанию это дата документа поставщика: операция произошла тогда, когда её совершил он, и датировать её днём приёмки значит поставить факт не в тот период
+	Date string `json:"date"`
+	// TypeKey — Ключ вида документа; у приёмки docflow_incoming
+	TypeKey string `json:"type_key"`
+	// TypeName — Имя вида в кабинете. Право клиента: вид можно переименовать, и код держит его за ключ, а не за название
+	TypeName string `json:"type_name"`
+	// Status — Состояние учётного документа. Приёмка заводит ЧЕРНОВИК: проведение принадлежит модулям — владельцам регистров
+	Status string `json:"status"`
+	// MarkedDeleted — Документ помечен на удаление. Такой пакет принимается заново: пометка и есть способ сказать «этот документ ошибочный»
+	MarkedDeleted bool `json:"marked_deleted"`
+	// AcceptedAt — Момент приёмки; пусто, если он не записан
+	AcceptedAt string `json:"accepted_at"`
+}
+
+// DocflowActionResult — Чем оператор ответил на выполненное действие.
+type DocflowActionResult struct {
+	// ID — Идентификатор действия у оператора
+	ID string `json:"id"`
+	// State — Новое состояние кодом оператора
+	State string `json:"state"`
+	// StateName — Новое состояние словами оператора
+	StateName string `json:"state_name"`
+}
+
+// DocflowAddressRequisites — АдрРФ: структурный российский адрес. Только российский: адрес по ГАР требует идентификатора адресного объекта из государственного реестра, которого в карточках Akeda нет, а иностранный адрес у продавца-резидента не встречается. Карточки юрлица и контрагента хранят такой адрес частями; объект отправления позволяет задать исключение.
+type DocflowAddressRequisites struct {
+	// PostalCode — Индекс
+	PostalCode *string `json:"postal_code,omitempty"`
+	// RegionCode — КодРегион
+	RegionCode *string `json:"region_code,omitempty"`
+	// RegionName — НаимРегион
+	RegionName *string `json:"region_name,omitempty"`
+	// District — Район
+	District *string `json:"district,omitempty"`
+	// City — Город
+	City *string `json:"city,omitempty"`
+	// Settlement — НаселПункт
+	Settlement *string `json:"settlement,omitempty"`
+	// Street — Улица
+	Street *string `json:"street,omitempty"`
+	// Building — Дом
+	Building *string `json:"building,omitempty"`
+	// Block — Корпус
+	Block *string `json:"block,omitempty"`
+	// Flat — Кварт
+	Flat *string `json:"flat,omitempty"`
+	// Info — ИныеСвед
+	Info *string `json:"info,omitempty"`
+}
+
+// DocflowAttachment — Файл внутри пакета. Внутреннего пути в хранилище здесь нет: снаружи файл получают отдельной операцией, а путь не часть контракта и не подсказка для перебора.
+type DocflowAttachment struct {
+	ID      UUID `json:"id"`
+	Message UUID `json:"message"`
+	// ExternalID — Идентификатор вложения у оператора
+	ExternalID string `json:"external_id"`
+	// Name — Имя файла словами оператора
+	Name string `json:"name"`
+	// Kind — Наш словарь, а не оператора: документ, ответный титул, служебное извещение. Пусто означает, что вид неизвестен, и это законно
+	Kind        string `json:"kind"`
+	ContentType string `json:"content_type"`
+	SizeBytes   int64  `json:"size_bytes"`
+	Sha256      string `json:"sha256"`
+	// Stored — Байты скачаны и лежат у НАС. Ссылка оператора хранилищем не считается: она живёт около месяца, а накладную спрашивают через три года
+	Stored       bool    `json:"stored"`
+	DownloadedAt *string `json:"downloaded_at,omitempty"`
+	CreatedAt    string  `json:"created_at"`
+}
+
+// DocflowAttorneySubmission — Машиночитаемая доверенность при подписи. Прикладывается ИДЕНТИФИКАТОРОМ в реестре ФНС, а не файлом: поля для тела доверенности у оператора нет вовсе. Поля content и content_signature приняты потому, что их присылает браузерный контур, и оператору они не передаются.
+type DocflowAttorneySubmission struct {
+	// RegistryNumber — Единый регистрационный номер доверенности в реестре ФНС
+	RegistryNumber string  `json:"registry_number"`
+	PrincipalINN   *string `json:"principal_inn,omitempty"`
+	IssuedAt       *string `json:"issued_at,omitempty"`
+	ExpiresAt      *string `json:"expires_at,omitempty"`
+	// Content — Тело доверенности Base64. Оператору не передаётся
+	Content *string `json:"content,omitempty"`
+	// ContentSignature — Подпись под телом доверенности Base64. Оператору не передаётся
+	ContentSignature *string `json:"content_signature,omitempty"`
+}
+
+// DocflowBankRequisites — БанкРекв: банковские реквизиты участника. У юрлица кабинета их нет вовсе.
+type DocflowBankRequisites struct {
+	// Account — НомерСчета
+	Account *string `json:"account,omitempty"`
+	// Name — НаимБанк
+	Name *string `json:"name,omitempty"`
+	// BIC — БИК
+	BIC *string `json:"bic,omitempty"`
+	// CorrAccount — КорСчет
+	CorrAccount *string `json:"corr_account,omitempty"`
+}
+
+// DocflowBuyerTitleInput — Ответный титул покупателя на входящий пакет. Сам пакет назван в адресе, реквизиты продавца сервер читает из его файла в пакете.
+type DocflowBuyerTitleInput struct {
+	// Result — КодИтога: 1 — принято без разногласий, 2 — с разногласиями, 3 — не принято
+	Result *string `json:"result,omitempty"`
+	// AcceptedAt — ДатаПрин в форме ГГГГ-ММ-ДД
+	AcceptedAt *string `json:"accepted_at,omitempty"`
+	// Operation — СодОпер. Формат ЗАПРЕЩАЕТ его при итоге «не принято»: «не приняли» — это отсутствие операции приёмки, а не операция с описанием
+	Operation *string `json:"operation,omitempty"`
+	// DocumentKindName — НаимДокОпрПр: наименование документа, определённое сторонами сделки. В титуле покупателя обязательно ВСЕГДА, в отличие от титула продавца, где оно зависит от функции
+	DocumentKindName *string `json:"document_kind_name,omitempty"`
+	// Function — Функция документа продавца, на который отвечаем. Пустое значение сервер берёт из его файла
+	Function *string `json:"function,omitempty"`
+	// Number — Номер документа продавца
+	Number *string `json:"number,omitempty"`
+	// Date — Дата документа продавца
+	Date         *string                       `json:"date,omitempty"`
+	Disagreement *DocflowDocumentRefRequisites `json:"disagreement,omitempty"`
+	Employee     *DocflowEmployeeRequisites    `json:"employee,omitempty"`
+	Signers      []DocflowSignerRequisites     `json:"signers,omitempty"`
+	File         *DocflowFileRequisites        `json:"file,omitempty"`
+	Extra        []DocflowTextInfoRequisites   `json:"extra,omitempty"`
+}
+
+// DocflowCancellation — Соглашение сторон об аннулировании документа. Запускает его любая сторона, а решает вторая: согласие даёт состояние 22 «Документ аннулирован», отказ — состояние 40 «Аннулирование отклонено», при котором состояние самого документа НЕ меняется. Шаг цепочки выводится из ленты СОБЫТИЙ пакета, а не из кода состояния: состояние 27 «Ожидает аннулирования» оператор отдаёт только отдельным методом выборки по событиям.
+type DocflowCancellation struct {
+	// State — Шаг цепочки: none — её нет; requested — ждём решения; agreed — аннулирован по соглашению; refused — в аннулировании отказано, и документ остался действующим
+	State string `json:"state"`
+	// StateName — Слова ОПЕРАТОРА о состоянии, когда оно относится к аннулированию. Своего перевода состояний у нас нет и быть не должно
+	StateName string `json:"state_name"`
+	// Initiator — Кто запустил цепочку. Пусто означает «неизвестно», а не «мы»
+	Initiator string `json:"initiator"`
+	// Reason — Причина словами того, кто её написал. Не переводится
+	Reason      string  `json:"reason"`
+	RequestedAt *string `json:"requested_at"`
+	DecidedAt   *string `json:"decided_at"`
+	// Available — Вид документа вообще допускает аннулирование. У электронной транспортной накладной его нет: там отказ 409 с кодом docflow.edo.cancellation_unavailable
+	Available bool `json:"available"`
+	// CanRequest — Ход за нами и цепочку можно начать
+	CanRequest bool `json:"can_request"`
+	// CanApprove — Соглашение прислали нам и на него можно согласиться
+	CanApprove bool `json:"can_approve"`
+	// CanReject — Соглашение прислали нам и в нём можно отказать
+	CanReject bool `json:"can_reject"`
+}
+
+// DocflowCancellationInput — Шаг соглашения об аннулировании. Одного поля довольно: сторону, документ и чей сейчас ход, сервер знает сам.
+type DocflowCancellationInput struct {
+	// Comment — Причина словами человека. Обязательна при предложении аннулирования и при отказе в нём: вторая сторона решает по причине, а не по факту обращения
+	Comment *string `json:"comment,omitempty"`
+}
+
+// DocflowCertificate — Сертификат, которым подпись доказывают спустя годы: имя подписанта меняется, отпечаток нет.
+type DocflowCertificate struct {
+	Thumbprint string  `json:"thumbprint"`
+	Subject    string  `json:"subject"`
+	ValidFrom  *string `json:"valid_from,omitempty"`
+	ValidTo    *string `json:"valid_to,omitempty"`
+}
+
+// DocflowConnection — Подключение юрлица к оператору ЭДО. Учётных данных здесь нет ни одним полем: снаружи виден только признак has_credentials.
+type DocflowConnection struct {
+	ID UUID `json:"id"`
+	// Provider — Оператор ЭДО. Диадок объявлен, адаптера к нему пока нет
+	Provider string `json:"provider"`
+	// ProviderName — Имя оператора для интерфейса; торговая марка, не переводится
+	ProviderName string `json:"provider_name"`
+	DisplayName  string `json:"display_name"`
+	Company      *UUID  `json:"company,omitempty"`
+	CompanyName  string `json:"company_name"`
+	CompanyINN   string `json:"company_inn"`
+	CompanyKPP   string `json:"company_kpp"`
+	// Status — reauth_required отделён от error намеренно: сеть починится сама, а отозванный доступ требует человека
+	Status     string `json:"status"`
+	StatusName string `json:"status_name"`
+	// HasCredentials — Тройка ключей оператора задана. Самих значений наружу не отдают никогда
+	HasCredentials bool `json:"has_credentials"`
+	// ReadOnly — Действующее ограничение: отправка, подписание и изменение состояний в ЭДО отключены
+	ReadOnly bool `json:"read_only"`
+	// ExternalOrgID — Идентификатор нашей организации у оператора; выясняется сопоставлением по ИНН и КПП, руками не вводится
+	ExternalOrgID string `json:"external_org_id"`
+	// GrantedByUserID — Кто из ERP выдал доступ; имя человека на стороне оператора нам неизвестно
+	GrantedByUserID *int64  `json:"granted_by_user_id,omitempty"`
+	GrantedByName   string  `json:"granted_by_name"`
+	GrantedAt       *string `json:"granted_at,omitempty"`
+	LastSyncAt      *string `json:"last_sync_at,omitempty"`
+	// LastSyncStatus — Итог последнего прохода синхронизации
+	LastSyncStatus string `json:"last_sync_status"`
+	// LastError — СЛОВА ОПЕРАТОРА и только они: по ним человек чинит доступ в кабинете оператора
+	LastError string `json:"last_error"`
+	// LastErrorCode — Машинный код последней неудачи (docflow.edo.*); его переводит интерфейс
+	LastErrorCode string `json:"last_error_code"`
+	MessagesTotal int64  `json:"messages_total"`
+	// ActionsDue — Сколько пакетов ждут нашего действия
+	ActionsDue int64  `json:"actions_due"`
+	CreatedAt  string `json:"created_at"`
+	UpdatedAt  string `json:"updated_at"`
+}
+
+// DocflowConnectionInput — Заведение подключения. Секреты приходят открытым текстом ровно один раз и шифруются до того, как что-либо попадёт в базу.
+type DocflowConnectionInput struct {
+	// Provider — Пусто означает saby — единственный оператор с адаптером
+	Provider    *string `json:"provider,omitempty"`
+	DisplayName *string `json:"display_name,omitempty"`
+	Company     UUID    `json:"company"`
+	// AppClientID — Часть тройки ключей оператора; обратно не возвращается
+	AppClientID string `json:"app_client_id"`
+	// AppSecret — Часть тройки ключей оператора; обратно не возвращается
+	AppSecret string `json:"app_secret"`
+	// ServiceKey — Часть тройки ключей оператора; обратно не возвращается
+	ServiceKey string `json:"service_key"`
+}
+
+type DocflowConnectionList struct {
+	Count   int64               `json:"count"`
+	Results []DocflowConnection `json:"results"`
+}
+
+// DocflowConnectionModeInput — Явный выбор режима. false разрешает юридически значимые действия через это подключение; true немедленно возвращает безопасный режим.
+type DocflowConnectionModeInput struct {
+	ReadOnly bool `json:"read_only"`
+}
+
+// DocflowConnectionPatch — Частичное изменение. Учётные данные обновляются только всеми тремя значениями сразу: у оператора это одно неделимое сочетание.
+type DocflowConnectionPatch struct {
+	DisplayName *string `json:"display_name,omitempty"`
+	Status      *string `json:"status,omitempty"`
+	AppClientID *string `json:"app_client_id,omitempty"`
+	AppSecret   *string `json:"app_secret,omitempty"`
+	ServiceKey  *string `json:"service_key,omitempty"`
+}
+
+// DocflowContactRequisites — Контакт: телефоны, почта и прочие сведения для связи.
+type DocflowContactRequisites struct {
+	// Phones — Тлф
+	Phones []string `json:"phones,omitempty"`
+	// Emails — ЭлПочта
+	Emails []string `json:"emails,omitempty"`
+	// Info — ИнКонт
+	Info *string `json:"info,omitempty"`
+}
+
+// DocflowCounterparty — Вторая сторона обмена. Реквизиты хранятся текстом всегда, даже когда сопоставление с нашим контрагентом состоялось: карточку могут удалить или переименовать, а пакет обязан остаться читаемым спустя годы.
+type DocflowCounterparty struct {
+	Name string `json:"name"`
+	INN  string `json:"inn"`
+	KPP  string `json:"kpp"`
+	// ExternalID — Идентификатор участника обмена у оператора: надёжнее ИНН, потому что у одного ИНН бывает несколько ящиков
+	ExternalID string `json:"external_id"`
+	Contact    *UUID  `json:"contact,omitempty"`
+	// ContactName — Наш контрагент, если сопоставление состоялось. Это наша догадка по ИНН либо выбор человека, а не факт от оператора
+	ContactName string `json:"contact_name"`
+}
+
+// DocflowCurrencyRequisites — ДенИзм: денежное измерение документа.
+type DocflowCurrencyRequisites struct {
+	// Code — КодОКВ. Пустое значение означает рубль
+	Code *string `json:"code,omitempty"`
+	// Name — НаимОКВ
+	Name *string `json:"name,omitempty"`
+	// Rate — КурсВал
+	Rate *string `json:"rate,omitempty"`
+}
+
+// DocflowDocumentRefRequisites — Реквизиты стороннего документа.
+type DocflowDocumentRefRequisites struct {
+	// Name — РеквНаимДок
+	Name *string `json:"name,omitempty"`
+	// Number — РеквНомерДок
+	Number *string `json:"number,omitempty"`
+	// Date — РеквДатаДок в форме ГГГГ-ММ-ДД
+	Date *string `json:"date,omitempty"`
+	// FileID — РеквИдФайлДок
+	FileID *string `json:"file_id,omitempty"`
+	// DocID — РеквИдДок
+	DocID *string `json:"doc_id,omitempty"`
+	// Info — РеквДопСведДок
+	Info *string `json:"info,omitempty"`
+}
+
+// DocflowElectronicPoARequisites — СвДоверЭл: машиночитаемая доверенность. Формат требует её ровно при способе подтверждения полномочий 3 и запрещает при остальных.
+type DocflowElectronicPoARequisites struct {
+	// Number — НомДовер, 36 символов
+	Number         *string `json:"number,omitempty"`
+	IssuedAt       *string `json:"issued_at,omitempty"`
+	InternalNumber *string `json:"internal_number,omitempty"`
+	InternalDate   *string `json:"internal_date,omitempty"`
+	// Storage — ИдСистХран
+	Storage *string `json:"storage,omitempty"`
+	URL     *string `json:"url,omitempty"`
+}
+
+// DocflowEmployeeRequisites — Работник организации: должность и ФИО.
+type DocflowEmployeeRequisites struct {
+	Position   *string `json:"position,omitempty"`
+	Surname    *string `json:"surname,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	Patronymic *string `json:"patronymic,omitempty"`
+	Info       *string `json:"info,omitempty"`
+}
+
+// DocflowEvent — Событие ленты пакета. Лента — то, по чему человек восстанавливает ход спора с контрагентом, поэтому название и комментарий хранятся словами оператора и не переводятся.
+type DocflowEvent struct {
+	ID         UUID    `json:"id"`
+	Message    UUID    `json:"message"`
+	ExternalID string  `json:"external_id"`
+	Name       string  `json:"name"`
+	Comment    string  `json:"comment"`
+	OccurredAt *string `json:"occurred_at,omitempty"`
+	CreatedAt  string  `json:"created_at"`
+}
+
+// DocflowFileRequisites — То, из чего складывается имя файла обмена. Идентификаторы участников спрашиваются, потому что взять их неоткуда: свой оператор отдаёт пустым, а идентификатор контрагента появляется только с первым его документом в ленте. Что сервер видел в зеркале, он подставляет сам; всё остальное — за человеком.
+type DocflowFileRequisites struct {
+	// SenderID — Идентификатор отправителя у оператора
+	SenderID *string `json:"sender_id,omitempty"`
+	// ReceiverID — Идентификатор получателя у оператора
+	ReceiverID *string `json:"receiver_id,omitempty"`
+	// UUID — Собственный идентификатор файла обмена
+	UUID *string `json:"uuid,omitempty"`
+	// Extra — Дополнительная часть имени файла
+	Extra *string `json:"extra,omitempty"`
+	// Traceability — Документ о прослеживаемых товарах
+	Traceability *bool `json:"traceability,omitempty"`
+	// Alcohol — Документ об алкогольной продукции
+	Alcohol *bool `json:"alcohol,omitempty"`
+	// Tobacco — Документ о табачной продукции
+	Tobacco *bool `json:"tobacco,omitempty"`
+	// Oil — Документ о нефтепродуктах
+	Oil *bool `json:"oil,omitempty"`
+}
+
+// DocflowFormatIssues — Документ не отвечает формату ФНС. Список непройденных проверок уходит ЦЕЛИКОМ: человек обязан увидеть всё сразу, а не по одной причине за попытку.
+type DocflowFormatIssues struct {
+	// Detail — Одна фраза на языке запроса
+	Detail string         `json:"detail"`
+	Code   string         `json:"code"`
+	Issues []DocflowIssue `json:"issues"`
+}
+
+// DocflowIntakeCounterparty — Вторая сторона и то, с кем мы её свели. Своей догадки по ИНН у приёмки нет вовсе: контрагента сводит механизм синхронизации, а второй механизм сопоставления рядом с существующим разошёлся бы с ним на первой же правке.
+type DocflowIntakeCounterparty struct {
+	// Contact — Карточка контрагента кабинета; null — свести не с кем, и приёмка отвечает проверкой docflow.edo.contact_required
+	Contact *UUID `json:"contact"`
+	// ContactName — Имя этой карточки в кабинете
+	ContactName string `json:"contact_name"`
+	// Name — Имя стороны словами оператора либо файла продавца
+	Name string `json:"name"`
+	INN  string `json:"inn"`
+	KPP  string `json:"kpp"`
+	// Match — Откуда взялся контрагент: manual — прислал человек, auto — свело зеркало, none — не свели ни с кем
+	Match string `json:"match"`
+}
+
+// DocflowIntakeInput — Решение человека, которым подтверждается приёмка. Сам пакет назван в адресе. Решения по строкам приезжают СПИСКОМ, а не картой «номер → товар»: пропуск строки — это тоже решение, и картой его пришлось бы выражать отсутствием ключа, то есть неотличимо от «человек про эту строку не сказал ничего», а разница между ними принципиальная.
+type DocflowIntakeInput struct {
+	// Date — Дата учётного документа ГГГГ-ММ-ДД. Пусто — берётся дата документа поставщика: она и есть дата операции
+	Date *string `json:"date,omitempty"`
+	// Contact — Контрагент. Пусто — берётся тот, с кем свело зеркало
+	Contact *UUID `json:"contact,omitempty"`
+	// Lines — Решения по строкам. Собственной догадкой подтверждение не пользуется: строка без записанного соответствия и без решения человека в документ не едет, а отвечает проверкой docflow.edo.product_required
+	Lines []DocflowIntakeLineInput `json:"lines,omitempty"`
+	// Comment — Примечание учётного документа
+	Comment *string `json:"comment,omitempty"`
+}
+
+// DocflowIntakeLine — Строка товарной таблицы чужого документа вместе с тем, что мы про неё предлагаем. Числа остаются СТРОКАМИ ровно так, как их написал поставщик: сумма в чужом документе такая, какую он подписал, и наша задача её донести, а не поправить. Расхождения покажет сверка, а не молчаливое округление.
+type DocflowIntakeLine struct {
+	// Number — Номер строки в файле поставщика. По нему человек соотносит экран с бумагой, и по нему же приходит его решение
+	Number int64 `json:"number"`
+	// Name — Наименование товара словами поставщика
+	Name string `json:"name"`
+	// Article — Артикул поставщика
+	Article string `json:"article"`
+	// Code — Код товара у поставщика
+	Code string `json:"code"`
+	// UnitCode — Код ОКЕИ единицы измерения
+	UnitCode string `json:"unit_code"`
+	UnitName string `json:"unit_name"`
+	Quantity string `json:"quantity"`
+	// Price — Цена единицы словами поставщика
+	Price            string `json:"price"`
+	AmountWithoutVAT string `json:"amount_without_vat"`
+	// VATRate — Ставка налога словами файла
+	VATRate string `json:"vat_rate"`
+	// VATAmount — Сумма налога. Пуста при отметке «без НДС»: нуля там нет, и подставить его значит превратить необлагаемую поставку в облагаемую с нулевым налогом
+	VATAmount string `json:"vat_amount"`
+	// VATWithout — Отметка «без НДС» у строки
+	VATWithout    bool   `json:"vat_without"`
+	AmountWithVAT string `json:"amount_with_vat"`
+	// Key — Ключ соответствия: то, по чему эта строка узнаётся в СЛЕДУЮЩЕМ документе того же поставщика. Собирается с приставкой вида `арт:`, `код:` или `наим:` — артикул «100» и наименование «100» разные вещи, и без приставки они стали бы одной строкой соответствий. Показывается затем, чтобы человек понимал, что именно он сопоставляет: не эту накладную, а артикул поставщика на все будущие поставки.
+	Key string `json:"key"`
+	// Product — Номенклатура кабинета; null — не выбрана
+	Product *UUID `json:"product"`
+	// ProductName — Имя выбранной карточки. Подсказка, а не реквизит: карточку могли заархивировать
+	ProductName string `json:"product_name"`
+	// Match — Откуда взялась номенклатура строки. `manual` — сопоставил человек, `auto` — сопоставила машина и решение записано, `rejected` — человек уже посмотрел и сказал «не это» (догадку по такой строке мы больше не показываем), `guess` — наша догадка ПРЯМО СЕЙЧАС, нигде не записанная, `none` — сопоставить не с чем. Записанное соответствие приносит свой способ из справочника внешних ссылок, поэтому здесь встречаются и его значения (`pending`, `import`). Различать обязательно: на экране «это решил человек» и «это мы угадали» выглядят одинаково — одна строка с названием товара, — а значат противоположное.
+	Match string `json:"match"`
+	// Options — С чем ещё эта строка могла совпасть. Непусто только у неоднозначной догадки: выбрать за человека из двух одинаково подходящих товаров значит угадать монеткой и записать это как факт
+	Options []DocflowIntakeProductOption `json:"options,omitempty"`
+}
+
+// DocflowIntakeLineInput — Решение человека по одной строке документа поставщика.
+type DocflowIntakeLineInput struct {
+	// Number — Номер строки в файле поставщика. Два решения по одному номеру отклоняются: какое из них считать выбором человека, знать неоткуда, а взять последнее значит тихо отбросить первое
+	Number int64 `json:"number"`
+	// Product — Выбранная номенклатура кабинета
+	Product *UUID `json:"product,omitempty"`
+	// Skip — Строку в учётный документ не берём. Нужно затем, что в УПД встречаются строки, которых у нас нет и не будет: доставка отдельной строкой, тара, услуга сборки. Заводить ради них карточку товара значит засорять справочник, а молча терять их — врать про сумму. Пропущенная строка остаётся видимой и в приёмке, и в самом документе.
+	Skip *bool `json:"skip,omitempty"`
+}
+
+// DocflowIntakeParty — Сторона сделки, прочитанная из чужого файла. Показывается ТЕКСТОМ, даже когда контрагент сопоставлен: карточку могут переименовать, а документ обязан остаться читаемым таким, каким его прислали.
+type DocflowIntakeParty struct {
+	// Kind — Вид участника словами файла: юридическое лицо, предприниматель, иностранное лицо, физическое лицо
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+	INN  string `json:"inn"`
+	KPP  string `json:"kpp"`
+	// Address — Адрес одной строкой, собранный из частей формата
+	Address string `json:"address"`
+}
+
+// DocflowIntakePreview — Что мы предлагаем принять к учёту. Ничего не меняет и никуда не ходит: предложение обязано быть безопасным, иначе «посмотреть, что там» становится действием с последствиями, и человек побоится его открыть раньше, чем решит принимать.
+type DocflowIntakePreview struct {
+	Message UUID `json:"message"`
+	// Formalized — Нашёлся ли во вложениях титул продавца. Ложь означает, что принимать нечего: пакет либо неформализованный, либо файлы ещё не скачаны — чинится это синхронизацией, а не заполнением формы
+	Formalized bool `json:"formalized"`
+	// Ready — Принимается ли пакет прямо сейчас, без правок
+	Ready bool `json:"ready"`
+	// Accepted — Учётный документ, если пакет уже принят; иначе null. Показывается вместо повторной приёмки: второй документ по тому же пакету — это задвоенный приход и задвоенный долг перед поставщиком.
+	Accepted     *DocflowAcceptedDocument  `json:"accepted"`
+	Source       DocflowIntakeSource       `json:"source"`
+	Counterparty DocflowIntakeCounterparty `json:"counterparty"`
+	// Lines — Товарная таблица чужого документа вместе с тем, что мы про неё предлагаем. Всегда массив, даже пустой
+	Lines  []DocflowIntakeLine `json:"lines"`
+	Totals DocflowIntakeTotals `json:"totals"`
+	// Issues — Что мешает принять. Тот же тип и тот же порядок, что у предполётной проверки исходящего документа: интерфейс переводит их одним словарём
+	Issues []DocflowIssue `json:"issues"`
+}
+
+// DocflowIntakeProductOption — Вариант номенклатуры, предложенный неоднозначной строке.
+type DocflowIntakeProductOption struct {
+	ID   UUID   `json:"id"`
+	Name string `json:"name"`
+	SKU  string `json:"sku"`
+}
+
+// DocflowIntakeResult — Что вышло из приёмки. Вместе с документом возвращается ПЕРЕСОБРАННОЕ предложение: экран после приёмки показывает то же, что показывал до неё, но уже с проставленными решениями — иначе ему пришлось бы спрашивать состояние вторым запросом и показывать между ними полупустую форму.
+type DocflowIntakeResult struct {
+	Document DocflowAcceptedDocument `json:"document"`
+	Preview  DocflowIntakePreview    `json:"preview"`
+}
+
+// DocflowIntakeSource — Реквизиты чужого файла обмена, из которого всё прочитано. Разбор частичный и ничего не проверяет: файл уже подписан и юридически значим, и отказать в его чтении из-за реквизита, который нам не нужен, значит потерять поставку из-за чужой ошибки в необязательном поле.
+type DocflowIntakeSource struct {
+	Attachment UUID `json:"attachment"`
+	// AttachmentName — Как это вложение назвал ОПЕРАТОР. Стоит рядом с file_name намеренно: имя оператора («Счёт-фактура № 12») человек видит в списке вложений, а file_name — имя файла обмена, и это разные строки
+	AttachmentName string `json:"attachment_name"`
+	// FileName — ИдФайл: имя файла обмена без расширения, как его записал продавец
+	FileName string `json:"file_name"`
+	// FormatVersion — ВерсФорм: редакция формата словами самого файла
+	FormatVersion string `json:"format_version"`
+	// Knd — Код документа по классификатору; у титула продавца 1115131
+	Knd string `json:"knd"`
+	// Function — Функция документа словами продавца: СЧФ, ДОП, СЧФДОП
+	Function string `json:"function"`
+	// DocumentKindName — Наименование документа, данное ему составителем
+	DocumentKindName string `json:"document_kind_name"`
+	// Number — Номер документа продавца
+	Number string `json:"number"`
+	// Date — Дата документа в форме ГГГГ-ММ-ДД. Пусто — дата не разобралась
+	Date string `json:"date"`
+	// DateRaw — Она же в форме поставщика ДД.ММ.ГГГГ. Показывается, когда разбор не удался: чужую опечатку человек поймёт быстрее, чем пустое поле
+	DateRaw string `json:"date_raw"`
+	// Currency — Валюта документа наименованием и кодом, словами файла
+	Currency string `json:"currency"`
+	// Operation — Содержание операции словами продавца
+	Operation string             `json:"operation"`
+	Seller    DocflowIntakeParty `json:"seller"`
+	Buyer     DocflowIntakeParty `json:"buyer"`
+}
+
+// DocflowIntakeTotals — Итоги таблицы словами поставщика. Мы их не пересчитываем: итог в чужом документе такой, какой он подписал.
+type DocflowIntakeTotals struct {
+	WithoutVAT string `json:"without_vat"`
+	// VATAmount — Пусто при отметке «без НДС» у документа
+	VATAmount string `json:"vat_amount"`
+	WithVAT   string `json:"with_vat"`
+	// VATWithout — Отметка «без НДС» у документа целиком
+	VATWithout bool `json:"vat_without"`
+}
+
+// DocflowInvitation — Последнее известное состояние заявки на обмен у оператора.
+type DocflowInvitation struct {
+	// ID — Идентификатор приглашения у оператора
+	ID             string `json:"id"`
+	Connection     UUID   `json:"connection"`
+	ConnectionName string `json:"connection_name"`
+	Company        *UUID  `json:"company,omitempty"`
+	CompanyName    string `json:"company_name"`
+	// Name — Название контрагента, если оператор его назвал; иначе экран использует ИНН
+	Name string `json:"name"`
+	INN  string `json:"inn"`
+	KPP  string `json:"kpp"`
+	// ExternalID — Идентификатор абонентского ящика контрагента
+	ExternalID string `json:"external_id"`
+	// State — Известные состояния Saby: 2 — отправлено, 7 — обмен возможен, 9 — маршрут разорван
+	State int64 `json:"state"`
+	// StateName — Слова оператора о состоянии
+	StateName string `json:"state_name"`
+	// Incoming — true — входящее приглашение из роуминга, которое Saby принимает автоматически
+	Incoming  bool    `json:"incoming"`
+	CreatedAt *string `json:"created_at,omitempty"`
+	ChangedAt *string `json:"changed_at,omitempty"`
+}
+
+// DocflowInvitationInput — Приглашение контрагента к обмену. Нужен ИНН либо идентификатор его ящика у оператора. Название обязательно, когда карточки контрагента у оператора ещё нет: приглашение её заводит.
+type DocflowInvitationInput struct {
+	// ExternalID — Идентификатор абонентского ящика контрагента. Ключом НЕ является: оператор предупреждает, что он может меняться
+	ExternalID *string `json:"external_id,omitempty"`
+	INN        *string `json:"inn,omitempty"`
+	KPP        *string `json:"kpp,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	// Message — Приписка человека. Оператору она НЕ уходит: поля сообщения у метода нет вовсе
+	Message *string `json:"message,omitempty"`
+}
+
+type DocflowInvitationPage struct {
+	Count   int64               `json:"count"`
+	Results []DocflowInvitation `json:"results"`
+	// Senders — Безопасный список подключений без учётных данных для формы приглашения
+	Senders []DocflowInvitationSender `json:"senders"`
+}
+
+type DocflowInvitationSender struct {
+	ID          UUID   `json:"id"`
+	Name        string `json:"name"`
+	CompanyName string `json:"company_name"`
+	CompanyINN  string `json:"company_inn"`
+	CompanyKPP  string `json:"company_kpp"`
+	Provider    string `json:"provider"`
+	Status      string `json:"status"`
+	ReadOnly    bool   `json:"read_only"`
+	// ExternalOrgID — Идентификатор собственного абонентского ящика; пусто — нужно повторно проверить связь
+	ExternalOrgID string `json:"external_org_id"`
+}
+
+// DocflowIssue — Одна невыполненная проверка. Форма одна на сборку файла формата ФНС и на приёмку входящего документа к учёту: интерфейс переводит их одним словарём, и вторая форма списка означала бы второй словарь. Ни одной надписи для человека здесь нет: код, путь реквизита и подробности значениями — фразу собирает интерфейс, и собирает её на языке читателя.
+type DocflowIssue struct {
+	// Code — Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои четыре: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки) и docflow.edo.product_required (строке документа не сопоставлена номенклатура)
+	Code string `json:"code"`
+	// Path — Путь до реквизита ИМЕНАМИ ФНС — именами приказа, а не нашими: этими же словами человек будет искать требование в письме налоговой. Например `Документ/СвСчФакт/СвПрод/Адрес`.
+	Path string `json:"path"`
+	// Line — Номер товарной строки с единицы. Отсутствует, когда реквизит не про строку
+	Line *int64 `json:"line,omitempty"`
+	// Params — Подробности значениями: предел длины, перечень допустимых значений, пришедшее значение. Отсутствует, когда проверке нечего добавить.
+	Params map[string]string `json:"params,omitempty"`
+}
+
+// DocflowLineRequisites — Дополнение к строке учётного документа. Строка адресуется line_id — тем же идентификатором, которым её знает сам документ. Не порядковым номером: порядок строк меняют, и привязка по номеру перевесила бы ставку НДС на другой товар молча.
+type DocflowLineRequisites struct {
+	LineID UUID `json:"line_id"`
+	// VATRate — НалСт. Обязателен в каждой строке формата; пустое значение берёт общую ставку юрлица
+	VATRate *string `json:"vat_rate,omitempty"`
+	// UnitCode — ОКЕИ_Тов. Пустое значение берёт код из карточки единицы измерения
+	UnitCode *string `json:"unit_code,omitempty"`
+	// UnitName — НаимЕдИзм
+	UnitName *string `json:"unit_name,omitempty"`
+	// Kind — ПрТовРаб
+	Kind *string `json:"kind,omitempty"`
+	// Gtin — ГТИН
+	Gtin *string `json:"gtin,omitempty"`
+	// CountryCode — КодПроисх
+	CountryCode *string `json:"country_code,omitempty"`
+	// CountryName — КрНаимСтрПр
+	CountryName *string `json:"country_name,omitempty"`
+	// CustomsNumber — НомерДТ
+	CustomsNumber *string `json:"customs_number,omitempty"`
+	// Marks — НомСредИдентТов: средства идентификации маркированного товара
+	Marks []DocflowMarkRequisites `json:"marks,omitempty"`
+	// Extra — ИнфПолФХЖ2
+	Extra []DocflowTextInfoRequisites `json:"extra,omitempty"`
+}
+
+// DocflowMarkRequisites — НомСредИдентТов: средства идентификации маркированного товара. Проходят насквозь: своего источника кодов маркировки в Akeda нет, а без них УПД на маркированный товар недействителен.
+type DocflowMarkRequisites struct {
+	TransportPackage *string  `json:"transport_package,omitempty"`
+	Count            *string  `json:"count,omitempty"`
+	Batch            *string  `json:"batch,omitempty"`
+	Codes            []string `json:"codes,omitempty"`
+	Packages         []string `json:"packages,omitempty"`
+}
+
+// DocflowMessage — Пакет документов у оператора — конверт, а не учётный документ Акеды.
+type DocflowMessage struct {
+	ID         UUID `json:"id"`
+	Connection UUID `json:"connection"`
+	// ExternalID — Идентификатор пакета у оператора
+	ExternalID string `json:"external_id"`
+	// ExternalRevision — Редакция пакета: оператор меняет содержимое конверта, не меняя его идентификатор
+	ExternalRevision string `json:"external_revision"`
+	Direction        string `json:"direction"`
+	// DocType — Слова оператора, а не наша классификация
+	DocType       string `json:"doc_type"`
+	DocSubtype    string `json:"doc_subtype"`
+	DocRegulation string `json:"doc_regulation"`
+	Number        string `json:"number"`
+	// Date — Календарная дата документа ГГГГ-ММ-ДД; пусто означает, что даты нет вовсе
+	Date string `json:"date"`
+	// Amount — Сумма строкой ровно так, как её прислал оператор; пусто означает «суммы нет», а не ноль
+	Amount       string              `json:"amount"`
+	Currency     string              `json:"currency"`
+	Counterparty DocflowCounterparty `json:"counterparty"`
+	// StateCode — Код состояния документооборота у оператора
+	StateCode string `json:"state_code"`
+	// StateName — Состояние словами оператора: своего перевода состояний у нас нет и быть не должно
+	StateName          string  `json:"state_name"`
+	OurOrgExternalID   string  `json:"our_org_external_id"`
+	ReceivedAt         *string `json:"received_at,omitempty"`
+	CreatedAt          string  `json:"created_at"`
+	UpdatedAt          string  `json:"updated_at"`
+	ConnectionName     string  `json:"connection_name"`
+	ConnectionProvider string  `json:"connection_provider"`
+	Company            *UUID   `json:"company,omitempty"`
+	CompanyName        string  `json:"company_name"`
+	AttachmentsTotal   int64   `json:"attachments_total"`
+	SignaturesTotal    int64   `json:"signatures_total"`
+	// ActionsDue — Сколько незакрытых этапов у пакета. Ноль означает «ход не за нами»
+	ActionsDue int64 `json:"actions_due"`
+	// StageName — Название ближайшего незакрытого этапа словами оператора
+	StageName string `json:"stage_name"`
+	// Attachments — Состав пакета. Наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null. null означает «не спрашивали», пустой массив — «спросили, и там пусто»
+	Attachments []DocflowAttachment `json:"attachments,omitempty"`
+	Signatures  []DocflowSignature  `json:"signatures,omitempty"`
+	Stages      []DocflowStage      `json:"stages,omitempty"`
+	Events      []DocflowEvent      `json:"events,omitempty"`
+	// Cancellation — Соглашение сторон об аннулировании. Наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null — null означает «не спрашивали»
+	Cancellation *DocflowCancellation `json:"cancellation,omitempty"`
+}
+
+// DocflowMessageActionInput — Действие над пакетом словами ОПЕРАТОРА. Что именно можно сделать сейчас, говорит сам пакет: stages[].actions[]. Подписания среди этих действий нет — подпись идёт контуром /api/v1/docflow/edo/signing/tasks.
+type DocflowMessageActionInput struct {
+	// Action — КОД действия у оператора из stage.actions[].code, а НЕ надпись с кнопки: строка действия своя у каждого вида документа и каждого регламента, и зашитый набор строк ломается на первом нестандартном
+	Action string `json:"action"`
+	// Stage — Идентификатор этапа у оператора. Не нужен в обычном сценарии: этап выбирает сервер по тому, что сказал оператор
+	Stage *string `json:"stage,omitempty"`
+	// StageName — Название этапа словами оператора. Адресует скрытые этапы — те, которых в составе пакета не видно, но которые оператор принимает по имени
+	StageName *string `json:"stage_name,omitempty"`
+	// Comment — Комментарий человека. Уходит второй стороне и остаётся в ленте событий; при отклонении документа обязателен
+	Comment *string `json:"comment,omitempty"`
+}
+
+type DocflowMessageList struct {
+	Count   int64            `json:"count"`
+	Results []DocflowMessage `json:"results"`
+}
+
+// DocflowOutgoingFile — Произвольный файл на отправку рядом с формализованным.
+type DocflowOutgoingFile struct {
+	// Name — Имя файла. Без него файл отклоняется: у оператора файл без имени не показывается никому
+	Name string `json:"name"`
+	// ContentBase64 — Содержимое файла в base64
+	ContentBase64 string `json:"content_base64"`
+}
+
+// DocflowOutgoingInput — Что проверяем и что отправляем. Реквизиты приезжают ОДНИМ объектом, а не россыпью полей: это дополнение к учётному документу, оно хранится целиком и целиком же участвует в пересборке.
+type DocflowOutgoingInput struct {
+	Connection UUID               `json:"connection"`
+	Document   UUID               `json:"document"`
+	Requisites *DocflowRequisites `json:"requisites,omitempty"`
+	// Comment — Примечание документа у оператора
+	Comment *string `json:"comment,omitempty"`
+	// Files — Произвольные файлы рядом с формализованным: договор, спецификация, скан доверенности. Оператор их не разбирает и печатную форму по ним не строит. Уходят по одному после титула: у оператора предел на файл и на запрос, а договор со сканами берёт его легко. На предполётной проверке не участвуют
+	Files []DocflowOutgoingFile `json:"files,omitempty"`
+}
+
+// DocflowPaperPoARequisites — СвДоверБум: бумажная доверенность. Обязательна ровно при способе подтверждения полномочий 5.
+type DocflowPaperPoARequisites struct {
+	Number     *string `json:"number,omitempty"`
+	IssuedAt   *string `json:"issued_at,omitempty"`
+	Info       *string `json:"info,omitempty"`
+	Surname    *string `json:"surname,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	Patronymic *string `json:"patronymic,omitempty"`
+}
+
+// DocflowPartyRequisites — Дополнение к карточке участника сделки.
+type DocflowPartyRequisites struct {
+	// ShortName — СокрНаим
+	ShortName *string `json:"short_name,omitempty"`
+	// Okpo — ОКПО. В карточке юрлица его нет вовсе
+	Okpo *string `json:"okpo,omitempty"`
+	// Division — СтруктПодр
+	Division *string `json:"division,omitempty"`
+	// Info — ИнфДляУчаст
+	Info   *string                  `json:"info,omitempty"`
+	Person *DocflowPersonRequisites `json:"person,omitempty"`
+	// Ogrnip — ОГРНИП предпринимателя, 15 цифр. В карточке лежит ОГРН, а это разные номера, и подставлять один вместо другого нельзя
+	Ogrnip  *string                   `json:"ogrnip,omitempty"`
+	Address *DocflowAddressRequisites `json:"address,omitempty"`
+	Bank    *DocflowBankRequisites    `json:"bank,omitempty"`
+	Contact *DocflowContactRequisites `json:"contact,omitempty"`
+}
+
+// DocflowPaymentDocumentRequisites — СвПРД: платёжно-расчётный документ.
+type DocflowPaymentDocumentRequisites struct {
+	Number *string `json:"number,omitempty"`
+	Date   *string `json:"date,omitempty"`
+	Amount *string `json:"amount,omitempty"`
+}
+
+// DocflowPersonRequisites — ФИО предпринимателя или физического лица. Спрашивается, потому что в карточке контрагента имя лежит ОДНОЙ строкой («ИП Иванов Иван Иванович»), а формат требует фамилию, имя и отчество порознь. Разобрать строку догадкой нельзя: «Ли Ван Чуань» и «Иванов Иван» ломают любое правило, а ошибка в ФИО подписанта — это недействительный счёт-фактура.
+type DocflowPersonRequisites struct {
+	Surname    *string `json:"surname,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	Patronymic *string `json:"patronymic,omitempty"`
+}
+
+// DocflowPreflight — Ответ на вопрос «соберётся ли документ и что уйдёт». Не булево «годится», а список непройденных проверок плюс разложенная товарная таблица: отказ приёмки приходит от контрагента через сутки и звучит невнятно, а эта проверка обязана назвать всё сразу.
+type DocflowPreflight struct {
+	// FormatVersion — Редакция формата ФНС
+	FormatVersion string `json:"format_version"`
+	// Function — Функция документа: СЧФ — счёт-фактура, ДОП — документ о передаче, СЧФДОП — оба сразу. Пусто у ответного титула покупателя: функции у него нет вовсе
+	Function string `json:"function"`
+	// Ready — Соберётся ли документ прямо сейчас. Это НЕ «всё в порядке»: суммы всё равно смотрят глазами, потому что налог считаем мы
+	Ready bool `json:"ready"`
+	// Issues — Всегда массив, даже пустой: null означал бы «не проверяли», а проверяли всегда
+	Issues []DocflowIssue `json:"issues"`
+	// FileName — Имя файла обмена, если он собирается. Пустое, пока не собирается: имя — часть формата, и показывать выдуманное нельзя
+	FileName string                   `json:"file_name"`
+	Totals   DocflowPreflightTotals   `json:"totals"`
+	Document DocflowPreflightDocument `json:"document"`
+	Seller   DocflowPreflightParty    `json:"seller"`
+	Buyer    DocflowPreflightParty    `json:"buyer"`
+	// Lines — Товарная таблица с посчитанным налогом. У ответного титула покупателя пуста: он отвечает на документ продавца, а не повторяет его
+	Lines []DocflowPreflightLine `json:"lines"`
+}
+
+// DocflowPreflightDocument — Учётный документ кабинета, который формализуем.
+type DocflowPreflightDocument struct {
+	ID     UUID   `json:"id"`
+	Number string `json:"number"`
+	// Date — Календарная дата документа ГГГГ-ММ-ДД
+	Date string `json:"date"`
+	// TypeKey — Ключ вида документа в кабинете
+	TypeKey  string `json:"type_key"`
+	TypeName string `json:"type_name"`
+	// Status — Состояние учётного документа в кабинете
+	Status string `json:"status"`
+}
+
+// DocflowPreflightLine — Строка товарной таблицы с посчитанным налогом. Показывается человеку целиком и ДО отправки, потому что налог считаем мы: карточка юрлица хранит только общее умолчание, а сумма НДС — наш вывод из фактической ставки строки и признака «цены с налогом». Вывод, который человек не увидел, он не проверил.
+type DocflowPreflightLine struct {
+	// Number — Порядковый номер строки в файле с единицы
+	Number int64  `json:"number"`
+	LineID UUID   `json:"line_id"`
+	Name   string `json:"name"`
+	// UnitCode — Код ОКЕИ из карточки единицы измерения либо явное исключение этого отправления
+	UnitCode string `json:"unit_code"`
+	UnitName string `json:"unit_name"`
+	Quantity string `json:"quantity"`
+	// Price — Цена единицы без налога
+	Price string `json:"price"`
+	// VATRate — Ставка словами приказа: «20%», «без НДС», «НДС исчисляется налоговым агентом» и прочие значения перечня
+	VATRate string `json:"vat_rate"`
+	// VATAmount — Сумма налога. Пуста при ставке «без НДС»: формат требует там не нулевую сумму, а отметку об отсутствии налога, и ноль вместо неё — другое утверждение
+	VATAmount        string `json:"vat_amount"`
+	AmountWithoutVAT string `json:"amount_without_vat"`
+	AmountWithVAT    string `json:"amount_with_vat"`
+}
+
+// DocflowPreflightParty — Сторона сделки в том виде, в каком она уедет в файл.
+type DocflowPreflightParty struct {
+	Name string `json:"name"`
+	INN  string `json:"inn"`
+	KPP  string `json:"kpp"`
+	// EntityType — Вид участника из карточки: legal, sole_prop, individual. От него зависит, какую ветвь формата заполнять: у предпринимателя вместо наименования организации ФИО
+	EntityType string `json:"entity_type"`
+	// AddressHint — Прежний адрес одной строкой для карточек, заведённых до структурированного адреса. Сервер не разбирает его на части догадкой: «улица Мира, 1» и «Мира, 1» неотличимы от «город Мира» ни одним правилом. Новая карточка подставляет готовые части прямо в реквизиты формата.
+	AddressHint string `json:"address_hint"`
+}
+
+// DocflowPreflightTotals — Итоги товарной таблицы. Складываются из уже напечатанных строк, а не пересчитываются от исходных величин: итог обязан сойтись со строками до копейки.
+type DocflowPreflightTotals struct {
+	// WithoutVAT — Стоимость без налога
+	WithoutVAT string `json:"without_vat"`
+	// VAT — Сумма налога
+	VAT string `json:"vat"`
+	// WithVAT — Стоимость с налогом
+	WithVAT string `json:"with_vat"`
+}
+
+// DocflowRequisites — Исключения одного отправления поверх повторяющихся реквизитов карточек юрлица, контрагента и единицы измерения. Здесь остаются ставка отдельной строки, выбранный расчётный счёт, подписант, содержание операции и идентификаторы участников обмена. У одного и того же товара в разных накладных ставка бывает разной. Каждое поле отвечает ровно одному реквизиту приказа, и имя ФНС названо в его описании. Все поля необязательны: чего не прислали, то и покажет предполётная проверка. Явное значение отправления сильнее карточки; валютой по умолчанию остаётся рубль.
+type DocflowRequisites struct {
+	// Function — Функция: перечень закрыт, потому что это перечень приказа
+	Function *string `json:"function,omitempty"`
+	// DocumentKindName — НаимДокОпр: наименование документа, определённое сторонами сделки
+	DocumentKindName *string `json:"document_kind_name,omitempty"`
+	// ProgramVersion — ВерсПрог. Пустое значение подставляет сервер: версию приложения знает он, а не человек в форме
+	ProgramVersion *string `json:"program_version,omitempty"`
+	// PricesIncludeVAT — Сумма строки уже содержит налог. Признак спрашивается, а не угадывается: сумма 1200 законно означает и «1200 без налога», и «1200 с налогом», а ошибка стоит расхождения в декларации
+	PricesIncludeVAT *bool `json:"prices_include_vat,omitempty"`
+	// VATRate — НалСт по умолчанию для всех строк. Строка вправе назвать свою
+	VATRate  *string                    `json:"vat_rate,omitempty"`
+	Currency *DocflowCurrencyRequisites `json:"currency,omitempty"`
+	File     *DocflowFileRequisites     `json:"file,omitempty"`
+	Seller   *DocflowPartyRequisites    `json:"seller,omitempty"`
+	Buyer    *DocflowPartyRequisites    `json:"buyer,omitempty"`
+	// ShipperSameAsSeller — Грузоотправитель — сам продавец
+	ShipperSameAsSeller *bool                      `json:"shipper_same_as_seller,omitempty"`
+	Transfer            *DocflowTransferRequisites `json:"transfer,omitempty"`
+	// ShipmentDocuments — Транспортные и сопроводительные документы
+	ShipmentDocuments []DocflowDocumentRefRequisites `json:"shipment_documents,omitempty"`
+	// PaymentDocuments — СвПРД: платёжно-расчётные документы
+	PaymentDocuments []DocflowPaymentDocumentRequisites `json:"payment_documents,omitempty"`
+	Signers          []DocflowSignerRequisites          `json:"signers,omitempty"`
+	// Extra — ИнфПолФХЖ1: дополнительные сведения факта хозяйственной жизни
+	Extra []DocflowTextInfoRequisites `json:"extra,omitempty"`
+	Lines []DocflowLineRequisites     `json:"lines,omitempty"`
+}
+
+// DocflowSignature — Подпись под вложением или под пакетом целиком. Подписей под одним файлом несколько — наша и контрагента, — и каждая приходит своим файлом со своим сертификатом.
+type DocflowSignature struct {
+	ID             UUID               `json:"id"`
+	Message        UUID               `json:"message"`
+	Attachment     *UUID              `json:"attachment,omitempty"`
+	Side           string             `json:"side"`
+	SignerName     string             `json:"signer_name"`
+	SignerPosition string             `json:"signer_position"`
+	Certificate    DocflowCertificate `json:"certificate"`
+	// PoaNumber — Номер машиночитаемой доверенности. С 2023 года подпись сотрудника без неё недействительна
+	PoaNumber string  `json:"poa_number"`
+	SignedAt  *string `json:"signed_at,omitempty"`
+	// Stored — Контейнер подписи скачан к нам и открывается отдельной операцией
+	Stored    bool   `json:"stored"`
+	CreatedAt string `json:"created_at"`
+}
+
+// DocflowSignatureShape — Какой подписи ждёт оператор. Форма подписи — свойство ЗАДАНИЯ, а не константа кода: смена решения оператора меняет значения здесь, и больше ничего.
+type DocflowSignatureShape struct {
+	Profile string `json:"profile"`
+	// Detached — Открепленная подпись отдельным файлом
+	Detached bool `json:"detached"`
+	// TimestampURL — Служба штампов времени. null означает, что штамп не нужен
+	TimestampURL *string `json:"timestamp_url"`
+}
+
+// DocflowSignatureSubmission — Результат подписания, вычисленный КриптоПро на машине человека.
+type DocflowSignatureSubmission struct {
+	// Signature — Контейнер CMS/PKCS#7 в Base64, без префикса data:
+	Signature string `json:"signature"`
+	// CertificateThumbprint — Отпечаток сертификата. Обязателен: оператор не помнит его между подготовкой и выполнением действия и иначе выберет сертификат сам
+	CertificateThumbprint string `json:"certificate_thumbprint"`
+	// Certificate — Открытая часть сертификата Base64. Удобство, а не обязанность: найти сертификат оператор умеет и по отпечатку
+	Certificate *string `json:"certificate,omitempty"`
+	// SignedAt — Время по часам браузера; хранится справкой
+	SignedAt *string                    `json:"signed_at,omitempty"`
+	Attorney *DocflowAttorneySubmission `json:"attorney,omitempty"`
+}
+
+// DocflowSignerRequisites — Подписант: кто и на каком основании подписывает документ.
+type DocflowSignerRequisites struct {
+	// Position — Должн
+	Position *string `json:"position,omitempty"`
+	// Kind — ТипПодпис
+	Kind *string `json:"kind,omitempty"`
+	// Authority — Способ подтверждения полномочий. От него зависит, какая доверенность обязательна
+	Authority *string `json:"authority,omitempty"`
+	// SignedAt — ДатаПодДок
+	SignedAt *string `json:"signed_at,omitempty"`
+	// Info — ДопСведПодп
+	Info          *string                         `json:"info,omitempty"`
+	Surname       *string                         `json:"surname,omitempty"`
+	Name          *string                         `json:"name,omitempty"`
+	Patronymic    *string                         `json:"patronymic,omitempty"`
+	ElectronicPoa *DocflowElectronicPoARequisites `json:"electronic_poa,omitempty"`
+	PaperPoa      *DocflowPaperPoARequisites      `json:"paper_poa,omitempty"`
+}
+
+// DocflowSigningPayload — То, что подлежит подписи. Data всегда Base64, без префикса data:.
+type DocflowSigningPayload struct {
+	// Form — content — подписывается содержимое файла, хеш считает КриптоПро на машине человека; digest — готовый хеш оператора
+	Form string `json:"form"`
+	// Data — Base64 в обеих формах
+	Data string `json:"data"`
+	// DigestAlgorithm — Чем посчитан хеш. Обязателен при form=digest и отсутствует иначе
+	DigestAlgorithm *string `json:"digest_algorithm,omitempty"`
+}
+
+// DocflowSigningResult — Чем кончилась приёмка подписи.
+type DocflowSigningResult struct {
+	Task      DocflowSigningTask  `json:"task"`
+	Action    DocflowActionResult `json:"action"`
+	Signature *UUID               `json:"signature,omitempty"`
+}
+
+// DocflowSigningTask — Задание на подпись. Ни ключа, ни контейнера, ни пина здесь нет и быть не может: подпись вычисляет КриптоПро на машине человека, сервер о ней узнаёт только результатом.
+type DocflowSigningTask struct {
+	ID           UUID                  `json:"id"`
+	MessageID    UUID                  `json:"message_id"`
+	AttachmentID *UUID                 `json:"attachment_id,omitempty"`
+	FileName     string                `json:"file_name"`
+	Payload      DocflowSigningPayload `json:"payload"`
+	Signature    DocflowSignatureShape `json:"signature"`
+	// Attorney — Требование машиночитаемой доверенности. Флага «требуется доверенность» у оператора нет: значение выводится из того, что он сказал о сертификатах
+	Attorney  string `json:"attorney"`
+	Status    string `json:"status"`
+	ExpiresAt string `json:"expires_at"`
+	// SignedAt — Отметка ПРИЁМКИ подписи сервером; часы браузера доказательством не служат
+	SignedAt  *string `json:"signed_at,omitempty"`
+	CreatedAt string  `json:"created_at"`
+}
+
+// DocflowSigningTaskInput — Просьба выдать задание на подпись.
+type DocflowSigningTaskInput struct {
+	MessageID    UUID  `json:"message_id"`
+	AttachmentID *UUID `json:"attachment_id,omitempty"`
+	// Stage — Идентификатор этапа у оператора. Не нужен в обычном сценарии: этап выбирает сервер по тому, что сказал оператор
+	Stage *string `json:"stage,omitempty"`
+	// Action — Код команды оператора; нужен, когда на этапе их несколько
+	Action *string `json:"action,omitempty"`
+}
+
+type DocflowSigningTaskList struct {
+	Count   int64                `json:"count"`
+	Results []DocflowSigningTask `json:"results"`
+}
+
+// DocflowStage — Этап документооборота: что с пакетом можно сделать сейчас. Список действий приходит от ОПЕРАТОРА и не выводится из нашего состояния.
+type DocflowStage struct {
+	ID      UUID `json:"id"`
+	Message UUID `json:"message"`
+	// ExternalID — Идентификатор этапа у оператора; он же адресует действие
+	ExternalID string               `json:"external_id"`
+	Name       string               `json:"name"`
+	Actions    []DocflowStageAction `json:"actions"`
+	// RequiresSignature — Этап закрывается подписью. Признак оператора, а не наш вывод из названия
+	RequiresSignature bool `json:"requires_signature"`
+	// Closed — Ход не за нами. Закрытые этапы не показываются и не считаются
+	Closed    bool   `json:"closed"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+// DocflowStageAction — Действие, которое оператор разрешает на этапе. Код отправляют оператору, надпись показывают человеку.
+type DocflowStageAction struct {
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
+// DocflowStageRef — Ссылка на строку очереди этапов. Пустое тело означает единственный незакрытый этап пакета: у обычного документа он один, и требовать его имя не с чего.
+type DocflowStageRef struct {
+	// Stage — Идентификатор этапа у оператора
+	Stage *string `json:"stage,omitempty"`
+	// StageName — Название этапа словами оператора
+	StageName *string `json:"stage_name,omitempty"`
+	// Action — Название действия этапа: очередь у оператора адресуется этапом ВМЕСТЕ с действием, а не одним этапом
+	Action *string `json:"action,omitempty"`
+}
+
+// DocflowSyncOutcome — Итог одного прохода синхронизации ленты оператора.
+type DocflowSyncOutcome struct {
+	// RunStatus — Итог самого прохода. skipped означает, что прохода не было: подключение работает в режиме только чтения
+	RunStatus string `json:"run_status"`
+	// Status — Состояние подключения после прохода
+	Status string `json:"status"`
+	// Retry — Неудача чинится временем: повторится сама, человек не нужен
+	Retry bool `json:"retry"`
+	// ErrorCode — Машинный код неудачи (docflow.edo.*); пусто при удаче
+	ErrorCode string `json:"error_code"`
+	// ProviderMessage — Слова оператора и только они; пусто при удаче
+	ProviderMessage string `json:"provider_message"`
+}
+
+// DocflowTextInfoRequisites — Пара «идентификатор — значение» дополнительных сведений.
+type DocflowTextInfoRequisites struct {
+	ID    *string `json:"id,omitempty"`
+	Value *string `json:"value,omitempty"`
+}
+
+// DocflowTitle — Строка исходящего титула. Одна форма на оба вида: титул продавца (КНД 1115131) и титул покупателя (КНД 1115132) — разные файлы разных схем, но судьба у них одна: собрать XML, положить в хранилище, записать оператору, запомнить, чем он ответил. Самого XML здесь нет: он лежит в объектном хранилище кабинета и выдаётся отдельным маршрутом, а ключ к нему наружу не уходит.
+type DocflowTitle struct {
+	ID         UUID `json:"id"`
+	Connection UUID `json:"connection"`
+	// Kind — seller — титул продавца по учётному документу кабинета; buyer — ответный титул покупателя на входящий пакет
+	Kind string `json:"kind"`
+	// Document — Учётный документ кабинета у титула продавца. Ссылка мягкая: документа нет — титул показывается как титул по удалённому документу
+	Document *string `json:"document"`
+	// Message — Пакет зеркала. У титула покупателя — входящий, на который отвечаем; у титула продавца — НАШ конверт, найденный синхронизацией после записи оператору
+	Message *string `json:"message"`
+	// FormatVersion — Редакция формата ФНС
+	FormatVersion string `json:"format_version"`
+	// Function — Функция документа: СЧФ, ДОП, СЧФДОП. Пусто у титула покупателя
+	Function   string            `json:"function"`
+	Requisites DocflowRequisites `json:"requisites"`
+	// FileName — Имя файла обмена ФНС. Повторяется внутри файла в ИдФайл: пересобранный титул обязан быть тем же самым
+	FileName string `json:"file_name"`
+	// ContentSha256 — Хеш отправленных байтов. Остаётся затем же, зачем он есть у вложения зеркала: доказать спустя годы, что отправляли именно эти байты
+	ContentSha256    string `json:"content_sha256"`
+	ContentSizeBytes int64  `json:"content_size_bytes"`
+	// ExternalDocID — Идентификатор документа у оператора. НАШ и заданный нами: без него каждый повтор отправки создавал бы у оператора новый документ
+	ExternalDocID string `json:"external_doc_id"`
+	// ExternalAttachmentID — Идентификатор вложения с титулом у оператора
+	ExternalAttachmentID string `json:"external_attachment_id"`
+	// Status — «Собран» отделён от «записан» намеренно: между ними стоит оператор, и его отказ не отменяет сборки — файл уже лежит в хранилище
+	Status string `json:"status"`
+	// LastErrorCode — Наш машинный код последней неудачи (docflow.edo.*); его переводит интерфейс
+	LastErrorCode string `json:"last_error_code"`
+	// LastError — СЛОВА ОПЕРАТОРА и только они; показываются как есть
+	LastError       string `json:"last_error"`
+	CreatedByUserID *int64 `json:"created_by_user_id"`
+	CreatedAt       string `json:"created_at"`
+	UpdatedAt       string `json:"updated_at"`
+}
+
+type DocflowTitleList struct {
+	Count   int64          `json:"count"`
+	Results []DocflowTitle `json:"results"`
+}
+
+// DocflowTransferRequisites — СвПродПер: сведения о передаче товара, работы или услуги.
+type DocflowTransferRequisites struct {
+	// Operation — СодОпер
+	Operation *string `json:"operation,omitempty"`
+	// Kind — ВидОпер
+	Kind *string `json:"kind,omitempty"`
+	// Date — ДатаПер в форме ГГГГ-ММ-ДД. Пустая означает дату самого документа: отгрузка датой накладной — обычный случай
+	Date *string `json:"date,omitempty"`
+	// PeriodStart — ДатаНачПер
+	PeriodStart *string `json:"period_start,omitempty"`
+	// PeriodEnd — ДатаОконПер
+	PeriodEnd *string `json:"period_end,omitempty"`
+	// Basis — ОснПер: документы-основания передачи
+	Basis []DocflowDocumentRefRequisites `json:"basis,omitempty"`
+	// WithoutBasis — БезДокОснПер. Формат требует ВЫБОРА: либо перечень оснований, либо прямая отметка «основания нет». Умолчания у выбора нет
+	WithoutBasis *bool                      `json:"without_basis,omitempty"`
+	Employee     *DocflowEmployeeRequisites `json:"employee,omitempty"`
+}
+
 // DocumentCreate — Владелец задаётся одной ссылкой `task`, `section`, `project`, `milestone` либо парой `owner_type`/`owner_id`.
 type DocumentCreate struct {
 	OwnerType *DocumentOwnerType `json:"owner_type,omitempty"`
@@ -4446,6 +5521,7 @@ type FinanceBalanceReport struct {
 	PassiveTotal     string                  `json:"passive_total"`
 	RetainedEarnings string                  `json:"retained_earnings"`
 	Difference       string                  `json:"difference"`
+	AccountingBasis  *AccountingBasis        `json:"accounting_basis,omitempty"`
 }
 
 type FinanceBalanceSection struct {
@@ -5535,6 +6611,7 @@ type FinancePnlReport struct {
 	Layout          *FinancePnlReportLayout `json:"layout,omitempty"`
 	Columns         []FinanceReportColumn   `json:"columns"`
 	Companies       []FinanceReportCompany  `json:"companies,omitempty"`
+	AccountingBasis *AccountingBasis        `json:"accounting_basis,omitempty"`
 }
 
 type FinancePnlReportLayout struct {
@@ -5740,6 +6817,19 @@ type FinanceReportCompany struct {
 	Name string `json:"name"`
 }
 
+type FinanceRequisitesAddress struct {
+	PostalCode string `json:"postal_code"`
+	RegionCode string `json:"region_code"`
+	RegionName string `json:"region_name"`
+	District   string `json:"district"`
+	City       string `json:"city"`
+	Settlement string `json:"settlement"`
+	Street     string `json:"street"`
+	Building   string `json:"building"`
+	Block      string `json:"block"`
+	Flat       string `json:"flat"`
+}
+
 type FinanceRequisitesBank struct {
 	Name                 string `json:"name"`
 	BIC                  string `json:"bic"`
@@ -5756,13 +6846,28 @@ type FinanceRequisitesLookup struct {
 }
 
 type FinanceRequisitesParty struct {
-	Name     string `json:"name"`
-	FullName string `json:"full_name"`
-	INN      string `json:"inn"`
-	KPP      string `json:"kpp"`
-	Ogrn     string `json:"ogrn"`
-	Address  string `json:"address"`
-	Status   string `json:"status"`
+	Name         string                   `json:"name"`
+	FullName     string                   `json:"full_name"`
+	EntityType   string                   `json:"entity_type"`
+	INN          string                   `json:"inn"`
+	KPP          string                   `json:"kpp"`
+	Ogrn         string                   `json:"ogrn"`
+	Okpo         string                   `json:"okpo"`
+	Address      string                   `json:"address"`
+	AddressParts FinanceRequisitesAddress `json:"address_parts"`
+	Entrepreneur FinanceRequisitesPerson  `json:"entrepreneur"`
+	Status       string                   `json:"status"`
+}
+
+type FinanceRequisitesPerson struct {
+	Surname    string `json:"surname"`
+	Name       string `json:"name"`
+	Patronymic string `json:"patronymic"`
+}
+
+type FinanceRequisitesSuggestions struct {
+	Suggestions         []FinanceRequisitesParty `json:"suggestions"`
+	DirectoryConfigured bool                     `json:"directory_configured"`
 }
 
 type FinanceResponsiblePatch struct {
@@ -9247,41 +10352,80 @@ type SettingsAppVersion struct {
 }
 
 type SettingsCompany struct {
-	ID        UUID   `json:"id"`
-	Name      string `json:"name"`
-	LegalName string `json:"legal_name"`
+	ID         UUID   `json:"id"`
+	BusinessID UUID   `json:"business_id"`
+	Name       string `json:"name"`
+	LegalName  string `json:"legal_name"`
+	// EntityType — Юридическое лицо или индивидуальный предприниматель
+	EntityType string `json:"entity_type"`
 	// INN — Пустой только у юрлица внутреннего учёта
-	INN      string `json:"inn"`
-	KPP      string `json:"kpp"`
-	IsActive bool   `json:"is_active"`
-	// IsInternal — Псевдо-юрлицо «Внутренний учёт» — контур неофициальных касс, одно на кабинет
-	IsInternal bool `json:"is_internal"`
-	// AccountingMethod — Метод учёта cash или accrual; на этой поверхности всегда приходит пустым, потому что накладка справочника его не переносит
+	INN string `json:"inn"`
+	KPP string `json:"kpp"`
+	// Ogrn — ОГРН у юрлица или ОГРНИП у предпринимателя
+	Ogrn string `json:"ogrn"`
+	// Okpo — ОКПО; необязательный реквизит формализованного документа
+	Okpo string `json:"okpo"`
+	// BranchCode — Код филиала у оператора ЭДО; не КПП
+	BranchCode string `json:"branch_code"`
+	// DefaultVATRate — Ставка НДС по умолчанию для новых строк документа; конкретная строка вправе её заменить
+	DefaultVATRate string `json:"default_vat_rate"`
+	// PricesIncludeVAT — Как по умолчанию трактовать цену при выбранной ставке НДС
+	PricesIncludeVAT bool                   `json:"prices_include_vat"`
+	LegalAddress     SettingsCompanyAddress `json:"legal_address"`
+	Entrepreneur     SettingsCompanyPerson  `json:"entrepreneur"`
+	IsActive         bool                   `json:"is_active"`
+	// AccountingMethod — Метод признания выручки: по деньгам или по начислению
 	AccountingMethod string `json:"accounting_method"`
-	// AccrualFrom — Дата перехода на accrual; на этой поверхности не приходит никогда
+	// AccrualFrom — Дата перехода на accrual; отсутствует у кассового метода
 	AccrualFrom *string `json:"accrual_from,omitempty"`
 }
 
-type SettingsCompanyAccountingMethodInput struct {
-	// Method — Значение приводится к нижнему регистру
-	Method string `json:"method"`
-	// AccrualFrom — Дата перехода на начисление; обязательна при accrual и не используется при cash
-	AccrualFrom *string `json:"accrual_from,omitempty"`
+type SettingsCompanyAddress struct {
+	PostalCode string `json:"postal_code"`
+	// RegionCode — Код субъекта РФ для формализованного документа
+	RegionCode string `json:"region_code"`
+	RegionName string `json:"region_name"`
+	District   string `json:"district"`
+	City       string `json:"city"`
+	Settlement string `json:"settlement"`
+	Street     string `json:"street"`
+	Building   string `json:"building"`
+	Block      string `json:"block"`
+	// Flat — Офис или помещение
+	Flat string `json:"flat"`
+	// Info — Дополнение, которое не раскладывается по остальным частям адреса
+	Info string `json:"info"`
 }
 
 type SettingsCompanyInput struct {
+	BusinessID UUID `json:"business_id"`
 	// Name — Пробельное название отклоняется
 	Name      string  `json:"name"`
 	LegalName *string `json:"legal_name,omitempty"`
+	// EntityType — Если не передан, определяется по длине нормализованного ИНН
+	EntityType *string `json:"entity_type,omitempty"`
 	// INN — Проверяется контрольной цифрой; пустой ИНН отклоняется
-	INN string  `json:"inn"`
-	KPP *string `json:"kpp,omitempty"`
+	INN              string                  `json:"inn"`
+	KPP              *string                 `json:"kpp,omitempty"`
+	Ogrn             *string                 `json:"ogrn,omitempty"`
+	Okpo             *string                 `json:"okpo,omitempty"`
+	BranchCode       *string                 `json:"branch_code,omitempty"`
+	DefaultVATRate   *string                 `json:"default_vat_rate,omitempty"`
+	PricesIncludeVAT *bool                   `json:"prices_include_vat,omitempty"`
+	LegalAddress     *SettingsCompanyAddress `json:"legal_address,omitempty"`
+	Entrepreneur     *SettingsCompanyPerson  `json:"entrepreneur,omitempty"`
 }
 
 type SettingsCompanyPage struct {
 	// Count — Число отданных строк, страниц у справочника нет
 	Count   int64             `json:"count"`
 	Results []SettingsCompany `json:"results"`
+}
+
+type SettingsCompanyPerson struct {
+	Surname    string `json:"surname"`
+	Name       string `json:"name"`
+	Patronymic string `json:"patronymic"`
 }
 
 type SettingsFieldDefinition struct {
@@ -10399,6 +11543,10 @@ type StockWarehouse struct {
 	ResponsibleEmployeeID *UUID                      `json:"responsible_employee_id"`
 	IsActive              bool                       `json:"is_active"`
 	SortOrder             int64                      `json:"sort_order"`
+	// ZonesEnabled — Внутри склада работают зоны — приход разрешён только в подчинённую зону
+	ZonesEnabled bool `json:"zones_enabled"`
+	// NeedsAllocation — На самом зональном складе ещё лежит остаток, оставшийся с момента включения зон
+	NeedsAllocation bool `json:"needs_allocation"`
 	// CompanyIds — Пустой список означает доступность склада всем активным юрлицам кабинета
 	CompanyIds []UUID `json:"company_ids"`
 	CreatedAt  string `json:"created_at"`
@@ -10443,6 +11591,50 @@ type StockWarehousePatch struct {
 	ResponsibleEmployeeID *UUID                      `json:"responsible_employee_id,omitempty"`
 	SortOrder             *int64                     `json:"sort_order,omitempty"`
 	CompanyIds            []UUID                     `json:"company_ids,omitempty"`
+}
+
+type StockWarehouseZoneInput struct {
+	// Name — Название зоны; код зоны присваивает сервер
+	Name string `json:"name"`
+}
+
+type StockZoneAllocation struct {
+	WarehouseID  UUID                `json:"warehouse_id"`
+	ZonesEnabled bool                `json:"zones_enabled"`
+	Direction    string              `json:"direction"`
+	Zones        []StockWarehouse    `json:"zones"`
+	Rows         []StockZoneStockRow `json:"rows"`
+	// Draft — Незавершённая матрица разнесения; у обратного переноса всегда null, потому что выключение атомарно
+	Draft *StockZoneAllocationInput `json:"draft,omitempty"`
+}
+
+type StockZoneAllocationInput struct {
+	// Date — Пусто — бизнес-дата кабинета
+	Date  *string                   `json:"date,omitempty"`
+	Lines []StockZoneAllocationLine `json:"lines"`
+}
+
+type StockZoneAllocationLine struct {
+	CompanyID UUID   `json:"company_id"`
+	ProductID UUID   `json:"product_id"`
+	ZoneID    UUID   `json:"zone_id"`
+	Quantity  string `json:"quantity"`
+}
+
+type StockZoneAllocationResult struct {
+	Warehouse StockWarehouse `json:"warehouse"`
+	// Documents — Проведённые перемещения — по одному на пару «юрлицо и зона»
+	Documents []CoreDocument `json:"documents"`
+	// Remaining — Остаток, который после разнесения всё ещё ждёт на складе
+	Remaining []StockZoneStockRow `json:"remaining"`
+}
+
+type StockZoneStockRow struct {
+	WarehouseID UUID `json:"warehouse_id"`
+	CompanyID   UUID `json:"company_id"`
+	ProductID   UUID `json:"product_id"`
+	// Quantity — Точное decimal-количество строкой
+	Quantity string `json:"quantity"`
 }
 
 type Subtask struct {

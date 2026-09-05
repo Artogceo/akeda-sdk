@@ -45,6 +45,20 @@ func ReferenceDataSchemaJSON() []byte { return referenceDataSchemaJSON }
 // PlatformCatalogJSON — каталог точек расширения, слотов и мест интерфейса.
 func PlatformCatalogJSON() []byte { return platformCatalogJSON }
 
+// ModelSandbox — модель точки, которая исполняет КОД расширения внутри
+// продукта: WebAssembly, без сети, без часов, с бюджетом в миллисекундах.
+//
+// Она единственная вправе остановить операцию кабинета и единственная, на
+// которой объявляется функция. Разница не косметическая: функция, объявленная
+// на сетевой точке, не будет вызвана никогда — а кабинет подпишет согласие
+// «проверяет документы перед проведением» и не получит ни одной проверки.
+// Молчание, неотличимое от работы, — поэтому проверка на это есть и здесь.
+//
+// Значение имени — из каталога, а не из головы: список моделей платформы лежит
+// в снимке полем point_models, и разбор снимка падает, если у точки оказалась
+// модель вне него.
+const ModelSandbox = "sandbox"
+
 // ExtensionPoint — точка расширения из каталога.
 type ExtensionPoint struct {
 	Key               string   `json:"key"`
@@ -58,6 +72,9 @@ type ExtensionPoint struct {
 	ResponseOperation string   `json:"response_operation,omitempty"`
 	Errors            []string `json:"errors,omitempty"`
 }
+
+// Sandboxed — точка исполняет код расширения, а не ходит по сети.
+func (p ExtensionPoint) Sandboxed() bool { return p.Model == ModelSandbox }
 
 // UISlot — контракт слота интерфейса: чем он вправе объявиться и что просить.
 type UISlot struct {
@@ -86,9 +103,13 @@ type UIPlacement struct {
 // поэтому он и лежит в снимке, рядом с контрактом, а не в коде CLI: список,
 // набранный руками, разошёлся бы с платформой молча.
 type PlatformCatalog struct {
-	CatalogVersion      int      `json:"catalog_version"`
-	Surfaces            []string `json:"surfaces"`
-	SlotTypes           []string `json:"slot_types"`
+	CatalogVersion int      `json:"catalog_version"`
+	Surfaces       []string `json:"surfaces"`
+	SlotTypes      []string `json:"slot_types"`
+	// PointModels — модели ответа, которые платформа знает сегодня. Список
+	// закрытый и снятый с её же констант: по нему видно, что `sandbox` — не
+	// опечатка в каталоге, а третья модель рядом с sync и async.
+	PointModels         []string `json:"point_models"`
 	LaunchContextFields []string `json:"launch_context_fields"`
 	Bridge              struct {
 		FromExtension []string `json:"from_extension"`
@@ -136,6 +157,19 @@ func (c PlatformCatalog) PointOf(key string) (ExtensionPoint, bool) {
 		}
 	}
 	return ExtensionPoint{}, false
+}
+
+// SandboxPointKeys — точки, исполняющие код расширения, по алфавиту. Нужны
+// отказу: «точка не песочничная» без списка тех, что песочничные, заставляет
+// автора манифеста угадывать.
+func (c PlatformCatalog) SandboxPointKeys() []string {
+	keys := make([]string, 0, len(c.ExtensionPoints))
+	for _, point := range c.ExtensionPoints {
+		if point.Sandboxed() {
+			keys = append(keys, point.Key)
+		}
+	}
+	return keys
 }
 
 // PlacementKeys — все места каталога, по алфавиту.

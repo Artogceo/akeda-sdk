@@ -13,6 +13,24 @@
   "catalog_version": 1,
   "extension_points": [
     {
+      "errors": [
+        "document_refused_by_extension",
+        "function_artifact_missing",
+        "function_failed",
+        "function_timed_out",
+        "function_response_invalid"
+      ],
+      "key": "core.document.before_post.v1",
+      "model": "sandbox",
+      "owner": "core",
+      "request_schema": "core.document_snapshot.v1",
+      "response_schema": "core.document_verdict.v1",
+      "scopes": [
+        "core:read"
+      ],
+      "summary": "Проверка документа перед проведением: функция расширения вправе отказать в проведении, предупредить или промолчать"
+    },
+    {
       "key": "core.document_lifecycle.v1",
       "model": "async",
       "owner": "core",
@@ -83,6 +101,11 @@
     "module",
     "tenant_id",
     "theme"
+  ],
+  "point_models": [
+    "async",
+    "sandbox",
+    "sync"
   ],
   "slot_types": [
     "action",

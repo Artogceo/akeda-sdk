@@ -139,3 +139,13 @@ jobs:
           if go run ./cmd/akeda manifest lint /tmp/unknown-placement.json; then
             echo "линт принял место, которого нет в каталоге"; exit 1
           fi
+      # Функция на СЕТЕВОЙ точке обязана отклоняться, и ошибка эта тихая по
+      # своей природе: диспетчер песочницы такую функцию не увидит, сетевой
+      # контур кода не исполняет, а кабинет подпишет согласие «проверяет
+      # документы перед проведением» и не получит ни одной проверки.
+      - name: Функция на сетевой точке отклоняется
+        run: |
+          python3 -c 'import json; m = json.load(open("examples/stock-abc/app.json")); m["functions"] = [{"key": "guard", "point": "core.document_lifecycle.v1", "artifact": {"digest": "sha256:" + "0" * 64}}]; json.dump(m, open("/tmp/network-function.json", "w"), ensure_ascii=False)'
+          if go run ./cmd/akeda manifest lint /tmp/network-function.json; then
+            echo "линт принял функцию на точке, которая кода не исполняет"; exit 1
+          fi

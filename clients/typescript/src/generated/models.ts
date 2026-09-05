@@ -1,8 +1,10 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a3e3b6127a35366107149251fc907a51b367bf2372bddd27c6782299b61707e).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a255440df951ca637e056f0155498f67bc7b34723eac197148cf9cab8906c7c3).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
+
+export type AccountingBasis = "cash" | "accrual" | "mixed";
 
 export interface Activity {
   "id": UUID;
@@ -1747,6 +1749,7 @@ export interface ChatConversation {
   "updated_at": string;
   "capabilities"?: ChatConversationCapabilities;
   "unread_count": number;
+  "first_unread_seq": number | null;
   "manual_unread_seq": number | null;
   "notification_mode": string;
   "mention_count": number;
@@ -1811,6 +1814,8 @@ export interface ChatFolder {
   "id": UUID;
   "name": string;
   "position": number;
+  /** Верхний уровень списка; папка не может одновременно принадлежать обычным чатам и чатам задач. */
+  "space": "chats" | "tasks";
   /** Разделы всегда возвращаются в порядке direct, group, task независимо от порядка в запросе. */
   "scopes": Array<"direct" | "group" | "task">;
   "include_conversation_ids": Array<UUID>;
@@ -2043,6 +2048,7 @@ export interface ChatReceiptState {
 export interface ChatSaveFolder {
   "name": string;
   "position"?: number;
+  "space": "chats" | "tasks";
   /** Повтор раздела отвергается. */
   "scopes"?: Array<"direct" | "group" | "task">;
   "include_conversation_ids"?: Array<UUID>;
@@ -2191,6 +2197,17 @@ export interface CoreBusiness {
   "id": UUID;
   "name": string;
   "is_active": boolean;
+  /** Что считать выручкой — cash это деньги, accrual это сделка */
+  "accounting_method": "cash" | "accrual";
+  /** Дата перехода на начисление; отсутствует у кассового бизнеса */
+  "accrual_from"?: string;
+}
+
+export interface CoreBusinessAccountingMethodInput {
+  /** Значение приводится к нижнему регистру */
+  "method": "cash" | "accrual";
+  /** Дата перехода на начисление; обязательна при accrual и не используется при cash */
+  "accrual_from"?: string;
 }
 
 export interface CoreBusinessInput {
@@ -2277,6 +2294,7 @@ export interface CoreContact {
   "kpp": string;
   "ogrn": string;
   "address": string;
+  "legal_address": CoreContactAddress;
   "bank_name": string;
   "bank_bic": string;
   "bank_account": string;
@@ -2285,6 +2303,22 @@ export interface CoreContact {
   "is_active": boolean;
   "created_at": string;
   "updated_at": string;
+}
+
+export interface CoreContactAddress {
+  "postal_code": string;
+  /** Код субъекта РФ для формализованного документа */
+  "region_code": string;
+  "region_name": string;
+  "district": string;
+  "city": string;
+  "settlement": string;
+  "street": string;
+  "building": string;
+  "block": string;
+  /** Офис или помещение */
+  "flat": string;
+  "info": string;
 }
 
 export interface CoreContactBulkPatch {
@@ -2309,6 +2343,7 @@ export interface CoreContactCreate {
   "kpp"?: string;
   "ogrn"?: string;
   "address"?: string;
+  "legal_address"?: CoreContactAddress;
   "bank_name"?: string;
   "bank_bic"?: string;
   "bank_account"?: string;
@@ -2340,6 +2375,7 @@ export interface CoreContactPatch {
   "kpp"?: string;
   "ogrn"?: string;
   "address"?: string;
+  "legal_address"?: CoreContactAddress;
   "bank_name"?: string;
   "bank_bic"?: string;
   "bank_account"?: string;
@@ -3601,6 +3637,7 @@ export interface CoreTrialBalance {
   "currency": string;
   "rows": Array<CoreTrialBalanceRow>;
   "totals": CoreTrialBalanceTotals;
+  "accounting_basis"?: AccountingBasis;
 }
 
 export interface CoreTrialBalanceRow {
@@ -4131,6 +4168,1048 @@ export interface DiscussionCommentUpdate {
 
 export type DiscussionOwnerType = "task" | "section" | "project" | "document" | "milestone" | "customer_need" | "pull_request";
 
+/** Учётный документ кабинета, заведённый приёмкой. */
+export interface DocflowAcceptedDocument {
+  "id": UUID;
+  /** Наш номер из нумератора кабинета. Номер продавца лежит в содержимом документа: занять им наш сквозной счётчик значит однажды получить два своих документа с одним номером от двух разных поставщиков */
+  "number": string;
+  /** Дата документа ГГГГ-ММ-ДД. По умолчанию это дата документа поставщика: операция произошла тогда, когда её совершил он, и датировать её днём приёмки значит поставить факт не в тот период */
+  "date": string;
+  /** Ключ вида документа; у приёмки docflow_incoming */
+  "type_key": string;
+  /** Имя вида в кабинете. Право клиента: вид можно переименовать, и код держит его за ключ, а не за название */
+  "type_name": string;
+  /** Состояние учётного документа. Приёмка заводит ЧЕРНОВИК: проведение принадлежит модулям — владельцам регистров */
+  "status": string;
+  /** Документ помечен на удаление. Такой пакет принимается заново: пометка и есть способ сказать «этот документ ошибочный» */
+  "marked_deleted": boolean;
+  /** Момент приёмки; пусто, если он не записан */
+  "accepted_at": string;
+}
+
+/** Чем оператор ответил на выполненное действие. */
+export interface DocflowActionResult {
+  /** Идентификатор действия у оператора */
+  "id": string;
+  /** Новое состояние кодом оператора */
+  "state": string;
+  /** Новое состояние словами оператора */
+  "state_name": string;
+}
+
+/** АдрРФ: структурный российский адрес. Только российский: адрес по ГАР требует идентификатора адресного объекта из государственного реестра, которого в карточках Akeda нет, а иностранный адрес у продавца-резидента не встречается. Карточки юрлица и контрагента хранят такой адрес частями; объект отправления позволяет задать исключение. */
+export interface DocflowAddressRequisites {
+  /** Индекс */
+  "postal_code"?: string;
+  /** КодРегион */
+  "region_code"?: string;
+  /** НаимРегион */
+  "region_name"?: string;
+  /** Район */
+  "district"?: string;
+  /** Город */
+  "city"?: string;
+  /** НаселПункт */
+  "settlement"?: string;
+  /** Улица */
+  "street"?: string;
+  /** Дом */
+  "building"?: string;
+  /** Корпус */
+  "block"?: string;
+  /** Кварт */
+  "flat"?: string;
+  /** ИныеСвед */
+  "info"?: string;
+}
+
+/** Файл внутри пакета. Внутреннего пути в хранилище здесь нет: снаружи файл получают отдельной операцией, а путь не часть контракта и не подсказка для перебора. */
+export interface DocflowAttachment {
+  "id": UUID;
+  "message": UUID;
+  /** Идентификатор вложения у оператора */
+  "external_id": string;
+  /** Имя файла словами оператора */
+  "name": string;
+  /** Наш словарь, а не оператора: документ, ответный титул, служебное извещение. Пусто означает, что вид неизвестен, и это законно */
+  "kind": "" | "document" | "title" | "notice";
+  "content_type": string;
+  "size_bytes": number;
+  "sha256": string;
+  /** Байты скачаны и лежат у НАС. Ссылка оператора хранилищем не считается: она живёт около месяца, а накладную спрашивают через три года */
+  "stored": boolean;
+  "downloaded_at"?: string;
+  "created_at": string;
+}
+
+/** Машиночитаемая доверенность при подписи. Прикладывается ИДЕНТИФИКАТОРОМ в реестре ФНС, а не файлом: поля для тела доверенности у оператора нет вовсе. Поля content и content_signature приняты потому, что их присылает браузерный контур, и оператору они не передаются. */
+export interface DocflowAttorneySubmission {
+  /** Единый регистрационный номер доверенности в реестре ФНС */
+  "registry_number": string;
+  "principal_inn"?: string;
+  "issued_at"?: string;
+  "expires_at"?: string;
+  /** Тело доверенности Base64. Оператору не передаётся */
+  "content"?: string;
+  /** Подпись под телом доверенности Base64. Оператору не передаётся */
+  "content_signature"?: string;
+}
+
+/** БанкРекв: банковские реквизиты участника. У юрлица кабинета их нет вовсе. */
+export interface DocflowBankRequisites {
+  /** НомерСчета */
+  "account"?: string;
+  /** НаимБанк */
+  "name"?: string;
+  /** БИК */
+  "bic"?: string;
+  /** КорСчет */
+  "corr_account"?: string;
+}
+
+/** Ответный титул покупателя на входящий пакет. Сам пакет назван в адресе, реквизиты продавца сервер читает из его файла в пакете. */
+export interface DocflowBuyerTitleInput {
+  /** КодИтога: 1 — принято без разногласий, 2 — с разногласиями, 3 — не принято */
+  "result"?: string;
+  /** ДатаПрин в форме ГГГГ-ММ-ДД */
+  "accepted_at"?: string;
+  /** СодОпер. Формат ЗАПРЕЩАЕТ его при итоге «не принято»: «не приняли» — это отсутствие операции приёмки, а не операция с описанием */
+  "operation"?: string;
+  /** НаимДокОпрПр: наименование документа, определённое сторонами сделки. В титуле покупателя обязательно ВСЕГДА, в отличие от титула продавца, где оно зависит от функции */
+  "document_kind_name"?: string;
+  /** Функция документа продавца, на который отвечаем. Пустое значение сервер берёт из его файла */
+  "function"?: string;
+  /** Номер документа продавца */
+  "number"?: string;
+  /** Дата документа продавца */
+  "date"?: string;
+  "disagreement"?: DocflowDocumentRefRequisites;
+  "employee"?: DocflowEmployeeRequisites;
+  "signers"?: Array<DocflowSignerRequisites>;
+  "file"?: DocflowFileRequisites;
+  "extra"?: Array<DocflowTextInfoRequisites>;
+}
+
+/** Соглашение сторон об аннулировании документа. Запускает его любая сторона, а решает вторая: согласие даёт состояние 22 «Документ аннулирован», отказ — состояние 40 «Аннулирование отклонено», при котором состояние самого документа НЕ меняется. Шаг цепочки выводится из ленты СОБЫТИЙ пакета, а не из кода состояния: состояние 27 «Ожидает аннулирования» оператор отдаёт только отдельным методом выборки по событиям. */
+export interface DocflowCancellation {
+  /** Шаг цепочки: none — её нет; requested — ждём решения; agreed — аннулирован по соглашению; refused — в аннулировании отказано, и документ остался действующим */
+  "state": "none" | "requested" | "agreed" | "refused";
+  /** Слова ОПЕРАТОРА о состоянии, когда оно относится к аннулированию. Своего перевода состояний у нас нет и быть не должно */
+  "state_name": string;
+  /** Кто запустил цепочку. Пусто означает «неизвестно», а не «мы» */
+  "initiator": "" | "us" | "counterparty";
+  /** Причина словами того, кто её написал. Не переводится */
+  "reason": string;
+  "requested_at": string | null;
+  "decided_at": string | null;
+  /** Вид документа вообще допускает аннулирование. У электронной транспортной накладной его нет: там отказ 409 с кодом docflow.edo.cancellation_unavailable */
+  "available": boolean;
+  /** Ход за нами и цепочку можно начать */
+  "can_request": boolean;
+  /** Соглашение прислали нам и на него можно согласиться */
+  "can_approve": boolean;
+  /** Соглашение прислали нам и в нём можно отказать */
+  "can_reject": boolean;
+}
+
+/** Шаг соглашения об аннулировании. Одного поля довольно: сторону, документ и чей сейчас ход, сервер знает сам. */
+export interface DocflowCancellationInput {
+  /** Причина словами человека. Обязательна при предложении аннулирования и при отказе в нём: вторая сторона решает по причине, а не по факту обращения */
+  "comment"?: string;
+}
+
+/** Сертификат, которым подпись доказывают спустя годы: имя подписанта меняется, отпечаток нет. */
+export interface DocflowCertificate {
+  "thumbprint": string;
+  "subject": string;
+  "valid_from"?: string;
+  "valid_to"?: string;
+}
+
+/** Подключение юрлица к оператору ЭДО. Учётных данных здесь нет ни одним полем: снаружи виден только признак has_credentials. */
+export interface DocflowConnection {
+  "id": UUID;
+  /** Оператор ЭДО. Диадок объявлен, адаптера к нему пока нет */
+  "provider": "saby" | "diadoc";
+  /** Имя оператора для интерфейса; торговая марка, не переводится */
+  "provider_name": string;
+  "display_name": string;
+  "company"?: UUID;
+  "company_name": string;
+  "company_inn": string;
+  "company_kpp": string;
+  /** reauth_required отделён от error намеренно: сеть починится сама, а отозванный доступ требует человека */
+  "status": "connected" | "paused" | "error" | "reauth_required" | "disconnected";
+  "status_name": string;
+  /** Тройка ключей оператора задана. Самих значений наружу не отдают никогда */
+  "has_credentials": boolean;
+  /** Действующее ограничение: отправка, подписание и изменение состояний в ЭДО отключены */
+  "read_only": boolean;
+  /** Идентификатор нашей организации у оператора; выясняется сопоставлением по ИНН и КПП, руками не вводится */
+  "external_org_id": string;
+  /** Кто из ERP выдал доступ; имя человека на стороне оператора нам неизвестно */
+  "granted_by_user_id"?: number;
+  "granted_by_name": string;
+  "granted_at"?: string;
+  "last_sync_at"?: string;
+  /** Итог последнего прохода синхронизации */
+  "last_sync_status": "" | "ok" | "failed" | "skipped";
+  /** СЛОВА ОПЕРАТОРА и только они: по ним человек чинит доступ в кабинете оператора */
+  "last_error": string;
+  /** Машинный код последней неудачи (docflow.edo.*); его переводит интерфейс */
+  "last_error_code": string;
+  "messages_total": number;
+  /** Сколько пакетов ждут нашего действия */
+  "actions_due": number;
+  "created_at": string;
+  "updated_at": string;
+}
+
+/** Заведение подключения. Секреты приходят открытым текстом ровно один раз и шифруются до того, как что-либо попадёт в базу. */
+export interface DocflowConnectionInput {
+  /** Пусто означает saby — единственный оператор с адаптером */
+  "provider"?: "saby";
+  "display_name"?: string;
+  "company": UUID;
+  /** Часть тройки ключей оператора; обратно не возвращается */
+  "app_client_id": string;
+  /** Часть тройки ключей оператора; обратно не возвращается */
+  "app_secret": string;
+  /** Часть тройки ключей оператора; обратно не возвращается */
+  "service_key": string;
+}
+
+export interface DocflowConnectionList {
+  "count": number;
+  "results": Array<DocflowConnection>;
+}
+
+/** Явный выбор режима. false разрешает юридически значимые действия через это подключение; true немедленно возвращает безопасный режим. */
+export interface DocflowConnectionModeInput {
+  "read_only": boolean;
+}
+
+/** Частичное изменение. Учётные данные обновляются только всеми тремя значениями сразу: у оператора это одно неделимое сочетание. */
+export interface DocflowConnectionPatch {
+  "display_name"?: string;
+  "status"?: "connected" | "paused" | "error" | "reauth_required" | "disconnected";
+  "app_client_id"?: string;
+  "app_secret"?: string;
+  "service_key"?: string;
+}
+
+/** Контакт: телефоны, почта и прочие сведения для связи. */
+export interface DocflowContactRequisites {
+  /** Тлф */
+  "phones"?: Array<string>;
+  /** ЭлПочта */
+  "emails"?: Array<string>;
+  /** ИнКонт */
+  "info"?: string;
+}
+
+/** Вторая сторона обмена. Реквизиты хранятся текстом всегда, даже когда сопоставление с нашим контрагентом состоялось: карточку могут удалить или переименовать, а пакет обязан остаться читаемым спустя годы. */
+export interface DocflowCounterparty {
+  "name": string;
+  "inn": string;
+  "kpp": string;
+  /** Идентификатор участника обмена у оператора: надёжнее ИНН, потому что у одного ИНН бывает несколько ящиков */
+  "external_id": string;
+  "contact"?: UUID;
+  /** Наш контрагент, если сопоставление состоялось. Это наша догадка по ИНН либо выбор человека, а не факт от оператора */
+  "contact_name": string;
+}
+
+/** ДенИзм: денежное измерение документа. */
+export interface DocflowCurrencyRequisites {
+  /** КодОКВ. Пустое значение означает рубль */
+  "code"?: string;
+  /** НаимОКВ */
+  "name"?: string;
+  /** КурсВал */
+  "rate"?: string;
+}
+
+/** Реквизиты стороннего документа. */
+export interface DocflowDocumentRefRequisites {
+  /** РеквНаимДок */
+  "name"?: string;
+  /** РеквНомерДок */
+  "number"?: string;
+  /** РеквДатаДок в форме ГГГГ-ММ-ДД */
+  "date"?: string;
+  /** РеквИдФайлДок */
+  "file_id"?: string;
+  /** РеквИдДок */
+  "doc_id"?: string;
+  /** РеквДопСведДок */
+  "info"?: string;
+}
+
+/** СвДоверЭл: машиночитаемая доверенность. Формат требует её ровно при способе подтверждения полномочий 3 и запрещает при остальных. */
+export interface DocflowElectronicPoARequisites {
+  /** НомДовер, 36 символов */
+  "number"?: string;
+  "issued_at"?: string;
+  "internal_number"?: string;
+  "internal_date"?: string;
+  /** ИдСистХран */
+  "storage"?: string;
+  "url"?: string;
+}
+
+/** Работник организации: должность и ФИО. */
+export interface DocflowEmployeeRequisites {
+  "position"?: string;
+  "surname"?: string;
+  "name"?: string;
+  "patronymic"?: string;
+  "info"?: string;
+}
+
+/** Событие ленты пакета. Лента — то, по чему человек восстанавливает ход спора с контрагентом, поэтому название и комментарий хранятся словами оператора и не переводятся. */
+export interface DocflowEvent {
+  "id": UUID;
+  "message": UUID;
+  "external_id": string;
+  "name": string;
+  "comment": string;
+  "occurred_at"?: string;
+  "created_at": string;
+}
+
+/** То, из чего складывается имя файла обмена. Идентификаторы участников спрашиваются, потому что взять их неоткуда: свой оператор отдаёт пустым, а идентификатор контрагента появляется только с первым его документом в ленте. Что сервер видел в зеркале, он подставляет сам; всё остальное — за человеком. */
+export interface DocflowFileRequisites {
+  /** Идентификатор отправителя у оператора */
+  "sender_id"?: string;
+  /** Идентификатор получателя у оператора */
+  "receiver_id"?: string;
+  /** Собственный идентификатор файла обмена */
+  "uuid"?: string;
+  /** Дополнительная часть имени файла */
+  "extra"?: string;
+  /** Документ о прослеживаемых товарах */
+  "traceability"?: boolean;
+  /** Документ об алкогольной продукции */
+  "alcohol"?: boolean;
+  /** Документ о табачной продукции */
+  "tobacco"?: boolean;
+  /** Документ о нефтепродуктах */
+  "oil"?: boolean;
+}
+
+/** Документ не отвечает формату ФНС. Список непройденных проверок уходит ЦЕЛИКОМ: человек обязан увидеть всё сразу, а не по одной причине за попытку. */
+export interface DocflowFormatIssues {
+  /** Одна фраза на языке запроса */
+  "detail": string;
+  "code": "docflow.formats.invalid";
+  "issues": Array<DocflowIssue>;
+}
+
+/** Вторая сторона и то, с кем мы её свели. Своей догадки по ИНН у приёмки нет вовсе: контрагента сводит механизм синхронизации, а второй механизм сопоставления рядом с существующим разошёлся бы с ним на первой же правке. */
+export interface DocflowIntakeCounterparty {
+  /** Карточка контрагента кабинета; null — свести не с кем, и приёмка отвечает проверкой docflow.edo.contact_required */
+  "contact": UUID | null;
+  /** Имя этой карточки в кабинете */
+  "contact_name": string;
+  /** Имя стороны словами оператора либо файла продавца */
+  "name": string;
+  "inn": string;
+  "kpp": string;
+  /** Откуда взялся контрагент: manual — прислал человек, auto — свело зеркало, none — не свели ни с кем */
+  "match": "manual" | "auto" | "none";
+}
+
+/** Решение человека, которым подтверждается приёмка. Сам пакет назван в адресе. Решения по строкам приезжают СПИСКОМ, а не картой «номер → товар»: пропуск строки — это тоже решение, и картой его пришлось бы выражать отсутствием ключа, то есть неотличимо от «человек про эту строку не сказал ничего», а разница между ними принципиальная. */
+export interface DocflowIntakeInput {
+  /** Дата учётного документа ГГГГ-ММ-ДД. Пусто — берётся дата документа поставщика: она и есть дата операции */
+  "date"?: string;
+  /** Контрагент. Пусто — берётся тот, с кем свело зеркало */
+  "contact"?: UUID | null;
+  /** Решения по строкам. Собственной догадкой подтверждение не пользуется: строка без записанного соответствия и без решения человека в документ не едет, а отвечает проверкой docflow.edo.product_required */
+  "lines"?: Array<DocflowIntakeLineInput>;
+  /** Примечание учётного документа */
+  "comment"?: string;
+}
+
+/** Строка товарной таблицы чужого документа вместе с тем, что мы про неё предлагаем. Числа остаются СТРОКАМИ ровно так, как их написал поставщик: сумма в чужом документе такая, какую он подписал, и наша задача её донести, а не поправить. Расхождения покажет сверка, а не молчаливое округление. */
+export interface DocflowIntakeLine {
+  /** Номер строки в файле поставщика. По нему человек соотносит экран с бумагой, и по нему же приходит его решение */
+  "number": number;
+  /** Наименование товара словами поставщика */
+  "name": string;
+  /** Артикул поставщика */
+  "article": string;
+  /** Код товара у поставщика */
+  "code": string;
+  /** Код ОКЕИ единицы измерения */
+  "unit_code": string;
+  "unit_name": string;
+  "quantity": string;
+  /** Цена единицы словами поставщика */
+  "price": string;
+  "amount_without_vat": string;
+  /** Ставка налога словами файла */
+  "vat_rate": string;
+  /** Сумма налога. Пуста при отметке «без НДС»: нуля там нет, и подставить его значит превратить необлагаемую поставку в облагаемую с нулевым налогом */
+  "vat_amount": string;
+  /** Отметка «без НДС» у строки */
+  "vat_without": boolean;
+  "amount_with_vat": string;
+  /** Ключ соответствия: то, по чему эта строка узнаётся в СЛЕДУЮЩЕМ документе того же поставщика. Собирается с приставкой вида `арт:`, `код:` или `наим:` — артикул «100» и наименование «100» разные вещи, и без приставки они стали бы одной строкой соответствий. Показывается затем, чтобы человек понимал, что именно он сопоставляет: не эту накладную, а артикул поставщика на все будущие поставки. */
+  "key": string;
+  /** Номенклатура кабинета; null — не выбрана */
+  "product": UUID | null;
+  /** Имя выбранной карточки. Подсказка, а не реквизит: карточку могли заархивировать */
+  "product_name": string;
+  /** Откуда взялась номенклатура строки. `manual` — сопоставил человек, `auto` — сопоставила машина и решение записано, `rejected` — человек уже посмотрел и сказал «не это» (догадку по такой строке мы больше не показываем), `guess` — наша догадка ПРЯМО СЕЙЧАС, нигде не записанная, `none` — сопоставить не с чем. Записанное соответствие приносит свой способ из справочника внешних ссылок, поэтому здесь встречаются и его значения (`pending`, `import`). Различать обязательно: на экране «это решил человек» и «это мы угадали» выглядят одинаково — одна строка с названием товара, — а значат противоположное. */
+  "match": string;
+  /** С чем ещё эта строка могла совпасть. Непусто только у неоднозначной догадки: выбрать за человека из двух одинаково подходящих товаров значит угадать монеткой и записать это как факт */
+  "options"?: Array<DocflowIntakeProductOption>;
+}
+
+/** Решение человека по одной строке документа поставщика. */
+export interface DocflowIntakeLineInput {
+  /** Номер строки в файле поставщика. Два решения по одному номеру отклоняются: какое из них считать выбором человека, знать неоткуда, а взять последнее значит тихо отбросить первое */
+  "number": number;
+  /** Выбранная номенклатура кабинета */
+  "product"?: UUID | null;
+  /** Строку в учётный документ не берём. Нужно затем, что в УПД встречаются строки, которых у нас нет и не будет: доставка отдельной строкой, тара, услуга сборки. Заводить ради них карточку товара значит засорять справочник, а молча терять их — врать про сумму. Пропущенная строка остаётся видимой и в приёмке, и в самом документе. */
+  "skip"?: boolean;
+}
+
+/** Сторона сделки, прочитанная из чужого файла. Показывается ТЕКСТОМ, даже когда контрагент сопоставлен: карточку могут переименовать, а документ обязан остаться читаемым таким, каким его прислали. */
+export interface DocflowIntakeParty {
+  /** Вид участника словами файла: юридическое лицо, предприниматель, иностранное лицо, физическое лицо */
+  "kind": string;
+  "name": string;
+  "inn": string;
+  "kpp": string;
+  /** Адрес одной строкой, собранный из частей формата */
+  "address": string;
+}
+
+/** Что мы предлагаем принять к учёту. Ничего не меняет и никуда не ходит: предложение обязано быть безопасным, иначе «посмотреть, что там» становится действием с последствиями, и человек побоится его открыть раньше, чем решит принимать. */
+export interface DocflowIntakePreview {
+  "message": UUID;
+  /** Нашёлся ли во вложениях титул продавца. Ложь означает, что принимать нечего: пакет либо неформализованный, либо файлы ещё не скачаны — чинится это синхронизацией, а не заполнением формы */
+  "formalized": boolean;
+  /** Принимается ли пакет прямо сейчас, без правок */
+  "ready": boolean;
+  /** Учётный документ, если пакет уже принят; иначе null. Показывается вместо повторной приёмки: второй документ по тому же пакету — это задвоенный приход и задвоенный долг перед поставщиком. */
+  "accepted": DocflowAcceptedDocument | null;
+  "source": DocflowIntakeSource;
+  "counterparty": DocflowIntakeCounterparty;
+  /** Товарная таблица чужого документа вместе с тем, что мы про неё предлагаем. Всегда массив, даже пустой */
+  "lines": Array<DocflowIntakeLine>;
+  "totals": DocflowIntakeTotals;
+  /** Что мешает принять. Тот же тип и тот же порядок, что у предполётной проверки исходящего документа: интерфейс переводит их одним словарём */
+  "issues": Array<DocflowIssue>;
+}
+
+/** Вариант номенклатуры, предложенный неоднозначной строке. */
+export interface DocflowIntakeProductOption {
+  "id": UUID;
+  "name": string;
+  "sku": string;
+}
+
+/** Что вышло из приёмки. Вместе с документом возвращается ПЕРЕСОБРАННОЕ предложение: экран после приёмки показывает то же, что показывал до неё, но уже с проставленными решениями — иначе ему пришлось бы спрашивать состояние вторым запросом и показывать между ними полупустую форму. */
+export interface DocflowIntakeResult {
+  "document": DocflowAcceptedDocument;
+  "preview": DocflowIntakePreview;
+}
+
+/** Реквизиты чужого файла обмена, из которого всё прочитано. Разбор частичный и ничего не проверяет: файл уже подписан и юридически значим, и отказать в его чтении из-за реквизита, который нам не нужен, значит потерять поставку из-за чужой ошибки в необязательном поле. */
+export interface DocflowIntakeSource {
+  "attachment": UUID;
+  /** Как это вложение назвал ОПЕРАТОР. Стоит рядом с file_name намеренно: имя оператора («Счёт-фактура № 12») человек видит в списке вложений, а file_name — имя файла обмена, и это разные строки */
+  "attachment_name": string;
+  /** ИдФайл: имя файла обмена без расширения, как его записал продавец */
+  "file_name": string;
+  /** ВерсФорм: редакция формата словами самого файла */
+  "format_version": string;
+  /** Код документа по классификатору; у титула продавца 1115131 */
+  "knd": string;
+  /** Функция документа словами продавца: СЧФ, ДОП, СЧФДОП */
+  "function": string;
+  /** Наименование документа, данное ему составителем */
+  "document_kind_name": string;
+  /** Номер документа продавца */
+  "number": string;
+  /** Дата документа в форме ГГГГ-ММ-ДД. Пусто — дата не разобралась */
+  "date": string;
+  /** Она же в форме поставщика ДД.ММ.ГГГГ. Показывается, когда разбор не удался: чужую опечатку человек поймёт быстрее, чем пустое поле */
+  "date_raw": string;
+  /** Валюта документа наименованием и кодом, словами файла */
+  "currency": string;
+  /** Содержание операции словами продавца */
+  "operation": string;
+  "seller": DocflowIntakeParty;
+  "buyer": DocflowIntakeParty;
+}
+
+/** Итоги таблицы словами поставщика. Мы их не пересчитываем: итог в чужом документе такой, какой он подписал. */
+export interface DocflowIntakeTotals {
+  "without_vat": string;
+  /** Пусто при отметке «без НДС» у документа */
+  "vat_amount": string;
+  "with_vat": string;
+  /** Отметка «без НДС» у документа целиком */
+  "vat_without": boolean;
+}
+
+/** Последнее известное состояние заявки на обмен у оператора. */
+export interface DocflowInvitation {
+  /** Идентификатор приглашения у оператора */
+  "id": string;
+  "connection": UUID;
+  "connection_name": string;
+  "company"?: UUID | null;
+  "company_name": string;
+  /** Название контрагента, если оператор его назвал; иначе экран использует ИНН */
+  "name": string;
+  "inn": string;
+  "kpp": string;
+  /** Идентификатор абонентского ящика контрагента */
+  "external_id": string;
+  /** Известные состояния Saby: 2 — отправлено, 7 — обмен возможен, 9 — маршрут разорван */
+  "state": number;
+  /** Слова оператора о состоянии */
+  "state_name": string;
+  /** true — входящее приглашение из роуминга, которое Saby принимает автоматически */
+  "incoming": boolean;
+  "created_at"?: string | null;
+  "changed_at"?: string | null;
+}
+
+/** Приглашение контрагента к обмену. Нужен ИНН либо идентификатор его ящика у оператора. Название обязательно, когда карточки контрагента у оператора ещё нет: приглашение её заводит. */
+export interface DocflowInvitationInput {
+  /** Идентификатор абонентского ящика контрагента. Ключом НЕ является: оператор предупреждает, что он может меняться */
+  "external_id"?: string;
+  "inn"?: string;
+  "kpp"?: string;
+  "name"?: string;
+  /** Приписка человека. Оператору она НЕ уходит: поля сообщения у метода нет вовсе */
+  "message"?: string;
+}
+
+export interface DocflowInvitationPage {
+  "count": number;
+  "results": Array<DocflowInvitation>;
+  /** Безопасный список подключений без учётных данных для формы приглашения */
+  "senders": Array<DocflowInvitationSender>;
+}
+
+export interface DocflowInvitationSender {
+  "id": UUID;
+  "name": string;
+  "company_name": string;
+  "company_inn": string;
+  "company_kpp": string;
+  "provider": string;
+  "status": "connected" | "paused" | "error" | "reauth_required" | "disconnected";
+  "read_only": boolean;
+  /** Идентификатор собственного абонентского ящика; пусто — нужно повторно проверить связь */
+  "external_org_id": string;
+}
+
+/** Одна невыполненная проверка. Форма одна на сборку файла формата ФНС и на приёмку входящего документа к учёту: интерфейс переводит их одним словарём, и вторая форма списка означала бы второй словарь. Ни одной надписи для человека здесь нет: код, путь реквизита и подробности значениями — фразу собирает интерфейс, и собирает её на языке читателя. */
+export interface DocflowIssue {
+  /** Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои четыре: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки) и docflow.edo.product_required (строке документа не сопоставлена номенклатура) */
+  "code": string;
+  /** Путь до реквизита ИМЕНАМИ ФНС — именами приказа, а не нашими: этими же словами человек будет искать требование в письме налоговой. Например `Документ/СвСчФакт/СвПрод/Адрес`. */
+  "path": string;
+  /** Номер товарной строки с единицы. Отсутствует, когда реквизит не про строку */
+  "line"?: number;
+  /** Подробности значениями: предел длины, перечень допустимых значений, пришедшее значение. Отсутствует, когда проверке нечего добавить. */
+  "params"?: { [key: string]: string };
+}
+
+/** Дополнение к строке учётного документа. Строка адресуется line_id — тем же идентификатором, которым её знает сам документ. Не порядковым номером: порядок строк меняют, и привязка по номеру перевесила бы ставку НДС на другой товар молча. */
+export interface DocflowLineRequisites {
+  "line_id": UUID;
+  /** НалСт. Обязателен в каждой строке формата; пустое значение берёт общую ставку юрлица */
+  "vat_rate"?: string;
+  /** ОКЕИ_Тов. Пустое значение берёт код из карточки единицы измерения */
+  "unit_code"?: string;
+  /** НаимЕдИзм */
+  "unit_name"?: string;
+  /** ПрТовРаб */
+  "kind"?: string;
+  /** ГТИН */
+  "gtin"?: string;
+  /** КодПроисх */
+  "country_code"?: string;
+  /** КрНаимСтрПр */
+  "country_name"?: string;
+  /** НомерДТ */
+  "customs_number"?: string;
+  /** НомСредИдентТов: средства идентификации маркированного товара */
+  "marks"?: Array<DocflowMarkRequisites>;
+  /** ИнфПолФХЖ2 */
+  "extra"?: Array<DocflowTextInfoRequisites>;
+}
+
+/** НомСредИдентТов: средства идентификации маркированного товара. Проходят насквозь: своего источника кодов маркировки в Akeda нет, а без них УПД на маркированный товар недействителен. */
+export interface DocflowMarkRequisites {
+  "transport_package"?: string;
+  "count"?: string;
+  "batch"?: string;
+  "codes"?: Array<string>;
+  "packages"?: Array<string>;
+}
+
+/** Пакет документов у оператора — конверт, а не учётный документ Акеды. */
+export interface DocflowMessage {
+  "id": UUID;
+  "connection": UUID;
+  /** Идентификатор пакета у оператора */
+  "external_id": string;
+  /** Редакция пакета: оператор меняет содержимое конверта, не меняя его идентификатор */
+  "external_revision": string;
+  "direction": "incoming" | "outgoing";
+  /** Слова оператора, а не наша классификация */
+  "doc_type": string;
+  "doc_subtype": string;
+  "doc_regulation": string;
+  "number": string;
+  /** Календарная дата документа ГГГГ-ММ-ДД; пусто означает, что даты нет вовсе */
+  "date": string;
+  /** Сумма строкой ровно так, как её прислал оператор; пусто означает «суммы нет», а не ноль */
+  "amount": string;
+  "currency": string;
+  "counterparty": DocflowCounterparty;
+  /** Код состояния документооборота у оператора */
+  "state_code": string;
+  /** Состояние словами оператора: своего перевода состояний у нас нет и быть не должно */
+  "state_name": string;
+  "our_org_external_id": string;
+  "received_at"?: string;
+  "created_at": string;
+  "updated_at": string;
+  "connection_name": string;
+  "connection_provider": string;
+  "company"?: UUID;
+  "company_name": string;
+  "attachments_total": number;
+  "signatures_total": number;
+  /** Сколько незакрытых этапов у пакета. Ноль означает «ход не за нами» */
+  "actions_due": number;
+  /** Название ближайшего незакрытого этапа словами оператора */
+  "stage_name": string;
+  /** Состав пакета. Наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null. null означает «не спрашивали», пустой массив — «спросили, и там пусто» */
+  "attachments"?: Array<DocflowAttachment> | null;
+  "signatures"?: Array<DocflowSignature> | null;
+  "stages"?: Array<DocflowStage> | null;
+  "events"?: Array<DocflowEvent> | null;
+  /** Соглашение сторон об аннулировании. Наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null — null означает «не спрашивали» */
+  "cancellation"?: DocflowCancellation | null;
+}
+
+/** Действие над пакетом словами ОПЕРАТОРА. Что именно можно сделать сейчас, говорит сам пакет: stages[].actions[]. Подписания среди этих действий нет — подпись идёт контуром /api/v1/docflow/edo/signing/tasks. */
+export interface DocflowMessageActionInput {
+  /** КОД действия у оператора из stage.actions[].code, а НЕ надпись с кнопки: строка действия своя у каждого вида документа и каждого регламента, и зашитый набор строк ломается на первом нестандартном */
+  "action": string;
+  /** Идентификатор этапа у оператора. Не нужен в обычном сценарии: этап выбирает сервер по тому, что сказал оператор */
+  "stage"?: string;
+  /** Название этапа словами оператора. Адресует скрытые этапы — те, которых в составе пакета не видно, но которые оператор принимает по имени */
+  "stage_name"?: string;
+  /** Комментарий человека. Уходит второй стороне и остаётся в ленте событий; при отклонении документа обязателен */
+  "comment"?: string;
+}
+
+export interface DocflowMessageList {
+  "count": number;
+  "results": Array<DocflowMessage>;
+}
+
+/** Произвольный файл на отправку рядом с формализованным. */
+export interface DocflowOutgoingFile {
+  /** Имя файла. Без него файл отклоняется: у оператора файл без имени не показывается никому */
+  "name": string;
+  /** Содержимое файла в base64 */
+  "content_base64": string;
+}
+
+/** Что проверяем и что отправляем. Реквизиты приезжают ОДНИМ объектом, а не россыпью полей: это дополнение к учётному документу, оно хранится целиком и целиком же участвует в пересборке. */
+export interface DocflowOutgoingInput {
+  "connection": UUID;
+  "document": UUID;
+  "requisites"?: DocflowRequisites;
+  /** Примечание документа у оператора */
+  "comment"?: string;
+  /** Произвольные файлы рядом с формализованным: договор, спецификация, скан доверенности. Оператор их не разбирает и печатную форму по ним не строит. Уходят по одному после титула: у оператора предел на файл и на запрос, а договор со сканами берёт его легко. На предполётной проверке не участвуют */
+  "files"?: Array<DocflowOutgoingFile>;
+}
+
+/** СвДоверБум: бумажная доверенность. Обязательна ровно при способе подтверждения полномочий 5. */
+export interface DocflowPaperPoARequisites {
+  "number"?: string;
+  "issued_at"?: string;
+  "info"?: string;
+  "surname"?: string;
+  "name"?: string;
+  "patronymic"?: string;
+}
+
+/** Дополнение к карточке участника сделки. */
+export interface DocflowPartyRequisites {
+  /** СокрНаим */
+  "short_name"?: string;
+  /** ОКПО. В карточке юрлица его нет вовсе */
+  "okpo"?: string;
+  /** СтруктПодр */
+  "division"?: string;
+  /** ИнфДляУчаст */
+  "info"?: string;
+  "person"?: DocflowPersonRequisites;
+  /** ОГРНИП предпринимателя, 15 цифр. В карточке лежит ОГРН, а это разные номера, и подставлять один вместо другого нельзя */
+  "ogrnip"?: string;
+  "address"?: DocflowAddressRequisites;
+  "bank"?: DocflowBankRequisites;
+  "contact"?: DocflowContactRequisites;
+}
+
+/** СвПРД: платёжно-расчётный документ. */
+export interface DocflowPaymentDocumentRequisites {
+  "number"?: string;
+  "date"?: string;
+  "amount"?: string;
+}
+
+/** ФИО предпринимателя или физического лица. Спрашивается, потому что в карточке контрагента имя лежит ОДНОЙ строкой («ИП Иванов Иван Иванович»), а формат требует фамилию, имя и отчество порознь. Разобрать строку догадкой нельзя: «Ли Ван Чуань» и «Иванов Иван» ломают любое правило, а ошибка в ФИО подписанта — это недействительный счёт-фактура. */
+export interface DocflowPersonRequisites {
+  "surname"?: string;
+  "name"?: string;
+  "patronymic"?: string;
+}
+
+/** Ответ на вопрос «соберётся ли документ и что уйдёт». Не булево «годится», а список непройденных проверок плюс разложенная товарная таблица: отказ приёмки приходит от контрагента через сутки и звучит невнятно, а эта проверка обязана назвать всё сразу. */
+export interface DocflowPreflight {
+  /** Редакция формата ФНС */
+  "format_version": string;
+  /** Функция документа: СЧФ — счёт-фактура, ДОП — документ о передаче, СЧФДОП — оба сразу. Пусто у ответного титула покупателя: функции у него нет вовсе */
+  "function": string;
+  /** Соберётся ли документ прямо сейчас. Это НЕ «всё в порядке»: суммы всё равно смотрят глазами, потому что налог считаем мы */
+  "ready": boolean;
+  /** Всегда массив, даже пустой: null означал бы «не проверяли», а проверяли всегда */
+  "issues": Array<DocflowIssue>;
+  /** Имя файла обмена, если он собирается. Пустое, пока не собирается: имя — часть формата, и показывать выдуманное нельзя */
+  "file_name": string;
+  "totals": DocflowPreflightTotals;
+  "document": DocflowPreflightDocument;
+  "seller": DocflowPreflightParty;
+  "buyer": DocflowPreflightParty;
+  /** Товарная таблица с посчитанным налогом. У ответного титула покупателя пуста: он отвечает на документ продавца, а не повторяет его */
+  "lines": Array<DocflowPreflightLine>;
+}
+
+/** Учётный документ кабинета, который формализуем. */
+export interface DocflowPreflightDocument {
+  "id": UUID;
+  "number": string;
+  /** Календарная дата документа ГГГГ-ММ-ДД */
+  "date": string;
+  /** Ключ вида документа в кабинете */
+  "type_key": string;
+  "type_name": string;
+  /** Состояние учётного документа в кабинете */
+  "status": string;
+}
+
+/** Строка товарной таблицы с посчитанным налогом. Показывается человеку целиком и ДО отправки, потому что налог считаем мы: карточка юрлица хранит только общее умолчание, а сумма НДС — наш вывод из фактической ставки строки и признака «цены с налогом». Вывод, который человек не увидел, он не проверил. */
+export interface DocflowPreflightLine {
+  /** Порядковый номер строки в файле с единицы */
+  "number": number;
+  "line_id": UUID;
+  "name": string;
+  /** Код ОКЕИ из карточки единицы измерения либо явное исключение этого отправления */
+  "unit_code": string;
+  "unit_name": string;
+  "quantity": string;
+  /** Цена единицы без налога */
+  "price": string;
+  /** Ставка словами приказа: «20%», «без НДС», «НДС исчисляется налоговым агентом» и прочие значения перечня */
+  "vat_rate": string;
+  /** Сумма налога. Пуста при ставке «без НДС»: формат требует там не нулевую сумму, а отметку об отсутствии налога, и ноль вместо неё — другое утверждение */
+  "vat_amount": string;
+  "amount_without_vat": string;
+  "amount_with_vat": string;
+}
+
+/** Сторона сделки в том виде, в каком она уедет в файл. */
+export interface DocflowPreflightParty {
+  "name": string;
+  "inn": string;
+  "kpp": string;
+  /** Вид участника из карточки: legal, sole_prop, individual. От него зависит, какую ветвь формата заполнять: у предпринимателя вместо наименования организации ФИО */
+  "entity_type": string;
+  /** Прежний адрес одной строкой для карточек, заведённых до структурированного адреса. Сервер не разбирает его на части догадкой: «улица Мира, 1» и «Мира, 1» неотличимы от «город Мира» ни одним правилом. Новая карточка подставляет готовые части прямо в реквизиты формата. */
+  "address_hint": string;
+}
+
+/** Итоги товарной таблицы. Складываются из уже напечатанных строк, а не пересчитываются от исходных величин: итог обязан сойтись со строками до копейки. */
+export interface DocflowPreflightTotals {
+  /** Стоимость без налога */
+  "without_vat": string;
+  /** Сумма налога */
+  "vat": string;
+  /** Стоимость с налогом */
+  "with_vat": string;
+}
+
+/**
+ * Исключения одного отправления поверх повторяющихся реквизитов карточек юрлица, контрагента и единицы измерения. Здесь остаются ставка отдельной строки, выбранный расчётный счёт, подписант, содержание операции и идентификаторы участников обмена. У одного и того же товара в разных накладных ставка бывает разной.
+ * 
+ * Каждое поле отвечает ровно одному реквизиту приказа, и имя ФНС названо в его описании. Все поля необязательны: чего не прислали, то и покажет предполётная проверка. Явное значение отправления сильнее карточки; валютой по умолчанию остаётся рубль.
+ */
+export interface DocflowRequisites {
+  /** Функция: перечень закрыт, потому что это перечень приказа */
+  "function"?: "СЧФ" | "ДОП" | "СЧФДОП";
+  /** НаимДокОпр: наименование документа, определённое сторонами сделки */
+  "document_kind_name"?: string;
+  /** ВерсПрог. Пустое значение подставляет сервер: версию приложения знает он, а не человек в форме */
+  "program_version"?: string;
+  /** Сумма строки уже содержит налог. Признак спрашивается, а не угадывается: сумма 1200 законно означает и «1200 без налога», и «1200 с налогом», а ошибка стоит расхождения в декларации */
+  "prices_include_vat"?: boolean;
+  /** НалСт по умолчанию для всех строк. Строка вправе назвать свою */
+  "vat_rate"?: string;
+  "currency"?: DocflowCurrencyRequisites;
+  "file"?: DocflowFileRequisites;
+  "seller"?: DocflowPartyRequisites;
+  "buyer"?: DocflowPartyRequisites;
+  /** Грузоотправитель — сам продавец */
+  "shipper_same_as_seller"?: boolean;
+  "transfer"?: DocflowTransferRequisites;
+  /** Транспортные и сопроводительные документы */
+  "shipment_documents"?: Array<DocflowDocumentRefRequisites>;
+  /** СвПРД: платёжно-расчётные документы */
+  "payment_documents"?: Array<DocflowPaymentDocumentRequisites>;
+  "signers"?: Array<DocflowSignerRequisites>;
+  /** ИнфПолФХЖ1: дополнительные сведения факта хозяйственной жизни */
+  "extra"?: Array<DocflowTextInfoRequisites>;
+  "lines"?: Array<DocflowLineRequisites>;
+}
+
+/** Подпись под вложением или под пакетом целиком. Подписей под одним файлом несколько — наша и контрагента, — и каждая приходит своим файлом со своим сертификатом. */
+export interface DocflowSignature {
+  "id": UUID;
+  "message": UUID;
+  "attachment"?: UUID;
+  "side": "ours" | "counterparty";
+  "signer_name": string;
+  "signer_position": string;
+  "certificate": DocflowCertificate;
+  /** Номер машиночитаемой доверенности. С 2023 года подпись сотрудника без неё недействительна */
+  "poa_number": string;
+  "signed_at"?: string;
+  /** Контейнер подписи скачан к нам и открывается отдельной операцией */
+  "stored": boolean;
+  "created_at": string;
+}
+
+/** Какой подписи ждёт оператор. Форма подписи — свойство ЗАДАНИЯ, а не константа кода: смена решения оператора меняет значения здесь, и больше ничего. */
+export interface DocflowSignatureShape {
+  "profile": "cades-bes" | "cades-t" | "cades-x-long-type-1" | "pkcs7";
+  /** Открепленная подпись отдельным файлом */
+  "detached": boolean;
+  /** Служба штампов времени. null означает, что штамп не нужен */
+  "timestamp_url": string | null;
+}
+
+/** Результат подписания, вычисленный КриптоПро на машине человека. */
+export interface DocflowSignatureSubmission {
+  /** Контейнер CMS/PKCS#7 в Base64, без префикса data: */
+  "signature": string;
+  /** Отпечаток сертификата. Обязателен: оператор не помнит его между подготовкой и выполнением действия и иначе выберет сертификат сам */
+  "certificate_thumbprint": string;
+  /** Открытая часть сертификата Base64. Удобство, а не обязанность: найти сертификат оператор умеет и по отпечатку */
+  "certificate"?: string;
+  /** Время по часам браузера; хранится справкой */
+  "signed_at"?: string;
+  "attorney"?: DocflowAttorneySubmission;
+}
+
+/** Подписант: кто и на каком основании подписывает документ. */
+export interface DocflowSignerRequisites {
+  /** Должн */
+  "position"?: string;
+  /** ТипПодпис */
+  "kind"?: string;
+  /** Способ подтверждения полномочий. От него зависит, какая доверенность обязательна */
+  "authority"?: string;
+  /** ДатаПодДок */
+  "signed_at"?: string;
+  /** ДопСведПодп */
+  "info"?: string;
+  "surname"?: string;
+  "name"?: string;
+  "patronymic"?: string;
+  "electronic_poa"?: DocflowElectronicPoARequisites;
+  "paper_poa"?: DocflowPaperPoARequisites;
+}
+
+/** То, что подлежит подписи. Data всегда Base64, без префикса data:. */
+export interface DocflowSigningPayload {
+  /** content — подписывается содержимое файла, хеш считает КриптоПро на машине человека; digest — готовый хеш оператора */
+  "form": "content" | "digest";
+  /** Base64 в обеих формах */
+  "data": string;
+  /** Чем посчитан хеш. Обязателен при form=digest и отсутствует иначе */
+  "digest_algorithm"?: "gost3411-2012-256" | "gost3411-2012-512" | "gost3411-94";
+}
+
+/** Чем кончилась приёмка подписи. */
+export interface DocflowSigningResult {
+  "task": DocflowSigningTask;
+  "action": DocflowActionResult;
+  "signature"?: UUID;
+}
+
+/** Задание на подпись. Ни ключа, ни контейнера, ни пина здесь нет и быть не может: подпись вычисляет КриптоПро на машине человека, сервер о ней узнаёт только результатом. */
+export interface DocflowSigningTask {
+  "id": UUID;
+  "message_id": UUID;
+  "attachment_id"?: UUID;
+  "file_name": string;
+  "payload": DocflowSigningPayload;
+  "signature": DocflowSignatureShape;
+  /** Требование машиночитаемой доверенности. Флага «требуется доверенность» у оператора нет: значение выводится из того, что он сказал о сертификатах */
+  "attorney": "none" | "optional" | "required";
+  "status": "pending" | "signed" | "expired";
+  "expires_at": string;
+  /** Отметка ПРИЁМКИ подписи сервером; часы браузера доказательством не служат */
+  "signed_at"?: string | null;
+  "created_at": string;
+}
+
+/** Просьба выдать задание на подпись. */
+export interface DocflowSigningTaskInput {
+  "message_id": UUID;
+  "attachment_id"?: UUID;
+  /** Идентификатор этапа у оператора. Не нужен в обычном сценарии: этап выбирает сервер по тому, что сказал оператор */
+  "stage"?: string;
+  /** Код команды оператора; нужен, когда на этапе их несколько */
+  "action"?: string;
+}
+
+export interface DocflowSigningTaskList {
+  "count": number;
+  "results": Array<DocflowSigningTask>;
+}
+
+/** Этап документооборота: что с пакетом можно сделать сейчас. Список действий приходит от ОПЕРАТОРА и не выводится из нашего состояния. */
+export interface DocflowStage {
+  "id": UUID;
+  "message": UUID;
+  /** Идентификатор этапа у оператора; он же адресует действие */
+  "external_id": string;
+  "name": string;
+  "actions": Array<DocflowStageAction>;
+  /** Этап закрывается подписью. Признак оператора, а не наш вывод из названия */
+  "requires_signature": boolean;
+  /** Ход не за нами. Закрытые этапы не показываются и не считаются */
+  "closed": boolean;
+  "created_at": string;
+  "updated_at": string;
+}
+
+/** Действие, которое оператор разрешает на этапе. Код отправляют оператору, надпись показывают человеку. */
+export interface DocflowStageAction {
+  "code": string;
+  "name": string;
+}
+
+/** Ссылка на строку очереди этапов. Пустое тело означает единственный незакрытый этап пакета: у обычного документа он один, и требовать его имя не с чего. */
+export interface DocflowStageRef {
+  /** Идентификатор этапа у оператора */
+  "stage"?: string;
+  /** Название этапа словами оператора */
+  "stage_name"?: string;
+  /** Название действия этапа: очередь у оператора адресуется этапом ВМЕСТЕ с действием, а не одним этапом */
+  "action"?: string;
+}
+
+/** Итог одного прохода синхронизации ленты оператора. */
+export interface DocflowSyncOutcome {
+  /** Итог самого прохода. skipped означает, что прохода не было: подключение работает в режиме только чтения */
+  "run_status": "ok" | "failed" | "skipped";
+  /** Состояние подключения после прохода */
+  "status": "connected" | "paused" | "error" | "reauth_required" | "disconnected";
+  /** Неудача чинится временем: повторится сама, человек не нужен */
+  "retry": boolean;
+  /** Машинный код неудачи (docflow.edo.*); пусто при удаче */
+  "error_code": string;
+  /** Слова оператора и только они; пусто при удаче */
+  "provider_message": string;
+}
+
+/** Пара «идентификатор — значение» дополнительных сведений. */
+export interface DocflowTextInfoRequisites {
+  "id"?: string;
+  "value"?: string;
+}
+
+/** Строка исходящего титула. Одна форма на оба вида: титул продавца (КНД 1115131) и титул покупателя (КНД 1115132) — разные файлы разных схем, но судьба у них одна: собрать XML, положить в хранилище, записать оператору, запомнить, чем он ответил. Самого XML здесь нет: он лежит в объектном хранилище кабинета и выдаётся отдельным маршрутом, а ключ к нему наружу не уходит. */
+export interface DocflowTitle {
+  "id": UUID;
+  "connection": UUID;
+  /** seller — титул продавца по учётному документу кабинета; buyer — ответный титул покупателя на входящий пакет */
+  "kind": "seller" | "buyer";
+  /** Учётный документ кабинета у титула продавца. Ссылка мягкая: документа нет — титул показывается как титул по удалённому документу */
+  "document": string | null;
+  /** Пакет зеркала. У титула покупателя — входящий, на который отвечаем; у титула продавца — НАШ конверт, найденный синхронизацией после записи оператору */
+  "message": string | null;
+  /** Редакция формата ФНС */
+  "format_version": string;
+  /** Функция документа: СЧФ, ДОП, СЧФДОП. Пусто у титула покупателя */
+  "function": string;
+  "requisites": DocflowRequisites;
+  /** Имя файла обмена ФНС. Повторяется внутри файла в ИдФайл: пересобранный титул обязан быть тем же самым */
+  "file_name": string;
+  /** Хеш отправленных байтов. Остаётся затем же, зачем он есть у вложения зеркала: доказать спустя годы, что отправляли именно эти байты */
+  "content_sha256": string;
+  "content_size_bytes": number;
+  /** Идентификатор документа у оператора. НАШ и заданный нами: без него каждый повтор отправки создавал бы у оператора новый документ */
+  "external_doc_id": string;
+  /** Идентификатор вложения с титулом у оператора */
+  "external_attachment_id": string;
+  /** «Собран» отделён от «записан» намеренно: между ними стоит оператор, и его отказ не отменяет сборки — файл уже лежит в хранилище */
+  "status": "draft" | "built" | "written" | "failed";
+  /** Наш машинный код последней неудачи (docflow.edo.*); его переводит интерфейс */
+  "last_error_code": string;
+  /** СЛОВА ОПЕРАТОРА и только они; показываются как есть */
+  "last_error": string;
+  "created_by_user_id": number | null;
+  "created_at": string;
+  "updated_at": string;
+}
+
+export interface DocflowTitleList {
+  "count": number;
+  "results": Array<DocflowTitle>;
+}
+
+/** СвПродПер: сведения о передаче товара, работы или услуги. */
+export interface DocflowTransferRequisites {
+  /** СодОпер */
+  "operation"?: string;
+  /** ВидОпер */
+  "kind"?: string;
+  /** ДатаПер в форме ГГГГ-ММ-ДД. Пустая означает дату самого документа: отгрузка датой накладной — обычный случай */
+  "date"?: string;
+  /** ДатаНачПер */
+  "period_start"?: string;
+  /** ДатаОконПер */
+  "period_end"?: string;
+  /** ОснПер: документы-основания передачи */
+  "basis"?: Array<DocflowDocumentRefRequisites>;
+  /** БезДокОснПер. Формат требует ВЫБОРА: либо перечень оснований, либо прямая отметка «основания нет». Умолчания у выбора нет */
+  "without_basis"?: boolean;
+  "employee"?: DocflowEmployeeRequisites;
+}
+
 /** Владелец задаётся одной ссылкой `task`, `section`, `project`, `milestone` либо парой `owner_type`/`owner_id`. */
 export interface DocumentCreate {
   "owner_type"?: DocumentOwnerType;
@@ -4451,6 +5530,7 @@ export interface FinanceBalanceReport {
   "passive_total": string;
   "retained_earnings": string;
   "difference": string;
+  "accounting_basis"?: AccountingBasis;
 }
 
 export interface FinanceBalanceSection {
@@ -5550,6 +6630,7 @@ export interface FinancePnlReport {
   "layout"?: FinancePnlReportLayout;
   "columns": Array<FinanceReportColumn>;
   "companies"?: Array<FinanceReportCompany>;
+  "accounting_basis"?: AccountingBasis;
 }
 
 export interface FinancePnlReportLayout {
@@ -5755,6 +6836,19 @@ export interface FinanceReportCompany {
   "name": string;
 }
 
+export interface FinanceRequisitesAddress {
+  "postal_code": string;
+  "region_code": string;
+  "region_name": string;
+  "district": string;
+  "city": string;
+  "settlement": string;
+  "street": string;
+  "building": string;
+  "block": string;
+  "flat": string;
+}
+
 export interface FinanceRequisitesBank {
   "name": string;
   "bic": string;
@@ -5773,11 +6867,26 @@ export interface FinanceRequisitesLookup {
 export interface FinanceRequisitesParty {
   "name": string;
   "full_name": string;
+  "entity_type": "LEGAL" | "INDIVIDUAL" | "";
   "inn": string;
   "kpp": string;
   "ogrn": string;
+  "okpo": string;
   "address": string;
+  "address_parts": FinanceRequisitesAddress;
+  "entrepreneur": FinanceRequisitesPerson;
   "status": string;
+}
+
+export interface FinanceRequisitesPerson {
+  "surname": string;
+  "name": string;
+  "patronymic": string;
+}
+
+export interface FinanceRequisitesSuggestions {
+  "suggestions": Array<FinanceRequisitesParty>;
+  "directory_configured": boolean;
 }
 
 export interface FinanceResponsiblePatch {
@@ -9282,40 +10391,79 @@ export interface SettingsAppVersion {
 
 export interface SettingsCompany {
   "id": UUID;
+  "business_id": UUID;
   "name": string;
   "legal_name": string;
+  /** Юридическое лицо или индивидуальный предприниматель */
+  "entity_type": "legal" | "sole_prop";
   /** Пустой только у юрлица внутреннего учёта */
   "inn": string;
   "kpp": string;
+  /** ОГРН у юрлица или ОГРНИП у предпринимателя */
+  "ogrn": string;
+  /** ОКПО; необязательный реквизит формализованного документа */
+  "okpo": string;
+  /** Код филиала у оператора ЭДО; не КПП */
+  "branch_code": string;
+  /** Ставка НДС по умолчанию для новых строк документа; конкретная строка вправе её заменить */
+  "default_vat_rate": string;
+  /** Как по умолчанию трактовать цену при выбранной ставке НДС */
+  "prices_include_vat": boolean;
+  "legal_address": SettingsCompanyAddress;
+  "entrepreneur": SettingsCompanyPerson;
   "is_active": boolean;
-  /** Псевдо-юрлицо «Внутренний учёт» — контур неофициальных касс, одно на кабинет */
-  "is_internal": boolean;
-  /** Метод учёта cash или accrual; на этой поверхности всегда приходит пустым, потому что накладка справочника его не переносит */
-  "accounting_method": string;
-  /** Дата перехода на accrual; на этой поверхности не приходит никогда */
+  /** Метод признания выручки: по деньгам или по начислению */
+  "accounting_method": "cash" | "accrual";
+  /** Дата перехода на accrual; отсутствует у кассового метода */
   "accrual_from"?: string;
 }
 
-export interface SettingsCompanyAccountingMethodInput {
-  /** Значение приводится к нижнему регистру */
-  "method": "cash" | "accrual";
-  /** Дата перехода на начисление; обязательна при accrual и не используется при cash */
-  "accrual_from"?: string;
+export interface SettingsCompanyAddress {
+  "postal_code": string;
+  /** Код субъекта РФ для формализованного документа */
+  "region_code": string;
+  "region_name": string;
+  "district": string;
+  "city": string;
+  "settlement": string;
+  "street": string;
+  "building": string;
+  "block": string;
+  /** Офис или помещение */
+  "flat": string;
+  /** Дополнение, которое не раскладывается по остальным частям адреса */
+  "info": string;
 }
 
 export interface SettingsCompanyInput {
+  "business_id": UUID;
   /** Пробельное название отклоняется */
   "name": string;
   "legal_name"?: string;
+  /** Если не передан, определяется по длине нормализованного ИНН */
+  "entity_type"?: "legal" | "sole_prop";
   /** Проверяется контрольной цифрой; пустой ИНН отклоняется */
   "inn": string;
   "kpp"?: string;
+  "ogrn"?: string;
+  "okpo"?: string;
+  "branch_code"?: string;
+  "default_vat_rate"?: string;
+  "prices_include_vat"?: boolean;
+  "legal_address"?: SettingsCompanyAddress;
+  "entrepreneur"?: SettingsCompanyPerson;
 }
 
 export interface SettingsCompanyPage {
   /** Число отданных строк, страниц у справочника нет */
   "count": number;
   "results": Array<SettingsCompany>;
+}
+
+export interface SettingsCompanyPerson {
+  "surname": string;
+  "name": string;
+  "patronymic": string;
 }
 
 export interface SettingsFieldDefinition {
@@ -10433,6 +11581,10 @@ export interface StockWarehouse {
   "responsible_employee_id": UUID | null;
   "is_active": boolean;
   "sort_order": number;
+  /** Внутри склада работают зоны — приход разрешён только в подчинённую зону */
+  "zones_enabled": boolean;
+  /** На самом зональном складе ещё лежит остаток, оставшийся с момента включения зон */
+  "needs_allocation": boolean;
   /** Пустой список означает доступность склада всем активным юрлицам кабинета */
   "company_ids": Array<UUID>;
   "created_at": string;
@@ -10477,6 +11629,50 @@ export interface StockWarehousePatch {
   "responsible_employee_id"?: UUID | null;
   "sort_order"?: number;
   "company_ids"?: Array<UUID>;
+}
+
+export interface StockWarehouseZoneInput {
+  /** Название зоны; код зоны присваивает сервер */
+  "name": string;
+}
+
+export interface StockZoneAllocation {
+  "warehouse_id": UUID;
+  "zones_enabled": boolean;
+  "direction": "to_zones" | "to_warehouse";
+  "zones": Array<StockWarehouse>;
+  "rows": Array<StockZoneStockRow>;
+  /** Незавершённая матрица разнесения; у обратного переноса всегда null, потому что выключение атомарно */
+  "draft"?: StockZoneAllocationInput | null;
+}
+
+export interface StockZoneAllocationInput {
+  /** Пусто — бизнес-дата кабинета */
+  "date"?: string;
+  "lines": Array<StockZoneAllocationLine>;
+}
+
+export interface StockZoneAllocationLine {
+  "company_id": UUID;
+  "product_id": UUID;
+  "zone_id": UUID;
+  "quantity": string;
+}
+
+export interface StockZoneAllocationResult {
+  "warehouse": StockWarehouse;
+  /** Проведённые перемещения — по одному на пару «юрлицо и зона» */
+  "documents": Array<CoreDocument>;
+  /** Остаток, который после разнесения всё ещё ждёт на складе */
+  "remaining": Array<StockZoneStockRow>;
+}
+
+export interface StockZoneStockRow {
+  "warehouse_id": UUID;
+  "company_id": UUID;
+  "product_id": UUID;
+  /** Точное decimal-количество строкой */
+  "quantity": string;
 }
 
 export interface Subtask {

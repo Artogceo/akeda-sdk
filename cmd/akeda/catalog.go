@@ -48,14 +48,18 @@ func commandCatalog(options globals, args []string) error {
 	}
 
 	if section == "all" || section == "points" {
-		fmt.Printf("точки расширения (%d)\n", len(catalog.ExtensionPoints))
+		fmt.Printf("точки расширения (%d), модели ответа: %s\n",
+			len(catalog.ExtensionPoints), strings.Join(catalog.PointModels, ", "))
 		for _, point := range catalog.ExtensionPoints {
-			fmt.Printf("  %-38s %-5s %s\n", point.Key, point.Model, point.Summary)
+			fmt.Printf("  %-34s %-7s %s\n", point.Key, point.Model, point.Summary)
 			if point.RequestTopic != "" {
-				fmt.Printf("  %-38s запрос темой %s, ответ операцией %s\n", "", point.RequestTopic, point.ResponseOperation)
+				fmt.Printf("  %-34s запрос темой %s, ответ операцией %s\n", "", point.RequestTopic, point.ResponseOperation)
 			}
 			if len(point.Scopes) > 0 {
-				fmt.Printf("  %-38s области: %s\n", "", strings.Join(point.Scopes, ", "))
+				fmt.Printf("  %-34s области: %s\n", "", strings.Join(point.Scopes, ", "))
+			}
+			if point.Sandboxed() {
+				fmt.Printf("  %-34s объявляется разделом functions: точка исполняет код, а не зовёт ваш адрес\n", "")
 			}
 		}
 		fmt.Println()
@@ -105,11 +109,23 @@ func catalogManifestRules(manifest map[string]any, catalog snapshot.PlatformCata
 		if key == "" {
 			continue
 		}
-		if _, known := catalog.PointOf(key); !known {
+		point, known := catalog.PointOf(key)
+		if !known {
 			add(fmt.Sprintf("$.extensionPoints[%d]", index),
 				"точки %q в каталоге нет; объявлены сегодня: %s", key, strings.Join(pointKeys, ", "))
+			continue
+		}
+		if point.Sandboxed() {
+			// Строка в `extensionPoints` обещает участие, которого не будет:
+			// песочничная точка исполняет КОД, а код объявляется артефактом в
+			// разделе `functions`. Без него точка молчалива — а кабинет уже
+			// подписал согласие.
+			add(fmt.Sprintf("$.extensionPoints[%d]", index),
+				"%q — песочничная точка, её объявляют разделом functions: без артефакта исполнять нечего", key)
 		}
 	}
+
+	issues = append(issues, functionRules(manifest, catalog)...)
 
 	for index, item := range asList(manifest["ui"]) {
 		entry, _ := item.(map[string]any)
@@ -187,6 +203,76 @@ func catalogManifestRules(manifest map[string]any, catalog snapshot.PlatformCata
 	}
 
 	sort.SliceStable(issues, func(i, j int) bool { return issues[i].Path < issues[j].Path })
+	return issues
+}
+
+// functionRules — раздел `functions`: код, который платформа исполняет У СЕБЯ,
+// в песочнице без сети, внутри операции кабинета.
+//
+// ГЛАВНАЯ ЗДЕСЬ — ВТОРАЯ ПРОВЕРКА. Функция, объявленная на сетевой точке,
+// ничего не сломает и ничего не сделает: диспетчер песочницы ищет свою точку, а
+// сетевой контур кода не исполняет. Кабинет при этом подпишет согласие с фразой
+// «проверяет документы перед проведением» и не получит ни одной проверки —
+// молчание, неотличимое от работы, и узнать о нём по жалобам нельзя.
+//
+// Отпечаток проверяется формой, а не содержимым: байтов артефакта здесь нет, и
+// сверяет их с отпечатком платформа при загрузке. Загрузку делает персонал
+// платформы — портала функций у издателя нет.
+func functionRules(manifest map[string]any, catalog snapshot.PlatformCatalog) []schemaIssue {
+	var issues []schemaIssue
+	add := func(path, format string, args ...any) {
+		issues = append(issues, schemaIssue{Path: path, Message: fmt.Sprintf(format, args...)})
+	}
+
+	requested := map[string]bool{}
+	permissions, _ := manifest["permissions"].(map[string]any)
+	for _, group := range []string{"required", "optional"} {
+		for _, item := range asList(permissions[group]) {
+			entry, _ := item.(map[string]any)
+			if scope, ok := entry["scope"].(string); ok {
+				requested[scope] = true
+			}
+		}
+	}
+
+	seen := map[string]bool{}
+	for index, item := range asList(manifest["functions"]) {
+		entry, _ := item.(map[string]any)
+		if entry == nil {
+			continue
+		}
+		where := fmt.Sprintf("$.functions[%d]", index)
+		key, _ := entry["key"].(string)
+
+		if key != "" {
+			if seen[key] {
+				add(where+".key", "имя функции %q объявлено дважды: журнал установки называет функцию именно им", key)
+			}
+			seen[key] = true
+		}
+
+		pointKey, _ := entry["point"].(string)
+		point, known := catalog.PointOf(pointKey)
+		if !known {
+			add(where+".point", "точки %q в каталоге нет; песочничные сегодня: %s",
+				pointKey, strings.Join(catalog.SandboxPointKeys(), ", "))
+			continue
+		}
+		if !point.Sandboxed() {
+			add(where+".point",
+				"точка %q не исполняет код расширения (модель %q): функция на ней не будет вызвана никогда; песочничные сегодня: %s",
+				pointKey, point.Model, strings.Join(catalog.SandboxPointKeys(), ", "))
+			continue
+		}
+		// Точку не зовут без одобренного права, и объявленная функция
+		// промолчала бы, не сказав почему.
+		for _, scope := range point.Scopes {
+			if !requested[scope] {
+				add(where+".point", "точка %q требует право %q, а манифест его не просит", pointKey, scope)
+			}
+		}
+	}
+
 	return issues
 }
 

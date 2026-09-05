@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a3e3b6127a35366107149251fc907a51b367bf2372bddd27c6782299b61707e).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a255440df951ca637e056f0155498f67bc7b34723eac197148cf9cab8906c7c3).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Literal, Optional, TypedDict, Union
 
 __all__ = [
+    "AccountingBasis",
     "Activity",
     "ActivityList",
     "AppFinanceClassificationSuggestionAccepted",
@@ -245,6 +246,7 @@ __all__ = [
     "CoreBalanceShortage",
     "CoreBulkResult",
     "CoreBusiness",
+    "CoreBusinessAccountingMethodInput",
     "CoreBusinessInput",
     "CoreBusinessOwner",
     "CoreBusinessOwnerInput",
@@ -254,6 +256,7 @@ __all__ = [
     "CoreChangeOp",
     "CoreConflictingRegistrar",
     "CoreContact",
+    "CoreContactAddress",
     "CoreContactBulkPatch",
     "CoreContactCreate",
     "CoreContactEntityType",
@@ -471,6 +474,79 @@ __all__ = [
     "DiscussionCommentPage",
     "DiscussionCommentUpdate",
     "DiscussionOwnerType",
+    "DocflowAcceptedDocument",
+    "DocflowActionResult",
+    "DocflowAddressRequisites",
+    "DocflowAttachment",
+    "DocflowAttorneySubmission",
+    "DocflowBankRequisites",
+    "DocflowBuyerTitleInput",
+    "DocflowCancellation",
+    "DocflowCancellationInput",
+    "DocflowCertificate",
+    "DocflowConnection",
+    "DocflowConnectionInput",
+    "DocflowConnectionList",
+    "DocflowConnectionModeInput",
+    "DocflowConnectionPatch",
+    "DocflowContactRequisites",
+    "DocflowCounterparty",
+    "DocflowCurrencyRequisites",
+    "DocflowDocumentRefRequisites",
+    "DocflowElectronicPoARequisites",
+    "DocflowEmployeeRequisites",
+    "DocflowEvent",
+    "DocflowFileRequisites",
+    "DocflowFormatIssues",
+    "DocflowIntakeCounterparty",
+    "DocflowIntakeInput",
+    "DocflowIntakeLine",
+    "DocflowIntakeLineInput",
+    "DocflowIntakeParty",
+    "DocflowIntakePreview",
+    "DocflowIntakeProductOption",
+    "DocflowIntakeResult",
+    "DocflowIntakeSource",
+    "DocflowIntakeTotals",
+    "DocflowInvitation",
+    "DocflowInvitationInput",
+    "DocflowInvitationPage",
+    "DocflowInvitationSender",
+    "DocflowIssue",
+    "DocflowLineRequisites",
+    "DocflowMarkRequisites",
+    "DocflowMessage",
+    "DocflowMessageActionInput",
+    "DocflowMessageList",
+    "DocflowOutgoingFile",
+    "DocflowOutgoingInput",
+    "DocflowPaperPoARequisites",
+    "DocflowPartyRequisites",
+    "DocflowPaymentDocumentRequisites",
+    "DocflowPersonRequisites",
+    "DocflowPreflight",
+    "DocflowPreflightDocument",
+    "DocflowPreflightLine",
+    "DocflowPreflightParty",
+    "DocflowPreflightTotals",
+    "DocflowRequisites",
+    "DocflowSignature",
+    "DocflowSignatureShape",
+    "DocflowSignatureSubmission",
+    "DocflowSignerRequisites",
+    "DocflowSigningPayload",
+    "DocflowSigningResult",
+    "DocflowSigningTask",
+    "DocflowSigningTaskInput",
+    "DocflowSigningTaskList",
+    "DocflowStage",
+    "DocflowStageAction",
+    "DocflowStageRef",
+    "DocflowSyncOutcome",
+    "DocflowTextInfoRequisites",
+    "DocflowTitle",
+    "DocflowTitleList",
+    "DocflowTransferRequisites",
     "DocumentCreate",
     "DocumentOwnerType",
     "DocumentPage",
@@ -636,9 +712,12 @@ __all__ = [
     "FinanceRegistersResyncResult",
     "FinanceReportColumn",
     "FinanceReportCompany",
+    "FinanceRequisitesAddress",
     "FinanceRequisitesBank",
     "FinanceRequisitesLookup",
     "FinanceRequisitesParty",
+    "FinanceRequisitesPerson",
+    "FinanceRequisitesSuggestions",
     "FinanceResponsiblePatch",
     "FinanceSettlementBalance",
     "FinanceSettlementBalancePage",
@@ -947,9 +1026,10 @@ __all__ = [
     "SettingsAppScopeActivity",
     "SettingsAppVersion",
     "SettingsCompany",
-    "SettingsCompanyAccountingMethodInput",
+    "SettingsCompanyAddress",
     "SettingsCompanyInput",
     "SettingsCompanyPage",
+    "SettingsCompanyPerson",
     "SettingsFieldDefinition",
     "SettingsFieldDefinitionInput",
     "SettingsFieldDefinitionPage",
@@ -1073,6 +1153,12 @@ __all__ = [
     "StockWarehouseInput",
     "StockWarehousePage",
     "StockWarehousePatch",
+    "StockWarehouseZoneInput",
+    "StockZoneAllocation",
+    "StockZoneAllocationInput",
+    "StockZoneAllocationLine",
+    "StockZoneAllocationResult",
+    "StockZoneStockRow",
     "Subtask",
     "Tag",
     "TagAttach",
@@ -1125,6 +1211,8 @@ __all__ = [
     "FinanceListDividendPoliciesResponse",
     "FinanceGetProjectBudgetHistoryResponse",
 ]
+
+AccountingBasis = Literal['cash', 'accrual', 'mixed']
 
 class Activity(TypedDict):
     id: "UUID"
@@ -2868,6 +2956,7 @@ class _ChatConversationRequired(TypedDict):
     created_at: str
     updated_at: str
     unread_count: int
+    first_unread_seq: Optional[int]
     manual_unread_seq: Optional[int]
     notification_mode: str
     mention_count: int
@@ -2930,6 +3019,8 @@ class ChatFolder(TypedDict):
     id: "UUID"
     name: str
     position: int
+    #: Верхний уровень списка; папка не может одновременно принадлежать обычным чатам и чатам задач.
+    space: Literal['chats', 'tasks']
     #: Разделы всегда возвращаются в порядке direct, group, task независимо от порядка в запросе.
     scopes: List[Literal['direct', 'group', 'task']]
     include_conversation_ids: List["UUID"]
@@ -3135,6 +3226,7 @@ class ChatReceiptState(TypedDict):
 
 class _ChatSaveFolderRequired(TypedDict):
     name: str
+    space: Literal['chats', 'tasks']
 
 class ChatSaveFolder(_ChatSaveFolderRequired, total=False):
     """Нужен непустой name и хотя бы один scope или один include_conversation_ids, иначе 400."""
@@ -3272,10 +3364,24 @@ class CoreBalanceShortage(TypedDict):
 class CoreBulkResult(TypedDict):
     updated: int
 
-class CoreBusiness(TypedDict):
+class _CoreBusinessRequired(TypedDict):
     id: "UUID"
     name: str
     is_active: bool
+    #: Что считать выручкой — cash это деньги, accrual это сделка
+    accounting_method: Literal['cash', 'accrual']
+
+class CoreBusiness(_CoreBusinessRequired, total=False):
+    #: Дата перехода на начисление; отсутствует у кассового бизнеса
+    accrual_from: str
+
+class _CoreBusinessAccountingMethodInputRequired(TypedDict):
+    #: Значение приводится к нижнему регистру
+    method: Literal['cash', 'accrual']
+
+class CoreBusinessAccountingMethodInput(_CoreBusinessAccountingMethodInputRequired, total=False):
+    #: Дата перехода на начисление; обязательна при accrual и не используется при cash
+    accrual_from: str
 
 class CoreBusinessInput(TypedDict):
     name: str
@@ -3358,6 +3464,7 @@ class CoreContact(TypedDict):
     kpp: str
     ogrn: str
     address: str
+    legal_address: "CoreContactAddress"
     bank_name: str
     bank_bic: str
     bank_account: str
@@ -3366,6 +3473,21 @@ class CoreContact(TypedDict):
     is_active: bool
     created_at: str
     updated_at: str
+
+class CoreContactAddress(TypedDict):
+    postal_code: str
+    #: Код субъекта РФ для формализованного документа
+    region_code: str
+    region_name: str
+    district: str
+    city: str
+    settlement: str
+    street: str
+    building: str
+    block: str
+    #: Офис или помещение
+    flat: str
+    info: str
 
 class _CoreContactBulkPatchRequired(TypedDict):
     ids: List["UUID"]
@@ -3392,6 +3514,7 @@ class CoreContactCreate(_CoreContactCreateRequired, total=False):
     kpp: str
     ogrn: str
     address: str
+    legal_address: "CoreContactAddress"
     bank_name: str
     bank_bic: str
     bank_account: str
@@ -3421,6 +3544,7 @@ class CoreContactPatch(TypedDict, total=False):
     kpp: str
     ogrn: str
     address: str
+    legal_address: "CoreContactAddress"
     bank_name: str
     bank_bic: str
     bank_account: str
@@ -4639,12 +4763,15 @@ class _CoreRegisterTurnoverRowRequired(TypedDict):
 class CoreRegisterTurnoverRow(_CoreRegisterTurnoverRowRequired, total=False):
     period: str
 
-class CoreTrialBalance(TypedDict):
+class _CoreTrialBalanceRequired(TypedDict):
     date_from: str
     date_to: str
     currency: str
     rows: List["CoreTrialBalanceRow"]
     totals: "CoreTrialBalanceTotals"
+
+class CoreTrialBalance(_CoreTrialBalanceRequired, total=False):
+    accounting_basis: "AccountingBasis"
 
 class CoreTrialBalanceRow(TypedDict):
     account_id: "UUID"
@@ -5156,6 +5283,1080 @@ class DiscussionCommentUpdate(TypedDict, total=False):
 
 DiscussionOwnerType = Literal['task', 'section', 'project', 'document', 'milestone', 'customer_need', 'pull_request']
 
+class DocflowAcceptedDocument(TypedDict):
+    """Учётный документ кабинета, заведённый приёмкой."""
+
+    id: "UUID"
+    #: Наш номер из нумератора кабинета. Номер продавца лежит в содержимом документа: занять им наш сквозной счётчик значит однажды получить два своих документа с одним номером от двух разных поставщиков
+    number: str
+    #: Дата документа ГГГГ-ММ-ДД. По умолчанию это дата документа поставщика: операция произошла тогда, когда её совершил он, и датировать её днём приёмки значит поставить факт не в тот период
+    date: str
+    #: Ключ вида документа; у приёмки docflow_incoming
+    type_key: str
+    #: Имя вида в кабинете. Право клиента: вид можно переименовать, и код держит его за ключ, а не за название
+    type_name: str
+    #: Состояние учётного документа. Приёмка заводит ЧЕРНОВИК: проведение принадлежит модулям — владельцам регистров
+    status: str
+    #: Документ помечен на удаление. Такой пакет принимается заново: пометка и есть способ сказать «этот документ ошибочный»
+    marked_deleted: bool
+    #: Момент приёмки; пусто, если он не записан
+    accepted_at: str
+
+class DocflowActionResult(TypedDict):
+    """Чем оператор ответил на выполненное действие."""
+
+    #: Идентификатор действия у оператора
+    id: str
+    #: Новое состояние кодом оператора
+    state: str
+    #: Новое состояние словами оператора
+    state_name: str
+
+class DocflowAddressRequisites(TypedDict, total=False):
+    """АдрРФ: структурный российский адрес. Только российский: адрес по ГАР требует идентификатора адресного объекта из государственного реестра, которого в карточках Akeda нет, а иностранный адрес у продавца-резидента не встречается. Карточки юрлица и контрагента хранят такой адрес частями; объект отправления позволяет задать исключение."""
+
+    #: Индекс
+    postal_code: str
+    #: КодРегион
+    region_code: str
+    #: НаимРегион
+    region_name: str
+    #: Район
+    district: str
+    #: Город
+    city: str
+    #: НаселПункт
+    settlement: str
+    #: Улица
+    street: str
+    #: Дом
+    building: str
+    #: Корпус
+    block: str
+    #: Кварт
+    flat: str
+    #: ИныеСвед
+    info: str
+
+class _DocflowAttachmentRequired(TypedDict):
+    id: "UUID"
+    message: "UUID"
+    #: Идентификатор вложения у оператора
+    external_id: str
+    #: Имя файла словами оператора
+    name: str
+    #: Наш словарь, а не оператора: документ, ответный титул, служебное извещение. Пусто означает, что вид неизвестен, и это законно
+    kind: Literal['', 'document', 'title', 'notice']
+    content_type: str
+    size_bytes: int
+    sha256: str
+    #: Байты скачаны и лежат у НАС. Ссылка оператора хранилищем не считается: она живёт около месяца, а накладную спрашивают через три года
+    stored: bool
+    created_at: str
+
+class DocflowAttachment(_DocflowAttachmentRequired, total=False):
+    """Файл внутри пакета. Внутреннего пути в хранилище здесь нет: снаружи файл получают отдельной операцией, а путь не часть контракта и не подсказка для перебора."""
+
+    downloaded_at: str
+
+class _DocflowAttorneySubmissionRequired(TypedDict):
+    #: Единый регистрационный номер доверенности в реестре ФНС
+    registry_number: str
+
+class DocflowAttorneySubmission(_DocflowAttorneySubmissionRequired, total=False):
+    """Машиночитаемая доверенность при подписи. Прикладывается ИДЕНТИФИКАТОРОМ в реестре ФНС, а не файлом: поля для тела доверенности у оператора нет вовсе. Поля content и content_signature приняты потому, что их присылает браузерный контур, и оператору они не передаются."""
+
+    principal_inn: str
+    issued_at: str
+    expires_at: str
+    #: Тело доверенности Base64. Оператору не передаётся
+    content: str
+    #: Подпись под телом доверенности Base64. Оператору не передаётся
+    content_signature: str
+
+class DocflowBankRequisites(TypedDict, total=False):
+    """БанкРекв: банковские реквизиты участника. У юрлица кабинета их нет вовсе."""
+
+    #: НомерСчета
+    account: str
+    #: НаимБанк
+    name: str
+    #: БИК
+    bic: str
+    #: КорСчет
+    corr_account: str
+
+class DocflowBuyerTitleInput(TypedDict, total=False):
+    """Ответный титул покупателя на входящий пакет. Сам пакет назван в адресе, реквизиты продавца сервер читает из его файла в пакете."""
+
+    #: КодИтога: 1 — принято без разногласий, 2 — с разногласиями, 3 — не принято
+    result: str
+    #: ДатаПрин в форме ГГГГ-ММ-ДД
+    accepted_at: str
+    #: СодОпер. Формат ЗАПРЕЩАЕТ его при итоге «не принято»: «не приняли» — это отсутствие операции приёмки, а не операция с описанием
+    operation: str
+    #: НаимДокОпрПр: наименование документа, определённое сторонами сделки. В титуле покупателя обязательно ВСЕГДА, в отличие от титула продавца, где оно зависит от функции
+    document_kind_name: str
+    #: Функция документа продавца, на который отвечаем. Пустое значение сервер берёт из его файла
+    function: str
+    #: Номер документа продавца
+    number: str
+    #: Дата документа продавца
+    date: str
+    disagreement: "DocflowDocumentRefRequisites"
+    employee: "DocflowEmployeeRequisites"
+    signers: List["DocflowSignerRequisites"]
+    file: "DocflowFileRequisites"
+    extra: List["DocflowTextInfoRequisites"]
+
+class DocflowCancellation(TypedDict):
+    """Соглашение сторон об аннулировании документа. Запускает его любая сторона, а решает вторая: согласие даёт состояние 22 «Документ аннулирован», отказ — состояние 40 «Аннулирование отклонено», при котором состояние самого документа НЕ меняется. Шаг цепочки выводится из ленты СОБЫТИЙ пакета, а не из кода состояния: состояние 27 «Ожидает аннулирования» оператор отдаёт только отдельным методом выборки по событиям."""
+
+    #: Шаг цепочки: none — её нет; requested — ждём решения; agreed — аннулирован по соглашению; refused — в аннулировании отказано, и документ остался действующим
+    state: Literal['none', 'requested', 'agreed', 'refused']
+    #: Слова ОПЕРАТОРА о состоянии, когда оно относится к аннулированию. Своего перевода состояний у нас нет и быть не должно
+    state_name: str
+    #: Кто запустил цепочку. Пусто означает «неизвестно», а не «мы»
+    initiator: Literal['', 'us', 'counterparty']
+    #: Причина словами того, кто её написал. Не переводится
+    reason: str
+    requested_at: Optional[str]
+    decided_at: Optional[str]
+    #: Вид документа вообще допускает аннулирование. У электронной транспортной накладной его нет: там отказ 409 с кодом docflow.edo.cancellation_unavailable
+    available: bool
+    #: Ход за нами и цепочку можно начать
+    can_request: bool
+    #: Соглашение прислали нам и на него можно согласиться
+    can_approve: bool
+    #: Соглашение прислали нам и в нём можно отказать
+    can_reject: bool
+
+class DocflowCancellationInput(TypedDict, total=False):
+    """Шаг соглашения об аннулировании. Одного поля довольно: сторону, документ и чей сейчас ход, сервер знает сам."""
+
+    #: Причина словами человека. Обязательна при предложении аннулирования и при отказе в нём: вторая сторона решает по причине, а не по факту обращения
+    comment: str
+
+class _DocflowCertificateRequired(TypedDict):
+    thumbprint: str
+    subject: str
+
+class DocflowCertificate(_DocflowCertificateRequired, total=False):
+    """Сертификат, которым подпись доказывают спустя годы: имя подписанта меняется, отпечаток нет."""
+
+    valid_from: str
+    valid_to: str
+
+class _DocflowConnectionRequired(TypedDict):
+    id: "UUID"
+    #: Оператор ЭДО. Диадок объявлен, адаптера к нему пока нет
+    provider: Literal['saby', 'diadoc']
+    #: Имя оператора для интерфейса; торговая марка, не переводится
+    provider_name: str
+    display_name: str
+    company_name: str
+    company_inn: str
+    company_kpp: str
+    #: reauth_required отделён от error намеренно: сеть починится сама, а отозванный доступ требует человека
+    status: Literal['connected', 'paused', 'error', 'reauth_required', 'disconnected']
+    status_name: str
+    #: Тройка ключей оператора задана. Самих значений наружу не отдают никогда
+    has_credentials: bool
+    #: Действующее ограничение: отправка, подписание и изменение состояний в ЭДО отключены
+    read_only: bool
+    #: Идентификатор нашей организации у оператора; выясняется сопоставлением по ИНН и КПП, руками не вводится
+    external_org_id: str
+    granted_by_name: str
+    #: Итог последнего прохода синхронизации
+    last_sync_status: Literal['', 'ok', 'failed', 'skipped']
+    #: СЛОВА ОПЕРАТОРА и только они: по ним человек чинит доступ в кабинете оператора
+    last_error: str
+    #: Машинный код последней неудачи (docflow.edo.*); его переводит интерфейс
+    last_error_code: str
+    messages_total: int
+    #: Сколько пакетов ждут нашего действия
+    actions_due: int
+    created_at: str
+    updated_at: str
+
+class DocflowConnection(_DocflowConnectionRequired, total=False):
+    """Подключение юрлица к оператору ЭДО. Учётных данных здесь нет ни одним полем: снаружи виден только признак has_credentials."""
+
+    company: "UUID"
+    #: Кто из ERP выдал доступ; имя человека на стороне оператора нам неизвестно
+    granted_by_user_id: int
+    granted_at: str
+    last_sync_at: str
+
+class _DocflowConnectionInputRequired(TypedDict):
+    company: "UUID"
+    #: Часть тройки ключей оператора; обратно не возвращается
+    app_client_id: str
+    #: Часть тройки ключей оператора; обратно не возвращается
+    app_secret: str
+    #: Часть тройки ключей оператора; обратно не возвращается
+    service_key: str
+
+class DocflowConnectionInput(_DocflowConnectionInputRequired, total=False):
+    """Заведение подключения. Секреты приходят открытым текстом ровно один раз и шифруются до того, как что-либо попадёт в базу."""
+
+    #: Пусто означает saby — единственный оператор с адаптером
+    provider: Literal['saby']
+    display_name: str
+
+class DocflowConnectionList(TypedDict):
+    count: int
+    results: List["DocflowConnection"]
+
+class DocflowConnectionModeInput(TypedDict):
+    """Явный выбор режима. false разрешает юридически значимые действия через это подключение; true немедленно возвращает безопасный режим."""
+
+    read_only: bool
+
+class DocflowConnectionPatch(TypedDict, total=False):
+    """Частичное изменение. Учётные данные обновляются только всеми тремя значениями сразу: у оператора это одно неделимое сочетание."""
+
+    display_name: str
+    status: Literal['connected', 'paused', 'error', 'reauth_required', 'disconnected']
+    app_client_id: str
+    app_secret: str
+    service_key: str
+
+class DocflowContactRequisites(TypedDict, total=False):
+    """Контакт: телефоны, почта и прочие сведения для связи."""
+
+    #: Тлф
+    phones: List[str]
+    #: ЭлПочта
+    emails: List[str]
+    #: ИнКонт
+    info: str
+
+class _DocflowCounterpartyRequired(TypedDict):
+    name: str
+    inn: str
+    kpp: str
+    #: Идентификатор участника обмена у оператора: надёжнее ИНН, потому что у одного ИНН бывает несколько ящиков
+    external_id: str
+    #: Наш контрагент, если сопоставление состоялось. Это наша догадка по ИНН либо выбор человека, а не факт от оператора
+    contact_name: str
+
+class DocflowCounterparty(_DocflowCounterpartyRequired, total=False):
+    """Вторая сторона обмена. Реквизиты хранятся текстом всегда, даже когда сопоставление с нашим контрагентом состоялось: карточку могут удалить или переименовать, а пакет обязан остаться читаемым спустя годы."""
+
+    contact: "UUID"
+
+class DocflowCurrencyRequisites(TypedDict, total=False):
+    """ДенИзм: денежное измерение документа."""
+
+    #: КодОКВ. Пустое значение означает рубль
+    code: str
+    #: НаимОКВ
+    name: str
+    #: КурсВал
+    rate: str
+
+class DocflowDocumentRefRequisites(TypedDict, total=False):
+    """Реквизиты стороннего документа."""
+
+    #: РеквНаимДок
+    name: str
+    #: РеквНомерДок
+    number: str
+    #: РеквДатаДок в форме ГГГГ-ММ-ДД
+    date: str
+    #: РеквИдФайлДок
+    file_id: str
+    #: РеквИдДок
+    doc_id: str
+    #: РеквДопСведДок
+    info: str
+
+class DocflowElectronicPoARequisites(TypedDict, total=False):
+    """СвДоверЭл: машиночитаемая доверенность. Формат требует её ровно при способе подтверждения полномочий 3 и запрещает при остальных."""
+
+    #: НомДовер, 36 символов
+    number: str
+    issued_at: str
+    internal_number: str
+    internal_date: str
+    #: ИдСистХран
+    storage: str
+    url: str
+
+class DocflowEmployeeRequisites(TypedDict, total=False):
+    """Работник организации: должность и ФИО."""
+
+    position: str
+    surname: str
+    name: str
+    patronymic: str
+    info: str
+
+class _DocflowEventRequired(TypedDict):
+    id: "UUID"
+    message: "UUID"
+    external_id: str
+    name: str
+    comment: str
+    created_at: str
+
+class DocflowEvent(_DocflowEventRequired, total=False):
+    """Событие ленты пакета. Лента — то, по чему человек восстанавливает ход спора с контрагентом, поэтому название и комментарий хранятся словами оператора и не переводятся."""
+
+    occurred_at: str
+
+class DocflowFileRequisites(TypedDict, total=False):
+    """То, из чего складывается имя файла обмена. Идентификаторы участников спрашиваются, потому что взять их неоткуда: свой оператор отдаёт пустым, а идентификатор контрагента появляется только с первым его документом в ленте. Что сервер видел в зеркале, он подставляет сам; всё остальное — за человеком."""
+
+    #: Идентификатор отправителя у оператора
+    sender_id: str
+    #: Идентификатор получателя у оператора
+    receiver_id: str
+    #: Собственный идентификатор файла обмена
+    uuid: str
+    #: Дополнительная часть имени файла
+    extra: str
+    #: Документ о прослеживаемых товарах
+    traceability: bool
+    #: Документ об алкогольной продукции
+    alcohol: bool
+    #: Документ о табачной продукции
+    tobacco: bool
+    #: Документ о нефтепродуктах
+    oil: bool
+
+class DocflowFormatIssues(TypedDict):
+    """Документ не отвечает формату ФНС. Список непройденных проверок уходит ЦЕЛИКОМ: человек обязан увидеть всё сразу, а не по одной причине за попытку."""
+
+    #: Одна фраза на языке запроса
+    detail: str
+    code: Literal['docflow.formats.invalid']
+    issues: List["DocflowIssue"]
+
+class DocflowIntakeCounterparty(TypedDict):
+    """Вторая сторона и то, с кем мы её свели. Своей догадки по ИНН у приёмки нет вовсе: контрагента сводит механизм синхронизации, а второй механизм сопоставления рядом с существующим разошёлся бы с ним на первой же правке."""
+
+    #: Карточка контрагента кабинета; null — свести не с кем, и приёмка отвечает проверкой docflow.edo.contact_required
+    contact: Optional["UUID"]
+    #: Имя этой карточки в кабинете
+    contact_name: str
+    #: Имя стороны словами оператора либо файла продавца
+    name: str
+    inn: str
+    kpp: str
+    #: Откуда взялся контрагент: manual — прислал человек, auto — свело зеркало, none — не свели ни с кем
+    match: Literal['manual', 'auto', 'none']
+
+class DocflowIntakeInput(TypedDict, total=False):
+    """Решение человека, которым подтверждается приёмка. Сам пакет назван в адресе. Решения по строкам приезжают СПИСКОМ, а не картой «номер → товар»: пропуск строки — это тоже решение, и картой его пришлось бы выражать отсутствием ключа, то есть неотличимо от «человек про эту строку не сказал ничего», а разница между ними принципиальная."""
+
+    #: Дата учётного документа ГГГГ-ММ-ДД. Пусто — берётся дата документа поставщика: она и есть дата операции
+    date: str
+    #: Контрагент. Пусто — берётся тот, с кем свело зеркало
+    contact: Optional["UUID"]
+    #: Решения по строкам. Собственной догадкой подтверждение не пользуется: строка без записанного соответствия и без решения человека в документ не едет, а отвечает проверкой docflow.edo.product_required
+    lines: List["DocflowIntakeLineInput"]
+    #: Примечание учётного документа
+    comment: str
+
+class _DocflowIntakeLineRequired(TypedDict):
+    #: Номер строки в файле поставщика. По нему человек соотносит экран с бумагой, и по нему же приходит его решение
+    number: int
+    #: Наименование товара словами поставщика
+    name: str
+    #: Артикул поставщика
+    article: str
+    #: Код товара у поставщика
+    code: str
+    #: Код ОКЕИ единицы измерения
+    unit_code: str
+    unit_name: str
+    quantity: str
+    #: Цена единицы словами поставщика
+    price: str
+    amount_without_vat: str
+    #: Ставка налога словами файла
+    vat_rate: str
+    #: Сумма налога. Пуста при отметке «без НДС»: нуля там нет, и подставить его значит превратить необлагаемую поставку в облагаемую с нулевым налогом
+    vat_amount: str
+    #: Отметка «без НДС» у строки
+    vat_without: bool
+    amount_with_vat: str
+    #: Ключ соответствия: то, по чему эта строка узнаётся в СЛЕДУЮЩЕМ документе того же поставщика. Собирается с приставкой вида `арт:`, `код:` или `наим:` — артикул «100» и наименование «100» разные вещи, и без приставки они стали бы одной строкой соответствий. Показывается затем, чтобы человек понимал, что именно он сопоставляет: не эту накладную, а артикул поставщика на все будущие поставки.
+    key: str
+    #: Номенклатура кабинета; null — не выбрана
+    product: Optional["UUID"]
+    #: Имя выбранной карточки. Подсказка, а не реквизит: карточку могли заархивировать
+    product_name: str
+    #: Откуда взялась номенклатура строки. `manual` — сопоставил человек, `auto` — сопоставила машина и решение записано, `rejected` — человек уже посмотрел и сказал «не это» (догадку по такой строке мы больше не показываем), `guess` — наша догадка ПРЯМО СЕЙЧАС, нигде не записанная, `none` — сопоставить не с чем. Записанное соответствие приносит свой способ из справочника внешних ссылок, поэтому здесь встречаются и его значения (`pending`, `import`). Различать обязательно: на экране «это решил человек» и «это мы угадали» выглядят одинаково — одна строка с названием товара, — а значат противоположное.
+    match: str
+
+class DocflowIntakeLine(_DocflowIntakeLineRequired, total=False):
+    """Строка товарной таблицы чужого документа вместе с тем, что мы про неё предлагаем. Числа остаются СТРОКАМИ ровно так, как их написал поставщик: сумма в чужом документе такая, какую он подписал, и наша задача её донести, а не поправить. Расхождения покажет сверка, а не молчаливое округление."""
+
+    #: С чем ещё эта строка могла совпасть. Непусто только у неоднозначной догадки: выбрать за человека из двух одинаково подходящих товаров значит угадать монеткой и записать это как факт
+    options: List["DocflowIntakeProductOption"]
+
+class _DocflowIntakeLineInputRequired(TypedDict):
+    #: Номер строки в файле поставщика. Два решения по одному номеру отклоняются: какое из них считать выбором человека, знать неоткуда, а взять последнее значит тихо отбросить первое
+    number: int
+
+class DocflowIntakeLineInput(_DocflowIntakeLineInputRequired, total=False):
+    """Решение человека по одной строке документа поставщика."""
+
+    #: Выбранная номенклатура кабинета
+    product: Optional["UUID"]
+    #: Строку в учётный документ не берём. Нужно затем, что в УПД встречаются строки, которых у нас нет и не будет: доставка отдельной строкой, тара, услуга сборки. Заводить ради них карточку товара значит засорять справочник, а молча терять их — врать про сумму. Пропущенная строка остаётся видимой и в приёмке, и в самом документе.
+    skip: bool
+
+class DocflowIntakeParty(TypedDict):
+    """Сторона сделки, прочитанная из чужого файла. Показывается ТЕКСТОМ, даже когда контрагент сопоставлен: карточку могут переименовать, а документ обязан остаться читаемым таким, каким его прислали."""
+
+    #: Вид участника словами файла: юридическое лицо, предприниматель, иностранное лицо, физическое лицо
+    kind: str
+    name: str
+    inn: str
+    kpp: str
+    #: Адрес одной строкой, собранный из частей формата
+    address: str
+
+class DocflowIntakePreview(TypedDict):
+    """Что мы предлагаем принять к учёту. Ничего не меняет и никуда не ходит: предложение обязано быть безопасным, иначе «посмотреть, что там» становится действием с последствиями, и человек побоится его открыть раньше, чем решит принимать."""
+
+    message: "UUID"
+    #: Нашёлся ли во вложениях титул продавца. Ложь означает, что принимать нечего: пакет либо неформализованный, либо файлы ещё не скачаны — чинится это синхронизацией, а не заполнением формы
+    formalized: bool
+    #: Принимается ли пакет прямо сейчас, без правок
+    ready: bool
+    #: Учётный документ, если пакет уже принят; иначе null. Показывается вместо повторной приёмки: второй документ по тому же пакету — это задвоенный приход и задвоенный долг перед поставщиком.
+    accepted: Optional["DocflowAcceptedDocument"]
+    source: "DocflowIntakeSource"
+    counterparty: "DocflowIntakeCounterparty"
+    #: Товарная таблица чужого документа вместе с тем, что мы про неё предлагаем. Всегда массив, даже пустой
+    lines: List["DocflowIntakeLine"]
+    totals: "DocflowIntakeTotals"
+    #: Что мешает принять. Тот же тип и тот же порядок, что у предполётной проверки исходящего документа: интерфейс переводит их одним словарём
+    issues: List["DocflowIssue"]
+
+class DocflowIntakeProductOption(TypedDict):
+    """Вариант номенклатуры, предложенный неоднозначной строке."""
+
+    id: "UUID"
+    name: str
+    sku: str
+
+class DocflowIntakeResult(TypedDict):
+    """Что вышло из приёмки. Вместе с документом возвращается ПЕРЕСОБРАННОЕ предложение: экран после приёмки показывает то же, что показывал до неё, но уже с проставленными решениями — иначе ему пришлось бы спрашивать состояние вторым запросом и показывать между ними полупустую форму."""
+
+    document: "DocflowAcceptedDocument"
+    preview: "DocflowIntakePreview"
+
+class DocflowIntakeSource(TypedDict):
+    """Реквизиты чужого файла обмена, из которого всё прочитано. Разбор частичный и ничего не проверяет: файл уже подписан и юридически значим, и отказать в его чтении из-за реквизита, который нам не нужен, значит потерять поставку из-за чужой ошибки в необязательном поле."""
+
+    attachment: "UUID"
+    #: Как это вложение назвал ОПЕРАТОР. Стоит рядом с file_name намеренно: имя оператора («Счёт-фактура № 12») человек видит в списке вложений, а file_name — имя файла обмена, и это разные строки
+    attachment_name: str
+    #: ИдФайл: имя файла обмена без расширения, как его записал продавец
+    file_name: str
+    #: ВерсФорм: редакция формата словами самого файла
+    format_version: str
+    #: Код документа по классификатору; у титула продавца 1115131
+    knd: str
+    #: Функция документа словами продавца: СЧФ, ДОП, СЧФДОП
+    function: str
+    #: Наименование документа, данное ему составителем
+    document_kind_name: str
+    #: Номер документа продавца
+    number: str
+    #: Дата документа в форме ГГГГ-ММ-ДД. Пусто — дата не разобралась
+    date: str
+    #: Она же в форме поставщика ДД.ММ.ГГГГ. Показывается, когда разбор не удался: чужую опечатку человек поймёт быстрее, чем пустое поле
+    date_raw: str
+    #: Валюта документа наименованием и кодом, словами файла
+    currency: str
+    #: Содержание операции словами продавца
+    operation: str
+    seller: "DocflowIntakeParty"
+    buyer: "DocflowIntakeParty"
+
+class DocflowIntakeTotals(TypedDict):
+    """Итоги таблицы словами поставщика. Мы их не пересчитываем: итог в чужом документе такой, какой он подписал."""
+
+    without_vat: str
+    #: Пусто при отметке «без НДС» у документа
+    vat_amount: str
+    with_vat: str
+    #: Отметка «без НДС» у документа целиком
+    vat_without: bool
+
+class _DocflowInvitationRequired(TypedDict):
+    #: Идентификатор приглашения у оператора
+    id: str
+    connection: "UUID"
+    connection_name: str
+    company_name: str
+    #: Название контрагента, если оператор его назвал; иначе экран использует ИНН
+    name: str
+    inn: str
+    kpp: str
+    #: Идентификатор абонентского ящика контрагента
+    external_id: str
+    #: Известные состояния Saby: 2 — отправлено, 7 — обмен возможен, 9 — маршрут разорван
+    state: int
+    #: Слова оператора о состоянии
+    state_name: str
+    #: true — входящее приглашение из роуминга, которое Saby принимает автоматически
+    incoming: bool
+
+class DocflowInvitation(_DocflowInvitationRequired, total=False):
+    """Последнее известное состояние заявки на обмен у оператора."""
+
+    company: Optional["UUID"]
+    created_at: Optional[str]
+    changed_at: Optional[str]
+
+class DocflowInvitationInput(TypedDict, total=False):
+    """Приглашение контрагента к обмену. Нужен ИНН либо идентификатор его ящика у оператора. Название обязательно, когда карточки контрагента у оператора ещё нет: приглашение её заводит."""
+
+    #: Идентификатор абонентского ящика контрагента. Ключом НЕ является: оператор предупреждает, что он может меняться
+    external_id: str
+    inn: str
+    kpp: str
+    name: str
+    #: Приписка человека. Оператору она НЕ уходит: поля сообщения у метода нет вовсе
+    message: str
+
+class DocflowInvitationPage(TypedDict):
+    count: int
+    results: List["DocflowInvitation"]
+    #: Безопасный список подключений без учётных данных для формы приглашения
+    senders: List["DocflowInvitationSender"]
+
+class DocflowInvitationSender(TypedDict):
+    id: "UUID"
+    name: str
+    company_name: str
+    company_inn: str
+    company_kpp: str
+    provider: str
+    status: Literal['connected', 'paused', 'error', 'reauth_required', 'disconnected']
+    read_only: bool
+    #: Идентификатор собственного абонентского ящика; пусто — нужно повторно проверить связь
+    external_org_id: str
+
+class _DocflowIssueRequired(TypedDict):
+    #: Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои четыре: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки) и docflow.edo.product_required (строке документа не сопоставлена номенклатура)
+    code: str
+    #: Путь до реквизита ИМЕНАМИ ФНС — именами приказа, а не нашими: этими же словами человек будет искать требование в письме налоговой. Например `Документ/СвСчФакт/СвПрод/Адрес`.
+    path: str
+
+class DocflowIssue(_DocflowIssueRequired, total=False):
+    """Одна невыполненная проверка. Форма одна на сборку файла формата ФНС и на приёмку входящего документа к учёту: интерфейс переводит их одним словарём, и вторая форма списка означала бы второй словарь. Ни одной надписи для человека здесь нет: код, путь реквизита и подробности значениями — фразу собирает интерфейс, и собирает её на языке читателя."""
+
+    #: Номер товарной строки с единицы. Отсутствует, когда реквизит не про строку
+    line: int
+    #: Подробности значениями: предел длины, перечень допустимых значений, пришедшее значение. Отсутствует, когда проверке нечего добавить.
+    params: Dict[str, str]
+
+class _DocflowLineRequisitesRequired(TypedDict):
+    line_id: "UUID"
+
+class DocflowLineRequisites(_DocflowLineRequisitesRequired, total=False):
+    """Дополнение к строке учётного документа. Строка адресуется line_id — тем же идентификатором, которым её знает сам документ. Не порядковым номером: порядок строк меняют, и привязка по номеру перевесила бы ставку НДС на другой товар молча."""
+
+    #: НалСт. Обязателен в каждой строке формата; пустое значение берёт общую ставку юрлица
+    vat_rate: str
+    #: ОКЕИ_Тов. Пустое значение берёт код из карточки единицы измерения
+    unit_code: str
+    #: НаимЕдИзм
+    unit_name: str
+    #: ПрТовРаб
+    kind: str
+    #: ГТИН
+    gtin: str
+    #: КодПроисх
+    country_code: str
+    #: КрНаимСтрПр
+    country_name: str
+    #: НомерДТ
+    customs_number: str
+    #: НомСредИдентТов: средства идентификации маркированного товара
+    marks: List["DocflowMarkRequisites"]
+    #: ИнфПолФХЖ2
+    extra: List["DocflowTextInfoRequisites"]
+
+class DocflowMarkRequisites(TypedDict, total=False):
+    """НомСредИдентТов: средства идентификации маркированного товара. Проходят насквозь: своего источника кодов маркировки в Akeda нет, а без них УПД на маркированный товар недействителен."""
+
+    transport_package: str
+    count: str
+    batch: str
+    codes: List[str]
+    packages: List[str]
+
+class _DocflowMessageRequired(TypedDict):
+    id: "UUID"
+    connection: "UUID"
+    #: Идентификатор пакета у оператора
+    external_id: str
+    #: Редакция пакета: оператор меняет содержимое конверта, не меняя его идентификатор
+    external_revision: str
+    direction: Literal['incoming', 'outgoing']
+    #: Слова оператора, а не наша классификация
+    doc_type: str
+    doc_subtype: str
+    doc_regulation: str
+    number: str
+    #: Календарная дата документа ГГГГ-ММ-ДД; пусто означает, что даты нет вовсе
+    date: str
+    #: Сумма строкой ровно так, как её прислал оператор; пусто означает «суммы нет», а не ноль
+    amount: str
+    currency: str
+    counterparty: "DocflowCounterparty"
+    #: Код состояния документооборота у оператора
+    state_code: str
+    #: Состояние словами оператора: своего перевода состояний у нас нет и быть не должно
+    state_name: str
+    our_org_external_id: str
+    created_at: str
+    updated_at: str
+    connection_name: str
+    connection_provider: str
+    company_name: str
+    attachments_total: int
+    signatures_total: int
+    #: Сколько незакрытых этапов у пакета. Ноль означает «ход не за нами»
+    actions_due: int
+    #: Название ближайшего незакрытого этапа словами оператора
+    stage_name: str
+
+class DocflowMessage(_DocflowMessageRequired, total=False):
+    """Пакет документов у оператора — конверт, а не учётный документ Акеды."""
+
+    received_at: str
+    company: "UUID"
+    #: Состав пакета. Наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null. null означает «не спрашивали», пустой массив — «спросили, и там пусто»
+    attachments: Optional[List["DocflowAttachment"]]
+    signatures: Optional[List["DocflowSignature"]]
+    stages: Optional[List["DocflowStage"]]
+    events: Optional[List["DocflowEvent"]]
+    #: Соглашение сторон об аннулировании. Наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null — null означает «не спрашивали»
+    cancellation: Optional["DocflowCancellation"]
+
+class _DocflowMessageActionInputRequired(TypedDict):
+    #: КОД действия у оператора из stage.actions[].code, а НЕ надпись с кнопки: строка действия своя у каждого вида документа и каждого регламента, и зашитый набор строк ломается на первом нестандартном
+    action: str
+
+class DocflowMessageActionInput(_DocflowMessageActionInputRequired, total=False):
+    """Действие над пакетом словами ОПЕРАТОРА. Что именно можно сделать сейчас, говорит сам пакет: stages[].actions[]. Подписания среди этих действий нет — подпись идёт контуром /api/v1/docflow/edo/signing/tasks."""
+
+    #: Идентификатор этапа у оператора. Не нужен в обычном сценарии: этап выбирает сервер по тому, что сказал оператор
+    stage: str
+    #: Название этапа словами оператора. Адресует скрытые этапы — те, которых в составе пакета не видно, но которые оператор принимает по имени
+    stage_name: str
+    #: Комментарий человека. Уходит второй стороне и остаётся в ленте событий; при отклонении документа обязателен
+    comment: str
+
+class DocflowMessageList(TypedDict):
+    count: int
+    results: List["DocflowMessage"]
+
+class DocflowOutgoingFile(TypedDict):
+    """Произвольный файл на отправку рядом с формализованным."""
+
+    #: Имя файла. Без него файл отклоняется: у оператора файл без имени не показывается никому
+    name: str
+    #: Содержимое файла в base64
+    content_base64: str
+
+class _DocflowOutgoingInputRequired(TypedDict):
+    connection: "UUID"
+    document: "UUID"
+
+class DocflowOutgoingInput(_DocflowOutgoingInputRequired, total=False):
+    """Что проверяем и что отправляем. Реквизиты приезжают ОДНИМ объектом, а не россыпью полей: это дополнение к учётному документу, оно хранится целиком и целиком же участвует в пересборке."""
+
+    requisites: "DocflowRequisites"
+    #: Примечание документа у оператора
+    comment: str
+    #: Произвольные файлы рядом с формализованным: договор, спецификация, скан доверенности. Оператор их не разбирает и печатную форму по ним не строит. Уходят по одному после титула: у оператора предел на файл и на запрос, а договор со сканами берёт его легко. На предполётной проверке не участвуют
+    files: List["DocflowOutgoingFile"]
+
+class DocflowPaperPoARequisites(TypedDict, total=False):
+    """СвДоверБум: бумажная доверенность. Обязательна ровно при способе подтверждения полномочий 5."""
+
+    number: str
+    issued_at: str
+    info: str
+    surname: str
+    name: str
+    patronymic: str
+
+class DocflowPartyRequisites(TypedDict, total=False):
+    """Дополнение к карточке участника сделки."""
+
+    #: СокрНаим
+    short_name: str
+    #: ОКПО. В карточке юрлица его нет вовсе
+    okpo: str
+    #: СтруктПодр
+    division: str
+    #: ИнфДляУчаст
+    info: str
+    person: "DocflowPersonRequisites"
+    #: ОГРНИП предпринимателя, 15 цифр. В карточке лежит ОГРН, а это разные номера, и подставлять один вместо другого нельзя
+    ogrnip: str
+    address: "DocflowAddressRequisites"
+    bank: "DocflowBankRequisites"
+    contact: "DocflowContactRequisites"
+
+class DocflowPaymentDocumentRequisites(TypedDict, total=False):
+    """СвПРД: платёжно-расчётный документ."""
+
+    number: str
+    date: str
+    amount: str
+
+class DocflowPersonRequisites(TypedDict, total=False):
+    """ФИО предпринимателя или физического лица. Спрашивается, потому что в карточке контрагента имя лежит ОДНОЙ строкой («ИП Иванов Иван Иванович»), а формат требует фамилию, имя и отчество порознь. Разобрать строку догадкой нельзя: «Ли Ван Чуань» и «Иванов Иван» ломают любое правило, а ошибка в ФИО подписанта — это недействительный счёт-фактура."""
+
+    surname: str
+    name: str
+    patronymic: str
+
+class DocflowPreflight(TypedDict):
+    """Ответ на вопрос «соберётся ли документ и что уйдёт». Не булево «годится», а список непройденных проверок плюс разложенная товарная таблица: отказ приёмки приходит от контрагента через сутки и звучит невнятно, а эта проверка обязана назвать всё сразу."""
+
+    #: Редакция формата ФНС
+    format_version: str
+    #: Функция документа: СЧФ — счёт-фактура, ДОП — документ о передаче, СЧФДОП — оба сразу. Пусто у ответного титула покупателя: функции у него нет вовсе
+    function: str
+    #: Соберётся ли документ прямо сейчас. Это НЕ «всё в порядке»: суммы всё равно смотрят глазами, потому что налог считаем мы
+    ready: bool
+    #: Всегда массив, даже пустой: null означал бы «не проверяли», а проверяли всегда
+    issues: List["DocflowIssue"]
+    #: Имя файла обмена, если он собирается. Пустое, пока не собирается: имя — часть формата, и показывать выдуманное нельзя
+    file_name: str
+    totals: "DocflowPreflightTotals"
+    document: "DocflowPreflightDocument"
+    seller: "DocflowPreflightParty"
+    buyer: "DocflowPreflightParty"
+    #: Товарная таблица с посчитанным налогом. У ответного титула покупателя пуста: он отвечает на документ продавца, а не повторяет его
+    lines: List["DocflowPreflightLine"]
+
+class DocflowPreflightDocument(TypedDict):
+    """Учётный документ кабинета, который формализуем."""
+
+    id: "UUID"
+    number: str
+    #: Календарная дата документа ГГГГ-ММ-ДД
+    date: str
+    #: Ключ вида документа в кабинете
+    type_key: str
+    type_name: str
+    #: Состояние учётного документа в кабинете
+    status: str
+
+class DocflowPreflightLine(TypedDict):
+    """Строка товарной таблицы с посчитанным налогом. Показывается человеку целиком и ДО отправки, потому что налог считаем мы: карточка юрлица хранит только общее умолчание, а сумма НДС — наш вывод из фактической ставки строки и признака «цены с налогом». Вывод, который человек не увидел, он не проверил."""
+
+    #: Порядковый номер строки в файле с единицы
+    number: int
+    line_id: "UUID"
+    name: str
+    #: Код ОКЕИ из карточки единицы измерения либо явное исключение этого отправления
+    unit_code: str
+    unit_name: str
+    quantity: str
+    #: Цена единицы без налога
+    price: str
+    #: Ставка словами приказа: «20%», «без НДС», «НДС исчисляется налоговым агентом» и прочие значения перечня
+    vat_rate: str
+    #: Сумма налога. Пуста при ставке «без НДС»: формат требует там не нулевую сумму, а отметку об отсутствии налога, и ноль вместо неё — другое утверждение
+    vat_amount: str
+    amount_without_vat: str
+    amount_with_vat: str
+
+class DocflowPreflightParty(TypedDict):
+    """Сторона сделки в том виде, в каком она уедет в файл."""
+
+    name: str
+    inn: str
+    kpp: str
+    #: Вид участника из карточки: legal, sole_prop, individual. От него зависит, какую ветвь формата заполнять: у предпринимателя вместо наименования организации ФИО
+    entity_type: str
+    #: Прежний адрес одной строкой для карточек, заведённых до структурированного адреса. Сервер не разбирает его на части догадкой: «улица Мира, 1» и «Мира, 1» неотличимы от «город Мира» ни одним правилом. Новая карточка подставляет готовые части прямо в реквизиты формата.
+    address_hint: str
+
+class DocflowPreflightTotals(TypedDict):
+    """Итоги товарной таблицы. Складываются из уже напечатанных строк, а не пересчитываются от исходных величин: итог обязан сойтись со строками до копейки."""
+
+    #: Стоимость без налога
+    without_vat: str
+    #: Сумма налога
+    vat: str
+    #: Стоимость с налогом
+    with_vat: str
+
+class DocflowRequisites(TypedDict, total=False):
+    """Исключения одного отправления поверх повторяющихся реквизитов карточек юрлица, контрагента и единицы измерения. Здесь остаются ставка отдельной строки, выбранный расчётный счёт, подписант, содержание операции и идентификаторы участников обмена. У одного и того же товара в разных накладных ставка бывает разной. Каждое поле отвечает ровно одному реквизиту приказа, и имя ФНС названо в его описании. Все поля необязательны: чего не прислали, то и покажет предполётная проверка. Явное значение отправления сильнее карточки; валютой по умолчанию остаётся рубль."""
+
+    #: Функция: перечень закрыт, потому что это перечень приказа
+    function: Literal['СЧФ', 'ДОП', 'СЧФДОП']
+    #: НаимДокОпр: наименование документа, определённое сторонами сделки
+    document_kind_name: str
+    #: ВерсПрог. Пустое значение подставляет сервер: версию приложения знает он, а не человек в форме
+    program_version: str
+    #: Сумма строки уже содержит налог. Признак спрашивается, а не угадывается: сумма 1200 законно означает и «1200 без налога», и «1200 с налогом», а ошибка стоит расхождения в декларации
+    prices_include_vat: bool
+    #: НалСт по умолчанию для всех строк. Строка вправе назвать свою
+    vat_rate: str
+    currency: "DocflowCurrencyRequisites"
+    file: "DocflowFileRequisites"
+    seller: "DocflowPartyRequisites"
+    buyer: "DocflowPartyRequisites"
+    #: Грузоотправитель — сам продавец
+    shipper_same_as_seller: bool
+    transfer: "DocflowTransferRequisites"
+    #: Транспортные и сопроводительные документы
+    shipment_documents: List["DocflowDocumentRefRequisites"]
+    #: СвПРД: платёжно-расчётные документы
+    payment_documents: List["DocflowPaymentDocumentRequisites"]
+    signers: List["DocflowSignerRequisites"]
+    #: ИнфПолФХЖ1: дополнительные сведения факта хозяйственной жизни
+    extra: List["DocflowTextInfoRequisites"]
+    lines: List["DocflowLineRequisites"]
+
+class _DocflowSignatureRequired(TypedDict):
+    id: "UUID"
+    message: "UUID"
+    side: Literal['ours', 'counterparty']
+    signer_name: str
+    signer_position: str
+    certificate: "DocflowCertificate"
+    #: Номер машиночитаемой доверенности. С 2023 года подпись сотрудника без неё недействительна
+    poa_number: str
+    #: Контейнер подписи скачан к нам и открывается отдельной операцией
+    stored: bool
+    created_at: str
+
+class DocflowSignature(_DocflowSignatureRequired, total=False):
+    """Подпись под вложением или под пакетом целиком. Подписей под одним файлом несколько — наша и контрагента, — и каждая приходит своим файлом со своим сертификатом."""
+
+    attachment: "UUID"
+    signed_at: str
+
+class DocflowSignatureShape(TypedDict):
+    """Какой подписи ждёт оператор. Форма подписи — свойство ЗАДАНИЯ, а не константа кода: смена решения оператора меняет значения здесь, и больше ничего."""
+
+    profile: Literal['cades-bes', 'cades-t', 'cades-x-long-type-1', 'pkcs7']
+    #: Открепленная подпись отдельным файлом
+    detached: bool
+    #: Служба штампов времени. null означает, что штамп не нужен
+    timestamp_url: Optional[str]
+
+class _DocflowSignatureSubmissionRequired(TypedDict):
+    #: Контейнер CMS/PKCS#7 в Base64, без префикса data:
+    signature: str
+    #: Отпечаток сертификата. Обязателен: оператор не помнит его между подготовкой и выполнением действия и иначе выберет сертификат сам
+    certificate_thumbprint: str
+
+class DocflowSignatureSubmission(_DocflowSignatureSubmissionRequired, total=False):
+    """Результат подписания, вычисленный КриптоПро на машине человека."""
+
+    #: Открытая часть сертификата Base64. Удобство, а не обязанность: найти сертификат оператор умеет и по отпечатку
+    certificate: str
+    #: Время по часам браузера; хранится справкой
+    signed_at: str
+    attorney: "DocflowAttorneySubmission"
+
+class DocflowSignerRequisites(TypedDict, total=False):
+    """Подписант: кто и на каком основании подписывает документ."""
+
+    #: Должн
+    position: str
+    #: ТипПодпис
+    kind: str
+    #: Способ подтверждения полномочий. От него зависит, какая доверенность обязательна
+    authority: str
+    #: ДатаПодДок
+    signed_at: str
+    #: ДопСведПодп
+    info: str
+    surname: str
+    name: str
+    patronymic: str
+    electronic_poa: "DocflowElectronicPoARequisites"
+    paper_poa: "DocflowPaperPoARequisites"
+
+class _DocflowSigningPayloadRequired(TypedDict):
+    #: content — подписывается содержимое файла, хеш считает КриптоПро на машине человека; digest — готовый хеш оператора
+    form: Literal['content', 'digest']
+    #: Base64 в обеих формах
+    data: str
+
+class DocflowSigningPayload(_DocflowSigningPayloadRequired, total=False):
+    """То, что подлежит подписи. Data всегда Base64, без префикса data:."""
+
+    #: Чем посчитан хеш. Обязателен при form=digest и отсутствует иначе
+    digest_algorithm: Literal['gost3411-2012-256', 'gost3411-2012-512', 'gost3411-94']
+
+class _DocflowSigningResultRequired(TypedDict):
+    task: "DocflowSigningTask"
+    action: "DocflowActionResult"
+
+class DocflowSigningResult(_DocflowSigningResultRequired, total=False):
+    """Чем кончилась приёмка подписи."""
+
+    signature: "UUID"
+
+class _DocflowSigningTaskRequired(TypedDict):
+    id: "UUID"
+    message_id: "UUID"
+    file_name: str
+    payload: "DocflowSigningPayload"
+    signature: "DocflowSignatureShape"
+    #: Требование машиночитаемой доверенности. Флага «требуется доверенность» у оператора нет: значение выводится из того, что он сказал о сертификатах
+    attorney: Literal['none', 'optional', 'required']
+    status: Literal['pending', 'signed', 'expired']
+    expires_at: str
+    created_at: str
+
+class DocflowSigningTask(_DocflowSigningTaskRequired, total=False):
+    """Задание на подпись. Ни ключа, ни контейнера, ни пина здесь нет и быть не может: подпись вычисляет КриптоПро на машине человека, сервер о ней узнаёт только результатом."""
+
+    attachment_id: "UUID"
+    #: Отметка ПРИЁМКИ подписи сервером; часы браузера доказательством не служат
+    signed_at: Optional[str]
+
+class _DocflowSigningTaskInputRequired(TypedDict):
+    message_id: "UUID"
+
+class DocflowSigningTaskInput(_DocflowSigningTaskInputRequired, total=False):
+    """Просьба выдать задание на подпись."""
+
+    attachment_id: "UUID"
+    #: Идентификатор этапа у оператора. Не нужен в обычном сценарии: этап выбирает сервер по тому, что сказал оператор
+    stage: str
+    #: Код команды оператора; нужен, когда на этапе их несколько
+    action: str
+
+class DocflowSigningTaskList(TypedDict):
+    count: int
+    results: List["DocflowSigningTask"]
+
+class DocflowStage(TypedDict):
+    """Этап документооборота: что с пакетом можно сделать сейчас. Список действий приходит от ОПЕРАТОРА и не выводится из нашего состояния."""
+
+    id: "UUID"
+    message: "UUID"
+    #: Идентификатор этапа у оператора; он же адресует действие
+    external_id: str
+    name: str
+    actions: List["DocflowStageAction"]
+    #: Этап закрывается подписью. Признак оператора, а не наш вывод из названия
+    requires_signature: bool
+    #: Ход не за нами. Закрытые этапы не показываются и не считаются
+    closed: bool
+    created_at: str
+    updated_at: str
+
+class DocflowStageAction(TypedDict):
+    """Действие, которое оператор разрешает на этапе. Код отправляют оператору, надпись показывают человеку."""
+
+    code: str
+    name: str
+
+class DocflowStageRef(TypedDict, total=False):
+    """Ссылка на строку очереди этапов. Пустое тело означает единственный незакрытый этап пакета: у обычного документа он один, и требовать его имя не с чего."""
+
+    #: Идентификатор этапа у оператора
+    stage: str
+    #: Название этапа словами оператора
+    stage_name: str
+    #: Название действия этапа: очередь у оператора адресуется этапом ВМЕСТЕ с действием, а не одним этапом
+    action: str
+
+class DocflowSyncOutcome(TypedDict):
+    """Итог одного прохода синхронизации ленты оператора."""
+
+    #: Итог самого прохода. skipped означает, что прохода не было: подключение работает в режиме только чтения
+    run_status: Literal['ok', 'failed', 'skipped']
+    #: Состояние подключения после прохода
+    status: Literal['connected', 'paused', 'error', 'reauth_required', 'disconnected']
+    #: Неудача чинится временем: повторится сама, человек не нужен
+    retry: bool
+    #: Машинный код неудачи (docflow.edo.*); пусто при удаче
+    error_code: str
+    #: Слова оператора и только они; пусто при удаче
+    provider_message: str
+
+class DocflowTextInfoRequisites(TypedDict, total=False):
+    """Пара «идентификатор — значение» дополнительных сведений."""
+
+    id: str
+    value: str
+
+class DocflowTitle(TypedDict):
+    """Строка исходящего титула. Одна форма на оба вида: титул продавца (КНД 1115131) и титул покупателя (КНД 1115132) — разные файлы разных схем, но судьба у них одна: собрать XML, положить в хранилище, записать оператору, запомнить, чем он ответил. Самого XML здесь нет: он лежит в объектном хранилище кабинета и выдаётся отдельным маршрутом, а ключ к нему наружу не уходит."""
+
+    id: "UUID"
+    connection: "UUID"
+    #: seller — титул продавца по учётному документу кабинета; buyer — ответный титул покупателя на входящий пакет
+    kind: Literal['seller', 'buyer']
+    #: Учётный документ кабинета у титула продавца. Ссылка мягкая: документа нет — титул показывается как титул по удалённому документу
+    document: Optional[str]
+    #: Пакет зеркала. У титула покупателя — входящий, на который отвечаем; у титула продавца — НАШ конверт, найденный синхронизацией после записи оператору
+    message: Optional[str]
+    #: Редакция формата ФНС
+    format_version: str
+    #: Функция документа: СЧФ, ДОП, СЧФДОП. Пусто у титула покупателя
+    function: str
+    requisites: "DocflowRequisites"
+    #: Имя файла обмена ФНС. Повторяется внутри файла в ИдФайл: пересобранный титул обязан быть тем же самым
+    file_name: str
+    #: Хеш отправленных байтов. Остаётся затем же, зачем он есть у вложения зеркала: доказать спустя годы, что отправляли именно эти байты
+    content_sha256: str
+    content_size_bytes: int
+    #: Идентификатор документа у оператора. НАШ и заданный нами: без него каждый повтор отправки создавал бы у оператора новый документ
+    external_doc_id: str
+    #: Идентификатор вложения с титулом у оператора
+    external_attachment_id: str
+    #: «Собран» отделён от «записан» намеренно: между ними стоит оператор, и его отказ не отменяет сборки — файл уже лежит в хранилище
+    status: Literal['draft', 'built', 'written', 'failed']
+    #: Наш машинный код последней неудачи (docflow.edo.*); его переводит интерфейс
+    last_error_code: str
+    #: СЛОВА ОПЕРАТОРА и только они; показываются как есть
+    last_error: str
+    created_by_user_id: Optional[int]
+    created_at: str
+    updated_at: str
+
+class DocflowTitleList(TypedDict):
+    count: int
+    results: List["DocflowTitle"]
+
+class DocflowTransferRequisites(TypedDict, total=False):
+    """СвПродПер: сведения о передаче товара, работы или услуги."""
+
+    #: СодОпер
+    operation: str
+    #: ВидОпер
+    kind: str
+    #: ДатаПер в форме ГГГГ-ММ-ДД. Пустая означает дату самого документа: отгрузка датой накладной — обычный случай
+    date: str
+    #: ДатаНачПер
+    period_start: str
+    #: ДатаОконПер
+    period_end: str
+    #: ОснПер: документы-основания передачи
+    basis: List["DocflowDocumentRefRequisites"]
+    #: БезДокОснПер. Формат требует ВЫБОРА: либо перечень оснований, либо прямая отметка «основания нет». Умолчания у выбора нет
+    without_basis: bool
+    employee: "DocflowEmployeeRequisites"
+
 class _DocumentCreateRequired(TypedDict):
     title: str
 
@@ -5471,7 +6672,7 @@ class FinanceBalanceItem(TypedDict):
     name: str
     amount: str
 
-class FinanceBalanceReport(TypedDict):
+class _FinanceBalanceReportRequired(TypedDict):
     on: str
     currency: str
     sections: List["FinanceBalanceSection"]
@@ -5479,6 +6680,9 @@ class FinanceBalanceReport(TypedDict):
     passive_total: str
     retained_earnings: str
     difference: str
+
+class FinanceBalanceReport(_FinanceBalanceReportRequired, total=False):
+    accounting_basis: "AccountingBasis"
 
 class FinanceBalanceSection(TypedDict):
     key: Literal['asset', 'liability', 'equity']
@@ -6490,7 +7694,7 @@ class FinancePnlLine(TypedDict):
     sign: int
     amount: str
 
-FinancePnlReport = TypedDict("FinancePnlReport", {"from": str, "to": str, "revenue": str, "expense": str, "profit": str, "unclassified_in": str, "unclassified_out": str, "lines": List["FinancePnlLine"], "layout_rows": List["FinancePnlReportRow"], "layout": "FinancePnlReportLayout", "columns": List["FinanceReportColumn"], "companies": List["FinanceReportCompany"]}, total=False)
+FinancePnlReport = TypedDict("FinancePnlReport", {"from": str, "to": str, "revenue": str, "expense": str, "profit": str, "unclassified_in": str, "unclassified_out": str, "lines": List["FinancePnlLine"], "layout_rows": List["FinancePnlReportRow"], "layout": "FinancePnlReportLayout", "columns": List["FinanceReportColumn"], "companies": List["FinanceReportCompany"], "accounting_basis": "AccountingBasis"}, total=False)
 
 class FinancePnlReportLayout(TypedDict):
     id: "UUID"
@@ -6670,6 +7874,18 @@ class FinanceReportCompany(TypedDict):
     id: str
     name: str
 
+class FinanceRequisitesAddress(TypedDict):
+    postal_code: str
+    region_code: str
+    region_name: str
+    district: str
+    city: str
+    settlement: str
+    street: str
+    building: str
+    block: str
+    flat: str
+
 class FinanceRequisitesBank(TypedDict):
     name: str
     bic: str
@@ -6686,11 +7902,24 @@ class FinanceRequisitesLookup(TypedDict):
 class FinanceRequisitesParty(TypedDict):
     name: str
     full_name: str
+    entity_type: Literal['LEGAL', 'INDIVIDUAL', '']
     inn: str
     kpp: str
     ogrn: str
+    okpo: str
     address: str
+    address_parts: "FinanceRequisitesAddress"
+    entrepreneur: "FinanceRequisitesPerson"
     status: str
+
+class FinanceRequisitesPerson(TypedDict):
+    surname: str
+    name: str
+    patronymic: str
+
+class FinanceRequisitesSuggestions(TypedDict):
+    suggestions: List["FinanceRequisitesParty"]
+    directory_configured: bool
 
 class FinanceResponsiblePatch(TypedDict):
     responsible: Optional[str]
@@ -9979,30 +11208,52 @@ class SettingsAppVersion(_SettingsAppVersionRequired, total=False):
 
 class _SettingsCompanyRequired(TypedDict):
     id: "UUID"
+    business_id: "UUID"
     name: str
     legal_name: str
+    #: Юридическое лицо или индивидуальный предприниматель
+    entity_type: Literal['legal', 'sole_prop']
     #: Пустой только у юрлица внутреннего учёта
     inn: str
     kpp: str
+    #: ОГРН у юрлица или ОГРНИП у предпринимателя
+    ogrn: str
+    #: ОКПО; необязательный реквизит формализованного документа
+    okpo: str
+    #: Код филиала у оператора ЭДО; не КПП
+    branch_code: str
+    #: Ставка НДС по умолчанию для новых строк документа; конкретная строка вправе её заменить
+    default_vat_rate: str
+    #: Как по умолчанию трактовать цену при выбранной ставке НДС
+    prices_include_vat: bool
+    legal_address: "SettingsCompanyAddress"
+    entrepreneur: "SettingsCompanyPerson"
     is_active: bool
-    #: Псевдо-юрлицо «Внутренний учёт» — контур неофициальных касс, одно на кабинет
-    is_internal: bool
-    #: Метод учёта cash или accrual; на этой поверхности всегда приходит пустым, потому что накладка справочника его не переносит
-    accounting_method: str
+    #: Метод признания выручки: по деньгам или по начислению
+    accounting_method: Literal['cash', 'accrual']
 
 class SettingsCompany(_SettingsCompanyRequired, total=False):
-    #: Дата перехода на accrual; на этой поверхности не приходит никогда
+    #: Дата перехода на accrual; отсутствует у кассового метода
     accrual_from: str
 
-class _SettingsCompanyAccountingMethodInputRequired(TypedDict):
-    #: Значение приводится к нижнему регистру
-    method: Literal['cash', 'accrual']
-
-class SettingsCompanyAccountingMethodInput(_SettingsCompanyAccountingMethodInputRequired, total=False):
-    #: Дата перехода на начисление; обязательна при accrual и не используется при cash
-    accrual_from: str
+class SettingsCompanyAddress(TypedDict):
+    postal_code: str
+    #: Код субъекта РФ для формализованного документа
+    region_code: str
+    region_name: str
+    district: str
+    city: str
+    settlement: str
+    street: str
+    building: str
+    block: str
+    #: Офис или помещение
+    flat: str
+    #: Дополнение, которое не раскладывается по остальным частям адреса
+    info: str
 
 class _SettingsCompanyInputRequired(TypedDict):
+    business_id: "UUID"
     #: Пробельное название отклоняется
     name: str
     #: Проверяется контрольной цифрой; пустой ИНН отклоняется
@@ -10010,12 +11261,26 @@ class _SettingsCompanyInputRequired(TypedDict):
 
 class SettingsCompanyInput(_SettingsCompanyInputRequired, total=False):
     legal_name: str
+    #: Если не передан, определяется по длине нормализованного ИНН
+    entity_type: Literal['legal', 'sole_prop']
     kpp: str
+    ogrn: str
+    okpo: str
+    branch_code: str
+    default_vat_rate: str
+    prices_include_vat: bool
+    legal_address: "SettingsCompanyAddress"
+    entrepreneur: "SettingsCompanyPerson"
 
 class SettingsCompanyPage(TypedDict):
     #: Число отданных строк, страниц у справочника нет
     count: int
     results: List["SettingsCompany"]
+
+class SettingsCompanyPerson(TypedDict):
+    surname: str
+    name: str
+    patronymic: str
 
 class SettingsFieldDefinition(TypedDict):
     id: "UUID"
@@ -11088,6 +12353,10 @@ class StockWarehouse(TypedDict):
     responsible_employee_id: Optional["UUID"]
     is_active: bool
     sort_order: int
+    #: Внутри склада работают зоны — приход разрешён только в подчинённую зону
+    zones_enabled: bool
+    #: На самом зональном складе ещё лежит остаток, оставшийся с момента включения зон
+    needs_allocation: bool
     #: Пустой список означает доступность склада всем активным юрлицам кабинета
     company_ids: List["UUID"]
     created_at: str
@@ -11130,6 +12399,48 @@ class StockWarehousePatch(TypedDict, total=False):
     responsible_employee_id: Optional["UUID"]
     sort_order: int
     company_ids: List["UUID"]
+
+class StockWarehouseZoneInput(TypedDict):
+    #: Название зоны; код зоны присваивает сервер
+    name: str
+
+class _StockZoneAllocationRequired(TypedDict):
+    warehouse_id: "UUID"
+    zones_enabled: bool
+    direction: Literal['to_zones', 'to_warehouse']
+    zones: List["StockWarehouse"]
+    rows: List["StockZoneStockRow"]
+
+class StockZoneAllocation(_StockZoneAllocationRequired, total=False):
+    #: Незавершённая матрица разнесения; у обратного переноса всегда null, потому что выключение атомарно
+    draft: Optional["StockZoneAllocationInput"]
+
+class _StockZoneAllocationInputRequired(TypedDict):
+    lines: List["StockZoneAllocationLine"]
+
+class StockZoneAllocationInput(_StockZoneAllocationInputRequired, total=False):
+    #: Пусто — бизнес-дата кабинета
+    date: str
+
+class StockZoneAllocationLine(TypedDict):
+    company_id: "UUID"
+    product_id: "UUID"
+    zone_id: "UUID"
+    quantity: str
+
+class StockZoneAllocationResult(TypedDict):
+    warehouse: "StockWarehouse"
+    #: Проведённые перемещения — по одному на пару «юрлицо и зона»
+    documents: List["CoreDocument"]
+    #: Остаток, который после разнесения всё ещё ждёт на складе
+    remaining: List["StockZoneStockRow"]
+
+class StockZoneStockRow(TypedDict):
+    warehouse_id: "UUID"
+    company_id: "UUID"
+    product_id: "UUID"
+    #: Точное decimal-количество строкой
+    quantity: str
 
 class Subtask(TypedDict):
     id: "UUID"

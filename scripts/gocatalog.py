@@ -276,18 +276,21 @@ def build(source: Path, manifest_schema: dict) -> dict:
     known.update(constants(points_text))
     known.update(constants(slots_text))
     known.update(constants(placements_text))
-    # Модель точки объявлена константами того же файла; строкой её не пишут.
-    known.setdefault("ExtensionModelSync", "sync")
-    known.setdefault("ExtensionModelAsync", "async")
 
     surfaces = sorted({value for name, value in known.items() if name.startswith("Surface")})
     slot_types = sorted({value for name, value in known.items() if name.startswith("SlotType")})
     launch_fields = sorted({value for name, value in known.items() if name.startswith("LaunchField")})
+    # Модели ответа берутся из тех же констант платформы, что и виды слотов, а
+    # не из списка в этом файле. Своя копия однажды разошлась бы с платформой —
+    # и разошлась: третья модель, `sandbox`, появилась у точки раньше, чем о ней
+    # узнал бы список здесь, и снимок отверг бы существующую точку как непонятную.
+    models = sorted({value for name, value in known.items() if name.startswith("ExtensionModel")})
 
     catalog = {
         "catalog_version": CATALOG_VERSION,
         "surfaces": surfaces,
         "slot_types": slot_types,
+        "point_models": models,
         "launch_context_fields": launch_fields,
         "bridge": {
             "from_extension": string_list(
@@ -393,6 +396,12 @@ def audit(catalog: dict, point_key: re.Pattern, placement_key: re.Pattern) -> No
             raise CatalogError(f"каталог: раздел {section} пуст — разбор объявлений сломался")
     surfaces = set(catalog["surfaces"])
     types = set(catalog["slot_types"])
+    models = set(catalog["point_models"])
+    if not models:
+        raise CatalogError(
+            "каталог: моделей ответа не разобралось ни одной — константы платформы читаются "
+            "не тем разбором, и любая точка ниже была бы отвергнута как непонятная"
+        )
     for point in catalog["extension_points"]:
         if not point_key.match(point["key"]):
             raise CatalogError(
@@ -400,8 +409,11 @@ def audit(catalog: dict, point_key: re.Pattern, placement_key: re.Pattern) -> No
                 "схема манифеста: объявить такую точку в манифесте нельзя, и снимок с ней "
                 "обещал бы разработчику невозможное"
             )
-        if point["model"] not in ("sync", "async"):
-            raise CatalogError(f"каталог: у точки {point['key']} непонятная модель {point['model']!r}")
+        if point["model"] not in models:
+            raise CatalogError(
+                f"каталог: у точки {point['key']} модель {point['model']!r} вне списка платформы: "
+                f"{sorted(models)}"
+            )
     for slot in catalog["ui_slots"]:
         if not point_key.match(slot["slot"]):
             raise CatalogError(

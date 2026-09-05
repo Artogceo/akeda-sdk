@@ -16,14 +16,16 @@ import (
 // Проверяет ФОРМУ по схеме из снимка плюс несколько правил, которые формой не
 // выражаются, но проверяются локально: чужое пространство имён справочника,
 // значение секрета внутри манифеста, назначение и срок хранения рядом с
-// областью, wildcard в областях.
+// областью, wildcard в областях, ссылка графы на чужой справочник и подпись
+// графы из одних пробелов.
 //
 // Проверяет и то, для чего формы мало, а нужен САМ СПИСОК: существование точки
-// расширения, слота и именованного места, вид слота, уместный в этом месте, и
-// поля контекста, которые место действительно даёт. Списки берутся из каталога
-// в снимке (catalog.go), а не из кода этой команды: копия, набранная руками,
-// разошлась бы с платформой молча — и принимала бы место, которого оболочка не
-// знает.
+// расширения, слота и именованного места, вид слота, уместный в этом месте,
+// поля контекста, которые место действительно даёт, и — для раздела
+// `functions` — что точка функции существует и ПЕСОЧНИЧНАЯ. Списки берутся из
+// каталога в снимке (catalog.go), а не из кода этой команды: копия, набранная
+// руками, разошлась бы с платформой молча — и принимала бы место, которого
+// оболочка не знает.
 //
 // НЕ проверяет то, для чего нужна живая таксономия Akeda: объявленность области
 // доступа и её ярус чувствительности. Эти проверки делает `tools/manifest-lint`
@@ -176,6 +178,8 @@ func localManifestRules(manifest map[string]any) []schemaIssue {
 		}
 	}
 
+	issues = append(issues, fieldRules(manifest, namespace)...)
+
 	if runtime, ok := manifest["runtime"].(map[string]any); ok {
 		mode, _ := runtime["mode"].(string)
 		if mode == "managed" {
@@ -202,6 +206,115 @@ func localManifestRules(manifest map[string]any) []schemaIssue {
 	}
 
 	return issues
+}
+
+// fieldRules — графы, которые приложение добавляет карточкам кабинета (раздел
+// `fields`).
+//
+// Схема ловит форму: закрытый список сущностей и типов, вид ключа, подпись на
+// двух языках, `required: false`. Здесь — то, чего формой не выразить, и всё
+// это про одно: графа живёт в ЧУЖОЙ карточке дольше, чем версия приложения, и
+// под ней лежат значения кабинета.
+//
+// Ссылка проверяется на собственный справочник ЭТОГО ЖЕ манифеста: его заводит
+// установка, и до неё справочника, на который смотрит графа, не существует.
+// Ключи списков, которые кабинет завёл сам, придумал человек — угадать их
+// приложение не может, и такая ссылка либо не разрешится, либо разрешится в
+// чужой список.
+//
+// Подпись из одних пробелов схема считает непустой строкой, а человек читает
+// пустое место в карточке рядом с собственными полями кабинета.
+func fieldRules(manifest map[string]any, namespace string) []schemaIssue {
+	var issues []schemaIssue
+	add := func(path, format string, args ...any) {
+		issues = append(issues, schemaIssue{Path: path, Message: fmt.Sprintf(format, args...)})
+	}
+
+	provided := map[string]bool{}
+	if reference, ok := manifest["referenceData"].(map[string]any); ok {
+		for _, item := range asList(reference["provides"]) {
+			entry, _ := item.(map[string]any)
+			if key, ok := entry["key"].(string); ok {
+				provided[key] = true
+			}
+		}
+	}
+
+	seen := map[string]bool{}
+	for index, item := range asList(manifest["fields"]) {
+		entry, _ := item.(map[string]any)
+		if entry == nil {
+			continue
+		}
+		where := fmt.Sprintf("$.fields[%d]", index)
+		entity, _ := entry["entity"].(string)
+		key, _ := entry["key"].(string)
+
+		if entity != "" && key != "" {
+			if seen[entity+"/"+key] {
+				// Ключ поля превращается в ключ значения внутри карточки:
+				// второе объявление молча перекрыло бы первое вместе со
+				// значениями, которые уже под ним лежат.
+				add(where+".key", "поле %q объявлено у %s дважды", key, entity)
+			}
+			seen[entity+"/"+key] = true
+		}
+		issues = append(issues, blankLabel(entry, where+".label", "подпись поля")...)
+
+		switch fieldType, _ := entry["type"].(string); fieldType {
+		case "reference":
+			directory := ""
+			if reference, ok := entry["reference"].(map[string]any); ok {
+				directory, _ = reference["directory"].(string)
+			}
+			switch {
+			case strings.TrimSpace(directory) == "":
+				add(where+".reference", "ссылочное поле не назвало справочник: пустой список выбора молчит о причине")
+			case !provided[directory]:
+				reason := "справочник обязан быть объявлен этим же манифестом в referenceData.provides"
+				if !strings.HasPrefix(directory, namespace+".") {
+					reason = "своё пространство у приложения ровно одно — " + namespace + ".…"
+				}
+				add(where+".reference.directory",
+					"поле ссылается на справочник %q, которого приложение не заводит: %s", directory, reason)
+			}
+		case "enum":
+			codes := map[string]bool{}
+			for position, option := range asList(entry["options"]) {
+				value, _ := option.(map[string]any)
+				spot := fmt.Sprintf("%s.options[%d]", where, position)
+				code, _ := value["code"].(string)
+				if code != "" && codes[code] {
+					// Код ложится в карточку и читается обратно как ответ на
+					// вопрос «что здесь выбрано»: два значения под одним кодом
+					// делают этот ответ неоднозначным навсегда.
+					add(spot+".code", "код значения %q повторяется", code)
+				}
+				codes[code] = true
+				issues = append(issues, blankLabel(value, spot+".label", "подпись значения")...)
+			}
+		}
+	}
+	return issues
+}
+
+// blankLabel — подпись, состоящая из пробелов, на любом из двух языков.
+func blankLabel(entry map[string]any, path, what string) []schemaIssue {
+	label, ok := entry["label"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	for _, language := range []string{"ru", "en"} {
+		text, present := label[language].(string)
+		if present && strings.TrimSpace(text) == "" {
+			return []schemaIssue{{
+				Path: path,
+				Message: fmt.Sprintf("%s пуста на языке %q: карточку Akeda показывает на русском и английском, "+
+					"и пустое место читается как сбой, а не как графа приложения", what, language),
+			}}
+		}
+	}
+	return nil
 }
 
 func asList(value any) []any {
