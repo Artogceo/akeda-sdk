@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a255440df951ca637e056f0155498f67bc7b34723eac197148cf9cab8906c7c3).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ebe5e52494dcae67cde216647dade1b2e8bf8b5342ebe09c26914a8cc4a895d5).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -150,10 +150,16 @@ export interface AppRuntimeLeaseInput {
   "ttl_seconds"?: number;
 }
 
-/** Человек, открывший панель, в том объёме, в каком приложению позволено его знать. Полей ровно три, и четвёртого не появится: имя и почта — это штат клиента, роли — его оргструктура, а числовой идентификатор общий на всю платформу и связал бы два кабинета между собой. */
+/**
+ * Человек, открывший панель, в том объёме, в каком приложению позволено его знать. Имени, почты, ролей и числового идентификатора здесь нет и не появится: имя и почта — это штат клиента, роли — его оргструктура, а числовой идентификатор общий на всю платформу и связал бы два кабинета между собой.
+ * 
+ * Карточка сотрудника (employee_id) — единственное поле, называющее человека настоящей записью кабинета, и приезжает она не всем: только слоту, который назвал actor_employee_id объявлением, и только в той версии, чей лист согласия кабинет читал. Общего на всю платформу в ней ничего нет — она живёт в базе кабинета, и тот же человек у двух клиентов это две разные строки, поэтому довод про связывание кабинетов к ней не относится.
+ */
 export interface AppRuntimeSlotActor {
   /** Псевдоним, свой у каждой пары «установка + человек». Устойчив внутри установки, поэтому панель помнит выбор сотрудника; в другой установке того же приложения у того же человека он ДРУГОЙ; умирает вместе с установкой */
   "subject": UUID;
+  /** Карточка сотрудника кабинета (core_employee.id) — та же, на которой висит его работа. Приезжает только слоту, попросившему actor_employee_id. Пусто означает «не просили либо человек не сотрудник»: различать эти случаи приложению незачем, оба означают, что сотрудника нет. Нужна тому, кто ведёт работу людей: без неё приложение заводит второй список сотрудников у себя, а псевдоним для этого не годится — он умирает вместе с установкой, а часы и назначения обязаны её пережить */
+  "employee_id"?: UUID;
   /** Язык интерфейса человека: слот обязан показывать текст на русском и английском, и без языка он показал бы не тот */
   "locale": "ru" | "en";
   /** Тема кабинета. Слот, объявивший themeAware, без неё исполнить объявленное не может */
@@ -3246,6 +3252,8 @@ export interface CoreProductCreate {
   "record_kind"?: CoreProductRecordKind;
   "parent_product_id"?: UUID | null;
   "custom"?: { [key: string]: unknown };
+  /** Штрихкод и артикулы с формы создания; ложатся в той же транзакции, что и карточка. Занятый код отклоняет создание целиком (409). */
+  "identifiers"?: Array<CoreProductIdentifierInput>;
 }
 
 export interface CoreProductCustomInput {
@@ -3285,6 +3293,41 @@ export interface CoreProductFieldSchema {
   "fields": Array<CoreProductFieldDefinition>;
 }
 
+export interface CoreProductFile {
+  "id": UUID;
+  "product_id": UUID;
+  "kind_item_id": UUID | null;
+  /** Код элемента справочника product_file_kinds; пусто без типа */
+  "kind_code": string;
+  "kind_label": string;
+  "name": string;
+  "mime_type": string;
+  "size_bytes": number;
+  "is_image": boolean;
+  /** Основное фото товара; бывает только у изображения */
+  "is_primary": boolean;
+  "sort_order": number;
+  "uploaded_by_name": string;
+  "created_at": string;
+}
+
+export interface CoreProductFilePage {
+  "count": number;
+  "results": Array<CoreProductFile>;
+}
+
+export interface CoreProductFilePatch {
+  /** Код типа из product_file_kinds; пустая строка снимает тип */
+  "kind"?: string;
+  "name"?: string;
+  /** true делает изображение основным фото */
+  "is_primary"?: boolean;
+}
+
+export interface CoreProductFileReorder {
+  "ids": Array<UUID>;
+}
+
 export interface CoreProductIdentifier {
   "id": UUID;
   "product_id": UUID;
@@ -3309,6 +3352,13 @@ export interface CoreProductIdentifierInput {
 }
 
 export type CoreProductIdentifierKind = "manufacturer_article" | "supplier_article" | "channel_article" | "barcode";
+
+export interface CoreProductIdentifierMatch {
+  "product_id": UUID;
+  "product_name": string;
+  "product_sku": string;
+  "identifier": CoreProductIdentifier;
+}
 
 export interface CoreProductIdentifierPage {
   "count": number;
@@ -4026,9 +4076,60 @@ export interface DeveloperDeliveryPage {
   "has_more": boolean;
 }
 
+export interface DeveloperFunctionArtifactRow {
+  /** Имя функции внутри приложения. У лишнего модуля его нет: манифест этих байтов не называет */
+  "key"?: string;
+  /** Ключ точки расширения, на которой стоит функция */
+  "point"?: string;
+  /** Отпечаток модуля: он и есть имя, под которым байты опознают */
+  "digest": string;
+  /** Виды документа, на которых функция зовётся. ПУСТОЙ СПИСОК ОЗНАЧАЕТ «на всех», и это то же умолчание, что на экране согласия кабинета. */
+  "document_types": Array<string>;
+  /** Байты с этим отпечатком лежат у этой версии */
+  "uploaded": boolean;
+  /** Размер модуля в байтах. Есть только у загруженного */
+  "size"?: number;
+  /** Когда байты положили. Есть только у загруженного */
+  "uploaded_at"?: string;
+}
+
+export interface DeveloperFunctionArtifacts {
+  "version": string;
+  /** Состояние версии. Им объясняется, почему выпущенная версия байтов больше не принимает */
+  "status": string;
+  /** Версия ещё принимает байты. Отдельным полем: выводить это из состояния — ошибиться в пользу разрешения */
+  "editable": boolean;
+  "functions": Array<DeveloperFunctionArtifactRow>;
+  /** Отпечатки, которые лежат у версии, но манифестом не названы. Байты приняты и вреда не делают, но исполнены не будут никогда: диспетчер ходит от манифеста, а не от хранилища. Чаще всего это пересобранный модуль, под который забыли поправить отпечаток в манифесте. */
+  "undeclared": Array<DeveloperFunctionArtifactRow>;
+}
+
+export interface DeveloperFunctionArtifactsResult {
+  "functions": DeveloperFunctionArtifacts;
+}
+
+export interface DeveloperFunctionUpload {
+  /** Отпечаток, ПОСЧИТАННЫЙ по байтам. Присланный полем digest к этому моменту уже сверен */
+  "digest": string;
+  "size": number;
+  "created_at": string;
+  /** Манифест версии называет этот отпечаток. Загрузка НЕ ОТКАЗЫВАЕТ модулю, которого манифест не называет: байты целы, а виноват может быть и файл, и манифест — какой из двух, решает издатель. Но узнать об этом он обязан сразу, а не от ворот публикации через день. */
+  "declared": boolean;
+  /** Модуль годен к исполнению: импорты по белому списку, оба экспорта ABI, память в пределах. При выключенной песочнице всегда true — рантайма нет, судить нечем. */
+  "verified": boolean;
+  /** Машинный код негодности: forbidden_import, abi_missing, module_invalid, verify_failed. Слова на двух языках собирает портал */
+  "verify_reason"?: string;
+  /** То единственное, чего кодом не сказать: какой именно импорт запрещён, какого экспорта не хватает */
+  "verify_detail"?: string;
+}
+
+export interface DeveloperFunctionUploadResult {
+  "upload": DeveloperFunctionUpload;
+}
+
 export interface DeveloperGateCheck {
   /** Какое ворот */
-  "gate": "publisher" | "scopes" | "sensitivity" | "endpoints" | "egress" | "manifest" | "scope_review" | "blocklist";
+  "gate": "publisher" | "scopes" | "sensitivity" | "endpoints" | "egress" | "manifest" | "scope_review" | "blocklist" | "functions";
   /** `awaiting_review` — ход за персоналом платформы: результат внешнего ворота либо не приносили вовсе, либо приносили для другого документа. Своё состояние, а не `failed`: чинить издателю там нечего, и общий ответ отправил бы его править исправный манифест. */
   "status": "passed" | "failed" | "awaiting_review";
   /** Результат приносит не сервер — по нему видно, чинится ли отказ правкой манифеста */
@@ -6096,6 +6197,167 @@ export interface FinanceOpeningBalanceRequest {
   "comment"?: string;
 }
 
+export interface FinanceOperation {
+  "recognition_mode": "document" | "plan";
+  /** Фактически оплачено по проведённым распределениям */
+  "cash_paid": string;
+  /** Оплата сверх признанного начисления */
+  "advance": string;
+  "cash_payments": Array<FinanceOperationFact>;
+  "id": UUID;
+  "kind": "sale" | "purchase";
+  "company_id": UUID;
+  "contact_id": UUID;
+  "currency": string;
+  /** Decimal string */
+  "amount": string;
+  "due_date"?: string;
+  "purpose"?: string;
+  "pnl_item_id"?: string;
+  "project_id"?: string;
+  "contract_id"?: string;
+  "source_system": string;
+  "source_ref": string;
+  "external_id": string;
+  "schema_version": number;
+  "status": CoreDocumentStatus;
+  "current": FinanceOperationVersion;
+  "versions": Array<FinanceOperationVersion>;
+}
+
+export interface FinanceOperationAccrualAllocation {
+  "accrual_id": UUID;
+  /** Положительная decimal string */
+  "amount": string;
+}
+
+/** Указывает ровно одну цель распределения: accrual_id для одной части плана либо allocations для нескольких частей. Совместимость этого ограничения проверяет сервер; плоская форма сохранена, чтобы сгенерированные TypeScript- и Swift-клиенты не теряли общие поля. */
+export interface FinanceOperationAccrualCreate {
+  "source": FinanceOperationSource;
+  "expected_version": number;
+  "accrual_id"?: UUID;
+  "allocations"?: Array<FinanceOperationAccrualAllocation>;
+  "date": string;
+  /** Сумма документа; должна совпасть с суммой allocations */
+  "amount": string;
+  /** Обычно вычисляется из графика; переданное значение не может ему противоречить */
+  "due_date"?: string;
+  "reason"?: string;
+}
+
+export interface FinanceOperationAccrualResult {
+  "operation_id": UUID;
+  "version_id": UUID;
+  "accrual_id"?: string;
+  "allocations": Array<FinanceOperationAccrualAllocation>;
+  "document": CoreDocument;
+  "operation": FinanceOperation;
+}
+
+export interface FinanceOperationAction {
+  "source": FinanceOperationSource;
+  "expected_version": number;
+  "reason"?: string;
+}
+
+export interface FinanceOperationCreate {
+  /** document — один документ начисления; plan — план, который сам не создаёт долг */
+  "recognition_mode"?: "document" | "plan";
+  "source": FinanceOperationSource;
+  "kind": "sale" | "purchase";
+  "company_id": UUID;
+  "contact_id": UUID;
+  "date": string;
+  "currency": string;
+  /** Положительная decimal string */
+  "amount": string;
+  "due_date"?: string;
+  "purpose"?: string;
+  "pnl_item_id": UUID;
+  "project_id"?: string;
+  "contract_id"?: string;
+  "accruals"?: Array<FinanceOperationStageInput>;
+  "payments"?: Array<FinanceOperationStageInput>;
+  "references"?: Array<FinanceOperationReferenceInput>;
+}
+
+export interface FinanceOperationFact {
+  "document_id": UUID;
+  "type_key": string;
+  "type_name": string;
+  "number": string;
+  "date": string;
+  "status": CoreDocumentStatus;
+  /** Decimal string из движений проведённого регистратора */
+  "amount": string;
+  "currency": string;
+}
+
+export interface FinanceOperationReferenceInput {
+  "relation": string;
+  "target_module": string;
+  "target_type": string;
+  "target_id": string;
+}
+
+export interface FinanceOperationSource {
+  "schema_version": number;
+  "source_system": string;
+  "source_ref": string;
+  "external_id": string;
+  "idempotency_key": string;
+}
+
+export interface FinanceOperationStage {
+  "id": UUID;
+  "sequence": number;
+  "label"?: string;
+  "date": string;
+  /** Плановая decimal string */
+  "amount": string;
+  "currency": string;
+  /** Decimal string из проведённых документов */
+  "actual_amount": string;
+  "due_trigger"?: "after_accrual";
+  "after_accrual_id"?: string;
+  "delay_days"?: number;
+  "payment_attribution_pending"?: boolean;
+  "facts": Array<FinanceOperationFact>;
+}
+
+export interface FinanceOperationStageInput {
+  "sequence": number;
+  "label"?: string;
+  /** Необязательная календарная дата; пусто означает без срока */
+  "date"?: string;
+  /** Положительная decimal string */
+  "amount": string;
+  /** По умолчанию валюта операции; другая валюта не принимается */
+  "currency"?: string;
+  /** Только для графика оплаты: считать срок от проведённого начисления */
+  "due_trigger"?: "after_accrual";
+  /** Номер части начисления; отсутствие означает от любого начисления */
+  "after_accrual_sequence"?: number;
+  "delay_days"?: number;
+}
+
+export interface FinanceOperationVersion {
+  "id": UUID;
+  "version": number;
+  "change_kind": "initial" | "correction" | "reversal";
+  "previous_version_id"?: string;
+  "document_id": UUID;
+  "document_status": CoreDocumentStatus;
+  "is_marked_deleted": boolean;
+  "company_id": UUID;
+  "contact_id": UUID;
+  "currency": string;
+  "effective_date": string;
+  "reason"?: string;
+  "accruals": Array<FinanceOperationStage>;
+  "payments": Array<FinanceOperationStage>;
+}
+
 export interface FinancePaymentCalendar {
   /** Дата доступных курсов для пересчёта прогноза без переоценки в главной книге */
   "valuation_date"?: string;
@@ -7044,6 +7306,10 @@ export interface FinanceTradeAdvance {
 export interface FinanceTradeJournalPage {
   "count": number;
   "results": Array<FinanceTradeJournalRow>;
+  "limit"?: number;
+  "offset"?: number;
+  "has_more"?: boolean;
+  "limit_reached"?: boolean;
 }
 
 export interface FinanceTradeJournalRow {
@@ -7064,6 +7330,27 @@ export interface FinanceTradeJournalRow {
   "due_date": string;
   /** Decimal string из регистра расчётов */
   "outstanding": string;
+  "operation_id"?: string;
+  "parent_operation_id"?: string;
+  "parent_document_id"?: string;
+  "recognition_mode"?: string;
+  "type_key"?: string;
+  "type_name"?: string;
+  "overdue_amount"?: string;
+  "accrued"?: string;
+  "paid"?: string;
+  "cash_paid"?: string;
+  "advance"?: string;
+  "change_kind"?: string;
+  "source_system"?: string;
+  "source_ref"?: string;
+  "external_id"?: string;
+  "version"?: number;
+  "cash_documents"?: number;
+  "accrual_stages"?: number;
+  "payment_stages"?: number;
+  "accrued_stages"?: number;
+  "paid_stages"?: number;
 }
 
 export interface FinanceTransaction {
@@ -7269,6 +7556,8 @@ export interface KnowledgeAnswerInput {
   "history"?: Array<KnowledgeAnswerTurn>;
   /** Где искать: company — материалы компании, guides — встроенные руководства продукта, all — оба корпуса */
   "scope"?: "all" | "company" | "guides";
+  /** Не сочинять ответ моделью, вернуть только найденные фрагменты и извлечённую сводку. Для того, кто говорит своим голосом и сам собирает ответ из цитат: без генерации ответ приходит за время поиска */
+  "citations_only"?: boolean;
 }
 
 export interface KnowledgeAnswerQuality {
@@ -7577,6 +7866,34 @@ export interface ManagedChecklistPatch {
   "items": Array<ManagedChecklistItem>;
 }
 
+/** Последняя дата операций площадки, уже включённых в каждый компонент отчёта; отсутствующее или null-значение означает, что дата покрытия пока неизвестна. */
+export interface MarketplaceComponentDataThrough {
+  /** Финансовые операции площадки */
+  "finance"?: string | null;
+  /** Реклама Wildberries */
+  "ads"?: string | null;
+  /** Клики рекламы Ozon */
+  "ads_clicks"?: string | null;
+  /** Заказы из рекламы Ozon */
+  "ads_orders"?: string | null;
+  /** Карточки товаров по дате последней синхронизации */
+  "products"?: string | null;
+}
+
+/** Время последней успешной загрузки каждого компонента отчёта; отсутствующее или null-значение означает, что компонент ещё не загружался успешно. */
+export interface MarketplaceComponentFreshness {
+  /** Финансовые операции площадки */
+  "finance"?: string | null;
+  /** Реклама Wildberries */
+  "ads"?: string | null;
+  /** Клики рекламы Ozon */
+  "ads_clicks"?: string | null;
+  /** Заказы из рекламы Ozon */
+  "ads_orders"?: string | null;
+  /** Карточки товаров */
+  "products"?: string | null;
+}
+
 /** Сырьё строки прайса в том виде в каком его отдаёт витрина ценообразования */
 export interface MarketplaceEconBaseRow {
   /** Установочная цена, до скидки площадки */
@@ -7743,6 +8060,10 @@ export interface MarketplaceOzonDecomposition {
   "periods": Array<MarketplaceOzonDecompositionPeriod>;
   "articles": Array<MarketplaceOzonDecompositionArticle>;
   "other": MarketplaceOzonDecompositionOtherBlock | null;
+  "freshness"?: MarketplaceComponentFreshness;
+  "data_through"?: MarketplaceComponentDataThrough;
+  /** Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась */
+  "incomplete"?: boolean;
 }
 
 export interface MarketplaceOzonDecompositionArticle {
@@ -7834,7 +8155,7 @@ export interface MarketplaceOzonDecompositionPeriod {
 
 export interface MarketplaceOzonFbs {
   "platform": "ozon";
-  "source"?: "ozon_fbs_live";
+  "source"?: "oz_orders_fbs";
   "from"?: string;
   "to"?: string;
   "totals"?: MarketplaceOzonFbsTotals;
@@ -8108,6 +8429,10 @@ export interface MarketplaceOzonPnl {
   "demo"?: boolean;
   /** Расшифровка прочего по периодам */
   "breakdown"?: { [key: string]: Array<MarketplaceOzonDecompositionOtherItem> };
+  "freshness"?: MarketplaceComponentFreshness;
+  "data_through"?: MarketplaceComponentDataThrough;
+  /** Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась */
+  "incomplete"?: boolean;
 }
 
 export interface MarketplaceOzonPnlPeriod {
@@ -8357,27 +8682,64 @@ export interface MarketplaceProductGroupPatch {
 
 export type MarketplaceProductGroupPlatform = "ozon" | "wildberries";
 
-/** Магазин маркетплейса в кабинете. Форма одна для Ozon, Wildberries и Яндекс Маркета — их различает только поле platform. Ключи и токены доступа к площадке в ответ не попадают. */
+/** Магазин маркетплейса в кабинете. Форма одна для Ozon, Wildberries и Яндекс Маркета — их различает только поле platform. Ключи, токены и proxy в ответ не попадают; вместо них возвращаются безопасные признаки настройки. */
 export interface MarketplaceStore {
   "id": UUID;
   /** Платформа задаётся маршрутом, а не телом запроса */
   "platform": "ozon" | "wildberries" | "yandex";
   "name": string;
-  /** Идентификатор магазина на стороне площадки */
-  "external_id": number;
+  /** Внутренний идентификатор MPTrack; назначается после передачи настройки и не вводится пользователем */
+  "external_id"?: number;
   /** Ставка налога в процентах; decimal строкой */
   "tax_percent": string;
   "is_active": boolean;
+  /** Для подключения включена загрузка схемы FBS */
+  "has_fbs": boolean;
+  /** Для подключения Wildberries включена аналитика «Джем» */
+  "has_jam": boolean;
+  /** Есть хотя бы один сохранённый API-реквизит */
+  "credentials_configured": boolean;
+  "ozon_client_id_set": boolean;
+  "ozon_api_key_set": boolean;
+  "ozon_pf_client_id_set": boolean;
+  "ozon_pf_client_secret_set": boolean;
+  "wb_token_set": boolean;
+  "ym_business_id_set": boolean;
+  "ym_api_key_set": boolean;
+  "proxy_set": boolean;
+  /** Состояние передачи настройки в MPTrack */
+  "config_sync_status": "not_configured" | "synced" | "error";
+  "config_synced_at"?: string;
+  /** Безопасная классификация токена Wildberries без раскрытия токена: basic — ограниченный базовый, personal — персональный, test — тестовый, service — сервисный, unknown — тип не определён */
+  "token_class"?: "basic" | "personal" | "test" | "service" | "unknown";
+  /** Безопасное состояние подключения в ERP: not_checked — проверка ещё не запускалась, pending — MPTrack проверяет реквизиты или запускает первую загрузку, disabled — загрузки отключены, ok — подключение работает, warning — требуется внимание, error — подключение не работает. Сырые статусы и тексты MPTrack не публикуются */
+  "connection_status": "not_checked" | "pending" | "disabled" | "ok" | "warning" | "error";
+  /** Безопасный стабильный код состояния подключения; сырой текст ошибки не публикуется */
+  "connection_error_code"?: string;
+  /** Момент последней успешной загрузки этого подключения */
+  "last_etl_at"?: string;
 }
 
-/** Тело заведения магазина. Одинаково для трёх площадок — платформу задаёт маршрут. */
+/** Тело создания управляемого подключения. Платформу задаёт маршрут, а external_id назначает MPTrack. Для Ozon нужны ozon_client_id и ozon_api_key, для Wildberries — wb_token, для Яндекс Маркета — ym_business_id и ym_api_key. */
 export interface MarketplaceStoreInput {
   "name": string;
-  /** Должен помещаться в int32 — по нему магазин сопоставляется с аналитической базой */
-  "external_id": number;
   /** Ставка налога в процентах; пустая строка сохраняется как ноль */
   "tax_percent"?: string;
   "is_active"?: boolean;
+  "has_fbs"?: boolean;
+  /** Используется для Wildberries */
+  "has_jam"?: boolean;
+  "ozon_client_id"?: string;
+  "ozon_api_key"?: string;
+  "ozon_pf_client_id"?: string;
+  "ozon_pf_client_secret"?: string;
+  /** Рекомендуется персональный токен класса personal; значение не возвращается */
+  "wb_token"?: string;
+  /** Business ID вводится строкой; ERP проверяет числовой идентификатор и преобразует его для MPTrack */
+  "ym_business_id"?: string;
+  "ym_api_key"?: string;
+  /** Необязательный адрес proxy; значение не возвращается */
+  "proxy"?: string;
 }
 
 export interface MarketplaceStorePage {
@@ -8385,11 +8747,26 @@ export interface MarketplaceStorePage {
   "results": Array<MarketplaceStore>;
 }
 
-/** Отсутствующее или пустое поле сохраняет текущее значение. Название и external_id этим маршрутом не меняются. */
+/** Меняет пользовательские настройки подключения. external_id изменить нельзя. Отсутствующее или пустое поле реквизита сохраняет прежний секрет. */
 export interface MarketplaceStorePatch {
+  "name"?: string;
   /** Пустая строка оставляет сохранённую ставку */
   "tax_percent"?: string;
   "is_active"?: boolean;
+  "has_fbs"?: boolean;
+  /** Используется для Wildberries */
+  "has_jam"?: boolean;
+  "ozon_client_id"?: string;
+  "ozon_api_key"?: string;
+  "ozon_pf_client_id"?: string;
+  "ozon_pf_client_secret"?: string;
+  /** Пустая строка сохраняет прежний токен */
+  "wb_token"?: string;
+  /** Business ID вводится строкой; ERP проверяет числовой идентификатор и преобразует его для MPTrack. Пустая строка сохраняет прежнее значение */
+  "ym_business_id"?: string;
+  "ym_api_key"?: string;
+  /** Пустая строка сохраняет прежнее значение */
+  "proxy"?: string;
 }
 
 export interface MarketplaceWbCardAdDay {
@@ -8537,6 +8914,10 @@ export interface MarketplaceWbDecomposition {
   "other": MarketplaceWbDecompositionOther | null;
   /** Аналитическая база не подключена и цифры синтетические */
   "demo"?: boolean;
+  "freshness"?: MarketplaceComponentFreshness;
+  "data_through"?: MarketplaceComponentDataThrough;
+  /** Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась */
+  "incomplete"?: boolean;
 }
 
 export interface MarketplaceWbDecompositionArticle {
@@ -8791,6 +9172,10 @@ export interface MarketplaceWbPnl {
   "demo"?: boolean;
   /** Разбор строки «Прочее» по периодам */
   "breakdown"?: { [key: string]: Array<MarketplaceWbDecompOtherItem> };
+  "freshness"?: MarketplaceComponentFreshness;
+  "data_through"?: MarketplaceComponentDataThrough;
+  /** Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась */
+  "incomplete"?: boolean;
 }
 
 export interface MarketplaceWbPnlPeriod {
@@ -10106,6 +10491,27 @@ export interface SettingsAppConsentEgress {
   "sends": Array<string>;
 }
 
+/** Одна графа, которую приложение добавит карточке кабинета. Ключа и типа здесь нет, как нет области у права: кабинет решает, пускать ли приложение к своим карточкам, а не читает манифест */
+export interface SettingsAppConsentField {
+  /** Ключ сущности. Не текст для экрана: он группирует строки, а показывается entity_name */
+  "entity": string;
+  "entity_name": SettingsAppLocalizedText;
+  "label": SettingsAppLocalizedText;
+  /** Версия объявила графу устаревшей: на карточках она не появится */
+  "obsolete"?: boolean;
+}
+
+/** Одна проверка приложения внутри операции кабинета, выполняемая КОДОМ в песочнице. Summary написан платформой: о том, чем приложение может помешать, кабинету рассказываем мы */
+export interface SettingsAppConsentFunction {
+  /** Ключ точки, на которой стоит функция */
+  "point": string;
+  /** Имя функции внутри приложения */
+  "key": string;
+  /** Виды документов, которые функция смотрит; пустой список означает ВСЕ, и лист говорит это словами */
+  "document_types": Array<string>;
+  "summary": SettingsAppLocalizedText;
+}
+
 export interface SettingsAppConsentPermission {
   "scope": string;
   /** Без этого права приложение не работает; необъяснённое манифестом право считается обязательным */
@@ -10150,6 +10556,25 @@ export interface SettingsAppConsentResult {
   "requires_consent": boolean;
 }
 
+/** Та же проверка внутри операции кабинета, но выраженная УСЛОВИЕМ, а не кодом. Отдельно от функций, потому что у правила лист знает заранее две вещи, которых у функции не знает: исход и точный текст, который человек прочтёт. Самого выражения здесь нет: кабинет решает, пускать ли приложение к своим документам, а не проверяет чужой код глазами */
+export interface SettingsAppConsentRule {
+  /** Ключ точки, на которой стоит правило */
+  "point": string;
+  /** Имя правила внутри приложения */
+  "key": string;
+  /** refuse останавливает проведение, warn показывает человеку сообщение и пропускает документ */
+  "outcome": "refuse" | "warn";
+  /** Виды документов, которые правило смотрит; пустой список означает ВСЕ */
+  "document_types": Array<string>;
+  "summary": SettingsAppLocalizedText;
+  "message": SettingsAppLocalizedText;
+}
+
+/** Раздел, который приложение добавит в меню кабинета. Только название: значок, порядок и адрес страницы — оформление пункта, а решение принимается по тому, что за раздел появится в меню */
+export interface SettingsAppConsentSection {
+  "title": SettingsAppLocalizedText;
+}
+
 /** Лист согласия, снятый с манифеста сервером: единственное утверждение платформы о приложении, на которое кабинет соглашается */
 export interface SettingsAppConsentSheet {
   "name": SettingsAppLocalizedText;
@@ -10160,8 +10585,18 @@ export interface SettingsAppConsentSheet {
   "permissions": Array<SettingsAppConsentPermission>;
   "subscriptions": Array<SettingsAppConsentSubscription>;
   "slots": Array<SettingsAppConsentSlot>;
-  /** Что приложение узнает о человеке, открывшем панель: пересечение запрошенного слотами с закрытым словарём платформы; больше ничего оно узнать не может */
-  "person_facts": Array<"actor_subject" | "locale" | "theme">;
+  /** Разделы, которые приложение добавит в МЕНЮ кабинета. Отдельной строкой рядом со слотами: слот — место внутри чужого экрана, а раздел меняет само меню, и увидит его каждый, кто войдёт в кабинет */
+  "sections": Array<SettingsAppConsentSection>;
+  /** Графы, которые приложение добавит карточкам кабинета. Рядом с правами, а не среди них: право говорит, что приложение УВИДИТ и ИЗМЕНИТ, а графа — что оно ДОБАВИТ на глаза каждому, кто откроет карточку */
+  "fields": Array<SettingsAppConsentField>;
+  /** Проверки КОДОМ внутри операций кабинета, с правом их остановить. Особняком от прав намеренно: ни одно право не отвечает на вопрос «может ли приложение мне запретить» */
+  "functions": Array<SettingsAppConsentFunction>;
+  /** Те же проверки, выраженные условием, а не кодом */
+  "rules": Array<SettingsAppConsentRule>;
+  /** У версии нет ни одного пути наружу: ни приёмника событий, ни слота на чужом источнике, ни объявленного исходящего, — и всё, что она делает, делается внутри продукта. ВЫЧИСЛЯЕТСЯ, а не ставится руками: отметка, поставленная человеком, означает «мы посмотрели и решили», а вычисляемое правило — «по построению не может быть иначе» */
+  "runs_on_akeda": boolean;
+  /** Что приложение узнает о человеке, открывшем панель: пересечение запрошенного слотами с закрытым словарём платформы; больше ничего оно узнать не может. actor_employee_id — единственный факт, называющий человека настоящей карточкой сотрудника кабинета, а не псевдонимом: с ним приложение отличает сотрудников друг от друга, а имя и должность читает только отдельным правом на сотрудников. Экран согласия обязан сказать про него другими словами, чем про остальные три */
+  "person_facts": Array<"actor_subject" | "actor_employee_id" | "locale" | "theme">;
   "data_policy": PlatformAppDataPolicy;
   "support": SettingsAppConsentSupport;
   /** Внешние получатели данных кабинета поимённо */
@@ -10207,6 +10642,10 @@ export interface SettingsAppDeclaredSlot {
   "context": Array<string>;
   "title": SettingsAppLocalizedText;
   "theme_aware": boolean;
+  /** Значок пункта меню из закрытого списка платформы. Только у слота раздела приложения; имя вне списка приведено к запасному ещё на сервере — незнакомое рисуется пустым квадратом молча */
+  "icon"?: string;
+  /** Порядок пункта в меню кабинета. Только у слота раздела приложения; не названный приложением порядок ставит раздел в хвост, а не в голову меню */
+  "order"?: number;
   /** Что расширение вправе прислать оболочке; уже пересечено с закрытым списком платформы */
   "bridge_sends": Array<string>;
   /** Что оболочка вправе прислать расширению */
@@ -10412,10 +10851,6 @@ export interface SettingsCompany {
   "legal_address": SettingsCompanyAddress;
   "entrepreneur": SettingsCompanyPerson;
   "is_active": boolean;
-  /** Метод признания выручки: по деньгам или по начислению */
-  "accounting_method": "cash" | "accrual";
-  /** Дата перехода на accrual; отсутствует у кассового метода */
-  "accrual_from"?: string;
 }
 
 export interface SettingsCompanyAddress {
@@ -10768,7 +11203,11 @@ export interface StatusUpdatePatch {
 
 export interface StockBatch {
   "id": UUID;
-  "company_id": UUID;
+  /** Бизнес партии — учётная единица, которой принадлежит товар */
+  "business_id": { [key: string]: unknown };
+  "business_name": string;
+  /** Юрлицо партии — разрез официального контура. У неофициального прихода его нет, и тогда поле пустое (ERP-704). */
+  "company_id": UUID | null;
   "company_name": string;
   "product_id": UUID;
   "product_sku": string;
@@ -10792,6 +11231,16 @@ export interface StockBatchPage {
   "limit": number;
   "offset": number;
   "results": Array<StockBatch>;
+}
+
+export interface StockBusinessRef {
+  "id": UUID;
+  "name": string;
+}
+
+export interface StockBusinessRefPage {
+  "count": number;
+  "results": Array<StockBusinessRef>;
 }
 
 export interface StockCompanyPolicy {
@@ -10822,6 +11271,7 @@ export interface StockCompanyPolicyPatch {
 export interface StockCompanyRef {
   "id": UUID;
   "name": string;
+  "business_id": UUID;
 }
 
 export interface StockCompanyRefPage {
@@ -11452,7 +11902,11 @@ export interface StockReportReservationSummary {
 }
 
 export interface StockReportRow {
-  "company_id": UUID;
+  /** Бизнес остатка — учётная единица строки */
+  "business_id": { [key: string]: unknown };
+  "business_name": string;
+  /** Юрлицо остатка — разрез официального контура. У неофициального товара его нет, и тогда поле пустое (ERP-704). */
+  "company_id": UUID | null;
   "company_name": string;
   "warehouse_id": UUID;
   "warehouse_code": string;

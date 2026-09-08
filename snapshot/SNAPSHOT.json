@@ -3,41 +3,41 @@
     "license": "LicenseRef-Akeda-Proprietary",
     "operations": {
       "by_audience": {
-        "external": 858
+        "external": 877
       },
       "by_module": {
         "calendar": 35,
         "chat": 45,
-        "core": 153,
+        "core": 160,
         "crm": 89,
-        "developer": 20,
+        "developer": 22,
         "docflow": 33,
         "files": 20,
-        "finance": 116,
+        "finance": 125,
         "knowledge": 38,
         "marketplace": 56,
         "platform": 4,
         "settings": 46,
-        "stock": 72,
+        "stock": 73,
         "tasks": 131
       },
       "by_stage": {
-        "preview": 828,
+        "preview": 847,
         "public": 30
       },
       "installation_by_module": {
         "calendar": 32,
-        "core": 140,
-        "finance": 103,
+        "core": 147,
+        "finance": 112,
         "marketplace": 56,
         "platform": 4,
-        "stock": 72,
+        "stock": 73,
         "tasks": 131
       },
-      "installation_reachable": 538,
-      "total": 858
+      "installation_reachable": 555,
+      "total": 877
     },
-    "schemas": 1169,
+    "schemas": 1199,
     "servers": [
       "https://erp.akeda.ru"
     ],
@@ -51,24 +51,24 @@
       "sha256": "8cd6156f92c73bd4858f106c9e398ed5008d93e3959f1347940197e8b484f933"
     },
     {
-      "bytes": 66625,
+      "bytes": 74789,
       "path": "extension-manifest/v1/manifest.schema.json",
-      "sha256": "5e7b0e6c5a7801346a699d993169d228020ab8635112cf06ea917c189de56c1e"
+      "sha256": "e3684fd15d7669ba2145457a94f7cd2ff8179e1790c400b02ca2f55c3105f01f"
     },
     {
-      "bytes": 3166047,
+      "bytes": 3283210,
       "path": "openapi/akeda-v1.json",
-      "sha256": "a255440df951ca637e056f0155498f67bc7b34723eac197148cf9cab8906c7c3"
+      "sha256": "ebe5e52494dcae67cde216647dade1b2e8bf8b5342ebe09c26914a8cc4a895d5"
     },
     {
-      "bytes": 2361362,
+      "bytes": 2452490,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "326e7f1d4aaa84c5f159228924fc43fed1e4634f2925492eef2dcbc8d5748d25"
+      "sha256": "091e74a1f5ea93ed57f282d0beb92cd6dcbf22f194cfb2389e1f3acec2155a53"
     },
     {
-      "bytes": 16402,
+      "bytes": 18332,
       "path": "platform-catalog/v1/platform-catalog.json",
-      "sha256": "5be06bc3e6c73aca4e218ae9a6a9ff25eda2df1aaede25ba697d1c1d6197af9f"
+      "sha256": "94f7698dbe5e47a20d7adf31dd7f58b6d1b564f6b3f3504de32ae6a131f081bb"
     },
     {
       "bytes": 19148,
@@ -76,6 +76,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "0f8ce313868ba105e2b918ad21de85c0798fbbc43f1a23a00fd84aac8ca2eeef",
+  "snapshot_digest": "1d9a6f3fed26aadb0efa104c854f680beece4dbed187169690efa9cd55693eb3",
   "snapshot_version": 1
 }

@@ -29,13 +29,16 @@ info:
     значение справочника — это пара «ключ справочника плюс код», а не голый
     идентификатор, и проверяет её сервер. Внутренним остаётся один
     операторский маршрут доразноса документов.
-    Для модуля finance (счета и выписки) опубликованы все 110 из 110
+    Для модуля finance (счета и выписки) опубликованы 119 из 136 живых
     операций: счета, выписки, транзакции, категоризация, сверка, входящие
     остатки, подключения к банкам, синхронизация, проверка реквизитов,
-    коммерческие условия, взаиморасчёты, торговый журнал, журнал обмена,
-    управляемый импорт, платёжный календарь, макеты ОПиУ, регистры, отчёты,
-    зарплатный контур с реестрами выплат и расшифровки строк отчётов о
-    движении денег и о прибылях.
+    коммерческие условия, взаиморасчёты, продажи и закупки с планами
+    начисления и оплаты, связанными документами и фактическим исполнением,
+    торговый журнал, журнал обмена, управляемый импорт, платёжный календарь,
+    макеты ОПиУ, регистры, отчёты, зарплатный контур с реестрами выплат и
+    расшифровки строк отчётов о движении денег и о прибылях. Коррекция и
+    сторно операции остаются внутренними до атомарной замены движений
+    исходного регистратора.
     Исторические `/api/v1/bank/*` не дублируются в контракте.
     Для модуля crm (продажи) опубликованы 89 из 90 живых операций: воронки и
     стадии с нормативами SLA, сделки с доской и историей этапов, лиды с
@@ -900,6 +903,8 @@ paths:
         - mcpOAuth:
             - akeda:delegate
         - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -909,6 +914,9 @@ paths:
       responses:
         '201':
           description: Созданная группа проектов
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
           content:
             application/json:
               schema:
@@ -919,8 +927,14 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/IdempotencyKeyMismatch'
         '500':
           $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/IdempotencyUnavailable'
   /api/v1/tasks/projects/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -1044,6 +1058,8 @@ paths:
         - mcpOAuth:
             - akeda:delegate
         - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -1053,6 +1069,9 @@ paths:
       responses:
         '201':
           description: Созданный проект задач
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
           content:
             application/json:
               schema:
@@ -1063,8 +1082,14 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/IdempotencyKeyMismatch'
         '500':
           $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/IdempotencyUnavailable'
   /api/v1/tasks/sections/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -8931,6 +8956,40 @@ paths:
           description: UUID, root или пусто без фильтра
           schema:
             type: string
+        - name: kind
+          in: query
+          description: Вид позиции; пусто — любой
+          schema:
+            type: string
+            enum:
+              - goods
+              - service
+              - material
+              - semi_product
+        - name: profile
+          in: query
+          description: Назначение; пусто — любое
+          schema:
+            type: string
+            enum:
+              - sell
+              - stock
+              - purchase
+              - produce
+        - name: sort
+          in: query
+          description: Порядок страницы; минус — по убыванию. Пусто — свежие правки первыми
+          schema:
+            type: string
+            enum:
+              - name
+              - -name
+              - sku
+              - -sku
+              - price
+              - -price
+              - updated
+              - -updated
         - name: limit
           in: query
           schema:
@@ -8946,7 +9005,7 @@ paths:
             default: 0
       responses:
         '200':
-          description: Номенклатура выбранного окна
+          description: Страница номенклатуры; count — общее число позиций под отбором, а не размер страницы
           content:
             application/json:
               schema:
@@ -9358,6 +9417,55 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/core/product-identifiers/lookup:
+    get:
+      tags:
+        - Core products
+      operationId: coreLookupProductIdentifier
+      summary: Чей это штрихкод или артикул
+      description: Проверка занятости кода до сохранения карточки. Штрихкод ищется по всему кабинету, артикул — в названном источнике или в любом, если source_ref пуст. Свободный код — 404.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: kind
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/CoreProductIdentifierKind'
+        - name: value
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: source_ref
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Владелец кода
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreProductIdentifierMatch'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/core/products/{id}/identifiers:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -9440,6 +9548,280 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/core/products/{id}/files:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Core products
+      operationId: coreListProductFiles
+      summary: Получить файлы и фото товара
+      description: Основное фото первым, затем в порядке, который расставил человек. Тип файла — элемент справочника product_file_kinds.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Файлы карточки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreProductFilePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Core products
+      operationId: coreUploadProductFile
+      summary: Загрузить файл или фото товара
+      description: Файл не больше 25 МиБ, изображений у товара не больше 5 (документов предел не касается). Поле kind — код типа из справочника product_file_kinds; изображению без kind достаётся photo. Первое изображение товара становится основным.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                kind:
+                  type: string
+                  description: Код типа файла из справочника product_file_kinds
+                name:
+                  type: string
+                  description: Имя файла; по умолчанию имя загруженного файла
+      responses:
+        '201':
+          description: Созданный файл
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreProductFile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/products/{id}/files/reorder:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    post:
+      tags:
+        - Core products
+      operationId: coreReorderProductFiles
+      summary: Переставить файлы товара
+      description: Названные файлы получают порядок списка, остальные идут следом в прежнем порядке.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreProductFileReorder'
+      responses:
+        '204':
+          description: Порядок сохранён
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/products/{id}/files/{fileId}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: fileId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    patch:
+      tags:
+        - Core products
+      operationId: coreUpdateProductFile
+      summary: Изменить тип, имя или основное фото
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreProductFilePatch'
+      responses:
+        '200':
+          description: Обновлённый файл
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreProductFile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Core products
+      operationId: coreDeleteProductFile
+      summary: Удалить файл товара
+      description: Строка и объект хранилища удаляются; если ушло основное фото, основным становится следующее изображение.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '204':
+          description: Файл удалён
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/products/{id}/files/{fileId}/content:
+    get:
+      tags:
+        - Core products
+      operationId: coreGetProductFileContent
+      summary: Скачать файл товара или миниатюру фото
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: w
+          in: query
+          description: Ширина миниатюры изображения; 0 возвращает оригинал
+          schema:
+            type: integer
+            minimum: 0
+        - name: download
+          in: query
+          description: true — Content-Disposition attachment с именем файла
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Байты файла с фактическим Content-Type
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/core/products/{id}/identifiers/{identifierId}:
     patch:
       tags:
@@ -14670,6 +15052,245 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/finance/operations:
+    post:
+      tags:
+        - Finance operations
+      operationId: financeCreateOperation
+      summary: Завести продажу или закупку
+      description: 'Создаёт штатный черновик операции. Режим document описывает один документ начисления, режим plan — договор или иной план с несколькими будущими начислениями. План сам долг не создаёт: долг появляется только после отдельного проведённого начисления. Повтор того же конверта источника идемпотентен; прямой записи в регистры нет.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.operations:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceOperationCreate'
+      responses:
+        '201':
+          description: Текущее состояние операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOperation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Конверт источника уже использован для другой команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/finance/operations/{id}:
+    get:
+      tags:
+        - Finance operations
+      operationId: financeGetOperation
+      summary: Получить состояние продажи или закупки
+      description: Возвращает план, фактические начисления и оплаты из проведённых документов, аванс и неизменяемую историю версий.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.operations:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Операция, факты и история
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOperation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/operations/{id}/accruals:
+    post:
+      tags:
+        - Finance operations
+      operationId: financeCreateOperationAccrual
+      summary: Провести начисление по плану операции
+      description: Создаёт и проводит отдельный документ выполнения по одной или нескольким частям плана. Сумма распределений обязана совпасть с общей суммой и не превышать неначисленный остаток. Относительный срок оплаты вычисляется от даты этого начисления.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.operations:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceOperationAccrualCreate'
+      responses:
+        '201':
+          description: Проведённый документ начисления и обновлённая операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOperationAccrualResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          description: Конверт источника уже использован для другой команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/operations/{id}/documents/{documentId}/links:
+    get:
+      tags:
+        - Finance operations
+      operationId: financeGetOperationDocumentLinks
+      summary: Развернуть документ операции до основания и движений
+      description: Отдаёт связи и движения только для документа, который действительно входит в эту операцию.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.operations:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Основания, зависимые документы и движения регистратора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocumentLinks'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/operations/{id}/cancel:
+    post:
+      tags:
+        - Finance operations
+      operationId: financeCancelOperation
+      summary: Отменить текущий документ операции
+      description: Отменяет документ атомарно с записью команды. План с действующими начислениями сначала требует разобрать эти документы. Исправление и сторно не входят в публичный контракт, пока замена движений исходного регистратора не реализована атомарно.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.operations:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceOperationAction'
+      responses:
+        '200':
+          description: Отменённая операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOperation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          description: Конверт источника уже использован для другой команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/finance/settlements/documents:
     get:
       tags:
@@ -14993,6 +15614,69 @@ paths:
             minimum: 1
             default: 500
             maximum: 500
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: company_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - draft
+              - posted
+              - cancelled
+        - name: view
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - control
+              - due
+            default: all
+        - name: settlement_state
+          in: query
+          schema:
+            type: string
+            enum:
+              - all
+              - unaccrued
+              - open
+              - overdue
+              - advance
+        - name: currency
+          in: query
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 3
+        - name: record_id
+          in: query
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: Сделки и остатки из регистра расчётов
@@ -15026,9 +15710,10 @@ paths:
         - installationToken: []
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/BusinessQuery'
         - name: company_id
           in: query
-          required: true
+          description: Omit for the selected business without a legal entity
           schema:
             $ref: '#/components/schemas/UUID'
         - name: contact_id
@@ -24710,6 +25395,36 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/v1/stock/businesses:
+    get:
+      tags:
+        - Stock references
+      operationId: stockListBusinesses
+      summary: Получить учётные единицы кабинета
+      description: Учётная единица склада — бизнес; юрлицо рядом с ним необязательный разрез. Отдаются только идентификатор и название активных бизнесов.
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Учётные единицы кабинета
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockBusinessRefPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/stock/suppliers:
     get:
       tags:
@@ -27752,7 +28467,7 @@ paths:
         - Marketplace stores
       operationId: marketplaceCreateOzonStore
       summary: Завести магазин Ozon
-      description: Идемпотентно по паре платформа плюс external_id — повторный вызов обновляет название, налог и активность существующего магазина.
+      description: Создаёт управляемое подключение Ozon. MPTrack назначает external_id сам; ключи и токены никогда не возвращаются в ответе.
       x-akeda-module: marketplace
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -27765,6 +28480,15 @@ paths:
         - installationToken: []
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Стабильный ключ одной попытки создания; повтор с тем же ключом обращается к тому же подключению.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+            pattern: ^[\x21-\x7E]+$
       requestBody:
         required: true
         content:
@@ -27784,6 +28508,16 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          description: На Ozon уже заведено 10 подключений; код marketplace_store_limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/marketplace/ozon/stores/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -27797,7 +28531,7 @@ paths:
         - Marketplace stores
       operationId: marketplaceUpdateOzonStore
       summary: Изменить магазин Ozon
-      description: Меняются только налог и активность; название и external_id правятся повторным заведением магазина.
+      description: Меняет название, налог, режимы работы, активность и переданные реквизиты. external_id назначает MPTrack, изменить его нельзя; пустой секрет сохраняет прежнее значение.
       x-akeda-module: marketplace
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -27829,6 +28563,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/marketplace/wb/stores:
     get:
       tags:
@@ -27874,7 +28612,7 @@ paths:
         - Marketplace stores
       operationId: marketplaceCreateWbStore
       summary: Завести магазин Wildberries
-      description: Идемпотентно по паре платформа плюс external_id — повторный вызов обновляет название, налог и активность существующего магазина.
+      description: Создаёт управляемое подключение Wildberries. MPTrack назначает external_id сам; токен никогда не возвращается в ответе.
       x-akeda-module: marketplace
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -27887,6 +28625,15 @@ paths:
         - installationToken: []
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Стабильный ключ одной попытки создания; повтор с тем же ключом обращается к тому же подключению.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+            pattern: ^[\x21-\x7E]+$
       requestBody:
         required: true
         content:
@@ -27906,6 +28653,16 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          description: На Wildberries уже заведено 10 подключений; код marketplace_store_limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/marketplace/wb/stores/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -27919,7 +28676,7 @@ paths:
         - Marketplace stores
       operationId: marketplaceUpdateWbStore
       summary: Изменить магазин Wildberries
-      description: Меняются только налог и активность; название и external_id правятся повторным заведением магазина.
+      description: Меняет название, налог, режимы работы, активность и переданный токен. external_id назначает MPTrack, изменить его нельзя; пустой секрет сохраняет прежнее значение.
       x-akeda-module: marketplace
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -27951,6 +28708,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/marketplace/yandex/stores:
     get:
       tags:
@@ -27996,7 +28757,7 @@ paths:
         - Marketplace stores
       operationId: marketplaceCreateYandexStore
       summary: Завести магазин Яндекс Маркета
-      description: Идемпотентно по паре платформа плюс external_id — повторный вызов обновляет название, налог и активность существующего магазина.
+      description: Создаёт управляемое подключение Яндекс Маркета. MPTrack назначает external_id сам; ключ API никогда не возвращается в ответе.
       x-akeda-module: marketplace
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -28009,6 +28770,15 @@ paths:
         - installationToken: []
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Стабильный ключ одной попытки создания; повтор с тем же ключом обращается к тому же подключению.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+            pattern: ^[\x21-\x7E]+$
       requestBody:
         required: true
         content:
@@ -28028,6 +28798,16 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          description: На Яндекс Маркете уже заведено 10 подключений; код marketplace_store_limit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/marketplace/yandex/stores/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -28041,7 +28821,7 @@ paths:
         - Marketplace stores
       operationId: marketplaceUpdateYandexStore
       summary: Изменить магазин Яндекс Маркета
-      description: Меняются только налог и активность; название и external_id правятся повторным заведением магазина.
+      description: Меняет название, налог, режимы работы, активность и переданные реквизиты. external_id назначает MPTrack, изменить его нельзя; пустой секрет сохраняет прежнее значение.
       x-akeda-module: marketplace
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -28073,6 +28853,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/marketplace/yandex/products:
     get:
       tags:
@@ -29577,7 +30361,7 @@ paths:
         - Settings API keys
       operationId: settingsCreateApiKey
       summary: Выпустить API-ключ
-      description: Единственный ответ этого модуля, который содержит значение ключа. Оно приходит в поле key ровно один раз — в теле этого ответа; сохраните его сразу, потому что список ключей отдаёт только prefix и маску hint. Ключу нельзя выдать право, которого нет у создателя, и нельзя превратить доступ «только свои записи» в сервисный ключ ко всем записям — иначе 403.
+      description: 'Единственный ответ этого модуля, который содержит значение ключа. Оно приходит в поле key ровно один раз — в теле этого ответа; сохраните его сразу, потому что список ключей отдаёт только prefix и маску hint. Ключу нельзя выдать право, которого нет у создателя, и нельзя превратить доступ «только свои записи» в сервисный ключ ко всем записям — иначе 403. Действие доступно только человеку в интерфейсе кабинета: сессия подключённого агента и любой API-ключ получают 403 settings.credentials_browser_only. Ключом нельзя выпустить или погасить ключ.'
       x-akeda-module: settings
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -29611,7 +30395,7 @@ paths:
         - Settings API keys
       operationId: settingsDeleteApiKey
       summary: Удалить свой API-ключ
-      description: 'Убирает ключ насовсем вместе с его журналом доступа. Отзыв оставляет ключ в списке как историю, удаление убирает и её. Чужой ключ по угаданному идентификатору не удаляется: владелец проверяется тем же запросом, и «не мой» неотличим от «нет такого» — 404.'
+      description: 'Убирает ключ насовсем вместе с его журналом доступа. Отзыв оставляет ключ в списке как историю, удаление убирает и её. Чужой ключ по угаданному идентификатору не удаляется: владелец проверяется тем же запросом, и «не мой» неотличим от «нет такого» — 404. Действие доступно только человеку в интерфейсе кабинета: сессия подключённого агента и любой API-ключ получают 403 settings.credentials_browser_only. Ключом нельзя выпустить или погасить ключ.'
       x-akeda-module: settings
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -29640,7 +30424,7 @@ paths:
         - Settings API keys
       operationId: settingsRevokeApiKey
       summary: Отозвать свой API-ключ
-      description: 'Гасит ключ, не удаляя его: запись остаётся в списке с is_active false и отметкой revoked_at. Тело запроса не нужно.'
+      description: 'Гасит ключ, не удаляя его: запись остаётся в списке с is_active false и отметкой revoked_at. Тело запроса не нужно. Действие доступно только человеку в интерфейсе кабинета: сессия подключённого агента и любой API-ключ получают 403 settings.credentials_browser_only. Ключом нельзя выпустить или погасить ключ.'
       x-akeda-module: settings
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -29673,7 +30457,7 @@ paths:
         - Settings API keys
       operationId: settingsRestoreApiKey
       summary: Вернуть отозванный API-ключ в работу
-      description: 'Снимает отзыв: прежнее значение ключа продолжает действовать, поэтому переподключать клиентов заново не нужно. Тело запроса не нужно.'
+      description: 'Снимает отзыв: прежнее значение ключа продолжает действовать, поэтому переподключать клиентов заново не нужно. Тело запроса не нужно. Действие доступно только человеку в интерфейсе кабинета: сессия подключённого агента и любой API-ключ получают 403 settings.credentials_browser_only. Ключом нельзя выпустить или погасить ключ.'
       x-akeda-module: settings
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -32209,6 +32993,179 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/app/finance/operations:
+    post:
+      tags:
+        - App runtime
+      operationId: appFinanceCreateOperation
+      summary: Завести продажу или закупку от имени установки
+      description: Кабинет берётся только из токена установки; учётный факт создаёт штатный owner-сервис finance.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.operations:write
+      security:
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceOperationCreate'
+      responses:
+        '201':
+          description: Текущее состояние операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOperation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Конверт источника уже использован для другой команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/app/finance/operations/{id}:
+    get:
+      tags:
+        - App runtime
+      operationId: appFinanceGetOperation
+      summary: Получить операцию от имени установки
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.operations:read
+      security:
+        - installationToken: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: План, факты и история операции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOperation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/app/finance/operations/{id}/accruals:
+    post:
+      tags:
+        - App runtime
+      operationId: appFinanceCreateOperationAccrual
+      summary: Провести начисление по плану от имени установки
+      description: Создаёт штатный документ выполнения и проводит его; установка не получает прямого доступа к регистрам.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.operations:write
+      security:
+        - installationToken: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceOperationAccrualCreate'
+      responses:
+        '201':
+          description: Проведённый документ начисления и обновлённая операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOperationAccrualResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          description: Конверт источника уже использован для другой команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/app/finance/operations/{id}/cancel:
+    post:
+      tags:
+        - App runtime
+      operationId: appFinanceCancelOperation
+      summary: Отменить операцию от имени установки
+      description: Коррекция и сторно намеренно не опубликованы до появления атомарной замены исходных движений.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.operations:write
+      security:
+        - installationToken: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceOperationAction'
+      responses:
+        '200':
+          description: Отменённая операция
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOperation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          description: Конверт источника уже использован для другой команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/app/finance/transactions/{id}/classification-suggestions:
     post:
       tags:
@@ -33650,7 +34607,7 @@ paths:
       x-akeda-audience: external
       summary: Прочитать готовность своей версии к публикации
       description: |-
-        Ворот восемь, и отчёт называет каждое: что проверяется, прошло ли, машинную причину отказа и те значения, которые издатель подал сам, — имена прав, адреса из манифеста, режим исполнения, отпечаток документа. Готовность приезжает отдельным полем: читатель не должен выводить её из списка и ошибиться в пользу разрешения.
+        Отчёт называет КАЖДОЕ ворот: что проверяется, прошло ли, машинную причину отказа и те значения, которые издатель подал сам, — имена прав, адреса из манифеста, режим исполнения, отпечаток документа. Числа ворот в описании нет намеренно: список растёт, и написанное здесь число устаревает молча. Готовность приезжает отдельным полем: читатель не должен выводить её из списка и ошибиться в пользу разрешения.
 
         Отчёт считает ТА ЖЕ функция, что отвечает оператору. Второй расчёт «для издателя» разошёлся бы с первым на первой правке правил, и портал показывал бы зелёное там, где публикация отказывает.
 
@@ -33697,6 +34654,154 @@ paths:
                 $ref: '#/components/schemas/Error'
         '503':
           description: Ворота публикации в этой сборке не собраны; пустой отчёт читался бы как «ничто не мешает»
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/developer/apps/{key}/versions/{version}/function-artifacts:
+    get:
+      tags:
+        - Developer account
+      operationId: developerAppVersionFunctionArtifacts
+      x-akeda-audience: external
+      summary: Прочитать модули функций своей версии
+      description: |-
+        Что объявил манифест, что лежит в хранилище и сходится ли одно с другим. У каждой объявленной функции — лежат ли её байты, сколько их и когда положили; отдельным списком — отпечатки, которые лежат, но манифестом не названы.
+
+        ЛИШНИЕ БАЙТЫ НАЗЫВАЮТСЯ ОТДЕЛЬНО, и это главное здесь. Модуль, пересобранный без правки отпечатка в манифесте, выглядит загруженным и не исполнится никогда: диспетчер ходит от манифеста, а не от хранилища. Без отдельного списка издатель узнал бы об этом от ворот публикации через день.
+
+        Сверку считает ТА ЖЕ функция, что стоит за воротом `functions`. Второй расчёт «для экрана» разошёлся бы с ним на первой правке правил, и портал показывал бы «всё загружено» там, где публикация отказывает.
+
+        ЧЕГО ЗДЕСЬ НЕТ: самих байтов и того, кто их положил. Байты издатель прислал сам, а «кто положил» — идентификатор сотрудника платформы, то есть наш внутренний.
+      x-akeda-module: developer
+      x-akeda-release-stage: preview
+      x-akeda-permission: developer:self
+      security:
+        - developerSessionToken: []
+        - developerAppKey: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          description: Ключ СВОЕГО приложения; издатель приезжает из владельца
+          schema:
+            type: string
+        - name: version
+          in: path
+          required: true
+          description: Номер версии своего приложения
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Состав модулей версии
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeveloperFunctionArtifactsResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Приложения или версии нет; тот же ответ получает чужой ключ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Хранилище модулей в этой сборке не собрано; пустой список читался бы как «ничего не загружено»
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/developer/apps/{key}/versions/{version}/function-artifact:
+    post:
+      tags:
+        - Developer account
+      operationId: developerUploadAppFunctionArtifact
+      x-akeda-audience: external
+      summary: Загрузить модуль функции своей версии
+      description: |-
+        Байты `.wasm`, которые платформа исполняет в песочнице внутри операции кабинета. Та же операция по смыслу, что у персонала платформы, и то же правило: отпечаток можно прислать полем `digest` — тогда он сверяется с посчитанным по байтам, а не принимается на слово; повторная загрузка того же отпечатка той же версии — не ошибка и не запись.
+
+        ВЫПУЩЕННАЯ ВЕРСИЯ БАЙТОВ НЕ ПРИНИМАЕТ — то же правило, что у её манифеста: состав версии не меняется после ворот. Ворот `functions` сверил отпечатки один раз, манифест выпущенной версии не правится, и любые новые байты у неё — код, который не исполнится никогда.
+
+        ЗАГРУЖАЕТ ЧЕЛОВЕК, А НЕ КЛЮЧ ПРИЛОЖЕНИЯ. Ключ живёт в конвейере сборки, и утёкший из CI ключ, умеющий сменить исполняемый у клиента модуль, означал бы, что код внутри проведения меняется в обход человека. Читать состав версии ключу можно: конвейеру полагается знать, доехал ли его файл.
+
+        Годность модуля (импорты по белому списку, оба экспорта ABI, память в пределах) проверяется ПОСЛЕ сохранения и возвращается полем `verified`: негодный модуль — повод не публиковать версию, а не повод потерять загруженный файл.
+      x-akeda-module: developer
+      x-akeda-release-stage: preview
+      x-akeda-permission: developer:self
+      security:
+        - developerSessionToken: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          description: Ключ СВОЕГО приложения; издатель приезжает из владельца
+          schema:
+            type: string
+        - name: version
+          in: path
+          required: true
+          description: Номер версии своего приложения
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                digest:
+                  type: string
+                  pattern: ^sha256:[0-9a-f]{64}$
+                  description: Ожидаемый отпечаток. Сверяется с посчитанным; расхождение — 409.
+      responses:
+        '201':
+          description: Загруженный модуль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeveloperFunctionUploadResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 'Ключ приложения модуль не подкладывает: загрузка человеческая'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Приложения или версии нет; тот же ответ получает чужой ключ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Отпечаток не сходится с содержимым файла либо версия уже выпущена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: Модуль больше 4 МБ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Хранилище модулей в этой сборке не собрано
           content:
             application/json:
               schema:
@@ -43783,6 +44888,11 @@ components:
           type: object
           additionalProperties: true
           default: {}
+        identifiers:
+          type: array
+          description: Штрихкод и артикулы с формы создания; ложатся в той же транзакции, что и карточка. Занятый код отклоняет создание целиком (409).
+          items:
+            $ref: '#/components/schemas/CoreProductIdentifierInput'
     CoreProductPatch:
       type: object
       additionalProperties: false
@@ -43959,6 +45069,112 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CoreProductIdentifier'
+    CoreProductIdentifierMatch:
+      type: object
+      additionalProperties: false
+      required:
+        - product_id
+        - product_name
+        - product_sku
+        - identifier
+      properties:
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        product_name:
+          type: string
+        product_sku:
+          type: string
+        identifier:
+          $ref: '#/components/schemas/CoreProductIdentifier'
+    CoreProductFile:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - product_id
+        - kind_item_id
+        - kind_code
+        - kind_label
+        - name
+        - mime_type
+        - size_bytes
+        - is_image
+        - is_primary
+        - sort_order
+        - uploaded_by_name
+        - created_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        kind_item_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+        kind_code:
+          type: string
+          description: Код элемента справочника product_file_kinds; пусто без типа
+        kind_label:
+          type: string
+        name:
+          type: string
+        mime_type:
+          type: string
+        size_bytes:
+          type: integer
+          minimum: 0
+        is_image:
+          type: boolean
+        is_primary:
+          type: boolean
+          description: Основное фото товара; бывает только у изображения
+        sort_order:
+          type: integer
+        uploaded_by_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    CoreProductFilePage:
+      type: object
+      additionalProperties: false
+      required:
+        - count
+        - results
+      properties:
+        count:
+          type: integer
+          minimum: 0
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreProductFile'
+    CoreProductFilePatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        kind:
+          type: string
+          description: Код типа из product_file_kinds; пустая строка снимает тип
+        name:
+          type: string
+          minLength: 1
+        is_primary:
+          type: boolean
+          description: true делает изображение основным фото
+    CoreProductFileReorder:
+      type: object
+      additionalProperties: false
+      required:
+        - ids
+      properties:
+        ids:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/UUID'
     CoreProductIdentifierInput:
       type: object
       additionalProperties: false
@@ -47188,6 +48404,480 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FinanceSettlementPayment'
+    FinanceOperationSource:
+      type: object
+      additionalProperties: false
+      required:
+        - schema_version
+        - source_system
+        - source_ref
+        - external_id
+        - idempotency_key
+      properties:
+        schema_version:
+          type: integer
+          enum:
+            - 1
+        source_system:
+          type: string
+          minLength: 1
+          maxLength: 100
+        source_ref:
+          type: string
+          minLength: 1
+          maxLength: 200
+        external_id:
+          type: string
+          minLength: 1
+          maxLength: 300
+        idempotency_key:
+          type: string
+          minLength: 1
+          maxLength: 300
+    FinanceOperationStageInput:
+      type: object
+      additionalProperties: false
+      required:
+        - sequence
+        - amount
+      properties:
+        sequence:
+          type: integer
+          minimum: 1
+        label:
+          type: string
+        date:
+          type: string
+          pattern: ^$|^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+          description: Необязательная календарная дата; пусто означает без срока
+        amount:
+          type: string
+          description: Положительная decimal string
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: По умолчанию валюта операции; другая валюта не принимается
+        due_trigger:
+          type: string
+          enum:
+            - after_accrual
+          description: 'Только для графика оплаты: считать срок от проведённого начисления'
+        after_accrual_sequence:
+          type: integer
+          minimum: 1
+          description: Номер части начисления; отсутствие означает от любого начисления
+        delay_days:
+          type: integer
+          minimum: 0
+          maximum: 3650
+    FinanceOperationReferenceInput:
+      type: object
+      additionalProperties: false
+      required:
+        - relation
+        - target_module
+        - target_type
+        - target_id
+      properties:
+        relation:
+          type: string
+          minLength: 1
+        target_module:
+          type: string
+          minLength: 1
+        target_type:
+          type: string
+          minLength: 1
+        target_id:
+          type: string
+          minLength: 1
+    FinanceOperationCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - source
+        - kind
+        - company_id
+        - contact_id
+        - date
+        - currency
+        - amount
+        - pnl_item_id
+      properties:
+        recognition_mode:
+          type: string
+          enum:
+            - document
+            - plan
+          description: document — один документ начисления; plan — план, который сам не создаёт долг
+        source:
+          $ref: '#/components/schemas/FinanceOperationSource'
+        kind:
+          type: string
+          enum:
+            - sale
+            - purchase
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        date:
+          type: string
+          format: date
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        amount:
+          type: string
+          description: Положительная decimal string
+        due_date:
+          type: string
+          format: date
+        purpose:
+          type: string
+        pnl_item_id:
+          $ref: '#/components/schemas/UUID'
+        project_id:
+          type: string
+          format: uuid
+        contract_id:
+          type: string
+          format: uuid
+        accruals:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/FinanceOperationStageInput'
+        payments:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/FinanceOperationStageInput'
+        references:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/FinanceOperationReferenceInput'
+    FinanceOperationAccrualAllocation:
+      type: object
+      additionalProperties: false
+      required:
+        - accrual_id
+        - amount
+      properties:
+        accrual_id:
+          $ref: '#/components/schemas/UUID'
+        amount:
+          type: string
+          description: Положительная decimal string
+    FinanceOperationAccrualCreate:
+      type: object
+      description: 'Указывает ровно одну цель распределения: accrual_id для одной части плана либо allocations для нескольких частей. Совместимость этого ограничения проверяет сервер; плоская форма сохранена, чтобы сгенерированные TypeScript- и Swift-клиенты не теряли общие поля.'
+      additionalProperties: false
+      required:
+        - source
+        - expected_version
+        - date
+        - amount
+      properties:
+        source:
+          $ref: '#/components/schemas/FinanceOperationSource'
+        expected_version:
+          type: integer
+          minimum: 1
+        accrual_id:
+          $ref: '#/components/schemas/UUID'
+        allocations:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/FinanceOperationAccrualAllocation'
+        date:
+          type: string
+          format: date
+        amount:
+          type: string
+          description: Сумма документа; должна совпасть с суммой allocations
+        due_date:
+          type: string
+          format: date
+          description: Обычно вычисляется из графика; переданное значение не может ему противоречить
+        reason:
+          type: string
+    FinanceOperationAction:
+      type: object
+      additionalProperties: false
+      required:
+        - source
+        - expected_version
+      properties:
+        source:
+          $ref: '#/components/schemas/FinanceOperationSource'
+        expected_version:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+    FinanceOperationFact:
+      type: object
+      additionalProperties: false
+      required:
+        - document_id
+        - type_key
+        - type_name
+        - number
+        - date
+        - status
+        - amount
+        - currency
+      properties:
+        document_id:
+          $ref: '#/components/schemas/UUID'
+        type_key:
+          type: string
+        type_name:
+          type: string
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/CoreDocumentStatus'
+        amount:
+          type: string
+          description: Decimal string из движений проведённого регистратора
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+    FinanceOperationStage:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - sequence
+        - date
+        - amount
+        - currency
+        - actual_amount
+        - facts
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        sequence:
+          type: integer
+          minimum: 1
+        label:
+          type: string
+        date:
+          type: string
+          pattern: ^$|^[0-9]{4}-[0-9]{2}-[0-9]{2}$
+        amount:
+          type: string
+          description: Плановая decimal string
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        actual_amount:
+          type: string
+          description: Decimal string из проведённых документов
+        due_trigger:
+          type: string
+          enum:
+            - after_accrual
+        after_accrual_id:
+          type: string
+          format: uuid
+        delay_days:
+          type: integer
+          minimum: 0
+          maximum: 3650
+        payment_attribution_pending:
+          type: boolean
+        facts:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceOperationFact'
+    FinanceOperationVersion:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - version
+        - change_kind
+        - document_id
+        - document_status
+        - is_marked_deleted
+        - company_id
+        - contact_id
+        - currency
+        - effective_date
+        - accruals
+        - payments
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        version:
+          type: integer
+          minimum: 1
+        change_kind:
+          type: string
+          enum:
+            - initial
+            - correction
+            - reversal
+        previous_version_id:
+          type: string
+          format: uuid
+        document_id:
+          $ref: '#/components/schemas/UUID'
+        document_status:
+          $ref: '#/components/schemas/CoreDocumentStatus'
+        is_marked_deleted:
+          type: boolean
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        effective_date:
+          type: string
+          format: date
+        reason:
+          type: string
+        accruals:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceOperationStage'
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceOperationStage'
+    FinanceOperation:
+      type: object
+      additionalProperties: false
+      required:
+        - recognition_mode
+        - cash_paid
+        - advance
+        - cash_payments
+        - id
+        - kind
+        - company_id
+        - contact_id
+        - currency
+        - amount
+        - source_system
+        - source_ref
+        - external_id
+        - schema_version
+        - status
+        - current
+        - versions
+      properties:
+        recognition_mode:
+          type: string
+          enum:
+            - document
+            - plan
+        cash_paid:
+          type: string
+          description: Фактически оплачено по проведённым распределениям
+        advance:
+          type: string
+          description: Оплата сверх признанного начисления
+        cash_payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceOperationFact'
+        id:
+          $ref: '#/components/schemas/UUID'
+        kind:
+          type: string
+          enum:
+            - sale
+            - purchase
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        amount:
+          type: string
+          description: Decimal string
+        due_date:
+          type: string
+          format: date
+        purpose:
+          type: string
+        pnl_item_id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        contract_id:
+          type: string
+          format: uuid
+        source_system:
+          type: string
+        source_ref:
+          type: string
+        external_id:
+          type: string
+        schema_version:
+          type: integer
+          enum:
+            - 1
+        status:
+          $ref: '#/components/schemas/CoreDocumentStatus'
+        current:
+          $ref: '#/components/schemas/FinanceOperationVersion'
+        versions:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/FinanceOperationVersion'
+    FinanceOperationAccrualResult:
+      type: object
+      additionalProperties: false
+      required:
+        - operation_id
+        - version_id
+        - allocations
+        - document
+        - operation
+      properties:
+        operation_id:
+          $ref: '#/components/schemas/UUID'
+        version_id:
+          $ref: '#/components/schemas/UUID'
+        accrual_id:
+          type: string
+          format: uuid
+        allocations:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/FinanceOperationAccrualAllocation'
+        document:
+          $ref: '#/components/schemas/CoreDocument'
+        operation:
+          $ref: '#/components/schemas/FinanceOperation'
     FinanceSettlementBalance:
       type: object
       additionalProperties: false
@@ -47378,6 +49068,57 @@ components:
         outstanding:
           type: string
           description: Decimal string из регистра расчётов
+        operation_id:
+          type: string
+          format: uuid
+        parent_operation_id:
+          type: string
+          format: uuid
+        parent_document_id:
+          type: string
+          format: uuid
+        recognition_mode:
+          type: string
+        type_key:
+          type: string
+        type_name:
+          type: string
+        overdue_amount:
+          type: string
+        accrued:
+          type: string
+        paid:
+          type: string
+        cash_paid:
+          type: string
+        advance:
+          type: string
+        change_kind:
+          type: string
+        source_system:
+          type: string
+        source_ref:
+          type: string
+        external_id:
+          type: string
+        version:
+          type: integer
+          minimum: 0
+        cash_documents:
+          type: integer
+          minimum: 0
+        accrual_stages:
+          type: integer
+          minimum: 0
+        payment_stages:
+          type: integer
+          minimum: 0
+        accrued_stages:
+          type: integer
+          minimum: 0
+        paid_stages:
+          type: integer
+          minimum: 0
     FinanceTradeJournalPage:
       type: object
       additionalProperties: false
@@ -47392,6 +49133,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FinanceTradeJournalRow'
+        limit:
+          type: integer
+          minimum: 1
+        offset:
+          type: integer
+          minimum: 0
+        has_more:
+          type: boolean
+        limit_reached:
+          type: boolean
     FinanceOpenAdvance:
       type: object
       additionalProperties: false
@@ -54563,6 +56314,9 @@ components:
             - company
             - guides
           description: 'Где искать: company — материалы компании, guides — встроенные руководства продукта, all — оба корпуса'
+        citations_only:
+          type: boolean
+          description: 'Не сочинять ответ моделью, вернуть только найденные фрагменты и извлечённую сводку. Для того, кто говорит своим голосом и сам собирает ответ из цитат: без генерации ответ приходит за время поиска'
     KnowledgeCitation:
       type: object
       additionalProperties: false
@@ -55621,6 +57375,8 @@ components:
       additionalProperties: false
       required:
         - id
+        - business_id
+        - business_name
         - company_id
         - company_name
         - product_id
@@ -55639,8 +57395,17 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/UUID'
+        business_id:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Бизнес партии — учётная единица, которой принадлежит товар
+        business_name:
+          type: string
         company_id:
-          $ref: '#/components/schemas/UUID'
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Юрлицо партии — разрез официального контура. У неофициального прихода его нет, и тогда поле пустое (ERP-704).
         company_name:
           type: string
         product_id:
@@ -55856,11 +57621,14 @@ components:
       required:
         - id
         - name
+        - business_id
       properties:
         id:
           $ref: '#/components/schemas/UUID'
         name:
           type: string
+        business_id:
+          $ref: '#/components/schemas/UUID'
     StockCompanyRefPage:
       type: object
       additionalProperties: false
@@ -55875,6 +57643,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StockCompanyRef'
+    StockBusinessRef:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+    StockBusinessRefPage:
+      type: object
+      additionalProperties: false
+      required:
+        - count
+        - results
+      properties:
+        count:
+          type: integer
+          minimum: 0
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockBusinessRef'
     StockSupplier:
       type: object
       additionalProperties: false
@@ -56127,6 +57920,8 @@ components:
       type: object
       additionalProperties: false
       required:
+        - business_id
+        - business_name
         - company_id
         - company_name
         - warehouse_id
@@ -56147,8 +57942,17 @@ components:
         - unit_cost
         - entry_count
       properties:
+        business_id:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Бизнес остатка — учётная единица строки
+        business_name:
+          type: string
         company_id:
-          $ref: '#/components/schemas/UUID'
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Юрлицо остатка — разрез официального контура. У неофициального товара его нет, и тогда поле пустое (ERP-704).
         company_name:
           type: string
         warehouse_id:
@@ -57642,6 +59446,13 @@ components:
           oneOf:
             - $ref: '#/components/schemas/MarketplaceOzonDecompositionOtherBlock'
             - type: 'null'
+        freshness:
+          $ref: '#/components/schemas/MarketplaceComponentFreshness'
+        data_through:
+          $ref: '#/components/schemas/MarketplaceComponentDataThrough'
+        incomplete:
+          type: boolean
+          description: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
     MarketplaceOzonDecompositionOtherPage:
       type: object
       additionalProperties: false
@@ -57770,6 +59581,13 @@ components:
             items:
               $ref: '#/components/schemas/MarketplaceOzonDecompositionOtherItem'
           description: Расшифровка прочего по периодам
+        freshness:
+          $ref: '#/components/schemas/MarketplaceComponentFreshness'
+        data_through:
+          $ref: '#/components/schemas/MarketplaceComponentDataThrough'
+        incomplete:
+          type: boolean
+          description: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
     MarketplaceOzonOrdersKpi:
       type: object
       additionalProperties: false
@@ -58603,7 +60421,7 @@ components:
           const: ozon
         source:
           type: string
-          const: ozon_fbs_live
+          const: oz_orders_fbs
         from:
           type: string
           format: date
@@ -59663,6 +61481,13 @@ components:
         demo:
           type: boolean
           description: Аналитическая база не подключена и цифры синтетические
+        freshness:
+          $ref: '#/components/schemas/MarketplaceComponentFreshness'
+        data_through:
+          $ref: '#/components/schemas/MarketplaceComponentDataThrough'
+        incomplete:
+          type: boolean
+          description: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
     MarketplaceWbDecompOtherItem:
       type: object
       additionalProperties: false
@@ -59795,6 +61620,13 @@ components:
             items:
               $ref: '#/components/schemas/MarketplaceWbDecompOtherItem'
           description: Разбор строки «Прочее» по периодам
+        freshness:
+          $ref: '#/components/schemas/MarketplaceComponentFreshness'
+        data_through:
+          $ref: '#/components/schemas/MarketplaceComponentDataThrough'
+        incomplete:
+          type: boolean
+          description: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
     MarketplaceWbOrdersKpi:
       type: object
       additionalProperties: false
@@ -60507,17 +62339,94 @@ components:
         demo:
           type: boolean
           description: Аналитическая база не подключена и цифры синтетические
+    MarketplaceComponentFreshness:
+      type: object
+      additionalProperties: false
+      description: Время последней успешной загрузки каждого компонента отчёта; отсутствующее или null-значение означает, что компонент ещё не загружался успешно.
+      properties:
+        finance:
+          type:
+            - string
+            - 'null'
+          description: Финансовые операции площадки
+        ads:
+          type:
+            - string
+            - 'null'
+          description: Реклама Wildberries
+        ads_clicks:
+          type:
+            - string
+            - 'null'
+          description: Клики рекламы Ozon
+        ads_orders:
+          type:
+            - string
+            - 'null'
+          description: Заказы из рекламы Ozon
+        products:
+          type:
+            - string
+            - 'null'
+          description: Карточки товаров
+    MarketplaceComponentDataThrough:
+      type: object
+      additionalProperties: false
+      description: Последняя дата операций площадки, уже включённых в каждый компонент отчёта; отсутствующее или null-значение означает, что дата покрытия пока неизвестна.
+      properties:
+        finance:
+          type:
+            - string
+            - 'null'
+          format: date
+          description: Финансовые операции площадки
+        ads:
+          type:
+            - string
+            - 'null'
+          format: date
+          description: Реклама Wildberries
+        ads_clicks:
+          type:
+            - string
+            - 'null'
+          format: date
+          description: Клики рекламы Ozon
+        ads_orders:
+          type:
+            - string
+            - 'null'
+          format: date
+          description: Заказы из рекламы Ozon
+        products:
+          type:
+            - string
+            - 'null'
+          format: date
+          description: Карточки товаров по дате последней синхронизации
     MarketplaceStore:
       type: object
       additionalProperties: false
-      description: Магазин маркетплейса в кабинете. Форма одна для Ozon, Wildberries и Яндекс Маркета — их различает только поле platform. Ключи и токены доступа к площадке в ответ не попадают.
+      description: Магазин маркетплейса в кабинете. Форма одна для Ozon, Wildberries и Яндекс Маркета — их различает только поле platform. Ключи, токены и proxy в ответ не попадают; вместо них возвращаются безопасные признаки настройки.
       required:
         - id
         - platform
         - name
-        - external_id
         - tax_percent
         - is_active
+        - has_fbs
+        - has_jam
+        - credentials_configured
+        - ozon_client_id_set
+        - ozon_api_key_set
+        - ozon_pf_client_id_set
+        - ozon_pf_client_secret_set
+        - wb_token_set
+        - ym_business_id_set
+        - ym_api_key_set
+        - proxy_set
+        - config_sync_status
+        - connection_status
       properties:
         id:
           $ref: '#/components/schemas/UUID'
@@ -60533,14 +62442,92 @@ components:
         external_id:
           type: integer
           format: int64
-          minimum: 1
+          minimum: 0
           maximum: 2147483647
-          description: Идентификатор магазина на стороне площадки
+          readOnly: true
+          description: Внутренний идентификатор MPTrack; назначается после передачи настройки и не вводится пользователем
         tax_percent:
           type: string
           description: Ставка налога в процентах; decimal строкой
         is_active:
           type: boolean
+        has_fbs:
+          type: boolean
+          description: Для подключения включена загрузка схемы FBS
+        has_jam:
+          type: boolean
+          description: Для подключения Wildberries включена аналитика «Джем»
+        credentials_configured:
+          type: boolean
+          readOnly: true
+          description: Есть хотя бы один сохранённый API-реквизит
+        ozon_client_id_set:
+          type: boolean
+          readOnly: true
+        ozon_api_key_set:
+          type: boolean
+          readOnly: true
+        ozon_pf_client_id_set:
+          type: boolean
+          readOnly: true
+        ozon_pf_client_secret_set:
+          type: boolean
+          readOnly: true
+        wb_token_set:
+          type: boolean
+          readOnly: true
+        ym_business_id_set:
+          type: boolean
+          readOnly: true
+        ym_api_key_set:
+          type: boolean
+          readOnly: true
+        proxy_set:
+          type: boolean
+          readOnly: true
+        config_sync_status:
+          type: string
+          enum:
+            - not_configured
+            - synced
+            - error
+          readOnly: true
+          description: Состояние передачи настройки в MPTrack
+        config_synced_at:
+          type: string
+          format: date-time
+          readOnly: true
+        token_class:
+          type: string
+          enum:
+            - basic
+            - personal
+            - test
+            - service
+            - unknown
+          readOnly: true
+          description: 'Безопасная классификация токена Wildberries без раскрытия токена: basic — ограниченный базовый, personal — персональный, test — тестовый, service — сервисный, unknown — тип не определён'
+        connection_status:
+          type: string
+          enum:
+            - not_checked
+            - pending
+            - disabled
+            - ok
+            - warning
+            - error
+          readOnly: true
+          description: 'Безопасное состояние подключения в ERP: not_checked — проверка ещё не запускалась, pending — MPTrack проверяет реквизиты или запускает первую загрузку, disabled — загрузки отключены, ok — подключение работает, warning — требуется внимание, error — подключение не работает. Сырые статусы и тексты MPTrack не публикуются'
+        connection_error_code:
+          type: string
+          pattern: ^[a-z][a-z0-9_.-]{0,63}$
+          readOnly: true
+          description: Безопасный стабильный код состояния подключения; сырой текст ошибки не публикуется
+        last_etl_at:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Момент последней успешной загрузки этого подключения
     MarketplaceStorePage:
       type: object
       additionalProperties: false
@@ -60558,36 +62545,106 @@ components:
     MarketplaceStoreInput:
       type: object
       additionalProperties: false
-      description: Тело заведения магазина. Одинаково для трёх площадок — платформу задаёт маршрут.
+      description: Тело создания управляемого подключения. Платформу задаёт маршрут, а external_id назначает MPTrack. Для Ozon нужны ozon_client_id и ozon_api_key, для Wildberries — wb_token, для Яндекс Маркета — ym_business_id и ym_api_key.
       required:
         - name
-        - external_id
       properties:
         name:
           type: string
           minLength: 1
-        external_id:
-          type: integer
-          format: int64
-          minimum: 1
-          maximum: 2147483647
-          description: Должен помещаться в int32 — по нему магазин сопоставляется с аналитической базой
         tax_percent:
           type: string
           description: Ставка налога в процентах; пустая строка сохраняется как ноль
         is_active:
           type: boolean
           default: true
+        has_fbs:
+          type: boolean
+          default: false
+        has_jam:
+          type: boolean
+          default: false
+          description: Используется для Wildberries
+        ozon_client_id:
+          type: string
+          minLength: 1
+          writeOnly: true
+        ozon_api_key:
+          type: string
+          minLength: 1
+          writeOnly: true
+        ozon_pf_client_id:
+          type: string
+          minLength: 1
+          writeOnly: true
+        ozon_pf_client_secret:
+          type: string
+          minLength: 1
+          writeOnly: true
+        wb_token:
+          type: string
+          minLength: 1
+          writeOnly: true
+          description: Рекомендуется персональный токен класса personal; значение не возвращается
+        ym_business_id:
+          type: string
+          minLength: 1
+          writeOnly: true
+          description: Business ID вводится строкой; ERP проверяет числовой идентификатор и преобразует его для MPTrack
+        ym_api_key:
+          type: string
+          minLength: 1
+          writeOnly: true
+        proxy:
+          type: string
+          minLength: 1
+          writeOnly: true
+          description: Необязательный адрес proxy; значение не возвращается
     MarketplaceStorePatch:
       type: object
       additionalProperties: false
-      description: Отсутствующее или пустое поле сохраняет текущее значение. Название и external_id этим маршрутом не меняются.
+      description: Меняет пользовательские настройки подключения. external_id изменить нельзя. Отсутствующее или пустое поле реквизита сохраняет прежний секрет.
       properties:
+        name:
+          type: string
+          minLength: 1
         tax_percent:
           type: string
           description: Пустая строка оставляет сохранённую ставку
         is_active:
           type: boolean
+        has_fbs:
+          type: boolean
+        has_jam:
+          type: boolean
+          description: Используется для Wildberries
+        ozon_client_id:
+          type: string
+          writeOnly: true
+        ozon_api_key:
+          type: string
+          writeOnly: true
+        ozon_pf_client_id:
+          type: string
+          writeOnly: true
+        ozon_pf_client_secret:
+          type: string
+          writeOnly: true
+        wb_token:
+          type: string
+          writeOnly: true
+          description: Пустая строка сохраняет прежний токен
+        ym_business_id:
+          type: string
+          writeOnly: true
+          description: Business ID вводится строкой; ERP проверяет числовой идентификатор и преобразует его для MPTrack. Пустая строка сохраняет прежнее значение
+        ym_api_key:
+          type: string
+          writeOnly: true
+        proxy:
+          type: string
+          writeOnly: true
+          description: Пустая строка сохраняет прежнее значение
     MarketplaceYandexProduct:
       type: object
       additionalProperties: false
@@ -61123,7 +63180,6 @@ components:
         - legal_address
         - entrepreneur
         - is_active
-        - accounting_method
       properties:
         id:
           $ref: '#/components/schemas/UUID'
@@ -61165,16 +63221,6 @@ components:
           $ref: '#/components/schemas/SettingsCompanyPerson'
         is_active:
           type: boolean
-        accounting_method:
-          type: string
-          enum:
-            - cash
-            - accrual
-          description: 'Метод признания выручки: по деньгам или по начислению'
-        accrual_from:
-          type: string
-          format: date
-          description: Дата перехода на accrual; отсутствует у кассового метода
     SettingsCompanyPerson:
       type: object
       additionalProperties: false
@@ -64030,11 +66076,17 @@ components:
         - subject
         - locale
         - theme
-      description: 'Человек, открывший панель, в том объёме, в каком приложению позволено его знать. Полей ровно три, и четвёртого не появится: имя и почта — это штат клиента, роли — его оргструктура, а числовой идентификатор общий на всю платформу и связал бы два кабинета между собой.'
+      description: |-
+        Человек, открывший панель, в том объёме, в каком приложению позволено его знать. Имени, почты, ролей и числового идентификатора здесь нет и не появится: имя и почта — это штат клиента, роли — его оргструктура, а числовой идентификатор общий на всю платформу и связал бы два кабинета между собой.
+
+        Карточка сотрудника (employee_id) — единственное поле, называющее человека настоящей записью кабинета, и приезжает она не всем: только слоту, который назвал actor_employee_id объявлением, и только в той версии, чей лист согласия кабинет читал. Общего на всю платформу в ней ничего нет — она живёт в базе кабинета, и тот же человек у двух клиентов это две разные строки, поэтому довод про связывание кабинетов к ней не относится.
       properties:
         subject:
           $ref: '#/components/schemas/UUID'
           description: Псевдоним, свой у каждой пары «установка + человек». Устойчив внутри установки, поэтому панель помнит выбор сотрудника; в другой установке того же приложения у того же человека он ДРУГОЙ; умирает вместе с установкой
+        employee_id:
+          $ref: '#/components/schemas/UUID'
+          description: 'Карточка сотрудника кабинета (core_employee.id) — та же, на которой висит его работа. Приезжает только слоту, попросившему actor_employee_id. Пусто означает «не просили либо человек не сотрудник»: различать эти случаи приложению незачем, оба означают, что сотрудника нет. Нужна тому, кто ведёт работу людей: без неё приложение заводит второй список сотрудников у себя, а псевдоним для этого не годится — он умирает вместе с установкой, а часы и назначения обязаны её пережить'
         locale:
           type: string
           enum:
@@ -64915,6 +66967,12 @@ components:
           $ref: '#/components/schemas/SettingsAppLocalizedText'
         theme_aware:
           type: boolean
+        icon:
+          type: string
+          description: Значок пункта меню из закрытого списка платформы. Только у слота раздела приложения; имя вне списка приведено к запасному ещё на сервере — незнакомое рисуется пустым квадратом молча
+        order:
+          type: integer
+          description: Порядок пункта в меню кабинета. Только у слота раздела приложения; не названный приложением порядок ставит раздел в хвост, а не в голову меню
         bridge_sends:
           type: array
           items:
@@ -65026,6 +67084,15 @@ components:
           items:
             type: string
           description: Поля контекста запуска, которые слот просит, по алфавиту
+    SettingsAppConsentSection:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+      description: 'Раздел, который приложение добавит в меню кабинета. Только название: значок, порядок и адрес страницы — оформление пункта, а решение принимается по тому, что за раздел появится в меню'
+      properties:
+        title:
+          $ref: '#/components/schemas/SettingsAppLocalizedText'
     SettingsAppConsentEgress:
       type: object
       additionalProperties: false
@@ -65074,6 +67141,81 @@ components:
           type: string
         response_hours:
           type: integer
+    SettingsAppConsentField:
+      type: object
+      additionalProperties: false
+      required:
+        - entity
+        - entity_name
+        - label
+      description: 'Одна графа, которую приложение добавит карточке кабинета. Ключа и типа здесь нет, как нет области у права: кабинет решает, пускать ли приложение к своим карточкам, а не читает манифест'
+      properties:
+        entity:
+          type: string
+          description: 'Ключ сущности. Не текст для экрана: он группирует строки, а показывается entity_name'
+        entity_name:
+          $ref: '#/components/schemas/SettingsAppLocalizedText'
+        label:
+          $ref: '#/components/schemas/SettingsAppLocalizedText'
+        obsolete:
+          type: boolean
+          description: 'Версия объявила графу устаревшей: на карточках она не появится'
+    SettingsAppConsentFunction:
+      type: object
+      additionalProperties: false
+      required:
+        - point
+        - key
+        - document_types
+        - summary
+      description: 'Одна проверка приложения внутри операции кабинета, выполняемая КОДОМ в песочнице. Summary написан платформой: о том, чем приложение может помешать, кабинету рассказываем мы'
+      properties:
+        point:
+          type: string
+          description: Ключ точки, на которой стоит функция
+        key:
+          type: string
+          description: Имя функции внутри приложения
+        document_types:
+          type: array
+          items:
+            type: string
+          description: Виды документов, которые функция смотрит; пустой список означает ВСЕ, и лист говорит это словами
+        summary:
+          $ref: '#/components/schemas/SettingsAppLocalizedText'
+    SettingsAppConsentRule:
+      type: object
+      additionalProperties: false
+      required:
+        - point
+        - key
+        - outcome
+        - document_types
+        - summary
+        - message
+      description: 'Та же проверка внутри операции кабинета, но выраженная УСЛОВИЕМ, а не кодом. Отдельно от функций, потому что у правила лист знает заранее две вещи, которых у функции не знает: исход и точный текст, который человек прочтёт. Самого выражения здесь нет: кабинет решает, пускать ли приложение к своим документам, а не проверяет чужой код глазами'
+      properties:
+        point:
+          type: string
+          description: Ключ точки, на которой стоит правило
+        key:
+          type: string
+          description: Имя правила внутри приложения
+        outcome:
+          type: string
+          enum:
+            - refuse
+            - warn
+          description: refuse останавливает проведение, warn показывает человеку сообщение и пропускает документ
+        document_types:
+          type: array
+          items:
+            type: string
+          description: Виды документов, которые правило смотрит; пустой список означает ВСЕ
+        summary:
+          $ref: '#/components/schemas/SettingsAppLocalizedText'
+        message:
+          $ref: '#/components/schemas/SettingsAppLocalizedText'
     SettingsAppConsentSheet:
       type: object
       additionalProperties: false
@@ -65086,6 +67228,11 @@ components:
         - permissions
         - subscriptions
         - slots
+        - sections
+        - fields
+        - functions
+        - rules
+        - runs_on_akeda
         - person_facts
         - data_policy
         - support
@@ -65126,15 +67273,39 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SettingsAppConsentSlot'
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/SettingsAppConsentSection'
+          description: 'Разделы, которые приложение добавит в МЕНЮ кабинета. Отдельной строкой рядом со слотами: слот — место внутри чужого экрана, а раздел меняет само меню, и увидит его каждый, кто войдёт в кабинет'
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/SettingsAppConsentField'
+          description: 'Графы, которые приложение добавит карточкам кабинета. Рядом с правами, а не среди них: право говорит, что приложение УВИДИТ и ИЗМЕНИТ, а графа — что оно ДОБАВИТ на глаза каждому, кто откроет карточку'
+        functions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SettingsAppConsentFunction'
+          description: 'Проверки КОДОМ внутри операций кабинета, с правом их остановить. Особняком от прав намеренно: ни одно право не отвечает на вопрос «может ли приложение мне запретить»'
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/SettingsAppConsentRule'
+          description: Те же проверки, выраженные условием, а не кодом
+        runs_on_akeda:
+          type: boolean
+          description: 'У версии нет ни одного пути наружу: ни приёмника событий, ни слота на чужом источнике, ни объявленного исходящего, — и всё, что она делает, делается внутри продукта. ВЫЧИСЛЯЕТСЯ, а не ставится руками: отметка, поставленная человеком, означает «мы посмотрели и решили», а вычисляемое правило — «по построению не может быть иначе»'
         person_facts:
           type: array
           items:
             type: string
             enum:
               - actor_subject
+              - actor_employee_id
               - locale
               - theme
-          description: 'Что приложение узнает о человеке, открывшем панель: пересечение запрошенного слотами с закрытым словарём платформы; больше ничего оно узнать не может'
+          description: 'Что приложение узнает о человеке, открывшем панель: пересечение запрошенного слотами с закрытым словарём платформы; больше ничего оно узнать не может. actor_employee_id — единственный факт, называющий человека настоящей карточкой сотрудника кабинета, а не псевдонимом: с ним приложение отличает сотрудников друг от друга, а имя и должность читает только отдельным правом на сотрудников. Экран согласия обязан сказать про него другими словами, чем про остальные три'
         data_policy:
           $ref: '#/components/schemas/PlatformAppDataPolicy'
         support:
@@ -65462,6 +67633,7 @@ components:
             - manifest
             - scope_review
             - blocklist
+            - functions
           description: Какое ворот
         status:
           type: string
@@ -65526,6 +67698,113 @@ components:
       properties:
         publication:
           $ref: '#/components/schemas/DeveloperPublicationReport'
+    DeveloperFunctionArtifactRow:
+      type: object
+      additionalProperties: false
+      required:
+        - digest
+        - document_types
+        - uploaded
+      properties:
+        key:
+          type: string
+          description: 'Имя функции внутри приложения. У лишнего модуля его нет: манифест этих байтов не называет'
+        point:
+          type: string
+          description: Ключ точки расширения, на которой стоит функция
+        digest:
+          type: string
+          pattern: ^sha256:[0-9a-f]{64}$
+          description: 'Отпечаток модуля: он и есть имя, под которым байты опознают'
+        document_types:
+          type: array
+          items:
+            type: string
+          description: Виды документа, на которых функция зовётся. ПУСТОЙ СПИСОК ОЗНАЧАЕТ «на всех», и это то же умолчание, что на экране согласия кабинета.
+        uploaded:
+          type: boolean
+          description: Байты с этим отпечатком лежат у этой версии
+        size:
+          type: integer
+          description: Размер модуля в байтах. Есть только у загруженного
+        uploaded_at:
+          type: string
+          format: date-time
+          description: Когда байты положили. Есть только у загруженного
+    DeveloperFunctionArtifacts:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+        - status
+        - editable
+        - functions
+        - undeclared
+      properties:
+        version:
+          type: string
+        status:
+          type: string
+          description: Состояние версии. Им объясняется, почему выпущенная версия байтов больше не принимает
+        editable:
+          type: boolean
+          description: 'Версия ещё принимает байты. Отдельным полем: выводить это из состояния — ошибиться в пользу разрешения'
+        functions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeveloperFunctionArtifactRow'
+        undeclared:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeveloperFunctionArtifactRow'
+          description: 'Отпечатки, которые лежат у версии, но манифестом не названы. Байты приняты и вреда не делают, но исполнены не будут никогда: диспетчер ходит от манифеста, а не от хранилища. Чаще всего это пересобранный модуль, под который забыли поправить отпечаток в манифесте.'
+    DeveloperFunctionArtifactsResult:
+      type: object
+      additionalProperties: false
+      required:
+        - functions
+      properties:
+        functions:
+          $ref: '#/components/schemas/DeveloperFunctionArtifacts'
+    DeveloperFunctionUpload:
+      type: object
+      additionalProperties: false
+      required:
+        - digest
+        - size
+        - created_at
+        - declared
+        - verified
+      properties:
+        digest:
+          type: string
+          pattern: ^sha256:[0-9a-f]{64}$
+          description: Отпечаток, ПОСЧИТАННЫЙ по байтам. Присланный полем digest к этому моменту уже сверен
+        size:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        declared:
+          type: boolean
+          description: 'Манифест версии называет этот отпечаток. Загрузка НЕ ОТКАЗЫВАЕТ модулю, которого манифест не называет: байты целы, а виноват может быть и файл, и манифест — какой из двух, решает издатель. Но узнать об этом он обязан сразу, а не от ворот публикации через день.'
+        verified:
+          type: boolean
+          description: 'Модуль годен к исполнению: импорты по белому списку, оба экспорта ABI, память в пределах. При выключенной песочнице всегда true — рантайма нет, судить нечем.'
+        verify_reason:
+          type: string
+          description: 'Машинный код негодности: forbidden_import, abi_missing, module_invalid, verify_failed. Слова на двух языках собирает портал'
+        verify_detail:
+          type: string
+          description: 'То единственное, чего кодом не сказать: какой именно импорт запрещён, какого экспорта не хватает'
+    DeveloperFunctionUploadResult:
+      type: object
+      additionalProperties: false
+      required:
+        - upload
+      properties:
+        upload:
+          $ref: '#/components/schemas/DeveloperFunctionUpload'
     DeveloperAppKey:
       type: object
       additionalProperties: false
@@ -68460,6 +70739,7 @@ x-akeda-contract-coverage:
   - finance-connector-sync
   - finance-requisites
   - finance-counterparty-terms
+  - finance-operations
   - finance-settlements
   - finance-trade
   - finance-exchange

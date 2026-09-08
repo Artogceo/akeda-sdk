@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a255440df951ca637e056f0155498f67bc7b34723eac197148cf9cab8906c7c3).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ebe5e52494dcae67cde216647dade1b2e8bf8b5342ebe09c26914a8cc4a895d5).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -370,9 +370,14 @@ __all__ = [
     "CoreProductExportRequest",
     "CoreProductFieldDefinition",
     "CoreProductFieldSchema",
+    "CoreProductFile",
+    "CoreProductFilePage",
+    "CoreProductFilePatch",
+    "CoreProductFileReorder",
     "CoreProductIdentifier",
     "CoreProductIdentifierInput",
     "CoreProductIdentifierKind",
+    "CoreProductIdentifierMatch",
     "CoreProductIdentifierPage",
     "CoreProductIdentifierPatch",
     "CoreProductImportApplyRequest",
@@ -457,6 +462,11 @@ __all__ = [
     "DeveloperApplicationStatus",
     "DeveloperDelivery",
     "DeveloperDeliveryPage",
+    "DeveloperFunctionArtifactRow",
+    "DeveloperFunctionArtifacts",
+    "DeveloperFunctionArtifactsResult",
+    "DeveloperFunctionUpload",
+    "DeveloperFunctionUploadResult",
     "DeveloperGateCheck",
     "DeveloperInstallation",
     "DeveloperInstallationPage",
@@ -641,6 +651,18 @@ __all__ = [
     "FinanceImportUpload",
     "FinanceOpenAdvance",
     "FinanceOpeningBalanceRequest",
+    "FinanceOperation",
+    "FinanceOperationAccrualAllocation",
+    "FinanceOperationAccrualCreate",
+    "FinanceOperationAccrualResult",
+    "FinanceOperationAction",
+    "FinanceOperationCreate",
+    "FinanceOperationFact",
+    "FinanceOperationReferenceInput",
+    "FinanceOperationSource",
+    "FinanceOperationStage",
+    "FinanceOperationStageInput",
+    "FinanceOperationVersion",
     "FinancePaymentCalendar",
     "FinancePaymentCalendarCell",
     "FinancePaymentCalendarCompany",
@@ -786,6 +808,8 @@ __all__ = [
     "LinkList",
     "ManagedChecklistItem",
     "ManagedChecklistPatch",
+    "MarketplaceComponentDataThrough",
+    "MarketplaceComponentFreshness",
     "MarketplaceEconBaseRow",
     "MarketplaceEconOverrides",
     "MarketplaceEconOzonInput",
@@ -1004,9 +1028,13 @@ __all__ = [
     "SettingsAppCatalog",
     "SettingsAppCatalogEntry",
     "SettingsAppConsentEgress",
+    "SettingsAppConsentField",
+    "SettingsAppConsentFunction",
     "SettingsAppConsentPermission",
     "SettingsAppConsentPreview",
     "SettingsAppConsentResult",
+    "SettingsAppConsentRule",
+    "SettingsAppConsentSection",
     "SettingsAppConsentSheet",
     "SettingsAppConsentSlot",
     "SettingsAppConsentSubscription",
@@ -1068,6 +1096,8 @@ __all__ = [
     "StatusUpdatePatch",
     "StockBatch",
     "StockBatchPage",
+    "StockBusinessRef",
+    "StockBusinessRefPage",
     "StockCompanyPolicy",
     "StockCompanyPolicyPage",
     "StockCompanyPolicyPatch",
@@ -1355,15 +1385,19 @@ class AppRuntimeLeaseInput(TypedDict, total=False):
     #: Запрошенный срок выдачи. Ноль или отсутствие поля означают умолчание сервера (пять минут), значение сверх потолка — отказ
     ttl_seconds: int
 
-class AppRuntimeSlotActor(TypedDict):
-    """Человек, открывший панель, в том объёме, в каком приложению позволено его знать. Полей ровно три, и четвёртого не появится: имя и почта — это штат клиента, роли — его оргструктура, а числовой идентификатор общий на всю платформу и связал бы два кабинета между собой."""
-
+class _AppRuntimeSlotActorRequired(TypedDict):
     #: Псевдоним, свой у каждой пары «установка + человек». Устойчив внутри установки, поэтому панель помнит выбор сотрудника; в другой установке того же приложения у того же человека он ДРУГОЙ; умирает вместе с установкой
     subject: "UUID"
     #: Язык интерфейса человека: слот обязан показывать текст на русском и английском, и без языка он показал бы не тот
     locale: Literal['ru', 'en']
     #: Тема кабинета. Слот, объявивший themeAware, без неё исполнить объявленное не может
     theme: Literal['light', 'dark']
+
+class AppRuntimeSlotActor(_AppRuntimeSlotActorRequired, total=False):
+    """Человек, открывший панель, в том объёме, в каком приложению позволено его знать. Имени, почты, ролей и числового идентификатора здесь нет и не появится: имя и почта — это штат клиента, роли — его оргструктура, а числовой идентификатор общий на всю платформу и связал бы два кабинета между собой. Карточка сотрудника (employee_id) — единственное поле, называющее человека настоящей записью кабинета, и приезжает она не всем: только слоту, который назвал actor_employee_id объявлением, и только в той версии, чей лист согласия кабинет читал. Общего на всю платформу в ней ничего нет — она живёт в базе кабинета, и тот же человек у двух клиентов это две разные строки, поэтому довод про связывание кабинетов к ней не относится."""
+
+    #: Карточка сотрудника кабинета (core_employee.id) — та же, на которой висит его работа. Приезжает только слоту, попросившему actor_employee_id. Пусто означает «не просили либо человек не сотрудник»: различать эти случаи приложению незачем, оба означают, что сотрудника нет. Нужна тому, кто ведёт работу людей: без неё приложение заводит второй список сотрудников у себя, а псевдоним для этого не годится — он умирает вместе с установкой, а часы и назначения обязаны её пережить
+    employee_id: "UUID"
 
 class _AppRuntimeSlotAnchorRequired(TypedDict):
     #: Модуль экрана, с которого открыли панель
@@ -4390,6 +4424,8 @@ class CoreProductCreate(_CoreProductCreateRequired, total=False):
     record_kind: "CoreProductRecordKind"
     parent_product_id: Optional["UUID"]
     custom: Dict[str, Any]
+    #: Штрихкод и артикулы с формы создания; ложатся в той же транзакции, что и карточка. Занятый код отклоняет создание целиком (409).
+    identifiers: List["CoreProductIdentifierInput"]
 
 class CoreProductCustomInput(TypedDict):
     custom: Dict[str, Any]
@@ -4427,6 +4463,37 @@ class CoreProductFieldDefinition(TypedDict):
 class CoreProductFieldSchema(TypedDict):
     fields: List["CoreProductFieldDefinition"]
 
+class CoreProductFile(TypedDict):
+    id: "UUID"
+    product_id: "UUID"
+    kind_item_id: Optional["UUID"]
+    #: Код элемента справочника product_file_kinds; пусто без типа
+    kind_code: str
+    kind_label: str
+    name: str
+    mime_type: str
+    size_bytes: int
+    is_image: bool
+    #: Основное фото товара; бывает только у изображения
+    is_primary: bool
+    sort_order: int
+    uploaded_by_name: str
+    created_at: str
+
+class CoreProductFilePage(TypedDict):
+    count: int
+    results: List["CoreProductFile"]
+
+class CoreProductFilePatch(TypedDict, total=False):
+    #: Код типа из product_file_kinds; пустая строка снимает тип
+    kind: str
+    name: str
+    #: true делает изображение основным фото
+    is_primary: bool
+
+class CoreProductFileReorder(TypedDict):
+    ids: List["UUID"]
+
 class CoreProductIdentifier(TypedDict):
     id: "UUID"
     product_id: "UUID"
@@ -4451,6 +4518,12 @@ class CoreProductIdentifierInput(_CoreProductIdentifierInputRequired, total=Fals
     attrs: Dict[str, Any]
 
 CoreProductIdentifierKind = Literal['manufacturer_article', 'supplier_article', 'channel_article', 'barcode']
+
+class CoreProductIdentifierMatch(TypedDict):
+    product_id: "UUID"
+    product_name: str
+    product_sku: str
+    identifier: "CoreProductIdentifier"
 
 class CoreProductIdentifierPage(TypedDict):
     count: int
@@ -5143,9 +5216,59 @@ class DeveloperDeliveryPage(TypedDict):
     #: Признак, а не общее число: счёт по журналу — полный проход по истории кабинета ради числа, которое никому не нужно точным
     has_more: bool
 
+class _DeveloperFunctionArtifactRowRequired(TypedDict):
+    #: Отпечаток модуля: он и есть имя, под которым байты опознают
+    digest: str
+    #: Виды документа, на которых функция зовётся. ПУСТОЙ СПИСОК ОЗНАЧАЕТ «на всех», и это то же умолчание, что на экране согласия кабинета.
+    document_types: List[str]
+    #: Байты с этим отпечатком лежат у этой версии
+    uploaded: bool
+
+class DeveloperFunctionArtifactRow(_DeveloperFunctionArtifactRowRequired, total=False):
+    #: Имя функции внутри приложения. У лишнего модуля его нет: манифест этих байтов не называет
+    key: str
+    #: Ключ точки расширения, на которой стоит функция
+    point: str
+    #: Размер модуля в байтах. Есть только у загруженного
+    size: int
+    #: Когда байты положили. Есть только у загруженного
+    uploaded_at: str
+
+class DeveloperFunctionArtifacts(TypedDict):
+    version: str
+    #: Состояние версии. Им объясняется, почему выпущенная версия байтов больше не принимает
+    status: str
+    #: Версия ещё принимает байты. Отдельным полем: выводить это из состояния — ошибиться в пользу разрешения
+    editable: bool
+    functions: List["DeveloperFunctionArtifactRow"]
+    #: Отпечатки, которые лежат у версии, но манифестом не названы. Байты приняты и вреда не делают, но исполнены не будут никогда: диспетчер ходит от манифеста, а не от хранилища. Чаще всего это пересобранный модуль, под который забыли поправить отпечаток в манифесте.
+    undeclared: List["DeveloperFunctionArtifactRow"]
+
+class DeveloperFunctionArtifactsResult(TypedDict):
+    functions: "DeveloperFunctionArtifacts"
+
+class _DeveloperFunctionUploadRequired(TypedDict):
+    #: Отпечаток, ПОСЧИТАННЫЙ по байтам. Присланный полем digest к этому моменту уже сверен
+    digest: str
+    size: int
+    created_at: str
+    #: Манифест версии называет этот отпечаток. Загрузка НЕ ОТКАЗЫВАЕТ модулю, которого манифест не называет: байты целы, а виноват может быть и файл, и манифест — какой из двух, решает издатель. Но узнать об этом он обязан сразу, а не от ворот публикации через день.
+    declared: bool
+    #: Модуль годен к исполнению: импорты по белому списку, оба экспорта ABI, память в пределах. При выключенной песочнице всегда true — рантайма нет, судить нечем.
+    verified: bool
+
+class DeveloperFunctionUpload(_DeveloperFunctionUploadRequired, total=False):
+    #: Машинный код негодности: forbidden_import, abi_missing, module_invalid, verify_failed. Слова на двух языках собирает портал
+    verify_reason: str
+    #: То единственное, чего кодом не сказать: какой именно импорт запрещён, какого экспорта не хватает
+    verify_detail: str
+
+class DeveloperFunctionUploadResult(TypedDict):
+    upload: "DeveloperFunctionUpload"
+
 class _DeveloperGateCheckRequired(TypedDict):
     #: Какое ворот
-    gate: Literal['publisher', 'scopes', 'sensitivity', 'endpoints', 'egress', 'manifest', 'scope_review', 'blocklist']
+    gate: Literal['publisher', 'scopes', 'sensitivity', 'endpoints', 'egress', 'manifest', 'scope_review', 'blocklist', 'functions']
     #: `awaiting_review` — ход за персоналом платформы: результат внешнего ворота либо не приносили вовсе, либо приносили для другого документа. Своё состояние, а не `failed`: чинить издателю там нечего, и общий ответ отправил бы его править исправный манифест.
     status: Literal['passed', 'failed', 'awaiting_review']
     #: Результат приносит не сервер — по нему видно, чинится ли отказ правкой манифеста
@@ -7220,6 +7343,172 @@ class FinanceOpeningBalanceRequest(_FinanceOpeningBalanceRequestRequired, total=
     #: Обязателен при исправлении сторно-документом
     comment: str
 
+class _FinanceOperationRequired(TypedDict):
+    recognition_mode: Literal['document', 'plan']
+    #: Фактически оплачено по проведённым распределениям
+    cash_paid: str
+    #: Оплата сверх признанного начисления
+    advance: str
+    cash_payments: List["FinanceOperationFact"]
+    id: "UUID"
+    kind: Literal['sale', 'purchase']
+    company_id: "UUID"
+    contact_id: "UUID"
+    currency: str
+    #: Decimal string
+    amount: str
+    source_system: str
+    source_ref: str
+    external_id: str
+    schema_version: int
+    status: "CoreDocumentStatus"
+    current: "FinanceOperationVersion"
+    versions: List["FinanceOperationVersion"]
+
+class FinanceOperation(_FinanceOperationRequired, total=False):
+    due_date: str
+    purpose: str
+    pnl_item_id: str
+    project_id: str
+    contract_id: str
+
+class FinanceOperationAccrualAllocation(TypedDict):
+    accrual_id: "UUID"
+    #: Положительная decimal string
+    amount: str
+
+class _FinanceOperationAccrualCreateRequired(TypedDict):
+    source: "FinanceOperationSource"
+    expected_version: int
+    date: str
+    #: Сумма документа; должна совпасть с суммой allocations
+    amount: str
+
+class FinanceOperationAccrualCreate(_FinanceOperationAccrualCreateRequired, total=False):
+    """Указывает ровно одну цель распределения: accrual_id для одной части плана либо allocations для нескольких частей. Совместимость этого ограничения проверяет сервер; плоская форма сохранена, чтобы сгенерированные TypeScript- и Swift-клиенты не теряли общие поля."""
+
+    accrual_id: "UUID"
+    allocations: List["FinanceOperationAccrualAllocation"]
+    #: Обычно вычисляется из графика; переданное значение не может ему противоречить
+    due_date: str
+    reason: str
+
+class _FinanceOperationAccrualResultRequired(TypedDict):
+    operation_id: "UUID"
+    version_id: "UUID"
+    allocations: List["FinanceOperationAccrualAllocation"]
+    document: "CoreDocument"
+    operation: "FinanceOperation"
+
+class FinanceOperationAccrualResult(_FinanceOperationAccrualResultRequired, total=False):
+    accrual_id: str
+
+class _FinanceOperationActionRequired(TypedDict):
+    source: "FinanceOperationSource"
+    expected_version: int
+
+class FinanceOperationAction(_FinanceOperationActionRequired, total=False):
+    reason: str
+
+class _FinanceOperationCreateRequired(TypedDict):
+    source: "FinanceOperationSource"
+    kind: Literal['sale', 'purchase']
+    company_id: "UUID"
+    contact_id: "UUID"
+    date: str
+    currency: str
+    #: Положительная decimal string
+    amount: str
+    pnl_item_id: "UUID"
+
+class FinanceOperationCreate(_FinanceOperationCreateRequired, total=False):
+    #: document — один документ начисления; plan — план, который сам не создаёт долг
+    recognition_mode: Literal['document', 'plan']
+    due_date: str
+    purpose: str
+    project_id: str
+    contract_id: str
+    accruals: List["FinanceOperationStageInput"]
+    payments: List["FinanceOperationStageInput"]
+    references: List["FinanceOperationReferenceInput"]
+
+class FinanceOperationFact(TypedDict):
+    document_id: "UUID"
+    type_key: str
+    type_name: str
+    number: str
+    date: str
+    status: "CoreDocumentStatus"
+    #: Decimal string из движений проведённого регистратора
+    amount: str
+    currency: str
+
+class FinanceOperationReferenceInput(TypedDict):
+    relation: str
+    target_module: str
+    target_type: str
+    target_id: str
+
+class FinanceOperationSource(TypedDict):
+    schema_version: int
+    source_system: str
+    source_ref: str
+    external_id: str
+    idempotency_key: str
+
+class _FinanceOperationStageRequired(TypedDict):
+    id: "UUID"
+    sequence: int
+    date: str
+    #: Плановая decimal string
+    amount: str
+    currency: str
+    #: Decimal string из проведённых документов
+    actual_amount: str
+    facts: List["FinanceOperationFact"]
+
+class FinanceOperationStage(_FinanceOperationStageRequired, total=False):
+    label: str
+    due_trigger: Literal['after_accrual']
+    after_accrual_id: str
+    delay_days: int
+    payment_attribution_pending: bool
+
+class _FinanceOperationStageInputRequired(TypedDict):
+    sequence: int
+    #: Положительная decimal string
+    amount: str
+
+class FinanceOperationStageInput(_FinanceOperationStageInputRequired, total=False):
+    label: str
+    #: Необязательная календарная дата; пусто означает без срока
+    date: str
+    #: По умолчанию валюта операции; другая валюта не принимается
+    currency: str
+    #: Только для графика оплаты: считать срок от проведённого начисления
+    due_trigger: Literal['after_accrual']
+    #: Номер части начисления; отсутствие означает от любого начисления
+    after_accrual_sequence: int
+    delay_days: int
+
+class _FinanceOperationVersionRequired(TypedDict):
+    id: "UUID"
+    version: int
+    change_kind: Literal['initial', 'correction', 'reversal']
+    document_id: "UUID"
+    document_status: "CoreDocumentStatus"
+    is_marked_deleted: bool
+    company_id: "UUID"
+    contact_id: "UUID"
+    currency: str
+    effective_date: str
+    accruals: List["FinanceOperationStage"]
+    payments: List["FinanceOperationStage"]
+
+class FinanceOperationVersion(_FinanceOperationVersionRequired, total=False):
+    previous_version_id: str
+    reason: str
+
 FinancePaymentCalendar = TypedDict("FinancePaymentCalendar", {"valuation_date": str, "project": str, "balance_available": bool, "from": str, "to": str, "currency": str, "derived_available": bool, "derived_note": str, "opening": str, "inflow": str, "outflow": str, "closing": str, "overdue_in": str, "overdue_out": str, "done_in": str, "done_out": str, "companies": List["FinancePaymentCalendarCompany"], "step": Literal['day', 'month', 'quarter'], "periods": List["FinancePaymentCalendarPeriod"], "totals": List["FinancePaymentCalendarCell"], "days": List["FinancePaymentCalendarDay"], "rows": List["FinancePaymentCalendarRow"], "overdue": List["FinancePaymentCalendarRow"]}, total=False)
 
 class FinancePaymentCalendarCell(TypedDict):
@@ -8060,11 +8349,17 @@ class FinanceTradeAdvance(TypedDict):
     amount: str
     advances: List["FinanceOpenAdvance"]
 
-class FinanceTradeJournalPage(TypedDict):
+class _FinanceTradeJournalPageRequired(TypedDict):
     count: int
     results: List["FinanceTradeJournalRow"]
 
-class FinanceTradeJournalRow(TypedDict):
+class FinanceTradeJournalPage(_FinanceTradeJournalPageRequired, total=False):
+    limit: int
+    offset: int
+    has_more: bool
+    limit_reached: bool
+
+class _FinanceTradeJournalRowRequired(TypedDict):
     id: "UUID"
     number: str
     date: str
@@ -8082,6 +8377,29 @@ class FinanceTradeJournalRow(TypedDict):
     due_date: str
     #: Decimal string из регистра расчётов
     outstanding: str
+
+class FinanceTradeJournalRow(_FinanceTradeJournalRowRequired, total=False):
+    operation_id: str
+    parent_operation_id: str
+    parent_document_id: str
+    recognition_mode: str
+    type_key: str
+    type_name: str
+    overdue_amount: str
+    accrued: str
+    paid: str
+    cash_paid: str
+    advance: str
+    change_kind: str
+    source_system: str
+    source_ref: str
+    external_id: str
+    version: int
+    cash_documents: int
+    accrual_stages: int
+    payment_stages: int
+    accrued_stages: int
+    paid_stages: int
 
 class _FinanceTransactionRequired(TypedDict):
     id: "UUID"
@@ -8281,6 +8599,8 @@ class KnowledgeAnswerInput(_KnowledgeAnswerInputRequired, total=False):
     history: List["KnowledgeAnswerTurn"]
     #: Где искать: company — материалы компании, guides — встроенные руководства продукта, all — оба корпуса
     scope: Literal['all', 'company', 'guides']
+    #: Не сочинять ответ моделью, вернуть только найденные фрагменты и извлечённую сводку. Для того, кто говорит своим голосом и сам собирает ответ из цитат: без генерации ответ приходит за время поиска
+    citations_only: bool
 
 class KnowledgeAnswerQuality(TypedDict):
     #: Длина периода в днях; по умолчанию 30
@@ -8584,6 +8904,34 @@ class ManagedChecklistPatch(TypedDict):
     #: Пустой массив удаляет только группу с переданным id.
     items: List["ManagedChecklistItem"]
 
+class MarketplaceComponentDataThrough(TypedDict, total=False):
+    """Последняя дата операций площадки, уже включённых в каждый компонент отчёта; отсутствующее или null-значение означает, что дата покрытия пока неизвестна."""
+
+    #: Финансовые операции площадки
+    finance: Optional[str]
+    #: Реклама Wildberries
+    ads: Optional[str]
+    #: Клики рекламы Ozon
+    ads_clicks: Optional[str]
+    #: Заказы из рекламы Ozon
+    ads_orders: Optional[str]
+    #: Карточки товаров по дате последней синхронизации
+    products: Optional[str]
+
+class MarketplaceComponentFreshness(TypedDict, total=False):
+    """Время последней успешной загрузки каждого компонента отчёта; отсутствующее или null-значение означает, что компонент ещё не загружался успешно."""
+
+    #: Финансовые операции площадки
+    finance: Optional[str]
+    #: Реклама Wildberries
+    ads: Optional[str]
+    #: Клики рекламы Ozon
+    ads_clicks: Optional[str]
+    #: Заказы из рекламы Ozon
+    ads_orders: Optional[str]
+    #: Карточки товаров
+    products: Optional[str]
+
 class MarketplaceEconBaseRow(TypedDict, total=False):
     """Сырьё строки прайса в том виде в каком его отдаёт витрина ценообразования"""
 
@@ -8740,7 +9088,7 @@ class MarketplaceOzonCostRequest(_MarketplaceOzonCostRequestRequired, total=Fals
     #: Комментарий; сохраняется, но в ответ не возвращается
     note: str
 
-class MarketplaceOzonDecomposition(TypedDict):
+class _MarketplaceOzonDecompositionRequired(TypedDict):
     #: Момент последней синхронизации аналитики
     updated: Optional[str]
     #: Последняя дата с данными
@@ -8750,6 +9098,12 @@ class MarketplaceOzonDecomposition(TypedDict):
     periods: List["MarketplaceOzonDecompositionPeriod"]
     articles: List["MarketplaceOzonDecompositionArticle"]
     other: Optional["MarketplaceOzonDecompositionOtherBlock"]
+
+class MarketplaceOzonDecomposition(_MarketplaceOzonDecompositionRequired, total=False):
+    freshness: "MarketplaceComponentFreshness"
+    data_through: "MarketplaceComponentDataThrough"
+    #: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
+    incomplete: bool
 
 class MarketplaceOzonDecompositionArticle(TypedDict):
     #: Внешний числовой идентификатор магазина
@@ -8833,7 +9187,7 @@ class MarketplaceOzonDecompositionPeriod(TypedDict):
     run_rate_factor: float
     totals: "MarketplaceOzonDecompositionCell"
 
-MarketplaceOzonFbs = TypedDict("MarketplaceOzonFbs", {"platform": Literal['ozon'], "source": Literal['ozon_fbs_live'], "from": str, "to": str, "totals": "MarketplaceOzonFbsTotals", "funnel": List["MarketplaceOzonFbsFunnelStage"], "tiles": "MarketplaceOzonFbsTiles", "histogram": List["MarketplaceOzonFbsSpeedBucket"], "warehouses": List["MarketplaceOzonFbsWarehouse"], "rows": List["MarketplaceOzonFbsPosting"], "note": str, "analytics": bool}, total=False)
+MarketplaceOzonFbs = TypedDict("MarketplaceOzonFbs", {"platform": Literal['ozon'], "source": Literal['oz_orders_fbs'], "from": str, "to": str, "totals": "MarketplaceOzonFbsTotals", "funnel": List["MarketplaceOzonFbsFunnelStage"], "tiles": "MarketplaceOzonFbsTiles", "histogram": List["MarketplaceOzonFbsSpeedBucket"], "warehouses": List["MarketplaceOzonFbsWarehouse"], "rows": List["MarketplaceOzonFbsPosting"], "note": str, "analytics": bool}, total=False)
 
 class MarketplaceOzonFbsFunnelStage(TypedDict):
     key: Literal['new', 'work', 'way', 'pvz', 'delivered', 'cancelled', 'problem']
@@ -9054,6 +9408,10 @@ class MarketplaceOzonPnl(_MarketplaceOzonPnlRequired, total=False):
     demo: bool
     #: Расшифровка прочего по периодам
     breakdown: Dict[str, List["MarketplaceOzonDecompositionOtherItem"]]
+    freshness: "MarketplaceComponentFreshness"
+    data_through: "MarketplaceComponentDataThrough"
+    #: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
+    incomplete: bool
 
 class MarketplaceOzonPnlPeriod(TypedDict):
     key: str
@@ -9277,41 +9635,95 @@ class MarketplaceProductGroupPatch(TypedDict, total=False):
 
 MarketplaceProductGroupPlatform = Literal['ozon', 'wildberries']
 
-class MarketplaceStore(TypedDict):
-    """Магазин маркетплейса в кабинете. Форма одна для Ozon, Wildberries и Яндекс Маркета — их различает только поле platform. Ключи и токены доступа к площадке в ответ не попадают."""
-
+class _MarketplaceStoreRequired(TypedDict):
     id: "UUID"
     #: Платформа задаётся маршрутом, а не телом запроса
     platform: Literal['ozon', 'wildberries', 'yandex']
     name: str
-    #: Идентификатор магазина на стороне площадки
-    external_id: int
     #: Ставка налога в процентах; decimal строкой
     tax_percent: str
     is_active: bool
+    #: Для подключения включена загрузка схемы FBS
+    has_fbs: bool
+    #: Для подключения Wildberries включена аналитика «Джем»
+    has_jam: bool
+    #: Есть хотя бы один сохранённый API-реквизит
+    credentials_configured: bool
+    ozon_client_id_set: bool
+    ozon_api_key_set: bool
+    ozon_pf_client_id_set: bool
+    ozon_pf_client_secret_set: bool
+    wb_token_set: bool
+    ym_business_id_set: bool
+    ym_api_key_set: bool
+    proxy_set: bool
+    #: Состояние передачи настройки в MPTrack
+    config_sync_status: Literal['not_configured', 'synced', 'error']
+    #: Безопасное состояние подключения в ERP: not_checked — проверка ещё не запускалась, pending — MPTrack проверяет реквизиты или запускает первую загрузку, disabled — загрузки отключены, ok — подключение работает, warning — требуется внимание, error — подключение не работает. Сырые статусы и тексты MPTrack не публикуются
+    connection_status: Literal['not_checked', 'pending', 'disabled', 'ok', 'warning', 'error']
+
+class MarketplaceStore(_MarketplaceStoreRequired, total=False):
+    """Магазин маркетплейса в кабинете. Форма одна для Ozon, Wildberries и Яндекс Маркета — их различает только поле platform. Ключи, токены и proxy в ответ не попадают; вместо них возвращаются безопасные признаки настройки."""
+
+    #: Внутренний идентификатор MPTrack; назначается после передачи настройки и не вводится пользователем
+    external_id: int
+    config_synced_at: str
+    #: Безопасная классификация токена Wildberries без раскрытия токена: basic — ограниченный базовый, personal — персональный, test — тестовый, service — сервисный, unknown — тип не определён
+    token_class: Literal['basic', 'personal', 'test', 'service', 'unknown']
+    #: Безопасный стабильный код состояния подключения; сырой текст ошибки не публикуется
+    connection_error_code: str
+    #: Момент последней успешной загрузки этого подключения
+    last_etl_at: str
 
 class _MarketplaceStoreInputRequired(TypedDict):
     name: str
-    #: Должен помещаться в int32 — по нему магазин сопоставляется с аналитической базой
-    external_id: int
 
 class MarketplaceStoreInput(_MarketplaceStoreInputRequired, total=False):
-    """Тело заведения магазина. Одинаково для трёх площадок — платформу задаёт маршрут."""
+    """Тело создания управляемого подключения. Платформу задаёт маршрут, а external_id назначает MPTrack. Для Ozon нужны ozon_client_id и ozon_api_key, для Wildberries — wb_token, для Яндекс Маркета — ym_business_id и ym_api_key."""
 
     #: Ставка налога в процентах; пустая строка сохраняется как ноль
     tax_percent: str
     is_active: bool
+    has_fbs: bool
+    #: Используется для Wildberries
+    has_jam: bool
+    ozon_client_id: str
+    ozon_api_key: str
+    ozon_pf_client_id: str
+    ozon_pf_client_secret: str
+    #: Рекомендуется персональный токен класса personal; значение не возвращается
+    wb_token: str
+    #: Business ID вводится строкой; ERP проверяет числовой идентификатор и преобразует его для MPTrack
+    ym_business_id: str
+    ym_api_key: str
+    #: Необязательный адрес proxy; значение не возвращается
+    proxy: str
 
 class MarketplaceStorePage(TypedDict):
     count: int
     results: List["MarketplaceStore"]
 
 class MarketplaceStorePatch(TypedDict, total=False):
-    """Отсутствующее или пустое поле сохраняет текущее значение. Название и external_id этим маршрутом не меняются."""
+    """Меняет пользовательские настройки подключения. external_id изменить нельзя. Отсутствующее или пустое поле реквизита сохраняет прежний секрет."""
 
+    name: str
     #: Пустая строка оставляет сохранённую ставку
     tax_percent: str
     is_active: bool
+    has_fbs: bool
+    #: Используется для Wildberries
+    has_jam: bool
+    ozon_client_id: str
+    ozon_api_key: str
+    ozon_pf_client_id: str
+    ozon_pf_client_secret: str
+    #: Пустая строка сохраняет прежний токен
+    wb_token: str
+    #: Business ID вводится строкой; ERP проверяет числовой идентификатор и преобразует его для MPTrack. Пустая строка сохраняет прежнее значение
+    ym_business_id: str
+    ym_api_key: str
+    #: Пустая строка сохраняет прежнее значение
+    proxy: str
 
 class MarketplaceWbCardAdDay(TypedDict):
     date: str
@@ -9459,6 +9871,10 @@ class _MarketplaceWbDecompositionRequired(TypedDict):
 class MarketplaceWbDecomposition(_MarketplaceWbDecompositionRequired, total=False):
     #: Аналитическая база не подключена и цифры синтетические
     demo: bool
+    freshness: "MarketplaceComponentFreshness"
+    data_through: "MarketplaceComponentDataThrough"
+    #: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
+    incomplete: bool
 
 class MarketplaceWbDecompositionArticle(TypedDict):
     #: Внешний идентификатор магазина в аналитике
@@ -9667,6 +10083,10 @@ class MarketplaceWbPnl(_MarketplaceWbPnlRequired, total=False):
     demo: bool
     #: Разбор строки «Прочее» по периодам
     breakdown: Dict[str, List["MarketplaceWbDecompOtherItem"]]
+    freshness: "MarketplaceComponentFreshness"
+    data_through: "MarketplaceComponentDataThrough"
+    #: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
+    incomplete: bool
 
 class MarketplaceWbPnlPeriod(TypedDict):
     key: str
@@ -10929,6 +11349,29 @@ class SettingsAppConsentEgress(_SettingsAppConsentEgressRequired, total=False):
 
     insecure_reason: "SettingsAppLocalizedText"
 
+class _SettingsAppConsentFieldRequired(TypedDict):
+    #: Ключ сущности. Не текст для экрана: он группирует строки, а показывается entity_name
+    entity: str
+    entity_name: "SettingsAppLocalizedText"
+    label: "SettingsAppLocalizedText"
+
+class SettingsAppConsentField(_SettingsAppConsentFieldRequired, total=False):
+    """Одна графа, которую приложение добавит карточке кабинета. Ключа и типа здесь нет, как нет области у права: кабинет решает, пускать ли приложение к своим карточкам, а не читает манифест"""
+
+    #: Версия объявила графу устаревшей: на карточках она не появится
+    obsolete: bool
+
+class SettingsAppConsentFunction(TypedDict):
+    """Одна проверка приложения внутри операции кабинета, выполняемая КОДОМ в песочнице. Summary написан платформой: о том, чем приложение может помешать, кабинету рассказываем мы"""
+
+    #: Ключ точки, на которой стоит функция
+    point: str
+    #: Имя функции внутри приложения
+    key: str
+    #: Виды документов, которые функция смотрит; пустой список означает ВСЕ, и лист говорит это словами
+    document_types: List[str]
+    summary: "SettingsAppLocalizedText"
+
 class SettingsAppConsentPermission(TypedDict):
     scope: str
     #: Без этого права приложение не работает; необъяснённое манифестом право считается обязательным
@@ -10972,6 +11415,25 @@ class SettingsAppConsentResult(TypedDict):
     #: Без нового согласия установка или обновление дальше не пойдут
     requires_consent: bool
 
+class SettingsAppConsentRule(TypedDict):
+    """Та же проверка внутри операции кабинета, но выраженная УСЛОВИЕМ, а не кодом. Отдельно от функций, потому что у правила лист знает заранее две вещи, которых у функции не знает: исход и точный текст, который человек прочтёт. Самого выражения здесь нет: кабинет решает, пускать ли приложение к своим документам, а не проверяет чужой код глазами"""
+
+    #: Ключ точки, на которой стоит правило
+    point: str
+    #: Имя правила внутри приложения
+    key: str
+    #: refuse останавливает проведение, warn показывает человеку сообщение и пропускает документ
+    outcome: Literal['refuse', 'warn']
+    #: Виды документов, которые правило смотрит; пустой список означает ВСЕ
+    document_types: List[str]
+    summary: "SettingsAppLocalizedText"
+    message: "SettingsAppLocalizedText"
+
+class SettingsAppConsentSection(TypedDict):
+    """Раздел, который приложение добавит в меню кабинета. Только название: значок, порядок и адрес страницы — оформление пункта, а решение принимается по тому, что за раздел появится в меню"""
+
+    title: "SettingsAppLocalizedText"
+
 class SettingsAppConsentSheet(TypedDict):
     """Лист согласия, снятый с манифеста сервером: единственное утверждение платформы о приложении, на которое кабинет соглашается"""
 
@@ -10983,8 +11445,18 @@ class SettingsAppConsentSheet(TypedDict):
     permissions: List["SettingsAppConsentPermission"]
     subscriptions: List["SettingsAppConsentSubscription"]
     slots: List["SettingsAppConsentSlot"]
-    #: Что приложение узнает о человеке, открывшем панель: пересечение запрошенного слотами с закрытым словарём платформы; больше ничего оно узнать не может
-    person_facts: List[Literal['actor_subject', 'locale', 'theme']]
+    #: Разделы, которые приложение добавит в МЕНЮ кабинета. Отдельной строкой рядом со слотами: слот — место внутри чужого экрана, а раздел меняет само меню, и увидит его каждый, кто войдёт в кабинет
+    sections: List["SettingsAppConsentSection"]
+    #: Графы, которые приложение добавит карточкам кабинета. Рядом с правами, а не среди них: право говорит, что приложение УВИДИТ и ИЗМЕНИТ, а графа — что оно ДОБАВИТ на глаза каждому, кто откроет карточку
+    fields: List["SettingsAppConsentField"]
+    #: Проверки КОДОМ внутри операций кабинета, с правом их остановить. Особняком от прав намеренно: ни одно право не отвечает на вопрос «может ли приложение мне запретить»
+    functions: List["SettingsAppConsentFunction"]
+    #: Те же проверки, выраженные условием, а не кодом
+    rules: List["SettingsAppConsentRule"]
+    #: У версии нет ни одного пути наружу: ни приёмника событий, ни слота на чужом источнике, ни объявленного исходящего, — и всё, что она делает, делается внутри продукта. ВЫЧИСЛЯЕТСЯ, а не ставится руками: отметка, поставленная человеком, означает «мы посмотрели и решили», а вычисляемое правило — «по построению не может быть иначе»
+    runs_on_akeda: bool
+    #: Что приложение узнает о человеке, открывшем панель: пересечение запрошенного слотами с закрытым словарём платформы; больше ничего оно узнать не может. actor_employee_id — единственный факт, называющий человека настоящей карточкой сотрудника кабинета, а не псевдонимом: с ним приложение отличает сотрудников друг от друга, а имя и должность читает только отдельным правом на сотрудников. Экран согласия обязан сказать про него другими словами, чем про остальные три
+    person_facts: List[Literal['actor_subject', 'actor_employee_id', 'locale', 'theme']]
     data_policy: "PlatformAppDataPolicy"
     support: "SettingsAppConsentSupport"
     #: Внешние получатели данных кабинета поимённо
@@ -11032,6 +11504,10 @@ class SettingsAppDeclaredSlot(_SettingsAppDeclaredSlotRequired, total=False):
     origin: str
     min_width: int
     min_height: int
+    #: Значок пункта меню из закрытого списка платформы. Только у слота раздела приложения; имя вне списка приведено к запасному ещё на сервере — незнакомое рисуется пустым квадратом молча
+    icon: str
+    #: Порядок пункта в меню кабинета. Только у слота раздела приложения; не названный приложением порядок ставит раздел в хвост, а не в голову меню
+    order: int
 
 class _SettingsAppExposureCallRequired(TypedDict):
     #: Сущность, вычисленная из шаблона маршрута: core.contacts, app.config.lease
@@ -11206,7 +11682,7 @@ class SettingsAppVersion(_SettingsAppVersionRequired, total=False):
 
     released_at: str
 
-class _SettingsCompanyRequired(TypedDict):
+class SettingsCompany(TypedDict):
     id: "UUID"
     business_id: "UUID"
     name: str
@@ -11229,12 +11705,6 @@ class _SettingsCompanyRequired(TypedDict):
     legal_address: "SettingsCompanyAddress"
     entrepreneur: "SettingsCompanyPerson"
     is_active: bool
-    #: Метод признания выручки: по деньгам или по начислению
-    accounting_method: Literal['cash', 'accrual']
-
-class SettingsCompany(_SettingsCompanyRequired, total=False):
-    #: Дата перехода на accrual; отсутствует у кассового метода
-    accrual_from: str
 
 class SettingsCompanyAddress(TypedDict):
     postal_code: str
@@ -11561,7 +12031,11 @@ class StatusUpdatePatch(TypedDict, total=False):
 
 class StockBatch(TypedDict):
     id: "UUID"
-    company_id: "UUID"
+    #: Бизнес партии — учётная единица, которой принадлежит товар
+    business_id: Dict[str, Any]
+    business_name: str
+    #: Юрлицо партии — разрез официального контура. У неофициального прихода его нет, и тогда поле пустое (ERP-704).
+    company_id: Optional["UUID"]
     company_name: str
     product_id: "UUID"
     product_sku: str
@@ -11584,6 +12058,14 @@ class StockBatchPage(TypedDict):
     limit: int
     offset: int
     results: List["StockBatch"]
+
+class StockBusinessRef(TypedDict):
+    id: "UUID"
+    name: str
+
+class StockBusinessRefPage(TypedDict):
+    count: int
+    results: List["StockBusinessRef"]
 
 class StockCompanyPolicy(TypedDict):
     id: "UUID"
@@ -11610,6 +12092,7 @@ class StockCompanyPolicyPatch(TypedDict, total=False):
 class StockCompanyRef(TypedDict):
     id: "UUID"
     name: str
+    business_id: "UUID"
 
 class StockCompanyRefPage(TypedDict):
     count: int
@@ -12231,7 +12714,11 @@ class StockReportReservationSummary(TypedDict):
     lines: List["StockReportReservationLine"]
 
 class StockReportRow(TypedDict):
-    company_id: "UUID"
+    #: Бизнес остатка — учётная единица строки
+    business_id: Dict[str, Any]
+    business_name: str
+    #: Юрлицо остатка — разрез официального контура. У неофициального товара его нет, и тогда поле пустое (ERP-704).
+    company_id: Optional["UUID"]
     company_name: str
     warehouse_id: "UUID"
     warehouse_code: str

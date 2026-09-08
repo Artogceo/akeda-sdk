@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a255440df951ca637e056f0155498f67bc7b34723eac197148cf9cab8906c7c3).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ebe5e52494dcae67cde216647dade1b2e8bf8b5342ebe09c26914a8cc4a895d5).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -152,10 +152,12 @@ type AppRuntimeLeaseInput struct {
 	TTLSeconds *int64 `json:"ttl_seconds,omitempty"`
 }
 
-// AppRuntimeSlotActor — Человек, открывший панель, в том объёме, в каком приложению позволено его знать. Полей ровно три, и четвёртого не появится: имя и почта — это штат клиента, роли — его оргструктура, а числовой идентификатор общий на всю платформу и связал бы два кабинета между собой.
+// AppRuntimeSlotActor — Человек, открывший панель, в том объёме, в каком приложению позволено его знать. Имени, почты, ролей и числового идентификатора здесь нет и не появится: имя и почта — это штат клиента, роли — его оргструктура, а числовой идентификатор общий на всю платформу и связал бы два кабинета между собой. Карточка сотрудника (employee_id) — единственное поле, называющее человека настоящей записью кабинета, и приезжает она не всем: только слоту, который назвал actor_employee_id объявлением, и только в той версии, чей лист согласия кабинет читал. Общего на всю платформу в ней ничего нет — она живёт в базе кабинета, и тот же человек у двух клиентов это две разные строки, поэтому довод про связывание кабинетов к ней не относится.
 type AppRuntimeSlotActor struct {
 	// Subject — Псевдоним, свой у каждой пары «установка + человек». Устойчив внутри установки, поэтому панель помнит выбор сотрудника; в другой установке того же приложения у того же человека он ДРУГОЙ; умирает вместе с установкой
 	Subject UUID `json:"subject"`
+	// EmployeeID — Карточка сотрудника кабинета (core_employee.id) — та же, на которой висит его работа. Приезжает только слоту, попросившему actor_employee_id. Пусто означает «не просили либо человек не сотрудник»: различать эти случаи приложению незачем, оба означают, что сотрудника нет. Нужна тому, кто ведёт работу людей: без неё приложение заводит второй список сотрудников у себя, а псевдоним для этого не годится — он умирает вместе с установкой, а часы и назначения обязаны её пережить
+	EmployeeID *UUID `json:"employee_id,omitempty"`
 	// Locale — Язык интерфейса человека: слот обязан показывать текст на русском и английском, и без языка он показал бы не тот
 	Locale string `json:"locale"`
 	// Theme — Тема кабинета. Слот, объявивший themeAware, без неё исполнить объявленное не может
@@ -3245,6 +3247,8 @@ type CoreProductCreate struct {
 	RecordKind      *CoreProductRecordKind     `json:"record_kind,omitempty"`
 	ParentProductID *UUID                      `json:"parent_product_id,omitempty"`
 	Custom          map[string]json.RawMessage `json:"custom,omitempty"`
+	// Identifiers — Штрихкод и артикулы с формы создания; ложатся в той же транзакции, что и карточка. Занятый код отклоняет создание целиком (409).
+	Identifiers []CoreProductIdentifierInput `json:"identifiers,omitempty"`
 }
 
 type CoreProductCustomInput struct {
@@ -3284,6 +3288,41 @@ type CoreProductFieldSchema struct {
 	Fields []CoreProductFieldDefinition `json:"fields"`
 }
 
+type CoreProductFile struct {
+	ID         UUID  `json:"id"`
+	ProductID  UUID  `json:"product_id"`
+	KindItemID *UUID `json:"kind_item_id"`
+	// KindCode — Код элемента справочника product_file_kinds; пусто без типа
+	KindCode  string `json:"kind_code"`
+	KindLabel string `json:"kind_label"`
+	Name      string `json:"name"`
+	MimeType  string `json:"mime_type"`
+	SizeBytes int64  `json:"size_bytes"`
+	IsImage   bool   `json:"is_image"`
+	// IsPrimary — Основное фото товара; бывает только у изображения
+	IsPrimary      bool   `json:"is_primary"`
+	SortOrder      int64  `json:"sort_order"`
+	UploadedByName string `json:"uploaded_by_name"`
+	CreatedAt      string `json:"created_at"`
+}
+
+type CoreProductFilePage struct {
+	Count   int64             `json:"count"`
+	Results []CoreProductFile `json:"results"`
+}
+
+type CoreProductFilePatch struct {
+	// Kind — Код типа из product_file_kinds; пустая строка снимает тип
+	Kind *string `json:"kind,omitempty"`
+	Name *string `json:"name,omitempty"`
+	// IsPrimary — true делает изображение основным фото
+	IsPrimary *bool `json:"is_primary,omitempty"`
+}
+
+type CoreProductFileReorder struct {
+	Ids []UUID `json:"ids"`
+}
+
 type CoreProductIdentifier struct {
 	ID              UUID                       `json:"id"`
 	ProductID       UUID                       `json:"product_id"`
@@ -3308,6 +3347,13 @@ type CoreProductIdentifierInput struct {
 }
 
 type CoreProductIdentifierKind = string
+
+type CoreProductIdentifierMatch struct {
+	ProductID   UUID                  `json:"product_id"`
+	ProductName string                `json:"product_name"`
+	ProductSKU  string                `json:"product_sku"`
+	Identifier  CoreProductIdentifier `json:"identifier"`
+}
 
 type CoreProductIdentifierPage struct {
 	Count   int64                   `json:"count"`
@@ -4019,6 +4065,57 @@ type DeveloperDeliveryPage struct {
 	Offset int64 `json:"offset"`
 	// HasMore — Признак, а не общее число: счёт по журналу — полный проход по истории кабинета ради числа, которое никому не нужно точным
 	HasMore bool `json:"has_more"`
+}
+
+type DeveloperFunctionArtifactRow struct {
+	// Key — Имя функции внутри приложения. У лишнего модуля его нет: манифест этих байтов не называет
+	Key *string `json:"key,omitempty"`
+	// Point — Ключ точки расширения, на которой стоит функция
+	Point *string `json:"point,omitempty"`
+	// Digest — Отпечаток модуля: он и есть имя, под которым байты опознают
+	Digest string `json:"digest"`
+	// DocumentTypes — Виды документа, на которых функция зовётся. ПУСТОЙ СПИСОК ОЗНАЧАЕТ «на всех», и это то же умолчание, что на экране согласия кабинета.
+	DocumentTypes []string `json:"document_types"`
+	// Uploaded — Байты с этим отпечатком лежат у этой версии
+	Uploaded bool `json:"uploaded"`
+	// Size — Размер модуля в байтах. Есть только у загруженного
+	Size *int64 `json:"size,omitempty"`
+	// UploadedAt — Когда байты положили. Есть только у загруженного
+	UploadedAt *string `json:"uploaded_at,omitempty"`
+}
+
+type DeveloperFunctionArtifacts struct {
+	Version string `json:"version"`
+	// Status — Состояние версии. Им объясняется, почему выпущенная версия байтов больше не принимает
+	Status string `json:"status"`
+	// Editable — Версия ещё принимает байты. Отдельным полем: выводить это из состояния — ошибиться в пользу разрешения
+	Editable  bool                           `json:"editable"`
+	Functions []DeveloperFunctionArtifactRow `json:"functions"`
+	// Undeclared — Отпечатки, которые лежат у версии, но манифестом не названы. Байты приняты и вреда не делают, но исполнены не будут никогда: диспетчер ходит от манифеста, а не от хранилища. Чаще всего это пересобранный модуль, под который забыли поправить отпечаток в манифесте.
+	Undeclared []DeveloperFunctionArtifactRow `json:"undeclared"`
+}
+
+type DeveloperFunctionArtifactsResult struct {
+	Functions DeveloperFunctionArtifacts `json:"functions"`
+}
+
+type DeveloperFunctionUpload struct {
+	// Digest — Отпечаток, ПОСЧИТАННЫЙ по байтам. Присланный полем digest к этому моменту уже сверен
+	Digest    string `json:"digest"`
+	Size      int64  `json:"size"`
+	CreatedAt string `json:"created_at"`
+	// Declared — Манифест версии называет этот отпечаток. Загрузка НЕ ОТКАЗЫВАЕТ модулю, которого манифест не называет: байты целы, а виноват может быть и файл, и манифест — какой из двух, решает издатель. Но узнать об этом он обязан сразу, а не от ворот публикации через день.
+	Declared bool `json:"declared"`
+	// Verified — Модуль годен к исполнению: импорты по белому списку, оба экспорта ABI, память в пределах. При выключенной песочнице всегда true — рантайма нет, судить нечем.
+	Verified bool `json:"verified"`
+	// VerifyReason — Машинный код негодности: forbidden_import, abi_missing, module_invalid, verify_failed. Слова на двух языках собирает портал
+	VerifyReason *string `json:"verify_reason,omitempty"`
+	// VerifyDetail — То единственное, чего кодом не сказать: какой именно импорт запрещён, какого экспорта не хватает
+	VerifyDetail *string `json:"verify_detail,omitempty"`
+}
+
+type DeveloperFunctionUploadResult struct {
+	Upload DeveloperFunctionUpload `json:"upload"`
 }
 
 type DeveloperGateCheck struct {
@@ -6087,6 +6184,167 @@ type FinanceOpeningBalanceRequest struct {
 	Comment *string `json:"comment,omitempty"`
 }
 
+type FinanceOperation struct {
+	RecognitionMode string `json:"recognition_mode"`
+	// CashPaid — Фактически оплачено по проведённым распределениям
+	CashPaid string `json:"cash_paid"`
+	// Advance — Оплата сверх признанного начисления
+	Advance      string                 `json:"advance"`
+	CashPayments []FinanceOperationFact `json:"cash_payments"`
+	ID           UUID                   `json:"id"`
+	Kind         string                 `json:"kind"`
+	CompanyID    UUID                   `json:"company_id"`
+	ContactID    UUID                   `json:"contact_id"`
+	Currency     string                 `json:"currency"`
+	// Amount — Decimal string
+	Amount        string                    `json:"amount"`
+	DueDate       *string                   `json:"due_date,omitempty"`
+	Purpose       *string                   `json:"purpose,omitempty"`
+	PNLItemID     *string                   `json:"pnl_item_id,omitempty"`
+	ProjectID     *string                   `json:"project_id,omitempty"`
+	ContractID    *string                   `json:"contract_id,omitempty"`
+	SourceSystem  string                    `json:"source_system"`
+	SourceRef     string                    `json:"source_ref"`
+	ExternalID    string                    `json:"external_id"`
+	SchemaVersion int64                     `json:"schema_version"`
+	Status        CoreDocumentStatus        `json:"status"`
+	Current       FinanceOperationVersion   `json:"current"`
+	Versions      []FinanceOperationVersion `json:"versions"`
+}
+
+type FinanceOperationAccrualAllocation struct {
+	AccrualID UUID `json:"accrual_id"`
+	// Amount — Положительная decimal string
+	Amount string `json:"amount"`
+}
+
+// FinanceOperationAccrualCreate — Указывает ровно одну цель распределения: accrual_id для одной части плана либо allocations для нескольких частей. Совместимость этого ограничения проверяет сервер; плоская форма сохранена, чтобы сгенерированные TypeScript- и Swift-клиенты не теряли общие поля.
+type FinanceOperationAccrualCreate struct {
+	Source          FinanceOperationSource              `json:"source"`
+	ExpectedVersion int64                               `json:"expected_version"`
+	AccrualID       *UUID                               `json:"accrual_id,omitempty"`
+	Allocations     []FinanceOperationAccrualAllocation `json:"allocations,omitempty"`
+	Date            string                              `json:"date"`
+	// Amount — Сумма документа; должна совпасть с суммой allocations
+	Amount string `json:"amount"`
+	// DueDate — Обычно вычисляется из графика; переданное значение не может ему противоречить
+	DueDate *string `json:"due_date,omitempty"`
+	Reason  *string `json:"reason,omitempty"`
+}
+
+type FinanceOperationAccrualResult struct {
+	OperationID UUID                                `json:"operation_id"`
+	VersionID   UUID                                `json:"version_id"`
+	AccrualID   *string                             `json:"accrual_id,omitempty"`
+	Allocations []FinanceOperationAccrualAllocation `json:"allocations"`
+	Document    CoreDocument                        `json:"document"`
+	Operation   FinanceOperation                    `json:"operation"`
+}
+
+type FinanceOperationAction struct {
+	Source          FinanceOperationSource `json:"source"`
+	ExpectedVersion int64                  `json:"expected_version"`
+	Reason          *string                `json:"reason,omitempty"`
+}
+
+type FinanceOperationCreate struct {
+	// RecognitionMode — document — один документ начисления; plan — план, который сам не создаёт долг
+	RecognitionMode *string                `json:"recognition_mode,omitempty"`
+	Source          FinanceOperationSource `json:"source"`
+	Kind            string                 `json:"kind"`
+	CompanyID       UUID                   `json:"company_id"`
+	ContactID       UUID                   `json:"contact_id"`
+	Date            string                 `json:"date"`
+	Currency        string                 `json:"currency"`
+	// Amount — Положительная decimal string
+	Amount     string                           `json:"amount"`
+	DueDate    *string                          `json:"due_date,omitempty"`
+	Purpose    *string                          `json:"purpose,omitempty"`
+	PNLItemID  UUID                             `json:"pnl_item_id"`
+	ProjectID  *string                          `json:"project_id,omitempty"`
+	ContractID *string                          `json:"contract_id,omitempty"`
+	Accruals   []FinanceOperationStageInput     `json:"accruals,omitempty"`
+	Payments   []FinanceOperationStageInput     `json:"payments,omitempty"`
+	References []FinanceOperationReferenceInput `json:"references,omitempty"`
+}
+
+type FinanceOperationFact struct {
+	DocumentID UUID               `json:"document_id"`
+	TypeKey    string             `json:"type_key"`
+	TypeName   string             `json:"type_name"`
+	Number     string             `json:"number"`
+	Date       string             `json:"date"`
+	Status     CoreDocumentStatus `json:"status"`
+	// Amount — Decimal string из движений проведённого регистратора
+	Amount   string `json:"amount"`
+	Currency string `json:"currency"`
+}
+
+type FinanceOperationReferenceInput struct {
+	Relation     string `json:"relation"`
+	TargetModule string `json:"target_module"`
+	TargetType   string `json:"target_type"`
+	TargetID     string `json:"target_id"`
+}
+
+type FinanceOperationSource struct {
+	SchemaVersion  int64  `json:"schema_version"`
+	SourceSystem   string `json:"source_system"`
+	SourceRef      string `json:"source_ref"`
+	ExternalID     string `json:"external_id"`
+	IdempotencyKey string `json:"idempotency_key"`
+}
+
+type FinanceOperationStage struct {
+	ID       UUID    `json:"id"`
+	Sequence int64   `json:"sequence"`
+	Label    *string `json:"label,omitempty"`
+	Date     string  `json:"date"`
+	// Amount — Плановая decimal string
+	Amount   string `json:"amount"`
+	Currency string `json:"currency"`
+	// ActualAmount — Decimal string из проведённых документов
+	ActualAmount              string                 `json:"actual_amount"`
+	DueTrigger                *string                `json:"due_trigger,omitempty"`
+	AfterAccrualID            *string                `json:"after_accrual_id,omitempty"`
+	DelayDays                 *int64                 `json:"delay_days,omitempty"`
+	PaymentAttributionPending *bool                  `json:"payment_attribution_pending,omitempty"`
+	Facts                     []FinanceOperationFact `json:"facts"`
+}
+
+type FinanceOperationStageInput struct {
+	Sequence int64   `json:"sequence"`
+	Label    *string `json:"label,omitempty"`
+	// Date — Необязательная календарная дата; пусто означает без срока
+	Date *string `json:"date,omitempty"`
+	// Amount — Положительная decimal string
+	Amount string `json:"amount"`
+	// Currency — По умолчанию валюта операции; другая валюта не принимается
+	Currency *string `json:"currency,omitempty"`
+	// DueTrigger — Только для графика оплаты: считать срок от проведённого начисления
+	DueTrigger *string `json:"due_trigger,omitempty"`
+	// AfterAccrualSequence — Номер части начисления; отсутствие означает от любого начисления
+	AfterAccrualSequence *int64 `json:"after_accrual_sequence,omitempty"`
+	DelayDays            *int64 `json:"delay_days,omitempty"`
+}
+
+type FinanceOperationVersion struct {
+	ID                UUID                    `json:"id"`
+	Version           int64                   `json:"version"`
+	ChangeKind        string                  `json:"change_kind"`
+	PreviousVersionID *string                 `json:"previous_version_id,omitempty"`
+	DocumentID        UUID                    `json:"document_id"`
+	DocumentStatus    CoreDocumentStatus      `json:"document_status"`
+	IsMarkedDeleted   bool                    `json:"is_marked_deleted"`
+	CompanyID         UUID                    `json:"company_id"`
+	ContactID         UUID                    `json:"contact_id"`
+	Currency          string                  `json:"currency"`
+	EffectiveDate     string                  `json:"effective_date"`
+	Reason            *string                 `json:"reason,omitempty"`
+	Accruals          []FinanceOperationStage `json:"accruals"`
+	Payments          []FinanceOperationStage `json:"payments"`
+}
+
 type FinancePaymentCalendar struct {
 	// ValuationDate — Дата доступных курсов для пересчёта прогноза без переоценки в главной книге
 	ValuationDate *string `json:"valuation_date,omitempty"`
@@ -7023,8 +7281,12 @@ type FinanceTradeAdvance struct {
 }
 
 type FinanceTradeJournalPage struct {
-	Count   int64                    `json:"count"`
-	Results []FinanceTradeJournalRow `json:"results"`
+	Count        int64                    `json:"count"`
+	Results      []FinanceTradeJournalRow `json:"results"`
+	Limit        *int64                   `json:"limit,omitempty"`
+	Offset       *int64                   `json:"offset,omitempty"`
+	HasMore      *bool                    `json:"has_more,omitempty"`
+	LimitReached *bool                    `json:"limit_reached,omitempty"`
 }
 
 type FinanceTradeJournalRow struct {
@@ -7044,7 +7306,28 @@ type FinanceTradeJournalRow struct {
 	Currency string `json:"currency"`
 	DueDate  string `json:"due_date"`
 	// Outstanding — Decimal string из регистра расчётов
-	Outstanding string `json:"outstanding"`
+	Outstanding       string  `json:"outstanding"`
+	OperationID       *string `json:"operation_id,omitempty"`
+	ParentOperationID *string `json:"parent_operation_id,omitempty"`
+	ParentDocumentID  *string `json:"parent_document_id,omitempty"`
+	RecognitionMode   *string `json:"recognition_mode,omitempty"`
+	TypeKey           *string `json:"type_key,omitempty"`
+	TypeName          *string `json:"type_name,omitempty"`
+	OverdueAmount     *string `json:"overdue_amount,omitempty"`
+	Accrued           *string `json:"accrued,omitempty"`
+	Paid              *string `json:"paid,omitempty"`
+	CashPaid          *string `json:"cash_paid,omitempty"`
+	Advance           *string `json:"advance,omitempty"`
+	ChangeKind        *string `json:"change_kind,omitempty"`
+	SourceSystem      *string `json:"source_system,omitempty"`
+	SourceRef         *string `json:"source_ref,omitempty"`
+	ExternalID        *string `json:"external_id,omitempty"`
+	Version           *int64  `json:"version,omitempty"`
+	CashDocuments     *int64  `json:"cash_documents,omitempty"`
+	AccrualStages     *int64  `json:"accrual_stages,omitempty"`
+	PaymentStages     *int64  `json:"payment_stages,omitempty"`
+	AccruedStages     *int64  `json:"accrued_stages,omitempty"`
+	PaidStages        *int64  `json:"paid_stages,omitempty"`
 }
 
 type FinanceTransaction struct {
@@ -7250,6 +7533,8 @@ type KnowledgeAnswerInput struct {
 	History []KnowledgeAnswerTurn `json:"history,omitempty"`
 	// Scope — Где искать: company — материалы компании, guides — встроенные руководства продукта, all — оба корпуса
 	Scope *string `json:"scope,omitempty"`
+	// CitationsOnly — Не сочинять ответ моделью, вернуть только найденные фрагменты и извлечённую сводку. Для того, кто говорит своим голосом и сам собирает ответ из цитат: без генерации ответ приходит за время поиска
+	CitationsOnly *bool `json:"citations_only,omitempty"`
 }
 
 type KnowledgeAnswerQuality struct {
@@ -7558,6 +7843,34 @@ type ManagedChecklistPatch struct {
 	Items []ManagedChecklistItem `json:"items"`
 }
 
+// MarketplaceComponentDataThrough — Последняя дата операций площадки, уже включённых в каждый компонент отчёта; отсутствующее или null-значение означает, что дата покрытия пока неизвестна.
+type MarketplaceComponentDataThrough struct {
+	// Finance — Финансовые операции площадки
+	Finance *string `json:"finance,omitempty"`
+	// Ads — Реклама Wildberries
+	Ads *string `json:"ads,omitempty"`
+	// AdsClicks — Клики рекламы Ozon
+	AdsClicks *string `json:"ads_clicks,omitempty"`
+	// AdsOrders — Заказы из рекламы Ozon
+	AdsOrders *string `json:"ads_orders,omitempty"`
+	// Products — Карточки товаров по дате последней синхронизации
+	Products *string `json:"products,omitempty"`
+}
+
+// MarketplaceComponentFreshness — Время последней успешной загрузки каждого компонента отчёта; отсутствующее или null-значение означает, что компонент ещё не загружался успешно.
+type MarketplaceComponentFreshness struct {
+	// Finance — Финансовые операции площадки
+	Finance *string `json:"finance,omitempty"`
+	// Ads — Реклама Wildberries
+	Ads *string `json:"ads,omitempty"`
+	// AdsClicks — Клики рекламы Ozon
+	AdsClicks *string `json:"ads_clicks,omitempty"`
+	// AdsOrders — Заказы из рекламы Ozon
+	AdsOrders *string `json:"ads_orders,omitempty"`
+	// Products — Карточки товаров
+	Products *string `json:"products,omitempty"`
+}
+
 // MarketplaceEconBaseRow — Сырьё строки прайса в том виде в каком его отдаёт витрина ценообразования
 type MarketplaceEconBaseRow struct {
 	// Price — Установочная цена, до скидки площадки
@@ -7718,12 +8031,16 @@ type MarketplaceOzonDecomposition struct {
 	// Updated — Момент последней синхронизации аналитики
 	Updated *string `json:"updated"`
 	// Anchor — Последняя дата с данными
-	Anchor   string                                  `json:"anchor"`
-	Months   []MarketplaceOzonDecompositionMonth     `json:"months"`
-	Month    *MarketplaceOzonDecompositionMonth      `json:"month"`
-	Periods  []MarketplaceOzonDecompositionPeriod    `json:"periods"`
-	Articles []MarketplaceOzonDecompositionArticle   `json:"articles"`
-	Other    *MarketplaceOzonDecompositionOtherBlock `json:"other"`
+	Anchor      string                                  `json:"anchor"`
+	Months      []MarketplaceOzonDecompositionMonth     `json:"months"`
+	Month       *MarketplaceOzonDecompositionMonth      `json:"month"`
+	Periods     []MarketplaceOzonDecompositionPeriod    `json:"periods"`
+	Articles    []MarketplaceOzonDecompositionArticle   `json:"articles"`
+	Other       *MarketplaceOzonDecompositionOtherBlock `json:"other"`
+	Freshness   *MarketplaceComponentFreshness          `json:"freshness,omitempty"`
+	DataThrough *MarketplaceComponentDataThrough        `json:"data_through,omitempty"`
+	// Incomplete — Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
+	Incomplete *bool `json:"incomplete,omitempty"`
 }
 
 type MarketplaceOzonDecompositionArticle struct {
@@ -8085,7 +8402,11 @@ type MarketplaceOzonPnl struct {
 	// Demo — Аналитика не подключена — цифры синтетические
 	Demo *bool `json:"demo,omitempty"`
 	// Breakdown — Расшифровка прочего по периодам
-	Breakdown map[string][]MarketplaceOzonDecompositionOtherItem `json:"breakdown,omitempty"`
+	Breakdown   map[string][]MarketplaceOzonDecompositionOtherItem `json:"breakdown,omitempty"`
+	Freshness   *MarketplaceComponentFreshness                     `json:"freshness,omitempty"`
+	DataThrough *MarketplaceComponentDataThrough                   `json:"data_through,omitempty"`
+	// Incomplete — Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
+	Incomplete *bool `json:"incomplete,omitempty"`
 }
 
 type MarketplaceOzonPnlPeriod struct {
@@ -8335,27 +8656,64 @@ type MarketplaceProductGroupPatch struct {
 
 type MarketplaceProductGroupPlatform = string
 
-// MarketplaceStore — Магазин маркетплейса в кабинете. Форма одна для Ozon, Wildberries и Яндекс Маркета — их различает только поле platform. Ключи и токены доступа к площадке в ответ не попадают.
+// MarketplaceStore — Магазин маркетплейса в кабинете. Форма одна для Ozon, Wildberries и Яндекс Маркета — их различает только поле platform. Ключи, токены и proxy в ответ не попадают; вместо них возвращаются безопасные признаки настройки.
 type MarketplaceStore struct {
 	ID UUID `json:"id"`
 	// Platform — Платформа задаётся маршрутом, а не телом запроса
 	Platform string `json:"platform"`
 	Name     string `json:"name"`
-	// ExternalID — Идентификатор магазина на стороне площадки
-	ExternalID int64 `json:"external_id"`
+	// ExternalID — Внутренний идентификатор MPTrack; назначается после передачи настройки и не вводится пользователем
+	ExternalID *int64 `json:"external_id,omitempty"`
 	// TaxPercent — Ставка налога в процентах; decimal строкой
 	TaxPercent string `json:"tax_percent"`
 	IsActive   bool   `json:"is_active"`
+	// HasFbs — Для подключения включена загрузка схемы FBS
+	HasFbs bool `json:"has_fbs"`
+	// HasJam — Для подключения Wildberries включена аналитика «Джем»
+	HasJam bool `json:"has_jam"`
+	// CredentialsConfigured — Есть хотя бы один сохранённый API-реквизит
+	CredentialsConfigured bool `json:"credentials_configured"`
+	OzonClientIDSet       bool `json:"ozon_client_id_set"`
+	OzonAPIKeySet         bool `json:"ozon_api_key_set"`
+	OzonPfClientIDSet     bool `json:"ozon_pf_client_id_set"`
+	OzonPfClientSecretSet bool `json:"ozon_pf_client_secret_set"`
+	WbTokenSet            bool `json:"wb_token_set"`
+	YmBusinessIDSet       bool `json:"ym_business_id_set"`
+	YmAPIKeySet           bool `json:"ym_api_key_set"`
+	ProxySet              bool `json:"proxy_set"`
+	// ConfigSyncStatus — Состояние передачи настройки в MPTrack
+	ConfigSyncStatus string  `json:"config_sync_status"`
+	ConfigSyncedAt   *string `json:"config_synced_at,omitempty"`
+	// TokenClass — Безопасная классификация токена Wildberries без раскрытия токена: basic — ограниченный базовый, personal — персональный, test — тестовый, service — сервисный, unknown — тип не определён
+	TokenClass *string `json:"token_class,omitempty"`
+	// ConnectionStatus — Безопасное состояние подключения в ERP: not_checked — проверка ещё не запускалась, pending — MPTrack проверяет реквизиты или запускает первую загрузку, disabled — загрузки отключены, ok — подключение работает, warning — требуется внимание, error — подключение не работает. Сырые статусы и тексты MPTrack не публикуются
+	ConnectionStatus string `json:"connection_status"`
+	// ConnectionErrorCode — Безопасный стабильный код состояния подключения; сырой текст ошибки не публикуется
+	ConnectionErrorCode *string `json:"connection_error_code,omitempty"`
+	// LastEtlAt — Момент последней успешной загрузки этого подключения
+	LastEtlAt *string `json:"last_etl_at,omitempty"`
 }
 
-// MarketplaceStoreInput — Тело заведения магазина. Одинаково для трёх площадок — платформу задаёт маршрут.
+// MarketplaceStoreInput — Тело создания управляемого подключения. Платформу задаёт маршрут, а external_id назначает MPTrack. Для Ozon нужны ozon_client_id и ozon_api_key, для Wildberries — wb_token, для Яндекс Маркета — ym_business_id и ym_api_key.
 type MarketplaceStoreInput struct {
 	Name string `json:"name"`
-	// ExternalID — Должен помещаться в int32 — по нему магазин сопоставляется с аналитической базой
-	ExternalID int64 `json:"external_id"`
 	// TaxPercent — Ставка налога в процентах; пустая строка сохраняется как ноль
 	TaxPercent *string `json:"tax_percent,omitempty"`
 	IsActive   *bool   `json:"is_active,omitempty"`
+	HasFbs     *bool   `json:"has_fbs,omitempty"`
+	// HasJam — Используется для Wildberries
+	HasJam             *bool   `json:"has_jam,omitempty"`
+	OzonClientID       *string `json:"ozon_client_id,omitempty"`
+	OzonAPIKey         *string `json:"ozon_api_key,omitempty"`
+	OzonPfClientID     *string `json:"ozon_pf_client_id,omitempty"`
+	OzonPfClientSecret *string `json:"ozon_pf_client_secret,omitempty"`
+	// WbToken — Рекомендуется персональный токен класса personal; значение не возвращается
+	WbToken *string `json:"wb_token,omitempty"`
+	// YmBusinessID — Business ID вводится строкой; ERP проверяет числовой идентификатор и преобразует его для MPTrack
+	YmBusinessID *string `json:"ym_business_id,omitempty"`
+	YmAPIKey     *string `json:"ym_api_key,omitempty"`
+	// Proxy — Необязательный адрес proxy; значение не возвращается
+	Proxy *string `json:"proxy,omitempty"`
 }
 
 type MarketplaceStorePage struct {
@@ -8363,11 +8721,26 @@ type MarketplaceStorePage struct {
 	Results []MarketplaceStore `json:"results"`
 }
 
-// MarketplaceStorePatch — Отсутствующее или пустое поле сохраняет текущее значение. Название и external_id этим маршрутом не меняются.
+// MarketplaceStorePatch — Меняет пользовательские настройки подключения. external_id изменить нельзя. Отсутствующее или пустое поле реквизита сохраняет прежний секрет.
 type MarketplaceStorePatch struct {
+	Name *string `json:"name,omitempty"`
 	// TaxPercent — Пустая строка оставляет сохранённую ставку
 	TaxPercent *string `json:"tax_percent,omitempty"`
 	IsActive   *bool   `json:"is_active,omitempty"`
+	HasFbs     *bool   `json:"has_fbs,omitempty"`
+	// HasJam — Используется для Wildberries
+	HasJam             *bool   `json:"has_jam,omitempty"`
+	OzonClientID       *string `json:"ozon_client_id,omitempty"`
+	OzonAPIKey         *string `json:"ozon_api_key,omitempty"`
+	OzonPfClientID     *string `json:"ozon_pf_client_id,omitempty"`
+	OzonPfClientSecret *string `json:"ozon_pf_client_secret,omitempty"`
+	// WbToken — Пустая строка сохраняет прежний токен
+	WbToken *string `json:"wb_token,omitempty"`
+	// YmBusinessID — Business ID вводится строкой; ERP проверяет числовой идентификатор и преобразует его для MPTrack. Пустая строка сохраняет прежнее значение
+	YmBusinessID *string `json:"ym_business_id,omitempty"`
+	YmAPIKey     *string `json:"ym_api_key,omitempty"`
+	// Proxy — Пустая строка сохраняет прежнее значение
+	Proxy *string `json:"proxy,omitempty"`
 }
 
 type MarketplaceWbCardAdDay struct {
@@ -8514,7 +8887,11 @@ type MarketplaceWbDecomposition struct {
 	Articles []MarketplaceWbDecompositionArticle `json:"articles"`
 	Other    *MarketplaceWbDecompositionOther    `json:"other"`
 	// Demo — Аналитическая база не подключена и цифры синтетические
-	Demo *bool `json:"demo,omitempty"`
+	Demo        *bool                            `json:"demo,omitempty"`
+	Freshness   *MarketplaceComponentFreshness   `json:"freshness,omitempty"`
+	DataThrough *MarketplaceComponentDataThrough `json:"data_through,omitempty"`
+	// Incomplete — Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
+	Incomplete *bool `json:"incomplete,omitempty"`
 }
 
 type MarketplaceWbDecompositionArticle struct {
@@ -8762,7 +9139,11 @@ type MarketplaceWbPnl struct {
 	// Demo — Аналитическая база не подключена и цифры синтетические
 	Demo *bool `json:"demo,omitempty"`
 	// Breakdown — Разбор строки «Прочее» по периодам
-	Breakdown map[string][]MarketplaceWbDecompOtherItem `json:"breakdown,omitempty"`
+	Breakdown   map[string][]MarketplaceWbDecompOtherItem `json:"breakdown,omitempty"`
+	Freshness   *MarketplaceComponentFreshness            `json:"freshness,omitempty"`
+	DataThrough *MarketplaceComponentDataThrough          `json:"data_through,omitempty"`
+	// Incomplete — Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
+	Incomplete *bool `json:"incomplete,omitempty"`
 }
 
 type MarketplaceWbPnlPeriod struct {
@@ -10078,6 +10459,27 @@ type SettingsAppConsentEgress struct {
 	Sends []string `json:"sends"`
 }
 
+// SettingsAppConsentField — Одна графа, которую приложение добавит карточке кабинета. Ключа и типа здесь нет, как нет области у права: кабинет решает, пускать ли приложение к своим карточкам, а не читает манифест
+type SettingsAppConsentField struct {
+	// Entity — Ключ сущности. Не текст для экрана: он группирует строки, а показывается entity_name
+	Entity     string                   `json:"entity"`
+	EntityName SettingsAppLocalizedText `json:"entity_name"`
+	Label      SettingsAppLocalizedText `json:"label"`
+	// Obsolete — Версия объявила графу устаревшей: на карточках она не появится
+	Obsolete *bool `json:"obsolete,omitempty"`
+}
+
+// SettingsAppConsentFunction — Одна проверка приложения внутри операции кабинета, выполняемая КОДОМ в песочнице. Summary написан платформой: о том, чем приложение может помешать, кабинету рассказываем мы
+type SettingsAppConsentFunction struct {
+	// Point — Ключ точки, на которой стоит функция
+	Point string `json:"point"`
+	// Key — Имя функции внутри приложения
+	Key string `json:"key"`
+	// DocumentTypes — Виды документов, которые функция смотрит; пустой список означает ВСЕ, и лист говорит это словами
+	DocumentTypes []string                 `json:"document_types"`
+	Summary       SettingsAppLocalizedText `json:"summary"`
+}
+
 type SettingsAppConsentPermission struct {
 	Scope string `json:"scope"`
 	// Required — Без этого права приложение не работает; необъяснённое манифестом право считается обязательным
@@ -10122,6 +10524,25 @@ type SettingsAppConsentResult struct {
 	RequiresConsent bool `json:"requires_consent"`
 }
 
+// SettingsAppConsentRule — Та же проверка внутри операции кабинета, но выраженная УСЛОВИЕМ, а не кодом. Отдельно от функций, потому что у правила лист знает заранее две вещи, которых у функции не знает: исход и точный текст, который человек прочтёт. Самого выражения здесь нет: кабинет решает, пускать ли приложение к своим документам, а не проверяет чужой код глазами
+type SettingsAppConsentRule struct {
+	// Point — Ключ точки, на которой стоит правило
+	Point string `json:"point"`
+	// Key — Имя правила внутри приложения
+	Key string `json:"key"`
+	// Outcome — refuse останавливает проведение, warn показывает человеку сообщение и пропускает документ
+	Outcome string `json:"outcome"`
+	// DocumentTypes — Виды документов, которые правило смотрит; пустой список означает ВСЕ
+	DocumentTypes []string                 `json:"document_types"`
+	Summary       SettingsAppLocalizedText `json:"summary"`
+	Message       SettingsAppLocalizedText `json:"message"`
+}
+
+// SettingsAppConsentSection — Раздел, который приложение добавит в меню кабинета. Только название: значок, порядок и адрес страницы — оформление пункта, а решение принимается по тому, что за раздел появится в меню
+type SettingsAppConsentSection struct {
+	Title SettingsAppLocalizedText `json:"title"`
+}
+
 // SettingsAppConsentSheet — Лист согласия, снятый с манифеста сервером: единственное утверждение платформы о приложении, на которое кабинет соглашается
 type SettingsAppConsentSheet struct {
 	Name          SettingsAppLocalizedText         `json:"name"`
@@ -10132,7 +10553,17 @@ type SettingsAppConsentSheet struct {
 	Permissions   []SettingsAppConsentPermission   `json:"permissions"`
 	Subscriptions []SettingsAppConsentSubscription `json:"subscriptions"`
 	Slots         []SettingsAppConsentSlot         `json:"slots"`
-	// PersonFacts — Что приложение узнает о человеке, открывшем панель: пересечение запрошенного слотами с закрытым словарём платформы; больше ничего оно узнать не может
+	// Sections — Разделы, которые приложение добавит в МЕНЮ кабинета. Отдельной строкой рядом со слотами: слот — место внутри чужого экрана, а раздел меняет само меню, и увидит его каждый, кто войдёт в кабинет
+	Sections []SettingsAppConsentSection `json:"sections"`
+	// Fields — Графы, которые приложение добавит карточкам кабинета. Рядом с правами, а не среди них: право говорит, что приложение УВИДИТ и ИЗМЕНИТ, а графа — что оно ДОБАВИТ на глаза каждому, кто откроет карточку
+	Fields []SettingsAppConsentField `json:"fields"`
+	// Functions — Проверки КОДОМ внутри операций кабинета, с правом их остановить. Особняком от прав намеренно: ни одно право не отвечает на вопрос «может ли приложение мне запретить»
+	Functions []SettingsAppConsentFunction `json:"functions"`
+	// Rules — Те же проверки, выраженные условием, а не кодом
+	Rules []SettingsAppConsentRule `json:"rules"`
+	// RunsOnAkeda — У версии нет ни одного пути наружу: ни приёмника событий, ни слота на чужом источнике, ни объявленного исходящего, — и всё, что она делает, делается внутри продукта. ВЫЧИСЛЯЕТСЯ, а не ставится руками: отметка, поставленная человеком, означает «мы посмотрели и решили», а вычисляемое правило — «по построению не может быть иначе»
+	RunsOnAkeda bool `json:"runs_on_akeda"`
+	// PersonFacts — Что приложение узнает о человеке, открывшем панель: пересечение запрошенного слотами с закрытым словарём платформы; больше ничего оно узнать не может. actor_employee_id — единственный факт, называющий человека настоящей карточкой сотрудника кабинета, а не псевдонимом: с ним приложение отличает сотрудников друг от друга, а имя и должность читает только отдельным правом на сотрудников. Экран согласия обязан сказать про него другими словами, чем про остальные три
 	PersonFacts []string                  `json:"person_facts"`
 	DataPolicy  PlatformAppDataPolicy     `json:"data_policy"`
 	Support     SettingsAppConsentSupport `json:"support"`
@@ -10179,6 +10610,10 @@ type SettingsAppDeclaredSlot struct {
 	Context    []string                 `json:"context"`
 	Title      SettingsAppLocalizedText `json:"title"`
 	ThemeAware bool                     `json:"theme_aware"`
+	// Icon — Значок пункта меню из закрытого списка платформы. Только у слота раздела приложения; имя вне списка приведено к запасному ещё на сервере — незнакомое рисуется пустым квадратом молча
+	Icon *string `json:"icon,omitempty"`
+	// Order — Порядок пункта в меню кабинета. Только у слота раздела приложения; не названный приложением порядок ставит раздел в хвост, а не в голову меню
+	Order *int64 `json:"order,omitempty"`
 	// BridgeSends — Что расширение вправе прислать оболочке; уже пересечено с закрытым списком платформы
 	BridgeSends []string `json:"bridge_sends"`
 	// BridgeReceives — Что оболочка вправе прислать расширению
@@ -10374,10 +10809,6 @@ type SettingsCompany struct {
 	LegalAddress     SettingsCompanyAddress `json:"legal_address"`
 	Entrepreneur     SettingsCompanyPerson  `json:"entrepreneur"`
 	IsActive         bool                   `json:"is_active"`
-	// AccountingMethod — Метод признания выручки: по деньгам или по начислению
-	AccountingMethod string `json:"accounting_method"`
-	// AccrualFrom — Дата перехода на accrual; отсутствует у кассового метода
-	AccrualFrom *string `json:"accrual_from,omitempty"`
 }
 
 type SettingsCompanyAddress struct {
@@ -10729,8 +11160,12 @@ type StatusUpdatePatch struct {
 }
 
 type StockBatch struct {
-	ID                    UUID    `json:"id"`
-	CompanyID             UUID    `json:"company_id"`
+	ID UUID `json:"id"`
+	// BusinessID — Бизнес партии — учётная единица, которой принадлежит товар
+	BusinessID   map[string]json.RawMessage `json:"business_id"`
+	BusinessName string                     `json:"business_name"`
+	// CompanyID — Юрлицо партии — разрез официального контура. У неофициального прихода его нет, и тогда поле пустое (ERP-704).
+	CompanyID             *UUID   `json:"company_id"`
 	CompanyName           string  `json:"company_name"`
 	ProductID             UUID    `json:"product_id"`
 	ProductSKU            string  `json:"product_sku"`
@@ -10754,6 +11189,16 @@ type StockBatchPage struct {
 	Limit   int64        `json:"limit"`
 	Offset  int64        `json:"offset"`
 	Results []StockBatch `json:"results"`
+}
+
+type StockBusinessRef struct {
+	ID   UUID   `json:"id"`
+	Name string `json:"name"`
+}
+
+type StockBusinessRefPage struct {
+	Count   int64              `json:"count"`
+	Results []StockBusinessRef `json:"results"`
 }
 
 type StockCompanyPolicy struct {
@@ -10782,8 +11227,9 @@ type StockCompanyPolicyPatch struct {
 }
 
 type StockCompanyRef struct {
-	ID   UUID   `json:"id"`
-	Name string `json:"name"`
+	ID         UUID   `json:"id"`
+	Name       string `json:"name"`
+	BusinessID UUID   `json:"business_id"`
 }
 
 type StockCompanyRefPage struct {
@@ -11414,7 +11860,11 @@ type StockReportReservationSummary struct {
 }
 
 type StockReportRow struct {
-	CompanyID     UUID   `json:"company_id"`
+	// BusinessID — Бизнес остатка — учётная единица строки
+	BusinessID   map[string]json.RawMessage `json:"business_id"`
+	BusinessName string                     `json:"business_name"`
+	// CompanyID — Юрлицо остатка — разрез официального контура. У неофициального товара его нет, и тогда поле пустое (ERP-704).
+	CompanyID     *UUID  `json:"company_id"`
 	CompanyName   string `json:"company_name"`
 	WarehouseID   UUID   `json:"warehouse_id"`
 	WarehouseCode string `json:"warehouse_code"`
