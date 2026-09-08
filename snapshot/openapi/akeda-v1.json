@@ -69154,6 +69154,9 @@
               }
             ]
           },
+          "preview": {
+            "$ref": "#/components/schemas/ChatMessage"
+          },
           "last_message_at": {
             "type": [
               "string",
