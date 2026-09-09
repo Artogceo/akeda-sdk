@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f1b287091f1745dc98e6868f843694ef7b75b8598254b685c04e4d733b711287).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9625a45a8681bf9cb31341242e66527a2482b840c50e0c8d3127192b7f211719).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1758,6 +1758,14 @@ type ChatConversation struct {
 	ManualUnreadSeq  *int64                        `json:"manual_unread_seq"`
 	NotificationMode string                        `json:"notification_mode"`
 	MentionCount     int64                         `json:"mention_count"`
+	Origin           *string                       `json:"origin,omitempty"`
+	OriginRef        *UUID                         `json:"origin_ref,omitempty"`
+	LastReadSeq      *int64                        `json:"last_read_seq,omitempty"`
+	OthersReadSeq    *int64                        `json:"others_read_seq,omitempty"`
+	HasAvatar        *bool                         `json:"has_avatar,omitempty"`
+	AvatarURL        *string                       `json:"avatar_url,omitempty"`
+	PeerUserID       *int64                        `json:"peer_user_id,omitempty"`
+	PeerAvatarURL    *string                       `json:"peer_avatar_url,omitempty"`
 }
 
 // ChatConversationAvatarUpload — Одно изображение на запрос. Ссылка на уже загруженный объект не принимается.

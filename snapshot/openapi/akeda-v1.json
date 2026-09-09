@@ -69231,6 +69231,46 @@
             "type": "integer",
             "format": "int64",
             "minimum": 0
+          },
+          "origin": {
+            "type": "string"
+          },
+          "origin_ref": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_read_seq": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "others_read_seq": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "has_avatar": {
+            "type": "boolean"
+          },
+          "avatar_url": {
+            "type": "string"
+          },
+          "peer_user_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 1
+          },
+          "peer_avatar_url": {
+            "type": "string"
           }
         }
       },
