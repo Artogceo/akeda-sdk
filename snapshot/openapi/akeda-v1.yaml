@@ -14994,6 +14994,20 @@ paths:
             minLength: 3
             maxLength: 3
             default: RUB
+        - name: contact_id
+          in: query
+          description: Точный контрагент. Вместе с юрлицом и валютой ограничивает оплаты до пагинации.
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: direction
+          in: query
+          description: Направление оплаты; точный подбор по направлению требует contact_id.
+          schema:
+            type: string
+            enum:
+              - in
+              - out
+            default: in
         - name: q
           in: query
           schema:

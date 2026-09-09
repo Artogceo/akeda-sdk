@@ -104,6 +104,7 @@
   ],
   "launch_context_fields": [
     "actor_employee_id",
+    "actor_full_access",
     "actor_subject",
     "entity",
     "entity_id",
@@ -671,6 +672,7 @@
         "installation_id",
         "actor_subject",
         "actor_employee_id",
+        "actor_full_access",
         "locale",
         "theme"
       ],
