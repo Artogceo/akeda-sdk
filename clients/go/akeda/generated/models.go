@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 25b2fbed0d8e1c8e0d61a8ad3d5a244e35597fe846e2e8b2ab710a64f04bfc22).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d7888ec19d13d375d71d566c85f13de77a68477d662039484836e8ca30606e2b).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -9441,6 +9441,41 @@ type MarketplaceWbStockWarehouse struct {
 	// Cluster — Кластер склада; у Wildberries не заполняется и в ответ не попадает
 	Cluster *string `json:"cluster,omitempty"`
 	Qty     int64   `json:"qty"`
+}
+
+type MarketplaceWeeklyFinanceOutcome struct {
+	DocumentIds []UUID                                  `json:"document_ids"`
+	Results     []MarketplaceWeeklyFinancePostingResult `json:"results,omitempty"`
+}
+
+type MarketplaceWeeklyFinancePostingResult struct {
+	SourceEventID                       string `json:"source_event_id"`
+	RevenueSettlementDocumentID         UUID   `json:"revenue_settlement_document_id"`
+	CogsDocumentID                      UUID   `json:"cogs_document_id"`
+	CostVersionID                       *UUID  `json:"cost_version_id,omitempty"`
+	CogsAmount                          string `json:"cogs_amount"`
+	CogsLedgerStatus                    string `json:"cogs_ledger_status"`
+	ManagementPNLAmount                 string `json:"management_pnl_amount"`
+	ManagementPNLIncludesCogs           bool   `json:"management_pnl_includes_cogs"`
+	GeneralLedgerIncludesManagementCogs bool   `json:"general_ledger_includes_management_cogs"`
+}
+
+type MarketplaceWeeklyFinanceRun struct {
+	RunID           string  `json:"run_id"`
+	WeekStart       string  `json:"week_start"`
+	WeekEnd         string  `json:"week_end"`
+	SourceRef       string  `json:"source_ref"`
+	SourceHash      string  `json:"source_hash"`
+	ReportComplete  bool    `json:"report_complete"`
+	ReportReady     bool    `json:"report_ready"`
+	BlockingCode    *string `json:"blocking_code,omitempty"`
+	CapturedAt      *string `json:"captured_at,omitempty"`
+	RowCount        int64   `json:"row_count"`
+	ExpenseRowCount int64   `json:"expense_row_count"`
+}
+
+type MarketplaceWeeklyFinanceRuns struct {
+	Results []MarketplaceWeeklyFinanceRun `json:"results"`
 }
 
 type MarketplaceYandexCost struct {

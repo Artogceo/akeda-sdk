@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 25b2fbed0d8e1c8e0d61a8ad3d5a244e35597fe846e2e8b2ab710a64f04bfc22).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d7888ec19d13d375d71d566c85f13de77a68477d662039484836e8ca30606e2b).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -9473,6 +9473,41 @@ export interface MarketplaceWbStockWarehouse {
   /** Кластер склада; у Wildberries не заполняется и в ответ не попадает */
   "cluster"?: string;
   "qty": number;
+}
+
+export interface MarketplaceWeeklyFinanceOutcome {
+  "document_ids": Array<UUID>;
+  "results"?: Array<MarketplaceWeeklyFinancePostingResult>;
+}
+
+export interface MarketplaceWeeklyFinancePostingResult {
+  "source_event_id": string;
+  "revenue_settlement_document_id": UUID;
+  "cogs_document_id": UUID;
+  "cost_version_id"?: UUID;
+  "cogs_amount": string;
+  "cogs_ledger_status": "included_in_general_ledger" | "management_only_excluded_from_general_ledger";
+  "management_pnl_amount": string;
+  "management_pnl_includes_cogs": boolean;
+  "general_ledger_includes_management_cogs": boolean;
+}
+
+export interface MarketplaceWeeklyFinanceRun {
+  "run_id": string;
+  "week_start": string;
+  "week_end": string;
+  "source_ref": string;
+  "source_hash": string;
+  "report_complete": boolean;
+  "report_ready": boolean;
+  "blocking_code"?: "source_unavailable" | "report_incomplete" | "source_semantics_unverified" | "accounting_setup_incomplete" | "cost_evidence_missing";
+  "captured_at"?: string;
+  "row_count": number;
+  "expense_row_count": number;
+}
+
+export interface MarketplaceWeeklyFinanceRuns {
+  "results": Array<MarketplaceWeeklyFinanceRun>;
 }
 
 export interface MarketplaceYandexCost {

@@ -29761,6 +29761,113 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/marketplace/{platform}/stores/{id}/finance/weeks:
+    get:
+      tags:
+        - Marketplace accounting
+      operationId: marketplaceListWeeklyFinanceRuns
+      summary: Получить готовность недельных финансовых отчётов
+      description: Читает только tenant/store-scoped source views аналитической БД. Сырой blocking_reason наружу не возвращается.
+      x-akeda-module: marketplace
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marketplace:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - ozon
+              - wb
+              - wildberries
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Последние недельные отчёты и безопасные коды блокировки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceWeeklyFinanceRuns'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/marketplace/{platform}/stores/{id}/finance/weeks/{weekStart}/apply:
+    post:
+      tags:
+        - Marketplace accounting
+      operationId: marketplaceApplyWeeklyFinanceRun
+      summary: Передать завершённую неделю в учёт
+      description: Требует report_complete и report_ready. Весь пакет проверяется до первой записи; повтор одного source run возвращает те же документы через постоянные source identities владельцев учётных документов.
+      x-akeda-module: marketplace
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marketplace:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - ozon
+              - wb
+              - wildberries
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: weekStart
+          in: path
+          required: true
+          description: Понедельник выбранной полной недели
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Идентификаторы созданных или найденных при повторе документов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceWeeklyFinanceOutcome'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/settings/companies:
     get:
       tags:
@@ -63604,6 +63711,111 @@ components:
           items:
             $ref: '#/components/schemas/MarketplaceProductGroupItem'
           description: Строки без store_id или offer_id отбрасываются молча
+    MarketplaceWeeklyFinanceRun:
+      type: object
+      additionalProperties: false
+      required:
+        - run_id
+        - week_start
+        - week_end
+        - source_ref
+        - source_hash
+        - report_complete
+        - report_ready
+        - row_count
+        - expense_row_count
+      properties:
+        run_id:
+          type: string
+        week_start:
+          type: string
+          format: date
+        week_end:
+          type: string
+          format: date
+        source_ref:
+          type: string
+        source_hash:
+          type: string
+        report_complete:
+          type: boolean
+        report_ready:
+          type: boolean
+        blocking_code:
+          type: string
+          enum:
+            - source_unavailable
+            - report_incomplete
+            - source_semantics_unverified
+            - accounting_setup_incomplete
+            - cost_evidence_missing
+        captured_at:
+          type: string
+          format: date-time
+        row_count:
+          type: integer
+          minimum: 0
+        expense_row_count:
+          type: integer
+          minimum: 0
+    MarketplaceWeeklyFinanceRuns:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketplaceWeeklyFinanceRun'
+    MarketplaceWeeklyFinancePostingResult:
+      type: object
+      additionalProperties: false
+      required:
+        - source_event_id
+        - revenue_settlement_document_id
+        - cogs_document_id
+        - cogs_amount
+        - cogs_ledger_status
+        - management_pnl_amount
+        - management_pnl_includes_cogs
+        - general_ledger_includes_management_cogs
+      properties:
+        source_event_id:
+          type: string
+        revenue_settlement_document_id:
+          $ref: '#/components/schemas/UUID'
+        cogs_document_id:
+          $ref: '#/components/schemas/UUID'
+        cost_version_id:
+          $ref: '#/components/schemas/UUID'
+        cogs_amount:
+          type: string
+        cogs_ledger_status:
+          type: string
+          enum:
+            - included_in_general_ledger
+            - management_only_excluded_from_general_ledger
+        management_pnl_amount:
+          type: string
+        management_pnl_includes_cogs:
+          type: boolean
+        general_ledger_includes_management_cogs:
+          type: boolean
+    MarketplaceWeeklyFinanceOutcome:
+      type: object
+      additionalProperties: false
+      required:
+        - document_ids
+      properties:
+        document_ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/UUID'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketplaceWeeklyFinancePostingResult'
     MarketplaceProductGroupItemsAdded:
       type: object
       additionalProperties: false

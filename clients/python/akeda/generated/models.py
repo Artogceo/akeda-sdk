@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 25b2fbed0d8e1c8e0d61a8ad3d5a244e35597fe846e2e8b2ab710a64f04bfc22).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d7888ec19d13d375d71d566c85f13de77a68477d662039484836e8ca30606e2b).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -923,6 +923,10 @@ __all__ = [
     "MarketplaceWbStockPage",
     "MarketplaceWbStockProduct",
     "MarketplaceWbStockWarehouse",
+    "MarketplaceWeeklyFinanceOutcome",
+    "MarketplaceWeeklyFinancePostingResult",
+    "MarketplaceWeeklyFinanceRun",
+    "MarketplaceWeeklyFinanceRuns",
     "MarketplaceYandexCost",
     "MarketplaceYandexCostInput",
     "MarketplaceYandexOrdersDay",
@@ -10373,6 +10377,43 @@ class _MarketplaceWbStockWarehouseRequired(TypedDict):
 class MarketplaceWbStockWarehouse(_MarketplaceWbStockWarehouseRequired, total=False):
     #: Кластер склада; у Wildberries не заполняется и в ответ не попадает
     cluster: str
+
+class _MarketplaceWeeklyFinanceOutcomeRequired(TypedDict):
+    document_ids: List["UUID"]
+
+class MarketplaceWeeklyFinanceOutcome(_MarketplaceWeeklyFinanceOutcomeRequired, total=False):
+    results: List["MarketplaceWeeklyFinancePostingResult"]
+
+class _MarketplaceWeeklyFinancePostingResultRequired(TypedDict):
+    source_event_id: str
+    revenue_settlement_document_id: "UUID"
+    cogs_document_id: "UUID"
+    cogs_amount: str
+    cogs_ledger_status: Literal['included_in_general_ledger', 'management_only_excluded_from_general_ledger']
+    management_pnl_amount: str
+    management_pnl_includes_cogs: bool
+    general_ledger_includes_management_cogs: bool
+
+class MarketplaceWeeklyFinancePostingResult(_MarketplaceWeeklyFinancePostingResultRequired, total=False):
+    cost_version_id: "UUID"
+
+class _MarketplaceWeeklyFinanceRunRequired(TypedDict):
+    run_id: str
+    week_start: str
+    week_end: str
+    source_ref: str
+    source_hash: str
+    report_complete: bool
+    report_ready: bool
+    row_count: int
+    expense_row_count: int
+
+class MarketplaceWeeklyFinanceRun(_MarketplaceWeeklyFinanceRunRequired, total=False):
+    blocking_code: Literal['source_unavailable', 'report_incomplete', 'source_semantics_unverified', 'accounting_setup_incomplete', 'cost_evidence_missing']
+    captured_at: str
+
+class MarketplaceWeeklyFinanceRuns(TypedDict):
+    results: List["MarketplaceWeeklyFinanceRun"]
 
 class MarketplaceYandexCost(TypedDict):
     store: "UUID"

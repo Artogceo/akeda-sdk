@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 25b2fbed0d8e1c8e0d61a8ad3d5a244e35597fe846e2e8b2ab710a64f04bfc22).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d7888ec19d13d375d71d566c85f13de77a68477d662039484836e8ca30606e2b).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -605,6 +605,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'knowledgeVerifyPage': OperationSpec('POST', '/api/v1/knowledge/nodes/{id}/verify', 'knowledge', 'preview', 'knowledge:write', False, False, ('id',), 'none', None, None),
     'marketplaceAddOzonProductGroupItems': OperationSpec('POST', '/api/v1/marketplace/ozon/product-groups/{id}/items', 'marketplace', 'preview', 'marketplace:write', False, True, ('id',), 'none', None, None),
     'marketplaceAddWbProductGroupItems': OperationSpec('POST', '/api/v1/marketplace/wb/product-groups/{id}/items', 'marketplace', 'preview', 'marketplace:write', False, True, ('id',), 'none', None, None),
+    'marketplaceApplyWeeklyFinanceRun': OperationSpec('POST', '/api/v1/marketplace/{platform}/stores/{id}/finance/weeks/{weekStart}/apply', 'marketplace', 'preview', 'marketplace:write', False, True, ('id', 'platform', 'weekStart',), 'none', None, None),
     'marketplaceCreateOzonProductGroup': OperationSpec('POST', '/api/v1/marketplace/ozon/product-groups', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
     'marketplaceCreateOzonStore': OperationSpec('POST', '/api/v1/marketplace/ozon/stores', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
     'marketplaceCreateWbProductGroup': OperationSpec('POST', '/api/v1/marketplace/wb/product-groups', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
@@ -613,6 +614,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'marketplaceDeleteOzonProductGroup': OperationSpec('DELETE', '/api/v1/marketplace/ozon/product-groups/{id}', 'marketplace', 'preview', 'marketplace:write', False, True, ('id',), 'none', None, None),
     'marketplaceDeleteWbProductGroup': OperationSpec('DELETE', '/api/v1/marketplace/wb/product-groups/{id}', 'marketplace', 'preview', 'marketplace:write', False, True, ('id',), 'none', None, None),
     'marketplaceEconQuote': OperationSpec('POST', '/api/v1/marketplace/econ/quote', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
+    'marketplaceListWeeklyFinanceRuns': OperationSpec('GET', '/api/v1/marketplace/{platform}/stores/{id}/finance/weeks', 'marketplace', 'preview', 'marketplace:read', False, True, ('id', 'platform',), 'none', None, None),
     'marketplaceOzonDecomposition': OperationSpec('GET', '/api/v1/marketplace/ozon/decomposition', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceOzonDecompositionOther': OperationSpec('GET', '/api/v1/marketplace/ozon/decomposition-other', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceOzonFbs': OperationSpec('GET', '/api/v1/marketplace/ozon/fbs', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
