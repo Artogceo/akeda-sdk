@@ -51,24 +51,24 @@
       "sha256": "8cd6156f92c73bd4858f106c9e398ed5008d93e3959f1347940197e8b484f933"
     },
     {
-      "bytes": 74789,
+      "bytes": 77070,
       "path": "extension-manifest/v1/manifest.schema.json",
-      "sha256": "e3684fd15d7669ba2145457a94f7cd2ff8179e1790c400b02ca2f55c3105f01f"
+      "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 3284070,
+      "bytes": 3284211,
       "path": "openapi/akeda-v1.json",
-      "sha256": "29d2a82e03231fd35a7d143e2bb25c61d656ae90fe3373323ea8912f581af607"
+      "sha256": "f1b287091f1745dc98e6868f843694ef7b75b8598254b685c04e4d733b711287"
     },
     {
-      "bytes": 2453150,
+      "bytes": 2453246,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "15ff568329b5ecbb1b636044ab4949335b06b0f8abdccad641290939b15ab295"
+      "sha256": "dc45559f941a673b3d1283cb66800b9efd18596f5accebe7adb70592ea731e32"
     },
     {
-      "bytes": 18386,
+      "bytes": 18414,
       "path": "platform-catalog/v1/platform-catalog.json",
-      "sha256": "8a45c3c985f4974218f68a91096bc6f3045ac04820e0b7e34649c0301ce55ae2"
+      "sha256": "dbe0d5916bceb9b4e1c593a49a7df9425d1850ce8ad2c84b67fb0a433b7151e7"
     },
     {
       "bytes": 19148,
@@ -76,6 +76,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "c3e4de832e2a7bc42efdd7c47f2615168bd9a4de0ddc7b3940d90308e9a7211c",
+  "snapshot_digest": "f9a13b65c9a959faecb4b3e7b1a4e2f0d806cf28451ebbe0b6bc5fc8b8bfa4e5",
   "snapshot_version": 1
 }

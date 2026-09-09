@@ -37620,6 +37620,7 @@ components:
         - identifier
         - title
         - status_category
+        - executor
         - executor_name
         - due_at
       properties:
@@ -37632,6 +37633,10 @@ components:
         status_category:
           type:
             - string
+            - 'null'
+        executor:
+          type:
+            - integer
             - 'null'
         executor_name:
           type:

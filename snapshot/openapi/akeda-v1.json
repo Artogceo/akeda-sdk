@@ -61655,6 +61655,7 @@
           "identifier",
           "title",
           "status_category",
+          "executor",
           "executor_name",
           "due_at"
         ],
@@ -61671,6 +61672,12 @@
           "status_category": {
             "type": [
               "string",
+              "null"
+            ]
+          },
+          "executor": {
+            "type": [
+              "integer",
               "null"
             ]
           },

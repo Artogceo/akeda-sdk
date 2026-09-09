@@ -7,7 +7,8 @@
     ],
     "to_extension": [
       "akeda.slot.launch",
-      "akeda.slot.theme"
+      "akeda.slot.theme",
+      "akeda.slot.section"
     ]
   },
   "catalog_version": 1,
