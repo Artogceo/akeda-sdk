@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9625a45a8681bf9cb31341242e66527a2482b840c50e0c8d3127192b7f211719).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 25b2fbed0d8e1c8e0d61a8ad3d5a244e35597fe846e2e8b2ab710a64f04bfc22).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -350,6 +350,7 @@ __all__ = [
     "CoreGLOpeningMatch",
     "CoreGLOpeningNote",
     "CoreGLOpeningWarning",
+    "CoreGeneratedBarcode",
     "CoreImportResult",
     "CoreItem",
     "CoreItemInput",
@@ -363,6 +364,8 @@ __all__ = [
     "CoreOwnershipVersionInput",
     "CorePhotoResult",
     "CoreProduct",
+    "CoreProductAxis",
+    "CoreProductAxisValue",
     "CoreProductBulkPatch",
     "CoreProductCreate",
     "CoreProductCustomInput",
@@ -401,6 +404,9 @@ __all__ = [
     "CoreProductRecordKind",
     "CoreProductTransferFormat",
     "CoreProductTransferKind",
+    "CoreProductVariantGenerate",
+    "CoreProductVariantGenerateAxesItem",
+    "CoreProductVariantGenerateResult",
     "CoreReferenceItem",
     "CoreReferenceItemPage",
     "CoreReferenceRef",
@@ -4300,6 +4306,11 @@ CoreGLOpeningNote = Literal['rollup', 'side_guess', 'no_account', 'has_detail', 
 
 CoreGLOpeningWarning = Literal['no_columns', 'no_rows', 'unbalanced', 'no_opening', 'no_closing']
 
+class CoreGeneratedBarcode(TypedDict):
+    #: EAN-13 с префиксом 200 и контрольной цифрой
+    value: str
+    type: Literal['ean13']
+
 class CoreImportResult(TypedDict):
     created: int
     updated: int
@@ -4404,6 +4415,42 @@ class CoreProduct(TypedDict):
     archived_at: Optional[str]
     created_at: str
     updated_at: str
+    #: Закупочная цена десятичной строкой; подставляется в строку приёмки
+    purchase_price: str
+    #: Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
+    vat_rate: str
+    #: Вес одной базовой единицы, кг; пусто — не задан
+    weight_kg: str
+    #: Объём одной базовой единицы, м³; пусто — не задан
+    volume_m3: str
+    #: Длина, мм; пусто — не задана
+    length_mm: str
+    #: Ширина, мм; пусто — не задана
+    width_mm: str
+    #: Высота, мм; пусто — не задана
+    height_mm: str
+    #: Страна происхождения — запись справочника countries (код ОКСМ в code)
+    country_item_id: Optional["UUID"]
+    #: Код ТН ВЭД, до десяти цифр
+    customs_code: str
+    #: Название страны происхождения; пусто без страны
+    country_label: str
+    #: Оси характеристик семейства; у остальных записей пусто
+    option_schema: List["CoreProductAxis"]
+    #: Значения варианта по осям семейства: ось → код; у остальных записей пусто
+    variant_values: Dict[str, str]
+
+class CoreProductAxis(TypedDict):
+    #: Ключ оси: латиница, цифры, _ и -
+    key: str
+    label: str
+    values: List["CoreProductAxisValue"]
+
+class CoreProductAxisValue(TypedDict):
+    #: Машинный код значения: латиница, цифры, _ и -
+    code: str
+    #: Подпись значения; пусто — код
+    label: str
 
 class _CoreProductBulkPatchRequired(TypedDict):
     ids: List["UUID"]
@@ -4435,6 +4482,28 @@ class CoreProductCreate(_CoreProductCreateRequired, total=False):
     custom: Dict[str, Any]
     #: Штрихкод и артикулы с формы создания; ложатся в той же транзакции, что и карточка. Занятый код отклоняет создание целиком (409).
     identifiers: List["CoreProductIdentifierInput"]
+    #: Закупочная цена десятичной строкой; подставляется в строку приёмки
+    purchase_price: str
+    #: Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
+    vat_rate: str
+    #: Вес одной базовой единицы, кг; пусто — не задан
+    weight_kg: str
+    #: Объём одной базовой единицы, м³; пусто — не задан
+    volume_m3: str
+    #: Длина, мм; пусто — не задана
+    length_mm: str
+    #: Ширина, мм; пусто — не задана
+    width_mm: str
+    #: Высота, мм; пусто — не задана
+    height_mm: str
+    #: Страна происхождения — запись справочника countries (код ОКСМ в code)
+    country_item_id: Optional["UUID"]
+    #: Код ТН ВЭД, до десяти цифр
+    customs_code: str
+    #: Оси характеристик семейства; у остальных записей пусто
+    option_schema: List["CoreProductAxis"]
+    #: Значения варианта по осям семейства: ось → код; у остальных записей пусто
+    variant_values: Dict[str, str]
 
 class CoreProductCustomInput(TypedDict):
     custom: Dict[str, Any]
@@ -4468,6 +4537,16 @@ class CoreProductFieldDefinition(TypedDict):
     dictionary: Optional["UUID"]
     order: int
     help: str
+    #: Панель карточки, в которой показывается поле; пусто — общая панель дополнительных реквизитов
+    group: str
+    #: Закреплённая характеристика: под названием в шапке карточки и столбцом каталога
+    pinned: bool
+    #: Поле участвует в отборе каталога
+    filterable: bool
+    #: Категории (элементы справочника product_categories), у товаров которых и их потомков поле показывается; пусто — у всех
+    category_ids: List["UUID"]
+    #: Суффикс единицы после значения: кг, мм, мл
+    unit_suffix: str
 
 class CoreProductFieldSchema(TypedDict):
     fields: List["CoreProductFieldDefinition"]
@@ -4521,9 +4600,10 @@ class _CoreProductIdentifierInputRequired(TypedDict):
     value: str
 
 class CoreProductIdentifierInput(_CoreProductIdentifierInputRequired, total=False):
-    #: Required for article kinds; optional for barcode
+    #: Пространство имён: у артикулов обязателен (производитель, поставщик, код канала из справочника sales_channels); у штрихкода — код активного канала продаж этого кабинета либо global (по умолчанию), иное значение — 400. Значение штрихкода уникально по кабинету независимо от канала
     source_ref: str
     is_primary: bool
+    #: У штрихкода: type ∈ ean13|ean8|upc_a|gtin14|code128 и product_uom_id упаковки. Названный type проверяется строго, включая контрольную цифру EAN/UPC/GTIN (400 с текстом ошибки). Без type символика угадывается по форме значения, и несошедшаяся контрольная цифра не отказ, а code128: догадка не вправе отвергать существующий код
     attrs: Dict[str, Any]
 
 CoreProductIdentifierKind = Literal['manufacturer_article', 'supplier_article', 'channel_article', 'barcode']
@@ -4540,9 +4620,11 @@ class CoreProductIdentifierPage(TypedDict):
 
 class CoreProductIdentifierPatch(TypedDict, total=False):
     kind: "CoreProductIdentifierKind"
+    #: Пространство имён: у артикулов обязателен; у штрихкода — код активного канала продаж этого кабинета либо global, иное значение — 400
     source_ref: str
     value: str
     is_primary: bool
+    #: У штрихкода: type ∈ ean13|ean8|upc_a|gtin14|code128 и product_uom_id упаковки. Названный type проверяется строго, включая контрольную цифру EAN/UPC/GTIN (400 с текстом ошибки). Без type символика угадывается по форме значения, и несошедшаяся контрольная цифра не отказ, а code128. Поле заменяет объект целиком, а не сливается с прежним
     attrs: Dict[str, Any]
 
 class _CoreProductImportApplyRequestRequired(TypedDict):
@@ -4676,12 +4758,50 @@ class CoreProductPatch(TypedDict, total=False):
     is_producible: bool
     category_id: Optional["UUID"]
     folder_id: Optional["UUID"]
+    #: Закупочная цена десятичной строкой; подставляется в строку приёмки
+    purchase_price: str
+    #: Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
+    vat_rate: str
+    #: Вес одной базовой единицы, кг; пусто — не задан
+    weight_kg: str
+    #: Объём одной базовой единицы, м³; пусто — не задан
+    volume_m3: str
+    #: Длина, мм; пусто — не задана
+    length_mm: str
+    #: Ширина, мм; пусто — не задана
+    width_mm: str
+    #: Высота, мм; пусто — не задана
+    height_mm: str
+    #: Страна происхождения — запись справочника countries (код ОКСМ в code)
+    country_item_id: Optional["UUID"]
+    #: Код ТН ВЭД, до десяти цифр
+    customs_code: str
+    #: Оси характеристик семейства; у остальных записей пусто
+    option_schema: List["CoreProductAxis"]
+    #: Значения варианта по осям семейства: ось → код; у остальных записей пусто
+    variant_values: Dict[str, str]
 
 CoreProductRecordKind = Literal['standalone', 'family', 'variant']
 
 CoreProductTransferFormat = Literal['xlsx', 'xls', 'ods', 'csv', 'tsv']
 
 CoreProductTransferKind = Literal['product_families', 'products', 'product_identifiers']
+
+class CoreProductVariantGenerate(TypedDict, total=False):
+    #: Какие оси и коды участвуют; пусто — все оси семейства целиком. Пустой список кодов у оси — все её значения
+    axes: List["CoreProductVariantGenerateAxesItem"]
+
+class _CoreProductVariantGenerateAxesItemRequired(TypedDict):
+    key: str
+
+class CoreProductVariantGenerateAxesItem(_CoreProductVariantGenerateAxesItemRequired, total=False):
+    codes: List[str]
+
+class CoreProductVariantGenerateResult(TypedDict):
+    created: int
+    #: Сочетания, у которых вариант уже был
+    skipped: int
+    results: List["CoreProduct"]
 
 class CoreReferenceItem(TypedDict):
     id: "UUID"
@@ -9508,6 +9628,12 @@ class MarketplaceOzonProduct(TypedDict):
     category: str
     #: Себестоимость из базы кабинета; null — не заведена
     cost: Optional[str]
+    #: Номенклатура кабинета, к которой привязан артикул канала (core_product_identifier вида channel_article); null — не привязан
+    linked_product_id: Optional["UUID"]
+    #: SKU привязанной номенклатуры; пусто без связи
+    linked_product_sku: str
+    #: Название привязанной номенклатуры; пусто без связи
+    linked_product_name: str
 
 class MarketplaceOzonProductFacets(TypedDict):
     #: Категории карточек Ozon
@@ -10181,6 +10307,12 @@ class MarketplaceWbProduct(TypedDict):
     in_way_from_client: int
     #: Себестоимость из кабинета
     cost: Optional[str]
+    #: Номенклатура кабинета, к которой привязан артикул канала (core_product_identifier вида channel_article); null — не привязан
+    linked_product_id: Optional["UUID"]
+    #: SKU привязанной номенклатуры; пусто без связи
+    linked_product_sku: str
+    #: Название привязанной номенклатуры; пусто без связи
+    linked_product_name: str
 
 class _MarketplaceWbProductPageRequired(TypedDict):
     count: int
@@ -10380,6 +10512,12 @@ class MarketplaceYandexProduct(TypedDict):
     url: str
     #: Себестоимость decimal строкой; null когда она не заведена
     cost: Optional[str]
+    #: Номенклатура кабинета, к которой привязан артикул канала (core_product_identifier вида channel_article); null — не привязан
+    linked_product_id: Optional["UUID"]
+    #: SKU привязанной номенклатуры; пусто без связи
+    linked_product_sku: str
+    #: Название привязанной номенклатуры; пусто без связи
+    linked_product_name: str
 
 class _MarketplaceYandexProductPageRequired(TypedDict):
     count: int
@@ -11772,6 +11910,16 @@ class SettingsFieldDefinition(TypedDict):
     order: int
     is_active: bool
     help: str
+    #: Панель карточки, в которой показывается поле; пусто — общая панель дополнительных реквизитов
+    group: str
+    #: Закреплённая характеристика: под названием в шапке карточки и столбцом каталога
+    pinned: bool
+    #: Поле участвует в отборе каталога
+    filterable: bool
+    #: Категории (элементы справочника product_categories), у товаров которых и их потомков поле показывается; пусто — у всех
+    category_ids: List["UUID"]
+    #: Суффикс единицы после значения: кг, мм, мл
+    unit_suffix: str
     #: Отметка времени как её печатает Postgres, а не RFC 3339
     created_at: str
     #: Отметка времени как её печатает Postgres, а не RFC 3339
@@ -11792,6 +11940,16 @@ class SettingsFieldDefinitionInput(_SettingsFieldDefinitionInputRequired, total=
     #: Читается только при изменении; на заведении определение всегда действующее
     is_active: bool
     help: str
+    #: Панель карточки; пусто — общая панель дополнительных реквизитов
+    group: str
+    #: Закрепить как характеристику: под названием в шапке карточки и столбцом каталога
+    pinned: bool
+    #: Показывать в отборе каталога
+    filterable: bool
+    #: Категории, у товаров которых и их потомков поле показывается; пусто — у всех
+    category_ids: List["UUID"]
+    #: Суффикс единицы после значения: кг, мм, мл
+    unit_suffix: str
 
 class SettingsFieldDefinitionPage(TypedDict):
     #: Число отданных строк, а не всего в базе; выборка обрезана 200 строками
@@ -12615,6 +12773,10 @@ class StockReportDrilldownEntry(TypedDict):
     dims: Dict[str, Any]
     values: Dict[str, Any]
     unit: str
+    #: Контрагент документа-регистратора: поставщик приёмки, покупатель отгрузки
+    contact_id: Optional["UUID"]
+    #: Название контрагента; пусто без контрагента
+    contact_name: str
 
 class StockReportOverduePage(TypedDict):
     count: int

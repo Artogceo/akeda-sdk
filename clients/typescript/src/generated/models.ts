@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9625a45a8681bf9cb31341242e66527a2482b840c50e0c8d3127192b7f211719).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 25b2fbed0d8e1c8e0d61a8ad3d5a244e35597fe846e2e8b2ab710a64f04bfc22).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -3128,6 +3128,12 @@ export type CoreGLOpeningNote = "rollup" | "side_guess" | "no_account" | "has_de
 
 export type CoreGLOpeningWarning = "no_columns" | "no_rows" | "unbalanced" | "no_opening" | "no_closing";
 
+export interface CoreGeneratedBarcode {
+  /** EAN-13 с префиксом 200 и контрольной цифрой */
+  "value": string;
+  "type": "ean13";
+}
+
 export interface CoreImportResult {
   "created": number;
   "updated": number;
@@ -3234,6 +3240,44 @@ export interface CoreProduct {
   "archived_at": string | null;
   "created_at": string;
   "updated_at": string;
+  /** Закупочная цена десятичной строкой; подставляется в строку приёмки */
+  "purchase_price": string;
+  /** Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию */
+  "vat_rate": string;
+  /** Вес одной базовой единицы, кг; пусто — не задан */
+  "weight_kg": string;
+  /** Объём одной базовой единицы, м³; пусто — не задан */
+  "volume_m3": string;
+  /** Длина, мм; пусто — не задана */
+  "length_mm": string;
+  /** Ширина, мм; пусто — не задана */
+  "width_mm": string;
+  /** Высота, мм; пусто — не задана */
+  "height_mm": string;
+  /** Страна происхождения — запись справочника countries (код ОКСМ в code) */
+  "country_item_id": UUID | null;
+  /** Код ТН ВЭД, до десяти цифр */
+  "customs_code": string;
+  /** Название страны происхождения; пусто без страны */
+  "country_label": string;
+  /** Оси характеристик семейства; у остальных записей пусто */
+  "option_schema": Array<CoreProductAxis>;
+  /** Значения варианта по осям семейства: ось → код; у остальных записей пусто */
+  "variant_values": { [key: string]: string };
+}
+
+export interface CoreProductAxis {
+  /** Ключ оси: латиница, цифры, _ и - */
+  "key": string;
+  "label": string;
+  "values": Array<CoreProductAxisValue>;
+}
+
+export interface CoreProductAxisValue {
+  /** Машинный код значения: латиница, цифры, _ и - */
+  "code": string;
+  /** Подпись значения; пусто — код */
+  "label": string;
 }
 
 export interface CoreProductBulkPatch {
@@ -3263,6 +3307,28 @@ export interface CoreProductCreate {
   "custom"?: { [key: string]: unknown };
   /** Штрихкод и артикулы с формы создания; ложатся в той же транзакции, что и карточка. Занятый код отклоняет создание целиком (409). */
   "identifiers"?: Array<CoreProductIdentifierInput>;
+  /** Закупочная цена десятичной строкой; подставляется в строку приёмки */
+  "purchase_price"?: string;
+  /** Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию */
+  "vat_rate"?: string;
+  /** Вес одной базовой единицы, кг; пусто — не задан */
+  "weight_kg"?: string;
+  /** Объём одной базовой единицы, м³; пусто — не задан */
+  "volume_m3"?: string;
+  /** Длина, мм; пусто — не задана */
+  "length_mm"?: string;
+  /** Ширина, мм; пусто — не задана */
+  "width_mm"?: string;
+  /** Высота, мм; пусто — не задана */
+  "height_mm"?: string;
+  /** Страна происхождения — запись справочника countries (код ОКСМ в code) */
+  "country_item_id"?: UUID | null;
+  /** Код ТН ВЭД, до десяти цифр */
+  "customs_code"?: string;
+  /** Оси характеристик семейства; у остальных записей пусто */
+  "option_schema"?: Array<CoreProductAxis>;
+  /** Значения варианта по осям семейства: ось → код; у остальных записей пусто */
+  "variant_values"?: { [key: string]: string };
 }
 
 export interface CoreProductCustomInput {
@@ -3296,6 +3362,16 @@ export interface CoreProductFieldDefinition {
   "dictionary": UUID | null;
   "order": number;
   "help": string;
+  /** Панель карточки, в которой показывается поле; пусто — общая панель дополнительных реквизитов */
+  "group": string;
+  /** Закреплённая характеристика: под названием в шапке карточки и столбцом каталога */
+  "pinned": boolean;
+  /** Поле участвует в отборе каталога */
+  "filterable": boolean;
+  /** Категории (элементы справочника product_categories), у товаров которых и их потомков поле показывается; пусто — у всех */
+  "category_ids": Array<UUID>;
+  /** Суффикс единицы после значения: кг, мм, мл */
+  "unit_suffix": string;
 }
 
 export interface CoreProductFieldSchema {
@@ -3353,10 +3429,11 @@ export interface CoreProductIdentifier {
 
 export interface CoreProductIdentifierInput {
   "kind": CoreProductIdentifierKind;
-  /** Required for article kinds; optional for barcode */
+  /** Пространство имён: у артикулов обязателен (производитель, поставщик, код канала из справочника sales_channels); у штрихкода — код активного канала продаж этого кабинета либо global (по умолчанию), иное значение — 400. Значение штрихкода уникально по кабинету независимо от канала */
   "source_ref"?: string;
   "value": string;
   "is_primary"?: boolean;
+  /** У штрихкода: type ∈ ean13|ean8|upc_a|gtin14|code128 и product_uom_id упаковки. Названный type проверяется строго, включая контрольную цифру EAN/UPC/GTIN (400 с текстом ошибки). Без type символика угадывается по форме значения, и несошедшаяся контрольная цифра не отказ, а code128: догадка не вправе отвергать существующий код */
   "attrs"?: { [key: string]: unknown };
 }
 
@@ -3376,9 +3453,11 @@ export interface CoreProductIdentifierPage {
 
 export interface CoreProductIdentifierPatch {
   "kind"?: CoreProductIdentifierKind;
+  /** Пространство имён: у артикулов обязателен; у штрихкода — код активного канала продаж этого кабинета либо global, иное значение — 400 */
   "source_ref"?: string;
   "value"?: string;
   "is_primary"?: boolean;
+  /** У штрихкода: type ∈ ean13|ean8|upc_a|gtin14|code128 и product_uom_id упаковки. Названный type проверяется строго, включая контрольную цифру EAN/UPC/GTIN (400 с текстом ошибки). Без type символика угадывается по форме значения, и несошедшаяся контрольная цифра не отказ, а code128. Поле заменяет объект целиком, а не сливается с прежним */
   "attrs"?: { [key: string]: unknown };
 }
 
@@ -3516,6 +3595,28 @@ export interface CoreProductPatch {
   "is_producible"?: boolean;
   "category_id"?: UUID | null;
   "folder_id"?: UUID | null;
+  /** Закупочная цена десятичной строкой; подставляется в строку приёмки */
+  "purchase_price"?: string;
+  /** Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию */
+  "vat_rate"?: string;
+  /** Вес одной базовой единицы, кг; пусто — не задан */
+  "weight_kg"?: string;
+  /** Объём одной базовой единицы, м³; пусто — не задан */
+  "volume_m3"?: string;
+  /** Длина, мм; пусто — не задана */
+  "length_mm"?: string;
+  /** Ширина, мм; пусто — не задана */
+  "width_mm"?: string;
+  /** Высота, мм; пусто — не задана */
+  "height_mm"?: string;
+  /** Страна происхождения — запись справочника countries (код ОКСМ в code) */
+  "country_item_id"?: UUID | null;
+  /** Код ТН ВЭД, до десяти цифр */
+  "customs_code"?: string;
+  /** Оси характеристик семейства; у остальных записей пусто */
+  "option_schema"?: Array<CoreProductAxis>;
+  /** Значения варианта по осям семейства: ось → код; у остальных записей пусто */
+  "variant_values"?: { [key: string]: string };
 }
 
 export type CoreProductRecordKind = "standalone" | "family" | "variant";
@@ -3523,6 +3624,23 @@ export type CoreProductRecordKind = "standalone" | "family" | "variant";
 export type CoreProductTransferFormat = "xlsx" | "xls" | "ods" | "csv" | "tsv";
 
 export type CoreProductTransferKind = "product_families" | "products" | "product_identifiers";
+
+export interface CoreProductVariantGenerate {
+  /** Какие оси и коды участвуют; пусто — все оси семейства целиком. Пустой список кодов у оси — все её значения */
+  "axes"?: Array<CoreProductVariantGenerateAxesItem>;
+}
+
+export interface CoreProductVariantGenerateAxesItem {
+  "key": string;
+  "codes"?: Array<string>;
+}
+
+export interface CoreProductVariantGenerateResult {
+  "created": number;
+  /** Сочетания, у которых вариант уже был */
+  "skipped": number;
+  "results": Array<CoreProduct>;
+}
 
 export interface CoreReferenceItem {
   "id": UUID;
@@ -8548,6 +8666,12 @@ export interface MarketplaceOzonProduct {
   "category": string;
   /** Себестоимость из базы кабинета; null — не заведена */
   "cost": string | null;
+  /** Номенклатура кабинета, к которой привязан артикул канала (core_product_identifier вида channel_article); null — не привязан */
+  "linked_product_id": UUID | null;
+  /** SKU привязанной номенклатуры; пусто без связи */
+  "linked_product_sku": string;
+  /** Название привязанной номенклатуры; пусто без связи */
+  "linked_product_name": string;
 }
 
 export interface MarketplaceOzonProductFacets {
@@ -9283,6 +9407,12 @@ export interface MarketplaceWbProduct {
   "in_way_from_client": number;
   /** Себестоимость из кабинета */
   "cost": string | null;
+  /** Номенклатура кабинета, к которой привязан артикул канала (core_product_identifier вида channel_article); null — не привязан */
+  "linked_product_id": UUID | null;
+  /** SKU привязанной номенклатуры; пусто без связи */
+  "linked_product_sku": string;
+  /** Название привязанной номенклатуры; пусто без связи */
+  "linked_product_name": string;
 }
 
 export interface MarketplaceWbProductPage {
@@ -9487,6 +9617,12 @@ export interface MarketplaceYandexProduct {
   "url": string;
   /** Себестоимость decimal строкой; null когда она не заведена */
   "cost": string | null;
+  /** Номенклатура кабинета, к которой привязан артикул канала (core_product_identifier вида channel_article); null — не привязан */
+  "linked_product_id": UUID | null;
+  /** SKU привязанной номенклатуры; пусто без связи */
+  "linked_product_sku": string;
+  /** Название привязанной номенклатуры; пусто без связи */
+  "linked_product_name": string;
 }
 
 export interface MarketplaceYandexProductPage {
@@ -10921,6 +11057,16 @@ export interface SettingsFieldDefinition {
   "order": number;
   "is_active": boolean;
   "help": string;
+  /** Панель карточки, в которой показывается поле; пусто — общая панель дополнительных реквизитов */
+  "group": string;
+  /** Закреплённая характеристика: под названием в шапке карточки и столбцом каталога */
+  "pinned": boolean;
+  /** Поле участвует в отборе каталога */
+  "filterable": boolean;
+  /** Категории (элементы справочника product_categories), у товаров которых и их потомков поле показывается; пусто — у всех */
+  "category_ids": Array<UUID>;
+  /** Суффикс единицы после значения: кг, мм, мл */
+  "unit_suffix": string;
   /** Отметка времени как её печатает Postgres, а не RFC 3339 */
   "created_at": string;
   /** Отметка времени как её печатает Postgres, а не RFC 3339 */
@@ -10940,6 +11086,16 @@ export interface SettingsFieldDefinitionInput {
   /** Читается только при изменении; на заведении определение всегда действующее */
   "is_active"?: boolean;
   "help"?: string;
+  /** Панель карточки; пусто — общая панель дополнительных реквизитов */
+  "group"?: string;
+  /** Закрепить как характеристику: под названием в шапке карточки и столбцом каталога */
+  "pinned"?: boolean;
+  /** Показывать в отборе каталога */
+  "filterable"?: boolean;
+  /** Категории, у товаров которых и их потомков поле показывается; пусто — у всех */
+  "category_ids"?: Array<UUID>;
+  /** Суффикс единицы после значения: кг, мм, мл */
+  "unit_suffix"?: string;
 }
 
 export interface SettingsFieldDefinitionPage {
@@ -11793,6 +11949,10 @@ export interface StockReportDrilldownEntry {
   "dims": { [key: string]: unknown };
   "values": { [key: string]: unknown };
   "unit": string;
+  /** Контрагент документа-регистратора: поставщик приёмки, покупатель отгрузки */
+  "contact_id": UUID | null;
+  /** Название контрагента; пусто без контрагента */
+  "contact_name": string;
 }
 
 export interface StockReportOverduePage {

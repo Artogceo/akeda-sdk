@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9625a45a8681bf9cb31341242e66527a2482b840c50e0c8d3127192b7f211719).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 25b2fbed0d8e1c8e0d61a8ad3d5a244e35597fe846e2e8b2ab710a64f04bfc22).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -965,6 +965,20 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
+  /** POST /api/v1/core/product-identifiers/generate — Сгенерировать внутренний штрихкод */
+  coreGenerateProductBarcode: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.CoreGeneratedBarcode;
+  };
+  /** POST /api/v1/core/products/{id}/variants/generate — Создать варианты семейства по сочетаниям осей */
+  coreGenerateProductVariants: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CoreProductVariantGenerate;
+    response: models.CoreProductVariantGenerateResult;
+  };
   /** GET /api/v1/core/accounting-periods — Получить закрытую дату и последние 50 решений */
   coreGetAccountingPeriodState: {
     params: Record<string, never>;
@@ -1423,7 +1437,7 @@ export interface OperationTypes {
   /** GET /api/v1/core/products — Получить номенклатуру */
   coreListProducts: {
     params: Record<string, never>;
-    query: { "folder"?: string; "is_stockable"?: boolean; "kind"?: "goods" | "service" | "material" | "semi_product"; "limit"?: number; "offset"?: number; "operational_only"?: boolean; "parent_product_id"?: models.UUID; "profile"?: "sell" | "stock" | "purchase" | "produce"; "q"?: string; "record_kind"?: models.CoreProductRecordKind; "sort"?: "name" | "-name" | "sku" | "-sku" | "price" | "-price" | "updated" | "-updated"; "status"?: "active" | "archived" | "all" };
+    query: { "custom"?: string; "folder"?: string; "is_stockable"?: boolean; "kind"?: "goods" | "service" | "material" | "semi_product"; "limit"?: number; "offset"?: number; "operational_only"?: boolean; "parent_product_id"?: models.UUID; "profile"?: "sell" | "stock" | "purchase" | "produce"; "q"?: string; "record_kind"?: "standalone" | "family" | "variant" | "standalone,family" | "standalone,variant" | "family,variant" | "standalone,family,variant"; "sort"?: "name" | "-name" | "sku" | "-sku" | "price" | "-price" | "updated" | "-updated"; "status"?: "active" | "archived" | "all" };
     body: never;
     response: models.CoreProductPage;
   };
@@ -6305,6 +6319,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreDeleteProductFile: { method: "DELETE", path: "/api/v1/core/products/{id}/files/{fileId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreDeleteRegister: { method: "DELETE", path: "/api/v1/core/registers/{key}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreDeleteSelfEmployeePhoto: { method: "DELETE", path: "/api/v1/core/self/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGenerateProductBarcode: { method: "POST", path: "/api/v1/core/product-identifiers/generate", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGenerateProductVariants: { method: "POST", path: "/api/v1/core/products/{id}/variants/generate", module: "core", stage: "preview", permission: "core:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetAccountingPeriodState: { method: "GET", path: "/api/v1/core/accounting-periods", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetAccountingSettings: { method: "GET", path: "/api/v1/core/accounting-settings", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetBusiness: { method: "GET", path: "/api/v1/core/businesses/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

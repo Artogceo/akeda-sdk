@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9625a45a8681bf9cb31341242e66527a2482b840c50e0c8d3127192b7f211719).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 25b2fbed0d8e1c8e0d61a8ad3d5a244e35597fe846e2e8b2ab710a64f04bfc22).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -163,6 +163,8 @@ var Operations = map[string]Operation{
 	"coreDeleteProductFile":                      {ID: "coreDeleteProductFile", Method: "DELETE", Path: "/api/v1/core/products/{id}/files/{fileId}", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"fileId", "id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreDeleteRegister":                         {ID: "coreDeleteRegister", Method: "DELETE", Path: "/api/v1/core/registers/{key}", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"key"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreDeleteSelfEmployeePhoto":                {ID: "coreDeleteSelfEmployeePhoto", Method: "DELETE", Path: "/api/v1/core/self/photo", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: false, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
+	"coreGenerateProductBarcode":                 {ID: "coreGenerateProductBarcode", Method: "POST", Path: "/api/v1/core/product-identifiers/generate", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
+	"coreGenerateProductVariants":                {ID: "coreGenerateProductVariants", Method: "POST", Path: "/api/v1/core/products/{id}/variants/generate", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: true, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreGetAccountingPeriodState":               {ID: "coreGetAccountingPeriodState", Method: "GET", Path: "/api/v1/core/accounting-periods", Module: "core", Stage: "preview", Permission: "core:read", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreGetAccountingSettings":                  {ID: "coreGetAccountingSettings", Method: "GET", Path: "/api/v1/core/accounting-settings", Module: "core", Stage: "preview", Permission: "core:read", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreGetBusiness":                            {ID: "coreGetBusiness", Method: "GET", Path: "/api/v1/core/businesses/{id}", Module: "core", Stage: "preview", Permission: "core:read", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},

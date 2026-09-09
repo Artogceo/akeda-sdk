@@ -15199,8 +15199,18 @@
           {
             "name": "record_kind",
             "in": "query",
+            "description": "Структурный вид или несколько видов через запятую; порядок безразличен. standalone,family сворачивает варианты под семейство",
             "schema": {
-              "$ref": "#/components/schemas/CoreProductRecordKind"
+              "type": "string",
+              "enum": [
+                "standalone",
+                "family",
+                "variant",
+                "standalone,family",
+                "standalone,variant",
+                "family,variant",
+                "standalone,family,variant"
+              ]
             }
           },
           {
@@ -15262,6 +15272,14 @@
                 "updated",
                 "-updated"
               ]
+            }
+          },
+          {
+            "name": "custom",
+            "in": "query",
+            "description": "Отбор по характеристикам: JSON-объект «ключ поля → значение» (у выбора — идентификатор записи справочника, у флага — true/false); каждая пара обязана совпасть. Пусто — без отбора. q при этом ищет и по значениям характеристик, включая подписи записей справочников",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -15995,6 +16013,156 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/core/products/{id}/variants/generate": {
+      "post": {
+        "tags": [
+          "Core products"
+        ],
+        "operationId": "coreGenerateProductVariants",
+        "summary": "Создать варианты семейства по сочетаниям осей",
+        "description": "Строит декартово произведение выбранных значений осей семейства и заводит недостающие варианты; занятыми считаются сочетания ВСЕХ существующих вариантов семейства, а не первой их страницы, поэтому повторный вызов ничего не дублирует. Вариант наследует вид, единицу, цены, категорию, реквизиты и характеристики семейства; имя — «семейство, подписи», SKU — «SKU-КОДЫ». Каждый вариант создаётся своей транзакцией: отказ на середине оставляет уже созданные в базе, и тело отказа 4xx несёт created и skipped на момент отказа. Читает Idempotency-Key — повтор того же запроса с тем же ключом отдаёт прежний результат, а не вторую партию.",
+        "x-akeda-module": "core",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "core:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoreProductVariantGenerate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Созданные варианты и число пропущенных сочетаний",
+            "headers": {
+              "Idempotent-Replay": {
+                "$ref": "#/components/headers/IdempotentReplay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreProductVariantGenerateResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/IdempotencyKeyMismatch"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/core/product-identifiers/generate": {
+      "post": {
+        "tags": [
+          "Core products"
+        ],
+        "operationId": "coreGenerateProductBarcode",
+        "summary": "Сгенерировать внутренний штрихкод",
+        "description": "Свободный EAN-13 внутреннего диапазона (префикс 200) из счётчика кабинета. Строка идентификатора не создаётся — код записывается вместе с карточкой или добавлением идентификатора.",
+        "x-akeda-module": "core",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "core:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Свободный внутренний код",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreGeneratedBarcode"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           }
         }
       }
@@ -71731,7 +71899,19 @@
           "is_active",
           "archived_at",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "purchase_price",
+          "vat_rate",
+          "weight_kg",
+          "volume_m3",
+          "length_mm",
+          "width_mm",
+          "height_mm",
+          "country_item_id",
+          "country_label",
+          "customs_code",
+          "option_schema",
+          "variant_values"
         ],
         "properties": {
           "id": {
@@ -71838,6 +72018,69 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "purchase_price": {
+            "type": "string",
+            "description": "Закупочная цена десятичной строкой; подставляется в строку приёмки"
+          },
+          "vat_rate": {
+            "type": "string",
+            "description": "Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию"
+          },
+          "weight_kg": {
+            "type": "string",
+            "description": "Вес одной базовой единицы, кг; пусто — не задан"
+          },
+          "volume_m3": {
+            "type": "string",
+            "description": "Объём одной базовой единицы, м³; пусто — не задан"
+          },
+          "length_mm": {
+            "type": "string",
+            "description": "Длина, мм; пусто — не задана"
+          },
+          "width_mm": {
+            "type": "string",
+            "description": "Ширина, мм; пусто — не задана"
+          },
+          "height_mm": {
+            "type": "string",
+            "description": "Высота, мм; пусто — не задана"
+          },
+          "country_item_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Страна происхождения — запись справочника countries (код ОКСМ в code)"
+          },
+          "customs_code": {
+            "type": "string",
+            "maxLength": 10,
+            "pattern": "^[0-9]{0,10}$",
+            "description": "Код ТН ВЭД, до десяти цифр"
+          },
+          "country_label": {
+            "type": "string",
+            "description": "Название страны происхождения; пусто без страны"
+          },
+          "option_schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreProductAxis"
+            },
+            "description": "Оси характеристик семейства; у остальных записей пусто"
+          },
+          "variant_values": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Значения варианта по осям семейства: ось → код; у остальных записей пусто"
           }
         }
       },
@@ -71945,6 +72188,65 @@
             "items": {
               "$ref": "#/components/schemas/CoreProductIdentifierInput"
             }
+          },
+          "purchase_price": {
+            "type": "string",
+            "description": "Закупочная цена десятичной строкой; подставляется в строку приёмки"
+          },
+          "vat_rate": {
+            "type": "string",
+            "description": "Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию"
+          },
+          "weight_kg": {
+            "type": "string",
+            "description": "Вес одной базовой единицы, кг; пусто — не задан"
+          },
+          "volume_m3": {
+            "type": "string",
+            "description": "Объём одной базовой единицы, м³; пусто — не задан"
+          },
+          "length_mm": {
+            "type": "string",
+            "description": "Длина, мм; пусто — не задана"
+          },
+          "width_mm": {
+            "type": "string",
+            "description": "Ширина, мм; пусто — не задана"
+          },
+          "height_mm": {
+            "type": "string",
+            "description": "Высота, мм; пусто — не задана"
+          },
+          "country_item_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Страна происхождения — запись справочника countries (код ОКСМ в code)"
+          },
+          "customs_code": {
+            "type": "string",
+            "maxLength": 10,
+            "pattern": "^[0-9]{0,10}$",
+            "description": "Код ТН ВЭД, до десяти цифр"
+          },
+          "option_schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreProductAxis"
+            },
+            "description": "Оси характеристик семейства; у остальных записей пусто"
+          },
+          "variant_values": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Значения варианта по осям семейства: ось → код; у остальных записей пусто"
           }
         }
       },
@@ -72013,6 +72315,169 @@
                 "type": "null"
               }
             ]
+          },
+          "purchase_price": {
+            "type": "string",
+            "description": "Закупочная цена десятичной строкой; подставляется в строку приёмки"
+          },
+          "vat_rate": {
+            "type": "string",
+            "description": "Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию"
+          },
+          "weight_kg": {
+            "type": "string",
+            "description": "Вес одной базовой единицы, кг; пусто — не задан"
+          },
+          "volume_m3": {
+            "type": "string",
+            "description": "Объём одной базовой единицы, м³; пусто — не задан"
+          },
+          "length_mm": {
+            "type": "string",
+            "description": "Длина, мм; пусто — не задана"
+          },
+          "width_mm": {
+            "type": "string",
+            "description": "Ширина, мм; пусто — не задана"
+          },
+          "height_mm": {
+            "type": "string",
+            "description": "Высота, мм; пусто — не задана"
+          },
+          "country_item_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Страна происхождения — запись справочника countries (код ОКСМ в code)"
+          },
+          "customs_code": {
+            "type": "string",
+            "maxLength": 10,
+            "pattern": "^[0-9]{0,10}$",
+            "description": "Код ТН ВЭД, до десяти цифр"
+          },
+          "option_schema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreProductAxis"
+            },
+            "description": "Оси характеристик семейства; у остальных записей пусто"
+          },
+          "variant_values": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Значения варианта по осям семейства: ось → код; у остальных записей пусто"
+          }
+        }
+      },
+      "CoreProductAxisValue": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "label"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "description": "Машинный код значения: латиница, цифры, _ и -"
+          },
+          "label": {
+            "type": "string",
+            "description": "Подпись значения; пусто — код"
+          }
+        }
+      },
+      "CoreProductAxis": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "label",
+          "values"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "description": "Ключ оси: латиница, цифры, _ и -"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "values": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/CoreProductAxisValue"
+            }
+          }
+        }
+      },
+      "CoreProductVariantGenerate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "axes": {
+            "type": "array",
+            "description": "Какие оси и коды участвуют; пусто — все оси семейства целиком. Пустой список кодов у оси — все её значения",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "key"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "codes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "CoreProductVariantGenerateResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "created",
+          "skipped",
+          "results"
+        ],
+        "properties": {
+          "created": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "skipped": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Сочетания, у которых вариант уже был"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreProduct"
+            }
           }
         }
       },
@@ -72079,7 +72544,12 @@
           "required",
           "dictionary",
           "order",
-          "help"
+          "help",
+          "group",
+          "pinned",
+          "filterable",
+          "category_ids",
+          "unit_suffix"
         ],
         "properties": {
           "id": {
@@ -72115,6 +72585,29 @@
           },
           "help": {
             "type": "string"
+          },
+          "group": {
+            "type": "string",
+            "description": "Панель карточки, в которой показывается поле; пусто — общая панель дополнительных реквизитов"
+          },
+          "pinned": {
+            "type": "boolean",
+            "description": "Закреплённая характеристика: под названием в шапке карточки и столбцом каталога"
+          },
+          "filterable": {
+            "type": "boolean",
+            "description": "Поле участвует в отборе каталога"
+          },
+          "category_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UUID"
+            },
+            "description": "Категории (элементы справочника product_categories), у товаров которых и их потомков поле показывается; пусто — у всех"
+          },
+          "unit_suffix": {
+            "type": "string",
+            "description": "Суффикс единицы после значения: кг, мм, мл"
           }
         }
       },
@@ -72214,6 +72707,26 @@
             "items": {
               "$ref": "#/components/schemas/CoreProductIdentifier"
             }
+          }
+        }
+      },
+      "CoreGeneratedBarcode": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "value",
+          "type"
+        ],
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "EAN-13 с префиксом 200 и контрольной цифрой"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "ean13"
+            ]
           }
         }
       },
@@ -72380,7 +72893,7 @@
           },
           "source_ref": {
             "type": "string",
-            "description": "Required for article kinds; optional for barcode"
+            "description": "Пространство имён: у артикулов обязателен (производитель, поставщик, код канала из справочника sales_channels); у штрихкода — код активного канала продаж этого кабинета либо global (по умолчанию), иное значение — 400. Значение штрихкода уникально по кабинету независимо от канала"
           },
           "value": {
             "type": "string",
@@ -72393,7 +72906,8 @@
           "attrs": {
             "type": "object",
             "additionalProperties": true,
-            "default": {}
+            "default": {},
+            "description": "У штрихкода: type ∈ ean13|ean8|upc_a|gtin14|code128 и product_uom_id упаковки. Названный type проверяется строго, включая контрольную цифру EAN/UPC/GTIN (400 с текстом ошибки). Без type символика угадывается по форме значения, и несошедшаяся контрольная цифра не отказ, а code128: догадка не вправе отвергать существующий код"
           }
         }
       },
@@ -72406,7 +72920,8 @@
             "$ref": "#/components/schemas/CoreProductIdentifierKind"
           },
           "source_ref": {
-            "type": "string"
+            "type": "string",
+            "description": "Пространство имён: у артикулов обязателен; у штрихкода — код активного канала продаж этого кабинета либо global, иное значение — 400"
           },
           "value": {
             "type": "string",
@@ -72417,7 +72932,8 @@
           },
           "attrs": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "description": "У штрихкода: type ∈ ean13|ean8|upc_a|gtin14|code128 и product_uom_id упаковки. Названный type проверяется строго, включая контрольную цифру EAN/UPC/GTIN (400 с текстом ошибки). Без type символика угадывается по форме значения, и несошедшаяся контрольная цифра не отказ, а code128. Поле заменяет объект целиком, а не сливается с прежним"
           }
         }
       },
@@ -90142,7 +90658,9 @@
           "sign",
           "dims",
           "values",
-          "unit"
+          "unit",
+          "contact_id",
+          "contact_name"
         ],
         "properties": {
           "id": {
@@ -90184,6 +90702,21 @@
           },
           "unit": {
             "type": "string"
+          },
+          "contact_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Контрагент документа-регистратора: поставщик приёмки, покупатель отгрузки"
+          },
+          "contact_name": {
+            "type": "string",
+            "description": "Название контрагента; пусто без контрагента"
           }
         }
       },
@@ -91313,7 +91846,10 @@
           "primary_image",
           "url",
           "category",
-          "cost"
+          "cost",
+          "linked_product_id",
+          "linked_product_sku",
+          "linked_product_name"
         ],
         "properties": {
           "id": {
@@ -91404,6 +91940,25 @@
               "null"
             ],
             "description": "Себестоимость из базы кабинета; null — не заведена"
+          },
+          "linked_product_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Номенклатура кабинета, к которой привязан артикул канала (core_product_identifier вида channel_article); null — не привязан"
+          },
+          "linked_product_sku": {
+            "type": "string",
+            "description": "SKU привязанной номенклатуры; пусто без связи"
+          },
+          "linked_product_name": {
+            "type": "string",
+            "description": "Название привязанной номенклатуры; пусто без связи"
           }
         }
       },
@@ -94108,7 +94663,10 @@
           "stock",
           "in_way_to_client",
           "in_way_from_client",
-          "cost"
+          "cost",
+          "linked_product_id",
+          "linked_product_sku",
+          "linked_product_name"
         ],
         "properties": {
           "id": {
@@ -94190,6 +94748,25 @@
               "null"
             ],
             "description": "Себестоимость из кабинета"
+          },
+          "linked_product_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Номенклатура кабинета, к которой привязан артикул канала (core_product_identifier вида channel_article); null — не привязан"
+          },
+          "linked_product_sku": {
+            "type": "string",
+            "description": "SKU привязанной номенклатуры; пусто без связи"
+          },
+          "linked_product_name": {
+            "type": "string",
+            "description": "Название привязанной номенклатуры; пусто без связи"
           }
         }
       },
@@ -96491,7 +97068,10 @@
           "status_name",
           "primary_image",
           "url",
-          "cost"
+          "cost",
+          "linked_product_id",
+          "linked_product_sku",
+          "linked_product_name"
         ],
         "properties": {
           "id": {
@@ -96563,6 +97143,25 @@
               }
             ],
             "description": "Себестоимость decimal строкой; null когда она не заведена"
+          },
+          "linked_product_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Номенклатура кабинета, к которой привязан артикул канала (core_product_identifier вида channel_article); null — не привязан"
+          },
+          "linked_product_sku": {
+            "type": "string",
+            "description": "SKU привязанной номенклатуры; пусто без связи"
+          },
+          "linked_product_name": {
+            "type": "string",
+            "description": "Название привязанной номенклатуры; пусто без связи"
           }
         }
       },
@@ -97462,6 +98061,11 @@
           "order",
           "is_active",
           "help",
+          "group",
+          "pinned",
+          "filterable",
+          "category_ids",
+          "unit_suffix",
           "created_at",
           "updated_at"
         ],
@@ -97502,6 +98106,29 @@
           },
           "help": {
             "type": "string"
+          },
+          "group": {
+            "type": "string",
+            "description": "Панель карточки, в которой показывается поле; пусто — общая панель дополнительных реквизитов"
+          },
+          "pinned": {
+            "type": "boolean",
+            "description": "Закреплённая характеристика: под названием в шапке карточки и столбцом каталога"
+          },
+          "filterable": {
+            "type": "boolean",
+            "description": "Поле участвует в отборе каталога"
+          },
+          "category_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UUID"
+            },
+            "description": "Категории (элементы справочника product_categories), у товаров которых и их потомков поле показывается; пусто — у всех"
+          },
+          "unit_suffix": {
+            "type": "string",
+            "description": "Суффикс единицы после значения: кг, мм, мл"
           },
           "created_at": {
             "type": "string",
@@ -97591,6 +98218,32 @@
           },
           "help": {
             "type": "string"
+          },
+          "group": {
+            "type": "string",
+            "maxLength": 60,
+            "description": "Панель карточки; пусто — общая панель дополнительных реквизитов"
+          },
+          "pinned": {
+            "type": "boolean",
+            "description": "Закрепить как характеристику: под названием в шапке карточки и столбцом каталога"
+          },
+          "filterable": {
+            "type": "boolean",
+            "description": "Показывать в отборе каталога"
+          },
+          "category_ids": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "$ref": "#/components/schemas/UUID"
+            },
+            "description": "Категории, у товаров которых и их потомков поле показывается; пусто — у всех"
+          },
+          "unit_suffix": {
+            "type": "string",
+            "maxLength": 16,
+            "description": "Суффикс единицы после значения: кг, мм, мл"
           }
         }
       },

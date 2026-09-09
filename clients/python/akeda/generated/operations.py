@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9625a45a8681bf9cb31341242e66527a2482b840c50e0c8d3127192b7f211719).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 25b2fbed0d8e1c8e0d61a8ad3d5a244e35597fe846e2e8b2ab710a64f04bfc22).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -164,6 +164,8 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreDeleteProductFile': OperationSpec('DELETE', '/api/v1/core/products/{id}/files/{fileId}', 'core', 'preview', 'core:write', False, True, ('fileId', 'id',), 'none', None, None),
     'coreDeleteRegister': OperationSpec('DELETE', '/api/v1/core/registers/{key}', 'core', 'preview', 'core:write', False, True, ('key',), 'none', None, None),
     'coreDeleteSelfEmployeePhoto': OperationSpec('DELETE', '/api/v1/core/self/photo', 'core', 'preview', 'core:write', False, False, (), 'none', None, None),
+    'coreGenerateProductBarcode': OperationSpec('POST', '/api/v1/core/product-identifiers/generate', 'core', 'preview', 'core:write', False, True, (), 'none', None, None),
+    'coreGenerateProductVariants': OperationSpec('POST', '/api/v1/core/products/{id}/variants/generate', 'core', 'preview', 'core:write', True, True, ('id',), 'none', None, None),
     'coreGetAccountingPeriodState': OperationSpec('GET', '/api/v1/core/accounting-periods', 'core', 'preview', 'core:read', False, True, (), 'none', None, None),
     'coreGetAccountingSettings': OperationSpec('GET', '/api/v1/core/accounting-settings', 'core', 'preview', 'core:read', False, True, (), 'none', None, None),
     'coreGetBusiness': OperationSpec('GET', '/api/v1/core/businesses/{id}', 'core', 'preview', 'core:read', False, True, ('id',), 'none', None, None),

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9625a45a8681bf9cb31341242e66527a2482b840c50e0c8d3127192b7f211719).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 25b2fbed0d8e1c8e0d61a8ad3d5a244e35597fe846e2e8b2ab710a64f04bfc22).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -3123,6 +3123,12 @@ type CoreGLOpeningNote = string
 
 type CoreGLOpeningWarning = string
 
+type CoreGeneratedBarcode struct {
+	// Value — EAN-13 с префиксом 200 и контрольной цифрой
+	Value string `json:"value"`
+	Type  string `json:"type"`
+}
+
 type CoreImportResult struct {
 	Created int64 `json:"created"`
 	Updated int64 `json:"updated"`
@@ -3229,6 +3235,44 @@ type CoreProduct struct {
 	ArchivedAt        *string                    `json:"archived_at"`
 	CreatedAt         string                     `json:"created_at"`
 	UpdatedAt         string                     `json:"updated_at"`
+	// PurchasePrice — Закупочная цена десятичной строкой; подставляется в строку приёмки
+	PurchasePrice string `json:"purchase_price"`
+	// VATRate — Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
+	VATRate string `json:"vat_rate"`
+	// WeightKg — Вес одной базовой единицы, кг; пусто — не задан
+	WeightKg string `json:"weight_kg"`
+	// VolumeM3 — Объём одной базовой единицы, м³; пусто — не задан
+	VolumeM3 string `json:"volume_m3"`
+	// LengthMm — Длина, мм; пусто — не задана
+	LengthMm string `json:"length_mm"`
+	// WidthMm — Ширина, мм; пусто — не задана
+	WidthMm string `json:"width_mm"`
+	// HeightMm — Высота, мм; пусто — не задана
+	HeightMm string `json:"height_mm"`
+	// CountryItemID — Страна происхождения — запись справочника countries (код ОКСМ в code)
+	CountryItemID *UUID `json:"country_item_id"`
+	// CustomsCode — Код ТН ВЭД, до десяти цифр
+	CustomsCode string `json:"customs_code"`
+	// CountryLabel — Название страны происхождения; пусто без страны
+	CountryLabel string `json:"country_label"`
+	// OptionSchema — Оси характеристик семейства; у остальных записей пусто
+	OptionSchema []CoreProductAxis `json:"option_schema"`
+	// VariantValues — Значения варианта по осям семейства: ось → код; у остальных записей пусто
+	VariantValues map[string]string `json:"variant_values"`
+}
+
+type CoreProductAxis struct {
+	// Key — Ключ оси: латиница, цифры, _ и -
+	Key    string                 `json:"key"`
+	Label  string                 `json:"label"`
+	Values []CoreProductAxisValue `json:"values"`
+}
+
+type CoreProductAxisValue struct {
+	// Code — Машинный код значения: латиница, цифры, _ и -
+	Code string `json:"code"`
+	// Label — Подпись значения; пусто — код
+	Label string `json:"label"`
 }
 
 type CoreProductBulkPatch struct {
@@ -3258,6 +3302,28 @@ type CoreProductCreate struct {
 	Custom          map[string]json.RawMessage `json:"custom,omitempty"`
 	// Identifiers — Штрихкод и артикулы с формы создания; ложатся в той же транзакции, что и карточка. Занятый код отклоняет создание целиком (409).
 	Identifiers []CoreProductIdentifierInput `json:"identifiers,omitempty"`
+	// PurchasePrice — Закупочная цена десятичной строкой; подставляется в строку приёмки
+	PurchasePrice *string `json:"purchase_price,omitempty"`
+	// VATRate — Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
+	VATRate *string `json:"vat_rate,omitempty"`
+	// WeightKg — Вес одной базовой единицы, кг; пусто — не задан
+	WeightKg *string `json:"weight_kg,omitempty"`
+	// VolumeM3 — Объём одной базовой единицы, м³; пусто — не задан
+	VolumeM3 *string `json:"volume_m3,omitempty"`
+	// LengthMm — Длина, мм; пусто — не задана
+	LengthMm *string `json:"length_mm,omitempty"`
+	// WidthMm — Ширина, мм; пусто — не задана
+	WidthMm *string `json:"width_mm,omitempty"`
+	// HeightMm — Высота, мм; пусто — не задана
+	HeightMm *string `json:"height_mm,omitempty"`
+	// CountryItemID — Страна происхождения — запись справочника countries (код ОКСМ в code)
+	CountryItemID *UUID `json:"country_item_id,omitempty"`
+	// CustomsCode — Код ТН ВЭД, до десяти цифр
+	CustomsCode *string `json:"customs_code,omitempty"`
+	// OptionSchema — Оси характеристик семейства; у остальных записей пусто
+	OptionSchema []CoreProductAxis `json:"option_schema,omitempty"`
+	// VariantValues — Значения варианта по осям семейства: ось → код; у остальных записей пусто
+	VariantValues map[string]string `json:"variant_values,omitempty"`
 }
 
 type CoreProductCustomInput struct {
@@ -3291,6 +3357,16 @@ type CoreProductFieldDefinition struct {
 	Dictionary *UUID  `json:"dictionary"`
 	Order      int64  `json:"order"`
 	Help       string `json:"help"`
+	// Group — Панель карточки, в которой показывается поле; пусто — общая панель дополнительных реквизитов
+	Group string `json:"group"`
+	// Pinned — Закреплённая характеристика: под названием в шапке карточки и столбцом каталога
+	Pinned bool `json:"pinned"`
+	// Filterable — Поле участвует в отборе каталога
+	Filterable bool `json:"filterable"`
+	// CategoryIds — Категории (элементы справочника product_categories), у товаров которых и их потомков поле показывается; пусто — у всех
+	CategoryIds []UUID `json:"category_ids"`
+	// UnitSuffix — Суффикс единицы после значения: кг, мм, мл
+	UnitSuffix string `json:"unit_suffix"`
 }
 
 type CoreProductFieldSchema struct {
@@ -3348,11 +3424,12 @@ type CoreProductIdentifier struct {
 
 type CoreProductIdentifierInput struct {
 	Kind CoreProductIdentifierKind `json:"kind"`
-	// SourceRef — Required for article kinds; optional for barcode
-	SourceRef *string                    `json:"source_ref,omitempty"`
-	Value     string                     `json:"value"`
-	IsPrimary *bool                      `json:"is_primary,omitempty"`
-	Attrs     map[string]json.RawMessage `json:"attrs,omitempty"`
+	// SourceRef — Пространство имён: у артикулов обязателен (производитель, поставщик, код канала из справочника sales_channels); у штрихкода — код активного канала продаж этого кабинета либо global (по умолчанию), иное значение — 400. Значение штрихкода уникально по кабинету независимо от канала
+	SourceRef *string `json:"source_ref,omitempty"`
+	Value     string  `json:"value"`
+	IsPrimary *bool   `json:"is_primary,omitempty"`
+	// Attrs — У штрихкода: type ∈ ean13|ean8|upc_a|gtin14|code128 и product_uom_id упаковки. Названный type проверяется строго, включая контрольную цифру EAN/UPC/GTIN (400 с текстом ошибки). Без type символика угадывается по форме значения, и несошедшаяся контрольная цифра не отказ, а code128: догадка не вправе отвергать существующий код
+	Attrs map[string]json.RawMessage `json:"attrs,omitempty"`
 }
 
 type CoreProductIdentifierKind = string
@@ -3370,11 +3447,13 @@ type CoreProductIdentifierPage struct {
 }
 
 type CoreProductIdentifierPatch struct {
-	Kind      *CoreProductIdentifierKind `json:"kind,omitempty"`
-	SourceRef *string                    `json:"source_ref,omitempty"`
-	Value     *string                    `json:"value,omitempty"`
-	IsPrimary *bool                      `json:"is_primary,omitempty"`
-	Attrs     map[string]json.RawMessage `json:"attrs,omitempty"`
+	Kind *CoreProductIdentifierKind `json:"kind,omitempty"`
+	// SourceRef — Пространство имён: у артикулов обязателен; у штрихкода — код активного канала продаж этого кабинета либо global, иное значение — 400
+	SourceRef *string `json:"source_ref,omitempty"`
+	Value     *string `json:"value,omitempty"`
+	IsPrimary *bool   `json:"is_primary,omitempty"`
+	// Attrs — У штрихкода: type ∈ ean13|ean8|upc_a|gtin14|code128 и product_uom_id упаковки. Названный type проверяется строго, включая контрольную цифру EAN/UPC/GTIN (400 с текстом ошибки). Без type символика угадывается по форме значения, и несошедшаяся контрольная цифра не отказ, а code128. Поле заменяет объект целиком, а не сливается с прежним
+	Attrs map[string]json.RawMessage `json:"attrs,omitempty"`
 }
 
 type CoreProductImportApplyRequest struct {
@@ -3511,6 +3590,28 @@ type CoreProductPatch struct {
 	IsProducible  *bool            `json:"is_producible,omitempty"`
 	CategoryID    *UUID            `json:"category_id,omitempty"`
 	FolderID      *UUID            `json:"folder_id,omitempty"`
+	// PurchasePrice — Закупочная цена десятичной строкой; подставляется в строку приёмки
+	PurchasePrice *string `json:"purchase_price,omitempty"`
+	// VATRate — Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
+	VATRate *string `json:"vat_rate,omitempty"`
+	// WeightKg — Вес одной базовой единицы, кг; пусто — не задан
+	WeightKg *string `json:"weight_kg,omitempty"`
+	// VolumeM3 — Объём одной базовой единицы, м³; пусто — не задан
+	VolumeM3 *string `json:"volume_m3,omitempty"`
+	// LengthMm — Длина, мм; пусто — не задана
+	LengthMm *string `json:"length_mm,omitempty"`
+	// WidthMm — Ширина, мм; пусто — не задана
+	WidthMm *string `json:"width_mm,omitempty"`
+	// HeightMm — Высота, мм; пусто — не задана
+	HeightMm *string `json:"height_mm,omitempty"`
+	// CountryItemID — Страна происхождения — запись справочника countries (код ОКСМ в code)
+	CountryItemID *UUID `json:"country_item_id,omitempty"`
+	// CustomsCode — Код ТН ВЭД, до десяти цифр
+	CustomsCode *string `json:"customs_code,omitempty"`
+	// OptionSchema — Оси характеристик семейства; у остальных записей пусто
+	OptionSchema []CoreProductAxis `json:"option_schema,omitempty"`
+	// VariantValues — Значения варианта по осям семейства: ось → код; у остальных записей пусто
+	VariantValues map[string]string `json:"variant_values,omitempty"`
 }
 
 type CoreProductRecordKind = string
@@ -3518,6 +3619,23 @@ type CoreProductRecordKind = string
 type CoreProductTransferFormat = string
 
 type CoreProductTransferKind = string
+
+type CoreProductVariantGenerate struct {
+	// Axes — Какие оси и коды участвуют; пусто — все оси семейства целиком. Пустой список кодов у оси — все её значения
+	Axes []CoreProductVariantGenerateAxesItem `json:"axes,omitempty"`
+}
+
+type CoreProductVariantGenerateAxesItem struct {
+	Key   string   `json:"key"`
+	Codes []string `json:"codes,omitempty"`
+}
+
+type CoreProductVariantGenerateResult struct {
+	Created int64 `json:"created"`
+	// Skipped — Сочетания, у которых вариант уже был
+	Skipped int64         `json:"skipped"`
+	Results []CoreProduct `json:"results"`
+}
 
 type CoreReferenceItem struct {
 	ID UUID `json:"id"`
@@ -8522,6 +8640,12 @@ type MarketplaceOzonProduct struct {
 	Category             string `json:"category"`
 	// Cost — Себестоимость из базы кабинета; null — не заведена
 	Cost *string `json:"cost"`
+	// LinkedProductID — Номенклатура кабинета, к которой привязан артикул канала (core_product_identifier вида channel_article); null — не привязан
+	LinkedProductID *UUID `json:"linked_product_id"`
+	// LinkedProductSKU — SKU привязанной номенклатуры; пусто без связи
+	LinkedProductSKU string `json:"linked_product_sku"`
+	// LinkedProductName — Название привязанной номенклатуры; пусто без связи
+	LinkedProductName string `json:"linked_product_name"`
 }
 
 type MarketplaceOzonProductFacets struct {
@@ -9251,6 +9375,12 @@ type MarketplaceWbProduct struct {
 	InWayFromClient int64  `json:"in_way_from_client"`
 	// Cost — Себестоимость из кабинета
 	Cost *string `json:"cost"`
+	// LinkedProductID — Номенклатура кабинета, к которой привязан артикул канала (core_product_identifier вида channel_article); null — не привязан
+	LinkedProductID *UUID `json:"linked_product_id"`
+	// LinkedProductSKU — SKU привязанной номенклатуры; пусто без связи
+	LinkedProductSKU string `json:"linked_product_sku"`
+	// LinkedProductName — Название привязанной номенклатуры; пусто без связи
+	LinkedProductName string `json:"linked_product_name"`
 }
 
 type MarketplaceWbProductPage struct {
@@ -9455,6 +9585,12 @@ type MarketplaceYandexProduct struct {
 	URL string `json:"url"`
 	// Cost — Себестоимость decimal строкой; null когда она не заведена
 	Cost *string `json:"cost"`
+	// LinkedProductID — Номенклатура кабинета, к которой привязан артикул канала (core_product_identifier вида channel_article); null — не привязан
+	LinkedProductID *UUID `json:"linked_product_id"`
+	// LinkedProductSKU — SKU привязанной номенклатуры; пусто без связи
+	LinkedProductSKU string `json:"linked_product_sku"`
+	// LinkedProductName — Название привязанной номенклатуры; пусто без связи
+	LinkedProductName string `json:"linked_product_name"`
 }
 
 type MarketplaceYandexProductPage struct {
@@ -10879,6 +11015,16 @@ type SettingsFieldDefinition struct {
 	Order      int64  `json:"order"`
 	IsActive   bool   `json:"is_active"`
 	Help       string `json:"help"`
+	// Group — Панель карточки, в которой показывается поле; пусто — общая панель дополнительных реквизитов
+	Group string `json:"group"`
+	// Pinned — Закреплённая характеристика: под названием в шапке карточки и столбцом каталога
+	Pinned bool `json:"pinned"`
+	// Filterable — Поле участвует в отборе каталога
+	Filterable bool `json:"filterable"`
+	// CategoryIds — Категории (элементы справочника product_categories), у товаров которых и их потомков поле показывается; пусто — у всех
+	CategoryIds []UUID `json:"category_ids"`
+	// UnitSuffix — Суффикс единицы после значения: кг, мм, мл
+	UnitSuffix string `json:"unit_suffix"`
 	// CreatedAt — Отметка времени как её печатает Postgres, а не RFC 3339
 	CreatedAt string `json:"created_at"`
 	// UpdatedAt — Отметка времени как её печатает Postgres, а не RFC 3339
@@ -10898,6 +11044,16 @@ type SettingsFieldDefinitionInput struct {
 	// IsActive — Читается только при изменении; на заведении определение всегда действующее
 	IsActive *bool   `json:"is_active,omitempty"`
 	Help     *string `json:"help,omitempty"`
+	// Group — Панель карточки; пусто — общая панель дополнительных реквизитов
+	Group *string `json:"group,omitempty"`
+	// Pinned — Закрепить как характеристику: под названием в шапке карточки и столбцом каталога
+	Pinned *bool `json:"pinned,omitempty"`
+	// Filterable — Показывать в отборе каталога
+	Filterable *bool `json:"filterable,omitempty"`
+	// CategoryIds — Категории, у товаров которых и их потомков поле показывается; пусто — у всех
+	CategoryIds []UUID `json:"category_ids,omitempty"`
+	// UnitSuffix — Суффикс единицы после значения: кг, мм, мл
+	UnitSuffix *string `json:"unit_suffix,omitempty"`
 }
 
 type SettingsFieldDefinitionPage struct {
@@ -11751,6 +11907,10 @@ type StockReportDrilldownEntry struct {
 	Dims              map[string]json.RawMessage `json:"dims"`
 	Values            map[string]json.RawMessage `json:"values"`
 	Unit              string                     `json:"unit"`
+	// ContactID — Контрагент документа-регистратора: поставщик приёмки, покупатель отгрузки
+	ContactID *UUID `json:"contact_id"`
+	// ContactName — Название контрагента; пусто без контрагента
+	ContactName string `json:"contact_name"`
 }
 
 type StockReportOverduePage struct {
