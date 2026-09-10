@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d7888ec19d13d375d71d566c85f13de77a68477d662039484836e8ca30606e2b).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b82522d1482c3d3933797ed1a4ff851319e7a0d4744c342d1bf52a78a518562e).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -175,6 +175,7 @@ __all__ = [
     "CalendarSyncResult",
     "CalendarWebPushConfig",
     "CalendarWebPushSubscription",
+    "CalendarWebPushTestResult",
     "CalendarWebPushUnsubscribe",
     "ChatAttachment",
     "ChatAttachmentPage",
@@ -2959,6 +2960,16 @@ class _CalendarWebPushSubscriptionRequired(TypedDict):
 
 class CalendarWebPushSubscription(_CalendarWebPushSubscriptionRequired, total=False):
     device: Literal['desktop', 'mobile']
+
+class CalendarWebPushTestResult(TypedDict):
+    #: Служба доставки браузера приняла пробное уведомление
+    delivered: bool
+    #: Endpoint протух и снят с учёта; браузеру нужно переподписаться
+    revoked: bool
+    #: Временный отказ службы доставки; повтор осмыслен
+    retryable: bool
+    #: Машинный код исхода: http_429, network_error, device_disabled и подобные
+    code: str
 
 class CalendarWebPushUnsubscribe(TypedDict):
     endpoint: str
@@ -7167,9 +7178,13 @@ class _FinanceConnectorProviderRequired(TypedDict):
     auth_kind: "FinanceConnectorAuthKind"
     supports_webhook: bool
     credential_hint: str
+    #: Банк принимает запросы только с адресов, объявленных в его кабинете.
+    requires_egress_allowlist: bool
 
 class FinanceConnectorProvider(_FinanceConnectorProviderRequired, total=False):
     redirect_path: str
+    #: Исходящие адреса контура для белого списка банка. Пусто — адрес контура не настроен.
+    egress_ips: List[str]
 
 FinanceConnectorProviderKey = Literal['modulbank', 'tbank', 'tochka', 'alfa', 'sber']
 
@@ -9813,6 +9828,8 @@ class MarketplaceStore(_MarketplaceStoreRequired, total=False):
     connection_error_code: str
     #: Момент последней успешной загрузки этого подключения
     last_etl_at: str
+    #: Разделитель базы и размера в артикуле продавца, объявленный владельцем магазина. Пустая строка — правило не объявлено, и размер берётся только из полей площадки. Применяется на Ozon, где каждый размер продаётся своим артикулом
+    article_size_separator: Literal['', '-', '/', '_']
 
 class _MarketplaceStoreInputRequired(TypedDict):
     name: str
@@ -9826,6 +9843,8 @@ class MarketplaceStoreInput(_MarketplaceStoreInputRequired, total=False):
     has_fbs: bool
     #: Используется для Wildberries
     has_jam: bool
+    #: Правило именования артикула Ozon: «БАЗА<разделитель>РАЗМЕР». Список закрыт; пустая строка означает «правила нет». Официальные поля размера площадки всегда старше этого правила
+    article_size_separator: Literal['', '-', '/', '_']
     ozon_client_id: str
     ozon_api_key: str
     ozon_pf_client_id: str
@@ -9852,6 +9871,8 @@ class MarketplaceStorePatch(TypedDict, total=False):
     has_fbs: bool
     #: Используется для Wildberries
     has_jam: bool
+    #: Правило именования артикула Ozon: «БАЗА<разделитель>РАЗМЕР». Список закрыт; пустая строка означает «правила нет». Официальные поля размера площадки всегда старше этого правила. Отсутствие поля оставляет сохранённое правило, пустая строка его снимает
+    article_size_separator: Literal['', '-', '/', '_']
     ozon_client_id: str
     ozon_api_key: str
     ozon_pf_client_id: str

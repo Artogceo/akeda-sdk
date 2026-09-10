@@ -9835,6 +9835,75 @@
         }
       }
     },
+    "/api/v1/calendar/push/test": {
+      "post": {
+        "tags": [
+          "Calendar"
+        ],
+        "operationId": "calendarTestPush",
+        "summary": "Отправить пробное уведомление в указанное устройство",
+        "description": "Адресная проверка: уведомление уходит ровно в названный endpoint, и он сверяется со списком подписок текущего пользователя. Незнакомый адрес отвечает 404 — это и есть признак протухшей подписки.",
+        "x-akeda-module": "calendar",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "calendar:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarWebPushUnsubscribe"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Исход проверки устройства",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarWebPushTestResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
     "/api/v1/calendar/busy": {
       "get": {
         "tags": [
@@ -68148,6 +68217,34 @@
           }
         }
       },
+      "CalendarWebPushTestResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "delivered",
+          "revoked",
+          "retryable",
+          "code"
+        ],
+        "properties": {
+          "delivered": {
+            "type": "boolean",
+            "description": "Служба доставки браузера приняла пробное уведомление"
+          },
+          "revoked": {
+            "type": "boolean",
+            "description": "Endpoint протух и снят с учёта; браузеру нужно переподписаться"
+          },
+          "retryable": {
+            "type": "boolean",
+            "description": "Временный отказ службы доставки; повтор осмыслен"
+          },
+          "code": {
+            "type": "string",
+            "description": "Машинный код исхода: http_429, network_error, device_disabled и подобные"
+          }
+        }
+      },
       "CalendarBusy": {
         "type": "object",
         "additionalProperties": false,
@@ -79152,7 +79249,8 @@
           "name",
           "auth_kind",
           "supports_webhook",
-          "credential_hint"
+          "credential_hint",
+          "requires_egress_allowlist"
         ],
         "properties": {
           "key": {
@@ -79172,6 +79270,17 @@
           },
           "redirect_path": {
             "type": "string"
+          },
+          "requires_egress_allowlist": {
+            "type": "boolean",
+            "description": "Банк принимает запросы только с адресов, объявленных в его кабинете."
+          },
+          "egress_ips": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Исходящие адреса контура для белого списка банка. Пусто — адрес контура не настроен."
           }
         }
       },
@@ -97068,6 +97177,16 @@
             "format": "date-time",
             "readOnly": true,
             "description": "Момент последней успешной загрузки этого подключения"
+          },
+          "article_size_separator": {
+            "type": "string",
+            "enum": [
+              "",
+              "-",
+              "/",
+              "_"
+            ],
+            "description": "Разделитель базы и размера в артикуле продавца, объявленный владельцем магазина. Пустая строка — правило не объявлено, и размер берётся только из полей площадки. Применяется на Ozon, где каждый размер продаётся своим артикулом"
           }
         }
       },
@@ -97119,6 +97238,16 @@
             "type": "boolean",
             "default": false,
             "description": "Используется для Wildberries"
+          },
+          "article_size_separator": {
+            "type": "string",
+            "enum": [
+              "",
+              "-",
+              "/",
+              "_"
+            ],
+            "description": "Правило именования артикула Ozon: «БАЗА<разделитель>РАЗМЕР». Список закрыт; пустая строка означает «правила нет». Официальные поля размера площадки всегда старше этого правила"
           },
           "ozon_client_id": {
             "type": "string",
@@ -97187,6 +97316,16 @@
           "has_jam": {
             "type": "boolean",
             "description": "Используется для Wildberries"
+          },
+          "article_size_separator": {
+            "type": "string",
+            "enum": [
+              "",
+              "-",
+              "/",
+              "_"
+            ],
+            "description": "Правило именования артикула Ozon: «БАЗА<разделитель>РАЗМЕР». Список закрыт; пустая строка означает «правила нет». Официальные поля размера площадки всегда старше этого правила. Отсутствие поля оставляет сохранённое правило, пустая строка его снимает"
           },
           "ozon_client_id": {
             "type": "string",

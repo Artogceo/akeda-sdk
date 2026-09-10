@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d7888ec19d13d375d71d566c85f13de77a68477d662039484836e8ca30606e2b).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b82522d1482c3d3933797ed1a4ff851319e7a0d4744c342d1bf52a78a518562e).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -320,6 +320,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CalendarConnectorSyncInput;
     response: models.CalendarSyncResult;
+  };
+  /** POST /api/v1/calendar/push/test — Отправить пробное уведомление в указанное устройство */
+  calendarTestPush: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.CalendarWebPushUnsubscribe;
+    response: models.CalendarWebPushTestResult;
   };
   /** DELETE /api/v1/calendar/push/subscriptions — Отозвать Web Push-подписку устройства */
   calendarUnsubscribePush: {
@@ -6241,6 +6248,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   calendarStartOffice365OAuth: { method: "GET", path: "/api/v1/calendar/connectors/office365/oauth/start", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarSubscribePush: { method: "POST", path: "/api/v1/calendar/push/subscriptions", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarSyncConnector: { method: "POST", path: "/api/v1/calendar/connectors/{id}/sync", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  calendarTestPush: { method: "POST", path: "/api/v1/calendar/push/test", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarUnsubscribePush: { method: "DELETE", path: "/api/v1/calendar/push/subscriptions", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarUpdateAvailability: { method: "PATCH", path: "/api/v1/calendar/availability/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarUpdateBookingLink: { method: "PATCH", path: "/api/v1/calendar/booking-links/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d7888ec19d13d375d71d566c85f13de77a68477d662039484836e8ca30606e2b).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b82522d1482c3d3933797ed1a4ff851319e7a0d4744c342d1bf52a78a518562e).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1708,6 +1708,17 @@ type CalendarWebPushSubscription struct {
 	P256dh   string  `json:"p256dh"`
 	Auth     string  `json:"auth"`
 	Device   *string `json:"device,omitempty"`
+}
+
+type CalendarWebPushTestResult struct {
+	// Delivered — Служба доставки браузера приняла пробное уведомление
+	Delivered bool `json:"delivered"`
+	// Revoked — Endpoint протух и снят с учёта; браузеру нужно переподписаться
+	Revoked bool `json:"revoked"`
+	// Retryable — Временный отказ службы доставки; повтор осмыслен
+	Retryable bool `json:"retryable"`
+	// Code — Машинный код исхода: http_429, network_error, device_disabled и подобные
+	Code string `json:"code"`
 }
 
 type CalendarWebPushUnsubscribe struct {
@@ -6000,6 +6011,10 @@ type FinanceConnectorProvider struct {
 	SupportsWebhook bool                        `json:"supports_webhook"`
 	CredentialHint  string                      `json:"credential_hint"`
 	RedirectPath    *string                     `json:"redirect_path,omitempty"`
+	// RequiresEgressAllowlist — Банк принимает запросы только с адресов, объявленных в его кабинете.
+	RequiresEgressAllowlist bool `json:"requires_egress_allowlist"`
+	// EgressIps — Исходящие адреса контура для белого списка банка. Пусто — адрес контура не настроен.
+	EgressIps []string `json:"egress_ips,omitempty"`
 }
 
 type FinanceConnectorProviderKey = string
@@ -8825,6 +8840,8 @@ type MarketplaceStore struct {
 	ConnectionErrorCode *string `json:"connection_error_code,omitempty"`
 	// LastEtlAt — Момент последней успешной загрузки этого подключения
 	LastEtlAt *string `json:"last_etl_at,omitempty"`
+	// ArticleSizeSeparator — Разделитель базы и размера в артикуле продавца, объявленный владельцем магазина. Пустая строка — правило не объявлено, и размер берётся только из полей площадки. Применяется на Ozon, где каждый размер продаётся своим артикулом
+	ArticleSizeSeparator *string `json:"article_size_separator,omitempty"`
 }
 
 // MarketplaceStoreInput — Тело создания управляемого подключения. Платформу задаёт маршрут, а external_id назначает MPTrack. Для Ozon нужны ozon_client_id и ozon_api_key, для Wildberries — wb_token, для Яндекс Маркета — ym_business_id и ym_api_key.
@@ -8835,11 +8852,13 @@ type MarketplaceStoreInput struct {
 	IsActive   *bool   `json:"is_active,omitempty"`
 	HasFbs     *bool   `json:"has_fbs,omitempty"`
 	// HasJam — Используется для Wildberries
-	HasJam             *bool   `json:"has_jam,omitempty"`
-	OzonClientID       *string `json:"ozon_client_id,omitempty"`
-	OzonAPIKey         *string `json:"ozon_api_key,omitempty"`
-	OzonPfClientID     *string `json:"ozon_pf_client_id,omitempty"`
-	OzonPfClientSecret *string `json:"ozon_pf_client_secret,omitempty"`
+	HasJam *bool `json:"has_jam,omitempty"`
+	// ArticleSizeSeparator — Правило именования артикула Ozon: «БАЗА<разделитель>РАЗМЕР». Список закрыт; пустая строка означает «правила нет». Официальные поля размера площадки всегда старше этого правила
+	ArticleSizeSeparator *string `json:"article_size_separator,omitempty"`
+	OzonClientID         *string `json:"ozon_client_id,omitempty"`
+	OzonAPIKey           *string `json:"ozon_api_key,omitempty"`
+	OzonPfClientID       *string `json:"ozon_pf_client_id,omitempty"`
+	OzonPfClientSecret   *string `json:"ozon_pf_client_secret,omitempty"`
 	// WbToken — Рекомендуется персональный токен класса personal; значение не возвращается
 	WbToken *string `json:"wb_token,omitempty"`
 	// YmBusinessID — Business ID вводится строкой; ERP проверяет числовой идентификатор и преобразует его для MPTrack
@@ -8862,11 +8881,13 @@ type MarketplaceStorePatch struct {
 	IsActive   *bool   `json:"is_active,omitempty"`
 	HasFbs     *bool   `json:"has_fbs,omitempty"`
 	// HasJam — Используется для Wildberries
-	HasJam             *bool   `json:"has_jam,omitempty"`
-	OzonClientID       *string `json:"ozon_client_id,omitempty"`
-	OzonAPIKey         *string `json:"ozon_api_key,omitempty"`
-	OzonPfClientID     *string `json:"ozon_pf_client_id,omitempty"`
-	OzonPfClientSecret *string `json:"ozon_pf_client_secret,omitempty"`
+	HasJam *bool `json:"has_jam,omitempty"`
+	// ArticleSizeSeparator — Правило именования артикула Ozon: «БАЗА<разделитель>РАЗМЕР». Список закрыт; пустая строка означает «правила нет». Официальные поля размера площадки всегда старше этого правила. Отсутствие поля оставляет сохранённое правило, пустая строка его снимает
+	ArticleSizeSeparator *string `json:"article_size_separator,omitempty"`
+	OzonClientID         *string `json:"ozon_client_id,omitempty"`
+	OzonAPIKey           *string `json:"ozon_api_key,omitempty"`
+	OzonPfClientID       *string `json:"ozon_pf_client_id,omitempty"`
+	OzonPfClientSecret   *string `json:"ozon_pf_client_secret,omitempty"`
 	// WbToken — Пустая строка сохраняет прежний токен
 	WbToken *string `json:"wb_token,omitempty"`
 	// YmBusinessID — Business ID вводится строкой; ERP проверяет числовой идентификатор и преобразует его для MPTrack. Пустая строка сохраняет прежнее значение

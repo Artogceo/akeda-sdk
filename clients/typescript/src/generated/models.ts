@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d7888ec19d13d375d71d566c85f13de77a68477d662039484836e8ca30606e2b).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b82522d1482c3d3933797ed1a4ff851319e7a0d4744c342d1bf52a78a518562e).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1710,6 +1710,17 @@ export interface CalendarWebPushSubscription {
   "p256dh": string;
   "auth": string;
   "device"?: "desktop" | "mobile";
+}
+
+export interface CalendarWebPushTestResult {
+  /** Служба доставки браузера приняла пробное уведомление */
+  "delivered": boolean;
+  /** Endpoint протух и снят с учёта; браузеру нужно переподписаться */
+  "revoked": boolean;
+  /** Временный отказ службы доставки; повтор осмыслен */
+  "retryable": boolean;
+  /** Машинный код исхода: http_429, network_error, device_disabled и подобные */
+  "code": string;
 }
 
 export interface CalendarWebPushUnsubscribe {
@@ -6013,6 +6024,10 @@ export interface FinanceConnectorProvider {
   "supports_webhook": boolean;
   "credential_hint": string;
   "redirect_path"?: string;
+  /** Банк принимает запросы только с адресов, объявленных в его кабинете. */
+  "requires_egress_allowlist": boolean;
+  /** Исходящие адреса контура для белого списка банка. Пусто — адрес контура не настроен. */
+  "egress_ips"?: Array<string>;
 }
 
 export type FinanceConnectorProviderKey = "modulbank" | "tbank" | "tochka" | "alfa" | "sber";
@@ -8851,6 +8866,8 @@ export interface MarketplaceStore {
   "connection_error_code"?: string;
   /** Момент последней успешной загрузки этого подключения */
   "last_etl_at"?: string;
+  /** Разделитель базы и размера в артикуле продавца, объявленный владельцем магазина. Пустая строка — правило не объявлено, и размер берётся только из полей площадки. Применяется на Ozon, где каждый размер продаётся своим артикулом */
+  "article_size_separator"?: "" | "-" | "/" | "_";
 }
 
 /** Тело создания управляемого подключения. Платформу задаёт маршрут, а external_id назначает MPTrack. Для Ozon нужны ozon_client_id и ozon_api_key, для Wildberries — wb_token, для Яндекс Маркета — ym_business_id и ym_api_key. */
@@ -8862,6 +8879,8 @@ export interface MarketplaceStoreInput {
   "has_fbs"?: boolean;
   /** Используется для Wildberries */
   "has_jam"?: boolean;
+  /** Правило именования артикула Ozon: «БАЗА<разделитель>РАЗМЕР». Список закрыт; пустая строка означает «правила нет». Официальные поля размера площадки всегда старше этого правила */
+  "article_size_separator"?: "" | "-" | "/" | "_";
   "ozon_client_id"?: string;
   "ozon_api_key"?: string;
   "ozon_pf_client_id"?: string;
@@ -8889,6 +8908,8 @@ export interface MarketplaceStorePatch {
   "has_fbs"?: boolean;
   /** Используется для Wildberries */
   "has_jam"?: boolean;
+  /** Правило именования артикула Ozon: «БАЗА<разделитель>РАЗМЕР». Список закрыт; пустая строка означает «правила нет». Официальные поля размера площадки всегда старше этого правила. Отсутствие поля оставляет сохранённое правило, пустая строка его снимает */
+  "article_size_separator"?: "" | "-" | "/" | "_";
   "ozon_client_id"?: string;
   "ozon_api_key"?: string;
   "ozon_pf_client_id"?: string;

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d7888ec19d13d375d71d566c85f13de77a68477d662039484836e8ca30606e2b).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b82522d1482c3d3933797ed1a4ff851319e7a0d4744c342d1bf52a78a518562e).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -72,6 +72,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'calendarStartOffice365OAuth': OperationSpec('GET', '/api/v1/calendar/connectors/office365/oauth/start', 'calendar', 'preview', 'calendar:read', False, True, (), 'none', None, None),
     'calendarSubscribePush': OperationSpec('POST', '/api/v1/calendar/push/subscriptions', 'calendar', 'preview', 'calendar:write', False, True, (), 'none', None, None),
     'calendarSyncConnector': OperationSpec('POST', '/api/v1/calendar/connectors/{id}/sync', 'calendar', 'preview', 'calendar:write', False, True, ('id',), 'none', None, None),
+    'calendarTestPush': OperationSpec('POST', '/api/v1/calendar/push/test', 'calendar', 'preview', 'calendar:write', False, True, (), 'none', None, None),
     'calendarUnsubscribePush': OperationSpec('DELETE', '/api/v1/calendar/push/subscriptions', 'calendar', 'preview', 'calendar:write', False, True, (), 'none', None, None),
     'calendarUpdateAvailability': OperationSpec('PATCH', '/api/v1/calendar/availability/{id}', 'calendar', 'preview', 'calendar:write', False, True, ('id',), 'none', None, None),
     'calendarUpdateBookingLink': OperationSpec('PATCH', '/api/v1/calendar/booking-links/{id}', 'calendar', 'preview', 'calendar:write', False, True, ('id',), 'none', None, None),

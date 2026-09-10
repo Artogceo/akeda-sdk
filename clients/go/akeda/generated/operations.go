@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d7888ec19d13d375d71d566c85f13de77a68477d662039484836e8ca30606e2b).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b82522d1482c3d3933797ed1a4ff851319e7a0d4744c342d1bf52a78a518562e).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -71,6 +71,7 @@ var Operations = map[string]Operation{
 	"calendarStartOffice365OAuth":                {ID: "calendarStartOffice365OAuth", Method: "GET", Path: "/api/v1/calendar/connectors/office365/oauth/start", Module: "calendar", Stage: "preview", Permission: "calendar:read", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"calendarSubscribePush":                      {ID: "calendarSubscribePush", Method: "POST", Path: "/api/v1/calendar/push/subscriptions", Module: "calendar", Stage: "preview", Permission: "calendar:write", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"calendarSyncConnector":                      {ID: "calendarSyncConnector", Method: "POST", Path: "/api/v1/calendar/connectors/{id}/sync", Module: "calendar", Stage: "preview", Permission: "calendar:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
+	"calendarTestPush":                           {ID: "calendarTestPush", Method: "POST", Path: "/api/v1/calendar/push/test", Module: "calendar", Stage: "preview", Permission: "calendar:write", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"calendarUnsubscribePush":                    {ID: "calendarUnsubscribePush", Method: "DELETE", Path: "/api/v1/calendar/push/subscriptions", Module: "calendar", Stage: "preview", Permission: "calendar:write", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"calendarUpdateAvailability":                 {ID: "calendarUpdateAvailability", Method: "PATCH", Path: "/api/v1/calendar/availability/{id}", Module: "calendar", Stage: "preview", Permission: "calendar:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"calendarUpdateBookingLink":                  {ID: "calendarUpdateBookingLink", Method: "PATCH", Path: "/api/v1/calendar/booking-links/{id}", Module: "calendar", Stage: "preview", Permission: "calendar:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
