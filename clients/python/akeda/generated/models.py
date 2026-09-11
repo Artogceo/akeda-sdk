@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b82522d1482c3d3933797ed1a4ff851319e7a0d4744c342d1bf52a78a518562e).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18b352e08e80e5306baca522259f8cb5b55e2ab487ee3288c8f4ba89303b0197).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1178,6 +1178,8 @@ __all__ = [
     "StockReportReservationPage",
     "StockReportReservationSummary",
     "StockReportRow",
+    "StockReportTotals",
+    "StockReportWarehouseTotal",
     "StockScanResult",
     "StockSettings",
     "StockSettingsPatch",
@@ -12825,6 +12827,20 @@ class StockReportDrilldown(TypedDict):
 
 class StockReportDrilldownEntry(TypedDict):
     id: "UUID"
+    #: Какой регистр двинул документ: остаток, резерв покупателя или ожидаемый приход
+    register_key: Literal['stock', 'stock_reserved', 'stock_expected']
+    #: Сколько записей ЭТОГО регистра отвечает отбору. Окно выдачи своё у каждого регистра, поэтому limit режет каждый по отдельности, а это число говорит, сколько осталось за краем.
+    register_count: int
+    #: Склад или зона движения
+    warehouse_id: Optional["UUID"]
+    warehouse_name: str
+    #: Склад зоны; пусто, если движение на самом складе
+    warehouse_parent_name: str
+    #: Юрлицо движения; пусто у неофициального контура (ERP-704)
+    company_id: Optional["UUID"]
+    company_name: str
+    #: Учётная единица движения: у неофициального остатка юрлица нет, и разрез называется бизнесом (ERP-704)
+    business_name: str
     registrar_id: "UUID"
     registrar_number: str
     registrar_type_key: str
@@ -12862,6 +12878,9 @@ class StockReportPage(TypedDict):
     limit: int
     offset: int
     results: List["StockReportRow"]
+    totals: "StockReportTotals"
+    #: Суммы по складам всей выборки, без постраничного окна
+    warehouse_totals: List["StockReportWarehouseTotal"]
     formula: Literal['available = on_hand - reserved; forecast = available + expected']
 
 class StockReportPurchasingPage(TypedDict):
@@ -12947,13 +12966,16 @@ class StockReportReservationSummary(TypedDict):
     lines: List["StockReportReservationLine"]
 
 class StockReportRow(TypedDict):
+    #: Измерения, которыми строка опознаётся. Режим сворачивает часть из них, и тогда пустое поле значит «много значений», а не «значения нет»: в «по товарам» юрлица у строки нет потому, что она накрывает их все, а в «по складам» — потому, что остаток неофициальный. По значению эти случаи неразличимы, поэтому разбор строки собирается по этому полю, а не по её пустотам.
+    scope: List[Literal['business', 'company', 'warehouse']]
     #: Бизнес остатка — учётная единица строки
     business_id: Dict[str, Any]
     business_name: str
     #: Юрлицо остатка — разрез официального контура. У неофициального товара его нет, и тогда поле пустое (ERP-704).
     company_id: Optional["UUID"]
     company_name: str
-    warehouse_id: "UUID"
+    #: Склад строки. Пусто в режимах, где он свёрнут: «по товарам» и «по юрлицам» его в разрезе нет вовсе, и нулевой идентификатор соврал бы — это значение конкретного склада.
+    warehouse_id: Optional["UUID"]
     warehouse_code: str
     warehouse_name: str
     product_id: "UUID"
@@ -12979,6 +13001,37 @@ class StockReportRow(TypedDict):
     #: Decimal string
     unit_cost: str
     entry_count: int
+
+class StockReportTotals(TypedDict):
+    """Итог по всей выборке отчёта, а не по странице. Количества, включая минимум, имеют смысл только при одной единице измерения на всю выборку — её называет поле unit. Себестоимости единицы здесь нет вовсе: сумма средних цен не значит ничего ни при какой однородности."""
+
+    #: Decimal string
+    on_hand: str
+    #: Decimal string
+    reserved: str
+    #: Decimal string
+    available: str
+    #: Decimal string
+    expected: str
+    #: Decimal string
+    forecast: str
+    #: Decimal string
+    minimum: str
+    #: Decimal string
+    suggested: str
+    #: Decimal string. Деньги аддитивны всегда и от единицы измерения не зависят
+    amount: str
+    #: Единица измерения итога, если она одна на всю выборку. Пусто, когда единицы разные: складывать штуки с килограммами нельзя, и потребитель обязан показать прочерк вместо суммы.
+    unit: str
+
+class StockReportWarehouseTotal(TypedDict):
+    """Сумма по складу под тем же отбором, что и страница отчёта. Дерево складов показывает эти числа рядом с именами узлов; считать их отдельным запросом нельзя — он не знал бы про отборы экрана и расходился бы с таблицей."""
+
+    warehouse_id: "UUID"
+    #: Decimal string
+    on_hand: str
+    #: Decimal string
+    amount: str
 
 class StockScanResult(TypedDict):
     identifier_id: "UUID"

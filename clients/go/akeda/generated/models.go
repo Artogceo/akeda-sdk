@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b82522d1482c3d3933797ed1a4ff851319e7a0d4744c342d1bf52a78a518562e).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18b352e08e80e5306baca522259f8cb5b55e2ab487ee3288c8f4ba89303b0197).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -11952,7 +11952,21 @@ type StockReportDrilldown struct {
 }
 
 type StockReportDrilldownEntry struct {
-	ID                UUID                       `json:"id"`
+	ID UUID `json:"id"`
+	// RegisterKey — Какой регистр двинул документ: остаток, резерв покупателя или ожидаемый приход
+	RegisterKey string `json:"register_key"`
+	// RegisterCount — Сколько записей ЭТОГО регистра отвечает отбору. Окно выдачи своё у каждого регистра, поэтому limit режет каждый по отдельности, а это число говорит, сколько осталось за краем.
+	RegisterCount int64 `json:"register_count"`
+	// WarehouseID — Склад или зона движения
+	WarehouseID   *UUID  `json:"warehouse_id"`
+	WarehouseName string `json:"warehouse_name"`
+	// WarehouseParentName — Склад зоны; пусто, если движение на самом складе
+	WarehouseParentName string `json:"warehouse_parent_name"`
+	// CompanyID — Юрлицо движения; пусто у неофициального контура (ERP-704)
+	CompanyID   *UUID  `json:"company_id"`
+	CompanyName string `json:"company_name"`
+	// BusinessName — Учётная единица движения: у неофициального остатка юрлица нет, и разрез называется бизнесом (ERP-704)
+	BusinessName      string                     `json:"business_name"`
 	RegistrarID       UUID                       `json:"registrar_id"`
 	RegistrarNumber   string                     `json:"registrar_number"`
 	RegistrarTypeKey  string                     `json:"registrar_type_key"`
@@ -11989,11 +12003,14 @@ type StockReportOverdueReservation struct {
 }
 
 type StockReportPage struct {
-	Count   int64            `json:"count"`
-	Limit   int64            `json:"limit"`
-	Offset  int64            `json:"offset"`
-	Results []StockReportRow `json:"results"`
-	Formula string           `json:"formula"`
+	Count   int64             `json:"count"`
+	Limit   int64             `json:"limit"`
+	Offset  int64             `json:"offset"`
+	Results []StockReportRow  `json:"results"`
+	Totals  StockReportTotals `json:"totals"`
+	// WarehouseTotals — Суммы по складам всей выборки, без постраничного окна
+	WarehouseTotals []StockReportWarehouseTotal `json:"warehouse_totals"`
+	Formula         string                      `json:"formula"`
 }
 
 type StockReportPurchasingPage struct {
@@ -12085,13 +12102,16 @@ type StockReportReservationSummary struct {
 }
 
 type StockReportRow struct {
+	// Scope — Измерения, которыми строка опознаётся. Режим сворачивает часть из них, и тогда пустое поле значит «много значений», а не «значения нет»: в «по товарам» юрлица у строки нет потому, что она накрывает их все, а в «по складам» — потому, что остаток неофициальный. По значению эти случаи неразличимы, поэтому разбор строки собирается по этому полю, а не по её пустотам.
+	Scope []string `json:"scope"`
 	// BusinessID — Бизнес остатка — учётная единица строки
 	BusinessID   map[string]json.RawMessage `json:"business_id"`
 	BusinessName string                     `json:"business_name"`
 	// CompanyID — Юрлицо остатка — разрез официального контура. У неофициального товара его нет, и тогда поле пустое (ERP-704).
-	CompanyID     *UUID  `json:"company_id"`
-	CompanyName   string `json:"company_name"`
-	WarehouseID   UUID   `json:"warehouse_id"`
+	CompanyID   *UUID  `json:"company_id"`
+	CompanyName string `json:"company_name"`
+	// WarehouseID — Склад строки. Пусто в режимах, где он свёрнут: «по товарам» и «по юрлицам» его в разрезе нет вовсе, и нулевой идентификатор соврал бы — это значение конкретного склада.
+	WarehouseID   *UUID  `json:"warehouse_id"`
 	WarehouseCode string `json:"warehouse_code"`
 	WarehouseName string `json:"warehouse_name"`
 	ProductID     UUID   `json:"product_id"`
@@ -12117,6 +12137,37 @@ type StockReportRow struct {
 	// UnitCost — Decimal string
 	UnitCost   string `json:"unit_cost"`
 	EntryCount int64  `json:"entry_count"`
+}
+
+// StockReportTotals — Итог по всей выборке отчёта, а не по странице. Количества, включая минимум, имеют смысл только при одной единице измерения на всю выборку — её называет поле unit. Себестоимости единицы здесь нет вовсе: сумма средних цен не значит ничего ни при какой однородности.
+type StockReportTotals struct {
+	// OnHand — Decimal string
+	OnHand string `json:"on_hand"`
+	// Reserved — Decimal string
+	Reserved string `json:"reserved"`
+	// Available — Decimal string
+	Available string `json:"available"`
+	// Expected — Decimal string
+	Expected string `json:"expected"`
+	// Forecast — Decimal string
+	Forecast string `json:"forecast"`
+	// Minimum — Decimal string
+	Minimum string `json:"minimum"`
+	// Suggested — Decimal string
+	Suggested string `json:"suggested"`
+	// Amount — Decimal string. Деньги аддитивны всегда и от единицы измерения не зависят
+	Amount string `json:"amount"`
+	// Unit — Единица измерения итога, если она одна на всю выборку. Пусто, когда единицы разные: складывать штуки с килограммами нельзя, и потребитель обязан показать прочерк вместо суммы.
+	Unit string `json:"unit"`
+}
+
+// StockReportWarehouseTotal — Сумма по складу под тем же отбором, что и страница отчёта. Дерево складов показывает эти числа рядом с именами узлов; считать их отдельным запросом нельзя — он не знал бы про отборы экрана и расходился бы с таблицей.
+type StockReportWarehouseTotal struct {
+	WarehouseID UUID `json:"warehouse_id"`
+	// OnHand — Decimal string
+	OnHand string `json:"on_hand"`
+	// Amount — Decimal string
+	Amount string `json:"amount"`
 }
 
 type StockScanResult struct {

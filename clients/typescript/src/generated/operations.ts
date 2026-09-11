@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b82522d1482c3d3933797ed1a4ff851319e7a0d4744c342d1bf52a78a518562e).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18b352e08e80e5306baca522259f8cb5b55e2ab487ee3288c8f4ba89303b0197).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -4108,12 +4108,33 @@ export interface OperationTypes {
     body: never;
     response: models.OK;
   };
+  /** DELETE /api/v1/marketplace/ozon/stores/{id} — Удалить магазин Ozon */
+  marketplaceDeleteOzonStore: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** DELETE /api/v1/marketplace/wb/product-groups/{id} — Удалить срез товаров Wildberries */
   marketplaceDeleteWbProductGroup: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.OK;
+  };
+  /** DELETE /api/v1/marketplace/wb/stores/{id} — Удалить магазин Wildberries */
+  marketplaceDeleteWbStore: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** DELETE /api/v1/marketplace/yandex/stores/{id} — Удалить магазин Яндекс Маркета */
+  marketplaceDeleteYandexStore: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
   };
   /** POST /api/v1/marketplace/econ/quote — Рассчитать юнит-экономику по строкам прайса */
   marketplaceEconQuote: {
@@ -5021,14 +5042,14 @@ export interface OperationTypes {
   /** GET /api/v1/stock/report/stocks/{productId} — Раскрыть остаток номенклатуры до движений регистра */
   stockGetStockDrilldown: {
     params: { "productId": models.UUID };
-    query: { "as_of"?: string; "below_minimum"?: boolean; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "limit"?: number; "mode"?: "products" | "warehouses" | "companies"; "offset"?: number; "sort"?: "name" | "on_hand" | "reserved" | "available" | "expected" | "forecast" | "minimum" | "suggested" | "unit_cost" | "amount"; "warehouse_id"?: models.UUID; "with_reserve"?: boolean };
+    query: { "as_of"?: string; "below_minimum"?: boolean; "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "limit"?: number; "mode"?: "products" | "warehouses" | "companies"; "offset"?: number; "rollup_zones"?: boolean; "sort"?: "name" | "on_hand" | "reserved" | "available" | "expected" | "forecast" | "minimum" | "suggested" | "unit_cost" | "amount"; "warehouse_id"?: models.UUID; "warehouse_ids"?: string; "with_reserve"?: boolean; "without_company"?: boolean };
     body: never;
     response: models.StockReportDrilldown;
   };
   /** GET /api/v1/stock/report/stocks — Получить отчёт по остаткам */
   stockGetStocksReport: {
     params: Record<string, never>;
-    query: { "as_of"?: string; "below_minimum"?: boolean; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "limit"?: number; "mode"?: "products" | "warehouses" | "companies"; "offset"?: number; "product_id"?: models.UUID; "q"?: string; "sort"?: "name" | "on_hand" | "reserved" | "available" | "expected" | "forecast" | "minimum" | "suggested" | "unit_cost" | "amount"; "warehouse_id"?: models.UUID; "with_reserve"?: boolean };
+    query: { "as_of"?: string; "below_minimum"?: boolean; "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "limit"?: number; "mode"?: "products" | "warehouses" | "companies"; "offset"?: number; "product_id"?: models.UUID; "q"?: string; "rollup_zones"?: boolean; "sort"?: "name" | "on_hand" | "reserved" | "available" | "expected" | "forecast" | "minimum" | "suggested" | "unit_cost" | "amount"; "warehouse_id"?: models.UUID; "warehouse_ids"?: string; "with_reserve"?: boolean; "without_company"?: boolean };
     body: never;
     response: models.StockReportPage;
   };
@@ -6789,7 +6810,10 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   marketplaceCreateWbStore: { method: "POST", path: "/api/v1/marketplace/wb/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceCreateYandexStore: { method: "POST", path: "/api/v1/marketplace/yandex/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceDeleteOzonProductGroup: { method: "DELETE", path: "/api/v1/marketplace/ozon/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceDeleteOzonStore: { method: "DELETE", path: "/api/v1/marketplace/ozon/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceDeleteWbProductGroup: { method: "DELETE", path: "/api/v1/marketplace/wb/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceDeleteWbStore: { method: "DELETE", path: "/api/v1/marketplace/wb/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceDeleteYandexStore: { method: "DELETE", path: "/api/v1/marketplace/yandex/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceEconQuote: { method: "POST", path: "/api/v1/marketplace/econ/quote", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceListWeeklyFinanceRuns: { method: "GET", path: "/api/v1/marketplace/{platform}/stores/{id}/finance/weeks", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonDecomposition: { method: "GET", path: "/api/v1/marketplace/ozon/decomposition", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

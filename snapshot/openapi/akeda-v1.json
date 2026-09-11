@@ -44135,6 +44135,14 @@
             }
           },
           {
+            "name": "warehouse_ids",
+            "in": "query",
+            "description": "Несколько складов через запятую: узел дерева, развёрнутый в поддерево вместе со своими зонами. Каждый склад дополнительно отбирается вместе с уровнем ниже",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "product_id",
             "in": "query",
             "schema": {
@@ -44161,6 +44169,7 @@
           {
             "name": "mode",
             "in": "query",
+            "description": "Разрез строки. Умолчание — полный разрез: вызов без параметра обязан отдавать склад и юрлицо, свёртка запрашивается явно",
             "schema": {
               "type": "string",
               "enum": [
@@ -44168,7 +44177,33 @@
                 "warehouses",
                 "companies"
               ],
-              "default": "products"
+              "default": "warehouses"
+            }
+          },
+          {
+            "name": "business_id",
+            "in": "query",
+            "description": "Бизнес остатка — учётная единица строки. В режиме «по товарам» это единственное измерение строки, и без отбора по нему разбор накрывает все бизнесы сразу, смешивая официальный контур с неофициальным (ERP-704)",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "without_company",
+            "in": "query",
+            "description": "Только остаток без юрлица. Пустой company_id означает «любое юрлицо», поэтому у разреза без юрлица собственный признак: остаток неофициального контура принадлежит бизнесу (ERP-704)",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "rollup_zones",
+            "in": "query",
+            "description": "Свернуть зоны в их склад: остаток зоны складывается в родительский склад ещё в группировке. Прятать строки зон на клиенте нельзя — товар, пришедший сразу в зону, строки своего склада не имеет вовсе",
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           },
           {
@@ -44317,6 +44352,14 @@
             }
           },
           {
+            "name": "warehouse_ids",
+            "in": "query",
+            "description": "Несколько складов через запятую — тот же набор, которым отобран отчёт. В свёрнутых режимах строка своего склада не несёт, и без него разбор накрыл бы склады, которых в её числе нет",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "as_of",
             "in": "query",
             "schema": {
@@ -44327,6 +44370,7 @@
           {
             "name": "mode",
             "in": "query",
+            "description": "Разрез строки. Умолчание — полный разрез: вызов без параметра обязан отдавать склад и юрлицо, свёртка запрашивается явно",
             "schema": {
               "type": "string",
               "enum": [
@@ -44334,7 +44378,33 @@
                 "warehouses",
                 "companies"
               ],
-              "default": "products"
+              "default": "warehouses"
+            }
+          },
+          {
+            "name": "business_id",
+            "in": "query",
+            "description": "Бизнес остатка — учётная единица строки. В режиме «по товарам» это единственное измерение строки, и без отбора по нему разбор накрывает все бизнесы сразу, смешивая официальный контур с неофициальным (ERP-704)",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "without_company",
+            "in": "query",
+            "description": "Только остаток без юрлица. Пустой company_id означает «любое юрлицо», поэтому у разреза без юрлица собственный признак: остаток неофициального контура принадлежит бизнесу (ERP-704)",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "rollup_zones",
+            "in": "query",
+            "description": "Свернуть зоны в их склад: остаток зоны складывается в родительский склад ещё в группировке. Прятать строки зон на клиенте нельзя — товар, пришедший сразу в зону, строки своего склада не имеет вовсе",
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           },
           {
@@ -44388,6 +44458,7 @@
           {
             "name": "limit",
             "in": "query",
+            "description": "Окно движений НА КАЖДЫЙ регистр: резервы и ожидания не оттесняют историю остатка за край",
             "schema": {
               "type": "integer",
               "minimum": 1,
@@ -44407,7 +44478,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Строки отчёта и движения регистра по номенклатуре",
+            "description": "Строки отчёта и движения регистров по номенклатуре",
             "content": {
               "application/json": {
                 "schema": {
@@ -48237,6 +48308,57 @@
             "$ref": "#/components/responses/ServiceUnavailable"
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Marketplace stores"
+        ],
+        "operationId": "marketplaceDeleteOzonStore",
+        "summary": "Удалить магазин Ozon",
+        "description": "Удаляет магазин, за которым нет ни одной проводки, вместе с учётной политикой, ставками себестоимости и составом групп; сборщик прекращает загрузки до удаления строки кабинета. Магазин с проводками не удаляется — ответ 409, такой магазин отправляют в архив выключением. Сборщик недоступен — не удаляется ничего, ответ 503.",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Магазин удалён"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
       }
     },
     "/api/v1/marketplace/wb/stores": {
@@ -48480,6 +48602,57 @@
             "$ref": "#/components/responses/ServiceUnavailable"
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "Marketplace stores"
+        ],
+        "operationId": "marketplaceDeleteWbStore",
+        "summary": "Удалить магазин Wildberries",
+        "description": "Удаляет магазин, за которым нет ни одной проводки, вместе с учётной политикой, ставками себестоимости и составом групп; сборщик прекращает загрузки до удаления строки кабинета. Магазин с проводками не удаляется — ответ 409, такой магазин отправляют в архив выключением. Сборщик недоступен — не удаляется ничего, ответ 503.",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Магазин удалён"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
       }
     },
     "/api/v1/marketplace/yandex/stores": {
@@ -48718,6 +48891,57 @@
           },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Marketplace stores"
+        ],
+        "operationId": "marketplaceDeleteYandexStore",
+        "summary": "Удалить магазин Яндекс Маркета",
+        "description": "Удаляет магазин, за которым нет ни одной проводки, вместе с учётной политикой, ставками себестоимости и составом групп; сборщик прекращает загрузки до удаления строки кабинета. Магазин с проводками не удаляется — ответ 409, такой магазин отправляют в архив выключением. Сборщик недоступен — не удаляется ничего, ответ 503.",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Магазин удалён"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           },
           "503": {
             "$ref": "#/components/responses/ServiceUnavailable"
@@ -90782,6 +91006,7 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
+          "scope",
           "business_id",
           "business_name",
           "company_id",
@@ -90805,6 +91030,18 @@
           "entry_count"
         ],
         "properties": {
+          "scope": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "business",
+                "company",
+                "warehouse"
+              ]
+            },
+            "description": "Измерения, которыми строка опознаётся. Режим сворачивает часть из них, и тогда пустое поле значит «много значений», а не «значения нет»: в «по товарам» юрлица у строки нет потому, что она накрывает их все, а в «по складам» — потому, что остаток неофициальный. По значению эти случаи неразличимы, поэтому разбор строки собирается по этому полю, а не по её пустотам."
+          },
           "business_id": {
             "allOf": [
               {
@@ -90831,7 +91068,15 @@
             "type": "string"
           },
           "warehouse_id": {
-            "$ref": "#/components/schemas/UUID"
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Склад строки. Пусто в режимах, где он свёрнут: «по товарам» и «по юрлицам» его в разрезе нет вовсе, и нулевой идентификатор соврал бы — это значение конкретного склада."
           },
           "warehouse_code": {
             "type": "string"
@@ -90894,6 +91139,83 @@
           }
         }
       },
+      "StockReportTotals": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "on_hand",
+          "reserved",
+          "available",
+          "expected",
+          "forecast",
+          "minimum",
+          "suggested",
+          "amount",
+          "unit"
+        ],
+        "description": "Итог по всей выборке отчёта, а не по странице. Количества, включая минимум, имеют смысл только при одной единице измерения на всю выборку — её называет поле unit. Себестоимости единицы здесь нет вовсе: сумма средних цен не значит ничего ни при какой однородности.",
+        "properties": {
+          "on_hand": {
+            "type": "string",
+            "description": "Decimal string"
+          },
+          "reserved": {
+            "type": "string",
+            "description": "Decimal string"
+          },
+          "available": {
+            "type": "string",
+            "description": "Decimal string"
+          },
+          "expected": {
+            "type": "string",
+            "description": "Decimal string"
+          },
+          "forecast": {
+            "type": "string",
+            "description": "Decimal string"
+          },
+          "minimum": {
+            "type": "string",
+            "description": "Decimal string"
+          },
+          "suggested": {
+            "type": "string",
+            "description": "Decimal string"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Decimal string. Деньги аддитивны всегда и от единицы измерения не зависят"
+          },
+          "unit": {
+            "type": "string",
+            "description": "Единица измерения итога, если она одна на всю выборку. Пусто, когда единицы разные: складывать штуки с килограммами нельзя, и потребитель обязан показать прочерк вместо суммы."
+          }
+        }
+      },
+      "StockReportWarehouseTotal": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "warehouse_id",
+          "on_hand",
+          "amount"
+        ],
+        "description": "Сумма по складу под тем же отбором, что и страница отчёта. Дерево складов показывает эти числа рядом с именами узлов; считать их отдельным запросом нельзя — он не знал бы про отборы экрана и расходился бы с таблицей.",
+        "properties": {
+          "warehouse_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "on_hand": {
+            "type": "string",
+            "description": "Decimal string"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Decimal string"
+          }
+        }
+      },
       "StockReportPage": {
         "type": "object",
         "additionalProperties": false,
@@ -90902,6 +91224,8 @@
           "limit",
           "offset",
           "results",
+          "totals",
+          "warehouse_totals",
           "formula"
         ],
         "properties": {
@@ -90923,6 +91247,16 @@
               "$ref": "#/components/schemas/StockReportRow"
             }
           },
+          "totals": {
+            "$ref": "#/components/schemas/StockReportTotals"
+          },
+          "warehouse_totals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockReportWarehouseTotal"
+            },
+            "description": "Суммы по складам всей выборки, без постраничного окна"
+          },
           "formula": {
             "type": "string",
             "const": "available = on_hand - reserved; forecast = available + expected"
@@ -90934,6 +91268,8 @@
         "additionalProperties": false,
         "required": [
           "id",
+          "register_key",
+          "register_count",
           "registrar_id",
           "registrar_number",
           "registrar_type_key",
@@ -90944,12 +91280,69 @@
           "dims",
           "values",
           "unit",
+          "warehouse_id",
+          "warehouse_name",
+          "warehouse_parent_name",
+          "company_id",
+          "company_name",
+          "business_name",
           "contact_id",
           "contact_name"
         ],
         "properties": {
           "id": {
             "$ref": "#/components/schemas/UUID"
+          },
+          "register_key": {
+            "type": "string",
+            "enum": [
+              "stock",
+              "stock_reserved",
+              "stock_expected"
+            ],
+            "description": "Какой регистр двинул документ: остаток, резерв покупателя или ожидаемый приход"
+          },
+          "register_count": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0,
+            "description": "Сколько записей ЭТОГО регистра отвечает отбору. Окно выдачи своё у каждого регистра, поэтому limit режет каждый по отдельности, а это число говорит, сколько осталось за краем."
+          },
+          "warehouse_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Склад или зона движения"
+          },
+          "warehouse_name": {
+            "type": "string"
+          },
+          "warehouse_parent_name": {
+            "type": "string",
+            "description": "Склад зоны; пусто, если движение на самом складе"
+          },
+          "company_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Юрлицо движения; пусто у неофициального контура (ERP-704)"
+          },
+          "company_name": {
+            "type": "string"
+          },
+          "business_name": {
+            "type": "string",
+            "description": "Учётная единица движения: у неофициального остатка юрлица нет, и разрез называется бизнесом (ERP-704)"
           },
           "registrar_id": {
             "$ref": "#/components/schemas/UUID"

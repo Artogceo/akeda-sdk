@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b82522d1482c3d3933797ed1a4ff851319e7a0d4744c342d1bf52a78a518562e).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18b352e08e80e5306baca522259f8cb5b55e2ab487ee3288c8f4ba89303b0197).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -613,7 +613,10 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'marketplaceCreateWbStore': OperationSpec('POST', '/api/v1/marketplace/wb/stores', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
     'marketplaceCreateYandexStore': OperationSpec('POST', '/api/v1/marketplace/yandex/stores', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
     'marketplaceDeleteOzonProductGroup': OperationSpec('DELETE', '/api/v1/marketplace/ozon/product-groups/{id}', 'marketplace', 'preview', 'marketplace:write', False, True, ('id',), 'none', None, None),
+    'marketplaceDeleteOzonStore': OperationSpec('DELETE', '/api/v1/marketplace/ozon/stores/{id}', 'marketplace', 'preview', 'marketplace:write', False, True, ('id',), 'none', None, None),
     'marketplaceDeleteWbProductGroup': OperationSpec('DELETE', '/api/v1/marketplace/wb/product-groups/{id}', 'marketplace', 'preview', 'marketplace:write', False, True, ('id',), 'none', None, None),
+    'marketplaceDeleteWbStore': OperationSpec('DELETE', '/api/v1/marketplace/wb/stores/{id}', 'marketplace', 'preview', 'marketplace:write', False, True, ('id',), 'none', None, None),
+    'marketplaceDeleteYandexStore': OperationSpec('DELETE', '/api/v1/marketplace/yandex/stores/{id}', 'marketplace', 'preview', 'marketplace:write', False, True, ('id',), 'none', None, None),
     'marketplaceEconQuote': OperationSpec('POST', '/api/v1/marketplace/econ/quote', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
     'marketplaceListWeeklyFinanceRuns': OperationSpec('GET', '/api/v1/marketplace/{platform}/stores/{id}/finance/weeks', 'marketplace', 'preview', 'marketplace:read', False, True, ('id', 'platform',), 'none', None, None),
     'marketplaceOzonDecomposition': OperationSpec('GET', '/api/v1/marketplace/ozon/decomposition', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
