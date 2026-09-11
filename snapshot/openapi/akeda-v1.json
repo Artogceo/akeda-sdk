@@ -40606,6 +40606,76 @@
         }
       }
     },
+    "/api/v1/stock/documents/{id}/close": {
+      "post": {
+        "tags": [
+          "Stock documents"
+        ],
+        "operationId": "stockCloseSupplierOrder",
+        "summary": "Закрыть недовезённый заказ поставщику",
+        "description": "Применяется к проведённому заказу поставщику. Недовезённый хвост снимается\nотдельным служебным регистратором на основании заказа: сам заказ остаётся\nпроведённым, а уже принятые поступления не трогаются. Снятое ожидание\nвозвращается потребностью в заявку-основание — недовезённое снова видно\nзакупщику как незакрытую нужду, и заказать это можно заново.\nРучка идемпотентна: повторный вызов возвращает тот же заказ и второго\nзакрытия не заводит. Нулевой хвост — не ошибка: заказ без недовоза\nвозвращается как есть, документ закрытия при этом не создаётся.\nДействие необратимо. Ответ — исходный заказ.\n",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Заказ поставщику со снятым недовозом",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/v1/stock/documents/{id}/count-sheet": {
       "get": {
         "tags": [
@@ -44532,6 +44602,14 @@
             "$ref": "#/components/parameters/TenantHeader"
           },
           {
+            "name": "business_id",
+            "in": "query",
+            "description": "Бизнес — учётная единица строки; потребность без юрлица отбирается только им",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
             "name": "company_id",
             "in": "query",
             "schema": {
@@ -44554,6 +44632,15 @@
             }
           },
           {
+            "name": "include_empty",
+            "in": "query",
+            "description": "Показать и строки без единого числа и без правила пополнения. По умолчанию они скрыты: товар, однажды проехавший через склад и давно списанный в ноль, иначе висит в витрине вечно.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
             "name": "limit",
             "in": "query",
             "schema": {
@@ -44561,6 +44648,15 @@
               "minimum": 1,
               "maximum": 500,
               "default": 200
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
             }
           }
         ],
@@ -44660,6 +44756,95 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StockReportOverduePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/stock/report/supplier-orders/overdue": {
+      "get": {
+        "tags": [
+          "Stock reports"
+        ],
+        "operationId": "stockGetOverdueSupplierOrders",
+        "summary": "Получить просроченные заказы поставщику",
+        "description": "Проведённые заказы поставщику, у которых delivery_at истёк на as_of или на текущую дату, а хвост ожидания ещё больше нуля. Заказ с проведённым закрытием сюда не попадает: закрытие снимает недовезённый хвост. В строке идёт имя поставщика; юрлицо может отсутствовать, бизнес есть всегда.",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "company_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "as_of",
+            "in": "query",
+            "description": "Дата отсечки просрочки; по умолчанию текущая",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Просроченные заказы поставщику",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockReportOverdueSupplierOrderPage"
                 }
               }
             }
@@ -79543,7 +79728,8 @@
           "auth_kind",
           "supports_webhook",
           "credential_hint",
-          "requires_egress_allowlist"
+          "requires_egress_allowlist",
+          "requires_account_number"
         ],
         "properties": {
           "key": {
@@ -79567,6 +79753,10 @@
           "requires_egress_allowlist": {
             "type": "boolean",
             "description": "Банк принимает запросы только с адресов, объявленных в его кабинете."
+          },
+          "requires_account_number": {
+            "type": "boolean",
+            "description": "Банк не отдаёт списка счетов организации — номер счёта называет человек."
           },
           "egress_ips": {
             "type": "array",
@@ -88875,7 +89065,7 @@
       },
       "StockDocumentTypeKey": {
         "type": "string",
-        "description": "Вид складского документа. `stock_reservation_release` заводит только модуль при снятии остатка резерва.",
+        "description": "Вид складского документа. Служебные виды заводит только модуль: `stock_reservation_release` — при снятии остатка резерва, `stock_supplier_order_close` — при закрытии недовезённого заказа поставщику.",
         "enum": [
           "stock_receipt",
           "stock_shipment",
@@ -88889,12 +89079,13 @@
           "stock_inventory",
           "stock_reservation",
           "stock_landed_cost",
-          "stock_reservation_release"
+          "stock_reservation_release",
+          "stock_supplier_order_close"
         ]
       },
       "StockDocumentCreateTypeKey": {
         "type": "string",
-        "description": "Виды, которые создаются извне. Служебное снятие резерва в список не входит.",
+        "description": "Виды, которые создаются извне. Служебные снятие резерва и закрытие заказа в список не входят.",
         "enum": [
           "stock_receipt",
           "stock_shipment",
@@ -91191,7 +91382,7 @@
           },
           "suggested": {
             "type": "string",
-            "description": "Decimal string"
+            "description": "Decimal string. Только правило пополнения: ноль, пока прогноз не ниже минимума или правила нет, иначе добор до максимума с округлением вверх по кратности. Незаказанная потребность сюда не входит — она есть только в /stock/report/purchasing."
           },
           "amount": {
             "type": "string",
@@ -91546,6 +91737,8 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
+          "business_id",
+          "business_name",
           "company_id",
           "company_name",
           "warehouse_id",
@@ -91573,8 +91766,27 @@
           "sources"
         ],
         "properties": {
+          "business_id": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              }
+            ],
+            "description": "Бизнес строки — учётная единица закупки"
+          },
+          "business_name": {
+            "type": "string"
+          },
           "company_id": {
-            "$ref": "#/components/schemas/UUID"
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Юрлицо строки — разрез официального контура. У неофициальной потребности его нет, и тогда поле пустое; правило пополнения такой строке не подбирается, потому что ключуется юрлицом (ERP-704)."
           },
           "company_name": {
             "type": "string"
@@ -91668,7 +91880,7 @@
           },
           "suggested_qty": {
             "type": "string",
-            "description": "Decimal string"
+            "description": "Decimal string. Максимум из незаказанной потребности и дефицита по правилу пополнения; дефицит считается тем же ядром, что и suggested в /stock/report/stocks."
           },
           "rule_id": {
             "oneOf": [
@@ -91705,11 +91917,22 @@
         "additionalProperties": false,
         "required": [
           "count",
+          "limit",
+          "offset",
           "results",
           "formula"
         ],
         "properties": {
           "count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Общее число строк отбора, а не длина страницы: усечение по limit на нём видно."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "offset": {
             "type": "integer",
             "minimum": 0
           },
@@ -91902,6 +92125,107 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/StockReportOverdueReservation"
+            }
+          }
+        }
+      },
+      "StockReportOverdueSupplierOrder": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "document_id",
+          "number",
+          "date",
+          "delivery_at",
+          "business_id",
+          "business_name",
+          "company_id",
+          "company_name",
+          "warehouse_id",
+          "warehouse_name",
+          "supplier_id",
+          "supplier_name",
+          "remaining_qty",
+          "product_count"
+        ],
+        "properties": {
+          "document_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "number": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "delivery_at": {
+            "type": "string",
+            "format": "date"
+          },
+          "business_id": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              }
+            ],
+            "description": "Бизнес заказа — учётная единица строки, он есть всегда"
+          },
+          "business_name": {
+            "type": "string"
+          },
+          "company_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Юрлицо заказа — разрез официального контура. У неофициального заказа его нет, и тогда поле пустое (ERP-704)."
+          },
+          "company_name": {
+            "type": "string"
+          },
+          "warehouse_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "warehouse_name": {
+            "type": "string"
+          },
+          "supplier_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "supplier_name": {
+            "type": "string"
+          },
+          "remaining_qty": {
+            "type": "string",
+            "description": "Decimal string. Недовезённый хвост заказа по регистру ожидания."
+          },
+          "product_count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "StockReportOverdueSupplierOrderPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "count",
+          "results"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockReportOverdueSupplierOrder"
             }
           }
         }

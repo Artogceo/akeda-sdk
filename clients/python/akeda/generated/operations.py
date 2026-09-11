@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9fb262c650da3747bca9a6690633a775fe8fe41e875644076c4a6fa8e87e5077).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 070ef817a93a6845e676aa4a45b593b1ac5db551c52b980bd99189afb76eab82).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -715,6 +715,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'stockApplyImport': OperationSpec('POST', '/api/v1/stock/imports/{id}/apply', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockApplyWarehouseZoneAllocation': OperationSpec('POST', '/api/v1/stock/warehouses/{id}/zones/allocation', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockCancelDocument': OperationSpec('POST', '/api/v1/stock/documents/{id}/cancel', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
+    'stockCloseSupplierOrder': OperationSpec('POST', '/api/v1/stock/documents/{id}/close', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockCreateDocument': OperationSpec('POST', '/api/v1/stock/documents', 'stock', 'preview', 'stock:write', True, True, (), 'none', None, None),
     'stockCreateExport': OperationSpec('POST', '/api/v1/stock/exports', 'stock', 'preview', 'stock:write', False, True, (), 'none', None, None),
     'stockCreateImport': OperationSpec('POST', '/api/v1/stock/imports', 'stock', 'preview', 'stock:write', False, True, (), 'none', None, None),
@@ -742,7 +743,8 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'stockGetImportTemplate': OperationSpec('GET', '/api/v1/stock/import-templates/{kind}', 'stock', 'preview', 'stock:read', False, True, ('kind',), 'none', None, None),
     'stockGetInventoryCountSheet': OperationSpec('GET', '/api/v1/stock/documents/{id}/count-sheet', 'stock', 'preview', 'stock:read', False, True, ('id',), 'none', None, None),
     'stockGetOverdueReservations': OperationSpec('GET', '/api/v1/stock/report/reservations/overdue', 'stock', 'preview', 'stock:read', False, True, (), 'limit', 1000, 200),
-    'stockGetPurchasingReport': OperationSpec('GET', '/api/v1/stock/report/purchasing', 'stock', 'preview', 'stock:read', False, True, (), 'limit', 500, 200),
+    'stockGetOverdueSupplierOrders': OperationSpec('GET', '/api/v1/stock/report/supplier-orders/overdue', 'stock', 'preview', 'stock:read', False, True, (), 'limit', 1000, 200),
+    'stockGetPurchasingReport': OperationSpec('GET', '/api/v1/stock/report/purchasing', 'stock', 'preview', 'stock:read', False, True, (), 'limit_offset', 500, 200),
     'stockGetReorderRule': OperationSpec('GET', '/api/v1/stock/reorder-rules/{id}', 'stock', 'preview', 'stock:read', False, True, ('id',), 'none', None, None),
     'stockGetReservationSummaries': OperationSpec('GET', '/api/v1/stock/report/reservations', 'stock', 'preview', 'stock:read', False, True, (), 'limit', 1000, 500),
     'stockGetSettings': OperationSpec('GET', '/api/v1/stock/settings', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),

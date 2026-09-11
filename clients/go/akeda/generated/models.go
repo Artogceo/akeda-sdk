@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9fb262c650da3747bca9a6690633a775fe8fe41e875644076c4a6fa8e87e5077).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 070ef817a93a6845e676aa4a45b593b1ac5db551c52b980bd99189afb76eab82).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -6013,6 +6013,8 @@ type FinanceConnectorProvider struct {
 	RedirectPath    *string                     `json:"redirect_path,omitempty"`
 	// RequiresEgressAllowlist — Банк принимает запросы только с адресов, объявленных в его кабинете.
 	RequiresEgressAllowlist bool `json:"requires_egress_allowlist"`
+	// RequiresAccountNumber — Банк не отдаёт списка счетов организации — номер счёта называет человек.
+	RequiresAccountNumber bool `json:"requires_account_number"`
 	// EgressIps — Исходящие адреса контура для белого списка банка. Пусто — адрес контура не настроен.
 	EgressIps []string `json:"egress_ips,omitempty"`
 }
@@ -12020,6 +12022,31 @@ type StockReportOverdueReservation struct {
 	ProductCount int64  `json:"product_count"`
 }
 
+type StockReportOverdueSupplierOrder struct {
+	DocumentID UUID   `json:"document_id"`
+	Number     string `json:"number"`
+	Date       string `json:"date"`
+	DeliveryAt string `json:"delivery_at"`
+	// BusinessID — Бизнес заказа — учётная единица строки, он есть всегда
+	BusinessID   map[string]json.RawMessage `json:"business_id"`
+	BusinessName string                     `json:"business_name"`
+	// CompanyID — Юрлицо заказа — разрез официального контура. У неофициального заказа его нет, и тогда поле пустое (ERP-704).
+	CompanyID     *UUID  `json:"company_id"`
+	CompanyName   string `json:"company_name"`
+	WarehouseID   UUID   `json:"warehouse_id"`
+	WarehouseName string `json:"warehouse_name"`
+	SupplierID    UUID   `json:"supplier_id"`
+	SupplierName  string `json:"supplier_name"`
+	// RemainingQty — Decimal string. Недовезённый хвост заказа по регистру ожидания.
+	RemainingQty string `json:"remaining_qty"`
+	ProductCount int64  `json:"product_count"`
+}
+
+type StockReportOverdueSupplierOrderPage struct {
+	Count   int64                             `json:"count"`
+	Results []StockReportOverdueSupplierOrder `json:"results"`
+}
+
 type StockReportPage struct {
 	Count   int64             `json:"count"`
 	Limit   int64             `json:"limit"`
@@ -12032,13 +12059,20 @@ type StockReportPage struct {
 }
 
 type StockReportPurchasingPage struct {
+	// Count — Общее число строк отбора, а не длина страницы: усечение по limit на нём видно.
 	Count   int64                      `json:"count"`
+	Limit   int64                      `json:"limit"`
+	Offset  int64                      `json:"offset"`
 	Results []StockReportPurchasingRow `json:"results"`
 	Formula string                     `json:"formula"`
 }
 
 type StockReportPurchasingRow struct {
-	CompanyID     UUID   `json:"company_id"`
+	// BusinessID — Бизнес строки — учётная единица закупки
+	BusinessID   map[string]json.RawMessage `json:"business_id"`
+	BusinessName string                     `json:"business_name"`
+	// CompanyID — Юрлицо строки — разрез официального контура. У неофициальной потребности его нет, и тогда поле пустое; правило пополнения такой строке не подбирается, потому что ключуется юрлицом (ERP-704).
+	CompanyID     *UUID  `json:"company_id"`
 	CompanyName   string `json:"company_name"`
 	WarehouseID   *UUID  `json:"warehouse_id"`
 	WarehouseCode string `json:"warehouse_code"`
@@ -12068,7 +12102,7 @@ type StockReportPurchasingRow struct {
 	LeadTimeDays          int64   `json:"lead_time_days"`
 	PreferredSupplierID   *UUID   `json:"preferred_supplier_id"`
 	PreferredSupplierName string  `json:"preferred_supplier_name"`
-	// SuggestedQty — Decimal string
+	// SuggestedQty — Decimal string. Максимум из незаказанной потребности и дефицита по правилу пополнения; дефицит считается тем же ядром, что и suggested в /stock/report/stocks.
 	SuggestedQty string `json:"suggested_qty"`
 	RuleID       *UUID  `json:"rule_id"`
 	// RuleSource — Какое правило пополнения подобралось к строке
@@ -12148,7 +12182,7 @@ type StockReportRow struct {
 	Forecast string `json:"forecast"`
 	// Minimum — Decimal string
 	Minimum string `json:"minimum"`
-	// Suggested — Decimal string
+	// Suggested — Decimal string. Только правило пополнения: ноль, пока прогноз не ниже минимума или правила нет, иначе добор до максимума с округлением вверх по кратности. Незаказанная потребность сюда не входит — она есть только в /stock/report/purchasing.
 	Suggested string `json:"suggested"`
 	// Amount — Decimal string
 	Amount string `json:"amount"`

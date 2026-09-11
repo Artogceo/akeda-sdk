@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9fb262c650da3747bca9a6690633a775fe8fe41e875644076c4a6fa8e87e5077).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 070ef817a93a6845e676aa4a45b593b1ac5db551c52b980bd99189afb76eab82).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -4822,6 +4822,13 @@ export interface OperationTypes {
     body: never;
     response: models.CoreDocument;
   };
+  /** POST /api/v1/stock/documents/{id}/close — Закрыть недовезённый заказ поставщику */
+  stockCloseSupplierOrder: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CoreDocument;
+  };
   /** POST /api/v1/stock/documents — Создать черновик складского документа */
   stockCreateDocument: {
     params: Record<string, never>;
@@ -5011,10 +5018,17 @@ export interface OperationTypes {
     body: never;
     response: models.StockReportOverduePage;
   };
+  /** GET /api/v1/stock/report/supplier-orders/overdue — Получить просроченные заказы поставщику */
+  stockGetOverdueSupplierOrders: {
+    params: Record<string, never>;
+    query: { "as_of"?: string; "company_id"?: models.UUID; "limit"?: number; "warehouse_id"?: models.UUID };
+    body: never;
+    response: models.StockReportOverdueSupplierOrderPage;
+  };
   /** GET /api/v1/stock/report/purchasing — Получить отчёт потребности в закупке */
   stockGetPurchasingReport: {
     params: Record<string, never>;
-    query: { "company_id"?: models.UUID; "limit"?: number; "q"?: string; "warehouse_id"?: models.UUID };
+    query: { "business_id"?: models.UUID; "company_id"?: models.UUID; "include_empty"?: boolean; "limit"?: number; "offset"?: number; "q"?: string; "warehouse_id"?: models.UUID };
     body: never;
     response: models.StockReportPurchasingPage;
   };
@@ -6912,6 +6926,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockApplyImport: { method: "POST", path: "/api/v1/stock/imports/{id}/apply", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockApplyWarehouseZoneAllocation: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones/allocation", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCancelDocument: { method: "POST", path: "/api/v1/stock/documents/{id}/cancel", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockCloseSupplierOrder: { method: "POST", path: "/api/v1/stock/documents/{id}/close", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateDocument: { method: "POST", path: "/api/v1/stock/documents", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateExport: { method: "POST", path: "/api/v1/stock/exports", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateImport: { method: "POST", path: "/api/v1/stock/imports", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -6939,7 +6954,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockGetImportTemplate: { method: "GET", path: "/api/v1/stock/import-templates/{kind}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetInventoryCountSheet: { method: "GET", path: "/api/v1/stock/documents/{id}/count-sheet", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetOverdueReservations: { method: "GET", path: "/api/v1/stock/report/reservations/overdue", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 200 },
-  stockGetPurchasingReport: { method: "GET", path: "/api/v1/stock/report/purchasing", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
+  stockGetOverdueSupplierOrders: { method: "GET", path: "/api/v1/stock/report/supplier-orders/overdue", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 200 },
+  stockGetPurchasingReport: { method: "GET", path: "/api/v1/stock/report/purchasing", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
   stockGetReorderRule: { method: "GET", path: "/api/v1/stock/reorder-rules/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetReservationSummaries: { method: "GET", path: "/api/v1/stock/report/reservations", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 500 },
   stockGetSettings: { method: "GET", path: "/api/v1/stock/settings", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

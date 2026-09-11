@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9fb262c650da3747bca9a6690633a775fe8fe41e875644076c4a6fa8e87e5077).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 070ef817a93a6845e676aa4a45b593b1ac5db551c52b980bd99189afb76eab82).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -6026,6 +6026,8 @@ export interface FinanceConnectorProvider {
   "redirect_path"?: string;
   /** Банк принимает запросы только с адресов, объявленных в его кабинете. */
   "requires_egress_allowlist": boolean;
+  /** Банк не отдаёт списка счетов организации — номер счёта называет человек. */
+  "requires_account_number": boolean;
   /** Исходящие адреса контура для белого списка банка. Пусто — адрес контура не настроен. */
   "egress_ips"?: Array<string>;
 }
@@ -11645,7 +11647,7 @@ export interface StockDocumentRefs {
   "contact"?: UUID;
 }
 
-export type StockDocumentTypeKey = "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_purchase_request" | "stock_supplier_order" | "stock_inventory" | "stock_reservation" | "stock_landed_cost" | "stock_reservation_release";
+export type StockDocumentTypeKey = "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_purchase_request" | "stock_supplier_order" | "stock_inventory" | "stock_reservation" | "stock_landed_cost" | "stock_reservation_release" | "stock_supplier_order_close";
 
 export interface StockExport {
   "id": UUID;
@@ -12062,6 +12064,31 @@ export interface StockReportOverdueReservation {
   "product_count": number;
 }
 
+export interface StockReportOverdueSupplierOrder {
+  "document_id": UUID;
+  "number": string;
+  "date": string;
+  "delivery_at": string;
+  /** Бизнес заказа — учётная единица строки, он есть всегда */
+  "business_id": { [key: string]: unknown };
+  "business_name": string;
+  /** Юрлицо заказа — разрез официального контура. У неофициального заказа его нет, и тогда поле пустое (ERP-704). */
+  "company_id": UUID | null;
+  "company_name": string;
+  "warehouse_id": UUID;
+  "warehouse_name": string;
+  "supplier_id": UUID;
+  "supplier_name": string;
+  /** Decimal string. Недовезённый хвост заказа по регистру ожидания. */
+  "remaining_qty": string;
+  "product_count": number;
+}
+
+export interface StockReportOverdueSupplierOrderPage {
+  "count": number;
+  "results": Array<StockReportOverdueSupplierOrder>;
+}
+
 export interface StockReportPage {
   "count": number;
   "limit": number;
@@ -12074,13 +12101,20 @@ export interface StockReportPage {
 }
 
 export interface StockReportPurchasingPage {
+  /** Общее число строк отбора, а не длина страницы: усечение по limit на нём видно. */
   "count": number;
+  "limit": number;
+  "offset": number;
   "results": Array<StockReportPurchasingRow>;
   "formula": "projected = on_hand - reserved + expected; suggested = max(demand, rule_shortage)";
 }
 
 export interface StockReportPurchasingRow {
-  "company_id": UUID;
+  /** Бизнес строки — учётная единица закупки */
+  "business_id": { [key: string]: unknown };
+  "business_name": string;
+  /** Юрлицо строки — разрез официального контура. У неофициальной потребности его нет, и тогда поле пустое; правило пополнения такой строке не подбирается, потому что ключуется юрлицом (ERP-704). */
+  "company_id": UUID | null;
   "company_name": string;
   "warehouse_id": UUID | null;
   "warehouse_code": string;
@@ -12110,7 +12144,7 @@ export interface StockReportPurchasingRow {
   "lead_time_days": number;
   "preferred_supplier_id": UUID | null;
   "preferred_supplier_name": string;
-  /** Decimal string */
+  /** Decimal string. Максимум из незаказанной потребности и дефицита по правилу пополнения; дефицит считается тем же ядром, что и suggested в /stock/report/stocks. */
   "suggested_qty": string;
   "rule_id": UUID | null;
   /** Какое правило пополнения подобралось к строке */
@@ -12190,7 +12224,7 @@ export interface StockReportRow {
   "forecast": string;
   /** Decimal string */
   "minimum": string;
-  /** Decimal string */
+  /** Decimal string. Только правило пополнения: ноль, пока прогноз не ниже минимума или правила нет, иначе добор до максимума с округлением вверх по кратности. Незаказанная потребность сюда не входит — она есть только в /stock/report/purchasing. */
   "suggested": string;
   /** Decimal string */
   "amount": string;

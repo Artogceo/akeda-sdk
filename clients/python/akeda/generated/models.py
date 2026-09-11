@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9fb262c650da3747bca9a6690633a775fe8fe41e875644076c4a6fa8e87e5077).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 070ef817a93a6845e676aa4a45b593b1ac5db551c52b980bd99189afb76eab82).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1170,6 +1170,8 @@ __all__ = [
     "StockReportDrilldownEntry",
     "StockReportOverduePage",
     "StockReportOverdueReservation",
+    "StockReportOverdueSupplierOrder",
+    "StockReportOverdueSupplierOrderPage",
     "StockReportPage",
     "StockReportPurchasingPage",
     "StockReportPurchasingRow",
@@ -7182,6 +7184,8 @@ class _FinanceConnectorProviderRequired(TypedDict):
     credential_hint: str
     #: Банк принимает запросы только с адресов, объявленных в его кабинете.
     requires_egress_allowlist: bool
+    #: Банк не отдаёт списка счетов организации — номер счёта называет человек.
+    requires_account_number: bool
 
 class FinanceConnectorProvider(_FinanceConnectorProviderRequired, total=False):
     redirect_path: str
@@ -12425,7 +12429,7 @@ class StockDocumentRefs(_StockDocumentRefsRequired, total=False):
     warehouse_to: "UUID"
     contact: "UUID"
 
-StockDocumentTypeKey = Literal['stock_receipt', 'stock_shipment', 'stock_transfer', 'stock_writeoff', 'stock_capitalization', 'stock_supplier_return', 'stock_customer_return', 'stock_purchase_request', 'stock_supplier_order', 'stock_inventory', 'stock_reservation', 'stock_landed_cost', 'stock_reservation_release']
+StockDocumentTypeKey = Literal['stock_receipt', 'stock_shipment', 'stock_transfer', 'stock_writeoff', 'stock_capitalization', 'stock_supplier_return', 'stock_customer_return', 'stock_purchase_request', 'stock_supplier_order', 'stock_inventory', 'stock_reservation', 'stock_landed_cost', 'stock_reservation_release', 'stock_supplier_order_close']
 
 class _StockExportRequired(TypedDict):
     id: "UUID"
@@ -12839,6 +12843,29 @@ class StockReportOverdueReservation(TypedDict):
     remaining_qty: str
     product_count: int
 
+class StockReportOverdueSupplierOrder(TypedDict):
+    document_id: "UUID"
+    number: str
+    date: str
+    delivery_at: str
+    #: Бизнес заказа — учётная единица строки, он есть всегда
+    business_id: Dict[str, Any]
+    business_name: str
+    #: Юрлицо заказа — разрез официального контура. У неофициального заказа его нет, и тогда поле пустое (ERP-704).
+    company_id: Optional["UUID"]
+    company_name: str
+    warehouse_id: "UUID"
+    warehouse_name: str
+    supplier_id: "UUID"
+    supplier_name: str
+    #: Decimal string. Недовезённый хвост заказа по регистру ожидания.
+    remaining_qty: str
+    product_count: int
+
+class StockReportOverdueSupplierOrderPage(TypedDict):
+    count: int
+    results: List["StockReportOverdueSupplierOrder"]
+
 class StockReportPage(TypedDict):
     count: int
     limit: int
@@ -12850,12 +12877,19 @@ class StockReportPage(TypedDict):
     formula: Literal['available = on_hand - reserved; forecast = available + expected']
 
 class StockReportPurchasingPage(TypedDict):
+    #: Общее число строк отбора, а не длина страницы: усечение по limit на нём видно.
     count: int
+    limit: int
+    offset: int
     results: List["StockReportPurchasingRow"]
     formula: Literal['projected = on_hand - reserved + expected; suggested = max(demand, rule_shortage)']
 
 class StockReportPurchasingRow(TypedDict):
-    company_id: "UUID"
+    #: Бизнес строки — учётная единица закупки
+    business_id: Dict[str, Any]
+    business_name: str
+    #: Юрлицо строки — разрез официального контура. У неофициальной потребности его нет, и тогда поле пустое; правило пополнения такой строке не подбирается, потому что ключуется юрлицом (ERP-704).
+    company_id: Optional["UUID"]
     company_name: str
     warehouse_id: Optional["UUID"]
     warehouse_code: str
@@ -12885,7 +12919,7 @@ class StockReportPurchasingRow(TypedDict):
     lead_time_days: int
     preferred_supplier_id: Optional["UUID"]
     preferred_supplier_name: str
-    #: Decimal string
+    #: Decimal string. Максимум из незаказанной потребности и дефицита по правилу пополнения; дефицит считается тем же ядром, что и suggested в /stock/report/stocks.
     suggested_qty: str
     rule_id: Optional["UUID"]
     #: Какое правило пополнения подобралось к строке
@@ -12960,7 +12994,7 @@ class StockReportRow(TypedDict):
     forecast: str
     #: Decimal string
     minimum: str
-    #: Decimal string
+    #: Decimal string. Только правило пополнения: ноль, пока прогноз не ниже минимума или правила нет, иначе добор до максимума с округлением вверх по кратности. Незаказанная потребность сюда не входит — она есть только в /stock/report/purchasing.
     suggested: str
     #: Decimal string
     amount: str
