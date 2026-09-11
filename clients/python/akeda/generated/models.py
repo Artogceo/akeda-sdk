@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18b352e08e80e5306baca522259f8cb5b55e2ab487ee3288c8f4ba89303b0197).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9fb262c650da3747bca9a6690633a775fe8fe41e875644076c4a6fa8e87e5077).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -9514,16 +9514,7 @@ class MarketplaceOzonOrdersKpi(TypedDict):
     delta_sum: Optional[float]
     delta_qty: Optional[float]
 
-class MarketplaceOzonOrdersOverview(TypedDict):
-    #: Самый свежий день в аналитике, а не сегодняшний
-    day: str
-    updated: Optional[str]
-    scheme: Literal['all', 'fbo', 'fbs']
-    #: Ключи orders и sales
-    kpi: Dict[str, "MarketplaceOzonOrdersKpi"]
-    #: Ровно 14 дней подряд
-    daily: List["MarketplaceOzonOrdersDailyRow"]
-    products: List["MarketplaceOzonOrdersProductRow"]
+MarketplaceOzonOrdersOverview = TypedDict("MarketplaceOzonOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "scheme": Literal['all', 'fbo', 'fbs'], "kpi": Dict[str, "MarketplaceOzonOrdersKpi"], "daily": List["MarketplaceOzonOrdersDailyRow"], "products": List["MarketplaceOzonOrdersProductRow"]}, total=False)
 
 class MarketplaceOzonOrdersProductRow(TypedDict):
     #: Внешний числовой идентификатор магазина
@@ -10194,19 +10185,7 @@ class MarketplaceWbOrdersKpi(TypedDict):
     #: Изменение к предыдущему дню в процентах
     delta_qty: Optional[float]
 
-class _MarketplaceWbOrdersOverviewRequired(TypedDict):
-    #: Опорный день выборки
-    day: str
-    updated: Optional[str]
-    kpi: "MarketplaceWbOrdersOverviewKpi"
-    #: Ровно 14 дней по опорный включительно
-    daily: List["MarketplaceWbOrdersDay"]
-    #: Не более 200 товаров опорного дня
-    products: List["MarketplaceWbOrdersProduct"]
-
-class MarketplaceWbOrdersOverview(_MarketplaceWbOrdersOverviewRequired, total=False):
-    #: Аналитическая база не подключена и цифры синтетические
-    demo: bool
+MarketplaceWbOrdersOverview = TypedDict("MarketplaceWbOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "kpi": "MarketplaceWbOrdersOverviewKpi", "daily": List["MarketplaceWbOrdersDay"], "products": List["MarketplaceWbOrdersProduct"], "demo": bool}, total=False)
 
 class MarketplaceWbOrdersOverviewKpi(TypedDict):
     orders: "MarketplaceWbOrdersKpi"
@@ -10473,20 +10452,7 @@ class MarketplaceYandexOrdersKpi(TypedDict):
     #: Изменение количества ко вчерашнему дню в процентах; null когда вчера было пусто
     delta_qty: Optional[float]
 
-class _MarketplaceYandexOrdersOverviewRequired(TypedDict):
-    #: Последний день с заказами; к нему привязаны показатели и товары
-    day: str
-    #: Момент последней синхронизации источника
-    updated: Optional[str]
-    kpi: "MarketplaceYandexOrdersOverviewKpi"
-    #: Четырнадцать дней подряд по возрастанию даты; дни без заказов заполнены нулями
-    daily: List["MarketplaceYandexOrdersDay"]
-    #: Товары дня по убыванию суммы
-    products: List["MarketplaceYandexOrdersProduct"]
-
-class MarketplaceYandexOrdersOverview(_MarketplaceYandexOrdersOverviewRequired, total=False):
-    #: Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические
-    demo: bool
+MarketplaceYandexOrdersOverview = TypedDict("MarketplaceYandexOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "kpi": "MarketplaceYandexOrdersOverviewKpi", "daily": List["MarketplaceYandexOrdersDay"], "products": List["MarketplaceYandexOrdersProduct"], "demo": bool}, total=False)
 
 class MarketplaceYandexOrdersOverviewKpi(TypedDict):
     orders: "MarketplaceYandexOrdersKpi"

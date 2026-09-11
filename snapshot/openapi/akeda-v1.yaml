@@ -27624,8 +27624,11 @@ paths:
       operationId: marketplaceOzonOrdersOverview
       summary: Получить сводку заказов Ozon
       description: |
-        Дашборд за окно в 14 дней: якорь дня и границы окна берутся из самой
-        свежей даты в аналитике, а не из календаря и не из параметров.
+        Показатели и товары считаются за период from–to; без параметров —
+        за самый свежий день в аналитике, а не календарный. Сравнение идёт с
+        предыдущим периодом той же длины; если период захватывает последний
+        день данных, оба режутся по времени последней синхронизации. График
+        показывает не меньше 14 дней, заканчивающихся последним днём периода.
         Заказы и продажи считаются по разным таблицам площадки и напрямую
         между собой не сходятся.
       x-akeda-module: marketplace
@@ -27660,6 +27663,20 @@ paths:
               - fbo
               - fbs
             default: all
+        - name: from
+          in: query
+          required: false
+          description: Первый день периода ГГГГ-ММ-ДД. Без from и to период — последний день данных; одна граница без другой — один день
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: false
+          description: Последний день периода ГГГГ-ММ-ДД включительно; не раньше from, отрезок не длиннее 366 дней
+          schema:
+            type: string
+            format: date
       responses:
         '200':
           description: Сводка заказов и продаж
@@ -27667,6 +27684,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarketplaceOzonOrdersOverview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -28367,9 +28386,11 @@ paths:
       operationId: marketplaceWbOrdersOverview
       summary: Получить сводку заказов и продаж Wildberries
       description: |
-        Опорный день — последняя дата заказов или продаж в аналитике.
-        Отдаются показатели дня со сравнением со вчера, динамика за 14 дней и
-        топ товаров опорного дня.
+        Показатели и товары считаются за период from–to; без параметров — за
+        опорный день, последнюю дату заказов или продаж в аналитике. Сравнение
+        идёт с предыдущим периодом той же длины; если период захватывает
+        опорный день, оба режутся по времени последней синхронизации. График
+        показывает не меньше 14 дней, заканчивающихся последним днём периода.
       x-akeda-module: marketplace
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -28387,6 +28408,20 @@ paths:
           description: Идентификаторы магазинов через запятую либо all; пусто — все активные магазины WB
           schema:
             type: string
+        - name: from
+          in: query
+          required: false
+          description: Первый день периода ГГГГ-ММ-ДД. Без from и to период — последний день данных; одна граница без другой — один день
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: false
+          description: Последний день периода ГГГГ-ММ-ДД включительно; не раньше from, отрезок не длиннее 366 дней
+          schema:
+            type: string
+            format: date
       responses:
         '200':
           description: Сводка заказов и продаж
@@ -28394,6 +28429,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarketplaceWbOrdersOverview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -29341,7 +29378,7 @@ paths:
         - Marketplace Yandex
       operationId: marketplaceYandexOrdersOverview
       summary: Получить сводку заказов Яндекс Маркета
-      description: Сводка привязана к последнему дню с заказами — четырнадцать дней динамики, показатели дня против вчерашнего и до двухсот товаров этого дня.
+      description: Показатели и до двухсот товаров считаются за период from–to, без параметров — за последний день с заказами. Сравнение идёт с предыдущим периодом той же длины целыми днями. График показывает не меньше четырнадцати дней, заканчивающихся последним днём периода.
       x-akeda-module: marketplace
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -29366,6 +29403,20 @@ paths:
           schema:
             type: string
           description: UUID срезов товаров через запятую
+        - name: from
+          in: query
+          required: false
+          description: Первый день периода ГГГГ-ММ-ДД. Без from и to период — последний день данных; одна граница без другой — один день
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: false
+          description: Последний день периода ГГГГ-ММ-ДД включительно; не раньше from, отрезок не длиннее 366 дней
+          schema:
+            type: string
+            format: date
       responses:
         '200':
           description: Сводка заказов
@@ -29373,6 +29424,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarketplaceYandexOrdersOverview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -60551,6 +60604,9 @@ components:
       additionalProperties: false
       required:
         - day
+        - from
+        - to
+        - chart_from
         - updated
         - scheme
         - kpi
@@ -60560,7 +60616,19 @@ components:
         day:
           type: string
           format: date
-          description: Самый свежий день в аналитике, а не сегодняшний
+          description: Последний день периода; без параметров — самый свежий день в аналитике, а не сегодняшний
+        from:
+          type: string
+          format: date
+          description: Первый день периода
+        to:
+          type: string
+          format: date
+          description: Последний день периода включительно
+        chart_from:
+          type: string
+          format: date
+          description: 'Первый день графика: не позже from и не меньше 14 дней до to'
         updated:
           type:
             - string
@@ -60580,7 +60648,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MarketplaceOzonOrdersDailyRow'
-          description: Ровно 14 дней подряд
+          description: 'Дни подряд от chart_from по to: не меньше 14'
         products:
           type: array
           items:
@@ -62599,6 +62667,9 @@ components:
       additionalProperties: false
       required:
         - day
+        - from
+        - to
+        - chart_from
         - updated
         - kpi
         - daily
@@ -62607,7 +62678,19 @@ components:
         day:
           type: string
           format: date
-          description: Опорный день выборки
+          description: Последний день периода
+        from:
+          type: string
+          format: date
+          description: Первый день периода
+        to:
+          type: string
+          format: date
+          description: Последний день периода включительно
+        chart_from:
+          type: string
+          format: date
+          description: 'Первый день графика: не позже from и не меньше 14 дней до to'
         updated:
           type:
             - string
@@ -62627,12 +62710,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MarketplaceWbOrdersDay'
-          description: Ровно 14 дней по опорный включительно
+          description: 'Дни подряд от chart_from по to: не меньше 14'
         products:
           type: array
           items:
             $ref: '#/components/schemas/MarketplaceWbOrdersProduct'
-          description: Не более 200 товаров опорного дня
+          description: Не более 200 товаров периода
         demo:
           type: boolean
           description: Аналитическая база не подключена и цифры синтетические
@@ -63915,6 +63998,9 @@ components:
       additionalProperties: false
       required:
         - day
+        - from
+        - to
+        - chart_from
         - updated
         - kpi
         - daily
@@ -63923,7 +64009,19 @@ components:
         day:
           type: string
           format: date
-          description: Последний день с заказами; к нему привязаны показатели и товары
+          description: Последний день периода; без параметров — последний день с заказами
+        from:
+          type: string
+          format: date
+          description: Первый день периода
+        to:
+          type: string
+          format: date
+          description: Последний день периода включительно
+        chart_from:
+          type: string
+          format: date
+          description: 'Первый день графика: не позже from и не меньше 14 дней до to'
         updated:
           oneOf:
             - type: string
@@ -63943,16 +64041,16 @@ components:
         daily:
           type: array
           minItems: 14
-          maxItems: 14
+          maxItems: 366
           items:
             $ref: '#/components/schemas/MarketplaceYandexOrdersDay'
-          description: Четырнадцать дней подряд по возрастанию даты; дни без заказов заполнены нулями
+          description: Дни подряд от chart_from по to по возрастанию даты; дни без заказов заполнены нулями
         products:
           type: array
           maxItems: 200
           items:
             $ref: '#/components/schemas/MarketplaceYandexOrdersProduct'
-          description: Товары дня по убыванию суммы
+          description: Товары периода по убыванию суммы
         demo:
           type: boolean
           description: Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические

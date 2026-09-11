@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18b352e08e80e5306baca522259f8cb5b55e2ab487ee3288c8f4ba89303b0197).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9fb262c650da3747bca9a6690633a775fe8fe41e875644076c4a6fa8e87e5077).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -8502,13 +8502,19 @@ type MarketplaceOzonOrdersKpi struct {
 }
 
 type MarketplaceOzonOrdersOverview struct {
-	// Day — Самый свежий день в аналитике, а не сегодняшний
-	Day     string  `json:"day"`
-	Updated *string `json:"updated"`
-	Scheme  string  `json:"scheme"`
+	// Day — Последний день периода; без параметров — самый свежий день в аналитике, а не сегодняшний
+	Day string `json:"day"`
+	// From — Первый день периода
+	From string `json:"from"`
+	// To — Последний день периода включительно
+	To string `json:"to"`
+	// ChartFrom — Первый день графика: не позже from и не меньше 14 дней до to
+	ChartFrom string  `json:"chart_from"`
+	Updated   *string `json:"updated"`
+	Scheme    string  `json:"scheme"`
 	// Kpi — Ключи orders и sales
 	Kpi map[string]MarketplaceOzonOrdersKpi `json:"kpi"`
-	// Daily — Ровно 14 дней подряд
+	// Daily — Дни подряд от chart_from по to: не меньше 14
 	Daily    []MarketplaceOzonOrdersDailyRow   `json:"daily"`
 	Products []MarketplaceOzonOrdersProductRow `json:"products"`
 }
@@ -9245,13 +9251,19 @@ type MarketplaceWbOrdersKpi struct {
 }
 
 type MarketplaceWbOrdersOverview struct {
-	// Day — Опорный день выборки
-	Day     string                         `json:"day"`
-	Updated *string                        `json:"updated"`
-	Kpi     MarketplaceWbOrdersOverviewKpi `json:"kpi"`
-	// Daily — Ровно 14 дней по опорный включительно
+	// Day — Последний день периода
+	Day string `json:"day"`
+	// From — Первый день периода
+	From string `json:"from"`
+	// To — Последний день периода включительно
+	To string `json:"to"`
+	// ChartFrom — Первый день графика: не позже from и не меньше 14 дней до to
+	ChartFrom string                         `json:"chart_from"`
+	Updated   *string                        `json:"updated"`
+	Kpi       MarketplaceWbOrdersOverviewKpi `json:"kpi"`
+	// Daily — Дни подряд от chart_from по to: не меньше 14
 	Daily []MarketplaceWbOrdersDay `json:"daily"`
-	// Products — Не более 200 товаров опорного дня
+	// Products — Не более 200 товаров периода
 	Products []MarketplaceWbOrdersProduct `json:"products"`
 	// Demo — Аналитическая база не подключена и цифры синтетические
 	Demo *bool `json:"demo,omitempty"`
@@ -9537,14 +9549,20 @@ type MarketplaceYandexOrdersKpi struct {
 }
 
 type MarketplaceYandexOrdersOverview struct {
-	// Day — Последний день с заказами; к нему привязаны показатели и товары
+	// Day — Последний день периода; без параметров — последний день с заказами
 	Day string `json:"day"`
+	// From — Первый день периода
+	From string `json:"from"`
+	// To — Последний день периода включительно
+	To string `json:"to"`
+	// ChartFrom — Первый день графика: не позже from и не меньше 14 дней до to
+	ChartFrom string `json:"chart_from"`
 	// Updated — Момент последней синхронизации источника
 	Updated *string                            `json:"updated"`
 	Kpi     MarketplaceYandexOrdersOverviewKpi `json:"kpi"`
-	// Daily — Четырнадцать дней подряд по возрастанию даты; дни без заказов заполнены нулями
+	// Daily — Дни подряд от chart_from по to по возрастанию даты; дни без заказов заполнены нулями
 	Daily []MarketplaceYandexOrdersDay `json:"daily"`
-	// Products — Товары дня по убыванию суммы
+	// Products — Товары периода по убыванию суммы
 	Products []MarketplaceYandexOrdersProduct `json:"products"`
 	// Demo — Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические
 	Demo *bool `json:"demo,omitempty"`

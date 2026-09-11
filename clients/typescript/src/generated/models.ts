@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18b352e08e80e5306baca522259f8cb5b55e2ab487ee3288c8f4ba89303b0197).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9fb262c650da3747bca9a6690633a775fe8fe41e875644076c4a6fa8e87e5077).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -8528,13 +8528,19 @@ export interface MarketplaceOzonOrdersKpi {
 }
 
 export interface MarketplaceOzonOrdersOverview {
-  /** Самый свежий день в аналитике, а не сегодняшний */
+  /** Последний день периода; без параметров — самый свежий день в аналитике, а не сегодняшний */
   "day": string;
+  /** Первый день периода */
+  "from": string;
+  /** Последний день периода включительно */
+  "to": string;
+  /** Первый день графика: не позже from и не меньше 14 дней до to */
+  "chart_from": string;
   "updated": string | null;
   "scheme": "all" | "fbo" | "fbs";
   /** Ключи orders и sales */
   "kpi": { [key: string]: MarketplaceOzonOrdersKpi };
-  /** Ровно 14 дней подряд */
+  /** Дни подряд от chart_from по to: не меньше 14 */
   "daily": Array<MarketplaceOzonOrdersDailyRow>;
   "products": Array<MarketplaceOzonOrdersProductRow>;
 }
@@ -9277,13 +9283,19 @@ export interface MarketplaceWbOrdersKpi {
 }
 
 export interface MarketplaceWbOrdersOverview {
-  /** Опорный день выборки */
+  /** Последний день периода */
   "day": string;
+  /** Первый день периода */
+  "from": string;
+  /** Последний день периода включительно */
+  "to": string;
+  /** Первый день графика: не позже from и не меньше 14 дней до to */
+  "chart_from": string;
   "updated": string | null;
   "kpi": MarketplaceWbOrdersOverviewKpi;
-  /** Ровно 14 дней по опорный включительно */
+  /** Дни подряд от chart_from по to: не меньше 14 */
   "daily": Array<MarketplaceWbOrdersDay>;
-  /** Не более 200 товаров опорного дня */
+  /** Не более 200 товаров периода */
   "products": Array<MarketplaceWbOrdersProduct>;
   /** Аналитическая база не подключена и цифры синтетические */
   "demo"?: boolean;
@@ -9569,14 +9581,20 @@ export interface MarketplaceYandexOrdersKpi {
 }
 
 export interface MarketplaceYandexOrdersOverview {
-  /** Последний день с заказами; к нему привязаны показатели и товары */
+  /** Последний день периода; без параметров — последний день с заказами */
   "day": string;
+  /** Первый день периода */
+  "from": string;
+  /** Последний день периода включительно */
+  "to": string;
+  /** Первый день графика: не позже from и не меньше 14 дней до to */
+  "chart_from": string;
   /** Момент последней синхронизации источника */
   "updated": string | null;
   "kpi": MarketplaceYandexOrdersOverviewKpi;
-  /** Четырнадцать дней подряд по возрастанию даты; дни без заказов заполнены нулями */
+  /** Дни подряд от chart_from по to по возрастанию даты; дни без заказов заполнены нулями */
   "daily": Array<MarketplaceYandexOrdersDay>;
-  /** Товары дня по убыванию суммы */
+  /** Товары периода по убыванию суммы */
   "products": Array<MarketplaceYandexOrdersProduct>;
   /** Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические */
   "demo"?: boolean;

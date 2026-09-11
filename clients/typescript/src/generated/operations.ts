@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18b352e08e80e5306baca522259f8cb5b55e2ab487ee3288c8f4ba89303b0197).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9fb262c650da3747bca9a6690633a775fe8fe41e875644076c4a6fa8e87e5077).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -4188,7 +4188,7 @@ export interface OperationTypes {
   /** GET /api/v1/marketplace/ozon/orders/overview — Получить сводку заказов Ozon */
   marketplaceOzonOrdersOverview: {
     params: Record<string, never>;
-    query: { "group"?: string; "scheme"?: "all" | "fbo" | "fbs"; "store"?: string };
+    query: { "from"?: string; "group"?: string; "scheme"?: "all" | "fbo" | "fbs"; "store"?: string; "to"?: string };
     body: never;
     response: models.MarketplaceOzonOrdersOverview;
   };
@@ -4370,7 +4370,7 @@ export interface OperationTypes {
   /** GET /api/v1/marketplace/wb/orders/overview — Получить сводку заказов и продаж Wildberries */
   marketplaceWbOrdersOverview: {
     params: Record<string, never>;
-    query: { "store"?: string };
+    query: { "from"?: string; "store"?: string; "to"?: string };
     body: never;
     response: models.MarketplaceWbOrdersOverview;
   };
@@ -4447,7 +4447,7 @@ export interface OperationTypes {
   /** GET /api/v1/marketplace/yandex/orders/overview — Получить сводку заказов Яндекс Маркета */
   marketplaceYandexOrdersOverview: {
     params: Record<string, never>;
-    query: { "group"?: string; "store"?: string };
+    query: { "from"?: string; "group"?: string; "store"?: string; "to"?: string };
     body: never;
     response: models.MarketplaceYandexOrdersOverview;
   };
