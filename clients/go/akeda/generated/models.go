@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 070ef817a93a6845e676aa4a45b593b1ac5db551c52b980bd99189afb76eab82).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 182cdc09220a7feb63bd59cef0b8678731793a054390887caa8850ae89e92c3a).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1924,6 +1924,8 @@ type ChatMember struct {
 	DisplayName string `json:"display_name"`
 	AvatarURL   string `json:"avatar_url"`
 	Role        string `json:"role"`
+	// IsFormer — Человека больше нет в справочнике кабинета: членство или учётная запись выключены. Он остаётся в составе беседы, потому что его сообщения в ней остались и подпись под ними обязана кем-то называться. Пустое display_name означает, что о нём не осталось даже имени — подписывать такую строку клиент решает сам.
+	IsFormer bool `json:"is_former"`
 }
 
 type ChatMemberPage struct {
@@ -2222,6 +2224,10 @@ type CoreBusiness struct {
 	AccountingMethod string `json:"accounting_method"`
 	// AccrualFrom — Дата перехода на начисление; отсутствует у кассового бизнеса
 	AccrualFrom *string `json:"accrual_from,omitempty"`
+	// VATPresentation — Очищаются ли суммы отчётов от косвенного налога; gross это полные суммы
+	VATPresentation *string `json:"vat_presentation,omitempty"`
+	// VATSince — Дата, с которой действует текущий режим показа сумм; отсутствует, если режим не переключали
+	VATSince *string `json:"vat_since,omitempty"`
 }
 
 type CoreBusinessAccountingMethodInput struct {
@@ -2252,6 +2258,13 @@ type CoreBusinessOwnerInput struct {
 	CompanyID  *UUID  `json:"company_id,omitempty"`
 	ContactID  *UUID  `json:"contact_id,omitempty"`
 	Share      string `json:"share"`
+}
+
+type CoreBusinessVATPresentationInput struct {
+	// Presentation — Значение приводится к нижнему регистру; mixed бывает подписью отчёта, но не выбором
+	Presentation string `json:"presentation"`
+	// Since — Дата, с которой действует новый режим; обязательна при смене режима и не спрашивается, когда режим не меняется
+	Since *string `json:"since,omitempty"`
 }
 
 type CoreCabinetPreferences struct {
@@ -11619,11 +11632,15 @@ type StockExport struct {
 	CreatedAt        string                    `json:"created_at"`
 }
 
+type StockExportKind = string
+
 type StockExportRequest struct {
-	Kind   StockImportKind            `json:"kind"`
+	Kind   StockExportKind            `json:"kind"`
 	Format *CoreProductTransferFormat `json:"format,omitempty"`
-	// TargetDocumentID — Обязателен для всех видов, кроме reorder_rules
+	// TargetDocumentID — Обязателен для всех видов, кроме reorder_rules и stock_report
 	TargetDocumentID *UUID `json:"target_document_id,omitempty"`
+	// Report — Обязателен для stock_report и запрещён остальным видам: без отбора запрос означал бы «выгрузите весь кабинет»
+	Report *StockReportExportRequest `json:"report,omitempty"`
 }
 
 type StockHandlingUnit struct {
@@ -12001,6 +12018,27 @@ type StockReportDrilldownEntry struct {
 	ContactID *UUID `json:"contact_id"`
 	// ContactName — Название контрагента; пусто без контрагента
 	ContactName string `json:"contact_name"`
+}
+
+// StockReportExportRequest — Отбор экрана остатков и его видимые колонки. Имена полей повторяют параметры GET /api/v1/stock/report/stocks: файл обязан содержать то же, что видел человек, и одно имя на два входа защищает от расхождения. Отличается только перенос: список складов идёт массивом, а не строкой через запятую, и дополнительные поля — объектом вместо параметров cf.*. Колонки берутся из перечня; неизвестная колонка — 400, а не молча пропущенная. Опознавательные колонки (бизнес, юрлицо, склад и зона с кодами, товар, SKU, единица) пишутся всегда, и порядок колонок в файле повторяет экран. Выборка обходится постранично целиком; слишком широкая отклоняется как 400 — книга собирается в памяти, и потолок общий с загрузкой.
+type StockReportExportRequest struct {
+	Mode           *string           `json:"mode,omitempty"`
+	Q              *string           `json:"q,omitempty"`
+	AsOf           *string           `json:"as_of,omitempty"`
+	BusinessID     *UUID             `json:"business_id,omitempty"`
+	CompanyID      *UUID             `json:"company_id,omitempty"`
+	WarehouseID    *UUID             `json:"warehouse_id,omitempty"`
+	WarehouseIds   []UUID            `json:"warehouse_ids,omitempty"`
+	ProductID      *UUID             `json:"product_id,omitempty"`
+	CustomFields   map[string]string `json:"custom_fields,omitempty"`
+	WithoutCompany *bool             `json:"without_company,omitempty"`
+	RollupZones    *bool             `json:"rollup_zones,omitempty"`
+	BelowMinimum   *bool             `json:"below_minimum,omitempty"`
+	WithReserve    *bool             `json:"with_reserve,omitempty"`
+	IncludeEmpty   *bool             `json:"include_empty,omitempty"`
+	Sort           *string           `json:"sort,omitempty"`
+	Direction      *string           `json:"direction,omitempty"`
+	Columns        []string          `json:"columns,omitempty"`
 }
 
 type StockReportOverduePage struct {

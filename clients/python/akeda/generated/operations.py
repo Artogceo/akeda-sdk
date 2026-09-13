@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 070ef817a93a6845e676aa4a45b593b1ac5db551c52b980bd99189afb76eab82).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 182cdc09220a7feb63bd59cef0b8678731793a054390887caa8850ae89e92c3a).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -256,6 +256,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreSaveUIState': OperationSpec('PUT', '/api/v1/core/ui-state/{screen}', 'core', 'preview', 'core:write', False, False, ('screen',), 'none', None, None),
     'coreSetBusinessAccountingMethod': OperationSpec('POST', '/api/v1/core/businesses/{id}/accounting-method', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreSetBusinessActive': OperationSpec('POST', '/api/v1/core/businesses/{id}/activation', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
+    'coreSetBusinessVATPresentation': OperationSpec('POST', '/api/v1/core/businesses/{id}/vat-presentation', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreSuggestRequisitesParties': OperationSpec('GET', '/api/v1/core/lookup/parties', 'finance', 'preview', 'core:read', False, False, (), 'none', None, None),
     'coreUnlinkExternalRef': OperationSpec('POST', '/api/v1/core/external-refs/{id}/unlink', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreUpdateAccountingDimension': OperationSpec('PATCH', '/api/v1/core/accounting-dimensions/{key}', 'core', 'preview', 'core:write', False, True, ('key',), 'none', None, None),

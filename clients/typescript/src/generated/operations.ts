@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 070ef817a93a6845e676aa4a45b593b1ac5db551c52b980bd99189afb76eab82).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 182cdc09220a7feb63bd59cef0b8678731793a054390887caa8850ae89e92c3a).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1607,6 +1607,13 @@ export interface OperationTypes {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.CoreSetBusinessActiveRequest;
+    response: models.CoreBusiness;
+  };
+  /** POST /api/v1/core/businesses/{id}/vat-presentation — Переключить режим показа сумм у бизнеса */
+  coreSetBusinessVATPresentation: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CoreBusinessVATPresentationInput;
     response: models.CoreBusiness;
   };
   /** GET /api/v1/core/lookup/parties — Найти организации по части ИНН, ОГРН или названия */
@@ -5063,7 +5070,7 @@ export interface OperationTypes {
   /** GET /api/v1/stock/report/stocks — Получить отчёт по остаткам */
   stockGetStocksReport: {
     params: Record<string, never>;
-    query: { "as_of"?: string; "below_minimum"?: boolean; "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "limit"?: number; "mode"?: "products" | "warehouses" | "companies"; "offset"?: number; "product_id"?: models.UUID; "q"?: string; "rollup_zones"?: boolean; "sort"?: "name" | "on_hand" | "reserved" | "available" | "expected" | "forecast" | "minimum" | "suggested" | "unit_cost" | "amount"; "warehouse_id"?: models.UUID; "warehouse_ids"?: string; "with_reserve"?: boolean; "without_company"?: boolean };
+    query: { "as_of"?: string; "below_minimum"?: boolean; "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "include_empty"?: boolean; "limit"?: number; "mode"?: "products" | "warehouses" | "companies"; "offset"?: number; "product_id"?: models.UUID; "q"?: string; "rollup_zones"?: boolean; "sort"?: "name" | "on_hand" | "reserved" | "available" | "expected" | "forecast" | "minimum" | "suggested" | "unit_cost" | "amount"; "warehouse_id"?: models.UUID; "warehouse_ids"?: string; "with_reserve"?: boolean; "without_company"?: boolean };
     body: never;
     response: models.StockReportPage;
   };
@@ -6467,6 +6474,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreSaveUIState: { method: "PUT", path: "/api/v1/core/ui-state/{screen}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetBusinessAccountingMethod: { method: "POST", path: "/api/v1/core/businesses/{id}/accounting-method", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetBusinessActive: { method: "POST", path: "/api/v1/core/businesses/{id}/activation", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreSetBusinessVATPresentation: { method: "POST", path: "/api/v1/core/businesses/{id}/vat-presentation", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSuggestRequisitesParties: { method: "GET", path: "/api/v1/core/lookup/parties", module: "finance", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUnlinkExternalRef: { method: "POST", path: "/api/v1/core/external-refs/{id}/unlink", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateAccountingDimension: { method: "PATCH", path: "/api/v1/core/accounting-dimensions/{key}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 070ef817a93a6845e676aa4a45b593b1ac5db551c52b980bd99189afb76eab82).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 182cdc09220a7feb63bd59cef0b8678731793a054390887caa8850ae89e92c3a).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -255,6 +255,7 @@ var Operations = map[string]Operation{
 	"coreSaveUIState":                            {ID: "coreSaveUIState", Method: "PUT", Path: "/api/v1/core/ui-state/{screen}", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: false, PathParams: []string{"screen"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreSetBusinessAccountingMethod":            {ID: "coreSetBusinessAccountingMethod", Method: "POST", Path: "/api/v1/core/businesses/{id}/accounting-method", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreSetBusinessActive":                      {ID: "coreSetBusinessActive", Method: "POST", Path: "/api/v1/core/businesses/{id}/activation", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
+	"coreSetBusinessVATPresentation":             {ID: "coreSetBusinessVATPresentation", Method: "POST", Path: "/api/v1/core/businesses/{id}/vat-presentation", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreSuggestRequisitesParties":               {ID: "coreSuggestRequisitesParties", Method: "GET", Path: "/api/v1/core/lookup/parties", Module: "finance", Stage: "preview", Permission: "core:read", Idempotent: false, Installation: false, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreUnlinkExternalRef":                      {ID: "coreUnlinkExternalRef", Method: "POST", Path: "/api/v1/core/external-refs/{id}/unlink", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreUpdateAccountingDimension":              {ID: "coreUpdateAccountingDimension", Method: "PATCH", Path: "/api/v1/core/accounting-dimensions/{key}", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"key"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},

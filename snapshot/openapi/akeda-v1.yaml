@@ -8526,6 +8526,53 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/core/businesses/{id}/vat-presentation:
+    post:
+      tags:
+        - Core directories
+      operationId: coreSetBusinessVATPresentation
+      summary: Переключить режим показа сумм у бизнеса
+      description: Очищаются ли суммы отчётов от косвенного налога. Вторая ось учётной политики рядом с методом учёта, и живёт она у бизнеса по той же причине — у него один ОПиУ. Чистая прибыль в обоих режимах совпадает, различаются строки выше блока налогов. Режим net доступен только бизнесу на методе начисления — на кассовом выручку создают деньги, а платёж ставки не несёт. Смена режима требует непустого since; переключаться можно в обе стороны, но только вперёд — дата обязана быть позже предыдущего переключения, потому что прошлое не переписывается. Повторный выбор действующего режима принимается и ничего не меняет.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreBusinessVATPresentationInput'
+      responses:
+        '200':
+          description: Обновлённый бизнес
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreBusiness'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/core/businesses/{id}/ownership:
     get:
       tags:
@@ -26082,6 +26129,10 @@ paths:
       summary: Сформировать складской снимок для скачивания
       description: |
         reorder_rules выгружает правила пополнения кабинета целиком.
+        stock_report выгружает отчёт остатков по отбору экрана: он приходит
+        объектом report, и без него запрос отклоняется как 400. Обратное тоже
+        верно — report у других видов отклоняется, чтобы отбор не применился
+        молча к выгрузке, которая его не читает.
         Остальным видам target_document_id обязателен: без него запрос
         отклоняется как 400, а недоступный или несуществующий документ даёт 404.
         Экспорт принадлежит создавшему субъекту и защищает текстовые значения
@@ -26275,6 +26326,12 @@ paths:
             default: false
         - name: with_reserve
           in: query
+          schema:
+            type: boolean
+            default: false
+        - name: include_empty
+          in: query
+          description: 'Показывать строки без единого числа и без правила пополнения. Умолчание — прятать: товар однажды проехал через склад и давно списан в ноль, а группа в выборке остаётся навсегда. Сумма входит в проверку: нулевое количество при ненулевой стоимости — расхождение оценки, а не пустая строка'
           schema:
             type: boolean
             default: false
@@ -43778,6 +43835,7 @@ components:
         - display_name
         - avatar_url
         - role
+        - is_former
       properties:
         user_id:
           type: integer
@@ -43793,6 +43851,9 @@ components:
             - moderator
             - member
             - readonly
+        is_former:
+          type: boolean
+          description: 'Человека больше нет в справочнике кабинета: членство или учётная запись выключены. Он остаётся в составе беседы, потому что его сообщения в ней остались и подпись под ними обязана кем-то называться. Пустое display_name означает, что о нём не осталось даже имени — подписывать такую строку клиент решает сам.'
     ChatMemberPage:
       type: object
       additionalProperties: false
@@ -44932,6 +44993,22 @@ components:
           type: string
           format: date
           description: Дата перехода на начисление; обязательна при accrual и не используется при cash
+    CoreBusinessVATPresentationInput:
+      type: object
+      additionalProperties: false
+      required:
+        - presentation
+      properties:
+        presentation:
+          type: string
+          enum:
+            - gross
+            - net
+          description: Значение приводится к нижнему регистру; mixed бывает подписью отчёта, но не выбором
+        since:
+          type: string
+          format: date
+          description: Дата, с которой действует новый режим; обязательна при смене режима и не спрашивается, когда режим не меняется
     CoreBusiness:
       type: object
       additionalProperties: false
@@ -44957,6 +45034,16 @@ components:
           type: string
           format: date
           description: Дата перехода на начисление; отсутствует у кассового бизнеса
+        vat_presentation:
+          type: string
+          enum:
+            - gross
+            - net
+          description: Очищаются ли суммы отчётов от косвенного налога; gross это полные суммы
+        vat_since:
+          type: string
+          format: date
+          description: Дата, с которой действует текущий режим показа сумм; отсутствует, если режим не переключали
     CoreBusinessInput:
       type: object
       additionalProperties: false
@@ -58597,12 +58684,118 @@ components:
             $ref: '#/components/schemas/StockSupplier'
     StockImportKind:
       type: string
-      description: Вид складского обмена; тот же перечень используют и импорт, и экспорт
+      description: Вид складской ЗАГРУЗКИ. Выгрузка шире, у неё свой перечень StockExportKind
       enum:
         - initial_stock
         - inventory_count
         - document_items
         - reorder_rules
+    StockExportKind:
+      type: string
+      description: |
+        Вид складской выгрузки. Шире вида загрузки: отчёт остатков
+        выгружается, но не загружается — читателя такого файла нет вовсе, и
+        вид в общем перечне открыл бы себе путь загрузки.
+      enum:
+        - initial_stock
+        - inventory_count
+        - document_items
+        - reorder_rules
+        - stock_report
+    StockReportExportRequest:
+      type: object
+      additionalProperties: false
+      description: |
+        Отбор экрана остатков и его видимые колонки. Имена полей повторяют
+        параметры GET /api/v1/stock/report/stocks: файл обязан содержать то
+        же, что видел человек, и одно имя на два входа защищает от
+        расхождения. Отличается только перенос: список складов идёт массивом,
+        а не строкой через запятую, и дополнительные поля — объектом вместо
+        параметров cf.*.
+        Колонки берутся из перечня; неизвестная колонка — 400, а не молча
+        пропущенная. Опознавательные колонки (бизнес, юрлицо, склад и зона с
+        кодами, товар, SKU, единица) пишутся всегда, и порядок колонок в файле
+        повторяет экран.
+        Выборка обходится постранично целиком; слишком широкая отклоняется
+        как 400 — книга собирается в памяти, и потолок общий с загрузкой.
+      properties:
+        mode:
+          type: string
+          enum:
+            - products
+            - warehouses
+            - companies
+          default: warehouses
+        q:
+          type: string
+        as_of:
+          type: string
+          format: date
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        warehouse_id:
+          $ref: '#/components/schemas/UUID'
+        warehouse_ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/UUID'
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        custom_fields:
+          type: object
+          additionalProperties:
+            type: string
+        without_company:
+          type: boolean
+          default: false
+        rollup_zones:
+          type: boolean
+          default: false
+        below_minimum:
+          type: boolean
+          default: false
+        with_reserve:
+          type: boolean
+          default: false
+        include_empty:
+          type: boolean
+          default: false
+        sort:
+          type: string
+          enum:
+            - name
+            - on_hand
+            - reserved
+            - available
+            - expected
+            - forecast
+            - minimum
+            - suggested
+            - unit_cost
+            - amount
+          default: name
+        direction:
+          type: string
+          enum:
+            - asc
+            - desc
+          default: asc
+        columns:
+          type: array
+          items:
+            type: string
+            enum:
+              - on_hand
+              - reserved
+              - available
+              - expected
+              - forecast
+              - minimum
+              - suggested
+              - unit_cost
+              - amount
     StockImportStatus:
       type: string
       enum:
@@ -58769,13 +58962,16 @@ components:
         - kind
       properties:
         kind:
-          $ref: '#/components/schemas/StockImportKind'
+          $ref: '#/components/schemas/StockExportKind'
         format:
           $ref: '#/components/schemas/CoreProductTransferFormat'
           default: xlsx
         target_document_id:
           $ref: '#/components/schemas/UUID'
-          description: Обязателен для всех видов, кроме reorder_rules
+          description: Обязателен для всех видов, кроме reorder_rules и stock_report
+        report:
+          $ref: '#/components/schemas/StockReportExportRequest'
+          description: 'Обязателен для stock_report и запрещён остальным видам: без отбора запрос означал бы «выгрузите весь кабинет»'
     StockExport:
       type: object
       additionalProperties: false

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 070ef817a93a6845e676aa4a45b593b1ac5db551c52b980bd99189afb76eab82).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 182cdc09220a7feb63bd59cef0b8678731793a054390887caa8850ae89e92c3a).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -251,6 +251,7 @@ __all__ = [
     "CoreBusinessInput",
     "CoreBusinessOwner",
     "CoreBusinessOwnerInput",
+    "CoreBusinessVATPresentationInput",
     "CoreCabinetPreferences",
     "CoreChange",
     "CoreChangeFeedPage",
@@ -1129,6 +1130,7 @@ __all__ = [
     "StockDocumentRefs",
     "StockDocumentTypeKey",
     "StockExport",
+    "StockExportKind",
     "StockExportRequest",
     "StockHandlingUnit",
     "StockHandlingUnitCard",
@@ -1168,6 +1170,7 @@ __all__ = [
     "StockReorderRulePatch",
     "StockReportDrilldown",
     "StockReportDrilldownEntry",
+    "StockReportExportRequest",
     "StockReportOverduePage",
     "StockReportOverdueReservation",
     "StockReportOverdueSupplierOrder",
@@ -3166,6 +3169,8 @@ class ChatMember(TypedDict):
     display_name: str
     avatar_url: str
     role: Literal['owner', 'moderator', 'member', 'readonly']
+    #: Человека больше нет в справочнике кабинета: членство или учётная запись выключены. Он остаётся в составе беседы, потому что его сообщения в ней остались и подпись под ними обязана кем-то называться. Пустое display_name означает, что о нём не осталось даже имени — подписывать такую строку клиент решает сам.
+    is_former: bool
 
 class ChatMemberPage(TypedDict):
     items: List["ChatMember"]
@@ -3442,6 +3447,10 @@ class _CoreBusinessRequired(TypedDict):
 class CoreBusiness(_CoreBusinessRequired, total=False):
     #: Дата перехода на начисление; отсутствует у кассового бизнеса
     accrual_from: str
+    #: Очищаются ли суммы отчётов от косвенного налога; gross это полные суммы
+    vat_presentation: Literal['gross', 'net']
+    #: Дата, с которой действует текущий режим показа сумм; отсутствует, если режим не переключали
+    vat_since: str
 
 class _CoreBusinessAccountingMethodInputRequired(TypedDict):
     #: Значение приводится к нижнему регистру
@@ -3474,6 +3483,14 @@ class CoreBusinessOwnerInput(_CoreBusinessOwnerInputRequired, total=False):
     employee_id: "UUID"
     company_id: "UUID"
     contact_id: "UUID"
+
+class _CoreBusinessVATPresentationInputRequired(TypedDict):
+    #: Значение приводится к нижнему регистру; mixed бывает подписью отчёта, но не выбором
+    presentation: Literal['gross', 'net']
+
+class CoreBusinessVATPresentationInput(_CoreBusinessVATPresentationInputRequired, total=False):
+    #: Дата, с которой действует новый режим; обязательна при смене режима и не спрашивается, когда режим не меняется
+    since: str
 
 class CoreCabinetPreferences(TypedDict):
     locale: Literal['ru-RU', 'en-US']
@@ -12444,13 +12461,17 @@ class StockExport(_StockExportRequired, total=False):
     target_document_id: "UUID"
     created_by: int
 
+StockExportKind = Literal['initial_stock', 'inventory_count', 'document_items', 'reorder_rules', 'stock_report']
+
 class _StockExportRequestRequired(TypedDict):
-    kind: "StockImportKind"
+    kind: "StockExportKind"
 
 class StockExportRequest(_StockExportRequestRequired, total=False):
     format: "CoreProductTransferFormat"
-    #: Обязателен для всех видов, кроме reorder_rules
+    #: Обязателен для всех видов, кроме reorder_rules и stock_report
     target_document_id: "UUID"
+    #: Обязателен для stock_report и запрещён остальным видам: без отбора запрос означал бы «выгрузите весь кабинет»
+    report: "StockReportExportRequest"
 
 class _StockHandlingUnitRequired(TypedDict):
     id: "UUID"
@@ -12825,6 +12846,27 @@ class StockReportDrilldownEntry(TypedDict):
     contact_id: Optional["UUID"]
     #: Название контрагента; пусто без контрагента
     contact_name: str
+
+class StockReportExportRequest(TypedDict, total=False):
+    """Отбор экрана остатков и его видимые колонки. Имена полей повторяют параметры GET /api/v1/stock/report/stocks: файл обязан содержать то же, что видел человек, и одно имя на два входа защищает от расхождения. Отличается только перенос: список складов идёт массивом, а не строкой через запятую, и дополнительные поля — объектом вместо параметров cf.*. Колонки берутся из перечня; неизвестная колонка — 400, а не молча пропущенная. Опознавательные колонки (бизнес, юрлицо, склад и зона с кодами, товар, SKU, единица) пишутся всегда, и порядок колонок в файле повторяет экран. Выборка обходится постранично целиком; слишком широкая отклоняется как 400 — книга собирается в памяти, и потолок общий с загрузкой."""
+
+    mode: Literal['products', 'warehouses', 'companies']
+    q: str
+    as_of: str
+    business_id: "UUID"
+    company_id: "UUID"
+    warehouse_id: "UUID"
+    warehouse_ids: List["UUID"]
+    product_id: "UUID"
+    custom_fields: Dict[str, str]
+    without_company: bool
+    rollup_zones: bool
+    below_minimum: bool
+    with_reserve: bool
+    include_empty: bool
+    sort: Literal['name', 'on_hand', 'reserved', 'available', 'expected', 'forecast', 'minimum', 'suggested', 'unit_cost', 'amount']
+    direction: Literal['asc', 'desc']
+    columns: List[Literal['on_hand', 'reserved', 'available', 'expected', 'forecast', 'minimum', 'suggested', 'unit_cost', 'amount']]
 
 class StockReportOverduePage(TypedDict):
     count: int
