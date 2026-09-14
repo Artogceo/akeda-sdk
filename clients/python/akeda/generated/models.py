@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 182cdc09220a7feb63bd59cef0b8678731793a054390887caa8850ae89e92c3a).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 761db417291a739b5c48c5a4a0a2623016e4f6ea430ce54bc4e373fa2a737fc2).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -238,6 +238,8 @@ __all__ = [
     "CoreAccountingDimensionPage",
     "CoreAccountingDimensionPageReadiness",
     "CoreAccountingDimensionPatch",
+    "CoreAccountingDimensionVersion",
+    "CoreAccountingDimensionVersionInput",
     "CoreAccountingPeriodClose",
     "CoreAccountingPeriodEvent",
     "CoreAccountingPeriodReopen",
@@ -3368,6 +3370,9 @@ class _CoreAccountingDimensionRequired(TypedDict):
 class CoreAccountingDimension(_CoreAccountingDimensionRequired, total=False):
     dictionary_key: str
     enabled_at: str
+    #: Дата, на которую показаны enabled и required
+    on: str
+    versions: List["CoreAccountingDimensionVersion"]
 
 class CoreAccountingDimensionPage(TypedDict):
     count: int
@@ -3380,6 +3385,26 @@ class CoreAccountingDimensionPageReadiness(TypedDict):
 class CoreAccountingDimensionPatch(TypedDict, total=False):
     enabled: bool
     required: bool
+
+class _CoreAccountingDimensionVersionRequired(TypedDict):
+    id: str
+    #: 0001-01-01 — с начала учёта
+    valid_from: str
+    enabled: bool
+    required: bool
+
+class CoreAccountingDimensionVersion(_CoreAccountingDimensionVersionRequired, total=False):
+    #: Пусто — запись действует
+    valid_to: str
+
+class _CoreAccountingDimensionVersionInputRequired(TypedDict):
+    valid_from: str
+    enabled: bool
+    required: bool
+
+class CoreAccountingDimensionVersionInput(_CoreAccountingDimensionVersionInputRequired, total=False):
+    #: Поправить действующую запись истории вместо новой
+    edit_open: bool
 
 class _CoreAccountingPeriodCloseRequired(TypedDict):
     closed_through: str
@@ -3872,6 +3897,10 @@ class _CoreDocumentBlockReasonRequired(TypedDict):
 class CoreDocumentBlockReason(_CoreDocumentBlockReasonRequired, total=False):
     detail: str
     shortages: List["CoreBalanceShortage"]
+    #: Код отказа проводчика внутри причины (например stock_backdated_conflict); detail для него собран на языке запроса.
+    detail_code: str
+    #: Параметры отказа с кодом detail_code: из них собрана фраза detail.
+    detail_params: Dict[str, str]
 
 class CoreDocumentBlockers(TypedDict):
     document_id: "UUID"
@@ -8309,6 +8338,9 @@ class FinanceRegisterReconciliation(TypedDict):
 
 class FinanceRegisterRepairFailure(TypedDict):
     id: "UUID"
+    #: Machine-readable reason (not_found, nothing_to_restore, wrong_document_type, period_closed, document_changed, payload_invalid, ledger_setup_missing, balance_shortage, ledger_imbalance, unexpected).
+    code: str
+    #: Human-readable reason in the request language; an internal failure carries the case code instead of the raw error.
     error: str
 
 class FinanceRegisterRepairRequest(TypedDict, total=False):
@@ -8435,10 +8467,12 @@ class FinanceSettlementExposure(TypedDict):
     contact_id: "UUID"
     company_id: "UUID"
     currency: str
-    #: Decimal string
+    #: Decimal string. What the counterparty owes us (side receivable); equals the receivable column of settlement positions for the same scope.
     receivable: str
-    #: Decimal string
+    #: Decimal string. Part of receivable whose due date has passed.
     overdue: str
+    #: Decimal string. Part of receivable without a due date; it is never overdue, so zero overdue does not mean everything is on time.
+    undated: str
     open_obligations: int
     source: str
 

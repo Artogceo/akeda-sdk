@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 182cdc09220a7feb63bd59cef0b8678731793a054390887caa8850ae89e92c3a).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 761db417291a739b5c48c5a4a0a2623016e4f6ea430ce54bc4e373fa2a737fc2).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -2141,6 +2141,9 @@ type CoreAccountingDimension struct {
 	Enabled       bool    `json:"enabled"`
 	Required      bool    `json:"required"`
 	EnabledAt     *string `json:"enabled_at,omitempty"`
+	// On — Дата, на которую показаны enabled и required
+	On       *string                          `json:"on,omitempty"`
+	Versions []CoreAccountingDimensionVersion `json:"versions,omitempty"`
 }
 
 type CoreAccountingDimensionPage struct {
@@ -2156,6 +2159,24 @@ type CoreAccountingDimensionPageReadiness struct {
 type CoreAccountingDimensionPatch struct {
 	Enabled  *bool `json:"enabled,omitempty"`
 	Required *bool `json:"required,omitempty"`
+}
+
+type CoreAccountingDimensionVersion struct {
+	ID string `json:"id"`
+	// ValidFrom — 0001-01-01 — с начала учёта
+	ValidFrom string `json:"valid_from"`
+	// ValidTo — Пусто — запись действует
+	ValidTo  *string `json:"valid_to,omitempty"`
+	Enabled  bool    `json:"enabled"`
+	Required bool    `json:"required"`
+}
+
+type CoreAccountingDimensionVersionInput struct {
+	ValidFrom string `json:"valid_from"`
+	Enabled   bool   `json:"enabled"`
+	Required  bool   `json:"required"`
+	// EditOpen — Поправить действующую запись истории вместо новой
+	EditOpen *bool `json:"edit_open,omitempty"`
 }
 
 type CoreAccountingPeriodClose struct {
@@ -2655,6 +2676,10 @@ type CoreDocumentBlockReason struct {
 	Message   string                `json:"message"`
 	Detail    *string               `json:"detail,omitempty"`
 	Shortages []CoreBalanceShortage `json:"shortages,omitempty"`
+	// DetailCode — Код отказа проводчика внутри причины (например stock_backdated_conflict); detail для него собран на языке запроса.
+	DetailCode *string `json:"detail_code,omitempty"`
+	// DetailParams — Параметры отказа с кодом detail_code: из них собрана фраза detail.
+	DetailParams map[string]string `json:"detail_params,omitempty"`
 }
 
 type CoreDocumentBlockers struct {
@@ -7194,7 +7219,10 @@ type FinanceRegisterReconciliation struct {
 }
 
 type FinanceRegisterRepairFailure struct {
-	ID    UUID   `json:"id"`
+	ID UUID `json:"id"`
+	// Code — Machine-readable reason (not_found, nothing_to_restore, wrong_document_type, period_closed, document_changed, payload_invalid, ledger_setup_missing, balance_shortage, ledger_imbalance, unexpected).
+	Code string `json:"code"`
+	// Error — Human-readable reason in the request language; an internal failure carries the case code instead of the raw error.
 	Error string `json:"error"`
 }
 
@@ -7341,10 +7369,12 @@ type FinanceSettlementExposure struct {
 	ContactID UUID   `json:"contact_id"`
 	CompanyID UUID   `json:"company_id"`
 	Currency  string `json:"currency"`
-	// Receivable — Decimal string
+	// Receivable — Decimal string. What the counterparty owes us (side receivable); equals the receivable column of settlement positions for the same scope.
 	Receivable string `json:"receivable"`
-	// Overdue — Decimal string
-	Overdue         string `json:"overdue"`
+	// Overdue — Decimal string. Part of receivable whose due date has passed.
+	Overdue string `json:"overdue"`
+	// Undated — Decimal string. Part of receivable without a due date; it is never overdue, so zero overdue does not mean everything is on time.
+	Undated         string `json:"undated"`
 	OpenObligations int64  `json:"open_obligations"`
 	Source          string `json:"source"`
 }

@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 182cdc09220a7feb63bd59cef0b8678731793a054390887caa8850ae89e92c3a).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 761db417291a739b5c48c5a4a0a2623016e4f6ea430ce54bc4e373fa2a737fc2).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1262,7 +1262,7 @@ export interface OperationTypes {
   /** GET /api/v1/core/accounting-dimensions — Получить включённые аналитические разрезы и готовность истории */
   coreListAccountingDimensions: {
     params: Record<string, never>;
-    query: Record<string, never>;
+    query: { "on"?: string };
     body: never;
     response: models.CoreAccountingDimensionPage;
   };
@@ -1587,6 +1587,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.CoreProduct;
+  };
+  /** POST /api/v1/core/accounting-dimensions/{key}/versions — Записать решение по разрезу с даты «действует с» или поправить действующую запись истории */
+  coreSaveAccountingDimensionVersion: {
+    params: { "key": "company" | "project" | "department" | "cfo" };
+    query: Record<string, never>;
+    body: models.CoreAccountingDimensionVersionInput;
+    response: models.CoreAccountingDimension;
   };
   /** PUT /api/v1/core/ui-state/{screen} — Заменить сохранённое состояние одного экрана */
   coreSaveUIState: {
@@ -6471,6 +6478,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreResolveExternalRefs: { method: "POST", path: "/api/v1/core/external-refs/resolve", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreRestoreContact: { method: "POST", path: "/api/v1/core/contacts/{id}/restore", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreRestoreProduct: { method: "POST", path: "/api/v1/core/products/{id}/restore", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreSaveAccountingDimensionVersion: { method: "POST", path: "/api/v1/core/accounting-dimensions/{key}/versions", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSaveUIState: { method: "PUT", path: "/api/v1/core/ui-state/{screen}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetBusinessAccountingMethod: { method: "POST", path: "/api/v1/core/businesses/{id}/accounting-method", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetBusinessActive: { method: "POST", path: "/api/v1/core/businesses/{id}/activation", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

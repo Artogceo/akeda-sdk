@@ -18994,11 +18994,21 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "on",
+            "in": "query",
+            "required": false,
+            "description": "Дата YYYY-MM-DD, на которую показать решения по разрезам; без неё — на сегодня",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Разрезы и число уже проведённых движений",
+            "description": "Разрезы на дату с историей решений и число уже проведённых движений",
             "content": {
               "application/json": {
                 "schema": {
@@ -19006,6 +19016,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -19075,6 +19088,88 @@
         "responses": {
           "200": {
             "description": "Сохранённый разрез",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreAccountingDimension"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/core/accounting-dimensions/{key}/versions": {
+      "post": {
+        "tags": [
+          "Core accounting"
+        ],
+        "operationId": "coreSaveAccountingDimensionVersion",
+        "summary": "Записать решение по разрезу с даты «действует с» или поправить действующую запись истории",
+        "x-akeda-module": "core",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "core:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "company",
+                "project",
+                "department",
+                "cfo"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoreAccountingDimensionVersionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Разрез на сегодня с историей решений",
             "content": {
               "application/json": {
                 "schema": {
@@ -74461,6 +74556,17 @@
             "items": {
               "$ref": "#/components/schemas/CoreBalanceShortage"
             }
+          },
+          "detail_code": {
+            "type": "string",
+            "description": "Код отказа проводчика внутри причины (например stock_backdated_conflict); detail для него собран на языке запроса."
+          },
+          "detail_params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Параметры отказа с кодом detail_code: из них собрана фраза detail."
           }
         }
       },
@@ -75036,6 +75142,74 @@
           "enabled_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "on": {
+            "type": "string",
+            "format": "date",
+            "description": "Дата, на которую показаны enabled и required"
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreAccountingDimensionVersion"
+            }
+          }
+        }
+      },
+      "CoreAccountingDimensionVersion": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "valid_from",
+          "enabled",
+          "required"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "valid_from": {
+            "type": "string",
+            "format": "date",
+            "description": "0001-01-01 — с начала учёта"
+          },
+          "valid_to": {
+            "type": "string",
+            "format": "date",
+            "description": "Пусто — запись действует"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CoreAccountingDimensionVersionInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "valid_from",
+          "enabled",
+          "required"
+        ],
+        "properties": {
+          "valid_from": {
+            "type": "string",
+            "format": "date"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "edit_open": {
+            "type": "boolean",
+            "description": "Поправить действующую запись истории вместо новой"
           }
         }
       },
@@ -78060,6 +78234,7 @@
           "currency",
           "receivable",
           "overdue",
+          "undated",
           "open_obligations",
           "source"
         ],
@@ -78084,11 +78259,15 @@
           },
           "receivable": {
             "type": "string",
-            "description": "Decimal string"
+            "description": "Decimal string. What the counterparty owes us (side receivable); equals the receivable column of settlement positions for the same scope."
           },
           "overdue": {
             "type": "string",
-            "description": "Decimal string"
+            "description": "Decimal string. Part of receivable whose due date has passed."
+          },
+          "undated": {
+            "type": "string",
+            "description": "Decimal string. Part of receivable without a due date; it is never overdue, so zero overdue does not mean everything is on time."
           },
           "open_obligations": {
             "type": "integer",
@@ -83529,14 +83708,20 @@
         "additionalProperties": false,
         "required": [
           "id",
+          "code",
           "error"
         ],
         "properties": {
           "id": {
             "$ref": "#/components/schemas/UUID"
           },
+          "code": {
+            "type": "string",
+            "description": "Machine-readable reason (not_found, nothing_to_restore, wrong_document_type, period_closed, document_changed, payload_invalid, ledger_setup_missing, balance_shortage, ledger_imbalance, unexpected)."
+          },
           "error": {
-            "type": "string"
+            "type": "string",
+            "description": "Human-readable reason in the request language; an internal failure carries the case code instead of the raw error."
           }
         }
       },

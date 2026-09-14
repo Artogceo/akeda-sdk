@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 182cdc09220a7feb63bd59cef0b8678731793a054390887caa8850ae89e92c3a).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 761db417291a739b5c48c5a4a0a2623016e4f6ea430ce54bc4e373fa2a737fc2).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2146,6 +2146,9 @@ export interface CoreAccountingDimension {
   "enabled": boolean;
   "required": boolean;
   "enabled_at"?: string;
+  /** Дата, на которую показаны enabled и required */
+  "on"?: string;
+  "versions"?: Array<CoreAccountingDimensionVersion>;
 }
 
 export interface CoreAccountingDimensionPage {
@@ -2161,6 +2164,24 @@ export interface CoreAccountingDimensionPageReadiness {
 export interface CoreAccountingDimensionPatch {
   "enabled"?: boolean;
   "required"?: boolean;
+}
+
+export interface CoreAccountingDimensionVersion {
+  "id": string;
+  /** 0001-01-01 — с начала учёта */
+  "valid_from": string;
+  /** Пусто — запись действует */
+  "valid_to"?: string;
+  "enabled": boolean;
+  "required": boolean;
+}
+
+export interface CoreAccountingDimensionVersionInput {
+  "valid_from": string;
+  "enabled": boolean;
+  "required": boolean;
+  /** Поправить действующую запись истории вместо новой */
+  "edit_open"?: boolean;
 }
 
 export interface CoreAccountingPeriodClose {
@@ -2660,6 +2681,10 @@ export interface CoreDocumentBlockReason {
   "message": string;
   "detail"?: string;
   "shortages"?: Array<CoreBalanceShortage>;
+  /** Код отказа проводчика внутри причины (например stock_backdated_conflict); detail для него собран на языке запроса. */
+  "detail_code"?: string;
+  /** Параметры отказа с кодом detail_code: из них собрана фраза detail. */
+  "detail_params"?: { [key: string]: string };
 }
 
 export interface CoreDocumentBlockers {
@@ -7218,6 +7243,9 @@ export interface FinanceRegisterReconciliation {
 
 export interface FinanceRegisterRepairFailure {
   "id": UUID;
+  /** Machine-readable reason (not_found, nothing_to_restore, wrong_document_type, period_closed, document_changed, payload_invalid, ledger_setup_missing, balance_shortage, ledger_imbalance, unexpected). */
+  "code": string;
+  /** Human-readable reason in the request language; an internal failure carries the case code instead of the raw error. */
   "error": string;
 }
 
@@ -7364,10 +7392,12 @@ export interface FinanceSettlementExposure {
   "contact_id": UUID;
   "company_id": UUID;
   "currency": string;
-  /** Decimal string */
+  /** Decimal string. What the counterparty owes us (side receivable); equals the receivable column of settlement positions for the same scope. */
   "receivable": string;
-  /** Decimal string */
+  /** Decimal string. Part of receivable whose due date has passed. */
   "overdue": string;
+  /** Decimal string. Part of receivable without a due date; it is never overdue, so zero overdue does not mean everything is on time. */
+  "undated": string;
   "open_obligations": number;
   "source": string;
 }
