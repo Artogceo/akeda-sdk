@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3f5811665ccdd93f447eca1f9f11d23163eee102e1f965915e1e01d27ea38be).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1bed7b3a1c1ca7151c7312fc5716ba8e5ed2367eaebc61d22da652ab660d2d02).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -363,6 +363,13 @@ export interface OperationTypes {
     body: models.CalendarEventPatch;
     response: models.CalendarEventEnvelope;
   };
+  /** POST /api/v1/chat/conversations/{id}/members — Добавить человека в группу */
+  chatAddGroupMember: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.ChatAddMember;
+    response: models.ChatMemberChangeResult;
+  };
   /** PATCH /api/v1/chat/conversations/{id}/notification-mode — Изменить режим уведомлений чата */
   chatChangeNotificationMode: {
     params: { "id": models.UUID };
@@ -475,6 +482,13 @@ export interface OperationTypes {
     body: never;
     response: models.ChatConversation;
   };
+  /** GET /api/v1/chat/link-preview — Развернуть ссылку из переписки */
+  chatLinkPreview: {
+    params: Record<string, never>;
+    query: { "url": string };
+    body: never;
+    response: models.ChatLinkPreview;
+  };
   /** GET /api/v1/chat/conversations/{id}/attachments — Получить вложения доступного чата */
   chatListAttachments: {
     params: { "id": models.UUID };
@@ -509,6 +523,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.ChatMentionCandidatePage;
+  };
+  /** GET /api/v1/chat/conversations/{id}/messages/{messageId}/readers — Узнать, кто прочитал сообщение */
+  chatListMessageReaders: {
+    params: { "id": models.UUID; "messageId": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.ChatMessageReaderPage;
   };
   /** GET /api/v1/chat/conversations/{id}/messages — Получить окно сообщений */
   chatListMessages: {
@@ -608,12 +629,26 @@ export interface OperationTypes {
     body: models.ChatMobileDeviceRegistration;
     response: models.ChatMobileDeviceRegistrationState;
   };
+  /** DELETE /api/v1/chat/conversations/{id}/members/{userId} — Исключить человека из группы */
+  chatRemoveGroupMember: {
+    params: { "id": models.UUID; "userId": number };
+    query: Record<string, never>;
+    body: never;
+    response: models.ChatMemberChangeResult;
+  };
   /** DELETE /api/v1/chat/conversations/{id}/messages/{messageId}/reaction — Снять свою реакцию с сообщения */
   chatRemoveReaction: {
     params: { "id": models.UUID; "messageId": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.ChatReactionResult;
+  };
+  /** PATCH /api/v1/chat/conversations/{id} — Переименовать группу */
+  chatRenameGroup: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.ChatRenameGroup;
+    response: models.ChatRenameGroupResult;
   };
   /** POST /api/v1/chat/conversations/{id}/media — Идемпотентно отправить голосовое или видеосообщение */
   chatSendMedia: {
@@ -656,6 +691,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.ChatChangePinResult;
+  };
+  /** GET /api/v1/chat/conversations/unread — Получить числа непрочитанного для значков */
+  chatUnreadSummary: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.ChatUnreadSummary;
   };
   /** PATCH /api/v1/chat/folders/{id} — Переписать личную папку списка бесед */
   chatUpdateFolder: {
@@ -6036,7 +6078,7 @@ export interface OperationTypes {
   /** GET /api/v1/tasks/tasks — Получить видимые пользователю задачи */
   tasksListTasks: {
     params: Record<string, never>;
-    query: { "compact"?: boolean; "limit"?: number; "offset"?: number; "priority"?: models.TaskPriority; "project"?: string; "q"?: string; "scope"?: "mine"; "section"?: string; "status"?: string };
+    query: { "compact"?: boolean; "limit"?: number; "milestone"?: string; "offset"?: number; "priority"?: models.TaskPriority; "project"?: string; "q"?: string; "scope"?: "mine"; "section"?: string; "status"?: string };
     body: never;
     response: models.TaskPage;
   };
@@ -6317,6 +6359,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   calendarUpdateBookingLink: { method: "PATCH", path: "/api/v1/calendar/booking-links/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarUpdateConnector: { method: "PATCH", path: "/api/v1/calendar/connectors/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarUpdateEvent: { method: "PATCH", path: "/api/v1/calendar/events/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatAddGroupMember: { method: "POST", path: "/api/v1/chat/conversations/{id}/members", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatChangeNotificationMode: { method: "PATCH", path: "/api/v1/chat/conversations/{id}/notification-mode", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatClearManualUnread: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/manual-unread", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatCreateFolder: { method: "POST", path: "/api/v1/chat/folders", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -6333,11 +6376,13 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   chatForwardMessage: { method: "POST", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/forward", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatGetAttachment: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments/{attachmentId}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatGetConversation: { method: "GET", path: "/api/v1/chat/conversations/{id}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatLinkPreview: { method: "GET", path: "/api/v1/chat/link-preview", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatListAttachments: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
   chatListConversationMembers: { method: "GET", path: "/api/v1/chat/conversations/{id}/members", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatListConversations: { method: "GET", path: "/api/v1/chat/conversations", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "cursor", pageSizeMax: 100, pageSizeDefault: 50 },
   chatListFolders: { method: "GET", path: "/api/v1/chat/folders", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatListMentionCandidates: { method: "GET", path: "/api/v1/chat/conversations/{id}/mentions/candidates", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatListMessageReaders: { method: "GET", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/readers", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatListMessages: { method: "GET", path: "/api/v1/chat/conversations/{id}/messages", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
   chatListPeople: { method: "GET", path: "/api/v1/chat/people", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatListPins: { method: "GET", path: "/api/v1/chat/conversations/{id}/pins", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -6352,13 +6397,16 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   chatPinMessage: { method: "PUT", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/pin", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatPulsePresence: { method: "POST", path: "/api/v1/chat/conversations/{id}/typing", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatRegisterMobileDevice: { method: "POST", path: "/api/v1/chat/mobile/devices", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatRemoveGroupMember: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/members/{userId}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatRemoveReaction: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/reaction", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatRenameGroup: { method: "PATCH", path: "/api/v1/chat/conversations/{id}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatSendMedia: { method: "POST", path: "/api/v1/chat/conversations/{id}/media", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatSendMessage: { method: "POST", path: "/api/v1/chat/conversations/{id}/messages", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatSendMobilePushTest: { method: "POST", path: "/api/v1/chat/mobile/devices/test", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatSetReaction: { method: "PUT", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/reaction", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatStreamRealtime: { method: "GET", path: "/api/v1/chat/realtime/stream", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatUnpinMessage: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/pin", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatUnreadSummary: { method: "GET", path: "/api/v1/chat/conversations/unread", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatUpdateFolder: { method: "PATCH", path: "/api/v1/chat/folders/{id}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatUploadAttachment: { method: "POST", path: "/api/v1/chat/conversations/{id}/attachments", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatUploadConversationAvatar: { method: "POST", path: "/api/v1/chat/conversations/{id}/avatar", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

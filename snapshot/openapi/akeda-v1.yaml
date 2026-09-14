@@ -431,6 +431,14 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/TaskPriority'
+        - name: milestone
+          in: query
+          description: |
+            Веха дорожной карты: UUID или точное имя. Возвращает только задачи
+            этой вехи. Несуществующее значение — ошибка 400, а не полная выдача:
+            молча проигнорированный фильтр читался бы как применённый.
+          schema:
+            type: string
         - name: scope
           in: query
           schema:
@@ -6773,6 +6781,71 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Chat
+      operationId: chatRenameGroup
+      summary: Переименовать группу
+      description: 'Название меняет тот, кому беседа разрешает распоряжаться составом. Личный диалог собственного имени не имеет: его название складывается из собеседников.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: chat
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: chat:write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRenameGroup'
+      responses:
+        '200':
+          description: Новое название и время правки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatRenameGroupResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/chat/conversations/unread:
+    get:
+      tags:
+        - Chat
+      operationId: chatUnreadSummary
+      summary: Получить числа непрочитанного для значков
+      description: 'Только числа: обычные беседы и беседы задач считаются раздельно, ни названий, ни текста в ответе нет. Отсюда берётся цифра на значке раздела и вкладок.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: chat
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: chat:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Непрочитанное по двум пространствам
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatUnreadSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/chat/conversations/{id}/members:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -6797,6 +6870,150 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ChatMemberPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Chat
+      operationId: chatAddGroupMember
+      summary: Добавить человека в группу
+      description: 'Ответ описывает состояние состава, а не действие: повторное добавление того же человека возвращает ту же запись. Личная переписка состава не меняет.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: chat
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: chat:write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatAddMember'
+      responses:
+        '200':
+          description: Состав изменён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMemberChangeResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/chat/conversations/{id}/members/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ChatConversationID'
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    delete:
+      tags:
+        - Chat
+      operationId: chatRemoveGroupMember
+      summary: Исключить человека из группы
+      description: 'Сообщения исключённого остаются в переписке, и он остаётся их автором. Несуществующий номер человека отвечает 404, а не 400: чужой состав наружу не называется.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: chat
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: chat:write
+      responses:
+        '200':
+          description: Состав изменён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMemberChangeResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/chat/conversations/{id}/messages/{messageId}/readers:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ChatConversationID'
+      - $ref: '#/components/parameters/ChatMessageID'
+    get:
+      tags:
+        - Chat
+      operationId: chatListMessageReaders
+      summary: Узнать, кто прочитал сообщение
+      description: 'Кто читает переписку — такая же её часть, как и текст, поэтому спрашивать вправе её участник. Уволенный отдаётся с признаком is_former, а не выпадает из списка. Листания нет: список отдаётся целиком.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: chat
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: chat:read
+      responses:
+        '200':
+          description: Прочитавшие и время прочтения
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessageReaderPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/chat/link-preview:
+    get:
+      tags:
+        - Chat
+      operationId: chatLinkPreview
+      summary: Развернуть ссылку из переписки
+      description: 'Ссылку открывает сервер, а не браузер читателя: иначе каждый, кто просто открыл беседу, представился бы чужому сайту своим адресом. Любая неудача отвечает 404 без причины — разбор чужих ответов превратил бы ручку в разведку сети.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: chat
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: chat:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Ссылка из текста сообщения
+      responses:
+        '200':
+          description: Карточка ссылки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatLinkPreview'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -38543,6 +38760,8 @@ components:
         - coexecutors
         - cycle
         - cycle_name
+        - milestone
+        - milestone_name
         - start_at
         - created_at
         - due_at
@@ -38639,6 +38858,14 @@ components:
             - $ref: '#/components/schemas/UUID'
             - type: 'null'
         cycle_name:
+          type:
+            - string
+            - 'null'
+        milestone:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+        milestone_name:
           type:
             - string
             - 'null'
@@ -38860,6 +39087,9 @@ components:
           type: string
         cycle:
           type: string
+        milestone:
+          type: string
+          description: 'Веха: UUID или имя этапа своего проекта задач'
         custom:
           type: object
           additionalProperties: true
@@ -38954,6 +39184,9 @@ components:
           type: string
         cycle:
           type: string
+        milestone:
+          type: string
+          description: 'Веха: UUID или имя этапа; пустая строка снимает задачу с вехи'
         custom:
           type: object
           additionalProperties: true
@@ -40531,6 +40764,8 @@ components:
         - target_date
         - order
         - is_archived
+        - task_count
+        - tasks_done
         - created_at
         - updated_at
       properties:
@@ -40554,6 +40789,12 @@ components:
           type: integer
         is_archived:
           type: boolean
+        task_count:
+          type: integer
+          description: Живые задачи вехи, без архивных
+        tasks_done:
+          type: integer
+          description: Из них в финальном статусе
         created_at:
           type: string
         updated_at:
@@ -44120,6 +44361,137 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ChatMember'
+    ChatRenameGroup:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 120
+          description: Название группы. Пробелы по краям снимаются; пустое после этого название отклоняется.
+    ChatRenameGroupResult:
+      type: object
+      additionalProperties: false
+      required:
+        - conversation_id
+        - title
+        - updated_at
+      properties:
+        conversation_id:
+          $ref: '#/components/schemas/UUID'
+        title:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+    ChatAddMember:
+      type: object
+      additionalProperties: false
+      required:
+        - user_id
+      properties:
+        user_id:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Человек кабинета, которого добавляют в группу
+    ChatMemberChangeResult:
+      type: object
+      additionalProperties: false
+      required:
+        - conversation_id
+        - user_id
+        - updated_at
+      properties:
+        conversation_id:
+          $ref: '#/components/schemas/UUID'
+        user_id:
+          type: integer
+          format: int64
+        updated_at:
+          type: string
+          format: date-time
+    ChatMessageReader:
+      type: object
+      additionalProperties: false
+      required:
+        - user_id
+        - display_name
+        - avatar_url
+        - read_at
+        - is_former
+      properties:
+        user_id:
+          type: integer
+          format: int64
+        display_name:
+          type: string
+        avatar_url:
+          type: string
+        read_at:
+          type: string
+          format: date-time
+          description: Когда человек увидел это сообщение
+        is_former:
+          type: boolean
+          description: 'Человека больше нет в справочнике кабинета. Он остаётся в списке прочитавших: сообщение он видел, и запись об этом — часть переписки.'
+    ChatMessageReaderPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessageReader'
+    ChatUnreadSpace:
+      type: object
+      additionalProperties: false
+      required:
+        - conversations
+        - messages
+      properties:
+        conversations:
+          type: integer
+          format: int64
+          description: Сколько бесед содержат непрочитанное
+        messages:
+          type: integer
+          format: int64
+          description: Сколько непрочитанных сообщений всего
+    ChatUnreadSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - chats
+        - tasks
+      properties:
+        chats:
+          $ref: '#/components/schemas/ChatUnreadSpace'
+        tasks:
+          $ref: '#/components/schemas/ChatUnreadSpace'
+    ChatLinkPreview:
+      type: object
+      additionalProperties: false
+      required:
+        - url
+        - title
+        - description
+        - site_name
+      properties:
+        url:
+          type: string
+          description: Итоговый адрес после переходов
+        title:
+          type: string
+        description:
+          type: string
+        site_name:
+          type: string
     ChatMessageMention:
       type: object
       additionalProperties: false

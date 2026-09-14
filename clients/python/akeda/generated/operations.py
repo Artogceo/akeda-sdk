@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3f5811665ccdd93f447eca1f9f11d23163eee102e1f965915e1e01d27ea38be).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1bed7b3a1c1ca7151c7312fc5716ba8e5ed2367eaebc61d22da652ab660d2d02).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -78,6 +78,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'calendarUpdateBookingLink': OperationSpec('PATCH', '/api/v1/calendar/booking-links/{id}', 'calendar', 'preview', 'calendar:write', False, True, ('id',), 'none', None, None),
     'calendarUpdateConnector': OperationSpec('PATCH', '/api/v1/calendar/connectors/{id}', 'calendar', 'preview', 'calendar:write', False, True, ('id',), 'none', None, None),
     'calendarUpdateEvent': OperationSpec('PATCH', '/api/v1/calendar/events/{id}', 'calendar', 'preview', 'calendar:write', False, True, ('id',), 'none', None, None),
+    'chatAddGroupMember': OperationSpec('POST', '/api/v1/chat/conversations/{id}/members', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
     'chatChangeNotificationMode': OperationSpec('PATCH', '/api/v1/chat/conversations/{id}/notification-mode', 'chat', 'preview', 'chat:read', False, False, ('id',), 'none', None, None),
     'chatClearManualUnread': OperationSpec('DELETE', '/api/v1/chat/conversations/{id}/manual-unread', 'chat', 'preview', 'chat:read', False, False, ('id',), 'none', None, None),
     'chatCreateFolder': OperationSpec('POST', '/api/v1/chat/folders', 'chat', 'preview', 'chat:write', False, False, (), 'none', None, None),
@@ -94,11 +95,13 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'chatForwardMessage': OperationSpec('POST', '/api/v1/chat/conversations/{id}/messages/{messageId}/forward', 'chat', 'preview', 'chat:write', False, False, ('id', 'messageId',), 'none', None, None),
     'chatGetAttachment': OperationSpec('GET', '/api/v1/chat/conversations/{id}/attachments/{attachmentId}', 'chat', 'preview', 'chat:read', False, False, ('attachmentId', 'id',), 'none', None, None),
     'chatGetConversation': OperationSpec('GET', '/api/v1/chat/conversations/{id}', 'chat', 'preview', 'chat:read', False, False, ('id',), 'none', None, None),
+    'chatLinkPreview': OperationSpec('GET', '/api/v1/chat/link-preview', 'chat', 'preview', 'chat:read', False, False, (), 'none', None, None),
     'chatListAttachments': OperationSpec('GET', '/api/v1/chat/conversations/{id}/attachments', 'chat', 'preview', 'chat:read', False, False, ('id',), 'limit', 100, 50),
     'chatListConversationMembers': OperationSpec('GET', '/api/v1/chat/conversations/{id}/members', 'chat', 'preview', 'chat:read', False, False, ('id',), 'none', None, None),
     'chatListConversations': OperationSpec('GET', '/api/v1/chat/conversations', 'chat', 'preview', 'chat:read', False, False, (), 'cursor', 100, 50),
     'chatListFolders': OperationSpec('GET', '/api/v1/chat/folders', 'chat', 'preview', 'chat:read', False, False, (), 'none', None, None),
     'chatListMentionCandidates': OperationSpec('GET', '/api/v1/chat/conversations/{id}/mentions/candidates', 'chat', 'preview', 'chat:read', False, False, ('id',), 'none', None, None),
+    'chatListMessageReaders': OperationSpec('GET', '/api/v1/chat/conversations/{id}/messages/{messageId}/readers', 'chat', 'preview', 'chat:read', False, False, ('id', 'messageId',), 'none', None, None),
     'chatListMessages': OperationSpec('GET', '/api/v1/chat/conversations/{id}/messages', 'chat', 'preview', 'chat:read', False, False, ('id',), 'limit', 100, 50),
     'chatListPeople': OperationSpec('GET', '/api/v1/chat/people', 'chat', 'preview', 'chat:read', False, False, (), 'none', None, None),
     'chatListPins': OperationSpec('GET', '/api/v1/chat/conversations/{id}/pins', 'chat', 'preview', 'chat:read', False, False, ('id',), 'none', None, None),
@@ -113,13 +116,16 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'chatPinMessage': OperationSpec('PUT', '/api/v1/chat/conversations/{id}/messages/{messageId}/pin', 'chat', 'preview', 'chat:write', False, False, ('id', 'messageId',), 'none', None, None),
     'chatPulsePresence': OperationSpec('POST', '/api/v1/chat/conversations/{id}/typing', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
     'chatRegisterMobileDevice': OperationSpec('POST', '/api/v1/chat/mobile/devices', 'chat', 'preview', 'chat:write', False, False, (), 'none', None, None),
+    'chatRemoveGroupMember': OperationSpec('DELETE', '/api/v1/chat/conversations/{id}/members/{userId}', 'chat', 'preview', 'chat:write', False, False, ('id', 'userId',), 'none', None, None),
     'chatRemoveReaction': OperationSpec('DELETE', '/api/v1/chat/conversations/{id}/messages/{messageId}/reaction', 'chat', 'preview', 'chat:write', False, False, ('id', 'messageId',), 'none', None, None),
+    'chatRenameGroup': OperationSpec('PATCH', '/api/v1/chat/conversations/{id}', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
     'chatSendMedia': OperationSpec('POST', '/api/v1/chat/conversations/{id}/media', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
     'chatSendMessage': OperationSpec('POST', '/api/v1/chat/conversations/{id}/messages', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
     'chatSendMobilePushTest': OperationSpec('POST', '/api/v1/chat/mobile/devices/test', 'chat', 'preview', 'chat:write', False, False, (), 'none', None, None),
     'chatSetReaction': OperationSpec('PUT', '/api/v1/chat/conversations/{id}/messages/{messageId}/reaction', 'chat', 'preview', 'chat:write', False, False, ('id', 'messageId',), 'none', None, None),
     'chatStreamRealtime': OperationSpec('GET', '/api/v1/chat/realtime/stream', 'chat', 'preview', 'chat:read', False, False, (), 'none', None, None),
     'chatUnpinMessage': OperationSpec('DELETE', '/api/v1/chat/conversations/{id}/messages/{messageId}/pin', 'chat', 'preview', 'chat:write', False, False, ('id', 'messageId',), 'none', None, None),
+    'chatUnreadSummary': OperationSpec('GET', '/api/v1/chat/conversations/unread', 'chat', 'preview', 'chat:read', False, False, (), 'none', None, None),
     'chatUpdateFolder': OperationSpec('PATCH', '/api/v1/chat/folders/{id}', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
     'chatUploadAttachment': OperationSpec('POST', '/api/v1/chat/conversations/{id}/attachments', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
     'chatUploadConversationAvatar': OperationSpec('POST', '/api/v1/chat/conversations/{id}/avatar', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3f5811665ccdd93f447eca1f9f11d23163eee102e1f965915e1e01d27ea38be).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1bed7b3a1c1ca7151c7312fc5716ba8e5ed2367eaebc61d22da652ab660d2d02).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -177,6 +177,7 @@ __all__ = [
     "CalendarWebPushSubscription",
     "CalendarWebPushTestResult",
     "CalendarWebPushUnsubscribe",
+    "ChatAddMember",
     "ChatAttachment",
     "ChatAttachmentPage",
     "ChatAttachmentUpload",
@@ -197,10 +198,12 @@ __all__ = [
     "ChatForwardMessageResult",
     "ChatForwardedAttachment",
     "ChatForwardedMessage",
+    "ChatLinkPreview",
     "ChatMarkAllRead",
     "ChatMarkAllReadResult",
     "ChatMediaUpload",
     "ChatMember",
+    "ChatMemberChangeResult",
     "ChatMemberPage",
     "ChatMentionCandidate",
     "ChatMentionCandidatePage",
@@ -211,6 +214,8 @@ __all__ = [
     "ChatMessagePin",
     "ChatMessagePinPage",
     "ChatMessageReaction",
+    "ChatMessageReader",
+    "ChatMessageReaderPage",
     "ChatMobileDeviceRegistration",
     "ChatMobileDeviceRegistrationState",
     "ChatMobilePushTestResult",
@@ -224,12 +229,16 @@ __all__ = [
     "ChatReactionResult",
     "ChatReceiptInput",
     "ChatReceiptState",
+    "ChatRenameGroup",
+    "ChatRenameGroupResult",
     "ChatSaveFolder",
     "ChatSendMessage",
     "ChatSendMessageResult",
     "ChatSetReaction",
     "ChatUnreadMention",
     "ChatUnreadMentionPage",
+    "ChatUnreadSpace",
+    "ChatUnreadSummary",
     "Comment",
     "CommentCreate",
     "CommentList",
@@ -2986,6 +2995,10 @@ class CalendarWebPushTestResult(TypedDict):
 class CalendarWebPushUnsubscribe(TypedDict):
     endpoint: str
 
+class ChatAddMember(TypedDict):
+    #: Человек кабинета, которого добавляют в группу
+    user_id: int
+
 class ChatAttachment(TypedDict):
     id: "UUID"
     original_name: str
@@ -3151,6 +3164,13 @@ class ChatForwardedMessage(TypedDict):
     deleted_at: Optional[str]
     attachments: List["ChatForwardedAttachment"]
 
+class ChatLinkPreview(TypedDict):
+    #: Итоговый адрес после переходов
+    url: str
+    title: str
+    description: str
+    site_name: str
+
 class ChatMarkAllRead(TypedDict):
     #: Раздел списка бесед: user — переписка людей без чатов задач.
     scope: Literal['all', 'direct', 'group', 'task', 'user']
@@ -3176,6 +3196,11 @@ class ChatMember(TypedDict):
     role: Literal['owner', 'moderator', 'member', 'readonly']
     #: Человека больше нет в справочнике кабинета: членство или учётная запись выключены. Он остаётся в составе беседы, потому что его сообщения в ней остались и подпись под ними обязана кем-то называться. Пустое display_name означает, что о нём не осталось даже имени — подписывать такую строку клиент решает сам.
     is_former: bool
+
+class ChatMemberChangeResult(TypedDict):
+    conversation_id: "UUID"
+    user_id: int
+    updated_at: str
 
 class ChatMemberPage(TypedDict):
     items: List["ChatMember"]
@@ -3226,6 +3251,18 @@ class ChatMessageReaction(TypedDict):
     emoji: str
     count: int
     is_own: bool
+
+class ChatMessageReader(TypedDict):
+    user_id: int
+    display_name: str
+    avatar_url: str
+    #: Когда человек увидел это сообщение
+    read_at: str
+    #: Человека больше нет в справочнике кабинета. Он остаётся в списке прочитавших: сообщение он видел, и запись об этом — часть переписки.
+    is_former: bool
+
+class ChatMessageReaderPage(TypedDict):
+    items: List["ChatMessageReader"]
 
 class _ChatMobileDeviceRegistrationRequired(TypedDict):
     device_id: str
@@ -3302,6 +3339,15 @@ class ChatReceiptState(TypedDict):
     manual_unread_seq: Optional[int]
     changed: bool
 
+class ChatRenameGroup(TypedDict):
+    #: Название группы. Пробелы по краям снимаются; пустое после этого название отклоняется.
+    title: str
+
+class ChatRenameGroupResult(TypedDict):
+    conversation_id: "UUID"
+    title: str
+    updated_at: str
+
 class _ChatSaveFolderRequired(TypedDict):
     name: str
     space: Literal['chats', 'tasks']
@@ -3338,6 +3384,16 @@ class ChatUnreadMention(TypedDict):
 
 class ChatUnreadMentionPage(TypedDict):
     items: List["ChatUnreadMention"]
+
+class ChatUnreadSpace(TypedDict):
+    #: Сколько бесед содержат непрочитанное
+    conversations: int
+    #: Сколько непрочитанных сообщений всего
+    messages: int
+
+class ChatUnreadSummary(TypedDict):
+    chats: "ChatUnreadSpace"
+    tasks: "ChatUnreadSpace"
 
 class Comment(TypedDict):
     id: "UUID"
@@ -10831,6 +10887,10 @@ class Milestone(TypedDict):
     target_date: Optional[str]
     order: int
     is_archived: bool
+    #: Живые задачи вехи, без архивных
+    task_count: int
+    #: Из них в финальном статусе
+    tasks_done: int
     created_at: str
     updated_at: str
 
@@ -13415,6 +13475,8 @@ class _TaskRequired(TypedDict):
     coexecutors: List["TaskWatcher"]
     cycle: Optional["UUID"]
     cycle_name: Optional[str]
+    milestone: Optional["UUID"]
+    milestone_name: Optional[str]
     start_at: Optional[str]
     created_at: str
     due_at: Optional[str]
@@ -13464,6 +13526,8 @@ class TaskCreate(_TaskCreateRequired, total=False):
     recurrence_interval: int
     recurrence_until: str
     cycle: str
+    #: Веха: UUID или имя этапа своего проекта задач
+    milestone: str
     custom: Dict[str, Any]
 
 class TaskDocument(TypedDict):
@@ -13624,6 +13688,8 @@ class TaskUpdate(TypedDict, total=False):
     recurrence_interval: int
     recurrence_until: str
     cycle: str
+    #: Веха: UUID или имя этапа; пустая строка снимает задачу с вехи
+    milestone: str
     custom: Dict[str, Any]
     managed_checklist: "ManagedChecklistPatch"
 

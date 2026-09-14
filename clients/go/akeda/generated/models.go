@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3f5811665ccdd93f447eca1f9f11d23163eee102e1f965915e1e01d27ea38be).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1bed7b3a1c1ca7151c7312fc5716ba8e5ed2367eaebc61d22da652ab660d2d02).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1725,6 +1725,11 @@ type CalendarWebPushUnsubscribe struct {
 	Endpoint string `json:"endpoint"`
 }
 
+type ChatAddMember struct {
+	// UserID — Человек кабинета, которого добавляют в группу
+	UserID int64 `json:"user_id"`
+}
+
 type ChatAttachment struct {
 	ID           UUID   `json:"id"`
 	OriginalName string `json:"original_name"`
@@ -1898,6 +1903,14 @@ type ChatForwardedMessage struct {
 	Attachments            []ChatForwardedAttachment `json:"attachments"`
 }
 
+type ChatLinkPreview struct {
+	// URL — Итоговый адрес после переходов
+	URL         string `json:"url"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	SiteName    string `json:"site_name"`
+}
+
 type ChatMarkAllRead struct {
 	// Scope — Раздел списка бесед: user — переписка людей без чатов задач.
 	Scope string `json:"scope"`
@@ -1926,6 +1939,12 @@ type ChatMember struct {
 	Role        string `json:"role"`
 	// IsFormer — Человека больше нет в справочнике кабинета: членство или учётная запись выключены. Он остаётся в составе беседы, потому что его сообщения в ней остались и подпись под ними обязана кем-то называться. Пустое display_name означает, что о нём не осталось даже имени — подписывать такую строку клиент решает сам.
 	IsFormer bool `json:"is_former"`
+}
+
+type ChatMemberChangeResult struct {
+	ConversationID UUID   `json:"conversation_id"`
+	UserID         int64  `json:"user_id"`
+	UpdatedAt      string `json:"updated_at"`
 }
 
 type ChatMemberPage struct {
@@ -1984,6 +2003,20 @@ type ChatMessageReaction struct {
 	Emoji string `json:"emoji"`
 	Count int64  `json:"count"`
 	IsOwn bool   `json:"is_own"`
+}
+
+type ChatMessageReader struct {
+	UserID      int64  `json:"user_id"`
+	DisplayName string `json:"display_name"`
+	AvatarURL   string `json:"avatar_url"`
+	// ReadAt — Когда человек увидел это сообщение
+	ReadAt string `json:"read_at"`
+	// IsFormer — Человека больше нет в справочнике кабинета. Он остаётся в списке прочитавших: сообщение он видел, и запись об этом — часть переписки.
+	IsFormer bool `json:"is_former"`
+}
+
+type ChatMessageReaderPage struct {
+	Items []ChatMessageReader `json:"items"`
 }
 
 type ChatMobileDeviceRegistration struct {
@@ -2070,6 +2103,17 @@ type ChatReceiptState struct {
 	Changed          bool   `json:"changed"`
 }
 
+type ChatRenameGroup struct {
+	// Title — Название группы. Пробелы по краям снимаются; пустое после этого название отклоняется.
+	Title string `json:"title"`
+}
+
+type ChatRenameGroupResult struct {
+	ConversationID UUID   `json:"conversation_id"`
+	Title          string `json:"title"`
+	UpdatedAt      string `json:"updated_at"`
+}
+
 // ChatSaveFolder — Нужен непустой name и хотя бы один scope или один include_conversation_ids, иначе 400.
 type ChatSaveFolder struct {
 	Name     string `json:"name"`
@@ -2106,6 +2150,18 @@ type ChatUnreadMention struct {
 
 type ChatUnreadMentionPage struct {
 	Items []ChatUnreadMention `json:"items"`
+}
+
+type ChatUnreadSpace struct {
+	// Conversations — Сколько бесед содержат непрочитанное
+	Conversations int64 `json:"conversations"`
+	// Messages — Сколько непрочитанных сообщений всего
+	Messages int64 `json:"messages"`
+}
+
+type ChatUnreadSummary struct {
+	Chats ChatUnreadSpace `json:"chats"`
+	Tasks ChatUnreadSpace `json:"tasks"`
 }
 
 type Comment struct {
@@ -9940,8 +9996,12 @@ type Milestone struct {
 	TargetDate  *string `json:"target_date"`
 	Order       int64   `json:"order"`
 	IsArchived  bool    `json:"is_archived"`
-	CreatedAt   string  `json:"created_at"`
-	UpdatedAt   string  `json:"updated_at"`
+	// TaskCount — Живые задачи вехи, без архивных
+	TaskCount int64 `json:"task_count"`
+	// TasksDone — Из них в финальном статусе
+	TasksDone int64  `json:"tasks_done"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 type MilestoneCreate struct {
@@ -12610,6 +12670,8 @@ type Task struct {
 	Coexecutors        []TaskWatcher                `json:"coexecutors"`
 	Cycle              *UUID                        `json:"cycle"`
 	CycleName          *string                      `json:"cycle_name"`
+	Milestone          *UUID                        `json:"milestone"`
+	MilestoneName      *string                      `json:"milestone_name"`
 	StartAt            *string                      `json:"start_at"`
 	CreatedAt          string                       `json:"created_at"`
 	DueAt              *string                      `json:"due_at"`
@@ -12634,27 +12696,29 @@ type Task struct {
 }
 
 type TaskCreate struct {
-	Section            UUID                       `json:"section"`
-	Title              string                     `json:"title"`
-	Description        *string                    `json:"description,omitempty"`
-	Status             *UUID                      `json:"status,omitempty"`
-	Priority           *TaskPriority              `json:"priority,omitempty"`
-	IsImportant        *bool                      `json:"is_important,omitempty"`
-	Creator            *int64                     `json:"creator,omitempty"`
-	Executor           *int64                     `json:"executor,omitempty"`
-	Assignee           *int64                     `json:"assignee,omitempty"`
-	CoexecutorIds      []int64                    `json:"coexecutor_ids,omitempty"`
-	WatcherIds         []int64                    `json:"watcher_ids,omitempty"`
-	TagIds             []UUID                     `json:"tag_ids,omitempty"`
-	StartAt            *string                    `json:"start_at,omitempty"`
-	DueAt              *string                    `json:"due_at,omitempty"`
-	Estimate           *float64                   `json:"estimate,omitempty"`
-	Parent             *UUID                      `json:"parent,omitempty"`
-	Recurrence         *string                    `json:"recurrence,omitempty"`
-	RecurrenceInterval *int64                     `json:"recurrence_interval,omitempty"`
-	RecurrenceUntil    *string                    `json:"recurrence_until,omitempty"`
-	Cycle              *string                    `json:"cycle,omitempty"`
-	Custom             map[string]json.RawMessage `json:"custom,omitempty"`
+	Section            UUID          `json:"section"`
+	Title              string        `json:"title"`
+	Description        *string       `json:"description,omitempty"`
+	Status             *UUID         `json:"status,omitempty"`
+	Priority           *TaskPriority `json:"priority,omitempty"`
+	IsImportant        *bool         `json:"is_important,omitempty"`
+	Creator            *int64        `json:"creator,omitempty"`
+	Executor           *int64        `json:"executor,omitempty"`
+	Assignee           *int64        `json:"assignee,omitempty"`
+	CoexecutorIds      []int64       `json:"coexecutor_ids,omitempty"`
+	WatcherIds         []int64       `json:"watcher_ids,omitempty"`
+	TagIds             []UUID        `json:"tag_ids,omitempty"`
+	StartAt            *string       `json:"start_at,omitempty"`
+	DueAt              *string       `json:"due_at,omitempty"`
+	Estimate           *float64      `json:"estimate,omitempty"`
+	Parent             *UUID         `json:"parent,omitempty"`
+	Recurrence         *string       `json:"recurrence,omitempty"`
+	RecurrenceInterval *int64        `json:"recurrence_interval,omitempty"`
+	RecurrenceUntil    *string       `json:"recurrence_until,omitempty"`
+	Cycle              *string       `json:"cycle,omitempty"`
+	// Milestone — Веха: UUID или имя этапа своего проекта задач
+	Milestone *string                    `json:"milestone,omitempty"`
+	Custom    map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
 type TaskDocument struct {
@@ -12798,27 +12862,29 @@ type TaskTemplateUpdate struct {
 }
 
 type TaskUpdate struct {
-	Title              *string                    `json:"title,omitempty"`
-	Description        *string                    `json:"description,omitempty"`
-	Section            *UUID                      `json:"section,omitempty"`
-	Status             *UUID                      `json:"status,omitempty"`
-	Priority           *TaskPriority              `json:"priority,omitempty"`
-	IsImportant        *bool                      `json:"is_important,omitempty"`
-	Executor           *int64                     `json:"executor,omitempty"`
-	Assignee           *int64                     `json:"assignee,omitempty"`
-	CoexecutorIds      []int64                    `json:"coexecutor_ids,omitempty"`
-	WatcherIds         []int64                    `json:"watcher_ids,omitempty"`
-	TagIds             []UUID                     `json:"tag_ids,omitempty"`
-	StartAt            *string                    `json:"start_at,omitempty"`
-	DueAt              *string                    `json:"due_at,omitempty"`
-	Estimate           *float64                   `json:"estimate,omitempty"`
-	Parent             *UUID                      `json:"parent,omitempty"`
-	Recurrence         *string                    `json:"recurrence,omitempty"`
-	RecurrenceInterval *int64                     `json:"recurrence_interval,omitempty"`
-	RecurrenceUntil    *string                    `json:"recurrence_until,omitempty"`
-	Cycle              *string                    `json:"cycle,omitempty"`
-	Custom             map[string]json.RawMessage `json:"custom,omitempty"`
-	ManagedChecklist   *ManagedChecklistPatch     `json:"managed_checklist,omitempty"`
+	Title              *string       `json:"title,omitempty"`
+	Description        *string       `json:"description,omitempty"`
+	Section            *UUID         `json:"section,omitempty"`
+	Status             *UUID         `json:"status,omitempty"`
+	Priority           *TaskPriority `json:"priority,omitempty"`
+	IsImportant        *bool         `json:"is_important,omitempty"`
+	Executor           *int64        `json:"executor,omitempty"`
+	Assignee           *int64        `json:"assignee,omitempty"`
+	CoexecutorIds      []int64       `json:"coexecutor_ids,omitempty"`
+	WatcherIds         []int64       `json:"watcher_ids,omitempty"`
+	TagIds             []UUID        `json:"tag_ids,omitempty"`
+	StartAt            *string       `json:"start_at,omitempty"`
+	DueAt              *string       `json:"due_at,omitempty"`
+	Estimate           *float64      `json:"estimate,omitempty"`
+	Parent             *UUID         `json:"parent,omitempty"`
+	Recurrence         *string       `json:"recurrence,omitempty"`
+	RecurrenceInterval *int64        `json:"recurrence_interval,omitempty"`
+	RecurrenceUntil    *string       `json:"recurrence_until,omitempty"`
+	Cycle              *string       `json:"cycle,omitempty"`
+	// Milestone — Веха: UUID или имя этапа; пустая строка снимает задачу с вехи
+	Milestone        *string                    `json:"milestone,omitempty"`
+	Custom           map[string]json.RawMessage `json:"custom,omitempty"`
+	ManagedChecklist *ManagedChecklistPatch     `json:"managed_checklist,omitempty"`
 }
 
 type TaskView struct {

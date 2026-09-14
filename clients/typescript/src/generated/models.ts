@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3f5811665ccdd93f447eca1f9f11d23163eee102e1f965915e1e01d27ea38be).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1bed7b3a1c1ca7151c7312fc5716ba8e5ed2367eaebc61d22da652ab660d2d02).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1727,6 +1727,11 @@ export interface CalendarWebPushUnsubscribe {
   "endpoint": string;
 }
 
+export interface ChatAddMember {
+  /** Человек кабинета, которого добавляют в группу */
+  "user_id": number;
+}
+
 export interface ChatAttachment {
   "id": UUID;
   "original_name": string;
@@ -1900,6 +1905,14 @@ export interface ChatForwardedMessage {
   "attachments": Array<ChatForwardedAttachment>;
 }
 
+export interface ChatLinkPreview {
+  /** Итоговый адрес после переходов */
+  "url": string;
+  "title": string;
+  "description": string;
+  "site_name": string;
+}
+
 export interface ChatMarkAllRead {
   /** Раздел списка бесед: user — переписка людей без чатов задач. */
   "scope": "all" | "direct" | "group" | "task" | "user";
@@ -1928,6 +1941,12 @@ export interface ChatMember {
   "role": "owner" | "moderator" | "member" | "readonly";
   /** Человека больше нет в справочнике кабинета: членство или учётная запись выключены. Он остаётся в составе беседы, потому что его сообщения в ней остались и подпись под ними обязана кем-то называться. Пустое display_name означает, что о нём не осталось даже имени — подписывать такую строку клиент решает сам. */
   "is_former": boolean;
+}
+
+export interface ChatMemberChangeResult {
+  "conversation_id": UUID;
+  "user_id": number;
+  "updated_at": string;
 }
 
 export interface ChatMemberPage {
@@ -1986,6 +2005,20 @@ export interface ChatMessageReaction {
   "emoji": string;
   "count": number;
   "is_own": boolean;
+}
+
+export interface ChatMessageReader {
+  "user_id": number;
+  "display_name": string;
+  "avatar_url": string;
+  /** Когда человек увидел это сообщение */
+  "read_at": string;
+  /** Человека больше нет в справочнике кабинета. Он остаётся в списке прочитавших: сообщение он видел, и запись об этом — часть переписки. */
+  "is_former": boolean;
+}
+
+export interface ChatMessageReaderPage {
+  "items": Array<ChatMessageReader>;
 }
 
 export interface ChatMobileDeviceRegistration {
@@ -2072,6 +2105,17 @@ export interface ChatReceiptState {
   "changed": boolean;
 }
 
+export interface ChatRenameGroup {
+  /** Название группы. Пробелы по краям снимаются; пустое после этого название отклоняется. */
+  "title": string;
+}
+
+export interface ChatRenameGroupResult {
+  "conversation_id": UUID;
+  "title": string;
+  "updated_at": string;
+}
+
 /** Нужен непустой name и хотя бы один scope или один include_conversation_ids, иначе 400. */
 export interface ChatSaveFolder {
   "name": string;
@@ -2108,6 +2152,18 @@ export interface ChatUnreadMention {
 
 export interface ChatUnreadMentionPage {
   "items": Array<ChatUnreadMention>;
+}
+
+export interface ChatUnreadSpace {
+  /** Сколько бесед содержат непрочитанное */
+  "conversations": number;
+  /** Сколько непрочитанных сообщений всего */
+  "messages": number;
+}
+
+export interface ChatUnreadSummary {
+  "chats": ChatUnreadSpace;
+  "tasks": ChatUnreadSpace;
 }
 
 export interface Comment {
@@ -9972,6 +10028,10 @@ export interface Milestone {
   "target_date": string | null;
   "order": number;
   "is_archived": boolean;
+  /** Живые задачи вехи, без архивных */
+  "task_count": number;
+  /** Из них в финальном статусе */
+  "tasks_done": number;
   "created_at": string;
   "updated_at": string;
 }
@@ -12665,6 +12725,8 @@ export interface Task {
   "coexecutors": Array<TaskWatcher>;
   "cycle": UUID | null;
   "cycle_name": string | null;
+  "milestone": UUID | null;
+  "milestone_name": string | null;
   "start_at": string | null;
   "created_at": string;
   "due_at": string | null;
@@ -12709,6 +12771,8 @@ export interface TaskCreate {
   "recurrence_interval"?: number;
   "recurrence_until"?: string;
   "cycle"?: string;
+  /** Веха: UUID или имя этапа своего проекта задач */
+  "milestone"?: string;
   "custom"?: { [key: string]: unknown };
 }
 
@@ -12872,6 +12936,8 @@ export interface TaskUpdate {
   "recurrence_interval"?: number;
   "recurrence_until"?: string;
   "cycle"?: string;
+  /** Веха: UUID или имя этапа; пустая строка снимает задачу с вехи */
+  "milestone"?: string;
   "custom"?: { [key: string]: unknown };
   "managed_checklist"?: ManagedChecklistPatch;
 }
