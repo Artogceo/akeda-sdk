@@ -16999,6 +16999,172 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/finance/cash-operations:
+    get:
+      tags:
+        - Finance transactions
+      operationId: financeListCashOperations
+      summary: Прочитать журнал кассы
+      description: |-
+        Журнал наличных: проведённые операции вида `finance_cash_operation` с их статьёй ДДС, кассой, контрагентом и ответственным.
+
+        Отбор ВЕСЬ серверный: период, касса, направление, статья, контрагент, ответственный, признак разнесения и строка поиска. Это не украшение — пока отбор жил в браузере, экран фильтровал уже обрезанную порцию, и журнал показывал одну операцию из ста пятидесяти двух, тогда как остаток рядом считался по всем ста пятидесяти двум.
+
+        `count` — сколько операций подходит отбору ВСЕГО, `results` — сколько поместилось в страницу: расхождение означает, что дальше есть ещё, а не ошибку учёта.
+
+        `allocated` отвечает на вопрос «что ещё не разнесено» и не совпадает с пустым `item`: пустая статья в отборе означает «не сужать по статье».
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.transactions:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/BusinessQuery'
+        - name: wallet
+          in: query
+          description: Касса из справочника «Кассы»
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: direction
+          in: query
+          schema:
+            $ref: '#/components/schemas/FinanceDirection'
+        - name: from
+          in: query
+          description: Левая граница периода
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Правая граница периода
+          schema:
+            type: string
+            format: date
+        - name: item
+          in: query
+          description: Статья ДДС
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: contact
+          in: query
+          description: Контрагент операции
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: employee
+          in: query
+          description: Ответственный — за кого выданы деньги
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: allocated
+          in: query
+          description: true — только со статьёй ДДС, false — только без неё
+          schema:
+            type: boolean
+        - name: q
+          in: query
+          description: Подстрока по номеру, назначению, контрагенту и сумме
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Страница журнала и число подходящих операций
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceCashOperationPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Finance transactions
+      operationId: financeCreateCashOperation
+      summary: Записать трату или приход в кассе
+      description: |-
+        Записывает наличный факт ОДНИМ запросом: операция создаётся сразу проведённой, документ и движения регистров ложатся одной транзакцией. Черновика у кассовой операции нет по смыслу — деньги уже двинулись.
+
+        Юрлицо и бизнес в теле НЕ передаются: сервер выводит их у самой кассы. Касса, привязанная к юрлицу, — официальная касса этого юрлица; касса без привязки — свободные деньги, и юрлица у неё нет вовсе.
+
+        `direction` обязателен, умолчания нет: молчаливое «расход» превратило бы непонятную операцию в трату. `amount` всегда положителен — знак движения берётся из направления.
+
+        Обязательные связки задаёт ВИД СТАТЬИ: статья расчётов с поставщиком требует `contact`, статья оплаты труда — `employee`, статья расчётов с собственником — `owner`. Отказ приходит до записи, и непроведённого документа после него не остаётся.
+
+        `Idempotency-Key` ОБЯЗАТЕЛЕН: команда чеканит проведённый документ, повтор сама не узнаёт, а второй документ ложится в регистры и в отчёты. Запрос без заголовка отклоняется кодом `idempotency.key_required`.
+
+        Правка суммы или даты уже проведённой операции этой дверью не делается: это правка факта, а история не удаляется — исправление идёт отменой или сторно.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.transactions:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKeyRequired'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceCashOperationCreate'
+      responses:
+        '201':
+          description: Записанная и проведённая операция
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceCashOperation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/IdempotencyKeyMismatch'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          description: Запись кассовых операций недоступна (`finance.cash.unavailable`) либо недоступно хранилище ключей идемпотентности (`idempotency.unavailable`). Во втором случае команда не выполнялась; `Retry-After` говорит, когда повторить.
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Секунд до повтора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/finance/cash-operations/{id}/responsible:
     patch:
       tags:
@@ -17545,6 +17711,12 @@ paths:
         - Finance payment calendar
       operationId: financeListPaymentFacts
       summary: Найти операции для подтверждения исполнения плана
+      description: |-
+        Лента денежных фактов: проведённые банковские и кассовые операции, которыми закрывают плановые строки календаря. Занятые не прячутся, а помечаются `used_by_plan_id`: спрятанная операция выглядит как ненайденная, и человек ищет её второй раз.
+
+        Рядом с суммой приходит статья ДДС (`item`, `item_name`) и признак разнесения (`allocated`), поэтому та же лента отвечает и на вопрос «что ещё не разнесено».
+
+        Границы страницы объявлены: до ERP-1029 здесь стоял необъявленный потолок в 200 строк, и урезанный список читался как «данных больше нет».
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -17583,6 +17755,19 @@ paths:
           in: query
           schema:
             type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 200
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
       responses:
         '200':
           description: Банковские и кассовые факты
@@ -37825,6 +38010,19 @@ components:
         minLength: 1
         maxLength: 200
         pattern: ^[\x21-\x7E]+$
+    IdempotencyKeyRequired:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: |-
+        Тот же ключ, что у `IdempotencyKey`, но ОБЯЗАТЕЛЬНЫЙ. Так помечены команды, где повтор без ключа — прямой убыток в учёте: запись кассовой операции чеканит ПРОВЕДЁННЫЙ документ, повтор сама не узнаёт, а второй документ ложится в регистры и в отчёты, и убрать его можно только отменой проведения задним числом.
+
+        Запрос без заголовка отклоняется кодом `idempotency.key_required` и команду не выполняет. Остальные правила — повтор, конфликт тела, судьба ключа после 4xx и 5xx, срок хранения ответа — те же, что у необязательного `IdempotencyKey`.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 200
+        pattern: ^[\x21-\x7E]+$
     PlatformAppInstallationID:
       name: id
       in: path
@@ -51259,6 +51457,7 @@ components:
       additionalProperties: false
       required:
         - id
+        - kind
         - company
         - bank
         - company_name
@@ -51285,6 +51484,12 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/UUID'
+        kind:
+          type: string
+          enum:
+            - bank
+            - cash
+          description: 'Где лежат деньги. `bank` — расчётный счёт, `cash` — касса из справочника «Кассы». Список общий намеренно: вопрос «сколько у меня денег» задаётся один раз. У кассы банковские поля (`bic`, `number`, `bank_name`, `connector`) пусты по построению, а не «ещё не заполнены», и карточка счёта по её идентификатору не открывается.'
         company:
           type:
             - string
@@ -51367,6 +51572,186 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FinanceAccount'
+    FinanceCashOperation:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - number
+        - date
+        - status
+        - direction
+        - amount
+        - currency
+        - wallet
+        - wallet_name
+        - company
+        - business
+        - item
+        - item_name
+        - allocated
+        - contact
+        - contact_name
+        - counterparty
+        - employee
+        - employee_name
+        - owner
+        - project
+        - note
+        - created_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        number:
+          type: string
+          description: Номер документа; его выдаёт нумератор кабинета
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+          description: Состояние документа; записанная операция сразу `posted`
+        direction:
+          $ref: '#/components/schemas/FinanceDirection'
+        amount:
+          type: string
+          description: Положительная сумма без знака; знак движения задаёт direction
+        currency:
+          type: string
+          description: 'Валюта учёта: своей валюты у кассовой операции нет'
+        wallet:
+          $ref: '#/components/schemas/UUID'
+        wallet_name:
+          type: string
+        company:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Юрлицо, взятое У КАССЫ. null законен и означает неофициальный контур — свободные деньги, а не пробел в данных.
+        business:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Управленческий бизнес кассы
+        item:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Статья ДДС; null — строка «Без статьи ДДС»
+        item_name:
+          type: string
+        allocated:
+          type: boolean
+          description: 'Разнесена ли операция: есть ли у неё статья ДДС'
+        contact:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        contact_name:
+          type: string
+        counterparty:
+          type: string
+          description: Имя плательщика или получателя текстом; не заменяет contact
+        employee:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        employee_name:
+          type: string
+        owner:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        project:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        note:
+          type: string
+        created_at:
+          type: string
+    FinanceCashOperationPage:
+      type: object
+      additionalProperties: false
+      required:
+        - count
+        - results
+      properties:
+        count:
+          type: integer
+          minimum: 0
+          description: 'Сколько операций подходит отбору ВСЕГО, а не сколько их на этой странице: расхождение с длиной `results` означает, что дальше есть ещё.'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceCashOperation'
+    FinanceCashOperationCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - wallet
+        - direction
+        - amount
+      properties:
+        wallet:
+          $ref: '#/components/schemas/UUID'
+        direction:
+          allOf:
+            - $ref: '#/components/schemas/FinanceDirection'
+          description: Обязательно; умолчания нет, иначе непонятная операция молча стала бы тратой
+        amount:
+          type: string
+          description: Положительная сумма; знак берётся из направления
+        date:
+          type: string
+          format: date
+          description: Пусто означает сегодня КАБИНЕТА, а не сегодня базы
+        item:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Статья ДДС; без неё операция законна и видна строкой «Без статьи ДДС»
+        contact:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Обязателен у статьи, ведущей именной долг
+        employee:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Ответственный; обязателен у статьи оплаты труда
+        owner:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Собственник; обязателен у статьи расчётов с собственником
+        project:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Разрез «проект», если он включён в кабинете
+        counterparty:
+          type: string
+          description: Имя плательщика или получателя текстом, когда карточки контрагента нет
+        note:
+          type: string
+          description: Назначение операции словами человека
+        remember:
+          type: boolean
+          description: Запомнить выбранную статью правилом для этого контрагента
     FinanceAccountCreate:
       type: object
       additionalProperties: false
@@ -52813,6 +53198,7 @@ components:
         - source_name
         - counterparty
         - purpose
+        - allocated
       properties:
         document_id:
           $ref: '#/components/schemas/UUID'
@@ -52840,6 +53226,14 @@ components:
           type: string
         used_by_plan_id:
           $ref: '#/components/schemas/UUID'
+        item:
+          $ref: '#/components/schemas/UUID'
+        item_name:
+          type: string
+          description: Название статьи ДДС; пусто у неразнесённой операции
+        allocated:
+          type: boolean
+          description: 'Разнесена ли операция: есть ли у неё статья ДДС. Тот же признак отдаёт журнал кассы, и ответ на этот вопрос у обоих один.'
     FinancePaymentFactPage:
       type: object
       additionalProperties: false

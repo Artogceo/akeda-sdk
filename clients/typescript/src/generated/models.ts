@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 761db417291a739b5c48c5a4a0a2623016e4f6ea430ce54bc4e373fa2a737fc2).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3f5811665ccdd93f447eca1f9f11d23163eee102e1f965915e1e01d27ea38be).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -5735,6 +5735,8 @@ export interface FilesUploadedPart {
 
 export interface FinanceAccount {
   "id": UUID;
+  /** Где лежат деньги. `bank` — расчётный счёт, `cash` — касса из справочника «Кассы». Список общий намеренно: вопрос «сколько у меня денег» задаётся один раз. У кассы банковские поля (`bic`, `number`, `bank_name`, `connector`) пусты по построению, а не «ещё не заполнены», и карточка счёта по её идентификатору не открывается. */
+  "kind": "bank" | "cash";
   "company": string | null;
   "bank": string | null;
   "company_name": string;
@@ -5815,6 +5817,73 @@ export interface FinanceBalanceSection {
   "label": string;
   "total": string;
   "items": Array<FinanceBalanceItem>;
+}
+
+export interface FinanceCashOperation {
+  "id": UUID;
+  /** Номер документа; его выдаёт нумератор кабинета */
+  "number": string;
+  "date": string;
+  /** Состояние документа; записанная операция сразу `posted` */
+  "status": string;
+  "direction": FinanceDirection;
+  /** Положительная сумма без знака; знак движения задаёт direction */
+  "amount": string;
+  /** Валюта учёта: своей валюты у кассовой операции нет */
+  "currency": string;
+  "wallet": UUID;
+  "wallet_name": string;
+  /** Юрлицо, взятое У КАССЫ. null законен и означает неофициальный контур — свободные деньги, а не пробел в данных. */
+  "company": string | null;
+  /** Управленческий бизнес кассы */
+  "business": string | null;
+  /** Статья ДДС; null — строка «Без статьи ДДС» */
+  "item": string | null;
+  "item_name": string;
+  /** Разнесена ли операция: есть ли у неё статья ДДС */
+  "allocated": boolean;
+  "contact": string | null;
+  "contact_name": string;
+  /** Имя плательщика или получателя текстом; не заменяет contact */
+  "counterparty": string;
+  "employee": string | null;
+  "employee_name": string;
+  "owner": string | null;
+  "project": string | null;
+  "note": string;
+  "created_at": string;
+}
+
+export interface FinanceCashOperationCreate {
+  "wallet": UUID;
+  /** Обязательно; умолчания нет, иначе непонятная операция молча стала бы тратой */
+  "direction": { [key: string]: unknown };
+  /** Положительная сумма; знак берётся из направления */
+  "amount": string;
+  /** Пусто означает сегодня КАБИНЕТА, а не сегодня базы */
+  "date"?: string;
+  /** Статья ДДС; без неё операция законна и видна строкой «Без статьи ДДС» */
+  "item"?: string | null;
+  /** Обязателен у статьи, ведущей именной долг */
+  "contact"?: string | null;
+  /** Ответственный; обязателен у статьи оплаты труда */
+  "employee"?: string | null;
+  /** Собственник; обязателен у статьи расчётов с собственником */
+  "owner"?: string | null;
+  /** Разрез «проект», если он включён в кабинете */
+  "project"?: string | null;
+  /** Имя плательщика или получателя текстом, когда карточки контрагента нет */
+  "counterparty"?: string;
+  /** Назначение операции словами человека */
+  "note"?: string;
+  /** Запомнить выбранную статью правилом для этого контрагента */
+  "remember"?: boolean;
+}
+
+export interface FinanceCashOperationPage {
+  /** Сколько операций подходит отбору ВСЕГО, а не сколько их на этой странице: расхождение с длиной `results` означает, что дальше есть ещё. */
+  "count": number;
+  "results": Array<FinanceCashOperation>;
 }
 
 export interface FinanceCashflowEntry {
@@ -6654,6 +6723,11 @@ export interface FinancePaymentFact {
   "counterparty": string;
   "purpose": string;
   "used_by_plan_id"?: UUID;
+  "item"?: UUID;
+  /** Название статьи ДДС; пусто у неразнесённой операции */
+  "item_name"?: string;
+  /** Разнесена ли операция: есть ли у неё статья ДДС. Тот же признак отдаёт журнал кассы, и ответ на этот вопрос у обоих один. */
+  "allocated": boolean;
 }
 
 export interface FinancePaymentFactPage {

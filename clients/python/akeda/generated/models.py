@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 761db417291a739b5c48c5a4a0a2623016e4f6ea430ce54bc4e373fa2a737fc2).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3f5811665ccdd93f447eca1f9f11d23163eee102e1f965915e1e01d27ea38be).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -597,6 +597,9 @@ __all__ = [
     "FinanceBalanceItem",
     "FinanceBalanceReport",
     "FinanceBalanceSection",
+    "FinanceCashOperation",
+    "FinanceCashOperationCreate",
+    "FinanceCashOperationPage",
     "FinanceCashflowEntry",
     "FinanceCashflowEntryCategorize",
     "FinanceCashflowEntryKind",
@@ -6928,6 +6931,8 @@ class FilesUploadedPart(TypedDict):
 
 class FinanceAccount(TypedDict):
     id: "UUID"
+    #: Где лежат деньги. `bank` — расчётный счёт, `cash` — касса из справочника «Кассы». Список общий намеренно: вопрос «сколько у меня денег» задаётся один раз. У кассы банковские поля (`bic`, `number`, `bank_name`, `connector`) пусты по построению, а не «ещё не заполнены», и карточка счёта по её идентификатору не открывается.
+    kind: Literal['bank', 'cash']
     company: Optional[str]
     bank: Optional[str]
     company_name: str
@@ -7006,6 +7011,72 @@ class FinanceBalanceSection(TypedDict):
     label: str
     total: str
     items: List["FinanceBalanceItem"]
+
+class FinanceCashOperation(TypedDict):
+    id: "UUID"
+    #: Номер документа; его выдаёт нумератор кабинета
+    number: str
+    date: str
+    #: Состояние документа; записанная операция сразу `posted`
+    status: str
+    direction: "FinanceDirection"
+    #: Положительная сумма без знака; знак движения задаёт direction
+    amount: str
+    #: Валюта учёта: своей валюты у кассовой операции нет
+    currency: str
+    wallet: "UUID"
+    wallet_name: str
+    #: Юрлицо, взятое У КАССЫ. null законен и означает неофициальный контур — свободные деньги, а не пробел в данных.
+    company: Optional[str]
+    #: Управленческий бизнес кассы
+    business: Optional[str]
+    #: Статья ДДС; null — строка «Без статьи ДДС»
+    item: Optional[str]
+    item_name: str
+    #: Разнесена ли операция: есть ли у неё статья ДДС
+    allocated: bool
+    contact: Optional[str]
+    contact_name: str
+    #: Имя плательщика или получателя текстом; не заменяет contact
+    counterparty: str
+    employee: Optional[str]
+    employee_name: str
+    owner: Optional[str]
+    project: Optional[str]
+    note: str
+    created_at: str
+
+class _FinanceCashOperationCreateRequired(TypedDict):
+    wallet: "UUID"
+    #: Обязательно; умолчания нет, иначе непонятная операция молча стала бы тратой
+    direction: Dict[str, Any]
+    #: Положительная сумма; знак берётся из направления
+    amount: str
+
+class FinanceCashOperationCreate(_FinanceCashOperationCreateRequired, total=False):
+    #: Пусто означает сегодня КАБИНЕТА, а не сегодня базы
+    date: str
+    #: Статья ДДС; без неё операция законна и видна строкой «Без статьи ДДС»
+    item: Optional[str]
+    #: Обязателен у статьи, ведущей именной долг
+    contact: Optional[str]
+    #: Ответственный; обязателен у статьи оплаты труда
+    employee: Optional[str]
+    #: Собственник; обязателен у статьи расчётов с собственником
+    owner: Optional[str]
+    #: Разрез «проект», если он включён в кабинете
+    project: Optional[str]
+    #: Имя плательщика или получателя текстом, когда карточки контрагента нет
+    counterparty: str
+    #: Назначение операции словами человека
+    note: str
+    #: Запомнить выбранную статью правилом для этого контрагента
+    remember: bool
+
+class FinanceCashOperationPage(TypedDict):
+    #: Сколько операций подходит отбору ВСЕГО, а не сколько их на этой странице: расхождение с длиной `results` означает, что дальше есть ещё.
+    count: int
+    results: List["FinanceCashOperation"]
 
 class _FinanceCashflowEntryRequired(TypedDict):
     id: "UUID"
@@ -7790,9 +7861,14 @@ class _FinancePaymentFactRequired(TypedDict):
     source_name: str
     counterparty: str
     purpose: str
+    #: Разнесена ли операция: есть ли у неё статья ДДС. Тот же признак отдаёт журнал кассы, и ответ на этот вопрос у обоих один.
+    allocated: bool
 
 class FinancePaymentFact(_FinancePaymentFactRequired, total=False):
     used_by_plan_id: "UUID"
+    item: "UUID"
+    #: Название статьи ДДС; пусто у неразнесённой операции
+    item_name: str
 
 class FinancePaymentFactPage(TypedDict):
     results: List["FinancePaymentFact"]

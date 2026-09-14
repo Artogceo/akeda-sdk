@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 761db417291a739b5c48c5a4a0a2623016e4f6ea430ce54bc4e373fa2a737fc2).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3f5811665ccdd93f447eca1f9f11d23163eee102e1f965915e1e01d27ea38be).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -3072,6 +3072,13 @@ export interface OperationTypes {
     body: models.FinanceAccountCreate;
     response: models.FinanceAccount;
   };
+  /** POST /api/v1/finance/cash-operations — Записать трату или приход в кассе */
+  financeCreateCashOperation: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FinanceCashOperationCreate;
+    response: models.FinanceCashOperation;
+  };
   /** POST /api/v1/finance/connectors — Создать подключение к банку */
   financeCreateConnector: {
     params: Record<string, never>;
@@ -3380,6 +3387,13 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceAccountPage;
   };
+  /** GET /api/v1/finance/cash-operations — Прочитать журнал кассы */
+  financeListCashOperations: {
+    params: Record<string, never>;
+    query: { "allocated"?: boolean; "business"?: models.UUID; "contact"?: models.UUID; "direction"?: models.FinanceDirection; "employee"?: models.UUID; "from"?: string; "item"?: models.UUID; "limit"?: number; "offset"?: number; "q"?: string; "to"?: string; "wallet"?: models.UUID };
+    body: never;
+    response: models.FinanceCashOperationPage;
+  };
   /** GET /api/v1/finance/connectors/{id}/accounts — Получить банковские счета подключения и их привязки */
   financeListConnectorAccounts: {
     params: { "id": models.UUID };
@@ -3453,7 +3467,7 @@ export interface OperationTypes {
   /** GET /api/v1/finance/payment-calendar/operations — Найти операции для подтверждения исполнения плана */
   financeListPaymentFacts: {
     params: Record<string, never>;
-    query: { "business"?: models.UUID; "currency"?: string; "direction"?: models.FinanceDirection; "from"?: string; "q"?: string; "to"?: string };
+    query: { "business"?: models.UUID; "currency"?: string; "direction"?: models.FinanceDirection; "from"?: string; "limit"?: number; "offset"?: number; "q"?: string; "to"?: string };
     body: never;
     response: models.FinancePaymentFactPage;
   };
@@ -6690,6 +6704,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeClassificationSuggestions: { method: "GET", path: "/api/v1/finance/classification-suggestions", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   financeConfigureConnectorMTLS: { method: "PUT", path: "/api/v1/finance/connectors/{id}/mtls", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateAccount: { method: "POST", path: "/api/v1/finance/accounts", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateCashOperation: { method: "POST", path: "/api/v1/finance/cash-operations", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateConnector: { method: "POST", path: "/api/v1/finance/connectors", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateCounterpartyTerms: { method: "POST", path: "/api/v1/finance/counterparties/{contactId}/terms", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -6734,6 +6749,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeLinkStatementTransactions: { method: "POST", path: "/api/v1/finance/statements/{id}/transactions", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListAccountStatements: { method: "GET", path: "/api/v1/finance/accounts/{id}/statements", module: "finance", stage: "preview", permission: "finance.statements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListAccounts: { method: "GET", path: "/api/v1/finance/accounts", module: "finance", stage: "preview", permission: "finance.accounts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListCashOperations: { method: "GET", path: "/api/v1/finance/cash-operations", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   financeListConnectorAccounts: { method: "GET", path: "/api/v1/finance/connectors/{id}/accounts", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListConnectorProviders: { method: "GET", path: "/api/v1/finance/connectors/providers", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListConnectorRuns: { method: "GET", path: "/api/v1/finance/connectors/{id}/runs", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 20 },
@@ -6744,7 +6760,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeListDividendOwners: { method: "GET", path: "/api/v1/finance/dividends/owners", module: "finance", stage: "preview", permission: "finance.dividends:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListDividendPolicies: { method: "GET", path: "/api/v1/finance/dividends/policies", module: "finance", stage: "preview", permission: "finance.dividends:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListExchangeJournal: { method: "GET", path: "/api/v1/finance/exchange/journal", module: "finance", stage: "preview", permission: "finance.exchange:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
-  financeListPaymentFacts: { method: "GET", path: "/api/v1/finance/payment-calendar/operations", module: "finance", stage: "preview", permission: "finance.payment_calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListPaymentFacts: { method: "GET", path: "/api/v1/finance/payment-calendar/operations", module: "finance", stage: "preview", permission: "finance.payment_calendar:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 200 },
   financeListPnlLayoutItems: { method: "GET", path: "/api/v1/finance/pnl-layouts/items", module: "finance", stage: "preview", permission: "finance.pnl_layouts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListPnlLayouts: { method: "GET", path: "/api/v1/finance/pnl-layouts", module: "finance", stage: "preview", permission: "finance.pnl_layouts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListSettlementBalances: { method: "GET", path: "/api/v1/finance/settlements/balances", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 761db417291a739b5c48c5a4a0a2623016e4f6ea430ce54bc4e373fa2a737fc2).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3f5811665ccdd93f447eca1f9f11d23163eee102e1f965915e1e01d27ea38be).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -5721,7 +5721,9 @@ type FilesUploadedPart struct {
 }
 
 type FinanceAccount struct {
-	ID                   UUID    `json:"id"`
+	ID UUID `json:"id"`
+	// Kind — Где лежат деньги. `bank` — расчётный счёт, `cash` — касса из справочника «Кассы». Список общий намеренно: вопрос «сколько у меня денег» задаётся один раз. У кассы банковские поля (`bic`, `number`, `bank_name`, `connector`) пусты по построению, а не «ещё не заполнены», и карточка счёта по её идентификатору не открывается.
+	Kind                 string  `json:"kind"`
 	Company              *string `json:"company"`
 	Bank                 *string `json:"bank"`
 	CompanyName          string  `json:"company_name"`
@@ -5802,6 +5804,73 @@ type FinanceBalanceSection struct {
 	Label string               `json:"label"`
 	Total string               `json:"total"`
 	Items []FinanceBalanceItem `json:"items"`
+}
+
+type FinanceCashOperation struct {
+	ID UUID `json:"id"`
+	// Number — Номер документа; его выдаёт нумератор кабинета
+	Number string `json:"number"`
+	Date   string `json:"date"`
+	// Status — Состояние документа; записанная операция сразу `posted`
+	Status    string           `json:"status"`
+	Direction FinanceDirection `json:"direction"`
+	// Amount — Положительная сумма без знака; знак движения задаёт direction
+	Amount string `json:"amount"`
+	// Currency — Валюта учёта: своей валюты у кассовой операции нет
+	Currency   string `json:"currency"`
+	Wallet     UUID   `json:"wallet"`
+	WalletName string `json:"wallet_name"`
+	// Company — Юрлицо, взятое У КАССЫ. null законен и означает неофициальный контур — свободные деньги, а не пробел в данных.
+	Company *string `json:"company"`
+	// Business — Управленческий бизнес кассы
+	Business *string `json:"business"`
+	// Item — Статья ДДС; null — строка «Без статьи ДДС»
+	Item     *string `json:"item"`
+	ItemName string  `json:"item_name"`
+	// Allocated — Разнесена ли операция: есть ли у неё статья ДДС
+	Allocated   bool    `json:"allocated"`
+	Contact     *string `json:"contact"`
+	ContactName string  `json:"contact_name"`
+	// Counterparty — Имя плательщика или получателя текстом; не заменяет contact
+	Counterparty string  `json:"counterparty"`
+	Employee     *string `json:"employee"`
+	EmployeeName string  `json:"employee_name"`
+	Owner        *string `json:"owner"`
+	Project      *string `json:"project"`
+	Note         string  `json:"note"`
+	CreatedAt    string  `json:"created_at"`
+}
+
+type FinanceCashOperationCreate struct {
+	Wallet UUID `json:"wallet"`
+	// Direction — Обязательно; умолчания нет, иначе непонятная операция молча стала бы тратой
+	Direction map[string]json.RawMessage `json:"direction"`
+	// Amount — Положительная сумма; знак берётся из направления
+	Amount string `json:"amount"`
+	// Date — Пусто означает сегодня КАБИНЕТА, а не сегодня базы
+	Date *string `json:"date,omitempty"`
+	// Item — Статья ДДС; без неё операция законна и видна строкой «Без статьи ДДС»
+	Item *string `json:"item,omitempty"`
+	// Contact — Обязателен у статьи, ведущей именной долг
+	Contact *string `json:"contact,omitempty"`
+	// Employee — Ответственный; обязателен у статьи оплаты труда
+	Employee *string `json:"employee,omitempty"`
+	// Owner — Собственник; обязателен у статьи расчётов с собственником
+	Owner *string `json:"owner,omitempty"`
+	// Project — Разрез «проект», если он включён в кабинете
+	Project *string `json:"project,omitempty"`
+	// Counterparty — Имя плательщика или получателя текстом, когда карточки контрагента нет
+	Counterparty *string `json:"counterparty,omitempty"`
+	// Note — Назначение операции словами человека
+	Note *string `json:"note,omitempty"`
+	// Remember — Запомнить выбранную статью правилом для этого контрагента
+	Remember *bool `json:"remember,omitempty"`
+}
+
+type FinanceCashOperationPage struct {
+	// Count — Сколько операций подходит отбору ВСЕГО, а не сколько их на этой странице: расхождение с длиной `results` означает, что дальше есть ещё.
+	Count   int64                  `json:"count"`
+	Results []FinanceCashOperation `json:"results"`
 }
 
 type FinanceCashflowEntry struct {
@@ -6641,6 +6710,11 @@ type FinancePaymentFact struct {
 	Counterparty string           `json:"counterparty"`
 	Purpose      string           `json:"purpose"`
 	UsedByPlanID *UUID            `json:"used_by_plan_id,omitempty"`
+	Item         *UUID            `json:"item,omitempty"`
+	// ItemName — Название статьи ДДС; пусто у неразнесённой операции
+	ItemName *string `json:"item_name,omitempty"`
+	// Allocated — Разнесена ли операция: есть ли у неё статья ДДС. Тот же признак отдаёт журнал кассы, и ответ на этот вопрос у обоих один.
+	Allocated bool `json:"allocated"`
 }
 
 type FinancePaymentFactPage struct {

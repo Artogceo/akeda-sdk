@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 761db417291a739b5c48c5a4a0a2623016e4f6ea430ce54bc4e373fa2a737fc2).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3f5811665ccdd93f447eca1f9f11d23163eee102e1f965915e1e01d27ea38be).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -465,6 +465,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeClassificationSuggestions': OperationSpec('GET', '/api/v1/finance/classification-suggestions', 'finance', 'preview', 'finance.transactions:read', False, True, (), 'limit_offset', 200, 50),
     'financeConfigureConnectorMTLS': OperationSpec('PUT', '/api/v1/finance/connectors/{id}/mtls', 'finance', 'preview', 'finance.connectors:write', False, False, ('id',), 'none', None, None),
     'financeCreateAccount': OperationSpec('POST', '/api/v1/finance/accounts', 'finance', 'preview', 'finance.accounts:write', False, True, (), 'none', None, None),
+    'financeCreateCashOperation': OperationSpec('POST', '/api/v1/finance/cash-operations', 'finance', 'preview', 'finance.transactions:write', False, False, (), 'none', None, None),
     'financeCreateConnector': OperationSpec('POST', '/api/v1/finance/connectors', 'finance', 'preview', 'finance.connectors:write', False, False, (), 'none', None, None),
     'financeCreateCounterpartyTerms': OperationSpec('POST', '/api/v1/finance/counterparties/{contactId}/terms', 'finance', 'preview', 'finance.settlements:write', False, True, ('contactId',), 'none', None, None),
     'financeCreateDividendDecision': OperationSpec('POST', '/api/v1/finance/dividends/decisions', 'finance', 'preview', 'finance.dividends:write', True, True, (), 'none', None, None),
@@ -509,6 +510,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeLinkStatementTransactions': OperationSpec('POST', '/api/v1/finance/statements/{id}/transactions', 'finance', 'preview', 'finance.statements:write', False, True, ('id',), 'none', None, None),
     'financeListAccountStatements': OperationSpec('GET', '/api/v1/finance/accounts/{id}/statements', 'finance', 'preview', 'finance.statements:read', False, True, ('id',), 'none', None, None),
     'financeListAccounts': OperationSpec('GET', '/api/v1/finance/accounts', 'finance', 'preview', 'finance.accounts:read', False, True, (), 'none', None, None),
+    'financeListCashOperations': OperationSpec('GET', '/api/v1/finance/cash-operations', 'finance', 'preview', 'finance.transactions:read', False, True, (), 'limit_offset', 200, 50),
     'financeListConnectorAccounts': OperationSpec('GET', '/api/v1/finance/connectors/{id}/accounts', 'finance', 'preview', 'finance.connectors:read', False, True, ('id',), 'none', None, None),
     'financeListConnectorProviders': OperationSpec('GET', '/api/v1/finance/connectors/providers', 'finance', 'preview', 'finance.connectors:read', False, True, (), 'none', None, None),
     'financeListConnectorRuns': OperationSpec('GET', '/api/v1/finance/connectors/{id}/runs', 'finance', 'preview', 'finance.connectors:read', False, True, ('id',), 'limit', 100, 20),
@@ -519,7 +521,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeListDividendOwners': OperationSpec('GET', '/api/v1/finance/dividends/owners', 'finance', 'preview', 'finance.dividends:read', False, True, (), 'none', None, None),
     'financeListDividendPolicies': OperationSpec('GET', '/api/v1/finance/dividends/policies', 'finance', 'preview', 'finance.dividends:read', False, True, (), 'none', None, None),
     'financeListExchangeJournal': OperationSpec('GET', '/api/v1/finance/exchange/journal', 'finance', 'preview', 'finance.exchange:read', False, True, (), 'limit_offset', 500, 200),
-    'financeListPaymentFacts': OperationSpec('GET', '/api/v1/finance/payment-calendar/operations', 'finance', 'preview', 'finance.payment_calendar:read', False, True, (), 'none', None, None),
+    'financeListPaymentFacts': OperationSpec('GET', '/api/v1/finance/payment-calendar/operations', 'finance', 'preview', 'finance.payment_calendar:read', False, True, (), 'limit_offset', 200, 200),
     'financeListPnlLayoutItems': OperationSpec('GET', '/api/v1/finance/pnl-layouts/items', 'finance', 'preview', 'finance.pnl_layouts:read', False, True, (), 'none', None, None),
     'financeListPnlLayouts': OperationSpec('GET', '/api/v1/finance/pnl-layouts', 'finance', 'preview', 'finance.pnl_layouts:read', False, True, (), 'none', None, None),
     'financeListSettlementBalances': OperationSpec('GET', '/api/v1/finance/settlements/balances', 'finance', 'preview', 'finance.settlements:read', False, True, (), 'none', None, None),
