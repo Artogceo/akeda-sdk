@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 023fe7c5fee3e639821a198c64c4a80193ed5f20de1b2fda3c9c08847800b280).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ce870b49d00317683cfee3018aca3de91a2e2d1142baf1a4bc63cce50b3aade0).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -13172,6 +13172,8 @@ type StockWarehouse struct {
 	ZonesEnabled bool `json:"zones_enabled"`
 	// NeedsAllocation — На самом зональном складе ещё лежит остаток, оставшийся с момента включения зон
 	NeedsAllocation bool `json:"needs_allocation"`
+	// InboundMode — documents — приход обычными складскими документами; external_receipt — склад внешней стороны: приход даёт только её приёмка, поступление и входящее перемещение запрещены
+	InboundMode string `json:"inbound_mode"`
 	// CompanyIds — Пустой список означает доступность склада всем активным юрлицам кабинета
 	CompanyIds []UUID `json:"company_ids"`
 	CreatedAt  string `json:"created_at"`

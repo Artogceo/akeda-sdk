@@ -61168,6 +61168,7 @@ components:
         - sort_order
         - zones_enabled
         - needs_allocation
+        - inbound_mode
         - company_ids
         - created_at
         - updated_at
@@ -61199,6 +61200,12 @@ components:
         needs_allocation:
           type: boolean
           description: На самом зональном складе ещё лежит остаток, оставшийся с момента включения зон
+        inbound_mode:
+          type: string
+          enum:
+            - documents
+            - external_receipt
+          description: 'documents — приход обычными складскими документами; external_receipt — склад внешней стороны: приход даёт только её приёмка, поступление и входящее перемещение запрещены'
         company_ids:
           type: array
           items:
