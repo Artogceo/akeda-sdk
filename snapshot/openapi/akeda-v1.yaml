@@ -67,7 +67,21 @@ info:
     расчёт юнит-экономики. Данные площадок читаются из внешней аналитической
     базы, а часть витрин ходит в API площадки напрямую; ключи доступа к
     площадкам не попадают в ответ ни одной операции.
-    Для модуля docflow (документы) опубликованы все 32 из 32 живых операций:
+    У модуля docflow (документы) два крыла, и опубликованы оба: все 58 из 58
+    живых операций. Крыло внутреннего документооборота — 25 операций: карточки
+    договоров, спецификаций и актов с неизменяемыми редакциями, файлы до 25 МБ,
+    связи между бумагами, маршрут согласования этапами с решением согласующего
+    под отдельным правом docflow.flow:approve, компактная очередь «ждёт моего
+    решения» для телефона и связь бумаги с учётом — ручные ссылки на документы
+    финансов и склада, создание плановой операции и приёмка акта. Учётного факта
+    это крыло не создаёт ни одной операцией: регистры и главную книгу оно не
+    трогает, а записывает всегда владелец через свой порт. Согласование не
+    является подписью: усиленная квалифицированная подпись живёт в крыле обмена
+    и вычисляется на машине человека.
+    Команды крыла требуют ключ повтора обязательно, а защита от одновременной
+    правки передаётся полем тела expected_version. Набор строк в списках крыла
+    называется items, тогда как крыло обмена исторически называет его results.
+    Для крыла обмена с контрагентами (ЭДО) опубликованы все 33 из 33 живых операций:
     подключения юрлиц к операторам ЭДО с отбором по юрлицу, проверка связи,
     запуск синхронизации по требованию, зеркало документов оператора вместе с
     составом пакета, выдача файлов вложений и контейнеров подписи, приглашение
@@ -280,6 +294,10 @@ tags:
     description: Модуль marketplace (торговые площадки) — витрины Яндекс.Маркета
   - name: Marketplace product groups
     description: Модуль marketplace (торговые площадки) — группы товаров Ozon и Wildberries
+  - name: Marketplace accounting
+    description: Модуль marketplace (торговые площадки) — юрлицо магазина, источник себестоимости и передача недельного отчёта в учёт
+  - name: Marketplace catalog
+    description: Модуль marketplace (торговые площадки) — загрузка каталога магазина в номенклатуру кабинета и разбор спорных карточек
   - name: Finance payroll
     description: Модуль finance (счета и выписки) — зарплатные документы, реестры выплат и загрузка ведомости
   - name: Core reference
@@ -310,6 +328,12 @@ tags:
     description: 'Модуль docflow (документы) — действия над пакетом у оператора: подтвердить и отклонить документ, очередь этапов и аннулирование по соглашению сторон. Все операции раздела меняют состояние в боевом ЭДО и при действующем ограничении «только чтение» отвечают отказом docflow.edo.read_only. Подписания среди них нет: подпись живёт своим контуром под правом docflow.edo:sign'
   - name: Docflow outgoing
     description: 'Модуль docflow (документы) — исходящий формализованный документ: титул продавца по учётному документу кабинета и ответный титул покупателя на входящий пакет. Предполётная проверка ничего не меняет и никуда не ходит, поэтому работает и при действующем ограничении «только чтение»; отправка при нём отвечает отказом docflow.edo.read_only до расшифровки учётных данных оператора'
+  - name: Docflow flow
+    description: 'Модуль docflow (документы) — внутренний документооборот кабинета: карточки договоров, спецификаций и актов, их неизменяемые редакции, файлы и связи между документами. Учётного факта это крыло не создаёт: регистры и главную книгу оно не трогает вовсе'
+  - name: Docflow flow approval
+    description: 'Модуль docflow (документы) — согласование внутри кабинета: маршрут этапами, решение согласующего, отзыв отправки и компактная очередь «ждёт моего решения». Решение стоит под ОТДЕЛЬНЫМ правом docflow.flow:approve — «согласовать» и «редактировать» в живой компании дают разным людям. Согласование не является подписью: усиленная квалифицированная подпись живёт в крыле обмена с контрагентами и вычисляется на машине человека'
+  - name: Docflow flow accounting
+    description: 'Модуль docflow (документы) — связь бумаги с учётом: ручные связи с документами модулей финансов и склада, создание плановой операции и приёмка акта. Записывает всегда владелец через свой порт — крыло документов держит бумагу и ссылку на неё, а движений по регистрам не сочиняет'
   - name: Docflow intake
     description: 'Модуль docflow (документы) — приёмка входящего формализованного документа к учёту: разбор титула продавца из вложений пакета, предложение по контрагенту и номенклатуре и подтверждение человека, из которого рождается учётный документ кабинета. Предложение ничего не меняет и стоит под правом чтения. Ограничение «только чтение» раздел не гасит: в боевом ЭДО приёмка не меняет ничего — она заводит черновик в нашей базе по файлу, который уже скачан'
 paths:
@@ -15327,7 +15351,7 @@ paths:
         - Finance counterparty terms
       operationId: financeGetSettlementPosition
       summary: Получить коммерческую позицию по контрагенту
-      description: Объединяет действующие условия с подтверждённой дебиторской позицией из регистра расчётов.
+      description: Объединяет действующие условия с подтверждённой дебиторской позицией из регистра расчётов. Разрез без единого проведённого движения не сверен — 409 с code finance.settlement_position.not_reconciled; сверенный ноль фиксируется документом finance_settlement_baseline.
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -15377,6 +15401,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/finance/settlements/sources:
@@ -20786,6 +20812,145 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/v1/crm/lead-sources:
+    get:
+      tags:
+        - CRM leads
+      operationId: crmListLeadSources
+      summary: Получить справочник источников обращения
+      description: 'Штатные источники заводит сеятель модуля: за ними стоит код - подстановка manual у сделки и ключи провайдеров Inbox. Кабинет добавляет свои и вправе переименовать любой; код узнаёт строку по key, а не по имени.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: active
+          in: query
+          description: Только включённые источники
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Источники обращения кабинета
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CRMLeadSource'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - CRM leads
+      operationId: crmCreateLeadSource
+      summary: Добавить источник обращения
+      description: Ключ строится из имени транслитерацией и при совпадении получает суффикс. Он уходит в lead.source и дальше не меняется.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMLeadSourceInput'
+      responses:
+        '201':
+          description: Созданный источник
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMLeadSource'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/crm/lead-sources/{id}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    patch:
+      tags:
+        - CRM leads
+      operationId: crmUpdateLeadSource
+      summary: Изменить источник обращения
+      description: 'Имя, канал и порядок правятся у любой строки. Выключить системную нельзя: код ищет её по ключу и обязан найти.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMLeadSourcePatch'
+      responses:
+        '200':
+          description: Изменённый источник
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMLeadSource'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Системный источник нельзя выключить
+    delete:
+      tags:
+        - CRM leads
+      operationId: crmDeleteLeadSource
+      summary: Удалить источник обращения
+      description: 'Удаляется только строка кабинета. История лидов не меняется: lead.source хранит ключ строкой.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      responses:
+        '204':
+          description: Источник удалён
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Системный источник нельзя удалить
   /api/v1/crm/loss-reasons:
     get:
       tags:
@@ -20913,6 +21078,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CRMContactRef'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/crm/contacts/{id}/adopt:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    post:
+      tags:
+        - CRM customers
+      operationId: crmAdoptDirectoryContact
+      summary: Взять контрагента справочника ERP в базу клиентов CRM
+      description: 'Обратная сторона переноса: карточка CRM заводится на уже существующего контрагента и сразу связывается с ним. В справочник операция не пишет, он только читается. Повторный вызов возвращает ту же карточку, а не близнеца.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:write
+      responses:
+        '201':
+          description: Клиент CRM, связанный с карточкой справочника
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMCustomer'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -30631,6 +30829,649 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/marketplace/{platform}/stores/{id}/accounting:
+    get:
+      tags:
+        - Marketplace accounting
+      operationId: marketplaceGetStoreAccounting
+      summary: Получить настройки учёта магазина
+      description: |
+        Юрлицо магазина, контрагент площадки, источник себестоимости и история
+        версий настройки. Отдельно возвращается готовность: setup_ready и
+        pnl_ready считаются по разным условиям, а покрытие себестоимости
+        приходит отдельным блоком, потому что показывать себестоимость числом
+        при неполном покрытии нельзя. Коды в blocking_reasons безопасны для
+        показа; сырой текст причины наружу не возвращается.
+      x-akeda-module: marketplace
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marketplace:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - ozon
+              - wb
+              - wildberries
+              - yandex
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Настройки учёта магазина и его готовность
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceStoreAccounting'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags:
+        - Marketplace accounting
+      operationId: marketplaceSaveStoreAccounting
+      summary: Сохранить настройки учёта магазина
+      description: |
+        Новая версия настройки с датой действия, а не правка прежней: сохранённый
+        период переписать нельзя, следующая дата должна быть позже последней
+        настройки и позже сегодняшнего дня. Точный повтор той же версии
+        принимается и ничего не меняет. Смена юрлица или контрагента у уже
+        привязанного магазина отклоняется: это отдельный перенос с сохранением
+        истории. Вместо выбора существующего юрлица можно передать new_company —
+        ИНН проверяется контрольной цифрой. Источник себестоимости stock требует
+        настроенного складского учёта у выбранного юрлица. После сохранения
+        магазин Ozon или Wildberries ставится в очередь первоначальной загрузки
+        каталога.
+      x-akeda-module: marketplace
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marketplace:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - ozon
+              - wb
+              - wildberries
+              - yandex
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketplaceStoreAccountingInput'
+      responses:
+        '200':
+          description: Сохранённые настройки учёта магазина
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceStoreAccounting'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/marketplace/{platform}/stores/{id}/catalog/status:
+    get:
+      tags:
+        - Marketplace catalog
+      operationId: marketplaceGetCatalogImportStatus
+      summary: Получить состояние первоначальной загрузки каталога
+      description: |
+        Задание первоначальной загрузки каталога магазина в номенклатуру
+        кабинета: состояние, фаза, число попыток и счётчики разбора. Пока
+        задание не запланировано, операция отвечает 404 — это не ошибка, а
+        отсутствие загрузки. Площадки только ozon и wildberries: у Яндекс
+        Маркета контура каталога нет.
+      x-akeda-module: marketplace
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marketplace:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - ozon
+              - wb
+              - wildberries
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Состояние задания загрузки каталога
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceCatalogJob'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/marketplace/{platform}/stores/{id}/catalog/retry:
+    post:
+      tags:
+        - Marketplace catalog
+      operationId: marketplaceRetryCatalogImport
+      summary: Повторить первоначальную загрузку каталога
+      description: |
+        Ставит задание загрузки каталога заново и пересчитывает счётчик спорных
+        карточек. Тела у запроса нет. Ответ 202 означает, что задание принято в
+        очередь, а не что каталог уже загружен: состояние читается операцией
+        marketplaceGetCatalogImportStatus.
+      x-akeda-module: marketplace
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marketplace:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - ozon
+              - wb
+              - wildberries
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '202':
+          description: Задание загрузки принято в очередь
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceCatalogJob'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/marketplace/{platform}/stores/{id}/catalog/preview:
+    post:
+      tags:
+        - Marketplace catalog
+      operationId: marketplacePreviewCatalogImport
+      summary: Показать разбор каталога магазина без записи
+      description: |
+        Тот же разбор, что и у импорта, но ничего не создаёт и не связывает:
+        отвечает, сколько карточек будет заведено, сколько связано с уже
+        известными товарами, сколько останется без изменений и сколько уйдёт в
+        спорные. Тела у запроса нет — источник разбора это сам каталог магазина.
+        Магазин должен быть привязан к юрлицу, иначе 409.
+      x-akeda-module: marketplace
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marketplace:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - ozon
+              - wb
+              - wildberries
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Разбор каталога без записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceCatalogImportResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/marketplace/{platform}/stores/{id}/catalog/import:
+    post:
+      tags:
+        - Marketplace catalog
+      operationId: marketplaceImportCatalog
+      summary: Завести каталог магазина в номенклатуру кабинета
+      description: |
+        Записывает результат разбора: заводит новые товары, связывает совпавшие
+        карточки и оставляет спорные без решения — их разбирает человек через
+        marketplaceListCatalogCandidates и marketplaceLinkCatalogProduct. Тела у
+        запроса нет. Каталог сверх размера одной загрузки отклоняется 409, как и
+        неполные или противоречивые карточки площадки.
+      x-akeda-module: marketplace
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marketplace:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - ozon
+              - wb
+              - wildberries
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Результат загрузки каталога
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceCatalogImportResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/marketplace/{platform}/stores/{id}/catalog/candidates:
+    get:
+      tags:
+        - Marketplace catalog
+      operationId: marketplaceListCatalogCandidates
+      summary: Получить товары кабинета для привязки спорной карточки
+      description: |
+        Выбор из номенклатуры кабинета для ручного решения по спорной карточке
+        площадки. Отбор и страница считаются в базе: каталог кабинета измеряется
+        тысячами позиций. Каждая строка говорит, с какими площадками товар уже
+        связан, и связан ли он уже с ЭТИМ магазином, — привязывать к такому
+        вторую карточку почти всегда ошибка. Рядом приходит список брендов под
+        отбором, чтобы фильтр не требовал отдельного запроса.
+      x-akeda-module: marketplace
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marketplace:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - ozon
+              - wb
+              - wildberries
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: q
+          in: query
+          description: Артикул, название или штрихкод одной строкой
+          schema:
+            type: string
+        - name: brand
+          in: query
+          description: Точное значение бренда карточки
+          schema:
+            type: string
+        - name: link
+          in: query
+          description: Отбор по связанности товара с площадками
+          schema:
+            type: string
+            enum:
+              - any
+              - linked
+              - unlinked
+        - name: linked_platform
+          in: query
+          description: Площадка, с которой товар уже связан; пусто — любая
+          schema:
+            type: string
+            enum:
+              - ozon
+              - wildberries
+        - name: limit
+          in: query
+          description: Размер страницы; значение вне диапазона читается как 50
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Страница товаров кабинета и список брендов под отбором
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceCatalogCandidatePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/marketplace/{platform}/stores/{id}/catalog/links:
+    post:
+      tags:
+        - Marketplace catalog
+      operationId: marketplaceLinkCatalogProduct
+      summary: Привязать карточку площадки к товару кабинета
+      description: |
+        Решение человека по спорной карточке. Форм решения две, и выбирается
+        одна: из окна разбора приходят external_id, snapshot_id и
+        expected_external_ref_updated_at — так изменившийся под руками каталог
+        отклоняется 409, а не переписывает чужое решение; с экрана товаров
+        приходит один offer_id, и тогда снимок не нужен. Артикул, под которым у
+        площадки несколько размеров, отклоняется 409: угадывать размер из
+        артикула нельзя, каждый размер сопоставляется отдельно.
+      x-akeda-module: marketplace
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marketplace:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: platform
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - ozon
+              - wb
+              - wildberries
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketplaceCatalogLinkRequest'
+      responses:
+        '200':
+          description: Сохранённое сопоставление карточки и товара
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceCatalogLinkDecision'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/marketplace/ozon/cost/import:
+    post:
+      tags:
+        - Marketplace Ozon
+      operationId: marketplaceImportOzonCost
+      summary: Загрузить себестоимость Ozon таблицей
+      description: |
+        Массовая простановка себестоимости магазину из таблицы XLSX, XLS, ODS,
+        CSV или TSV. Колонки «артикул» и «себестоимость» ищутся по заголовку
+        первой строки; «1 234,56» приводится к «1234.56». Строка без артикула
+        пропускается молча, пустая себестоимость читается как ноль. Каждая
+        строка сохраняется тем же путём, что и ручной ввод, поэтому частичный
+        успех — обычный исход: ответ называет число применённых строк и причину
+        отказа по каждой непринятой.
+      x-akeda-module: marketplace
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marketplace:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MarketplaceCostImportRequest'
+      responses:
+        '200':
+          description: Сколько строк применено и почему отклонены остальные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceCostImportResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/marketplace/wb/cost/import:
+    post:
+      tags:
+        - Marketplace Wildberries
+      operationId: marketplaceImportWbCost
+      summary: Загрузить себестоимость Wildberries таблицей
+      description: |
+        То же, что и у Ozon, с одной оговоркой площадки: артикулом здесь
+        считается артикул продавца (vendor_code), а не nm_id, — по нему
+        себестоимость и подмешивается в отчёты. Частичный успех обычен: ответ
+        называет число применённых строк и причину отказа по каждой непринятой.
+      x-akeda-module: marketplace
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marketplace:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MarketplaceCostImportRequest'
+      responses:
+        '200':
+          description: Сколько строк применено и почему отклонены остальные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceCostImportResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/marketplace/yandex/cost/import:
+    post:
+      tags:
+        - Marketplace Yandex
+      operationId: marketplaceImportYandexCost
+      summary: Загрузить себестоимость Яндекс Маркета таблицей
+      description: |
+        То же, что и у Ozon: колонки «артикул» и «себестоимость» ищутся по
+        заголовку первой строки, строка без артикула пропускается, пустая
+        себестоимость читается как ноль. Частичный успех обычен: ответ называет
+        число применённых строк и причину отказа по каждой непринятой.
+      x-akeda-module: marketplace
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marketplace:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MarketplaceCostImportRequest'
+      responses:
+        '200':
+          description: Сколько строк применено и почему отклонены остальные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketplaceCostImportResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
   /api/v1/marketplace/{platform}/stores/{id}/finance/weeks:
     get:
       tags:
@@ -33264,7 +34105,11 @@ paths:
         - Chat
       operationId: chatListAttachments
       summary: Получить вложения доступного чата
-      description: Отдаются только вложения из видимой участнику части истории; для этого нужна capability скачивания файлов, а не просто чтение чата.
+      description: |
+        Указатель вложений беседы. Отдаются только вложения из видимой участнику части истории;
+        для этого нужна capability скачивания файлов, а не просто чтение чата. Удалённые сообщения
+        и вложения, снятые антивирусом, не возвращаются ни списком, ни поиском.
+        Страница идёт от свежих к старым; следующая берётся непрозрачным `cursor` из `next_cursor`.
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -33276,15 +34121,21 @@ paths:
       parameters:
         - name: media_kind
           in: query
-          description: Фильтр по типу вложения
+          description: 'Фильтр по типу вложения. Принимает перечень через запятую: media_kind=image,video,video_circle.'
           schema:
             type: string
-            enum:
-              - file
-              - image
-              - video
-              - voice
-              - video_circle
+            example: image,video,video_circle
+        - name: q
+          in: query
+          description: 'Поиск по имени файла: до 16 слов и 256 знаков, регистр и е/ё не важны, синтаксис полнотекстового запроса не исполняется.'
+          schema:
+            type: string
+            maxLength: 256
+        - name: cursor
+          in: query
+          description: Непрозрачный курсор следующей страницы из next_cursor предыдущего ответа.
+          schema:
+            type: string
         - name: limit
           in: query
           schema:
@@ -38169,6 +39020,1448 @@ paths:
           $ref: '#/components/responses/DocflowFormatInvalid'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/references:
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowReferences
+      x-akeda-audience: external
+      summary: Получить справочники внутреннего контура
+      description: |-
+        Подсказки для полей карточки: юрлица кабинета, контрагенты, номенклатура и статьи движения денег. Отдаётся ровно то, что видно текущему человеку: юрлица сужены его членством, как и весь контур.
+
+        Листание здесь одностороннее — страница фиксирована в 25 строк, своего limit у выборки нет, и продолжение спрашивают следующим offset, пока has_more истинно.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: kind
+          in: query
+          required: true
+          description: Какой справочник спрашивают
+          schema:
+            type: string
+            enum:
+              - company
+              - contact
+              - product
+              - sale_item
+              - purchase_item
+        - name: search
+          in: query
+          description: Поиск подстрокой по названию; до 200 знаков
+          schema:
+            type: string
+            maxLength: 200
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100000
+            default: 0
+      responses:
+        '200':
+          description: Страница справочника
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowReferencePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/approvals/inbox:
+    get:
+      tags:
+        - Docflow flow approval
+      operationId: docflowFlowApprovalInbox
+      x-akeda-audience: external
+      summary: Получить компактную очередь «ждёт моего решения»
+      description: |-
+        Личная очередь решений одной строкой на документ: вид, номер, заголовок, юрлицо, контрагент, кто просит, когда попросил, срок, номер активного этапа из их общего числа и сумма. Файлов, состава маршрута, товарных строк и учётных связей здесь нет ВОВСЕ — за ними идут в карточку документа по его адресу.
+
+        Это решение в пользу телефона, а не урезанная копия списка: очередь открывают, чтобы решить, что открывать дальше, и полная карточка каждого пункта — трафик за содержимое, которое человек, скорее всего, не раскроет.
+
+        Чужую очередь спросить нечем: действующее лицо сервер берёт из сессии, и параметра с идентификатором человека у операции нет. Видимость документов считается тем же слоем доступа, что и у списка карточек (членство и его company_scope), и тем же условием «ждёт решения» — второго места, где решается, кто что видит, не заведено.
+
+        Порядок отличается от карточного списка намеренно: сначала то, у чего ближе срок, затем то, о чём просили раньше. Сумма пуста законно — у рамочного договора её нет, и ноль вместо неё назвал бы сумму, которой не называли. Архивные документы в очередь не попадают.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100000
+            default: 0
+      responses:
+        '200':
+          description: Страница очереди решений
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowApprovalInboxPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents:
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowDocuments
+      x-akeda-audience: external
+      summary: Получить документы внутреннего контура
+      description: |-
+        Список карточек внутреннего документооборота: договоры, спецификации, акты и прочие бумаги кабинета. Каждая строка — ПОЛНАЯ карточка текущей редакции вместе с файлами, связями и маршрутом согласования; для телефонной очереди решений есть отдельная лёгкая операция docflowFlowApprovalInbox.
+
+        Отбор awaiting_my_approval=true оставляет только то, что ждёт решения ТЕКУЩЕГО человека: действующее лицо сервер берёт из сессии, назвать в отборе чужого нечем. Допустимых значений ровно два — true и false; любое другое отвечает отказом 400, а не молча игнорируется. Значение false отбор не сужает и равнозначно его отсутствию.
+
+        Набор строк называется items — как у остальных страниц этого контура. Крыло обмена с контрагентами (ЭДО) в том же модуле исторически называет его results, и это расхождение здесь названо вслух, а не оставлено на догадку читателя.
+
+        Без явного status архивные документы скрыты. Отбор related_to возвращает связную компоненту графа связей документа целиком, и архивные в ней остаются: разорванная история — это не история.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: search
+          in: query
+          description: Поиск подстрокой по заголовку, номеру, контрагенту и юрлицу; до 200 знаков
+          schema:
+            type: string
+            maxLength: 200
+        - name: kind
+          in: query
+          schema:
+            $ref: '#/components/schemas/DocflowFlowKind'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - draft
+              - registered
+              - archived
+        - name: company_id
+          in: query
+          description: Сузить юрлицом кабинета
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: contact_id
+          in: query
+          description: Сузить контрагентом
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: related_to
+          in: query
+          description: Связная компонента графа связей названного документа целиком
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: awaiting_my_approval
+          in: query
+          description: true — только ждущие решения текущего человека. Иное значение, кроме false, — отказ
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100000
+            default: 0
+      responses:
+        '200':
+          description: Страница документов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowCreateDocument
+      x-akeda-audience: external
+      summary: Завести документ внутреннего контура
+      description: |-
+        Заводит ЧЕРНОВИК первой редакции. Учётного факта при этом не рождается: внутренний документооборот не проводит документ, не пишет регистры и не трогает главную книгу — связь с учётом делают отдельные операции этого же крыла.
+
+        Заголовок Idempotency-Key здесь ОБЯЗАТЕЛЕН, а не «принимается»: запрос без него отвечает 400. Квитанция команды лежит в базе кабинета рядом с самим документом, и повтор того же ключа тем же человеком отдаёт документ первой попытки, а не заводит второй.
+
+        Юрлицо обязано входить в доступные текущему человеку, иначе ответ 404: документ, которого не видно, и завести нельзя.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowFlowCreateInput'
+      responses:
+        '201':
+          description: Заведённый черновик первой редакции
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}:
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowDocument
+      x-akeda-audience: external
+      summary: Получить карточку документа
+      description: 'Текущая редакция целиком: реквизиты, коммерческая часть, файлы, связи, маршрут согласования и ссылки на учётные документы. Историческая редакция читается своим адресом.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Карточка документа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/commands:
+    post:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowChangeDocument
+      x-akeda-audience: external
+      summary: Выполнить команду правки документа
+      description: |-
+        Все правки идут одной командой с полем action, и каждая принятая команда рождает НОВУЮ неизменяемую редакцию — прежняя остаётся читаемой по своему адресу. Правка снимков задним числом не бывает.
+
+        Поле expected_version обязательно в каждой команде: это защита от одновременной правки, и передаётся она полем ТЕЛА, а не заголовком. Разошлась с текущей версией — 409 docflow.flow.version_conflict, и клиент обязан перечитать документ, а не повторять с тем же числом.
+
+        Команды save, link, unlink и remove_file работают только по черновику; register переводит его в зарегистрированный, revise возвращает в черновик, archive и restore ведут архив. Стороны и вид документа, уже закреплённые зарегистрированной редакцией или учётной связью, не меняются вовсе — отказ docflow.flow.identity_locked.
+
+        Заголовок Idempotency-Key обязателен, как и у остальных команд крыла.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowFlowChangeInput'
+      responses:
+        '200':
+          description: Документ после команды
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/revisions/{version}:
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowDocumentRevision
+      x-akeda-audience: external
+      summary: Получить историческую редакцию документа
+      description: 'Снимок документа на момент названной версии. Редакции неизменяемы: документ, показанный согласующему, читается ровно тем, что он видел, сколько бы правок ни случилось после.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: version
+          in: path
+          required: true
+          description: Номер редакции с единицы
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Снимок названной редакции
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/files:
+    post:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowUploadFile
+      x-akeda-audience: external
+      summary: Приложить файл к документу
+      description: |-
+        Тело запроса — multipart/form-data. Предел одного файла 25 МБ; файл больше отвечает 413 docflow.flow.file_too_large, и это проверяется до чтения содержимого. Больше ста файлов к одному документу не прикладывается.
+
+        Ожидаемая версия передаётся полем формы expected_version — тем же механизмом защиты от одновременной правки, что и у остальных команд. Файл с тем же содержимым, уже приложенный к документу, отвечает 409 docflow.flow.file_duplicate: одна и та же бумага дважды в деле не лежит. Поле replace_id заменяет названный файл вместо добавления.
+
+        Заголовок Idempotency-Key обязателен. Байты ложатся в папку кабинета в объектном хранилище, и каждая историческая редакция продолжает ссылаться на те же байты.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - expected_version
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Не больше 25 МБ
+                expected_version:
+                  type: integer
+                  minimum: 1
+                  description: Ожидаемая версия документа
+                replace_id:
+                  $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Документ с приложенным файлом
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/files/{fileId}/content:
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowFileContent
+      x-akeda-audience: external
+      summary: Скачать файл документа
+      description: |-
+        Отдаёт байты файла как вложение. Содержимое приходит потоком, а не полем JSON, и заголовки запрещают его кэширование посредниками.
+
+        Параметр preview=1 отдаёт производное представление для просмотра, когда оно построено; без него приходит исходный файл.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: preview
+          in: query
+          description: 1 — производное представление для просмотра
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          $ref: '#/components/responses/DocflowFlowFileContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/revisions/{version}/files/{fileId}/content:
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowRevisionFileContent
+      x-akeda-audience: external
+      summary: Скачать файл исторической редакции
+      description: Тот же файл в том виде, в каком он входил в названную редакцию. Байты прежних файлов не переписываются, поэтому согласованный документ открывается тем же содержимым и спустя годы.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: preview
+          in: query
+          description: 1 — производное представление для просмотра
+          schema:
+            type: string
+            enum:
+              - '1'
+      responses:
+        '200':
+          $ref: '#/components/responses/DocflowFlowFileContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/approval/context:
+    get:
+      tags:
+        - Docflow flow approval
+      operationId: docflowFlowApprovalContext
+      x-akeda-audience: external
+      summary: Узнать, что текущий человек может сделать с согласованием
+      description: |-
+        Отвечает на три вопроса про ТЕКУЩЕГО человека и текущее состояние: может ли он отправить документ на согласование, может ли принять решение сейчас и может ли отозвать отправку. Это не снимок прав на прошлое — права проверяются заново на каждый вызов.
+
+        can_decide истинно только тогда, когда человек стоит в активном этапе маршрута и ещё не решил, и когда у него есть отдельное полномочие docflow.flow:approve.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Возможности текущего человека
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowApprovalContext'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/approval/people:
+    get:
+      tags:
+        - Docflow flow approval
+      operationId: docflowFlowApprovalPeople
+      x-akeda-audience: external
+      summary: Получить кандидатов в согласующие
+      description: |-
+        Люди кабинета, которым можно поручить решение по ЭТОМУ документу: у каждого проверено членство и доступ к юрлицу документа. Логин, состав ролей и права наружу не отдаются — только идентификатор и имя.
+
+        Операция стоит под правом ЗАПИСИ, хотя и читает: список кандидатов нужен тому, кто собирает маршрут, а не всякому читателю документа.
+
+        Листается не смещением, а продолжением по идентификатору: параметр after берут из next_after предыдущей страницы. Страница — 100 человек. Смещение здесь соврало бы: список участников меняется между запросами, и вставка нового человека сдвинула бы хвост.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: search
+          in: query
+          description: Поиск подстрокой по имени
+          schema:
+            type: string
+        - name: after
+          in: query
+          description: Продолжение с next_after предыдущей страницы; 0 — с начала
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Страница кандидатов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowApprovalPeoplePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/approval:
+    post:
+      tags:
+        - Docflow flow approval
+      operationId: docflowFlowSubmitApproval
+      x-akeda-audience: external
+      summary: Отправить документ на согласование
+      description: |-
+        Маршрут задаётся списком этапов, каждый этап — список людей. Этапы проходятся по порядку: следующий открывается, когда решили все участники текущего. До десяти этапов и до пятидесяти участников всего.
+
+        Срок due_at необязателен, но если назван, то обязан быть в будущем. Маршрут закрепляется за ТОЙ версией документа, которую видит отправка: согласующий решает по тому, что ему показали.
+
+        Согласование — мнение, а не проведение: учётных движений оно не создаёт и черновик не замораживает.
+
+        Заголовок Idempotency-Key обязателен: команда читает его и без него отвечает 400.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowFlowApprovalSubmit'
+      responses:
+        '200':
+          description: Документ с заведённым маршрутом
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/approval/decisions:
+    post:
+      tags:
+        - Docflow flow approval
+      operationId: docflowFlowDecideApproval
+      x-akeda-audience: external
+      summary: Принять решение согласующего
+      description: |-
+        Единственная операция крыла под правом docflow.flow:approve. Это сделано намеренно: «согласовать» и «редактировать» — РАЗНЫЕ полномочия, и в живой компании их дают разным людям. Права на правку документа для решения недостаточно, как и наоборот.
+
+        Решений три: approve — согласен, return — вернуть на доработку, reject — отказать. Решить может только тот, кто стоит в активном этапе и ещё не решал; чужое решение подписать нечем — действующее лицо берётся из сессии.
+
+        Поле approval_id называет тот самый маршрут, а expected_version — ту самую версию документа: решение по устаревшему показу отвечает конфликтом, а не тихо ложится на новый текст.
+
+        Это не подпись и не проведение. Усиленная квалифицированная подпись живёт в крыле обмена с контрагентами и вычисляется на машине человека.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:approve
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowFlowApprovalDecision'
+      responses:
+        '200':
+          description: Документ после решения
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/approval/cancel:
+    post:
+      tags:
+        - Docflow flow approval
+      operationId: docflowFlowCancelApproval
+      x-akeda-audience: external
+      summary: Отозвать документ с согласования
+      description: |-
+        Отзывает собственную отправку. Отозвать может ТОЛЬКО тот, кто отправлял: снять чужой маршрут нельзя даже с полным правом записи.
+
+        Уже принятые решения не стираются — они остаются в истории маршрута вместе с причиной отзыва. Заголовок Idempotency-Key обязателен.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowFlowApprovalCancel'
+      responses:
+        '200':
+          description: Документ после отзыва
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/accounting-documents/{owner}/{document}/originals:
+    get:
+      tags:
+        - Docflow flow accounting
+      operationId: docflowFlowAccountingOriginals
+      x-akeda-audience: external
+      summary: Получить бумаги, стоящие за учётным документом
+      description: |-
+        Обратный взгляд: какие документы внутреннего контура сделаны из этой учётной операции или привязаны к ней вручную. Отвечает на вопрос карточки учётного документа «где бумага, по которой это записано».
+
+        Version называет ЗАКРЕПЛЁННУЮ редакцию, из которой сделан план или акт, а current_version — текущую. Открывать нужно первую: именно она была основанием.
+
+        Страница фиксирована в 25 строк, своего limit у выборки нет.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: owner
+          in: path
+          required: true
+          description: Модуль-владелец учётного документа
+          schema:
+            type: string
+            enum:
+              - finance
+              - stock
+        - name: document
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Страница бумаг за учётным документом
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowAccountingBacklinkPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Docflow flow accounting
+      operationId: docflowFlowCreateAccountingOriginal
+      x-akeda-audience: external
+      summary: Завести бумагу по учётному документу
+      description: |-
+        Делает документ внутреннего контура из названной редакции учётного документа владельца. Стороны, направление и валюта берутся из ЭТОЙ редакции и телом запроса не подделываются — в запросе называют только вид бумаги и её реквизиты.
+
+        Учётного факта операция не создаёт: она заводит бумагу рядом с уже существующей записью, а не записывает вторую.
+
+        Заголовок Idempotency-Key обязателен. Повтор с новым ключом привязывается к уже заведённой бумаге, а не заводит дубль.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: owner
+          in: path
+          required: true
+          description: Сегодня принимается только finance
+          schema:
+            type: string
+            enum:
+              - finance
+              - stock
+        - name: document
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowFlowAccountingOriginalInput'
+      responses:
+        '201':
+          description: Заведённая бумага
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/accounting-candidates:
+    get:
+      tags:
+        - Docflow flow accounting
+      operationId: docflowFlowAccountingCandidates
+      x-akeda-audience: external
+      summary: Получить учётные документы, которые можно связать с бумагой
+      description: |-
+        Документы модуля-владельца с теми же сторонами и валютой, что у бумаги: связать разрешено только то, что описывает ту же сделку.
+
+        Операция стоит под правом ЗАПИСИ, хотя и читает: список нужен тому, кто собирается связывать, и он же обязан иметь право читать документы модуля-владельца — оно проверяется отдельно.
+
+        Страница — 100 строк; продолжение спрашивают значением next_offset.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: owner
+          in: query
+          required: true
+          description: Модуль-владелец учётного документа
+          schema:
+            type: string
+            enum:
+              - finance
+              - stock
+        - name: search
+          in: query
+          description: Поиск подстрокой по номеру и виду; до 200 знаков
+          schema:
+            type: string
+            maxLength: 200
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Страница учётных документов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowAccountingPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/accounting-links:
+    post:
+      tags:
+        - Docflow flow accounting
+      operationId: docflowFlowLinkAccountingDocument
+      x-akeda-audience: external
+      summary: Связать бумагу с учётным документом
+      description: |-
+        Ручная связь «эта бумага — основание вот этой учётной записи». Связь называет чужой документ по личности и не копирует в снимок его состояние, остаток и содержимое: у учётного документа свой владелец, и правда о нём живёт у него.
+
+        Стороны и валюта обязаны совпасть, иначе отказ. Учётных движений операция не делает.
+
+        Поле expected_version обязательно; заголовок Idempotency-Key тоже.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowFlowAccountingLinkInput'
+      responses:
+        '200':
+          description: Документ со связью
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/accounting-links/remove:
+    post:
+      tags:
+        - Docflow flow accounting
+      operationId: docflowFlowUnlinkAccountingDocument
+      x-akeda-audience: external
+      summary: Снять связь бумаги с учётным документом
+      description: |-
+        Снимает названную связь. Учётный документ при этом остаётся как был — снимается ссылка, а не запись: удалять чужие факты крыло не умеет и не будет.
+
+        Связь, которой закреплён принятый акт, снимается только тем, у кого есть право читать документы модуля финансов: она держит долг, и снять её вслепую значило бы оставить деньги без основания.
+
+        Поле expected_version обязательно; заголовок Idempotency-Key тоже.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowFlowAccountingUnlinkInput'
+      responses:
+        '200':
+          description: Документ без снятой связи
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/accounting-links/{link}:
+    get:
+      tags:
+        - Docflow flow accounting
+      operationId: docflowFlowAccountingLink
+      x-akeda-audience: external
+      summary: Прочитать учётный документ связи
+      description: |-
+        Отдаёт карточку чужого учётного документа, на который указывает связь: вид, номер, дату и состояние. Данные читаются у модуля-владельца в момент запроса, а не берутся из снимка бумаги — состояние учётного документа меняется, и снимок соврал бы.
+
+        Право читать документы модуля-владельца проверяется отдельно от права на бумагу.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: link
+          in: path
+          required: true
+          description: Идентификатор связи из карточки бумаги
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: version
+          in: query
+          description: Редакция бумаги, в которой искать связь; 0 — текущая
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Учётный документ связи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowAccountingDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/finance-plan:
+    post:
+      tags:
+        - Docflow flow accounting
+      operationId: docflowFlowCreateFinancePlan
+      x-akeda-audience: external
+      summary: Создать продажу или закупку по бумаге
+      description: |-
+        Просит модуль финансов завести плановую операцию по сумме и графикам этой бумаги. Экономическая роль называется явно: входящий договор всё ещё может быть продажей, и выводить её из направления документа нельзя.
+
+        Записывает не крыло документов, а владелец: операция зовёт его порт, и регистры с главной книгой остаются его же делом. Сумма и валюта берутся из бумаги; без них команда отвечает отказом, а не подставляет ноль.
+
+        Требует, кроме права записи в крыле, права работать с документами модуля финансов. Поле expected_version и заголовок Idempotency-Key обязательны.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowFlowFinancePlanInput'
+      responses:
+        '200':
+          description: Бумага со связью на заведённую операцию
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/accrual-plan:
+    get:
+      tags:
+        - Docflow flow accounting
+      operationId: docflowFlowAccrualPlan
+      x-akeda-audience: external
+      summary: Получить этапы работ выбранного плана
+      description: |-
+        Показывает, сколько по каждому этапу запланировано и сколько уже принято актами. По этим остаткам распределяют новый акт.
+
+        Операция стоит под правом ЗАПИСИ и дополнительно требует права работать с документами модуля финансов: это рабочий шаг приёмки акта, а не отчёт.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          description: Бумага акта
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: document
+          in: query
+          required: true
+          description: Плановая операция модуля финансов
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: План и его этапы
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowAccrualPlan'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/accrual-candidates:
+    get:
+      tags:
+        - Docflow flow accounting
+      operationId: docflowFlowAccrualCandidates
+      x-akeda-audience: external
+      summary: Получить планы, к которым можно принять акт
+      description: |-
+        Плановые операции модуля финансов с теми же сторонами и валютой, что у акта. Из них выбирают тот план, работы по которому закрывает акт.
+
+        Как и соседняя выборка этапов, стоит под правом записи и требует права работать с документами модуля финансов. Страница — 100 строк; продолжение спрашивают значением next_offset.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          description: Бумага акта
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: search
+          in: query
+          description: Поиск подстрокой; до 200 знаков
+          schema:
+            type: string
+            maxLength: 200
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Страница плановых операций
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowAccountingPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/finance-act:
+    post:
+      tags:
+        - Docflow flow accounting
+      operationId: docflowFlowAcceptFinanceAct
+      x-akeda-audience: external
+      summary: Подтвердить выполнение актом
+      description: |-
+        Распределяет сумму акта по этапам работ выбранного плана и просит модуль финансов записать факт. Сумма распределения не превышает остаток этапа — иначе отказ docflow.flow.accrual_limit; этапы с разными сроками оплаты в один акт не собираются — docflow.flow.accrual_due_date_conflict; дата выполнения в закрытом периоде — docflow.flow.period_closed.
+
+        Фактическая дата называется явно и может отличаться от плановой даты завершения этапа.
+
+        Записывает факт владелец — модуль финансов, через свой порт; регистры и главная книга остаются за ним. Крыло документов держит только бумагу и связь с ней.
+
+        Требует права работать с документами модуля финансов. Поля expected_version и expected_operation_version и заголовок Idempotency-Key обязательны.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowFlowFinanceAccrualInput'
+      responses:
+        '200':
+          description: Бумага со связью на записанный факт
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
 components:
   securitySchemes:
     erpUserToken:
@@ -38610,6 +40903,31 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/DocflowFormatIssues'
+    DocflowFlowFileContent:
+      description: Байты файла как вложение. Содержимое приходит потоком, а не полем JSON, и посредникам кэшировать его запрещено.
+      headers:
+        Content-Disposition:
+          schema:
+            type: string
+        Cache-Control:
+          schema:
+            type: string
+            const: private, no-store
+        X-Content-Type-Options:
+          schema:
+            type: string
+            const: nosniff
+      content:
+        application/octet-stream:
+          schema:
+            type: string
+            format: binary
+    DocflowFlowIdempotencyConflict:
+      description: Тот же Idempotency-Key уже использован этим человеком для ДРУГОГО изменения этого документа. Код `docflow.flow.idempotency_conflict`; сохранённый ответ не раскрывается. Документ перечитывают и повторяют действие новым ключом.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     TabularFile:
       description: XLSX, XLS, ODS, CSV или TSV-файл из tenant-scoped object storage
       headers:
@@ -43826,6 +46144,7 @@ components:
           enum:
             - ''
             - calendar.connector.internal
+            - calendar.connector.credentials_rejected
             - calendar.connector.provider_declined
             - calendar.connector.disconnected
         supports_import:
@@ -55192,6 +57511,70 @@ components:
         is_primary:
           type: boolean
           default: false
+    CRMLeadSource:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - key
+        - name
+        - channel
+        - sort_order
+        - is_system
+        - is_active
+        - created_at
+        - updated_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        key:
+          type: string
+          description: То, что ложится в lead.source. У системной строки за ключом стоит код
+        name:
+          type: string
+          description: Имя - право кабинета; сеятель его не возвращает
+        channel:
+          type: string
+          description: Канал для цвета и значка; неизвестный приводится к other
+        sort_order:
+          type: integer
+        is_system:
+          type: boolean
+          description: 'Строку завёл сеятель модуля: удалить и выключить нельзя'
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CRMLeadSourceInput:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+        channel:
+          type: string
+        sort_order:
+          type: integer
+    CRMLeadSourcePatch:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+        channel:
+          type: string
+        sort_order:
+          type: integer
+        is_active:
+          type: boolean
     CRMLossReason:
       type: object
       additionalProperties: false
@@ -62080,6 +64463,64 @@ components:
         analytics:
           type: boolean
           description: Присутствует и равно false, когда аналитика не подключена
+    MarketplaceFunnelDailyReference:
+      type: object
+      additionalProperties: false
+      required:
+        - buyoutFrom
+        - buyoutTo
+        - bought
+        - cancelled
+        - pending
+        - from
+        - to
+        - units
+        - commission
+        - logistics
+        - other
+        - buyout
+        - missing
+      properties:
+        buyoutFrom:
+          type: string
+          format: date
+        buyoutTo:
+          type: string
+          format: date
+        bought:
+          type: number
+        cancelled:
+          type: number
+        pending:
+          type: number
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        units:
+          type: number
+        commission:
+          type:
+            - number
+            - 'null'
+        logistics:
+          type:
+            - number
+            - 'null'
+        other:
+          type:
+            - number
+            - 'null'
+        buyout:
+          type:
+            - number
+            - 'null'
+        missing:
+          type: array
+          items:
+            type: string
     MarketplaceOzonFunnelDailyCard:
       type: object
       additionalProperties: false
@@ -62095,14 +64536,64 @@ components:
           type: string
         photo:
           type: string
+        store:
+          type: string
         stock:
-          type: number
-          description: Доступный остаток
+          type:
+            - number
+            - 'null'
+          description: Общий остаток, только когда известны оба источника
+        stockMarketplace:
+          type:
+            - number
+            - 'null'
+        stockFbs:
+          type:
+            - number
+            - 'null'
+        ordersToday:
+          type:
+            - number
+            - 'null'
+        rating:
+          type:
+            - number
+            - 'null'
+        reviews:
+          type:
+            - number
+            - 'null'
         cost:
           type: number
         commission:
-          type: number
-          description: Последняя ставка комиссии в процентах
+          type:
+            - number
+            - 'null'
+          description: Взвешенная ставка предыдущей полной недели
+        acquiring:
+          type:
+            - number
+            - 'null'
+        tax:
+          type:
+            - number
+            - 'null'
+        logisticsUnit:
+          type:
+            - number
+            - 'null'
+        otherUnit:
+          type:
+            - number
+            - 'null'
+        buyoutAll:
+          type:
+            - number
+            - 'null'
+        buyoutRolling:
+          type:
+            - number
+            - 'null'
     MarketplaceOzonFunnelDailyArticle:
       type: object
       additionalProperties: false
@@ -62186,8 +64677,9 @@ components:
         adShare:
           type: array
           items:
-            type: 'null'
-          description: Источника пока нет
+            type:
+              - number
+              - 'null'
         ordersSum:
           type: array
           items:
@@ -62212,6 +64704,7 @@ components:
             type:
               - number
               - 'null'
+          description: Средняя цена продавца в заказах без отмен; имя ключа сохранено для совместимости
         spp:
           type: array
           items:
@@ -62221,8 +64714,9 @@ components:
         position:
           type: array
           items:
-            type: 'null'
-          description: Источника пока нет
+            type:
+              - number
+              - 'null'
         adSpend:
           type: array
           items:
@@ -62253,12 +64747,73 @@ components:
             type:
               - number
               - 'null'
+        buyoutRate:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        expectedUnits:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        expectedRevenue:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        costUnit:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        acquiringRate:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        commissionRate:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        logisticsUnit:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        otherUnit:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        taxRate:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
         umd:
           type: array
           items:
-            type: 'null'
-          description: Источника пока нет
+            type:
+              - number
+              - 'null'
         roi:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        roiOrders:
           type: array
           items:
             type:
@@ -62278,7 +64833,12 @@ components:
               - 'null'
     MarketplaceOzonFunnelDailyTotals:
       type: object
-      additionalProperties: false
+      additionalProperties:
+        type: array
+        items:
+          type:
+            - number
+            - 'null'
       description: Каждый итог — массив из одного значения, чтобы колонка ИТОГО рисовалась тем же кодом что и дни
       required:
         - traffic
@@ -62365,7 +64925,7 @@ components:
             type:
               - number
               - 'null'
-          description: Появляется только когда есть по чему считать
+          description: Средняя цена продавца в заказах без отмен
     MarketplaceOzonFunnelDaily:
       type: object
       additionalProperties: false
@@ -62379,7 +64939,10 @@ components:
           const: ozon
         source:
           type: string
-          const: ozon_analytics
+          const: ozon_orders_and_finance
+        estimateModel:
+          type: string
+          const: sales_and_orders_weekly
         sku:
           type: string
           description: Артикул за который построена матрица
@@ -62405,6 +64968,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MarketplaceOzonFunnelDailyArticle'
+        references:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/MarketplaceFunnelDailyReference'
+        dataThrough:
+          type: object
+          additionalProperties:
+            type:
+              - string
+              - 'null'
         note:
           type: string
           description: Пустая строка, когда сказать нечего
@@ -64175,9 +66748,63 @@ components:
           type: string
         photo:
           type: string
+        store:
+          type: string
+        stock:
+          type:
+            - number
+            - 'null'
+        stockMarketplace:
+          type:
+            - number
+            - 'null'
+        stockFbs:
+          type:
+            - number
+            - 'null'
+        ordersToday:
+          type:
+            - number
+            - 'null'
+        rating:
+          type:
+            - number
+            - 'null'
+        reviews:
+          type:
+            - number
+            - 'null'
         cost:
-          type: integer
+          type: number
           description: Себестоимость из кабинета
+        commission:
+          type:
+            - number
+            - 'null'
+        acquiring:
+          type:
+            - number
+            - 'null'
+        tax:
+          type:
+            - number
+            - 'null'
+        logisticsUnit:
+          type:
+            - number
+            - 'null'
+        otherUnit:
+          type:
+            - number
+            - 'null'
+        buyoutAll:
+          type:
+            - number
+            - 'null'
+        buyoutRolling:
+          type:
+            - number
+            - 'null'
     MarketplaceWbFunnelDailyArticle:
       type: object
       additionalProperties: false
@@ -64207,7 +66834,10 @@ components:
           const: wb
         source:
           type: string
-          const: wb_finance
+          const: wb_orders_sales_and_finance
+        estimateModel:
+          type: string
+          const: sales_and_orders_weekly
         sku:
           type: string
           description: Артикул поставщика выбранной строки
@@ -64234,9 +66864,11 @@ components:
           description: |
             Ряды по дням окна той же длины, что days. Ключи traffic, views, cv2,
             cart, cv3, orders, adShare, ordersSum, buyouts, buyoutsSum, avgBuyer,
-            spp, position, adSpend, drrOrders, drrSales, margin, umd, roi,
-            marginTot. Заполнены только spp, avgBuyer, margin, roi и marginTot —
-            воронка WB ещё не подключена и остальные ряды приходят пустыми.
+            spp, position, adSpend, drrOrders, drrSales, buyoutRate,
+            expectedUnits, expectedRevenue, costUnit, acquiringRate,
+            commissionRate, logisticsUnit, otherUnit, taxRate, margin,
+            marginSheet, umd, roi, roiOrders, marginTot и marginSheetTot.
+            Отсутствующий источник даёт null, а не ложный ноль.
         totals:
           type: object
           additionalProperties:
@@ -64253,6 +66885,16 @@ components:
           items:
             $ref: '#/components/schemas/MarketplaceWbFunnelDailyArticle'
           description: До 300 артикулов по выручке за окно
+        references:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/MarketplaceFunnelDailyReference'
+        dataThrough:
+          type: object
+          additionalProperties:
+            type:
+              - string
+              - 'null'
         note:
           type: string
         analytics:
@@ -65581,6 +68223,462 @@ components:
           type: integer
           minimum: 0
           description: Сколько строк реально легло в срез. Повторы и товары чужих магазинов сюда не попадают
+    MarketplaceStoreAccountingPolicy:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - company_id
+        - cost_source
+        - valid_from
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        cost_source:
+          type: string
+          enum:
+            - manual
+            - stock
+          description: Откуда берётся себестоимость на этот период
+        valid_from:
+          type: string
+          format: date
+        valid_to:
+          type: string
+          format: date
+          description: Пусто у действующей версии
+    MarketplaceStoreAccountingCostCoverage:
+      type: object
+      additionalProperties: false
+      required:
+        - state
+        - articles
+        - articles_with_rate
+        - uncovered_articles
+      properties:
+        state:
+          type: string
+          enum:
+            - complete
+            - partial
+            - none
+            - unknown
+          description: Показывать себестоимость числом можно только при complete
+        reason:
+          type: string
+          enum:
+            - cost_source_required
+            - catalog_not_matched
+            - cost_rates_missing
+            - cost_rates_partial
+            - cost_from_stock
+        articles:
+          type: integer
+          minimum: 0
+          description: Артикулы магазина, сопоставленные с товарами кабинета
+        articles_with_rate:
+          type: integer
+          minimum: 0
+          description: Из них те, у кого есть действующая ставка больше нуля
+        uncovered_articles:
+          type: array
+          items:
+            type: string
+          description: Кого не хватает, поимённо; список короткий и не перечисляет весь каталог
+    MarketplaceStoreAccounting:
+      type: object
+      additionalProperties: false
+      required:
+        - store_id
+        - company_id
+        - company_name
+        - business_id
+        - stock_costing_method
+        - policies
+        - setup_ready
+        - pnl_ready
+        - cost_rates
+        - blocking_reasons
+        - marketplace_contact_id
+        - marketplace_contact_name
+      properties:
+        store_id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+        company_name:
+          type: string
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+        marketplace_contact_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+        marketplace_contact_name:
+          type: string
+        stock_costing_method:
+          type: string
+          description: Метод оценки складского учёта юрлица; пусто — складской учёт не настроен
+        policies:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketplaceStoreAccountingPolicy'
+          description: История версий настройки по возрастанию даты действия
+        setup_ready:
+          type: boolean
+          description: Подключение закрыто целиком; считается по blocking_reasons, а не по успешной проверке учётных данных
+        pnl_ready:
+          type: boolean
+        cost_rates:
+          $ref: '#/components/schemas/MarketplaceStoreAccountingCostCoverage'
+        blocking_reasons:
+          type: array
+          items:
+            type: string
+            enum:
+              - company_required
+              - cost_source_required
+              - marketplace_contact_required
+              - stock_policy_required
+              - cost_rates_incomplete
+    MarketplaceStoreCompanyInput:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - inn
+        - business_id
+      properties:
+        name:
+          type: string
+          minLength: 1
+        inn:
+          type: string
+          description: Проверяется контрольной цифрой
+        kpp:
+          type: string
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        vat_accounting_mode:
+          type: string
+    MarketplaceStoreAccountingInput:
+      type: object
+      additionalProperties: false
+      required:
+        - company_id
+        - cost_source
+        - valid_from
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        marketplace_contact_id:
+          $ref: '#/components/schemas/UUID'
+        cost_source:
+          type: string
+          enum:
+            - manual
+            - stock
+        valid_from:
+          type: string
+          format: date
+          description: Дата действия версии; первая может закрыть исторический период, следующая обязана быть в будущем
+        new_company:
+          $ref: '#/components/schemas/MarketplaceStoreCompanyInput'
+    MarketplaceCatalogJob:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - platform
+        - store_id
+        - status
+        - attempts
+        - stats
+        - phase
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        platform:
+          type: string
+          enum:
+            - ozon
+            - wildberries
+        store_id:
+          $ref: '#/components/schemas/UUID'
+        status:
+          type: string
+          enum:
+            - queued
+            - running
+            - waiting_company
+            - waiting_catalog
+            - needs_review
+            - succeeded
+            - failed
+        attempts:
+          type: integer
+          minimum: 0
+        stats:
+          type: object
+          additionalProperties: true
+          description: Счётчики последнего разбора; состав зависит от фазы
+        phase:
+          type: string
+          enum:
+            - initial
+            - sync
+          description: initial — первоначальная загрузка, sync — последующая сверка
+        last_snapshot_id:
+          type: string
+        target_snapshot_id:
+          type: string
+    MarketplaceCatalogImportRow:
+      type: object
+      additionalProperties: false
+      required:
+        - external_id
+        - sku
+        - name
+        - attributes
+        - action
+      properties:
+        external_id:
+          type: string
+          description: Идентификатор карточки на площадке
+        sku:
+          type: string
+        name:
+          type: string
+        attributes:
+          type: object
+          additionalProperties:
+            type: string
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        action:
+          type: string
+          enum:
+            - created
+            - linked
+            - unchanged
+            - pending
+          description: pending — карточка осталась спорной и ждёт решения человека
+        reason:
+          type: string
+          enum:
+            - rejected
+            - identifier_conflict
+            - parent_pending
+            - parent_conflict
+            - required_fields
+            - internal_sku_conflict
+          description: Почему строка не решилась сама
+        external_ref_updated_at:
+          type: string
+          description: Версия связи карточки; её же ждёт marketplaceLinkCatalogProduct
+    MarketplaceCatalogImportResult:
+      type: object
+      additionalProperties: false
+      required:
+        - preview
+        - created
+        - linked
+        - unchanged
+        - pending
+        - rows
+      properties:
+        snapshot_id:
+          type: string
+          description: Снимок каталога, по которому считался разбор
+        preview:
+          type: boolean
+          description: true у marketplacePreviewCatalogImport — ничего не записано
+        created:
+          type: integer
+          minimum: 0
+        linked:
+          type: integer
+          minimum: 0
+        unchanged:
+          type: integer
+          minimum: 0
+        pending:
+          type: integer
+          minimum: 0
+          description: Сколько карточек осталось спорными
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketplaceCatalogImportRow'
+    MarketplaceCatalogCandidate:
+      type: object
+      additionalProperties: false
+      required:
+        - product_id
+        - sku
+        - name
+        - record_kind
+        - parent_product_name
+        - brand
+        - size
+        - color
+        - barcode
+        - photo_file_id
+        - platforms
+        - linked_here
+      properties:
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        sku:
+          type: string
+        name:
+          type: string
+        record_kind:
+          type: string
+          description: Вид записи номенклатуры — самостоятельный товар или вариант
+        parent_product_name:
+          type: string
+        brand:
+          type: string
+        size:
+          type: string
+        color:
+          type: string
+        barcode:
+          type: string
+        photo_file_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Основное фото товара; миниатюра читается ручкой coreGetProductFileContent
+        platforms:
+          type: array
+          items:
+            type: string
+          description: Площадки, с которыми товар уже связан; пустой список означает «ничей»
+        linked_here:
+          type: boolean
+          description: Товар уже связан с ЭТИМ магазином — вторая карточка к нему почти всегда ошибка
+    MarketplaceCatalogCandidatePage:
+      type: object
+      additionalProperties: false
+      required:
+        - count
+        - results
+        - brands
+      properties:
+        count:
+          type: integer
+          minimum: 0
+          description: Всего строк под отбором, а не на странице
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketplaceCatalogCandidate'
+        brands:
+          type: array
+          items:
+            type: string
+          description: Бренды под текущим отбором, для фильтра без отдельного запроса
+    MarketplaceCatalogLinkRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - product_id
+      properties:
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        external_id:
+          type: string
+          description: Карточка площадки из окна разбора; вместе с ней обязательны snapshot_id и expected_external_ref_updated_at
+        offer_id:
+          type: string
+          description: Артикул продавца с экрана товаров; вторая форма решения, снимок при ней не нужен
+        snapshot_id:
+          type: string
+        expected_external_ref_updated_at:
+          type: string
+          description: Версия связи из разбора; расхождение отклоняется 409, чтобы не переписать чужое решение
+    MarketplaceCatalogLinkDecision:
+      type: object
+      additionalProperties: false
+      required:
+        - external_id
+        - product_id
+        - match_source
+        - external_ref_updated_at
+      properties:
+        external_id:
+          type: string
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        match_source:
+          type: string
+          enum:
+            - pending
+            - rejected
+            - auto
+            - manual
+            - import
+          description: Решение человека приходит как manual
+        snapshot_id:
+          type: string
+        external_ref_updated_at:
+          type: string
+    MarketplaceCostImportRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - store
+        - file
+      properties:
+        store:
+          $ref: '#/components/schemas/UUID'
+        file:
+          type: string
+          format: binary
+          description: XLSX, XLS, ODS, CSV или TSV; первая строка — заголовок с колонками артикула и себестоимости
+    MarketplaceCostImportRowError:
+      type: object
+      additionalProperties: false
+      required:
+        - row
+        - offer
+        - reason
+      properties:
+        row:
+          type: integer
+          minimum: 1
+          description: Номер строки в таблице, считая заголовок первой
+        offer:
+          type: string
+        reason:
+          type: string
+          description: Причина отказа теми же словами, что и у одиночной простановки себестоимости
+    MarketplaceCostImportResult:
+      type: object
+      additionalProperties: false
+      required:
+        - applied
+        - failed
+        - errors
+      properties:
+        applied:
+          type: integer
+          minimum: 0
+        failed:
+          type: integer
+          minimum: 0
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketplaceCostImportRowError'
     SettingsCompany:
       type: object
       additionalProperties: false
@@ -67649,12 +70747,19 @@ components:
       additionalProperties: false
       required:
         - items
+        - has_more
       properties:
         items:
           type: array
           maxItems: 100
           items:
             $ref: '#/components/schemas/ChatForwardedAttachment'
+        has_more:
+          type: boolean
+          description: Следующая страница доказана прочитанной строкой за границей текущей, а не тем, что страница оказалась полной.
+        next_cursor:
+          type: string
+          description: Курсор следующей страницы; присутствует только вместе с has_more=true.
     ChatAttachmentUpload:
       type: object
       additionalProperties: false
@@ -70964,6 +74069,1015 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SettingsAppIncident'
+    DocflowFlowKind:
+      type: string
+      description: 'Вид документа внутреннего контура. Вид называет бумагу, а не учётную операцию: продажу и закупку из бумаги делают отдельные команды.'
+      enum:
+        - contract
+        - specification
+        - amendment
+        - invoice
+        - act
+        - upd
+        - goods_waybill
+        - transport_waybill
+        - consignment_note
+        - transport_order
+        - tax_invoice
+        - correction
+        - return
+        - discrepancy_act
+        - reconciliation_act
+        - power_of_attorney
+        - other
+    DocflowFlowReference:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        unit:
+          type: string
+          description: Единица измерения; приходит только у номенклатуры
+    DocflowFlowReferencePage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - has_more
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowFlowReference'
+        has_more:
+          type: boolean
+          description: 'Есть продолжение: спрашивают следующим offset'
+    DocflowFlowScheduleStage:
+      type: object
+      additionalProperties: false
+      description: Плановая сумма этапа работ или платежа. Ни выполнения, ни оплаты она не утверждает — это то, о чём договорились.
+      required:
+        - id
+        - amount
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        label:
+          type: string
+        date:
+          type: string
+          format: date
+        amount:
+          type: string
+          description: Десятичным текстом, не числом с плавающей точкой
+        due_trigger:
+          type: string
+          description: 'Чем открывается срок платежа: датой или закрытием этапа'
+        after_stage_id:
+          $ref: '#/components/schemas/UUID'
+        delay_days:
+          type: integer
+          description: Дней после события срока
+    DocflowFlowCommercialLine:
+      type: object
+      additionalProperties: false
+      description: 'Строка переписанного оригинала, а не расчёт. Сумма строки приходит явно: скидка поставщика, налог и округление не заменяются местным произведением количества на цену.'
+      required:
+        - id
+        - name
+        - amount
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        product_name:
+          type: string
+        name:
+          type: string
+        unit:
+          type: string
+        quantity:
+          type: string
+        price:
+          type: string
+        amount:
+          type: string
+        vat_amount:
+          type:
+            - string
+            - 'null'
+          description: null означает, что налог не переписывали, а не что строка без налога
+    DocflowFlowCommercial:
+      type: object
+      additionalProperties: false
+      description: Коммерческая часть бумаги — сумма, валюта, строки и графики.
+      required:
+        - currency
+        - amount
+      properties:
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+        amount:
+          type: string
+          description: Десятичным текстом
+        payment_terms:
+          type: string
+          maxLength: 20000
+        due_date:
+          type: string
+          format: date
+        lines:
+          type: array
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/DocflowFlowCommercialLine'
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowFlowScheduleStage'
+          description: Этапы работ
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowFlowScheduleStage'
+          description: График платежей
+    DocflowFlowContractTerms:
+      type: object
+      additionalProperties: false
+      description: Условия договора в старой форме. Остаётся читаемой и принимается, но новую коммерческую часть описывает commercial. У рамочного договора суммы и валюты нет вовсе — искусственного нуля здесь не бывает.
+      required:
+        - mode
+        - subject
+        - valid_from
+      properties:
+        mode:
+          type: string
+          enum:
+            - framework
+            - fixed
+        subject:
+          type: string
+          maxLength: 10000
+        valid_from:
+          type: string
+          format: date
+        valid_until:
+          type: string
+          format: date
+        amount:
+          type: string
+          description: Только у mode=fixed
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+        payment_terms:
+          type: string
+          maxLength: 20000
+        renewal_terms:
+          type: string
+          maxLength: 10000
+    DocflowFlowContent:
+      type: object
+      additionalProperties: false
+      description: Реквизиты бумаги — то, что переписано с документа.
+      required:
+        - title
+        - date
+      properties:
+        title:
+          type: string
+          maxLength: 1000
+        number:
+          type: string
+          maxLength: 200
+        date:
+          type: string
+          format: date
+        contract:
+          $ref: '#/components/schemas/DocflowFlowContractTerms'
+        commercial:
+          $ref: '#/components/schemas/DocflowFlowCommercial'
+    DocflowFlowFile:
+      type: object
+      additionalProperties: false
+      description: Приложенный файл. Всё это описание делает владелец при загрузке, и командой правки оно не принимается.
+      required:
+        - id
+        - name
+        - size
+        - sha256
+        - content_type
+        - uploaded_by
+        - uploaded_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        size:
+          type: integer
+          format: int64
+          description: Байт; не больше 26214400
+        sha256:
+          type: string
+        content_type:
+          type: string
+        uploaded_by:
+          type: integer
+          format: int64
+        uploaded_at:
+          type: string
+          format: date-time
+    DocflowFlowRelation:
+      type: object
+      additionalProperties: false
+      description: Связь между бумагами кабинета — основание, приложение, изменение или замена. Учётной инструкцией она не является.
+      required:
+        - id
+        - kind
+        - target_id
+        - target_version
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        kind:
+          type: string
+          enum:
+            - basis
+            - attachment
+            - amends
+            - replaces
+        target_id:
+          $ref: '#/components/schemas/UUID'
+        target_version:
+          type: integer
+          minimum: 1
+          description: Закреплённая редакция другой бумаги
+    DocflowFlowRelationInput:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - target_id
+        - target_version
+      properties:
+        kind:
+          type: string
+          enum:
+            - basis
+            - attachment
+            - amends
+            - replaces
+        target_id:
+          $ref: '#/components/schemas/UUID'
+        target_version:
+          type: integer
+          minimum: 1
+    DocflowFlowReview:
+      type: object
+      additionalProperties: false
+      description: Один участник маршрута и его решение, если оно принято.
+      required:
+        - actor_id
+      properties:
+        actor_id:
+          type: integer
+          format: int64
+        actor_name:
+          type: string
+        decision:
+          type: string
+          enum:
+            - approve
+            - return
+            - reject
+            - cancel
+          description: Пусто, пока человек не решил
+        comment:
+          type: string
+        decided_at:
+          type: string
+          format: date-time
+    DocflowFlowApprovalStage:
+      type: object
+      additionalProperties: false
+      required:
+        - reviewers
+      properties:
+        reviewers:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowFlowReview'
+    DocflowFlowApproval:
+      type: object
+      additionalProperties: false
+      description: 'Маршрут согласования, закреплённый за той версией документа, которую видел отправитель. Согласование — мнение, а не проведение: учётных движений оно не делает и черновик не замораживает.'
+      required:
+        - id
+        - content_version
+        - state
+        - requested_by
+        - requested_at
+        - stages
+        - active_stage
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        content_version:
+          type: integer
+          minimum: 1
+          description: Версия документа, по которой решают
+        state:
+          type: string
+          enum:
+            - pending
+            - approved
+            - returned
+            - rejected
+            - cancelled
+        requested_by:
+          type: integer
+          format: int64
+        requested_name:
+          type: string
+        requested_at:
+          type: string
+          format: date-time
+        due_at:
+          type: string
+          format: date-time
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowFlowApprovalStage'
+        active_stage:
+          type: integer
+          minimum: 0
+          description: Номер текущего этапа с нуля
+        waiting_for:
+          type: array
+          items:
+            type: integer
+            format: int64
+          description: Кто ещё не решил на текущем этапе
+        cancellation:
+          $ref: '#/components/schemas/DocflowFlowReview'
+    DocflowFlowAccountingLink:
+      type: object
+      additionalProperties: false
+      description: 'Ссылка на учётный документ чужого модуля по личности. Состояние, остаток и содержимое чужого документа сюда не копируются: правда о нём живёт у его владельца.'
+      required:
+        - id
+        - owner
+        - document_id
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        owner:
+          type: string
+          enum:
+            - finance
+            - stock
+        document_id:
+          $ref: '#/components/schemas/UUID'
+        source_action:
+          type: string
+          description: 'Команда, породившая связь: create_plan, accept_act и подобные'
+        source_version:
+          type: integer
+          description: Редакция бумаги, закреплённая командой
+        target_version:
+          type: integer
+          description: Редакция учётного документа, из которой сделана бумага
+    DocflowFlowDocument:
+      type: object
+      additionalProperties: false
+      description: Карточка документа внутреннего контура в одной редакции. Каждая принятая команда рождает новую неизменяемую редакцию, а прежняя остаётся читаемой по своему адресу.
+      required:
+        - id
+        - company_id
+        - contact_id
+        - kind
+        - direction
+        - status
+        - version
+        - content
+        - identity_editable
+        - company_name
+        - contact_name
+        - created_at
+        - updated_at
+        - updated_by
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        company_name:
+          type: string
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        contact_name:
+          type: string
+        kind:
+          $ref: '#/components/schemas/DocflowFlowKind'
+        direction:
+          type: string
+          enum:
+            - incoming
+            - outgoing
+            - internal
+        status:
+          type: string
+          enum:
+            - draft
+            - registered
+            - archived
+        archived_from:
+          type: string
+          enum:
+            - draft
+            - registered
+          description: Из какого состояния бумага ушла в архив
+        version:
+          type: integer
+          minimum: 1
+        identity_editable:
+          type: boolean
+          description: 'Ложь означает: стороны и вид уже закреплены редакцией или связью и не меняются'
+        content:
+          $ref: '#/components/schemas/DocflowFlowContent'
+        files:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DocflowFlowFile'
+        relations:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DocflowFlowRelation'
+        approval:
+          $ref: '#/components/schemas/DocflowFlowApproval'
+        accounting_links:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DocflowFlowAccountingLink'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        updated_by:
+          type: integer
+          format: int64
+    DocflowFlowPage:
+      type: object
+      additionalProperties: false
+      description: Страница карточек. Набор строк называется items — как у остальных страниц этого крыла; крыло обмена с контрагентами в том же модуле исторически называет его results.
+      required:
+        - items
+        - has_more
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowFlowDocument'
+        has_more:
+          type: boolean
+    DocflowFlowApprovalInboxItem:
+      type: object
+      additionalProperties: false
+      description: 'Одна строка очереди решений. Файлов, состава маршрута, товарных строк и учётных связей здесь нет: за ними идут в карточку документа.'
+      required:
+        - id
+        - version
+        - kind
+        - title
+        - date
+        - company_id
+        - contact_id
+        - requested_by
+        - requested_at
+        - active_stage
+        - stage_count
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        version:
+          type: integer
+          minimum: 1
+          description: Версия, которую подставляют в решение как expected_version
+        kind:
+          $ref: '#/components/schemas/DocflowFlowKind'
+        number:
+          type: string
+        title:
+          type: string
+        date:
+          type: string
+          format: date
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        company_name:
+          type: string
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        contact_name:
+          type: string
+        requested_by:
+          type: integer
+          format: int64
+        requested_name:
+          type: string
+        requested_at:
+          type: string
+          format: date-time
+        due_at:
+          type: string
+          format: date-time
+          description: Срок решения; отсутствует, когда срок не назначали
+        active_stage:
+          type: integer
+          minimum: 0
+          description: Номер текущего этапа с нуля
+        stage_count:
+          type: integer
+          minimum: 1
+          description: Сколько этапов в маршруте всего
+        amount:
+          type: string
+          description: Сумма документа десятичным текстом; пусто у рамочного договора — нуля вместо неё не бывает
+        currency:
+          type: string
+          description: Валюта суммы; пусто там же, где пуста сумма
+    DocflowFlowApprovalInboxPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - has_more
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowFlowApprovalInboxItem'
+        has_more:
+          type: boolean
+    DocflowFlowCreateInput:
+      type: object
+      additionalProperties: false
+      required:
+        - company_id
+        - contact_id
+        - kind
+        - direction
+        - content
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        kind:
+          $ref: '#/components/schemas/DocflowFlowKind'
+        direction:
+          type: string
+          enum:
+            - incoming
+            - outgoing
+            - internal
+        content:
+          $ref: '#/components/schemas/DocflowFlowContent'
+    DocflowFlowChangeInput:
+      type: object
+      additionalProperties: false
+      description: 'Одна команда правки. Поля, не относящиеся к названному действию, отвергаются, а не игнорируются: запрос, просящий две разные вещи сразу, сам не знает, чего хочет.'
+      required:
+        - expected_version
+        - action
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+          description: Версия, которую видел клиент. Разошлась — 409 docflow.flow.version_conflict
+        action:
+          type: string
+          enum:
+            - save
+            - link
+            - unlink
+            - remove_file
+            - register
+            - revise
+            - archive
+            - restore
+        content:
+          $ref: '#/components/schemas/DocflowFlowContent'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        kind:
+          $ref: '#/components/schemas/DocflowFlowKind'
+        direction:
+          type: string
+          enum:
+            - incoming
+            - outgoing
+            - internal
+        file_id:
+          $ref: '#/components/schemas/UUID'
+        relation:
+          $ref: '#/components/schemas/DocflowFlowRelationInput'
+        relation_id:
+          $ref: '#/components/schemas/UUID'
+    DocflowFlowApprovalSubmit:
+      type: object
+      additionalProperties: false
+      required:
+        - expected_version
+        - stages
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        stages:
+          type: array
+          maxItems: 10
+          description: Этапы по порядку; каждый — список идентификаторов людей. Всего не больше пятидесяти участников
+          items:
+            type: array
+            items:
+              type: integer
+              format: int64
+        due_at:
+          type: string
+          format: date-time
+          description: Срок решения; если назван, обязан быть в будущем
+    DocflowFlowApprovalDecision:
+      type: object
+      additionalProperties: false
+      required:
+        - expected_version
+        - approval_id
+        - decision
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        approval_id:
+          $ref: '#/components/schemas/UUID'
+        decision:
+          type: string
+          enum:
+            - approve
+            - return
+            - reject
+        comment:
+          type: string
+    DocflowFlowApprovalCancel:
+      type: object
+      additionalProperties: false
+      required:
+        - expected_version
+        - approval_id
+        - comment
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        approval_id:
+          $ref: '#/components/schemas/UUID'
+        comment:
+          type: string
+          description: Причина отзыва остаётся в истории маршрута
+    DocflowFlowApprovalContext:
+      type: object
+      additionalProperties: false
+      description: Текущие возможности текущего человека, а не снимок прошлых прав.
+      required:
+        - version
+        - can_submit
+        - can_decide
+        - can_cancel
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        can_submit:
+          type: boolean
+        can_decide:
+          type: boolean
+          description: Истинно только у участника активного этапа с правом docflow.flow:approve
+        can_cancel:
+          type: boolean
+          description: Истинно только у того, кто отправлял
+    DocflowFlowApprovalPerson:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    DocflowFlowApprovalPeoplePage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DocflowFlowApprovalPerson'
+        next_after:
+          type: integer
+          format: int64
+          description: Продолжение листания; отсутствует на последней странице
+    DocflowFlowAccountingDocument:
+      type: object
+      additionalProperties: false
+      description: Карточка учётного документа чужого модуля, прочитанная у его владельца.
+      required:
+        - id
+        - owner
+        - type_key
+        - type_name
+        - number
+        - date
+        - status
+        - is_marked_deleted
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        owner:
+          type: string
+          enum:
+            - finance
+            - stock
+        type_key:
+          type: string
+        type_name:
+          type: string
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+        is_marked_deleted:
+          type: boolean
+    DocflowFlowAccountingPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - next_offset
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowFlowAccountingDocument'
+        next_offset:
+          type:
+            - integer
+            - 'null'
+          description: Продолжение листания; null означает, что дальше ничего нет
+    DocflowFlowAccountingBacklink:
+      type: object
+      additionalProperties: false
+      description: Бумага, стоящая за учётным документом. Открывать нужно version — ту закреплённую редакцию, которая была основанием, а не current_version.
+      required:
+        - id
+        - version
+        - current_version
+        - title
+        - number
+        - date
+        - kind
+        - status
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        version:
+          type: integer
+          minimum: 1
+          description: Закреплённая редакция-основание
+        current_version:
+          type: integer
+          minimum: 1
+          description: Текущая редакция бумаги
+        title:
+          type: string
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        kind:
+          $ref: '#/components/schemas/DocflowFlowKind'
+        status:
+          type: string
+          enum:
+            - draft
+            - registered
+            - archived
+    DocflowFlowAccountingBacklinkPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - has_more
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowFlowAccountingBacklink'
+        has_more:
+          type: boolean
+    DocflowFlowAccountingLinkInput:
+      type: object
+      additionalProperties: false
+      required:
+        - expected_version
+        - owner
+        - document_id
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        owner:
+          type: string
+          enum:
+            - finance
+            - stock
+        document_id:
+          $ref: '#/components/schemas/UUID'
+    DocflowFlowAccountingUnlinkInput:
+      type: object
+      additionalProperties: false
+      required:
+        - expected_version
+        - link_id
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        link_id:
+          $ref: '#/components/schemas/UUID'
+    DocflowFlowAccountingOriginalInput:
+      type: object
+      additionalProperties: false
+      description: Только то, что выбирают в документообороте. Юрлицо, контрагент и направление берутся из названной редакции учётного документа и телом запроса не подделываются.
+      required:
+        - target_version
+        - kind
+        - content
+      properties:
+        target_version:
+          type: integer
+          minimum: 1
+          description: Точная редакция учётного документа
+        kind:
+          $ref: '#/components/schemas/DocflowFlowKind'
+        content:
+          $ref: '#/components/schemas/DocflowFlowContent'
+    DocflowFlowFinancePlanInput:
+      type: object
+      additionalProperties: false
+      description: 'Экономическая роль называется явно: входящий договор всё ещё может быть продажей, и выводить роль из направления документа нельзя.'
+      required:
+        - expected_version
+        - kind
+        - pnl_item_id
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        kind:
+          type: string
+          enum:
+            - sale
+            - purchase
+        pnl_item_id:
+          $ref: '#/components/schemas/UUID'
+          description: Статья отчёта о прибылях и убытках
+    DocflowFlowAccrualStage:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - label
+        - amount
+        - actual_amount
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        label:
+          type: string
+        date:
+          type: string
+          format: date
+        amount:
+          type: string
+          description: Запланировано по этапу
+        actual_amount:
+          type: string
+          description: Уже принято актами
+    DocflowFlowAccrualPlan:
+      type: object
+      additionalProperties: false
+      required:
+        - document_id
+        - operation_id
+        - version
+        - kind
+        - currency
+        - amount
+        - stages
+      properties:
+        document_id:
+          $ref: '#/components/schemas/UUID'
+        operation_id:
+          $ref: '#/components/schemas/UUID'
+        version:
+          type: integer
+          minimum: 1
+          description: Версия операции владельца; её подставляют в expected_operation_version
+        kind:
+          type: string
+          enum:
+            - sale
+            - purchase
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+        amount:
+          type: string
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowFlowAccrualStage'
+    DocflowFlowFinanceAccrualAllocation:
+      type: object
+      additionalProperties: false
+      required:
+        - accrual_id
+        - amount
+      properties:
+        accrual_id:
+          $ref: '#/components/schemas/UUID'
+          description: Этап работ плана
+        amount:
+          type: string
+          description: Сколько этого этапа закрывает акт; не больше остатка
+    DocflowFlowFinanceAccrualInput:
+      type: object
+      additionalProperties: false
+      description: Распределение суммы акта по этапам работ. Поле accrual_id остаётся совместимым с прежней однoэтапной формой запроса.
+      required:
+        - expected_version
+        - plan_document_id
+        - expected_operation_version
+        - actual_date
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+        plan_document_id:
+          $ref: '#/components/schemas/UUID'
+          description: Плановая операция модуля финансов
+        expected_operation_version:
+          type: integer
+          minimum: 1
+          description: Версия операции владельца
+        accrual_id:
+          $ref: '#/components/schemas/UUID'
+          description: Единственный этап; равнозначно одной строке allocations
+        allocations:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowFlowFinanceAccrualAllocation'
+        actual_date:
+          type: string
+          format: date
+          description: Фактическая дата выполнения; может отличаться от плановой даты этапа
     DocflowConnection:
       type: object
       additionalProperties: false
@@ -73247,6 +77361,8 @@ x-akeda-contract-coverage:
   - marketplace-wildberries
   - marketplace-yandex
   - marketplace-product-groups
+  - marketplace-accounting
+  - marketplace-catalog
   - settings-companies
   - settings-roles
   - settings-members
@@ -73278,6 +77394,9 @@ x-akeda-contract-coverage:
   - docflow-actions
   - docflow-outgoing
   - docflow-intake
+  - docflow-flow
+  - docflow-flow-approval
+  - docflow-flow-accounting
 x-akeda-docs-path: /docs
 x-akeda-default-release-stage: internal
 x-akeda-default-audience: operator

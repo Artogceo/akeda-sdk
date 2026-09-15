@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1bed7b3a1c1ca7151c7312fc5716ba8e5ed2367eaebc61d22da652ab660d2d02).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 023fe7c5fee3e639821a198c64c4a80193ed5f20de1b2fda3c9c08847800b280).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -100,6 +100,9 @@ __all__ = [
     "CRMLeadDuplicate",
     "CRMLeadInput",
     "CRMLeadPatch",
+    "CRMLeadSource",
+    "CRMLeadSourceInput",
+    "CRMLeadSourcePatch",
     "CRMLeadStatus",
     "CRMLossReason",
     "CRMLossReasonInput",
@@ -526,6 +529,45 @@ __all__ = [
     "DocflowEmployeeRequisites",
     "DocflowEvent",
     "DocflowFileRequisites",
+    "DocflowFlowAccountingBacklink",
+    "DocflowFlowAccountingBacklinkPage",
+    "DocflowFlowAccountingDocument",
+    "DocflowFlowAccountingLink",
+    "DocflowFlowAccountingLinkInput",
+    "DocflowFlowAccountingOriginalInput",
+    "DocflowFlowAccountingPage",
+    "DocflowFlowAccountingUnlinkInput",
+    "DocflowFlowAccrualPlan",
+    "DocflowFlowAccrualStage",
+    "DocflowFlowApproval",
+    "DocflowFlowApprovalCancel",
+    "DocflowFlowApprovalContext",
+    "DocflowFlowApprovalDecision",
+    "DocflowFlowApprovalInboxItem",
+    "DocflowFlowApprovalInboxPage",
+    "DocflowFlowApprovalPeoplePage",
+    "DocflowFlowApprovalPerson",
+    "DocflowFlowApprovalStage",
+    "DocflowFlowApprovalSubmit",
+    "DocflowFlowChangeInput",
+    "DocflowFlowCommercial",
+    "DocflowFlowCommercialLine",
+    "DocflowFlowContent",
+    "DocflowFlowContractTerms",
+    "DocflowFlowCreateInput",
+    "DocflowFlowDocument",
+    "DocflowFlowFile",
+    "DocflowFlowFinanceAccrualAllocation",
+    "DocflowFlowFinanceAccrualInput",
+    "DocflowFlowFinancePlanInput",
+    "DocflowFlowKind",
+    "DocflowFlowPage",
+    "DocflowFlowReference",
+    "DocflowFlowReferencePage",
+    "DocflowFlowRelation",
+    "DocflowFlowRelationInput",
+    "DocflowFlowReview",
+    "DocflowFlowScheduleStage",
     "DocflowFormatIssues",
     "DocflowIntakeCounterparty",
     "DocflowIntakeInput",
@@ -830,8 +872,18 @@ __all__ = [
     "LinkList",
     "ManagedChecklistItem",
     "ManagedChecklistPatch",
+    "MarketplaceCatalogCandidate",
+    "MarketplaceCatalogCandidatePage",
+    "MarketplaceCatalogImportResult",
+    "MarketplaceCatalogImportRow",
+    "MarketplaceCatalogJob",
+    "MarketplaceCatalogLinkDecision",
+    "MarketplaceCatalogLinkRequest",
     "MarketplaceComponentDataThrough",
     "MarketplaceComponentFreshness",
+    "MarketplaceCostImportRequest",
+    "MarketplaceCostImportResult",
+    "MarketplaceCostImportRowError",
     "MarketplaceEconBaseRow",
     "MarketplaceEconOverrides",
     "MarketplaceEconOzonInput",
@@ -841,6 +893,7 @@ __all__ = [
     "MarketplaceEconQuoteRow",
     "MarketplaceEconResult",
     "MarketplaceEconWbInput",
+    "MarketplaceFunnelDailyReference",
     "MarketplaceOzonCost",
     "MarketplaceOzonCostRequest",
     "MarketplaceOzonDecomposition",
@@ -896,6 +949,11 @@ __all__ = [
     "MarketplaceProductGroupPatch",
     "MarketplaceProductGroupPlatform",
     "MarketplaceStore",
+    "MarketplaceStoreAccounting",
+    "MarketplaceStoreAccountingCostCoverage",
+    "MarketplaceStoreAccountingInput",
+    "MarketplaceStoreAccountingPolicy",
+    "MarketplaceStoreCompanyInput",
     "MarketplaceStoreInput",
     "MarketplaceStorePage",
     "MarketplaceStorePatch",
@@ -2300,6 +2358,34 @@ class CRMLeadPatch(TypedDict, total=False):
     next_action_at: Optional[str]
     archived: bool
 
+class CRMLeadSource(TypedDict):
+    id: "UUID"
+    #: То, что ложится в lead.source. У системной строки за ключом стоит код
+    key: str
+    #: Имя - право кабинета; сеятель его не возвращает
+    name: str
+    #: Канал для цвета и значка; неизвестный приводится к other
+    channel: str
+    sort_order: int
+    #: Строку завёл сеятель модуля: удалить и выключить нельзя
+    is_system: bool
+    is_active: bool
+    created_at: str
+    updated_at: str
+
+class _CRMLeadSourceInputRequired(TypedDict):
+    name: str
+
+class CRMLeadSourceInput(_CRMLeadSourceInputRequired, total=False):
+    channel: str
+    sort_order: int
+
+class CRMLeadSourcePatch(TypedDict, total=False):
+    name: str
+    channel: str
+    sort_order: int
+    is_active: bool
+
 CRMLeadStatus = Literal['new', 'qualified', 'disqualified', 'converted']
 
 class CRMLossReason(TypedDict):
@@ -2693,7 +2779,7 @@ class _CalendarConnectorRequired(TypedDict):
     last_sync_status: str
     #: The provider's own words and nothing else. Empty when the failure was ours; last_error_code names it and the log carries the cause.
     last_error: str
-    last_error_code: Literal['', 'calendar.connector.internal', 'calendar.connector.provider_declined', 'calendar.connector.disconnected']
+    last_error_code: Literal['', 'calendar.connector.internal', 'calendar.connector.credentials_rejected', 'calendar.connector.provider_declined', 'calendar.connector.disconnected']
     supports_import: bool
     supports_export: bool
     created_at: str
@@ -3009,8 +3095,14 @@ class ChatAttachment(TypedDict):
     duration_ms: int
     content_url: str
 
-class ChatAttachmentPage(TypedDict):
+class _ChatAttachmentPageRequired(TypedDict):
     items: List["ChatForwardedAttachment"]
+    #: Следующая страница доказана прочитанной строкой за границей текущей, а не тем, что страница оказалась полной.
+    has_more: bool
+
+class ChatAttachmentPage(_ChatAttachmentPageRequired, total=False):
+    #: Курсор следующей страницы; присутствует только вместе с has_more=true.
+    next_cursor: str
 
 class ChatAttachmentUpload(TypedDict):
     """Один файл на запрос. Ссылка на уже загруженный объект не принимается."""
@@ -6001,6 +6093,409 @@ class DocflowFileRequisites(TypedDict, total=False):
     tobacco: bool
     #: Документ о нефтепродуктах
     oil: bool
+
+class DocflowFlowAccountingBacklink(TypedDict):
+    """Бумага, стоящая за учётным документом. Открывать нужно version — ту закреплённую редакцию, которая была основанием, а не current_version."""
+
+    id: "UUID"
+    #: Закреплённая редакция-основание
+    version: int
+    #: Текущая редакция бумаги
+    current_version: int
+    title: str
+    number: str
+    date: str
+    kind: "DocflowFlowKind"
+    status: Literal['draft', 'registered', 'archived']
+
+class DocflowFlowAccountingBacklinkPage(TypedDict):
+    items: List["DocflowFlowAccountingBacklink"]
+    has_more: bool
+
+class DocflowFlowAccountingDocument(TypedDict):
+    """Карточка учётного документа чужого модуля, прочитанная у его владельца."""
+
+    id: "UUID"
+    owner: Literal['finance', 'stock']
+    type_key: str
+    type_name: str
+    number: str
+    date: str
+    status: str
+    is_marked_deleted: bool
+
+class _DocflowFlowAccountingLinkRequired(TypedDict):
+    id: "UUID"
+    owner: Literal['finance', 'stock']
+    document_id: "UUID"
+
+class DocflowFlowAccountingLink(_DocflowFlowAccountingLinkRequired, total=False):
+    """Ссылка на учётный документ чужого модуля по личности. Состояние, остаток и содержимое чужого документа сюда не копируются: правда о нём живёт у его владельца."""
+
+    #: Команда, породившая связь: create_plan, accept_act и подобные
+    source_action: str
+    #: Редакция бумаги, закреплённая командой
+    source_version: int
+    #: Редакция учётного документа, из которой сделана бумага
+    target_version: int
+
+class DocflowFlowAccountingLinkInput(TypedDict):
+    expected_version: int
+    owner: Literal['finance', 'stock']
+    document_id: "UUID"
+
+class DocflowFlowAccountingOriginalInput(TypedDict):
+    """Только то, что выбирают в документообороте. Юрлицо, контрагент и направление берутся из названной редакции учётного документа и телом запроса не подделываются."""
+
+    #: Точная редакция учётного документа
+    target_version: int
+    kind: "DocflowFlowKind"
+    content: "DocflowFlowContent"
+
+class DocflowFlowAccountingPage(TypedDict):
+    items: List["DocflowFlowAccountingDocument"]
+    #: Продолжение листания; null означает, что дальше ничего нет
+    next_offset: Optional[int]
+
+class DocflowFlowAccountingUnlinkInput(TypedDict):
+    expected_version: int
+    link_id: "UUID"
+
+class DocflowFlowAccrualPlan(TypedDict):
+    document_id: "UUID"
+    operation_id: "UUID"
+    #: Версия операции владельца; её подставляют в expected_operation_version
+    version: int
+    kind: Literal['sale', 'purchase']
+    currency: str
+    amount: str
+    stages: List["DocflowFlowAccrualStage"]
+
+class _DocflowFlowAccrualStageRequired(TypedDict):
+    id: "UUID"
+    label: str
+    #: Запланировано по этапу
+    amount: str
+    #: Уже принято актами
+    actual_amount: str
+
+class DocflowFlowAccrualStage(_DocflowFlowAccrualStageRequired, total=False):
+    date: str
+
+class _DocflowFlowApprovalRequired(TypedDict):
+    id: "UUID"
+    #: Версия документа, по которой решают
+    content_version: int
+    state: Literal['pending', 'approved', 'returned', 'rejected', 'cancelled']
+    requested_by: int
+    requested_at: str
+    stages: List["DocflowFlowApprovalStage"]
+    #: Номер текущего этапа с нуля
+    active_stage: int
+
+class DocflowFlowApproval(_DocflowFlowApprovalRequired, total=False):
+    """Маршрут согласования, закреплённый за той версией документа, которую видел отправитель. Согласование — мнение, а не проведение: учётных движений оно не делает и черновик не замораживает."""
+
+    requested_name: str
+    due_at: str
+    #: Кто ещё не решил на текущем этапе
+    waiting_for: List[int]
+    cancellation: "DocflowFlowReview"
+
+class DocflowFlowApprovalCancel(TypedDict):
+    expected_version: int
+    approval_id: "UUID"
+    #: Причина отзыва остаётся в истории маршрута
+    comment: str
+
+class DocflowFlowApprovalContext(TypedDict):
+    """Текущие возможности текущего человека, а не снимок прошлых прав."""
+
+    version: int
+    can_submit: bool
+    #: Истинно только у участника активного этапа с правом docflow.flow:approve
+    can_decide: bool
+    #: Истинно только у того, кто отправлял
+    can_cancel: bool
+
+class _DocflowFlowApprovalDecisionRequired(TypedDict):
+    expected_version: int
+    approval_id: "UUID"
+    decision: Literal['approve', 'return', 'reject']
+
+class DocflowFlowApprovalDecision(_DocflowFlowApprovalDecisionRequired, total=False):
+    comment: str
+
+class _DocflowFlowApprovalInboxItemRequired(TypedDict):
+    id: "UUID"
+    #: Версия, которую подставляют в решение как expected_version
+    version: int
+    kind: "DocflowFlowKind"
+    title: str
+    date: str
+    company_id: "UUID"
+    contact_id: "UUID"
+    requested_by: int
+    requested_at: str
+    #: Номер текущего этапа с нуля
+    active_stage: int
+    #: Сколько этапов в маршруте всего
+    stage_count: int
+
+class DocflowFlowApprovalInboxItem(_DocflowFlowApprovalInboxItemRequired, total=False):
+    """Одна строка очереди решений. Файлов, состава маршрута, товарных строк и учётных связей здесь нет: за ними идут в карточку документа."""
+
+    number: str
+    company_name: str
+    contact_name: str
+    requested_name: str
+    #: Срок решения; отсутствует, когда срок не назначали
+    due_at: str
+    #: Сумма документа десятичным текстом; пусто у рамочного договора — нуля вместо неё не бывает
+    amount: str
+    #: Валюта суммы; пусто там же, где пуста сумма
+    currency: str
+
+class DocflowFlowApprovalInboxPage(TypedDict):
+    items: List["DocflowFlowApprovalInboxItem"]
+    has_more: bool
+
+class _DocflowFlowApprovalPeoplePageRequired(TypedDict):
+    items: List["DocflowFlowApprovalPerson"]
+
+class DocflowFlowApprovalPeoplePage(_DocflowFlowApprovalPeoplePageRequired, total=False):
+    #: Продолжение листания; отсутствует на последней странице
+    next_after: int
+
+class DocflowFlowApprovalPerson(TypedDict):
+    id: int
+    name: str
+
+class DocflowFlowApprovalStage(TypedDict):
+    reviewers: List["DocflowFlowReview"]
+
+class _DocflowFlowApprovalSubmitRequired(TypedDict):
+    expected_version: int
+    #: Этапы по порядку; каждый — список идентификаторов людей. Всего не больше пятидесяти участников
+    stages: List[List[int]]
+
+class DocflowFlowApprovalSubmit(_DocflowFlowApprovalSubmitRequired, total=False):
+    #: Срок решения; если назван, обязан быть в будущем
+    due_at: str
+
+class _DocflowFlowChangeInputRequired(TypedDict):
+    #: Версия, которую видел клиент. Разошлась — 409 docflow.flow.version_conflict
+    expected_version: int
+    action: Literal['save', 'link', 'unlink', 'remove_file', 'register', 'revise', 'archive', 'restore']
+
+class DocflowFlowChangeInput(_DocflowFlowChangeInputRequired, total=False):
+    """Одна команда правки. Поля, не относящиеся к названному действию, отвергаются, а не игнорируются: запрос, просящий две разные вещи сразу, сам не знает, чего хочет."""
+
+    content: "DocflowFlowContent"
+    company_id: "UUID"
+    contact_id: "UUID"
+    kind: "DocflowFlowKind"
+    direction: Literal['incoming', 'outgoing', 'internal']
+    file_id: "UUID"
+    relation: "DocflowFlowRelationInput"
+    relation_id: "UUID"
+
+class _DocflowFlowCommercialRequired(TypedDict):
+    currency: str
+    #: Десятичным текстом
+    amount: str
+
+class DocflowFlowCommercial(_DocflowFlowCommercialRequired, total=False):
+    """Коммерческая часть бумаги — сумма, валюта, строки и графики."""
+
+    payment_terms: str
+    due_date: str
+    lines: List["DocflowFlowCommercialLine"]
+    #: Этапы работ
+    milestones: List["DocflowFlowScheduleStage"]
+    #: График платежей
+    payments: List["DocflowFlowScheduleStage"]
+
+class _DocflowFlowCommercialLineRequired(TypedDict):
+    id: "UUID"
+    name: str
+    amount: str
+
+class DocflowFlowCommercialLine(_DocflowFlowCommercialLineRequired, total=False):
+    """Строка переписанного оригинала, а не расчёт. Сумма строки приходит явно: скидка поставщика, налог и округление не заменяются местным произведением количества на цену."""
+
+    product_id: "UUID"
+    product_name: str
+    unit: str
+    quantity: str
+    price: str
+    #: null означает, что налог не переписывали, а не что строка без налога
+    vat_amount: Optional[str]
+
+class _DocflowFlowContentRequired(TypedDict):
+    title: str
+    date: str
+
+class DocflowFlowContent(_DocflowFlowContentRequired, total=False):
+    """Реквизиты бумаги — то, что переписано с документа."""
+
+    number: str
+    contract: "DocflowFlowContractTerms"
+    commercial: "DocflowFlowCommercial"
+
+class _DocflowFlowContractTermsRequired(TypedDict):
+    mode: Literal['framework', 'fixed']
+    subject: str
+    valid_from: str
+
+class DocflowFlowContractTerms(_DocflowFlowContractTermsRequired, total=False):
+    """Условия договора в старой форме. Остаётся читаемой и принимается, но новую коммерческую часть описывает commercial. У рамочного договора суммы и валюты нет вовсе — искусственного нуля здесь не бывает."""
+
+    valid_until: str
+    #: Только у mode=fixed
+    amount: str
+    currency: str
+    payment_terms: str
+    renewal_terms: str
+
+class DocflowFlowCreateInput(TypedDict):
+    company_id: "UUID"
+    contact_id: "UUID"
+    kind: "DocflowFlowKind"
+    direction: Literal['incoming', 'outgoing', 'internal']
+    content: "DocflowFlowContent"
+
+class _DocflowFlowDocumentRequired(TypedDict):
+    id: "UUID"
+    company_id: "UUID"
+    company_name: str
+    contact_id: "UUID"
+    contact_name: str
+    kind: "DocflowFlowKind"
+    direction: Literal['incoming', 'outgoing', 'internal']
+    status: Literal['draft', 'registered', 'archived']
+    version: int
+    #: Ложь означает: стороны и вид уже закреплены редакцией или связью и не меняются
+    identity_editable: bool
+    content: "DocflowFlowContent"
+    created_at: str
+    updated_at: str
+    updated_by: int
+
+class DocflowFlowDocument(_DocflowFlowDocumentRequired, total=False):
+    """Карточка документа внутреннего контура в одной редакции. Каждая принятая команда рождает новую неизменяемую редакцию, а прежняя остаётся читаемой по своему адресу."""
+
+    #: Из какого состояния бумага ушла в архив
+    archived_from: Literal['draft', 'registered']
+    files: List["DocflowFlowFile"]
+    relations: List["DocflowFlowRelation"]
+    approval: "DocflowFlowApproval"
+    accounting_links: List["DocflowFlowAccountingLink"]
+
+class DocflowFlowFile(TypedDict):
+    """Приложенный файл. Всё это описание делает владелец при загрузке, и командой правки оно не принимается."""
+
+    id: "UUID"
+    name: str
+    #: Байт; не больше 26214400
+    size: int
+    sha256: str
+    content_type: str
+    uploaded_by: int
+    uploaded_at: str
+
+class DocflowFlowFinanceAccrualAllocation(TypedDict):
+    #: Этап работ плана
+    accrual_id: "UUID"
+    #: Сколько этого этапа закрывает акт; не больше остатка
+    amount: str
+
+class _DocflowFlowFinanceAccrualInputRequired(TypedDict):
+    expected_version: int
+    #: Плановая операция модуля финансов
+    plan_document_id: "UUID"
+    #: Версия операции владельца
+    expected_operation_version: int
+    #: Фактическая дата выполнения; может отличаться от плановой даты этапа
+    actual_date: str
+
+class DocflowFlowFinanceAccrualInput(_DocflowFlowFinanceAccrualInputRequired, total=False):
+    """Распределение суммы акта по этапам работ. Поле accrual_id остаётся совместимым с прежней однoэтапной формой запроса."""
+
+    #: Единственный этап; равнозначно одной строке allocations
+    accrual_id: "UUID"
+    allocations: List["DocflowFlowFinanceAccrualAllocation"]
+
+class DocflowFlowFinancePlanInput(TypedDict):
+    """Экономическая роль называется явно: входящий договор всё ещё может быть продажей, и выводить роль из направления документа нельзя."""
+
+    expected_version: int
+    kind: Literal['sale', 'purchase']
+    #: Статья отчёта о прибылях и убытках
+    pnl_item_id: "UUID"
+
+DocflowFlowKind = Literal['contract', 'specification', 'amendment', 'invoice', 'act', 'upd', 'goods_waybill', 'transport_waybill', 'consignment_note', 'transport_order', 'tax_invoice', 'correction', 'return', 'discrepancy_act', 'reconciliation_act', 'power_of_attorney', 'other']
+
+class DocflowFlowPage(TypedDict):
+    """Страница карточек. Набор строк называется items — как у остальных страниц этого крыла; крыло обмена с контрагентами в том же модуле исторически называет его results."""
+
+    items: List["DocflowFlowDocument"]
+    has_more: bool
+
+class _DocflowFlowReferenceRequired(TypedDict):
+    id: "UUID"
+    name: str
+
+class DocflowFlowReference(_DocflowFlowReferenceRequired, total=False):
+    #: Единица измерения; приходит только у номенклатуры
+    unit: str
+
+class DocflowFlowReferencePage(TypedDict):
+    items: List["DocflowFlowReference"]
+    #: Есть продолжение: спрашивают следующим offset
+    has_more: bool
+
+class DocflowFlowRelation(TypedDict):
+    """Связь между бумагами кабинета — основание, приложение, изменение или замена. Учётной инструкцией она не является."""
+
+    id: "UUID"
+    kind: Literal['basis', 'attachment', 'amends', 'replaces']
+    target_id: "UUID"
+    #: Закреплённая редакция другой бумаги
+    target_version: int
+
+class DocflowFlowRelationInput(TypedDict):
+    kind: Literal['basis', 'attachment', 'amends', 'replaces']
+    target_id: "UUID"
+    target_version: int
+
+class _DocflowFlowReviewRequired(TypedDict):
+    actor_id: int
+
+class DocflowFlowReview(_DocflowFlowReviewRequired, total=False):
+    """Один участник маршрута и его решение, если оно принято."""
+
+    actor_name: str
+    #: Пусто, пока человек не решил
+    decision: Literal['approve', 'return', 'reject', 'cancel']
+    comment: str
+    decided_at: str
+
+class _DocflowFlowScheduleStageRequired(TypedDict):
+    id: "UUID"
+    #: Десятичным текстом, не числом с плавающей точкой
+    amount: str
+
+class DocflowFlowScheduleStage(_DocflowFlowScheduleStageRequired, total=False):
+    """Плановая сумма этапа работ или платежа. Ни выполнения, ни оплаты она не утверждает — это то, о чём договорились."""
+
+    label: str
+    date: str
+    #: Чем открывается срок платежа: датой или закрытием этапа
+    due_trigger: str
+    after_stage_id: "UUID"
+    #: Дней после события срока
+    delay_days: int
 
 class DocflowFormatIssues(TypedDict):
     """Документ не отвечает формату ФНС. Список непройденных проверок уходит ЦЕЛИКОМ: человек обязан увидеть всё сразу, а не по одной причине за попытку."""
@@ -9241,6 +9736,98 @@ class ManagedChecklistPatch(TypedDict):
     #: Пустой массив удаляет только группу с переданным id.
     items: List["ManagedChecklistItem"]
 
+class MarketplaceCatalogCandidate(TypedDict):
+    product_id: "UUID"
+    sku: str
+    name: str
+    #: Вид записи номенклатуры — самостоятельный товар или вариант
+    record_kind: str
+    parent_product_name: str
+    brand: str
+    size: str
+    color: str
+    barcode: str
+    #: Основное фото товара; миниатюра читается ручкой coreGetProductFileContent
+    photo_file_id: Optional["UUID"]
+    #: Площадки, с которыми товар уже связан; пустой список означает «ничей»
+    platforms: List[str]
+    #: Товар уже связан с ЭТИМ магазином — вторая карточка к нему почти всегда ошибка
+    linked_here: bool
+
+class MarketplaceCatalogCandidatePage(TypedDict):
+    #: Всего строк под отбором, а не на странице
+    count: int
+    results: List["MarketplaceCatalogCandidate"]
+    #: Бренды под текущим отбором, для фильтра без отдельного запроса
+    brands: List[str]
+
+class _MarketplaceCatalogImportResultRequired(TypedDict):
+    #: true у marketplacePreviewCatalogImport — ничего не записано
+    preview: bool
+    created: int
+    linked: int
+    unchanged: int
+    #: Сколько карточек осталось спорными
+    pending: int
+    rows: List["MarketplaceCatalogImportRow"]
+
+class MarketplaceCatalogImportResult(_MarketplaceCatalogImportResultRequired, total=False):
+    #: Снимок каталога, по которому считался разбор
+    snapshot_id: str
+
+class _MarketplaceCatalogImportRowRequired(TypedDict):
+    #: Идентификатор карточки на площадке
+    external_id: str
+    sku: str
+    name: str
+    attributes: Dict[str, str]
+    #: pending — карточка осталась спорной и ждёт решения человека
+    action: Literal['created', 'linked', 'unchanged', 'pending']
+
+class MarketplaceCatalogImportRow(_MarketplaceCatalogImportRowRequired, total=False):
+    product_id: "UUID"
+    #: Почему строка не решилась сама
+    reason: Literal['rejected', 'identifier_conflict', 'parent_pending', 'parent_conflict', 'required_fields', 'internal_sku_conflict']
+    #: Версия связи карточки; её же ждёт marketplaceLinkCatalogProduct
+    external_ref_updated_at: str
+
+class _MarketplaceCatalogJobRequired(TypedDict):
+    id: "UUID"
+    platform: Literal['ozon', 'wildberries']
+    store_id: "UUID"
+    status: Literal['queued', 'running', 'waiting_company', 'waiting_catalog', 'needs_review', 'succeeded', 'failed']
+    attempts: int
+    #: Счётчики последнего разбора; состав зависит от фазы
+    stats: Dict[str, Any]
+    #: initial — первоначальная загрузка, sync — последующая сверка
+    phase: Literal['initial', 'sync']
+
+class MarketplaceCatalogJob(_MarketplaceCatalogJobRequired, total=False):
+    last_snapshot_id: str
+    target_snapshot_id: str
+
+class _MarketplaceCatalogLinkDecisionRequired(TypedDict):
+    external_id: str
+    product_id: "UUID"
+    #: Решение человека приходит как manual
+    match_source: Literal['pending', 'rejected', 'auto', 'manual', 'import']
+    external_ref_updated_at: str
+
+class MarketplaceCatalogLinkDecision(_MarketplaceCatalogLinkDecisionRequired, total=False):
+    snapshot_id: str
+
+class _MarketplaceCatalogLinkRequestRequired(TypedDict):
+    product_id: "UUID"
+
+class MarketplaceCatalogLinkRequest(_MarketplaceCatalogLinkRequestRequired, total=False):
+    #: Карточка площадки из окна разбора; вместе с ней обязательны snapshot_id и expected_external_ref_updated_at
+    external_id: str
+    #: Артикул продавца с экрана товаров; вторая форма решения, снимок при ней не нужен
+    offer_id: str
+    snapshot_id: str
+    #: Версия связи из разбора; расхождение отклоняется 409, чтобы не переписать чужое решение
+    expected_external_ref_updated_at: str
+
 class MarketplaceComponentDataThrough(TypedDict, total=False):
     """Последняя дата операций площадки, уже включённых в каждый компонент отчёта; отсутствующее или null-значение означает, что дата покрытия пока неизвестна."""
 
@@ -9268,6 +9855,23 @@ class MarketplaceComponentFreshness(TypedDict, total=False):
     ads_orders: Optional[str]
     #: Карточки товаров
     products: Optional[str]
+
+class MarketplaceCostImportRequest(TypedDict):
+    store: "UUID"
+    #: XLSX, XLS, ODS, CSV или TSV; первая строка — заголовок с колонками артикула и себестоимости
+    file: str
+
+class MarketplaceCostImportResult(TypedDict):
+    applied: int
+    failed: int
+    errors: List["MarketplaceCostImportRowError"]
+
+class MarketplaceCostImportRowError(TypedDict):
+    #: Номер строки в таблице, считая заголовок первой
+    row: int
+    offer: str
+    #: Причина отказа теми же словами, что и у одиночной простановки себестоимости
+    reason: str
 
 class MarketplaceEconBaseRow(TypedDict, total=False):
     """Сырьё строки прайса в том виде в каком его отдаёт витрина ценообразования"""
@@ -9408,6 +10012,8 @@ class MarketplaceEconWbInput(TypedDict):
     adIn: float
     adEx: float
     tax: float
+
+MarketplaceFunnelDailyReference = TypedDict("MarketplaceFunnelDailyReference", {"buyoutFrom": str, "buyoutTo": str, "bought": float, "cancelled": float, "pending": float, "from": str, "to": str, "units": float, "commission": Optional[float], "logistics": Optional[float], "other": Optional[float], "buyout": Optional[float], "missing": List[str]}, total=False)
 
 class MarketplaceOzonCost(TypedDict):
     store: "UUID"
@@ -9586,7 +10192,7 @@ class MarketplaceOzonFbsWarehouse(TypedDict):
 
 MarketplaceOzonFunnel = TypedDict("MarketplaceOzonFunnel", {"platform": Literal['ozon'], "source": Literal['ozon_analytics'], "from": str, "to": str, "totals": "MarketplaceOzonFunnelTotals", "rows": List["MarketplaceOzonFunnelRow"], "note": str, "analytics": bool}, total=False)
 
-MarketplaceOzonFunnelDaily = TypedDict("MarketplaceOzonFunnelDaily", {"platform": Literal['ozon'], "source": Literal['ozon_analytics'], "sku": str, "from": str, "to": str, "days": List[str], "series": "MarketplaceOzonFunnelDailySeries", "totals": "MarketplaceOzonFunnelDailyTotals", "card": "MarketplaceOzonFunnelDailyCard", "articles": List["MarketplaceOzonFunnelDailyArticle"], "note": str, "analytics": bool}, total=False)
+MarketplaceOzonFunnelDaily = TypedDict("MarketplaceOzonFunnelDaily", {"platform": Literal['ozon'], "source": Literal['ozon_orders_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": "MarketplaceOzonFunnelDailySeries", "totals": "MarketplaceOzonFunnelDailyTotals", "card": "MarketplaceOzonFunnelDailyCard", "articles": List["MarketplaceOzonFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
 
 class MarketplaceOzonFunnelDailyArticle(TypedDict):
     sku: str
@@ -9600,40 +10206,62 @@ class _MarketplaceOzonFunnelDailyCardRequired(TypedDict):
     photo: str
 
 class MarketplaceOzonFunnelDailyCard(_MarketplaceOzonFunnelDailyCardRequired, total=False):
-    #: Доступный остаток
-    stock: float
+    store: str
+    #: Общий остаток, только когда известны оба источника
+    stock: Optional[float]
+    stockMarketplace: Optional[float]
+    stockFbs: Optional[float]
+    ordersToday: Optional[float]
+    rating: Optional[float]
+    reviews: Optional[float]
     cost: float
-    #: Последняя ставка комиссии в процентах
-    commission: float
+    #: Взвешенная ставка предыдущей полной недели
+    commission: Optional[float]
+    acquiring: Optional[float]
+    tax: Optional[float]
+    logisticsUnit: Optional[float]
+    otherUnit: Optional[float]
+    buyoutAll: Optional[float]
+    buyoutRolling: Optional[float]
 
-class MarketplaceOzonFunnelDailySeries(TypedDict):
-    """Каждый ряд — значение на каждый день окна в том же порядке что days. Ряды без источника заполнены null целиком."""
-
+class _MarketplaceOzonFunnelDailySeriesRequired(TypedDict):
     traffic: List[Optional[float]]
     views: List[Optional[float]]
     cv2: List[Optional[float]]
     cart: List[Optional[float]]
     cv3: List[Optional[float]]
     orders: List[Optional[float]]
-    #: Источника пока нет
-    adShare: List[None]
+    adShare: List[Optional[float]]
     ordersSum: List[Optional[float]]
     buyouts: List[Optional[float]]
     buyoutsSum: List[Optional[float]]
+    #: Средняя цена продавца в заказах без отмен; имя ключа сохранено для совместимости
     avgBuyer: List[Optional[float]]
     spp: List[Optional[float]]
-    #: Источника пока нет
-    position: List[None]
+    position: List[Optional[float]]
     adSpend: List[Optional[float]]
     drrOrders: List[Optional[float]]
     drrSales: List[Optional[float]]
     margin: List[Optional[float]]
     marginSheet: List[Optional[float]]
-    #: Источника пока нет
-    umd: List[None]
+    umd: List[Optional[float]]
     roi: List[Optional[float]]
     marginTot: List[Optional[float]]
     marginSheetTot: List[Optional[float]]
+
+class MarketplaceOzonFunnelDailySeries(_MarketplaceOzonFunnelDailySeriesRequired, total=False):
+    """Каждый ряд — значение на каждый день окна в том же порядке что days. Ряды без источника заполнены null целиком."""
+
+    buyoutRate: List[Optional[float]]
+    expectedUnits: List[Optional[float]]
+    expectedRevenue: List[Optional[float]]
+    costUnit: List[Optional[float]]
+    acquiringRate: List[Optional[float]]
+    commissionRate: List[Optional[float]]
+    logisticsUnit: List[Optional[float]]
+    otherUnit: List[Optional[float]]
+    taxRate: List[Optional[float]]
+    roiOrders: List[Optional[float]]
 
 class _MarketplaceOzonFunnelDailyTotalsRequired(TypedDict):
     traffic: List[Optional[float]]
@@ -9651,7 +10279,7 @@ class _MarketplaceOzonFunnelDailyTotalsRequired(TypedDict):
 class MarketplaceOzonFunnelDailyTotals(_MarketplaceOzonFunnelDailyTotalsRequired, total=False):
     """Каждый итог — массив из одного значения, чтобы колонка ИТОГО рисовалась тем же кодом что и дни"""
 
-    #: Появляется только когда есть по чему считать
+    #: Средняя цена продавца в заказах без отмен
     avgBuyer: List[Optional[float]]
 
 class MarketplaceOzonFunnelRow(TypedDict):
@@ -10011,6 +10639,67 @@ class MarketplaceStore(_MarketplaceStoreRequired, total=False):
     #: Разделитель базы и размера в артикуле продавца, объявленный владельцем магазина. Пустая строка — правило не объявлено, и размер берётся только из полей площадки. Применяется на Ozon, где каждый размер продаётся своим артикулом
     article_size_separator: Literal['', '-', '/', '_']
 
+class MarketplaceStoreAccounting(TypedDict):
+    store_id: "UUID"
+    company_id: Optional["UUID"]
+    company_name: str
+    business_id: Optional["UUID"]
+    marketplace_contact_id: Optional["UUID"]
+    marketplace_contact_name: str
+    #: Метод оценки складского учёта юрлица; пусто — складской учёт не настроен
+    stock_costing_method: str
+    #: История версий настройки по возрастанию даты действия
+    policies: List["MarketplaceStoreAccountingPolicy"]
+    #: Подключение закрыто целиком; считается по blocking_reasons, а не по успешной проверке учётных данных
+    setup_ready: bool
+    pnl_ready: bool
+    cost_rates: "MarketplaceStoreAccountingCostCoverage"
+    blocking_reasons: List[Literal['company_required', 'cost_source_required', 'marketplace_contact_required', 'stock_policy_required', 'cost_rates_incomplete']]
+
+class _MarketplaceStoreAccountingCostCoverageRequired(TypedDict):
+    #: Показывать себестоимость числом можно только при complete
+    state: Literal['complete', 'partial', 'none', 'unknown']
+    #: Артикулы магазина, сопоставленные с товарами кабинета
+    articles: int
+    #: Из них те, у кого есть действующая ставка больше нуля
+    articles_with_rate: int
+    #: Кого не хватает, поимённо; список короткий и не перечисляет весь каталог
+    uncovered_articles: List[str]
+
+class MarketplaceStoreAccountingCostCoverage(_MarketplaceStoreAccountingCostCoverageRequired, total=False):
+    reason: Literal['cost_source_required', 'catalog_not_matched', 'cost_rates_missing', 'cost_rates_partial', 'cost_from_stock']
+
+class _MarketplaceStoreAccountingInputRequired(TypedDict):
+    company_id: "UUID"
+    cost_source: Literal['manual', 'stock']
+    #: Дата действия версии; первая может закрыть исторический период, следующая обязана быть в будущем
+    valid_from: str
+
+class MarketplaceStoreAccountingInput(_MarketplaceStoreAccountingInputRequired, total=False):
+    marketplace_contact_id: "UUID"
+    new_company: "MarketplaceStoreCompanyInput"
+
+class _MarketplaceStoreAccountingPolicyRequired(TypedDict):
+    id: "UUID"
+    company_id: "UUID"
+    #: Откуда берётся себестоимость на этот период
+    cost_source: Literal['manual', 'stock']
+    valid_from: str
+
+class MarketplaceStoreAccountingPolicy(_MarketplaceStoreAccountingPolicyRequired, total=False):
+    #: Пусто у действующей версии
+    valid_to: str
+
+class _MarketplaceStoreCompanyInputRequired(TypedDict):
+    name: str
+    #: Проверяется контрольной цифрой
+    inn: str
+    business_id: "UUID"
+
+class MarketplaceStoreCompanyInput(_MarketplaceStoreCompanyInputRequired, total=False):
+    kpp: str
+    vat_accounting_mode: str
+
 class _MarketplaceStoreInputRequired(TypedDict):
     name: str
 
@@ -10270,7 +10959,7 @@ class MarketplaceWbFacets(TypedDict):
 
 MarketplaceWbFunnel = TypedDict("MarketplaceWbFunnel", {"platform": Literal['wildberries'], "store": str, "source": Literal['jam', 'v3', 'v3_pending'], "from": str, "to": str, "totals": "MarketplaceWbFunnelTotals", "rows": List["MarketplaceWbFunnelRow"], "note": str, "analytics": bool}, total=False)
 
-MarketplaceWbFunnelDaily = TypedDict("MarketplaceWbFunnelDaily", {"platform": Literal['wb'], "source": Literal['wb_finance'], "sku": str, "from": str, "to": str, "days": List[str], "series": Dict[str, List[Optional[float]]], "totals": Dict[str, List[Optional[float]]], "card": "MarketplaceWbFunnelDailyCard", "articles": List["MarketplaceWbFunnelDailyArticle"], "note": str, "analytics": bool}, total=False)
+MarketplaceWbFunnelDaily = TypedDict("MarketplaceWbFunnelDaily", {"platform": Literal['wb'], "source": Literal['wb_orders_sales_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": Dict[str, List[Optional[float]]], "totals": Dict[str, List[Optional[float]]], "card": "MarketplaceWbFunnelDailyCard", "articles": List["MarketplaceWbFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
 
 class MarketplaceWbFunnelDailyArticle(TypedDict):
     #: Артикул поставщика
@@ -10286,8 +10975,22 @@ class _MarketplaceWbFunnelDailyCardRequired(TypedDict):
     photo: str
 
 class MarketplaceWbFunnelDailyCard(_MarketplaceWbFunnelDailyCardRequired, total=False):
+    store: str
+    stock: Optional[float]
+    stockMarketplace: Optional[float]
+    stockFbs: Optional[float]
+    ordersToday: Optional[float]
+    rating: Optional[float]
+    reviews: Optional[float]
     #: Себестоимость из кабинета
-    cost: int
+    cost: float
+    commission: Optional[float]
+    acquiring: Optional[float]
+    tax: Optional[float]
+    logisticsUnit: Optional[float]
+    otherUnit: Optional[float]
+    buyoutAll: Optional[float]
+    buyoutRolling: Optional[float]
 
 class MarketplaceWbFunnelRow(TypedDict):
     nm_id: int

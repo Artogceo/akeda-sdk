@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1bed7b3a1c1ca7151c7312fc5716ba8e5ed2367eaebc61d22da652ab660d2d02).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 023fe7c5fee3e639821a198c64c4a80193ed5f20de1b2fda3c9c08847800b280).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1012,6 +1012,35 @@ type CRMLeadPatch struct {
 	Archived      *bool   `json:"archived,omitempty"`
 }
 
+type CRMLeadSource struct {
+	ID UUID `json:"id"`
+	// Key — То, что ложится в lead.source. У системной строки за ключом стоит код
+	Key string `json:"key"`
+	// Name — Имя - право кабинета; сеятель его не возвращает
+	Name string `json:"name"`
+	// Channel — Канал для цвета и значка; неизвестный приводится к other
+	Channel   string `json:"channel"`
+	SortOrder int64  `json:"sort_order"`
+	// IsSystem — Строку завёл сеятель модуля: удалить и выключить нельзя
+	IsSystem  bool   `json:"is_system"`
+	IsActive  bool   `json:"is_active"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type CRMLeadSourceInput struct {
+	Name      string  `json:"name"`
+	Channel   *string `json:"channel,omitempty"`
+	SortOrder *int64  `json:"sort_order,omitempty"`
+}
+
+type CRMLeadSourcePatch struct {
+	Name      *string `json:"name,omitempty"`
+	Channel   *string `json:"channel,omitempty"`
+	SortOrder *int64  `json:"sort_order,omitempty"`
+	IsActive  *bool   `json:"is_active,omitempty"`
+}
+
 type CRMLeadStatus = string
 
 type CRMLossReason struct {
@@ -1743,6 +1772,10 @@ type ChatAttachment struct {
 
 type ChatAttachmentPage struct {
 	Items []ChatForwardedAttachment `json:"items"`
+	// HasMore — Следующая страница доказана прочитанной строкой за границей текущей, а не тем, что страница оказалась полной.
+	HasMore bool `json:"has_more"`
+	// NextCursor — Курсор следующей страницы; присутствует только вместе с has_more=true.
+	NextCursor *string `json:"next_cursor,omitempty"`
 }
 
 // ChatAttachmentUpload — Один файл на запрос. Ссылка на уже загруженный объект не принимается.
@@ -4820,6 +4853,393 @@ type DocflowFileRequisites struct {
 	Tobacco *bool `json:"tobacco,omitempty"`
 	// Oil — Документ о нефтепродуктах
 	Oil *bool `json:"oil,omitempty"`
+}
+
+// DocflowFlowAccountingBacklink — Бумага, стоящая за учётным документом. Открывать нужно version — ту закреплённую редакцию, которая была основанием, а не current_version.
+type DocflowFlowAccountingBacklink struct {
+	ID UUID `json:"id"`
+	// Version — Закреплённая редакция-основание
+	Version int64 `json:"version"`
+	// CurrentVersion — Текущая редакция бумаги
+	CurrentVersion int64           `json:"current_version"`
+	Title          string          `json:"title"`
+	Number         string          `json:"number"`
+	Date           string          `json:"date"`
+	Kind           DocflowFlowKind `json:"kind"`
+	Status         string          `json:"status"`
+}
+
+type DocflowFlowAccountingBacklinkPage struct {
+	Items   []DocflowFlowAccountingBacklink `json:"items"`
+	HasMore bool                            `json:"has_more"`
+}
+
+// DocflowFlowAccountingDocument — Карточка учётного документа чужого модуля, прочитанная у его владельца.
+type DocflowFlowAccountingDocument struct {
+	ID              UUID   `json:"id"`
+	Owner           string `json:"owner"`
+	TypeKey         string `json:"type_key"`
+	TypeName        string `json:"type_name"`
+	Number          string `json:"number"`
+	Date            string `json:"date"`
+	Status          string `json:"status"`
+	IsMarkedDeleted bool   `json:"is_marked_deleted"`
+}
+
+// DocflowFlowAccountingLink — Ссылка на учётный документ чужого модуля по личности. Состояние, остаток и содержимое чужого документа сюда не копируются: правда о нём живёт у его владельца.
+type DocflowFlowAccountingLink struct {
+	ID         UUID   `json:"id"`
+	Owner      string `json:"owner"`
+	DocumentID UUID   `json:"document_id"`
+	// SourceAction — Команда, породившая связь: create_plan, accept_act и подобные
+	SourceAction *string `json:"source_action,omitempty"`
+	// SourceVersion — Редакция бумаги, закреплённая командой
+	SourceVersion *int64 `json:"source_version,omitempty"`
+	// TargetVersion — Редакция учётного документа, из которой сделана бумага
+	TargetVersion *int64 `json:"target_version,omitempty"`
+}
+
+type DocflowFlowAccountingLinkInput struct {
+	ExpectedVersion int64  `json:"expected_version"`
+	Owner           string `json:"owner"`
+	DocumentID      UUID   `json:"document_id"`
+}
+
+// DocflowFlowAccountingOriginalInput — Только то, что выбирают в документообороте. Юрлицо, контрагент и направление берутся из названной редакции учётного документа и телом запроса не подделываются.
+type DocflowFlowAccountingOriginalInput struct {
+	// TargetVersion — Точная редакция учётного документа
+	TargetVersion int64              `json:"target_version"`
+	Kind          DocflowFlowKind    `json:"kind"`
+	Content       DocflowFlowContent `json:"content"`
+}
+
+type DocflowFlowAccountingPage struct {
+	Items []DocflowFlowAccountingDocument `json:"items"`
+	// NextOffset — Продолжение листания; null означает, что дальше ничего нет
+	NextOffset *int64 `json:"next_offset"`
+}
+
+type DocflowFlowAccountingUnlinkInput struct {
+	ExpectedVersion int64 `json:"expected_version"`
+	LinkID          UUID  `json:"link_id"`
+}
+
+type DocflowFlowAccrualPlan struct {
+	DocumentID  UUID `json:"document_id"`
+	OperationID UUID `json:"operation_id"`
+	// Version — Версия операции владельца; её подставляют в expected_operation_version
+	Version  int64                     `json:"version"`
+	Kind     string                    `json:"kind"`
+	Currency string                    `json:"currency"`
+	Amount   string                    `json:"amount"`
+	Stages   []DocflowFlowAccrualStage `json:"stages"`
+}
+
+type DocflowFlowAccrualStage struct {
+	ID    UUID    `json:"id"`
+	Label string  `json:"label"`
+	Date  *string `json:"date,omitempty"`
+	// Amount — Запланировано по этапу
+	Amount string `json:"amount"`
+	// ActualAmount — Уже принято актами
+	ActualAmount string `json:"actual_amount"`
+}
+
+// DocflowFlowApproval — Маршрут согласования, закреплённый за той версией документа, которую видел отправитель. Согласование — мнение, а не проведение: учётных движений оно не делает и черновик не замораживает.
+type DocflowFlowApproval struct {
+	ID UUID `json:"id"`
+	// ContentVersion — Версия документа, по которой решают
+	ContentVersion int64                      `json:"content_version"`
+	State          string                     `json:"state"`
+	RequestedBy    int64                      `json:"requested_by"`
+	RequestedName  *string                    `json:"requested_name,omitempty"`
+	RequestedAt    string                     `json:"requested_at"`
+	DueAt          *string                    `json:"due_at,omitempty"`
+	Stages         []DocflowFlowApprovalStage `json:"stages"`
+	// ActiveStage — Номер текущего этапа с нуля
+	ActiveStage int64 `json:"active_stage"`
+	// WaitingFor — Кто ещё не решил на текущем этапе
+	WaitingFor   []int64            `json:"waiting_for,omitempty"`
+	Cancellation *DocflowFlowReview `json:"cancellation,omitempty"`
+}
+
+type DocflowFlowApprovalCancel struct {
+	ExpectedVersion int64 `json:"expected_version"`
+	ApprovalID      UUID  `json:"approval_id"`
+	// Comment — Причина отзыва остаётся в истории маршрута
+	Comment string `json:"comment"`
+}
+
+// DocflowFlowApprovalContext — Текущие возможности текущего человека, а не снимок прошлых прав.
+type DocflowFlowApprovalContext struct {
+	Version   int64 `json:"version"`
+	CanSubmit bool  `json:"can_submit"`
+	// CanDecide — Истинно только у участника активного этапа с правом docflow.flow:approve
+	CanDecide bool `json:"can_decide"`
+	// CanCancel — Истинно только у того, кто отправлял
+	CanCancel bool `json:"can_cancel"`
+}
+
+type DocflowFlowApprovalDecision struct {
+	ExpectedVersion int64   `json:"expected_version"`
+	ApprovalID      UUID    `json:"approval_id"`
+	Decision        string  `json:"decision"`
+	Comment         *string `json:"comment,omitempty"`
+}
+
+// DocflowFlowApprovalInboxItem — Одна строка очереди решений. Файлов, состава маршрута, товарных строк и учётных связей здесь нет: за ними идут в карточку документа.
+type DocflowFlowApprovalInboxItem struct {
+	ID UUID `json:"id"`
+	// Version — Версия, которую подставляют в решение как expected_version
+	Version       int64           `json:"version"`
+	Kind          DocflowFlowKind `json:"kind"`
+	Number        *string         `json:"number,omitempty"`
+	Title         string          `json:"title"`
+	Date          string          `json:"date"`
+	CompanyID     UUID            `json:"company_id"`
+	CompanyName   *string         `json:"company_name,omitempty"`
+	ContactID     UUID            `json:"contact_id"`
+	ContactName   *string         `json:"contact_name,omitempty"`
+	RequestedBy   int64           `json:"requested_by"`
+	RequestedName *string         `json:"requested_name,omitempty"`
+	RequestedAt   string          `json:"requested_at"`
+	// DueAt — Срок решения; отсутствует, когда срок не назначали
+	DueAt *string `json:"due_at,omitempty"`
+	// ActiveStage — Номер текущего этапа с нуля
+	ActiveStage int64 `json:"active_stage"`
+	// StageCount — Сколько этапов в маршруте всего
+	StageCount int64 `json:"stage_count"`
+	// Amount — Сумма документа десятичным текстом; пусто у рамочного договора — нуля вместо неё не бывает
+	Amount *string `json:"amount,omitempty"`
+	// Currency — Валюта суммы; пусто там же, где пуста сумма
+	Currency *string `json:"currency,omitempty"`
+}
+
+type DocflowFlowApprovalInboxPage struct {
+	Items   []DocflowFlowApprovalInboxItem `json:"items"`
+	HasMore bool                           `json:"has_more"`
+}
+
+type DocflowFlowApprovalPeoplePage struct {
+	Items []DocflowFlowApprovalPerson `json:"items"`
+	// NextAfter — Продолжение листания; отсутствует на последней странице
+	NextAfter *int64 `json:"next_after,omitempty"`
+}
+
+type DocflowFlowApprovalPerson struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+type DocflowFlowApprovalStage struct {
+	Reviewers []DocflowFlowReview `json:"reviewers"`
+}
+
+type DocflowFlowApprovalSubmit struct {
+	ExpectedVersion int64 `json:"expected_version"`
+	// Stages — Этапы по порядку; каждый — список идентификаторов людей. Всего не больше пятидесяти участников
+	Stages [][]int64 `json:"stages"`
+	// DueAt — Срок решения; если назван, обязан быть в будущем
+	DueAt *string `json:"due_at,omitempty"`
+}
+
+// DocflowFlowChangeInput — Одна команда правки. Поля, не относящиеся к названному действию, отвергаются, а не игнорируются: запрос, просящий две разные вещи сразу, сам не знает, чего хочет.
+type DocflowFlowChangeInput struct {
+	// ExpectedVersion — Версия, которую видел клиент. Разошлась — 409 docflow.flow.version_conflict
+	ExpectedVersion int64                     `json:"expected_version"`
+	Action          string                    `json:"action"`
+	Content         *DocflowFlowContent       `json:"content,omitempty"`
+	CompanyID       *UUID                     `json:"company_id,omitempty"`
+	ContactID       *UUID                     `json:"contact_id,omitempty"`
+	Kind            *DocflowFlowKind          `json:"kind,omitempty"`
+	Direction       *string                   `json:"direction,omitempty"`
+	FileID          *UUID                     `json:"file_id,omitempty"`
+	Relation        *DocflowFlowRelationInput `json:"relation,omitempty"`
+	RelationID      *UUID                     `json:"relation_id,omitempty"`
+}
+
+// DocflowFlowCommercial — Коммерческая часть бумаги — сумма, валюта, строки и графики.
+type DocflowFlowCommercial struct {
+	Currency string `json:"currency"`
+	// Amount — Десятичным текстом
+	Amount       string                      `json:"amount"`
+	PaymentTerms *string                     `json:"payment_terms,omitempty"`
+	DueDate      *string                     `json:"due_date,omitempty"`
+	Lines        []DocflowFlowCommercialLine `json:"lines,omitempty"`
+	// Milestones — Этапы работ
+	Milestones []DocflowFlowScheduleStage `json:"milestones,omitempty"`
+	// Payments — График платежей
+	Payments []DocflowFlowScheduleStage `json:"payments,omitempty"`
+}
+
+// DocflowFlowCommercialLine — Строка переписанного оригинала, а не расчёт. Сумма строки приходит явно: скидка поставщика, налог и округление не заменяются местным произведением количества на цену.
+type DocflowFlowCommercialLine struct {
+	ID          UUID    `json:"id"`
+	ProductID   *UUID   `json:"product_id,omitempty"`
+	ProductName *string `json:"product_name,omitempty"`
+	Name        string  `json:"name"`
+	Unit        *string `json:"unit,omitempty"`
+	Quantity    *string `json:"quantity,omitempty"`
+	Price       *string `json:"price,omitempty"`
+	Amount      string  `json:"amount"`
+	// VATAmount — null означает, что налог не переписывали, а не что строка без налога
+	VATAmount *string `json:"vat_amount,omitempty"`
+}
+
+// DocflowFlowContent — Реквизиты бумаги — то, что переписано с документа.
+type DocflowFlowContent struct {
+	Title      string                    `json:"title"`
+	Number     *string                   `json:"number,omitempty"`
+	Date       string                    `json:"date"`
+	Contract   *DocflowFlowContractTerms `json:"contract,omitempty"`
+	Commercial *DocflowFlowCommercial    `json:"commercial,omitempty"`
+}
+
+// DocflowFlowContractTerms — Условия договора в старой форме. Остаётся читаемой и принимается, но новую коммерческую часть описывает commercial. У рамочного договора суммы и валюты нет вовсе — искусственного нуля здесь не бывает.
+type DocflowFlowContractTerms struct {
+	Mode       string  `json:"mode"`
+	Subject    string  `json:"subject"`
+	ValidFrom  string  `json:"valid_from"`
+	ValidUntil *string `json:"valid_until,omitempty"`
+	// Amount — Только у mode=fixed
+	Amount       *string `json:"amount,omitempty"`
+	Currency     *string `json:"currency,omitempty"`
+	PaymentTerms *string `json:"payment_terms,omitempty"`
+	RenewalTerms *string `json:"renewal_terms,omitempty"`
+}
+
+type DocflowFlowCreateInput struct {
+	CompanyID UUID               `json:"company_id"`
+	ContactID UUID               `json:"contact_id"`
+	Kind      DocflowFlowKind    `json:"kind"`
+	Direction string             `json:"direction"`
+	Content   DocflowFlowContent `json:"content"`
+}
+
+// DocflowFlowDocument — Карточка документа внутреннего контура в одной редакции. Каждая принятая команда рождает новую неизменяемую редакцию, а прежняя остаётся читаемой по своему адресу.
+type DocflowFlowDocument struct {
+	ID          UUID            `json:"id"`
+	CompanyID   UUID            `json:"company_id"`
+	CompanyName string          `json:"company_name"`
+	ContactID   UUID            `json:"contact_id"`
+	ContactName string          `json:"contact_name"`
+	Kind        DocflowFlowKind `json:"kind"`
+	Direction   string          `json:"direction"`
+	Status      string          `json:"status"`
+	// ArchivedFrom — Из какого состояния бумага ушла в архив
+	ArchivedFrom *string `json:"archived_from,omitempty"`
+	Version      int64   `json:"version"`
+	// IdentityEditable — Ложь означает: стороны и вид уже закреплены редакцией или связью и не меняются
+	IdentityEditable bool                        `json:"identity_editable"`
+	Content          DocflowFlowContent          `json:"content"`
+	Files            []DocflowFlowFile           `json:"files,omitempty"`
+	Relations        []DocflowFlowRelation       `json:"relations,omitempty"`
+	Approval         *DocflowFlowApproval        `json:"approval,omitempty"`
+	AccountingLinks  []DocflowFlowAccountingLink `json:"accounting_links,omitempty"`
+	CreatedAt        string                      `json:"created_at"`
+	UpdatedAt        string                      `json:"updated_at"`
+	UpdatedBy        int64                       `json:"updated_by"`
+}
+
+// DocflowFlowFile — Приложенный файл. Всё это описание делает владелец при загрузке, и командой правки оно не принимается.
+type DocflowFlowFile struct {
+	ID   UUID   `json:"id"`
+	Name string `json:"name"`
+	// Size — Байт; не больше 26214400
+	Size        int64  `json:"size"`
+	Sha256      string `json:"sha256"`
+	ContentType string `json:"content_type"`
+	UploadedBy  int64  `json:"uploaded_by"`
+	UploadedAt  string `json:"uploaded_at"`
+}
+
+type DocflowFlowFinanceAccrualAllocation struct {
+	// AccrualID — Этап работ плана
+	AccrualID UUID `json:"accrual_id"`
+	// Amount — Сколько этого этапа закрывает акт; не больше остатка
+	Amount string `json:"amount"`
+}
+
+// DocflowFlowFinanceAccrualInput — Распределение суммы акта по этапам работ. Поле accrual_id остаётся совместимым с прежней однoэтапной формой запроса.
+type DocflowFlowFinanceAccrualInput struct {
+	ExpectedVersion int64 `json:"expected_version"`
+	// PlanDocumentID — Плановая операция модуля финансов
+	PlanDocumentID UUID `json:"plan_document_id"`
+	// ExpectedOperationVersion — Версия операции владельца
+	ExpectedOperationVersion int64 `json:"expected_operation_version"`
+	// AccrualID — Единственный этап; равнозначно одной строке allocations
+	AccrualID   *UUID                                 `json:"accrual_id,omitempty"`
+	Allocations []DocflowFlowFinanceAccrualAllocation `json:"allocations,omitempty"`
+	// ActualDate — Фактическая дата выполнения; может отличаться от плановой даты этапа
+	ActualDate string `json:"actual_date"`
+}
+
+// DocflowFlowFinancePlanInput — Экономическая роль называется явно: входящий договор всё ещё может быть продажей, и выводить роль из направления документа нельзя.
+type DocflowFlowFinancePlanInput struct {
+	ExpectedVersion int64  `json:"expected_version"`
+	Kind            string `json:"kind"`
+	// PNLItemID — Статья отчёта о прибылях и убытках
+	PNLItemID UUID `json:"pnl_item_id"`
+}
+
+type DocflowFlowKind = string
+
+// DocflowFlowPage — Страница карточек. Набор строк называется items — как у остальных страниц этого крыла; крыло обмена с контрагентами в том же модуле исторически называет его results.
+type DocflowFlowPage struct {
+	Items   []DocflowFlowDocument `json:"items"`
+	HasMore bool                  `json:"has_more"`
+}
+
+type DocflowFlowReference struct {
+	ID   UUID   `json:"id"`
+	Name string `json:"name"`
+	// Unit — Единица измерения; приходит только у номенклатуры
+	Unit *string `json:"unit,omitempty"`
+}
+
+type DocflowFlowReferencePage struct {
+	Items []DocflowFlowReference `json:"items"`
+	// HasMore — Есть продолжение: спрашивают следующим offset
+	HasMore bool `json:"has_more"`
+}
+
+// DocflowFlowRelation — Связь между бумагами кабинета — основание, приложение, изменение или замена. Учётной инструкцией она не является.
+type DocflowFlowRelation struct {
+	ID       UUID   `json:"id"`
+	Kind     string `json:"kind"`
+	TargetID UUID   `json:"target_id"`
+	// TargetVersion — Закреплённая редакция другой бумаги
+	TargetVersion int64 `json:"target_version"`
+}
+
+type DocflowFlowRelationInput struct {
+	Kind          string `json:"kind"`
+	TargetID      UUID   `json:"target_id"`
+	TargetVersion int64  `json:"target_version"`
+}
+
+// DocflowFlowReview — Один участник маршрута и его решение, если оно принято.
+type DocflowFlowReview struct {
+	ActorID   int64   `json:"actor_id"`
+	ActorName *string `json:"actor_name,omitempty"`
+	// Decision — Пусто, пока человек не решил
+	Decision  *string `json:"decision,omitempty"`
+	Comment   *string `json:"comment,omitempty"`
+	DecidedAt *string `json:"decided_at,omitempty"`
+}
+
+// DocflowFlowScheduleStage — Плановая сумма этапа работ или платежа. Ни выполнения, ни оплаты она не утверждает — это то, о чём договорились.
+type DocflowFlowScheduleStage struct {
+	ID    UUID    `json:"id"`
+	Label *string `json:"label,omitempty"`
+	Date  *string `json:"date,omitempty"`
+	// Amount — Десятичным текстом, не числом с плавающей точкой
+	Amount string `json:"amount"`
+	// DueTrigger — Чем открывается срок платежа: датой или закрытием этапа
+	DueTrigger   *string `json:"due_trigger,omitempty"`
+	AfterStageID *UUID   `json:"after_stage_id,omitempty"`
+	// DelayDays — Дней после события срока
+	DelayDays *int64 `json:"delay_days,omitempty"`
 }
 
 // DocflowFormatIssues — Документ не отвечает формату ФНС. Список непройденных проверок уходит ЦЕЛИКОМ: человек обязан увидеть всё сразу, а не по одной причине за попытку.
@@ -8160,6 +8580,95 @@ type ManagedChecklistPatch struct {
 	Items []ManagedChecklistItem `json:"items"`
 }
 
+type MarketplaceCatalogCandidate struct {
+	ProductID UUID   `json:"product_id"`
+	SKU       string `json:"sku"`
+	Name      string `json:"name"`
+	// RecordKind — Вид записи номенклатуры — самостоятельный товар или вариант
+	RecordKind        string `json:"record_kind"`
+	ParentProductName string `json:"parent_product_name"`
+	Brand             string `json:"brand"`
+	Size              string `json:"size"`
+	Color             string `json:"color"`
+	Barcode           string `json:"barcode"`
+	// PhotoFileID — Основное фото товара; миниатюра читается ручкой coreGetProductFileContent
+	PhotoFileID *UUID `json:"photo_file_id"`
+	// Platforms — Площадки, с которыми товар уже связан; пустой список означает «ничей»
+	Platforms []string `json:"platforms"`
+	// LinkedHere — Товар уже связан с ЭТИМ магазином — вторая карточка к нему почти всегда ошибка
+	LinkedHere bool `json:"linked_here"`
+}
+
+type MarketplaceCatalogCandidatePage struct {
+	// Count — Всего строк под отбором, а не на странице
+	Count   int64                         `json:"count"`
+	Results []MarketplaceCatalogCandidate `json:"results"`
+	// Brands — Бренды под текущим отбором, для фильтра без отдельного запроса
+	Brands []string `json:"brands"`
+}
+
+type MarketplaceCatalogImportResult struct {
+	// SnapshotID — Снимок каталога, по которому считался разбор
+	SnapshotID *string `json:"snapshot_id,omitempty"`
+	// Preview — true у marketplacePreviewCatalogImport — ничего не записано
+	Preview   bool  `json:"preview"`
+	Created   int64 `json:"created"`
+	Linked    int64 `json:"linked"`
+	Unchanged int64 `json:"unchanged"`
+	// Pending — Сколько карточек осталось спорными
+	Pending int64                         `json:"pending"`
+	Rows    []MarketplaceCatalogImportRow `json:"rows"`
+}
+
+type MarketplaceCatalogImportRow struct {
+	// ExternalID — Идентификатор карточки на площадке
+	ExternalID string            `json:"external_id"`
+	SKU        string            `json:"sku"`
+	Name       string            `json:"name"`
+	Attributes map[string]string `json:"attributes"`
+	ProductID  *UUID             `json:"product_id,omitempty"`
+	// Action — pending — карточка осталась спорной и ждёт решения человека
+	Action string `json:"action"`
+	// Reason — Почему строка не решилась сама
+	Reason *string `json:"reason,omitempty"`
+	// ExternalRefUpdatedAt — Версия связи карточки; её же ждёт marketplaceLinkCatalogProduct
+	ExternalRefUpdatedAt *string `json:"external_ref_updated_at,omitempty"`
+}
+
+type MarketplaceCatalogJob struct {
+	ID       UUID   `json:"id"`
+	Platform string `json:"platform"`
+	StoreID  UUID   `json:"store_id"`
+	Status   string `json:"status"`
+	Attempts int64  `json:"attempts"`
+	// Stats — Счётчики последнего разбора; состав зависит от фазы
+	Stats map[string]json.RawMessage `json:"stats"`
+	// Phase — initial — первоначальная загрузка, sync — последующая сверка
+	Phase            string  `json:"phase"`
+	LastSnapshotID   *string `json:"last_snapshot_id,omitempty"`
+	TargetSnapshotID *string `json:"target_snapshot_id,omitempty"`
+}
+
+type MarketplaceCatalogLinkDecision struct {
+	ExternalID string `json:"external_id"`
+	ProductID  UUID   `json:"product_id"`
+	// MatchSource — Решение человека приходит как manual
+	MatchSource          string  `json:"match_source"`
+	SnapshotID           *string `json:"snapshot_id,omitempty"`
+	ExternalRefUpdatedAt string  `json:"external_ref_updated_at"`
+}
+
+type MarketplaceCatalogLinkRequest struct {
+	ProductID UUID `json:"product_id"`
+	// ExternalID — Карточка площадки из окна разбора; вместе с ней обязательны snapshot_id и expected_external_ref_updated_at
+	ExternalID *string `json:"external_id,omitempty"`
+	// OfferID — Артикул продавца с экрана товаров; вторая форма решения, снимок при ней не нужен
+	OfferID    *string `json:"offer_id,omitempty"`
+	SnapshotID *string `json:"snapshot_id,omitempty"`
+	// ExpectedExternalRefUpdatedAt — Версия связи из разбора; расхождение отклоняется 409, чтобы не переписать чужое решение
+	ExpectedExternalRefUpdatedAt *string `json:"expected_external_ref_updated_at,omitempty"`
+}
+
 // MarketplaceComponentDataThrough — Последняя дата операций площадки, уже включённых в каждый компонент отчёта; отсутствующее или null-значение означает, что дата покрытия пока неизвестна.
 type MarketplaceComponentDataThrough struct {
 	// Finance — Финансовые операции площадки
@@ -8186,6 +8695,26 @@ type MarketplaceComponentFreshness struct {
 	AdsOrders *string `json:"ads_orders,omitempty"`
 	// Products — Карточки товаров
 	Products *string `json:"products,omitempty"`
+}
+
+type MarketplaceCostImportRequest struct {
+	Store UUID `json:"store"`
+	// File — XLSX, XLS, ODS, CSV или TSV; первая строка — заголовок с колонками артикула и себестоимости
+	File string `json:"file"`
+}
+
+type MarketplaceCostImportResult struct {
+	Applied int64                           `json:"applied"`
+	Failed  int64                           `json:"failed"`
+	Errors  []MarketplaceCostImportRowError `json:"errors"`
+}
+
+type MarketplaceCostImportRowError struct {
+	// Row — Номер строки в таблице, считая заголовок первой
+	Row   int64  `json:"row"`
+	Offer string `json:"offer"`
+	// Reason — Причина отказа теми же словами, что и у одиночной простановки себестоимости
+	Reason string `json:"reason"`
 }
 
 // MarketplaceEconBaseRow — Сырьё строки прайса в том виде в каком его отдаёт витрина ценообразования
@@ -8326,6 +8855,22 @@ type MarketplaceEconWbInput struct {
 	AdIn    float64 `json:"adIn"`
 	AdEx    float64 `json:"adEx"`
 	Tax     float64 `json:"tax"`
+}
+
+type MarketplaceFunnelDailyReference struct {
+	BuyoutFrom string   `json:"buyoutFrom"`
+	BuyoutTo   string   `json:"buyoutTo"`
+	Bought     float64  `json:"bought"`
+	Cancelled  float64  `json:"cancelled"`
+	Pending    float64  `json:"pending"`
+	From       string   `json:"from"`
+	To         string   `json:"to"`
+	Units      float64  `json:"units"`
+	Commission *float64 `json:"commission"`
+	Logistics  *float64 `json:"logistics"`
+	Other      *float64 `json:"other"`
+	Buyout     *float64 `json:"buyout"`
+	Missing    []string `json:"missing"`
 }
 
 type MarketplaceOzonCost struct {
@@ -8543,18 +9088,21 @@ type MarketplaceOzonFunnel struct {
 }
 
 type MarketplaceOzonFunnelDaily struct {
-	Platform string  `json:"platform"`
-	Source   *string `json:"source,omitempty"`
+	Platform      string  `json:"platform"`
+	Source        *string `json:"source,omitempty"`
+	EstimateModel *string `json:"estimateModel,omitempty"`
 	// SKU — Артикул за который построена матрица
 	SKU  *string `json:"sku,omitempty"`
 	From *string `json:"from,omitempty"`
 	To   *string `json:"to,omitempty"`
 	// Days — Четырнадцать дней от старого к новому
-	Days     []string                            `json:"days"`
-	Series   MarketplaceOzonFunnelDailySeries    `json:"series"`
-	Totals   *MarketplaceOzonFunnelDailyTotals   `json:"totals,omitempty"`
-	Card     *MarketplaceOzonFunnelDailyCard     `json:"card,omitempty"`
-	Articles []MarketplaceOzonFunnelDailyArticle `json:"articles,omitempty"`
+	Days        []string                                   `json:"days"`
+	Series      MarketplaceOzonFunnelDailySeries           `json:"series"`
+	Totals      *MarketplaceOzonFunnelDailyTotals          `json:"totals,omitempty"`
+	Card        *MarketplaceOzonFunnelDailyCard            `json:"card,omitempty"`
+	Articles    []MarketplaceOzonFunnelDailyArticle        `json:"articles,omitempty"`
+	References  map[string]MarketplaceFunnelDailyReference `json:"references,omitempty"`
+	DataThrough map[string]*string                         `json:"dataThrough,omitempty"`
 	// Note — Пустая строка, когда сказать нечего
 	Note *string `json:"note,omitempty"`
 	// Analytics — Присутствует и равно false, когда аналитика не подключена
@@ -8569,43 +9117,63 @@ type MarketplaceOzonFunnelDailyArticle struct {
 
 type MarketplaceOzonFunnelDailyCard struct {
 	// SKU — Артикул продавца
-	SKU   string `json:"sku"`
-	Name  string `json:"name"`
-	Photo string `json:"photo"`
-	// Stock — Доступный остаток
-	Stock *float64 `json:"stock,omitempty"`
-	Cost  *float64 `json:"cost,omitempty"`
-	// Commission — Последняя ставка комиссии в процентах
-	Commission *float64 `json:"commission,omitempty"`
+	SKU   string  `json:"sku"`
+	Name  string  `json:"name"`
+	Photo string  `json:"photo"`
+	Store *string `json:"store,omitempty"`
+	// Stock — Общий остаток, только когда известны оба источника
+	Stock            *float64 `json:"stock,omitempty"`
+	StockMarketplace *float64 `json:"stockMarketplace,omitempty"`
+	StockFbs         *float64 `json:"stockFbs,omitempty"`
+	OrdersToday      *float64 `json:"ordersToday,omitempty"`
+	Rating           *float64 `json:"rating,omitempty"`
+	Reviews          *float64 `json:"reviews,omitempty"`
+	Cost             *float64 `json:"cost,omitempty"`
+	// Commission — Взвешенная ставка предыдущей полной недели
+	Commission    *float64 `json:"commission,omitempty"`
+	Acquiring     *float64 `json:"acquiring,omitempty"`
+	Tax           *float64 `json:"tax,omitempty"`
+	LogisticsUnit *float64 `json:"logisticsUnit,omitempty"`
+	OtherUnit     *float64 `json:"otherUnit,omitempty"`
+	BuyoutAll     *float64 `json:"buyoutAll,omitempty"`
+	BuyoutRolling *float64 `json:"buyoutRolling,omitempty"`
 }
 
 // MarketplaceOzonFunnelDailySeries — Каждый ряд — значение на каждый день окна в том же порядке что days. Ряды без источника заполнены null целиком.
 type MarketplaceOzonFunnelDailySeries struct {
-	Traffic []*float64 `json:"traffic"`
-	Views   []*float64 `json:"views"`
-	Cv2     []*float64 `json:"cv2"`
-	Cart    []*float64 `json:"cart"`
-	Cv3     []*float64 `json:"cv3"`
-	Orders  []*float64 `json:"orders"`
-	// AdShare — Источника пока нет
-	AdShare    []json.RawMessage `json:"adShare"`
-	OrdersSum  []*float64        `json:"ordersSum"`
-	Buyouts    []*float64        `json:"buyouts"`
-	BuyoutsSum []*float64        `json:"buyoutsSum"`
-	AvgBuyer   []*float64        `json:"avgBuyer"`
-	Spp        []*float64        `json:"spp"`
-	// Position — Источника пока нет
-	Position    []json.RawMessage `json:"position"`
-	AdSpend     []*float64        `json:"adSpend"`
-	DrrOrders   []*float64        `json:"drrOrders"`
-	DrrSales    []*float64        `json:"drrSales"`
-	Margin      []*float64        `json:"margin"`
-	MarginSheet []*float64        `json:"marginSheet"`
-	// Umd — Источника пока нет
-	Umd            []json.RawMessage `json:"umd"`
-	Roi            []*float64        `json:"roi"`
-	MarginTot      []*float64        `json:"marginTot"`
-	MarginSheetTot []*float64        `json:"marginSheetTot"`
+	Traffic    []*float64 `json:"traffic"`
+	Views      []*float64 `json:"views"`
+	Cv2        []*float64 `json:"cv2"`
+	Cart       []*float64 `json:"cart"`
+	Cv3        []*float64 `json:"cv3"`
+	Orders     []*float64 `json:"orders"`
+	AdShare    []*float64 `json:"adShare"`
+	OrdersSum  []*float64 `json:"ordersSum"`
+	Buyouts    []*float64 `json:"buyouts"`
+	BuyoutsSum []*float64 `json:"buyoutsSum"`
+	// AvgBuyer — Средняя цена продавца в заказах без отмен; имя ключа сохранено для совместимости
+	AvgBuyer        []*float64 `json:"avgBuyer"`
+	Spp             []*float64 `json:"spp"`
+	Position        []*float64 `json:"position"`
+	AdSpend         []*float64 `json:"adSpend"`
+	DrrOrders       []*float64 `json:"drrOrders"`
+	DrrSales        []*float64 `json:"drrSales"`
+	Margin          []*float64 `json:"margin"`
+	MarginSheet     []*float64 `json:"marginSheet"`
+	BuyoutRate      []*float64 `json:"buyoutRate,omitempty"`
+	ExpectedUnits   []*float64 `json:"expectedUnits,omitempty"`
+	ExpectedRevenue []*float64 `json:"expectedRevenue,omitempty"`
+	CostUnit        []*float64 `json:"costUnit,omitempty"`
+	AcquiringRate   []*float64 `json:"acquiringRate,omitempty"`
+	CommissionRate  []*float64 `json:"commissionRate,omitempty"`
+	LogisticsUnit   []*float64 `json:"logisticsUnit,omitempty"`
+	OtherUnit       []*float64 `json:"otherUnit,omitempty"`
+	TaxRate         []*float64 `json:"taxRate,omitempty"`
+	Umd             []*float64 `json:"umd"`
+	Roi             []*float64 `json:"roi"`
+	RoiOrders       []*float64 `json:"roiOrders,omitempty"`
+	MarginTot       []*float64 `json:"marginTot"`
+	MarginSheetTot  []*float64 `json:"marginSheetTot"`
 }
 
 // MarketplaceOzonFunnelDailyTotals — Каждый итог — массив из одного значения, чтобы колонка ИТОГО рисовалась тем же кодом что и дни
@@ -8621,8 +9189,10 @@ type MarketplaceOzonFunnelDailyTotals struct {
 	AdSpend        []*float64 `json:"adSpend"`
 	Cv2            []*float64 `json:"cv2"`
 	Cv3            []*float64 `json:"cv3"`
-	// AvgBuyer — Появляется только когда есть по чему считать
+	// AvgBuyer — Средняя цена продавца в заказах без отмен
 	AvgBuyer []*float64 `json:"avgBuyer,omitempty"`
+	// Extra — поля сверх схемы; заполняется вызывающим кодом при необходимости.
+	Extra map[string][]*float64 `json:"-"`
 }
 
 type MarketplaceOzonFunnelRow struct {
@@ -9025,6 +9595,64 @@ type MarketplaceStore struct {
 	ArticleSizeSeparator *string `json:"article_size_separator,omitempty"`
 }
 
+type MarketplaceStoreAccounting struct {
+	StoreID                UUID   `json:"store_id"`
+	CompanyID              *UUID  `json:"company_id"`
+	CompanyName            string `json:"company_name"`
+	BusinessID             *UUID  `json:"business_id"`
+	MarketplaceContactID   *UUID  `json:"marketplace_contact_id"`
+	MarketplaceContactName string `json:"marketplace_contact_name"`
+	// StockCostingMethod — Метод оценки складского учёта юрлица; пусто — складской учёт не настроен
+	StockCostingMethod string `json:"stock_costing_method"`
+	// Policies — История версий настройки по возрастанию даты действия
+	Policies []MarketplaceStoreAccountingPolicy `json:"policies"`
+	// SetupReady — Подключение закрыто целиком; считается по blocking_reasons, а не по успешной проверке учётных данных
+	SetupReady      bool                                   `json:"setup_ready"`
+	PNLReady        bool                                   `json:"pnl_ready"`
+	CostRates       MarketplaceStoreAccountingCostCoverage `json:"cost_rates"`
+	BlockingReasons []string                               `json:"blocking_reasons"`
+}
+
+type MarketplaceStoreAccountingCostCoverage struct {
+	// State — Показывать себестоимость числом можно только при complete
+	State  string  `json:"state"`
+	Reason *string `json:"reason,omitempty"`
+	// Articles — Артикулы магазина, сопоставленные с товарами кабинета
+	Articles int64 `json:"articles"`
+	// ArticlesWithRate — Из них те, у кого есть действующая ставка больше нуля
+	ArticlesWithRate int64 `json:"articles_with_rate"`
+	// UncoveredArticles — Кого не хватает, поимённо; список короткий и не перечисляет весь каталог
+	UncoveredArticles []string `json:"uncovered_articles"`
+}
+
+type MarketplaceStoreAccountingInput struct {
+	CompanyID            UUID   `json:"company_id"`
+	MarketplaceContactID *UUID  `json:"marketplace_contact_id,omitempty"`
+	CostSource           string `json:"cost_source"`
+	// ValidFrom — Дата действия версии; первая может закрыть исторический период, следующая обязана быть в будущем
+	ValidFrom  string                        `json:"valid_from"`
+	NewCompany *MarketplaceStoreCompanyInput `json:"new_company,omitempty"`
+}
+
+type MarketplaceStoreAccountingPolicy struct {
+	ID        UUID `json:"id"`
+	CompanyID UUID `json:"company_id"`
+	// CostSource — Откуда берётся себестоимость на этот период
+	CostSource string `json:"cost_source"`
+	ValidFrom  string `json:"valid_from"`
+	// ValidTo — Пусто у действующей версии
+	ValidTo *string `json:"valid_to,omitempty"`
+}
+
+type MarketplaceStoreCompanyInput struct {
+	Name string `json:"name"`
+	// INN — Проверяется контрольной цифрой
+	INN               string  `json:"inn"`
+	KPP               *string `json:"kpp,omitempty"`
+	BusinessID        UUID    `json:"business_id"`
+	VATAccountingMode *string `json:"vat_accounting_mode,omitempty"`
+}
+
 // MarketplaceStoreInput — Тело создания управляемого подключения. Платформу задаёт маршрут, а external_id назначает MPTrack. Для Ozon нужны ozon_client_id и ozon_api_key, для Wildberries — wb_token, для Яндекс Маркета — ym_business_id и ym_api_key.
 type MarketplaceStoreInput struct {
 	Name string `json:"name"`
@@ -9303,22 +9931,25 @@ type MarketplaceWbFunnel struct {
 }
 
 type MarketplaceWbFunnelDaily struct {
-	Platform string  `json:"platform"`
-	Source   *string `json:"source,omitempty"`
+	Platform      string  `json:"platform"`
+	Source        *string `json:"source,omitempty"`
+	EstimateModel *string `json:"estimateModel,omitempty"`
 	// SKU — Артикул поставщика выбранной строки
 	SKU  *string `json:"sku,omitempty"`
 	From *string `json:"from,omitempty"`
 	To   *string `json:"to,omitempty"`
 	// Days — Окно 14 дней по опорный включительно
 	Days []string `json:"days"`
-	// Series — Ряды по дням окна той же длины, что days. Ключи traffic, views, cv2, cart, cv3, orders, adShare, ordersSum, buyouts, buyoutsSum, avgBuyer, spp, position, adSpend, drrOrders, drrSales, margin, umd, roi, marginTot. Заполнены только spp, avgBuyer, margin, roi и marginTot — воронка WB ещё не подключена и остальные ряды приходят пустыми.
+	// Series — Ряды по дням окна той же длины, что days. Ключи traffic, views, cv2, cart, cv3, orders, adShare, ordersSum, buyouts, buyoutsSum, avgBuyer, spp, position, adSpend, drrOrders, drrSales, buyoutRate, expectedUnits, expectedRevenue, costUnit, acquiringRate, commissionRate, logisticsUnit, otherUnit, taxRate, margin, marginSheet, umd, roi, roiOrders, marginTot и marginSheetTot. Отсутствующий источник даёт null, а не ложный ноль.
 	Series map[string][]*float64 `json:"series"`
 	// Totals — Итог по каждому ряду одним элементом массива
 	Totals map[string][]*float64         `json:"totals,omitempty"`
 	Card   *MarketplaceWbFunnelDailyCard `json:"card,omitempty"`
 	// Articles — До 300 артикулов по выручке за окно
-	Articles []MarketplaceWbFunnelDailyArticle `json:"articles,omitempty"`
-	Note     *string                           `json:"note,omitempty"`
+	Articles    []MarketplaceWbFunnelDailyArticle          `json:"articles,omitempty"`
+	References  map[string]MarketplaceFunnelDailyReference `json:"references,omitempty"`
+	DataThrough map[string]*string                         `json:"dataThrough,omitempty"`
+	Note        *string                                    `json:"note,omitempty"`
 	// Analytics — Присутствует и равно false, когда аналитическая база не подключена
 	Analytics *bool `json:"analytics,omitempty"`
 }
@@ -9333,11 +9964,25 @@ type MarketplaceWbFunnelDailyArticle struct {
 
 type MarketplaceWbFunnelDailyCard struct {
 	// SKU — Артикул поставщика
-	SKU   string `json:"sku"`
-	Name  string `json:"name"`
-	Photo string `json:"photo"`
+	SKU              string   `json:"sku"`
+	Name             string   `json:"name"`
+	Photo            string   `json:"photo"`
+	Store            *string  `json:"store,omitempty"`
+	Stock            *float64 `json:"stock,omitempty"`
+	StockMarketplace *float64 `json:"stockMarketplace,omitempty"`
+	StockFbs         *float64 `json:"stockFbs,omitempty"`
+	OrdersToday      *float64 `json:"ordersToday,omitempty"`
+	Rating           *float64 `json:"rating,omitempty"`
+	Reviews          *float64 `json:"reviews,omitempty"`
 	// Cost — Себестоимость из кабинета
-	Cost *int64 `json:"cost,omitempty"`
+	Cost          *float64 `json:"cost,omitempty"`
+	Commission    *float64 `json:"commission,omitempty"`
+	Acquiring     *float64 `json:"acquiring,omitempty"`
+	Tax           *float64 `json:"tax,omitempty"`
+	LogisticsUnit *float64 `json:"logisticsUnit,omitempty"`
+	OtherUnit     *float64 `json:"otherUnit,omitempty"`
+	BuyoutAll     *float64 `json:"buyoutAll,omitempty"`
+	BuyoutRolling *float64 `json:"buyoutRolling,omitempty"`
 }
 
 type MarketplaceWbFunnelRow struct {
