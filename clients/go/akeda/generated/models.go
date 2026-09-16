@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 afb961d977a73e9d08608b181de766b56ecaed0fafe87ba1f3bc4effe124eca7).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9bacaaf12d34af8eb76fbca3880fa019749c69ad8e994158633b8062acb7eeff).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -9,10 +9,21 @@ import "encoding/json"
 type AccountingBasis = string
 
 type Activity struct {
-	ID        UUID    `json:"id"`
-	Action    string  `json:"action"`
-	ActorName *string `json:"actor_name"`
-	CreatedAt string  `json:"created_at"`
+	ID UUID `json:"id"`
+	// Action — Готовый русский текст записи.
+	Action string `json:"action"`
+	// Kind — Вид записи об этапе задачи — `status_set`, `status_changed` или `status_deleted` (этап удалён, задача перенесена в `detail.to` или осталась без этапа). У остальных записей поле отсутствует; клиент, не знающий вида, показывает `action`.
+	Kind *string `json:"kind,omitempty"`
+	// Detail — Названия этапов записи об этапе; у удалённого этапа — сохранённое название.
+	Detail    *ActivityDetail `json:"detail,omitempty"`
+	ActorName *string         `json:"actor_name"`
+	CreatedAt string          `json:"created_at"`
+}
+
+// ActivityDetail — Названия этапов записи об этапе; у удалённого этапа — сохранённое название.
+type ActivityDetail struct {
+	From *string `json:"from,omitempty"`
+	To   *string `json:"to,omitempty"`
 }
 
 type ActivityList = []Activity
@@ -369,6 +380,8 @@ type CRMContactRef struct {
 	ID         UUID    `json:"id"`
 	Name       string  `json:"name"`
 	LegalName  *string `json:"legal_name,omitempty"`
+	INN        *string `json:"inn,omitempty"`
+	KPP        *string `json:"kpp,omitempty"`
 	EntityType string  `json:"entity_type"`
 	IsActive   bool    `json:"is_active"`
 	// Available — false, когда карточка недоступна текущему пользователю
@@ -419,8 +432,12 @@ type CRMCustomer struct {
 	Kind      string `json:"kind"`
 	Name      string `json:"name"`
 	LegalName string `json:"legal_name"`
-	Phone     string `json:"phone"`
-	Email     string `json:"email"`
+	// INN — ИНН без пробелов; пустая строка - не указан
+	INN string `json:"inn"`
+	// KPP — КПП в верхнем регистре; бывает только при ИНН из 10 цифр
+	KPP   string `json:"kpp"`
+	Phone string `json:"phone"`
+	Email string `json:"email"`
 	// Messengers — Ник или номер клиента по мессенджерам
 	Messengers    map[string]string `json:"messengers"`
 	Tags          []string          `json:"tags"`
@@ -442,8 +459,12 @@ type CRMCustomerDuplicate struct {
 	Kind      string `json:"kind"`
 	Name      string `json:"name"`
 	LegalName string `json:"legal_name"`
-	Phone     string `json:"phone"`
-	Email     string `json:"email"`
+	// INN — ИНН без пробелов; пустая строка - не указан
+	INN string `json:"inn"`
+	// KPP — КПП в верхнем регистре; бывает только при ИНН из 10 цифр
+	KPP   string `json:"kpp"`
+	Phone string `json:"phone"`
+	Email string `json:"email"`
 	// Messengers — Ник или номер клиента по мессенджерам
 	Messengers    map[string]string `json:"messengers"`
 	Tags          []string          `json:"tags"`
@@ -462,9 +483,13 @@ type CRMCustomerDuplicate struct {
 }
 
 type CRMCustomerInput struct {
-	Kind       *string           `json:"kind,omitempty"`
-	Name       string            `json:"name"`
-	LegalName  *string           `json:"legal_name,omitempty"`
+	Kind      *string `json:"kind,omitempty"`
+	Name      string  `json:"name"`
+	LegalName *string `json:"legal_name,omitempty"`
+	// INN — ИНН: 10 цифр у организации, 12 у предпринимателя, с верной контрольной цифрой
+	INN *string `json:"inn,omitempty"`
+	// KPP — КПП: девять знаков, только вместе с ИНН из 10 цифр
+	KPP        *string           `json:"kpp,omitempty"`
 	Phone      *string           `json:"phone,omitempty"`
 	Email      *string           `json:"email,omitempty"`
 	Messengers map[string]string `json:"messengers,omitempty"`
@@ -474,10 +499,19 @@ type CRMCustomerInput struct {
 	Note       *string           `json:"note,omitempty"`
 }
 
+type CRMCustomerLinkInput struct {
+	// Position — Должность человека в компании
+	Position *string `json:"position,omitempty"`
+}
+
 type CRMCustomerPatch struct {
-	Kind       *string           `json:"kind,omitempty"`
-	Name       *string           `json:"name,omitempty"`
-	LegalName  *string           `json:"legal_name,omitempty"`
+	Kind      *string `json:"kind,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	LegalName *string `json:"legal_name,omitempty"`
+	// INN — Пустая строка стирает ИНН
+	INN *string `json:"inn,omitempty"`
+	// KPP — Пустая строка стирает КПП
+	KPP        *string           `json:"kpp,omitempty"`
 	Phone      *string           `json:"phone,omitempty"`
 	Email      *string           `json:"email,omitempty"`
 	Messengers map[string]string `json:"messengers,omitempty"`
@@ -486,6 +520,13 @@ type CRMCustomerPatch struct {
 	OwnerID    *int64            `json:"owner_id,omitempty"`
 	Note       *string           `json:"note,omitempty"`
 	Archived   *bool             `json:"archived,omitempty"`
+}
+
+type CRMCustomerRelations struct {
+	// Companies — Компании, в которых работает человек
+	Companies []CRMRelatedCustomer `json:"companies"`
+	// Contacts — Контакты компании
+	Contacts []CRMRelatedCustomer `json:"contacts"`
 }
 
 type CRMDeal struct {
@@ -1139,6 +1180,18 @@ type CRMQualifyLeadInput struct {
 	Reason string `json:"reason"`
 	// ReasonID — Причина из справочника вида lead - по ней строится аналитика отказов
 	ReasonID *string `json:"reason_id,omitempty"`
+}
+
+type CRMRelatedCustomer struct {
+	ID        UUID   `json:"id"`
+	Kind      string `json:"kind"`
+	Name      string `json:"name"`
+	LegalName string `json:"legal_name"`
+	INN       string `json:"inn"`
+	Phone     string `json:"phone"`
+	Email     string `json:"email"`
+	// Position — Должность человека в компании
+	Position string `json:"position"`
 }
 
 type CRMReopenDealInput struct {
@@ -2064,11 +2117,11 @@ type ChatMobileDeviceRegistration struct {
 	DeviceName    *string `json:"device_name,omitempty"`
 	AppVersion    *string `json:"app_version,omitempty"`
 	SystemVersion *string `json:"system_version,omitempty"`
-	// Preview — Показывать текст сообщения в уведомлении. Поле отсутствует — уведомление полное.
+	// Preview — Показывать содержание сообщения в уведомлении. Выключено — уведомление не несёт ни текста, ни отправителя: ни имени, ни фотографии, ни названия группы, поэтому баннер с человеком на iPhone не рисуется. Счётчик непрочитанных и переход в чат остаются. Поле отсутствует — уведомление полное.
 	Preview *bool `json:"preview,omitempty"`
 	// Sound — Звук уведомления. Поле отсутствует — со звуком.
 	Sound *bool `json:"sound,omitempty"`
-	// PushPreview — Совместимый псевдоним preview. Если любое из двух полей false, текст скрыт.
+	// PushPreview — Совместимый псевдоним preview. Если любое из двух полей false, содержание скрыто.
 	PushPreview *bool `json:"push_preview,omitempty"`
 	// PushSound — Совместимый псевдоним sound. Если любое из двух полей false, звук выключен.
 	PushSound *bool `json:"push_sound,omitempty"`
@@ -7891,6 +7944,12 @@ type FinanceRegisterReconciliation struct {
 	InputVATMatch *bool `json:"input_vat_match,omitempty"`
 	// InputVATUnexplained — Источники с отрицательным остатком входного НДС, который не объяснён возвратом поставщику после вычета.
 	InputVATUnexplained []FinanceRegisterReconciliationInputVatUnexplainedItem `json:"input_vat_unexplained,omitempty"`
+	// Stock — Сверка стоимости склада с книгой по счетам запасов.
+	Stock []FinanceRegisterReconciliationStockItem `json:"stock,omitempty"`
+	// StockTransferPending — Остаток запасов, который после смены правила счёта лежит в книге на старом счёте и ещё не перенесён документом «Перенос остатка» (ERP-1146). Разрез — пара счетов.
+	StockTransferPending []FinanceRegisterReconciliationStockTransferPendingItem `json:"stock_transfer_pending,omitempty"`
+	// StockTransferHint — Пояснение к неперенесённому остатку для человека; пусто, если переносить нечего.
+	StockTransferHint *string `json:"stock_transfer_hint,omitempty"`
 }
 
 type FinanceRegisterReconciliationInputVatUnexplainedItem struct {
@@ -7899,6 +7958,20 @@ type FinanceRegisterReconciliationInputVatUnexplainedItem struct {
 	SourceDate   string `json:"source_date"`
 	Company      string `json:"company"`
 	Amount       string `json:"amount"`
+}
+
+type FinanceRegisterReconciliationStockItem struct {
+	// TransferPendingOut — Неперенесённый остаток, который уйдёт с этого счёта документом «Перенос остатка» (ERP-1146); нет поля — переносить нечего.
+	TransferPendingOut *string `json:"transfer_pending_out,omitempty"`
+	// TransferPendingIn — Неперенесённый остаток, который придёт на этот счёт документом «Перенос остатка» (ERP-1146); нет поля — переносить нечего.
+	TransferPendingIn *string `json:"transfer_pending_in,omitempty"`
+}
+
+type FinanceRegisterReconciliationStockTransferPendingItem struct {
+	FromCode   string `json:"from_code"`
+	ToCode     string `json:"to_code"`
+	Amount     string `json:"amount"`
+	Warehouses int64  `json:"warehouses"`
 }
 
 type FinanceRegisterRepairFailure struct {
@@ -8937,6 +9010,374 @@ type LinkCreate struct {
 }
 
 type LinkList = []Link
+
+// MailAccount — Почтовый ящик кабинета. Пароль подключения не сериализуется никогда: наружу уходит только признак has_credentials.
+type MailAccount struct {
+	ID UUID `json:"id"`
+	// OwnerUserID — Сотрудник, которому принадлежит ящик
+	OwnerUserID int64 `json:"owner_user_id"`
+	// Shared — Общий ящик отдела виден всем, у кого есть право на модуль; личный — владельцу и тому, кто видит все записи
+	Shared         bool           `json:"shared"`
+	Email          string         `json:"email"`
+	DisplayName    string         `json:"display_name"`
+	ImapHost       string         `json:"imap_host"`
+	ImapPort       int64          `json:"imap_port"`
+	ImapEncryption MailEncryption `json:"imap_encryption"`
+	SmtpHost       string         `json:"smtp_host"`
+	SmtpPort       int64          `json:"smtp_port"`
+	SmtpEncryption MailEncryption `json:"smtp_encryption"`
+	// Username — Логин подключения; по умолчанию равен адресу
+	Username string `json:"username"`
+	// HasCredentials — Пароль приложения сохранён. Самого пароля не отдаёт ни одна операция
+	HasCredentials bool              `json:"has_credentials"`
+	Status         MailAccountStatus `json:"status"`
+	SyncStatus     MailSyncStatus    `json:"sync_status"`
+	// SyncSinceDays — Глубина первичного импорта в днях; ноль означает весь ящик
+	SyncSinceDays int64 `json:"sync_since_days"`
+	// Signature — Подпись, подставляемая в исходящие письма
+	Signature  string  `json:"signature"`
+	LastSyncAt *string `json:"last_sync_at"`
+	// LastError — Последняя ошибка подключения для человека
+	LastError string `json:"last_error"`
+	// LastErrorCode — Машинный код последней ошибки подключения, например mail.account.credentials_rejected; пусто, когда ошибки нет
+	LastErrorCode string `json:"last_error_code"`
+	UnreadCount   int64  `json:"unread_count"`
+	CreatedAt     string `json:"created_at"`
+	UpdatedAt     string `json:"updated_at"`
+}
+
+// MailAccountInput — Подключение и изменение ящика. Одна форма на обе операции: при подключении обязательны email, imap_host, smtp_host и пароль, при изменении непереданное поле сохраняет прежнее значение, а пустой пароль оставляет сохранённый секрет нетронутым.
+type MailAccountInput struct {
+	Email *string `json:"email,omitempty"`
+	// DisplayName — Без значения берётся адрес
+	DisplayName *string `json:"display_name,omitempty"`
+	// Shared — Сделать ящик общим ящиком отдела
+	Shared *bool `json:"shared,omitempty"`
+	// ImapHost — Схема, завершающая точка и порт внутри значения снимаются
+	ImapHost *string `json:"imap_host,omitempty"`
+	// ImapPort — Без значения — 993 для tls и 143 для starttls
+	ImapPort       *int64          `json:"imap_port,omitempty"`
+	ImapEncryption *MailEncryption `json:"imap_encryption,omitempty"`
+	SmtpHost       *string         `json:"smtp_host,omitempty"`
+	// SmtpPort — Без значения — 465 для tls и 587 для starttls
+	SmtpPort       *int64          `json:"smtp_port,omitempty"`
+	SmtpEncryption *MailEncryption `json:"smtp_encryption,omitempty"`
+	// Username — Без значения берётся адрес почты
+	Username *string `json:"username,omitempty"`
+	// Password — Пароль приложения. Принимается, но не возвращается никогда; о его наличии говорит has_credentials
+	Password *string `json:"password,omitempty"`
+	// AppPassword — Синоним password: у Яндекса, VK и Mail.ru это поле называется «пароль приложения». Принимается, но не возвращается никогда
+	AppPassword *string `json:"app_password,omitempty"`
+	// SyncSinceDays — Глубина первичного импорта в днях; ноль означает весь ящик
+	SyncSinceDays *int64 `json:"sync_since_days,omitempty"`
+	// Signature — Подпись исходящих писем
+	Signature *string `json:"signature,omitempty"`
+	// Status — Ящик можно только включить или выключить; состояние error ставит синхронизация
+	Status *string `json:"status,omitempty"`
+}
+
+type MailAccountStatus = string
+
+// MailAttachment — Вложение письма. Ключ объектного хранилища наружу не отдаётся: знание ключа — половина пути к чужому файлу.
+type MailAttachment struct {
+	ID          UUID   `json:"id"`
+	MessageID   UUID   `json:"message_id"`
+	Filename    string `json:"filename"`
+	ContentType string `json:"content_type"`
+	SizeBytes   int64  `json:"size_bytes"`
+	// ContentID — Заполняется у картинок, вставленных в тело письма через cid:
+	ContentID *string `json:"content_id,omitempty"`
+	// IsInline — Встроенная в тело картинка, а не документ
+	IsInline   bool           `json:"is_inline"`
+	ScanStatus MailScanStatus `json:"scan_status"`
+	CreatedAt  string         `json:"created_at"`
+}
+
+// MailComposeInput — Отправка письма или сохранение черновика. Поле in_reply_to_id указывает на письмо в нашей базе, а не на Message-ID: заголовки ответа собираем мы.
+type MailComposeInput struct {
+	Subject *string `json:"subject,omitempty"`
+	// To — Одна строка может содержать несколько адресов через запятую
+	To       []string `json:"to,omitempty"`
+	Cc       []string `json:"cc,omitempty"`
+	Bcc      []string `json:"bcc,omitempty"`
+	BodyText *string  `json:"body_text,omitempty"`
+	BodyHTML *string  `json:"body_html,omitempty"`
+	// InReplyToID — Письмо, на которое отвечаем
+	InReplyToID *UUID `json:"in_reply_to_id,omitempty"`
+	// ForwardOfID — Письмо, которое пересылаем
+	ForwardOfID *UUID `json:"forward_of_id,omitempty"`
+	// UploadIds — Идентификаторы заранее загруженных файлов
+	UploadIds []UUID `json:"upload_ids,omitempty"`
+	// SaveAsDraft — Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо уходит получателю и отозвать его нельзя
+	SaveAsDraft *bool `json:"save_as_draft,omitempty"`
+}
+
+// MailDiscoveredSettings — Предложение настроек для адреса. Поле source называет происхождение: catalog — справочник провайдеров, autoconfig и autodiscover — настройки самого домена, srv и mx — записи DNS, probe — угаданный и проверенный соединением сервер.
+type MailDiscoveredSettings struct {
+	Email          *string `json:"email,omitempty"`
+	Domain         *string `json:"domain,omitempty"`
+	Source         *string `json:"source,omitempty"`
+	ProviderKey    *string `json:"provider_key,omitempty"`
+	ProviderLabel  *string `json:"provider_label,omitempty"`
+	ImapHost       *string `json:"imap_host,omitempty"`
+	ImapPort       *int64  `json:"imap_port,omitempty"`
+	ImapEncryption *string `json:"imap_encryption,omitempty"`
+	SmtpHost       *string `json:"smtp_host,omitempty"`
+	SmtpPort       *int64  `json:"smtp_port,omitempty"`
+	SmtpEncryption *string `json:"smtp_encryption,omitempty"`
+	Username       *string `json:"username,omitempty"`
+	AuthMethod     *string `json:"auth_method,omitempty"`
+	OauthProvider  *string `json:"oauth_provider,omitempty"`
+	PasswordHint   *string `json:"password_hint,omitempty"`
+	HelpURL        *string `json:"help_url,omitempty"`
+	// Verified — Координаты проверены соединением, а не только прочитаны
+	Verified *bool `json:"verified,omitempty"`
+}
+
+type MailEncryption = string
+
+// MailFolder — Папка ящика. Координаты синхронизации IMAP (UIDVALIDITY, UIDNEXT, последний прочитанный UID) наружу не отдаются.
+type MailFolder struct {
+	ID        UUID `json:"id"`
+	AccountID UUID `json:"account_id"`
+	// ExternalID — Имя папки на почтовом сервере
+	ExternalID string         `json:"external_id"`
+	Name       string         `json:"name"`
+	Role       MailFolderRole `json:"role"`
+	ParentID   *UUID          `json:"parent_id"`
+	// Delimiter — Разделитель иерархии, который назвал сервер
+	Delimiter   string `json:"delimiter"`
+	TotalCount  int64  `json:"total_count"`
+	UnreadCount int64  `json:"unread_count"`
+	// SortOrder — Вес папки в привычном порядке системных папок
+	SortOrder  int64  `json:"sort_order"`
+	Subscribed bool   `json:"subscribed"`
+	CreatedAt  string `json:"created_at"`
+	UpdatedAt  string `json:"updated_at"`
+}
+
+// MailFolderInput — Создание и переименование пользовательской папки
+type MailFolderInput struct {
+	// Name — Косые черты запрещены: разделитель иерархии задаёт сервер
+	Name string `json:"name"`
+	// ParentID — Родительская папка
+	ParentID *UUID `json:"parent_id,omitempty"`
+}
+
+type MailFolderRole = string
+
+// MailMessage — Письмо в копии кабинета. Внутренние координаты IMAP (UID и UIDVALIDITY) наружу не отдаются. Тело в HTML хранится таким, каким его прислал отправитель: обезвреживание живёт на отдаче, а не в хранимой копии.
+type MailMessage struct {
+	ID        UUID `json:"id"`
+	AccountID UUID `json:"account_id"`
+	FolderID  UUID `json:"folder_id"`
+	ThreadID  UUID `json:"thread_id"`
+	// MessageRef — Message-ID без угловых скобок; письму без него присваивается наш
+	MessageRef string `json:"message_ref"`
+	// InReplyTo — Заголовок In-Reply-To
+	InReplyTo *string `json:"in_reply_to,omitempty"`
+	// References — Заголовок References целиком
+	References  *string `json:"references,omitempty"`
+	Subject     string  `json:"subject"`
+	FromAddress string  `json:"from_address"`
+	FromName    string  `json:"from_name"`
+	// Addresses — Конверт письма целиком
+	Addresses []MailMessageAddress `json:"addresses,omitempty"`
+	// Snippet — Короткий пересказ письма для списка
+	Snippet        string          `json:"snippet"`
+	BodyText       *string         `json:"body_text,omitempty"`
+	BodyHTML       *string         `json:"body_html,omitempty"`
+	SizeBytes      int64           `json:"size_bytes"`
+	Direction      string          `json:"direction"`
+	IsRead         bool            `json:"is_read"`
+	IsFlagged      bool            `json:"is_flagged"`
+	IsAnswered     bool            `json:"is_answered"`
+	IsDraft        bool            `json:"is_draft"`
+	HasAttachments bool            `json:"has_attachments"`
+	SpamVerdict    MailSpamVerdict `json:"spam_verdict"`
+	// SpamSource — Кто вынес вердикт. Решение человека сильнее флага сервера и правил
+	SpamSource  *string          `json:"spam_source,omitempty"`
+	SpamReason  *string          `json:"spam_reason,omitempty"`
+	SentAt      *string          `json:"sent_at"`
+	ReceivedAt  string           `json:"received_at"`
+	CreatedAt   string           `json:"created_at"`
+	UpdatedAt   string           `json:"updated_at"`
+	Attachments []MailAttachment `json:"attachments,omitempty"`
+}
+
+// MailMessageAddress — Один адрес в конверте письма
+type MailMessageAddress struct {
+	// Kind — Вид адреса: from, to, cc, bcc, reply_to. Значение list_id несёт идентификатор рассылки, а не адрес человека
+	Kind    string `json:"kind"`
+	Address string `json:"address"`
+	// Name — Имя отправителя или получателя, если оно было в конверте
+	Name string `json:"name"`
+	// Position — Порядок адреса в своей группе
+	Position int64 `json:"position"`
+}
+
+// MailMessagePage — Страница писем. Общее число нужно, чтобы решить, стоит ли листать дальше.
+type MailMessagePage struct {
+	Items   []MailMessage `json:"items"`
+	Total   int64         `json:"total"`
+	Limit   int64         `json:"limit"`
+	Offset  int64         `json:"offset"`
+	HasMore bool          `json:"has_more"`
+}
+
+// MailOutbound — Исходящее письмо в очереди отправки. Постоянный отказ SMTP (код 5xx) не повторяется: повторять отклонённое навсегда письмо вредно для репутации отправителя.
+type MailOutbound struct {
+	ID            UUID    `json:"id"`
+	AccountID     UUID    `json:"account_id"`
+	MessageID     UUID    `json:"message_id"`
+	Status        string  `json:"status"`
+	Attempts      int64   `json:"attempts"`
+	MaxAttempts   int64   `json:"max_attempts"`
+	NextAttemptAt *string `json:"next_attempt_at"`
+	LastError     string  `json:"last_error"`
+	LastErrorCode string  `json:"last_error_code"`
+	SentAt        *string `json:"sent_at"`
+	// CreatedBy — Сотрудник, отправивший письмо
+	CreatedBy int64  `json:"created_by"`
+	CreatedAt string `json:"created_at"`
+}
+
+// MailOutboundPage — Страница очереди отправки
+type MailOutboundPage struct {
+	Items   []MailOutbound `json:"items"`
+	Total   int64          `json:"total"`
+	Limit   int64          `json:"limit"`
+	Offset  int64          `json:"offset"`
+	HasMore bool           `json:"has_more"`
+}
+
+// MailOutboundUpload — Файл, загруженный до отправки письма. Ключ объектного хранилища наружу не отдаётся.
+type MailOutboundUpload struct {
+	ID          UUID           `json:"id"`
+	AccountID   UUID           `json:"account_id"`
+	Filename    string         `json:"filename"`
+	ContentType string         `json:"content_type"`
+	SizeBytes   int64          `json:"size_bytes"`
+	ScanStatus  MailScanStatus `json:"scan_status"`
+	Status      string         `json:"status"`
+	ExpiresAt   string         `json:"expires_at"`
+	CreatedAt   string         `json:"created_at"`
+}
+
+// MailProvider — Подсказка настроек для формы подключения ящика
+type MailProvider struct {
+	// Key — Машинный ключ провайдера
+	Key string `json:"key"`
+	// Label — Название провайдера для человека
+	Label string `json:"label"`
+	// Domains — Домены адресов, по которым подсказка подбирается
+	Domains        []string       `json:"domains"`
+	ImapHost       string         `json:"imap_host"`
+	ImapPort       int64          `json:"imap_port"`
+	ImapEncryption MailEncryption `json:"imap_encryption"`
+	SmtpHost       string         `json:"smtp_host"`
+	SmtpPort       int64          `json:"smtp_port"`
+	SmtpEncryption MailEncryption `json:"smtp_encryption"`
+	// PasswordHint — Какой именно пароль нужен: у перечисленных провайдеров обычный пароль от аккаунта не подходит
+	PasswordHint string `json:"password_hint"`
+	// HelpURL — Ссылка на справку провайдера; у части провайдеров пуста
+	HelpURL string `json:"help_url"`
+}
+
+// MailRule — Правило разбора входящей почты
+type MailRule struct {
+	ID        UUID   `json:"id"`
+	AccountID UUID   `json:"account_id"`
+	Name      string `json:"name"`
+	Enabled   bool   `json:"enabled"`
+	// SortOrder — Порядок применения правил ящика
+	SortOrder int64 `json:"sort_order"`
+	// Match — Правило применяется при всех условиях или при любом из них
+	Match      string              `json:"match"`
+	Conditions []MailRuleCondition `json:"conditions"`
+	Actions    []MailRuleAction    `json:"actions"`
+	// StopProcessing — Прекратить разбор письма после этого правила
+	StopProcessing bool `json:"stop_processing"`
+	// AppliedCount — Сколько писем правило разобрало: единственный способ увидеть, что правило молчит из-за опечатки
+	AppliedCount  int64   `json:"applied_count"`
+	LastAppliedAt *string `json:"last_applied_at"`
+	CreatedAt     string  `json:"created_at"`
+	UpdatedAt     string  `json:"updated_at"`
+}
+
+// MailRuleAction — Одно действие правила
+type MailRuleAction struct {
+	Type string `json:"type"`
+	// FolderID — Заполняется только для переноса в папку; остальные действия папку не принимают
+	FolderID *UUID `json:"folder_id,omitempty"`
+}
+
+// MailRuleCondition — Одно условие правила. Набор полей и операторов закрытый: правило исполняется на сервере над чужой почтой.
+type MailRuleCondition struct {
+	Field string `json:"field"`
+	// Op — Сравнение по домену доступно только адресным полям; поле has_attachment проверяется как is_true или is_false.
+	Op string `json:"op"`
+	// Value — Обязательно для всех полей, кроме has_attachment
+	Value *string `json:"value,omitempty"`
+}
+
+// MailRuleInput — Создание и изменение правила; условия и действия передаются целиком
+type MailRuleInput struct {
+	Name      string `json:"name"`
+	Enabled   *bool  `json:"enabled,omitempty"`
+	SortOrder *int64 `json:"sort_order,omitempty"`
+	// Match — Без значения — all
+	Match          *string             `json:"match,omitempty"`
+	Conditions     []MailRuleCondition `json:"conditions"`
+	Actions        []MailRuleAction    `json:"actions"`
+	StopProcessing *bool               `json:"stop_processing,omitempty"`
+}
+
+// MailRuleOutcome — Что правило сделало с письмом
+type MailRuleOutcome struct {
+	RuleID        UUID    `json:"rule_id"`
+	RuleName      string  `json:"rule_name"`
+	MessageID     UUID    `json:"message_id"`
+	Subject       string  `json:"subject"`
+	MovedToFolder *UUID   `json:"moved_to_folder,omitempty"`
+	MarkedRead    *bool   `json:"marked_read,omitempty"`
+	Flagged       *bool   `json:"flagged,omitempty"`
+	SpamVerdict   *string `json:"spam_verdict,omitempty"`
+}
+
+type MailScanStatus = string
+
+type MailSpamVerdict = string
+
+// MailSyncReport — Итог одного прохода по ящику: «ничего не изменилось» — тоже ответ
+type MailSyncReport struct {
+	AccountID UUID `json:"account_id"`
+	// Folders — Сколько папок прочитано
+	Folders     int64 `json:"folders"`
+	NewMessages int64 `json:"new_messages"`
+	// RulesApplied — Сколько писем разобрали правила
+	RulesApplied int64  `json:"rules_applied"`
+	FinishedAt   string `json:"finished_at"`
+	// FullReloaded — Папки, перечитанные целиком после смены UIDVALIDITY на сервере
+	FullReloaded []string `json:"full_reloaded,omitempty"`
+}
+
+type MailSyncStatus = string
+
+// MailThread — Переписка: письма, связанные ответами. Склейка идёт по корню цепочки References, а не по теме.
+type MailThread struct {
+	ID        UUID   `json:"id"`
+	AccountID UUID   `json:"account_id"`
+	Subject   string `json:"subject"`
+	// RootRef — Корневой Message-ID ветки
+	RootRef        string               `json:"root_ref"`
+	MessageCount   int64                `json:"message_count"`
+	UnreadCount    int64                `json:"unread_count"`
+	HasAttachments bool                 `json:"has_attachments"`
+	Participants   []MailMessageAddress `json:"participants"`
+	LastMessageAt  string               `json:"last_message_at"`
+	Messages       []MailMessage        `json:"messages,omitempty"`
+}
 
 type ManagedChecklistItem struct {
 	Text string `json:"text"`
@@ -12593,6 +13034,37 @@ type StatusUpdatePatch struct {
 	IsArchived *bool           `json:"is_archived,omitempty"`
 }
 
+// StockAccountTransferCreate — Тело черновика переноса остатка; строки подбирает сервер.
+type StockAccountTransferCreate struct {
+	// Date — Пусто или отсутствует означает рабочую дату кабинета
+	Date       *string `json:"date,omitempty"`
+	BusinessID UUID    `json:"business_id"`
+	Comment    *string `json:"comment,omitempty"`
+}
+
+// StockAccountTransferLine — Строка переноса остатка — стоимость склада и товара, которая лежит в книге на счёте `from_*`, хотя по правилу на дату принадлежит счёту `to_*`.
+type StockAccountTransferLine struct {
+	BusinessID    UUID   `json:"business_id"`
+	CompanyID     *UUID  `json:"company_id,omitempty"`
+	WarehouseID   UUID   `json:"warehouse_id"`
+	WarehouseName string `json:"warehouse_name"`
+	ProductID     UUID   `json:"product_id"`
+	ProductName   string `json:"product_name"`
+	FromAccount   UUID   `json:"from_account"`
+	// FromCode — Код старого счёта, например 41
+	FromCode  string `json:"from_code"`
+	ToAccount UUID   `json:"to_account"`
+	// ToCode — Код счёта по действующему правилу, например 10
+	ToCode string `json:"to_code"`
+	// Amount — Сумма переноса, десятичная строка
+	Amount string `json:"amount"`
+}
+
+type StockAccountTransferProposal struct {
+	Count   int64                      `json:"count"`
+	Results []StockAccountTransferLine `json:"results"`
+}
+
 type StockBatch struct {
 	ID UUID `json:"id"`
 	// BusinessID — Бизнес партии — учётная единица, которой принадлежит товар
@@ -13043,6 +13515,15 @@ type StockInventoryRefreshInput struct {
 }
 
 type StockInventoryWorkflow = string
+
+// StockOpeningBalanceCreate — Тело черновика ввода начальных остатков товара; вид задаёт ручка.
+type StockOpeningBalanceCreate struct {
+	// Date — Пусто или отсутствует означает рабочую дату кабинета
+	Date       *string              `json:"date,omitempty"`
+	EntityRefs StockDocumentRefs    `json:"entity_refs"`
+	Payload    StockDocumentPayload `json:"payload"`
+	Comment    *string              `json:"comment,omitempty"`
+}
 
 type StockProductUOM struct {
 	ID          UUID                 `json:"id"`
@@ -14140,4 +14621,67 @@ type FinanceListDividendPoliciesResponse struct {
 type FinanceGetProjectBudgetHistoryResponse struct {
 	Count   int64                  `json:"count"`
 	Results []FinanceProjectBudget `json:"results"`
+}
+
+type MailListAccountsResponse struct {
+	Items []MailAccount `json:"items"`
+}
+
+type MailListFoldersResponse struct {
+	Items []MailFolder `json:"items"`
+}
+
+type MailComposeMessageResponse struct {
+	Message  MailMessage  `json:"message"`
+	Outbound MailOutbound `json:"outbound"`
+}
+
+type MailListRulesResponse struct {
+	Items []MailRule `json:"items"`
+}
+
+type MailApplyRulesRequest struct {
+	// FolderID — Папка разбора; без неё разбираются «Входящие»
+	FolderID *UUID `json:"folder_id,omitempty"`
+	// Limit — Сколько писем взять в разбор; ноль и меньше означает умолчание
+	Limit *int64 `json:"limit,omitempty"`
+}
+
+type MailApplyRulesResponse struct {
+	Items []MailRuleOutcome `json:"items"`
+	// Applied — Сколько писем правила разобрали
+	Applied int64 `json:"applied"`
+}
+
+type MailAttachStoredFileRequest struct {
+	// FileID — Файл в хранилище кабинета
+	FileID string `json:"file_id"`
+}
+
+type MailListMessageAttachmentsResponse struct {
+	Items []MailAttachment `json:"items"`
+}
+
+type MailFlagMessageRequest struct {
+	// Flagged — Значение false снимает отметку важности
+	Flagged *bool `json:"flagged,omitempty"`
+}
+
+type MailMoveMessageRequest struct {
+	FolderID UUID `json:"folder_id"`
+}
+
+type MailCompleteGoogleOAuthRequest struct {
+	State string `json:"state"`
+	Code  string `json:"code"`
+}
+
+type MailStartGoogleOAuthResponse struct {
+	AuthURL  *string `json:"auth_url,omitempty"`
+	Provider *string `json:"provider,omitempty"`
+}
+
+type MailListProvidersResponse struct {
+	Items      []MailProvider `json:"items"`
+	Suggestion *MailProvider  `json:"suggestion,omitempty"`
 }

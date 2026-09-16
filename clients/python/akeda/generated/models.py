@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 afb961d977a73e9d08608b181de766b56ecaed0fafe87ba1f3bc4effe124eca7).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9bacaaf12d34af8eb76fbca3880fa019749c69ad8e994158633b8062acb7eeff).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Literal, Optional, TypedDict, Union
 __all__ = [
     "AccountingBasis",
     "Activity",
+    "ActivityDetail",
     "ActivityList",
     "AppFinanceClassificationSuggestionAccepted",
     "AppFinanceClassificationSuggestionInput",
@@ -56,7 +57,9 @@ __all__ = [
     "CRMCustomer",
     "CRMCustomerDuplicate",
     "CRMCustomerInput",
+    "CRMCustomerLinkInput",
     "CRMCustomerPatch",
+    "CRMCustomerRelations",
     "CRMDeal",
     "CRMDealBoard",
     "CRMDealBoardStage",
@@ -117,6 +120,7 @@ __all__ = [
     "CRMPipelineOverview",
     "CRMPipelinePatch",
     "CRMQualifyLeadInput",
+    "CRMRelatedCustomer",
     "CRMReopenDealInput",
     "CRMReorderInput",
     "CRMRequiredField",
@@ -804,6 +808,8 @@ __all__ = [
     "FinanceRegisterAccountCheck",
     "FinanceRegisterReconciliation",
     "FinanceRegisterReconciliationInputVatUnexplainedItem",
+    "FinanceRegisterReconciliationStockItem",
+    "FinanceRegisterReconciliationStockTransferPendingItem",
     "FinanceRegisterRepairFailure",
     "FinanceRegisterRepairRequest",
     "FinanceRegisterRepairResult",
@@ -901,6 +907,33 @@ __all__ = [
     "Link",
     "LinkCreate",
     "LinkList",
+    "MailAccount",
+    "MailAccountInput",
+    "MailAccountStatus",
+    "MailAttachment",
+    "MailComposeInput",
+    "MailDiscoveredSettings",
+    "MailEncryption",
+    "MailFolder",
+    "MailFolderInput",
+    "MailFolderRole",
+    "MailMessage",
+    "MailMessageAddress",
+    "MailMessagePage",
+    "MailOutbound",
+    "MailOutboundPage",
+    "MailOutboundUpload",
+    "MailProvider",
+    "MailRule",
+    "MailRuleAction",
+    "MailRuleCondition",
+    "MailRuleInput",
+    "MailRuleOutcome",
+    "MailScanStatus",
+    "MailSpamVerdict",
+    "MailSyncReport",
+    "MailSyncStatus",
+    "MailThread",
     "ManagedChecklistItem",
     "ManagedChecklistPatch",
     "MarketplaceCatalogCandidate",
@@ -1209,6 +1242,9 @@ __all__ = [
     "StatusUpdateCreate",
     "StatusUpdatePage",
     "StatusUpdatePatch",
+    "StockAccountTransferCreate",
+    "StockAccountTransferLine",
+    "StockAccountTransferProposal",
     "StockBatch",
     "StockBatchPage",
     "StockBusinessRef",
@@ -1261,6 +1297,7 @@ __all__ = [
     "StockInventoryFinishInput",
     "StockInventoryRefreshInput",
     "StockInventoryWorkflow",
+    "StockOpeningBalanceCreate",
     "StockProductUOM",
     "StockProductUOMInput",
     "StockProductUOMPage",
@@ -1364,15 +1401,37 @@ __all__ = [
     "FinanceListDividendOwnersResponseResultsItem",
     "FinanceListDividendPoliciesResponse",
     "FinanceGetProjectBudgetHistoryResponse",
+    "MailListAccountsResponse",
+    "MailListFoldersResponse",
+    "MailComposeMessageResponse",
+    "MailListRulesResponse",
+    "MailApplyRulesRequest",
+    "MailApplyRulesResponse",
+    "MailAttachStoredFileRequest",
+    "MailListMessageAttachmentsResponse",
+    "MailFlagMessageRequest",
+    "MailMoveMessageRequest",
+    "MailCompleteGoogleOAuthRequest",
+    "MailStartGoogleOAuthResponse",
+    "MailListProvidersResponse",
 ]
 
 AccountingBasis = Literal['cash', 'accrual', 'mixed']
 
-class Activity(TypedDict):
+class _ActivityRequired(TypedDict):
     id: "UUID"
+    #: Готовый русский текст записи.
     action: str
     actor_name: Optional[str]
     created_at: str
+
+class Activity(_ActivityRequired, total=False):
+    #: Вид записи об этапе задачи — `status_set`, `status_changed` или `status_deleted` (этап удалён, задача перенесена в `detail.to` или осталась без этапа). У остальных записей поле отсутствует; клиент, не знающий вида, показывает `action`.
+    kind: str
+    #: Названия этапов записи об этапе; у удалённого этапа — сохранённое название.
+    detail: "ActivityDetail"
+
+ActivityDetail = TypedDict("ActivityDetail", {"from": Optional[str], "to": Optional[str]}, total=False)
 
 ActivityList = List["Activity"]
 
@@ -1735,6 +1794,8 @@ class CRMContactRef(_CRMContactRefRequired, total=False):
     """Узкая проекция карточки справочника ERP; CRM её не редактирует"""
 
     legal_name: str
+    inn: str
+    kpp: str
 
 class CRMConversionMetric(TypedDict):
     qualified_leads: int
@@ -1783,6 +1844,10 @@ class _CRMCustomerRequired(TypedDict):
     kind: Literal['person', 'company']
     name: str
     legal_name: str
+    #: ИНН без пробелов; пустая строка - не указан
+    inn: str
+    #: КПП в верхнем регистре; бывает только при ИНН из 10 цифр
+    kpp: str
     phone: str
     email: str
     #: Ник или номер клиента по мессенджерам
@@ -1807,6 +1872,10 @@ class _CRMCustomerDuplicateRequired(TypedDict):
     kind: Literal['person', 'company']
     name: str
     legal_name: str
+    #: ИНН без пробелов; пустая строка - не указан
+    inn: str
+    #: КПП в верхнем регистре; бывает только при ИНН из 10 цифр
+    kpp: str
     phone: str
     email: str
     #: Ник или номер клиента по мессенджерам
@@ -1817,7 +1886,7 @@ class _CRMCustomerDuplicateRequired(TypedDict):
     open_deals: int
     created_at: str
     updated_at: str
-    matched_by: Literal['name', 'phone']
+    matched_by: Literal['inn', 'phone', 'name']
 
 class CRMCustomerDuplicate(_CRMCustomerDuplicateRequired, total=False):
     owner_id: int
@@ -1833,6 +1902,10 @@ class _CRMCustomerInputRequired(TypedDict):
 class CRMCustomerInput(_CRMCustomerInputRequired, total=False):
     kind: Literal['person', 'company']
     legal_name: str
+    #: ИНН: 10 цифр у организации, 12 у предпринимателя, с верной контрольной цифрой
+    inn: str
+    #: КПП: девять знаков, только вместе с ИНН из 10 цифр
+    kpp: str
     phone: str
     email: str
     messengers: Optional[Dict[str, str]]
@@ -1841,10 +1914,18 @@ class CRMCustomerInput(_CRMCustomerInputRequired, total=False):
     owner_id: Optional[int]
     note: str
 
+class CRMCustomerLinkInput(TypedDict, total=False):
+    #: Должность человека в компании
+    position: str
+
 class CRMCustomerPatch(TypedDict, total=False):
     kind: Literal['person', 'company']
     name: str
     legal_name: str
+    #: Пустая строка стирает ИНН
+    inn: str
+    #: Пустая строка стирает КПП
+    kpp: str
     phone: str
     email: str
     messengers: Optional[Dict[str, str]]
@@ -1853,6 +1934,12 @@ class CRMCustomerPatch(TypedDict, total=False):
     owner_id: Optional[int]
     note: str
     archived: bool
+
+class CRMCustomerRelations(TypedDict):
+    #: Компании, в которых работает человек
+    companies: List["CRMRelatedCustomer"]
+    #: Контакты компании
+    contacts: List["CRMRelatedCustomer"]
 
 class _CRMDealRequired(TypedDict):
     id: "UUID"
@@ -2524,6 +2611,17 @@ class _CRMQualifyLeadInputRequired(TypedDict):
 class CRMQualifyLeadInput(_CRMQualifyLeadInputRequired, total=False):
     #: Причина из справочника вида lead - по ней строится аналитика отказов
     reason_id: Optional[str]
+
+class CRMRelatedCustomer(TypedDict):
+    id: "UUID"
+    kind: Literal['person', 'company']
+    name: str
+    legal_name: str
+    inn: str
+    phone: str
+    email: str
+    #: Должность человека в компании
+    position: str
 
 class CRMReopenDealInput(TypedDict):
     stage_id: "UUID"
@@ -3404,11 +3502,11 @@ class ChatMobileDeviceRegistration(_ChatMobileDeviceRegistrationRequired, total=
     device_name: str
     app_version: str
     system_version: str
-    #: Показывать текст сообщения в уведомлении. Поле отсутствует — уведомление полное.
+    #: Показывать содержание сообщения в уведомлении. Выключено — уведомление не несёт ни текста, ни отправителя: ни имени, ни фотографии, ни названия группы, поэтому баннер с человеком на iPhone не рисуется. Счётчик непрочитанных и переход в чат остаются. Поле отсутствует — уведомление полное.
     preview: bool
     #: Звук уведомления. Поле отсутствует — со звуком.
     sound: bool
-    #: Совместимый псевдоним preview. Если любое из двух полей false, текст скрыт.
+    #: Совместимый псевдоним preview. Если любое из двух полей false, содержание скрыто.
     push_preview: bool
     #: Совместимый псевдоним sound. Если любое из двух полей false, звук выключен.
     push_sound: bool
@@ -9130,6 +9228,12 @@ class FinanceRegisterReconciliation(_FinanceRegisterReconciliationRequired, tota
     input_vat_match: bool
     #: Источники с отрицательным остатком входного НДС, который не объяснён возвратом поставщику после вычета.
     input_vat_unexplained: List["FinanceRegisterReconciliationInputVatUnexplainedItem"]
+    #: Сверка стоимости склада с книгой по счетам запасов.
+    stock: Optional[List["FinanceRegisterReconciliationStockItem"]]
+    #: Остаток запасов, который после смены правила счёта лежит в книге на старом счёте и ещё не перенесён документом «Перенос остатка» (ERP-1146). Разрез — пара счетов.
+    stock_transfer_pending: List["FinanceRegisterReconciliationStockTransferPendingItem"]
+    #: Пояснение к неперенесённому остатку для человека; пусто, если переносить нечего.
+    stock_transfer_hint: str
 
 class FinanceRegisterReconciliationInputVatUnexplainedItem(TypedDict):
     source: str
@@ -9137,6 +9241,18 @@ class FinanceRegisterReconciliationInputVatUnexplainedItem(TypedDict):
     source_date: str
     company: str
     amount: str
+
+class FinanceRegisterReconciliationStockItem(TypedDict, total=False):
+    #: Неперенесённый остаток, который уйдёт с этого счёта документом «Перенос остатка» (ERP-1146); нет поля — переносить нечего.
+    transfer_pending_out: str
+    #: Неперенесённый остаток, который придёт на этот счёт документом «Перенос остатка» (ERP-1146); нет поля — переносить нечего.
+    transfer_pending_in: str
+
+class FinanceRegisterReconciliationStockTransferPendingItem(TypedDict):
+    from_code: str
+    to_code: str
+    amount: str
+    warehouses: int
 
 class FinanceRegisterRepairFailure(TypedDict):
     id: "UUID"
@@ -10117,6 +10233,392 @@ class LinkCreate(_LinkCreateRequired, total=False):
     label: str
 
 LinkList = List["Link"]
+
+class MailAccount(TypedDict):
+    """Почтовый ящик кабинета. Пароль подключения не сериализуется никогда: наружу уходит только признак has_credentials."""
+
+    id: "UUID"
+    #: Сотрудник, которому принадлежит ящик
+    owner_user_id: int
+    #: Общий ящик отдела виден всем, у кого есть право на модуль; личный — владельцу и тому, кто видит все записи
+    shared: bool
+    email: str
+    display_name: str
+    imap_host: str
+    imap_port: int
+    imap_encryption: "MailEncryption"
+    smtp_host: str
+    smtp_port: int
+    smtp_encryption: "MailEncryption"
+    #: Логин подключения; по умолчанию равен адресу
+    username: str
+    #: Пароль приложения сохранён. Самого пароля не отдаёт ни одна операция
+    has_credentials: bool
+    status: "MailAccountStatus"
+    sync_status: "MailSyncStatus"
+    #: Глубина первичного импорта в днях; ноль означает весь ящик
+    sync_since_days: int
+    #: Подпись, подставляемая в исходящие письма
+    signature: str
+    last_sync_at: Optional[str]
+    #: Последняя ошибка подключения для человека
+    last_error: str
+    #: Машинный код последней ошибки подключения, например mail.account.credentials_rejected; пусто, когда ошибки нет
+    last_error_code: str
+    unread_count: int
+    created_at: str
+    updated_at: str
+
+class MailAccountInput(TypedDict, total=False):
+    """Подключение и изменение ящика. Одна форма на обе операции: при подключении обязательны email, imap_host, smtp_host и пароль, при изменении непереданное поле сохраняет прежнее значение, а пустой пароль оставляет сохранённый секрет нетронутым."""
+
+    email: str
+    #: Без значения берётся адрес
+    display_name: str
+    #: Сделать ящик общим ящиком отдела
+    shared: Optional[bool]
+    #: Схема, завершающая точка и порт внутри значения снимаются
+    imap_host: str
+    #: Без значения — 993 для tls и 143 для starttls
+    imap_port: int
+    imap_encryption: "MailEncryption"
+    smtp_host: str
+    #: Без значения — 465 для tls и 587 для starttls
+    smtp_port: int
+    smtp_encryption: "MailEncryption"
+    #: Без значения берётся адрес почты
+    username: str
+    #: Пароль приложения. Принимается, но не возвращается никогда; о его наличии говорит has_credentials
+    password: str
+    #: Синоним password: у Яндекса, VK и Mail.ru это поле называется «пароль приложения». Принимается, но не возвращается никогда
+    app_password: str
+    #: Глубина первичного импорта в днях; ноль означает весь ящик
+    sync_since_days: Optional[int]
+    #: Подпись исходящих писем
+    signature: Optional[str]
+    #: Ящик можно только включить или выключить; состояние error ставит синхронизация
+    status: Literal['active', 'disabled']
+
+MailAccountStatus = Literal['active', 'disabled', 'error']
+
+class _MailAttachmentRequired(TypedDict):
+    id: "UUID"
+    message_id: "UUID"
+    filename: str
+    content_type: str
+    size_bytes: int
+    #: Встроенная в тело картинка, а не документ
+    is_inline: bool
+    scan_status: "MailScanStatus"
+    created_at: str
+
+class MailAttachment(_MailAttachmentRequired, total=False):
+    """Вложение письма. Ключ объектного хранилища наружу не отдаётся: знание ключа — половина пути к чужому файлу."""
+
+    #: Заполняется у картинок, вставленных в тело письма через cid:
+    content_id: str
+
+class MailComposeInput(TypedDict, total=False):
+    """Отправка письма или сохранение черновика. Поле in_reply_to_id указывает на письмо в нашей базе, а не на Message-ID: заголовки ответа собираем мы."""
+
+    subject: str
+    #: Одна строка может содержать несколько адресов через запятую
+    to: List[str]
+    cc: List[str]
+    bcc: List[str]
+    body_text: str
+    body_html: str
+    #: Письмо, на которое отвечаем
+    in_reply_to_id: Optional["UUID"]
+    #: Письмо, которое пересылаем
+    forward_of_id: Optional["UUID"]
+    #: Идентификаторы заранее загруженных файлов
+    upload_ids: List["UUID"]
+    #: Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо уходит получателю и отозвать его нельзя
+    save_as_draft: bool
+
+class MailDiscoveredSettings(TypedDict, total=False):
+    """Предложение настроек для адреса. Поле source называет происхождение: catalog — справочник провайдеров, autoconfig и autodiscover — настройки самого домена, srv и mx — записи DNS, probe — угаданный и проверенный соединением сервер."""
+
+    email: str
+    domain: str
+    source: Literal['catalog', 'autoconfig', 'autodiscover', 'srv', 'mx', 'probe']
+    provider_key: str
+    provider_label: str
+    imap_host: str
+    imap_port: int
+    imap_encryption: Literal['tls', 'starttls']
+    smtp_host: str
+    smtp_port: int
+    smtp_encryption: Literal['tls', 'starttls']
+    username: str
+    auth_method: Literal['password', 'oauth']
+    oauth_provider: str
+    password_hint: str
+    help_url: str
+    #: Координаты проверены соединением, а не только прочитаны
+    verified: bool
+
+MailEncryption = Literal['tls', 'starttls']
+
+class MailFolder(TypedDict):
+    """Папка ящика. Координаты синхронизации IMAP (UIDVALIDITY, UIDNEXT, последний прочитанный UID) наружу не отдаются."""
+
+    id: "UUID"
+    account_id: "UUID"
+    #: Имя папки на почтовом сервере
+    external_id: str
+    name: str
+    role: "MailFolderRole"
+    parent_id: Optional["UUID"]
+    #: Разделитель иерархии, который назвал сервер
+    delimiter: str
+    total_count: int
+    unread_count: int
+    #: Вес папки в привычном порядке системных папок
+    sort_order: int
+    subscribed: bool
+    created_at: str
+    updated_at: str
+
+class _MailFolderInputRequired(TypedDict):
+    #: Косые черты запрещены: разделитель иерархии задаёт сервер
+    name: str
+
+class MailFolderInput(_MailFolderInputRequired, total=False):
+    """Создание и переименование пользовательской папки"""
+
+    #: Родительская папка
+    parent_id: Optional["UUID"]
+
+MailFolderRole = Literal['inbox', 'sent', 'drafts', 'trash', 'spam', 'archive', 'custom']
+
+class _MailMessageRequired(TypedDict):
+    id: "UUID"
+    account_id: "UUID"
+    folder_id: "UUID"
+    thread_id: "UUID"
+    #: Message-ID без угловых скобок; письму без него присваивается наш
+    message_ref: str
+    subject: str
+    from_address: str
+    from_name: str
+    #: Короткий пересказ письма для списка
+    snippet: str
+    size_bytes: int
+    direction: Literal['inbound', 'outbound']
+    is_read: bool
+    is_flagged: bool
+    is_answered: bool
+    is_draft: bool
+    has_attachments: bool
+    spam_verdict: "MailSpamVerdict"
+    sent_at: Optional[str]
+    received_at: str
+    created_at: str
+    updated_at: str
+
+class MailMessage(_MailMessageRequired, total=False):
+    """Письмо в копии кабинета. Внутренние координаты IMAP (UID и UIDVALIDITY) наружу не отдаются. Тело в HTML хранится таким, каким его прислал отправитель: обезвреживание живёт на отдаче, а не в хранимой копии."""
+
+    #: Заголовок In-Reply-To
+    in_reply_to: str
+    #: Заголовок References целиком
+    references: str
+    #: Конверт письма целиком
+    addresses: List["MailMessageAddress"]
+    body_text: str
+    body_html: str
+    #: Кто вынес вердикт. Решение человека сильнее флага сервера и правил
+    spam_source: Literal['provider', 'rule', 'user', 'agent']
+    spam_reason: str
+    attachments: List["MailAttachment"]
+
+class MailMessageAddress(TypedDict):
+    """Один адрес в конверте письма"""
+
+    #: Вид адреса: from, to, cc, bcc, reply_to. Значение list_id несёт идентификатор рассылки, а не адрес человека
+    kind: str
+    address: str
+    #: Имя отправителя или получателя, если оно было в конверте
+    name: str
+    #: Порядок адреса в своей группе
+    position: int
+
+class MailMessagePage(TypedDict):
+    """Страница писем. Общее число нужно, чтобы решить, стоит ли листать дальше."""
+
+    items: List["MailMessage"]
+    total: int
+    limit: int
+    offset: int
+    has_more: bool
+
+class MailOutbound(TypedDict):
+    """Исходящее письмо в очереди отправки. Постоянный отказ SMTP (код 5xx) не повторяется: повторять отклонённое навсегда письмо вредно для репутации отправителя."""
+
+    id: "UUID"
+    account_id: "UUID"
+    message_id: "UUID"
+    status: Literal['queued', 'sending', 'sent', 'failed', 'cancelled']
+    attempts: int
+    max_attempts: int
+    next_attempt_at: Optional[str]
+    last_error: str
+    last_error_code: str
+    sent_at: Optional[str]
+    #: Сотрудник, отправивший письмо
+    created_by: int
+    created_at: str
+
+class MailOutboundPage(TypedDict):
+    """Страница очереди отправки"""
+
+    items: List["MailOutbound"]
+    total: int
+    limit: int
+    offset: int
+    has_more: bool
+
+class MailOutboundUpload(TypedDict):
+    """Файл, загруженный до отправки письма. Ключ объектного хранилища наружу не отдаётся."""
+
+    id: "UUID"
+    account_id: "UUID"
+    filename: str
+    content_type: str
+    size_bytes: int
+    scan_status: "MailScanStatus"
+    status: Literal['ready', 'consumed', 'expired']
+    expires_at: str
+    created_at: str
+
+class MailProvider(TypedDict):
+    """Подсказка настроек для формы подключения ящика"""
+
+    #: Машинный ключ провайдера
+    key: str
+    #: Название провайдера для человека
+    label: str
+    #: Домены адресов, по которым подсказка подбирается
+    domains: List[str]
+    imap_host: str
+    imap_port: int
+    imap_encryption: "MailEncryption"
+    smtp_host: str
+    smtp_port: int
+    smtp_encryption: "MailEncryption"
+    #: Какой именно пароль нужен: у перечисленных провайдеров обычный пароль от аккаунта не подходит
+    password_hint: str
+    #: Ссылка на справку провайдера; у части провайдеров пуста
+    help_url: str
+
+class MailRule(TypedDict):
+    """Правило разбора входящей почты"""
+
+    id: "UUID"
+    account_id: "UUID"
+    name: str
+    enabled: bool
+    #: Порядок применения правил ящика
+    sort_order: int
+    #: Правило применяется при всех условиях или при любом из них
+    match: Literal['all', 'any']
+    conditions: List["MailRuleCondition"]
+    actions: List["MailRuleAction"]
+    #: Прекратить разбор письма после этого правила
+    stop_processing: bool
+    #: Сколько писем правило разобрало: единственный способ увидеть, что правило молчит из-за опечатки
+    applied_count: int
+    last_applied_at: Optional[str]
+    created_at: str
+    updated_at: str
+
+class _MailRuleActionRequired(TypedDict):
+    type: Literal['move_to_folder', 'mark_read', 'mark_unread', 'flag', 'mark_spam', 'mark_not_spam']
+
+class MailRuleAction(_MailRuleActionRequired, total=False):
+    """Одно действие правила"""
+
+    #: Заполняется только для переноса в папку; остальные действия папку не принимают
+    folder_id: Optional["UUID"]
+
+class _MailRuleConditionRequired(TypedDict):
+    field: Literal['from', 'to', 'cc', 'subject', 'body', 'list_id', 'has_attachment', 'spam_verdict']
+    #: Сравнение по домену доступно только адресным полям; поле has_attachment проверяется как is_true или is_false.
+    op: Literal['contains', 'equals', 'starts_with', 'ends_with', 'domain_is', 'is_true', 'is_false']
+
+class MailRuleCondition(_MailRuleConditionRequired, total=False):
+    """Одно условие правила. Набор полей и операторов закрытый: правило исполняется на сервере над чужой почтой."""
+
+    #: Обязательно для всех полей, кроме has_attachment
+    value: str
+
+class _MailRuleInputRequired(TypedDict):
+    name: str
+    conditions: List["MailRuleCondition"]
+    actions: List["MailRuleAction"]
+
+class MailRuleInput(_MailRuleInputRequired, total=False):
+    """Создание и изменение правила; условия и действия передаются целиком"""
+
+    enabled: Optional[bool]
+    sort_order: Optional[int]
+    #: Без значения — all
+    match: Literal['all', 'any']
+    stop_processing: Optional[bool]
+
+class _MailRuleOutcomeRequired(TypedDict):
+    rule_id: "UUID"
+    rule_name: str
+    message_id: "UUID"
+    subject: str
+
+class MailRuleOutcome(_MailRuleOutcomeRequired, total=False):
+    """Что правило сделало с письмом"""
+
+    moved_to_folder: Optional["UUID"]
+    marked_read: Optional[bool]
+    flagged: bool
+    spam_verdict: str
+
+MailScanStatus = Literal['pending', 'clean', 'infected', 'skipped']
+
+MailSpamVerdict = Literal['unknown', 'spam', 'ham']
+
+class _MailSyncReportRequired(TypedDict):
+    account_id: "UUID"
+    #: Сколько папок прочитано
+    folders: int
+    new_messages: int
+    #: Сколько писем разобрали правила
+    rules_applied: int
+    finished_at: str
+
+class MailSyncReport(_MailSyncReportRequired, total=False):
+    """Итог одного прохода по ящику: «ничего не изменилось» — тоже ответ"""
+
+    #: Папки, перечитанные целиком после смены UIDVALIDITY на сервере
+    full_reloaded: List[str]
+
+MailSyncStatus = Literal['never', 'ok', 'running', 'failed']
+
+class _MailThreadRequired(TypedDict):
+    id: "UUID"
+    account_id: "UUID"
+    subject: str
+    #: Корневой Message-ID ветки
+    root_ref: str
+    message_count: int
+    unread_count: int
+    has_attachments: bool
+    participants: List["MailMessageAddress"]
+    last_message_at: str
+
+class MailThread(_MailThreadRequired, total=False):
+    """Переписка: письма, связанные ответами. Склейка идёт по корню цепочки References, а не по теме."""
+
+    messages: List["MailMessage"]
 
 class ManagedChecklistItem(TypedDict):
     text: str
@@ -13513,6 +14015,40 @@ class StatusUpdatePatch(TypedDict, total=False):
     body: str
     is_archived: bool
 
+class _StockAccountTransferCreateRequired(TypedDict):
+    business_id: "UUID"
+
+class StockAccountTransferCreate(_StockAccountTransferCreateRequired, total=False):
+    """Тело черновика переноса остатка; строки подбирает сервер."""
+
+    #: Пусто или отсутствует означает рабочую дату кабинета
+    date: str
+    comment: str
+
+class _StockAccountTransferLineRequired(TypedDict):
+    business_id: "UUID"
+    warehouse_id: "UUID"
+    warehouse_name: str
+    product_id: "UUID"
+    product_name: str
+    from_account: "UUID"
+    #: Код старого счёта, например 41
+    from_code: str
+    to_account: "UUID"
+    #: Код счёта по действующему правилу, например 10
+    to_code: str
+    #: Сумма переноса, десятичная строка
+    amount: str
+
+class StockAccountTransferLine(_StockAccountTransferLineRequired, total=False):
+    """Строка переноса остатка — стоимость склада и товара, которая лежит в книге на счёте `from_*`, хотя по правилу на дату принадлежит счёту `to_*`."""
+
+    company_id: "UUID"
+
+class StockAccountTransferProposal(TypedDict):
+    count: int
+    results: List["StockAccountTransferLine"]
+
 class StockBatch(TypedDict):
     id: "UUID"
     #: Бизнес партии — учётная единица, которой принадлежит товар
@@ -13723,7 +14259,7 @@ class StockDocumentRefs(_StockDocumentRefsRequired, total=False):
     warehouse_to: "UUID"
     contact: "UUID"
 
-StockDocumentTypeKey = Literal['stock_receipt', 'stock_shipment', 'stock_transfer', 'stock_writeoff', 'stock_capitalization', 'stock_supplier_return', 'stock_customer_return', 'stock_purchase_request', 'stock_supplier_order', 'stock_inventory', 'stock_reservation', 'stock_landed_cost', 'stock_reservation_release', 'stock_supplier_order_close', 'stock_opening_balance', 'stock_marketplace_return']
+StockDocumentTypeKey = Literal['stock_receipt', 'stock_shipment', 'stock_transfer', 'stock_writeoff', 'stock_capitalization', 'stock_supplier_return', 'stock_customer_return', 'stock_purchase_request', 'stock_supplier_order', 'stock_inventory', 'stock_reservation', 'stock_landed_cost', 'stock_reservation_release', 'stock_supplier_order_close', 'stock_opening_balance', 'stock_marketplace_return', 'stock_account_transfer']
 
 class _StockExportRequired(TypedDict):
     id: "UUID"
@@ -13959,6 +14495,17 @@ class StockInventoryRefreshInput(TypedDict, total=False):
     expected_updated_at: str
 
 StockInventoryWorkflow = Literal['counting', 'counted', 'acts_created', 'closed']
+
+class _StockOpeningBalanceCreateRequired(TypedDict):
+    entity_refs: "StockDocumentRefs"
+    payload: "StockDocumentPayload"
+
+class StockOpeningBalanceCreate(_StockOpeningBalanceCreateRequired, total=False):
+    """Тело черновика ввода начальных остатков товара; вид задаёт ручка."""
+
+    #: Пусто или отсутствует означает рабочую дату кабинета
+    date: str
+    comment: str
 
 class StockProductUOM(TypedDict):
     id: "UUID"
@@ -15011,3 +15558,55 @@ class FinanceListDividendPoliciesResponse(TypedDict, total=False):
 class FinanceGetProjectBudgetHistoryResponse(TypedDict):
     count: int
     results: List["FinanceProjectBudget"]
+
+class MailListAccountsResponse(TypedDict):
+    items: List["MailAccount"]
+
+class MailListFoldersResponse(TypedDict):
+    items: List["MailFolder"]
+
+class MailComposeMessageResponse(TypedDict):
+    message: "MailMessage"
+    outbound: "MailOutbound"
+
+class MailListRulesResponse(TypedDict):
+    items: List["MailRule"]
+
+class MailApplyRulesRequest(TypedDict, total=False):
+    #: Папка разбора; без неё разбираются «Входящие»
+    folder_id: Optional["UUID"]
+    #: Сколько писем взять в разбор; ноль и меньше означает умолчание
+    limit: int
+
+class MailApplyRulesResponse(TypedDict):
+    items: List["MailRuleOutcome"]
+    #: Сколько писем правила разобрали
+    applied: int
+
+class MailAttachStoredFileRequest(TypedDict):
+    #: Файл в хранилище кабинета
+    file_id: str
+
+class MailListMessageAttachmentsResponse(TypedDict):
+    items: List["MailAttachment"]
+
+class MailFlagMessageRequest(TypedDict, total=False):
+    #: Значение false снимает отметку важности
+    flagged: bool
+
+class MailMoveMessageRequest(TypedDict):
+    folder_id: "UUID"
+
+class MailCompleteGoogleOAuthRequest(TypedDict):
+    state: str
+    code: str
+
+class MailStartGoogleOAuthResponse(TypedDict, total=False):
+    auth_url: str
+    provider: str
+
+class _MailListProvidersResponseRequired(TypedDict):
+    items: List["MailProvider"]
+
+class MailListProvidersResponse(_MailListProvidersResponseRequired, total=False):
+    suggestion: "MailProvider"

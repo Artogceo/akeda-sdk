@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 afb961d977a73e9d08608b181de766b56ecaed0fafe87ba1f3bc4effe124eca7).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9bacaaf12d34af8eb76fbca3880fa019749c69ad8e994158633b8062acb7eeff).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2081,7 +2081,7 @@ export interface OperationTypes {
   /** GET /api/v1/crm/customers/duplicates — Найти похожие карточки клиента */
   crmFindCustomerDuplicates: {
     params: Record<string, never>;
-    query: { "name"?: string; "phone"?: string };
+    query: { "inn"?: string; "kpp"?: string; "name"?: string; "phone"?: string };
     body: never;
     response: Array<models.CRMCustomerDuplicate>;
   };
@@ -2112,6 +2112,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.CRMCustomer;
+  };
+  /** GET /api/v1/crm/customers/{id}/relations — Получить компании человека и контакты компании */
+  crmGetCustomerRelations: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMCustomerRelations;
   };
   /** GET /api/v1/crm/deals/{id} — Получить карточку сделки */
   crmGetDeal: {
@@ -2196,6 +2203,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: Array<models.CRMLeadDuplicate>;
+  };
+  /** PUT /api/v1/crm/customers/{id}/companies/{companyId} — Связать человека с компанией */
+  crmLinkCustomerCompany: {
+    params: { "companyId": models.UUID; "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMCustomerLinkInput;
+    response: models.CRMCustomerRelations;
   };
   /** POST /api/v1/crm/inbox/entities/{entity}/{id}/conversations — Привязать диалог к записи CRM */
   crmLinkEntityConversation: {
@@ -2490,6 +2504,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CRMInboxSendInput;
     response: models.CRMInboxMessage;
+  };
+  /** DELETE /api/v1/crm/customers/{id}/companies/{companyId} — Снять связь человека с компанией */
+  crmUnlinkCustomerCompany: {
+    params: { "companyId": models.UUID; "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMCustomerRelations;
   };
   /** PUT /api/v1/crm/automation/rules/{id} — Заменить правило автоматизации */
   crmUpdateAutomationRule: {
@@ -4458,6 +4479,258 @@ export interface OperationTypes {
     body: models.KnowledgeVersionInput;
     response: models.KnowledgeNode;
   };
+  /** POST /api/v1/mail/accounts/{id}/rules/apply — Применить правила к уже лежащим письмам */
+  mailApplyRules: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MailApplyRulesRequest;
+    response: models.MailApplyRulesResponse;
+  };
+  /** POST /api/v1/mail/accounts/{id}/uploads/from-file — Приложить к письму файл из хранилища */
+  mailAttachStoredFile: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MailAttachStoredFileRequest;
+    response: models.MailOutboundUpload;
+  };
+  /** POST /api/v1/mail/accounts/{id}/check — Проверить подключение ящика */
+  mailCheckAccount: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MailAccount;
+  };
+  /** POST /api/v1/mail/oauth/google/complete — Завершить подключение Gmail */
+  mailCompleteGoogleOAuth: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.MailCompleteGoogleOAuthRequest;
+    response: models.MailAccount;
+  };
+  /** POST /api/v1/mail/accounts/{id}/messages — Отправить письмо или сохранить черновик */
+  mailComposeMessage: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MailComposeInput;
+    response: models.MailComposeMessageResponse;
+  };
+  /** POST /api/v1/mail/accounts — Подключить почтовый ящик */
+  mailCreateAccount: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.MailAccountInput;
+    response: models.MailAccount;
+  };
+  /** POST /api/v1/mail/accounts/{id}/folders — Создать папку ящика */
+  mailCreateFolder: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MailFolderInput;
+    response: models.MailFolder;
+  };
+  /** POST /api/v1/mail/accounts/{id}/rules — Создать правило разбора почты */
+  mailCreateRule: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MailRuleInput;
+    response: models.MailRule;
+  };
+  /** DELETE /api/v1/mail/accounts/{id} — Отключить почтовый ящик */
+  mailDeleteAccount: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** DELETE /api/v1/mail/folders/{id} — Удалить пользовательскую папку */
+  mailDeleteFolder: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** DELETE /api/v1/mail/messages/{id} — Переложить письмо в корзину */
+  mailDeleteMessage: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** DELETE /api/v1/mail/rules/{id} — Удалить правило разбора почты */
+  mailDeleteRule: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** GET /api/v1/mail/discover — Определить настройки сервера по адресу почты */
+  mailDiscoverSettings: {
+    params: Record<string, never>;
+    query: { "email": string };
+    body: never;
+    response: models.MailDiscoveredSettings;
+  };
+  /** POST /api/v1/mail/messages/{id}/flag — Поставить или снять отметку важности */
+  mailFlagMessage: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MailFlagMessageRequest;
+    response: void;
+  };
+  /** GET /api/v1/mail/accounts/{id} — Получить почтовый ящик */
+  mailGetAccount: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MailAccount;
+  };
+  /** GET /api/v1/mail/attachments/{id}/content — Скачать вложение письма */
+  mailGetAttachmentContent: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** GET /api/v1/mail/messages/{id} — Получить письмо целиком */
+  mailGetMessage: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MailMessage;
+  };
+  /** GET /api/v1/mail/threads/{id} — Получить переписку целиком */
+  mailGetThread: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MailThread;
+  };
+  /** GET /api/v1/mail/accounts — Получить почтовые ящики сотрудника */
+  mailListAccounts: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.MailListAccountsResponse;
+  };
+  /** GET /api/v1/mail/accounts/{id}/folders — Получить папки ящика */
+  mailListFolders: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MailListFoldersResponse;
+  };
+  /** GET /api/v1/mail/messages/{id}/attachments — Получить вложения письма */
+  mailListMessageAttachments: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MailListMessageAttachmentsResponse;
+  };
+  /** GET /api/v1/mail/messages — Получить письма по фильтру */
+  mailListMessages: {
+    params: Record<string, never>;
+    query: { "account_id"?: models.UUID; "folder_id"?: models.UUID; "folder_role"?: models.MailFolderRole; "from"?: string; "has_files"?: boolean; "is_flagged"?: boolean; "is_read"?: boolean; "limit"?: number; "offset"?: number; "q"?: string; "sent_after"?: string; "sent_before"?: string; "spam_verdict"?: models.MailSpamVerdict; "thread_id"?: models.UUID };
+    body: never;
+    response: models.MailMessagePage;
+  };
+  /** GET /api/v1/mail/accounts/{id}/outbox — Получить очередь отправки ящика */
+  mailListOutbox: {
+    params: { "id": models.UUID };
+    query: { "limit"?: number; "offset"?: number };
+    body: never;
+    response: models.MailOutboundPage;
+  };
+  /** GET /api/v1/mail/providers — Получить подсказки почтовых провайдеров */
+  mailListProviders: {
+    params: Record<string, never>;
+    query: { "email"?: string };
+    body: never;
+    response: models.MailListProvidersResponse;
+  };
+  /** GET /api/v1/mail/accounts/{id}/rules — Получить правила разбора ящика */
+  mailListRules: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MailListRulesResponse;
+  };
+  /** POST /api/v1/mail/messages/{id}/not-spam — Вернуть письмо из спама */
+  mailMarkMessageNotSpam: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** POST /api/v1/mail/messages/{id}/read — Отметить письмо прочитанным */
+  mailMarkMessageRead: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** POST /api/v1/mail/messages/{id}/spam — Отправить письмо в спам */
+  mailMarkMessageSpam: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** POST /api/v1/mail/messages/{id}/unread — Снять отметку прочтения */
+  mailMarkMessageUnread: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** POST /api/v1/mail/messages/{id}/move — Переложить письмо в другую папку */
+  mailMoveMessage: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MailMoveMessageRequest;
+    response: void;
+  };
+  /** PATCH /api/v1/mail/folders/{id} — Переименовать папку ящика */
+  mailRenameFolder: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MailFolderInput;
+    response: models.MailFolder;
+  };
+  /** GET /api/v1/mail/oauth/google/start — Начать подключение Gmail через вход в Google */
+  mailStartGoogleOAuth: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.MailStartGoogleOAuthResponse;
+  };
+  /** POST /api/v1/mail/accounts/{id}/sync — Синхронизировать ящик по требованию */
+  mailSyncAccount: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MailSyncReport;
+  };
+  /** PATCH /api/v1/mail/accounts/{id} — Изменить настройки почтового ящика */
+  mailUpdateAccount: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MailAccountInput;
+    response: models.MailAccount;
+  };
+  /** PATCH /api/v1/mail/rules/{id} — Изменить правило разбора почты */
+  mailUpdateRule: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MailRuleInput;
+    response: models.MailRule;
+  };
+  /** POST /api/v1/mail/accounts/{id}/uploads — Загрузить файл для письма */
+  mailUploadOutboundFile: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MailOutboundUpload;
+  };
   /** POST /api/v1/marketplace/ozon/product-groups/{id}/items — Добавить товары в срез Ozon */
   marketplaceAddOzonProductGroupItems: {
     params: { "id": models.UUID };
@@ -5284,6 +5557,13 @@ export interface OperationTypes {
     body: models.SettingsRoleInput;
     response: models.SettingsRole;
   };
+  /** GET /api/v1/stock/account-transfers/proposal — Показать остаток запасов, который надо перенести на счёт по новому правилу */
+  stockAccountTransferProposal: {
+    params: Record<string, never>;
+    query: { "business_id"?: models.UUID; "date": string };
+    body: never;
+    response: models.StockAccountTransferProposal;
+  };
   /** POST /api/v1/stock/warehouses/{id}/activate — Вернуть склад в работу */
   stockActivateWarehouse: {
     params: { "id": models.UUID };
@@ -5319,6 +5599,13 @@ export interface OperationTypes {
     body: never;
     response: models.CoreDocument;
   };
+  /** POST /api/v1/stock/account-transfers — Создать черновик переноса остатка на счёт по новому правилу */
+  stockCreateAccountTransfer: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.StockAccountTransferCreate;
+    response: models.CoreDocument;
+  };
   /** POST /api/v1/stock/documents — Создать черновик складского документа */
   stockCreateDocument: {
     params: Record<string, never>;
@@ -5339,6 +5626,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.StockImportRun;
+  };
+  /** POST /api/v1/stock/opening-balances — Создать черновик ввода начальных остатков товара */
+  stockCreateOpeningBalance: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.StockOpeningBalanceCreate;
+    response: models.CoreDocument;
   };
   /** POST /api/v1/stock/purchasing/orders — Создать заказ поставщику по рассчитанной потребности */
   stockCreatePurchaseOrder: {
@@ -7036,6 +7330,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmGetAutomationRule: { method: "GET", path: "/api/v1/crm/automation/rules/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetAutomationRunActions: { method: "GET", path: "/api/v1/crm/automation/runs/{id}/actions", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetCustomer: { method: "GET", path: "/api/v1/crm/customers/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetCustomerRelations: { method: "GET", path: "/api/v1/crm/customers/{id}/relations", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetDeal: { method: "GET", path: "/api/v1/crm/deals/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetDealBoard: { method: "GET", path: "/api/v1/crm/deals/board", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
   crmGetDealStageHistory: { method: "GET", path: "/api/v1/crm/deals/{id}/stage-history", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7048,6 +7343,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmGetPipeline: { method: "GET", path: "/api/v1/crm/pipelines/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetTimeline: { method: "GET", path: "/api/v1/crm/{entity}/{id}/timeline", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmLeadDuplicates: { method: "GET", path: "/api/v1/crm/leads/{id}/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmLinkCustomerCompany: { method: "PUT", path: "/api/v1/crm/customers/{id}/companies/{companyId}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmLinkEntityConversation: { method: "POST", path: "/api/v1/crm/inbox/entities/{entity}/{id}/conversations", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListAutomationRules: { method: "GET", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListAutomationRuns: { method: "GET", path: "/api/v1/crm/automation/runs", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7090,6 +7386,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmSaveInboxTemplate: { method: "POST", path: "/api/v1/crm/inbox/templates", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSaveSalesPlans: { method: "PUT", path: "/api/v1/crm/sales-plans", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSendInboxMessage: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/messages", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUnlinkCustomerCompany: { method: "DELETE", path: "/api/v1/crm/customers/{id}/companies/{companyId}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateAutomationRule: { method: "PUT", path: "/api/v1/crm/automation/rules/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateCustomer: { method: "PATCH", path: "/api/v1/crm/customers/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateDeal: { method: "PATCH", path: "/api/v1/crm/deals/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7371,6 +7668,42 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   knowledgeUploadPageAsset: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/assets", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeUploadSpaceCover: { method: "POST", path: "/api/v1/knowledge/spaces/{id}/cover", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeVerifyPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/verify", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailApplyRules: { method: "POST", path: "/api/v1/mail/accounts/{id}/rules/apply", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailAttachStoredFile: { method: "POST", path: "/api/v1/mail/accounts/{id}/uploads/from-file", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailCheckAccount: { method: "POST", path: "/api/v1/mail/accounts/{id}/check", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailCompleteGoogleOAuth: { method: "POST", path: "/api/v1/mail/oauth/google/complete", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailComposeMessage: { method: "POST", path: "/api/v1/mail/accounts/{id}/messages", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailCreateAccount: { method: "POST", path: "/api/v1/mail/accounts", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailCreateFolder: { method: "POST", path: "/api/v1/mail/accounts/{id}/folders", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailCreateRule: { method: "POST", path: "/api/v1/mail/accounts/{id}/rules", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailDeleteAccount: { method: "DELETE", path: "/api/v1/mail/accounts/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailDeleteFolder: { method: "DELETE", path: "/api/v1/mail/folders/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailDeleteMessage: { method: "DELETE", path: "/api/v1/mail/messages/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailDeleteRule: { method: "DELETE", path: "/api/v1/mail/rules/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailDiscoverSettings: { method: "GET", path: "/api/v1/mail/discover", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailFlagMessage: { method: "POST", path: "/api/v1/mail/messages/{id}/flag", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailGetAccount: { method: "GET", path: "/api/v1/mail/accounts/{id}", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailGetAttachmentContent: { method: "GET", path: "/api/v1/mail/attachments/{id}/content", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailGetMessage: { method: "GET", path: "/api/v1/mail/messages/{id}", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailGetThread: { method: "GET", path: "/api/v1/mail/threads/{id}", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailListAccounts: { method: "GET", path: "/api/v1/mail/accounts", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailListFolders: { method: "GET", path: "/api/v1/mail/accounts/{id}/folders", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailListMessageAttachments: { method: "GET", path: "/api/v1/mail/messages/{id}/attachments", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailListMessages: { method: "GET", path: "/api/v1/mail/messages", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
+  mailListOutbox: { method: "GET", path: "/api/v1/mail/accounts/{id}/outbox", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
+  mailListProviders: { method: "GET", path: "/api/v1/mail/providers", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailListRules: { method: "GET", path: "/api/v1/mail/accounts/{id}/rules", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailMarkMessageNotSpam: { method: "POST", path: "/api/v1/mail/messages/{id}/not-spam", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailMarkMessageRead: { method: "POST", path: "/api/v1/mail/messages/{id}/read", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailMarkMessageSpam: { method: "POST", path: "/api/v1/mail/messages/{id}/spam", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailMarkMessageUnread: { method: "POST", path: "/api/v1/mail/messages/{id}/unread", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailMoveMessage: { method: "POST", path: "/api/v1/mail/messages/{id}/move", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailRenameFolder: { method: "PATCH", path: "/api/v1/mail/folders/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailStartGoogleOAuth: { method: "GET", path: "/api/v1/mail/oauth/google/start", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailSyncAccount: { method: "POST", path: "/api/v1/mail/accounts/{id}/sync", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailUpdateAccount: { method: "PATCH", path: "/api/v1/mail/accounts/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailUpdateRule: { method: "PATCH", path: "/api/v1/mail/rules/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailUploadOutboundFile: { method: "POST", path: "/api/v1/mail/accounts/{id}/uploads", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceAddOzonProductGroupItems: { method: "POST", path: "/api/v1/marketplace/ozon/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceAddWbProductGroupItems: { method: "POST", path: "/api/v1/marketplace/wb/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceApplyWeeklyFinanceRun: { method: "POST", path: "/api/v1/marketplace/{platform}/stores/{id}/finance/weeks/{weekStart}/apply", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7489,14 +7822,17 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   settingsUpdateFieldDefinition: { method: "PATCH", path: "/api/v1/settings/field-definitions/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsUpdateMember: { method: "PATCH", path: "/api/v1/settings/members/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsUpdateRole: { method: "PATCH", path: "/api/v1/settings/roles/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockAccountTransferProposal: { method: "GET", path: "/api/v1/stock/account-transfers/proposal", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockActivateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses/{id}/activate", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockApplyImport: { method: "POST", path: "/api/v1/stock/imports/{id}/apply", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockApplyWarehouseZoneAllocation: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones/allocation", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCancelDocument: { method: "POST", path: "/api/v1/stock/documents/{id}/cancel", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCloseSupplierOrder: { method: "POST", path: "/api/v1/stock/documents/{id}/close", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockCreateAccountTransfer: { method: "POST", path: "/api/v1/stock/account-transfers", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateDocument: { method: "POST", path: "/api/v1/stock/documents", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateExport: { method: "POST", path: "/api/v1/stock/exports", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateImport: { method: "POST", path: "/api/v1/stock/imports", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockCreateOpeningBalance: { method: "POST", path: "/api/v1/stock/opening-balances", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreatePurchaseOrder: { method: "POST", path: "/api/v1/stock/purchasing/orders", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateWarehouseZone: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

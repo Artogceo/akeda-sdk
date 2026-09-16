@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 afb961d977a73e9d08608b181de766b56ecaed0fafe87ba1f3bc4effe124eca7).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9bacaaf12d34af8eb76fbca3880fa019749c69ad8e994158633b8062acb7eeff).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -8,9 +8,20 @@ export type AccountingBasis = "cash" | "accrual" | "mixed";
 
 export interface Activity {
   "id": UUID;
+  /** Готовый русский текст записи. */
   "action": string;
+  /** Вид записи об этапе задачи — `status_set`, `status_changed` или `status_deleted` (этап удалён, задача перенесена в `detail.to` или осталась без этапа). У остальных записей поле отсутствует; клиент, не знающий вида, показывает `action`. */
+  "kind"?: string;
+  /** Названия этапов записи об этапе; у удалённого этапа — сохранённое название. */
+  "detail"?: ActivityDetail;
   "actor_name": string | null;
   "created_at": string;
+}
+
+/** Названия этапов записи об этапе; у удалённого этапа — сохранённое название. */
+export interface ActivityDetail {
+  "from"?: string | null;
+  "to"?: string | null;
 }
 
 export type ActivityList = Array<Activity>;
@@ -371,6 +382,8 @@ export interface CRMContactRef {
   "id": UUID;
   "name": string;
   "legal_name"?: string;
+  "inn"?: string;
+  "kpp"?: string;
   "entity_type": string;
   "is_active": boolean;
   /** false, когда карточка недоступна текущему пользователю */
@@ -421,6 +434,10 @@ export interface CRMCustomer {
   "kind": "person" | "company";
   "name": string;
   "legal_name": string;
+  /** ИНН без пробелов; пустая строка - не указан */
+  "inn": string;
+  /** КПП в верхнем регистре; бывает только при ИНН из 10 цифр */
+  "kpp": string;
   "phone": string;
   "email": string;
   /** Ник или номер клиента по мессенджерам */
@@ -444,6 +461,10 @@ export interface CRMCustomerDuplicate {
   "kind": "person" | "company";
   "name": string;
   "legal_name": string;
+  /** ИНН без пробелов; пустая строка - не указан */
+  "inn": string;
+  /** КПП в верхнем регистре; бывает только при ИНН из 10 цифр */
+  "kpp": string;
   "phone": string;
   "email": string;
   /** Ник или номер клиента по мессенджерам */
@@ -460,13 +481,17 @@ export interface CRMCustomerDuplicate {
   "open_deals": number;
   "created_at": string;
   "updated_at": string;
-  "matched_by": "name" | "phone";
+  "matched_by": "inn" | "phone" | "name";
 }
 
 export interface CRMCustomerInput {
   "kind"?: "person" | "company";
   "name": string;
   "legal_name"?: string;
+  /** ИНН: 10 цифр у организации, 12 у предпринимателя, с верной контрольной цифрой */
+  "inn"?: string;
+  /** КПП: девять знаков, только вместе с ИНН из 10 цифр */
+  "kpp"?: string;
   "phone"?: string;
   "email"?: string;
   "messengers"?: { [key: string]: string } | null;
@@ -476,10 +501,19 @@ export interface CRMCustomerInput {
   "note"?: string;
 }
 
+export interface CRMCustomerLinkInput {
+  /** Должность человека в компании */
+  "position"?: string;
+}
+
 export interface CRMCustomerPatch {
   "kind"?: "person" | "company";
   "name"?: string;
   "legal_name"?: string;
+  /** Пустая строка стирает ИНН */
+  "inn"?: string;
+  /** Пустая строка стирает КПП */
+  "kpp"?: string;
   "phone"?: string;
   "email"?: string;
   "messengers"?: { [key: string]: string } | null;
@@ -488,6 +522,13 @@ export interface CRMCustomerPatch {
   "owner_id"?: number | null;
   "note"?: string;
   "archived"?: boolean;
+}
+
+export interface CRMCustomerRelations {
+  /** Компании, в которых работает человек */
+  "companies": Array<CRMRelatedCustomer>;
+  /** Контакты компании */
+  "contacts": Array<CRMRelatedCustomer>;
 }
 
 export interface CRMDeal {
@@ -1141,6 +1182,18 @@ export interface CRMQualifyLeadInput {
   "reason": string;
   /** Причина из справочника вида lead - по ней строится аналитика отказов */
   "reason_id"?: string | null;
+}
+
+export interface CRMRelatedCustomer {
+  "id": UUID;
+  "kind": "person" | "company";
+  "name": string;
+  "legal_name": string;
+  "inn": string;
+  "phone": string;
+  "email": string;
+  /** Должность человека в компании */
+  "position": string;
 }
 
 export interface CRMReopenDealInput {
@@ -2066,11 +2119,11 @@ export interface ChatMobileDeviceRegistration {
   "device_name"?: string;
   "app_version"?: string;
   "system_version"?: string;
-  /** Показывать текст сообщения в уведомлении. Поле отсутствует — уведомление полное. */
+  /** Показывать содержание сообщения в уведомлении. Выключено — уведомление не несёт ни текста, ни отправителя: ни имени, ни фотографии, ни названия группы, поэтому баннер с человеком на iPhone не рисуется. Счётчик непрочитанных и переход в чат остаются. Поле отсутствует — уведомление полное. */
   "preview"?: boolean;
   /** Звук уведомления. Поле отсутствует — со звуком. */
   "sound"?: boolean;
-  /** Совместимый псевдоним preview. Если любое из двух полей false, текст скрыт. */
+  /** Совместимый псевдоним preview. Если любое из двух полей false, содержание скрыто. */
   "push_preview"?: boolean;
   /** Совместимый псевдоним sound. Если любое из двух полей false, звук выключен. */
   "push_sound"?: boolean;
@@ -7914,6 +7967,12 @@ export interface FinanceRegisterReconciliation {
   "input_vat_match"?: boolean;
   /** Источники с отрицательным остатком входного НДС, который не объяснён возвратом поставщику после вычета. */
   "input_vat_unexplained"?: Array<FinanceRegisterReconciliationInputVatUnexplainedItem>;
+  /** Сверка стоимости склада с книгой по счетам запасов. */
+  "stock"?: Array<FinanceRegisterReconciliationStockItem> | null;
+  /** Остаток запасов, который после смены правила счёта лежит в книге на старом счёте и ещё не перенесён документом «Перенос остатка» (ERP-1146). Разрез — пара счетов. */
+  "stock_transfer_pending"?: Array<FinanceRegisterReconciliationStockTransferPendingItem>;
+  /** Пояснение к неперенесённому остатку для человека; пусто, если переносить нечего. */
+  "stock_transfer_hint"?: string;
 }
 
 export interface FinanceRegisterReconciliationInputVatUnexplainedItem {
@@ -7922,6 +7981,20 @@ export interface FinanceRegisterReconciliationInputVatUnexplainedItem {
   "source_date": string;
   "company": string;
   "amount": string;
+}
+
+export interface FinanceRegisterReconciliationStockItem {
+  /** Неперенесённый остаток, который уйдёт с этого счёта документом «Перенос остатка» (ERP-1146); нет поля — переносить нечего. */
+  "transfer_pending_out"?: string;
+  /** Неперенесённый остаток, который придёт на этот счёт документом «Перенос остатка» (ERP-1146); нет поля — переносить нечего. */
+  "transfer_pending_in"?: string;
+}
+
+export interface FinanceRegisterReconciliationStockTransferPendingItem {
+  "from_code": string;
+  "to_code": string;
+  "amount": string;
+  "warehouses": number;
 }
 
 export interface FinanceRegisterRepairFailure {
@@ -8960,6 +9033,374 @@ export interface LinkCreate {
 }
 
 export type LinkList = Array<Link>;
+
+/** Почтовый ящик кабинета. Пароль подключения не сериализуется никогда: наружу уходит только признак has_credentials. */
+export interface MailAccount {
+  "id": UUID;
+  /** Сотрудник, которому принадлежит ящик */
+  "owner_user_id": number;
+  /** Общий ящик отдела виден всем, у кого есть право на модуль; личный — владельцу и тому, кто видит все записи */
+  "shared": boolean;
+  "email": string;
+  "display_name": string;
+  "imap_host": string;
+  "imap_port": number;
+  "imap_encryption": MailEncryption;
+  "smtp_host": string;
+  "smtp_port": number;
+  "smtp_encryption": MailEncryption;
+  /** Логин подключения; по умолчанию равен адресу */
+  "username": string;
+  /** Пароль приложения сохранён. Самого пароля не отдаёт ни одна операция */
+  "has_credentials": boolean;
+  "status": MailAccountStatus;
+  "sync_status": MailSyncStatus;
+  /** Глубина первичного импорта в днях; ноль означает весь ящик */
+  "sync_since_days": number;
+  /** Подпись, подставляемая в исходящие письма */
+  "signature": string;
+  "last_sync_at": string | null;
+  /** Последняя ошибка подключения для человека */
+  "last_error": string;
+  /** Машинный код последней ошибки подключения, например mail.account.credentials_rejected; пусто, когда ошибки нет */
+  "last_error_code": string;
+  "unread_count": number;
+  "created_at": string;
+  "updated_at": string;
+}
+
+/** Подключение и изменение ящика. Одна форма на обе операции: при подключении обязательны email, imap_host, smtp_host и пароль, при изменении непереданное поле сохраняет прежнее значение, а пустой пароль оставляет сохранённый секрет нетронутым. */
+export interface MailAccountInput {
+  "email"?: string;
+  /** Без значения берётся адрес */
+  "display_name"?: string;
+  /** Сделать ящик общим ящиком отдела */
+  "shared"?: boolean | null;
+  /** Схема, завершающая точка и порт внутри значения снимаются */
+  "imap_host"?: string;
+  /** Без значения — 993 для tls и 143 для starttls */
+  "imap_port"?: number;
+  "imap_encryption"?: MailEncryption;
+  "smtp_host"?: string;
+  /** Без значения — 465 для tls и 587 для starttls */
+  "smtp_port"?: number;
+  "smtp_encryption"?: MailEncryption;
+  /** Без значения берётся адрес почты */
+  "username"?: string;
+  /** Пароль приложения. Принимается, но не возвращается никогда; о его наличии говорит has_credentials */
+  "password"?: string;
+  /** Синоним password: у Яндекса, VK и Mail.ru это поле называется «пароль приложения». Принимается, но не возвращается никогда */
+  "app_password"?: string;
+  /** Глубина первичного импорта в днях; ноль означает весь ящик */
+  "sync_since_days"?: number | null;
+  /** Подпись исходящих писем */
+  "signature"?: string | null;
+  /** Ящик можно только включить или выключить; состояние error ставит синхронизация */
+  "status"?: "active" | "disabled";
+}
+
+export type MailAccountStatus = "active" | "disabled" | "error";
+
+/** Вложение письма. Ключ объектного хранилища наружу не отдаётся: знание ключа — половина пути к чужому файлу. */
+export interface MailAttachment {
+  "id": UUID;
+  "message_id": UUID;
+  "filename": string;
+  "content_type": string;
+  "size_bytes": number;
+  /** Заполняется у картинок, вставленных в тело письма через cid: */
+  "content_id"?: string;
+  /** Встроенная в тело картинка, а не документ */
+  "is_inline": boolean;
+  "scan_status": MailScanStatus;
+  "created_at": string;
+}
+
+/** Отправка письма или сохранение черновика. Поле in_reply_to_id указывает на письмо в нашей базе, а не на Message-ID: заголовки ответа собираем мы. */
+export interface MailComposeInput {
+  "subject"?: string;
+  /** Одна строка может содержать несколько адресов через запятую */
+  "to"?: Array<string>;
+  "cc"?: Array<string>;
+  "bcc"?: Array<string>;
+  "body_text"?: string;
+  "body_html"?: string;
+  /** Письмо, на которое отвечаем */
+  "in_reply_to_id"?: UUID | null;
+  /** Письмо, которое пересылаем */
+  "forward_of_id"?: UUID | null;
+  /** Идентификаторы заранее загруженных файлов */
+  "upload_ids"?: Array<UUID>;
+  /** Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо уходит получателю и отозвать его нельзя */
+  "save_as_draft"?: boolean;
+}
+
+/** Предложение настроек для адреса. Поле source называет происхождение: catalog — справочник провайдеров, autoconfig и autodiscover — настройки самого домена, srv и mx — записи DNS, probe — угаданный и проверенный соединением сервер. */
+export interface MailDiscoveredSettings {
+  "email"?: string;
+  "domain"?: string;
+  "source"?: "catalog" | "autoconfig" | "autodiscover" | "srv" | "mx" | "probe";
+  "provider_key"?: string;
+  "provider_label"?: string;
+  "imap_host"?: string;
+  "imap_port"?: number;
+  "imap_encryption"?: "tls" | "starttls";
+  "smtp_host"?: string;
+  "smtp_port"?: number;
+  "smtp_encryption"?: "tls" | "starttls";
+  "username"?: string;
+  "auth_method"?: "password" | "oauth";
+  "oauth_provider"?: string;
+  "password_hint"?: string;
+  "help_url"?: string;
+  /** Координаты проверены соединением, а не только прочитаны */
+  "verified"?: boolean;
+}
+
+export type MailEncryption = "tls" | "starttls";
+
+/** Папка ящика. Координаты синхронизации IMAP (UIDVALIDITY, UIDNEXT, последний прочитанный UID) наружу не отдаются. */
+export interface MailFolder {
+  "id": UUID;
+  "account_id": UUID;
+  /** Имя папки на почтовом сервере */
+  "external_id": string;
+  "name": string;
+  "role": MailFolderRole;
+  "parent_id": UUID | null;
+  /** Разделитель иерархии, который назвал сервер */
+  "delimiter": string;
+  "total_count": number;
+  "unread_count": number;
+  /** Вес папки в привычном порядке системных папок */
+  "sort_order": number;
+  "subscribed": boolean;
+  "created_at": string;
+  "updated_at": string;
+}
+
+/** Создание и переименование пользовательской папки */
+export interface MailFolderInput {
+  /** Косые черты запрещены: разделитель иерархии задаёт сервер */
+  "name": string;
+  /** Родительская папка */
+  "parent_id"?: UUID | null;
+}
+
+export type MailFolderRole = "inbox" | "sent" | "drafts" | "trash" | "spam" | "archive" | "custom";
+
+/** Письмо в копии кабинета. Внутренние координаты IMAP (UID и UIDVALIDITY) наружу не отдаются. Тело в HTML хранится таким, каким его прислал отправитель: обезвреживание живёт на отдаче, а не в хранимой копии. */
+export interface MailMessage {
+  "id": UUID;
+  "account_id": UUID;
+  "folder_id": UUID;
+  "thread_id": UUID;
+  /** Message-ID без угловых скобок; письму без него присваивается наш */
+  "message_ref": string;
+  /** Заголовок In-Reply-To */
+  "in_reply_to"?: string;
+  /** Заголовок References целиком */
+  "references"?: string;
+  "subject": string;
+  "from_address": string;
+  "from_name": string;
+  /** Конверт письма целиком */
+  "addresses"?: Array<MailMessageAddress>;
+  /** Короткий пересказ письма для списка */
+  "snippet": string;
+  "body_text"?: string;
+  "body_html"?: string;
+  "size_bytes": number;
+  "direction": "inbound" | "outbound";
+  "is_read": boolean;
+  "is_flagged": boolean;
+  "is_answered": boolean;
+  "is_draft": boolean;
+  "has_attachments": boolean;
+  "spam_verdict": MailSpamVerdict;
+  /** Кто вынес вердикт. Решение человека сильнее флага сервера и правил */
+  "spam_source"?: "provider" | "rule" | "user" | "agent";
+  "spam_reason"?: string;
+  "sent_at": string | null;
+  "received_at": string;
+  "created_at": string;
+  "updated_at": string;
+  "attachments"?: Array<MailAttachment>;
+}
+
+/** Один адрес в конверте письма */
+export interface MailMessageAddress {
+  /** Вид адреса: from, to, cc, bcc, reply_to. Значение list_id несёт идентификатор рассылки, а не адрес человека */
+  "kind": string;
+  "address": string;
+  /** Имя отправителя или получателя, если оно было в конверте */
+  "name": string;
+  /** Порядок адреса в своей группе */
+  "position": number;
+}
+
+/** Страница писем. Общее число нужно, чтобы решить, стоит ли листать дальше. */
+export interface MailMessagePage {
+  "items": Array<MailMessage>;
+  "total": number;
+  "limit": number;
+  "offset": number;
+  "has_more": boolean;
+}
+
+/** Исходящее письмо в очереди отправки. Постоянный отказ SMTP (код 5xx) не повторяется: повторять отклонённое навсегда письмо вредно для репутации отправителя. */
+export interface MailOutbound {
+  "id": UUID;
+  "account_id": UUID;
+  "message_id": UUID;
+  "status": "queued" | "sending" | "sent" | "failed" | "cancelled";
+  "attempts": number;
+  "max_attempts": number;
+  "next_attempt_at": string | null;
+  "last_error": string;
+  "last_error_code": string;
+  "sent_at": string | null;
+  /** Сотрудник, отправивший письмо */
+  "created_by": number;
+  "created_at": string;
+}
+
+/** Страница очереди отправки */
+export interface MailOutboundPage {
+  "items": Array<MailOutbound>;
+  "total": number;
+  "limit": number;
+  "offset": number;
+  "has_more": boolean;
+}
+
+/** Файл, загруженный до отправки письма. Ключ объектного хранилища наружу не отдаётся. */
+export interface MailOutboundUpload {
+  "id": UUID;
+  "account_id": UUID;
+  "filename": string;
+  "content_type": string;
+  "size_bytes": number;
+  "scan_status": MailScanStatus;
+  "status": "ready" | "consumed" | "expired";
+  "expires_at": string;
+  "created_at": string;
+}
+
+/** Подсказка настроек для формы подключения ящика */
+export interface MailProvider {
+  /** Машинный ключ провайдера */
+  "key": string;
+  /** Название провайдера для человека */
+  "label": string;
+  /** Домены адресов, по которым подсказка подбирается */
+  "domains": Array<string>;
+  "imap_host": string;
+  "imap_port": number;
+  "imap_encryption": MailEncryption;
+  "smtp_host": string;
+  "smtp_port": number;
+  "smtp_encryption": MailEncryption;
+  /** Какой именно пароль нужен: у перечисленных провайдеров обычный пароль от аккаунта не подходит */
+  "password_hint": string;
+  /** Ссылка на справку провайдера; у части провайдеров пуста */
+  "help_url": string;
+}
+
+/** Правило разбора входящей почты */
+export interface MailRule {
+  "id": UUID;
+  "account_id": UUID;
+  "name": string;
+  "enabled": boolean;
+  /** Порядок применения правил ящика */
+  "sort_order": number;
+  /** Правило применяется при всех условиях или при любом из них */
+  "match": "all" | "any";
+  "conditions": Array<MailRuleCondition>;
+  "actions": Array<MailRuleAction>;
+  /** Прекратить разбор письма после этого правила */
+  "stop_processing": boolean;
+  /** Сколько писем правило разобрало: единственный способ увидеть, что правило молчит из-за опечатки */
+  "applied_count": number;
+  "last_applied_at": string | null;
+  "created_at": string;
+  "updated_at": string;
+}
+
+/** Одно действие правила */
+export interface MailRuleAction {
+  "type": "move_to_folder" | "mark_read" | "mark_unread" | "flag" | "mark_spam" | "mark_not_spam";
+  /** Заполняется только для переноса в папку; остальные действия папку не принимают */
+  "folder_id"?: UUID | null;
+}
+
+/** Одно условие правила. Набор полей и операторов закрытый: правило исполняется на сервере над чужой почтой. */
+export interface MailRuleCondition {
+  "field": "from" | "to" | "cc" | "subject" | "body" | "list_id" | "has_attachment" | "spam_verdict";
+  /** Сравнение по домену доступно только адресным полям; поле has_attachment проверяется как is_true или is_false. */
+  "op": "contains" | "equals" | "starts_with" | "ends_with" | "domain_is" | "is_true" | "is_false";
+  /** Обязательно для всех полей, кроме has_attachment */
+  "value"?: string;
+}
+
+/** Создание и изменение правила; условия и действия передаются целиком */
+export interface MailRuleInput {
+  "name": string;
+  "enabled"?: boolean | null;
+  "sort_order"?: number | null;
+  /** Без значения — all */
+  "match"?: "all" | "any";
+  "conditions": Array<MailRuleCondition>;
+  "actions": Array<MailRuleAction>;
+  "stop_processing"?: boolean | null;
+}
+
+/** Что правило сделало с письмом */
+export interface MailRuleOutcome {
+  "rule_id": UUID;
+  "rule_name": string;
+  "message_id": UUID;
+  "subject": string;
+  "moved_to_folder"?: UUID | null;
+  "marked_read"?: boolean | null;
+  "flagged"?: boolean;
+  "spam_verdict"?: string;
+}
+
+export type MailScanStatus = "pending" | "clean" | "infected" | "skipped";
+
+export type MailSpamVerdict = "unknown" | "spam" | "ham";
+
+/** Итог одного прохода по ящику: «ничего не изменилось» — тоже ответ */
+export interface MailSyncReport {
+  "account_id": UUID;
+  /** Сколько папок прочитано */
+  "folders": number;
+  "new_messages": number;
+  /** Сколько писем разобрали правила */
+  "rules_applied": number;
+  "finished_at": string;
+  /** Папки, перечитанные целиком после смены UIDVALIDITY на сервере */
+  "full_reloaded"?: Array<string>;
+}
+
+export type MailSyncStatus = "never" | "ok" | "running" | "failed";
+
+/** Переписка: письма, связанные ответами. Склейка идёт по корню цепочки References, а не по теме. */
+export interface MailThread {
+  "id": UUID;
+  "account_id": UUID;
+  "subject": string;
+  /** Корневой Message-ID ветки */
+  "root_ref": string;
+  "message_count": number;
+  "unread_count": number;
+  "has_attachments": boolean;
+  "participants": Array<MailMessageAddress>;
+  "last_message_at": string;
+  "messages"?: Array<MailMessage>;
+}
 
 export interface ManagedChecklistItem {
   "text": string;
@@ -12636,6 +13077,37 @@ export interface StatusUpdatePatch {
   "is_archived"?: boolean;
 }
 
+/** Тело черновика переноса остатка; строки подбирает сервер. */
+export interface StockAccountTransferCreate {
+  /** Пусто или отсутствует означает рабочую дату кабинета */
+  "date"?: string;
+  "business_id": UUID;
+  "comment"?: string;
+}
+
+/** Строка переноса остатка — стоимость склада и товара, которая лежит в книге на счёте `from_*`, хотя по правилу на дату принадлежит счёту `to_*`. */
+export interface StockAccountTransferLine {
+  "business_id": UUID;
+  "company_id"?: UUID;
+  "warehouse_id": UUID;
+  "warehouse_name": string;
+  "product_id": UUID;
+  "product_name": string;
+  "from_account": UUID;
+  /** Код старого счёта, например 41 */
+  "from_code": string;
+  "to_account": UUID;
+  /** Код счёта по действующему правилу, например 10 */
+  "to_code": string;
+  /** Сумма переноса, десятичная строка */
+  "amount": string;
+}
+
+export interface StockAccountTransferProposal {
+  "count": number;
+  "results": Array<StockAccountTransferLine>;
+}
+
 export interface StockBatch {
   "id": UUID;
   /** Бизнес партии — учётная единица, которой принадлежит товар */
@@ -12852,7 +13324,7 @@ export interface StockDocumentRefs {
   "contact"?: UUID;
 }
 
-export type StockDocumentTypeKey = "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_purchase_request" | "stock_supplier_order" | "stock_inventory" | "stock_reservation" | "stock_landed_cost" | "stock_reservation_release" | "stock_supplier_order_close" | "stock_opening_balance" | "stock_marketplace_return";
+export type StockDocumentTypeKey = "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_purchase_request" | "stock_supplier_order" | "stock_inventory" | "stock_reservation" | "stock_landed_cost" | "stock_reservation_release" | "stock_supplier_order_close" | "stock_opening_balance" | "stock_marketplace_return" | "stock_account_transfer";
 
 export interface StockExport {
   "id": UUID;
@@ -13086,6 +13558,15 @@ export interface StockInventoryRefreshInput {
 }
 
 export type StockInventoryWorkflow = "counting" | "counted" | "acts_created" | "closed";
+
+/** Тело черновика ввода начальных остатков товара; вид задаёт ручка. */
+export interface StockOpeningBalanceCreate {
+  /** Пусто или отсутствует означает рабочую дату кабинета */
+  "date"?: string;
+  "entity_refs": StockDocumentRefs;
+  "payload": StockDocumentPayload;
+  "comment"?: string;
+}
 
 export interface StockProductUOM {
   "id": UUID;
@@ -14196,4 +14677,67 @@ export interface FinanceListDividendPoliciesResponse {
 export interface FinanceGetProjectBudgetHistoryResponse {
   "count": number;
   "results": Array<FinanceProjectBudget>;
+}
+
+export interface MailListAccountsResponse {
+  "items": Array<MailAccount>;
+}
+
+export interface MailListFoldersResponse {
+  "items": Array<MailFolder>;
+}
+
+export interface MailComposeMessageResponse {
+  "message": MailMessage;
+  "outbound": MailOutbound;
+}
+
+export interface MailListRulesResponse {
+  "items": Array<MailRule>;
+}
+
+export interface MailApplyRulesRequest {
+  /** Папка разбора; без неё разбираются «Входящие» */
+  "folder_id"?: UUID | null;
+  /** Сколько писем взять в разбор; ноль и меньше означает умолчание */
+  "limit"?: number;
+}
+
+export interface MailApplyRulesResponse {
+  "items": Array<MailRuleOutcome>;
+  /** Сколько писем правила разобрали */
+  "applied": number;
+}
+
+export interface MailAttachStoredFileRequest {
+  /** Файл в хранилище кабинета */
+  "file_id": string;
+}
+
+export interface MailListMessageAttachmentsResponse {
+  "items": Array<MailAttachment>;
+}
+
+export interface MailFlagMessageRequest {
+  /** Значение false снимает отметку важности */
+  "flagged"?: boolean;
+}
+
+export interface MailMoveMessageRequest {
+  "folder_id": UUID;
+}
+
+export interface MailCompleteGoogleOAuthRequest {
+  "state": string;
+  "code": string;
+}
+
+export interface MailStartGoogleOAuthResponse {
+  "auth_url"?: string;
+  "provider"?: string;
+}
+
+export interface MailListProvidersResponse {
+  "items": Array<MailProvider>;
+  "suggestion"?: MailProvider;
 }

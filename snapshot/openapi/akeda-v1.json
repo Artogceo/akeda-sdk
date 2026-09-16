@@ -401,6 +401,18 @@
     {
       "name": "Docflow intake",
       "description": "Модуль docflow (документы) — приёмка входящего формализованного документа к учёту: разбор титула продавца из вложений пакета, предложение по контрагенту и номенклатуре и подтверждение человека, из которого рождается учётный документ кабинета. Предложение ничего не меняет и стоит под правом чтения. Ограничение «только чтение» раздел не гасит: в боевом ЭДО приёмка не меняет ничего — она заводит черновик в нашей базе по файлу, который уже скачан"
+    },
+    {
+      "name": "Mail accounts",
+      "description": "Модуль mail (почта сотрудника) — подключение ящиков по IMAP и SMTP, подсказки провайдеров, папки ящика и синхронизация по требованию. Пароль подключения не возвращает ни одна операция: о нём говорит только признак has_credentials"
+    },
+    {
+      "name": "Mail messages",
+      "description": "Модуль mail (почта сотрудника) — письма и переписки, отметки прочтения, важности и спама, перенос между папками, вложения, очередь отправки и составление письма. Письмо без признака save_as_draft уходит получателю, и отозвать его нельзя"
+    },
+    {
+      "name": "Mail rules",
+      "description": "Модуль mail (почта сотрудника) — правила разбора входящей почты и их применение к уже накопившимся письмам. Набор полей и операторов закрытый: правило исполняется на сервере над чужой перепиской"
     }
   ],
   "paths": {
@@ -36336,7 +36348,7 @@
         ],
         "operationId": "crmFindCustomerDuplicates",
         "summary": "Найти похожие карточки клиента",
-        "description": "Проверка перед созданием: совпадение по имени или нормализованному телефону.",
+        "description": "Проверка перед созданием: совпадение по ИНН (с КПП, если он передан), хвосту телефона или имени. Найденные идут по силе признака.",
         "security": [
           {
             "erpUserToken": []
@@ -36367,6 +36379,22 @@
             "name": "phone",
             "in": "query",
             "description": "Телефон в любом формате",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "inn",
+            "in": "query",
+            "description": "ИНН; пробелы и дефисы игнорируются",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kpp",
+            "in": "query",
+            "description": "КПП; сужает совпадение по ИНН до конкретного подразделения",
             "schema": {
               "type": "string"
             }
@@ -36560,6 +36588,180 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/crm/customers/{id}/relations": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "CRM customers"
+        ],
+        "operationId": "crmGetCustomerRelations",
+        "summary": "Получить компании человека и контакты компании",
+        "description": "У человека заполнен список companies, у компании - contacts; вторая сторона - пустой список.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:read",
+        "responses": {
+          "200": {
+            "description": "Связи карточки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CRMCustomerRelations"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/crm/customers/{id}/companies/{companyId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        },
+        {
+          "name": "companyId",
+          "in": "path",
+          "required": true,
+          "description": "Клиент CRM с типом company",
+          "schema": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        }
+      ],
+      "put": {
+        "tags": [
+          "CRM customers"
+        ],
+        "operationId": "crmLinkCustomerCompany",
+        "summary": "Связать человека с компанией",
+        "description": "{id} - клиент с типом person. Повторный вызов обновляет должность и второй связи не создаёт.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:write",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CRMCustomerLinkInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Связи человека после привязки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CRMCustomerRelations"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CRM customers"
+        ],
+        "operationId": "crmUnlinkCustomerCompany",
+        "summary": "Снять связь человека с компанией",
+        "description": "Отсутствующая связь не ошибка: ответ - текущие связи человека.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:write",
+        "responses": {
+          "200": {
+            "description": "Связи человека после отвязки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CRMCustomerRelations"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           }
         }
       }
@@ -42755,6 +42957,253 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/StockDocumentCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Созданный черновик",
+            "headers": {
+              "Idempotent-Replay": {
+                "$ref": "#/components/headers/IdempotentReplay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/IdempotencyKeyMismatch"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/stock/opening-balances": {
+      "post": {
+        "tags": [
+          "Stock documents"
+        ],
+        "operationId": "stockCreateOpeningBalance",
+        "summary": "Создать черновик ввода начальных остатков товара",
+        "description": "Черновик вида `stock_opening_balance`: запас, который был у бизнеса на\nначало учёта. Проведённый, он ложится в капитал на начало учёта (счёт\n80) без движения ОПиУ — в отличие от оприходования излишков, которое\nдаёт прочий доход (ERP-1134). Общая ручка `stockCreateDocument` этот вид\nне заводит.\n\nНа складе площадки ввод принимается только до начала учёта бизнеса:\nесли в книге уже есть проводка раньше даты ввода (кроме самих вводов\nостатков), ответ — 400 с объяснением оформить приёмку.\n\nЧитает `Idempotency-Key` так же, как `stockCreateDocument`.\n",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockOpeningBalanceCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Созданный черновик",
+            "headers": {
+              "Idempotent-Replay": {
+                "$ref": "#/components/headers/IdempotentReplay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/IdempotencyKeyMismatch"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/stock/account-transfers/proposal": {
+      "get": {
+        "tags": [
+          "Stock documents"
+        ],
+        "operationId": "stockAccountTransferProposal",
+        "summary": "Показать остаток запасов, который надо перенести на счёт по новому правилу",
+        "description": "Счёт запасов (10/41/43) задаёт правило по складу или товару с датой\nначала. Книга проводит складское движение по правилу на дату документа,\nпоэтому после смены правила остаток остаётся в книге на старом счёте.\nОтвет — строки, которые перенесёт документ `stock_account_transfer`\n(«Перенос остатка») на эту дату: склад, товар, счёт откуда, счёт куда и\nсумма. Пустой список означает, что переносить нечего.\n\nТолько чтение: документ не заводится.\n",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "description": "Дата переноса, ГГГГ-ММ-ДД",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "business_id",
+            "in": "query",
+            "required": false,
+            "description": "Бизнес; без него — строки всех бизнесов",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Строки переноса остатка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockAccountTransferProposal"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/stock/account-transfers": {
+      "post": {
+        "tags": [
+          "Stock documents"
+        ],
+        "operationId": "stockCreateAccountTransfer",
+        "summary": "Создать черновик переноса остатка на счёт по новому правилу",
+        "description": "Черновик вида `stock_account_transfer` («Перенос остатка»): строки\nберутся из `stockAccountTransferProposal` на дату по бизнесу и лежат в\n`payload.items`. Проведённый документ склад не двигает ни количеством,\nни стоимостью, а пишет книгу: Дт счёт по действующему правилу / Кт\nстарый счёт. Проводится и отменяется общими `stockPostDocument` и\n`stockCancelDocument`; после проведения строки лежат в\n`payload.posting.items`.\n\n400 — если переносить нечего или не указан бизнес. Документ сам не\nпоявляется: его заводит человек. Общая ручка `stockCreateDocument` этот\nвид не заводит.\n\nЧитает `Idempotency-Key` так же, как `stockCreateDocument`.\n",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockAccountTransferCreate"
               }
             }
           }
@@ -67586,6 +68035,2341 @@
           }
         }
       }
+    },
+    "/api/v1/mail/providers": {
+      "get": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailListProviders",
+        "summary": "Получить подсказки почтовых провайдеров",
+        "description": "Каталог известных провайдеров с хостами, портами и указанием, какой именно пароль нужен. Список — подсказка, а не ограничение: любой ящик подключается вручную. Параметр email добавляет к ответу поле suggestion с подсказкой по домену адреса; неизвестный домен просто не даёт suggestion.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "Адрес ящика для подбора подсказки по домену",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Каталог провайдеров и подсказка по адресу",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MailProvider"
+                      }
+                    },
+                    "suggestion": {
+                      "$ref": "#/components/schemas/MailProvider"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/oauth/google/start": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailStartGoogleOAuth",
+        "summary": "Начать подключение Gmail через вход в Google",
+        "description": "Возвращает ссылку, по которой человек входит в свой аккаунт Google и разрешает доступ к почте. Пароль в Akeda при этом не вводится и не хранится: Google выдаёт ключ обновления, он шифруется и по нему выпускаются короткоживущие ключи доступа. Состояние возврата подписывается вместе с кабинетом и сотрудником — иначе чужую почту можно было бы привязать к кабинету подсунутой ссылкой.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "responses": {
+          "200": {
+            "description": "Ссылка входа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "auth_url": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "503": {
+            "description": "Вход через Google не настроен на сервере"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/oauth/google/complete": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailCompleteGoogleOAuth",
+        "summary": "Завершить подключение Gmail",
+        "description": "Обменивает одноразовый код возврата на доступ к ящику и подключает его. Код действует один раз; просроченное или чужое состояние отклоняется.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "state",
+                  "code"
+                ],
+                "properties": {
+                  "state": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Подключённый ящик",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "503": {
+            "description": "Вход через Google не настроен на сервере"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/discover": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailDiscoverSettings",
+        "summary": "Определить настройки сервера по адресу почты",
+        "description": "Подбирает координаты серверов для адреса: сначала по справочнику известных провайдеров, затем по настройкам, опубликованным самим доменом, записям DNS, почтовому обменнику и, в последнюю очередь, перебором обычных имён с проверкой соединения. Ответ — предложение, а не решение: поля подставляются в форму и остаются доступными для правки. Отказ 404 означает «не нашли» и не мешает подключить ящик вручную — корпоративные серверы часто не публикуют настроек вовсе.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:read",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Адрес почты целиком, вместе с доменом"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Предложенные настройки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailDiscoveredSettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Настройки определить не удалось"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/accounts": {
+      "get": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailListAccounts",
+        "summary": "Получить почтовые ящики сотрудника",
+        "description": "Видны личные ящики текущего сотрудника, общие ящики отдела и — у того, кому роль разрешает видеть все записи ресурса mail.account, — все ящики кабинета. Пароль подключения не возвращается ни здесь, ни где-либо ещё: его наличие показывает признак has_credentials.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Доступные сотруднику ящики",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MailAccount"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailCreateAccount",
+        "summary": "Подключить почтовый ящик",
+        "description": "Пароль приложения принимается полем password или его синонимом app_password и НИКОГДА не возвращается: ни эта операция, ни чтение ящика, ни изменение его настроек секрета не отдают. В ответе о пароле говорит только признак has_credentials. При подключении обязательны email, imap_host, smtp_host и пароль; логин, отображаемое имя и порты достраиваются по адресу и режиму шифрования, если не переданы.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailAccountInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Подключённый ящик без учётных данных",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/accounts/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailGetAccount",
+        "summary": "Получить почтовый ящик",
+        "description": "Недоступный и отсутствующий ящик одинаково возвращают 404: иначе перебором идентификаторов составляется карта чужих ящиков кабинета.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:read",
+        "responses": {
+          "200": {
+            "description": "Ящик без учётных данных",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailUpdateAccount",
+        "summary": "Изменить настройки почтового ящика",
+        "description": "Пароль приложения принимается полем password или app_password и НИКОГДА не возвращается: в ответе о нём говорит только признак has_credentials. Пустое значение пароля оставляет сохранённый секрет нетронутым — иначе открытая форма редактирования стирала бы подключение при каждом сохранении. Переданные поля применяются, непереданные сохраняют прежнее значение. Общий ящик настраивает владелец или тот, кому роль разрешает видеть все записи ресурса mail.account.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailAccountInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Обновлённый ящик без учётных данных",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailDeleteAccount",
+        "summary": "Отключить почтовый ящик",
+        "description": "Ящик отключается, и наша копия переписки убирается. Письма остаются на почтовом сервере клиента: их владелец — он, а не Akeda.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "responses": {
+          "204": {
+            "description": "Ящик отключён"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/accounts/{id}/check": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailCheckAccount",
+        "summary": "Проверить подключение ящика",
+        "description": "Проверка входа на IMAP сохранённым паролем. Наружу уходит код отказа, а не текст почтового сервера: текст сервера называет ящик и позволяет догадаться, существует ли такой адрес. Отклонённый пароль отвечает 400 с кодом mail.account.credentials_rejected.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "responses": {
+          "200": {
+            "description": "Ящик с обновлённым состоянием подключения",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/accounts/{id}/sync": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailSyncAccount",
+        "summary": "Синхронизировать ящик по требованию",
+        "description": "Один проход по папкам и письмам ящика. Идущая синхронизация того же ящика отвечает 409 mail.sync_in_progress, выключенный ящик — 409 mail.account_disabled, ящик без сохранённого пароля — 409 mail.not_connected. Отчёт возвращается и тогда, когда нового ничего нет: «ничего не изменилось» — тоже ответ.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "responses": {
+          "200": {
+            "description": "Итог прохода по ящику",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailSyncReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/accounts/{id}/folders": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailListFolders",
+        "summary": "Получить папки ящика",
+        "description": "Роль папки — наше прочтение её назначения, а не имя на сервере: экран и правила работают с ролью, синхронизация — с внешним именем.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:read",
+        "responses": {
+          "200": {
+            "description": "Папки ящика в привычном порядке системных папок",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MailFolder"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailCreateFolder",
+        "summary": "Создать папку ящика",
+        "description": "Косые черты в названии запрещены: разделитель иерархии задаёт почтовый сервер, и имя с ним внутри создаёт не папку, а ветку с пустым промежуточным узлом.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailFolderInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Созданная папка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailFolder"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/accounts/{id}/rules": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Mail rules"
+        ],
+        "operationId": "mailListRules",
+        "summary": "Получить правила разбора ящика",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:read",
+        "responses": {
+          "200": {
+            "description": "Правила ящика в порядке применения",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MailRule"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Mail rules"
+        ],
+        "operationId": "mailCreateRule",
+        "summary": "Создать правило разбора почты",
+        "description": "Набор полей и операторов закрытый: правило исполняется на сервере над чужой почтой, и свободное выражение здесь означало бы право выполнить что угодно над любым письмом кабинета. В правиле не больше 20 условий, у ящика — не больше 100 правил.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailRuleInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Созданное правило",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailRule"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/accounts/{id}/rules/apply": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Mail rules"
+        ],
+        "operationId": "mailApplyRules",
+        "summary": "Применить правила к уже лежащим письмам",
+        "description": "Прогон правил по накопившимся письмам: человек завёл правило и хочет разобрать почту, которая пришла раньше. Без folder_id разбираются «Входящие». Ответ перечисляет последствия по каждому письму, то есть говорит, что именно правила сделали.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "folder_id": {
+                    "oneOf": [
+                      {
+                        "$ref": "#/components/schemas/UUID"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Папка разбора; без неё разбираются «Входящие»"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 200,
+                    "default": 50,
+                    "description": "Сколько писем взять в разбор; ноль и меньше означает умолчание"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Последствия правил по каждому письму",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items",
+                    "applied"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MailRuleOutcome"
+                      }
+                    },
+                    "applied": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Сколько писем правила разобрали"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/accounts/{id}/outbox": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailListOutbox",
+        "summary": "Получить очередь отправки ящика",
+        "description": "Очередь показывает состояние доставки: сколько попыток сделано, когда будет следующая и каким кодом отказал SMTP.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:read",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Размер страницы",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Смещение страницы",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница очереди отправки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailOutboundPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/accounts/{id}/uploads": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailUploadOutboundFile",
+        "summary": "Загрузить файл для письма",
+        "description": "Файл уходит в хранилище кабинета отдельным запросом, а отправка остаётся быстрой: письмо и его вложения появляются одной транзакцией. Полученный идентификатор передаётся в upload_ids при отправке. Потолок одного файла — 25 МБ.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Подготовленная загрузка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailOutboundUpload"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/accounts/{id}/uploads/from-file": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailAttachStoredFile",
+        "summary": "Приложить к письму файл из хранилища",
+        "description": "Документ из папки компании прикладывается по идентификатору: браузер его не скачивает и не загружает обратно. Содержимое копируется в момент вызова, поэтому письмо уходит с тем файлом, который человек видел, а более поздняя правка документа его не меняет. Право на файл проверяет файловое хранилище по действующему сотруднику: доступ к ящику чужую папку не открывает. Потолок одного файла — 25 МБ.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "file_id"
+                ],
+                "properties": {
+                  "file_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Файл в хранилище кабинета"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Подготовленная загрузка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailOutboundUpload"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Файловое хранилище недоступно"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/accounts/{id}/messages": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailComposeMessage",
+        "summary": "Отправить письмо или сохранить черновик",
+        "description": "При save_as_draft равном true письмо только СОХРАНЯЕТСЯ в «Черновиках» и ждёт человека — получателю оно не уходит. Без этого признака письмо встаёт в очередь отправки и уходит получателю; отозвать отправленное письмо нельзя. Для агента черновик — единственный способ подготовить ответ, не отправив его от чужого имени без подтверждения. В одном письме не больше 200 получателей и не больше 20 файлов.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailComposeInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Созданное письмо и его запись в очереди отправки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "message",
+                    "outbound"
+                  ],
+                  "properties": {
+                    "message": {
+                      "$ref": "#/components/schemas/MailMessage"
+                    },
+                    "outbound": {
+                      "$ref": "#/components/schemas/MailOutbound"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/folders/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "patch": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailRenameFolder",
+        "summary": "Переименовать папку ящика",
+        "description": "Системную папку переименовать нельзя — 409 mail.system_folder: без «Входящих» ящик перестаёт работать.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailFolderInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Переименованная папка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailFolder"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailDeleteFolder",
+        "summary": "Удалить пользовательскую папку",
+        "description": "Папка с письмами не удаляется — 409 mail.folder_not_empty: письма лежат на сервере клиента, и молча потерять их мы не вправе. Системная папка не удаляется вовсе — 409 mail.system_folder.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "responses": {
+          "204": {
+            "description": "Папка удалена"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/rules/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "patch": {
+        "tags": [
+          "Mail rules"
+        ],
+        "operationId": "mailUpdateRule",
+        "summary": "Изменить правило разбора почты",
+        "description": "Правило передаётся целиком: условия и действия заменяются, а не дописываются.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MailRuleInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Обновлённое правило",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailRule"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Mail rules"
+        ],
+        "operationId": "mailDeleteRule",
+        "summary": "Удалить правило разбора почты",
+        "description": "Уже разобранные письма остаются там, куда правило их положило: удаление правила — не отмена его последствий.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "responses": {
+          "204": {
+            "description": "Правило удалено"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/messages": {
+      "get": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailListMessages",
+        "summary": "Получить письма по фильтру",
+        "description": "Одна выборка обслуживает и список папки, и поиск. Папку можно назвать ролью (folder_role), не зная её идентификатора: так инструкция агента переносится между кабинетами. Видны письма только тех ящиков, которые доступны сотруднику.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Поиск по теме, отправителю и тексту",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account_id",
+            "in": "query",
+            "description": "Ограничить одним ящиком",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "folder_id",
+            "in": "query",
+            "description": "Ограничить одной папкой",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "thread_id",
+            "in": "query",
+            "description": "Ограничить одной перепиской",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "folder_role",
+            "in": "query",
+            "description": "Папка по назначению вместо идентификатора",
+            "schema": {
+              "$ref": "#/components/schemas/MailFolderRole"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Адрес отправителя",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "spam_verdict",
+            "in": "query",
+            "description": "Вердикт по спаму",
+            "schema": {
+              "$ref": "#/components/schemas/MailSpamVerdict"
+            }
+          },
+          {
+            "name": "is_read",
+            "in": "query",
+            "description": "Только прочитанные или только непрочитанные",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "is_flagged",
+            "in": "query",
+            "description": "Только отмеченные важными",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "has_files",
+            "in": "query",
+            "description": "Только письма с вложениями",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "sent_after",
+            "in": "query",
+            "description": "Письма, отправленные не раньше этого момента (RFC 3339)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "sent_before",
+            "in": "query",
+            "description": "Письма, отправленные не позже этого момента (RFC 3339)",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Размер страницы",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Смещение страницы",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Страница писем с общим числом строк",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailMessagePage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/messages/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailGetMessage",
+        "summary": "Получить письмо целиком",
+        "description": "Недоступное и отсутствующее письмо одинаково возвращают 404. HTML письма приходит таким, каким его прислал отправитель: обезвреживание живёт на отдаче, а не в хранимой копии.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:read",
+        "responses": {
+          "200": {
+            "description": "Письмо вместе с конвертом и вложениями",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailMessage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailDeleteMessage",
+        "summary": "Переложить письмо в корзину",
+        "description": "Письмо переносится в корзину ящика, а не стирается: удаление письма — дело почтового сервера клиента.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "responses": {
+          "204": {
+            "description": "Письмо в корзине"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/messages/{id}/read": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailMarkMessageRead",
+        "summary": "Отметить письмо прочитанным",
+        "description": "Отметка уезжает обратно на почтовый сервер: владелец письма — он, и флаг обязан совпасть.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "responses": {
+          "204": {
+            "description": "Письмо отмечено прочитанным"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/messages/{id}/unread": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailMarkMessageUnread",
+        "summary": "Снять отметку прочтения",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "responses": {
+          "204": {
+            "description": "Отметка прочтения снята"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/messages/{id}/flag": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailFlagMessage",
+        "summary": "Поставить или снять отметку важности",
+        "description": "Тело необязательно: без него отметка ставится. Так кнопка «важное» работает одним запросом.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "flagged": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Значение false снимает отметку важности"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Отметка важности применена"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/messages/{id}/move": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailMoveMessage",
+        "summary": "Переложить письмо в другую папку",
+        "description": "Папка другого ящика отвечает 400 mail.folder_foreign: письмо не переезжает между ящиками.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "folder_id"
+                ],
+                "properties": {
+                  "folder_id": {
+                    "$ref": "#/components/schemas/UUID"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Письмо переложено"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/messages/{id}/spam": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailMarkMessageSpam",
+        "summary": "Отправить письмо в спам",
+        "description": "Решение человека сильнее флага почтового сервера и сильнее правил: следующая синхронизация его не перебивает.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "responses": {
+          "204": {
+            "description": "Письмо помечено спамом"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/messages/{id}/not-spam": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailMarkMessageNotSpam",
+        "summary": "Вернуть письмо из спама",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:write",
+        "responses": {
+          "204": {
+            "description": "Письмо возвращено из спама"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/messages/{id}/attachments": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailListMessageAttachments",
+        "summary": "Получить вложения письма",
+        "description": "Ключи объектного хранилища не возвращаются: знание ключа — половина пути к чужому файлу.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:read",
+        "responses": {
+          "200": {
+            "description": "Вложения письма без ключей хранилища",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MailAttachment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/threads/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailGetThread",
+        "summary": "Получить переписку целиком",
+        "description": "Письма склеиваются в переписку по корню цепочки References, а не по теме: «Re: Договор» от двух разных клиентов — это две переписки.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:read",
+        "responses": {
+          "200": {
+            "description": "Переписка вместе с письмами",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailThread"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/mail/attachments/{id}/content": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Mail messages"
+        ],
+        "operationId": "mailGetAttachmentContent",
+        "summary": "Скачать вложение письма",
+        "description": "Содержимое приходит потоком с исходным типом и запретом кеширования: вложение письма — частные данные кабинета, и промежуточным кэшам его хранить нельзя. Заражённый файл отвечает 403 mail.attachment_infected, ещё проверяемый — 409 mail.attachment_pending.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:read",
+        "responses": {
+          "200": {
+            "description": "Содержимое вложения",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              }
+            },
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -70720,7 +73504,31 @@
             "$ref": "#/components/schemas/UUID"
           },
           "action": {
-            "type": "string"
+            "type": "string",
+            "description": "Готовый русский текст записи."
+          },
+          "kind": {
+            "type": "string",
+            "description": "Вид записи об этапе задачи — `status_set`, `status_changed` или `status_deleted` (этап удалён, задача перенесена в `detail.to` или осталась без этапа). У остальных записей поле отсутствует; клиент, не знающий вида, показывает `action`."
+          },
+          "detail": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Названия этапов записи об этапе; у удалённого этапа — сохранённое название.",
+            "properties": {
+              "from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "to": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
           },
           "actor_name": {
             "type": [
@@ -77059,7 +79867,7 @@
           "preview": {
             "type": "boolean",
             "default": true,
-            "description": "Показывать текст сообщения в уведомлении. Поле отсутствует — уведомление полное."
+            "description": "Показывать содержание сообщения в уведомлении. Выключено — уведомление не несёт ни текста, ни отправителя: ни имени, ни фотографии, ни названия группы, поэтому баннер с человеком на iPhone не рисуется. Счётчик непрочитанных и переход в чат остаются. Поле отсутствует — уведомление полное."
           },
           "sound": {
             "type": "boolean",
@@ -77069,7 +79877,7 @@
           "push_preview": {
             "type": "boolean",
             "default": true,
-            "description": "Совместимый псевдоним preview. Если любое из двух полей false, текст скрыт."
+            "description": "Совместимый псевдоним preview. Если любое из двух полей false, содержание скрыто."
           },
           "push_sound": {
             "type": "boolean",
@@ -91270,6 +94078,60 @@
                 }
               }
             }
+          },
+          "stock": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Сверка стоимости склада с книгой по счетам запасов.",
+            "items": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "transfer_pending_out": {
+                  "type": "string",
+                  "description": "Неперенесённый остаток, который уйдёт с этого счёта документом «Перенос остатка» (ERP-1146); нет поля — переносить нечего."
+                },
+                "transfer_pending_in": {
+                  "type": "string",
+                  "description": "Неперенесённый остаток, который придёт на этот счёт документом «Перенос остатка» (ERP-1146); нет поля — переносить нечего."
+                }
+              }
+            }
+          },
+          "stock_transfer_pending": {
+            "type": "array",
+            "description": "Остаток запасов, который после смены правила счёта лежит в книге на старом счёте и ещё не перенесён документом «Перенос остатка» (ERP-1146). Разрез — пара счетов.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "from_code",
+                "to_code",
+                "amount",
+                "warehouses"
+              ],
+              "properties": {
+                "from_code": {
+                  "type": "string"
+                },
+                "to_code": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "string"
+                },
+                "warehouses": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "stock_transfer_hint": {
+            "type": "string",
+            "description": "Пояснение к неперенесённому остатку для человека; пусто, если переносить нечего."
           }
         }
       },
@@ -93214,6 +96076,8 @@
           "kind",
           "name",
           "legal_name",
+          "inn",
+          "kpp",
           "phone",
           "email",
           "messengers",
@@ -93240,6 +96104,14 @@
           },
           "legal_name": {
             "type": "string"
+          },
+          "inn": {
+            "type": "string",
+            "description": "ИНН без пробелов; пустая строка - не указан"
+          },
+          "kpp": {
+            "type": "string",
+            "description": "КПП в верхнем регистре; бывает только при ИНН из 10 цифр"
           },
           "phone": {
             "type": "string"
@@ -93328,6 +96200,14 @@
           "legal_name": {
             "type": "string"
           },
+          "inn": {
+            "type": "string",
+            "description": "ИНН: 10 цифр у организации, 12 у предпринимателя, с верной контрольной цифрой"
+          },
+          "kpp": {
+            "type": "string",
+            "description": "КПП: девять знаков, только вместе с ИНН из 10 цифр"
+          },
           "phone": {
             "type": "string"
           },
@@ -93385,6 +96265,14 @@
           "legal_name": {
             "type": "string"
           },
+          "inn": {
+            "type": "string",
+            "description": "Пустая строка стирает ИНН"
+          },
+          "kpp": {
+            "type": "string",
+            "description": "Пустая строка стирает КПП"
+          },
           "phone": {
             "type": "string"
           },
@@ -93441,13 +96329,93 @@
               "matched_by": {
                 "type": "string",
                 "enum": [
-                  "name",
-                  "phone"
+                  "inn",
+                  "phone",
+                  "name"
                 ]
               }
             }
           }
         ]
+      },
+      "CRMRelatedCustomer": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "name",
+          "legal_name",
+          "inn",
+          "phone",
+          "email",
+          "position"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "person",
+              "company"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "legal_name": {
+            "type": "string"
+          },
+          "inn": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "position": {
+            "type": "string",
+            "description": "Должность человека в компании"
+          }
+        }
+      },
+      "CRMCustomerRelations": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "companies",
+          "contacts"
+        ],
+        "properties": {
+          "companies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CRMRelatedCustomer"
+            },
+            "description": "Компании, в которых работает человек"
+          },
+          "contacts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CRMRelatedCustomer"
+            },
+            "description": "Контакты компании"
+          }
+        }
+      },
+      "CRMCustomerLinkInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "position": {
+            "type": "string",
+            "description": "Должность человека в компании"
+          }
+        }
       },
       "CRMContactRef": {
         "type": "object",
@@ -93468,6 +96436,12 @@
             "type": "string"
           },
           "legal_name": {
+            "type": "string"
+          },
+          "inn": {
+            "type": "string"
+          },
+          "kpp": {
             "type": "string"
           },
           "entity_type": {
@@ -96885,7 +99859,7 @@
       },
       "StockDocumentTypeKey": {
         "type": "string",
-        "description": "Вид складского документа. Служебные виды заводит только модуль: `stock_reservation_release` — при снятии остатка резерва, `stock_supplier_order_close` — при закрытии недовезённого заказа поставщику. Виды `stock_opening_balance` и `stock_marketplace_return` заводит ввод остатков и учёт склада площадки; вручную они не создаются.",
+        "description": "Вид складского документа. Служебные виды заводит только модуль: `stock_reservation_release` — при снятии остатка резерва, `stock_supplier_order_close` — при закрытии недовезённого заказа поставщику. Виды `stock_opening_balance` и `stock_marketplace_return` заводит ввод остатков и учёт склада площадки, `stock_account_transfer` — `stockCreateAccountTransfer`; общей ручкой они не создаются.",
         "enum": [
           "stock_receipt",
           "stock_shipment",
@@ -96902,7 +99876,8 @@
           "stock_reservation_release",
           "stock_supplier_order_close",
           "stock_opening_balance",
-          "stock_marketplace_return"
+          "stock_marketplace_return",
+          "stock_account_transfer"
         ]
       },
       "StockDocumentCreateTypeKey": {
@@ -97298,6 +100273,127 @@
                 "$ref": "#/components/schemas/StockInventoryCreatePayload"
               }
             ]
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "StockOpeningBalanceCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entity_refs",
+          "payload"
+        ],
+        "description": "Тело черновика ввода начальных остатков товара; вид задаёт ручка.",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Пусто или отсутствует означает рабочую дату кабинета"
+          },
+          "entity_refs": {
+            "$ref": "#/components/schemas/StockDocumentRefs"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/StockDocumentPayload"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "StockAccountTransferLine": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "business_id",
+          "warehouse_id",
+          "warehouse_name",
+          "product_id",
+          "product_name",
+          "from_account",
+          "from_code",
+          "to_account",
+          "to_code",
+          "amount"
+        ],
+        "description": "Строка переноса остатка — стоимость склада и товара, которая лежит в книге на счёте `from_*`, хотя по правилу на дату принадлежит счёту `to_*`.",
+        "properties": {
+          "business_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "company_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "warehouse_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "warehouse_name": {
+            "type": "string"
+          },
+          "product_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "product_name": {
+            "type": "string"
+          },
+          "from_account": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "from_code": {
+            "type": "string",
+            "description": "Код старого счёта, например 41"
+          },
+          "to_account": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "to_code": {
+            "type": "string",
+            "description": "Код счёта по действующему правилу, например 10"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Сумма переноса, десятичная строка"
+          }
+        }
+      },
+      "StockAccountTransferProposal": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "count",
+          "results"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockAccountTransferLine"
+            }
+          }
+        }
+      },
+      "StockAccountTransferCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "business_id"
+        ],
+        "description": "Тело черновика переноса остатка; строки подбирает сервер.",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Пусто или отсутствует означает рабочую дату кабинета"
+          },
+          "business_id": {
+            "$ref": "#/components/schemas/UUID"
           },
           "comment": {
             "type": "string"
@@ -119834,6 +122930,1382 @@
             }
           }
         }
+      },
+      "MailEncryption": {
+        "type": "string",
+        "description": "Режим шифрования канала. Открытого соединения без TLS в перечне нет намеренно: пароль от почты в открытом канале не передаётся.",
+        "enum": [
+          "tls",
+          "starttls"
+        ]
+      },
+      "MailAccountStatus": {
+        "type": "string",
+        "description": "Состояние ящика. disabled ставит человек, error — воркер синхронизации; разделение нужно, чтобы починка пароля не воскрешала ящик, который владелец выключил сознательно.",
+        "enum": [
+          "active",
+          "disabled",
+          "error"
+        ]
+      },
+      "MailSyncStatus": {
+        "type": "string",
+        "description": "Состояние последней синхронизации ящика",
+        "enum": [
+          "never",
+          "ok",
+          "running",
+          "failed"
+        ]
+      },
+      "MailFolderRole": {
+        "type": "string",
+        "description": "Назначение папки в нашем прочтении, а не её имя на сервере. Незнакомое имя остаётся custom — угаданная роль складывала бы туда отправленные письма.",
+        "enum": [
+          "inbox",
+          "sent",
+          "drafts",
+          "trash",
+          "spam",
+          "archive",
+          "custom"
+        ]
+      },
+      "MailSpamVerdict": {
+        "type": "string",
+        "description": "Вердикт по спаму; unknown — состояние по умолчанию",
+        "enum": [
+          "unknown",
+          "spam",
+          "ham"
+        ]
+      },
+      "MailScanStatus": {
+        "type": "string",
+        "description": "Состояние антивирусной проверки файла. pending существует потому, что письмо сохраняется целиком, а проверка идёт потоком: видеть письмо можно сразу, скачать вложение — только после вердикта.",
+        "enum": [
+          "pending",
+          "clean",
+          "infected",
+          "skipped"
+        ]
+      },
+      "MailProvider": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Подсказка настроек для формы подключения ящика",
+        "required": [
+          "key",
+          "label",
+          "domains",
+          "imap_host",
+          "imap_port",
+          "imap_encryption",
+          "smtp_host",
+          "smtp_port",
+          "smtp_encryption",
+          "password_hint",
+          "help_url"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Машинный ключ провайдера"
+          },
+          "label": {
+            "type": "string",
+            "description": "Название провайдера для человека"
+          },
+          "domains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Домены адресов, по которым подсказка подбирается"
+          },
+          "imap_host": {
+            "type": "string"
+          },
+          "imap_port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "imap_encryption": {
+            "$ref": "#/components/schemas/MailEncryption"
+          },
+          "smtp_host": {
+            "type": "string"
+          },
+          "smtp_port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "smtp_encryption": {
+            "$ref": "#/components/schemas/MailEncryption"
+          },
+          "password_hint": {
+            "type": "string",
+            "description": "Какой именно пароль нужен: у перечисленных провайдеров обычный пароль от аккаунта не подходит"
+          },
+          "help_url": {
+            "type": "string",
+            "description": "Ссылка на справку провайдера; у части провайдеров пуста"
+          }
+        }
+      },
+      "MailAccount": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Почтовый ящик кабинета. Пароль подключения не сериализуется никогда: наружу уходит только признак has_credentials.",
+        "required": [
+          "id",
+          "owner_user_id",
+          "shared",
+          "email",
+          "display_name",
+          "imap_host",
+          "imap_port",
+          "imap_encryption",
+          "smtp_host",
+          "smtp_port",
+          "smtp_encryption",
+          "username",
+          "has_credentials",
+          "status",
+          "sync_status",
+          "sync_since_days",
+          "signature",
+          "last_sync_at",
+          "last_error",
+          "last_error_code",
+          "unread_count",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "owner_user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Сотрудник, которому принадлежит ящик"
+          },
+          "shared": {
+            "type": "boolean",
+            "description": "Общий ящик отдела виден всем, у кого есть право на модуль; личный — владельцу и тому, кто видит все записи"
+          },
+          "email": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "imap_host": {
+            "type": "string"
+          },
+          "imap_port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "imap_encryption": {
+            "$ref": "#/components/schemas/MailEncryption"
+          },
+          "smtp_host": {
+            "type": "string"
+          },
+          "smtp_port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "smtp_encryption": {
+            "$ref": "#/components/schemas/MailEncryption"
+          },
+          "username": {
+            "type": "string",
+            "description": "Логин подключения; по умолчанию равен адресу"
+          },
+          "has_credentials": {
+            "type": "boolean",
+            "description": "Пароль приложения сохранён. Самого пароля не отдаёт ни одна операция"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MailAccountStatus"
+          },
+          "sync_status": {
+            "$ref": "#/components/schemas/MailSyncStatus"
+          },
+          "sync_since_days": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3650,
+            "description": "Глубина первичного импорта в днях; ноль означает весь ящик"
+          },
+          "signature": {
+            "type": "string",
+            "description": "Подпись, подставляемая в исходящие письма"
+          },
+          "last_sync_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "last_error": {
+            "type": "string",
+            "description": "Последняя ошибка подключения для человека"
+          },
+          "last_error_code": {
+            "type": "string",
+            "description": "Машинный код последней ошибки подключения, например mail.account.credentials_rejected; пусто, когда ошибки нет"
+          },
+          "unread_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MailAccountInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Подключение и изменение ящика. Одна форма на обе операции: при подключении обязательны email, imap_host, smtp_host и пароль, при изменении непереданное поле сохраняет прежнее значение, а пустой пароль оставляет сохранённый секрет нетронутым.",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Без значения берётся адрес"
+          },
+          "shared": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Сделать ящик общим ящиком отдела"
+          },
+          "imap_host": {
+            "type": "string",
+            "description": "Схема, завершающая точка и порт внутри значения снимаются"
+          },
+          "imap_port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535,
+            "description": "Без значения — 993 для tls и 143 для starttls"
+          },
+          "imap_encryption": {
+            "$ref": "#/components/schemas/MailEncryption"
+          },
+          "smtp_host": {
+            "type": "string"
+          },
+          "smtp_port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535,
+            "description": "Без значения — 465 для tls и 587 для starttls"
+          },
+          "smtp_encryption": {
+            "$ref": "#/components/schemas/MailEncryption"
+          },
+          "username": {
+            "type": "string",
+            "description": "Без значения берётся адрес почты"
+          },
+          "password": {
+            "type": "string",
+            "writeOnly": true,
+            "description": "Пароль приложения. Принимается, но не возвращается никогда; о его наличии говорит has_credentials"
+          },
+          "app_password": {
+            "type": "string",
+            "writeOnly": true,
+            "description": "Синоним password: у Яндекса, VK и Mail.ru это поле называется «пароль приложения». Принимается, но не возвращается никогда"
+          },
+          "sync_since_days": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 3650,
+            "description": "Глубина первичного импорта в днях; ноль означает весь ящик"
+          },
+          "signature": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Подпись исходящих писем"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "disabled"
+            ],
+            "description": "Ящик можно только включить или выключить; состояние error ставит синхронизация"
+          }
+        }
+      },
+      "MailFolder": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Папка ящика. Координаты синхронизации IMAP (UIDVALIDITY, UIDNEXT, последний прочитанный UID) наружу не отдаются.",
+        "required": [
+          "id",
+          "account_id",
+          "external_id",
+          "name",
+          "role",
+          "parent_id",
+          "delimiter",
+          "total_count",
+          "unread_count",
+          "sort_order",
+          "subscribed",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "account_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "external_id": {
+            "type": "string",
+            "description": "Имя папки на почтовом сервере"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/MailFolderRole"
+          },
+          "parent_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "delimiter": {
+            "type": "string",
+            "description": "Разделитель иерархии, который назвал сервер"
+          },
+          "total_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "unread_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sort_order": {
+            "type": "integer",
+            "description": "Вес папки в привычном порядке системных папок"
+          },
+          "subscribed": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MailFolderInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Создание и переименование пользовательской папки",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Косые черты запрещены: разделитель иерархии задаёт сервер"
+          },
+          "parent_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Родительская папка"
+          }
+        }
+      },
+      "MailMessageAddress": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Один адрес в конверте письма",
+        "required": [
+          "kind",
+          "address",
+          "name",
+          "position"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "Вид адреса: from, to, cc, bcc, reply_to. Значение list_id несёт идентификатор рассылки, а не адрес человека"
+          },
+          "address": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "Имя отправителя или получателя, если оно было в конверте"
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Порядок адреса в своей группе"
+          }
+        }
+      },
+      "MailMessage": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Письмо в копии кабинета. Внутренние координаты IMAP (UID и UIDVALIDITY) наружу не отдаются. Тело в HTML хранится таким, каким его прислал отправитель: обезвреживание живёт на отдаче, а не в хранимой копии.",
+        "required": [
+          "id",
+          "account_id",
+          "folder_id",
+          "thread_id",
+          "message_ref",
+          "subject",
+          "from_address",
+          "from_name",
+          "snippet",
+          "size_bytes",
+          "direction",
+          "is_read",
+          "is_flagged",
+          "is_answered",
+          "is_draft",
+          "has_attachments",
+          "spam_verdict",
+          "sent_at",
+          "received_at",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "account_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "folder_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "thread_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "message_ref": {
+            "type": "string",
+            "description": "Message-ID без угловых скобок; письму без него присваивается наш"
+          },
+          "in_reply_to": {
+            "type": "string",
+            "description": "Заголовок In-Reply-To"
+          },
+          "references": {
+            "type": "string",
+            "description": "Заголовок References целиком"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "from_address": {
+            "type": "string"
+          },
+          "from_name": {
+            "type": "string"
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MailMessageAddress"
+            },
+            "description": "Конверт письма целиком"
+          },
+          "snippet": {
+            "type": "string",
+            "description": "Короткий пересказ письма для списка"
+          },
+          "body_text": {
+            "type": "string"
+          },
+          "body_html": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "inbound",
+              "outbound"
+            ]
+          },
+          "is_read": {
+            "type": "boolean"
+          },
+          "is_flagged": {
+            "type": "boolean"
+          },
+          "is_answered": {
+            "type": "boolean"
+          },
+          "is_draft": {
+            "type": "boolean"
+          },
+          "has_attachments": {
+            "type": "boolean"
+          },
+          "spam_verdict": {
+            "$ref": "#/components/schemas/MailSpamVerdict"
+          },
+          "spam_source": {
+            "type": "string",
+            "enum": [
+              "provider",
+              "rule",
+              "user",
+              "agent"
+            ],
+            "description": "Кто вынес вердикт. Решение человека сильнее флага сервера и правил"
+          },
+          "spam_reason": {
+            "type": "string"
+          },
+          "sent_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MailAttachment"
+            }
+          }
+        }
+      },
+      "MailThread": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Переписка: письма, связанные ответами. Склейка идёт по корню цепочки References, а не по теме.",
+        "required": [
+          "id",
+          "account_id",
+          "subject",
+          "root_ref",
+          "message_count",
+          "unread_count",
+          "has_attachments",
+          "participants",
+          "last_message_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "account_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "root_ref": {
+            "type": "string",
+            "description": "Корневой Message-ID ветки"
+          },
+          "message_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "unread_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "has_attachments": {
+            "type": "boolean"
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MailMessageAddress"
+            }
+          },
+          "last_message_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MailMessage"
+            }
+          }
+        }
+      },
+      "MailAttachment": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Вложение письма. Ключ объектного хранилища наружу не отдаётся: знание ключа — половина пути к чужому файлу.",
+        "required": [
+          "id",
+          "message_id",
+          "filename",
+          "content_type",
+          "size_bytes",
+          "is_inline",
+          "scan_status",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "message_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "content_id": {
+            "type": "string",
+            "description": "Заполняется у картинок, вставленных в тело письма через cid:"
+          },
+          "is_inline": {
+            "type": "boolean",
+            "description": "Встроенная в тело картинка, а не документ"
+          },
+          "scan_status": {
+            "$ref": "#/components/schemas/MailScanStatus"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MailRuleCondition": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Одно условие правила. Набор полей и операторов закрытый: правило исполняется на сервере над чужой почтой.",
+        "required": [
+          "field",
+          "op"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "enum": [
+              "from",
+              "to",
+              "cc",
+              "subject",
+              "body",
+              "list_id",
+              "has_attachment",
+              "spam_verdict"
+            ]
+          },
+          "op": {
+            "type": "string",
+            "description": "Сравнение по домену доступно только адресным полям; поле has_attachment проверяется как is_true или is_false.",
+            "enum": [
+              "contains",
+              "equals",
+              "starts_with",
+              "ends_with",
+              "domain_is",
+              "is_true",
+              "is_false"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 400,
+            "description": "Обязательно для всех полей, кроме has_attachment"
+          }
+        }
+      },
+      "MailRuleAction": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Одно действие правила",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "move_to_folder",
+              "mark_read",
+              "mark_unread",
+              "flag",
+              "mark_spam",
+              "mark_not_spam"
+            ]
+          },
+          "folder_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Заполняется только для переноса в папку; остальные действия папку не принимают"
+          }
+        }
+      },
+      "MailRule": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Правило разбора входящей почты",
+        "required": [
+          "id",
+          "account_id",
+          "name",
+          "enabled",
+          "sort_order",
+          "match",
+          "conditions",
+          "actions",
+          "stop_processing",
+          "applied_count",
+          "last_applied_at",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "account_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "sort_order": {
+            "type": "integer",
+            "description": "Порядок применения правил ящика"
+          },
+          "match": {
+            "type": "string",
+            "enum": [
+              "all",
+              "any"
+            ],
+            "description": "Правило применяется при всех условиях или при любом из них"
+          },
+          "conditions": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/MailRuleCondition"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/MailRuleAction"
+            }
+          },
+          "stop_processing": {
+            "type": "boolean",
+            "description": "Прекратить разбор письма после этого правила"
+          },
+          "applied_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Сколько писем правило разобрало: единственный способ увидеть, что правило молчит из-за опечатки"
+          },
+          "last_applied_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MailRuleInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Создание и изменение правила; условия и действия передаются целиком",
+        "required": [
+          "name",
+          "conditions",
+          "actions"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "enabled": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "sort_order": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "match": {
+            "type": "string",
+            "enum": [
+              "all",
+              "any"
+            ],
+            "description": "Без значения — all"
+          },
+          "conditions": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/MailRuleCondition"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/MailRuleAction"
+            }
+          },
+          "stop_processing": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      },
+      "MailRuleOutcome": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Что правило сделало с письмом",
+        "required": [
+          "rule_id",
+          "rule_name",
+          "message_id",
+          "subject"
+        ],
+        "properties": {
+          "rule_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "rule_name": {
+            "type": "string"
+          },
+          "message_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "moved_to_folder": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "marked_read": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "flagged": {
+            "type": "boolean"
+          },
+          "spam_verdict": {
+            "type": "string"
+          }
+        }
+      },
+      "MailOutbound": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Исходящее письмо в очереди отправки. Постоянный отказ SMTP (код 5xx) не повторяется: повторять отклонённое навсегда письмо вредно для репутации отправителя.",
+        "required": [
+          "id",
+          "account_id",
+          "message_id",
+          "status",
+          "attempts",
+          "max_attempts",
+          "next_attempt_at",
+          "last_error",
+          "last_error_code",
+          "sent_at",
+          "created_by",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "account_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "message_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "sending",
+              "sent",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "max_attempts": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "next_attempt_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "last_error": {
+            "type": "string"
+          },
+          "last_error_code": {
+            "type": "string"
+          },
+          "sent_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "created_by": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Сотрудник, отправивший письмо"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MailDiscoveredSettings": {
+        "type": "object",
+        "description": "Предложение настроек для адреса. Поле source называет происхождение: catalog — справочник провайдеров, autoconfig и autodiscover — настройки самого домена, srv и mx — записи DNS, probe — угаданный и проверенный соединением сервер.",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "catalog",
+              "autoconfig",
+              "autodiscover",
+              "srv",
+              "mx",
+              "probe"
+            ]
+          },
+          "provider_key": {
+            "type": "string"
+          },
+          "provider_label": {
+            "type": "string"
+          },
+          "imap_host": {
+            "type": "string"
+          },
+          "imap_port": {
+            "type": "integer"
+          },
+          "imap_encryption": {
+            "type": "string",
+            "enum": [
+              "tls",
+              "starttls"
+            ]
+          },
+          "smtp_host": {
+            "type": "string"
+          },
+          "smtp_port": {
+            "type": "integer"
+          },
+          "smtp_encryption": {
+            "type": "string",
+            "enum": [
+              "tls",
+              "starttls"
+            ]
+          },
+          "username": {
+            "type": "string"
+          },
+          "auth_method": {
+            "type": "string",
+            "enum": [
+              "password",
+              "oauth"
+            ]
+          },
+          "oauth_provider": {
+            "type": "string"
+          },
+          "password_hint": {
+            "type": "string"
+          },
+          "help_url": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean",
+            "description": "Координаты проверены соединением, а не только прочитаны"
+          }
+        }
+      },
+      "MailOutboundUpload": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Файл, загруженный до отправки письма. Ключ объектного хранилища наружу не отдаётся.",
+        "required": [
+          "id",
+          "account_id",
+          "filename",
+          "content_type",
+          "size_bytes",
+          "scan_status",
+          "status",
+          "expires_at",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "account_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "scan_status": {
+            "$ref": "#/components/schemas/MailScanStatus"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "consumed",
+              "expired"
+            ]
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MailComposeInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Отправка письма или сохранение черновика. Поле in_reply_to_id указывает на письмо в нашей базе, а не на Message-ID: заголовки ответа собираем мы.",
+        "properties": {
+          "subject": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "to": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Одна строка может содержать несколько адресов через запятую"
+          },
+          "cc": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bcc": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "body_text": {
+            "type": "string"
+          },
+          "body_html": {
+            "type": "string"
+          },
+          "in_reply_to_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Письмо, на которое отвечаем"
+          },
+          "forward_of_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Письмо, которое пересылаем"
+          },
+          "upload_ids": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/UUID"
+            },
+            "description": "Идентификаторы заранее загруженных файлов"
+          },
+          "save_as_draft": {
+            "type": "boolean",
+            "default": false,
+            "description": "Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо уходит получателю и отозвать его нельзя"
+          }
+        }
+      },
+      "MailSyncReport": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Итог одного прохода по ящику: «ничего не изменилось» — тоже ответ",
+        "required": [
+          "account_id",
+          "folders",
+          "new_messages",
+          "rules_applied",
+          "finished_at"
+        ],
+        "properties": {
+          "account_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "folders": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Сколько папок прочитано"
+          },
+          "new_messages": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "rules_applied": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Сколько писем разобрали правила"
+          },
+          "finished_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "full_reloaded": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Папки, перечитанные целиком после смены UIDVALIDITY на сервере"
+          }
+        }
+      },
+      "MailMessagePage": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Страница писем. Общее число нужно, чтобы решить, стоит ли листать дальше.",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_more"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MailMessage"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MailOutboundPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Страница очереди отправки",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset",
+          "has_more"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MailOutbound"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        }
       }
     }
   },
@@ -119964,7 +124436,13 @@
     "docflow-intake",
     "docflow-flow",
     "docflow-flow-approval",
-    "docflow-flow-accounting"
+    "docflow-flow-accounting",
+    "mail-accounts",
+    "mail-folders",
+    "mail-messages",
+    "mail-rules",
+    "mail-outbound",
+    "mail-attachments"
   ],
   "x-akeda-docs-path": "/docs",
   "x-akeda-default-release-stage": "internal",
