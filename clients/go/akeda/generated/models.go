@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c176ac5a2841026b2bd4f7a77fd8818492e0f12c7e5accec44c9929d8b2b5493).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 afb961d977a73e9d08608b181de766b56ecaed0fafe87ba1f3bc4effe124eca7).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -8041,7 +8041,7 @@ type FinanceSettlementDocumentCreate struct {
 	Amount *string `json:"amount,omitempty"`
 	// DueDate — Обязательна для долга, продажи и закупки
 	DueDate *string `json:"due_date,omitempty"`
-	// ObligationID — Обязательно для зачёта аванса и распределения оплаты
+	// ObligationID — Обязательно для зачёта аванса, распределения оплаты и возврата по продаже (продажа-основание)
 	ObligationID *string `json:"obligation_id,omitempty"`
 	// PaymentID — Оплата-источник аванса либо обязательная оплата для распределения
 	PaymentID *string                                  `json:"payment_id,omitempty"`
@@ -8053,8 +8053,10 @@ type FinanceSettlementDocumentCreate struct {
 	// ProjectID — Путешествие или проект продажи и закупки
 	ProjectID *string `json:"project_id,omitempty"`
 	// Side — Обязательна только для аванса
-	Side    *string `json:"side,omitempty"`
-	Comment *string `json:"comment,omitempty"`
+	Side *string `json:"side,omitempty"`
+	// StockReturnID — Только возврат по продаже: складской возврат от покупателя по этой продаже; без amount сумма — доля продажи по количеству
+	StockReturnID *string `json:"stock_return_id,omitempty"`
+	Comment       *string `json:"comment,omitempty"`
 	// SourceSystem — Ключ идемпотентности сделки (только продажа и закупка): система-источник — учётная система клиента или ключ стороннего приложения
 	SourceSystem *string `json:"source_system,omitempty"`
 	// SourceRef — Какая именно база/кабинет клиента внутри source_system; пусто — единственный источник
@@ -12833,8 +12835,10 @@ type StockExportRequest struct {
 }
 
 type StockHandlingUnit struct {
-	ID                   UUID               `json:"id"`
-	BatchID              UUID               `json:"batch_id"`
+	ID         UUID  `json:"id"`
+	BatchID    UUID  `json:"batch_id"`
+	BusinessID *UUID `json:"business_id,omitempty"`
+	// CompanyID — Нулевой UUID — единица без юрлица
 	CompanyID            UUID               `json:"company_id"`
 	CompanyName          string             `json:"company_name"`
 	ProductID            UUID               `json:"product_id"`

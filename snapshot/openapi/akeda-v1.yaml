@@ -26747,9 +26747,16 @@ paths:
         - installationToken: []
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
+        - name: business_id
+          in: query
+          required: false
+          description: Бизнес подбора; нужен бизнес или юрлицо. Без юрлица подбираются только единицы без юрлица этого бизнеса
+          schema:
+            $ref: '#/components/schemas/UUID'
         - name: company_id
           in: query
-          required: true
+          required: false
+          description: Юрлицо подбора; при заданном business_id обязано относиться к нему
           schema:
             $ref: '#/components/schemas/UUID'
         - name: warehouse_id
@@ -54087,6 +54094,7 @@ components:
         - finance_sale
         - finance_purchase
         - finance_payment_allocation
+        - finance_sale_return
     FinanceSettlementSourceAllocationInput:
       type: object
       additionalProperties: false
@@ -54133,7 +54141,7 @@ components:
         obligation_id:
           type: string
           format: uuid
-          description: Обязательно для зачёта аванса и распределения оплаты
+          description: Обязательно для зачёта аванса, распределения оплаты и возврата по продаже (продажа-основание)
         payment_id:
           type: string
           format: uuid
@@ -54162,6 +54170,10 @@ components:
             - receivable_advance
             - payable_advance
           description: Обязательна только для аванса
+        stock_return_id:
+          type: string
+          format: uuid
+          description: 'Только возврат по продаже: складской возврат от покупателя по этой продаже; без amount сумма — доля продажи по количеству'
         comment:
           type: string
         source_system:
@@ -63378,8 +63390,11 @@ components:
           $ref: '#/components/schemas/UUID'
         batch_id:
           $ref: '#/components/schemas/UUID'
+        business_id:
+          $ref: '#/components/schemas/UUID'
         company_id:
           $ref: '#/components/schemas/UUID'
+          description: Нулевой UUID — единица без юрлица
         company_name:
           type: string
         product_id:

@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c176ac5a2841026b2bd4f7a77fd8818492e0f12c7e5accec44c9929d8b2b5493).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 afb961d977a73e9d08608b181de766b56ecaed0fafe87ba1f3bc4effe124eca7).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -5763,7 +5763,7 @@ export interface OperationTypes {
   /** GET /api/v1/stock/handling-units/suggestions — Подобрать физические единицы под требуемое количество */
   stockSuggestHandlingUnits: {
     params: Record<string, never>;
-    query: { "company_id": models.UUID; "product_id": models.UUID; "qty": string; "warehouse_id": models.UUID };
+    query: { "business_id"?: models.UUID; "company_id"?: models.UUID; "product_id": models.UUID; "qty": string; "warehouse_id": models.UUID };
     body: never;
     response: models.StockHandlingUnitSuggestionResult;
   };

@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c176ac5a2841026b2bd4f7a77fd8818492e0f12c7e5accec44c9929d8b2b5493).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 afb961d977a73e9d08608b181de766b56ecaed0fafe87ba1f3bc4effe124eca7).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -8064,7 +8064,7 @@ export interface FinanceSettlementDocumentCreate {
   "amount"?: string;
   /** Обязательна для долга, продажи и закупки */
   "due_date"?: string;
-  /** Обязательно для зачёта аванса и распределения оплаты */
+  /** Обязательно для зачёта аванса, распределения оплаты и возврата по продаже (продажа-основание) */
   "obligation_id"?: string;
   /** Оплата-источник аванса либо обязательная оплата для распределения */
   "payment_id"?: string;
@@ -8077,6 +8077,8 @@ export interface FinanceSettlementDocumentCreate {
   "project_id"?: string;
   /** Обязательна только для аванса */
   "side"?: "receivable_advance" | "payable_advance";
+  /** Только возврат по продаже: складской возврат от покупателя по этой продаже; без amount сумма — доля продажи по количеству */
+  "stock_return_id"?: string;
   "comment"?: string;
   /** Ключ идемпотентности сделки (только продажа и закупка): система-источник — учётная система клиента или ключ стороннего приложения */
   "source_system"?: string;
@@ -8089,7 +8091,7 @@ export interface FinanceSettlementDocumentCreate {
   "supplier_document"?: SupplierDocument;
 }
 
-export type FinanceSettlementDocumentType = "finance_settlement_baseline" | "finance_receivable_opening" | "finance_receivable" | "finance_payable_opening" | "finance_payable" | "finance_advance" | "finance_advance_offset" | "finance_sale" | "finance_purchase" | "finance_payment_allocation";
+export type FinanceSettlementDocumentType = "finance_settlement_baseline" | "finance_receivable_opening" | "finance_receivable" | "finance_payable_opening" | "finance_payable" | "finance_advance" | "finance_advance_offset" | "finance_sale" | "finance_purchase" | "finance_payment_allocation" | "finance_sale_return";
 
 export interface FinanceSettlementExposure {
   "available": boolean;
@@ -12878,6 +12880,8 @@ export interface StockExportRequest {
 export interface StockHandlingUnit {
   "id": UUID;
   "batch_id": UUID;
+  "business_id"?: UUID;
+  /** Нулевой UUID — единица без юрлица */
   "company_id": UUID;
   "company_name": string;
   "product_id": UUID;

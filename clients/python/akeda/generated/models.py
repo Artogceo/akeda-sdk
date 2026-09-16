@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c176ac5a2841026b2bd4f7a77fd8818492e0f12c7e5accec44c9929d8b2b5493).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 afb961d977a73e9d08608b181de766b56ecaed0fafe87ba1f3bc4effe124eca7).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -9242,7 +9242,7 @@ class FinanceSettlementDocumentCreate(_FinanceSettlementDocumentCreateRequired, 
     amount: str
     #: Обязательна для долга, продажи и закупки
     due_date: str
-    #: Обязательно для зачёта аванса и распределения оплаты
+    #: Обязательно для зачёта аванса, распределения оплаты и возврата по продаже (продажа-основание)
     obligation_id: str
     #: Оплата-источник аванса либо обязательная оплата для распределения
     payment_id: str
@@ -9255,6 +9255,8 @@ class FinanceSettlementDocumentCreate(_FinanceSettlementDocumentCreateRequired, 
     project_id: str
     #: Обязательна только для аванса
     side: Literal['receivable_advance', 'payable_advance']
+    #: Только возврат по продаже: складской возврат от покупателя по этой продаже; без amount сумма — доля продажи по количеству
+    stock_return_id: str
     comment: str
     #: Ключ идемпотентности сделки (только продажа и закупка): система-источник — учётная система клиента или ключ стороннего приложения
     source_system: str
@@ -9266,7 +9268,7 @@ class FinanceSettlementDocumentCreate(_FinanceSettlementDocumentCreateRequired, 
     vat_amount: str
     supplier_document: "SupplierDocument"
 
-FinanceSettlementDocumentType = Literal['finance_settlement_baseline', 'finance_receivable_opening', 'finance_receivable', 'finance_payable_opening', 'finance_payable', 'finance_advance', 'finance_advance_offset', 'finance_sale', 'finance_purchase', 'finance_payment_allocation']
+FinanceSettlementDocumentType = Literal['finance_settlement_baseline', 'finance_receivable_opening', 'finance_receivable', 'finance_payable_opening', 'finance_payable', 'finance_advance', 'finance_advance_offset', 'finance_sale', 'finance_purchase', 'finance_payment_allocation', 'finance_sale_return']
 
 class FinanceSettlementExposure(TypedDict):
     available: bool
@@ -13751,6 +13753,7 @@ class StockExportRequest(_StockExportRequestRequired, total=False):
 class _StockHandlingUnitRequired(TypedDict):
     id: "UUID"
     batch_id: "UUID"
+    #: Нулевой UUID — единица без юрлица
     company_id: "UUID"
     company_name: str
     product_id: "UUID"
@@ -13777,6 +13780,7 @@ class _StockHandlingUnitRequired(TypedDict):
     updated_at: str
 
 class StockHandlingUnit(_StockHandlingUnitRequired, total=False):
+    business_id: "UUID"
     #: Отдаётся только когда положительный остаток лежит в одном месте хранения
     warehouse_id: Optional["UUID"]
 
