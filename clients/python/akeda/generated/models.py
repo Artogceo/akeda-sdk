@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ce870b49d00317683cfee3018aca3de91a2e2d1142baf1a4bc63cce50b3aade0).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 fe5ccea4c72d80cb31f0535902d57f69853ce40558ea47f30fe5ad5b48b10f9a).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -256,6 +256,7 @@ __all__ = [
     "CoreAccountingPeriodEvent",
     "CoreAccountingPeriodReopen",
     "CoreAccountingPeriodState",
+    "CoreAccountingPolicy",
     "CoreAccountingSettings",
     "CoreAccountingSettingsInput",
     "CoreBalanceShortage",
@@ -265,11 +266,12 @@ __all__ = [
     "CoreBusinessInput",
     "CoreBusinessOwner",
     "CoreBusinessOwnerInput",
-    "CoreBusinessVATPresentationInput",
+    "CoreBusinessPolicy",
     "CoreCabinetPreferences",
     "CoreChange",
     "CoreChangeFeedPage",
     "CoreChangeOp",
+    "CoreCompanyPolicy",
     "CoreConflictingRegistrar",
     "CoreContact",
     "CoreContactAddress",
@@ -379,6 +381,15 @@ __all__ = [
     "CoreOwnershipVersion",
     "CoreOwnershipVersionInput",
     "CorePhotoResult",
+    "CorePolicyPeriod",
+    "CorePolicyTaxModeInput",
+    "CorePolicyTaxModeVersion",
+    "CorePolicyVATPendingInput",
+    "CorePolicyVATPendingVersion",
+    "CorePolicyVATPresentationInput",
+    "CorePolicyVATPresentationVersion",
+    "CorePolicyVATRatesInput",
+    "CorePolicyVATRatesVersion",
     "CoreProduct",
     "CoreProductAxis",
     "CoreProductAxisValue",
@@ -792,6 +803,7 @@ __all__ = [
     "FinanceReconciliationSummary",
     "FinanceRegisterAccountCheck",
     "FinanceRegisterReconciliation",
+    "FinanceRegisterReconciliationInputVatUnexplainedItem",
     "FinanceRegisterRepairFailure",
     "FinanceRegisterRepairRequest",
     "FinanceRegisterRepairResult",
@@ -805,6 +817,7 @@ __all__ = [
     "FinanceRequisitesPerson",
     "FinanceRequisitesSuggestions",
     "FinanceResponsiblePatch",
+    "FinanceSaleVATTerms",
     "FinanceSettlementBalance",
     "FinanceSettlementBalancePage",
     "FinanceSettlementDocumentCreate",
@@ -829,6 +842,24 @@ __all__ = [
     "FinanceTransactionCreate",
     "FinanceTransactionPage",
     "FinanceTransactionTotals",
+    "FinanceVATBookImport",
+    "FinanceVATBookMatch",
+    "FinanceVATBookOurRow",
+    "FinanceVATBookReconciliation",
+    "FinanceVATBookRow",
+    "FinanceVATBookSide",
+    "FinanceVATBookUploadPage",
+    "FinanceVATBookUploadPageItemsItem",
+    "FinanceVATQuarter",
+    "FinanceVATQuarterFigureSource",
+    "FinanceVATQuarterInput",
+    "FinanceVATQuarterLine",
+    "FinanceVATQuarterLineCausesItem",
+    "FinanceVATQuarterLineChoice",
+    "FinanceVATQuarterPage",
+    "FinanceVATQuarterPart",
+    "FinanceVATQuarterPayload",
+    "FinanceVATQuarterTotals",
     "HubCounters",
     "HubOverview",
     "HubProject",
@@ -1236,6 +1267,8 @@ __all__ = [
     "StockProductUOMUsage",
     "StockPurchaseOrderCreate",
     "StockPurchaseOrderLineInput",
+    "StockReceiptVATTerms",
+    "StockReceiptVATTermsInput",
     "StockReorderRule",
     "StockReorderRuleInput",
     "StockReorderRulePage",
@@ -1280,6 +1313,7 @@ __all__ = [
     "StockZoneAllocationResult",
     "StockZoneStockRow",
     "Subtask",
+    "SupplierDocument",
     "Tag",
     "TagAttach",
     "TagPage",
@@ -3587,6 +3621,10 @@ class CoreAccountingPeriodState(TypedDict):
     closed_through: str
     history: List["CoreAccountingPeriodEvent"]
 
+class CoreAccountingPolicy(TypedDict):
+    businesses: List["CoreBusinessPolicy"]
+    companies: List["CoreCompanyPolicy"]
+
 class _CoreAccountingSettingsRequired(TypedDict):
     currency: str
     locked: bool
@@ -3623,9 +3661,9 @@ class _CoreBusinessRequired(TypedDict):
 class CoreBusiness(_CoreBusinessRequired, total=False):
     #: Дата перехода на начисление; отсутствует у кассового бизнеса
     accrual_from: str
-    #: Очищаются ли суммы отчётов от косвенного налога; gross это полные суммы
+    #: Очищаются ли суммы отчётов от косвенного налога сегодня; gross это полные суммы. Меняется в учётной политике с датой
     vat_presentation: Literal['gross', 'net']
-    #: Дата, с которой действует текущий режим показа сумм; отсутствует, если режим не переключали
+    #: Дата начала действующей сегодня версии очистки сумм; отсутствует, если версия действует с начала учёта
     vat_since: str
 
 class _CoreBusinessAccountingMethodInputRequired(TypedDict):
@@ -3660,13 +3698,16 @@ class CoreBusinessOwnerInput(_CoreBusinessOwnerInputRequired, total=False):
     company_id: "UUID"
     contact_id: "UUID"
 
-class _CoreBusinessVATPresentationInputRequired(TypedDict):
-    #: Значение приводится к нижнему регистру; mixed бывает подписью отчёта, но не выбором
-    presentation: Literal['gross', 'net']
+class _CoreBusinessPolicyRequired(TypedDict):
+    id: "UUID"
+    name: str
+    is_active: bool
+    accounting_method: Literal['cash', 'accrual']
+    vat_presentation: List["CorePolicyVATPresentationVersion"]
+    vat_pending: List["CorePolicyVATPendingVersion"]
 
-class CoreBusinessVATPresentationInput(_CoreBusinessVATPresentationInputRequired, total=False):
-    #: Дата, с которой действует новый режим; обязательна при смене режима и не спрашивается, когда режим не меняется
-    since: str
+class CoreBusinessPolicy(_CoreBusinessPolicyRequired, total=False):
+    accrual_from: str
 
 class CoreCabinetPreferences(TypedDict):
     locale: Literal['ru-RU', 'en-US']
@@ -3696,6 +3737,14 @@ class CoreChangeFeedPage(TypedDict):
     changes: List["CoreChange"]
 
 CoreChangeOp = Literal['upsert', 'delete']
+
+class CoreCompanyPolicy(TypedDict):
+    id: "UUID"
+    name: str
+    is_active: bool
+    business_id: "UUID"
+    tax_mode: List["CorePolicyTaxModeVersion"]
+    vat_rates: List["CorePolicyVATRatesVersion"]
 
 class CoreConflictingRegistrar(TypedDict):
     id: "UUID"
@@ -4548,6 +4597,8 @@ class CoreItem(_CoreItemRequired, total=False):
     cashflow_parent_id: "UUID"
     pnl_sign: int
     pnl_parent_id: "UUID"
+    #: Вид ставки НДС сделки без товара по статье дохода; пусто — общая
+    vat_kind: Literal['', 'general', 'reduced', 'zero', 'exempt']
 
 class _CoreItemInputRequired(TypedDict):
     name: str
@@ -4562,6 +4613,8 @@ class CoreItemInput(_CoreItemInputRequired, total=False):
     pnl_sign: int
     pnl_parent_id: "UUID"
     pnl_sort_order: int
+    #: Вид ставки НДС статьи дохода; не передан — не меняется; у статьи не дохода — 400
+    vat_kind: Literal['', 'general', 'reduced', 'zero', 'exempt']
 
 class _CoreItemMoveRequired(TypedDict):
     application: Literal['cashflow', 'pnl']
@@ -4606,7 +4659,87 @@ class CoreOwnershipVersionInput(TypedDict):
 class CorePhotoResult(TypedDict):
     photo_url: str
 
-class CoreProduct(TypedDict):
+class _CorePolicyPeriodRequired(TypedDict):
+    id: "UUID"
+    #: Начало версии; 0001-01-01 означает «с начала учёта»
+    valid_from: str
+
+class CorePolicyPeriod(_CorePolicyPeriodRequired, total=False):
+    #: Последний день версии; отсутствует у открытой версии
+    valid_to: str
+
+class _CorePolicyTaxModeInputRequired(TypedDict):
+    #: 0001-01-01 — с начала учёта, если по юрлицу ещё нет проведённых документов
+    valid_from: str
+    mode: Literal['deductible', 'non_deductible', 'none']
+
+class CorePolicyTaxModeInput(_CorePolicyTaxModeInputRequired, total=False):
+    #: Налоговая валюта юрлица; не передана — RUB. Меняется вместе с версией режима: с даты, по которой есть проведённые документы, — отказ 409.
+    tax_currency: str
+
+class _CorePolicyTaxModeVersionRequired(TypedDict):
+    id: "UUID"
+    #: Начало версии; 0001-01-01 означает «с начала учёта»
+    valid_from: str
+    mode: Literal['deductible', 'non_deductible', 'none']
+    #: Налоговая валюта юрлица: в ней ведутся суммы налога регистров НДС и документа «НДС за квартал». По умолчанию RUB.
+    tax_currency: str
+
+class CorePolicyTaxModeVersion(_CorePolicyTaxModeVersionRequired, total=False):
+    #: Последний день версии; отсутствует у открытой версии
+    valid_to: str
+
+class CorePolicyVATPendingInput(TypedDict):
+    valid_from: str
+    months: int
+
+class _CorePolicyVATPendingVersionRequired(TypedDict):
+    id: "UUID"
+    #: Начало версии; 0001-01-01 означает «с начала учёта»
+    valid_from: str
+    months: int
+
+class CorePolicyVATPendingVersion(_CorePolicyVATPendingVersionRequired, total=False):
+    #: Последний день версии; отсутствует у открытой версии
+    valid_to: str
+
+class CorePolicyVATPresentationInput(TypedDict):
+    valid_from: str
+    presentation: Literal['gross', 'net']
+
+class _CorePolicyVATPresentationVersionRequired(TypedDict):
+    id: "UUID"
+    #: Начало версии; 0001-01-01 означает «с начала учёта»
+    valid_from: str
+    presentation: Literal['gross', 'net']
+
+class CorePolicyVATPresentationVersion(_CorePolicyVATPresentationVersionRequired, total=False):
+    #: Последний день версии; отсутствует у открытой версии
+    valid_to: str
+
+class _CorePolicyVATRatesInputRequired(TypedDict):
+    valid_from: str
+
+class CorePolicyVATRatesInput(_CorePolicyVATRatesInputRequired, total=False):
+    #: Процент общей ставки, больше 0 и меньше 100; пусто — не заведена
+    general: str
+    #: Процент льготной ставки, больше 0 и меньше 100; пусто — не заведена
+    reduced: str
+
+class _CorePolicyVATRatesVersionRequired(TypedDict):
+    id: "UUID"
+    #: Начало версии; 0001-01-01 означает «с начала учёта»
+    valid_from: str
+    #: Процент общей ставки с двумя знаками; пусто — вид не заведён
+    general: str
+    #: Процент льготной ставки с двумя знаками; пусто — вид не заведён
+    reduced: str
+
+class CorePolicyVATRatesVersion(_CorePolicyVATRatesVersionRequired, total=False):
+    #: Последний день версии; отсутствует у открытой версии
+    valid_to: str
+
+class _CoreProductRequired(TypedDict):
     id: "UUID"
     sku: str
     name: str
@@ -4633,7 +4766,7 @@ class CoreProduct(TypedDict):
     updated_at: str
     #: Закупочная цена десятичной строкой; подставляется в строку приёмки
     purchase_price: str
-    #: Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
+    #: Устарело (ERP-484): снимается, ставка определяется видом товара (vat_kind) и налоговой политикой юрлица на дату документа. Всегда пустая строка
     vat_rate: str
     #: Вес одной базовой единицы, кг; пусто — не задан
     weight_kg: str
@@ -4655,6 +4788,10 @@ class CoreProduct(TypedDict):
     option_schema: List["CoreProductAxis"]
     #: Значения варианта по осям семейства: ось → код; у остальных записей пусто
     variant_values: Dict[str, str]
+
+class CoreProduct(_CoreProductRequired, total=False):
+    #: Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)
+    vat_kind: Literal['', 'general', 'reduced', 'zero', 'exempt']
 
 class CoreProductAxis(TypedDict):
     #: Ключ оси: латиница, цифры, _ и -
@@ -4700,8 +4837,8 @@ class CoreProductCreate(_CoreProductCreateRequired, total=False):
     identifiers: List["CoreProductIdentifierInput"]
     #: Закупочная цена десятичной строкой; подставляется в строку приёмки
     purchase_price: str
-    #: Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
-    vat_rate: str
+    #: Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)
+    vat_kind: Literal['', 'general', 'reduced', 'zero', 'exempt']
     #: Вес одной базовой единицы, кг; пусто — не задан
     weight_kg: str
     #: Объём одной базовой единицы, м³; пусто — не задан
@@ -4976,8 +5113,8 @@ class CoreProductPatch(TypedDict, total=False):
     folder_id: Optional["UUID"]
     #: Закупочная цена десятичной строкой; подставляется в строку приёмки
     purchase_price: str
-    #: Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
-    vat_rate: str
+    #: Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)
+    vat_kind: Literal['', 'general', 'reduced', 'zero', 'exempt']
     #: Вес одной базовой единицы, кг; пусто — не задан
     weight_kg: str
     #: Объём одной базовой единицы, м³; пусто — не задан
@@ -6737,7 +6874,7 @@ class _DocflowLineRequisitesRequired(TypedDict):
 class DocflowLineRequisites(_DocflowLineRequisitesRequired, total=False):
     """Дополнение к строке учётного документа. Строка адресуется line_id — тем же идентификатором, которым её знает сам документ. Не порядковым номером: порядок строк меняют, и привязка по номеру перевесила бы ставку НДС на другой товар молча."""
 
-    #: НалСт. Обязателен в каждой строке формата; пустое значение берёт общую ставку юрлица
+    #: Не принимается: ставку строки задают вид ставки товара и учётная политика юрлица. Непустое значение — 400
     vat_rate: str
     #: ОКЕИ_Тов. Пустое значение берёт код из карточки единицы измерения
     unit_code: str
@@ -6980,10 +7117,6 @@ class DocflowRequisites(TypedDict, total=False):
     document_kind_name: str
     #: ВерсПрог. Пустое значение подставляет сервер: версию приложения знает он, а не человек в форме
     program_version: str
-    #: Сумма строки уже содержит налог. Признак спрашивается, а не угадывается: сумма 1200 законно означает и «1200 без налога», и «1200 с налогом», а ошибка стоит расхождения в декларации
-    prices_include_vat: bool
-    #: НалСт по умолчанию для всех строк. Строка вправе назвать свою
-    vat_rate: str
     currency: "DocflowCurrencyRequisites"
     file: "DocflowFileRequisites"
     seller: "DocflowPartyRequisites"
@@ -7480,7 +7613,7 @@ class FilesUploadedPart(TypedDict):
     etag: str
     size: int
 
-class FinanceAccount(TypedDict):
+class _FinanceAccountRequired(TypedDict):
     id: "UUID"
     #: Где лежат деньги. `bank` — расчётный счёт, `cash` — касса из справочника «Кассы». Список общий намеренно: вопрос «сколько у меня денег» задаётся один раз. У кассы банковские поля (`bic`, `number`, `bank_name`, `connector`) пусты по построению, а не «ещё не заполнены», и карточка счёта по её идентификатору не открывается.
     kind: Literal['bank', 'cash']
@@ -7510,6 +7643,20 @@ class FinanceAccount(TypedDict):
     created_at: str
     updated_at: str
 
+class FinanceAccount(_FinanceAccountRequired, total=False):
+    #: Остаток по данным банка на момент `bank_balance_at`, decimal string. null — банк остатка не называл (счёт не подключён или остаток ещё не приходил): это не ноль, и сверять с ним нечего.
+    bank_balance: Optional[str]
+    #: Когда банк назвал остаток `bank_balance`.
+    bank_balance_at: Optional[str]
+    #: Когда счёт закрыт банком. null — счёт действующий.
+    bank_closed_at: Optional[str]
+    #: «Используется с»: с какой даты счёт принадлежит бизнесу. Операции раньше неё коннектор не запрашивает, загрузка файла пропускает, ручной ввод отклоняет. Поля нет — ограничения нет.
+    in_use_since: str
+    #: Часовой пояс банковских суток счёта (IANA), например Asia/Novosibirsk. По нему банк режет сутки выписки, и по нему считаются окно синхронизации, «Загрузить период» и остаток на дату. Умолчание — по БИК подразделения банка. null у кассы.
+    bank_timezone: Optional[str]
+    #: Откуда пояс: `bic` — определён по БИК, `default` — определить не удалось, стоит умолчание (проверьте пояс), `manual` — задан человеком; подключение банка ручной пояс не трогает.
+    bank_timezone_source: Optional[Literal['bic', 'default', 'manual', None]]
+
 class _FinanceAccountCreateRequired(TypedDict):
     name: str
     bic: str
@@ -7524,6 +7671,9 @@ class FinanceAccountCreate(_FinanceAccountCreateRequired, total=False):
     gl_account: str
     #: Decimal string
     opening_balance: str
+    is_active: bool
+    #: «Используется с», ГГГГ-ММ-ДД; пусто — без ограничения.
+    in_use_since: str
 
 class FinanceAccountPage(TypedDict):
     count: int
@@ -7539,6 +7689,10 @@ class FinanceAccountPatch(TypedDict, total=False):
     currency: str
     gl_account: Optional[str]
     is_active: bool
+    #: «Используется с», ГГГГ-ММ-ДД; null или пустая строка снимают ограничение.
+    in_use_since: Optional[str]
+    #: Часовой пояс банковских суток (IANA). Источник пояса становится manual.
+    bank_timezone: str
 
 class FinanceBalanceItem(TypedDict):
     code: str
@@ -7854,6 +8008,8 @@ class _FinanceConnectorProviderRequired(TypedDict):
     requires_egress_allowlist: bool
     #: Банк не отдаёт списка счетов организации — номер счёта называет человек.
     requires_account_number: bool
+    #: Пояс банковских суток (IANA), например Europe/Moscow. По нему считаются окно выписки и «сегодня» банка; даты операций банка не пересчитываются.
+    timezone: str
 
 class FinanceConnectorProvider(_FinanceConnectorProviderRequired, total=False):
     redirect_path: str
@@ -8214,6 +8370,9 @@ class FinanceOperationAccrualCreate(_FinanceOperationAccrualCreateRequired, tota
     #: Обычно вычисляется из графика; переданное значение не может ему противоречить
     due_date: str
     reason: str
+    #: Только закупка без «в т.ч. НДС» на плане (ERP-484, подшаг 5.3в): «в т.ч. НДС» акта поставщика. Обязательна, если на дату начисления бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. У плана с налогом начисление берёт долю нарастающим итогом, и непустое значение — 400
+    vat_amount: str
+    supplier_document: "SupplierDocument"
 
 class _FinanceOperationAccrualResultRequired(TypedDict):
     operation_id: "UUID"
@@ -8253,6 +8412,9 @@ class FinanceOperationCreate(_FinanceOperationCreateRequired, total=False):
     accruals: List["FinanceOperationStageInput"]
     payments: List["FinanceOperationStageInput"]
     references: List["FinanceOperationReferenceInput"]
+    #: Только закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаги 5.3 и 5.3в). У закупки по документу обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. У плана по периодам необязательна: указана — начисления берут долю нарастающим итогом, нет — налог приносит каждое начисление. Вне периода непустое значение — 400
+    vat_amount: str
+    supplier_document: "SupplierDocument"
 
 class FinanceOperationFact(TypedDict):
     document_id: "UUID"
@@ -8949,7 +9111,7 @@ class FinanceRegisterAccountCheck(TypedDict):
     adjustments: str
     match: bool
 
-class FinanceRegisterReconciliation(TypedDict):
+class _FinanceRegisterReconciliationRequired(TypedDict):
     accounts: List["FinanceRegisterAccountCheck"]
     accounts_match: bool
     unprojected_count: int
@@ -8962,6 +9124,19 @@ class FinanceRegisterReconciliation(TypedDict):
     transit: List[Dict[str, Any]]
     transit_total: str
     transit_match: bool
+
+class FinanceRegisterReconciliation(_FinanceRegisterReconciliationRequired, total=False):
+    #: Нет минуса входного НДС по источнику без возврата поставщику после вычета.
+    input_vat_match: bool
+    #: Источники с отрицательным остатком входного НДС, который не объяснён возвратом поставщику после вычета.
+    input_vat_unexplained: List["FinanceRegisterReconciliationInputVatUnexplainedItem"]
+
+class FinanceRegisterReconciliationInputVatUnexplainedItem(TypedDict):
+    source: str
+    source_number: str
+    source_date: str
+    company: str
+    amount: str
 
 class FinanceRegisterRepairFailure(TypedDict):
     id: "UUID"
@@ -9043,6 +9218,8 @@ class FinanceRequisitesSuggestions(TypedDict):
 class FinanceResponsiblePatch(TypedDict):
     responsible: Optional[str]
 
+FinanceSaleVATTerms = TypedDict("FinanceSaleVATTerms", {"applies": bool, "charged": bool, "mode": Literal['', 'deductible', 'non_deductible', 'none'], "rate": str, "kind": Literal['', 'general', 'reduced', 'zero', 'exempt'], "from": Literal['', 'item', 'default'], "problem": Literal['', 'mode_unset', 'rate_missing'], "detail": str}, total=False)
+
 class FinanceSettlementBalance(TypedDict):
     obligation_id: "UUID"
     #: Decimal string
@@ -9085,6 +9262,9 @@ class FinanceSettlementDocumentCreate(_FinanceSettlementDocumentCreateRequired, 
     source_ref: str
     #: Идентификатор сделки в source_system; повтор того же (source_system, source_ref, external_id) возвращает уже созданный документ вместо второго
     external_id: str
+    #: Только закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаг 5.3). Обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне периода непустое значение — 400
+    vat_amount: str
+    supplier_document: "SupplierDocument"
 
 FinanceSettlementDocumentType = Literal['finance_settlement_baseline', 'finance_receivable_opening', 'finance_receivable', 'finance_payable_opening', 'finance_payable', 'finance_advance', 'finance_advance_offset', 'finance_sale', 'finance_purchase', 'finance_payment_allocation']
 
@@ -9322,6 +9502,217 @@ class FinanceTransactionTotals(TypedDict):
     currency: str
     #: Сколько операций осталось без пересчёта в валюту учёта: неполный пересчёт не должен выглядеть верным итогом
     unconverted_count: int
+
+class _FinanceVATBookImportRequired(TypedDict):
+    id: str
+    company_id: str
+    year: int
+    quarter: int
+    kind: Literal['purchase', 'sales']
+    status: Literal['active', 'replaced']
+    source_name: str
+    source_sha256: str
+    source_size: int
+    file_id: str
+    declared_inn: str
+    declared_kpp: str
+    form_version: str
+    correction: int
+    total_vat: str
+    rows_vat: str
+    row_count: int
+    created_at: str
+
+class FinanceVATBookImport(_FinanceVATBookImportRequired, total=False):
+    created_by: int
+    replaced_at: str
+
+class _FinanceVATBookMatchRequired(TypedDict):
+    status: Literal['matched', 'amount_differs', 'only_book', 'only_ours', 'not_deducted']
+    inn: str
+    number: str
+    date: str
+    book_vat: str
+    our_vat: str
+    difference: str
+    book_rows: List["FinanceVATBookRow"]
+    our_rows: List["FinanceVATBookOurRow"]
+
+class FinanceVATBookMatch(_FinanceVATBookMatchRequired, total=False):
+    group: bool
+    kpp_differs: bool
+    counterparty: str
+    counterparty_name: str
+
+class _FinanceVATBookOurRowRequired(TypedDict):
+    source: str
+    source_number: str
+    source_date: str
+    number: str
+    date: str
+    vat: str
+
+class FinanceVATBookOurRow(_FinanceVATBookOurRowRequired, total=False):
+    contact: str
+    contact_name: str
+    inn: str
+    kpp: str
+    action: str
+    restoration: bool
+
+class _FinanceVATBookReconciliationRequired(TypedDict):
+    #: Налоговая валюта юрлица — валюта книг 1С и нашего налога.
+    currency: str
+    purchase: "FinanceVATBookSide"
+    sales: "FinanceVATBookSide"
+
+class FinanceVATBookReconciliation(_FinanceVATBookReconciliationRequired, total=False):
+    quarter_document: str
+    quarter_number: str
+
+class _FinanceVATBookRowRequired(TypedDict):
+    line: int
+    codes: List[str]
+    number: str
+    date: str
+    amount: str
+    vat: str
+
+class FinanceVATBookRow(_FinanceVATBookRowRequired, total=False):
+    inn: str
+    kpp: str
+    correction: bool
+
+class FinanceVATBookSide(TypedDict):
+    kind: Literal['purchase', 'sales']
+    active: Optional["FinanceVATBookImport"]
+    history: List["FinanceVATBookImport"]
+    matches: List["FinanceVATBookMatch"]
+    counts: Dict[str, int]
+    attention: int
+    our_vat: str
+
+class FinanceVATBookUploadPage(TypedDict):
+    items: List["FinanceVATBookUploadPageItemsItem"]
+
+FinanceVATBookUploadPageItemsItem = TypedDict("FinanceVATBookUploadPageItemsItem", {"kind": Literal['purchase', 'sales'], "import": "FinanceVATBookImport", "duplicate": bool}, total=False)
+
+class FinanceVATQuarter(TypedDict):
+    id: "UUID"
+    number: str
+    date: str
+    status: Literal['draft', 'posted', 'cancelled']
+    company_id: str
+    comment: str
+    updated_at: str
+    payload: "FinanceVATQuarterPayload"
+
+class FinanceVATQuarterFigureSource(TypedDict):
+    import_id: str
+    loaded_at: str
+
+class FinanceVATQuarterInput(TypedDict, total=False):
+    company_id: "UUID"
+    year: int
+    quarter: int
+    #: Начислено НДС по бухгалтерии за квартал.
+    accounting_output: str
+    #: К вычету по бухгалтерии за квартал.
+    accounting_deduction: str
+    discrepancy_item_id: "UUID"
+    accounting_output_book_id: "UUID"
+    accounting_deduction_book_id: "UUID"
+    lines: List["FinanceVATQuarterLineChoice"]
+    comment: str
+
+class _FinanceVATQuarterLineRequired(TypedDict):
+    kind: Literal['deduction', 'restoration']
+    source: "UUID"
+    contact: str
+    #: Налог строки в налоговой валюте юрлица.
+    amount: str
+    age_months: int
+    over_threshold: bool
+    action: Literal['deduct', 'carry', 'write_off', 'restore']
+    parts: List["FinanceVATQuarterPart"]
+
+class FinanceVATQuarterLine(_FinanceVATQuarterLineRequired, total=False):
+    source_type: str
+    source_number: str
+    source_date: str
+    contact_name: str
+    supplier_document: "SupplierDocument"
+    base: str
+    #: Налог строки в валюте учёта — сумма книги.
+    accounting_amount: str
+    item: str
+    #: У восстановления — возвраты поставщику после вычета, объясняющие минус.
+    causes: List["FinanceVATQuarterLineCausesItem"]
+
+class FinanceVATQuarterLineCausesItem(TypedDict):
+    document: str
+    type_key: str
+    number: str
+    date: str
+
+class _FinanceVATQuarterLineChoiceRequired(TypedDict):
+    source: "UUID"
+    action: Literal['deduct', 'carry', 'write_off']
+
+class FinanceVATQuarterLineChoice(_FinanceVATQuarterLineChoiceRequired, total=False):
+    item_id: "UUID"
+
+class FinanceVATQuarterPage(TypedDict):
+    items: List["FinanceVATQuarter"]
+
+class _FinanceVATQuarterPartRequired(TypedDict):
+    #: Налог в налоговой валюте юрлица.
+    amount: str
+
+class FinanceVATQuarterPart(_FinanceVATQuarterPartRequired, total=False):
+    item: str
+    #: Сумма без налога в налоговой валюте юрлица.
+    base: str
+    #: Тот же налог в валюте учёта кабинета.
+    accounting_amount: str
+    #: Та же сумма без налога в валюте учёта кабинета.
+    accounting_base: str
+
+class _FinanceVATQuarterPayloadRequired(TypedDict):
+    year: int
+    quarter: int
+    #: Валюта учёта кабинета — валюта книги.
+    currency: str
+    #: Налоговая валюта юрлица — валюта сумм документа.
+    tax_currency: str
+    pending_months: int
+    accounting_output: str
+    accounting_deduction: str
+    output_total: str
+    lines: List["FinanceVATQuarterLine"]
+    totals: "FinanceVATQuarterTotals"
+
+class FinanceVATQuarterPayload(_FinanceVATQuarterPayloadRequired, total=False):
+    accounting_output_source: "FinanceVATQuarterFigureSource"
+    accounting_deduction_source: "FinanceVATQuarterFigureSource"
+    discrepancy_item: str
+
+class FinanceVATQuarterTotals(TypedDict, total=False):
+    deducted: str
+    restored: str
+    carried: str
+    written_off: str
+    deduction: str
+    output_difference: str
+    deduction_difference: str
+    discrepancy: str
+    #: Расхождение в валюте учёта — сумма книги и ОПиУ.
+    discrepancy_accounting: str
+    #: Курс налоговой валюты к валюте учёта на последний день квартала; пусто в одной валюте.
+    discrepancy_rate: str
+    discrepancy_rate_date: str
+    #: К уплате за квартал в налоговой валюте: начислено по продажам − (вычет − восстановление) + расхождение
+    payable: str
 
 class HubCounters(TypedDict):
     files: int
@@ -12769,10 +13160,10 @@ class SettingsCompany(TypedDict):
     okpo: str
     #: Код филиала у оператора ЭДО; не КПП
     branch_code: str
-    #: Ставка НДС по умолчанию для новых строк документа; конкретная строка вправе её заменить
-    default_vat_rate: str
-    #: Как по умолчанию трактовать цену при выбранной ставке НДС
-    prices_include_vat: bool
+    #: Режим налога, действующий сегодня (версия учётной политики): deductible — в вычет, non_deductible — в стоимость, none — налога нет, пусто — не выбран
+    vat_accounting_mode: Literal['', 'deductible', 'non_deductible', 'none']
+    #: Кто поставил значение: manual — человек, import — внешняя система; импорт не перезаписывает manual
+    vat_accounting_mode_source: Literal['manual', 'import']
     legal_address: "SettingsCompanyAddress"
     entrepreneur: "SettingsCompanyPerson"
     is_active: bool
@@ -12808,8 +13199,8 @@ class SettingsCompanyInput(_SettingsCompanyInputRequired, total=False):
     ogrn: str
     okpo: str
     branch_code: str
-    default_vat_rate: str
-    prices_include_vat: bool
+    #: Режим налога нового юрлица — становится первой версией «с начала учёта». У существующего юрлица режим меняется в учётной политике с датой; пусто — не менять, другое значение, чем действующее сегодня, отклоняется 409
+    vat_accounting_mode: Literal['', 'deductible', 'non_deductible', 'none']
     legal_address: "SettingsCompanyAddress"
     entrepreneur: "SettingsCompanyPerson"
 
@@ -13250,6 +13641,10 @@ class StockDocumentLine(_StockDocumentLineRequired, total=False):
     price: str
     #: Decimal string
     amount: str
+    #: Сумма строки без налога. Считает сервер из paper_vat_amount и перезаписывает присланное
+    amount_without_vat: str
+    #: Доля налога документа в строке: пропорционально сумме строки, копеечный остаток — на самую крупную. Считает сервер и перезаписывает присланное; по её наличию судят о разбивке при перепроведении
+    vat_amount: str
     basis_line_id: Optional["UUID"]
     #: Построчное происхождение, когда один заказ поставщику сводит несколько заявок
     basis_document_id: Optional["UUID"]
@@ -13301,6 +13696,13 @@ class StockDocumentPayload(_StockDocumentPayloadRequired, total=False):
     #: Срок резерва; не раньше даты документа
     expires_at: str
     items: List["StockDocumentLine"]
+    #: Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается
+    paper_amount: str
+    #: В т.ч. НДС документа поставщика, одна сумма (ERP-484, подшаг 5.3). Обязательна, если на дату документа бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне этого периода непустое значение — 400. Сервер раскладывает сумму по строкам
+    paper_vat_amount: str
+    supplier_document: "SupplierDocument"
+    #: Налоговая валюта юрлица на дату приёмки (ERP-484, Р21). Пишет сервер вместе с разбивкой налога; присланное значение перезаписывается
+    tax_currency: str
     #: Decimal string; сумма накладных расходов
     amount: str
     allocation_method: Literal['quantity', 'cost', 'manual']
@@ -13620,6 +14022,22 @@ class StockPurchaseOrderLineInput(_StockPurchaseOrderLineInputRequired, total=Fa
     basis_line_id: Optional["UUID"]
     #: Проведённая заявка на закупку того же юрлица и склада; указывается только вместе с basis_line_id
     request_id: Optional["UUID"]
+
+class StockReceiptVATTerms(TypedDict):
+    #: Обязательно ли на дату «в т.ч. НДС»: бизнес очищает суммы и юрлицо принимает налог к вычету
+    applies: bool
+    #: Режим налога юрлица на дату; пусто — не выбран
+    mode: Literal['', 'deductible', 'non_deductible', 'none']
+    #: Валюта учёта на дату документа
+    currency: str
+
+class _StockReceiptVATTermsInputRequired(TypedDict):
+    #: Дата документа: от неё зависит, обязательно ли «в т.ч. НДС»
+    date: str
+
+class StockReceiptVATTermsInput(_StockReceiptVATTermsInputRequired, total=False):
+    company_id: "UUID"
+    business_id: "UUID"
 
 class StockReorderRule(TypedDict):
     id: "UUID"
@@ -14140,6 +14558,12 @@ class Subtask(TypedDict):
     executor: Optional[int]
     executor_name: Optional[str]
     due_at: Optional[str]
+
+class SupplierDocument(TypedDict, total=False):
+    """Номер и дата документа поставщика (ERP-484, подшаг 5.3): по ним входящий НДС сверяется с книгой покупок. Оба поля необязательны"""
+
+    number: str
+    date: str
 
 class Tag(TypedDict):
     id: "UUID"

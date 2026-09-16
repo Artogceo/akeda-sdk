@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ce870b49d00317683cfee3018aca3de91a2e2d1142baf1a4bc63cce50b3aade0).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 fe5ccea4c72d80cb31f0535902d57f69853ce40558ea47f30fe5ad5b48b10f9a).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2305,6 +2305,11 @@ export interface CoreAccountingPeriodState {
   "history": Array<CoreAccountingPeriodEvent>;
 }
 
+export interface CoreAccountingPolicy {
+  "businesses": Array<CoreBusinessPolicy>;
+  "companies": Array<CoreCompanyPolicy>;
+}
+
 export interface CoreAccountingSettings {
   "currency": string;
   "valid_from"?: string;
@@ -2339,9 +2344,9 @@ export interface CoreBusiness {
   "accounting_method": "cash" | "accrual";
   /** Дата перехода на начисление; отсутствует у кассового бизнеса */
   "accrual_from"?: string;
-  /** Очищаются ли суммы отчётов от косвенного налога; gross это полные суммы */
+  /** Очищаются ли суммы отчётов от косвенного налога сегодня; gross это полные суммы. Меняется в учётной политике с датой */
   "vat_presentation"?: "gross" | "net";
-  /** Дата, с которой действует текущий режим показа сумм; отсутствует, если режим не переключали */
+  /** Дата начала действующей сегодня версии очистки сумм; отсутствует, если версия действует с начала учёта */
   "vat_since"?: string;
 }
 
@@ -2375,11 +2380,14 @@ export interface CoreBusinessOwnerInput {
   "share": string;
 }
 
-export interface CoreBusinessVATPresentationInput {
-  /** Значение приводится к нижнему регистру; mixed бывает подписью отчёта, но не выбором */
-  "presentation": "gross" | "net";
-  /** Дата, с которой действует новый режим; обязательна при смене режима и не спрашивается, когда режим не меняется */
-  "since"?: string;
+export interface CoreBusinessPolicy {
+  "id": UUID;
+  "name": string;
+  "is_active": boolean;
+  "accounting_method": "cash" | "accrual";
+  "accrual_from"?: string;
+  "vat_presentation": Array<CorePolicyVATPresentationVersion>;
+  "vat_pending": Array<CorePolicyVATPendingVersion>;
 }
 
 export interface CoreCabinetPreferences {
@@ -2413,6 +2421,15 @@ export interface CoreChangeFeedPage {
 }
 
 export type CoreChangeOp = "upsert" | "delete";
+
+export interface CoreCompanyPolicy {
+  "id": UUID;
+  "name": string;
+  "is_active": boolean;
+  "business_id": UUID;
+  "tax_mode": Array<CorePolicyTaxModeVersion>;
+  "vat_rates": Array<CorePolicyVATRatesVersion>;
+}
 
 export interface CoreConflictingRegistrar {
   "id": UUID;
@@ -3292,6 +3309,8 @@ export interface CoreItem {
   "pnl_parent_id"?: UUID;
   "pnl_sort_order": number;
   "usage_count": number;
+  /** Вид ставки НДС сделки без товара по статье дохода; пусто — общая */
+  "vat_kind"?: "" | "general" | "reduced" | "zero" | "exempt";
 }
 
 export interface CoreItemInput {
@@ -3305,6 +3324,8 @@ export interface CoreItemInput {
   "pnl_sign"?: number;
   "pnl_parent_id"?: UUID;
   "pnl_sort_order"?: number;
+  /** Вид ставки НДС статьи дохода; не передан — не меняется; у статьи не дохода — 400 */
+  "vat_kind"?: "" | "general" | "reduced" | "zero" | "exempt";
 }
 
 export interface CoreItemMove {
@@ -3353,6 +3374,81 @@ export interface CorePhotoResult {
   "photo_url": string;
 }
 
+export interface CorePolicyPeriod {
+  "id": UUID;
+  /** Начало версии; 0001-01-01 означает «с начала учёта» */
+  "valid_from": string;
+  /** Последний день версии; отсутствует у открытой версии */
+  "valid_to"?: string;
+}
+
+export interface CorePolicyTaxModeInput {
+  /** 0001-01-01 — с начала учёта, если по юрлицу ещё нет проведённых документов */
+  "valid_from": string;
+  "mode": "deductible" | "non_deductible" | "none";
+  /** Налоговая валюта юрлица; не передана — RUB. Меняется вместе с версией режима: с даты, по которой есть проведённые документы, — отказ 409. */
+  "tax_currency"?: string;
+}
+
+export interface CorePolicyTaxModeVersion {
+  "id": UUID;
+  /** Начало версии; 0001-01-01 означает «с начала учёта» */
+  "valid_from": string;
+  /** Последний день версии; отсутствует у открытой версии */
+  "valid_to"?: string;
+  "mode": "deductible" | "non_deductible" | "none";
+  /** Налоговая валюта юрлица: в ней ведутся суммы налога регистров НДС и документа «НДС за квартал». По умолчанию RUB. */
+  "tax_currency": string;
+}
+
+export interface CorePolicyVATPendingInput {
+  "valid_from": string;
+  "months": number;
+}
+
+export interface CorePolicyVATPendingVersion {
+  "id": UUID;
+  /** Начало версии; 0001-01-01 означает «с начала учёта» */
+  "valid_from": string;
+  /** Последний день версии; отсутствует у открытой версии */
+  "valid_to"?: string;
+  "months": number;
+}
+
+export interface CorePolicyVATPresentationInput {
+  "valid_from": string;
+  "presentation": "gross" | "net";
+}
+
+export interface CorePolicyVATPresentationVersion {
+  "id": UUID;
+  /** Начало версии; 0001-01-01 означает «с начала учёта» */
+  "valid_from": string;
+  /** Последний день версии; отсутствует у открытой версии */
+  "valid_to"?: string;
+  "presentation": "gross" | "net";
+}
+
+export interface CorePolicyVATRatesInput {
+  "valid_from": string;
+  /** Процент общей ставки, больше 0 и меньше 100; пусто — не заведена */
+  "general"?: string;
+  /** Процент льготной ставки, больше 0 и меньше 100; пусто — не заведена */
+  "reduced"?: string;
+}
+
+export interface CorePolicyVATRatesVersion {
+  "id": UUID;
+  /** Начало версии; 0001-01-01 означает «с начала учёта» */
+  "valid_from": string;
+  /** Последний день версии; отсутствует у открытой версии */
+  "valid_to"?: string;
+  /** Процент общей ставки с двумя знаками; пусто — вид не заведён */
+  "general": string;
+  /** Процент льготной ставки с двумя знаками; пусто — вид не заведён */
+  "reduced": string;
+}
+
 export interface CoreProduct {
   "id": UUID;
   "sku": string;
@@ -3380,8 +3476,10 @@ export interface CoreProduct {
   "updated_at": string;
   /** Закупочная цена десятичной строкой; подставляется в строку приёмки */
   "purchase_price": string;
-  /** Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию */
+  /** Устарело (ERP-484): снимается, ставка определяется видом товара (vat_kind) и налоговой политикой юрлица на дату документа. Всегда пустая строка */
   "vat_rate": string;
+  /** Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика) */
+  "vat_kind"?: "" | "general" | "reduced" | "zero" | "exempt";
   /** Вес одной базовой единицы, кг; пусто — не задан */
   "weight_kg": string;
   /** Объём одной базовой единицы, м³; пусто — не задан */
@@ -3447,8 +3545,8 @@ export interface CoreProductCreate {
   "identifiers"?: Array<CoreProductIdentifierInput>;
   /** Закупочная цена десятичной строкой; подставляется в строку приёмки */
   "purchase_price"?: string;
-  /** Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию */
-  "vat_rate"?: string;
+  /** Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика) */
+  "vat_kind"?: "" | "general" | "reduced" | "zero" | "exempt";
   /** Вес одной базовой единицы, кг; пусто — не задан */
   "weight_kg"?: string;
   /** Объём одной базовой единицы, м³; пусто — не задан */
@@ -3735,8 +3833,8 @@ export interface CoreProductPatch {
   "folder_id"?: UUID | null;
   /** Закупочная цена десятичной строкой; подставляется в строку приёмки */
   "purchase_price"?: string;
-  /** Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию */
-  "vat_rate"?: string;
+  /** Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика) */
+  "vat_kind"?: "" | "general" | "reduced" | "zero" | "exempt";
   /** Вес одной базовой единицы, кг; пусто — не задан */
   "weight_kg"?: string;
   /** Объём одной базовой единицы, м³; пусто — не задан */
@@ -5482,7 +5580,7 @@ export interface DocflowIssue {
 /** Дополнение к строке учётного документа. Строка адресуется line_id — тем же идентификатором, которым её знает сам документ. Не порядковым номером: порядок строк меняют, и привязка по номеру перевесила бы ставку НДС на другой товар молча. */
 export interface DocflowLineRequisites {
   "line_id": UUID;
-  /** НалСт. Обязателен в каждой строке формата; пустое значение берёт общую ставку юрлица */
+  /** Не принимается: ставку строки задают вид ставки товара и учётная политика юрлица. Непустое значение — 400 */
   "vat_rate"?: string;
   /** ОКЕИ_Тов. Пустое значение берёт код из карточки единицы измерения */
   "unit_code"?: string;
@@ -5724,10 +5822,6 @@ export interface DocflowRequisites {
   "document_kind_name"?: string;
   /** ВерсПрог. Пустое значение подставляет сервер: версию приложения знает он, а не человек в форме */
   "program_version"?: string;
-  /** Сумма строки уже содержит налог. Признак спрашивается, а не угадывается: сумма 1200 законно означает и «1200 без налога», и «1200 с налогом», а ошибка стоит расхождения в декларации */
-  "prices_include_vat"?: boolean;
-  /** НалСт по умолчанию для всех строк. Строка вправе назвать свою */
-  "vat_rate"?: string;
   "currency"?: DocflowCurrencyRequisites;
   "file"?: DocflowFileRequisites;
   "seller"?: DocflowPartyRequisites;
@@ -6238,6 +6332,18 @@ export interface FinanceAccount {
   "synced_at": string | null;
   "created_at": string;
   "updated_at": string;
+  /** Остаток по данным банка на момент `bank_balance_at`, decimal string. null — банк остатка не называл (счёт не подключён или остаток ещё не приходил): это не ноль, и сверять с ним нечего. */
+  "bank_balance"?: string | null;
+  /** Когда банк назвал остаток `bank_balance`. */
+  "bank_balance_at"?: string | null;
+  /** Когда счёт закрыт банком. null — счёт действующий. */
+  "bank_closed_at"?: string | null;
+  /** «Используется с»: с какой даты счёт принадлежит бизнесу. Операции раньше неё коннектор не запрашивает, загрузка файла пропускает, ручной ввод отклоняет. Поля нет — ограничения нет. */
+  "in_use_since"?: string;
+  /** Часовой пояс банковских суток счёта (IANA), например Asia/Novosibirsk. По нему банк режет сутки выписки, и по нему считаются окно синхронизации, «Загрузить период» и остаток на дату. Умолчание — по БИК подразделения банка. null у кассы. */
+  "bank_timezone"?: string | null;
+  /** Откуда пояс: `bic` — определён по БИК, `default` — определить не удалось, стоит умолчание (проверьте пояс), `manual` — задан человеком; подключение банка ручной пояс не трогает. */
+  "bank_timezone_source"?: "bic" | "default" | "manual" | null | null;
 }
 
 export interface FinanceAccountCreate {
@@ -6252,6 +6358,9 @@ export interface FinanceAccountCreate {
   "gl_account"?: string;
   /** Decimal string */
   "opening_balance"?: string;
+  "is_active"?: boolean;
+  /** «Используется с», ГГГГ-ММ-ДД; пусто — без ограничения. */
+  "in_use_since"?: string;
 }
 
 export interface FinanceAccountPage {
@@ -6269,6 +6378,10 @@ export interface FinanceAccountPatch {
   "currency"?: string;
   "gl_account"?: string | null;
   "is_active"?: boolean;
+  /** «Используется с», ГГГГ-ММ-ДД; null или пустая строка снимают ограничение. */
+  "in_use_since"?: string | null;
+  /** Часовой пояс банковских суток (IANA). Источник пояса становится manual. */
+  "bank_timezone"?: string;
 }
 
 export interface FinanceBalanceItem {
@@ -6613,6 +6726,8 @@ export interface FinanceConnectorProvider {
   "requires_account_number": boolean;
   /** Исходящие адреса контура для белого списка банка. Пусто — адрес контура не настроен. */
   "egress_ips"?: Array<string>;
+  /** Пояс банковских суток (IANA), например Europe/Moscow. По нему считаются окно выписки и «сегодня» банка; даты операций банка не пересчитываются. */
+  "timezone": string;
 }
 
 export type FinanceConnectorProviderKey = "modulbank" | "tbank" | "tochka" | "alfa" | "sber";
@@ -6970,6 +7085,9 @@ export interface FinanceOperationAccrualCreate {
   /** Обычно вычисляется из графика; переданное значение не может ему противоречить */
   "due_date"?: string;
   "reason"?: string;
+  /** Только закупка без «в т.ч. НДС» на плане (ERP-484, подшаг 5.3в): «в т.ч. НДС» акта поставщика. Обязательна, если на дату начисления бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. У плана с налогом начисление берёт долю нарастающим итогом, и непустое значение — 400 */
+  "vat_amount"?: string;
+  "supplier_document"?: SupplierDocument;
 }
 
 export interface FinanceOperationAccrualResult {
@@ -7006,6 +7124,9 @@ export interface FinanceOperationCreate {
   "accruals"?: Array<FinanceOperationStageInput>;
   "payments"?: Array<FinanceOperationStageInput>;
   "references"?: Array<FinanceOperationReferenceInput>;
+  /** Только закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаги 5.3 и 5.3в). У закупки по документу обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. У плана по периодам необязательна: указана — начисления берут долю нарастающим итогом, нет — налог приносит каждое начисление. Вне периода непустое значение — 400 */
+  "vat_amount"?: string;
+  "supplier_document"?: SupplierDocument;
 }
 
 export interface FinanceOperationFact {
@@ -7789,6 +7910,18 @@ export interface FinanceRegisterReconciliation {
   "transit": Array<{ [key: string]: unknown }>;
   "transit_total": string;
   "transit_match": boolean;
+  /** Нет минуса входного НДС по источнику без возврата поставщику после вычета. */
+  "input_vat_match"?: boolean;
+  /** Источники с отрицательным остатком входного НДС, который не объяснён возвратом поставщику после вычета. */
+  "input_vat_unexplained"?: Array<FinanceRegisterReconciliationInputVatUnexplainedItem>;
+}
+
+export interface FinanceRegisterReconciliationInputVatUnexplainedItem {
+  "source": string;
+  "source_number": string;
+  "source_date": string;
+  "company": string;
+  "amount": string;
 }
 
 export interface FinanceRegisterRepairFailure {
@@ -7890,6 +8023,25 @@ export interface FinanceResponsiblePatch {
   "responsible": string | null;
 }
 
+export interface FinanceSaleVATTerms {
+  /** На дату бизнес очищает суммы от налога и у сделки есть юрлицо */
+  "applies": boolean;
+  /** Юрлицо начисляет налог с продажи */
+  "charged": boolean;
+  /** Режим налога юрлица на дату */
+  "mode": "" | "deductible" | "non_deductible" | "none";
+  /** Ставка в записи ФНС («22%», «0%», «без НДС»); пусто — ставку не дать */
+  "rate": string;
+  /** Вид ставки */
+  "kind": "" | "general" | "reduced" | "zero" | "exempt";
+  /** Откуда вид — статья или общая по умолчанию */
+  "from": "" | "item" | "default";
+  /** Почему сохранение откажет без правки; пусто — не откажет */
+  "problem": "" | "mode_unset" | "rate_missing";
+  /** Объяснение отказа словами — с видом ставки и датой */
+  "detail"?: string;
+}
+
 export interface FinanceSettlementBalance {
   "obligation_id": UUID;
   /** Decimal string */
@@ -7932,6 +8084,9 @@ export interface FinanceSettlementDocumentCreate {
   "source_ref"?: string;
   /** Идентификатор сделки в source_system; повтор того же (source_system, source_ref, external_id) возвращает уже созданный документ вместо второго */
   "external_id"?: string;
+  /** Только закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаг 5.3). Обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне периода непустое значение — 400 */
+  "vat_amount"?: string;
+  "supplier_document"?: SupplierDocument;
 }
 
 export type FinanceSettlementDocumentType = "finance_settlement_baseline" | "finance_receivable_opening" | "finance_receivable" | "finance_payable_opening" | "finance_payable" | "finance_advance" | "finance_advance_offset" | "finance_sale" | "finance_purchase" | "finance_payment_allocation";
@@ -8178,6 +8333,220 @@ export interface FinanceTransactionTotals {
   "currency": string;
   /** Сколько операций осталось без пересчёта в валюту учёта: неполный пересчёт не должен выглядеть верным итогом */
   "unconverted_count": number;
+}
+
+export interface FinanceVATBookImport {
+  "id": string;
+  "company_id": string;
+  "year": number;
+  "quarter": number;
+  "kind": "purchase" | "sales";
+  "status": "active" | "replaced";
+  "source_name": string;
+  "source_sha256": string;
+  "source_size": number;
+  "file_id": string;
+  "declared_inn": string;
+  "declared_kpp": string;
+  "form_version": string;
+  "correction": number;
+  "total_vat": string;
+  "rows_vat": string;
+  "row_count": number;
+  "created_by"?: number;
+  "created_at": string;
+  "replaced_at"?: string;
+}
+
+export interface FinanceVATBookMatch {
+  "status": "matched" | "amount_differs" | "only_book" | "only_ours" | "not_deducted";
+  "inn": string;
+  "number": string;
+  "date": string;
+  "book_vat": string;
+  "our_vat": string;
+  "difference": string;
+  "book_rows": Array<FinanceVATBookRow>;
+  "our_rows": Array<FinanceVATBookOurRow>;
+  "group"?: boolean;
+  "kpp_differs"?: boolean;
+  "counterparty"?: string;
+  "counterparty_name"?: string;
+}
+
+export interface FinanceVATBookOurRow {
+  "source": string;
+  "source_number": string;
+  "source_date": string;
+  "contact"?: string;
+  "contact_name"?: string;
+  "inn"?: string;
+  "kpp"?: string;
+  "number": string;
+  "date": string;
+  "vat": string;
+  "action"?: string;
+  "restoration"?: boolean;
+}
+
+export interface FinanceVATBookReconciliation {
+  /** Налоговая валюта юрлица — валюта книг 1С и нашего налога. */
+  "currency": string;
+  "quarter_document"?: string;
+  "quarter_number"?: string;
+  "purchase": FinanceVATBookSide;
+  "sales": FinanceVATBookSide;
+}
+
+export interface FinanceVATBookRow {
+  "line": number;
+  "codes": Array<string>;
+  "number": string;
+  "date": string;
+  "inn"?: string;
+  "kpp"?: string;
+  "amount": string;
+  "vat": string;
+  "correction"?: boolean;
+}
+
+export interface FinanceVATBookSide {
+  "kind": "purchase" | "sales";
+  "active": FinanceVATBookImport | null;
+  "history": Array<FinanceVATBookImport>;
+  "matches": Array<FinanceVATBookMatch>;
+  "counts": { [key: string]: number };
+  "attention": number;
+  "our_vat": string;
+}
+
+export interface FinanceVATBookUploadPage {
+  "items": Array<FinanceVATBookUploadPageItemsItem>;
+}
+
+export interface FinanceVATBookUploadPageItemsItem {
+  "kind": "purchase" | "sales";
+  "import": FinanceVATBookImport;
+  "duplicate": boolean;
+}
+
+export interface FinanceVATQuarter {
+  "id": UUID;
+  "number": string;
+  "date": string;
+  "status": "draft" | "posted" | "cancelled";
+  "company_id": string;
+  "comment": string;
+  "updated_at": string;
+  "payload": FinanceVATQuarterPayload;
+}
+
+export interface FinanceVATQuarterFigureSource {
+  "import_id": string;
+  "loaded_at": string;
+}
+
+export interface FinanceVATQuarterInput {
+  "company_id"?: UUID;
+  "year"?: number;
+  "quarter"?: number;
+  /** Начислено НДС по бухгалтерии за квартал. */
+  "accounting_output"?: string;
+  /** К вычету по бухгалтерии за квартал. */
+  "accounting_deduction"?: string;
+  "discrepancy_item_id"?: UUID;
+  "accounting_output_book_id"?: UUID;
+  "accounting_deduction_book_id"?: UUID;
+  "lines"?: Array<FinanceVATQuarterLineChoice>;
+  "comment"?: string;
+}
+
+export interface FinanceVATQuarterLine {
+  "kind": "deduction" | "restoration";
+  "source": UUID;
+  "source_type"?: string;
+  "source_number"?: string;
+  "source_date"?: string;
+  "contact": string;
+  "contact_name"?: string;
+  "supplier_document"?: SupplierDocument;
+  /** Налог строки в налоговой валюте юрлица. */
+  "amount": string;
+  "base"?: string;
+  /** Налог строки в валюте учёта — сумма книги. */
+  "accounting_amount"?: string;
+  "age_months": number;
+  "over_threshold": boolean;
+  "action": "deduct" | "carry" | "write_off" | "restore";
+  "item"?: string;
+  "parts": Array<FinanceVATQuarterPart>;
+  /** У восстановления — возвраты поставщику после вычета, объясняющие минус. */
+  "causes"?: Array<FinanceVATQuarterLineCausesItem>;
+}
+
+export interface FinanceVATQuarterLineCausesItem {
+  "document": string;
+  "type_key": string;
+  "number": string;
+  "date": string;
+}
+
+export interface FinanceVATQuarterLineChoice {
+  "source": UUID;
+  "action": "deduct" | "carry" | "write_off";
+  "item_id"?: UUID;
+}
+
+export interface FinanceVATQuarterPage {
+  "items": Array<FinanceVATQuarter>;
+}
+
+export interface FinanceVATQuarterPart {
+  "item"?: string;
+  /** Налог в налоговой валюте юрлица. */
+  "amount": string;
+  /** Сумма без налога в налоговой валюте юрлица. */
+  "base"?: string;
+  /** Тот же налог в валюте учёта кабинета. */
+  "accounting_amount"?: string;
+  /** Та же сумма без налога в валюте учёта кабинета. */
+  "accounting_base"?: string;
+}
+
+export interface FinanceVATQuarterPayload {
+  "year": number;
+  "quarter": number;
+  /** Валюта учёта кабинета — валюта книги. */
+  "currency": string;
+  /** Налоговая валюта юрлица — валюта сумм документа. */
+  "tax_currency": string;
+  "pending_months": number;
+  "accounting_output": string;
+  "accounting_deduction": string;
+  "accounting_output_source"?: FinanceVATQuarterFigureSource;
+  "accounting_deduction_source"?: FinanceVATQuarterFigureSource;
+  "output_total": string;
+  "discrepancy_item"?: string;
+  "lines": Array<FinanceVATQuarterLine>;
+  "totals": FinanceVATQuarterTotals;
+}
+
+export interface FinanceVATQuarterTotals {
+  "deducted"?: string;
+  "restored"?: string;
+  "carried"?: string;
+  "written_off"?: string;
+  "deduction"?: string;
+  "output_difference"?: string;
+  "deduction_difference"?: string;
+  "discrepancy"?: string;
+  /** Расхождение в валюте учёта — сумма книги и ОПиУ. */
+  "discrepancy_accounting"?: string;
+  /** Курс налоговой валюты к валюте учёта на последний день квартала; пусто в одной валюте. */
+  "discrepancy_rate"?: string;
+  "discrepancy_rate_date"?: string;
+  /** К уплате за квартал в налоговой валюте: начислено по продажам − (вычет − восстановление) + расхождение */
+  "payable"?: string;
 }
 
 export interface HubCounters {
@@ -11888,10 +12257,10 @@ export interface SettingsCompany {
   "okpo": string;
   /** Код филиала у оператора ЭДО; не КПП */
   "branch_code": string;
-  /** Ставка НДС по умолчанию для новых строк документа; конкретная строка вправе её заменить */
-  "default_vat_rate": string;
-  /** Как по умолчанию трактовать цену при выбранной ставке НДС */
-  "prices_include_vat": boolean;
+  /** Режим налога, действующий сегодня (версия учётной политики): deductible — в вычет, non_deductible — в стоимость, none — налога нет, пусто — не выбран */
+  "vat_accounting_mode": "" | "deductible" | "non_deductible" | "none";
+  /** Кто поставил значение: manual — человек, import — внешняя система; импорт не перезаписывает manual */
+  "vat_accounting_mode_source": "manual" | "import";
   "legal_address": SettingsCompanyAddress;
   "entrepreneur": SettingsCompanyPerson;
   "is_active": boolean;
@@ -11927,8 +12296,8 @@ export interface SettingsCompanyInput {
   "ogrn"?: string;
   "okpo"?: string;
   "branch_code"?: string;
-  "default_vat_rate"?: string;
-  "prices_include_vat"?: boolean;
+  /** Режим налога нового юрлица — становится первой версией «с начала учёта». У существующего юрлица режим меняется в учётной политике с датой; пусто — не менять, другое значение, чем действующее сегодня, отклоняется 409 */
+  "vat_accounting_mode"?: "" | "deductible" | "non_deductible" | "none";
   "legal_address"?: SettingsCompanyAddress;
   "entrepreneur"?: SettingsCompanyPerson;
 }
@@ -12402,6 +12771,10 @@ export interface StockDocumentLine {
   "price"?: string;
   /** Decimal string */
   "amount"?: string;
+  /** Сумма строки без налога. Считает сервер из paper_vat_amount и перезаписывает присланное */
+  "amount_without_vat"?: string;
+  /** Доля налога документа в строке: пропорционально сумме строки, копеечный остаток — на самую крупную. Считает сервер и перезаписывает присланное; по её наличию судят о разбивке при перепроведении */
+  "vat_amount"?: string;
   "basis_line_id"?: UUID | null;
   /** Построчное происхождение, когда один заказ поставщику сводит несколько заявок */
   "basis_document_id"?: UUID | null;
@@ -12453,6 +12826,13 @@ export interface StockDocumentPayload {
   /** Срок резерва; не раньше даты документа */
   "expires_at"?: string;
   "items"?: Array<StockDocumentLine>;
+  /** Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается */
+  "paper_amount"?: string;
+  /** В т.ч. НДС документа поставщика, одна сумма (ERP-484, подшаг 5.3). Обязательна, если на дату документа бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне этого периода непустое значение — 400. Сервер раскладывает сумму по строкам */
+  "paper_vat_amount"?: string;
+  "supplier_document"?: SupplierDocument;
+  /** Налоговая валюта юрлица на дату приёмки (ERP-484, Р21). Пишет сервер вместе с разбивкой налога; присланное значение перезаписывается */
+  "tax_currency"?: string;
   /** Decimal string; сумма накладных расходов */
   "amount"?: string;
   "allocation_method"?: "quantity" | "cost" | "manual";
@@ -12767,6 +13147,22 @@ export interface StockPurchaseOrderLineInput {
   "basis_line_id"?: UUID | null;
   /** Проведённая заявка на закупку того же юрлица и склада; указывается только вместе с basis_line_id */
   "request_id"?: UUID | null;
+}
+
+export interface StockReceiptVATTerms {
+  /** Обязательно ли на дату «в т.ч. НДС»: бизнес очищает суммы и юрлицо принимает налог к вычету */
+  "applies": boolean;
+  /** Режим налога юрлица на дату; пусто — не выбран */
+  "mode": "" | "deductible" | "non_deductible" | "none";
+  /** Валюта учёта на дату документа */
+  "currency": string;
+}
+
+export interface StockReceiptVATTermsInput {
+  "company_id"?: UUID;
+  "business_id"?: UUID;
+  /** Дата документа: от неё зависит, обязательно ли «в т.ч. НДС» */
+  "date": string;
 }
 
 export interface StockReorderRule {
@@ -13328,6 +13724,12 @@ export interface Subtask {
   "executor": number | null;
   "executor_name": string | null;
   "due_at": string | null;
+}
+
+/** Номер и дата документа поставщика (ERP-484, подшаг 5.3): по ним входящий НДС сверяется с книгой покупок. Оба поля необязательны */
+export interface SupplierDocument {
+  "number"?: string;
+  "date"?: string;
 }
 
 export interface Tag {

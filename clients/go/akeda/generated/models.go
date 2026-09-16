@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ce870b49d00317683cfee3018aca3de91a2e2d1142baf1a4bc63cce50b3aade0).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 fe5ccea4c72d80cb31f0535902d57f69853ce40558ea47f30fe5ad5b48b10f9a).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -2300,6 +2300,11 @@ type CoreAccountingPeriodState struct {
 	History       []CoreAccountingPeriodEvent `json:"history"`
 }
 
+type CoreAccountingPolicy struct {
+	Businesses []CoreBusinessPolicy `json:"businesses"`
+	Companies  []CoreCompanyPolicy  `json:"companies"`
+}
+
 type CoreAccountingSettings struct {
 	Currency      string  `json:"currency"`
 	ValidFrom     *string `json:"valid_from,omitempty"`
@@ -2334,9 +2339,9 @@ type CoreBusiness struct {
 	AccountingMethod string `json:"accounting_method"`
 	// AccrualFrom — Дата перехода на начисление; отсутствует у кассового бизнеса
 	AccrualFrom *string `json:"accrual_from,omitempty"`
-	// VATPresentation — Очищаются ли суммы отчётов от косвенного налога; gross это полные суммы
+	// VATPresentation — Очищаются ли суммы отчётов от косвенного налога сегодня; gross это полные суммы. Меняется в учётной политике с датой
 	VATPresentation *string `json:"vat_presentation,omitempty"`
-	// VATSince — Дата, с которой действует текущий режим показа сумм; отсутствует, если режим не переключали
+	// VATSince — Дата начала действующей сегодня версии очистки сумм; отсутствует, если версия действует с начала учёта
 	VATSince *string `json:"vat_since,omitempty"`
 }
 
@@ -2370,11 +2375,14 @@ type CoreBusinessOwnerInput struct {
 	Share      string `json:"share"`
 }
 
-type CoreBusinessVATPresentationInput struct {
-	// Presentation — Значение приводится к нижнему регистру; mixed бывает подписью отчёта, но не выбором
-	Presentation string `json:"presentation"`
-	// Since — Дата, с которой действует новый режим; обязательна при смене режима и не спрашивается, когда режим не меняется
-	Since *string `json:"since,omitempty"`
+type CoreBusinessPolicy struct {
+	ID               UUID                               `json:"id"`
+	Name             string                             `json:"name"`
+	IsActive         bool                               `json:"is_active"`
+	AccountingMethod string                             `json:"accounting_method"`
+	AccrualFrom      *string                            `json:"accrual_from,omitempty"`
+	VATPresentation  []CorePolicyVATPresentationVersion `json:"vat_presentation"`
+	VATPending       []CorePolicyVATPendingVersion      `json:"vat_pending"`
 }
 
 type CoreCabinetPreferences struct {
@@ -2408,6 +2416,15 @@ type CoreChangeFeedPage struct {
 }
 
 type CoreChangeOp = string
+
+type CoreCompanyPolicy struct {
+	ID         UUID                        `json:"id"`
+	Name       string                      `json:"name"`
+	IsActive   bool                        `json:"is_active"`
+	BusinessID UUID                        `json:"business_id"`
+	TaxMode    []CorePolicyTaxModeVersion  `json:"tax_mode"`
+	VATRates   []CorePolicyVATRatesVersion `json:"vat_rates"`
+}
 
 type CoreConflictingRegistrar struct {
 	ID       UUID               `json:"id"`
@@ -3287,6 +3304,8 @@ type CoreItem struct {
 	PNLParentID         *UUID   `json:"pnl_parent_id,omitempty"`
 	PNLSortOrder        int64   `json:"pnl_sort_order"`
 	UsageCount          int64   `json:"usage_count"`
+	// VATKind — Вид ставки НДС сделки без товара по статье дохода; пусто — общая
+	VATKind *string `json:"vat_kind,omitempty"`
 }
 
 type CoreItemInput struct {
@@ -3300,6 +3319,8 @@ type CoreItemInput struct {
 	PNLSign           *int64  `json:"pnl_sign,omitempty"`
 	PNLParentID       *UUID   `json:"pnl_parent_id,omitempty"`
 	PNLSortOrder      *int64  `json:"pnl_sort_order,omitempty"`
+	// VATKind — Вид ставки НДС статьи дохода; не передан — не меняется; у статьи не дохода — 400
+	VATKind *string `json:"vat_kind,omitempty"`
 }
 
 type CoreItemMove struct {
@@ -3348,6 +3369,81 @@ type CorePhotoResult struct {
 	PhotoURL string `json:"photo_url"`
 }
 
+type CorePolicyPeriod struct {
+	ID UUID `json:"id"`
+	// ValidFrom — Начало версии; 0001-01-01 означает «с начала учёта»
+	ValidFrom string `json:"valid_from"`
+	// ValidTo — Последний день версии; отсутствует у открытой версии
+	ValidTo *string `json:"valid_to,omitempty"`
+}
+
+type CorePolicyTaxModeInput struct {
+	// ValidFrom — 0001-01-01 — с начала учёта, если по юрлицу ещё нет проведённых документов
+	ValidFrom string `json:"valid_from"`
+	Mode      string `json:"mode"`
+	// TaxCurrency — Налоговая валюта юрлица; не передана — RUB. Меняется вместе с версией режима: с даты, по которой есть проведённые документы, — отказ 409.
+	TaxCurrency *string `json:"tax_currency,omitempty"`
+}
+
+type CorePolicyTaxModeVersion struct {
+	ID UUID `json:"id"`
+	// ValidFrom — Начало версии; 0001-01-01 означает «с начала учёта»
+	ValidFrom string `json:"valid_from"`
+	// ValidTo — Последний день версии; отсутствует у открытой версии
+	ValidTo *string `json:"valid_to,omitempty"`
+	Mode    string  `json:"mode"`
+	// TaxCurrency — Налоговая валюта юрлица: в ней ведутся суммы налога регистров НДС и документа «НДС за квартал». По умолчанию RUB.
+	TaxCurrency string `json:"tax_currency"`
+}
+
+type CorePolicyVATPendingInput struct {
+	ValidFrom string `json:"valid_from"`
+	Months    int64  `json:"months"`
+}
+
+type CorePolicyVATPendingVersion struct {
+	ID UUID `json:"id"`
+	// ValidFrom — Начало версии; 0001-01-01 означает «с начала учёта»
+	ValidFrom string `json:"valid_from"`
+	// ValidTo — Последний день версии; отсутствует у открытой версии
+	ValidTo *string `json:"valid_to,omitempty"`
+	Months  int64   `json:"months"`
+}
+
+type CorePolicyVATPresentationInput struct {
+	ValidFrom    string `json:"valid_from"`
+	Presentation string `json:"presentation"`
+}
+
+type CorePolicyVATPresentationVersion struct {
+	ID UUID `json:"id"`
+	// ValidFrom — Начало версии; 0001-01-01 означает «с начала учёта»
+	ValidFrom string `json:"valid_from"`
+	// ValidTo — Последний день версии; отсутствует у открытой версии
+	ValidTo      *string `json:"valid_to,omitempty"`
+	Presentation string  `json:"presentation"`
+}
+
+type CorePolicyVATRatesInput struct {
+	ValidFrom string `json:"valid_from"`
+	// General — Процент общей ставки, больше 0 и меньше 100; пусто — не заведена
+	General *string `json:"general,omitempty"`
+	// Reduced — Процент льготной ставки, больше 0 и меньше 100; пусто — не заведена
+	Reduced *string `json:"reduced,omitempty"`
+}
+
+type CorePolicyVATRatesVersion struct {
+	ID UUID `json:"id"`
+	// ValidFrom — Начало версии; 0001-01-01 означает «с начала учёта»
+	ValidFrom string `json:"valid_from"`
+	// ValidTo — Последний день версии; отсутствует у открытой версии
+	ValidTo *string `json:"valid_to,omitempty"`
+	// General — Процент общей ставки с двумя знаками; пусто — вид не заведён
+	General string `json:"general"`
+	// Reduced — Процент льготной ставки с двумя знаками; пусто — вид не заведён
+	Reduced string `json:"reduced"`
+}
+
 type CoreProduct struct {
 	ID     UUID   `json:"id"`
 	SKU    string `json:"sku"`
@@ -3375,8 +3471,10 @@ type CoreProduct struct {
 	UpdatedAt         string                     `json:"updated_at"`
 	// PurchasePrice — Закупочная цена десятичной строкой; подставляется в строку приёмки
 	PurchasePrice string `json:"purchase_price"`
-	// VATRate — Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
+	// VATRate — Устарело (ERP-484): снимается, ставка определяется видом товара (vat_kind) и налоговой политикой юрлица на дату документа. Всегда пустая строка
 	VATRate string `json:"vat_rate"`
+	// VATKind — Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)
+	VATKind *string `json:"vat_kind,omitempty"`
 	// WeightKg — Вес одной базовой единицы, кг; пусто — не задан
 	WeightKg string `json:"weight_kg"`
 	// VolumeM3 — Объём одной базовой единицы, м³; пусто — не задан
@@ -3442,8 +3540,8 @@ type CoreProductCreate struct {
 	Identifiers []CoreProductIdentifierInput `json:"identifiers,omitempty"`
 	// PurchasePrice — Закупочная цена десятичной строкой; подставляется в строку приёмки
 	PurchasePrice *string `json:"purchase_price,omitempty"`
-	// VATRate — Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
-	VATRate *string `json:"vat_rate,omitempty"`
+	// VATKind — Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)
+	VATKind *string `json:"vat_kind,omitempty"`
 	// WeightKg — Вес одной базовой единицы, кг; пусто — не задан
 	WeightKg *string `json:"weight_kg,omitempty"`
 	// VolumeM3 — Объём одной базовой единицы, м³; пусто — не задан
@@ -3730,8 +3828,8 @@ type CoreProductPatch struct {
 	FolderID      *UUID            `json:"folder_id,omitempty"`
 	// PurchasePrice — Закупочная цена десятичной строкой; подставляется в строку приёмки
 	PurchasePrice *string `json:"purchase_price,omitempty"`
-	// VATRate — Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
-	VATRate *string `json:"vat_rate,omitempty"`
+	// VATKind — Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)
+	VATKind *string `json:"vat_kind,omitempty"`
 	// WeightKg — Вес одной базовой единицы, кг; пусто — не задан
 	WeightKg *string `json:"weight_kg,omitempty"`
 	// VolumeM3 — Объём одной базовой единицы, м³; пусто — не задан
@@ -5473,7 +5571,7 @@ type DocflowIssue struct {
 // DocflowLineRequisites — Дополнение к строке учётного документа. Строка адресуется line_id — тем же идентификатором, которым её знает сам документ. Не порядковым номером: порядок строк меняют, и привязка по номеру перевесила бы ставку НДС на другой товар молча.
 type DocflowLineRequisites struct {
 	LineID UUID `json:"line_id"`
-	// VATRate — НалСт. Обязателен в каждой строке формата; пустое значение берёт общую ставку юрлица
+	// VATRate — Не принимается: ставку строки задают вид ставки товара и учётная политика юрлица. Непустое значение — 400
 	VATRate *string `json:"vat_rate,omitempty"`
 	// UnitCode — ОКЕИ_Тов. Пустое значение берёт код из карточки единицы измерения
 	UnitCode *string `json:"unit_code,omitempty"`
@@ -5710,15 +5808,11 @@ type DocflowRequisites struct {
 	// DocumentKindName — НаимДокОпр: наименование документа, определённое сторонами сделки
 	DocumentKindName *string `json:"document_kind_name,omitempty"`
 	// ProgramVersion — ВерсПрог. Пустое значение подставляет сервер: версию приложения знает он, а не человек в форме
-	ProgramVersion *string `json:"program_version,omitempty"`
-	// PricesIncludeVAT — Сумма строки уже содержит налог. Признак спрашивается, а не угадывается: сумма 1200 законно означает и «1200 без налога», и «1200 с налогом», а ошибка стоит расхождения в декларации
-	PricesIncludeVAT *bool `json:"prices_include_vat,omitempty"`
-	// VATRate — НалСт по умолчанию для всех строк. Строка вправе назвать свою
-	VATRate  *string                    `json:"vat_rate,omitempty"`
-	Currency *DocflowCurrencyRequisites `json:"currency,omitempty"`
-	File     *DocflowFileRequisites     `json:"file,omitempty"`
-	Seller   *DocflowPartyRequisites    `json:"seller,omitempty"`
-	Buyer    *DocflowPartyRequisites    `json:"buyer,omitempty"`
+	ProgramVersion *string                    `json:"program_version,omitempty"`
+	Currency       *DocflowCurrencyRequisites `json:"currency,omitempty"`
+	File           *DocflowFileRequisites     `json:"file,omitempty"`
+	Seller         *DocflowPartyRequisites    `json:"seller,omitempty"`
+	Buyer          *DocflowPartyRequisites    `json:"buyer,omitempty"`
 	// ShipperSameAsSeller — Грузоотправитель — сам продавец
 	ShipperSameAsSeller *bool                      `json:"shipper_same_as_seller,omitempty"`
 	Transfer            *DocflowTransferRequisites `json:"transfer,omitempty"`
@@ -6225,6 +6319,18 @@ type FinanceAccount struct {
 	SyncedAt        *string `json:"synced_at"`
 	CreatedAt       string  `json:"created_at"`
 	UpdatedAt       string  `json:"updated_at"`
+	// BankBalance — Остаток по данным банка на момент `bank_balance_at`, decimal string. null — банк остатка не называл (счёт не подключён или остаток ещё не приходил): это не ноль, и сверять с ним нечего.
+	BankBalance *string `json:"bank_balance,omitempty"`
+	// BankBalanceAt — Когда банк назвал остаток `bank_balance`.
+	BankBalanceAt *string `json:"bank_balance_at,omitempty"`
+	// BankClosedAt — Когда счёт закрыт банком. null — счёт действующий.
+	BankClosedAt *string `json:"bank_closed_at,omitempty"`
+	// InUseSince — «Используется с»: с какой даты счёт принадлежит бизнесу. Операции раньше неё коннектор не запрашивает, загрузка файла пропускает, ручной ввод отклоняет. Поля нет — ограничения нет.
+	InUseSince *string `json:"in_use_since,omitempty"`
+	// BankTimezone — Часовой пояс банковских суток счёта (IANA), например Asia/Novosibirsk. По нему банк режет сутки выписки, и по нему считаются окно синхронизации, «Загрузить период» и остаток на дату. Умолчание — по БИК подразделения банка. null у кассы.
+	BankTimezone *string `json:"bank_timezone,omitempty"`
+	// BankTimezoneSource — Откуда пояс: `bic` — определён по БИК, `default` — определить не удалось, стоит умолчание (проверьте пояс), `manual` — задан человеком; подключение банка ручной пояс не трогает.
+	BankTimezoneSource *json.RawMessage `json:"bank_timezone_source,omitempty"`
 }
 
 type FinanceAccountCreate struct {
@@ -6239,6 +6345,9 @@ type FinanceAccountCreate struct {
 	GLAccount   *string `json:"gl_account,omitempty"`
 	// OpeningBalance — Decimal string
 	OpeningBalance *string `json:"opening_balance,omitempty"`
+	IsActive       *bool   `json:"is_active,omitempty"`
+	// InUseSince — «Используется с», ГГГГ-ММ-ДД; пусто — без ограничения.
+	InUseSince *string `json:"in_use_since,omitempty"`
 }
 
 type FinanceAccountPage struct {
@@ -6256,6 +6365,10 @@ type FinanceAccountPatch struct {
 	Currency    *string `json:"currency,omitempty"`
 	GLAccount   *string `json:"gl_account,omitempty"`
 	IsActive    *bool   `json:"is_active,omitempty"`
+	// InUseSince — «Используется с», ГГГГ-ММ-ДД; null или пустая строка снимают ограничение.
+	InUseSince *string `json:"in_use_since,omitempty"`
+	// BankTimezone — Часовой пояс банковских суток (IANA). Источник пояса становится manual.
+	BankTimezone *string `json:"bank_timezone,omitempty"`
 }
 
 type FinanceBalanceItem struct {
@@ -6600,6 +6713,8 @@ type FinanceConnectorProvider struct {
 	RequiresAccountNumber bool `json:"requires_account_number"`
 	// EgressIps — Исходящие адреса контура для белого списка банка. Пусто — адрес контура не настроен.
 	EgressIps []string `json:"egress_ips,omitempty"`
+	// Timezone — Пояс банковских суток (IANA), например Europe/Moscow. По нему считаются окно выписки и «сегодня» банка; даты операций банка не пересчитываются.
+	Timezone string `json:"timezone"`
 }
 
 type FinanceConnectorProviderKey = string
@@ -6957,6 +7072,9 @@ type FinanceOperationAccrualCreate struct {
 	// DueDate — Обычно вычисляется из графика; переданное значение не может ему противоречить
 	DueDate *string `json:"due_date,omitempty"`
 	Reason  *string `json:"reason,omitempty"`
+	// VATAmount — Только закупка без «в т.ч. НДС» на плане (ERP-484, подшаг 5.3в): «в т.ч. НДС» акта поставщика. Обязательна, если на дату начисления бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. У плана с налогом начисление берёт долю нарастающим итогом, и непустое значение — 400
+	VATAmount        *string           `json:"vat_amount,omitempty"`
+	SupplierDocument *SupplierDocument `json:"supplier_document,omitempty"`
 }
 
 type FinanceOperationAccrualResult struct {
@@ -6993,6 +7111,9 @@ type FinanceOperationCreate struct {
 	Accruals   []FinanceOperationStageInput     `json:"accruals,omitempty"`
 	Payments   []FinanceOperationStageInput     `json:"payments,omitempty"`
 	References []FinanceOperationReferenceInput `json:"references,omitempty"`
+	// VATAmount — Только закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаги 5.3 и 5.3в). У закупки по документу обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. У плана по периодам необязательна: указана — начисления берут долю нарастающим итогом, нет — налог приносит каждое начисление. Вне периода непустое значение — 400
+	VATAmount        *string           `json:"vat_amount,omitempty"`
+	SupplierDocument *SupplierDocument `json:"supplier_document,omitempty"`
 }
 
 type FinanceOperationFact struct {
@@ -7766,6 +7887,18 @@ type FinanceRegisterReconciliation struct {
 	Transit          []map[string]json.RawMessage  `json:"transit"`
 	TransitTotal     string                        `json:"transit_total"`
 	TransitMatch     bool                          `json:"transit_match"`
+	// InputVATMatch — Нет минуса входного НДС по источнику без возврата поставщику после вычета.
+	InputVATMatch *bool `json:"input_vat_match,omitempty"`
+	// InputVATUnexplained — Источники с отрицательным остатком входного НДС, который не объяснён возвратом поставщику после вычета.
+	InputVATUnexplained []FinanceRegisterReconciliationInputVatUnexplainedItem `json:"input_vat_unexplained,omitempty"`
+}
+
+type FinanceRegisterReconciliationInputVatUnexplainedItem struct {
+	Source       string `json:"source"`
+	SourceNumber string `json:"source_number"`
+	SourceDate   string `json:"source_date"`
+	Company      string `json:"company"`
+	Amount       string `json:"amount"`
 }
 
 type FinanceRegisterRepairFailure struct {
@@ -7867,6 +8000,25 @@ type FinanceResponsiblePatch struct {
 	Responsible *string `json:"responsible"`
 }
 
+type FinanceSaleVATTerms struct {
+	// Applies — На дату бизнес очищает суммы от налога и у сделки есть юрлицо
+	Applies bool `json:"applies"`
+	// Charged — Юрлицо начисляет налог с продажи
+	Charged bool `json:"charged"`
+	// Mode — Режим налога юрлица на дату
+	Mode string `json:"mode"`
+	// Rate — Ставка в записи ФНС («22%», «0%», «без НДС»); пусто — ставку не дать
+	Rate string `json:"rate"`
+	// Kind — Вид ставки
+	Kind string `json:"kind"`
+	// From — Откуда вид — статья или общая по умолчанию
+	From string `json:"from"`
+	// Problem — Почему сохранение откажет без правки; пусто — не откажет
+	Problem string `json:"problem"`
+	// Detail — Объяснение отказа словами — с видом ставки и датой
+	Detail *string `json:"detail,omitempty"`
+}
+
 type FinanceSettlementBalance struct {
 	ObligationID UUID `json:"obligation_id"`
 	// Remaining — Decimal string
@@ -7909,6 +8061,9 @@ type FinanceSettlementDocumentCreate struct {
 	SourceRef *string `json:"source_ref,omitempty"`
 	// ExternalID — Идентификатор сделки в source_system; повтор того же (source_system, source_ref, external_id) возвращает уже созданный документ вместо второго
 	ExternalID *string `json:"external_id,omitempty"`
+	// VATAmount — Только закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаг 5.3). Обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне периода непустое значение — 400
+	VATAmount        *string           `json:"vat_amount,omitempty"`
+	SupplierDocument *SupplierDocument `json:"supplier_document,omitempty"`
 }
 
 type FinanceSettlementDocumentType = string
@@ -8155,6 +8310,220 @@ type FinanceTransactionTotals struct {
 	Currency string  `json:"currency"`
 	// UnconvertedCount — Сколько операций осталось без пересчёта в валюту учёта: неполный пересчёт не должен выглядеть верным итогом
 	UnconvertedCount int64 `json:"unconverted_count"`
+}
+
+type FinanceVATBookImport struct {
+	ID           string  `json:"id"`
+	CompanyID    string  `json:"company_id"`
+	Year         int64   `json:"year"`
+	Quarter      int64   `json:"quarter"`
+	Kind         string  `json:"kind"`
+	Status       string  `json:"status"`
+	SourceName   string  `json:"source_name"`
+	SourceSha256 string  `json:"source_sha256"`
+	SourceSize   int64   `json:"source_size"`
+	FileID       string  `json:"file_id"`
+	DeclaredINN  string  `json:"declared_inn"`
+	DeclaredKPP  string  `json:"declared_kpp"`
+	FormVersion  string  `json:"form_version"`
+	Correction   int64   `json:"correction"`
+	TotalVAT     string  `json:"total_vat"`
+	RowsVAT      string  `json:"rows_vat"`
+	RowCount     int64   `json:"row_count"`
+	CreatedBy    *int64  `json:"created_by,omitempty"`
+	CreatedAt    string  `json:"created_at"`
+	ReplacedAt   *string `json:"replaced_at,omitempty"`
+}
+
+type FinanceVATBookMatch struct {
+	Status           string                 `json:"status"`
+	INN              string                 `json:"inn"`
+	Number           string                 `json:"number"`
+	Date             string                 `json:"date"`
+	BookVAT          string                 `json:"book_vat"`
+	OurVAT           string                 `json:"our_vat"`
+	Difference       string                 `json:"difference"`
+	BookRows         []FinanceVATBookRow    `json:"book_rows"`
+	OurRows          []FinanceVATBookOurRow `json:"our_rows"`
+	Group            *bool                  `json:"group,omitempty"`
+	KPPDiffers       *bool                  `json:"kpp_differs,omitempty"`
+	Counterparty     *string                `json:"counterparty,omitempty"`
+	CounterpartyName *string                `json:"counterparty_name,omitempty"`
+}
+
+type FinanceVATBookOurRow struct {
+	Source       string  `json:"source"`
+	SourceNumber string  `json:"source_number"`
+	SourceDate   string  `json:"source_date"`
+	Contact      *string `json:"contact,omitempty"`
+	ContactName  *string `json:"contact_name,omitempty"`
+	INN          *string `json:"inn,omitempty"`
+	KPP          *string `json:"kpp,omitempty"`
+	Number       string  `json:"number"`
+	Date         string  `json:"date"`
+	VAT          string  `json:"vat"`
+	Action       *string `json:"action,omitempty"`
+	Restoration  *bool   `json:"restoration,omitempty"`
+}
+
+type FinanceVATBookReconciliation struct {
+	// Currency — Налоговая валюта юрлица — валюта книг 1С и нашего налога.
+	Currency        string             `json:"currency"`
+	QuarterDocument *string            `json:"quarter_document,omitempty"`
+	QuarterNumber   *string            `json:"quarter_number,omitempty"`
+	Purchase        FinanceVATBookSide `json:"purchase"`
+	Sales           FinanceVATBookSide `json:"sales"`
+}
+
+type FinanceVATBookRow struct {
+	Line       int64    `json:"line"`
+	Codes      []string `json:"codes"`
+	Number     string   `json:"number"`
+	Date       string   `json:"date"`
+	INN        *string  `json:"inn,omitempty"`
+	KPP        *string  `json:"kpp,omitempty"`
+	Amount     string   `json:"amount"`
+	VAT        string   `json:"vat"`
+	Correction *bool    `json:"correction,omitempty"`
+}
+
+type FinanceVATBookSide struct {
+	Kind      string                 `json:"kind"`
+	Active    *FinanceVATBookImport  `json:"active"`
+	History   []FinanceVATBookImport `json:"history"`
+	Matches   []FinanceVATBookMatch  `json:"matches"`
+	Counts    map[string]int64       `json:"counts"`
+	Attention int64                  `json:"attention"`
+	OurVAT    string                 `json:"our_vat"`
+}
+
+type FinanceVATBookUploadPage struct {
+	Items []FinanceVATBookUploadPageItemsItem `json:"items"`
+}
+
+type FinanceVATBookUploadPageItemsItem struct {
+	Kind      string               `json:"kind"`
+	Import    FinanceVATBookImport `json:"import"`
+	Duplicate bool                 `json:"duplicate"`
+}
+
+type FinanceVATQuarter struct {
+	ID        UUID                     `json:"id"`
+	Number    string                   `json:"number"`
+	Date      string                   `json:"date"`
+	Status    string                   `json:"status"`
+	CompanyID string                   `json:"company_id"`
+	Comment   string                   `json:"comment"`
+	UpdatedAt string                   `json:"updated_at"`
+	Payload   FinanceVATQuarterPayload `json:"payload"`
+}
+
+type FinanceVATQuarterFigureSource struct {
+	ImportID string `json:"import_id"`
+	LoadedAt string `json:"loaded_at"`
+}
+
+type FinanceVATQuarterInput struct {
+	CompanyID *UUID  `json:"company_id,omitempty"`
+	Year      *int64 `json:"year,omitempty"`
+	Quarter   *int64 `json:"quarter,omitempty"`
+	// AccountingOutput — Начислено НДС по бухгалтерии за квартал.
+	AccountingOutput *string `json:"accounting_output,omitempty"`
+	// AccountingDeduction — К вычету по бухгалтерии за квартал.
+	AccountingDeduction       *string                       `json:"accounting_deduction,omitempty"`
+	DiscrepancyItemID         *UUID                         `json:"discrepancy_item_id,omitempty"`
+	AccountingOutputBookID    *UUID                         `json:"accounting_output_book_id,omitempty"`
+	AccountingDeductionBookID *UUID                         `json:"accounting_deduction_book_id,omitempty"`
+	Lines                     []FinanceVATQuarterLineChoice `json:"lines,omitempty"`
+	Comment                   *string                       `json:"comment,omitempty"`
+}
+
+type FinanceVATQuarterLine struct {
+	Kind             string            `json:"kind"`
+	Source           UUID              `json:"source"`
+	SourceType       *string           `json:"source_type,omitempty"`
+	SourceNumber     *string           `json:"source_number,omitempty"`
+	SourceDate       *string           `json:"source_date,omitempty"`
+	Contact          string            `json:"contact"`
+	ContactName      *string           `json:"contact_name,omitempty"`
+	SupplierDocument *SupplierDocument `json:"supplier_document,omitempty"`
+	// Amount — Налог строки в налоговой валюте юрлица.
+	Amount string  `json:"amount"`
+	Base   *string `json:"base,omitempty"`
+	// AccountingAmount — Налог строки в валюте учёта — сумма книги.
+	AccountingAmount *string                 `json:"accounting_amount,omitempty"`
+	AgeMonths        int64                   `json:"age_months"`
+	OverThreshold    bool                    `json:"over_threshold"`
+	Action           string                  `json:"action"`
+	Item             *string                 `json:"item,omitempty"`
+	Parts            []FinanceVATQuarterPart `json:"parts"`
+	// Causes — У восстановления — возвраты поставщику после вычета, объясняющие минус.
+	Causes []FinanceVATQuarterLineCausesItem `json:"causes,omitempty"`
+}
+
+type FinanceVATQuarterLineCausesItem struct {
+	Document string `json:"document"`
+	TypeKey  string `json:"type_key"`
+	Number   string `json:"number"`
+	Date     string `json:"date"`
+}
+
+type FinanceVATQuarterLineChoice struct {
+	Source UUID   `json:"source"`
+	Action string `json:"action"`
+	ItemID *UUID  `json:"item_id,omitempty"`
+}
+
+type FinanceVATQuarterPage struct {
+	Items []FinanceVATQuarter `json:"items"`
+}
+
+type FinanceVATQuarterPart struct {
+	Item *string `json:"item,omitempty"`
+	// Amount — Налог в налоговой валюте юрлица.
+	Amount string `json:"amount"`
+	// Base — Сумма без налога в налоговой валюте юрлица.
+	Base *string `json:"base,omitempty"`
+	// AccountingAmount — Тот же налог в валюте учёта кабинета.
+	AccountingAmount *string `json:"accounting_amount,omitempty"`
+	// AccountingBase — Та же сумма без налога в валюте учёта кабинета.
+	AccountingBase *string `json:"accounting_base,omitempty"`
+}
+
+type FinanceVATQuarterPayload struct {
+	Year    int64 `json:"year"`
+	Quarter int64 `json:"quarter"`
+	// Currency — Валюта учёта кабинета — валюта книги.
+	Currency string `json:"currency"`
+	// TaxCurrency — Налоговая валюта юрлица — валюта сумм документа.
+	TaxCurrency               string                         `json:"tax_currency"`
+	PendingMonths             int64                          `json:"pending_months"`
+	AccountingOutput          string                         `json:"accounting_output"`
+	AccountingDeduction       string                         `json:"accounting_deduction"`
+	AccountingOutputSource    *FinanceVATQuarterFigureSource `json:"accounting_output_source,omitempty"`
+	AccountingDeductionSource *FinanceVATQuarterFigureSource `json:"accounting_deduction_source,omitempty"`
+	OutputTotal               string                         `json:"output_total"`
+	DiscrepancyItem           *string                        `json:"discrepancy_item,omitempty"`
+	Lines                     []FinanceVATQuarterLine        `json:"lines"`
+	Totals                    FinanceVATQuarterTotals        `json:"totals"`
+}
+
+type FinanceVATQuarterTotals struct {
+	Deducted            *string `json:"deducted,omitempty"`
+	Restored            *string `json:"restored,omitempty"`
+	Carried             *string `json:"carried,omitempty"`
+	WrittenOff          *string `json:"written_off,omitempty"`
+	Deduction           *string `json:"deduction,omitempty"`
+	OutputDifference    *string `json:"output_difference,omitempty"`
+	DeductionDifference *string `json:"deduction_difference,omitempty"`
+	Discrepancy         *string `json:"discrepancy,omitempty"`
+	// DiscrepancyAccounting — Расхождение в валюте учёта — сумма книги и ОПиУ.
+	DiscrepancyAccounting *string `json:"discrepancy_accounting,omitempty"`
+	// DiscrepancyRate — Курс налоговой валюты к валюте учёта на последний день квартала; пусто в одной валюте.
+	DiscrepancyRate     *string `json:"discrepancy_rate,omitempty"`
+	DiscrepancyRateDate *string `json:"discrepancy_rate_date,omitempty"`
+	// Payable — К уплате за квартал в налоговой валюте: начислено по продажам − (вычет − восстановление) + расхождение
+	Payable *string `json:"payable,omitempty"`
 }
 
 type HubCounters struct {
@@ -11845,13 +12214,13 @@ type SettingsCompany struct {
 	Okpo string `json:"okpo"`
 	// BranchCode — Код филиала у оператора ЭДО; не КПП
 	BranchCode string `json:"branch_code"`
-	// DefaultVATRate — Ставка НДС по умолчанию для новых строк документа; конкретная строка вправе её заменить
-	DefaultVATRate string `json:"default_vat_rate"`
-	// PricesIncludeVAT — Как по умолчанию трактовать цену при выбранной ставке НДС
-	PricesIncludeVAT bool                   `json:"prices_include_vat"`
-	LegalAddress     SettingsCompanyAddress `json:"legal_address"`
-	Entrepreneur     SettingsCompanyPerson  `json:"entrepreneur"`
-	IsActive         bool                   `json:"is_active"`
+	// VATAccountingMode — Режим налога, действующий сегодня (версия учётной политики): deductible — в вычет, non_deductible — в стоимость, none — налога нет, пусто — не выбран
+	VATAccountingMode string `json:"vat_accounting_mode"`
+	// VATAccountingModeSource — Кто поставил значение: manual — человек, import — внешняя система; импорт не перезаписывает manual
+	VATAccountingModeSource string                 `json:"vat_accounting_mode_source"`
+	LegalAddress            SettingsCompanyAddress `json:"legal_address"`
+	Entrepreneur            SettingsCompanyPerson  `json:"entrepreneur"`
+	IsActive                bool                   `json:"is_active"`
 }
 
 type SettingsCompanyAddress struct {
@@ -11879,15 +12248,15 @@ type SettingsCompanyInput struct {
 	// EntityType — Если не передан, определяется по длине нормализованного ИНН
 	EntityType *string `json:"entity_type,omitempty"`
 	// INN — Проверяется контрольной цифрой; пустой ИНН отклоняется
-	INN              string                  `json:"inn"`
-	KPP              *string                 `json:"kpp,omitempty"`
-	Ogrn             *string                 `json:"ogrn,omitempty"`
-	Okpo             *string                 `json:"okpo,omitempty"`
-	BranchCode       *string                 `json:"branch_code,omitempty"`
-	DefaultVATRate   *string                 `json:"default_vat_rate,omitempty"`
-	PricesIncludeVAT *bool                   `json:"prices_include_vat,omitempty"`
-	LegalAddress     *SettingsCompanyAddress `json:"legal_address,omitempty"`
-	Entrepreneur     *SettingsCompanyPerson  `json:"entrepreneur,omitempty"`
+	INN        string  `json:"inn"`
+	KPP        *string `json:"kpp,omitempty"`
+	Ogrn       *string `json:"ogrn,omitempty"`
+	Okpo       *string `json:"okpo,omitempty"`
+	BranchCode *string `json:"branch_code,omitempty"`
+	// VATAccountingMode — Режим налога нового юрлица — становится первой версией «с начала учёта». У существующего юрлица режим меняется в учётной политике с датой; пусто — не менять, другое значение, чем действующее сегодня, отклоняется 409
+	VATAccountingMode *string                 `json:"vat_accounting_mode,omitempty"`
+	LegalAddress      *SettingsCompanyAddress `json:"legal_address,omitempty"`
+	Entrepreneur      *SettingsCompanyPerson  `json:"entrepreneur,omitempty"`
 }
 
 type SettingsCompanyPage struct {
@@ -12358,7 +12727,11 @@ type StockDocumentLine struct {
 	// Price — Decimal string
 	Price *string `json:"price,omitempty"`
 	// Amount — Decimal string
-	Amount      *string `json:"amount,omitempty"`
+	Amount *string `json:"amount,omitempty"`
+	// AmountWithoutVAT — Сумма строки без налога. Считает сервер из paper_vat_amount и перезаписывает присланное
+	AmountWithoutVAT *string `json:"amount_without_vat,omitempty"`
+	// VATAmount — Доля налога документа в строке: пропорционально сумме строки, копеечный остаток — на самую крупную. Считает сервер и перезаписывает присланное; по её наличию судят о разбивке при перепроведении
+	VATAmount   *string `json:"vat_amount,omitempty"`
 	BasisLineID *UUID   `json:"basis_line_id,omitempty"`
 	// BasisDocumentID — Построчное происхождение, когда один заказ поставщику сводит несколько заявок
 	BasisDocumentID         *UUID                                 `json:"basis_document_id,omitempty"`
@@ -12410,6 +12783,13 @@ type StockDocumentPayload struct {
 	// ExpiresAt — Срок резерва; не раньше даты документа
 	ExpiresAt *string             `json:"expires_at,omitempty"`
 	Items     []StockDocumentLine `json:"items,omitempty"`
+	// PaperAmount — Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается
+	PaperAmount *string `json:"paper_amount,omitempty"`
+	// PaperVATAmount — В т.ч. НДС документа поставщика, одна сумма (ERP-484, подшаг 5.3). Обязательна, если на дату документа бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне этого периода непустое значение — 400. Сервер раскладывает сумму по строкам
+	PaperVATAmount   *string           `json:"paper_vat_amount,omitempty"`
+	SupplierDocument *SupplierDocument `json:"supplier_document,omitempty"`
+	// TaxCurrency — Налоговая валюта юрлица на дату приёмки (ERP-484, Р21). Пишет сервер вместе с разбивкой налога; присланное значение перезаписывается
+	TaxCurrency *string `json:"tax_currency,omitempty"`
 	// Amount — Decimal string; сумма накладных расходов
 	Amount           *string                         `json:"amount,omitempty"`
 	AllocationMethod *string                         `json:"allocation_method,omitempty"`
@@ -12724,6 +13104,22 @@ type StockPurchaseOrderLineInput struct {
 	BasisLineID *UUID `json:"basis_line_id,omitempty"`
 	// RequestID — Проведённая заявка на закупку того же юрлица и склада; указывается только вместе с basis_line_id
 	RequestID *UUID `json:"request_id,omitempty"`
+}
+
+type StockReceiptVATTerms struct {
+	// Applies — Обязательно ли на дату «в т.ч. НДС»: бизнес очищает суммы и юрлицо принимает налог к вычету
+	Applies bool `json:"applies"`
+	// Mode — Режим налога юрлица на дату; пусто — не выбран
+	Mode string `json:"mode"`
+	// Currency — Валюта учёта на дату документа
+	Currency string `json:"currency"`
+}
+
+type StockReceiptVATTermsInput struct {
+	CompanyID  *UUID `json:"company_id,omitempty"`
+	BusinessID *UUID `json:"business_id,omitempty"`
+	// Date — Дата документа: от неё зависит, обязательно ли «в т.ч. НДС»
+	Date string `json:"date"`
 }
 
 type StockReorderRule struct {
@@ -13272,6 +13668,12 @@ type Subtask struct {
 	Executor       *int64  `json:"executor"`
 	ExecutorName   *string `json:"executor_name"`
 	DueAt          *string `json:"due_at"`
+}
+
+// SupplierDocument — Номер и дата документа поставщика (ERP-484, подшаг 5.3): по ним входящий НДС сверяется с книгой покупок. Оба поля необязательны
+type SupplierDocument struct {
+	Number *string `json:"number,omitempty"`
+	Date   *string `json:"date,omitempty"`
 }
 
 type Tag struct {

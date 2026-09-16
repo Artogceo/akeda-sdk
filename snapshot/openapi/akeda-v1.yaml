@@ -8767,53 +8767,6 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/v1/core/businesses/{id}/vat-presentation:
-    post:
-      tags:
-        - Core directories
-      operationId: coreSetBusinessVATPresentation
-      summary: Переключить режим показа сумм у бизнеса
-      description: Очищаются ли суммы отчётов от косвенного налога. Вторая ось учётной политики рядом с методом учёта, и живёт она у бизнеса по той же причине — у него один ОПиУ. Чистая прибыль в обоих режимах совпадает, различаются строки выше блока налогов. Режим net доступен только бизнесу на методе начисления — на кассовом выручку создают деньги, а платёж ставки не несёт. Смена режима требует непустого since; переключаться можно в обе стороны, но только вперёд — дата обязана быть позже предыдущего переключения, потому что прошлое не переписывается. Повторный выбор действующего режима принимается и ничего не меняет.
-      x-akeda-module: core
-      x-akeda-release-stage: preview
-      x-akeda-audience: external
-      x-akeda-permission: core:write
-      security:
-        - erpUserToken: []
-        - tenantApiKey: []
-        - mcpOAuth:
-            - akeda:delegate
-        - installationToken: []
-      parameters:
-        - $ref: '#/components/parameters/TenantHeader'
-        - name: id
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/UUID'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CoreBusinessVATPresentationInput'
-      responses:
-        '200':
-          description: Обновлённый бизнес
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CoreBusiness'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
   /api/v1/core/businesses/{id}/ownership:
     get:
       tags:
@@ -11548,6 +11501,414 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/core/accounting-policy:
+    get:
+      tags:
+        - Core accounting
+      operationId: coreGetAccountingPolicy
+      summary: Получить учётную политику бизнесов и юрлиц
+      description: Раздел «Учётная политика» — версии с датой действия. У бизнеса метод учёта (история — переходы метода), очистка сумм от НДС и порог ожидания вычета; у юрлица режим налога и ставки по видам. Нет версий — умолчание — суммы с налогом, порог 12 месяцев, режим не выбран, ставок нет.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Учётная политика
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreAccountingPolicy'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/core/accounting-policy/businesses/{id}/vat-presentation:
+    post:
+      tags:
+        - Core accounting
+      operationId: coreAddPolicyVATPresentation
+      summary: Очистка сумм бизнеса от НДС с даты
+      description: Режим net доступен только с даты, когда бизнес уже ведёт учёт методом начисления. Новая версия начинается строго позже открытой и закрывает её днём раньше; с даты, по которой уже есть проведённые документы, значение не меняется (409 с числом документов и датой последнего) — прошлое не переписывается.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorePolicyVATPresentationInput'
+      responses:
+        '200':
+          description: Учётная политика после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreAccountingPolicy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/accounting-policy/businesses/{id}/vat-presentation/open:
+    put:
+      tags:
+        - Core accounting
+      operationId: coreEditPolicyVATPresentation
+      summary: Поправить открытую версию — очистка сумм бизнеса от НДС с даты
+      description: Режим net доступен только с даты, когда бизнес уже ведёт учёт методом начисления. Правит дату или значение открытой версии; дата не раньше начала предыдущей версии, и проведённые документы с более ранней из двух дат запирают правку (409).
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorePolicyVATPresentationInput'
+      responses:
+        '200':
+          description: Учётная политика после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreAccountingPolicy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/accounting-policy/businesses/{id}/vat-pending:
+    post:
+      tags:
+        - Core accounting
+      operationId: coreAddPolicyVATPending
+      summary: Порог ожидания вычета у бизнеса с даты
+      description: Сколько месяцев входной НДС ждёт вычета, прежде чем квартальный документ его подсветит; проведённые документы порог не запирают. Новая версия начинается строго позже открытой и закрывает её днём раньше; с даты, по которой уже есть проведённые документы, значение не меняется (409 с числом документов и датой последнего) — прошлое не переписывается.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorePolicyVATPendingInput'
+      responses:
+        '200':
+          description: Учётная политика после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreAccountingPolicy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/accounting-policy/businesses/{id}/vat-pending/open:
+    put:
+      tags:
+        - Core accounting
+      operationId: coreEditPolicyVATPending
+      summary: Поправить открытую версию — порог ожидания вычета у бизнеса с даты
+      description: Сколько месяцев входной НДС ждёт вычета, прежде чем квартальный документ его подсветит; проведённые документы порог не запирают. Правит дату или значение открытой версии; дата не раньше начала предыдущей версии, и проведённые документы с более ранней из двух дат запирают правку (409).
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorePolicyVATPendingInput'
+      responses:
+        '200':
+          description: Учётная политика после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreAccountingPolicy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/accounting-policy/companies/{id}/tax-mode:
+    post:
+      tags:
+        - Core accounting
+      operationId: coreAddPolicyTaxMode
+      summary: Режим налога юрлица с даты
+      description: Режим решает, вычитает ли юрлицо налог поставщика и начисляет ли налог с продажи. Новая версия начинается строго позже открытой и закрывает её днём раньше; с даты, по которой уже есть проведённые документы, значение не меняется (409 с числом документов и датой последнего) — прошлое не переписывается.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorePolicyTaxModeInput'
+      responses:
+        '200':
+          description: Учётная политика после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreAccountingPolicy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/accounting-policy/companies/{id}/tax-mode/open:
+    put:
+      tags:
+        - Core accounting
+      operationId: coreEditPolicyTaxMode
+      summary: Поправить открытую версию — режим налога юрлица с даты
+      description: Режим решает, вычитает ли юрлицо налог поставщика и начисляет ли налог с продажи. Правит дату или значение открытой версии; дата не раньше начала предыдущей версии, и проведённые документы с более ранней из двух дат запирают правку (409).
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorePolicyTaxModeInput'
+      responses:
+        '200':
+          description: Учётная политика после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreAccountingPolicy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/accounting-policy/companies/{id}/vat-rates:
+    post:
+      tags:
+        - Core accounting
+      operationId: coreAddPolicyVATRates
+      summary: Ставки НДС юрлица с даты
+      description: Процент вводится для общей и льготной ставки; нулевая всегда 0 %, у «без НДС» процента нет. Новая версия начинается строго позже открытой и закрывает её днём раньше; с даты, по которой уже есть проведённые документы, значение не меняется (409 с числом документов и датой последнего) — прошлое не переписывается.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorePolicyVATRatesInput'
+      responses:
+        '200':
+          description: Учётная политика после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreAccountingPolicy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/accounting-policy/companies/{id}/vat-rates/open:
+    put:
+      tags:
+        - Core accounting
+      operationId: coreEditPolicyVATRates
+      summary: Поправить открытую версию — ставки НДС юрлица с даты
+      description: Процент вводится для общей и льготной ставки; нулевая всегда 0 %, у «без НДС» процента нет. Правит дату или значение открытой версии; дата не раньше начала предыдущей версии, и проведённые документы с более ранней из двух дат запирают правку (409).
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorePolicyVATRatesInput'
+      responses:
+        '200':
+          description: Учётная политика после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreAccountingPolicy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/core/accounting-settings:
     get:
       tags:
@@ -15601,6 +15962,57 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/finance/sale-vat-terms:
+    get:
+      tags:
+        - Finance operations
+      operationId: financeSaleVATTerms
+      summary: Получить налоговые условия продажи до сохранения
+      description: Выделяется ли НДС у продажи этого юрлица на дату и какую ставку дадут вид ставки статьи и учётная политика юрлица. Суммы налога не считает — их пишет сервер при сохранении.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.operations:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: company_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: item_id
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/UUID'
+          description: 'Статья сделки: её вид ставки; не передана — общая'
+      responses:
+        '200':
+          description: Налоговые условия продажи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceSaleVATTerms'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/finance/operations/{id}:
     get:
       tags:
@@ -18261,6 +18673,439 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/finance/vat-quarters:
+    get:
+      tags:
+        - Finance registers
+      operationId: financeListVATQuarters
+      summary: Получить документы «НДС за квартал»
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.period:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: company_id
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Документы с телом
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceVATQuarterPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Finance registers
+      operationId: financeCreateVATQuarter
+      summary: Сохранить черновик «НДС за квартал»
+      description: Строки собирает сервер из остатков входного НДС юрлица на конец квартала; человек выбирает действие строки и вносит две цифры бухгалтерии.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.period:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceVATQuarterInput'
+      responses:
+        '201':
+          description: Сохранённый черновик
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceVATQuarter'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/finance/vat-quarters/books:
+    get:
+      tags:
+        - Finance registers
+      operationId: financeReconcileVATBooks
+      summary: Сверить квартал с загруженными книгами покупок и продаж 1С
+      description: Строки книг 1С сопоставляются по ИНН контрагента, номеру и дате счёта-фактуры с документом «НДС за квартал» и продажами квартала. Суммы сверяются всегда.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.period:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: company_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 2000
+            maximum: 2999
+        - name: quarter
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 4
+      responses:
+        '200':
+          description: Сверка с книгами
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceVATBookReconciliation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Finance registers
+      operationId: financeUploadVATBooks
+      summary: Загрузить книгу покупок или продаж 1С
+      description: Файл раздела 8 или 9 декларации по НДС в формате ФНС либо zip выгрузки. Вид книги определяется по содержимому; тот же файл повторно — отказ «этот файл уже загружен».
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.period:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - company_id
+                - year
+                - quarter
+                - file
+              properties:
+                company_id:
+                  $ref: '#/components/schemas/UUID'
+                year:
+                  type: integer
+                quarter:
+                  type: integer
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Загруженные книги
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceVATBookUploadPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/finance/vat-quarters/books/{id}/source:
+    get:
+      tags:
+        - Finance registers
+      operationId: financeGetVATBookSource
+      summary: Скачать исходный файл загруженной книги 1С
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.period:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Файл раздела декларации
+          content:
+            application/xml:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/finance/vat-quarters/preview:
+    post:
+      tags:
+        - Finance registers
+      operationId: financePreviewVATQuarter
+      summary: Посчитать «НДС за квартал» без сохранения
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.period:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceVATQuarterInput'
+      responses:
+        '200':
+          description: Строки и итоги
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceVATQuarterPayload'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/finance/vat-quarters/{id}:
+    get:
+      tags:
+        - Finance registers
+      operationId: financeGetVATQuarter
+      summary: Получить документ «НДС за квартал»
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.period:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Документ с телом
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceVATQuarter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Finance registers
+      operationId: financeUpdateVATQuarter
+      summary: Пересохранить черновик «НДС за квартал»
+      description: Строки заново собираются из остатков; выбор человека переносится по документу-источнику. Юрлицо, год и квартал сохранённого документа не меняются.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.period:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceVATQuarterInput'
+      responses:
+        '200':
+          description: Пересохранённый черновик
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceVATQuarter'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/finance/vat-quarters/{id}/post:
+    post:
+      tags:
+        - Finance registers
+      operationId: financePostVATQuarter
+      summary: Провести «НДС за квартал»
+      description: Проведение сверяет строки с остатками сейчас и отказывает, если после сохранения налог квартала изменился. Второй проведённый документ за квартал у юрлица — отказ.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.period:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Проведённый документ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceVATQuarter'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/finance/vat-quarters/{id}/cancel:
+    post:
+      tags:
+        - Finance registers
+      operationId: financeCancelVATQuarter
+      summary: Отменить проведение «НДС за квартал»
+      description: Квартал, за которым у юрлица проведён более поздний документ, не отменяется.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.period:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Отменённый документ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceVATQuarter'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/finance/pnl-layouts:
     get:
       tags:
@@ -26365,6 +27210,46 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/v1/stock/receipt-vat-terms:
+    post:
+      tags:
+        - Stock references
+      operationId: stockReceiptVATTerms
+      summary: Получить налоговые условия приёмки до сохранения
+      description: Чтение, а не запись; POST оставлен ради совместимости. Право вычисляется по методу как запись — у того, кто создаёт приёмку, оно есть. Отдаёт, обязательно ли на дату документа «в т.ч. НДС» (бизнес очищает суммы и юрлицо принимает налог к вычету), режим юрлица и валюту учёта. Налог приёмки — одна сумма документа поставщика; раскладку по строкам сервер пишет при сохранении черновика (ERP-484, подшаг 5.3). Доступ к юрлицу проверяется.
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockReceiptVATTermsInput'
+      responses:
+        '200':
+          description: Налоговые условия приёмки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockReceiptVATTerms'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/stock/import-templates/{kind}:
     get:
       tags:
@@ -31634,6 +32519,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/settings/companies/selectable:
     get:
       tags:
@@ -31697,6 +32584,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
     delete:
       tags:
         - Settings companies
@@ -47940,22 +48829,218 @@ components:
           type: string
           format: date
           description: Дата перехода на начисление; обязательна при accrual и не используется при cash
-    CoreBusinessVATPresentationInput:
+    CorePolicyPeriod:
       type: object
       additionalProperties: false
       required:
+        - id
+        - valid_from
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        valid_from:
+          type: string
+          format: date
+          description: Начало версии; 0001-01-01 означает «с начала учёта»
+        valid_to:
+          type: string
+          format: date
+          description: Последний день версии; отсутствует у открытой версии
+    CorePolicyVATPresentationVersion:
+      allOf:
+        - $ref: '#/components/schemas/CorePolicyPeriod'
+        - type: object
+          required:
+            - presentation
+          properties:
+            presentation:
+              type: string
+              enum:
+                - gross
+                - net
+    CorePolicyVATPendingVersion:
+      allOf:
+        - $ref: '#/components/schemas/CorePolicyPeriod'
+        - type: object
+          required:
+            - months
+          properties:
+            months:
+              type: integer
+              minimum: 1
+              maximum: 120
+    CorePolicyTaxModeVersion:
+      allOf:
+        - $ref: '#/components/schemas/CorePolicyPeriod'
+        - type: object
+          required:
+            - mode
+            - tax_currency
+          properties:
+            mode:
+              type: string
+              enum:
+                - deductible
+                - non_deductible
+                - none
+            tax_currency:
+              type: string
+              pattern: ^[A-Z]{3}$
+              description: 'Налоговая валюта юрлица: в ней ведутся суммы налога регистров НДС и документа «НДС за квартал». По умолчанию RUB.'
+    CorePolicyVATRatesVersion:
+      allOf:
+        - $ref: '#/components/schemas/CorePolicyPeriod'
+        - type: object
+          required:
+            - general
+            - reduced
+          properties:
+            general:
+              type: string
+              description: Процент общей ставки с двумя знаками; пусто — вид не заведён
+            reduced:
+              type: string
+              description: Процент льготной ставки с двумя знаками; пусто — вид не заведён
+    CoreBusinessPolicy:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - is_active
+        - accounting_method
+        - vat_presentation
+        - vat_pending
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        is_active:
+          type: boolean
+        accounting_method:
+          type: string
+          enum:
+            - cash
+            - accrual
+        accrual_from:
+          type: string
+          format: date
+        vat_presentation:
+          type: array
+          items:
+            $ref: '#/components/schemas/CorePolicyVATPresentationVersion'
+        vat_pending:
+          type: array
+          items:
+            $ref: '#/components/schemas/CorePolicyVATPendingVersion'
+    CoreCompanyPolicy:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - is_active
+        - business_id
+        - tax_mode
+        - vat_rates
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        is_active:
+          type: boolean
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        tax_mode:
+          type: array
+          items:
+            $ref: '#/components/schemas/CorePolicyTaxModeVersion'
+        vat_rates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CorePolicyVATRatesVersion'
+    CoreAccountingPolicy:
+      type: object
+      additionalProperties: false
+      required:
+        - businesses
+        - companies
+      properties:
+        businesses:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreBusinessPolicy'
+        companies:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreCompanyPolicy'
+    CorePolicyVATPresentationInput:
+      type: object
+      additionalProperties: false
+      required:
+        - valid_from
         - presentation
       properties:
+        valid_from:
+          type: string
+          format: date
         presentation:
           type: string
           enum:
             - gross
             - net
-          description: Значение приводится к нижнему регистру; mixed бывает подписью отчёта, но не выбором
-        since:
+    CorePolicyVATPendingInput:
+      type: object
+      additionalProperties: false
+      required:
+        - valid_from
+        - months
+      properties:
+        valid_from:
           type: string
           format: date
-          description: Дата, с которой действует новый режим; обязательна при смене режима и не спрашивается, когда режим не меняется
+        months:
+          type: integer
+          minimum: 1
+          maximum: 120
+    CorePolicyTaxModeInput:
+      type: object
+      additionalProperties: false
+      required:
+        - valid_from
+        - mode
+      properties:
+        valid_from:
+          type: string
+          format: date
+          description: 0001-01-01 — с начала учёта, если по юрлицу ещё нет проведённых документов
+        mode:
+          type: string
+          enum:
+            - deductible
+            - non_deductible
+            - none
+        tax_currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+          description: 'Налоговая валюта юрлица; не передана — RUB. Меняется вместе с версией режима: с даты, по которой есть проведённые документы, — отказ 409.'
+    CorePolicyVATRatesInput:
+      type: object
+      additionalProperties: false
+      required:
+        - valid_from
+      properties:
+        valid_from:
+          type: string
+          format: date
+        general:
+          type: string
+          description: Процент общей ставки, больше 0 и меньше 100; пусто — не заведена
+        reduced:
+          type: string
+          description: Процент льготной ставки, больше 0 и меньше 100; пусто — не заведена
     CoreBusiness:
       type: object
       additionalProperties: false
@@ -47986,11 +49071,11 @@ components:
           enum:
             - gross
             - net
-          description: Очищаются ли суммы отчётов от косвенного налога; gross это полные суммы
+          description: Очищаются ли суммы отчётов от косвенного налога сегодня; gross это полные суммы. Меняется в учётной политике с датой
         vat_since:
           type: string
           format: date
-          description: Дата, с которой действует текущий режим показа сумм; отсутствует, если режим не переключали
+          description: Дата начала действующей сегодня версии очистки сумм; отсутствует, если версия действует с начала учёта
     CoreBusinessInput:
       type: object
       additionalProperties: false
@@ -48507,7 +49592,17 @@ components:
           description: Закупочная цена десятичной строкой; подставляется в строку приёмки
         vat_rate:
           type: string
-          description: Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
+          deprecated: true
+          description: 'Устарело (ERP-484): снимается, ставка определяется видом товара (vat_kind) и налоговой политикой юрлица на дату документа. Всегда пустая строка'
+        vat_kind:
+          type: string
+          enum:
+            - ''
+            - general
+            - reduced
+            - zero
+            - exempt
+          description: 'Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)'
         weight_kg:
           type: string
           description: Вес одной базовой единицы, кг; пусто — не задан
@@ -48615,9 +49710,15 @@ components:
         purchase_price:
           type: string
           description: Закупочная цена десятичной строкой; подставляется в строку приёмки
-        vat_rate:
+        vat_kind:
           type: string
-          description: Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
+          enum:
+            - ''
+            - general
+            - reduced
+            - zero
+            - exempt
+          description: 'Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)'
         weight_kg:
           type: string
           description: Вес одной базовой единицы, кг; пусто — не задан
@@ -48694,9 +49795,15 @@ components:
         purchase_price:
           type: string
           description: Закупочная цена десятичной строкой; подставляется в строку приёмки
-        vat_rate:
+        vat_kind:
           type: string
-          description: Ставка НДС в записи ФНС («22%», «без НДС»); пусто — ставка компании по умолчанию
+          enum:
+            - ''
+            - general
+            - reduced
+            - zero
+            - exempt
+          description: 'Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)'
         weight_kg:
           type: string
           description: Вес одной базовой единицы, кг; пусто — не задан
@@ -50557,6 +51664,15 @@ components:
         usage_count:
           type: integer
           minimum: 0
+        vat_kind:
+          type: string
+          enum:
+            - ''
+            - general
+            - reduced
+            - zero
+            - exempt
+          description: Вид ставки НДС сделки без товара по статье дохода; пусто — общая
     CoreItemPage:
       type: object
       additionalProperties: false
@@ -50610,6 +51726,15 @@ components:
         pnl_sort_order:
           type: integer
           default: 0
+        vat_kind:
+          type: string
+          enum:
+            - ''
+            - general
+            - reduced
+            - zero
+            - exempt
+          description: Вид ставки НДС статьи дохода; не передан — не меняется; у статьи не дохода — 400
     CoreItemMove:
       type: object
       additionalProperties: false
@@ -52540,6 +53665,66 @@ components:
           maxItems: 200
           items:
             $ref: '#/components/schemas/FinanceOperationReferenceInput'
+        vat_amount:
+          type: string
+          description: 'Только закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаги 5.3 и 5.3в). У закупки по документу обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. У плана по периодам необязательна: указана — начисления берут долю нарастающим итогом, нет — налог приносит каждое начисление. Вне периода непустое значение — 400'
+        supplier_document:
+          $ref: '#/components/schemas/SupplierDocument'
+    FinanceSaleVATTerms:
+      type: object
+      additionalProperties: false
+      required:
+        - applies
+        - charged
+        - mode
+        - rate
+        - kind
+        - from
+        - problem
+      properties:
+        applies:
+          type: boolean
+          description: На дату бизнес очищает суммы от налога и у сделки есть юрлицо
+        charged:
+          type: boolean
+          description: Юрлицо начисляет налог с продажи
+        mode:
+          type: string
+          enum:
+            - ''
+            - deductible
+            - non_deductible
+            - none
+          description: Режим налога юрлица на дату
+        rate:
+          type: string
+          description: Ставка в записи ФНС («22%», «0%», «без НДС»); пусто — ставку не дать
+        kind:
+          type: string
+          enum:
+            - ''
+            - general
+            - reduced
+            - zero
+            - exempt
+          description: Вид ставки
+        from:
+          type: string
+          enum:
+            - ''
+            - item
+            - default
+          description: Откуда вид — статья или общая по умолчанию
+        problem:
+          type: string
+          enum:
+            - ''
+            - mode_unset
+            - rate_missing
+          description: Почему сохранение откажет без правки; пусто — не откажет
+        detail:
+          type: string
+          description: Объяснение отказа словами — с видом ставки и датой
     FinanceOperationAccrualAllocation:
       type: object
       additionalProperties: false
@@ -52587,6 +53772,11 @@ components:
           description: Обычно вычисляется из графика; переданное значение не может ему противоречить
         reason:
           type: string
+        vat_amount:
+          type: string
+          description: 'Только закупка без «в т.ч. НДС» на плане (ERP-484, подшаг 5.3в): «в т.ч. НДС» акта поставщика. Обязательна, если на дату начисления бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. У плана с налогом начисление берёт долю нарастающим итогом, и непустое значение — 400'
+        supplier_document:
+          $ref: '#/components/schemas/SupplierDocument'
     FinanceOperationAction:
       type: object
       additionalProperties: false
@@ -52981,6 +54171,11 @@ components:
         external_id:
           type: string
           description: Идентификатор сделки в source_system; повтор того же (source_system, source_ref, external_id) возвращает уже созданный документ вместо второго
+        vat_amount:
+          type: string
+          description: 'Только закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаг 5.3). Обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне периода непустое значение — 400'
+        supplier_document:
+          $ref: '#/components/schemas/SupplierDocument'
     FinanceTradeJournalRow:
       type: object
       additionalProperties: false
@@ -53611,6 +54806,7 @@ components:
         - credential_hint
         - requires_egress_allowlist
         - requires_account_number
+        - timezone
       properties:
         key:
           $ref: '#/components/schemas/FinanceConnectorProviderKey'
@@ -53635,6 +54831,9 @@ components:
           items:
             type: string
           description: Исходящие адреса контура для белого списка банка. Пусто — адрес контура не настроен.
+        timezone:
+          type: string
+          description: Пояс банковских суток (IANA), например Europe/Moscow. По нему считаются окно выписки и «сегодня» банка; даты операций банка не пересчитываются.
     FinanceConnectorProviderPage:
       type: object
       additionalProperties: false
@@ -54249,6 +55448,42 @@ components:
         updated_at:
           type: string
           format: date-time
+        bank_balance:
+          type:
+            - string
+            - 'null'
+          description: 'Остаток по данным банка на момент `bank_balance_at`, decimal string. null — банк остатка не называл (счёт не подключён или остаток ещё не приходил): это не ноль, и сверять с ним нечего.'
+        bank_balance_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Когда банк назвал остаток `bank_balance`.
+        bank_closed_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Когда счёт закрыт банком. null — счёт действующий.
+        in_use_since:
+          type: string
+          format: date
+          description: '«Используется с»: с какой даты счёт принадлежит бизнесу. Операции раньше неё коннектор не запрашивает, загрузка файла пропускает, ручной ввод отклоняет. Поля нет — ограничения нет.'
+        bank_timezone:
+          type:
+            - string
+            - 'null'
+          description: Часовой пояс банковских суток счёта (IANA), например Asia/Novosibirsk. По нему банк режет сутки выписки, и по нему считаются окно синхронизации, «Загрузить период» и остаток на дату. Умолчание — по БИК подразделения банка. null у кассы.
+        bank_timezone_source:
+          type:
+            - string
+            - 'null'
+          enum:
+            - bic
+            - default
+            - manual
+            - null
+          description: 'Откуда пояс: `bic` — определён по БИК, `default` — определить не удалось, стоит умолчание (проверьте пояс), `manual` — задан человеком; подключение банка ручной пояс не трогает.'
     FinanceAccountPage:
       type: object
       additionalProperties: false
@@ -54480,6 +55715,11 @@ components:
         opening_balance:
           type: string
           description: Decimal string
+        is_active:
+          type: boolean
+        in_use_since:
+          type: string
+          description: «Используется с», ГГГГ-ММ-ДД; пусто — без ограничения.
     FinanceAccountPatch:
       type: object
       additionalProperties: false
@@ -54514,6 +55754,15 @@ components:
           format: uuid
         is_active:
           type: boolean
+        in_use_since:
+          type:
+            - string
+            - 'null'
+          description: «Используется с», ГГГГ-ММ-ДД; null или пустая строка снимают ограничение.
+        bank_timezone:
+          type: string
+          minLength: 1
+          description: Часовой пояс банковских суток (IANA). Источник пояса становится manual.
     FinanceOpeningBalanceRequest:
       type: object
       additionalProperties: false
@@ -56256,6 +57505,551 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FinancePeriodCheck'
+    FinanceVATBookRow:
+      type: object
+      additionalProperties: false
+      required:
+        - line
+        - codes
+        - number
+        - date
+        - amount
+        - vat
+      properties:
+        line:
+          type: integer
+        codes:
+          type: array
+          items:
+            type: string
+        number:
+          type: string
+        date:
+          type: string
+        inn:
+          type: string
+        kpp:
+          type: string
+        amount:
+          type: string
+        vat:
+          type: string
+        correction:
+          type: boolean
+    FinanceVATBookOurRow:
+      type: object
+      additionalProperties: false
+      required:
+        - source
+        - source_number
+        - source_date
+        - number
+        - date
+        - vat
+      properties:
+        source:
+          type: string
+        source_number:
+          type: string
+        source_date:
+          type: string
+        contact:
+          type: string
+        contact_name:
+          type: string
+        inn:
+          type: string
+        kpp:
+          type: string
+        number:
+          type: string
+        date:
+          type: string
+        vat:
+          type: string
+        action:
+          type: string
+        restoration:
+          type: boolean
+    FinanceVATBookMatch:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - inn
+        - number
+        - date
+        - book_vat
+        - our_vat
+        - difference
+        - book_rows
+        - our_rows
+      properties:
+        status:
+          type: string
+          enum:
+            - matched
+            - amount_differs
+            - only_book
+            - only_ours
+            - not_deducted
+        inn:
+          type: string
+        number:
+          type: string
+        date:
+          type: string
+        book_vat:
+          type: string
+        our_vat:
+          type: string
+        difference:
+          type: string
+        book_rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceVATBookRow'
+        our_rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceVATBookOurRow'
+        group:
+          type: boolean
+        kpp_differs:
+          type: boolean
+        counterparty:
+          type: string
+        counterparty_name:
+          type: string
+    FinanceVATBookImport:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - company_id
+        - year
+        - quarter
+        - kind
+        - status
+        - source_name
+        - source_sha256
+        - source_size
+        - file_id
+        - declared_inn
+        - declared_kpp
+        - form_version
+        - correction
+        - total_vat
+        - rows_vat
+        - row_count
+        - created_at
+      properties:
+        id:
+          type: string
+        company_id:
+          type: string
+        year:
+          type: integer
+        quarter:
+          type: integer
+        kind:
+          type: string
+          enum:
+            - purchase
+            - sales
+        status:
+          type: string
+          enum:
+            - active
+            - replaced
+        source_name:
+          type: string
+        source_sha256:
+          type: string
+        source_size:
+          type: integer
+        file_id:
+          type: string
+        declared_inn:
+          type: string
+        declared_kpp:
+          type: string
+        form_version:
+          type: string
+        correction:
+          type: integer
+        total_vat:
+          type: string
+        rows_vat:
+          type: string
+        row_count:
+          type: integer
+        created_by:
+          type: integer
+        created_at:
+          type: string
+        replaced_at:
+          type: string
+    FinanceVATBookSide:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - active
+        - history
+        - matches
+        - counts
+        - attention
+        - our_vat
+      properties:
+        kind:
+          type: string
+          enum:
+            - purchase
+            - sales
+        active:
+          oneOf:
+            - $ref: '#/components/schemas/FinanceVATBookImport'
+            - type: 'null'
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceVATBookImport'
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceVATBookMatch'
+        counts:
+          type: object
+          additionalProperties:
+            type: integer
+        attention:
+          type: integer
+        our_vat:
+          type: string
+    FinanceVATBookReconciliation:
+      type: object
+      additionalProperties: false
+      required:
+        - currency
+        - purchase
+        - sales
+      properties:
+        currency:
+          type: string
+          description: Налоговая валюта юрлица — валюта книг 1С и нашего налога.
+        quarter_document:
+          type: string
+        quarter_number:
+          type: string
+        purchase:
+          $ref: '#/components/schemas/FinanceVATBookSide'
+        sales:
+          $ref: '#/components/schemas/FinanceVATBookSide'
+    FinanceVATBookUploadPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - kind
+              - import
+              - duplicate
+            properties:
+              kind:
+                type: string
+                enum:
+                  - purchase
+                  - sales
+              import:
+                $ref: '#/components/schemas/FinanceVATBookImport'
+              duplicate:
+                type: boolean
+    FinanceVATQuarterLineChoice:
+      type: object
+      additionalProperties: false
+      required:
+        - source
+        - action
+      properties:
+        source:
+          $ref: '#/components/schemas/UUID'
+        action:
+          type: string
+          enum:
+            - deduct
+            - carry
+            - write_off
+        item_id:
+          $ref: '#/components/schemas/UUID'
+    FinanceVATQuarterInput:
+      type: object
+      additionalProperties: false
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        year:
+          type: integer
+          minimum: 2000
+          maximum: 2999
+        quarter:
+          type: integer
+          minimum: 1
+          maximum: 4
+        accounting_output:
+          type: string
+          description: Начислено НДС по бухгалтерии за квартал.
+        accounting_deduction:
+          type: string
+          description: К вычету по бухгалтерии за квартал.
+        discrepancy_item_id:
+          $ref: '#/components/schemas/UUID'
+        accounting_output_book_id:
+          $ref: '#/components/schemas/UUID'
+        accounting_deduction_book_id:
+          $ref: '#/components/schemas/UUID'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceVATQuarterLineChoice'
+        comment:
+          type: string
+    FinanceVATQuarterPart:
+      type: object
+      additionalProperties: false
+      required:
+        - amount
+      properties:
+        item:
+          type: string
+        amount:
+          type: string
+          description: Налог в налоговой валюте юрлица.
+        base:
+          type: string
+          description: Сумма без налога в налоговой валюте юрлица.
+        accounting_amount:
+          type: string
+          description: Тот же налог в валюте учёта кабинета.
+        accounting_base:
+          type: string
+          description: Та же сумма без налога в валюте учёта кабинета.
+    FinanceVATQuarterLine:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - source
+        - contact
+        - amount
+        - age_months
+        - over_threshold
+        - action
+        - parts
+      properties:
+        kind:
+          type: string
+          enum:
+            - deduction
+            - restoration
+        source:
+          $ref: '#/components/schemas/UUID'
+        source_type:
+          type: string
+        source_number:
+          type: string
+        source_date:
+          type: string
+          format: date
+        contact:
+          type: string
+        contact_name:
+          type: string
+        supplier_document:
+          $ref: '#/components/schemas/SupplierDocument'
+        amount:
+          type: string
+          description: Налог строки в налоговой валюте юрлица.
+        base:
+          type: string
+        accounting_amount:
+          type: string
+          description: Налог строки в валюте учёта — сумма книги.
+        age_months:
+          type: integer
+        over_threshold:
+          type: boolean
+        action:
+          type: string
+          enum:
+            - deduct
+            - carry
+            - write_off
+            - restore
+        item:
+          type: string
+        parts:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceVATQuarterPart'
+        causes:
+          type: array
+          description: У восстановления — возвраты поставщику после вычета, объясняющие минус.
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - document
+              - type_key
+              - number
+              - date
+            properties:
+              document:
+                type: string
+              type_key:
+                type: string
+              number:
+                type: string
+              date:
+                type: string
+    FinanceVATQuarterFigureSource:
+      type: object
+      additionalProperties: false
+      required:
+        - import_id
+        - loaded_at
+      properties:
+        import_id:
+          type: string
+        loaded_at:
+          type: string
+    FinanceVATQuarterTotals:
+      type: object
+      additionalProperties: false
+      properties:
+        deducted:
+          type: string
+        restored:
+          type: string
+        carried:
+          type: string
+        written_off:
+          type: string
+        deduction:
+          type: string
+        output_difference:
+          type: string
+        deduction_difference:
+          type: string
+        discrepancy:
+          type: string
+        discrepancy_accounting:
+          type: string
+          description: Расхождение в валюте учёта — сумма книги и ОПиУ.
+        discrepancy_rate:
+          type: string
+          description: Курс налоговой валюты к валюте учёта на последний день квартала; пусто в одной валюте.
+        discrepancy_rate_date:
+          type: string
+          format: date
+        payable:
+          type: string
+          description: 'К уплате за квартал в налоговой валюте: начислено по продажам − (вычет − восстановление) + расхождение'
+    FinanceVATQuarterPayload:
+      type: object
+      additionalProperties: false
+      required:
+        - year
+        - quarter
+        - currency
+        - tax_currency
+        - pending_months
+        - accounting_output
+        - accounting_deduction
+        - output_total
+        - lines
+        - totals
+      properties:
+        year:
+          type: integer
+        quarter:
+          type: integer
+        currency:
+          type: string
+          description: Валюта учёта кабинета — валюта книги.
+        tax_currency:
+          type: string
+          description: Налоговая валюта юрлица — валюта сумм документа.
+        pending_months:
+          type: integer
+        accounting_output:
+          type: string
+        accounting_deduction:
+          type: string
+        accounting_output_source:
+          $ref: '#/components/schemas/FinanceVATQuarterFigureSource'
+        accounting_deduction_source:
+          $ref: '#/components/schemas/FinanceVATQuarterFigureSource'
+        output_total:
+          type: string
+        discrepancy_item:
+          type: string
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceVATQuarterLine'
+        totals:
+          $ref: '#/components/schemas/FinanceVATQuarterTotals'
+    FinanceVATQuarter:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - number
+        - date
+        - status
+        - company_id
+        - comment
+        - updated_at
+        - payload
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum:
+            - draft
+            - posted
+            - cancelled
+        company_id:
+          type: string
+        comment:
+          type: string
+        updated_at:
+          type: string
+        payload:
+          $ref: '#/components/schemas/FinanceVATQuarterPayload'
+    FinanceVATQuarterPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceVATQuarter'
     FinancePnlFormulaToken:
       type: object
       additionalProperties: false
@@ -56568,6 +58362,32 @@ components:
           type: string
         transit_match:
           type: boolean
+        input_vat_match:
+          type: boolean
+          description: Нет минуса входного НДС по источнику без возврата поставщику после вычета.
+        input_vat_unexplained:
+          type: array
+          description: Источники с отрицательным остатком входного НДС, который не объяснён возвратом поставщику после вычета.
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - source
+              - source_number
+              - source_date
+              - company
+              - amount
+            properties:
+              source:
+                type: string
+              source_number:
+                type: string
+              source_date:
+                type: string
+              company:
+                type: string
+              amount:
+                type: string
     FinanceReportColumn:
       type: object
       additionalProperties: false
@@ -60757,6 +62577,12 @@ components:
         amount:
           type: string
           description: Decimal string
+        amount_without_vat:
+          type: string
+          description: Сумма строки без налога. Считает сервер из paper_vat_amount и перезаписывает присланное
+        vat_amount:
+          type: string
+          description: 'Доля налога документа в строке: пропорционально сумме строки, копеечный остаток — на самую крупную. Считает сервер и перезаписывает присланное; по её наличию судят о разбивке при перепроведении'
         basis_line_id:
           oneOf:
             - $ref: '#/components/schemas/UUID'
@@ -60825,6 +62651,18 @@ components:
           maxItems: 1000
           items:
             $ref: '#/components/schemas/StockDocumentLine'
+        paper_amount:
+          type: string
+          description: 'Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается'
+        paper_vat_amount:
+          type: string
+          description: В т.ч. НДС документа поставщика, одна сумма (ERP-484, подшаг 5.3). Обязательна, если на дату документа бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне этого периода непустое значение — 400. Сервер раскладывает сумму по строкам
+        supplier_document:
+          $ref: '#/components/schemas/SupplierDocument'
+        tax_currency:
+          type: string
+          readOnly: true
+          description: Налоговая валюта юрлица на дату приёмки (ERP-484, Р21). Пишет сервер вместе с разбивкой налога; присланное значение перезаписывается
         amount:
           type: string
           description: Decimal string; сумма накладных расходов
@@ -60842,6 +62680,53 @@ components:
           type: object
           additionalProperties: true
           description: Разложение проведения по строкам и партиям, которое пишет сам движок
+    StockReceiptVATTermsInput:
+      type: object
+      additionalProperties: false
+      required:
+        - date
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        date:
+          type: string
+          format: date
+          description: 'Дата документа: от неё зависит, обязательно ли «в т.ч. НДС»'
+    StockReceiptVATTerms:
+      type: object
+      additionalProperties: false
+      required:
+        - applies
+        - mode
+        - currency
+      properties:
+        applies:
+          type: boolean
+          description: 'Обязательно ли на дату «в т.ч. НДС»: бизнес очищает суммы и юрлицо принимает налог к вычету'
+        mode:
+          type: string
+          enum:
+            - ''
+            - deductible
+            - non_deductible
+            - none
+          description: Режим налога юрлица на дату; пусто — не выбран
+        currency:
+          type: string
+          description: Валюта учёта на дату документа
+    SupplierDocument:
+      type: object
+      additionalProperties: false
+      description: 'Номер и дата документа поставщика (ERP-484, подшаг 5.3): по ним входящий НДС сверяется с книгой покупок. Оба поля необязательны'
+      properties:
+        number:
+          type: string
+          maxLength: 100
+        date:
+          type: string
+          format: date
     StockDocumentCreate:
       type: object
       additionalProperties: false
@@ -68700,8 +70585,8 @@ components:
         - ogrn
         - okpo
         - branch_code
-        - default_vat_rate
-        - prices_include_vat
+        - vat_accounting_mode
+        - vat_accounting_mode_source
         - legal_address
         - entrepreneur
         - is_active
@@ -68734,12 +70619,20 @@ components:
         branch_code:
           type: string
           description: Код филиала у оператора ЭДО; не КПП
-        default_vat_rate:
+        vat_accounting_mode:
           type: string
-          description: Ставка НДС по умолчанию для новых строк документа; конкретная строка вправе её заменить
-        prices_include_vat:
-          type: boolean
-          description: Как по умолчанию трактовать цену при выбранной ставке НДС
+          enum:
+            - ''
+            - deductible
+            - non_deductible
+            - none
+          description: 'Режим налога, действующий сегодня (версия учётной политики): deductible — в вычет, non_deductible — в стоимость, none — налога нет, пусто — не выбран'
+        vat_accounting_mode_source:
+          type: string
+          enum:
+            - manual
+            - import
+          description: 'Кто поставил значение: manual — человек, import — внешняя система; импорт не перезаписывает manual'
         legal_address:
           $ref: '#/components/schemas/SettingsCompanyAddress'
         entrepreneur:
@@ -68850,10 +70743,14 @@ components:
           type: string
         branch_code:
           type: string
-        default_vat_rate:
+        vat_accounting_mode:
           type: string
-        prices_include_vat:
-          type: boolean
+          enum:
+            - ''
+            - deductible
+            - non_deductible
+            - none
+          description: Режим налога нового юрлица — становится первой версией «с начала учёта». У существующего юрлица режим меняется в учётной политике с датой; пусто — не менять, другое значение, чем действующее сегодня, отклоняется 409
         legal_address:
           $ref: '#/components/schemas/SettingsCompanyAddress'
         entrepreneur:
@@ -76844,12 +78741,6 @@ components:
         program_version:
           type: string
           description: 'ВерсПрог. Пустое значение подставляет сервер: версию приложения знает он, а не человек в форме'
-        prices_include_vat:
-          type: boolean
-          description: 'Сумма строки уже содержит налог. Признак спрашивается, а не угадывается: сумма 1200 законно означает и «1200 без налога», и «1200 с налогом», а ошибка стоит расхождения в декларации'
-        vat_rate:
-          type: string
-          description: НалСт по умолчанию для всех строк. Строка вправе назвать свою
         currency:
           $ref: '#/components/schemas/DocflowCurrencyRequisites'
         file:
@@ -77206,7 +79097,7 @@ components:
           $ref: '#/components/schemas/UUID'
         vat_rate:
           type: string
-          description: НалСт. Обязателен в каждой строке формата; пустое значение берёт общую ставку юрлица
+          description: 'Не принимается: ставку строки задают вид ставки товара и учётная политика юрлица. Непустое значение — 400'
         unit_code:
           type: string
           description: ОКЕИ_Тов. Пустое значение берёт код из карточки единицы измерения
