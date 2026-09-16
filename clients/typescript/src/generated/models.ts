@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6d74e73b08043ef518b7fb11e34a291e6d8d1598b2235e219adfda82c51d8cb0).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c176ac5a2841026b2bd4f7a77fd8818492e0f12c7e5accec44c9929d8b2b5493).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -12850,7 +12850,7 @@ export interface StockDocumentRefs {
   "contact"?: UUID;
 }
 
-export type StockDocumentTypeKey = "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_purchase_request" | "stock_supplier_order" | "stock_inventory" | "stock_reservation" | "stock_landed_cost" | "stock_reservation_release" | "stock_supplier_order_close";
+export type StockDocumentTypeKey = "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_purchase_request" | "stock_supplier_order" | "stock_inventory" | "stock_reservation" | "stock_landed_cost" | "stock_reservation_release" | "stock_supplier_order_close" | "stock_opening_balance" | "stock_marketplace_return";
 
 export interface StockExport {
   "id": UUID;

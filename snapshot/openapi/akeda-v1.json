@@ -96869,7 +96869,7 @@
       },
       "StockDocumentTypeKey": {
         "type": "string",
-        "description": "Вид складского документа. Служебные виды заводит только модуль: `stock_reservation_release` — при снятии остатка резерва, `stock_supplier_order_close` — при закрытии недовезённого заказа поставщику.",
+        "description": "Вид складского документа. Служебные виды заводит только модуль: `stock_reservation_release` — при снятии остатка резерва, `stock_supplier_order_close` — при закрытии недовезённого заказа поставщику. Виды `stock_opening_balance` и `stock_marketplace_return` заводит ввод остатков и учёт склада площадки; вручную они не создаются.",
         "enum": [
           "stock_receipt",
           "stock_shipment",
@@ -96884,7 +96884,9 @@
           "stock_reservation",
           "stock_landed_cost",
           "stock_reservation_release",
-          "stock_supplier_order_close"
+          "stock_supplier_order_close",
+          "stock_opening_balance",
+          "stock_marketplace_return"
         ]
       },
       "StockDocumentCreateTypeKey": {
