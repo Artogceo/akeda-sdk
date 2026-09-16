@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 fe5ccea4c72d80cb31f0535902d57f69853ce40558ea47f30fe5ad5b48b10f9a).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6d74e73b08043ef518b7fb11e34a291e6d8d1598b2235e219adfda82c51d8cb0).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -13412,7 +13412,10 @@ type StockReportRow struct {
 	ProductID     UUID   `json:"product_id"`
 	ProductSKU    string `json:"product_sku"`
 	ProductName   string `json:"product_name"`
-	Unit          string `json:"unit"`
+	// CategoryID — Категория товара — заголовок группы строк, а не измерение разреза: в scope её нет, по ней ничего не сворачивается и не суммируется. Пусто, если категория у карточки не задана.
+	CategoryID   *UUID  `json:"category_id"`
+	CategoryName string `json:"category_name"`
+	Unit         string `json:"unit"`
 	// OnHand — Decimal string
 	OnHand string `json:"on_hand"`
 	// Reserved — Decimal string
@@ -13429,7 +13432,7 @@ type StockReportRow struct {
 	Suggested string `json:"suggested"`
 	// Amount — Decimal string
 	Amount string `json:"amount"`
-	// UnitCost — Decimal string
+	// UnitCost — Decimal string. Пусто в режиме matrix без company_id: ячейка складывает партии разных владельцев, и среднее по ним не лежит ни на одном складе.
 	UnitCost   string `json:"unit_cost"`
 	EntryCount int64  `json:"entry_count"`
 }

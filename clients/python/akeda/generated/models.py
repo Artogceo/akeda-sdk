@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 fe5ccea4c72d80cb31f0535902d57f69853ce40558ea47f30fe5ad5b48b10f9a).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6d74e73b08043ef518b7fb11e34a291e6d8d1598b2235e219adfda82c51d8cb0).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -14314,6 +14314,9 @@ class StockReportRow(TypedDict):
     product_id: "UUID"
     product_sku: str
     product_name: str
+    #: Категория товара — заголовок группы строк, а не измерение разреза: в scope её нет, по ней ничего не сворачивается и не суммируется. Пусто, если категория у карточки не задана.
+    category_id: Optional["UUID"]
+    category_name: str
     unit: str
     #: Decimal string
     on_hand: str
@@ -14331,7 +14334,7 @@ class StockReportRow(TypedDict):
     suggested: str
     #: Decimal string
     amount: str
-    #: Decimal string
+    #: Decimal string. Пусто в режиме matrix без company_id: ячейка складывает партии разных владельцев, и среднее по ним не лежит ни на одном складе.
     unit_cost: str
     entry_count: int
 

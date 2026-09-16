@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 fe5ccea4c72d80cb31f0535902d57f69853ce40558ea47f30fe5ad5b48b10f9a).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6d74e73b08043ef518b7fb11e34a291e6d8d1598b2235e219adfda82c51d8cb0).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -13468,6 +13468,9 @@ export interface StockReportRow {
   "product_id": UUID;
   "product_sku": string;
   "product_name": string;
+  /** Категория товара — заголовок группы строк, а не измерение разреза: в scope её нет, по ней ничего не сворачивается и не суммируется. Пусто, если категория у карточки не задана. */
+  "category_id": UUID | null;
+  "category_name": string;
   "unit": string;
   /** Decimal string */
   "on_hand": string;
@@ -13485,7 +13488,7 @@ export interface StockReportRow {
   "suggested": string;
   /** Decimal string */
   "amount": string;
-  /** Decimal string */
+  /** Decimal string. Пусто в режиме matrix без company_id: ячейка складывает партии разных владельцев, и среднее по ним не лежит ни на одном складе. */
   "unit_cost": string;
   "entry_count": number;
 }

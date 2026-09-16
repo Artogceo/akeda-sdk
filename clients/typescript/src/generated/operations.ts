@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 fe5ccea4c72d80cb31f0535902d57f69853ce40558ea47f30fe5ad5b48b10f9a).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6d74e73b08043ef518b7fb11e34a291e6d8d1598b2235e219adfda82c51d8cb0).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -5546,14 +5546,14 @@ export interface OperationTypes {
   /** GET /api/v1/stock/report/stocks/{productId} — Раскрыть остаток номенклатуры до движений регистра */
   stockGetStockDrilldown: {
     params: { "productId": models.UUID };
-    query: { "as_of"?: string; "below_minimum"?: boolean; "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "limit"?: number; "mode"?: "products" | "warehouses" | "companies"; "offset"?: number; "rollup_zones"?: boolean; "sort"?: "name" | "on_hand" | "reserved" | "available" | "expected" | "forecast" | "minimum" | "suggested" | "unit_cost" | "amount"; "warehouse_id"?: models.UUID; "warehouse_ids"?: string; "with_reserve"?: boolean; "without_company"?: boolean };
+    query: { "as_of"?: string; "below_minimum"?: boolean; "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "limit"?: number; "mode"?: "products" | "warehouses" | "companies" | "matrix"; "offset"?: number; "rollup_zones"?: boolean; "sort"?: "name" | "on_hand" | "reserved" | "available" | "expected" | "forecast" | "minimum" | "suggested" | "unit_cost" | "amount"; "warehouse_id"?: models.UUID; "warehouse_ids"?: string; "with_reserve"?: boolean; "without_company"?: boolean };
     body: never;
     response: models.StockReportDrilldown;
   };
   /** GET /api/v1/stock/report/stocks — Получить отчёт по остаткам */
   stockGetStocksReport: {
     params: Record<string, never>;
-    query: { "as_of"?: string; "below_minimum"?: boolean; "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "include_empty"?: boolean; "limit"?: number; "mode"?: "products" | "warehouses" | "companies"; "offset"?: number; "product_id"?: models.UUID; "q"?: string; "rollup_zones"?: boolean; "sort"?: "name" | "on_hand" | "reserved" | "available" | "expected" | "forecast" | "minimum" | "suggested" | "unit_cost" | "amount"; "warehouse_id"?: models.UUID; "warehouse_ids"?: string; "with_reserve"?: boolean; "without_company"?: boolean };
+    query: { "as_of"?: string; "below_minimum"?: boolean; "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "include_empty"?: boolean; "limit"?: number; "mode"?: "products" | "warehouses" | "companies" | "matrix"; "offset"?: number; "product_id"?: models.UUID; "q"?: string; "rollup_zones"?: boolean; "sort"?: "name" | "on_hand" | "reserved" | "available" | "expected" | "forecast" | "minimum" | "suggested" | "unit_cost" | "amount"; "warehouse_id"?: models.UUID; "warehouse_ids"?: string; "with_reserve"?: boolean; "without_company"?: boolean };
     body: never;
     response: models.StockReportPage;
   };

@@ -27837,13 +27837,14 @@ paths:
             format: date
         - name: mode
           in: query
-          description: 'Разрез строки. Умолчание — полный разрез: вызов без параметра обязан отдавать склад и юрлицо, свёртка запрашивается явно'
+          description: 'Разрез строки. Умолчание — полный разрез: вызов без параметра обязан отдавать склад и юрлицо, свёртка запрашивается явно. matrix — сводная «товар × склад»: юрлицо свёрнуто, склад остаётся, и листаются ТОВАРЫ — count, limit и offset считают товары, а results несёт все ячейки товаров страницы, поэтому строк в ответе больше limit. Себестоимость единицы в matrix без company_id пуста: среднее по владельцам не существует. Ширина ограничена 40 складами в выборке, шире — отказ с просьбой сузить отбор'
           schema:
             type: string
             enum:
               - products
               - warehouses
               - companies
+              - matrix
             default: warehouses
         - name: business_id
           in: query
@@ -27972,13 +27973,14 @@ paths:
             format: date
         - name: mode
           in: query
-          description: 'Разрез строки. Умолчание — полный разрез: вызов без параметра обязан отдавать склад и юрлицо, свёртка запрашивается явно'
+          description: 'Разрез строки. Умолчание — полный разрез: вызов без параметра обязан отдавать склад и юрлицо, свёртка запрашивается явно. matrix — сводная «товар × склад»: юрлицо свёрнуто, склад остаётся, и листаются ТОВАРЫ — count, limit и offset считают товары, а results несёт все ячейки товаров страницы, поэтому строк в ответе больше limit. Себестоимость единицы в matrix без company_id пуста: среднее по владельцам не существует. Ширина ограничена 40 складами в выборке, шире — отказ с просьбой сузить отбор'
           schema:
             type: string
             enum:
               - products
               - warehouses
               - companies
+              - matrix
             default: warehouses
         - name: business_id
           in: query
@@ -64189,6 +64191,8 @@ components:
         - product_id
         - product_sku
         - product_name
+        - category_id
+        - category_name
         - unit
         - on_hand
         - reserved
@@ -64238,6 +64242,13 @@ components:
           type: string
         product_name:
           type: string
+        category_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: 'Категория товара — заголовок группы строк, а не измерение разреза: в scope её нет, по ней ничего не сворачивается и не суммируется. Пусто, если категория у карточки не задана.'
+        category_name:
+          type: string
         unit:
           type: string
         on_hand:
@@ -64266,7 +64277,7 @@ components:
           description: Decimal string
         unit_cost:
           type: string
-          description: Decimal string
+          description: 'Decimal string. Пусто в режиме matrix без company_id: ячейка складывает партии разных владельцев, и среднее по ним не лежит ни на одном складе.'
         entry_count:
           type: integer
           format: int64
