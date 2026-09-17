@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9bacaaf12d34af8eb76fbca3880fa019749c69ad8e994158633b8062acb7eeff).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4721eeb7d987e5e1b3d0d270eb4ae47c25ee5684b9b7ac49582bd5d8aafd6a74).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -543,6 +543,7 @@ var Operations = map[string]Operation{
 	"financeGetOperationDocumentLinks":           {ID: "financeGetOperationDocumentLinks", Method: "GET", Path: "/api/v1/finance/operations/{id}/documents/{documentId}/links", Module: "finance", Stage: "preview", Permission: "finance.operations:read", Idempotent: false, Installation: true, PathParams: []string{"documentId", "id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"financeGetPaymentCalendar":                  {ID: "financeGetPaymentCalendar", Method: "GET", Path: "/api/v1/finance/payment-calendar", Module: "finance", Stage: "preview", Permission: "finance.payment_calendar:read", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"financeGetPayrollJournal":                   {ID: "financeGetPayrollJournal", Method: "GET", Path: "/api/v1/finance/reports/payroll", Module: "finance", Stage: "preview", Permission: "finance.reports.payroll:read", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
+	"financeGetPayrollPayments":                  {ID: "financeGetPayrollPayments", Method: "GET", Path: "/api/v1/finance/reports/payroll/payments", Module: "finance", Stage: "preview", Permission: "finance.reports.payroll:read", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"financeGetPeriodCloseChecks":                {ID: "financeGetPeriodCloseChecks", Method: "GET", Path: "/api/v1/finance/period-checks", Module: "finance", Stage: "preview", Permission: "finance.period:read", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"financeGetPnlLayout":                        {ID: "financeGetPnlLayout", Method: "GET", Path: "/api/v1/finance/pnl-layouts/{id}", Module: "finance", Stage: "preview", Permission: "finance.pnl_layouts:read", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"financeGetPnlReport":                        {ID: "financeGetPnlReport", Method: "GET", Path: "/api/v1/finance/reports/pnl", Module: "finance", Stage: "preview", Permission: "finance.reports.pnl:read", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},

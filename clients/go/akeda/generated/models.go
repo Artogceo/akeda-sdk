@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9bacaaf12d34af8eb76fbca3880fa019749c69ad8e994158633b8062acb7eeff).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4721eeb7d987e5e1b3d0d270eb4ae47c25ee5684b9b7ac49582bd5d8aafd6a74).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -6537,10 +6537,12 @@ type FinanceCashflowEntry struct {
 type FinanceCashflowEntryCategorize struct {
 	// CashflowItem — Идентификатор статьи ДДС; пустая строка снимает статью
 	CashflowItem *string `json:"cashflow_item,omitempty"`
-	// Employee — Идентификатор ответственного; пустая строка снимает ответственного
+	// Employee — Прежнее учётное физлицо зарплаты; пустая строка снимает его. Новое разнесение указывает человека в for_contact
 	Employee *string `json:"employee,omitempty"`
-	// Contact — Идентификатор собственника; пустая строка снимает собственника
+	// Contact — Идентификатор контрагента; пустая строка снимает контрагента
 	Contact *string `json:"contact,omitempty"`
+	// ForContact — «За кого»: контрагент сотрудника или собственника, чей расчёт гасит выдача. Пусто — как контрагент; не присланное поле остаётся как было
+	ForContact *string `json:"for_contact,omitempty"`
 }
 
 type FinanceCashflowEntryKind = string
@@ -7636,6 +7638,20 @@ type FinancePayrollJournalTotals struct {
 	Debt string `json:"debt"`
 }
 
+type FinancePayrollPayment struct {
+	Date       string `json:"date"`
+	DocumentID UUID   `json:"document_id"`
+	Number     string `json:"number"`
+	// Source — Банковская операция или касса
+	Source string `json:"source"`
+	// Amount — Decimal string; сумма выплаты сотруднику по документу
+	Amount string `json:"amount"`
+	// Register — Номер реестра; пусто — выплата не по реестру
+	Register string `json:"register"`
+	// Recipient — Кому ушли деньги, если не самому сотруднику; пусто — ему самому или получатель не указан
+	Recipient string `json:"recipient"`
+}
+
 // FinancePayrollPaymentPayload — Содержимое реестра выплаты. Строка без человека и строка с двумя нулями не годятся, и узнаётся это при заведении, а не в момент оплаты.
 type FinancePayrollPaymentPayload struct {
 	// Period — Месяц выплаты в формате YYYY-MM
@@ -7652,6 +7668,12 @@ type FinancePayrollPaymentRow struct {
 	Official *string `json:"official,omitempty"`
 	// Unofficial — Decimal string; неофициальная часть выплаты
 	Unofficial *string `json:"unofficial,omitempty"`
+}
+
+type FinancePayrollPayments struct {
+	From string                  `json:"from"`
+	To   string                  `json:"to"`
+	Rows []FinancePayrollPayment `json:"rows"`
 }
 
 type FinancePeriodCheck struct {
@@ -8319,11 +8341,16 @@ type FinanceTransaction struct {
 	PNLItemName         *string `json:"pnl_item_name"`
 	Contact             *string `json:"contact"`
 	ContactName         *string `json:"contact_name"`
-	Order               *string `json:"order"`
-	OrderNumber         *string `json:"order_number"`
-	Project             *string `json:"project"`
-	ProjectName         *string `json:"project_name"`
-	// Responsible — Операционный ответственный, не участвующий в проводках
+	// ForContact — «За кого»: контрагент из папки «Сотрудники» или «Собственники», чей расчёт гасит платёж. Пусто — как контрагент: платили самому человеку
+	ForContact     *string `json:"for_contact,omitempty"`
+	ForContactName *string `json:"for_contact_name,omitempty"`
+	// ContactEmployee — Сотрудник, связанный с контрагентом. У зарплаты пустое «За кого» при нём означает самого получателя
+	ContactEmployee *string `json:"contact_employee,omitempty"`
+	Order           *string `json:"order"`
+	OrderNumber     *string `json:"order_number"`
+	Project         *string `json:"project"`
+	ProjectName     *string `json:"project_name"`
+	// Responsible — Инициатор: кто завёл или согласовал платёж. В проводки не идёт; чей расчёт гасится, задаёт for_contact
 	Responsible               *string                    `json:"responsible,omitempty"`
 	ResponsibleName           *string                    `json:"responsible_name,omitempty"`
 	OrderTotal                *string                    `json:"order_total"`
@@ -8342,8 +8369,10 @@ type FinanceTransaction struct {
 type FinanceTransactionCategorize struct {
 	CashflowItem *string `json:"cashflow_item,omitempty"`
 	Contact      *string `json:"contact,omitempty"`
-	Order        *string `json:"order,omitempty"`
-	Project      *string `json:"project,omitempty"`
+	// ForContact — «За кого»: чей расчёт гасит платёж. У зарплаты — контрагент из папки «Сотрудники», у расчётов с собственником — контрагент из состава владельцев на дату платежа. Пусто — как контрагент. Не присланное поле остаётся как было.
+	ForContact *string `json:"for_contact,omitempty"`
+	Order      *string `json:"order,omitempty"`
+	Project    *string `json:"project,omitempty"`
 	// Suggestion — Рекомендация внешнего расширения, которую человек принимает этим вызовом. Не второй способ назвать статью: статья берётся из самой рекомендации, а поле отвечает на другой вопрос — чей совет сработал. Названная в теле другая статья — отказ, а не тихая победа одного из двух значений. Рекомендация с чужой операции и уже решённая отвечают так же, как несуществующая.
 	Suggestion *string `json:"suggestion,omitempty"`
 }
@@ -13608,13 +13637,17 @@ type StockReceiptVATTermsInput struct {
 }
 
 type StockReorderRule struct {
-	ID          UUID   `json:"id"`
-	CompanyID   UUID   `json:"company_id"`
+	ID           UUID   `json:"id"`
+	BusinessID   UUID   `json:"business_id"`
+	BusinessName string `json:"business_name"`
+	// CompanyID — null означает правило бизнеса без юрлица
+	CompanyID *UUID `json:"company_id"`
+	// CompanyName — Пустая строка у правила без юрлица
 	CompanyName string `json:"company_name"`
 	ProductID   UUID   `json:"product_id"`
 	ProductSKU  string `json:"product_sku"`
 	ProductName string `json:"product_name"`
-	// WarehouseID — null означает правило юрлица на все склады
+	// WarehouseID — null означает правило на все склады
 	WarehouseID   *UUID  `json:"warehouse_id"`
 	WarehouseName string `json:"warehouse_name"`
 	// MinQty — Decimal string неснижаемого остатка
@@ -13631,10 +13664,13 @@ type StockReorderRule struct {
 }
 
 type StockReorderRuleInput struct {
-	CompanyID UUID `json:"company_id"`
+	// BusinessID — Бизнес правила; обязателен без company_id, с company_id выводится от юрлица и обязан с ним совпасть
+	BusinessID *UUID `json:"business_id,omitempty"`
+	// CompanyID — Пропуск или null заводит правило бизнеса без юрлица
+	CompanyID *UUID `json:"company_id,omitempty"`
 	// ProductID — Складская номенклатура — отдельный товар или вариант; семейство вариантов и услуга не принимаются
 	ProductID UUID `json:"product_id"`
-	// WarehouseID — Пропуск или null заводит правило юрлица на все склады
+	// WarehouseID — Пропуск или null заводит правило на все склады; правилу без юрлица годится только склад, не закреплённый за юрлицами
 	WarehouseID *UUID `json:"warehouse_id,omitempty"`
 	// MinQty — Decimal string неотрицательного неснижаемого остатка
 	MinQty string `json:"min_qty"`
@@ -13656,6 +13692,8 @@ type StockReorderRulePage struct {
 }
 
 type StockReorderRulePatch struct {
+	BusinessID *UUID `json:"business_id,omitempty"`
+	// CompanyID — null переносит правило в бизнес без юрлица
 	CompanyID   *UUID `json:"company_id,omitempty"`
 	ProductID   *UUID `json:"product_id,omitempty"`
 	WarehouseID *UUID `json:"warehouse_id,omitempty"`
@@ -14125,8 +14163,11 @@ type StockZoneAllocationInput struct {
 	Lines []StockZoneAllocationLine `json:"lines"`
 }
 
+// StockZoneAllocationLine — Клетка матрицы. Для остатка без юрлица business_id обязателен; для остатка юрлица сервер выводит бизнес из юрлица, если он не передан.
 type StockZoneAllocationLine struct {
-	CompanyID UUID   `json:"company_id"`
+	BusinessID *UUID `json:"business_id,omitempty"`
+	// CompanyID — Пусто или null — остаток без юрлица
+	CompanyID *UUID  `json:"company_id,omitempty"`
 	ProductID UUID   `json:"product_id"`
 	ZoneID    UUID   `json:"zone_id"`
 	Quantity  string `json:"quantity"`
@@ -14134,16 +14175,19 @@ type StockZoneAllocationLine struct {
 
 type StockZoneAllocationResult struct {
 	Warehouse StockWarehouse `json:"warehouse"`
-	// Documents — Проведённые перемещения — по одному на пару «юрлицо и зона»
+	// Documents — Проведённые перемещения — по одному на сочетание «бизнес, юрлицо или его отсутствие, зона»
 	Documents []CoreDocument `json:"documents"`
 	// Remaining — Остаток, который после разнесения всё ещё ждёт на складе
 	Remaining []StockZoneStockRow `json:"remaining"`
 }
 
+// StockZoneStockRow — Строка остатка склада или зоны. Ключ строки — бизнес и необязательное юрлицо; остаток без юрлица приходит отдельной строкой на каждый бизнес.
 type StockZoneStockRow struct {
 	WarehouseID UUID `json:"warehouse_id"`
-	CompanyID   UUID `json:"company_id"`
-	ProductID   UUID `json:"product_id"`
+	BusinessID  UUID `json:"business_id"`
+	// CompanyID — null — остаток без юрлица
+	CompanyID *UUID `json:"company_id"`
+	ProductID UUID  `json:"product_id"`
 	// Quantity — Точное decimal-количество строкой
 	Quantity string `json:"quantity"`
 }

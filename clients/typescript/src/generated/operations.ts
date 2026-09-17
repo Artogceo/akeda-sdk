@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9bacaaf12d34af8eb76fbca3880fa019749c69ad8e994158633b8062acb7eeff).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4721eeb7d987e5e1b3d0d270eb4ae47c25ee5684b9b7ac49582bd5d8aafd6a74).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -3625,6 +3625,13 @@ export interface OperationTypes {
     body: never;
     response: models.FinancePayrollJournal;
   };
+  /** GET /api/v1/finance/reports/payroll/payments — Расшифровать выплаты сотруднику за период */
+  financeGetPayrollPayments: {
+    params: Record<string, never>;
+    query: { "company"?: models.UUID; "employee": models.UUID; "from"?: string; "to"?: string };
+    body: never;
+    response: models.FinancePayrollPayments;
+  };
   /** GET /api/v1/finance/period-checks — Получить проверки перед закрытием периода */
   financeGetPeriodCloseChecks: {
     params: Record<string, never>;
@@ -4157,7 +4164,7 @@ export interface OperationTypes {
     body: models.FinanceAccountPatch;
     response: models.FinanceAccount;
   };
-  /** PATCH /api/v1/finance/cash-operations/{id}/responsible — Изменить ответственного кассовой операции без перепроведения */
+  /** PATCH /api/v1/finance/cash-operations/{id}/responsible — Изменить инициатора кассовой операции */
   financeUpdateCashOperationResponsible: {
     params: { "id": models.UUID };
     query: Record<string, never>;
@@ -4185,7 +4192,7 @@ export interface OperationTypes {
     body: models.FinancePaymentPlanInput;
     response: models.FinancePaymentPlan;
   };
-  /** PATCH /api/v1/finance/transactions/{id}/responsible — Изменить операционного ответственного без перепроведения */
+  /** PATCH /api/v1/finance/transactions/{id}/responsible — Изменить инициатора операции без перепроведения */
   financeUpdateTransactionResponsible: {
     params: { "id": models.UUID };
     query: Record<string, never>;
@@ -5952,7 +5959,7 @@ export interface OperationTypes {
   /** GET /api/v1/stock/reorder-rules — Получить правила пополнения запаса */
   stockListReorderRules: {
     params: Record<string, never>;
-    query: { "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "limit"?: number; "offset"?: number; "product_id"?: models.UUID; "q"?: string; "sort"?: "company" | "product" | "warehouse" | "min_qty" | "updated_at"; "status"?: "active" | "inactive"; "warehouse_id"?: models.UUID };
+    query: { "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "limit"?: number; "offset"?: number; "product_id"?: models.UUID; "q"?: string; "sort"?: "business" | "company" | "product" | "warehouse" | "min_qty" | "updated_at"; "status"?: "active" | "inactive"; "warehouse_id"?: models.UUID };
     body: never;
     response: models.StockReorderRulePage;
   };
@@ -7546,6 +7553,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeGetOperationDocumentLinks: { method: "GET", path: "/api/v1/finance/operations/{id}/documents/{documentId}/links", module: "finance", stage: "preview", permission: "finance.operations:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetPaymentCalendar: { method: "GET", path: "/api/v1/finance/payment-calendar", module: "finance", stage: "preview", permission: "finance.payment_calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetPayrollJournal: { method: "GET", path: "/api/v1/finance/reports/payroll", module: "finance", stage: "preview", permission: "finance.reports.payroll:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetPayrollPayments: { method: "GET", path: "/api/v1/finance/reports/payroll/payments", module: "finance", stage: "preview", permission: "finance.reports.payroll:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetPeriodCloseChecks: { method: "GET", path: "/api/v1/finance/period-checks", module: "finance", stage: "preview", permission: "finance.period:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetPnlLayout: { method: "GET", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance.pnl_layouts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetPnlReport: { method: "GET", path: "/api/v1/finance/reports/pnl", module: "finance", stage: "preview", permission: "finance.reports.pnl:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

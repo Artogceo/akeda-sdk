@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9bacaaf12d34af8eb76fbca3880fa019749c69ad8e994158633b8062acb7eeff).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4721eeb7d987e5e1b3d0d270eb4ae47c25ee5684b9b7ac49582bd5d8aafd6a74).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -6550,10 +6550,12 @@ export interface FinanceCashflowEntry {
 export interface FinanceCashflowEntryCategorize {
   /** Идентификатор статьи ДДС; пустая строка снимает статью */
   "cashflow_item"?: string;
-  /** Идентификатор ответственного; пустая строка снимает ответственного */
+  /** Прежнее учётное физлицо зарплаты; пустая строка снимает его. Новое разнесение указывает человека в for_contact */
   "employee"?: string;
-  /** Идентификатор собственника; пустая строка снимает собственника */
+  /** Идентификатор контрагента; пустая строка снимает контрагента */
   "contact"?: string;
+  /** «За кого»: контрагент сотрудника или собственника, чей расчёт гасит выдача. Пусто — как контрагент; не присланное поле остаётся как было */
+  "for_contact"?: string | null;
 }
 
 export type FinanceCashflowEntryKind = "bank" | "cash";
@@ -7656,6 +7658,20 @@ export interface FinancePayrollJournalTotals {
   "debt": string;
 }
 
+export interface FinancePayrollPayment {
+  "date": string;
+  "document_id": UUID;
+  "number": string;
+  /** Банковская операция или касса */
+  "source": "bank" | "cash";
+  /** Decimal string; сумма выплаты сотруднику по документу */
+  "amount": string;
+  /** Номер реестра; пусто — выплата не по реестру */
+  "register": string;
+  /** Кому ушли деньги, если не самому сотруднику; пусто — ему самому или получатель не указан */
+  "recipient": string;
+}
+
 /**
  * Содержимое реестра выплаты. Строка без человека и строка с двумя
  * нулями не годятся, и узнаётся это при заведении, а не в момент оплаты.
@@ -7675,6 +7691,12 @@ export interface FinancePayrollPaymentRow {
   "official"?: string;
   /** Decimal string; неофициальная часть выплаты */
   "unofficial"?: string;
+}
+
+export interface FinancePayrollPayments {
+  "from": string;
+  "to": string;
+  "rows": Array<FinancePayrollPayment>;
 }
 
 export interface FinancePeriodCheck {
@@ -8342,11 +8364,16 @@ export interface FinanceTransaction {
   "pnl_item_name": string | null;
   "contact": string | null;
   "contact_name": string | null;
+  /** «За кого»: контрагент из папки «Сотрудники» или «Собственники», чей расчёт гасит платёж. Пусто — как контрагент: платили самому человеку */
+  "for_contact"?: string | null;
+  "for_contact_name"?: string | null;
+  /** Сотрудник, связанный с контрагентом. У зарплаты пустое «За кого» при нём означает самого получателя */
+  "contact_employee"?: string | null;
   "order": string | null;
   "order_number": string | null;
   "project": string | null;
   "project_name": string | null;
-  /** Операционный ответственный, не участвующий в проводках */
+  /** Инициатор: кто завёл или согласовал платёж. В проводки не идёт; чей расчёт гасится, задаёт for_contact */
   "responsible"?: string | null;
   "responsible_name"?: string | null;
   "order_total": string | null;
@@ -8365,6 +8392,8 @@ export interface FinanceTransaction {
 export interface FinanceTransactionCategorize {
   "cashflow_item"?: string | null;
   "contact"?: string | null;
+  /** «За кого»: чей расчёт гасит платёж. У зарплаты — контрагент из папки «Сотрудники», у расчётов с собственником — контрагент из состава владельцев на дату платежа. Пусто — как контрагент. Не присланное поле остаётся как было. */
+  "for_contact"?: string | null;
   "order"?: string | null;
   "project"?: string | null;
   /** Рекомендация внешнего расширения, которую человек принимает этим вызовом. Не второй способ назвать статью: статья берётся из самой рекомендации, а поле отвечает на другой вопрос — чей совет сработал. Названная в теле другая статья — отказ, а не тихая победа одного из двух значений. Рекомендация с чужой операции и уже решённая отвечают так же, как несуществующая. */
@@ -13652,12 +13681,16 @@ export interface StockReceiptVATTermsInput {
 
 export interface StockReorderRule {
   "id": UUID;
-  "company_id": UUID;
+  "business_id": UUID;
+  "business_name": string;
+  /** null означает правило бизнеса без юрлица */
+  "company_id": UUID | null;
+  /** Пустая строка у правила без юрлица */
   "company_name": string;
   "product_id": UUID;
   "product_sku": string;
   "product_name": string;
-  /** null означает правило юрлица на все склады */
+  /** null означает правило на все склады */
   "warehouse_id": UUID | null;
   "warehouse_name": string;
   /** Decimal string неснижаемого остатка */
@@ -13674,10 +13707,13 @@ export interface StockReorderRule {
 }
 
 export interface StockReorderRuleInput {
-  "company_id": UUID;
+  /** Бизнес правила; обязателен без company_id, с company_id выводится от юрлица и обязан с ним совпасть */
+  "business_id"?: UUID | null;
+  /** Пропуск или null заводит правило бизнеса без юрлица */
+  "company_id"?: UUID | null;
   /** Складская номенклатура — отдельный товар или вариант; семейство вариантов и услуга не принимаются */
   "product_id": UUID;
-  /** Пропуск или null заводит правило юрлица на все склады */
+  /** Пропуск или null заводит правило на все склады; правилу без юрлица годится только склад, не закреплённый за юрлицами */
   "warehouse_id"?: UUID | null;
   /** Decimal string неотрицательного неснижаемого остатка */
   "min_qty": string;
@@ -13699,7 +13735,9 @@ export interface StockReorderRulePage {
 }
 
 export interface StockReorderRulePatch {
-  "company_id"?: UUID;
+  "business_id"?: UUID;
+  /** null переносит правило в бизнес без юрлица */
+  "company_id"?: UUID | null;
   "product_id"?: UUID;
   "warehouse_id"?: UUID | null;
   /** Decimal string */
@@ -14181,8 +14219,11 @@ export interface StockZoneAllocationInput {
   "lines": Array<StockZoneAllocationLine>;
 }
 
+/** Клетка матрицы. Для остатка без юрлица business_id обязателен; для остатка юрлица сервер выводит бизнес из юрлица, если он не передан. */
 export interface StockZoneAllocationLine {
-  "company_id": UUID;
+  "business_id"?: UUID;
+  /** Пусто или null — остаток без юрлица */
+  "company_id"?: UUID | null;
   "product_id": UUID;
   "zone_id": UUID;
   "quantity": string;
@@ -14190,15 +14231,18 @@ export interface StockZoneAllocationLine {
 
 export interface StockZoneAllocationResult {
   "warehouse": StockWarehouse;
-  /** Проведённые перемещения — по одному на пару «юрлицо и зона» */
+  /** Проведённые перемещения — по одному на сочетание «бизнес, юрлицо или его отсутствие, зона» */
   "documents": Array<CoreDocument>;
   /** Остаток, который после разнесения всё ещё ждёт на складе */
   "remaining": Array<StockZoneStockRow>;
 }
 
+/** Строка остатка склада или зоны. Ключ строки — бизнес и необязательное юрлицо; остаток без юрлица приходит отдельной строкой на каждый бизнес. */
 export interface StockZoneStockRow {
   "warehouse_id": UUID;
-  "company_id": UUID;
+  "business_id": UUID;
+  /** null — остаток без юрлица */
+  "company_id": UUID | null;
   "product_id": UUID;
   /** Точное decimal-количество строкой */
   "quantity": string;

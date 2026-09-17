@@ -17620,8 +17620,8 @@ paths:
       tags:
         - Finance transactions
       operationId: financeUpdateTransactionResponsible
-      summary: Изменить операционного ответственного без перепроведения
-      description: Меняет только metadata-реквизит responsible; статья, статус и движения документа не затрагиваются.
+      summary: Изменить инициатора операции без перепроведения
+      description: Меняет только инициатора (responsible) — кто завёл или согласовал платёж. Статья, «За кого», статус и движения документа не затрагиваются.
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -17647,7 +17647,7 @@ paths:
               $ref: '#/components/schemas/FinanceResponsiblePatch'
       responses:
         '200':
-          description: Операция с обновлённым ответственным
+          description: Операция с обновлённым инициатором
           content:
             application/json:
               schema:
@@ -17831,8 +17831,8 @@ paths:
       tags:
         - Finance transactions
       operationId: financeUpdateCashOperationResponsible
-      summary: Изменить ответственного кассовой операции без перепроведения
-      description: Меняет только ссылку responsible; статус, статья и движения документа не затрагиваются.
+      summary: Изменить инициатора кассовой операции
+      description: Меняет только ссылку инициатора responsible; статья, «За кого» и суммы движений не меняются.
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -17858,7 +17858,7 @@ paths:
               $ref: '#/components/schemas/FinanceResponsiblePatch'
       responses:
         '204':
-          description: Ответственный обновлён
+          description: Инициатор обновлён
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -28729,7 +28729,7 @@ paths:
         - Stock reorder rules
       operationId: stockListReorderRules
       summary: Получить правила пополнения запаса
-      description: Отдаются только правила юрлиц, доступных текущему пользователю; count — общее число подходящих правил, а не размер страницы.
+      description: Отдаются только правила юрлиц, доступных текущему пользователю, а правила без юрлица — пользователю с доступом ко всем юрлицам; count — общее число подходящих правил, а не размер страницы.
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -28742,6 +28742,10 @@ paths:
         - installationToken: []
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
+        - name: business_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
         - name: company_id
           in: query
           schema:
@@ -28756,7 +28760,7 @@ paths:
             $ref: '#/components/schemas/UUID'
         - name: q
           in: query
-          description: Поиск по товару, юрлицу и складу
+          description: Поиск по товару, бизнесу, юрлицу и складу
           schema:
             type: string
         - name: status
@@ -28771,6 +28775,7 @@ paths:
           schema:
             type: string
             enum:
+              - business
               - company
               - product
               - warehouse
@@ -28818,7 +28823,7 @@ paths:
         - Stock reorder rules
       operationId: stockSaveReorderRule
       summary: Завести или переписать правило пополнения по ключу
-      description: 'Заведение-или-перезапись по естественному ключу «юрлицо + товар + склад»: если правило с таким ключом уже есть, оно переписывается целиком, иначе заводится новое. Правило без warehouse_id — отдельное правило кабинета «на все склады», оно не конфликтует со складским. Идентификатор правила здесь не передаётся и не выбирается: он приходит в ответе. Тело задаёт все поля сразу, пропущенное необязательное поле обнуляется, а is_active по умолчанию true. Чтобы поменять часть полей у известного правила или перенести его на другой ключ, берут PATCH /api/v1/stock/reorder-rules/{id}.'
+      description: 'Заведение-или-перезапись по естественному ключу «бизнес + юрлицо + товар + склад»: если правило с таким ключом уже есть, оно переписывается целиком, иначе заводится новое. Правило принадлежит бизнесу, юрлицо — необязательный разрез, как у остатка: без company_id правило действует на товар бизнеса без юрлица и требует business_id, а с company_id бизнес выводится от юрлица (названный business_id обязан с ним совпасть). Правило без warehouse_id — отдельное правило «на все склады», оно не конфликтует со складским. Идентификатор правила здесь не передаётся и не выбирается: он приходит в ответе. Тело задаёт все поля сразу, пропущенное необязательное поле обнуляется, а is_active по умолчанию true. Чтобы поменять часть полей у известного правила или перенести его на другой ключ, берут PATCH /api/v1/stock/reorder-rules/{id}.'
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -28899,7 +28904,7 @@ paths:
         - Stock reorder rules
       operationId: stockUpdateReorderRule
       summary: Частично изменить существующее правило пополнения
-      description: Правка правила, которое уже заведено, по его id. Меняются только переданные поля, остальные сохраняют текущее значение; неизвестный id отвечает 404, а не заводит правило. Ключевые поля company_id, product_id и warehouse_id тоже правятся — так правило переносят на другой ключ, и если по новому ключу правило уже есть, приходит 409. Явный null снимает значение у warehouse_id, max_qty, order_multiple и preferred_supplier_id. Для заведения правила берут PUT /api/v1/stock/reorder-rules.
+      description: Правка правила, которое уже заведено, по его id. Меняются только переданные поля, остальные сохраняют текущее значение; неизвестный id отвечает 404, а не заводит правило. Ключевые поля business_id, company_id, product_id и warehouse_id тоже правятся — так правило переносят на другой ключ, и если по новому ключу правило уже есть, приходит 409. Новое юрлицо без business_id переносит правило в бизнес этого юрлица. Явный null снимает значение у company_id (правило бизнеса без юрлица), warehouse_id, max_qty, order_multiple и preferred_supplier_id. Для заведения правила берут PUT /api/v1/stock/reorder-rules.
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -33869,7 +33874,7 @@ paths:
         - Finance transactions
       operationId: financeCategorizeCashOperation
       summary: Проставить статью ДДС кассовой операции
-      description: 'Классифицирует САМ ДОКУМЕНТ кассовой операции, а не строку `finance_transaction`, и этим отличается от `financeCategorizeTransaction`: у банка классифицируется транзакция, у кассы классифицировать нечего кроме документа. Отсюда и разный состав: здесь принимаются статья ДДС, ответственный и собственник, у банковской ручки — статья, контрагент, заказ и проект. Ответ тоже разный: банковская ручка возвращает переклассифицированную операцию, эта — пустое тело. Пустая строка в любом поле снимает привязку: операция без статьи — законное состояние, её показывает строка «Без статьи ДДС», и запрещать возврат в него нельзя. Ручка нужна расшифровке ДДС: у записи с `kind` = `cash` разносить статью надо здесь, у `bank` — через `financeCategorizeTransaction`. Смена собственника проходит проверку дивидендного контура и может быть отклонена.'
+      description: 'Классифицирует САМ ДОКУМЕНТ кассовой операции, а не строку `finance_transaction`, и этим отличается от `financeCategorizeTransaction`: у банка классифицируется транзакция, у кассы классифицировать нечего кроме документа. Отсюда и разный состав: здесь принимаются статья ДДС, контрагент и «За кого», у банковской ручки — ещё заказ и проект. Ответ тоже разный: банковская ручка возвращает переклассифицированную операцию, эта — пустое тело. Пустая строка в любом поле снимает привязку: операция без статьи — законное состояние, её показывает строка «Без статьи ДДС», и запрещать возврат в него нельзя. Ручка нужна расшифровке ДДС: у записи с `kind` = `cash` разносить статью надо здесь, у `bank` — через `financeCategorizeTransaction`. «За кого» у расчётов с собственником проходит проверку состава владельцев на дату и может быть отклонено.'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -34168,6 +34173,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FinancePayrollJournal'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/reports/payroll/payments:
+    get:
+      tags:
+        - Finance reports
+      operationId: financeGetPayrollPayments
+      summary: Расшифровать выплаты сотруднику за период
+      description: 'Строки колонки «Выплачено» журнала заработной платы по одному сотруднику: документ, дата, сумма, номер реестра, если выплата шла по нему, и получатель, если деньги ушли не самому сотруднику. Выплата считается тому, кого платёж назвал в «За кого» (ERP-1149): зарплату на ИП по договору подряда журнал засчитывает сотруднику, а получатель остаётся в расшифровке. Сумма строк равна «Выплачено» журнала за тот же период.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.reports.payroll:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: employee
+          in: query
+          required: true
+          description: Сотрудник
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: from
+          in: query
+          description: Начало периода; явно пустое значение откатывает отбор на текущий месяц
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Конец периода; явно пустое значение откатывает отбор на текущий месяц
+          schema:
+            type: string
+            format: date
+        - name: company
+          in: query
+          description: Разрез по юрлицу; без него — по всем
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Выплаты сотруднику за период
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancePayrollPayments'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -57896,6 +57958,22 @@ components:
           type:
             - string
             - 'null'
+        for_contact:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: '«За кого»: контрагент из папки «Сотрудники» или «Собственники», чей расчёт гасит платёж. Пусто — как контрагент: платили самому человеку'
+        for_contact_name:
+          type:
+            - string
+            - 'null'
+        contact_employee:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Сотрудник, связанный с контрагентом. У зарплаты пустое «За кого» при нём означает самого получателя
         order:
           type:
             - string
@@ -57919,7 +57997,7 @@ components:
             - string
             - 'null'
           format: uuid
-          description: Операционный ответственный, не участвующий в проводках
+          description: 'Инициатор: кто завёл или согласовал платёж. В проводки не идёт; чей расчёт гасится, задаёт for_contact'
         responsible_name:
           type:
             - string
@@ -58077,6 +58155,12 @@ components:
             - string
             - 'null'
           format: uuid
+        for_contact:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: '«За кого»: чей расчёт гасит платёж. У зарплаты — контрагент из папки «Сотрудники», у расчётов с собственником — контрагент из состава владельцев на дату платежа. Пусто — как контрагент. Не присланное поле остаётся как было.'
         order:
           type:
             - string
@@ -65079,16 +65163,23 @@ components:
     StockZoneStockRow:
       type: object
       additionalProperties: false
+      description: Строка остатка склада или зоны. Ключ строки — бизнес и необязательное юрлицо; остаток без юрлица приходит отдельной строкой на каждый бизнес.
       required:
         - warehouse_id
+        - business_id
         - company_id
         - product_id
         - quantity
       properties:
         warehouse_id:
           $ref: '#/components/schemas/UUID'
-        company_id:
+        business_id:
           $ref: '#/components/schemas/UUID'
+        company_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: null — остаток без юрлица
         product_id:
           $ref: '#/components/schemas/UUID'
         quantity:
@@ -65097,14 +65188,19 @@ components:
     StockZoneAllocationLine:
       type: object
       additionalProperties: false
+      description: Клетка матрицы. Для остатка без юрлица business_id обязателен; для остатка юрлица сервер выводит бизнес из юрлица, если он не передан.
       required:
-        - company_id
         - product_id
         - zone_id
         - quantity
       properties:
-        company_id:
+        business_id:
           $ref: '#/components/schemas/UUID'
+        company_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Пусто или null — остаток без юрлица
         product_id:
           $ref: '#/components/schemas/UUID'
         zone_id:
@@ -65171,7 +65267,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CoreDocument'
-          description: Проведённые перемещения — по одному на пару «юрлицо и зона»
+          description: Проведённые перемещения — по одному на сочетание «бизнес, юрлицо или его отсутствие, зона»
         remaining:
           type: array
           items:
@@ -66965,6 +67061,8 @@ components:
       additionalProperties: false
       required:
         - id
+        - business_id
+        - business_name
         - company_id
         - company_name
         - product_id
@@ -66983,10 +67081,18 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/UUID'
-        company_id:
+        business_id:
           $ref: '#/components/schemas/UUID'
+        business_name:
+          type: string
+        company_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: null означает правило бизнеса без юрлица
         company_name:
           type: string
+          description: Пустая строка у правила без юрлица
         product_id:
           $ref: '#/components/schemas/UUID'
         product_sku:
@@ -66997,7 +67103,7 @@ components:
           oneOf:
             - $ref: '#/components/schemas/UUID'
             - type: 'null'
-          description: null означает правило юрлица на все склады
+          description: null означает правило на все склады
         warehouse_name:
           type: string
         min_qty:
@@ -67054,12 +67160,19 @@ components:
       type: object
       additionalProperties: false
       required:
-        - company_id
         - product_id
         - min_qty
       properties:
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Бизнес правила; обязателен без company_id, с company_id выводится от юрлица и обязан с ним совпасть
         company_id:
-          $ref: '#/components/schemas/UUID'
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Пропуск или null заводит правило бизнеса без юрлица
         product_id:
           $ref: '#/components/schemas/UUID'
           description: Складская номенклатура — отдельный товар или вариант; семейство вариантов и услуга не принимаются
@@ -67067,7 +67180,7 @@ components:
           oneOf:
             - $ref: '#/components/schemas/UUID'
             - type: 'null'
-          description: Пропуск или null заводит правило юрлица на все склады
+          description: Пропуск или null заводит правило на все склады; правилу без юрлица годится только склад, не закреплённый за юрлицами
         min_qty:
           type: string
           description: Decimal string неотрицательного неснижаемого остатка
@@ -67097,8 +67210,13 @@ components:
       additionalProperties: false
       minProperties: 1
       properties:
-        company_id:
+        business_id:
           $ref: '#/components/schemas/UUID'
+        company_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: null переносит правило в бизнес без юрлица
         product_id:
           $ref: '#/components/schemas/UUID'
         warehouse_id:
@@ -73707,10 +73825,15 @@ components:
           description: Идентификатор статьи ДДС; пустая строка снимает статью
         employee:
           type: string
-          description: Идентификатор ответственного; пустая строка снимает ответственного
+          description: Прежнее учётное физлицо зарплаты; пустая строка снимает его. Новое разнесение указывает человека в for_contact
         contact:
           type: string
-          description: Идентификатор собственника; пустая строка снимает собственника
+          description: Идентификатор контрагента; пустая строка снимает контрагента
+        for_contact:
+          type:
+            - string
+            - 'null'
+          description: '«За кого»: контрагент сотрудника или собственника, чей расчёт гасит выдача. Пусто — как контрагент; не присланное поле остаётся как было'
     FinancePnlEntry:
       type: object
       additionalProperties: false
@@ -73914,6 +74037,58 @@ components:
             $ref: '#/components/schemas/FinancePayrollJournalRow'
         totals:
           $ref: '#/components/schemas/FinancePayrollJournalTotals'
+    FinancePayrollPayments:
+      type: object
+      additionalProperties: false
+      required:
+        - from
+        - to
+        - rows
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinancePayrollPayment'
+    FinancePayrollPayment:
+      type: object
+      additionalProperties: false
+      required:
+        - date
+        - document_id
+        - number
+        - source
+        - amount
+        - register
+        - recipient
+      properties:
+        date:
+          type: string
+          format: date
+        document_id:
+          $ref: '#/components/schemas/UUID'
+        number:
+          type: string
+        source:
+          type: string
+          enum:
+            - bank
+            - cash
+          description: Банковская операция или касса
+        amount:
+          type: string
+          description: Decimal string; сумма выплаты сотруднику по документу
+        register:
+          type: string
+          description: Номер реестра; пусто — выплата не по реестру
+        recipient:
+          type: string
+          description: Кому ушли деньги, если не самому сотруднику; пусто — ему самому или получатель не указан
     FinancePayrollDocumentTypeKey:
       type: string
       enum:

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9bacaaf12d34af8eb76fbca3880fa019749c69ad8e994158633b8062acb7eeff).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4721eeb7d987e5e1b3d0d270eb4ae47c25ee5684b9b7ac49582bd5d8aafd6a74).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -544,6 +544,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeGetOperationDocumentLinks': OperationSpec('GET', '/api/v1/finance/operations/{id}/documents/{documentId}/links', 'finance', 'preview', 'finance.operations:read', False, True, ('documentId', 'id',), 'none', None, None),
     'financeGetPaymentCalendar': OperationSpec('GET', '/api/v1/finance/payment-calendar', 'finance', 'preview', 'finance.payment_calendar:read', False, True, (), 'none', None, None),
     'financeGetPayrollJournal': OperationSpec('GET', '/api/v1/finance/reports/payroll', 'finance', 'preview', 'finance.reports.payroll:read', False, True, (), 'none', None, None),
+    'financeGetPayrollPayments': OperationSpec('GET', '/api/v1/finance/reports/payroll/payments', 'finance', 'preview', 'finance.reports.payroll:read', False, True, (), 'none', None, None),
     'financeGetPeriodCloseChecks': OperationSpec('GET', '/api/v1/finance/period-checks', 'finance', 'preview', 'finance.period:read', False, True, (), 'none', None, None),
     'financeGetPnlLayout': OperationSpec('GET', '/api/v1/finance/pnl-layouts/{id}', 'finance', 'preview', 'finance.pnl_layouts:read', False, True, ('id',), 'none', None, None),
     'financeGetPnlReport': OperationSpec('GET', '/api/v1/finance/reports/pnl', 'finance', 'preview', 'finance.reports.pnl:read', False, True, (), 'none', None, None),

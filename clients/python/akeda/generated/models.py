@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9bacaaf12d34af8eb76fbca3880fa019749c69ad8e994158633b8062acb7eeff).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4721eeb7d987e5e1b3d0d270eb4ae47c25ee5684b9b7ac49582bd5d8aafd6a74).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -772,8 +772,10 @@ __all__ = [
     "FinancePayrollJournal",
     "FinancePayrollJournalRow",
     "FinancePayrollJournalTotals",
+    "FinancePayrollPayment",
     "FinancePayrollPaymentPayload",
     "FinancePayrollPaymentRow",
+    "FinancePayrollPayments",
     "FinancePeriodCheck",
     "FinancePeriodCheckPage",
     "FinancePnlCoverage",
@@ -7905,10 +7907,12 @@ class FinanceCashflowEntryCategorize(TypedDict, total=False):
 
     #: Идентификатор статьи ДДС; пустая строка снимает статью
     cashflow_item: str
-    #: Идентификатор ответственного; пустая строка снимает ответственного
+    #: Прежнее учётное физлицо зарплаты; пустая строка снимает его. Новое разнесение указывает человека в for_contact
     employee: str
-    #: Идентификатор собственника; пустая строка снимает собственника
+    #: Идентификатор контрагента; пустая строка снимает контрагента
     contact: str
+    #: «За кого»: контрагент сотрудника или собственника, чей расчёт гасит выдача. Пусто — как контрагент; не присланное поле остаётся как было
+    for_contact: Optional[str]
 
 FinanceCashflowEntryKind = Literal['bank', 'cash']
 
@@ -8945,6 +8949,19 @@ class FinancePayrollJournalTotals(TypedDict):
     #: Decimal string — берётся только с последней строки каждого сотрудника: сальдо накопительное
     debt: str
 
+class FinancePayrollPayment(TypedDict):
+    date: str
+    document_id: "UUID"
+    number: str
+    #: Банковская операция или касса
+    source: Literal['bank', 'cash']
+    #: Decimal string; сумма выплаты сотруднику по документу
+    amount: str
+    #: Номер реестра; пусто — выплата не по реестру
+    register: str
+    #: Кому ушли деньги, если не самому сотруднику; пусто — ему самому или получатель не указан
+    recipient: str
+
 class _FinancePayrollPaymentPayloadRequired(TypedDict):
     rows: List["FinancePayrollPaymentRow"]
 
@@ -8966,6 +8983,8 @@ class FinancePayrollPaymentRow(_FinancePayrollPaymentRowRequired, total=False):
     official: str
     #: Decimal string; неофициальная часть выплаты
     unofficial: str
+
+FinancePayrollPayments = TypedDict("FinancePayrollPayments", {"from": str, "to": str, "rows": List["FinancePayrollPayment"]}, total=False)
 
 class FinancePeriodCheck(TypedDict):
     key: str
@@ -9570,13 +9589,20 @@ class _FinanceTransactionRequired(TypedDict):
     updated_at: str
 
 class FinanceTransaction(_FinanceTransactionRequired, total=False):
-    #: Операционный ответственный, не участвующий в проводках
+    #: «За кого»: контрагент из папки «Сотрудники» или «Собственники», чей расчёт гасит платёж. Пусто — как контрагент: платили самому человеку
+    for_contact: Optional[str]
+    for_contact_name: Optional[str]
+    #: Сотрудник, связанный с контрагентом. У зарплаты пустое «За кого» при нём означает самого получателя
+    contact_employee: Optional[str]
+    #: Инициатор: кто завёл или согласовал платёж. В проводки не идёт; чей расчёт гасится, задаёт for_contact
     responsible: Optional[str]
     responsible_name: Optional[str]
 
 class FinanceTransactionCategorize(TypedDict, total=False):
     cashflow_item: Optional[str]
     contact: Optional[str]
+    #: «За кого»: чей расчёт гасит платёж. У зарплаты — контрагент из папки «Сотрудники», у расчётов с собственником — контрагент из состава владельцев на дату платежа. Пусто — как контрагент. Не присланное поле остаётся как было.
+    for_contact: Optional[str]
     order: Optional[str]
     project: Optional[str]
     #: Рекомендация внешнего расширения, которую человек принимает этим вызовом. Не второй способ назвать статью: статья берётся из самой рекомендации, а поле отвечает на другой вопрос — чей совет сработал. Названная в теле другая статья — отказ, а не тихая победа одного из двух значений. Рекомендация с чужой операции и уже решённая отвечают так же, как несуществующая.
@@ -14592,12 +14618,16 @@ class StockReceiptVATTermsInput(_StockReceiptVATTermsInputRequired, total=False)
 
 class StockReorderRule(TypedDict):
     id: "UUID"
-    company_id: "UUID"
+    business_id: "UUID"
+    business_name: str
+    #: null означает правило бизнеса без юрлица
+    company_id: Optional["UUID"]
+    #: Пустая строка у правила без юрлица
     company_name: str
     product_id: "UUID"
     product_sku: str
     product_name: str
-    #: null означает правило юрлица на все склады
+    #: null означает правило на все склады
     warehouse_id: Optional["UUID"]
     warehouse_name: str
     #: Decimal string неснижаемого остатка
@@ -14613,14 +14643,17 @@ class StockReorderRule(TypedDict):
     updated_at: str
 
 class _StockReorderRuleInputRequired(TypedDict):
-    company_id: "UUID"
     #: Складская номенклатура — отдельный товар или вариант; семейство вариантов и услуга не принимаются
     product_id: "UUID"
     #: Decimal string неотрицательного неснижаемого остатка
     min_qty: str
 
 class StockReorderRuleInput(_StockReorderRuleInputRequired, total=False):
-    #: Пропуск или null заводит правило юрлица на все склады
+    #: Бизнес правила; обязателен без company_id, с company_id выводится от юрлица и обязан с ним совпасть
+    business_id: Optional["UUID"]
+    #: Пропуск или null заводит правило бизнеса без юрлица
+    company_id: Optional["UUID"]
+    #: Пропуск или null заводит правило на все склады; правилу без юрлица годится только склад, не закреплённый за юрлицами
     warehouse_id: Optional["UUID"]
     #: Decimal string; не меньше min_qty
     max_qty: Optional[str]
@@ -14638,7 +14671,9 @@ class StockReorderRulePage(TypedDict):
     results: List["StockReorderRule"]
 
 class StockReorderRulePatch(TypedDict, total=False):
-    company_id: "UUID"
+    business_id: "UUID"
+    #: null переносит правило в бизнес без юрлица
+    company_id: Optional["UUID"]
     product_id: "UUID"
     warehouse_id: Optional["UUID"]
     #: Decimal string
@@ -15084,22 +15119,32 @@ class StockZoneAllocationInput(_StockZoneAllocationInputRequired, total=False):
     #: Пусто — бизнес-дата кабинета
     date: str
 
-class StockZoneAllocationLine(TypedDict):
-    company_id: "UUID"
+class _StockZoneAllocationLineRequired(TypedDict):
     product_id: "UUID"
     zone_id: "UUID"
     quantity: str
 
+class StockZoneAllocationLine(_StockZoneAllocationLineRequired, total=False):
+    """Клетка матрицы. Для остатка без юрлица business_id обязателен; для остатка юрлица сервер выводит бизнес из юрлица, если он не передан."""
+
+    business_id: "UUID"
+    #: Пусто или null — остаток без юрлица
+    company_id: Optional["UUID"]
+
 class StockZoneAllocationResult(TypedDict):
     warehouse: "StockWarehouse"
-    #: Проведённые перемещения — по одному на пару «юрлицо и зона»
+    #: Проведённые перемещения — по одному на сочетание «бизнес, юрлицо или его отсутствие, зона»
     documents: List["CoreDocument"]
     #: Остаток, который после разнесения всё ещё ждёт на складе
     remaining: List["StockZoneStockRow"]
 
 class StockZoneStockRow(TypedDict):
+    """Строка остатка склада или зоны. Ключ строки — бизнес и необязательное юрлицо; остаток без юрлица приходит отдельной строкой на каждый бизнес."""
+
     warehouse_id: "UUID"
-    company_id: "UUID"
+    business_id: "UUID"
+    #: null — остаток без юрлица
+    company_id: Optional["UUID"]
     product_id: "UUID"
     #: Точное decimal-количество строкой
     quantity: str
