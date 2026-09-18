@@ -67242,6 +67242,71 @@
         }
       }
     },
+    "/api/v1/docflow/messages/{id}/payment-details": {
+      "get": {
+        "tags": [
+          "Docflow intake"
+        ],
+        "operationId": "docflowPaymentDetails",
+        "x-akeda-audience": "external",
+        "summary": "Прочитать платёжные реквизиты входящего счёта",
+        "description": "Чем заполняется заявка на оплату по входящему счёту: получатель с его расчётным счётом, БИК и банком, плательщик, сумма, валюта, основание, предмет и налог. Метод НИЧЕГО НЕ МЕНЯЕТ — он разбирает файл, который уже лежит у нас на диске, — поэтому право docflow.edo:read. Право готовить заявку (finance.payment-requests:request) проверяет форма финансов и сама заявка при сохранении: показать реквизиты счёта тому, кто вправе видеть сам счёт, полномочием платить не является.\n\nОтдельный адрес, а не поле предпросмотра приёмки. Предпросмотр отвечает на вопрос «что мы заведём в учёт» и открывается у накладной, у которой платёжных реквизитов нет вовсе; оплату нажимают у счёта, у которого нет ни товарной таблицы в нашем смысле, ни приёмки — счёт формализованного титула не имеет и учётным документом не становится. Одним ответом они заставили бы каждую сторону платить за чужой разбор.\n\nКак разбирается. Если во вложениях есть формализованный титул ФНС — стороны, номер, дата и итог берутся из него и помечаются origin=auto: файл подписан. Банковских реквизитов в титуле нет и по приказу быть не может, поэтому они, а у счёта и всё остальное, читаются из ТЕКСТА основного вложения якорными правилами («ИНН», «КПП», «БИК», «Сч. №», «Счёт на оплату №», «Основание», «Итого», «Всего к оплате», «Без налога (НДС)») и помечаются origin=guess. ИНН проверяется контрольными цифрами, номер счёта — ключеванием по БИК. Ни одной нейросети и ни одного обращения к внешнему справочнику: разбор детерминированный и локальный.\n\nНичего не выдумывается. Поле, которого в бумаге не нашлось, приходит пустым с origin=none, а признак parsed остаётся ложью, когда читать было нечего: скан без текстового слоя, неформализованное письмо, выключенный обработчик текста. Отказом это не является — форма тогда открывается тем же, чем открывалась раньше.\n\nЮрлицо-плательщик (company) ищется по ИНН покупателя из счёта среди юрлиц кабинета: нашлось — origin=auto, потому что ошибиться негде. Берётся именно покупатель бумаги, а не юрлицо подключения: в кабинете с несколькими организациями счёт выставляют конкретной.\n\nОтказ 409 с кодом docflow.edo.intake_incoming_only — реквизиты отдаёт только ВХОДЯЩИЙ пакет: оплачивают то, что выставили нам.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.edo:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Входящий пакет со счётом на оплату",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Платёжные реквизиты вместе с происхождением каждого поля",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocflowPaymentDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/v1/docflow/flow/references": {
       "get": {
         "tags": [
@@ -124869,6 +124934,161 @@
               "$ref": "#/components/schemas/DocflowIssue"
             },
             "description": "Что мешает принять. Тот же тип и тот же порядок, что у предполётной проверки исходящего документа: интерфейс переводит их одним словарём"
+          }
+        }
+      },
+      "DocflowPaymentField": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Значение вместе с тем, откуда оно взялось. Пара, а не голая строка: без происхождения форма не может поставить пометку «проверьте» там, где она нужна, и вынуждена либо не показывать её вовсе, либо ставить у всех полей — в обоих случаях пометка перестаёт работать.",
+        "required": [
+          "value",
+          "origin"
+        ],
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Прочитанное значение; пустая строка означает «не нашлось»"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "guess",
+              "none"
+            ],
+            "description": "auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое."
+          }
+        }
+      },
+      "DocflowPaymentParty": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Реквизиты одной стороны платежа.",
+        "required": [
+          "name",
+          "inn",
+          "kpp",
+          "account",
+          "bic",
+          "bank_name",
+          "corr_account"
+        ],
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "inn": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "kpp": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "account": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "bic": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "bank_name": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "corr_account": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          }
+        }
+      },
+      "DocflowPaymentDetails": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Платёжные реквизиты входящего счёта. Назначение платежа здесь НЕ собрано: строка «оплата по счёту такому-то за то-то» — текст на языке человека, и складывает её интерфейс из частей, которые приезжают ниже отдельно (номер, дата, основание, предмет, налог).",
+        "required": [
+          "message",
+          "source",
+          "parsed",
+          "document",
+          "payee",
+          "payer",
+          "company",
+          "company_name",
+          "amount",
+          "currency",
+          "due_date",
+          "number",
+          "date",
+          "basis",
+          "subject",
+          "vat_amount",
+          "vat_without"
+        ],
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "title",
+              "text",
+              "none"
+            ],
+            "description": "Чем прочитан счёт: title — формализованный титул ФНС, text — текст вложения, none — читать было нечего."
+          },
+          "parsed": {
+            "type": "boolean",
+            "description": "Вышло ли из документа хоть одно поле. Ложь означает, что форма открывается тем же, чем открывалась раньше"
+          },
+          "document": {
+            "type": "string",
+            "description": "Имя вложения, из которого всё прочитано, словами оператора: по нему человек откроет ту же бумагу и сверит"
+          },
+          "payee": {
+            "$ref": "#/components/schemas/DocflowPaymentParty"
+          },
+          "payer": {
+            "$ref": "#/components/schemas/DocflowPaymentParty"
+          },
+          "company": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Юрлицо кабинета, найденное по ИНН плательщика из счёта; null — такого юрлица в кабинете нет, и выбирает человек"
+          },
+          "company_name": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "amount": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "due_date": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "number": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "basis": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "vat_amount": {
+            "$ref": "#/components/schemas/DocflowPaymentField"
+          },
+          "vat_without": {
+            "type": "boolean",
+            "description": "В счёте стояла отметка «без налога (НДС)». Пустая сумма при снятой отметке означает «про налог не сказано», а не «налога нет»"
           }
         }
       },

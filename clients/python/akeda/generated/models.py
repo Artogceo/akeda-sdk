@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 44b04d661a5eba3e76dec981600dd7748d2296464c91113af547463c6078cd82).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 572ea6f9912f3669e4fde0f563c911eaf420217e163124abfeb68dc3a5954326).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -640,7 +640,10 @@ __all__ = [
     "DocflowOutgoingInput",
     "DocflowPaperPoARequisites",
     "DocflowPartyRequisites",
+    "DocflowPaymentDetails",
     "DocflowPaymentDocumentRequisites",
+    "DocflowPaymentField",
+    "DocflowPaymentParty",
     "DocflowPersonRequisites",
     "DocflowPreflight",
     "DocflowPreflightDocument",
@@ -7505,12 +7508,57 @@ class DocflowPartyRequisites(TypedDict, total=False):
     bank: "DocflowBankRequisites"
     contact: "DocflowContactRequisites"
 
+class DocflowPaymentDetails(TypedDict):
+    """Платёжные реквизиты входящего счёта. Назначение платежа здесь НЕ собрано: строка «оплата по счёту такому-то за то-то» — текст на языке человека, и складывает её интерфейс из частей, которые приезжают ниже отдельно (номер, дата, основание, предмет, налог)."""
+
+    message: "UUID"
+    #: Чем прочитан счёт: title — формализованный титул ФНС, text — текст вложения, none — читать было нечего.
+    source: Literal['title', 'text', 'none']
+    #: Вышло ли из документа хоть одно поле. Ложь означает, что форма открывается тем же, чем открывалась раньше
+    parsed: bool
+    #: Имя вложения, из которого всё прочитано, словами оператора: по нему человек откроет ту же бумагу и сверит
+    document: str
+    payee: "DocflowPaymentParty"
+    payer: "DocflowPaymentParty"
+    #: Юрлицо кабинета, найденное по ИНН плательщика из счёта; null — такого юрлица в кабинете нет, и выбирает человек
+    company: Optional["UUID"]
+    company_name: "DocflowPaymentField"
+    amount: "DocflowPaymentField"
+    currency: "DocflowPaymentField"
+    due_date: "DocflowPaymentField"
+    number: "DocflowPaymentField"
+    date: "DocflowPaymentField"
+    basis: "DocflowPaymentField"
+    subject: "DocflowPaymentField"
+    vat_amount: "DocflowPaymentField"
+    #: В счёте стояла отметка «без налога (НДС)». Пустая сумма при снятой отметке означает «про налог не сказано», а не «налога нет»
+    vat_without: bool
+
 class DocflowPaymentDocumentRequisites(TypedDict, total=False):
     """СвПРД: платёжно-расчётный документ."""
 
     number: str
     date: str
     amount: str
+
+class DocflowPaymentField(TypedDict):
+    """Значение вместе с тем, откуда оно взялось. Пара, а не голая строка: без происхождения форма не может поставить пометку «проверьте» там, где она нужна, и вынуждена либо не показывать её вовсе, либо ставить у всех полей — в обоих случаях пометка перестаёт работать."""
+
+    #: Прочитанное значение; пустая строка означает «не нашлось»
+    value: str
+    #: auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое.
+    origin: Literal['auto', 'guess', 'none']
+
+class DocflowPaymentParty(TypedDict):
+    """Реквизиты одной стороны платежа."""
+
+    name: "DocflowPaymentField"
+    inn: "DocflowPaymentField"
+    kpp: "DocflowPaymentField"
+    account: "DocflowPaymentField"
+    bic: "DocflowPaymentField"
+    bank_name: "DocflowPaymentField"
+    corr_account: "DocflowPaymentField"
 
 class DocflowPersonRequisites(TypedDict, total=False):
     """ФИО предпринимателя или физического лица. Спрашивается, потому что в карточке контрагента имя лежит ОДНОЙ строкой («ИП Иванов Иван Иванович»), а формат требует фамилию, имя и отчество порознь. Разобрать строку догадкой нельзя: «Ли Ван Чуань» и «Иванов Иван» ломают любое правило, а ошибка в ФИО подписанта — это недействительный счёт-фактура."""

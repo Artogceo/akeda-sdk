@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 44b04d661a5eba3e76dec981600dd7748d2296464c91113af547463c6078cd82).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 572ea6f9912f3669e4fde0f563c911eaf420217e163124abfeb68dc3a5954326).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -481,6 +481,7 @@ var Operations = map[string]Operation{
 	"docflowListMessages":                        {ID: "docflowListMessages", Method: "GET", Path: "/api/v1/docflow/messages", Module: "docflow", Stage: "preview", Permission: "docflow.edo:read", Idempotent: false, Installation: false, PathParams: nil, Pagination: "limit_offset", PageSizeMax: 200, PageSizeDefault: 50},
 	"docflowListSigningTasks":                    {ID: "docflowListSigningTasks", Method: "GET", Path: "/api/v1/docflow/edo/signing/tasks", Module: "docflow", Stage: "preview", Permission: "docflow.edo:sign", Idempotent: false, Installation: false, PathParams: nil, Pagination: "limit_offset", PageSizeMax: 50, PageSizeDefault: 20},
 	"docflowListTitles":                          {ID: "docflowListTitles", Method: "GET", Path: "/api/v1/docflow/outgoing", Module: "docflow", Stage: "preview", Permission: "docflow.edo:read", Idempotent: false, Installation: false, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
+	"docflowPaymentDetails":                      {ID: "docflowPaymentDetails", Method: "GET", Path: "/api/v1/docflow/messages/{id}/payment-details", Module: "docflow", Stage: "preview", Permission: "docflow.edo:read", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"docflowPostponeStage":                       {ID: "docflowPostponeStage", Method: "POST", Path: "/api/v1/docflow/messages/{id}/stages/postpone", Module: "docflow", Stage: "preview", Permission: "docflow.edo:write", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"docflowPreflightBuyerTitle":                 {ID: "docflowPreflightBuyerTitle", Method: "POST", Path: "/api/v1/docflow/messages/{id}/buyer-title/preflight", Module: "docflow", Stage: "preview", Permission: "docflow.edo:write", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"docflowPreflightOutgoing":                   {ID: "docflowPreflightOutgoing", Method: "POST", Path: "/api/v1/docflow/outgoing/preflight", Module: "docflow", Stage: "preview", Permission: "docflow.edo:write", Idempotent: false, Installation: false, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},

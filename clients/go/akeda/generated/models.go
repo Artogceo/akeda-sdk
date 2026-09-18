@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 44b04d661a5eba3e76dec981600dd7748d2296464c91113af547463c6078cd82).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 572ea6f9912f3669e4fde0f563c911eaf420217e163124abfeb68dc3a5954326).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -6119,11 +6119,56 @@ type DocflowPartyRequisites struct {
 	Contact *DocflowContactRequisites `json:"contact,omitempty"`
 }
 
+// DocflowPaymentDetails — Платёжные реквизиты входящего счёта. Назначение платежа здесь НЕ собрано: строка «оплата по счёту такому-то за то-то» — текст на языке человека, и складывает её интерфейс из частей, которые приезжают ниже отдельно (номер, дата, основание, предмет, налог).
+type DocflowPaymentDetails struct {
+	Message UUID `json:"message"`
+	// Source — Чем прочитан счёт: title — формализованный титул ФНС, text — текст вложения, none — читать было нечего.
+	Source string `json:"source"`
+	// Parsed — Вышло ли из документа хоть одно поле. Ложь означает, что форма открывается тем же, чем открывалась раньше
+	Parsed bool `json:"parsed"`
+	// Document — Имя вложения, из которого всё прочитано, словами оператора: по нему человек откроет ту же бумагу и сверит
+	Document string              `json:"document"`
+	Payee    DocflowPaymentParty `json:"payee"`
+	Payer    DocflowPaymentParty `json:"payer"`
+	// Company — Юрлицо кабинета, найденное по ИНН плательщика из счёта; null — такого юрлица в кабинете нет, и выбирает человек
+	Company     *UUID               `json:"company"`
+	CompanyName DocflowPaymentField `json:"company_name"`
+	Amount      DocflowPaymentField `json:"amount"`
+	Currency    DocflowPaymentField `json:"currency"`
+	DueDate     DocflowPaymentField `json:"due_date"`
+	Number      DocflowPaymentField `json:"number"`
+	Date        DocflowPaymentField `json:"date"`
+	Basis       DocflowPaymentField `json:"basis"`
+	Subject     DocflowPaymentField `json:"subject"`
+	VATAmount   DocflowPaymentField `json:"vat_amount"`
+	// VATWithout — В счёте стояла отметка «без налога (НДС)». Пустая сумма при снятой отметке означает «про налог не сказано», а не «налога нет»
+	VATWithout bool `json:"vat_without"`
+}
+
 // DocflowPaymentDocumentRequisites — СвПРД: платёжно-расчётный документ.
 type DocflowPaymentDocumentRequisites struct {
 	Number *string `json:"number,omitempty"`
 	Date   *string `json:"date,omitempty"`
 	Amount *string `json:"amount,omitempty"`
+}
+
+// DocflowPaymentField — Значение вместе с тем, откуда оно взялось. Пара, а не голая строка: без происхождения форма не может поставить пометку «проверьте» там, где она нужна, и вынуждена либо не показывать её вовсе, либо ставить у всех полей — в обоих случаях пометка перестаёт работать.
+type DocflowPaymentField struct {
+	// Value — Прочитанное значение; пустая строка означает «не нашлось»
+	Value string `json:"value"`
+	// Origin — auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое.
+	Origin string `json:"origin"`
+}
+
+// DocflowPaymentParty — Реквизиты одной стороны платежа.
+type DocflowPaymentParty struct {
+	Name        DocflowPaymentField `json:"name"`
+	INN         DocflowPaymentField `json:"inn"`
+	KPP         DocflowPaymentField `json:"kpp"`
+	Account     DocflowPaymentField `json:"account"`
+	BIC         DocflowPaymentField `json:"bic"`
+	BankName    DocflowPaymentField `json:"bank_name"`
+	CorrAccount DocflowPaymentField `json:"corr_account"`
 }
 
 // DocflowPersonRequisites — ФИО предпринимателя или физического лица. Спрашивается, потому что в карточке контрагента имя лежит ОДНОЙ строкой («ИП Иванов Иван Иванович»), а формат требует фамилию, имя и отчество порознь. Разобрать строку догадкой нельзя: «Ли Ван Чуань» и «Иванов Иван» ломают любое правило, а ошибка в ФИО подписанта — это недействительный счёт-фактура.

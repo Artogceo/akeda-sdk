@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 44b04d661a5eba3e76dec981600dd7748d2296464c91113af547463c6078cd82).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 572ea6f9912f3669e4fde0f563c911eaf420217e163124abfeb68dc3a5954326).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -482,6 +482,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowListMessages': OperationSpec('GET', '/api/v1/docflow/messages', 'docflow', 'preview', 'docflow.edo:read', False, False, (), 'limit_offset', 200, 50),
     'docflowListSigningTasks': OperationSpec('GET', '/api/v1/docflow/edo/signing/tasks', 'docflow', 'preview', 'docflow.edo:sign', False, False, (), 'limit_offset', 50, 20),
     'docflowListTitles': OperationSpec('GET', '/api/v1/docflow/outgoing', 'docflow', 'preview', 'docflow.edo:read', False, False, (), 'none', None, None),
+    'docflowPaymentDetails': OperationSpec('GET', '/api/v1/docflow/messages/{id}/payment-details', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
     'docflowPostponeStage': OperationSpec('POST', '/api/v1/docflow/messages/{id}/stages/postpone', 'docflow', 'preview', 'docflow.edo:write', False, False, ('id',), 'none', None, None),
     'docflowPreflightBuyerTitle': OperationSpec('POST', '/api/v1/docflow/messages/{id}/buyer-title/preflight', 'docflow', 'preview', 'docflow.edo:write', False, False, ('id',), 'none', None, None),
     'docflowPreflightOutgoing': OperationSpec('POST', '/api/v1/docflow/outgoing/preflight', 'docflow', 'preview', 'docflow.edo:write', False, False, (), 'none', None, None),
