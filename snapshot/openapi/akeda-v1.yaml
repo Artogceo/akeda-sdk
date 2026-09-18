@@ -228,6 +228,8 @@ tags:
     description: Модуль crm — заявки, квалификация и перевод в сделку
   - name: CRM customers
     description: Модуль crm — собственная база клиентов и перенос в справочник контрагентов ERP
+  - name: CRM import
+    description: Модуль crm — перенос клиентов, лидов и сделок из чужих CRM и файлов
   - name: CRM inbox
     description: Модуль crm — каналы, диалоги, переписка и шаблоны ответов
   - name: CRM automation
@@ -1175,7 +1177,7 @@ paths:
         - Tasks
       operationId: tasksArchiveSection
       summary: Архивировать проект задач
-      description: Если внутри остались задачи, передайте другой проект в `target_section`.
+      description: Задачи раздела уезжают в системный раздел «Входящие» того же проекта; меняется только раздел, перенос каждой задачи виден в её истории. Поле `target_section` прежних клиентов игнорируется. Системный раздел (`system_code` = `inbox`) удалить нельзя — ответ 400.
       x-akeda-module: tasks
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -15077,7 +15079,7 @@ paths:
         - Finance connectors
       operationId: financeUpdateConnector
       summary: Изменить подключение или его состояние
-      description: Пустой credential не стирает сохранённый секрет; явный null у company отвязывает юрлицо. Удаления нет — используется статус disconnected.
+      description: Пустой credential не стирает сохранённый секрет; явный null у company отвязывает юрлицо. Статус disconnected отключает подключение, сохраняя историю.
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -15116,6 +15118,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FinanceCompanyMatchError'
+    delete:
+      tags:
+        - Finance connectors
+      operationId: financeDeleteConnector
+      summary: Удалить брошенную попытку подключения
+      description: |
+        Удаляется ТОЛЬКО подключение без истории: банк не отдал по нему ни одного
+        счёта и ни разу не запускалась синхронизация (признак can_delete в карточке).
+        Всё остальное — след происхождения операций выписки, и обе связи каскадные,
+        поэтому такое подключение отключают статусом disconnected, а не удаляют;
+        попытка удаления возвращает 409.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.connectors:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Подключение удалено
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/finance/connectors/{id}/mtls:
     put:
       tags:
@@ -21749,6 +21792,716 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/v1/crm/import-fields:
+    get:
+      tags:
+        - CRM import
+      operationId: crmImportFields
+      summary: Поля листов универсального файла импорта
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Виды листов и их поля
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportFields'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/crm/imports:
+    get:
+      tags:
+        - CRM import
+      operationId: crmListImports
+      summary: Список запусков импорта
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Запуски импорта, новые первыми
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CRMImportRun'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - CRM import
+      operationId: crmCreateImport
+      summary: Создать запуск импорта
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMImportRunInput'
+      responses:
+        '201':
+          description: Запуск в статусе draft
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportRun'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/crm/imports/{id}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    get:
+      tags:
+        - CRM import
+      operationId: crmGetImport
+      summary: Получить запуск импорта
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      responses:
+        '200':
+          description: Запуск импорта с прогрессом
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportRun'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/crm/imports/{id}/file:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    post:
+      tags:
+        - CRM import
+      operationId: crmUploadImportFile
+      summary: Загрузить файл импорта
+      description: XLSX, XLS, ODS или CSV до 25 МБ. Файл хранится только до конца запуска.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FileUpload'
+      responses:
+        '200':
+          description: Листы файла с первыми строками
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportFileInfo'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/BadRequest'
+  /api/v1/crm/imports/{id}/inspect:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    post:
+      tags:
+        - CRM import
+      operationId: crmInspectImportSheet
+      summary: Показать колонки листа
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMImportInspectInput'
+      responses:
+        '200':
+          description: Колонки листа, образцы строк и подсказка полей
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportSheetInfo'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/crm/imports/{id}/extract:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    post:
+      tags:
+        - CRM import
+      operationId: crmExtractImport
+      summary: Собрать пакет из листов файла
+      description: Собрать пакет можно один раз; другое сопоставление листов - новый запуск.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMImportExtractInput'
+      responses:
+        '200':
+          description: Итог сборки и проблемы строк
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportExtractResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/crm/imports/{id}/connect:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    post:
+      tags:
+        - CRM import
+      operationId: crmConnectImport
+      summary: Подключить запуск к аккаунту amoCRM или порталу Битрикс24
+      description: Проверяет ключ доступа запросом к источнику, хранит его зашифрованным до завершения запуска и ставит извлечение в фон. Ключ в ответах не возвращается. Для Битрикс24 нужен входящий вебхук администратора облачного портала.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMImportConnectInput'
+      responses:
+        '200':
+          description: Запуск в извлечении
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportRun'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '502':
+          description: Источник не ответил
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/crm/imports/{id}/pipelines:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    post:
+      tags:
+        - CRM import
+      operationId: crmCreateImportPipelines
+      summary: Создать воронки как в источнике
+      description: Заводит воронки и этапы источника в кабинете; уже заведённые прошлым запуском находятся по внешним ссылкам и не повторяются.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      responses:
+        '200':
+          description: Варианты сопоставления с подставленными этапами
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/crm/imports/{id}/options:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    get:
+      tags:
+        - CRM import
+      operationId: crmImportOptions
+      summary: Справочники для сопоставления импорта
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      responses:
+        '200':
+          description: Значения пакета, справочники кабинета и предложенное сопоставление
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportOptions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/crm/imports/{id}/mapping:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    put:
+      tags:
+        - CRM import
+      operationId: crmSaveImportMapping
+      summary: Сохранить сопоставление импорта
+      description: Пишется при совпадении ревизии; сбрасывает предпросмотр.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMImportMappingInput'
+      responses:
+        '200':
+          description: Запуск с новой ревизией
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportRun'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/crm/imports/{id}/preview:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    post:
+      tags:
+        - CRM import
+      operationId: crmPreviewImport
+      summary: Проверить импорт перед переносом
+      description: 'Ищет дубли: единственное сильное совпадение связывается само, спорные уходят в очередь решений. Возвращает токен для переноса.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMImportRevisionInput'
+      responses:
+        '200':
+          description: Счётчики и токен предпросмотра
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportPreview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/crm/imports/{id}/records:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    get:
+      tags:
+        - CRM import
+      operationId: crmListImportRecords
+      summary: Записи пакета импорта
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - pending
+              - skipped
+              - conflict
+              - applied
+              - failed
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Записи в порядке переноса
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CRMImportRecord'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/crm/imports/{id}/records/{recordId}/decision:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+      - name: recordId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    put:
+      tags:
+        - CRM import
+      operationId: crmDecideImportRecord
+      summary: Решить, что делать с записью импорта
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMImportDecisionInput'
+      responses:
+        '200':
+          description: Запись с решением
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportRecord'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/crm/imports/{id}/apply:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    post:
+      tags:
+        - CRM import
+      operationId: crmApplyImport
+      summary: Запустить перенос импорта
+      description: Перенос идёт в фоне порциями; повторный вызов второго переноса не запускает.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMImportApplyInput'
+      responses:
+        '202':
+          description: Запуск в статусе applying
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportRun'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/crm/imports/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    post:
+      tags:
+        - CRM import
+      operationId: crmCancelImport
+      summary: Отменить запуск импорта
+      description: Идущий перенос останавливается перед следующей порцией.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      responses:
+        '200':
+          description: Запуск после отмены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportRun'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/crm/imports/{id}/rollback:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    post:
+      tags:
+        - CRM import
+      operationId: crmRollbackImport
+      summary: Отменить загрузку импорта
+      description: Удаляет созданное запуском, пока с ним не работали; тронутое архивирует и возвращает списком.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      responses:
+        '200':
+          description: Итог отмены загрузки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMImportRollback'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/crm/imports/{id}/report:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    get:
+      tags:
+        - CRM import
+      operationId: crmImportReport
+      summary: Отчёт импорта в XLSX
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      responses:
+        '200':
+          description: Непереносённые записи и предупреждения
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+            Cache-Control:
+              schema:
+                type: string
+                const: private, no-store
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/crm/members:
     get:
       tags:
@@ -40183,7 +40936,7 @@ paths:
 
         Сопоставление номенклатуры — ДОГАДКА, и она помечена: поле match у строки отвечает, откуда взялся товар. Записанное решение и наша догадка прямо сейчас выглядят на экране одинаково — одна строка с названием товара, — а значат противоположное: первое трогать нельзя, второе нужно подтвердить.
 
-        Признак ready означает «принимается прямо сейчас, без правок». Всё, что мешает, приходит списком issues кодом 200, а не отказом: человек обязан увидеть сразу всё, что ему чинить, а не по одной причине за попытку.
+        Признак ready означает «принимается прямо сейчас, без правок». Всё, что мешает, приходит списком issues кодом 200, а не отказом: человек обязан увидеть сразу всё, что ему чинить, а не по одной причине за попытку. Неподписанный документ приходит в этом же списке строкой docflow.edo.sign_first — отказом то же правило отвечает только на подтверждении приёмки.
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -40231,7 +40984,7 @@ paths:
 
         Решение обязано прийти по КАЖДОЙ строке: либо товар, либо отметка skip «не брать». Собственной догадкой подтверждение не пользуется вовсе — номенклатура берётся только из записанного соответствия или из присланного решения, а строка, по которой нет ни того, ни другого, отвечает проверкой docflow.edo.product_required с её номером. Иначе неверная догадка молча стала бы неверной себестоимостью, неверным остатком и неверным долгом.
 
-        Отказы 409. docflow.edo.already_accepted — по пакету уже заведён живой учётный документ, и второй означал бы задвоенный приход и задвоенный долг перед поставщиком; пакет с ПОМЕЧЕННЫМ на удаление документом принимается заново, потому что пометка и есть способ сказать «этот документ ошибочный». docflow.edo.intake_incoming_only — к учёту принимается входящий документ, а исходящий мы собрали из своего же учётного, и принять его обратно значит завести копию того же факта.
+        Отказы 409. docflow.edo.already_accepted — по пакету уже заведён живой учётный документ, и второй означал бы задвоенный приход и задвоенный долг перед поставщиком; пакет с ПОМЕЧЕННЫМ на удаление документом принимается заново, потому что пометка и есть способ сказать «этот документ ошибочный». docflow.edo.intake_incoming_only — к учёту принимается входящий документ, а исходящий мы собрали из своего же учётного, и принять его обратно значит завести копию того же факта. docflow.edo.sign_first — В УЧЁТ НЕЛЬЗЯ, ПОКА НЕ ПОДПИСАЛ: у пакета открыт этап, который закрывается нашей подписью под самим документом (sign_required). Принятый до подписи документ заводит приход и долг по бумаге, юридическую судьбу которой мы ещё не решили, — отказаться от неё после этого можно уже только сторно. СЛУЖЕБНЫЙ подписной этап (notice_sign_required — извещение, квитанция) приёмку не держит: он подтверждает технологию обмена, а не содержание документа.
 
         Отказ 422 с кодом docflow.formats.invalid несёт поле issues — тот же список непройденных проверок, что у предполётной проверки исходящего, и целиком. Свои коды приёмки: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась, а подставить «сегодня» за чужой документ нельзя), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке не сопоставлена номенклатура).
 
@@ -41554,6 +42307,49 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/schedule-preview:
+    post:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowPreviewPaymentSchedule
+      x-akeda-audience: external
+      summary: Раскрыть правило графика оплат в строки
+      description: |-
+        Показывает, какие платежи даст правило payment_rule при сумме и валюте из тела, ничего не записывая. Из тела читаются только currency, amount и payment_rule; строки товаров и этапы, если присланы, не проверяются. Документа может ещё не быть: экран зовёт предпросмотр до первого сохранения черновика.
+
+        Ответ — та же коммерческая часть с заполненным payments; те же строки сервер положит в снимок при сохранении. Правило без единой даты, больше ста платежей или с суммой платежа, не оставляющей остатка последнему, отвечает отказом.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowFlowCommercial'
+      responses:
+        '200':
+          description: Коммерческая часть с раскрытым графиком
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowCommercial'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/docflow/flow/documents/{id}/accrual-plan:
@@ -44023,12 +44819,16 @@ components:
     TaskCreate:
       type: object
       additionalProperties: false
+      description: 'Нужен `section` или `project`: задача без раздела попадает в системный раздел «Входящие» указанного проекта.'
       required:
-        - section
         - title
       properties:
         section:
           $ref: '#/components/schemas/UUID'
+        project:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Проект задач для задачи без раздела; при заданном `section` не читается.
         title:
           type: string
           minLength: 1
@@ -44778,6 +45578,11 @@ components:
         tasks_overdue:
           type: integer
           minimum: 0
+        system_code:
+          type: string
+          enum:
+            - inbox
+          description: 'Код системного раздела. `inbox` — «Входящие» проекта: удалить и перенести в другой проект нельзя, переименовать можно. У раздела клиента поле отсутствует.'
         members_count:
           type: integer
           minimum: 0
@@ -56390,6 +57195,7 @@ components:
         - last_error_code
         - accounts_total
         - accounts_linked
+        - can_delete
         - created_at
         - updated_at
       properties:
@@ -56455,7 +57261,7 @@ components:
         last_error:
           type: string
           maxLength: 601
-          description: 'The provider''s own words and nothing else — what the cabinet user can act on ("consent expired", "certificate revoked"). Empty when the failure was ours: an internal cause never reaches this field, it is logged and named by last_error_code instead.'
+          description: 'The provider''s technical reply, verbatim — material for an investigation, not a message for the cabinet screen: it may carry machine keys such as "invalid_client". The portal operator reads it in full on the bank connectors page, while the cabinet card renders last_error_code instead. Empty when the failure was ours: an internal cause never reaches this field, it is logged and named by last_error_code instead.'
         last_error_code:
           type: string
           description: 'Machine code of the last failure, translated by the client. Present because the text is stored: it is written in whatever locale the background sync happened to run in, and only a finite code can be rendered in the reader''s language.'
@@ -56472,6 +57278,9 @@ components:
         accounts_linked:
           type: integer
           minimum: 0
+        can_delete:
+          type: boolean
+          description: 'True only for an abandoned connection attempt: no accounts returned by the bank and no sync run at all. Everything else is the origin trail of the imported operations and is never deleted — both links cascade — so such a connection is disconnected instead.'
         created_at:
           type: string
           format: date-time
@@ -59093,6 +59902,17 @@ components:
         overdue:
           type: boolean
         document_id:
+          $ref: '#/components/schemas/UUID'
+        operation_id:
+          $ref: '#/components/schemas/UUID'
+        operation_kind:
+          type: string
+          enum:
+            - sale
+            - purchase
+        operation_version:
+          type: integer
+        contract_id:
           $ref: '#/components/schemas/UUID'
         fact:
           $ref: '#/components/schemas/FinancePaymentFact'
@@ -61908,6 +62728,697 @@ components:
         position:
           type: string
           description: Должность человека в компании
+    CRMImportRunInput:
+      type: object
+      additionalProperties: false
+      required:
+        - source_kind
+        - source_system
+      properties:
+        source_kind:
+          type: string
+          enum:
+            - file
+            - api
+        source_system:
+          type: string
+          minLength: 1
+          description: 'Система-источник: excel, amocrm, bitrix24'
+        source_account:
+          type: string
+          description: 'Аккаунт в системе: поддомен amoCRM, портал Битрикс24'
+        scope:
+          type: object
+          additionalProperties: true
+        batch_size:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          default: 200
+    CRMImportRun:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - source_kind
+        - source_system
+        - source_account
+        - status
+        - scope
+        - mapping
+        - revision
+        - batch_size
+        - total_records
+        - applied_records
+        - skipped_records
+        - conflict_records
+        - failed_records
+        - has_credentials
+        - error
+        - created_by
+        - created_at
+        - updated_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        source_kind:
+          type: string
+          enum:
+            - file
+            - api
+        source_system:
+          type: string
+        source_account:
+          type: string
+        status:
+          type: string
+          enum:
+            - draft
+            - extracting
+            - extracted
+            - mapped
+            - previewed
+            - applying
+            - applied
+            - failed
+            - cancelled
+        scope:
+          type: object
+          additionalProperties: true
+        mapping:
+          type: object
+          additionalProperties: true
+        revision:
+          type: integer
+        preview_token:
+          type: string
+        batch_size:
+          type: integer
+        total_records:
+          type: integer
+        applied_records:
+          type: integer
+        skipped_records:
+          type: integer
+        conflict_records:
+          type: integer
+        failed_records:
+          type: integer
+        has_credentials:
+          type: boolean
+          description: Токен источника сохранён; сам токен API не отдаёт
+        error:
+          type: string
+        cancel_requested_at:
+          type: string
+          format: date-time
+        started_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+        rolled_back_at:
+          type: string
+          format: date-time
+        created_by:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CRMImportField:
+      type: object
+      additionalProperties: false
+      required:
+        - key
+        - required
+      properties:
+        key:
+          type: string
+        required:
+          type: boolean
+    CRMImportFields:
+      type: object
+      additionalProperties: false
+      required:
+        - entities
+      properties:
+        entities:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/CRMImportField'
+          description: 'Вид листа -> поля: companies, contacts, leads, deals, tasks, notes'
+    CRMImportSheetInfo:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - rows
+        - header_row
+        - headers
+        - sample
+      properties:
+        name:
+          type: string
+        rows:
+          type: integer
+        header_row:
+          type: integer
+        headers:
+          type: array
+          items:
+            type: string
+        sample:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+        suggested:
+          type: object
+          additionalProperties:
+            type: string
+          description: Заголовок -> предложенное поле
+    CRMImportFileInfo:
+      type: object
+      additionalProperties: false
+      required:
+        - filename
+        - format
+        - sheets
+        - warnings
+      properties:
+        filename:
+          type: string
+        format:
+          type: string
+        sheets:
+          type: array
+          items:
+            $ref: '#/components/schemas/CRMImportSheetInfo'
+        warnings:
+          type: integer
+          description: Сколько ячеек с формулами прочитано по сохранённому значению
+    CRMImportInspectInput:
+      type: object
+      additionalProperties: false
+      required:
+        - sheet
+      properties:
+        sheet:
+          type: string
+        header_row:
+          type: integer
+          minimum: 1
+          default: 1
+        entity:
+          type: string
+          enum:
+            - companies
+            - contacts
+            - leads
+            - deals
+            - tasks
+            - notes
+    CRMImportSheetMapping:
+      type: object
+      additionalProperties: false
+      required:
+        - sheet
+        - header_row
+        - entity
+        - columns
+      properties:
+        sheet:
+          type: string
+        header_row:
+          type: integer
+          minimum: 1
+        entity:
+          type: string
+          enum:
+            - companies
+            - contacts
+            - leads
+            - deals
+            - tasks
+            - notes
+        columns:
+          type: object
+          additionalProperties:
+            type: string
+          description: Заголовок колонки -> поле
+    CRMImportExtractInput:
+      type: object
+      additionalProperties: false
+      required:
+        - sheets
+      properties:
+        sheets:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CRMImportSheetMapping'
+    CRMImportRowIssue:
+      type: object
+      additionalProperties: false
+      required:
+        - sheet
+        - row
+        - message
+      properties:
+        sheet:
+          type: string
+        row:
+          type: integer
+        message:
+          type: string
+    CRMImportExtractResult:
+      type: object
+      additionalProperties: false
+      required:
+        - run
+        - added
+        - records
+        - issues
+      properties:
+        run:
+          $ref: '#/components/schemas/CRMImportRun'
+        added:
+          type: integer
+        records:
+          type: integer
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/CRMImportRowIssue'
+    CRMImportValue:
+      type: object
+      additionalProperties: false
+      required:
+        - value
+        - count
+      properties:
+        value:
+          type: string
+        count:
+          type: integer
+        label:
+          type: string
+          description: Название значения в источнике-коннекторе (сотрудник, этап, причина)
+        email:
+          type: string
+          description: Почта сотрудника источника
+    CRMImportMapping:
+      type: object
+      additionalProperties: false
+      properties:
+        owners:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        pipelines:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/UUID'
+        stages:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/UUID'
+        loss_reasons:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/UUID'
+        sources:
+          type: object
+          additionalProperties:
+            type: string
+        default_pipeline:
+          $ref: '#/components/schemas/UUID'
+        default_stage:
+          $ref: '#/components/schemas/UUID'
+        default_loss_reason:
+          $ref: '#/components/schemas/UUID'
+        default_currency:
+          type: string
+    CRMImportOptions:
+      type: object
+      additionalProperties: false
+      required:
+        - values
+        - members
+        - pipelines
+        - lead_sources
+        - loss_reasons
+        - source_pipelines
+        - suggested
+      properties:
+        values:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/CRMImportValue'
+          description: owners, stages, sources, currencies, loss_reasons
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/CRMUserRef'
+        pipelines:
+          type: array
+          items:
+            $ref: '#/components/schemas/CRMPipeline'
+        lead_sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/CRMLeadSource'
+        loss_reasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/CRMLossReason'
+        source_pipelines:
+          type: array
+          items:
+            $ref: '#/components/schemas/CRMImportSourcePipeline'
+          description: Воронки источника-коннектора; у файла пусто
+        suggested:
+          $ref: '#/components/schemas/CRMImportMapping'
+    CRMImportSourcePipeline:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - sort
+        - main
+        - archived
+        - stages
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        sort:
+          type: integer
+        main:
+          type: boolean
+        archived:
+          type: boolean
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/CRMImportSourceStage'
+    CRMImportSourceStage:
+      type: object
+      additionalProperties: false
+      required:
+        - ref
+        - name
+        - sort
+        - category
+        - color
+      properties:
+        ref:
+          type: string
+          description: Внешний ID этапа, который несут сделки пакета
+        name:
+          type: string
+        sort:
+          type: integer
+        category:
+          type: string
+          enum:
+            - open
+            - won
+            - lost
+        color:
+          type: string
+        unsorted:
+          type: boolean
+          description: 'Служебное «неразобранное»: в воронку кабинета не попадает'
+    CRMImportConnectInput:
+      type: object
+      additionalProperties: false
+      required:
+        - token
+      properties:
+        account:
+          type: string
+          description: 'amoCRM: поддомен или адрес аккаунта (name, name.amocrm.ru, name.kommo.com). Битрикс24: не нужен, портал берётся из адреса вебхука'
+        token:
+          type: string
+          minLength: 1
+          writeOnly: true
+          description: 'amoCRM: долгосрочный токен администратора. Битрикс24: адрес входящего вебхука https://портал.bitrix24.ru/rest/<номер>/<ключ>/'
+        include_unsorted:
+          type: boolean
+          description: 'amoCRM: перенести неразобранное лидами'
+        updated_since:
+          type: string
+          format: date-time
+          description: 'Дозагрузка: только записи, изменённые после этого момента'
+    CRMImportMappingInput:
+      type: object
+      additionalProperties: false
+      required:
+        - revision
+        - mapping
+      properties:
+        revision:
+          type: integer
+        mapping:
+          $ref: '#/components/schemas/CRMImportMapping'
+    CRMImportRevisionInput:
+      type: object
+      additionalProperties: false
+      required:
+        - revision
+      properties:
+        revision:
+          type: integer
+    CRMImportApplyInput:
+      type: object
+      additionalProperties: false
+      required:
+        - token
+      properties:
+        token:
+          type: string
+          minLength: 1
+    CRMImportPreview:
+      type: object
+      additionalProperties: false
+      required:
+        - token
+        - revision
+        - total
+        - create
+        - link
+        - existing
+        - skip
+        - conflicts
+        - by_kind
+      properties:
+        token:
+          type: string
+        revision:
+          type: integer
+        total:
+          type: integer
+        create:
+          type: integer
+        link:
+          type: integer
+        existing:
+          type: integer
+        skip:
+          type: integer
+        conflicts:
+          type: integer
+        by_kind:
+          type: object
+          additionalProperties:
+            type: integer
+    CRMImportCandidate:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - kind
+        - name
+        - phone
+        - email
+        - inn
+        - matched_by
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        kind:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        inn:
+          type: string
+        matched_by:
+          type: array
+          items:
+            type: string
+            enum:
+              - inn
+              - email
+              - phone
+              - name
+    CRMImportDecision:
+      type: object
+      additionalProperties: false
+      properties:
+        action:
+          type: string
+          enum:
+            - ''
+            - create
+            - link
+            - skip
+        entity_id:
+          $ref: '#/components/schemas/UUID'
+        origin:
+          type: string
+        candidates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CRMImportCandidate'
+    CRMImportDecisionInput:
+      type: object
+      additionalProperties: false
+      properties:
+        action:
+          type: string
+          enum:
+            - ''
+            - create
+            - link
+            - skip
+        entity_id:
+          $ref: '#/components/schemas/UUID'
+    CRMImportRecord:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - run_id
+        - seq
+        - kind
+        - external_id
+        - is_deleted
+        - merged_into
+        - payload
+        - status
+        - decision
+        - error
+        - entity_type
+        - created_entity
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        run_id:
+          $ref: '#/components/schemas/UUID'
+        seq:
+          type: integer
+          format: int64
+        kind:
+          type: string
+          enum:
+            - customer
+            - lead
+            - deal
+            - customer_company
+            - engagement
+            - note
+        external_id:
+          type: string
+        source_created_at:
+          type: string
+          format: date-time
+        source_updated_at:
+          type: string
+          format: date-time
+        is_deleted:
+          type: boolean
+        merged_into:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+        status:
+          type: string
+          enum:
+            - pending
+            - skipped
+            - conflict
+            - applied
+            - failed
+        decision:
+          $ref: '#/components/schemas/CRMImportDecision'
+        error:
+          type: string
+        entity_type:
+          type: string
+        entity_id:
+          $ref: '#/components/schemas/UUID'
+        created_entity:
+          type: boolean
+        applied_at:
+          type: string
+          format: date-time
+    CRMImportRollbackKept:
+      type: object
+      additionalProperties: false
+      required:
+        - entity_id
+        - kind
+        - archived
+        - reason
+      properties:
+        entity_id:
+          $ref: '#/components/schemas/UUID'
+        kind:
+          type: string
+        archived:
+          type: boolean
+        reason:
+          type: string
+    CRMImportRollback:
+      type: object
+      additionalProperties: false
+      required:
+        - deleted
+        - archived
+        - touched
+        - kept
+      properties:
+        deleted:
+          type: integer
+        archived:
+          type: integer
+        touched:
+          type: array
+          items:
+            $ref: '#/components/schemas/UUID'
+        kept:
+          type: array
+          items:
+            $ref: '#/components/schemas/CRMImportRollbackKept'
     CRMContactRef:
       type: object
       additionalProperties: false
@@ -61950,6 +63461,9 @@ components:
           type: string
         username:
           type: string
+        email:
+          type: string
+          description: Рабочая почта; по ней импорт узнаёт сотрудника чужой CRM
     CRMActivity:
       type: object
       additionalProperties: false
@@ -78199,6 +79713,42 @@ components:
         delay_days:
           type: integer
           description: Дней после события срока
+    DocflowFlowPaymentRule:
+      type: object
+      additionalProperties: false
+      description: 'Регулярный график оплат одним правилом: сумма платежа, период, день, начало и либо число платежей, либо последняя дата. Сервер раскрывает правило в строки payments сам; план финансов и расчёты видят только строки, как при ручном графике.'
+      required:
+        - period
+        - day
+        - start
+      properties:
+        amount:
+          type: string
+          description: Сумма одного платежа десятичным текстом; пусто — сумма документа делится поровну
+        period:
+          type: string
+          enum:
+            - month
+            - week
+            - quarter
+        day:
+          type: integer
+          minimum: 1
+          maximum: 31
+          description: День месяца (month, quarter; короткий месяц прижимает к своему концу) или день недели ISO 1..7 (week)
+        start:
+          type: string
+          format: date
+          description: Первый платёж — ближайшая дата не раньше этой
+        count:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Число платежей; задаётся вместо until
+        until:
+          type: string
+          format: date
+          description: Последняя допустимая дата включительно; задаётся вместо count
     DocflowFlowCommercialLine:
       type: object
       additionalProperties: false
@@ -78263,7 +79813,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DocflowFlowScheduleStage'
-          description: График платежей
+          description: График платежей; при payment_rule — его раскрытие
+        payment_rule:
+          $ref: '#/components/schemas/DocflowFlowPaymentRule'
     DocflowFlowContractTerms:
       type: object
       additionalProperties: false
@@ -78587,6 +80139,14 @@ components:
           maxItems: 100
           items:
             $ref: '#/components/schemas/DocflowFlowAccountingLink'
+        edo:
+          $ref: '#/components/schemas/DocflowFlowEDOState'
+        edo_links:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/DocflowFlowEDOLink'
+          description: 'Конверты, которыми карточка уходила и приходила. Заполняется только при чтении карточки и в редакцию не пишется: связь живёт своей строкой, её правит синхронизация, а редакция неизменяема'
         created_at:
           type: string
           format: date-time
@@ -78596,6 +80156,97 @@ components:
         updated_by:
           type: integer
           format: int64
+    DocflowFlowEDOState:
+      type: object
+      additionalProperties: false
+      description: 'Ответ контрагента по документу, как его понимает карточка: подписал, отказал или аннулировали по соглашению сторон. Пересказа состояний оператора здесь нет — регламентов у него десятки, и свой словарь на них отстал бы от первой же правки закона. Живёт в редакции карточки и поэтому попадает в её историю сам.'
+      required:
+        - message
+        - outcome
+        - occurred_at
+      properties:
+        message:
+          $ref: '#/components/schemas/UUID'
+        outcome:
+          type: string
+          enum:
+            - signed
+            - refused
+            - cancelled
+          description: Подписал, отказал (отклонение либо уведомление об уточнении) или аннулирован по соглашению сторон
+        state_name:
+          type: string
+          description: 'Состояние словами оператора: показывается как есть, человек сверяет его с кабинетом оператора'
+        occurred_at:
+          type: string
+          format: date-time
+          description: Когда это случилось у оператора
+    DocflowFlowEDOLink:
+      type: object
+      additionalProperties: false
+      description: 'Конверт, которым карточка уехала или пришла. Пакет — канал доставки, и здесь видно, чем карточка ему приходится и каким файлом она в нём поехала. Содержания конверта тут нет: за ним идут в сам пакет.'
+      required:
+        - id
+        - connection
+        - role
+        - external_doc_id
+        - draft
+        - direction
+        - number
+        - date
+        - state_code
+        - state_name
+        - created_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        connection:
+          $ref: '#/components/schemas/UUID'
+        message:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Пакет у оператора; пусто при непустом external_doc_id означает черновик у оператора, наружу не ушедший
+        role:
+          type: string
+          enum:
+            - primary
+            - attachment
+            - basis
+          description: 'Чем карточка приходится конверту: основной документ, приложение или основание'
+        file:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Какой файл карточки уехал вложением
+        external_doc_id:
+          type: string
+          description: Идентификатор документа у оператора
+        external_attachment_id:
+          type: string
+          description: 'Идентификатор вложения у оператора: им адресуется замена файла при повторной отправке'
+        draft:
+          type: boolean
+          description: Черновик, который ещё можно удалить у оператора
+        direction:
+          type: string
+          description: Слова оператора о самом пакете, собранные при чтении карточки
+        number:
+          type: string
+        date:
+          type: string
+        state_code:
+          type: string
+        state_name:
+          type: string
+        created_by:
+          type:
+            - integer
+            - 'null'
+          format: int64
+        created_at:
+          type: string
+          format: date-time
     DocflowFlowPage:
       type: object
       additionalProperties: false
@@ -79365,6 +81016,10 @@ components:
         - signatures_total
         - actions_due
         - stage_name
+        - sign_required
+        - notice_sign_required
+        - draft
+        - deleted_reason
       properties:
         id:
           $ref: '#/components/schemas/UUID'
@@ -79435,6 +81090,12 @@ components:
         stage_name:
           type: string
           description: Название ближайшего незакрытого этапа словами оператора
+        sign_required:
+          type: boolean
+          description: 'У пакета открыт этап, который закрывается нашей подписью под самим документом. Отдельно от actions_due и stage_name: счётчик говорит «ход за нами», а название этапа — слова оператора, и отличить по ним подпись от согласования нельзя. Пока признак поднят, приёмка к учёту отказывает кодом docflow.edo.sign_first'
+        notice_sign_required:
+          type: boolean
+          description: 'Открытый подписной этап служебный: извещение о получении, подтверждение даты, квитанция. Отдельным признаком, потому что человеку это другое дело — «Подписать извещение» подтверждает технологию обмена, а не содержание документа. Приёмку к учёту служебный этап НЕ держит'
         attachments:
           type:
             - array
@@ -79460,11 +81121,105 @@ components:
             - 'null'
           items:
             $ref: '#/components/schemas/DocflowEvent'
+        flow_documents:
+          type:
+            - array
+            - 'null'
+          items:
+            $ref: '#/components/schemas/DocflowMessageFlowLink'
+          description: Карточки документооборота, которые вёз этот конверт. Как и весь состав, наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null
         cancellation:
           oneOf:
             - $ref: '#/components/schemas/DocflowCancellation'
             - type: 'null'
           description: Соглашение сторон об аннулировании. Наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null — null означает «не спрашивали»
+        accounting_document:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Учётный документ, которым пакет принят к учёту. Пусто означает «не принимали» и делает пакет принимаемым; обнулиться поле может и после приёмки, когда учётный документ удалили
+        accepted_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: 'Когда пакет приняли к учёту. Переживает удаление учётного документа: приёмка была'
+        accepted_by:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Кто принял пакет к учёту
+        draft:
+          type: boolean
+          description: 'Пакет записан оператору и наружу ещё не ушёл. Выводится из состава пакета при чтении: исходящий, без единого события обмена и без единой подписи'
+        deleted_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: 'Корзина НАШЕГО зеркала: контрагент её не видит, и пакет у оператора остаётся прежним'
+        deleted_by:
+          type:
+            - integer
+            - 'null'
+          format: int64
+        deleted_reason:
+          type: string
+          enum:
+            - ''
+            - trashed
+            - draft_removed
+          description: 'Возвращают из корзины только trashed: у draft_removed документа у оператора больше нет'
+    DocflowMessageFlowLink:
+      type: object
+      additionalProperties: false
+      description: Карточка документооборота в пакете — обратная сторона связи edo_links карточки. Пакет доказывает отправку и подпись, а содержание живёт в карточке; здесь видно, чьё содержание он вёз и чем карточка ему приходится.
+      required:
+        - id
+        - document
+        - role
+        - version
+        - kind
+        - status
+        - title
+        - number
+        - date
+        - created_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        document:
+          $ref: '#/components/schemas/UUID'
+        role:
+          type: string
+          enum:
+            - primary
+            - attachment
+            - basis
+          description: 'Чем карточка приходится конверту: основной документ, приложение или основание'
+        version:
+          type: integer
+          minimum: 1
+          description: 'Текущая редакция карточки: открывать человеку следует её'
+        kind:
+          $ref: '#/components/schemas/DocflowFlowKind'
+        status:
+          type: string
+          enum:
+            - draft
+            - registered
+            - archived
+        title:
+          type: string
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
     DocflowAttachment:
       type: object
       additionalProperties: false
@@ -79601,6 +81356,7 @@ components:
         - actions
         - requires_signature
         - closed
+        - service
         - created_at
         - updated_at
       properties:
@@ -79623,6 +81379,9 @@ components:
         closed:
           type: boolean
           description: Ход не за нами. Закрытые этапы не показываются и не считаются
+        service:
+          type: boolean
+          description: 'Служебный этап оператора — извещение о получении, подтверждение, квитанция. Технология обмена, а не решение по документу: клиент обрабатывает все служебные этапы пакета одним действием, а не по кнопке на каждый'
         created_at:
           type: string
           format: date-time
@@ -80157,7 +81916,7 @@ components:
       properties:
         code:
           type: string
-          description: 'Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои четыре: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки) и docflow.edo.product_required (строке документа не сопоставлена номенклатура)'
+          description: 'Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои пять: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке документа не сопоставлена номенклатура) и docflow.edo.sign_first (документ ещё не подписан: в учёт его принимают после подписи)'
         path:
           type: string
           description: 'Путь до реквизита ИМЕНАМИ ФНС — именами приказа, а не нашими: этими же словами человек будет искать требование в письме налоговой. Например `Документ/СвСчФакт/СвПрод/Адрес`.'

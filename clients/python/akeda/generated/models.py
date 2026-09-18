@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4721eeb7d987e5e1b3d0d270eb4ae47c25ee5684b9b7ac49582bd5d8aafd6a74).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 621f4c1320822d2049bfb3c0d0617e2437c27e149b34c2375d3c081841449370).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -76,6 +76,33 @@ __all__ = [
     "CRMEngagementKind",
     "CRMEngagementPatch",
     "CRMExternalLink",
+    "CRMImportApplyInput",
+    "CRMImportCandidate",
+    "CRMImportConnectInput",
+    "CRMImportDecision",
+    "CRMImportDecisionInput",
+    "CRMImportExtractInput",
+    "CRMImportExtractResult",
+    "CRMImportField",
+    "CRMImportFields",
+    "CRMImportFileInfo",
+    "CRMImportInspectInput",
+    "CRMImportMapping",
+    "CRMImportMappingInput",
+    "CRMImportOptions",
+    "CRMImportPreview",
+    "CRMImportRecord",
+    "CRMImportRevisionInput",
+    "CRMImportRollback",
+    "CRMImportRollbackKept",
+    "CRMImportRowIssue",
+    "CRMImportRun",
+    "CRMImportRunInput",
+    "CRMImportSheetInfo",
+    "CRMImportSheetMapping",
+    "CRMImportSourcePipeline",
+    "CRMImportSourceStage",
+    "CRMImportValue",
     "CRMInboxAssignInput",
     "CRMInboxAttachment",
     "CRMInboxConnection",
@@ -571,12 +598,15 @@ __all__ = [
     "DocflowFlowContractTerms",
     "DocflowFlowCreateInput",
     "DocflowFlowDocument",
+    "DocflowFlowEDOLink",
+    "DocflowFlowEDOState",
     "DocflowFlowFile",
     "DocflowFlowFinanceAccrualAllocation",
     "DocflowFlowFinanceAccrualInput",
     "DocflowFlowFinancePlanInput",
     "DocflowFlowKind",
     "DocflowFlowPage",
+    "DocflowFlowPaymentRule",
     "DocflowFlowReference",
     "DocflowFlowReferencePage",
     "DocflowFlowRelation",
@@ -603,6 +633,7 @@ __all__ = [
     "DocflowMarkRequisites",
     "DocflowMessage",
     "DocflowMessageActionInput",
+    "DocflowMessageFlowLink",
     "DocflowMessageList",
     "DocflowOutgoingFile",
     "DocflowOutgoingInput",
@@ -2148,6 +2179,237 @@ class CRMExternalLink(TypedDict):
     external_id: "UUID"
     created_at: str
 
+class CRMImportApplyInput(TypedDict):
+    token: str
+
+class CRMImportCandidate(TypedDict):
+    id: "UUID"
+    kind: str
+    name: str
+    phone: str
+    email: str
+    inn: str
+    matched_by: List[Literal['inn', 'email', 'phone', 'name']]
+
+class _CRMImportConnectInputRequired(TypedDict):
+    #: amoCRM: долгосрочный токен администратора. Битрикс24: адрес входящего вебхука https://портал.bitrix24.ru/rest/<номер>/<ключ>/
+    token: str
+
+class CRMImportConnectInput(_CRMImportConnectInputRequired, total=False):
+    #: amoCRM: поддомен или адрес аккаунта (name, name.amocrm.ru, name.kommo.com). Битрикс24: не нужен, портал берётся из адреса вебхука
+    account: str
+    #: amoCRM: перенести неразобранное лидами
+    include_unsorted: bool
+    #: Дозагрузка: только записи, изменённые после этого момента
+    updated_since: str
+
+class CRMImportDecision(TypedDict, total=False):
+    action: Literal['', 'create', 'link', 'skip']
+    entity_id: "UUID"
+    origin: str
+    candidates: List["CRMImportCandidate"]
+
+class CRMImportDecisionInput(TypedDict, total=False):
+    action: Literal['', 'create', 'link', 'skip']
+    entity_id: "UUID"
+
+class CRMImportExtractInput(TypedDict):
+    sheets: List["CRMImportSheetMapping"]
+
+class CRMImportExtractResult(TypedDict):
+    run: "CRMImportRun"
+    added: int
+    records: int
+    issues: List["CRMImportRowIssue"]
+
+class CRMImportField(TypedDict):
+    key: str
+    required: bool
+
+class CRMImportFields(TypedDict):
+    #: Вид листа -> поля: companies, contacts, leads, deals, tasks, notes
+    entities: Dict[str, List["CRMImportField"]]
+
+class CRMImportFileInfo(TypedDict):
+    filename: str
+    format: str
+    sheets: List["CRMImportSheetInfo"]
+    #: Сколько ячеек с формулами прочитано по сохранённому значению
+    warnings: int
+
+class _CRMImportInspectInputRequired(TypedDict):
+    sheet: str
+
+class CRMImportInspectInput(_CRMImportInspectInputRequired, total=False):
+    header_row: int
+    entity: Literal['companies', 'contacts', 'leads', 'deals', 'tasks', 'notes']
+
+class CRMImportMapping(TypedDict, total=False):
+    owners: Dict[str, int]
+    pipelines: Dict[str, "UUID"]
+    stages: Dict[str, "UUID"]
+    loss_reasons: Dict[str, "UUID"]
+    sources: Dict[str, str]
+    default_pipeline: "UUID"
+    default_stage: "UUID"
+    default_loss_reason: "UUID"
+    default_currency: str
+
+class CRMImportMappingInput(TypedDict):
+    revision: int
+    mapping: "CRMImportMapping"
+
+class CRMImportOptions(TypedDict):
+    #: owners, stages, sources, currencies, loss_reasons
+    values: Dict[str, List["CRMImportValue"]]
+    members: List["CRMUserRef"]
+    pipelines: List["CRMPipeline"]
+    lead_sources: List["CRMLeadSource"]
+    loss_reasons: List["CRMLossReason"]
+    #: Воронки источника-коннектора; у файла пусто
+    source_pipelines: List["CRMImportSourcePipeline"]
+    suggested: "CRMImportMapping"
+
+class CRMImportPreview(TypedDict):
+    token: str
+    revision: int
+    total: int
+    create: int
+    link: int
+    existing: int
+    skip: int
+    conflicts: int
+    by_kind: Dict[str, int]
+
+class _CRMImportRecordRequired(TypedDict):
+    id: "UUID"
+    run_id: "UUID"
+    seq: int
+    kind: Literal['customer', 'lead', 'deal', 'customer_company', 'engagement', 'note']
+    external_id: str
+    is_deleted: bool
+    merged_into: str
+    payload: Dict[str, Any]
+    status: Literal['pending', 'skipped', 'conflict', 'applied', 'failed']
+    decision: "CRMImportDecision"
+    error: str
+    entity_type: str
+    created_entity: bool
+
+class CRMImportRecord(_CRMImportRecordRequired, total=False):
+    source_created_at: str
+    source_updated_at: str
+    entity_id: "UUID"
+    applied_at: str
+
+class CRMImportRevisionInput(TypedDict):
+    revision: int
+
+class CRMImportRollback(TypedDict):
+    deleted: int
+    archived: int
+    touched: List["UUID"]
+    kept: List["CRMImportRollbackKept"]
+
+class CRMImportRollbackKept(TypedDict):
+    entity_id: "UUID"
+    kind: str
+    archived: bool
+    reason: str
+
+class CRMImportRowIssue(TypedDict):
+    sheet: str
+    row: int
+    message: str
+
+class _CRMImportRunRequired(TypedDict):
+    id: "UUID"
+    source_kind: Literal['file', 'api']
+    source_system: str
+    source_account: str
+    status: Literal['draft', 'extracting', 'extracted', 'mapped', 'previewed', 'applying', 'applied', 'failed', 'cancelled']
+    scope: Dict[str, Any]
+    mapping: Dict[str, Any]
+    revision: int
+    batch_size: int
+    total_records: int
+    applied_records: int
+    skipped_records: int
+    conflict_records: int
+    failed_records: int
+    #: Токен источника сохранён; сам токен API не отдаёт
+    has_credentials: bool
+    error: str
+    created_by: int
+    created_at: str
+    updated_at: str
+
+class CRMImportRun(_CRMImportRunRequired, total=False):
+    preview_token: str
+    cancel_requested_at: str
+    started_at: str
+    finished_at: str
+    rolled_back_at: str
+
+class _CRMImportRunInputRequired(TypedDict):
+    source_kind: Literal['file', 'api']
+    #: Система-источник: excel, amocrm, bitrix24
+    source_system: str
+
+class CRMImportRunInput(_CRMImportRunInputRequired, total=False):
+    #: Аккаунт в системе: поддомен amoCRM, портал Битрикс24
+    source_account: str
+    scope: Dict[str, Any]
+    batch_size: int
+
+class _CRMImportSheetInfoRequired(TypedDict):
+    name: str
+    rows: int
+    header_row: int
+    headers: List[str]
+    sample: List[List[str]]
+
+class CRMImportSheetInfo(_CRMImportSheetInfoRequired, total=False):
+    #: Заголовок -> предложенное поле
+    suggested: Dict[str, str]
+
+class CRMImportSheetMapping(TypedDict):
+    sheet: str
+    header_row: int
+    entity: Literal['companies', 'contacts', 'leads', 'deals', 'tasks', 'notes']
+    #: Заголовок колонки -> поле
+    columns: Dict[str, str]
+
+class CRMImportSourcePipeline(TypedDict):
+    id: str
+    name: str
+    sort: int
+    main: bool
+    archived: bool
+    stages: List["CRMImportSourceStage"]
+
+class _CRMImportSourceStageRequired(TypedDict):
+    #: Внешний ID этапа, который несут сделки пакета
+    ref: str
+    name: str
+    sort: int
+    category: Literal['open', 'won', 'lost']
+    color: str
+
+class CRMImportSourceStage(_CRMImportSourceStageRequired, total=False):
+    #: Служебное «неразобранное»: в воронку кабинета не попадает
+    unsorted: bool
+
+class _CRMImportValueRequired(TypedDict):
+    value: str
+    count: int
+
+class CRMImportValue(_CRMImportValueRequired, total=False):
+    #: Название значения в источнике-коннекторе (сотрудник, этап, причина)
+    label: str
+    #: Почта сотрудника источника
+    email: str
+
 class CRMInboxAssignInput(TypedDict, total=False):
     #: null снимает назначение
     assigned_to: Optional[int]
@@ -2757,6 +3019,8 @@ class _CRMUserRefRequired(TypedDict):
 
 class CRMUserRef(_CRMUserRefRequired, total=False):
     username: str
+    #: Рабочая почта; по ней импорт узнаёт сотрудника чужой CRM
+    email: str
 
 class CalendarAvailability(TypedDict):
     id: "UUID"
@@ -6550,8 +6814,9 @@ class DocflowFlowCommercial(_DocflowFlowCommercialRequired, total=False):
     lines: List["DocflowFlowCommercialLine"]
     #: Этапы работ
     milestones: List["DocflowFlowScheduleStage"]
-    #: График платежей
+    #: График платежей; при payment_rule — его раскрытие
     payments: List["DocflowFlowScheduleStage"]
+    payment_rule: "DocflowFlowPaymentRule"
 
 class _DocflowFlowCommercialLineRequired(TypedDict):
     id: "UUID"
@@ -6628,6 +6893,50 @@ class DocflowFlowDocument(_DocflowFlowDocumentRequired, total=False):
     relations: List["DocflowFlowRelation"]
     approval: "DocflowFlowApproval"
     accounting_links: List["DocflowFlowAccountingLink"]
+    edo: "DocflowFlowEDOState"
+    #: Конверты, которыми карточка уходила и приходила. Заполняется только при чтении карточки и в редакцию не пишется: связь живёт своей строкой, её правит синхронизация, а редакция неизменяема
+    edo_links: List["DocflowFlowEDOLink"]
+
+class _DocflowFlowEDOLinkRequired(TypedDict):
+    id: "UUID"
+    connection: "UUID"
+    #: Чем карточка приходится конверту: основной документ, приложение или основание
+    role: Literal['primary', 'attachment', 'basis']
+    #: Идентификатор документа у оператора
+    external_doc_id: str
+    #: Черновик, который ещё можно удалить у оператора
+    draft: bool
+    #: Слова оператора о самом пакете, собранные при чтении карточки
+    direction: str
+    number: str
+    date: str
+    state_code: str
+    state_name: str
+    created_at: str
+
+class DocflowFlowEDOLink(_DocflowFlowEDOLinkRequired, total=False):
+    """Конверт, которым карточка уехала или пришла. Пакет — канал доставки, и здесь видно, чем карточка ему приходится и каким файлом она в нём поехала. Содержания конверта тут нет: за ним идут в сам пакет."""
+
+    #: Пакет у оператора; пусто при непустом external_doc_id означает черновик у оператора, наружу не ушедший
+    message: Optional["UUID"]
+    #: Какой файл карточки уехал вложением
+    file: Optional["UUID"]
+    #: Идентификатор вложения у оператора: им адресуется замена файла при повторной отправке
+    external_attachment_id: str
+    created_by: Optional[int]
+
+class _DocflowFlowEDOStateRequired(TypedDict):
+    message: "UUID"
+    #: Подписал, отказал (отклонение либо уведомление об уточнении) или аннулирован по соглашению сторон
+    outcome: Literal['signed', 'refused', 'cancelled']
+    #: Когда это случилось у оператора
+    occurred_at: str
+
+class DocflowFlowEDOState(_DocflowFlowEDOStateRequired, total=False):
+    """Ответ контрагента по документу, как его понимает карточка: подписал, отказал или аннулировали по соглашению сторон. Пересказа состояний оператора здесь нет — регламентов у него десятки, и свой словарь на них отстал бы от первой же правки закона. Живёт в редакции карточки и поэтому попадает в её историю сам."""
+
+    #: Состояние словами оператора: показывается как есть, человек сверяет его с кабинетом оператора
+    state_name: str
 
 class DocflowFlowFile(TypedDict):
     """Приложенный файл. Всё это описание делает владелец при загрузке, и командой правки оно не принимается."""
@@ -6678,6 +6987,23 @@ class DocflowFlowPage(TypedDict):
 
     items: List["DocflowFlowDocument"]
     has_more: bool
+
+class _DocflowFlowPaymentRuleRequired(TypedDict):
+    period: Literal['month', 'week', 'quarter']
+    #: День месяца (month, quarter; короткий месяц прижимает к своему концу) или день недели ISO 1..7 (week)
+    day: int
+    #: Первый платёж — ближайшая дата не раньше этой
+    start: str
+
+class DocflowFlowPaymentRule(_DocflowFlowPaymentRuleRequired, total=False):
+    """Регулярный график оплат одним правилом: сумма платежа, период, день, начало и либо число платежей, либо последняя дата. Сервер раскрывает правило в строки payments сам; план финансов и расчёты видят только строки, как при ручном графике."""
+
+    #: Сумма одного платежа десятичным текстом; пусто — сумма документа делится поровну
+    amount: str
+    #: Число платежей; задаётся вместо until
+    count: int
+    #: Последняя допустимая дата включительно; задаётся вместо count
+    until: str
 
 class _DocflowFlowReferenceRequired(TypedDict):
     id: "UUID"
@@ -6955,7 +7281,7 @@ class DocflowInvitationSender(TypedDict):
     external_org_id: str
 
 class _DocflowIssueRequired(TypedDict):
-    #: Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои четыре: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки) и docflow.edo.product_required (строке документа не сопоставлена номенклатура)
+    #: Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои пять: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке документа не сопоставлена номенклатура) и docflow.edo.sign_first (документ ещё не подписан: в учёт его принимают после подписи)
     code: str
     #: Путь до реквизита ИМЕНАМИ ФНС — именами приказа, а не нашими: этими же словами человек будет искать требование в письме налоговой. Например `Документ/СвСчФакт/СвПрод/Адрес`.
     path: str
@@ -7039,6 +7365,14 @@ class _DocflowMessageRequired(TypedDict):
     actions_due: int
     #: Название ближайшего незакрытого этапа словами оператора
     stage_name: str
+    #: У пакета открыт этап, который закрывается нашей подписью под самим документом. Отдельно от actions_due и stage_name: счётчик говорит «ход за нами», а название этапа — слова оператора, и отличить по ним подпись от согласования нельзя. Пока признак поднят, приёмка к учёту отказывает кодом docflow.edo.sign_first
+    sign_required: bool
+    #: Открытый подписной этап служебный: извещение о получении, подтверждение даты, квитанция. Отдельным признаком, потому что человеку это другое дело — «Подписать извещение» подтверждает технологию обмена, а не содержание документа. Приёмку к учёту служебный этап НЕ держит
+    notice_sign_required: bool
+    #: Пакет записан оператору и наружу ещё не ушёл. Выводится из состава пакета при чтении: исходящий, без единого события обмена и без единой подписи
+    draft: bool
+    #: Возвращают из корзины только trashed: у draft_removed документа у оператора больше нет
+    deleted_reason: Literal['', 'trashed', 'draft_removed']
 
 class DocflowMessage(_DocflowMessageRequired, total=False):
     """Пакет документов у оператора — конверт, а не учётный документ Акеды."""
@@ -7050,8 +7384,19 @@ class DocflowMessage(_DocflowMessageRequired, total=False):
     signatures: Optional[List["DocflowSignature"]]
     stages: Optional[List["DocflowStage"]]
     events: Optional[List["DocflowEvent"]]
+    #: Карточки документооборота, которые вёз этот конверт. Как и весь состав, наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null
+    flow_documents: Optional[List["DocflowMessageFlowLink"]]
     #: Соглашение сторон об аннулировании. Наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null — null означает «не спрашивали»
     cancellation: Optional["DocflowCancellation"]
+    #: Учётный документ, которым пакет принят к учёту. Пусто означает «не принимали» и делает пакет принимаемым; обнулиться поле может и после приёмки, когда учётный документ удалили
+    accounting_document: Optional["UUID"]
+    #: Когда пакет приняли к учёту. Переживает удаление учётного документа: приёмка была
+    accepted_at: Optional[str]
+    #: Кто принял пакет к учёту
+    accepted_by: Optional[int]
+    #: Корзина НАШЕГО зеркала: контрагент её не видит, и пакет у оператора остаётся прежним
+    deleted_at: Optional[str]
+    deleted_by: Optional[int]
 
 class _DocflowMessageActionInputRequired(TypedDict):
     #: КОД действия у оператора из stage.actions[].code, а НЕ надпись с кнопки: строка действия своя у каждого вида документа и каждого регламента, и зашитый набор строк ломается на первом нестандартном
@@ -7066,6 +7411,22 @@ class DocflowMessageActionInput(_DocflowMessageActionInputRequired, total=False)
     stage_name: str
     #: Комментарий человека. Уходит второй стороне и остаётся в ленте событий; при отклонении документа обязателен
     comment: str
+
+class DocflowMessageFlowLink(TypedDict):
+    """Карточка документооборота в пакете — обратная сторона связи edo_links карточки. Пакет доказывает отправку и подпись, а содержание живёт в карточке; здесь видно, чьё содержание он вёз и чем карточка ему приходится."""
+
+    id: "UUID"
+    document: "UUID"
+    #: Чем карточка приходится конверту: основной документ, приложение или основание
+    role: Literal['primary', 'attachment', 'basis']
+    #: Текущая редакция карточки: открывать человеку следует её
+    version: int
+    kind: "DocflowFlowKind"
+    status: Literal['draft', 'registered', 'archived']
+    title: str
+    number: str
+    date: str
+    created_at: str
 
 class DocflowMessageList(TypedDict):
     count: int
@@ -7364,6 +7725,8 @@ class DocflowStage(TypedDict):
     requires_signature: bool
     #: Ход не за нами. Закрытые этапы не показываются и не считаются
     closed: bool
+    #: Служебный этап оператора — извещение о получении, подтверждение, квитанция. Технология обмена, а не решение по документу: клиент обрабатывает все служебные этапы пакета одним действием, а не по кнопке на каждый
+    service: bool
     created_at: str
     updated_at: str
 
@@ -8007,12 +8370,14 @@ class FinanceConnector(TypedDict):
     overlap_days: int
     last_sync_at: Optional[str]
     last_sync_status: str
-    #: The provider's own words and nothing else — what the cabinet user can act on ("consent expired", "certificate revoked"). Empty when the failure was ours: an internal cause never reaches this field, it is logged and named by last_error_code instead.
+    #: The provider's technical reply, verbatim — material for an investigation, not a message for the cabinet screen: it may carry machine keys such as "invalid_client". The portal operator reads it in full on the bank connectors page, while the cabinet card renders last_error_code instead. Empty when the failure was ours: an internal cause never reaches this field, it is logged and named by last_error_code instead.
     last_error: str
     #: Machine code of the last failure, translated by the client. Present because the text is stored: it is written in whatever locale the background sync happened to run in, and only a finite code can be rendered in the reader's language.
     last_error_code: Literal['', 'finance.connector.internal', 'finance.connector.provider_unauthorized', 'finance.connector.provider_rate_limited', 'finance.connector.provider_declined', 'finance.connector.consent_required']
     accounts_total: int
     accounts_linked: int
+    #: True only for an abandoned connection attempt: no accounts returned by the bank and no sync run at all. Everything else is the origin trail of the imported operations and is never deleted — both links cascade — so such a connection is disconnected instead.
+    can_delete: bool
     created_at: str
     updated_at: str
 
@@ -8652,6 +9017,10 @@ class FinancePaymentCalendarRow(_FinancePaymentCalendarRowRequired, total=False)
     company_id: "UUID"
     executed_on: str
     document_id: "UUID"
+    operation_id: "UUID"
+    operation_kind: Literal['sale', 'purchase']
+    operation_version: int
+    contract_id: "UUID"
     fact: "FinancePaymentFact"
 
 class FinancePaymentCalendarSource(TypedDict):
@@ -13163,7 +13532,7 @@ class ScrumTeamMember(TypedDict):
     in_team: bool
     sections: int
 
-class Section(TypedDict):
+class _SectionRequired(TypedDict):
     id: "UUID"
     project: Optional["UUID"]
     project_key: Optional[str]
@@ -13183,6 +13552,10 @@ class Section(TypedDict):
     tasks_overdue: int
     members_count: int
     members: List["SectionMemberPreview"]
+
+class Section(_SectionRequired, total=False):
+    #: Код системного раздела. `inbox` — «Входящие» проекта: удалить и перенести в другой проект нельзя, переименовать можно. У раздела клиента поле отсутствует.
+    system_code: Literal['inbox']
 
 class _SectionCreateRequired(TypedDict):
     project: "UUID"
@@ -15232,10 +15605,14 @@ class Task(_TaskRequired, total=False):
     assignee_name: Optional[str]
 
 class _TaskCreateRequired(TypedDict):
-    section: "UUID"
     title: str
 
 class TaskCreate(_TaskCreateRequired, total=False):
+    """Нужен `section` или `project`: задача без раздела попадает в системный раздел «Входящие» указанного проекта."""
+
+    section: "UUID"
+    #: Проект задач для задачи без раздела; при заданном `section` не читается.
+    project: Dict[str, Any]
     description: str
     status: "UUID"
     priority: "TaskPriority"

@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4721eeb7d987e5e1b3d0d270eb4ae47c25ee5684b9b7ac49582bd5d8aafd6a74).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 621f4c1320822d2049bfb3c0d0617e2437c27e149b34c2375d3c081841449370).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -728,6 +728,248 @@ export interface CRMExternalLink {
   "created_at": string;
 }
 
+export interface CRMImportApplyInput {
+  "token": string;
+}
+
+export interface CRMImportCandidate {
+  "id": UUID;
+  "kind": string;
+  "name": string;
+  "phone": string;
+  "email": string;
+  "inn": string;
+  "matched_by": Array<"inn" | "email" | "phone" | "name">;
+}
+
+export interface CRMImportConnectInput {
+  /** amoCRM: поддомен или адрес аккаунта (name, name.amocrm.ru, name.kommo.com). Битрикс24: не нужен, портал берётся из адреса вебхука */
+  "account"?: string;
+  /** amoCRM: долгосрочный токен администратора. Битрикс24: адрес входящего вебхука https://портал.bitrix24.ru/rest/<номер>/<ключ>/ */
+  "token": string;
+  /** amoCRM: перенести неразобранное лидами */
+  "include_unsorted"?: boolean;
+  /** Дозагрузка: только записи, изменённые после этого момента */
+  "updated_since"?: string;
+}
+
+export interface CRMImportDecision {
+  "action"?: "" | "create" | "link" | "skip";
+  "entity_id"?: UUID;
+  "origin"?: string;
+  "candidates"?: Array<CRMImportCandidate>;
+}
+
+export interface CRMImportDecisionInput {
+  "action"?: "" | "create" | "link" | "skip";
+  "entity_id"?: UUID;
+}
+
+export interface CRMImportExtractInput {
+  "sheets": Array<CRMImportSheetMapping>;
+}
+
+export interface CRMImportExtractResult {
+  "run": CRMImportRun;
+  "added": number;
+  "records": number;
+  "issues": Array<CRMImportRowIssue>;
+}
+
+export interface CRMImportField {
+  "key": string;
+  "required": boolean;
+}
+
+export interface CRMImportFields {
+  /** Вид листа -> поля: companies, contacts, leads, deals, tasks, notes */
+  "entities": { [key: string]: Array<CRMImportField> };
+}
+
+export interface CRMImportFileInfo {
+  "filename": string;
+  "format": string;
+  "sheets": Array<CRMImportSheetInfo>;
+  /** Сколько ячеек с формулами прочитано по сохранённому значению */
+  "warnings": number;
+}
+
+export interface CRMImportInspectInput {
+  "sheet": string;
+  "header_row"?: number;
+  "entity"?: "companies" | "contacts" | "leads" | "deals" | "tasks" | "notes";
+}
+
+export interface CRMImportMapping {
+  "owners"?: { [key: string]: number };
+  "pipelines"?: { [key: string]: UUID };
+  "stages"?: { [key: string]: UUID };
+  "loss_reasons"?: { [key: string]: UUID };
+  "sources"?: { [key: string]: string };
+  "default_pipeline"?: UUID;
+  "default_stage"?: UUID;
+  "default_loss_reason"?: UUID;
+  "default_currency"?: string;
+}
+
+export interface CRMImportMappingInput {
+  "revision": number;
+  "mapping": CRMImportMapping;
+}
+
+export interface CRMImportOptions {
+  /** owners, stages, sources, currencies, loss_reasons */
+  "values": { [key: string]: Array<CRMImportValue> };
+  "members": Array<CRMUserRef>;
+  "pipelines": Array<CRMPipeline>;
+  "lead_sources": Array<CRMLeadSource>;
+  "loss_reasons": Array<CRMLossReason>;
+  /** Воронки источника-коннектора; у файла пусто */
+  "source_pipelines": Array<CRMImportSourcePipeline>;
+  "suggested": CRMImportMapping;
+}
+
+export interface CRMImportPreview {
+  "token": string;
+  "revision": number;
+  "total": number;
+  "create": number;
+  "link": number;
+  "existing": number;
+  "skip": number;
+  "conflicts": number;
+  "by_kind": { [key: string]: number };
+}
+
+export interface CRMImportRecord {
+  "id": UUID;
+  "run_id": UUID;
+  "seq": number;
+  "kind": "customer" | "lead" | "deal" | "customer_company" | "engagement" | "note";
+  "external_id": string;
+  "source_created_at"?: string;
+  "source_updated_at"?: string;
+  "is_deleted": boolean;
+  "merged_into": string;
+  "payload": { [key: string]: unknown };
+  "status": "pending" | "skipped" | "conflict" | "applied" | "failed";
+  "decision": CRMImportDecision;
+  "error": string;
+  "entity_type": string;
+  "entity_id"?: UUID;
+  "created_entity": boolean;
+  "applied_at"?: string;
+}
+
+export interface CRMImportRevisionInput {
+  "revision": number;
+}
+
+export interface CRMImportRollback {
+  "deleted": number;
+  "archived": number;
+  "touched": Array<UUID>;
+  "kept": Array<CRMImportRollbackKept>;
+}
+
+export interface CRMImportRollbackKept {
+  "entity_id": UUID;
+  "kind": string;
+  "archived": boolean;
+  "reason": string;
+}
+
+export interface CRMImportRowIssue {
+  "sheet": string;
+  "row": number;
+  "message": string;
+}
+
+export interface CRMImportRun {
+  "id": UUID;
+  "source_kind": "file" | "api";
+  "source_system": string;
+  "source_account": string;
+  "status": "draft" | "extracting" | "extracted" | "mapped" | "previewed" | "applying" | "applied" | "failed" | "cancelled";
+  "scope": { [key: string]: unknown };
+  "mapping": { [key: string]: unknown };
+  "revision": number;
+  "preview_token"?: string;
+  "batch_size": number;
+  "total_records": number;
+  "applied_records": number;
+  "skipped_records": number;
+  "conflict_records": number;
+  "failed_records": number;
+  /** Токен источника сохранён; сам токен API не отдаёт */
+  "has_credentials": boolean;
+  "error": string;
+  "cancel_requested_at"?: string;
+  "started_at"?: string;
+  "finished_at"?: string;
+  "rolled_back_at"?: string;
+  "created_by": number;
+  "created_at": string;
+  "updated_at": string;
+}
+
+export interface CRMImportRunInput {
+  "source_kind": "file" | "api";
+  /** Система-источник: excel, amocrm, bitrix24 */
+  "source_system": string;
+  /** Аккаунт в системе: поддомен amoCRM, портал Битрикс24 */
+  "source_account"?: string;
+  "scope"?: { [key: string]: unknown };
+  "batch_size"?: number;
+}
+
+export interface CRMImportSheetInfo {
+  "name": string;
+  "rows": number;
+  "header_row": number;
+  "headers": Array<string>;
+  "sample": Array<Array<string>>;
+  /** Заголовок -> предложенное поле */
+  "suggested"?: { [key: string]: string };
+}
+
+export interface CRMImportSheetMapping {
+  "sheet": string;
+  "header_row": number;
+  "entity": "companies" | "contacts" | "leads" | "deals" | "tasks" | "notes";
+  /** Заголовок колонки -> поле */
+  "columns": { [key: string]: string };
+}
+
+export interface CRMImportSourcePipeline {
+  "id": string;
+  "name": string;
+  "sort": number;
+  "main": boolean;
+  "archived": boolean;
+  "stages": Array<CRMImportSourceStage>;
+}
+
+export interface CRMImportSourceStage {
+  /** Внешний ID этапа, который несут сделки пакета */
+  "ref": string;
+  "name": string;
+  "sort": number;
+  "category": "open" | "won" | "lost";
+  "color": string;
+  /** Служебное «неразобранное»: в воронку кабинета не попадает */
+  "unsorted"?: boolean;
+}
+
+export interface CRMImportValue {
+  "value": string;
+  "count": number;
+  /** Название значения в источнике-коннекторе (сотрудник, этап, причина) */
+  "label"?: string;
+  /** Почта сотрудника источника */
+  "email"?: string;
+}
+
 export interface CRMInboxAssignInput {
   /** null снимает назначение */
   "assigned_to"?: number | null;
@@ -1324,6 +1566,8 @@ export interface CRMUserRef {
   "id": number;
   "display_name": string;
   "username"?: string;
+  /** Рабочая почта; по ней импорт узнаёт сотрудника чужой CRM */
+  "email"?: string;
 }
 
 export interface CalendarAvailability {
@@ -5228,8 +5472,9 @@ export interface DocflowFlowCommercial {
   "lines"?: Array<DocflowFlowCommercialLine>;
   /** Этапы работ */
   "milestones"?: Array<DocflowFlowScheduleStage>;
-  /** График платежей */
+  /** График платежей; при payment_rule — его раскрытие */
   "payments"?: Array<DocflowFlowScheduleStage>;
+  "payment_rule"?: DocflowFlowPaymentRule;
 }
 
 /** Строка переписанного оригинала, а не расчёт. Сумма строки приходит явно: скидка поставщика, налог и округление не заменяются местным произведением количества на цену. */
@@ -5296,9 +5541,49 @@ export interface DocflowFlowDocument {
   "relations"?: Array<DocflowFlowRelation>;
   "approval"?: DocflowFlowApproval;
   "accounting_links"?: Array<DocflowFlowAccountingLink>;
+  "edo"?: DocflowFlowEDOState;
+  /** Конверты, которыми карточка уходила и приходила. Заполняется только при чтении карточки и в редакцию не пишется: связь живёт своей строкой, её правит синхронизация, а редакция неизменяема */
+  "edo_links"?: Array<DocflowFlowEDOLink>;
   "created_at": string;
   "updated_at": string;
   "updated_by": number;
+}
+
+/** Конверт, которым карточка уехала или пришла. Пакет — канал доставки, и здесь видно, чем карточка ему приходится и каким файлом она в нём поехала. Содержания конверта тут нет: за ним идут в сам пакет. */
+export interface DocflowFlowEDOLink {
+  "id": UUID;
+  "connection": UUID;
+  /** Пакет у оператора; пусто при непустом external_doc_id означает черновик у оператора, наружу не ушедший */
+  "message"?: UUID | null;
+  /** Чем карточка приходится конверту: основной документ, приложение или основание */
+  "role": "primary" | "attachment" | "basis";
+  /** Какой файл карточки уехал вложением */
+  "file"?: UUID | null;
+  /** Идентификатор документа у оператора */
+  "external_doc_id": string;
+  /** Идентификатор вложения у оператора: им адресуется замена файла при повторной отправке */
+  "external_attachment_id"?: string;
+  /** Черновик, который ещё можно удалить у оператора */
+  "draft": boolean;
+  /** Слова оператора о самом пакете, собранные при чтении карточки */
+  "direction": string;
+  "number": string;
+  "date": string;
+  "state_code": string;
+  "state_name": string;
+  "created_by"?: number | null;
+  "created_at": string;
+}
+
+/** Ответ контрагента по документу, как его понимает карточка: подписал, отказал или аннулировали по соглашению сторон. Пересказа состояний оператора здесь нет — регламентов у него десятки, и свой словарь на них отстал бы от первой же правки закона. Живёт в редакции карточки и поэтому попадает в её историю сам. */
+export interface DocflowFlowEDOState {
+  "message": UUID;
+  /** Подписал, отказал (отклонение либо уведомление об уточнении) или аннулирован по соглашению сторон */
+  "outcome": "signed" | "refused" | "cancelled";
+  /** Состояние словами оператора: показывается как есть, человек сверяет его с кабинетом оператора */
+  "state_name"?: string;
+  /** Когда это случилось у оператора */
+  "occurred_at": string;
 }
 
 /** Приложенный файл. Всё это описание делает владелец при загрузке, и командой правки оно не принимается. */
@@ -5348,6 +5633,21 @@ export type DocflowFlowKind = "contract" | "specification" | "amendment" | "invo
 export interface DocflowFlowPage {
   "items": Array<DocflowFlowDocument>;
   "has_more": boolean;
+}
+
+/** Регулярный график оплат одним правилом: сумма платежа, период, день, начало и либо число платежей, либо последняя дата. Сервер раскрывает правило в строки payments сам; план финансов и расчёты видят только строки, как при ручном графике. */
+export interface DocflowFlowPaymentRule {
+  /** Сумма одного платежа десятичным текстом; пусто — сумма документа делится поровну */
+  "amount"?: string;
+  "period": "month" | "week" | "quarter";
+  /** День месяца (month, quarter; короткий месяц прижимает к своему концу) или день недели ISO 1..7 (week) */
+  "day": number;
+  /** Первый платёж — ближайшая дата не раньше этой */
+  "start": string;
+  /** Число платежей; задаётся вместо until */
+  "count"?: number;
+  /** Последняя допустимая дата включительно; задаётся вместо count */
+  "until"?: string;
 }
 
 export interface DocflowFlowReference {
@@ -5620,7 +5920,7 @@ export interface DocflowInvitationSender {
 
 /** Одна невыполненная проверка. Форма одна на сборку файла формата ФНС и на приёмку входящего документа к учёту: интерфейс переводит их одним словарём, и вторая форма списка означала бы второй словарь. Ни одной надписи для человека здесь нет: код, путь реквизита и подробности значениями — фразу собирает интерфейс, и собирает её на языке читателя. */
 export interface DocflowIssue {
-  /** Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои четыре: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки) и docflow.edo.product_required (строке документа не сопоставлена номенклатура) */
+  /** Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои пять: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке документа не сопоставлена номенклатура) и docflow.edo.sign_first (документ ещё не подписан: в учёт его принимают после подписи) */
   "code": string;
   /** Путь до реквизита ИМЕНАМИ ФНС — именами приказа, а не нашими: этими же словами человек будет искать требование в письме налоговой. Например `Документ/СвСчФакт/СвПрод/Адрес`. */
   "path": string;
@@ -5702,13 +6002,32 @@ export interface DocflowMessage {
   "actions_due": number;
   /** Название ближайшего незакрытого этапа словами оператора */
   "stage_name": string;
+  /** У пакета открыт этап, который закрывается нашей подписью под самим документом. Отдельно от actions_due и stage_name: счётчик говорит «ход за нами», а название этапа — слова оператора, и отличить по ним подпись от согласования нельзя. Пока признак поднят, приёмка к учёту отказывает кодом docflow.edo.sign_first */
+  "sign_required": boolean;
+  /** Открытый подписной этап служебный: извещение о получении, подтверждение даты, квитанция. Отдельным признаком, потому что человеку это другое дело — «Подписать извещение» подтверждает технологию обмена, а не содержание документа. Приёмку к учёту служебный этап НЕ держит */
+  "notice_sign_required": boolean;
   /** Состав пакета. Наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null. null означает «не спрашивали», пустой массив — «спросили, и там пусто» */
   "attachments"?: Array<DocflowAttachment> | null;
   "signatures"?: Array<DocflowSignature> | null;
   "stages"?: Array<DocflowStage> | null;
   "events"?: Array<DocflowEvent> | null;
+  /** Карточки документооборота, которые вёз этот конверт. Как и весь состав, наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null */
+  "flow_documents"?: Array<DocflowMessageFlowLink> | null;
   /** Соглашение сторон об аннулировании. Наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null — null означает «не спрашивали» */
   "cancellation"?: DocflowCancellation | null;
+  /** Учётный документ, которым пакет принят к учёту. Пусто означает «не принимали» и делает пакет принимаемым; обнулиться поле может и после приёмки, когда учётный документ удалили */
+  "accounting_document"?: UUID | null;
+  /** Когда пакет приняли к учёту. Переживает удаление учётного документа: приёмка была */
+  "accepted_at"?: string | null;
+  /** Кто принял пакет к учёту */
+  "accepted_by"?: number | null;
+  /** Пакет записан оператору и наружу ещё не ушёл. Выводится из состава пакета при чтении: исходящий, без единого события обмена и без единой подписи */
+  "draft": boolean;
+  /** Корзина НАШЕГО зеркала: контрагент её не видит, и пакет у оператора остаётся прежним */
+  "deleted_at"?: string | null;
+  "deleted_by"?: number | null;
+  /** Возвращают из корзины только trashed: у draft_removed документа у оператора больше нет */
+  "deleted_reason": "" | "trashed" | "draft_removed";
 }
 
 /** Действие над пакетом словами ОПЕРАТОРА. Что именно можно сделать сейчас, говорит сам пакет: stages[].actions[]. Подписания среди этих действий нет — подпись идёт контуром /api/v1/docflow/edo/signing/tasks. */
@@ -5721,6 +6040,22 @@ export interface DocflowMessageActionInput {
   "stage_name"?: string;
   /** Комментарий человека. Уходит второй стороне и остаётся в ленте событий; при отклонении документа обязателен */
   "comment"?: string;
+}
+
+/** Карточка документооборота в пакете — обратная сторона связи edo_links карточки. Пакет доказывает отправку и подпись, а содержание живёт в карточке; здесь видно, чьё содержание он вёз и чем карточка ему приходится. */
+export interface DocflowMessageFlowLink {
+  "id": UUID;
+  "document": UUID;
+  /** Чем карточка приходится конверту: основной документ, приложение или основание */
+  "role": "primary" | "attachment" | "basis";
+  /** Текущая редакция карточки: открывать человеку следует её */
+  "version": number;
+  "kind": DocflowFlowKind;
+  "status": "draft" | "registered" | "archived";
+  "title": string;
+  "number": string;
+  "date": string;
+  "created_at": string;
 }
 
 export interface DocflowMessageList {
@@ -6011,6 +6346,8 @@ export interface DocflowStage {
   "requires_signature": boolean;
   /** Ход не за нами. Закрытые этапы не показываются и не считаются */
   "closed": boolean;
+  /** Служебный этап оператора — извещение о получении, подтверждение, квитанция. Технология обмена, а не решение по документу: клиент обрабатывает все служебные этапы пакета одним действием, а не по кнопке на каждый */
+  "service": boolean;
   "created_at": string;
   "updated_at": string;
 }
@@ -6669,12 +7006,14 @@ export interface FinanceConnector {
   "overlap_days": number;
   "last_sync_at": string | null;
   "last_sync_status": string;
-  /** The provider's own words and nothing else — what the cabinet user can act on ("consent expired", "certificate revoked"). Empty when the failure was ours: an internal cause never reaches this field, it is logged and named by last_error_code instead. */
+  /** The provider's technical reply, verbatim — material for an investigation, not a message for the cabinet screen: it may carry machine keys such as "invalid_client". The portal operator reads it in full on the bank connectors page, while the cabinet card renders last_error_code instead. Empty when the failure was ours: an internal cause never reaches this field, it is logged and named by last_error_code instead. */
   "last_error": string;
   /** Machine code of the last failure, translated by the client. Present because the text is stored: it is written in whatever locale the background sync happened to run in, and only a finite code can be rendered in the reader's language. */
   "last_error_code": "" | "finance.connector.internal" | "finance.connector.provider_unauthorized" | "finance.connector.provider_rate_limited" | "finance.connector.provider_declined" | "finance.connector.consent_required";
   "accounts_total": number;
   "accounts_linked": number;
+  /** True only for an abandoned connection attempt: no accounts returned by the bank and no sync run at all. Everything else is the origin trail of the imported operations and is never deleted — both links cascade — so such a connection is disconnected instead. */
+  "can_delete": boolean;
   "created_at": string;
   "updated_at": string;
 }
@@ -7348,6 +7687,10 @@ export interface FinancePaymentCalendarRow {
   "executed_on"?: string;
   "overdue": boolean;
   "document_id"?: UUID;
+  "operation_id"?: UUID;
+  "operation_kind"?: "sale" | "purchase";
+  "operation_version"?: number;
+  "contract_id"?: UUID;
   "fact"?: FinancePaymentFact;
 }
 
@@ -12207,6 +12550,8 @@ export interface Section {
   "tasks_active": number;
   "tasks_done": number;
   "tasks_overdue": number;
+  /** Код системного раздела. `inbox` — «Входящие» проекта: удалить и перенести в другой проект нельзя, переименовать можно. У раздела клиента поле отсутствует. */
+  "system_code"?: "inbox";
   "members_count": number;
   "members": Array<SectionMemberPreview>;
 }
@@ -14332,8 +14677,11 @@ export interface Task {
   "blocked_by_count": number;
 }
 
+/** Нужен `section` или `project`: задача без раздела попадает в системный раздел «Входящие» указанного проекта. */
 export interface TaskCreate {
-  "section": UUID;
+  "section"?: UUID;
+  /** Проект задач для задачи без раздела; при заданном `section` не читается. */
+  "project"?: { [key: string]: unknown };
   "title": string;
   "description"?: string;
   "status"?: UUID;

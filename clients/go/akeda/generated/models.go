@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4721eeb7d987e5e1b3d0d270eb4ae47c25ee5684b9b7ac49582bd5d8aafd6a74).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 621f4c1320822d2049bfb3c0d0617e2437c27e149b34c2375d3c081841449370).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -726,6 +726,248 @@ type CRMExternalLink struct {
 	CreatedAt  string `json:"created_at"`
 }
 
+type CRMImportApplyInput struct {
+	Token string `json:"token"`
+}
+
+type CRMImportCandidate struct {
+	ID        UUID     `json:"id"`
+	Kind      string   `json:"kind"`
+	Name      string   `json:"name"`
+	Phone     string   `json:"phone"`
+	Email     string   `json:"email"`
+	INN       string   `json:"inn"`
+	MatchedBy []string `json:"matched_by"`
+}
+
+type CRMImportConnectInput struct {
+	// Account — amoCRM: поддомен или адрес аккаунта (name, name.amocrm.ru, name.kommo.com). Битрикс24: не нужен, портал берётся из адреса вебхука
+	Account *string `json:"account,omitempty"`
+	// Token — amoCRM: долгосрочный токен администратора. Битрикс24: адрес входящего вебхука https://портал.bitrix24.ru/rest/<номер>/<ключ>/
+	Token string `json:"token"`
+	// IncludeUnsorted — amoCRM: перенести неразобранное лидами
+	IncludeUnsorted *bool `json:"include_unsorted,omitempty"`
+	// UpdatedSince — Дозагрузка: только записи, изменённые после этого момента
+	UpdatedSince *string `json:"updated_since,omitempty"`
+}
+
+type CRMImportDecision struct {
+	Action     *string              `json:"action,omitempty"`
+	EntityID   *UUID                `json:"entity_id,omitempty"`
+	Origin     *string              `json:"origin,omitempty"`
+	Candidates []CRMImportCandidate `json:"candidates,omitempty"`
+}
+
+type CRMImportDecisionInput struct {
+	Action   *string `json:"action,omitempty"`
+	EntityID *UUID   `json:"entity_id,omitempty"`
+}
+
+type CRMImportExtractInput struct {
+	Sheets []CRMImportSheetMapping `json:"sheets"`
+}
+
+type CRMImportExtractResult struct {
+	Run     CRMImportRun        `json:"run"`
+	Added   int64               `json:"added"`
+	Records int64               `json:"records"`
+	Issues  []CRMImportRowIssue `json:"issues"`
+}
+
+type CRMImportField struct {
+	Key      string `json:"key"`
+	Required bool   `json:"required"`
+}
+
+type CRMImportFields struct {
+	// Entities — Вид листа -> поля: companies, contacts, leads, deals, tasks, notes
+	Entities map[string][]CRMImportField `json:"entities"`
+}
+
+type CRMImportFileInfo struct {
+	Filename string               `json:"filename"`
+	Format   string               `json:"format"`
+	Sheets   []CRMImportSheetInfo `json:"sheets"`
+	// Warnings — Сколько ячеек с формулами прочитано по сохранённому значению
+	Warnings int64 `json:"warnings"`
+}
+
+type CRMImportInspectInput struct {
+	Sheet     string  `json:"sheet"`
+	HeaderRow *int64  `json:"header_row,omitempty"`
+	Entity    *string `json:"entity,omitempty"`
+}
+
+type CRMImportMapping struct {
+	Owners            map[string]int64  `json:"owners,omitempty"`
+	Pipelines         map[string]UUID   `json:"pipelines,omitempty"`
+	Stages            map[string]UUID   `json:"stages,omitempty"`
+	LossReasons       map[string]UUID   `json:"loss_reasons,omitempty"`
+	Sources           map[string]string `json:"sources,omitempty"`
+	DefaultPipeline   *UUID             `json:"default_pipeline,omitempty"`
+	DefaultStage      *UUID             `json:"default_stage,omitempty"`
+	DefaultLossReason *UUID             `json:"default_loss_reason,omitempty"`
+	DefaultCurrency   *string           `json:"default_currency,omitempty"`
+}
+
+type CRMImportMappingInput struct {
+	Revision int64            `json:"revision"`
+	Mapping  CRMImportMapping `json:"mapping"`
+}
+
+type CRMImportOptions struct {
+	// Values — owners, stages, sources, currencies, loss_reasons
+	Values      map[string][]CRMImportValue `json:"values"`
+	Members     []CRMUserRef                `json:"members"`
+	Pipelines   []CRMPipeline               `json:"pipelines"`
+	LeadSources []CRMLeadSource             `json:"lead_sources"`
+	LossReasons []CRMLossReason             `json:"loss_reasons"`
+	// SourcePipelines — Воронки источника-коннектора; у файла пусто
+	SourcePipelines []CRMImportSourcePipeline `json:"source_pipelines"`
+	Suggested       CRMImportMapping          `json:"suggested"`
+}
+
+type CRMImportPreview struct {
+	Token     string           `json:"token"`
+	Revision  int64            `json:"revision"`
+	Total     int64            `json:"total"`
+	Create    int64            `json:"create"`
+	Link      int64            `json:"link"`
+	Existing  int64            `json:"existing"`
+	Skip      int64            `json:"skip"`
+	Conflicts int64            `json:"conflicts"`
+	ByKind    map[string]int64 `json:"by_kind"`
+}
+
+type CRMImportRecord struct {
+	ID              UUID                       `json:"id"`
+	RunID           UUID                       `json:"run_id"`
+	Seq             int64                      `json:"seq"`
+	Kind            string                     `json:"kind"`
+	ExternalID      string                     `json:"external_id"`
+	SourceCreatedAt *string                    `json:"source_created_at,omitempty"`
+	SourceUpdatedAt *string                    `json:"source_updated_at,omitempty"`
+	IsDeleted       bool                       `json:"is_deleted"`
+	MergedInto      string                     `json:"merged_into"`
+	Payload         map[string]json.RawMessage `json:"payload"`
+	Status          string                     `json:"status"`
+	Decision        CRMImportDecision          `json:"decision"`
+	Error           string                     `json:"error"`
+	EntityType      string                     `json:"entity_type"`
+	EntityID        *UUID                      `json:"entity_id,omitempty"`
+	CreatedEntity   bool                       `json:"created_entity"`
+	AppliedAt       *string                    `json:"applied_at,omitempty"`
+}
+
+type CRMImportRevisionInput struct {
+	Revision int64 `json:"revision"`
+}
+
+type CRMImportRollback struct {
+	Deleted  int64                   `json:"deleted"`
+	Archived int64                   `json:"archived"`
+	Touched  []UUID                  `json:"touched"`
+	Kept     []CRMImportRollbackKept `json:"kept"`
+}
+
+type CRMImportRollbackKept struct {
+	EntityID UUID   `json:"entity_id"`
+	Kind     string `json:"kind"`
+	Archived bool   `json:"archived"`
+	Reason   string `json:"reason"`
+}
+
+type CRMImportRowIssue struct {
+	Sheet   string `json:"sheet"`
+	Row     int64  `json:"row"`
+	Message string `json:"message"`
+}
+
+type CRMImportRun struct {
+	ID              UUID                       `json:"id"`
+	SourceKind      string                     `json:"source_kind"`
+	SourceSystem    string                     `json:"source_system"`
+	SourceAccount   string                     `json:"source_account"`
+	Status          string                     `json:"status"`
+	Scope           map[string]json.RawMessage `json:"scope"`
+	Mapping         map[string]json.RawMessage `json:"mapping"`
+	Revision        int64                      `json:"revision"`
+	PreviewToken    *string                    `json:"preview_token,omitempty"`
+	BatchSize       int64                      `json:"batch_size"`
+	TotalRecords    int64                      `json:"total_records"`
+	AppliedRecords  int64                      `json:"applied_records"`
+	SkippedRecords  int64                      `json:"skipped_records"`
+	ConflictRecords int64                      `json:"conflict_records"`
+	FailedRecords   int64                      `json:"failed_records"`
+	// HasCredentials — Токен источника сохранён; сам токен API не отдаёт
+	HasCredentials    bool    `json:"has_credentials"`
+	Error             string  `json:"error"`
+	CancelRequestedAt *string `json:"cancel_requested_at,omitempty"`
+	StartedAt         *string `json:"started_at,omitempty"`
+	FinishedAt        *string `json:"finished_at,omitempty"`
+	RolledBackAt      *string `json:"rolled_back_at,omitempty"`
+	CreatedBy         int64   `json:"created_by"`
+	CreatedAt         string  `json:"created_at"`
+	UpdatedAt         string  `json:"updated_at"`
+}
+
+type CRMImportRunInput struct {
+	SourceKind string `json:"source_kind"`
+	// SourceSystem — Система-источник: excel, amocrm, bitrix24
+	SourceSystem string `json:"source_system"`
+	// SourceAccount — Аккаунт в системе: поддомен amoCRM, портал Битрикс24
+	SourceAccount *string                    `json:"source_account,omitempty"`
+	Scope         map[string]json.RawMessage `json:"scope,omitempty"`
+	BatchSize     *int64                     `json:"batch_size,omitempty"`
+}
+
+type CRMImportSheetInfo struct {
+	Name      string     `json:"name"`
+	Rows      int64      `json:"rows"`
+	HeaderRow int64      `json:"header_row"`
+	Headers   []string   `json:"headers"`
+	Sample    [][]string `json:"sample"`
+	// Suggested — Заголовок -> предложенное поле
+	Suggested map[string]string `json:"suggested,omitempty"`
+}
+
+type CRMImportSheetMapping struct {
+	Sheet     string `json:"sheet"`
+	HeaderRow int64  `json:"header_row"`
+	Entity    string `json:"entity"`
+	// Columns — Заголовок колонки -> поле
+	Columns map[string]string `json:"columns"`
+}
+
+type CRMImportSourcePipeline struct {
+	ID       string                 `json:"id"`
+	Name     string                 `json:"name"`
+	Sort     int64                  `json:"sort"`
+	Main     bool                   `json:"main"`
+	Archived bool                   `json:"archived"`
+	Stages   []CRMImportSourceStage `json:"stages"`
+}
+
+type CRMImportSourceStage struct {
+	// Ref — Внешний ID этапа, который несут сделки пакета
+	Ref      string `json:"ref"`
+	Name     string `json:"name"`
+	Sort     int64  `json:"sort"`
+	Category string `json:"category"`
+	Color    string `json:"color"`
+	// Unsorted — Служебное «неразобранное»: в воронку кабинета не попадает
+	Unsorted *bool `json:"unsorted,omitempty"`
+}
+
+type CRMImportValue struct {
+	Value string `json:"value"`
+	Count int64  `json:"count"`
+	// Label — Название значения в источнике-коннекторе (сотрудник, этап, причина)
+	Label *string `json:"label,omitempty"`
+	// Email — Почта сотрудника источника
+	Email *string `json:"email,omitempty"`
+}
+
 type CRMInboxAssignInput struct {
 	// AssignedTo — null снимает назначение
 	AssignedTo *int64 `json:"assigned_to,omitempty"`
@@ -1322,6 +1564,8 @@ type CRMUserRef struct {
 	ID          int64   `json:"id"`
 	DisplayName string  `json:"display_name"`
 	Username    *string `json:"username,omitempty"`
+	// Email — Рабочая почта; по ней импорт узнаёт сотрудника чужой CRM
+	Email *string `json:"email,omitempty"`
 }
 
 type CalendarAvailability struct {
@@ -5219,8 +5463,9 @@ type DocflowFlowCommercial struct {
 	Lines        []DocflowFlowCommercialLine `json:"lines,omitempty"`
 	// Milestones — Этапы работ
 	Milestones []DocflowFlowScheduleStage `json:"milestones,omitempty"`
-	// Payments — График платежей
-	Payments []DocflowFlowScheduleStage `json:"payments,omitempty"`
+	// Payments — График платежей; при payment_rule — его раскрытие
+	Payments    []DocflowFlowScheduleStage `json:"payments,omitempty"`
+	PaymentRule *DocflowFlowPaymentRule    `json:"payment_rule,omitempty"`
 }
 
 // DocflowFlowCommercialLine — Строка переписанного оригинала, а не расчёт. Сумма строки приходит явно: скидка поставщика, налог и округление не заменяются местным произведением количества на цену.
@@ -5287,9 +5532,49 @@ type DocflowFlowDocument struct {
 	Relations        []DocflowFlowRelation       `json:"relations,omitempty"`
 	Approval         *DocflowFlowApproval        `json:"approval,omitempty"`
 	AccountingLinks  []DocflowFlowAccountingLink `json:"accounting_links,omitempty"`
-	CreatedAt        string                      `json:"created_at"`
-	UpdatedAt        string                      `json:"updated_at"`
-	UpdatedBy        int64                       `json:"updated_by"`
+	Edo              *DocflowFlowEDOState        `json:"edo,omitempty"`
+	// EdoLinks — Конверты, которыми карточка уходила и приходила. Заполняется только при чтении карточки и в редакцию не пишется: связь живёт своей строкой, её правит синхронизация, а редакция неизменяема
+	EdoLinks  []DocflowFlowEDOLink `json:"edo_links,omitempty"`
+	CreatedAt string               `json:"created_at"`
+	UpdatedAt string               `json:"updated_at"`
+	UpdatedBy int64                `json:"updated_by"`
+}
+
+// DocflowFlowEDOLink — Конверт, которым карточка уехала или пришла. Пакет — канал доставки, и здесь видно, чем карточка ему приходится и каким файлом она в нём поехала. Содержания конверта тут нет: за ним идут в сам пакет.
+type DocflowFlowEDOLink struct {
+	ID         UUID `json:"id"`
+	Connection UUID `json:"connection"`
+	// Message — Пакет у оператора; пусто при непустом external_doc_id означает черновик у оператора, наружу не ушедший
+	Message *UUID `json:"message,omitempty"`
+	// Role — Чем карточка приходится конверту: основной документ, приложение или основание
+	Role string `json:"role"`
+	// File — Какой файл карточки уехал вложением
+	File *UUID `json:"file,omitempty"`
+	// ExternalDocID — Идентификатор документа у оператора
+	ExternalDocID string `json:"external_doc_id"`
+	// ExternalAttachmentID — Идентификатор вложения у оператора: им адресуется замена файла при повторной отправке
+	ExternalAttachmentID *string `json:"external_attachment_id,omitempty"`
+	// Draft — Черновик, который ещё можно удалить у оператора
+	Draft bool `json:"draft"`
+	// Direction — Слова оператора о самом пакете, собранные при чтении карточки
+	Direction string `json:"direction"`
+	Number    string `json:"number"`
+	Date      string `json:"date"`
+	StateCode string `json:"state_code"`
+	StateName string `json:"state_name"`
+	CreatedBy *int64 `json:"created_by,omitempty"`
+	CreatedAt string `json:"created_at"`
+}
+
+// DocflowFlowEDOState — Ответ контрагента по документу, как его понимает карточка: подписал, отказал или аннулировали по соглашению сторон. Пересказа состояний оператора здесь нет — регламентов у него десятки, и свой словарь на них отстал бы от первой же правки закона. Живёт в редакции карточки и поэтому попадает в её историю сам.
+type DocflowFlowEDOState struct {
+	Message UUID `json:"message"`
+	// Outcome — Подписал, отказал (отклонение либо уведомление об уточнении) или аннулирован по соглашению сторон
+	Outcome string `json:"outcome"`
+	// StateName — Состояние словами оператора: показывается как есть, человек сверяет его с кабинетом оператора
+	StateName *string `json:"state_name,omitempty"`
+	// OccurredAt — Когда это случилось у оператора
+	OccurredAt string `json:"occurred_at"`
 }
 
 // DocflowFlowFile — Приложенный файл. Всё это описание делает владелец при загрузке, и командой правки оно не принимается.
@@ -5339,6 +5624,21 @@ type DocflowFlowKind = string
 type DocflowFlowPage struct {
 	Items   []DocflowFlowDocument `json:"items"`
 	HasMore bool                  `json:"has_more"`
+}
+
+// DocflowFlowPaymentRule — Регулярный график оплат одним правилом: сумма платежа, период, день, начало и либо число платежей, либо последняя дата. Сервер раскрывает правило в строки payments сам; план финансов и расчёты видят только строки, как при ручном графике.
+type DocflowFlowPaymentRule struct {
+	// Amount — Сумма одного платежа десятичным текстом; пусто — сумма документа делится поровну
+	Amount *string `json:"amount,omitempty"`
+	Period string  `json:"period"`
+	// Day — День месяца (month, quarter; короткий месяц прижимает к своему концу) или день недели ISO 1..7 (week)
+	Day int64 `json:"day"`
+	// Start — Первый платёж — ближайшая дата не раньше этой
+	Start string `json:"start"`
+	// Count — Число платежей; задаётся вместо until
+	Count *int64 `json:"count,omitempty"`
+	// Until — Последняя допустимая дата включительно; задаётся вместо count
+	Until *string `json:"until,omitempty"`
 }
 
 type DocflowFlowReference struct {
@@ -5611,7 +5911,7 @@ type DocflowInvitationSender struct {
 
 // DocflowIssue — Одна невыполненная проверка. Форма одна на сборку файла формата ФНС и на приёмку входящего документа к учёту: интерфейс переводит их одним словарём, и вторая форма списка означала бы второй словарь. Ни одной надписи для человека здесь нет: код, путь реквизита и подробности значениями — фразу собирает интерфейс, и собирает её на языке читателя.
 type DocflowIssue struct {
-	// Code — Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои четыре: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки) и docflow.edo.product_required (строке документа не сопоставлена номенклатура)
+	// Code — Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои пять: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке документа не сопоставлена номенклатура) и docflow.edo.sign_first (документ ещё не подписан: в учёт его принимают после подписи)
 	Code string `json:"code"`
 	// Path — Путь до реквизита ИМЕНАМИ ФНС — именами приказа, а не нашими: этими же словами человек будет искать требование в письме налоговой. Например `Документ/СвСчФакт/СвПрод/Адрес`.
 	Path string `json:"path"`
@@ -5693,13 +5993,32 @@ type DocflowMessage struct {
 	ActionsDue int64 `json:"actions_due"`
 	// StageName — Название ближайшего незакрытого этапа словами оператора
 	StageName string `json:"stage_name"`
+	// SignRequired — У пакета открыт этап, который закрывается нашей подписью под самим документом. Отдельно от actions_due и stage_name: счётчик говорит «ход за нами», а название этапа — слова оператора, и отличить по ним подпись от согласования нельзя. Пока признак поднят, приёмка к учёту отказывает кодом docflow.edo.sign_first
+	SignRequired bool `json:"sign_required"`
+	// NoticeSignRequired — Открытый подписной этап служебный: извещение о получении, подтверждение даты, квитанция. Отдельным признаком, потому что человеку это другое дело — «Подписать извещение» подтверждает технологию обмена, а не содержание документа. Приёмку к учёту служебный этап НЕ держит
+	NoticeSignRequired bool `json:"notice_sign_required"`
 	// Attachments — Состав пакета. Наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null. null означает «не спрашивали», пустой массив — «спросили, и там пусто»
 	Attachments []DocflowAttachment `json:"attachments,omitempty"`
 	Signatures  []DocflowSignature  `json:"signatures,omitempty"`
 	Stages      []DocflowStage      `json:"stages,omitempty"`
 	Events      []DocflowEvent      `json:"events,omitempty"`
+	// FlowDocuments — Карточки документооборота, которые вёз этот конверт. Как и весь состав, наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null
+	FlowDocuments []DocflowMessageFlowLink `json:"flow_documents,omitempty"`
 	// Cancellation — Соглашение сторон об аннулировании. Наполняется ТОЛЬКО в карточке одного пакета; в списке остаётся null — null означает «не спрашивали»
 	Cancellation *DocflowCancellation `json:"cancellation,omitempty"`
+	// AccountingDocument — Учётный документ, которым пакет принят к учёту. Пусто означает «не принимали» и делает пакет принимаемым; обнулиться поле может и после приёмки, когда учётный документ удалили
+	AccountingDocument *UUID `json:"accounting_document,omitempty"`
+	// AcceptedAt — Когда пакет приняли к учёту. Переживает удаление учётного документа: приёмка была
+	AcceptedAt *string `json:"accepted_at,omitempty"`
+	// AcceptedBy — Кто принял пакет к учёту
+	AcceptedBy *int64 `json:"accepted_by,omitempty"`
+	// Draft — Пакет записан оператору и наружу ещё не ушёл. Выводится из состава пакета при чтении: исходящий, без единого события обмена и без единой подписи
+	Draft bool `json:"draft"`
+	// DeletedAt — Корзина НАШЕГО зеркала: контрагент её не видит, и пакет у оператора остаётся прежним
+	DeletedAt *string `json:"deleted_at,omitempty"`
+	DeletedBy *int64  `json:"deleted_by,omitempty"`
+	// DeletedReason — Возвращают из корзины только trashed: у draft_removed документа у оператора больше нет
+	DeletedReason string `json:"deleted_reason"`
 }
 
 // DocflowMessageActionInput — Действие над пакетом словами ОПЕРАТОРА. Что именно можно сделать сейчас, говорит сам пакет: stages[].actions[]. Подписания среди этих действий нет — подпись идёт контуром /api/v1/docflow/edo/signing/tasks.
@@ -5712,6 +6031,22 @@ type DocflowMessageActionInput struct {
 	StageName *string `json:"stage_name,omitempty"`
 	// Comment — Комментарий человека. Уходит второй стороне и остаётся в ленте событий; при отклонении документа обязателен
 	Comment *string `json:"comment,omitempty"`
+}
+
+// DocflowMessageFlowLink — Карточка документооборота в пакете — обратная сторона связи edo_links карточки. Пакет доказывает отправку и подпись, а содержание живёт в карточке; здесь видно, чьё содержание он вёз и чем карточка ему приходится.
+type DocflowMessageFlowLink struct {
+	ID       UUID `json:"id"`
+	Document UUID `json:"document"`
+	// Role — Чем карточка приходится конверту: основной документ, приложение или основание
+	Role string `json:"role"`
+	// Version — Текущая редакция карточки: открывать человеку следует её
+	Version   int64           `json:"version"`
+	Kind      DocflowFlowKind `json:"kind"`
+	Status    string          `json:"status"`
+	Title     string          `json:"title"`
+	Number    string          `json:"number"`
+	Date      string          `json:"date"`
+	CreatedAt string          `json:"created_at"`
 }
 
 type DocflowMessageList struct {
@@ -5997,7 +6332,9 @@ type DocflowStage struct {
 	// RequiresSignature — Этап закрывается подписью. Признак оператора, а не наш вывод из названия
 	RequiresSignature bool `json:"requires_signature"`
 	// Closed — Ход не за нами. Закрытые этапы не показываются и не считаются
-	Closed    bool   `json:"closed"`
+	Closed bool `json:"closed"`
+	// Service — Служебный этап оператора — извещение о получении, подтверждение, квитанция. Технология обмена, а не решение по документу: клиент обрабатывает все служебные этапы пакета одним действием, а не по кнопке на каждый
+	Service   bool   `json:"service"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
@@ -6656,14 +6993,16 @@ type FinanceConnector struct {
 	OverlapDays        int64                      `json:"overlap_days"`
 	LastSyncAt         *string                    `json:"last_sync_at"`
 	LastSyncStatus     string                     `json:"last_sync_status"`
-	// LastError — The provider's own words and nothing else — what the cabinet user can act on ("consent expired", "certificate revoked"). Empty when the failure was ours: an internal cause never reaches this field, it is logged and named by last_error_code instead.
+	// LastError — The provider's technical reply, verbatim — material for an investigation, not a message for the cabinet screen: it may carry machine keys such as "invalid_client". The portal operator reads it in full on the bank connectors page, while the cabinet card renders last_error_code instead. Empty when the failure was ours: an internal cause never reaches this field, it is logged and named by last_error_code instead.
 	LastError string `json:"last_error"`
 	// LastErrorCode — Machine code of the last failure, translated by the client. Present because the text is stored: it is written in whatever locale the background sync happened to run in, and only a finite code can be rendered in the reader's language.
 	LastErrorCode  string `json:"last_error_code"`
 	AccountsTotal  int64  `json:"accounts_total"`
 	AccountsLinked int64  `json:"accounts_linked"`
-	CreatedAt      string `json:"created_at"`
-	UpdatedAt      string `json:"updated_at"`
+	// CanDelete — True only for an abandoned connection attempt: no accounts returned by the bank and no sync run at all. Everything else is the origin trail of the imported operations and is never deleted — both links cascade — so such a connection is disconnected instead.
+	CanDelete bool   `json:"can_delete"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 type FinanceConnectorAccount struct {
@@ -7335,6 +7674,10 @@ type FinancePaymentCalendarRow struct {
 	ExecutedOn       *string                  `json:"executed_on,omitempty"`
 	Overdue          bool                     `json:"overdue"`
 	DocumentID       *UUID                    `json:"document_id,omitempty"`
+	OperationID      *UUID                    `json:"operation_id,omitempty"`
+	OperationKind    *string                  `json:"operation_kind,omitempty"`
+	OperationVersion *int64                   `json:"operation_version,omitempty"`
+	ContractID       *UUID                    `json:"contract_id,omitempty"`
 	Fact             *FinancePaymentFact      `json:"fact,omitempty"`
 }
 
@@ -12157,23 +12500,25 @@ type ScrumTeamMember struct {
 }
 
 type Section struct {
-	ID           UUID                   `json:"id"`
-	Project      *UUID                  `json:"project"`
-	ProjectKey   *string                `json:"project_key"`
-	ProjectName  *string                `json:"project_name"`
-	Key          string                 `json:"key"`
-	Name         string                 `json:"name"`
-	Description  string                 `json:"description"`
-	Color        string                 `json:"color"`
-	Icon         string                 `json:"icon"`
-	Status       string                 `json:"status"`
-	Lead         *int64                 `json:"lead"`
-	LeadName     *string                `json:"lead_name"`
-	TargetDate   *string                `json:"target_date"`
-	TasksTotal   int64                  `json:"tasks_total"`
-	TasksActive  int64                  `json:"tasks_active"`
-	TasksDone    int64                  `json:"tasks_done"`
-	TasksOverdue int64                  `json:"tasks_overdue"`
+	ID           UUID    `json:"id"`
+	Project      *UUID   `json:"project"`
+	ProjectKey   *string `json:"project_key"`
+	ProjectName  *string `json:"project_name"`
+	Key          string  `json:"key"`
+	Name         string  `json:"name"`
+	Description  string  `json:"description"`
+	Color        string  `json:"color"`
+	Icon         string  `json:"icon"`
+	Status       string  `json:"status"`
+	Lead         *int64  `json:"lead"`
+	LeadName     *string `json:"lead_name"`
+	TargetDate   *string `json:"target_date"`
+	TasksTotal   int64   `json:"tasks_total"`
+	TasksActive  int64   `json:"tasks_active"`
+	TasksDone    int64   `json:"tasks_done"`
+	TasksOverdue int64   `json:"tasks_overdue"`
+	// SystemCode — Код системного раздела. `inbox` — «Входящие» проекта: удалить и перенести в другой проект нельзя, переименовать можно. У раздела клиента поле отсутствует.
+	SystemCode   *string                `json:"system_code,omitempty"`
 	MembersCount int64                  `json:"members_count"`
 	Members      []SectionMemberPreview `json:"members"`
 }
@@ -14276,27 +14621,30 @@ type Task struct {
 	BlockedByCount     int64                        `json:"blocked_by_count"`
 }
 
+// TaskCreate — Нужен `section` или `project`: задача без раздела попадает в системный раздел «Входящие» указанного проекта.
 type TaskCreate struct {
-	Section            UUID          `json:"section"`
-	Title              string        `json:"title"`
-	Description        *string       `json:"description,omitempty"`
-	Status             *UUID         `json:"status,omitempty"`
-	Priority           *TaskPriority `json:"priority,omitempty"`
-	IsImportant        *bool         `json:"is_important,omitempty"`
-	Creator            *int64        `json:"creator,omitempty"`
-	Executor           *int64        `json:"executor,omitempty"`
-	Assignee           *int64        `json:"assignee,omitempty"`
-	CoexecutorIds      []int64       `json:"coexecutor_ids,omitempty"`
-	WatcherIds         []int64       `json:"watcher_ids,omitempty"`
-	TagIds             []UUID        `json:"tag_ids,omitempty"`
-	StartAt            *string       `json:"start_at,omitempty"`
-	DueAt              *string       `json:"due_at,omitempty"`
-	Estimate           *float64      `json:"estimate,omitempty"`
-	Parent             *UUID         `json:"parent,omitempty"`
-	Recurrence         *string       `json:"recurrence,omitempty"`
-	RecurrenceInterval *int64        `json:"recurrence_interval,omitempty"`
-	RecurrenceUntil    *string       `json:"recurrence_until,omitempty"`
-	Cycle              *string       `json:"cycle,omitempty"`
+	Section *UUID `json:"section,omitempty"`
+	// Project — Проект задач для задачи без раздела; при заданном `section` не читается.
+	Project            map[string]json.RawMessage `json:"project,omitempty"`
+	Title              string                     `json:"title"`
+	Description        *string                    `json:"description,omitempty"`
+	Status             *UUID                      `json:"status,omitempty"`
+	Priority           *TaskPriority              `json:"priority,omitempty"`
+	IsImportant        *bool                      `json:"is_important,omitempty"`
+	Creator            *int64                     `json:"creator,omitempty"`
+	Executor           *int64                     `json:"executor,omitempty"`
+	Assignee           *int64                     `json:"assignee,omitempty"`
+	CoexecutorIds      []int64                    `json:"coexecutor_ids,omitempty"`
+	WatcherIds         []int64                    `json:"watcher_ids,omitempty"`
+	TagIds             []UUID                     `json:"tag_ids,omitempty"`
+	StartAt            *string                    `json:"start_at,omitempty"`
+	DueAt              *string                    `json:"due_at,omitempty"`
+	Estimate           *float64                   `json:"estimate,omitempty"`
+	Parent             *UUID                      `json:"parent,omitempty"`
+	Recurrence         *string                    `json:"recurrence,omitempty"`
+	RecurrenceInterval *int64                     `json:"recurrence_interval,omitempty"`
+	RecurrenceUntil    *string                    `json:"recurrence_until,omitempty"`
+	Cycle              *string                    `json:"cycle,omitempty"`
 	// Milestone — Веха: UUID или имя этапа своего проекта задач
 	Milestone *string                    `json:"milestone,omitempty"`
 	Custom    map[string]json.RawMessage `json:"custom,omitempty"`

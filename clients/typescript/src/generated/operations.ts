@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4721eeb7d987e5e1b3d0d270eb4ae47c25ee5684b9b7ac49582bd5d8aafd6a74).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 621f4c1320822d2049bfb3c0d0617e2437c27e149b34c2375d3c081841449370).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1924,6 +1924,13 @@ export interface OperationTypes {
     body: never;
     response: models.CRMCustomer;
   };
+  /** POST /api/v1/crm/imports/{id}/apply — Запустить перенос импорта */
+  crmApplyImport: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMImportApplyInput;
+    response: models.CRMImportRun;
+  };
   /** POST /api/v1/crm/pipelines/{id}/archive — Архивировать воронку */
   crmArchivePipeline: {
     params: { "id": models.UUID };
@@ -1938,12 +1945,26 @@ export interface OperationTypes {
     body: models.CRMInboxAssignInput;
     response: models.CRMInboxConversation;
   };
+  /** POST /api/v1/crm/imports/{id}/cancel — Отменить запуск импорта */
+  crmCancelImport: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMImportRun;
+  };
   /** POST /api/v1/crm/inbox/connections/{id}/check — Проверить подключение канала */
   crmCheckInboxConnection: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.CRMInboxConnectionCheck;
+  };
+  /** POST /api/v1/crm/imports/{id}/connect — Подключить запуск к аккаунту amoCRM или порталу Битрикс24 */
+  crmConnectImport: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMImportConnectInput;
+    response: models.CRMImportRun;
   };
   /** POST /api/v1/crm/leads/{id}/convert — Перевести лид в сделку */
   crmConvertLead: {
@@ -2001,6 +2022,20 @@ export interface OperationTypes {
     body: models.CRMCreateHubMeetingInput;
     response: models.CRMExternalLink;
   };
+  /** POST /api/v1/crm/imports — Создать запуск импорта */
+  crmCreateImport: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.CRMImportRunInput;
+    response: models.CRMImportRun;
+  };
+  /** POST /api/v1/crm/imports/{id}/pipelines — Создать воронки как в источнике */
+  crmCreateImportPipelines: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMImportOptions;
+  };
   /** POST /api/v1/crm/inbox/connections — Подключить канал */
   crmCreateInboxConnection: {
     params: Record<string, never>;
@@ -2057,6 +2092,13 @@ export interface OperationTypes {
     body: models.CRMCreateTaskLinkInput;
     response: models.CRMExternalLink;
   };
+  /** PUT /api/v1/crm/imports/{id}/records/{recordId}/decision — Решить, что делать с записью импорта */
+  crmDecideImportRecord: {
+    params: { "id": models.UUID; "recordId": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMImportDecisionInput;
+    response: models.CRMImportRecord;
+  };
   /** DELETE /api/v1/crm/lead-sources/{id} — Удалить источник обращения */
   crmDeleteLeadSource: {
     params: { "id": models.UUID };
@@ -2077,6 +2119,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.CRMInboxConnection;
+  };
+  /** POST /api/v1/crm/imports/{id}/extract — Собрать пакет из листов файла */
+  crmExtractImport: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMImportExtractInput;
+    response: models.CRMImportExtractResult;
   };
   /** GET /api/v1/crm/customers/duplicates — Найти похожие карточки клиента */
   crmFindCustomerDuplicates: {
@@ -2148,6 +2197,13 @@ export interface OperationTypes {
     body: never;
     response: models.CRMContactRef;
   };
+  /** GET /api/v1/crm/imports/{id} — Получить запуск импорта */
+  crmGetImport: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMImportRun;
+  };
   /** GET /api/v1/crm/inbox/attachments/{id}/content — Скачать вложение диалога */
   crmGetInboxAttachmentContent: {
     params: { "id": models.UUID };
@@ -2196,6 +2252,34 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: Array<models.CRMTimelineEntry>;
+  };
+  /** GET /api/v1/crm/import-fields — Поля листов универсального файла импорта */
+  crmImportFields: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMImportFields;
+  };
+  /** GET /api/v1/crm/imports/{id}/options — Справочники для сопоставления импорта */
+  crmImportOptions: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMImportOptions;
+  };
+  /** GET /api/v1/crm/imports/{id}/report — Отчёт импорта в XLSX */
+  crmImportReport: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** POST /api/v1/crm/imports/{id}/inspect — Показать колонки листа */
+  crmInspectImportSheet: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMImportInspectInput;
+    response: models.CRMImportSheetInfo;
   };
   /** GET /api/v1/crm/leads/{id}/duplicates — Похожие обращения */
   crmLeadDuplicates: {
@@ -2301,6 +2385,20 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: Array<models.CRMExternalLink>;
+  };
+  /** GET /api/v1/crm/imports/{id}/records — Записи пакета импорта */
+  crmListImportRecords: {
+    params: { "id": models.UUID };
+    query: { "limit"?: number; "offset"?: number; "status"?: "pending" | "skipped" | "conflict" | "applied" | "failed" };
+    body: never;
+    response: Array<models.CRMImportRecord>;
+  };
+  /** GET /api/v1/crm/imports — Список запусков импорта */
+  crmListImports: {
+    params: Record<string, never>;
+    query: { "limit"?: number };
+    body: never;
+    response: Array<models.CRMImportRun>;
   };
   /** GET /api/v1/crm/inbox/connections — Получить подключённые каналы */
   crmListInboxConnections: {
@@ -2421,6 +2519,13 @@ export interface OperationTypes {
     body: models.CRMMoveDealInput;
     response: models.CRMDeal;
   };
+  /** POST /api/v1/crm/imports/{id}/preview — Проверить импорт перед переносом */
+  crmPreviewImport: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMImportRevisionInput;
+    response: models.CRMImportPreview;
+  };
   /** POST /api/v1/crm/customers/{id}/promote — Завести клиента в справочнике контрагентов ERP */
   crmPromoteCustomer: {
     params: { "id": models.UUID };
@@ -2477,12 +2582,26 @@ export interface OperationTypes {
     body: never;
     response: models.CRMAutomationRun;
   };
+  /** POST /api/v1/crm/imports/{id}/rollback — Отменить загрузку импорта */
+  crmRollbackImport: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMImportRollback;
+  };
   /** GET /api/v1/crm/sales-plans — Планы продаж на месяц */
   crmSalesPlans: {
     params: Record<string, never>;
     query: { "period"?: string };
     body: never;
     response: Array<models.CRMSalesPlan>;
+  };
+  /** PUT /api/v1/crm/imports/{id}/mapping — Сохранить сопоставление импорта */
+  crmSaveImportMapping: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMImportMappingInput;
+    response: models.CRMImportRun;
   };
   /** POST /api/v1/crm/inbox/templates — Сохранить шаблон быстрого ответа */
   crmSaveInboxTemplate: {
@@ -2574,6 +2693,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CRMStagePatch;
     response: models.CRMStage;
+  };
+  /** POST /api/v1/crm/imports/{id}/file — Загрузить файл импорта */
+  crmUploadImportFile: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMImportFileInfo;
   };
   /** POST /api/v1/crm/inbox/messages/{id}/attachments — Добавить вложение к сообщению */
   crmUploadInboxMessageAttachment: {
@@ -2931,6 +3057,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.DocflowFlowAccountingLinkInput;
     response: models.DocflowFlowDocument;
+  };
+  /** POST /api/v1/docflow/flow/schedule-preview — Раскрыть правило графика оплат в строки */
+  docflowFlowPreviewPaymentSchedule: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.DocflowFlowCommercial;
+    response: models.DocflowFlowCommercial;
   };
   /** GET /api/v1/docflow/flow/references — Получить справочники внутреннего контура */
   docflowFlowReferences: {
@@ -3509,6 +3642,13 @@ export interface OperationTypes {
   /** DELETE /api/v1/finance/accounts/{id}/statements/{statementId} — Удалить последнюю загруженную выписку счёта */
   financeDeleteAccountStatement: {
     params: { "id": models.UUID; "statementId": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** DELETE /api/v1/finance/connectors/{id} — Удалить брошенную попытку подключения */
+  financeDeleteConnector: {
+    params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: void;
@@ -7310,9 +7450,12 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreUploadSelfEmployeePhoto: { method: "POST", path: "/api/v1/core/self/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmAddNote: { method: "POST", path: "/api/v1/crm/{entity}/{id}/notes", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmAdoptDirectoryContact: { method: "POST", path: "/api/v1/crm/contacts/{id}/adopt", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmApplyImport: { method: "POST", path: "/api/v1/crm/imports/{id}/apply", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmArchivePipeline: { method: "POST", path: "/api/v1/crm/pipelines/{id}/archive", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmAssignInboxConversation: { method: "PATCH", path: "/api/v1/crm/inbox/conversations/{id}/assign", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCancelImport: { method: "POST", path: "/api/v1/crm/imports/{id}/cancel", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCheckInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/check", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmConnectImport: { method: "POST", path: "/api/v1/crm/imports/{id}/connect", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmConvertLead: { method: "POST", path: "/api/v1/crm/leads/{id}/convert", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateAutomationRule: { method: "POST", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateCustomer: { method: "POST", path: "/api/v1/crm/customers", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7321,6 +7464,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmCreateEngagement: { method: "POST", path: "/api/v1/crm/{entity}/{id}/engagements", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateEventLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/events", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateHubMeetingLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/hub-meetings", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateImport: { method: "POST", path: "/api/v1/crm/imports", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateImportPipelines: { method: "POST", path: "/api/v1/crm/imports/{id}/pipelines", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateLead: { method: "POST", path: "/api/v1/crm/leads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateLeadFromConversation: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/leads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7329,9 +7474,11 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmCreatePipeline: { method: "POST", path: "/api/v1/crm/pipelines", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateStage: { method: "POST", path: "/api/v1/crm/pipelines/{id}/stages", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateTaskLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/tasks", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmDecideImportRecord: { method: "PUT", path: "/api/v1/crm/imports/{id}/records/{recordId}/decision", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmDeleteLeadSource: { method: "DELETE", path: "/api/v1/crm/lead-sources/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmDisableInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/disable", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmEnableInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/enable", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmExtractImport: { method: "POST", path: "/api/v1/crm/imports/{id}/extract", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmFindCustomerDuplicates: { method: "GET", path: "/api/v1/crm/customers/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetAnalytics: { method: "GET", path: "/api/v1/crm/analytics", module: "crm", stage: "preview", permission: "crm:team_read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetAutomationRule: { method: "GET", path: "/api/v1/crm/automation/rules/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7342,6 +7489,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmGetDealBoard: { method: "GET", path: "/api/v1/crm/deals/board", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
   crmGetDealStageHistory: { method: "GET", path: "/api/v1/crm/deals/{id}/stage-history", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetDirectoryContact: { method: "GET", path: "/api/v1/crm/contacts/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetImport: { method: "GET", path: "/api/v1/crm/imports/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetInboxAttachmentContent: { method: "GET", path: "/api/v1/crm/inbox/attachments/{id}/content", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetInboxConversation: { method: "GET", path: "/api/v1/crm/inbox/conversations/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetLead: { method: "GET", path: "/api/v1/crm/leads/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7349,6 +7497,10 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmGetOverview: { method: "GET", path: "/api/v1/crm/overview", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetPipeline: { method: "GET", path: "/api/v1/crm/pipelines/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetTimeline: { method: "GET", path: "/api/v1/crm/{entity}/{id}/timeline", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmImportFields: { method: "GET", path: "/api/v1/crm/import-fields", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmImportOptions: { method: "GET", path: "/api/v1/crm/imports/{id}/options", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmImportReport: { method: "GET", path: "/api/v1/crm/imports/{id}/report", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmInspectImportSheet: { method: "POST", path: "/api/v1/crm/imports/{id}/inspect", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmLeadDuplicates: { method: "GET", path: "/api/v1/crm/leads/{id}/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmLinkCustomerCompany: { method: "PUT", path: "/api/v1/crm/customers/{id}/companies/{companyId}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmLinkEntityConversation: { method: "POST", path: "/api/v1/crm/inbox/entities/{entity}/{id}/conversations", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7364,6 +7516,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmListEntityConversations: { method: "GET", path: "/api/v1/crm/inbox/entities/{entity}/{id}/conversations", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListEntityMessages: { method: "GET", path: "/api/v1/crm/inbox/entities/{entity}/{id}/messages", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 100 },
   crmListExternalLinks: { method: "GET", path: "/api/v1/crm/{entity}/{id}/links", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListImportRecords: { method: "GET", path: "/api/v1/crm/imports/{id}/records", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
+  crmListImports: { method: "GET", path: "/api/v1/crm/imports", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 20 },
   crmListInboxConnections: { method: "GET", path: "/api/v1/crm/inbox/connections", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListInboxConversationLinks: { method: "GET", path: "/api/v1/crm/inbox/conversations/{id}/links", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListInboxConversations: { method: "GET", path: "/api/v1/crm/inbox/conversations", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
@@ -7381,6 +7535,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmMarkInboxConversationRead: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/read", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmMergeLeads: { method: "POST", path: "/api/v1/crm/leads/{id}/merge", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmMoveDeal: { method: "POST", path: "/api/v1/crm/deals/{id}/move", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmPreviewImport: { method: "POST", path: "/api/v1/crm/imports/{id}/preview", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmPromoteCustomer: { method: "POST", path: "/api/v1/crm/customers/{id}/promote", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmQualifyLead: { method: "POST", path: "/api/v1/crm/leads/{id}/qualify", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmReopenDeal: { method: "POST", path: "/api/v1/crm/deals/{id}/reopen", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7389,7 +7544,9 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmReplaceDealContacts: { method: "PUT", path: "/api/v1/crm/deals/{id}/contacts", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmReplaceDealItems: { method: "PUT", path: "/api/v1/crm/deals/{id}/items", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmRetryAutomationRun: { method: "POST", path: "/api/v1/crm/automation/runs/{id}/retry", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmRollbackImport: { method: "POST", path: "/api/v1/crm/imports/{id}/rollback", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSalesPlans: { method: "GET", path: "/api/v1/crm/sales-plans", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmSaveImportMapping: { method: "PUT", path: "/api/v1/crm/imports/{id}/mapping", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSaveInboxTemplate: { method: "POST", path: "/api/v1/crm/inbox/templates", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSaveSalesPlans: { method: "PUT", path: "/api/v1/crm/sales-plans", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSendInboxMessage: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/messages", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7403,6 +7560,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmUpdateLeadSource: { method: "PATCH", path: "/api/v1/crm/lead-sources/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdatePipeline: { method: "PATCH", path: "/api/v1/crm/pipelines/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateStage: { method: "PATCH", path: "/api/v1/crm/stages/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUploadImportFile: { method: "POST", path: "/api/v1/crm/imports/{id}/file", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUploadInboxMessageAttachment: { method: "POST", path: "/api/v1/crm/inbox/messages/{id}/attachments", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUploadInboxOutboundFile: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/uploads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   developerAppAPICalls: { method: "GET", path: "/api/v1/developer/apps/{key}/installations/{id}/api-calls", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
@@ -7454,6 +7612,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowFlowDocuments: { method: "GET", path: "/api/v1/docflow/flow/documents", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   docflowFlowFileContent: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/files/{fileId}/content", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowLinkAccountingDocument: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/accounting-links", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowFlowPreviewPaymentSchedule: { method: "POST", path: "/api/v1/docflow/flow/schedule-preview", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowReferences: { method: "GET", path: "/api/v1/docflow/flow/references", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowRevisionFileContent: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/revisions/{version}/files/{fileId}/content", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowSubmitApproval: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/approval", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7537,6 +7696,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeCreateTransaction: { method: "POST", path: "/api/v1/finance/transactions", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateVATQuarter: { method: "POST", path: "/api/v1/finance/vat-quarters", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteAccountStatement: { method: "DELETE", path: "/api/v1/finance/accounts/{id}/statements/{statementId}", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeDeleteConnector: { method: "DELETE", path: "/api/v1/finance/connectors/{id}", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeletePnlLayout: { method: "DELETE", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance.pnl_layouts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteSettlementDocument: { method: "DELETE", path: "/api/v1/finance/settlements/documents/{id}", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeExecutePaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans/{id}/execute", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
