@@ -48879,6 +48879,30 @@ components:
         settings:
           type: object
           additionalProperties: true
+        cabinets:
+          type: array
+          description: Другие кабинеты человека; их занятость учитывается по профилю, видимость и учёт переключаются в шторке «Календари». Только в ответе GET.
+          items:
+            $ref: '#/components/schemas/CalendarCabinet'
+    CalendarCabinet:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - name
+        - source
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        name:
+          type: string
+        source:
+          type: string
+          description: 'Идентификатор источника в шторке: cabinet:<slug>.'
     CalendarWebPushConfig:
       type: object
       additionalProperties: false

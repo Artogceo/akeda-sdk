@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 50647620f9bf033d61428fc9773c0ea447f9fee99ad780884425c1a85f6d5ae6).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5759183aa0cde4837294fc472322f22f477b3a74db7a77ea8a69accaa1f00895).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1720,6 +1720,14 @@ export interface CalendarBusyPage {
   "items": Array<CalendarBusy>;
 }
 
+export interface CalendarCabinet {
+  "id": string;
+  "slug": string;
+  "name": string;
+  /** Идентификатор источника в шторке: cabinet:<slug>. */
+  "source": string;
+}
+
 export interface CalendarConnector {
   "id": UUID;
   "owner": number;
@@ -2007,6 +2015,8 @@ export interface CalendarPublicBookingLink {
 
 export interface CalendarSettingsEnvelope {
   "settings": { [key: string]: unknown };
+  /** Другие кабинеты человека; их занятость учитывается по профилю, видимость и учёт переключаются в шторке «Календари». Только в ответе GET. */
+  "cabinets"?: Array<CalendarCabinet>;
 }
 
 export interface CalendarSlot {

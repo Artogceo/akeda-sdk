@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 50647620f9bf033d61428fc9773c0ea447f9fee99ad780884425c1a85f6d5ae6).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5759183aa0cde4837294fc472322f22f477b3a74db7a77ea8a69accaa1f00895).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -177,6 +177,7 @@ __all__ = [
     "CalendarBookingParticipant",
     "CalendarBusy",
     "CalendarBusyPage",
+    "CalendarCabinet",
     "CalendarConnector",
     "CalendarConnectorCreate",
     "CalendarConnectorEnvelope",
@@ -3161,6 +3162,13 @@ class CalendarBusyPage(TypedDict):
     results: List["CalendarBusy"]
     items: List["CalendarBusy"]
 
+class CalendarCabinet(TypedDict):
+    id: str
+    slug: str
+    name: str
+    #: Идентификатор источника в шторке: cabinet:<slug>.
+    source: str
+
 class _CalendarConnectorRequired(TypedDict):
     id: "UUID"
     owner: int
@@ -3437,8 +3445,12 @@ class CalendarPublicBookingLink(TypedDict):
     participant_count: int
     company: str
 
-class CalendarSettingsEnvelope(TypedDict):
+class _CalendarSettingsEnvelopeRequired(TypedDict):
     settings: Dict[str, Any]
+
+class CalendarSettingsEnvelope(_CalendarSettingsEnvelopeRequired, total=False):
+    #: Другие кабинеты человека; их занятость учитывается по профилю, видимость и учёт переключаются в шторке «Календари». Только в ответе GET.
+    cabinets: List["CalendarCabinet"]
 
 class CalendarSlot(TypedDict):
     starts_at: str

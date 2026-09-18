@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 50647620f9bf033d61428fc9773c0ea447f9fee99ad780884425c1a85f6d5ae6).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5759183aa0cde4837294fc472322f22f477b3a74db7a77ea8a69accaa1f00895).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1718,6 +1718,14 @@ type CalendarBusyPage struct {
 	Items   []CalendarBusy `json:"items"`
 }
 
+type CalendarCabinet struct {
+	ID   string `json:"id"`
+	Slug string `json:"slug"`
+	Name string `json:"name"`
+	// Source — Идентификатор источника в шторке: cabinet:<slug>.
+	Source string `json:"source"`
+}
+
 type CalendarConnector struct {
 	ID                UUID                       `json:"id"`
 	Owner             int64                      `json:"owner"`
@@ -2005,6 +2013,8 @@ type CalendarPublicBookingLink struct {
 
 type CalendarSettingsEnvelope struct {
 	Settings map[string]json.RawMessage `json:"settings"`
+	// Cabinets — Другие кабинеты человека; их занятость учитывается по профилю, видимость и учёт переключаются в шторке «Календари». Только в ответе GET.
+	Cabinets []CalendarCabinet `json:"cabinets,omitempty"`
 }
 
 type CalendarSlot struct {
