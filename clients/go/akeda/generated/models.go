@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 621f4c1320822d2049bfb3c0d0617e2437c27e149b34c2375d3c081841449370).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 50647620f9bf033d61428fc9773c0ea447f9fee99ad780884425c1a85f6d5ae6).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -14294,13 +14294,13 @@ type StockReportRow struct {
 	Expected string `json:"expected"`
 	// Forecast — Decimal string
 	Forecast string `json:"forecast"`
-	// Minimum — Decimal string
+	// Minimum — Decimal string. В свёрнутых режимах — сумма минимумов разрезов «юрлицо × склад», из которых сложена строка.
 	Minimum string `json:"minimum"`
-	// Suggested — Decimal string. Только правило пополнения: ноль, пока прогноз не ниже минимума или правила нет, иначе добор до максимума с округлением вверх по кратности. Незаказанная потребность сюда не входит — она есть только в /stock/report/purchasing.
+	// Suggested — Decimal string. Только правило пополнения: ноль, пока прогноз не ниже минимума или правила нет, иначе добор до максимума с округлением вверх по кратности. Нехватка считается в разрезе «юрлицо × склад» (со свёрткой зон) против прогноза того же разреза; свёрнутая строка products, companies и matrix складывает нехватки своих разрезов, и остаток без правила, остаток без юрлица и излишек другого разреза её не гасят — итог одинаков во всех режимах. Незаказанная потребность сюда не входит — она есть только в /stock/report/purchasing.
 	Suggested string `json:"suggested"`
 	// Amount — Decimal string
 	Amount string `json:"amount"`
-	// UnitCost — Decimal string. Пусто в режиме matrix без company_id: ячейка складывает партии разных владельцев, и среднее по ним не лежит ни на одном складе.
+	// UnitCost — Decimal string. Пусто в режимах matrix и products без company_id и without_company: строка складывает партии разных владельцев, и среднее по ним не лежит ни на одном складе. Сортировка по unit_cost там идёт по имени.
 	UnitCost   string `json:"unit_cost"`
 	EntryCount int64  `json:"entry_count"`
 }
