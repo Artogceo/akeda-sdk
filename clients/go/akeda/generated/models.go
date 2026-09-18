@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5759183aa0cde4837294fc472322f22f477b3a74db7a77ea8a69accaa1f00895).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 44b04d661a5eba3e76dec981600dd7748d2296464c91113af547463c6078cd82).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -5289,6 +5289,10 @@ type DocflowFlowAccountingDocument struct {
 	Date            string `json:"date"`
 	Status          string `json:"status"`
 	IsMarkedDeleted bool   `json:"is_marked_deleted"`
+	// ContractNumber — Номер договора, по которому собран этот план. Заполнен только у кандидатов, поднятых наверх связью основания акта: человек обязан видеть, почему план стоит первым
+	ContractNumber *string `json:"contract_number,omitempty"`
+	// ContractDate — Дата того же договора в форме ГГГГ-ММ-ДД
+	ContractDate *string `json:"contract_date,omitempty"`
 }
 
 // DocflowFlowAccountingLink — Ссылка на учётный документ чужого модуля по личности. Состояние, остаток и содержимое чужого документа сюда не копируются: правда о нём живёт у его владельца.
@@ -5801,6 +5805,8 @@ type DocflowIntakePreview struct {
 	Formalized bool `json:"formalized"`
 	// Ready — Принимается ли пакет прямо сейчас, без правок
 	Ready bool `json:"ready"`
+	// FlowCardKind — Вид карточки документооборота, которую заведёт приёмка; пусто — карточки по этому пакету не будет. Читается вместе с formalized: непустой вид при formalized = false означает «учётного документа не будет, карточка будет», и приёмка по такому пакету осмысленна. Договор формализованным титулом не бывает по определению — его присылают подписанным PDF, — поэтому кнопку приёмки на нём гасить нельзя, её следует назвать «Завести карточку».
+	FlowCardKind string `json:"flow_card_kind"`
 	// Accepted — Учётный документ, если пакет уже принят; иначе null. Показывается вместо повторной приёмки: второй документ по тому же пакету — это задвоенный приход и задвоенный долг перед поставщиком.
 	Accepted     *DocflowAcceptedDocument  `json:"accepted"`
 	Source       DocflowIntakeSource       `json:"source"`
@@ -5823,6 +5829,8 @@ type DocflowIntakeProductOption struct {
 type DocflowIntakeResult struct {
 	Document DocflowAcceptedDocument `json:"document"`
 	Preview  DocflowIntakePreview    `json:"preview"`
+	// FlowDocument — Карточка документооборота, если этот пакет её заводит: договор, дополнительное соглашение, спецификация, акт. Отсутствует у первички — счёт и УПД идут в учёт и привязываются к договору. У неформализованного договора приходит ОДНА карточка без учётного документа: принимать к учёту там нечего, а согласовывать есть что.
+	FlowDocument *DocflowFlowDocument `json:"flow_document,omitempty"`
 }
 
 // DocflowIntakeSource — Реквизиты чужого файла обмена, из которого всё прочитано. Разбор частичный и ничего не проверяет: файл уже подписан и юридически значим, и отказать в его чтении из-за реквизита, который нам не нужен, значит потерять поставку из-за чужой ошибки в необязательном поле.
@@ -13520,6 +13528,7 @@ type StockCompanyRef struct {
 	ID         UUID   `json:"id"`
 	Name       string `json:"name"`
 	BusinessID UUID   `json:"business_id"`
+	IsActive   bool   `json:"is_active"`
 }
 
 type StockCompanyRefPage struct {

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5759183aa0cde4837294fc472322f22f477b3a74db7a77ea8a69accaa1f00895).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 44b04d661a5eba3e76dec981600dd7748d2296464c91113af547463c6078cd82).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -6625,9 +6625,7 @@ class DocflowFlowAccountingBacklinkPage(TypedDict):
     items: List["DocflowFlowAccountingBacklink"]
     has_more: bool
 
-class DocflowFlowAccountingDocument(TypedDict):
-    """Карточка учётного документа чужого модуля, прочитанная у его владельца."""
-
+class _DocflowFlowAccountingDocumentRequired(TypedDict):
     id: "UUID"
     owner: Literal['finance', 'stock']
     type_key: str
@@ -6636,6 +6634,14 @@ class DocflowFlowAccountingDocument(TypedDict):
     date: str
     status: str
     is_marked_deleted: bool
+
+class DocflowFlowAccountingDocument(_DocflowFlowAccountingDocumentRequired, total=False):
+    """Карточка учётного документа чужого модуля, прочитанная у его владельца."""
+
+    #: Номер договора, по которому собран этот план. Заполнен только у кандидатов, поднятых наверх связью основания акта: человек обязан видеть, почему план стоит первым
+    contract_number: str
+    #: Дата того же договора в форме ГГГГ-ММ-ДД
+    contract_date: str
 
 class _DocflowFlowAccountingLinkRequired(TypedDict):
     id: "UUID"
@@ -7175,6 +7181,8 @@ class DocflowIntakePreview(TypedDict):
     formalized: bool
     #: Принимается ли пакет прямо сейчас, без правок
     ready: bool
+    #: Вид карточки документооборота, которую заведёт приёмка; пусто — карточки по этому пакету не будет. Читается вместе с formalized: непустой вид при formalized = false означает «учётного документа не будет, карточка будет», и приёмка по такому пакету осмысленна. Договор формализованным титулом не бывает по определению — его присылают подписанным PDF, — поэтому кнопку приёмки на нём гасить нельзя, её следует назвать «Завести карточку».
+    flow_card_kind: Literal['', 'contract', 'amendment', 'specification', 'act']
     #: Учётный документ, если пакет уже принят; иначе null. Показывается вместо повторной приёмки: второй документ по тому же пакету — это задвоенный приход и задвоенный долг перед поставщиком.
     accepted: Optional["DocflowAcceptedDocument"]
     source: "DocflowIntakeSource"
@@ -7192,11 +7200,15 @@ class DocflowIntakeProductOption(TypedDict):
     name: str
     sku: str
 
-class DocflowIntakeResult(TypedDict):
-    """Что вышло из приёмки. Вместе с документом возвращается ПЕРЕСОБРАННОЕ предложение: экран после приёмки показывает то же, что показывал до неё, но уже с проставленными решениями — иначе ему пришлось бы спрашивать состояние вторым запросом и показывать между ними полупустую форму."""
-
+class _DocflowIntakeResultRequired(TypedDict):
     document: "DocflowAcceptedDocument"
     preview: "DocflowIntakePreview"
+
+class DocflowIntakeResult(_DocflowIntakeResultRequired, total=False):
+    """Что вышло из приёмки. Вместе с документом возвращается ПЕРЕСОБРАННОЕ предложение: экран после приёмки показывает то же, что показывал до неё, но уже с проставленными решениями — иначе ему пришлось бы спрашивать состояние вторым запросом и показывать между ними полупустую форму."""
+
+    #: Карточка документооборота, если этот пакет её заводит: договор, дополнительное соглашение, спецификация, акт. Отсутствует у первички — счёт и УПД идут в учёт и привязываются к договору. У неформализованного договора приходит ОДНА карточка без учётного документа: принимать к учёту там нечего, а согласовывать есть что.
+    flow_document: "DocflowFlowDocument"
 
 class DocflowIntakeSource(TypedDict):
     """Реквизиты чужого файла обмена, из которого всё прочитано. Разбор частичный и ничего не проверяет: файл уже подписан и юридически значим, и отказать в его чтении из-за реквизита, который нам не нужен, значит потерять поставку из-за чужой ошибки в необязательном поле."""
@@ -14524,6 +14536,7 @@ class StockCompanyRef(TypedDict):
     id: "UUID"
     name: str
     business_id: "UUID"
+    is_active: bool
 
 class StockCompanyRefPage(TypedDict):
     count: int

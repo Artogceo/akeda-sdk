@@ -28184,7 +28184,7 @@ paths:
         - Stock references
       operationId: stockListCompanies
       summary: Получить юрлица кабинета, доступные сотруднику
-      description: Это подстановочный список активных юрлиц кабинета, а не контрагентов; отдаются только идентификатор и название.
+      description: Это подстановочный список юрлиц кабинета, а не контрагентов; отдаются идентификатор, название, бизнес и признак действующего. По умолчанию только действующие; include_archived=true добавляет архивные — ими экран называет юрлицо документа, заведённого до архивации.
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -28197,6 +28197,11 @@ paths:
         - installationToken: []
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
+        - name: include_archived
+          in: query
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Доступные юрлица
@@ -42411,6 +42416,8 @@ paths:
       summary: Получить планы, к которым можно принять акт
       description: |-
         Плановые операции модуля финансов с теми же сторонами и валютой, что у акта. Из них выбирают тот план, работы по которому закрывает акт.
+
+        План ДОГОВОРА, на который акт сослан связью основания, идёт первым и несёт его номер и дату (contract_number, contract_date). Поднимается он только на первой странице: строка стоит вне общего порядка, и повторять её на каждой следующей значило бы показывать один и тот же план столько раз, сколько страниц человек пролистал.
 
         Как и соседняя выборка этапов, стоит под правом записи и требует права работать с документами модуля финансов. Страница — 100 строк; продолжение спрашивают значением next_offset.
       security:
@@ -67373,6 +67380,7 @@ components:
         - id
         - name
         - business_id
+        - is_active
       properties:
         id:
           $ref: '#/components/schemas/UUID'
@@ -67380,6 +67388,8 @@ components:
           type: string
         business_id:
           $ref: '#/components/schemas/UUID'
+        is_active:
+          type: boolean
     StockCompanyRefPage:
       type: object
       additionalProperties: false
@@ -80574,6 +80584,12 @@ components:
           type: string
         is_marked_deleted:
           type: boolean
+        contract_number:
+          type: string
+          description: 'Номер договора, по которому собран этот план. Заполнен только у кандидатов, поднятых наверх связью основания акта: человек обязан видеть, почему план стоит первым'
+        contract_date:
+          type: string
+          description: Дата того же договора в форме ГГГГ-ММ-ДД
     DocflowFlowAccountingPage:
       type: object
       additionalProperties: false
@@ -82303,6 +82319,7 @@ components:
         - message
         - formalized
         - ready
+        - flow_card_kind
         - accepted
         - source
         - counterparty
@@ -82318,6 +82335,15 @@ components:
         ready:
           type: boolean
           description: Принимается ли пакет прямо сейчас, без правок
+        flow_card_kind:
+          type: string
+          enum:
+            - ''
+            - contract
+            - amendment
+            - specification
+            - act
+          description: 'Вид карточки документооборота, которую заведёт приёмка; пусто — карточки по этому пакету не будет. Читается вместе с formalized: непустой вид при formalized = false означает «учётного документа не будет, карточка будет», и приёмка по такому пакету осмысленна. Договор формализованным титулом не бывает по определению — его присылают подписанным PDF, — поэтому кнопку приёмки на нём гасить нельзя, её следует назвать «Завести карточку».'
         accepted:
           oneOf:
             - $ref: '#/components/schemas/DocflowAcceptedDocument'
@@ -82655,6 +82681,9 @@ components:
           $ref: '#/components/schemas/DocflowAcceptedDocument'
         preview:
           $ref: '#/components/schemas/DocflowIntakePreview'
+        flow_document:
+          $ref: '#/components/schemas/DocflowFlowDocument'
+          description: 'Карточка документооборота, если этот пакет её заводит: договор, дополнительное соглашение, спецификация, акт. Отсутствует у первички — счёт и УПД идут в учёт и привязываются к договору. У неформализованного договора приходит ОДНА карточка без учётного документа: принимать к учёту там нечего, а согласовывать есть что.'
     DocflowRequisites:
       type: object
       additionalProperties: false
