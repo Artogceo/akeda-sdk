@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 572ea6f9912f3669e4fde0f563c911eaf420217e163124abfeb68dc3a5954326).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 45dcff42ccfb9f45d44cd2874aa80f3763f5d6c00f638f786e320f27f475f215).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -110,6 +110,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.AppRuntimeSlotLaunchInput;
     response: models.AppRuntimeSlotLaunch;
+  };
+  /** GET /api/v1/billing/public/catalog — Получить публичную витрину тарифов */
+  billingPublicCatalog: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.BillingPublicCatalog;
   };
   /** POST /api/v1/calendar/public/{slug}/book — Забронировать свободный слот */
   calendarBookPublicSlot: {
@@ -2099,13 +2106,6 @@ export interface OperationTypes {
     body: models.CRMImportDecisionInput;
     response: models.CRMImportRecord;
   };
-  /** DELETE /api/v1/crm/lead-sources/{id} — Удалить источник обращения */
-  crmDeleteLeadSource: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
   /** POST /api/v1/crm/inbox/connections/{id}/disable — Выключить канал */
   crmDisableInboxConnection: {
     params: { "id": models.UUID };
@@ -2876,6 +2876,55 @@ export interface OperationTypes {
     body: models.DocflowIntakeInput;
     response: models.DocflowIntakeResult;
   };
+  /** GET /api/v1/docflow/approvals/{id} — Получить согласование целиком */
+  docflowApproval: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowApproval;
+  };
+  /** GET /api/v1/docflow/approval-routes/{id} — Получить маршрут согласования */
+  docflowApprovalRoute: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowApprovalRoute;
+  };
+  /** GET /api/v1/docflow/approval-routes — Получить маршруты согласования */
+  docflowApprovalRoutes: {
+    params: Record<string, never>;
+    query: { "kind"?: "flow_document" | "payment_request" | "any"; "module"?: "docflow" | "finance" };
+    body: never;
+    response: models.DocflowApprovalRouteList;
+  };
+  /** GET /api/v1/docflow/approval-settings — Получить справочники конструктора маршрутов */
+  docflowApprovalSettings: {
+    params: Record<string, never>;
+    query: { "search"?: string };
+    body: never;
+    response: models.DocflowApprovalDirectories;
+  };
+  /** GET /api/v1/docflow/approvals/state — Узнать состояние согласования одного предмета */
+  docflowApprovalState: {
+    params: Record<string, never>;
+    query: { "id": models.UUID; "kind": "flow_document" | "payment_request"; "module": "docflow" | "finance" };
+    body: never;
+    response: models.DocflowApprovalSubjectState;
+  };
+  /** GET /api/v1/docflow/approval-substitutions — Получить замещения согласующих */
+  docflowApprovalSubstitutions: {
+    params: Record<string, never>;
+    query: { "principal"?: number; "substitute"?: number };
+    body: never;
+    response: models.DocflowApprovalSubstitutionList;
+  };
+  /** GET /api/v1/docflow/approvals — Получить очередь согласований */
+  docflowApprovals: {
+    params: Record<string, never>;
+    query: { "limit"?: number; "mine"?: "true" | "false"; "module"?: "docflow" | "finance"; "offset"?: number; "overdue"?: "true" | "false"; "search"?: string; "state"?: "pending" | "approved" | "rejected" | "returned" | "cancelled" };
+    body: never;
+    response: models.DocflowApprovalInboxPage;
+  };
   /** POST /api/v1/docflow/messages/{id}/cancellation/approve — Согласиться на аннулирование */
   docflowApproveCancellation: {
     params: { "id": models.UUID };
@@ -2890,6 +2939,13 @@ export interface OperationTypes {
     body: models.DocflowMessageActionInput;
     response: models.DocflowActionResult;
   };
+  /** POST /api/v1/docflow/approvals/{id}/cancel — Отозвать предмет с согласования */
+  docflowCancelApproval: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.DocflowApprovalCancelInput;
+    response: models.DocflowApproval;
+  };
   /** POST /api/v1/docflow/connections/{id}/check — Проверить связь с оператором */
   docflowCheckConnection: {
     params: { "id": models.UUID };
@@ -2897,12 +2953,40 @@ export interface OperationTypes {
     body: never;
     response: models.DocflowConnection;
   };
+  /** POST /api/v1/docflow/approval-routes — Завести маршрут согласования */
+  docflowCreateApprovalRoute: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.DocflowApprovalRoute;
+    response: models.DocflowApprovalRoute;
+  };
   /** POST /api/v1/docflow/connections — Завести подключение к оператору ЭДО */
   docflowCreateConnection: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.DocflowConnectionInput;
     response: models.DocflowConnection;
+  };
+  /** POST /api/v1/docflow/approvals/{id}/decisions — Принять решение согласующего */
+  docflowDecideApproval: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.DocflowApprovalDecisionInput;
+    response: models.DocflowApproval;
+  };
+  /** POST /api/v1/docflow/approvals/{id}/delegate — Поручить своё решение другому человеку */
+  docflowDelegateApproval: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.DocflowApprovalDelegateInput;
+    response: models.DocflowApproval;
+  };
+  /** DELETE /api/v1/docflow/approval-substitutions/{id} — Удалить замещение согласующего */
+  docflowDeleteApprovalSubstitution: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
   };
   /** DELETE /api/v1/docflow/connections/{id} — Удалить подключение */
   docflowDeleteConnection: {
@@ -2960,34 +3044,6 @@ export interface OperationTypes {
     body: never;
     response: models.DocflowFlowAccrualPlan;
   };
-  /** GET /api/v1/docflow/flow/documents/{id}/approval/context — Узнать, что текущий человек может сделать с согласованием */
-  docflowFlowApprovalContext: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowFlowApprovalContext;
-  };
-  /** GET /api/v1/docflow/flow/approvals/inbox — Получить компактную очередь «ждёт моего решения» */
-  docflowFlowApprovalInbox: {
-    params: Record<string, never>;
-    query: { "limit"?: number; "offset"?: number };
-    body: never;
-    response: models.DocflowFlowApprovalInboxPage;
-  };
-  /** GET /api/v1/docflow/flow/documents/{id}/approval/people — Получить кандидатов в согласующие */
-  docflowFlowApprovalPeople: {
-    params: { "id": models.UUID };
-    query: { "after"?: number; "search"?: string };
-    body: never;
-    response: models.DocflowFlowApprovalPeoplePage;
-  };
-  /** POST /api/v1/docflow/flow/documents/{id}/approval/cancel — Отозвать документ с согласования */
-  docflowFlowCancelApproval: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowFlowApprovalCancel;
-    response: models.DocflowFlowDocument;
-  };
   /** POST /api/v1/docflow/flow/documents/{id}/commands — Выполнить команду правки документа */
   docflowFlowChangeDocument: {
     params: { "id": models.UUID };
@@ -3014,13 +3070,6 @@ export interface OperationTypes {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.DocflowFlowFinancePlanInput;
-    response: models.DocflowFlowDocument;
-  };
-  /** POST /api/v1/docflow/flow/documents/{id}/approval/decisions — Принять решение согласующего */
-  docflowFlowDecideApproval: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowFlowApprovalDecision;
     response: models.DocflowFlowDocument;
   };
   /** GET /api/v1/docflow/flow/documents/{id} — Получить карточку документа */
@@ -3078,13 +3127,6 @@ export interface OperationTypes {
     query: { "preview"?: "1" };
     body: never;
     response: void;
-  };
-  /** POST /api/v1/docflow/flow/documents/{id}/approval — Отправить документ на согласование */
-  docflowFlowSubmitApproval: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowFlowApprovalSubmit;
-    response: models.DocflowFlowDocument;
   };
   /** POST /api/v1/docflow/flow/documents/{id}/accounting-links/remove — Снять связь бумаги с учётным документом */
   docflowFlowUnlinkAccountingDocument: {
@@ -3155,6 +3197,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.DocflowSigningTaskInput;
     response: models.DocflowSigningTask;
+  };
+  /** PUT /api/v1/docflow/messages/{id}/intake/counterparty — Запомнить, с каким контрагентом справочника сведён пакет */
+  docflowLinkIntakeCounterparty: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.DocflowLinkIntakeCounterpartyRequest;
+    response: models.DocflowIntakePreview;
   };
   /** GET /api/v1/docflow/connections — Получить подключения к операторам ЭДО */
   docflowListConnections: {
@@ -3247,6 +3296,34 @@ export interface OperationTypes {
     body: models.DocflowCancellationInput;
     response: models.DocflowActionResult;
   };
+  /** POST /api/v1/docflow/approvals/{id}/resubmit — Отправить предмет повторно после доработки */
+  docflowResubmitApproval: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.DocflowApprovalResubmitInput;
+    response: models.DocflowApproval;
+  };
+  /** PUT /api/v1/docflow/approval-policies — Объявить согласование обязательным для вида предмета */
+  docflowSaveApprovalPolicy: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.DocflowApprovalPolicy;
+    response: void;
+  };
+  /** PUT /api/v1/docflow/approval-routes/{id} — Сохранить маршрут согласования */
+  docflowSaveApprovalRoute: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.DocflowApprovalRoute;
+    response: models.DocflowApprovalRoute;
+  };
+  /** POST /api/v1/docflow/approval-substitutions — Завести или изменить замещение согласующего */
+  docflowSaveApprovalSubstitution: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.DocflowApprovalSubstitution;
+    response: models.DocflowApprovalSubstitution;
+  };
   /** POST /api/v1/docflow/messages/{id}/buyer-title — Собрать ответный титул покупателя и приложить его к пакету */
   docflowSendBuyerTitle: {
     params: { "id": models.UUID };
@@ -3261,12 +3338,26 @@ export interface OperationTypes {
     body: models.DocflowOutgoingInput;
     response: models.DocflowTitle;
   };
+  /** POST /api/v1/docflow/approval-routes/{id}/active — Включить или выключить маршрут согласования */
+  docflowSetApprovalRouteActive: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.DocflowApprovalRouteActiveInput;
+    response: void;
+  };
   /** PUT /api/v1/docflow/connections/{id}/mode — Выбрать безопасный или рабочий режим подключения */
   docflowSetConnectionMode: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.DocflowConnectionModeInput;
     response: models.DocflowConnection;
+  };
+  /** POST /api/v1/docflow/approvals — Отправить предмет на согласование */
+  docflowSubmitApproval: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.DocflowApprovalSubject;
+    response: models.DocflowApproval;
   };
   /** POST /api/v1/docflow/edo/signing/tasks/{task_id}/signature — Отправить вычисленную подпись */
   docflowSubmitSignature: {
@@ -5431,6 +5522,13 @@ export interface OperationTypes {
     body: never;
     response: models.PlatformAppInstallationEventPage;
   };
+  /** POST /api/v1/settings/subscription/change — Изменить подписку кабинета */
+  settingsChangeSubscription: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.BillingChangeInput;
+    response: models.BillingChangeResult;
+  };
   /** POST /api/v1/settings/api-keys — Выпустить API-ключ */
   settingsCreateApiKey: {
     params: Record<string, never>;
@@ -5522,6 +5620,34 @@ export interface OperationTypes {
     body: never;
     response: models.SettingsFieldSchema;
   };
+  /** GET /api/v1/settings/billing/invoices/{id} — Получить свой счёт */
+  settingsGetInvoice: {
+    params: { "id": string };
+    query: Record<string, never>;
+    body: never;
+    response: models.BillingCabinetInvoice;
+  };
+  /** GET /api/v1/settings/subscription — Получить подписку кабинета */
+  settingsGetSubscription: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.BillingCabinetSubscription;
+  };
+  /** GET /api/v1/settings/subscription/notice — Получить предупреждение о подписке */
+  settingsGetSubscriptionNotice: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.BillingCabinetNotice;
+  };
+  /** GET /api/v1/settings/usage — Получить потребление своего кабинета */
+  settingsGetUsage: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.SettingsUsage;
+  };
   /** POST /api/v1/settings/apps/{publisher}/{key}/installation — Установить приложение в свой кабинет */
   settingsInstallApp: {
     params: { "key": string; "publisher": string };
@@ -5571,6 +5697,13 @@ export interface OperationTypes {
     body: never;
     response: models.SettingsFieldDefinitionPage;
   };
+  /** GET /api/v1/settings/billing/invoices — Получить свои счета */
+  settingsListInvoices: {
+    params: Record<string, never>;
+    query: { "limit"?: number; "offset"?: number };
+    body: never;
+    response: models.BillingInvoicePage;
+  };
   /** GET /api/v1/settings/members — Получить участников кабинета */
   settingsListMembers: {
     params: Record<string, never>;
@@ -5612,6 +5745,13 @@ export interface OperationTypes {
     query: { "version": string };
     body: never;
     response: models.SettingsAppConsentResult;
+  };
+  /** POST /api/v1/settings/subscription/change-preview — Посчитать изменение подписки */
+  settingsPreviewSubscriptionChange: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.BillingChangeInput;
+    response: models.BillingChangePreview;
   };
   /** POST /api/v1/settings/app-installations/{id}/deliveries/replay — Переиграть доставки своей установки */
   settingsReplayAppDeliveries: {
@@ -5710,6 +5850,34 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.SettingsRoleInput;
     response: models.SettingsRole;
+  };
+  /** POST /api/v1/signup/requests/{token}/complete — Завести кабинет по одноразовой ссылке */
+  signupCompleteRequest: {
+    params: { "token": string };
+    query: Record<string, never>;
+    body: models.SignupCompleteInput;
+    response: models.SignupSession;
+  };
+  /** GET /api/v1/signup/requests/{token} — Прочитать заявку по одноразовой ссылке */
+  signupInspectRequest: {
+    params: { "token": string };
+    query: Record<string, never>;
+    body: never;
+    response: models.SignupRequestInfo;
+  };
+  /** POST /api/v1/signup/requests — Оставить заявку на кабинет */
+  signupRequest: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.SignupRequestInput;
+    response: models.SignupAccepted;
+  };
+  /** POST /api/v1/signup/requests/{token}/retry-provisioning — Повторить провижининг кабинета по заявке */
+  signupRetryProvisioning: {
+    params: { "token": string };
+    query: Record<string, never>;
+    body: never;
+    response: models.SignupSession;
   };
   /** GET /api/v1/stock/account-transfers/proposal — Показать остаток запасов, который надо перенести на счёт по новому правилу */
   stockAccountTransferProposal: {
@@ -7198,6 +7366,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   appRuntimeInstallation: { method: "GET", path: "/api/v1/app/installation", module: "platform", stage: "preview", permission: "app:self", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appRuntimeLeaseSecret: { method: "POST", path: "/api/v1/app/config/{key}/lease", module: "platform", stage: "preview", permission: "app:secrets", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appRuntimeRedeemSlotLaunch: { method: "POST", path: "/api/v1/app/slot-launch", module: "platform", stage: "preview", permission: "app:launch", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  billingPublicCatalog: { method: "GET", path: "/api/v1/billing/public/catalog", module: "billing", stage: "preview", permission: "billing:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarBookPublicSlot: { method: "POST", path: "/api/v1/calendar/public/{slug}/book", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarCompleteGoogleOAuth: { method: "POST", path: "/api/v1/calendar/connectors/google/oauth/complete", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarCompleteOffice365OAuth: { method: "POST", path: "/api/v1/calendar/connectors/office365/oauth/complete", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7482,7 +7651,6 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmCreateStage: { method: "POST", path: "/api/v1/crm/pipelines/{id}/stages", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateTaskLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/tasks", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmDecideImportRecord: { method: "PUT", path: "/api/v1/crm/imports/{id}/records/{recordId}/decision", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmDeleteLeadSource: { method: "DELETE", path: "/api/v1/crm/lead-sources/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmDisableInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/disable", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmEnableInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/enable", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmExtractImport: { method: "POST", path: "/api/v1/crm/imports/{id}/extract", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7593,10 +7761,22 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   developerSubmitPublisherApplication: { method: "POST", path: "/api/v1/developer/publisher-application", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   developerUploadAppFunctionArtifact: { method: "POST", path: "/api/v1/developer/apps/{key}/versions/{version}/function-artifact", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowAcceptIntake: { method: "POST", path: "/api/v1/docflow/messages/{id}/intake", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowApproval: { method: "GET", path: "/api/v1/docflow/approvals/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowApprovalRoute: { method: "GET", path: "/api/v1/docflow/approval-routes/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowApprovalRoutes: { method: "GET", path: "/api/v1/docflow/approval-routes", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowApprovalSettings: { method: "GET", path: "/api/v1/docflow/approval-settings", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowApprovalState: { method: "GET", path: "/api/v1/docflow/approvals/state", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowApprovalSubstitutions: { method: "GET", path: "/api/v1/docflow/approval-substitutions", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowApprovals: { method: "GET", path: "/api/v1/docflow/approvals", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   docflowApproveCancellation: { method: "POST", path: "/api/v1/docflow/messages/{id}/cancellation/approve", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApproveMessage: { method: "POST", path: "/api/v1/docflow/messages/{id}/actions/approve", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowCancelApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/cancel", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowCheckConnection: { method: "POST", path: "/api/v1/docflow/connections/{id}/check", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowCreateApprovalRoute: { method: "POST", path: "/api/v1/docflow/approval-routes", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowCreateConnection: { method: "POST", path: "/api/v1/docflow/connections", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowDecideApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/decisions", module: "docflow", stage: "preview", permission: "docflow.flow:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowDelegateApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/delegate", module: "docflow", stage: "preview", permission: "docflow.flow:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowDeleteApprovalSubstitution: { method: "DELETE", path: "/api/v1/docflow/approval-substitutions/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowDeleteConnection: { method: "DELETE", path: "/api/v1/docflow/connections/{id}", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowDropStage: { method: "POST", path: "/api/v1/docflow/messages/{id}/stages/drop", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowAcceptFinanceAct: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/finance-act", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7605,15 +7785,10 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowFlowAccountingOriginals: { method: "GET", path: "/api/v1/docflow/flow/accounting-documents/{owner}/{document}/originals", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowAccrualCandidates: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/accrual-candidates", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowAccrualPlan: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/accrual-plan", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowApprovalContext: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/approval/context", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowApprovalInbox: { method: "GET", path: "/api/v1/docflow/flow/approvals/inbox", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
-  docflowFlowApprovalPeople: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/approval/people", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "cursor", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowCancelApproval: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/approval/cancel", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowChangeDocument: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/commands", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowCreateAccountingOriginal: { method: "POST", path: "/api/v1/docflow/flow/accounting-documents/{owner}/{document}/originals", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowCreateDocument: { method: "POST", path: "/api/v1/docflow/flow/documents", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowCreateFinancePlan: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/finance-plan", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowDecideApproval: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/approval/decisions", module: "docflow", stage: "preview", permission: "docflow.flow:approve", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocument: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocumentRevision: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/revisions/{version}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocuments: { method: "GET", path: "/api/v1/docflow/flow/documents", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
@@ -7622,7 +7797,6 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowFlowPreviewPaymentSchedule: { method: "POST", path: "/api/v1/docflow/flow/schedule-preview", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowReferences: { method: "GET", path: "/api/v1/docflow/flow/references", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowRevisionFileContent: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/revisions/{version}/files/{fileId}/content", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowSubmitApproval: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/approval", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowUnlinkAccountingDocument: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/accounting-links/remove", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowUploadFile: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/files", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowGetAttachmentContent: { method: "GET", path: "/api/v1/docflow/attachments/{id}/content", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7633,6 +7807,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowIntakePreview: { method: "GET", path: "/api/v1/docflow/messages/{id}/intake", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowInviteCounterparty: { method: "POST", path: "/api/v1/docflow/connections/{id}/invitations", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowIssueSigningTask: { method: "POST", path: "/api/v1/docflow/edo/signing/tasks", module: "docflow", stage: "preview", permission: "docflow.edo:sign", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowLinkIntakeCounterparty: { method: "PUT", path: "/api/v1/docflow/messages/{id}/intake/counterparty", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowListConnections: { method: "GET", path: "/api/v1/docflow/connections", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowListInvitations: { method: "GET", path: "/api/v1/docflow/invitations", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 200 },
   docflowListMessages: { method: "GET", path: "/api/v1/docflow/messages", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
@@ -7646,9 +7821,15 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowRejectMessage: { method: "POST", path: "/api/v1/docflow/messages/{id}/actions/reject", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowRepeatStage: { method: "POST", path: "/api/v1/docflow/messages/{id}/stages/repeat", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowRequestCancellation: { method: "POST", path: "/api/v1/docflow/messages/{id}/cancellation", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowResubmitApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/resubmit", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowSaveApprovalPolicy: { method: "PUT", path: "/api/v1/docflow/approval-policies", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowSaveApprovalRoute: { method: "PUT", path: "/api/v1/docflow/approval-routes/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowSaveApprovalSubstitution: { method: "POST", path: "/api/v1/docflow/approval-substitutions", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSendBuyerTitle: { method: "POST", path: "/api/v1/docflow/messages/{id}/buyer-title", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSendOutgoing: { method: "POST", path: "/api/v1/docflow/outgoing", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowSetApprovalRouteActive: { method: "POST", path: "/api/v1/docflow/approval-routes/{id}/active", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSetConnectionMode: { method: "PUT", path: "/api/v1/docflow/connections/{id}/mode", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowSubmitApproval: { method: "POST", path: "/api/v1/docflow/approvals", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSubmitSignature: { method: "POST", path: "/api/v1/docflow/edo/signing/tasks/{task_id}/signature", module: "docflow", stage: "preview", permission: "docflow.edo:sign", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSyncConnection: { method: "POST", path: "/api/v1/docflow/connections/{id}/sync", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowUpdateConnection: { method: "PATCH", path: "/api/v1/docflow/connections/{id}", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7958,6 +8139,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   settingsAppInstallationActivity: { method: "GET", path: "/api/v1/settings/app-installations/{id}/activity", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsAppInstallationConfig: { method: "GET", path: "/api/v1/settings/app-installations/{id}/config", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsAppInstallationEvents: { method: "GET", path: "/api/v1/settings/app-installations/{id}/events", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 100 },
+  settingsChangeSubscription: { method: "POST", path: "/api/v1/settings/subscription/change", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsCreateApiKey: { method: "POST", path: "/api/v1/settings/api-keys", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsCreateCompany: { method: "POST", path: "/api/v1/settings/companies", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsCreateFieldDefinition: { method: "POST", path: "/api/v1/settings/field-definitions", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7971,6 +8153,10 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   settingsDisableAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/disable", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsEnableAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/enable", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsGetFieldSchema: { method: "GET", path: "/api/v1/settings/field-schema", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsGetInvoice: { method: "GET", path: "/api/v1/settings/billing/invoices/{id}", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsGetSubscription: { method: "GET", path: "/api/v1/settings/subscription", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsGetSubscriptionNotice: { method: "GET", path: "/api/v1/settings/subscription/notice", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsGetUsage: { method: "GET", path: "/api/v1/settings/usage", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsInstallApp: { method: "POST", path: "/api/v1/settings/apps/{publisher}/{key}/installation", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListApiKeyAccess: { method: "GET", path: "/api/v1/settings/api-keys/{id}/access", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListApiKeys: { method: "GET", path: "/api/v1/settings/api-keys", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7978,12 +8164,14 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   settingsListApps: { method: "GET", path: "/api/v1/settings/apps", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListCompanies: { method: "GET", path: "/api/v1/settings/companies", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListFieldDefinitions: { method: "GET", path: "/api/v1/settings/field-definitions", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsListInvoices: { method: "GET", path: "/api/v1/settings/billing/invoices", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   settingsListMembers: { method: "GET", path: "/api/v1/settings/members", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListRoleMembers: { method: "GET", path: "/api/v1/settings/roles/{id}/members", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListRoles: { method: "GET", path: "/api/v1/settings/roles", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListSelectableCompanies: { method: "GET", path: "/api/v1/settings/companies/selectable", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListVatRates: { method: "GET", path: "/api/v1/settings/vat-rates", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsPreviewAppConsent: { method: "GET", path: "/api/v1/settings/apps/{publisher}/{key}/consent", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsPreviewSubscriptionChange: { method: "POST", path: "/api/v1/settings/subscription/change-preview", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsReplayAppDeliveries: { method: "POST", path: "/api/v1/settings/app-installations/{id}/deliveries/replay", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsRestoreApiKey: { method: "POST", path: "/api/v1/settings/api-keys/{id}/restore", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsRevokeApiKey: { method: "POST", path: "/api/v1/settings/api-keys/{id}/revoke", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7998,6 +8186,10 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   settingsUpdateFieldDefinition: { method: "PATCH", path: "/api/v1/settings/field-definitions/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsUpdateMember: { method: "PATCH", path: "/api/v1/settings/members/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsUpdateRole: { method: "PATCH", path: "/api/v1/settings/roles/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  signupCompleteRequest: { method: "POST", path: "/api/v1/signup/requests/{token}/complete", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  signupInspectRequest: { method: "GET", path: "/api/v1/signup/requests/{token}", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  signupRequest: { method: "POST", path: "/api/v1/signup/requests", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  signupRetryProvisioning: { method: "POST", path: "/api/v1/signup/requests/{token}/retry-provisioning", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockAccountTransferProposal: { method: "GET", path: "/api/v1/stock/account-transfers/proposal", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockActivateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses/{id}/activate", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockApplyImport: { method: "POST", path: "/api/v1/stock/imports/{id}/apply", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

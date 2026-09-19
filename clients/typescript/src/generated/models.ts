@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 572ea6f9912f3669e4fde0f563c911eaf420217e163124abfeb68dc3a5954326).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 45dcff42ccfb9f45d44cd2874aa80f3763f5d6c00f638f786e320f27f475f215).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -295,6 +295,430 @@ export interface AttachmentUploadSessionCreate {
   "mime_type"?: string;
   "size_bytes": number;
   "sha256"?: string;
+}
+
+/** Счёт вместе с реквизитами для оплаты. Реквизиты идут в том же ответе, а не отдельным маршрутом: экран оплаты показывает их на одной вкладке со счётом, и второй запрос означал бы мгновение, в котором сумма уже есть, а платить по ней некуда */
+export interface BillingCabinetInvoice {
+  "invoice": BillingInvoice;
+  "requisites": BillingRequisites;
+}
+
+/** Что оболочка кабинета говорит человеку про его подписку. Пустой kind — самый частый ответ: у работающего кабинета баннера нет */
+export interface BillingCabinetNotice {
+  /** '' — говорить не о чем. restriction_soon — счёт просрочен, доступ ограничат restrict_at. read_only — кабинет уже оставлен на просмотр и выгрузку данных */
+  "kind": "" | "restriction_soon" | "read_only";
+  /** Состояние подписки, объясняющее предупреждение; пусто у кабинета без подписки */
+  "status": string;
+  /** С какого дня ограничат доступ; заполнено у restriction_soon */
+  "restrict_at": string | null;
+  /** Дней до ограничения */
+  "days_left": number | null;
+  /** С какого дня кабинет перестал работать; заполнено у read_only */
+  "since": string | null;
+  /** Неоплаченный счёт, если он есть. null законен: у расторгнутой подписки счёта может не быть, и человеку предлагают возобновить её, а не оплатить несуществующий документ */
+  "invoice": BillingCabinetNoticeInvoice | null;
+}
+
+/** Счёт, на который ведёт баннер кабинета */
+export interface BillingCabinetNoticeInvoice {
+  "id": string;
+  "number": string;
+  "amount": BillingMoney;
+  "currency": string;
+}
+
+export interface BillingCabinetSeats {
+  "used": number;
+  /** null — без ограничения */
+  "limit": number | null;
+}
+
+export interface BillingCabinetStorage {
+  /** Занятое место по последнему суточному снимку потребления. null — снимка ещё нет; ноль означал бы «клиент ничего не загрузил» */
+  "used_bytes": number | null;
+  "limit_bytes": number | null;
+}
+
+/** Экран «Настройки → Подписка» глазами клиента: что у него есть, сколько он израсходовал и что он может выбрать */
+export interface BillingCabinetSubscription {
+  /** none означает, что подписки НЕТ вовсе — законное состояние живых кабинетов, работавших до биллинга, а не «не загрузилось». internal — внутренний кабинет Akeda: разрешено всё, счета не выставляются. pilot — внедрение: кабинет клиента, который мы ведём до передачи, права те же. Различать их обязательно: первое означает «мы про кабинет ничего не решали», остальные два — записанные решения оператора, и только второе из них означает наш собственный кабинет */
+  "state": "trial" | "active" | "past_due" | "suspended" | "cancelled" | "internal" | "pilot" | "none";
+  "subscription": BillingSubscription | null;
+  "plan": BillingPlan | null;
+  "addons": Array<BillingPlan>;
+  "billing_period": "month" | "year";
+  "trial": BillingTrialState | null;
+  /** Идущее внедрение: кабинет ведём мы, счетов нет, открыт весь продукт. null во всех остальных состояниях */
+  "pilot": BillingPilotState | null;
+  /** До какого числа оплачено; пусто у пробы и у кабинета без подписки */
+  "paid_until": string | null;
+  "past_due": BillingPastDueState | null;
+  "seats": BillingCabinetSeats;
+  "storage": BillingCabinetStorage;
+  "catalog": BillingCatalog;
+  "payment_method": BillingPaymentMethod | null;
+  "entitlements": BillingEntitlements;
+}
+
+/** Витрина кабинета: только публичные и неархивные предложения. Полный список заведённого у оператора — GET /platform/billing/plans */
+export interface BillingCatalog {
+  "plans": Array<BillingPlan>;
+  "modules": Array<BillingPlan>;
+  /** Основание тарифа-конструктора «Соберите свой». Модулей в нём нет: клиент набирает их из modules теми же дополнениями. null означает, что конструктора нет или он снят с витрины */
+  "constructor"?: BillingPlan | null;
+  "trial_days": number;
+}
+
+/** Заявка кабинета на изменение подписки. Непереданное поле означает «оставить как есть»: клиент, подключающий модуль, не обязан заново называть свой тариф, а клиент, меняющий тариф, не должен молча лишиться оплаченного модуля. Пустой addon_keys означает «снять все» */
+export interface BillingChangeInput {
+  "plan_key"?: string;
+  "addon_keys"?: Array<string> | null;
+  "billing_period"?: "month" | "year";
+  /**
+   * ЖЕЛАЕМЫЙ ОБЩИЙ потолок мест, а не «сколько докупить». Экран показывает «участники 17 из 20» и спрашивает новое «из скольких»; заявка «плюс три места», пришедшая дважды из-за повторной отправки формы, купила бы шесть. Непереданное поле означает «оставить как есть»: смена тарифа не отменяет доплаченные места.
+   * 
+   * Сверх пакета тарифа берётся price_per_seat версии ЗА МЕСЯЦ — у доплат нет отдельной годовой цены, и годовой скидки на них тоже нет. Потолок НИЖЕ пакета отвергается: это не доплата, а попытка урезать оплаченное. Подписке без тарифа доплаты недоступны вовсе — «сверх пакета» без пакета не существует
+   */
+  "seats_limit"?: number | null;
+  /** То же про хранилище: общий потолок в ГБ, доплата по price_per_gb за месяц */
+  "storage_limit_gb"?: number | null;
+}
+
+/** Что произойдёт, если клиент нажмёт кнопку. Считается тем же кодом, что и применение: разойдись расчёты — клиент увидел бы одну сумму, а заплатил другую */
+export interface BillingChangePreview {
+  "now": BillingSnap;
+  "becomes": BillingSnap;
+  "added_modules": Array<string>;
+  "removed_modules": Array<string>;
+  /** Доплата за остаток текущего периода. Ноль означает, что платить сейчас не нужно вовсе: так выглядит и понижение, и изменение на пробе, у которой оплаченного периода ещё нет */
+  "proration_amount": { [key: string]: unknown };
+  /** Из чего доплата сложилась: тариф с модулями, места сверх пакета, гигабайты сверх пакета. Ровно эти строки печатает счёт, и их сумма равна proration_amount — счёт печатается строками, и сумма счёта это сумма его строк. Строка может быть отрицательной: клиент, перешедший на тариф дороже и одновременно снявший доплаченные места, платит разницу, и снятые места обязаны быть в счёте видны. Пусто, когда доплаты нет */
+  "proration_lines": Array<BillingInvoiceLine>;
+  "currency": string;
+  /** Сумма следующего списания уже по новым условиям, за расчётный период */
+  "next_amount": { [key: string]: unknown };
+  /** У пробы это дата её окончания: с неё клиент начинает платить */
+  "next_charge_at": string | null;
+  /** now — применяется сразу и оплачивается прорацией; period_end — откладывается до конца оплаченного периода. Правило одно: изменение, за которое клиент платит больше, применяется сейчас, всё остальное — с конца периода. Смена ритма оплаты всегда ждёт конца периода */
+  "effective": "now" | "period_end";
+}
+
+/** Новое состояние экрана подписки и счёт, если доплачивать было за что */
+export interface BillingChangeResult {
+  "subscription": BillingCabinetSubscription;
+  "invoice": BillingInvoice | null;
+  /** Что стало с составом модулей кабинета. Приходит только когда состав реально изменился или часть его до кабинета не доехала; null или отсутствие поля означают «состав уже совпадал с правами» — так выглядит отложенное понижение, при котором сегодня не изменилось ничего */
+  "modules_sync"?: BillingModuleSyncReport | null;
+}
+
+/** Что подписка РАЗРЕШАЕТ кабинету. Состав модулей кабинета ВЫВОДИТСЯ отсюда: после каждого изменения подписки он приводится к этим правам, и руками продуктовые модули больше не включают. Клиентские ext-модули и кабинеты без подписки — исключения: первых не бывает ни в тарифе, ни в пробе, вторые работали до биллинга и не ограничиваются. Места и гигабайты по-прежнему только считаются и показываются, кроме потолка хранилища — его сравнивает с занятым рамка загрузки файла */
+export interface BillingEntitlements {
+  /** Кабинет без подписки ЛИБО кабинет, которому весь продукт открыт решением оператора: внутренний кабинет Akeda (internal) и клиент на внедрении (pilot). Ограничений нет */
+  "unlimited": boolean;
+  /** Разрешённые ключи модулей; null при unlimited — пустая карта читалась бы как «ни одного модуля» */
+  "modules": { [key: string]: boolean } | null;
+  /** null означает «без лимита» */
+  "seats_limit": number | null;
+  "storage_limit_bytes": number | null;
+  /** Кабинету оставлено только чтение: подписка приостановлена за неплатёж или расторгнута. Модули при этом НЕ отбираются — данные остаются видимыми и выгружаемыми, — а любая изменяющая операция отвечает 402 billing.read_only */
+  "read_only": boolean;
+}
+
+/** Счёт Akeda кабинету. Живёт в control plane, а не в базе клиента: иначе администратор кабинета правил бы собственный счёт, а история платежей не пережила бы пересоздание его базы */
+export interface BillingInvoice {
+  "id": string;
+  /** «ГГГГ-НННН». Сплошной внутри года: пропуск бухгалтерия читает как утерянный документ */
+  "number": string;
+  "tenant": BillingTenantRef;
+  "subscription_id": string | null;
+  /** issued — выставлен, срок не вышел; overdue — срок вышел, доступ ещё полный; paid — оплачен; cancelled — отозван. Удаления нет вовсе */
+  "status": "issued" | "paid" | "overdue" | "cancelled";
+  /** Назначение платежа: его клиент прочитает в банке через месяц */
+  "purpose": string;
+  "amount": BillingMoney;
+  "currency": string;
+  "issued_at": string;
+  "due_at": string;
+  "paid_at": string | null;
+  "cancelled_at": string | null;
+  /** Строки счёта как они напечатаны. У счёта на доплату их столько, сколько слагаемых изменилось: тариф с модулями, места сверх пакета, гигабайты сверх пакета. Сумма строк равна amount */
+  "lines": Array<BillingInvoiceLine>;
+  /** Ключ эквайринга, которым заказан платёж («tochka»). Пусто, когда эквайринг не подключён либо ссылку получить не удалось: счёт тогда оплачивают по реквизитам, и это постоянный путь, а не запасной */
+  "payment_provider": string;
+  /** Куда отправить плательщика. Пусто, пока платёжная ссылка не заказана */
+  "payment_url": string;
+  /** Личность платежа у банка. По ней уведомление об оплате находит свой счёт: номер заказа провайдер возвращать не обязан, а искать счёт по сумме значило бы засчитать чужие деньги */
+  "provider_payment_id": string;
+}
+
+/** Строка счёта как она напечатана: за что и сколько */
+export interface BillingInvoiceLine {
+  "description": string;
+  "amount": BillingMoney;
+}
+
+export interface BillingInvoicePage {
+  "invoices": Array<BillingInvoice>;
+}
+
+/** Модуль, который привести к составу подписки не удалось */
+export interface BillingModuleSyncFailure {
+  "module": string;
+  /** Почему не удалось — человеческим текстом */
+  "reason": string;
+}
+
+/** Что стало с составом модулей кабинета после изменения подписки. Приходит ТОЛЬКО когда состав реально изменился или часть его до кабинета не доехала; отсутствие поля означает «состав уже совпадал с правами». Непустой failed означает, что подписка изменена и, возможно, оплачена, а модуль до кабинета не доехал: включение модуля накатывает его миграции в базу кабинета и может не удаться по причине, к подписке отношения не имеющей. Подписку это не откатывает — отменять оплаченное решение из-за чужой поломки значило бы потерять оплату */
+export interface BillingModuleSyncReport {
+  "enabled": Array<string>;
+  "disabled": Array<string>;
+  "failed"?: Array<BillingModuleSyncFailure>;
+}
+
+export type BillingMoney = string;
+
+/** Неоплаченный счёт и дата ограничения доступа. Считается по САМОМУ СТАРОМУ просроченному счёту: его срок наступит первым. Само ограничение в этой фазе не включается — число показывается, решение принимает владелец */
+export interface BillingPastDueState {
+  "invoice_id": string;
+  "invoice_number": string;
+  "amount": BillingMoney;
+  "currency": string;
+  "restrict_at": string;
+  "days_left": number;
+}
+
+/** СОХРАНЁННАЯ карта для автоплатежа. Сегодня всегда null: рекуррентное списание подключается отдельной работой. Разовую оплату счёта картой это не трогает — ссылка на неё живёт в самом счёте (payment_url) */
+export interface BillingPaymentMethod {
+  "kind": string;
+  "last4": string;
+}
+
+/** Заявка клиента, применяемая суточным обходом с конца оплаченного периода */
+export interface BillingPendingChange {
+  "plan_key": string;
+  "addon_keys": Array<string>;
+  "billing_period": "month" | "year";
+  "effective_at": string;
+}
+
+/** Идущее внедрение глазами клиента */
+export interface BillingPilotState {
+  /** Плановая дата передачи кабинета. null — срок ещё не назначен; выдуманная дата хуже отсутствующей, клиент запомнит именно её */
+  "handover_at": string | null;
+}
+
+/** Тариф как предложение. Цена и состав лежат не здесь, а в версии */
+export interface BillingPlan {
+  "id": string;
+  /** Ключ-slug: им тариф назначают и по нему ищут */
+  "key": string;
+  /** plan — готовый тариф: пакет модулей, мест и гигабайтов. module — отдельное дополнение, которое подключают к любому тарифу: РОВНО ОДИН модуль и его цена, без мест, гигабайтов и доплат. constructor — тариф-конструктор «Соберите свой»: основание с ценой, пакетом и доплатами и БЕЗ единого модуля внутри, их клиент набирает сам теми же дополнениями. Конструктор на платформе один */
+  "kind": "plan" | "module" | "constructor";
+  "name": string;
+  /** «Для кого этот тариф» одной строкой под именем в карточке */
+  "tagline": string;
+  "description": string;
+  /** Показывать ли тариф в витрине; индивидуальный тариф клиента существует, но в витрине его нет */
+  "is_public": boolean;
+  /** Новым не предлагают; действующие подписки на нём остаются */
+  "is_archived": boolean;
+  /** Витрина выделяет его обводкой и чипом «Рекомендуем» */
+  "is_recommended": boolean;
+  "sort_order": number;
+  "created_at": string;
+  "updated_at": string;
+  /** Действующая версия условий; в карточке подписки — та версия, на которую ссылается подписка */
+  "current": BillingPlanVersion | null;
+}
+
+/** Условия тарифа на дату. Строка НЕИЗМЕНЯЕМА: подписка ссылается именно на неё, и правка означала бы переписанный задним числом договор. Срока пробного периода здесь нет: проба даётся кабинету ДО того, как он выбрал тариф, и её срок — правило платформы (BillingTrialSettings) */
+export interface BillingPlanVersion {
+  "id": string;
+  "plan_id": string;
+  /** Номер версии, назначает сервер */
+  "version": number;
+  /** Код валюты ISO 4217 */
+  "currency": string;
+  /** Цена за месяц при ПОМЕСЯЧНОЙ оплате */
+  "price_month": { [key: string]: unknown };
+  /** Цена ЗА МЕСЯЦ при оплате за год — та самая, которую карточка пишет как «12 000 ₽/мес при оплате за год». За расчётный период с кабинета берут её двенадцатикратно. НОЛЬ означает, что годовой оплаты у тарифа нет вовсе, а не «бесплатно за год» */
+  "price_year": { [key: string]: unknown };
+  /** Ключи ПРОДУКТОВЫХ модулей платформы, которые разрешает тариф. core и settings сюда не пишут: без справочников и настроек кабинета нет вовсе, они включены всегда. Клиентских ext-модулей здесь тоже не бывает: они написаны под один кабинет и общим предложением не продаются */
+  "modules": Array<string>;
+  /** Мест в пакете; НОЛЬ означает «без лимита», а не «ноль мест» */
+  "seats_included": number;
+  /** Гигабайтов в пакете; ноль означает «без лимита» */
+  "storage_included_gb": number;
+  "price_per_seat": BillingMoney;
+  "price_per_gb": BillingMoney;
+  "effective_from": string;
+  "created_at": string;
+}
+
+/** Публичная витрина: только продаваемые сегодня предложения. Пустые списки приходят как [], а не null — клиент, получивший null, показал бы «не загрузилось» вместо честной пустой страницы */
+export interface BillingPublicCatalog {
+  /** Валюта всех цен витрины. Одна на ответ: две цены в разных валютах рядом человек не сложит */
+  "currency": string;
+  /** Сколько дней бесплатной работы получает новый кабинет. Приходит из правил платформы, а не из вёрстки: правка срока оператором обязана доехать до посетителя тем же днём */
+  "trial_days": number;
+  "plans": Array<BillingPublicPlan>;
+  "modules": Array<BillingPublicPlan>;
+  /** Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой */
+  "constructor"?: BillingPublicPlan | null;
+}
+
+/** Тариф или отдельный модуль глазами страницы тарифов */
+export interface BillingPublicPlan {
+  /** Ключ-slug: им предложение выбирают при смене тарифа */
+  "key": string;
+  /** plan — готовый тариф (пакет модулей, мест и гигабайтов), module — отдельное дополнение к любому тарифу, constructor — основание тарифа «Соберите свой» без единого модуля внутри */
+  "kind": "plan" | "module" | "constructor";
+  "name": string;
+  /** «Для кого это» одной строкой под именем в карточке */
+  "tagline": string;
+  /** Витрина выделяет предложение обводкой и чипом «Рекомендуем» */
+  "is_recommended": boolean;
+  "sort_order": number;
+  "current": BillingPublicPlanVersion;
+}
+
+/** Условия публичного предложения на сегодня. Номера версии и дат здесь нет: страницу тарифов читает посторонний, и внутреннее устройство каталога его не касается */
+export interface BillingPublicPlanVersion {
+  /** Цена за месяц при ПОМЕСЯЧНОЙ оплате */
+  "price_month": { [key: string]: unknown };
+  /** Цена ЗА МЕСЯЦ при оплате за год — та самая, которую карточка пишет как «12 000 ₽/мес при оплате за год». Ноль означает, что годовой оплаты у предложения нет вовсе, а не «бесплатно за год» */
+  "price_year": { [key: string]: unknown };
+  /** Ключи продуктовых модулей, которые даёт предложение; у отдельного модуля их ровно один */
+  "modules": Array<string>;
+  /** Мест в пакете; НОЛЬ означает «без лимита», а не «ноль мест» */
+  "seats_included": number;
+  /** Гигабайтов в пакете; ноль означает «без лимита» */
+  "storage_included_gb": number;
+  /** Цена места сверх пакета, ЗА МЕСЯЦ. Годовой скидки у доплат нет: отдельной годовой цены в условиях не существует */
+  "price_per_seat": { [key: string]: unknown };
+  /** Цена гигабайта сверх пакета, за месяц */
+  "price_per_gb": { [key: string]: unknown };
+}
+
+/** Реквизиты получателя для счёта «по реквизитам». Пустые значения законны, пока владелец их не задал: вкладку «По реквизитам» кабинету тогда просто не показывают */
+export interface BillingRequisites {
+  "recipient": string;
+  "inn": string;
+  "kpp": string;
+  "account": string;
+  "bank": string;
+  "bik": string;
+}
+
+/** Срез состояния подписки для экрана «Сейчас | Станет» */
+export interface BillingSnap {
+  "plan_key": string;
+  "plan_name": string;
+  /** Ключи подключённых дополнений */
+  "addons": Array<string>;
+  /** ОБЩИЙ потолок мест: пакет тарифа либо доплаченный сверх него. null — без ограничения */
+  "seats_limit": number | null;
+  /** Общий потолок хранилища в ГБ; null — без ограничения */
+  "storage_limit_gb": number | null;
+  /** Сумма за ОДИН расчётный период: при помесячной оплате это месячная цена, при годовой — она же, умноженная на двенадцать. Цена «за месяц при оплате за год» живёт в версии тарифа (price_year), а здесь именно то, что спишут одним платежом */
+  "amount_per_period": { [key: string]: unknown };
+  "billing_period": "month" | "year";
+}
+
+/** Подписка кабинета; строка на кабинет ровно одна */
+export interface BillingSubscription {
+  "id": string;
+  "tenant_id": string;
+  /** Версия тарифа, на условиях которой живёт кабинет. null у ПРОБНОЙ подписки: тариф выбирают, посмотрев продукт, а не до того */
+  "plan_version_id": string | null;
+  /**
+   * internal — ВНУТРЕННИЙ кабинет Akeda: разрешено всё, счета не выставляются, просрочки не бывает, в MRR и в воронку он не входит. Отдельное состояние, а не отсутствие подписки: кабинет без строки тоже ни в чём не ограничен, но это ответ «мы про него ничего не решали», а internal — записанное решение оператора с причиной и автором в журнале.
+   * 
+   * pilot — ВНЕДРЕНИЕ: кабинет КЛИЕНТА, который мы ведём до передачи. Права те же, что у internal, а смысл другой, и путать их нельзя: внедрение кончается платящим клиентом, а собственный кабинет вендора — нет. В MRR не входит, но считается отдельным счётчиком pilot_count
+   */
+  "status": "trial" | "active" | "past_due" | "suspended" | "cancelled" | "internal" | "pilot";
+  /** Ритм оплаты, выбранный кабинетом. Лежит в подписке, а не в версии тарифа: тариф предлагает обе цены, а выбирает между ними клиент */
+  "billing_period": "month" | "year";
+  /** Дата окончания пробного периода */
+  "trial_ends_at": string | null;
+  /** Границы оплаченного периода. В фазе 1 поле хранится, но не заполняется: его поставит биллинговый цикл */
+  "current_period_start": string | null;
+  "current_period_end": string | null;
+  /** Договорённость поверх пакета тарифа; null означает «как в тарифе», а не ноль */
+  "seats_override": number | null;
+  "storage_override_gb": number | null;
+  /** Момент расторжения; снимается при возобновлении */
+  "cancel_at": string | null;
+  /** Плановая дата передачи кабинета клиенту. Заполнена только во время внедрения (status = pilot) и НЕОБЯЗАТЕЛЬНА даже там: внедрение начинают и без назначенного срока, а выдуманная дата хуже отсутствующей. Снимается при выходе из внедрения — дата передачи, пережившая передачу, напоминала бы о том, что уже случилось */
+  "pilot_handover_at": string | null;
+  /** День, когда кабинет ПЕРЕСТАЛ РАБОТАТЬ: был приостановлен за неплатёж или расторгнут. С него идёт срок хранения данных. null у работающего кабинета; возврат в работу дату снимает */
+  "access_lost_at": string | null;
+  /** Когда данные кабинета были удалены безвозвратно. Заполнено у подписки, пережившей свой кабинет: сам договор и счета по нему мы храним дальше — это бухгалтерский учёт Akeda, а не данные клиента */
+  "tenant_purged_at": string | null;
+  /** Понижение, отложенное до конца оплаченного периода. null — ничего не отложено. Заявка у подписки ровно одна: следующее решение клиента заменяет предыдущее целиком */
+  "pending_change": BillingPendingChange | null;
+  /** Подключённые сейчас дополнения; снятые сюда не попадают — их история в журнале */
+  "addons": Array<BillingSubscriptionAddonsItem>;
+  "created_at": string;
+  "updated_at": string;
+}
+
+export interface BillingSubscriptionAddonsItem {
+  "plan_key": string;
+  "plan_version_id": string;
+  "added_at": string;
+}
+
+/** Кабинет — единица подписки; кабинет не является юрлицом */
+export interface BillingTenantRef {
+  "id": string;
+  "slug": string;
+  "name": string;
+  "is_active": boolean;
+}
+
+/** Сколько бесплатных дней осталось из выданных */
+export interface BillingTrialState {
+  "ends_at": string;
+  "days_left": number;
+  "days_total": number;
+}
+
+/** Источник, который посчитать не удалось. Живёт В СНИМКЕ, а не только в логе: снимок с семью цифрами из восьми внешне неотличим от полного, и разницу обязан называть он сам. */
+export interface BillingUsageCollectError {
+  /** Ключ раздела; database — размер базы кабинета, members — счёт участников */
+  "module": string;
+  /** Технический текст отказа для оператора платформы */
+  "message": string;
+}
+
+/** Строка разбивки для интерфейса. Подпись ставит сервер по реестру разделов платформы */
+export interface BillingUsageModuleBytes {
+  "key": string;
+  "label": string;
+  "bytes": number;
+}
+
+/** Одно измерение потребления кабинета. storage_bytes_total — сумма bytes_by_module; db_size_bytes в неё НЕ входит, это другой ресурс (место в PostgreSQL против места в объектном хранилище), и сложение их в одно число врало бы про оба. */
+export interface BillingUsageSnapshot {
+  "id": string;
+  "tenant_id": string;
+  /** Момент, о котором снимок говорит */
+  "taken_at": string;
+  /** Активные членства кабинета */
+  "active_members": number;
+  /** Сумма разбивки по разделам */
+  "storage_bytes_total": number;
+  /** Карта «ключ раздела → байты». Раздел, выключенный у кабинета, в карту не попадает вовсе */
+  "bytes_by_module": { [key: string]: number };
+  /** pg_database_size базы кабинета */
+  "db_size_bytes": number;
+  /** scheduled — суточный обход, manual — ручной пересчёт оператором */
+  "source": "scheduled" | "manual";
+  /** Сколько занял сбор */
+  "duration_ms": number;
+  /** Источники, которые посчитать не удалось. Пустой массив означает полный сбор */
+  "errors": Array<BillingUsageCollectError>;
 }
 
 /** Лента только дописывается */
@@ -1066,6 +1490,8 @@ export interface CRMInboxEntityMessage {
   "status": "queued" | "received" | "sent" | "delivered" | "failed";
   "sent_by"?: number;
   "created_at": string;
+  /** Сколько файлов у сообщения; список — GET /api/v1/crm/inbox/messages/{id}/attachments */
+  "attachment_count"?: number;
   "provider": string;
   "connection_name": string;
 }
@@ -1100,6 +1526,8 @@ export interface CRMInboxMessage {
   "status": "queued" | "received" | "sent" | "delivered" | "failed";
   "sent_by"?: number;
   "created_at": string;
+  /** Сколько файлов у сообщения; список — GET /api/v1/crm/inbox/messages/{id}/attachments */
+  "attachment_count"?: number;
 }
 
 export interface CRMInboxOutboundUpload {
@@ -1299,15 +1727,14 @@ export interface CRMLeadPatch {
 
 export interface CRMLeadSource {
   "id": UUID;
-  /** То, что ложится в lead.source. У системной строки за ключом стоит код */
+  /** Код записи справочника. То, что ложится в lead.source; за штатным кодом стоит код продукта */
   "key": string;
   /** Имя - право кабинета; сеятель его не возвращает */
   "name": string;
   /** Канал для цвета и значка; неизвестный приводится к other */
   "channel": string;
   "sort_order": number;
-  /** Строку завёл сеятель модуля: удалить и выключить нельзя */
-  "is_system": boolean;
+  /** Ненужную строку выключают, а не удаляют: на её код ссылаются заведённые лиды */
   "is_active": boolean;
   "created_at": string;
   "updated_at": string;
@@ -1331,7 +1758,7 @@ export type CRMLeadStatus = "new" | "qualified" | "disqualified" | "converted";
 export interface CRMLossReason {
   "id": UUID;
   "name": string;
-  /** deal - почему проиграна сделка, lead - почему лид оказался не наш */
+  /** Из какого справочника запись: deal - crm_loss_reason (почему проиграна сделка), lead - crm_lead_reject_reason (почему лид оказался не наш) */
   "kind": "deal" | "lead";
   "is_active": boolean;
   "created_at": string;
@@ -4994,6 +5421,330 @@ export interface DocflowAddressRequisites {
   "info"?: string;
 }
 
+/** Один проход предмета по маршруту. Согласование ничего не проводит и ни строки регистра не пишет: оно отвечает на один вопрос — можно ли уже выполнить действие, выпускающее бумагу или деньги наружу. Возврат на доработку проход не закрывает: предмет правят и продолжают тот же проход, сохраняя чужие визы. */
+export interface DocflowApproval {
+  "id": UUID;
+  "subject": DocflowApprovalSubject;
+  "subject_title"?: string;
+  "subject_number"?: string;
+  "company_id"?: UUID;
+  "contact_id"?: UUID;
+  "item_id"?: UUID;
+  "route_id"?: UUID;
+  "route_name"?: string;
+  "rework_mode": "restart" | "returner_only";
+  /** Пусто законно: у рамочного договора суммы нет */
+  "amount"?: string;
+  "currency"?: string;
+  /** Редакция предмета, по которой решают */
+  "content_version": number;
+  "state": "pending" | "approved" | "rejected" | "returned" | "cancelled";
+  /** Номер текущего этапа */
+  "active_stage": number;
+  "requested_by": number;
+  "requested_name"?: string;
+  "requested_at": string;
+  "finished_at"?: string;
+  "reminded_at"?: string;
+  "escalated_at"?: string;
+  "updated_at": string;
+  "stages": Array<DocflowApprovalStage>;
+  "events"?: Array<DocflowApprovalEvent>;
+}
+
+/** Вердикт по одному действию вместе с причинами отказа. */
+export interface DocflowApprovalActionCheck {
+  "allowed": boolean;
+  "reasons": Array<DocflowApprovalBlockReason>;
+}
+
+/** Почему действие запрещено, словами, а не кодом состояния. */
+export interface DocflowApprovalBlockReason {
+  "code": string;
+  "message": string;
+  "approval_id"?: UUID;
+  "stage_title"?: string;
+}
+
+/**
+ * Что можно сделать с предметом прямо сейчас и почему нельзя остальное. Согласование блокирует РОВНО ДВА действия — отправку контрагенту и отправку заявки в банк; editing_stays_unlocked говорит прямо, что редактирование карточки не глушится никогда.
+ * 
+ * Это СНИМОК: между чтением и нажатием кнопки мир может измениться, и настоящую защиту держит транзакция самого действия.
+ */
+export interface DocflowApprovalBlockers {
+  "subject": DocflowApprovalSubject;
+  /** Объявлен ли вид предмета требующим согласования */
+  "required": boolean;
+  "approval_id"?: UUID;
+  "state"?: "pending" | "approved" | "rejected" | "returned" | "cancelled";
+  "send_to_counterparty": DocflowApprovalActionCheck;
+  "send_to_bank": DocflowApprovalActionCheck;
+  "can_submit": boolean;
+  "can_decide": boolean;
+  "can_cancel": boolean;
+  "can_resubmit": boolean;
+  "matched_route_id"?: UUID;
+  "matched_route_name"?: string;
+  /** Всегда истинно: редактирование карточки согласование не глушит */
+  "editing_stays_unlocked": boolean;
+}
+
+export interface DocflowApprovalCancelInput {
+  /** Причина отзыва остаётся в истории прохода */
+  "comment": string;
+}
+
+/** Одно решение. Комментарий обязателен у return и reject и не требуется у approve: отказ без слов отправляет автора чинить неизвестно что. */
+export interface DocflowApprovalDecisionInput {
+  /** Заполняется из адреса; значение в теле роли не играет */
+  "approval_id"?: UUID;
+  /** ЧЬЯ виза закрывается. Не обязательно тот, кто нажимает: замещающий закрывает визу отсутствующего, оставаясь собой в истории */
+  "reviewer_id"?: number;
+  "decision": "approve" | "return" | "reject";
+  "comment"?: string;
+}
+
+export interface DocflowApprovalDelegateInput {
+  /** Кому поручается решение по этому проходу */
+  "user_id": number;
+}
+
+/** Подразделение справочника ядра глазами согласования. */
+export interface DocflowApprovalDepartment {
+  "id": UUID;
+  "code": string;
+  "label": string;
+}
+
+/** Справочники конструктора маршрутов ОДНИМ ответом: три отдельных запроса ради одной формы означают три повода ей мигнуть и три места, где список окажется из разных моментов времени. */
+export interface DocflowApprovalDirectories {
+  "departments": Array<DocflowApprovalDepartment>;
+  "roles": Array<DocflowApprovalRoleRef>;
+  "people": Array<DocflowApprovalPerson>;
+  /** Виды предметов, которые сегодня умеют согласовываться, вместе с их обязательностью */
+  "subjects": Array<DocflowApprovalPolicy>;
+}
+
+/** Строка истории прохода. Не переписывается. */
+export interface DocflowApprovalEvent {
+  "id": UUID;
+  "stage_position"?: number;
+  "action": "submitted" | "approved" | "returned" | "rejected" | "cancelled" | "resubmitted" | "reset_significant_change" | "delegated" | "escalated" | "reminded";
+  "user_id"?: number;
+  "user_name"?: string;
+  "comment"?: string;
+  "created_at": string;
+}
+
+/** Строка очереди. Это НЕ урезанный предмет: ни файлов, ни строк, ни связей здесь нет — очередь открывают, чтобы решить, что открывать дальше. */
+export interface DocflowApprovalInboxItem {
+  "approval_id": UUID;
+  "subject": DocflowApprovalSubject;
+  "subject_title": string;
+  "subject_number"?: string;
+  "route_name"?: string;
+  "stage_title"?: string;
+  "stage_position": number;
+  /** Сколько этапов в маршруте всего */
+  "stage_count": number;
+  "stage_mode": "all" | "any";
+  "amount"?: string;
+  "currency"?: string;
+  "company_name"?: string;
+  "contact_name"?: string;
+  "requested_name"?: string;
+  "requested_at": string;
+  "due_at"?: string;
+  "overdue": boolean;
+  /** Чью визу вы ставите, если это не ваша собственная */
+  "on_behalf_of"?: string;
+  "on_behalf_via"?: "self" | "substitute" | "delegate" | "administrator";
+  /** Истинно у собственной отправки, которую вернули на доработку */
+  "returned_to_me": boolean;
+}
+
+export interface DocflowApprovalInboxPage {
+  "items": Array<DocflowApprovalInboxItem>;
+  "has_more": boolean;
+}
+
+/** Человек в списках согласования. Логин, роли и права наружу не отдаются. */
+export interface DocflowApprovalPerson {
+  "id": number;
+  "name": string;
+}
+
+/** Обязательность согласования у ОДНОГО вида предмета, а не глобальный выключатель кабинета: у заявки на оплату согласование может быть обязательным, а у письма контрагенту — нет. */
+export interface DocflowApprovalPolicy {
+  "subject_module": "docflow" | "finance";
+  "subject_kind": "flow_document" | "payment_request";
+  "required": boolean;
+}
+
+/** Повторная отправка после доработки. Что произойдёт с визами, решает настройка маршрута: restart гасит все, returner_only сохраняет визы всех, кроме вернувшего. */
+export interface DocflowApprovalResubmitInput {
+  /** Заполняется из адреса; значение в теле роли не играет */
+  "approval_id"?: UUID;
+  /** Кого инициатор решил переспросить дополнительно. Вернувший этап переспрашивается всегда и в списке не нужен */
+  "ask_again"?: Array<UUID>;
+  "comment"?: string;
+}
+
+/** Персональная виза. actor_id — чья она, decided_by — чья рука её поставила, если это не сам согласующий, а decided_via — на каком основании: замещение, поручение или вмешательство администратора. */
+export interface DocflowApprovalReview {
+  "id": UUID;
+  "actor_id": number;
+  "actor_name"?: string;
+  "decided_by"?: number;
+  "decided_by_name"?: string;
+  "decided_via"?: "self" | "substitute" | "delegate" | "administrator";
+  "delegated_to"?: number;
+  /** Пусто, пока человек не решил */
+  "decision"?: "approve" | "return" | "reject";
+  /** Обязателен у return и reject: без слов автор не узнает, что исправлять */
+  "comment"?: string;
+  "decided_at"?: string;
+}
+
+/** Роль кабинета глазами согласования: идентификатор и имя, без состава прав. */
+export interface DocflowApprovalRoleRef {
+  "id": UUID;
+  "name": string;
+}
+
+/** Именованный ШАБЛОН маршрута, а не разовый список людей. Подошло несколько — берётся самый конкретный; нижняя граница суммы включается, верхняя нет, поэтому смежные диапазоны стыкуются без щели и без нахлёста. Названия юрлица, контрагента, папки и статьи подставляются на чтении: в шаблоне хранятся только ссылки. */
+export interface DocflowApprovalRoute {
+  "id": UUID;
+  "name": string;
+  "subject_module": "docflow" | "finance";
+  /** any — любой вид предмета своего модуля */
+  "subject_kind": "flow_document" | "payment_request" | "any";
+  /** Вид бумаги у владельца предмета */
+  "document_kind"?: string;
+  "company_id"?: UUID;
+  "company_name"?: string;
+  "contact_id"?: UUID;
+  "contact_name"?: string;
+  "contact_folder_id"?: UUID;
+  "contact_folder"?: string;
+  "item_id"?: UUID;
+  "item_name"?: string;
+  /** Нижняя граница суммы ВКЛЮЧАЕТСЯ */
+  "amount_from"?: string;
+  /** Верхняя граница суммы НЕ включается */
+  "amount_to"?: string;
+  /** Что будет после возврата на доработку: весь путь заново либо продолжает вернувший, визы остальных сохраняются */
+  "rework_mode": "restart" | "returner_only";
+  /** Выключенный маршрут не подбирается новым проходам, но остаётся на месте */
+  "is_active": boolean;
+  "stages": Array<DocflowApprovalRouteStage>;
+  "created_at": string;
+  "updated_at": string;
+}
+
+export interface DocflowApprovalRouteActiveInput {
+  "active": boolean;
+}
+
+export interface DocflowApprovalRouteList {
+  "items": Array<DocflowApprovalRoute>;
+}
+
+/** Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался». */
+export interface DocflowApprovalRouteStage {
+  "id"?: UUID;
+  /** Порядок этапа в маршруте */
+  "position": number;
+  "title"?: string;
+  "assignee_kind": "user" | "department" | "role" | "manager";
+  "assignee_user_id"?: number;
+  "assignee_department_id"?: UUID;
+  "assignee_role_id"?: UUID;
+  /** Как назначение читается человеком. Подставляется на чтении; в шаблоне не хранится */
+  "assignee_label"?: string;
+  /** Решают все или достаточно одного. Кворума с процентом нет */
+  "mode": "all" | "any";
+  /** Срок ЭТАПА в часах. Просрочка даёт напоминание и эскалацию на одно звено; автоотклонения по сроку нет */
+  "due_hours"?: number;
+  /** Лимит по сумме УСЛОВИЕМ НА ЭТАП: выполнять только при сумме от N. Этап, чей лимит не достигнут, остаётся в проходе строкой skipped */
+  "min_amount"?: string;
+}
+
+/** Этап ПРОХОДА: кого спросили на самом деле. Состояние skipped означает «этап не выполняется, его лимит по сумме не достигнут»; строка всё равно есть, чтобы человек видел, ПОЧЕМУ финансового директора не спросили. */
+export interface DocflowApprovalStage {
+  "id": UUID;
+  "position": number;
+  "title"?: string;
+  "mode": "all" | "any";
+  "assignee_kind": "user" | "department" | "role" | "manager";
+  "assignee_label"?: string;
+  "min_amount"?: string;
+  "due_hours"?: number;
+  "due_at"?: string;
+  "state": "waiting" | "active" | "approved" | "rejected" | "returned" | "skipped";
+  "started_at"?: string;
+  "decided_at"?: string;
+  "reviews": Array<DocflowApprovalReview>;
+}
+
+/** Предмет согласования НЕЙТРАЛЬНОЙ ТРОЙКОЙ «модуль — вид — идентификатор». Внешнего ключа на предмет нет вовсе: без этого приёма к заявке на оплату, живущей в модуле finance (счета, выписки и расчёты), лист было бы не прицепить. */
+export interface DocflowApprovalSubject {
+  /** Модуль-владелец предмета */
+  "module": "docflow" | "finance";
+  /** Вид предмета: карточка документооборота или заявка на оплату */
+  "kind": "flow_document" | "payment_request";
+  /** Идентификатор предмета у его владельца */
+  "id": UUID;
+}
+
+/** Что владелец предмета рассказывает о нём согласованию своим портом. Пустая сумма законна — у рамочного договора её нет, и ноль вместо неё назвал бы сумму, которой не называли. */
+export interface DocflowApprovalSubjectFacts {
+  "subject": DocflowApprovalSubject;
+  "title": string;
+  "number"?: string;
+  /** Вид бумаги у владельца: договор, счёт, акт */
+  "document_kind"?: string;
+  "company_id"?: UUID;
+  "contact_id"?: UUID;
+  "contact_folder_id"?: UUID;
+  /** Статья расхода предмета */
+  "item_id"?: UUID;
+  /** Сумма десятичным текстом; пусто там, где суммы нет */
+  "amount"?: string;
+  "currency"?: string;
+  /** Редакция предмета у владельца — основание значимой правки */
+  "content_version": number;
+  /** Кто завёл предмет; нужен этапу «руководитель автора» */
+  "author_id": number;
+}
+
+/** Согласование одного предмета глазами его карточки. */
+export interface DocflowApprovalSubjectState {
+  "blockers": DocflowApprovalBlockers;
+  /** Отсутствует, пока предмет ни разу не отправляли */
+  "approval"?: DocflowApproval;
+  "facts": DocflowApprovalSubjectFacts;
+}
+
+/** Замещение согласующего на период. Бессрочное замещение законно — ends_on можно не называть. */
+export interface DocflowApprovalSubstitution {
+  "id": UUID;
+  /** Кого замещают */
+  "principal_id": number;
+  "principal_name"?: string;
+  /** Кто замещает */
+  "substitute_id": number;
+  "substitute_name"?: string;
+  "starts_on": string;
+  /** Пусто — замещение бессрочно */
+  "ends_on"?: string;
+  "comment"?: string;
+}
+
+export interface DocflowApprovalSubstitutionList {
+  "items": Array<DocflowApprovalSubstitution>;
+}
+
 /** Файл внутри пакета. Внутреннего пути в хранилище здесь нет: снаружи файл получают отдельной операцией, а путь не часть контракта и не подсказка для перебора. */
 export interface DocflowAttachment {
   "id": UUID;
@@ -5363,109 +6114,11 @@ export interface DocflowFlowAccrualStage {
   "actual_amount": string;
 }
 
-/** Маршрут согласования, закреплённый за той версией документа, которую видел отправитель. Согласование — мнение, а не проведение: учётных движений оно не делает и черновик не замораживает. */
-export interface DocflowFlowApproval {
-  "id": UUID;
-  /** Версия документа, по которой решают */
-  "content_version": number;
-  "state": "pending" | "approved" | "returned" | "rejected" | "cancelled";
-  "requested_by": number;
-  "requested_name"?: string;
-  "requested_at": string;
-  "due_at"?: string;
-  "stages": Array<DocflowFlowApprovalStage>;
-  /** Номер текущего этапа с нуля */
-  "active_stage": number;
-  /** Кто ещё не решил на текущем этапе */
-  "waiting_for"?: Array<number>;
-  "cancellation"?: DocflowFlowReview;
-}
-
-export interface DocflowFlowApprovalCancel {
-  "expected_version": number;
-  "approval_id": UUID;
-  /** Причина отзыва остаётся в истории маршрута */
-  "comment": string;
-}
-
-/** Текущие возможности текущего человека, а не снимок прошлых прав. */
-export interface DocflowFlowApprovalContext {
-  "version": number;
-  "can_submit": boolean;
-  /** Истинно только у участника активного этапа с правом docflow.flow:approve */
-  "can_decide": boolean;
-  /** Истинно только у того, кто отправлял */
-  "can_cancel": boolean;
-}
-
-export interface DocflowFlowApprovalDecision {
-  "expected_version": number;
-  "approval_id": UUID;
-  "decision": "approve" | "return" | "reject";
-  "comment"?: string;
-}
-
-/** Одна строка очереди решений. Файлов, состава маршрута, товарных строк и учётных связей здесь нет: за ними идут в карточку документа. */
-export interface DocflowFlowApprovalInboxItem {
-  "id": UUID;
-  /** Версия, которую подставляют в решение как expected_version */
-  "version": number;
-  "kind": DocflowFlowKind;
-  "number"?: string;
-  "title": string;
-  "date": string;
-  "company_id": UUID;
-  "company_name"?: string;
-  "contact_id": UUID;
-  "contact_name"?: string;
-  "requested_by": number;
-  "requested_name"?: string;
-  "requested_at": string;
-  /** Срок решения; отсутствует, когда срок не назначали */
-  "due_at"?: string;
-  /** Номер текущего этапа с нуля */
-  "active_stage": number;
-  /** Сколько этапов в маршруте всего */
-  "stage_count": number;
-  /** Сумма документа десятичным текстом; пусто у рамочного договора — нуля вместо неё не бывает */
-  "amount"?: string;
-  /** Валюта суммы; пусто там же, где пуста сумма */
-  "currency"?: string;
-}
-
-export interface DocflowFlowApprovalInboxPage {
-  "items": Array<DocflowFlowApprovalInboxItem>;
-  "has_more": boolean;
-}
-
-export interface DocflowFlowApprovalPeoplePage {
-  "items": Array<DocflowFlowApprovalPerson>;
-  /** Продолжение листания; отсутствует на последней странице */
-  "next_after"?: number;
-}
-
-export interface DocflowFlowApprovalPerson {
-  "id": number;
-  "name": string;
-}
-
-export interface DocflowFlowApprovalStage {
-  "reviewers": Array<DocflowFlowReview>;
-}
-
-export interface DocflowFlowApprovalSubmit {
-  "expected_version": number;
-  /** Этапы по порядку; каждый — список идентификаторов людей. Всего не больше пятидесяти участников */
-  "stages": Array<Array<number>>;
-  /** Срок решения; если назван, обязан быть в будущем */
-  "due_at"?: string;
-}
-
 /** Одна команда правки. Поля, не относящиеся к названному действию, отвергаются, а не игнорируются: запрос, просящий две разные вещи сразу, сам не знает, чего хочет. */
 export interface DocflowFlowChangeInput {
   /** Версия, которую видел клиент. Разошлась — 409 docflow.flow.version_conflict */
   "expected_version": number;
-  "action": "save" | "link" | "unlink" | "remove_file" | "register" | "revise" | "archive" | "restore";
+  "action": "save" | "link" | "unlink" | "remove_file" | "register" | "revise" | "archive" | "restore" | "delete";
   "content"?: DocflowFlowContent;
   "company_id"?: UUID;
   "contact_id"?: UUID;
@@ -5476,10 +6129,10 @@ export interface DocflowFlowChangeInput {
   "relation_id"?: UUID;
 }
 
-/** Коммерческая часть бумаги — сумма, валюта, строки и графики. */
+/** Коммерческая часть бумаги — сумма, валюта, строки и графики. Пустая amount законна только вместе с payment_rule, у которого названа сумма платежа: у бессрочного договора итога нет и быть не может, а строк оригинала и этапов работ у такой сделки не бывает — их суммы обязаны сойтись с итогом. */
 export interface DocflowFlowCommercial {
   "currency": string;
-  /** Десятичным текстом */
+  /** Десятичным текстом; пусто — итога нет или его выводит правило графика */
   "amount": string;
   "payment_terms"?: string;
   "due_date"?: string;
@@ -5512,9 +6165,10 @@ export interface DocflowFlowContent {
   "date": string;
   "contract"?: DocflowFlowContractTerms;
   "commercial"?: DocflowFlowCommercial;
+  "recognized"?: DocflowFlowRecognized;
 }
 
-/** Условия договора в старой форме. Остаётся читаемой и принимается, но новую коммерческую часть описывает commercial. У рамочного договора суммы и валюты нет вовсе — искусственного нуля здесь не бывает. */
+/** Условия договора в старой форме. Остаётся читаемой и принимается, но новую коммерческую часть описывает commercial. У договора без лимита (mode=framework) суммы и валюты в условиях нет вовсе — искусственного нуля здесь не бывает. Коммерческая часть рядом с ним законна только с payment_rule, у которого названа сумма платежа: это бессрочный договор с регулярным платежом. Без неё это рамочный договор, суммы которого ведутся спецификациями, и commercial с ним не сохраняется. */
 export interface DocflowFlowContractTerms {
   "mode": "framework" | "fixed";
   "subject": string;
@@ -5553,14 +6207,28 @@ export interface DocflowFlowDocument {
   "content": DocflowFlowContent;
   "files"?: Array<DocflowFlowFile>;
   "relations"?: Array<DocflowFlowRelation>;
-  "approval"?: DocflowFlowApproval;
   "accounting_links"?: Array<DocflowFlowAccountingLink>;
   "edo"?: DocflowFlowEDOState;
   /** Конверты, которыми карточка уходила и приходила. Заполняется только при чтении карточки и в редакцию не пишется: связь живёт своей строкой, её правит синхронизация, а редакция неизменяема */
   "edo_links"?: Array<DocflowFlowEDOLink>;
+  /** Чего карточке не хватает до полноты: содержательного файла, подтверждённой суммы, срока действия (последний — только у договора и дополнительного соглашения). Считается при чтении одной карточки и в редакцию не пишется. Пустой список у карточки из ЭДО означает, что приёмка зарегистрировала её сразу; непустой — что карточка осталась черновиком и ждёт подтверждения человека. */
+  "gaps"?: Array<"file" | "amount" | "validity">;
   "created_at": string;
   "updated_at": string;
   "updated_by": number;
+}
+
+/** Файл конверта глазами карточки: чем оператор его назвал, чем он является, сколько весит и есть ли он у нас. Скачивается адресом вложения пакета. */
+export interface DocflowFlowEDOAttachment {
+  "id": UUID;
+  "message": UUID;
+  "name": string;
+  /** document, title либо пусто */
+  "kind": string;
+  "content_type": string;
+  "size_bytes": number;
+  /** Байты скачаны в наше хранилище; ложь — файл пока живёт только у оператора */
+  "stored": boolean;
 }
 
 /** Конверт, которым карточка уехала или пришла. Пакет — канал доставки, и здесь видно, чем карточка ему приходится и каким файлом она в нём поехала. Содержания конверта тут нет: за ним идут в сам пакет. */
@@ -5585,6 +6253,8 @@ export interface DocflowFlowEDOLink {
   "date": string;
   "state_code": string;
   "state_name": string;
+  /** Содержательные файлы конверта, показанные в карточке ссылкой, а не копией: байты лежат в хранилище кабинета один раз. Извещений здесь нет. Заполняется только при чтении одной карточки */
+  "attachments"?: Array<DocflowFlowEDOAttachment>;
   "created_by"?: number | null;
   "created_at": string;
 }
@@ -5649,9 +6319,13 @@ export interface DocflowFlowPage {
   "has_more": boolean;
 }
 
-/** Регулярный график оплат одним правилом: сумма платежа, период, день, начало и либо число платежей, либо последняя дата. Сервер раскрывает правило в строки payments сам; план финансов и расчёты видят только строки, как при ручном графике. */
+/**
+ * Регулярный график оплат одним правилом: сумма платежа, период, день, начало и ровно одно из трёх окончаний — число платежей, последняя дата или open («пока действует договор»). Сервер раскрывает правило в строки payments сам; план финансов и расчёты видят только строки, как при ручном графике.
+ * 
+ * При названной сумме платежа сумма документа (commercial.amount) может быть пустой: с count или until она вычисляется как N × платёж, с open её нет вовсе. Бессрочное правило раскрывается на горизонт в 12 ближайших платежей — это план, а не весь договор.
+ */
 export interface DocflowFlowPaymentRule {
-  /** Сумма одного платежа десятичным текстом; пусто — сумма документа делится поровну */
+  /** Сумма одного платежа десятичным текстом; пусто — сумма документа делится поровну. Обязательна, когда суммы документа нет */
   "amount"?: string;
   "period": "month" | "week" | "quarter";
   /** День месяца (month, quarter; короткий месяц прижимает к своему концу) или день недели ISO 1..7 (week) */
@@ -5662,6 +6336,19 @@ export interface DocflowFlowPaymentRule {
   "count"?: number;
   /** Последняя допустимая дата включительно; задаётся вместо count */
   "until"?: string;
+  /** Пока действует договор: окончания нет, итога нет, раскрываются ближайшие 12 платежей */
+  "open"?: boolean;
+}
+
+/** Прочитанное машиной из файла карточки — НА ПРОВЕРКУ. Живёт отдельно от условий договора: в условия сумма и срок попадают только рукой человека. Пустое поле означает «не прочиталось», а не ноль. Приёмка входящего договора в PDF заполняет его текстом бумаги. */
+export interface DocflowFlowRecognized {
+  /** Имя вложения словами оператора: по нему человек откроет ту же бумагу и сверит */
+  "source"?: string;
+  /** Десятичная строка */
+  "amount"?: string;
+  "currency"?: string;
+  "valid_from"?: string;
+  "valid_until"?: string;
 }
 
 export interface DocflowFlowReference {
@@ -5692,16 +6379,6 @@ export interface DocflowFlowRelationInput {
   "target_version": number;
 }
 
-/** Один участник маршрута и его решение, если оно принято. */
-export interface DocflowFlowReview {
-  "actor_id": number;
-  "actor_name"?: string;
-  /** Пусто, пока человек не решил */
-  "decision"?: "approve" | "return" | "reject" | "cancel";
-  "comment"?: string;
-  "decided_at"?: string;
-}
-
 /** Плановая сумма этапа работ или платежа. Ни выполнения, ни оплаты она не утверждает — это то, о чём договорились. */
 export interface DocflowFlowScheduleStage {
   "id": UUID;
@@ -5724,7 +6401,13 @@ export interface DocflowFormatIssues {
   "issues": Array<DocflowIssue>;
 }
 
-/** Вторая сторона и то, с кем мы её свели. Своей догадки по ИНН у приёмки нет вовсе: контрагента сводит механизм синхронизации, а второй механизм сопоставления рядом с существующим разошёлся бы с ним на первой же правке. */
+/**
+ * Вторая сторона и то, с кем мы её свели.
+ * 
+ * Порядок узнавания жёсткий, и каждая ступень сильнее следующей: решение человека этим же запросом, сопоставление зеркала пакета, ЗАПИСАННОЕ решение по этому участнику обмена и, наконец, поиск в справочнике по ИНН и КПП. Последняя ступень — догадка, и она называет себя догадкой (match: guess), а не выдаёт себя за чьё-то решение. Разбор у неё общий с автоматчем выгрузок: второй механизм узнавания рядом с существующим разошёлся бы с ним на первой же правке — молча и в пользу дубля.
+ * 
+ * Неоднозначность не разрешается никогда: ИНН, совпавший у двух юрлиц, которых не развёл КПП, уходит человеку списком options.
+ */
 export interface DocflowIntakeCounterparty {
   /** Карточка контрагента кабинета; null — свести не с кем, и приёмка отвечает проверкой docflow.edo.contact_required */
   "contact": UUID | null;
@@ -5734,8 +6417,17 @@ export interface DocflowIntakeCounterparty {
   "name": string;
   "inn": string;
   "kpp": string;
-  /** Откуда взялся контрагент: manual — прислал человек, auto — свело зеркало, none — не свели ни с кем */
-  "match": "manual" | "auto" | "none";
+  /** Откуда взялся контрагент: manual — решение человека, auto — записанное сопоставление, guess — наша догадка по реквизитам прямо сейчас, нигде не записанная, none — не свели ни с кем */
+  "match": "manual" | "auto" | "guess" | "none";
+  /** Наши контрагенты с тем же ИНН, когда выбрать между ними обязан человек. Непустой список означает «такие у нас уже есть, выбери» — и потому же означает, что заводить нового НЕ НАДО: там, где контрагент с такими реквизитами уже заведён, место кнопке «связать с существующим», а не «завести». */
+  "options"?: Array<DocflowIntakeCounterpartyOption>;
+}
+
+/** Один наш контрагент на выбор человеку. КПП здесь не для полноты: он единственное, чем два юрлица с одним ИНН различаются. */
+export interface DocflowIntakeCounterpartyOption {
+  "id": UUID;
+  "name": string;
+  "kpp": string;
 }
 
 /** Решение человека, которым подтверждается приёмка. Сам пакет назван в адресе. Решения по строкам приезжают СПИСКОМ, а не картой «номер → товар»: пропуск строки — это тоже решение, и картой его пришлось бы выражать отсутствием ключа, то есть неотличимо от «человек про эту строку не сказал ничего», а разница между ними принципиальная. */
@@ -5836,7 +6528,8 @@ export interface DocflowIntakeProductOption {
 
 /** Что вышло из приёмки. Вместе с документом возвращается ПЕРЕСОБРАННОЕ предложение: экран после приёмки показывает то же, что показывал до неё, но уже с проставленными решениями — иначе ему пришлось бы спрашивать состояние вторым запросом и показывать между ними полупустую форму. */
 export interface DocflowIntakeResult {
-  "document": DocflowAcceptedDocument;
+  /** Учётный документ. ОТСУТСТВУЕТ, когда пакет его не порождает: у договора, дополнительного соглашения и спецификации в PDF результат приёмки — одна карточка документооборота, и экран ведёт человека в неё, а не в журнал учёта. */
+  "document"?: DocflowAcceptedDocument;
   "preview": DocflowIntakePreview;
   /** Карточка документооборота, если этот пакет её заводит: договор, дополнительное соглашение, спецификация, акт. Отсутствует у первички — счёт и УПД идут в учёт и привязываются к договору. У неформализованного договора приходит ОДНА карточка без учётного документа: принимать к учёту там нечего, а согласовывать есть что. */
   "flow_document"?: DocflowFlowDocument;
@@ -6046,6 +6739,9 @@ export interface DocflowMessage {
   "deleted_by"?: number | null;
   /** Возвращают из корзины только trashed: у draft_removed документа у оператора больше нет */
   "deleted_reason": "" | "trashed" | "draft_removed";
+  "recognized"?: DocflowRecognized;
+  /** Что стало с оплатой этого счёта. Приходит И В СПИСКЕ, в отличие от состава пакета: состояние оплаты — ровно то, что человек читает глазами в каждой строке. Считает его модуль finance (счета, выписки и расчёты) одним запросом на всю страницу. null означает «этот счёт никто не оплачивает»: ни заведённой заявки, ни платежа, — именно там и остаётся кнопка «Отправить в оплату». */
+  "payment"?: DocflowMessagePayment | null;
 }
 
 /** Действие над пакетом словами ОПЕРАТОРА. Что именно можно сделать сейчас, говорит сам пакет: stages[].actions[]. Подписания среди этих действий нет — подпись идёт контуром /api/v1/docflow/edo/signing/tasks. */
@@ -6079,6 +6775,17 @@ export interface DocflowMessageFlowLink {
 export interface DocflowMessageList {
   "count": number;
   "results": Array<DocflowMessage>;
+}
+
+/** Состояние оплаты входящего счёта. Два состояния, а не шесть: путь заявки внутри финансов подробнее (план, отправлена, ждёт подписи, исполнена, отклонена, отменена), но ленте нужен ответ на один вопрос — деньги уже ушли или ещё нет. Оплаченным платёж делает ВЫПИСКА, а не наша кнопка и не слово банка: «отправлено в банк» означает лишь, что платёжка легла в интернет-банк на подпись. */
+export interface DocflowMessagePayment {
+  /** requested — заявка заведена, денег ещё нет; paid — платёж подтверждён выпиской */
+  "state": "requested" | "paid";
+  "request": UUID;
+  /** Номер заявки на оплату словами для человека */
+  "number"?: string;
+  /** Дата оплаты из выписки в форме ГГГГ-ММ-ДД. Заполнена только у state=paid */
+  "paid_on"?: string;
 }
 
 /** Произвольный файл на отправку рядом с формализованным. */
@@ -6142,16 +6849,39 @@ export interface DocflowPaymentDetails {
   /** Юрлицо кабинета, найденное по ИНН плательщика из счёта; null — такого юрлица в кабинете нет, и выбирает человек */
   "company": UUID | null;
   "company_name": DocflowPaymentField;
+  /** Наш контрагент, с которым сведён участник обмена, — той же лестницей, что и в приёмке: сопоставление зеркала пакета → ЗАПИСАННОЕ решение по этому участнику (ИНН+КПП у этого оператора) → поиск в справочнике по ИНН и КПП. Зеркало одного конверта здесь не источник истины: пакет, загруженный раньше решения человека, стоит в нём без сопоставления, а решение по партнёру уже записано. null — свести не с кем, либо два юрлица с одним ИНН, между которыми выбирает человек. */
+  "contact": UUID | null;
+  /** Имя этой карточки в кабинете. origin=auto — записанное решение (человека или синхронизации), проверять его незачем; origin=guess — найдено по реквизитам прямо сейчас и нигде не записано, форма ставит рядом «проверьте». */
+  "contact_name": DocflowPaymentDetailsContactName;
   "amount": DocflowPaymentField;
   "currency": DocflowPaymentField;
-  "due_date": DocflowPaymentField;
+  /** Срок оплаты в форме ГГГГ-ММ-ДД из первого доступного источника: «оплатить до» из самого счёта; иначе дата счёта плюс отсрочка по условиям оплаты контрагента у модуля finance (finance_counterparty_terms на дату счёта); иначе дата счёта плюс отсрочка, которую finance применяет без заведённых условий. Всегда origin=guess — за срок отвечает человек. Пусто только без даты счёта: прибавлять отсрочку не к чему. */
+  "due_date": DocflowPaymentDetailsDueDate;
   "number": DocflowPaymentField;
   "date": DocflowPaymentField;
   "basis": DocflowPaymentField;
+  /** НАША карточка договора, к которой привязан конверт. Рядом с basis, а не вместо него: basis — строка из чужой бумаги («по договору №17»), contract — карточка в кабинете, по которой договор открывается. Строку в карточку сервер не превращает: угадывать договор по номеру из PDF значит однажды повесить платёж на чужую бумагу. Заполнено только там, где связь «конверт ↔ карточка» уже записана человеком и договор ровно один; два договора дают null — выбирать за человека нельзя. */
+  "contract"?: UUID | null;
   "subject": DocflowPaymentField;
   "vat_amount": DocflowPaymentField;
   /** В счёте стояла отметка «без налога (НДС)». Пустая сумма при снятой отметке означает «про налог не сказано», а не «налога нет» */
   "vat_without": boolean;
+}
+
+/** Имя этой карточки в кабинете. origin=auto — записанное решение (человека или синхронизации), проверять его незачем; origin=guess — найдено по реквизитам прямо сейчас и нигде не записано, форма ставит рядом «проверьте». */
+export interface DocflowPaymentDetailsContactName {
+  /** Прочитанное значение; пустая строка означает «не нашлось» */
+  "value": string;
+  /** auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое. */
+  "origin": "auto" | "guess" | "none";
+}
+
+/** Срок оплаты в форме ГГГГ-ММ-ДД из первого доступного источника: «оплатить до» из самого счёта; иначе дата счёта плюс отсрочка по условиям оплаты контрагента у модуля finance (finance_counterparty_terms на дату счёта); иначе дата счёта плюс отсрочка, которую finance применяет без заведённых условий. Всегда origin=guess — за срок отвечает человек. Пусто только без даты счёта: прибавлять отсрочку не к чему. */
+export interface DocflowPaymentDetailsDueDate {
+  /** Прочитанное значение; пустая строка означает «не нашлось» */
+  "value": string;
+  /** auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое. */
+  "origin": "auto" | "guess" | "none";
 }
 
 /** СвПРД: платёжно-расчётный документ. */
@@ -6259,6 +6989,23 @@ export interface DocflowPreflightTotals {
   "vat": string;
   /** Стоимость с налогом */
   "with_vat": string;
+}
+
+/** Сумма и реквизиты, прочитанные ИЗ ФАЙЛА пакета, а не присланные оператором. Оператор присылает сумму отдельным реквизитом только у формализованных документов — УПД и счёта-фактуры; у счёта на оплату и договора она живёт внутри PDF. Поле стоит РЯДОМ с amount, а не вместо него: amount — слова оператора, по ним сверяют переписку спустя годы, и подменять их нашим чтением чужой бумаги нельзя. Разбор локальный и детерминированный: текстовый слой PDF, у скана — распознавание изображения; ни одной нейросети и ни одного обращения к платному справочнику. Строк товарной таблицы здесь нет: со скана они не восстанавливаются и фактом не выдаются. */
+export interface DocflowRecognized {
+  /** Когда разбирали. Пусто — попытки ещё не было; это не то же самое, что source=none («читали и брать оказалось нечего») */
+  "at"?: string | null;
+  /** Чем прочитано, и заодно насколько верить. title — подписанный файл обмена ФНС, проверять нечего; text — вытащено якорными правилами из чужой раскладки, и рядом со значением интерфейс ставит «проверьте»; none — читали и брать было нечего; пустая строка — разбора не было */
+  "source": "" | "title" | "text" | "none";
+  /** Имя вложения СЛОВАМИ ОПЕРАТОРА: по нему человек откроет ту же бумагу и сверит показанную цифру */
+  "document": string;
+  /** Итог к оплате строкой, как и amount: через число с плавающей точкой здесь теряются копейки. Пустая строка — итог в бумаге не нашёлся */
+  "amount": string;
+  /** Валюта счёта, если бумага её назвала. Пусто означает «не сказано»: подставлять рубль молча нельзя */
+  "currency": string;
+  "number": string;
+  /** Дата документа в форме ГГГГ-ММ-ДД; пустая строка означает, что даты нет */
+  "date": string;
 }
 
 /**
@@ -7682,6 +8429,11 @@ export interface FinancePaymentCalendar {
   "overdue_out": string;
   "done_in": string;
   "done_out": string;
+  /** «Должны» — поступления, выведенные из регистра расчётов: долг записан, его можно требовать */
+  "committed_in": string;
+  /** «С ожиданиями» — то же плюс выставленные счета и этапы графиков договоров */
+  "expected_in": string;
+  "undated"?: FinancePaymentCalendarUndated;
   "companies": Array<FinancePaymentCalendarCompany>;
   "step": "day" | "month" | "quarter";
   "periods": Array<FinancePaymentCalendarPeriod>;
@@ -7689,6 +8441,14 @@ export interface FinancePaymentCalendar {
   "days": Array<FinancePaymentCalendarDay>;
   "rows": Array<FinancePaymentCalendarRow>;
   "overdue": Array<FinancePaymentCalendarRow>;
+}
+
+export interface FinancePaymentCalendarUndated {
+  "count_in": number;
+  "count_out": number;
+  "amount_in": string;
+  "amount_out": string;
+  "rows": Array<FinancePaymentCalendarRow>;
 }
 
 export interface FinancePaymentCalendarCell {
@@ -7730,7 +8490,7 @@ export interface FinancePaymentCalendarRow {
   "original_currency"?: string;
   "project_id"?: UUID;
   "id": UUID;
-  "origin": "manual" | "receivable" | "payable";
+  "origin": "manual" | "receivable" | "payable" | "payment_request" | "contract_stage" | "invoice";
   "date": string;
   "direction": FinanceDirection;
   "amount": string;
@@ -7754,6 +8514,12 @@ export interface FinancePaymentCalendarRow {
   "operation_kind"?: "sale" | "purchase";
   "operation_version"?: number;
   "contract_id"?: UUID;
+  /** Карточка выставленного счёта у происхождения invoice; учётным документом счёт не является */
+  "invoice_id"?: UUID;
+  /** Строка ожидания, а не долга: счёт и этап договора обещают деньги, но требовать по ним нельзя */
+  "expectation"?: boolean;
+  /** Обязательство без срока оплаты: рядом со шкалой, а не на ней */
+  "undated"?: boolean;
   "fact"?: FinancePaymentFact;
 }
 
@@ -9974,7 +10740,12 @@ export interface MarketplaceCostImportRequest {
 }
 
 export interface MarketplaceCostImportResult {
+  /** Сколько строк завели новую ставку */
   "applied": number;
+  /** Строки с той же ценой, что уже действует: новая ставка не заводилась */
+  "unchanged"?: number;
+  /** Строки с пустой себестоимостью: пустая ячейка — «не заведена», а не ноль */
+  "skipped"?: number;
   "failed": number;
   "errors": Array<MarketplaceCostImportRowError>;
 }
@@ -10568,6 +11339,8 @@ export interface MarketplaceOzonPnl {
   "demo"?: boolean;
   /** Расшифровка прочего по периодам */
   "breakdown"?: { [key: string]: Array<MarketplaceOzonDecompositionOtherItem> };
+  /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода */
+  "cost_missing"?: { [key: string]: number };
   "freshness"?: MarketplaceComponentFreshness;
   "data_through"?: MarketplaceComponentDataThrough;
   /** Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась */
@@ -10959,6 +11732,8 @@ export interface MarketplaceStorePatch {
   "name"?: string;
   /** Пустая строка оставляет сохранённую ставку */
   "tax_percent"?: string;
+  /** С какого дня действует новая ставка налога (ГГГГ-ММ-ДД). Пусто — с сегодняшнего дня по Москве. Не позже сегодня и не раньше начала действующей ставки: прошлые периоды считаются по ставке своего времени */
+  "tax_effective_from"?: string;
   "is_active"?: boolean;
   "has_fbs"?: boolean;
   /** Используется для Wildberries */
@@ -11406,6 +12181,8 @@ export interface MarketplaceWbPnl {
   "demo"?: boolean;
   /** Разбор строки «Прочее» по периодам */
   "breakdown"?: { [key: string]: Array<MarketplaceWbDecompOtherItem> };
+  /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода */
+  "cost_missing"?: { [key: string]: number };
   "freshness"?: MarketplaceComponentFreshness;
   "data_through"?: MarketplaceComponentDataThrough;
   /** Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась */
@@ -11706,6 +12483,8 @@ export interface MarketplaceYandexPnl {
   "range": MarketplaceYandexPnlRange;
   "periods": Array<MarketplaceYandexPnlPeriod>;
   "rows": Array<MarketplaceYandexPnlRow>;
+  /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода */
+  "cost_missing"?: { [key: string]: number };
   /** Пояснение к неполноте источника */
   "note"?: string;
   /** Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические */
@@ -13359,9 +14138,74 @@ export interface SettingsRoleTransferResult {
   "target_role_id": UUID;
 }
 
+export interface SettingsUsage {
+  "snapshot": BillingUsageSnapshot | null;
+  /** Разбивка по убыванию занятого; пустая, пока снимка нет */
+  "modules": Array<BillingUsageModuleBytes>;
+}
+
 export interface SettingsVatRates {
   /** Фиксированный профиль 22, 20, 10 и 0 процентов */
   "rates": Array<number>;
+}
+
+export interface SignupAccepted {
+  /** Единственное значение: исход не различается снаружи ни телом, ни кодом */
+  "status": "accepted";
+  /** Условная формулировка «если на этот адрес можно завести кабинет — мы отправили письмо»: она правдива при любом исходе */
+  "detail": string;
+}
+
+export interface SignupCompleteInput {
+  "first_name": string;
+  "last_name": string;
+}
+
+export interface SignupRequestInfo {
+  "email": string;
+  "company_name": string;
+  /** Свободный адрес будущего кабинета на момент чтения */
+  "suggested_slug": string;
+  "status": "pending" | "confirmed" | "completed" | "expired" | "revoked";
+  "is_expired": boolean;
+  /** Адрес уже заведённого кабинета; пусто, пока его нет */
+  "tenant_slug": string;
+  /** Кабинет заведён, а его база не поднялась: на экране нужна кнопка повтора, а не форма */
+  "provisioning_pending": boolean;
+  /** У адреса уже есть учётная запись. Владельцу ссылки это известно и так; наружу без ссылки не уходит */
+  "account_exists": boolean;
+  /** Состояние активной browser-сессии относительно адреса ссылки */
+  "session_state": "none" | "matching" | "mismatch";
+  "session_email": string;
+}
+
+export interface SignupRequestInput {
+  /** Рабочая почта будущего владельца кабинета */
+  "email": string;
+  /** Название компании; становится названием кабинета */
+  "company_name": string;
+  /** Пожелание адреса кабинета. Пусто — адрес выводится транслитерацией названия компании */
+  "slug"?: string;
+  /** Ловушка для роботов: поле скрыто на форме, человек его не заполняет. Заполненное принимается как успех, но письма не отправляет */
+  "website"?: string;
+}
+
+export interface SignupSession {
+  /** ERP-сессия владельца: тот же go_-токен, что выдаёт мост Kratos-сессии */
+  "token": string;
+  "user": SignupSessionUser;
+  /** Кабинеты человека; у нового владельца ровно один */
+  "memberships": Array<{ [key: string]: unknown }>;
+  "source"?: string;
+}
+
+export interface SignupSessionUser {
+  "username"?: string;
+  "name"?: string;
+  "avatar_url"?: string;
+  "platform_role"?: string;
+  "platform_scopes"?: Array<string>;
+  "is_platform_admin"?: boolean;
 }
 
 export interface SprintAgingTask {
@@ -15048,6 +15892,11 @@ export interface CoreSetBusinessActiveRequest {
 
 export interface CoreListBusinessOwnershipResponse {
   "results": Array<CoreOwnershipVersion>;
+}
+
+export interface DocflowLinkIntakeCounterpartyRequest {
+  /** Контрагент справочника, с которым сводится участник обмена */
+  "contact": { [key: string]: unknown };
 }
 
 export interface FilesAccessCheckRequest {

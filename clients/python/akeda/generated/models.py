@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 572ea6f9912f3669e4fde0f563c911eaf420217e163124abfeb68dc3a5954326).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 45dcff42ccfb9f45d44cd2874aa80f3763f5d6c00f638f786e320f27f475f215).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -40,6 +40,41 @@ __all__ = [
     "AttachmentReplacementSessionCreate",
     "AttachmentUploadSession",
     "AttachmentUploadSessionCreate",
+    "BillingCabinetInvoice",
+    "BillingCabinetNotice",
+    "BillingCabinetNoticeInvoice",
+    "BillingCabinetSeats",
+    "BillingCabinetStorage",
+    "BillingCabinetSubscription",
+    "BillingCatalog",
+    "BillingChangeInput",
+    "BillingChangePreview",
+    "BillingChangeResult",
+    "BillingEntitlements",
+    "BillingInvoice",
+    "BillingInvoiceLine",
+    "BillingInvoicePage",
+    "BillingModuleSyncFailure",
+    "BillingModuleSyncReport",
+    "BillingMoney",
+    "BillingPastDueState",
+    "BillingPaymentMethod",
+    "BillingPendingChange",
+    "BillingPilotState",
+    "BillingPlan",
+    "BillingPlanVersion",
+    "BillingPublicCatalog",
+    "BillingPublicPlan",
+    "BillingPublicPlanVersion",
+    "BillingRequisites",
+    "BillingSnap",
+    "BillingSubscription",
+    "BillingSubscriptionAddonsItem",
+    "BillingTenantRef",
+    "BillingTrialState",
+    "BillingUsageCollectError",
+    "BillingUsageModuleBytes",
+    "BillingUsageSnapshot",
     "CRMActivity",
     "CRMAnalytics",
     "CRMAutomationAction",
@@ -552,6 +587,33 @@ __all__ = [
     "DocflowAcceptedDocument",
     "DocflowActionResult",
     "DocflowAddressRequisites",
+    "DocflowApproval",
+    "DocflowApprovalActionCheck",
+    "DocflowApprovalBlockReason",
+    "DocflowApprovalBlockers",
+    "DocflowApprovalCancelInput",
+    "DocflowApprovalDecisionInput",
+    "DocflowApprovalDelegateInput",
+    "DocflowApprovalDepartment",
+    "DocflowApprovalDirectories",
+    "DocflowApprovalEvent",
+    "DocflowApprovalInboxItem",
+    "DocflowApprovalInboxPage",
+    "DocflowApprovalPerson",
+    "DocflowApprovalPolicy",
+    "DocflowApprovalResubmitInput",
+    "DocflowApprovalReview",
+    "DocflowApprovalRoleRef",
+    "DocflowApprovalRoute",
+    "DocflowApprovalRouteActiveInput",
+    "DocflowApprovalRouteList",
+    "DocflowApprovalRouteStage",
+    "DocflowApprovalStage",
+    "DocflowApprovalSubject",
+    "DocflowApprovalSubjectFacts",
+    "DocflowApprovalSubjectState",
+    "DocflowApprovalSubstitution",
+    "DocflowApprovalSubstitutionList",
     "DocflowAttachment",
     "DocflowAttorneySubmission",
     "DocflowBankRequisites",
@@ -582,16 +644,6 @@ __all__ = [
     "DocflowFlowAccountingUnlinkInput",
     "DocflowFlowAccrualPlan",
     "DocflowFlowAccrualStage",
-    "DocflowFlowApproval",
-    "DocflowFlowApprovalCancel",
-    "DocflowFlowApprovalContext",
-    "DocflowFlowApprovalDecision",
-    "DocflowFlowApprovalInboxItem",
-    "DocflowFlowApprovalInboxPage",
-    "DocflowFlowApprovalPeoplePage",
-    "DocflowFlowApprovalPerson",
-    "DocflowFlowApprovalStage",
-    "DocflowFlowApprovalSubmit",
     "DocflowFlowChangeInput",
     "DocflowFlowCommercial",
     "DocflowFlowCommercialLine",
@@ -599,6 +651,7 @@ __all__ = [
     "DocflowFlowContractTerms",
     "DocflowFlowCreateInput",
     "DocflowFlowDocument",
+    "DocflowFlowEDOAttachment",
     "DocflowFlowEDOLink",
     "DocflowFlowEDOState",
     "DocflowFlowFile",
@@ -608,14 +661,15 @@ __all__ = [
     "DocflowFlowKind",
     "DocflowFlowPage",
     "DocflowFlowPaymentRule",
+    "DocflowFlowRecognized",
     "DocflowFlowReference",
     "DocflowFlowReferencePage",
     "DocflowFlowRelation",
     "DocflowFlowRelationInput",
-    "DocflowFlowReview",
     "DocflowFlowScheduleStage",
     "DocflowFormatIssues",
     "DocflowIntakeCounterparty",
+    "DocflowIntakeCounterpartyOption",
     "DocflowIntakeInput",
     "DocflowIntakeLine",
     "DocflowIntakeLineInput",
@@ -636,11 +690,14 @@ __all__ = [
     "DocflowMessageActionInput",
     "DocflowMessageFlowLink",
     "DocflowMessageList",
+    "DocflowMessagePayment",
     "DocflowOutgoingFile",
     "DocflowOutgoingInput",
     "DocflowPaperPoARequisites",
     "DocflowPartyRequisites",
     "DocflowPaymentDetails",
+    "DocflowPaymentDetailsContactName",
+    "DocflowPaymentDetailsDueDate",
     "DocflowPaymentDocumentRequisites",
     "DocflowPaymentField",
     "DocflowPaymentParty",
@@ -650,6 +707,7 @@ __all__ = [
     "DocflowPreflightLine",
     "DocflowPreflightParty",
     "DocflowPreflightTotals",
+    "DocflowRecognized",
     "DocflowRequisites",
     "DocflowSignature",
     "DocflowSignatureShape",
@@ -778,6 +836,7 @@ __all__ = [
     "FinanceOperationStageInput",
     "FinanceOperationVersion",
     "FinancePaymentCalendar",
+    "FinancePaymentCalendarUndated",
     "FinancePaymentCalendarCell",
     "FinancePaymentCalendarCompany",
     "FinancePaymentCalendarDay",
@@ -1258,7 +1317,14 @@ __all__ = [
     "SettingsRolePage",
     "SettingsRoleTransferInput",
     "SettingsRoleTransferResult",
+    "SettingsUsage",
     "SettingsVatRates",
+    "SignupAccepted",
+    "SignupCompleteInput",
+    "SignupRequestInfo",
+    "SignupRequestInput",
+    "SignupSession",
+    "SignupSessionUser",
     "SprintAgingTask",
     "SprintMetrics",
     "SprintOutcomeMetrics",
@@ -1422,6 +1488,7 @@ __all__ = [
     "CoreListBusinessesResponse",
     "CoreSetBusinessActiveRequest",
     "CoreListBusinessOwnershipResponse",
+    "DocflowLinkIntakeCounterpartyRequest",
     "FilesAccessCheckRequest",
     "FilesAccessCheckResponse",
     "FilesAccessCheckResponseItemsItem",
@@ -1737,6 +1804,426 @@ class _AttachmentUploadSessionCreateRequired(TypedDict):
 class AttachmentUploadSessionCreate(_AttachmentUploadSessionCreateRequired, total=False):
     mime_type: str
     sha256: str
+
+class BillingCabinetInvoice(TypedDict):
+    """Счёт вместе с реквизитами для оплаты. Реквизиты идут в том же ответе, а не отдельным маршрутом: экран оплаты показывает их на одной вкладке со счётом, и второй запрос означал бы мгновение, в котором сумма уже есть, а платить по ней некуда"""
+
+    invoice: "BillingInvoice"
+    requisites: "BillingRequisites"
+
+class BillingCabinetNotice(TypedDict):
+    """Что оболочка кабинета говорит человеку про его подписку. Пустой kind — самый частый ответ: у работающего кабинета баннера нет"""
+
+    #: '' — говорить не о чем. restriction_soon — счёт просрочен, доступ ограничат restrict_at. read_only — кабинет уже оставлен на просмотр и выгрузку данных
+    kind: Literal['', 'restriction_soon', 'read_only']
+    #: Состояние подписки, объясняющее предупреждение; пусто у кабинета без подписки
+    status: str
+    #: С какого дня ограничат доступ; заполнено у restriction_soon
+    restrict_at: Optional[str]
+    #: Дней до ограничения
+    days_left: Optional[int]
+    #: С какого дня кабинет перестал работать; заполнено у read_only
+    since: Optional[str]
+    #: Неоплаченный счёт, если он есть. null законен: у расторгнутой подписки счёта может не быть, и человеку предлагают возобновить её, а не оплатить несуществующий документ
+    invoice: Optional["BillingCabinetNoticeInvoice"]
+
+class BillingCabinetNoticeInvoice(TypedDict):
+    """Счёт, на который ведёт баннер кабинета"""
+
+    id: str
+    number: str
+    amount: "BillingMoney"
+    currency: str
+
+class BillingCabinetSeats(TypedDict):
+    used: int
+    #: null — без ограничения
+    limit: Optional[int]
+
+class BillingCabinetStorage(TypedDict):
+    #: Занятое место по последнему суточному снимку потребления. null — снимка ещё нет; ноль означал бы «клиент ничего не загрузил»
+    used_bytes: Optional[int]
+    limit_bytes: Optional[int]
+
+class BillingCabinetSubscription(TypedDict):
+    """Экран «Настройки → Подписка» глазами клиента: что у него есть, сколько он израсходовал и что он может выбрать"""
+
+    #: none означает, что подписки НЕТ вовсе — законное состояние живых кабинетов, работавших до биллинга, а не «не загрузилось». internal — внутренний кабинет Akeda: разрешено всё, счета не выставляются. pilot — внедрение: кабинет клиента, который мы ведём до передачи, права те же. Различать их обязательно: первое означает «мы про кабинет ничего не решали», остальные два — записанные решения оператора, и только второе из них означает наш собственный кабинет
+    state: Literal['trial', 'active', 'past_due', 'suspended', 'cancelled', 'internal', 'pilot', 'none']
+    subscription: Optional["BillingSubscription"]
+    plan: Optional["BillingPlan"]
+    addons: List["BillingPlan"]
+    billing_period: Literal['month', 'year']
+    trial: Optional["BillingTrialState"]
+    #: Идущее внедрение: кабинет ведём мы, счетов нет, открыт весь продукт. null во всех остальных состояниях
+    pilot: Optional["BillingPilotState"]
+    #: До какого числа оплачено; пусто у пробы и у кабинета без подписки
+    paid_until: Optional[str]
+    past_due: Optional["BillingPastDueState"]
+    seats: "BillingCabinetSeats"
+    storage: "BillingCabinetStorage"
+    catalog: "BillingCatalog"
+    payment_method: Optional["BillingPaymentMethod"]
+    entitlements: "BillingEntitlements"
+
+class _BillingCatalogRequired(TypedDict):
+    plans: List["BillingPlan"]
+    modules: List["BillingPlan"]
+    trial_days: int
+
+class BillingCatalog(_BillingCatalogRequired, total=False):
+    """Витрина кабинета: только публичные и неархивные предложения. Полный список заведённого у оператора — GET /platform/billing/plans"""
+
+    #: Основание тарифа-конструктора «Соберите свой». Модулей в нём нет: клиент набирает их из modules теми же дополнениями. null означает, что конструктора нет или он снят с витрины
+    constructor: Optional["BillingPlan"]
+
+class BillingChangeInput(TypedDict, total=False):
+    """Заявка кабинета на изменение подписки. Непереданное поле означает «оставить как есть»: клиент, подключающий модуль, не обязан заново называть свой тариф, а клиент, меняющий тариф, не должен молча лишиться оплаченного модуля. Пустой addon_keys означает «снять все»"""
+
+    plan_key: str
+    addon_keys: Optional[List[str]]
+    billing_period: Literal['month', 'year']
+    #: ЖЕЛАЕМЫЙ ОБЩИЙ потолок мест, а не «сколько докупить». Экран показывает «участники 17 из 20» и спрашивает новое «из скольких»; заявка «плюс три места», пришедшая дважды из-за повторной отправки формы, купила бы шесть. Непереданное поле означает «оставить как есть»: смена тарифа не отменяет доплаченные места. Сверх пакета тарифа берётся price_per_seat версии ЗА МЕСЯЦ — у доплат нет отдельной годовой цены, и годовой скидки на них тоже нет. Потолок НИЖЕ пакета отвергается: это не доплата, а попытка урезать оплаченное. Подписке без тарифа доплаты недоступны вовсе — «сверх пакета» без пакета не существует
+    seats_limit: Optional[int]
+    #: То же про хранилище: общий потолок в ГБ, доплата по price_per_gb за месяц
+    storage_limit_gb: Optional[int]
+
+class BillingChangePreview(TypedDict):
+    """Что произойдёт, если клиент нажмёт кнопку. Считается тем же кодом, что и применение: разойдись расчёты — клиент увидел бы одну сумму, а заплатил другую"""
+
+    now: "BillingSnap"
+    becomes: "BillingSnap"
+    added_modules: List[str]
+    removed_modules: List[str]
+    #: Доплата за остаток текущего периода. Ноль означает, что платить сейчас не нужно вовсе: так выглядит и понижение, и изменение на пробе, у которой оплаченного периода ещё нет
+    proration_amount: Dict[str, Any]
+    #: Из чего доплата сложилась: тариф с модулями, места сверх пакета, гигабайты сверх пакета. Ровно эти строки печатает счёт, и их сумма равна proration_amount — счёт печатается строками, и сумма счёта это сумма его строк. Строка может быть отрицательной: клиент, перешедший на тариф дороже и одновременно снявший доплаченные места, платит разницу, и снятые места обязаны быть в счёте видны. Пусто, когда доплаты нет
+    proration_lines: List["BillingInvoiceLine"]
+    currency: str
+    #: Сумма следующего списания уже по новым условиям, за расчётный период
+    next_amount: Dict[str, Any]
+    #: У пробы это дата её окончания: с неё клиент начинает платить
+    next_charge_at: Optional[str]
+    #: now — применяется сразу и оплачивается прорацией; period_end — откладывается до конца оплаченного периода. Правило одно: изменение, за которое клиент платит больше, применяется сейчас, всё остальное — с конца периода. Смена ритма оплаты всегда ждёт конца периода
+    effective: Literal['now', 'period_end']
+
+class _BillingChangeResultRequired(TypedDict):
+    subscription: "BillingCabinetSubscription"
+    invoice: Optional["BillingInvoice"]
+
+class BillingChangeResult(_BillingChangeResultRequired, total=False):
+    """Новое состояние экрана подписки и счёт, если доплачивать было за что"""
+
+    #: Что стало с составом модулей кабинета. Приходит только когда состав реально изменился или часть его до кабинета не доехала; null или отсутствие поля означают «состав уже совпадал с правами» — так выглядит отложенное понижение, при котором сегодня не изменилось ничего
+    modules_sync: Optional["BillingModuleSyncReport"]
+
+class BillingEntitlements(TypedDict):
+    """Что подписка РАЗРЕШАЕТ кабинету. Состав модулей кабинета ВЫВОДИТСЯ отсюда: после каждого изменения подписки он приводится к этим правам, и руками продуктовые модули больше не включают. Клиентские ext-модули и кабинеты без подписки — исключения: первых не бывает ни в тарифе, ни в пробе, вторые работали до биллинга и не ограничиваются. Места и гигабайты по-прежнему только считаются и показываются, кроме потолка хранилища — его сравнивает с занятым рамка загрузки файла"""
+
+    #: Кабинет без подписки ЛИБО кабинет, которому весь продукт открыт решением оператора: внутренний кабинет Akeda (internal) и клиент на внедрении (pilot). Ограничений нет
+    unlimited: bool
+    #: Разрешённые ключи модулей; null при unlimited — пустая карта читалась бы как «ни одного модуля»
+    modules: Optional[Dict[str, bool]]
+    #: null означает «без лимита»
+    seats_limit: Optional[int]
+    storage_limit_bytes: Optional[int]
+    #: Кабинету оставлено только чтение: подписка приостановлена за неплатёж или расторгнута. Модули при этом НЕ отбираются — данные остаются видимыми и выгружаемыми, — а любая изменяющая операция отвечает 402 billing.read_only
+    read_only: bool
+
+class BillingInvoice(TypedDict):
+    """Счёт Akeda кабинету. Живёт в control plane, а не в базе клиента: иначе администратор кабинета правил бы собственный счёт, а история платежей не пережила бы пересоздание его базы"""
+
+    id: str
+    #: «ГГГГ-НННН». Сплошной внутри года: пропуск бухгалтерия читает как утерянный документ
+    number: str
+    tenant: "BillingTenantRef"
+    subscription_id: Optional[str]
+    #: issued — выставлен, срок не вышел; overdue — срок вышел, доступ ещё полный; paid — оплачен; cancelled — отозван. Удаления нет вовсе
+    status: Literal['issued', 'paid', 'overdue', 'cancelled']
+    #: Назначение платежа: его клиент прочитает в банке через месяц
+    purpose: str
+    amount: "BillingMoney"
+    currency: str
+    issued_at: str
+    due_at: str
+    paid_at: Optional[str]
+    cancelled_at: Optional[str]
+    #: Строки счёта как они напечатаны. У счёта на доплату их столько, сколько слагаемых изменилось: тариф с модулями, места сверх пакета, гигабайты сверх пакета. Сумма строк равна amount
+    lines: List["BillingInvoiceLine"]
+    #: Ключ эквайринга, которым заказан платёж («tochka»). Пусто, когда эквайринг не подключён либо ссылку получить не удалось: счёт тогда оплачивают по реквизитам, и это постоянный путь, а не запасной
+    payment_provider: str
+    #: Куда отправить плательщика. Пусто, пока платёжная ссылка не заказана
+    payment_url: str
+    #: Личность платежа у банка. По ней уведомление об оплате находит свой счёт: номер заказа провайдер возвращать не обязан, а искать счёт по сумме значило бы засчитать чужие деньги
+    provider_payment_id: str
+
+class BillingInvoiceLine(TypedDict):
+    """Строка счёта как она напечатана: за что и сколько"""
+
+    description: str
+    amount: "BillingMoney"
+
+class BillingInvoicePage(TypedDict):
+    invoices: List["BillingInvoice"]
+
+class BillingModuleSyncFailure(TypedDict):
+    """Модуль, который привести к составу подписки не удалось"""
+
+    module: str
+    #: Почему не удалось — человеческим текстом
+    reason: str
+
+class _BillingModuleSyncReportRequired(TypedDict):
+    enabled: List[str]
+    disabled: List[str]
+
+class BillingModuleSyncReport(_BillingModuleSyncReportRequired, total=False):
+    """Что стало с составом модулей кабинета после изменения подписки. Приходит ТОЛЬКО когда состав реально изменился или часть его до кабинета не доехала; отсутствие поля означает «состав уже совпадал с правами». Непустой failed означает, что подписка изменена и, возможно, оплачена, а модуль до кабинета не доехал: включение модуля накатывает его миграции в базу кабинета и может не удаться по причине, к подписке отношения не имеющей. Подписку это не откатывает — отменять оплаченное решение из-за чужой поломки значило бы потерять оплату"""
+
+    failed: List["BillingModuleSyncFailure"]
+
+BillingMoney = str
+
+class BillingPastDueState(TypedDict):
+    """Неоплаченный счёт и дата ограничения доступа. Считается по САМОМУ СТАРОМУ просроченному счёту: его срок наступит первым. Само ограничение в этой фазе не включается — число показывается, решение принимает владелец"""
+
+    invoice_id: str
+    invoice_number: str
+    amount: "BillingMoney"
+    currency: str
+    restrict_at: str
+    days_left: int
+
+class BillingPaymentMethod(TypedDict):
+    """СОХРАНЁННАЯ карта для автоплатежа. Сегодня всегда null: рекуррентное списание подключается отдельной работой. Разовую оплату счёта картой это не трогает — ссылка на неё живёт в самом счёте (payment_url)"""
+
+    kind: str
+    last4: str
+
+class BillingPendingChange(TypedDict):
+    """Заявка клиента, применяемая суточным обходом с конца оплаченного периода"""
+
+    plan_key: str
+    addon_keys: List[str]
+    billing_period: Literal['month', 'year']
+    effective_at: str
+
+class BillingPilotState(TypedDict):
+    """Идущее внедрение глазами клиента"""
+
+    #: Плановая дата передачи кабинета. null — срок ещё не назначен; выдуманная дата хуже отсутствующей, клиент запомнит именно её
+    handover_at: Optional[str]
+
+class BillingPlan(TypedDict):
+    """Тариф как предложение. Цена и состав лежат не здесь, а в версии"""
+
+    id: str
+    #: Ключ-slug: им тариф назначают и по нему ищут
+    key: str
+    #: plan — готовый тариф: пакет модулей, мест и гигабайтов. module — отдельное дополнение, которое подключают к любому тарифу: РОВНО ОДИН модуль и его цена, без мест, гигабайтов и доплат. constructor — тариф-конструктор «Соберите свой»: основание с ценой, пакетом и доплатами и БЕЗ единого модуля внутри, их клиент набирает сам теми же дополнениями. Конструктор на платформе один
+    kind: Literal['plan', 'module', 'constructor']
+    name: str
+    #: «Для кого этот тариф» одной строкой под именем в карточке
+    tagline: str
+    description: str
+    #: Показывать ли тариф в витрине; индивидуальный тариф клиента существует, но в витрине его нет
+    is_public: bool
+    #: Новым не предлагают; действующие подписки на нём остаются
+    is_archived: bool
+    #: Витрина выделяет его обводкой и чипом «Рекомендуем»
+    is_recommended: bool
+    sort_order: int
+    created_at: str
+    updated_at: str
+    #: Действующая версия условий; в карточке подписки — та версия, на которую ссылается подписка
+    current: Optional["BillingPlanVersion"]
+
+class BillingPlanVersion(TypedDict):
+    """Условия тарифа на дату. Строка НЕИЗМЕНЯЕМА: подписка ссылается именно на неё, и правка означала бы переписанный задним числом договор. Срока пробного периода здесь нет: проба даётся кабинету ДО того, как он выбрал тариф, и её срок — правило платформы (BillingTrialSettings)"""
+
+    id: str
+    plan_id: str
+    #: Номер версии, назначает сервер
+    version: int
+    #: Код валюты ISO 4217
+    currency: str
+    #: Цена за месяц при ПОМЕСЯЧНОЙ оплате
+    price_month: Dict[str, Any]
+    #: Цена ЗА МЕСЯЦ при оплате за год — та самая, которую карточка пишет как «12 000 ₽/мес при оплате за год». За расчётный период с кабинета берут её двенадцатикратно. НОЛЬ означает, что годовой оплаты у тарифа нет вовсе, а не «бесплатно за год»
+    price_year: Dict[str, Any]
+    #: Ключи ПРОДУКТОВЫХ модулей платформы, которые разрешает тариф. core и settings сюда не пишут: без справочников и настроек кабинета нет вовсе, они включены всегда. Клиентских ext-модулей здесь тоже не бывает: они написаны под один кабинет и общим предложением не продаются
+    modules: List[str]
+    #: Мест в пакете; НОЛЬ означает «без лимита», а не «ноль мест»
+    seats_included: int
+    #: Гигабайтов в пакете; ноль означает «без лимита»
+    storage_included_gb: int
+    price_per_seat: "BillingMoney"
+    price_per_gb: "BillingMoney"
+    effective_from: str
+    created_at: str
+
+class _BillingPublicCatalogRequired(TypedDict):
+    #: Валюта всех цен витрины. Одна на ответ: две цены в разных валютах рядом человек не сложит
+    currency: str
+    #: Сколько дней бесплатной работы получает новый кабинет. Приходит из правил платформы, а не из вёрстки: правка срока оператором обязана доехать до посетителя тем же днём
+    trial_days: int
+    plans: List["BillingPublicPlan"]
+    modules: List["BillingPublicPlan"]
+
+class BillingPublicCatalog(_BillingPublicCatalogRequired, total=False):
+    """Публичная витрина: только продаваемые сегодня предложения. Пустые списки приходят как [], а не null — клиент, получивший null, показал бы «не загрузилось» вместо честной пустой страницы"""
+
+    #: Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой
+    constructor: Optional["BillingPublicPlan"]
+
+class BillingPublicPlan(TypedDict):
+    """Тариф или отдельный модуль глазами страницы тарифов"""
+
+    #: Ключ-slug: им предложение выбирают при смене тарифа
+    key: str
+    #: plan — готовый тариф (пакет модулей, мест и гигабайтов), module — отдельное дополнение к любому тарифу, constructor — основание тарифа «Соберите свой» без единого модуля внутри
+    kind: Literal['plan', 'module', 'constructor']
+    name: str
+    #: «Для кого это» одной строкой под именем в карточке
+    tagline: str
+    #: Витрина выделяет предложение обводкой и чипом «Рекомендуем»
+    is_recommended: bool
+    sort_order: int
+    current: "BillingPublicPlanVersion"
+
+class BillingPublicPlanVersion(TypedDict):
+    """Условия публичного предложения на сегодня. Номера версии и дат здесь нет: страницу тарифов читает посторонний, и внутреннее устройство каталога его не касается"""
+
+    #: Цена за месяц при ПОМЕСЯЧНОЙ оплате
+    price_month: Dict[str, Any]
+    #: Цена ЗА МЕСЯЦ при оплате за год — та самая, которую карточка пишет как «12 000 ₽/мес при оплате за год». Ноль означает, что годовой оплаты у предложения нет вовсе, а не «бесплатно за год»
+    price_year: Dict[str, Any]
+    #: Ключи продуктовых модулей, которые даёт предложение; у отдельного модуля их ровно один
+    modules: List[str]
+    #: Мест в пакете; НОЛЬ означает «без лимита», а не «ноль мест»
+    seats_included: int
+    #: Гигабайтов в пакете; ноль означает «без лимита»
+    storage_included_gb: int
+    #: Цена места сверх пакета, ЗА МЕСЯЦ. Годовой скидки у доплат нет: отдельной годовой цены в условиях не существует
+    price_per_seat: Dict[str, Any]
+    #: Цена гигабайта сверх пакета, за месяц
+    price_per_gb: Dict[str, Any]
+
+class BillingRequisites(TypedDict):
+    """Реквизиты получателя для счёта «по реквизитам». Пустые значения законны, пока владелец их не задал: вкладку «По реквизитам» кабинету тогда просто не показывают"""
+
+    recipient: str
+    inn: str
+    kpp: str
+    account: str
+    bank: str
+    bik: str
+
+class BillingSnap(TypedDict):
+    """Срез состояния подписки для экрана «Сейчас | Станет»"""
+
+    plan_key: str
+    plan_name: str
+    #: Ключи подключённых дополнений
+    addons: List[str]
+    #: ОБЩИЙ потолок мест: пакет тарифа либо доплаченный сверх него. null — без ограничения
+    seats_limit: Optional[int]
+    #: Общий потолок хранилища в ГБ; null — без ограничения
+    storage_limit_gb: Optional[int]
+    #: Сумма за ОДИН расчётный период: при помесячной оплате это месячная цена, при годовой — она же, умноженная на двенадцать. Цена «за месяц при оплате за год» живёт в версии тарифа (price_year), а здесь именно то, что спишут одним платежом
+    amount_per_period: Dict[str, Any]
+    billing_period: Literal['month', 'year']
+
+class BillingSubscription(TypedDict):
+    """Подписка кабинета; строка на кабинет ровно одна"""
+
+    id: str
+    tenant_id: str
+    #: Версия тарифа, на условиях которой живёт кабинет. null у ПРОБНОЙ подписки: тариф выбирают, посмотрев продукт, а не до того
+    plan_version_id: Optional[str]
+    #: internal — ВНУТРЕННИЙ кабинет Akeda: разрешено всё, счета не выставляются, просрочки не бывает, в MRR и в воронку он не входит. Отдельное состояние, а не отсутствие подписки: кабинет без строки тоже ни в чём не ограничен, но это ответ «мы про него ничего не решали», а internal — записанное решение оператора с причиной и автором в журнале. pilot — ВНЕДРЕНИЕ: кабинет КЛИЕНТА, который мы ведём до передачи. Права те же, что у internal, а смысл другой, и путать их нельзя: внедрение кончается платящим клиентом, а собственный кабинет вендора — нет. В MRR не входит, но считается отдельным счётчиком pilot_count
+    status: Literal['trial', 'active', 'past_due', 'suspended', 'cancelled', 'internal', 'pilot']
+    #: Ритм оплаты, выбранный кабинетом. Лежит в подписке, а не в версии тарифа: тариф предлагает обе цены, а выбирает между ними клиент
+    billing_period: Literal['month', 'year']
+    #: Дата окончания пробного периода
+    trial_ends_at: Optional[str]
+    #: Границы оплаченного периода. В фазе 1 поле хранится, но не заполняется: его поставит биллинговый цикл
+    current_period_start: Optional[str]
+    current_period_end: Optional[str]
+    #: Договорённость поверх пакета тарифа; null означает «как в тарифе», а не ноль
+    seats_override: Optional[int]
+    storage_override_gb: Optional[int]
+    #: Момент расторжения; снимается при возобновлении
+    cancel_at: Optional[str]
+    #: Плановая дата передачи кабинета клиенту. Заполнена только во время внедрения (status = pilot) и НЕОБЯЗАТЕЛЬНА даже там: внедрение начинают и без назначенного срока, а выдуманная дата хуже отсутствующей. Снимается при выходе из внедрения — дата передачи, пережившая передачу, напоминала бы о том, что уже случилось
+    pilot_handover_at: Optional[str]
+    #: День, когда кабинет ПЕРЕСТАЛ РАБОТАТЬ: был приостановлен за неплатёж или расторгнут. С него идёт срок хранения данных. null у работающего кабинета; возврат в работу дату снимает
+    access_lost_at: Optional[str]
+    #: Когда данные кабинета были удалены безвозвратно. Заполнено у подписки, пережившей свой кабинет: сам договор и счета по нему мы храним дальше — это бухгалтерский учёт Akeda, а не данные клиента
+    tenant_purged_at: Optional[str]
+    #: Понижение, отложенное до конца оплаченного периода. null — ничего не отложено. Заявка у подписки ровно одна: следующее решение клиента заменяет предыдущее целиком
+    pending_change: Optional["BillingPendingChange"]
+    #: Подключённые сейчас дополнения; снятые сюда не попадают — их история в журнале
+    addons: List["BillingSubscriptionAddonsItem"]
+    created_at: str
+    updated_at: str
+
+class BillingSubscriptionAddonsItem(TypedDict):
+    plan_key: str
+    plan_version_id: str
+    added_at: str
+
+class BillingTenantRef(TypedDict):
+    """Кабинет — единица подписки; кабинет не является юрлицом"""
+
+    id: str
+    slug: str
+    name: str
+    is_active: bool
+
+class BillingTrialState(TypedDict):
+    """Сколько бесплатных дней осталось из выданных"""
+
+    ends_at: str
+    days_left: int
+    days_total: int
+
+class BillingUsageCollectError(TypedDict):
+    """Источник, который посчитать не удалось. Живёт В СНИМКЕ, а не только в логе: снимок с семью цифрами из восьми внешне неотличим от полного, и разницу обязан называть он сам."""
+
+    #: Ключ раздела; database — размер базы кабинета, members — счёт участников
+    module: str
+    #: Технический текст отказа для оператора платформы
+    message: str
+
+class BillingUsageModuleBytes(TypedDict):
+    """Строка разбивки для интерфейса. Подпись ставит сервер по реестру разделов платформы"""
+
+    key: str
+    label: str
+    bytes: int
+
+class BillingUsageSnapshot(TypedDict):
+    """Одно измерение потребления кабинета. storage_bytes_total — сумма bytes_by_module; db_size_bytes в неё НЕ входит, это другой ресурс (место в PostgreSQL против места в объектном хранилище), и сложение их в одно число врало бы про оба."""
+
+    id: str
+    tenant_id: str
+    #: Момент, о котором снимок говорит
+    taken_at: str
+    #: Активные членства кабинета
+    active_members: int
+    #: Сумма разбивки по разделам
+    storage_bytes_total: int
+    #: Карта «ключ раздела → байты». Раздел, выключенный у кабинета, в карту не попадает вовсе
+    bytes_by_module: Dict[str, int]
+    #: pg_database_size базы кабинета
+    db_size_bytes: int
+    #: scheduled — суточный обход, manual — ручной пересчёт оператором
+    source: Literal['scheduled', 'manual']
+    #: Сколько занял сбор
+    duration_ms: int
+    #: Источники, которые посчитать не удалось. Пустой массив означает полный сбор
+    errors: List["BillingUsageCollectError"]
 
 class _CRMActivityRequired(TypedDict):
     id: "UUID"
@@ -2515,6 +3002,8 @@ class _CRMInboxEntityMessageRequired(TypedDict):
 class CRMInboxEntityMessage(_CRMInboxEntityMessageRequired, total=False):
     provider_message_id: str
     sent_by: int
+    #: Сколько файлов у сообщения; список — GET /api/v1/crm/inbox/messages/{id}/attachments
+    attachment_count: int
 
 class CRMInboxLinkConversationInput(TypedDict):
     conversation_id: "UUID"
@@ -2548,6 +3037,8 @@ class _CRMInboxMessageRequired(TypedDict):
 class CRMInboxMessage(_CRMInboxMessageRequired, total=False):
     provider_message_id: str
     sent_by: int
+    #: Сколько файлов у сообщения; список — GET /api/v1/crm/inbox/messages/{id}/attachments
+    attachment_count: int
 
 class CRMInboxOutboundUpload(TypedDict):
     id: "UUID"
@@ -2749,15 +3240,14 @@ class CRMLeadPatch(TypedDict, total=False):
 
 class CRMLeadSource(TypedDict):
     id: "UUID"
-    #: То, что ложится в lead.source. У системной строки за ключом стоит код
+    #: Код записи справочника. То, что ложится в lead.source; за штатным кодом стоит код продукта
     key: str
     #: Имя - право кабинета; сеятель его не возвращает
     name: str
     #: Канал для цвета и значка; неизвестный приводится к other
     channel: str
     sort_order: int
-    #: Строку завёл сеятель модуля: удалить и выключить нельзя
-    is_system: bool
+    #: Ненужную строку выключают, а не удаляют: на её код ссылаются заведённые лиды
     is_active: bool
     created_at: str
     updated_at: str
@@ -2780,7 +3270,7 @@ CRMLeadStatus = Literal['new', 'qualified', 'disqualified', 'converted']
 class CRMLossReason(TypedDict):
     id: "UUID"
     name: str
-    #: deal - почему проиграна сделка, lead - почему лид оказался не наш
+    #: Из какого справочника запись: deal - crm_loss_reason (почему проиграна сделка), lead - crm_lead_reject_reason (почему лид оказался не наш)
     kind: Literal['deal', 'lead']
     is_active: bool
     created_at: str
@@ -6322,6 +6812,346 @@ class DocflowAddressRequisites(TypedDict, total=False):
     #: ИныеСвед
     info: str
 
+class _DocflowApprovalRequired(TypedDict):
+    id: "UUID"
+    subject: "DocflowApprovalSubject"
+    rework_mode: Literal['restart', 'returner_only']
+    #: Редакция предмета, по которой решают
+    content_version: int
+    state: Literal['pending', 'approved', 'rejected', 'returned', 'cancelled']
+    #: Номер текущего этапа
+    active_stage: int
+    requested_by: int
+    requested_at: str
+    updated_at: str
+    stages: List["DocflowApprovalStage"]
+
+class DocflowApproval(_DocflowApprovalRequired, total=False):
+    """Один проход предмета по маршруту. Согласование ничего не проводит и ни строки регистра не пишет: оно отвечает на один вопрос — можно ли уже выполнить действие, выпускающее бумагу или деньги наружу. Возврат на доработку проход не закрывает: предмет правят и продолжают тот же проход, сохраняя чужие визы."""
+
+    subject_title: str
+    subject_number: str
+    company_id: "UUID"
+    contact_id: "UUID"
+    item_id: "UUID"
+    route_id: "UUID"
+    route_name: str
+    #: Пусто законно: у рамочного договора суммы нет
+    amount: str
+    currency: str
+    requested_name: str
+    finished_at: str
+    reminded_at: str
+    escalated_at: str
+    events: List["DocflowApprovalEvent"]
+
+class DocflowApprovalActionCheck(TypedDict):
+    """Вердикт по одному действию вместе с причинами отказа."""
+
+    allowed: bool
+    reasons: List["DocflowApprovalBlockReason"]
+
+class _DocflowApprovalBlockReasonRequired(TypedDict):
+    code: str
+    message: str
+
+class DocflowApprovalBlockReason(_DocflowApprovalBlockReasonRequired, total=False):
+    """Почему действие запрещено, словами, а не кодом состояния."""
+
+    approval_id: "UUID"
+    stage_title: str
+
+class _DocflowApprovalBlockersRequired(TypedDict):
+    subject: "DocflowApprovalSubject"
+    #: Объявлен ли вид предмета требующим согласования
+    required: bool
+    send_to_counterparty: "DocflowApprovalActionCheck"
+    send_to_bank: "DocflowApprovalActionCheck"
+    can_submit: bool
+    can_decide: bool
+    can_cancel: bool
+    can_resubmit: bool
+    #: Всегда истинно: редактирование карточки согласование не глушит
+    editing_stays_unlocked: bool
+
+class DocflowApprovalBlockers(_DocflowApprovalBlockersRequired, total=False):
+    """Что можно сделать с предметом прямо сейчас и почему нельзя остальное. Согласование блокирует РОВНО ДВА действия — отправку контрагенту и отправку заявки в банк; editing_stays_unlocked говорит прямо, что редактирование карточки не глушится никогда. Это СНИМОК: между чтением и нажатием кнопки мир может измениться, и настоящую защиту держит транзакция самого действия."""
+
+    approval_id: "UUID"
+    state: Literal['pending', 'approved', 'rejected', 'returned', 'cancelled']
+    matched_route_id: "UUID"
+    matched_route_name: str
+
+class DocflowApprovalCancelInput(TypedDict):
+    #: Причина отзыва остаётся в истории прохода
+    comment: str
+
+class _DocflowApprovalDecisionInputRequired(TypedDict):
+    decision: Literal['approve', 'return', 'reject']
+
+class DocflowApprovalDecisionInput(_DocflowApprovalDecisionInputRequired, total=False):
+    """Одно решение. Комментарий обязателен у return и reject и не требуется у approve: отказ без слов отправляет автора чинить неизвестно что."""
+
+    #: Заполняется из адреса; значение в теле роли не играет
+    approval_id: "UUID"
+    #: ЧЬЯ виза закрывается. Не обязательно тот, кто нажимает: замещающий закрывает визу отсутствующего, оставаясь собой в истории
+    reviewer_id: int
+    comment: str
+
+class DocflowApprovalDelegateInput(TypedDict):
+    #: Кому поручается решение по этому проходу
+    user_id: int
+
+class DocflowApprovalDepartment(TypedDict):
+    """Подразделение справочника ядра глазами согласования."""
+
+    id: "UUID"
+    code: str
+    label: str
+
+class DocflowApprovalDirectories(TypedDict):
+    """Справочники конструктора маршрутов ОДНИМ ответом: три отдельных запроса ради одной формы означают три повода ей мигнуть и три места, где список окажется из разных моментов времени."""
+
+    departments: List["DocflowApprovalDepartment"]
+    roles: List["DocflowApprovalRoleRef"]
+    people: List["DocflowApprovalPerson"]
+    #: Виды предметов, которые сегодня умеют согласовываться, вместе с их обязательностью
+    subjects: List["DocflowApprovalPolicy"]
+
+class _DocflowApprovalEventRequired(TypedDict):
+    id: "UUID"
+    action: Literal['submitted', 'approved', 'returned', 'rejected', 'cancelled', 'resubmitted', 'reset_significant_change', 'delegated', 'escalated', 'reminded']
+    created_at: str
+
+class DocflowApprovalEvent(_DocflowApprovalEventRequired, total=False):
+    """Строка истории прохода. Не переписывается."""
+
+    stage_position: int
+    user_id: int
+    user_name: str
+    comment: str
+
+class _DocflowApprovalInboxItemRequired(TypedDict):
+    approval_id: "UUID"
+    subject: "DocflowApprovalSubject"
+    subject_title: str
+    stage_position: int
+    #: Сколько этапов в маршруте всего
+    stage_count: int
+    stage_mode: Literal['all', 'any']
+    requested_at: str
+    overdue: bool
+    #: Истинно у собственной отправки, которую вернули на доработку
+    returned_to_me: bool
+
+class DocflowApprovalInboxItem(_DocflowApprovalInboxItemRequired, total=False):
+    """Строка очереди. Это НЕ урезанный предмет: ни файлов, ни строк, ни связей здесь нет — очередь открывают, чтобы решить, что открывать дальше."""
+
+    subject_number: str
+    route_name: str
+    stage_title: str
+    amount: str
+    currency: str
+    company_name: str
+    contact_name: str
+    requested_name: str
+    due_at: str
+    #: Чью визу вы ставите, если это не ваша собственная
+    on_behalf_of: str
+    on_behalf_via: Literal['self', 'substitute', 'delegate', 'administrator']
+
+class DocflowApprovalInboxPage(TypedDict):
+    items: List["DocflowApprovalInboxItem"]
+    has_more: bool
+
+class DocflowApprovalPerson(TypedDict):
+    """Человек в списках согласования. Логин, роли и права наружу не отдаются."""
+
+    id: int
+    name: str
+
+class DocflowApprovalPolicy(TypedDict):
+    """Обязательность согласования у ОДНОГО вида предмета, а не глобальный выключатель кабинета: у заявки на оплату согласование может быть обязательным, а у письма контрагенту — нет."""
+
+    subject_module: Literal['docflow', 'finance']
+    subject_kind: Literal['flow_document', 'payment_request']
+    required: bool
+
+class DocflowApprovalResubmitInput(TypedDict, total=False):
+    """Повторная отправка после доработки. Что произойдёт с визами, решает настройка маршрута: restart гасит все, returner_only сохраняет визы всех, кроме вернувшего."""
+
+    #: Заполняется из адреса; значение в теле роли не играет
+    approval_id: "UUID"
+    #: Кого инициатор решил переспросить дополнительно. Вернувший этап переспрашивается всегда и в списке не нужен
+    ask_again: List["UUID"]
+    comment: str
+
+class _DocflowApprovalReviewRequired(TypedDict):
+    id: "UUID"
+    actor_id: int
+
+class DocflowApprovalReview(_DocflowApprovalReviewRequired, total=False):
+    """Персональная виза. actor_id — чья она, decided_by — чья рука её поставила, если это не сам согласующий, а decided_via — на каком основании: замещение, поручение или вмешательство администратора."""
+
+    actor_name: str
+    decided_by: int
+    decided_by_name: str
+    decided_via: Literal['self', 'substitute', 'delegate', 'administrator']
+    delegated_to: int
+    #: Пусто, пока человек не решил
+    decision: Literal['approve', 'return', 'reject']
+    #: Обязателен у return и reject: без слов автор не узнает, что исправлять
+    comment: str
+    decided_at: str
+
+class DocflowApprovalRoleRef(TypedDict):
+    """Роль кабинета глазами согласования: идентификатор и имя, без состава прав."""
+
+    id: "UUID"
+    name: str
+
+class _DocflowApprovalRouteRequired(TypedDict):
+    id: "UUID"
+    name: str
+    subject_module: Literal['docflow', 'finance']
+    #: any — любой вид предмета своего модуля
+    subject_kind: Literal['flow_document', 'payment_request', 'any']
+    #: Что будет после возврата на доработку: весь путь заново либо продолжает вернувший, визы остальных сохраняются
+    rework_mode: Literal['restart', 'returner_only']
+    #: Выключенный маршрут не подбирается новым проходам, но остаётся на месте
+    is_active: bool
+    stages: List["DocflowApprovalRouteStage"]
+    created_at: str
+    updated_at: str
+
+class DocflowApprovalRoute(_DocflowApprovalRouteRequired, total=False):
+    """Именованный ШАБЛОН маршрута, а не разовый список людей. Подошло несколько — берётся самый конкретный; нижняя граница суммы включается, верхняя нет, поэтому смежные диапазоны стыкуются без щели и без нахлёста. Названия юрлица, контрагента, папки и статьи подставляются на чтении: в шаблоне хранятся только ссылки."""
+
+    #: Вид бумаги у владельца предмета
+    document_kind: str
+    company_id: "UUID"
+    company_name: str
+    contact_id: "UUID"
+    contact_name: str
+    contact_folder_id: "UUID"
+    contact_folder: str
+    item_id: "UUID"
+    item_name: str
+    #: Нижняя граница суммы ВКЛЮЧАЕТСЯ
+    amount_from: str
+    #: Верхняя граница суммы НЕ включается
+    amount_to: str
+
+class DocflowApprovalRouteActiveInput(TypedDict):
+    active: bool
+
+class DocflowApprovalRouteList(TypedDict):
+    items: List["DocflowApprovalRoute"]
+
+class _DocflowApprovalRouteStageRequired(TypedDict):
+    #: Порядок этапа в маршруте
+    position: int
+    assignee_kind: Literal['user', 'department', 'role', 'manager']
+    #: Решают все или достаточно одного. Кворума с процентом нет
+    mode: Literal['all', 'any']
+
+class DocflowApprovalRouteStage(_DocflowApprovalRouteStageRequired, total=False):
+    """Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался»."""
+
+    id: "UUID"
+    title: str
+    assignee_user_id: int
+    assignee_department_id: "UUID"
+    assignee_role_id: "UUID"
+    #: Как назначение читается человеком. Подставляется на чтении; в шаблоне не хранится
+    assignee_label: str
+    #: Срок ЭТАПА в часах. Просрочка даёт напоминание и эскалацию на одно звено; автоотклонения по сроку нет
+    due_hours: int
+    #: Лимит по сумме УСЛОВИЕМ НА ЭТАП: выполнять только при сумме от N. Этап, чей лимит не достигнут, остаётся в проходе строкой skipped
+    min_amount: str
+
+class _DocflowApprovalStageRequired(TypedDict):
+    id: "UUID"
+    position: int
+    mode: Literal['all', 'any']
+    assignee_kind: Literal['user', 'department', 'role', 'manager']
+    state: Literal['waiting', 'active', 'approved', 'rejected', 'returned', 'skipped']
+    reviews: List["DocflowApprovalReview"]
+
+class DocflowApprovalStage(_DocflowApprovalStageRequired, total=False):
+    """Этап ПРОХОДА: кого спросили на самом деле. Состояние skipped означает «этап не выполняется, его лимит по сумме не достигнут»; строка всё равно есть, чтобы человек видел, ПОЧЕМУ финансового директора не спросили."""
+
+    title: str
+    assignee_label: str
+    min_amount: str
+    due_hours: int
+    due_at: str
+    started_at: str
+    decided_at: str
+
+class DocflowApprovalSubject(TypedDict):
+    """Предмет согласования НЕЙТРАЛЬНОЙ ТРОЙКОЙ «модуль — вид — идентификатор». Внешнего ключа на предмет нет вовсе: без этого приёма к заявке на оплату, живущей в модуле finance (счета, выписки и расчёты), лист было бы не прицепить."""
+
+    #: Модуль-владелец предмета
+    module: Literal['docflow', 'finance']
+    #: Вид предмета: карточка документооборота или заявка на оплату
+    kind: Literal['flow_document', 'payment_request']
+    #: Идентификатор предмета у его владельца
+    id: "UUID"
+
+class _DocflowApprovalSubjectFactsRequired(TypedDict):
+    subject: "DocflowApprovalSubject"
+    title: str
+    #: Редакция предмета у владельца — основание значимой правки
+    content_version: int
+    #: Кто завёл предмет; нужен этапу «руководитель автора»
+    author_id: int
+
+class DocflowApprovalSubjectFacts(_DocflowApprovalSubjectFactsRequired, total=False):
+    """Что владелец предмета рассказывает о нём согласованию своим портом. Пустая сумма законна — у рамочного договора её нет, и ноль вместо неё назвал бы сумму, которой не называли."""
+
+    number: str
+    #: Вид бумаги у владельца: договор, счёт, акт
+    document_kind: str
+    company_id: "UUID"
+    contact_id: "UUID"
+    contact_folder_id: "UUID"
+    #: Статья расхода предмета
+    item_id: "UUID"
+    #: Сумма десятичным текстом; пусто там, где суммы нет
+    amount: str
+    currency: str
+
+class _DocflowApprovalSubjectStateRequired(TypedDict):
+    blockers: "DocflowApprovalBlockers"
+    facts: "DocflowApprovalSubjectFacts"
+
+class DocflowApprovalSubjectState(_DocflowApprovalSubjectStateRequired, total=False):
+    """Согласование одного предмета глазами его карточки."""
+
+    #: Отсутствует, пока предмет ни разу не отправляли
+    approval: "DocflowApproval"
+
+class _DocflowApprovalSubstitutionRequired(TypedDict):
+    id: "UUID"
+    #: Кого замещают
+    principal_id: int
+    #: Кто замещает
+    substitute_id: int
+    starts_on: str
+
+class DocflowApprovalSubstitution(_DocflowApprovalSubstitutionRequired, total=False):
+    """Замещение согласующего на период. Бессрочное замещение законно — ends_on можно не называть."""
+
+    principal_name: str
+    substitute_name: str
+    #: Пусто — замещение бессрочно
+    ends_on: str
+    comment: str
+
+class DocflowApprovalSubstitutionList(TypedDict):
+    items: List["DocflowApprovalSubstitution"]
+
 class _DocflowAttachmentRequired(TypedDict):
     id: "UUID"
     message: "UUID"
@@ -6704,111 +7534,10 @@ class _DocflowFlowAccrualStageRequired(TypedDict):
 class DocflowFlowAccrualStage(_DocflowFlowAccrualStageRequired, total=False):
     date: str
 
-class _DocflowFlowApprovalRequired(TypedDict):
-    id: "UUID"
-    #: Версия документа, по которой решают
-    content_version: int
-    state: Literal['pending', 'approved', 'returned', 'rejected', 'cancelled']
-    requested_by: int
-    requested_at: str
-    stages: List["DocflowFlowApprovalStage"]
-    #: Номер текущего этапа с нуля
-    active_stage: int
-
-class DocflowFlowApproval(_DocflowFlowApprovalRequired, total=False):
-    """Маршрут согласования, закреплённый за той версией документа, которую видел отправитель. Согласование — мнение, а не проведение: учётных движений оно не делает и черновик не замораживает."""
-
-    requested_name: str
-    due_at: str
-    #: Кто ещё не решил на текущем этапе
-    waiting_for: List[int]
-    cancellation: "DocflowFlowReview"
-
-class DocflowFlowApprovalCancel(TypedDict):
-    expected_version: int
-    approval_id: "UUID"
-    #: Причина отзыва остаётся в истории маршрута
-    comment: str
-
-class DocflowFlowApprovalContext(TypedDict):
-    """Текущие возможности текущего человека, а не снимок прошлых прав."""
-
-    version: int
-    can_submit: bool
-    #: Истинно только у участника активного этапа с правом docflow.flow:approve
-    can_decide: bool
-    #: Истинно только у того, кто отправлял
-    can_cancel: bool
-
-class _DocflowFlowApprovalDecisionRequired(TypedDict):
-    expected_version: int
-    approval_id: "UUID"
-    decision: Literal['approve', 'return', 'reject']
-
-class DocflowFlowApprovalDecision(_DocflowFlowApprovalDecisionRequired, total=False):
-    comment: str
-
-class _DocflowFlowApprovalInboxItemRequired(TypedDict):
-    id: "UUID"
-    #: Версия, которую подставляют в решение как expected_version
-    version: int
-    kind: "DocflowFlowKind"
-    title: str
-    date: str
-    company_id: "UUID"
-    contact_id: "UUID"
-    requested_by: int
-    requested_at: str
-    #: Номер текущего этапа с нуля
-    active_stage: int
-    #: Сколько этапов в маршруте всего
-    stage_count: int
-
-class DocflowFlowApprovalInboxItem(_DocflowFlowApprovalInboxItemRequired, total=False):
-    """Одна строка очереди решений. Файлов, состава маршрута, товарных строк и учётных связей здесь нет: за ними идут в карточку документа."""
-
-    number: str
-    company_name: str
-    contact_name: str
-    requested_name: str
-    #: Срок решения; отсутствует, когда срок не назначали
-    due_at: str
-    #: Сумма документа десятичным текстом; пусто у рамочного договора — нуля вместо неё не бывает
-    amount: str
-    #: Валюта суммы; пусто там же, где пуста сумма
-    currency: str
-
-class DocflowFlowApprovalInboxPage(TypedDict):
-    items: List["DocflowFlowApprovalInboxItem"]
-    has_more: bool
-
-class _DocflowFlowApprovalPeoplePageRequired(TypedDict):
-    items: List["DocflowFlowApprovalPerson"]
-
-class DocflowFlowApprovalPeoplePage(_DocflowFlowApprovalPeoplePageRequired, total=False):
-    #: Продолжение листания; отсутствует на последней странице
-    next_after: int
-
-class DocflowFlowApprovalPerson(TypedDict):
-    id: int
-    name: str
-
-class DocflowFlowApprovalStage(TypedDict):
-    reviewers: List["DocflowFlowReview"]
-
-class _DocflowFlowApprovalSubmitRequired(TypedDict):
-    expected_version: int
-    #: Этапы по порядку; каждый — список идентификаторов людей. Всего не больше пятидесяти участников
-    stages: List[List[int]]
-
-class DocflowFlowApprovalSubmit(_DocflowFlowApprovalSubmitRequired, total=False):
-    #: Срок решения; если назван, обязан быть в будущем
-    due_at: str
-
 class _DocflowFlowChangeInputRequired(TypedDict):
     #: Версия, которую видел клиент. Разошлась — 409 docflow.flow.version_conflict
     expected_version: int
-    action: Literal['save', 'link', 'unlink', 'remove_file', 'register', 'revise', 'archive', 'restore']
+    action: Literal['save', 'link', 'unlink', 'remove_file', 'register', 'revise', 'archive', 'restore', 'delete']
 
 class DocflowFlowChangeInput(_DocflowFlowChangeInputRequired, total=False):
     """Одна команда правки. Поля, не относящиеся к названному действию, отвергаются, а не игнорируются: запрос, просящий две разные вещи сразу, сам не знает, чего хочет."""
@@ -6824,11 +7553,11 @@ class DocflowFlowChangeInput(_DocflowFlowChangeInputRequired, total=False):
 
 class _DocflowFlowCommercialRequired(TypedDict):
     currency: str
-    #: Десятичным текстом
+    #: Десятичным текстом; пусто — итога нет или его выводит правило графика
     amount: str
 
 class DocflowFlowCommercial(_DocflowFlowCommercialRequired, total=False):
-    """Коммерческая часть бумаги — сумма, валюта, строки и графики."""
+    """Коммерческая часть бумаги — сумма, валюта, строки и графики. Пустая amount законна только вместе с payment_rule, у которого названа сумма платежа: у бессрочного договора итога нет и быть не может, а строк оригинала и этапов работ у такой сделки не бывает — их суммы обязаны сойтись с итогом."""
 
     payment_terms: str
     due_date: str
@@ -6865,6 +7594,7 @@ class DocflowFlowContent(_DocflowFlowContentRequired, total=False):
     number: str
     contract: "DocflowFlowContractTerms"
     commercial: "DocflowFlowCommercial"
+    recognized: "DocflowFlowRecognized"
 
 class _DocflowFlowContractTermsRequired(TypedDict):
     mode: Literal['framework', 'fixed']
@@ -6872,7 +7602,7 @@ class _DocflowFlowContractTermsRequired(TypedDict):
     valid_from: str
 
 class DocflowFlowContractTerms(_DocflowFlowContractTermsRequired, total=False):
-    """Условия договора в старой форме. Остаётся читаемой и принимается, но новую коммерческую часть описывает commercial. У рамочного договора суммы и валюты нет вовсе — искусственного нуля здесь не бывает."""
+    """Условия договора в старой форме. Остаётся читаемой и принимается, но новую коммерческую часть описывает commercial. У договора без лимита (mode=framework) суммы и валюты в условиях нет вовсе — искусственного нуля здесь не бывает. Коммерческая часть рядом с ним законна только с payment_rule, у которого названа сумма платежа: это бессрочный договор с регулярным платежом. Без неё это рамочный договор, суммы которого ведутся спецификациями, и commercial с ним не сохраняется."""
 
     valid_until: str
     #: Только у mode=fixed
@@ -6912,11 +7642,25 @@ class DocflowFlowDocument(_DocflowFlowDocumentRequired, total=False):
     archived_from: Literal['draft', 'registered']
     files: List["DocflowFlowFile"]
     relations: List["DocflowFlowRelation"]
-    approval: "DocflowFlowApproval"
     accounting_links: List["DocflowFlowAccountingLink"]
     edo: "DocflowFlowEDOState"
     #: Конверты, которыми карточка уходила и приходила. Заполняется только при чтении карточки и в редакцию не пишется: связь живёт своей строкой, её правит синхронизация, а редакция неизменяема
     edo_links: List["DocflowFlowEDOLink"]
+    #: Чего карточке не хватает до полноты: содержательного файла, подтверждённой суммы, срока действия (последний — только у договора и дополнительного соглашения). Считается при чтении одной карточки и в редакцию не пишется. Пустой список у карточки из ЭДО означает, что приёмка зарегистрировала её сразу; непустой — что карточка осталась черновиком и ждёт подтверждения человека.
+    gaps: List[Literal['file', 'amount', 'validity']]
+
+class DocflowFlowEDOAttachment(TypedDict):
+    """Файл конверта глазами карточки: чем оператор его назвал, чем он является, сколько весит и есть ли он у нас. Скачивается адресом вложения пакета."""
+
+    id: "UUID"
+    message: "UUID"
+    name: str
+    #: document, title либо пусто
+    kind: str
+    content_type: str
+    size_bytes: int
+    #: Байты скачаны в наше хранилище; ложь — файл пока живёт только у оператора
+    stored: bool
 
 class _DocflowFlowEDOLinkRequired(TypedDict):
     id: "UUID"
@@ -6944,6 +7688,8 @@ class DocflowFlowEDOLink(_DocflowFlowEDOLinkRequired, total=False):
     file: Optional["UUID"]
     #: Идентификатор вложения у оператора: им адресуется замена файла при повторной отправке
     external_attachment_id: str
+    #: Содержательные файлы конверта, показанные в карточке ссылкой, а не копией: байты лежат в хранилище кабинета один раз. Извещений здесь нет. Заполняется только при чтении одной карточки
+    attachments: List["DocflowFlowEDOAttachment"]
     created_by: Optional[int]
 
 class _DocflowFlowEDOStateRequired(TypedDict):
@@ -7017,14 +7763,27 @@ class _DocflowFlowPaymentRuleRequired(TypedDict):
     start: str
 
 class DocflowFlowPaymentRule(_DocflowFlowPaymentRuleRequired, total=False):
-    """Регулярный график оплат одним правилом: сумма платежа, период, день, начало и либо число платежей, либо последняя дата. Сервер раскрывает правило в строки payments сам; план финансов и расчёты видят только строки, как при ручном графике."""
+    """Регулярный график оплат одним правилом: сумма платежа, период, день, начало и ровно одно из трёх окончаний — число платежей, последняя дата или open («пока действует договор»). Сервер раскрывает правило в строки payments сам; план финансов и расчёты видят только строки, как при ручном графике. При названной сумме платежа сумма документа (commercial.amount) может быть пустой: с count или until она вычисляется как N × платёж, с open её нет вовсе. Бессрочное правило раскрывается на горизонт в 12 ближайших платежей — это план, а не весь договор."""
 
-    #: Сумма одного платежа десятичным текстом; пусто — сумма документа делится поровну
+    #: Сумма одного платежа десятичным текстом; пусто — сумма документа делится поровну. Обязательна, когда суммы документа нет
     amount: str
     #: Число платежей; задаётся вместо until
     count: int
     #: Последняя допустимая дата включительно; задаётся вместо count
     until: str
+    #: Пока действует договор: окончания нет, итога нет, раскрываются ближайшие 12 платежей
+    open: bool
+
+class DocflowFlowRecognized(TypedDict, total=False):
+    """Прочитанное машиной из файла карточки — НА ПРОВЕРКУ. Живёт отдельно от условий договора: в условия сумма и срок попадают только рукой человека. Пустое поле означает «не прочиталось», а не ноль. Приёмка входящего договора в PDF заполняет его текстом бумаги."""
+
+    #: Имя вложения словами оператора: по нему человек откроет ту же бумагу и сверит
+    source: str
+    #: Десятичная строка
+    amount: str
+    currency: str
+    valid_from: str
+    valid_until: str
 
 class _DocflowFlowReferenceRequired(TypedDict):
     id: "UUID"
@@ -7053,18 +7812,6 @@ class DocflowFlowRelationInput(TypedDict):
     target_id: "UUID"
     target_version: int
 
-class _DocflowFlowReviewRequired(TypedDict):
-    actor_id: int
-
-class DocflowFlowReview(_DocflowFlowReviewRequired, total=False):
-    """Один участник маршрута и его решение, если оно принято."""
-
-    actor_name: str
-    #: Пусто, пока человек не решил
-    decision: Literal['approve', 'return', 'reject', 'cancel']
-    comment: str
-    decided_at: str
-
 class _DocflowFlowScheduleStageRequired(TypedDict):
     id: "UUID"
     #: Десятичным текстом, не числом с плавающей точкой
@@ -7089,9 +7836,7 @@ class DocflowFormatIssues(TypedDict):
     code: Literal['docflow.formats.invalid']
     issues: List["DocflowIssue"]
 
-class DocflowIntakeCounterparty(TypedDict):
-    """Вторая сторона и то, с кем мы её свели. Своей догадки по ИНН у приёмки нет вовсе: контрагента сводит механизм синхронизации, а второй механизм сопоставления рядом с существующим разошёлся бы с ним на первой же правке."""
-
+class _DocflowIntakeCounterpartyRequired(TypedDict):
     #: Карточка контрагента кабинета; null — свести не с кем, и приёмка отвечает проверкой docflow.edo.contact_required
     contact: Optional["UUID"]
     #: Имя этой карточки в кабинете
@@ -7100,8 +7845,21 @@ class DocflowIntakeCounterparty(TypedDict):
     name: str
     inn: str
     kpp: str
-    #: Откуда взялся контрагент: manual — прислал человек, auto — свело зеркало, none — не свели ни с кем
-    match: Literal['manual', 'auto', 'none']
+    #: Откуда взялся контрагент: manual — решение человека, auto — записанное сопоставление, guess — наша догадка по реквизитам прямо сейчас, нигде не записанная, none — не свели ни с кем
+    match: Literal['manual', 'auto', 'guess', 'none']
+
+class DocflowIntakeCounterparty(_DocflowIntakeCounterpartyRequired, total=False):
+    """Вторая сторона и то, с кем мы её свели. Порядок узнавания жёсткий, и каждая ступень сильнее следующей: решение человека этим же запросом, сопоставление зеркала пакета, ЗАПИСАННОЕ решение по этому участнику обмена и, наконец, поиск в справочнике по ИНН и КПП. Последняя ступень — догадка, и она называет себя догадкой (match: guess), а не выдаёт себя за чьё-то решение. Разбор у неё общий с автоматчем выгрузок: второй механизм узнавания рядом с существующим разошёлся бы с ним на первой же правке — молча и в пользу дубля. Неоднозначность не разрешается никогда: ИНН, совпавший у двух юрлиц, которых не развёл КПП, уходит человеку списком options."""
+
+    #: Наши контрагенты с тем же ИНН, когда выбрать между ними обязан человек. Непустой список означает «такие у нас уже есть, выбери» — и потому же означает, что заводить нового НЕ НАДО: там, где контрагент с такими реквизитами уже заведён, место кнопке «связать с существующим», а не «завести».
+    options: List["DocflowIntakeCounterpartyOption"]
+
+class DocflowIntakeCounterpartyOption(TypedDict):
+    """Один наш контрагент на выбор человеку. КПП здесь не для полноты: он единственное, чем два юрлица с одним ИНН различаются."""
+
+    id: "UUID"
+    name: str
+    kpp: str
 
 class DocflowIntakeInput(TypedDict, total=False):
     """Решение человека, которым подтверждается приёмка. Сам пакет назван в адресе. Решения по строкам приезжают СПИСКОМ, а не картой «номер → товар»: пропуск строки — это тоже решение, и картой его пришлось бы выражать отсутствием ключа, то есть неотличимо от «человек про эту строку не сказал ничего», а разница между ними принципиальная."""
@@ -7204,12 +7962,13 @@ class DocflowIntakeProductOption(TypedDict):
     sku: str
 
 class _DocflowIntakeResultRequired(TypedDict):
-    document: "DocflowAcceptedDocument"
     preview: "DocflowIntakePreview"
 
 class DocflowIntakeResult(_DocflowIntakeResultRequired, total=False):
     """Что вышло из приёмки. Вместе с документом возвращается ПЕРЕСОБРАННОЕ предложение: экран после приёмки показывает то же, что показывал до неё, но уже с проставленными решениями — иначе ему пришлось бы спрашивать состояние вторым запросом и показывать между ними полупустую форму."""
 
+    #: Учётный документ. ОТСУТСТВУЕТ, когда пакет его не порождает: у договора, дополнительного соглашения и спецификации в PDF результат приёмки — одна карточка документооборота, и экран ведёт человека в неё, а не в журнал учёта.
+    document: "DocflowAcceptedDocument"
     #: Карточка документооборота, если этот пакет её заводит: договор, дополнительное соглашение, спецификация, акт. Отсутствует у первички — счёт и УПД идут в учёт и привязываются к договору. У неформализованного договора приходит ОДНА карточка без учётного документа: принимать к учёту там нечего, а согласовывать есть что.
     flow_document: "DocflowFlowDocument"
 
@@ -7424,6 +8183,9 @@ class DocflowMessage(_DocflowMessageRequired, total=False):
     #: Корзина НАШЕГО зеркала: контрагент её не видит, и пакет у оператора остаётся прежним
     deleted_at: Optional[str]
     deleted_by: Optional[int]
+    recognized: "DocflowRecognized"
+    #: Что стало с оплатой этого счёта. Приходит И В СПИСКЕ, в отличие от состава пакета: состояние оплаты — ровно то, что человек читает глазами в каждой строке. Считает его модуль finance (счета, выписки и расчёты) одним запросом на всю страницу. null означает «этот счёт никто не оплачивает»: ни заведённой заявки, ни платежа, — именно там и остаётся кнопка «Отправить в оплату».
+    payment: Optional["DocflowMessagePayment"]
 
 class _DocflowMessageActionInputRequired(TypedDict):
     #: КОД действия у оператора из stage.actions[].code, а НЕ надпись с кнопки: строка действия своя у каждого вида документа и каждого регламента, и зашитый набор строк ломается на первом нестандартном
@@ -7458,6 +8220,19 @@ class DocflowMessageFlowLink(TypedDict):
 class DocflowMessageList(TypedDict):
     count: int
     results: List["DocflowMessage"]
+
+class _DocflowMessagePaymentRequired(TypedDict):
+    #: requested — заявка заведена, денег ещё нет; paid — платёж подтверждён выпиской
+    state: Literal['requested', 'paid']
+    request: "UUID"
+
+class DocflowMessagePayment(_DocflowMessagePaymentRequired, total=False):
+    """Состояние оплаты входящего счёта. Два состояния, а не шесть: путь заявки внутри финансов подробнее (план, отправлена, ждёт подписи, исполнена, отклонена, отменена), но ленте нужен ответ на один вопрос — деньги уже ушли или ещё нет. Оплаченным платёж делает ВЫПИСКА, а не наша кнопка и не слово банка: «отправлено в банк» означает лишь, что платёжка легла в интернет-банк на подпись."""
+
+    #: Номер заявки на оплату словами для человека
+    number: str
+    #: Дата оплаты из выписки в форме ГГГГ-ММ-ДД. Заполнена только у state=paid
+    paid_on: str
 
 class DocflowOutgoingFile(TypedDict):
     """Произвольный файл на отправку рядом с формализованным."""
@@ -7508,9 +8283,7 @@ class DocflowPartyRequisites(TypedDict, total=False):
     bank: "DocflowBankRequisites"
     contact: "DocflowContactRequisites"
 
-class DocflowPaymentDetails(TypedDict):
-    """Платёжные реквизиты входящего счёта. Назначение платежа здесь НЕ собрано: строка «оплата по счёту такому-то за то-то» — текст на языке человека, и складывает её интерфейс из частей, которые приезжают ниже отдельно (номер, дата, основание, предмет, налог)."""
-
+class _DocflowPaymentDetailsRequired(TypedDict):
     message: "UUID"
     #: Чем прочитан счёт: title — формализованный титул ФНС, text — текст вложения, none — читать было нечего.
     source: Literal['title', 'text', 'none']
@@ -7523,9 +8296,14 @@ class DocflowPaymentDetails(TypedDict):
     #: Юрлицо кабинета, найденное по ИНН плательщика из счёта; null — такого юрлица в кабинете нет, и выбирает человек
     company: Optional["UUID"]
     company_name: "DocflowPaymentField"
+    #: Наш контрагент, с которым сведён участник обмена, — той же лестницей, что и в приёмке: сопоставление зеркала пакета → ЗАПИСАННОЕ решение по этому участнику (ИНН+КПП у этого оператора) → поиск в справочнике по ИНН и КПП. Зеркало одного конверта здесь не источник истины: пакет, загруженный раньше решения человека, стоит в нём без сопоставления, а решение по партнёру уже записано. null — свести не с кем, либо два юрлица с одним ИНН, между которыми выбирает человек.
+    contact: Optional["UUID"]
+    #: Имя этой карточки в кабинете. origin=auto — записанное решение (человека или синхронизации), проверять его незачем; origin=guess — найдено по реквизитам прямо сейчас и нигде не записано, форма ставит рядом «проверьте».
+    contact_name: "DocflowPaymentDetailsContactName"
     amount: "DocflowPaymentField"
     currency: "DocflowPaymentField"
-    due_date: "DocflowPaymentField"
+    #: Срок оплаты в форме ГГГГ-ММ-ДД из первого доступного источника: «оплатить до» из самого счёта; иначе дата счёта плюс отсрочка по условиям оплаты контрагента у модуля finance (finance_counterparty_terms на дату счёта); иначе дата счёта плюс отсрочка, которую finance применяет без заведённых условий. Всегда origin=guess — за срок отвечает человек. Пусто только без даты счёта: прибавлять отсрочку не к чему.
+    due_date: "DocflowPaymentDetailsDueDate"
     number: "DocflowPaymentField"
     date: "DocflowPaymentField"
     basis: "DocflowPaymentField"
@@ -7533,6 +8311,28 @@ class DocflowPaymentDetails(TypedDict):
     vat_amount: "DocflowPaymentField"
     #: В счёте стояла отметка «без налога (НДС)». Пустая сумма при снятой отметке означает «про налог не сказано», а не «налога нет»
     vat_without: bool
+
+class DocflowPaymentDetails(_DocflowPaymentDetailsRequired, total=False):
+    """Платёжные реквизиты входящего счёта. Назначение платежа здесь НЕ собрано: строка «оплата по счёту такому-то за то-то» — текст на языке человека, и складывает её интерфейс из частей, которые приезжают ниже отдельно (номер, дата, основание, предмет, налог)."""
+
+    #: НАША карточка договора, к которой привязан конверт. Рядом с basis, а не вместо него: basis — строка из чужой бумаги («по договору №17»), contract — карточка в кабинете, по которой договор открывается. Строку в карточку сервер не превращает: угадывать договор по номеру из PDF значит однажды повесить платёж на чужую бумагу. Заполнено только там, где связь «конверт ↔ карточка» уже записана человеком и договор ровно один; два договора дают null — выбирать за человека нельзя.
+    contract: Optional["UUID"]
+
+class DocflowPaymentDetailsContactName(TypedDict):
+    """Имя этой карточки в кабинете. origin=auto — записанное решение (человека или синхронизации), проверять его незачем; origin=guess — найдено по реквизитам прямо сейчас и нигде не записано, форма ставит рядом «проверьте»."""
+
+    #: Прочитанное значение; пустая строка означает «не нашлось»
+    value: str
+    #: auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое.
+    origin: Literal['auto', 'guess', 'none']
+
+class DocflowPaymentDetailsDueDate(TypedDict):
+    """Срок оплаты в форме ГГГГ-ММ-ДД из первого доступного источника: «оплатить до» из самого счёта; иначе дата счёта плюс отсрочка по условиям оплаты контрагента у модуля finance (finance_counterparty_terms на дату счёта); иначе дата счёта плюс отсрочка, которую finance применяет без заведённых условий. Всегда origin=guess — за срок отвечает человек. Пусто только без даты счёта: прибавлять отсрочку не к чему."""
+
+    #: Прочитанное значение; пустая строка означает «не нашлось»
+    value: str
+    #: auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое.
+    origin: Literal['auto', 'guess', 'none']
 
 class DocflowPaymentDocumentRequisites(TypedDict, total=False):
     """СвПРД: платёжно-расчётный документ."""
@@ -7640,6 +8440,25 @@ class DocflowPreflightTotals(TypedDict):
     vat: str
     #: Стоимость с налогом
     with_vat: str
+
+class _DocflowRecognizedRequired(TypedDict):
+    #: Чем прочитано, и заодно насколько верить. title — подписанный файл обмена ФНС, проверять нечего; text — вытащено якорными правилами из чужой раскладки, и рядом со значением интерфейс ставит «проверьте»; none — читали и брать было нечего; пустая строка — разбора не было
+    source: Literal['', 'title', 'text', 'none']
+    #: Имя вложения СЛОВАМИ ОПЕРАТОРА: по нему человек откроет ту же бумагу и сверит показанную цифру
+    document: str
+    #: Итог к оплате строкой, как и amount: через число с плавающей точкой здесь теряются копейки. Пустая строка — итог в бумаге не нашёлся
+    amount: str
+    #: Валюта счёта, если бумага её назвала. Пусто означает «не сказано»: подставлять рубль молча нельзя
+    currency: str
+    number: str
+    #: Дата документа в форме ГГГГ-ММ-ДД; пустая строка означает, что даты нет
+    date: str
+
+class DocflowRecognized(_DocflowRecognizedRequired, total=False):
+    """Сумма и реквизиты, прочитанные ИЗ ФАЙЛА пакета, а не присланные оператором. Оператор присылает сумму отдельным реквизитом только у формализованных документов — УПД и счёта-фактуры; у счёта на оплату и договора она живёт внутри PDF. Поле стоит РЯДОМ с amount, а не вместо него: amount — слова оператора, по ним сверяют переписку спустя годы, и подменять их нашим чтением чужой бумаги нельзя. Разбор локальный и детерминированный: текстовый слой PDF, у скана — распознавание изображения; ни одной нейросети и ни одного обращения к платному справочнику. Строк товарной таблицы здесь нет: со скана они не восстанавливаются и фактом не выдаются."""
+
+    #: Когда разбирали. Пусто — попытки ещё не было; это не то же самое, что source=none («читали и брать оказалось нечего»)
+    at: Optional[str]
 
 class DocflowRequisites(TypedDict, total=False):
     """Исключения одного отправления поверх повторяющихся реквизитов карточек юрлица, контрагента и единицы измерения. Здесь остаются ставка отдельной строки, выбранный расчётный счёт, подписант, содержание операции и идентификаторы участников обмена. У одного и того же товара в разных накладных ставка бывает разной. Каждое поле отвечает ровно одному реквизиту приказа, и имя ФНС названо в его описании. Все поля необязательны: чего не прислали, то и покажет предполётная проверка. Явное значение отправления сильнее карточки; валютой по умолчанию остаётся рубль."""
@@ -9032,7 +9851,14 @@ class FinanceOperationVersion(_FinanceOperationVersionRequired, total=False):
     previous_version_id: str
     reason: str
 
-FinancePaymentCalendar = TypedDict("FinancePaymentCalendar", {"valuation_date": str, "project": str, "balance_available": bool, "from": str, "to": str, "currency": str, "derived_available": bool, "derived_note": str, "opening": str, "inflow": str, "outflow": str, "closing": str, "overdue_in": str, "overdue_out": str, "done_in": str, "done_out": str, "companies": List["FinancePaymentCalendarCompany"], "step": Literal['day', 'month', 'quarter'], "periods": List["FinancePaymentCalendarPeriod"], "totals": List["FinancePaymentCalendarCell"], "days": List["FinancePaymentCalendarDay"], "rows": List["FinancePaymentCalendarRow"], "overdue": List["FinancePaymentCalendarRow"]}, total=False)
+FinancePaymentCalendar = TypedDict("FinancePaymentCalendar", {"valuation_date": str, "project": str, "balance_available": bool, "from": str, "to": str, "currency": str, "derived_available": bool, "derived_note": str, "opening": str, "inflow": str, "outflow": str, "closing": str, "overdue_in": str, "overdue_out": str, "done_in": str, "done_out": str, "committed_in": str, "expected_in": str, "undated": "FinancePaymentCalendarUndated", "companies": List["FinancePaymentCalendarCompany"], "step": Literal['day', 'month', 'quarter'], "periods": List["FinancePaymentCalendarPeriod"], "totals": List["FinancePaymentCalendarCell"], "days": List["FinancePaymentCalendarDay"], "rows": List["FinancePaymentCalendarRow"], "overdue": List["FinancePaymentCalendarRow"]}, total=False)
+
+class FinancePaymentCalendarUndated(TypedDict):
+    count_in: int
+    count_out: int
+    amount_in: str
+    amount_out: str
+    rows: List["FinancePaymentCalendarRow"]
 
 class FinancePaymentCalendarCell(TypedDict):
     inflow: str
@@ -9064,7 +9890,7 @@ FinancePaymentCalendarPeriod = TypedDict("FinancePaymentCalendarPeriod", {"key":
 
 class _FinancePaymentCalendarRowRequired(TypedDict):
     id: "UUID"
-    origin: Literal['manual', 'receivable', 'payable']
+    origin: Literal['manual', 'receivable', 'payable', 'payment_request', 'contract_stage', 'invoice']
     date: str
     direction: "FinanceDirection"
     amount: str
@@ -9093,6 +9919,12 @@ class FinancePaymentCalendarRow(_FinancePaymentCalendarRowRequired, total=False)
     operation_kind: Literal['sale', 'purchase']
     operation_version: int
     contract_id: "UUID"
+    #: Карточка выставленного счёта у происхождения invoice; учётным документом счёт не является
+    invoice_id: "UUID"
+    #: Строка ожидания, а не долга: счёт и этап договора обещают деньги, но требовать по ним нельзя
+    expectation: bool
+    #: Обязательство без срока оплаты: рядом со шкалой, а не на ней
+    undated: bool
     fact: "FinancePaymentFact"
 
 class FinancePaymentCalendarSource(TypedDict):
@@ -11223,10 +12055,17 @@ class MarketplaceCostImportRequest(TypedDict):
     #: XLSX, XLS, ODS, CSV или TSV; первая строка — заголовок с колонками артикула и себестоимости
     file: str
 
-class MarketplaceCostImportResult(TypedDict):
+class _MarketplaceCostImportResultRequired(TypedDict):
+    #: Сколько строк завели новую ставку
     applied: int
     failed: int
     errors: List["MarketplaceCostImportRowError"]
+
+class MarketplaceCostImportResult(_MarketplaceCostImportResultRequired, total=False):
+    #: Строки с той же ценой, что уже действует: новая ставка не заводилась
+    unchanged: int
+    #: Строки с пустой себестоимостью: пустая ячейка — «не заведена», а не ноль
+    skipped: int
 
 class MarketplaceCostImportRowError(TypedDict):
     #: Номер строки в таблице, считая заголовок первой
@@ -11726,6 +12565,8 @@ class MarketplaceOzonPnl(_MarketplaceOzonPnlRequired, total=False):
     demo: bool
     #: Расшифровка прочего по периодам
     breakdown: Dict[str, List["MarketplaceOzonDecompositionOtherItem"]]
+    #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
+    cost_missing: Dict[str, float]
     freshness: "MarketplaceComponentFreshness"
     data_through: "MarketplaceComponentDataThrough"
     #: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
@@ -12098,6 +12939,8 @@ class MarketplaceStorePatch(TypedDict, total=False):
     name: str
     #: Пустая строка оставляет сохранённую ставку
     tax_percent: str
+    #: С какого дня действует новая ставка налога (ГГГГ-ММ-ДД). Пусто — с сегодняшнего дня по Москве. Не позже сегодня и не раньше начала действующей ставки: прошлые периоды считаются по ставке своего времени
+    tax_effective_from: str
     is_active: bool
     has_fbs: bool
     #: Используется для Wildberries
@@ -12476,6 +13319,8 @@ class MarketplaceWbPnl(_MarketplaceWbPnlRequired, total=False):
     demo: bool
     #: Разбор строки «Прочее» по периодам
     breakdown: Dict[str, List["MarketplaceWbDecompOtherItem"]]
+    #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
+    cost_missing: Dict[str, float]
     freshness: "MarketplaceComponentFreshness"
     data_through: "MarketplaceComponentDataThrough"
     #: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
@@ -12747,6 +13592,8 @@ class _MarketplaceYandexPnlRequired(TypedDict):
     rows: List["MarketplaceYandexPnlRow"]
 
 class MarketplaceYandexPnl(_MarketplaceYandexPnlRequired, total=False):
+    #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
+    cost_missing: Dict[str, float]
     #: Пояснение к неполноте источника
     note: str
     #: Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические
@@ -14345,9 +15192,71 @@ class SettingsRoleTransferResult(TypedDict):
     count: int
     target_role_id: "UUID"
 
+class SettingsUsage(TypedDict):
+    snapshot: Optional["BillingUsageSnapshot"]
+    #: Разбивка по убыванию занятого; пустая, пока снимка нет
+    modules: List["BillingUsageModuleBytes"]
+
 class SettingsVatRates(TypedDict):
     #: Фиксированный профиль 22, 20, 10 и 0 процентов
     rates: List[int]
+
+class SignupAccepted(TypedDict):
+    #: Единственное значение: исход не различается снаружи ни телом, ни кодом
+    status: Literal['accepted']
+    #: Условная формулировка «если на этот адрес можно завести кабинет — мы отправили письмо»: она правдива при любом исходе
+    detail: str
+
+class SignupCompleteInput(TypedDict):
+    first_name: str
+    last_name: str
+
+class SignupRequestInfo(TypedDict):
+    email: str
+    company_name: str
+    #: Свободный адрес будущего кабинета на момент чтения
+    suggested_slug: str
+    status: Literal['pending', 'confirmed', 'completed', 'expired', 'revoked']
+    is_expired: bool
+    #: Адрес уже заведённого кабинета; пусто, пока его нет
+    tenant_slug: str
+    #: Кабинет заведён, а его база не поднялась: на экране нужна кнопка повтора, а не форма
+    provisioning_pending: bool
+    #: У адреса уже есть учётная запись. Владельцу ссылки это известно и так; наружу без ссылки не уходит
+    account_exists: bool
+    #: Состояние активной browser-сессии относительно адреса ссылки
+    session_state: Literal['none', 'matching', 'mismatch']
+    session_email: str
+
+class _SignupRequestInputRequired(TypedDict):
+    #: Рабочая почта будущего владельца кабинета
+    email: str
+    #: Название компании; становится названием кабинета
+    company_name: str
+
+class SignupRequestInput(_SignupRequestInputRequired, total=False):
+    #: Пожелание адреса кабинета. Пусто — адрес выводится транслитерацией названия компании
+    slug: str
+    #: Ловушка для роботов: поле скрыто на форме, человек его не заполняет. Заполненное принимается как успех, но письма не отправляет
+    website: str
+
+class _SignupSessionRequired(TypedDict):
+    #: ERP-сессия владельца: тот же go_-токен, что выдаёт мост Kratos-сессии
+    token: str
+    user: "SignupSessionUser"
+    #: Кабинеты человека; у нового владельца ровно один
+    memberships: List[Dict[str, Any]]
+
+class SignupSession(_SignupSessionRequired, total=False):
+    source: str
+
+class SignupSessionUser(TypedDict, total=False):
+    username: str
+    name: str
+    avatar_url: str
+    platform_role: str
+    platform_scopes: List[str]
+    is_platform_admin: bool
 
 class SprintAgingTask(TypedDict):
     id: "UUID"
@@ -15980,6 +16889,10 @@ class CoreSetBusinessActiveRequest(TypedDict):
 
 class CoreListBusinessOwnershipResponse(TypedDict):
     results: List["CoreOwnershipVersion"]
+
+class DocflowLinkIntakeCounterpartyRequest(TypedDict):
+    #: Контрагент справочника, с которым сводится участник обмена
+    contact: Dict[str, Any]
 
 class FilesAccessCheckRequest(TypedDict):
     file_ids: List["UUID"]

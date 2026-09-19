@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 572ea6f9912f3669e4fde0f563c911eaf420217e163124abfeb68dc3a5954326).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 45dcff42ccfb9f45d44cd2874aa80f3763f5d6c00f638f786e320f27f475f215).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -293,6 +293,422 @@ type AttachmentUploadSessionCreate struct {
 	MimeType  *string             `json:"mime_type,omitempty"`
 	SizeBytes int64               `json:"size_bytes"`
 	Sha256    *string             `json:"sha256,omitempty"`
+}
+
+// BillingCabinetInvoice — Счёт вместе с реквизитами для оплаты. Реквизиты идут в том же ответе, а не отдельным маршрутом: экран оплаты показывает их на одной вкладке со счётом, и второй запрос означал бы мгновение, в котором сумма уже есть, а платить по ней некуда
+type BillingCabinetInvoice struct {
+	Invoice    BillingInvoice    `json:"invoice"`
+	Requisites BillingRequisites `json:"requisites"`
+}
+
+// BillingCabinetNotice — Что оболочка кабинета говорит человеку про его подписку. Пустой kind — самый частый ответ: у работающего кабинета баннера нет
+type BillingCabinetNotice struct {
+	// Kind — '' — говорить не о чем. restriction_soon — счёт просрочен, доступ ограничат restrict_at. read_only — кабинет уже оставлен на просмотр и выгрузку данных
+	Kind string `json:"kind"`
+	// Status — Состояние подписки, объясняющее предупреждение; пусто у кабинета без подписки
+	Status string `json:"status"`
+	// RestrictAt — С какого дня ограничат доступ; заполнено у restriction_soon
+	RestrictAt *string `json:"restrict_at"`
+	// DaysLeft — Дней до ограничения
+	DaysLeft *int64 `json:"days_left"`
+	// Since — С какого дня кабинет перестал работать; заполнено у read_only
+	Since *string `json:"since"`
+	// Invoice — Неоплаченный счёт, если он есть. null законен: у расторгнутой подписки счёта может не быть, и человеку предлагают возобновить её, а не оплатить несуществующий документ
+	Invoice *BillingCabinetNoticeInvoice `json:"invoice"`
+}
+
+// BillingCabinetNoticeInvoice — Счёт, на который ведёт баннер кабинета
+type BillingCabinetNoticeInvoice struct {
+	ID       string       `json:"id"`
+	Number   string       `json:"number"`
+	Amount   BillingMoney `json:"amount"`
+	Currency string       `json:"currency"`
+}
+
+type BillingCabinetSeats struct {
+	Used int64 `json:"used"`
+	// Limit — null — без ограничения
+	Limit *int64 `json:"limit"`
+}
+
+type BillingCabinetStorage struct {
+	// UsedBytes — Занятое место по последнему суточному снимку потребления. null — снимка ещё нет; ноль означал бы «клиент ничего не загрузил»
+	UsedBytes  *int64 `json:"used_bytes"`
+	LimitBytes *int64 `json:"limit_bytes"`
+}
+
+// BillingCabinetSubscription — Экран «Настройки → Подписка» глазами клиента: что у него есть, сколько он израсходовал и что он может выбрать
+type BillingCabinetSubscription struct {
+	// State — none означает, что подписки НЕТ вовсе — законное состояние живых кабинетов, работавших до биллинга, а не «не загрузилось». internal — внутренний кабинет Akeda: разрешено всё, счета не выставляются. pilot — внедрение: кабинет клиента, который мы ведём до передачи, права те же. Различать их обязательно: первое означает «мы про кабинет ничего не решали», остальные два — записанные решения оператора, и только второе из них означает наш собственный кабинет
+	State         string               `json:"state"`
+	Subscription  *BillingSubscription `json:"subscription"`
+	Plan          *BillingPlan         `json:"plan"`
+	Addons        []BillingPlan        `json:"addons"`
+	BillingPeriod string               `json:"billing_period"`
+	Trial         *BillingTrialState   `json:"trial"`
+	// Pilot — Идущее внедрение: кабинет ведём мы, счетов нет, открыт весь продукт. null во всех остальных состояниях
+	Pilot *BillingPilotState `json:"pilot"`
+	// PaidUntil — До какого числа оплачено; пусто у пробы и у кабинета без подписки
+	PaidUntil     *string               `json:"paid_until"`
+	PastDue       *BillingPastDueState  `json:"past_due"`
+	Seats         BillingCabinetSeats   `json:"seats"`
+	Storage       BillingCabinetStorage `json:"storage"`
+	Catalog       BillingCatalog        `json:"catalog"`
+	PaymentMethod *BillingPaymentMethod `json:"payment_method"`
+	Entitlements  BillingEntitlements   `json:"entitlements"`
+}
+
+// BillingCatalog — Витрина кабинета: только публичные и неархивные предложения. Полный список заведённого у оператора — GET /platform/billing/plans
+type BillingCatalog struct {
+	Plans   []BillingPlan `json:"plans"`
+	Modules []BillingPlan `json:"modules"`
+	// Constructor — Основание тарифа-конструктора «Соберите свой». Модулей в нём нет: клиент набирает их из modules теми же дополнениями. null означает, что конструктора нет или он снят с витрины
+	Constructor *BillingPlan `json:"constructor,omitempty"`
+	TrialDays   int64        `json:"trial_days"`
+}
+
+// BillingChangeInput — Заявка кабинета на изменение подписки. Непереданное поле означает «оставить как есть»: клиент, подключающий модуль, не обязан заново называть свой тариф, а клиент, меняющий тариф, не должен молча лишиться оплаченного модуля. Пустой addon_keys означает «снять все»
+type BillingChangeInput struct {
+	PlanKey       *string  `json:"plan_key,omitempty"`
+	AddonKeys     []string `json:"addon_keys,omitempty"`
+	BillingPeriod *string  `json:"billing_period,omitempty"`
+	// SeatsLimit — ЖЕЛАЕМЫЙ ОБЩИЙ потолок мест, а не «сколько докупить». Экран показывает «участники 17 из 20» и спрашивает новое «из скольких»; заявка «плюс три места», пришедшая дважды из-за повторной отправки формы, купила бы шесть. Непереданное поле означает «оставить как есть»: смена тарифа не отменяет доплаченные места. Сверх пакета тарифа берётся price_per_seat версии ЗА МЕСЯЦ — у доплат нет отдельной годовой цены, и годовой скидки на них тоже нет. Потолок НИЖЕ пакета отвергается: это не доплата, а попытка урезать оплаченное. Подписке без тарифа доплаты недоступны вовсе — «сверх пакета» без пакета не существует
+	SeatsLimit *int64 `json:"seats_limit,omitempty"`
+	// StorageLimitGb — То же про хранилище: общий потолок в ГБ, доплата по price_per_gb за месяц
+	StorageLimitGb *int64 `json:"storage_limit_gb,omitempty"`
+}
+
+// BillingChangePreview — Что произойдёт, если клиент нажмёт кнопку. Считается тем же кодом, что и применение: разойдись расчёты — клиент увидел бы одну сумму, а заплатил другую
+type BillingChangePreview struct {
+	Now            BillingSnap `json:"now"`
+	Becomes        BillingSnap `json:"becomes"`
+	AddedModules   []string    `json:"added_modules"`
+	RemovedModules []string    `json:"removed_modules"`
+	// ProrationAmount — Доплата за остаток текущего периода. Ноль означает, что платить сейчас не нужно вовсе: так выглядит и понижение, и изменение на пробе, у которой оплаченного периода ещё нет
+	ProrationAmount map[string]json.RawMessage `json:"proration_amount"`
+	// ProrationLines — Из чего доплата сложилась: тариф с модулями, места сверх пакета, гигабайты сверх пакета. Ровно эти строки печатает счёт, и их сумма равна proration_amount — счёт печатается строками, и сумма счёта это сумма его строк. Строка может быть отрицательной: клиент, перешедший на тариф дороже и одновременно снявший доплаченные места, платит разницу, и снятые места обязаны быть в счёте видны. Пусто, когда доплаты нет
+	ProrationLines []BillingInvoiceLine `json:"proration_lines"`
+	Currency       string               `json:"currency"`
+	// NextAmount — Сумма следующего списания уже по новым условиям, за расчётный период
+	NextAmount map[string]json.RawMessage `json:"next_amount"`
+	// NextChargeAt — У пробы это дата её окончания: с неё клиент начинает платить
+	NextChargeAt *string `json:"next_charge_at"`
+	// Effective — now — применяется сразу и оплачивается прорацией; period_end — откладывается до конца оплаченного периода. Правило одно: изменение, за которое клиент платит больше, применяется сейчас, всё остальное — с конца периода. Смена ритма оплаты всегда ждёт конца периода
+	Effective string `json:"effective"`
+}
+
+// BillingChangeResult — Новое состояние экрана подписки и счёт, если доплачивать было за что
+type BillingChangeResult struct {
+	Subscription BillingCabinetSubscription `json:"subscription"`
+	Invoice      *BillingInvoice            `json:"invoice"`
+	// ModulesSync — Что стало с составом модулей кабинета. Приходит только когда состав реально изменился или часть его до кабинета не доехала; null или отсутствие поля означают «состав уже совпадал с правами» — так выглядит отложенное понижение, при котором сегодня не изменилось ничего
+	ModulesSync *BillingModuleSyncReport `json:"modules_sync,omitempty"`
+}
+
+// BillingEntitlements — Что подписка РАЗРЕШАЕТ кабинету. Состав модулей кабинета ВЫВОДИТСЯ отсюда: после каждого изменения подписки он приводится к этим правам, и руками продуктовые модули больше не включают. Клиентские ext-модули и кабинеты без подписки — исключения: первых не бывает ни в тарифе, ни в пробе, вторые работали до биллинга и не ограничиваются. Места и гигабайты по-прежнему только считаются и показываются, кроме потолка хранилища — его сравнивает с занятым рамка загрузки файла
+type BillingEntitlements struct {
+	// Unlimited — Кабинет без подписки ЛИБО кабинет, которому весь продукт открыт решением оператора: внутренний кабинет Akeda (internal) и клиент на внедрении (pilot). Ограничений нет
+	Unlimited bool `json:"unlimited"`
+	// Modules — Разрешённые ключи модулей; null при unlimited — пустая карта читалась бы как «ни одного модуля»
+	Modules map[string]bool `json:"modules"`
+	// SeatsLimit — null означает «без лимита»
+	SeatsLimit        *int64 `json:"seats_limit"`
+	StorageLimitBytes *int64 `json:"storage_limit_bytes"`
+	// ReadOnly — Кабинету оставлено только чтение: подписка приостановлена за неплатёж или расторгнута. Модули при этом НЕ отбираются — данные остаются видимыми и выгружаемыми, — а любая изменяющая операция отвечает 402 billing.read_only
+	ReadOnly bool `json:"read_only"`
+}
+
+// BillingInvoice — Счёт Akeda кабинету. Живёт в control plane, а не в базе клиента: иначе администратор кабинета правил бы собственный счёт, а история платежей не пережила бы пересоздание его базы
+type BillingInvoice struct {
+	ID string `json:"id"`
+	// Number — «ГГГГ-НННН». Сплошной внутри года: пропуск бухгалтерия читает как утерянный документ
+	Number         string           `json:"number"`
+	Tenant         BillingTenantRef `json:"tenant"`
+	SubscriptionID *string          `json:"subscription_id"`
+	// Status — issued — выставлен, срок не вышел; overdue — срок вышел, доступ ещё полный; paid — оплачен; cancelled — отозван. Удаления нет вовсе
+	Status string `json:"status"`
+	// Purpose — Назначение платежа: его клиент прочитает в банке через месяц
+	Purpose     string       `json:"purpose"`
+	Amount      BillingMoney `json:"amount"`
+	Currency    string       `json:"currency"`
+	IssuedAt    string       `json:"issued_at"`
+	DueAt       string       `json:"due_at"`
+	PaidAt      *string      `json:"paid_at"`
+	CancelledAt *string      `json:"cancelled_at"`
+	// Lines — Строки счёта как они напечатаны. У счёта на доплату их столько, сколько слагаемых изменилось: тариф с модулями, места сверх пакета, гигабайты сверх пакета. Сумма строк равна amount
+	Lines []BillingInvoiceLine `json:"lines"`
+	// PaymentProvider — Ключ эквайринга, которым заказан платёж («tochka»). Пусто, когда эквайринг не подключён либо ссылку получить не удалось: счёт тогда оплачивают по реквизитам, и это постоянный путь, а не запасной
+	PaymentProvider string `json:"payment_provider"`
+	// PaymentURL — Куда отправить плательщика. Пусто, пока платёжная ссылка не заказана
+	PaymentURL string `json:"payment_url"`
+	// ProviderPaymentID — Личность платежа у банка. По ней уведомление об оплате находит свой счёт: номер заказа провайдер возвращать не обязан, а искать счёт по сумме значило бы засчитать чужие деньги
+	ProviderPaymentID string `json:"provider_payment_id"`
+}
+
+// BillingInvoiceLine — Строка счёта как она напечатана: за что и сколько
+type BillingInvoiceLine struct {
+	Description string       `json:"description"`
+	Amount      BillingMoney `json:"amount"`
+}
+
+type BillingInvoicePage struct {
+	Invoices []BillingInvoice `json:"invoices"`
+}
+
+// BillingModuleSyncFailure — Модуль, который привести к составу подписки не удалось
+type BillingModuleSyncFailure struct {
+	Module string `json:"module"`
+	// Reason — Почему не удалось — человеческим текстом
+	Reason string `json:"reason"`
+}
+
+// BillingModuleSyncReport — Что стало с составом модулей кабинета после изменения подписки. Приходит ТОЛЬКО когда состав реально изменился или часть его до кабинета не доехала; отсутствие поля означает «состав уже совпадал с правами». Непустой failed означает, что подписка изменена и, возможно, оплачена, а модуль до кабинета не доехал: включение модуля накатывает его миграции в базу кабинета и может не удаться по причине, к подписке отношения не имеющей. Подписку это не откатывает — отменять оплаченное решение из-за чужой поломки значило бы потерять оплату
+type BillingModuleSyncReport struct {
+	Enabled  []string                   `json:"enabled"`
+	Disabled []string                   `json:"disabled"`
+	Failed   []BillingModuleSyncFailure `json:"failed,omitempty"`
+}
+
+type BillingMoney = string
+
+// BillingPastDueState — Неоплаченный счёт и дата ограничения доступа. Считается по САМОМУ СТАРОМУ просроченному счёту: его срок наступит первым. Само ограничение в этой фазе не включается — число показывается, решение принимает владелец
+type BillingPastDueState struct {
+	InvoiceID     string       `json:"invoice_id"`
+	InvoiceNumber string       `json:"invoice_number"`
+	Amount        BillingMoney `json:"amount"`
+	Currency      string       `json:"currency"`
+	RestrictAt    string       `json:"restrict_at"`
+	DaysLeft      int64        `json:"days_left"`
+}
+
+// BillingPaymentMethod — СОХРАНЁННАЯ карта для автоплатежа. Сегодня всегда null: рекуррентное списание подключается отдельной работой. Разовую оплату счёта картой это не трогает — ссылка на неё живёт в самом счёте (payment_url)
+type BillingPaymentMethod struct {
+	Kind  string `json:"kind"`
+	Last4 string `json:"last4"`
+}
+
+// BillingPendingChange — Заявка клиента, применяемая суточным обходом с конца оплаченного периода
+type BillingPendingChange struct {
+	PlanKey       string   `json:"plan_key"`
+	AddonKeys     []string `json:"addon_keys"`
+	BillingPeriod string   `json:"billing_period"`
+	EffectiveAt   string   `json:"effective_at"`
+}
+
+// BillingPilotState — Идущее внедрение глазами клиента
+type BillingPilotState struct {
+	// HandoverAt — Плановая дата передачи кабинета. null — срок ещё не назначен; выдуманная дата хуже отсутствующей, клиент запомнит именно её
+	HandoverAt *string `json:"handover_at"`
+}
+
+// BillingPlan — Тариф как предложение. Цена и состав лежат не здесь, а в версии
+type BillingPlan struct {
+	ID string `json:"id"`
+	// Key — Ключ-slug: им тариф назначают и по нему ищут
+	Key string `json:"key"`
+	// Kind — plan — готовый тариф: пакет модулей, мест и гигабайтов. module — отдельное дополнение, которое подключают к любому тарифу: РОВНО ОДИН модуль и его цена, без мест, гигабайтов и доплат. constructor — тариф-конструктор «Соберите свой»: основание с ценой, пакетом и доплатами и БЕЗ единого модуля внутри, их клиент набирает сам теми же дополнениями. Конструктор на платформе один
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+	// Tagline — «Для кого этот тариф» одной строкой под именем в карточке
+	Tagline     string `json:"tagline"`
+	Description string `json:"description"`
+	// IsPublic — Показывать ли тариф в витрине; индивидуальный тариф клиента существует, но в витрине его нет
+	IsPublic bool `json:"is_public"`
+	// IsArchived — Новым не предлагают; действующие подписки на нём остаются
+	IsArchived bool `json:"is_archived"`
+	// IsRecommended — Витрина выделяет его обводкой и чипом «Рекомендуем»
+	IsRecommended bool   `json:"is_recommended"`
+	SortOrder     int64  `json:"sort_order"`
+	CreatedAt     string `json:"created_at"`
+	UpdatedAt     string `json:"updated_at"`
+	// Current — Действующая версия условий; в карточке подписки — та версия, на которую ссылается подписка
+	Current *BillingPlanVersion `json:"current"`
+}
+
+// BillingPlanVersion — Условия тарифа на дату. Строка НЕИЗМЕНЯЕМА: подписка ссылается именно на неё, и правка означала бы переписанный задним числом договор. Срока пробного периода здесь нет: проба даётся кабинету ДО того, как он выбрал тариф, и её срок — правило платформы (BillingTrialSettings)
+type BillingPlanVersion struct {
+	ID     string `json:"id"`
+	PlanID string `json:"plan_id"`
+	// Version — Номер версии, назначает сервер
+	Version int64 `json:"version"`
+	// Currency — Код валюты ISO 4217
+	Currency string `json:"currency"`
+	// PriceMonth — Цена за месяц при ПОМЕСЯЧНОЙ оплате
+	PriceMonth map[string]json.RawMessage `json:"price_month"`
+	// PriceYear — Цена ЗА МЕСЯЦ при оплате за год — та самая, которую карточка пишет как «12 000 ₽/мес при оплате за год». За расчётный период с кабинета берут её двенадцатикратно. НОЛЬ означает, что годовой оплаты у тарифа нет вовсе, а не «бесплатно за год»
+	PriceYear map[string]json.RawMessage `json:"price_year"`
+	// Modules — Ключи ПРОДУКТОВЫХ модулей платформы, которые разрешает тариф. core и settings сюда не пишут: без справочников и настроек кабинета нет вовсе, они включены всегда. Клиентских ext-модулей здесь тоже не бывает: они написаны под один кабинет и общим предложением не продаются
+	Modules []string `json:"modules"`
+	// SeatsIncluded — Мест в пакете; НОЛЬ означает «без лимита», а не «ноль мест»
+	SeatsIncluded int64 `json:"seats_included"`
+	// StorageIncludedGb — Гигабайтов в пакете; ноль означает «без лимита»
+	StorageIncludedGb int64        `json:"storage_included_gb"`
+	PricePerSeat      BillingMoney `json:"price_per_seat"`
+	PricePerGb        BillingMoney `json:"price_per_gb"`
+	EffectiveFrom     string       `json:"effective_from"`
+	CreatedAt         string       `json:"created_at"`
+}
+
+// BillingPublicCatalog — Публичная витрина: только продаваемые сегодня предложения. Пустые списки приходят как [], а не null — клиент, получивший null, показал бы «не загрузилось» вместо честной пустой страницы
+type BillingPublicCatalog struct {
+	// Currency — Валюта всех цен витрины. Одна на ответ: две цены в разных валютах рядом человек не сложит
+	Currency string `json:"currency"`
+	// TrialDays — Сколько дней бесплатной работы получает новый кабинет. Приходит из правил платформы, а не из вёрстки: правка срока оператором обязана доехать до посетителя тем же днём
+	TrialDays int64               `json:"trial_days"`
+	Plans     []BillingPublicPlan `json:"plans"`
+	Modules   []BillingPublicPlan `json:"modules"`
+	// Constructor — Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой
+	Constructor *BillingPublicPlan `json:"constructor,omitempty"`
+}
+
+// BillingPublicPlan — Тариф или отдельный модуль глазами страницы тарифов
+type BillingPublicPlan struct {
+	// Key — Ключ-slug: им предложение выбирают при смене тарифа
+	Key string `json:"key"`
+	// Kind — plan — готовый тариф (пакет модулей, мест и гигабайтов), module — отдельное дополнение к любому тарифу, constructor — основание тарифа «Соберите свой» без единого модуля внутри
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+	// Tagline — «Для кого это» одной строкой под именем в карточке
+	Tagline string `json:"tagline"`
+	// IsRecommended — Витрина выделяет предложение обводкой и чипом «Рекомендуем»
+	IsRecommended bool                     `json:"is_recommended"`
+	SortOrder     int64                    `json:"sort_order"`
+	Current       BillingPublicPlanVersion `json:"current"`
+}
+
+// BillingPublicPlanVersion — Условия публичного предложения на сегодня. Номера версии и дат здесь нет: страницу тарифов читает посторонний, и внутреннее устройство каталога его не касается
+type BillingPublicPlanVersion struct {
+	// PriceMonth — Цена за месяц при ПОМЕСЯЧНОЙ оплате
+	PriceMonth map[string]json.RawMessage `json:"price_month"`
+	// PriceYear — Цена ЗА МЕСЯЦ при оплате за год — та самая, которую карточка пишет как «12 000 ₽/мес при оплате за год». Ноль означает, что годовой оплаты у предложения нет вовсе, а не «бесплатно за год»
+	PriceYear map[string]json.RawMessage `json:"price_year"`
+	// Modules — Ключи продуктовых модулей, которые даёт предложение; у отдельного модуля их ровно один
+	Modules []string `json:"modules"`
+	// SeatsIncluded — Мест в пакете; НОЛЬ означает «без лимита», а не «ноль мест»
+	SeatsIncluded int64 `json:"seats_included"`
+	// StorageIncludedGb — Гигабайтов в пакете; ноль означает «без лимита»
+	StorageIncludedGb int64 `json:"storage_included_gb"`
+	// PricePerSeat — Цена места сверх пакета, ЗА МЕСЯЦ. Годовой скидки у доплат нет: отдельной годовой цены в условиях не существует
+	PricePerSeat map[string]json.RawMessage `json:"price_per_seat"`
+	// PricePerGb — Цена гигабайта сверх пакета, за месяц
+	PricePerGb map[string]json.RawMessage `json:"price_per_gb"`
+}
+
+// BillingRequisites — Реквизиты получателя для счёта «по реквизитам». Пустые значения законны, пока владелец их не задал: вкладку «По реквизитам» кабинету тогда просто не показывают
+type BillingRequisites struct {
+	Recipient string `json:"recipient"`
+	INN       string `json:"inn"`
+	KPP       string `json:"kpp"`
+	Account   string `json:"account"`
+	Bank      string `json:"bank"`
+	Bik       string `json:"bik"`
+}
+
+// BillingSnap — Срез состояния подписки для экрана «Сейчас | Станет»
+type BillingSnap struct {
+	PlanKey  string `json:"plan_key"`
+	PlanName string `json:"plan_name"`
+	// Addons — Ключи подключённых дополнений
+	Addons []string `json:"addons"`
+	// SeatsLimit — ОБЩИЙ потолок мест: пакет тарифа либо доплаченный сверх него. null — без ограничения
+	SeatsLimit *int64 `json:"seats_limit"`
+	// StorageLimitGb — Общий потолок хранилища в ГБ; null — без ограничения
+	StorageLimitGb *int64 `json:"storage_limit_gb"`
+	// AmountPerPeriod — Сумма за ОДИН расчётный период: при помесячной оплате это месячная цена, при годовой — она же, умноженная на двенадцать. Цена «за месяц при оплате за год» живёт в версии тарифа (price_year), а здесь именно то, что спишут одним платежом
+	AmountPerPeriod map[string]json.RawMessage `json:"amount_per_period"`
+	BillingPeriod   string                     `json:"billing_period"`
+}
+
+// BillingSubscription — Подписка кабинета; строка на кабинет ровно одна
+type BillingSubscription struct {
+	ID       string `json:"id"`
+	TenantID string `json:"tenant_id"`
+	// PlanVersionID — Версия тарифа, на условиях которой живёт кабинет. null у ПРОБНОЙ подписки: тариф выбирают, посмотрев продукт, а не до того
+	PlanVersionID *string `json:"plan_version_id"`
+	// Status — internal — ВНУТРЕННИЙ кабинет Akeda: разрешено всё, счета не выставляются, просрочки не бывает, в MRR и в воронку он не входит. Отдельное состояние, а не отсутствие подписки: кабинет без строки тоже ни в чём не ограничен, но это ответ «мы про него ничего не решали», а internal — записанное решение оператора с причиной и автором в журнале. pilot — ВНЕДРЕНИЕ: кабинет КЛИЕНТА, который мы ведём до передачи. Права те же, что у internal, а смысл другой, и путать их нельзя: внедрение кончается платящим клиентом, а собственный кабинет вендора — нет. В MRR не входит, но считается отдельным счётчиком pilot_count
+	Status string `json:"status"`
+	// BillingPeriod — Ритм оплаты, выбранный кабинетом. Лежит в подписке, а не в версии тарифа: тариф предлагает обе цены, а выбирает между ними клиент
+	BillingPeriod string `json:"billing_period"`
+	// TrialEndsAt — Дата окончания пробного периода
+	TrialEndsAt *string `json:"trial_ends_at"`
+	// CurrentPeriodStart — Границы оплаченного периода. В фазе 1 поле хранится, но не заполняется: его поставит биллинговый цикл
+	CurrentPeriodStart *string `json:"current_period_start"`
+	CurrentPeriodEnd   *string `json:"current_period_end"`
+	// SeatsOverride — Договорённость поверх пакета тарифа; null означает «как в тарифе», а не ноль
+	SeatsOverride     *int64 `json:"seats_override"`
+	StorageOverrideGb *int64 `json:"storage_override_gb"`
+	// CancelAt — Момент расторжения; снимается при возобновлении
+	CancelAt *string `json:"cancel_at"`
+	// PilotHandoverAt — Плановая дата передачи кабинета клиенту. Заполнена только во время внедрения (status = pilot) и НЕОБЯЗАТЕЛЬНА даже там: внедрение начинают и без назначенного срока, а выдуманная дата хуже отсутствующей. Снимается при выходе из внедрения — дата передачи, пережившая передачу, напоминала бы о том, что уже случилось
+	PilotHandoverAt *string `json:"pilot_handover_at"`
+	// AccessLostAt — День, когда кабинет ПЕРЕСТАЛ РАБОТАТЬ: был приостановлен за неплатёж или расторгнут. С него идёт срок хранения данных. null у работающего кабинета; возврат в работу дату снимает
+	AccessLostAt *string `json:"access_lost_at"`
+	// TenantPurgedAt — Когда данные кабинета были удалены безвозвратно. Заполнено у подписки, пережившей свой кабинет: сам договор и счета по нему мы храним дальше — это бухгалтерский учёт Akeda, а не данные клиента
+	TenantPurgedAt *string `json:"tenant_purged_at"`
+	// PendingChange — Понижение, отложенное до конца оплаченного периода. null — ничего не отложено. Заявка у подписки ровно одна: следующее решение клиента заменяет предыдущее целиком
+	PendingChange *BillingPendingChange `json:"pending_change"`
+	// Addons — Подключённые сейчас дополнения; снятые сюда не попадают — их история в журнале
+	Addons    []BillingSubscriptionAddonsItem `json:"addons"`
+	CreatedAt string                          `json:"created_at"`
+	UpdatedAt string                          `json:"updated_at"`
+}
+
+type BillingSubscriptionAddonsItem struct {
+	PlanKey       string `json:"plan_key"`
+	PlanVersionID string `json:"plan_version_id"`
+	AddedAt       string `json:"added_at"`
+}
+
+// BillingTenantRef — Кабинет — единица подписки; кабинет не является юрлицом
+type BillingTenantRef struct {
+	ID       string `json:"id"`
+	Slug     string `json:"slug"`
+	Name     string `json:"name"`
+	IsActive bool   `json:"is_active"`
+}
+
+// BillingTrialState — Сколько бесплатных дней осталось из выданных
+type BillingTrialState struct {
+	EndsAt    string `json:"ends_at"`
+	DaysLeft  int64  `json:"days_left"`
+	DaysTotal int64  `json:"days_total"`
+}
+
+// BillingUsageCollectError — Источник, который посчитать не удалось. Живёт В СНИМКЕ, а не только в логе: снимок с семью цифрами из восьми внешне неотличим от полного, и разницу обязан называть он сам.
+type BillingUsageCollectError struct {
+	// Module — Ключ раздела; database — размер базы кабинета, members — счёт участников
+	Module string `json:"module"`
+	// Message — Технический текст отказа для оператора платформы
+	Message string `json:"message"`
+}
+
+// BillingUsageModuleBytes — Строка разбивки для интерфейса. Подпись ставит сервер по реестру разделов платформы
+type BillingUsageModuleBytes struct {
+	Key   string `json:"key"`
+	Label string `json:"label"`
+	Bytes int64  `json:"bytes"`
+}
+
+// BillingUsageSnapshot — Одно измерение потребления кабинета. storage_bytes_total — сумма bytes_by_module; db_size_bytes в неё НЕ входит, это другой ресурс (место в PostgreSQL против места в объектном хранилище), и сложение их в одно число врало бы про оба.
+type BillingUsageSnapshot struct {
+	ID       string `json:"id"`
+	TenantID string `json:"tenant_id"`
+	// TakenAt — Момент, о котором снимок говорит
+	TakenAt string `json:"taken_at"`
+	// ActiveMembers — Активные членства кабинета
+	ActiveMembers int64 `json:"active_members"`
+	// StorageBytesTotal — Сумма разбивки по разделам
+	StorageBytesTotal int64 `json:"storage_bytes_total"`
+	// BytesByModule — Карта «ключ раздела → байты». Раздел, выключенный у кабинета, в карту не попадает вовсе
+	BytesByModule map[string]int64 `json:"bytes_by_module"`
+	// DBSizeBytes — pg_database_size базы кабинета
+	DBSizeBytes int64 `json:"db_size_bytes"`
+	// Source — scheduled — суточный обход, manual — ручной пересчёт оператором
+	Source string `json:"source"`
+	// DurationMs — Сколько занял сбор
+	DurationMs int64 `json:"duration_ms"`
+	// Errors — Источники, которые посчитать не удалось. Пустой массив означает полный сбор
+	Errors []BillingUsageCollectError `json:"errors"`
 }
 
 // CRMActivity — Лента только дописывается
@@ -1064,8 +1480,10 @@ type CRMInboxEntityMessage struct {
 	Status            string  `json:"status"`
 	SentBy            *int64  `json:"sent_by,omitempty"`
 	CreatedAt         string  `json:"created_at"`
-	Provider          string  `json:"provider"`
-	ConnectionName    string  `json:"connection_name"`
+	// AttachmentCount — Сколько файлов у сообщения; список — GET /api/v1/crm/inbox/messages/{id}/attachments
+	AttachmentCount *int64 `json:"attachment_count,omitempty"`
+	Provider        string `json:"provider"`
+	ConnectionName  string `json:"connection_name"`
 }
 
 type CRMInboxLinkConversationInput struct {
@@ -1098,6 +1516,8 @@ type CRMInboxMessage struct {
 	Status            string  `json:"status"`
 	SentBy            *int64  `json:"sent_by,omitempty"`
 	CreatedAt         string  `json:"created_at"`
+	// AttachmentCount — Сколько файлов у сообщения; список — GET /api/v1/crm/inbox/messages/{id}/attachments
+	AttachmentCount *int64 `json:"attachment_count,omitempty"`
 }
 
 type CRMInboxOutboundUpload struct {
@@ -1297,15 +1717,14 @@ type CRMLeadPatch struct {
 
 type CRMLeadSource struct {
 	ID UUID `json:"id"`
-	// Key — То, что ложится в lead.source. У системной строки за ключом стоит код
+	// Key — Код записи справочника. То, что ложится в lead.source; за штатным кодом стоит код продукта
 	Key string `json:"key"`
 	// Name — Имя - право кабинета; сеятель его не возвращает
 	Name string `json:"name"`
 	// Channel — Канал для цвета и значка; неизвестный приводится к other
 	Channel   string `json:"channel"`
 	SortOrder int64  `json:"sort_order"`
-	// IsSystem — Строку завёл сеятель модуля: удалить и выключить нельзя
-	IsSystem  bool   `json:"is_system"`
+	// IsActive — Ненужную строку выключают, а не удаляют: на её код ссылаются заведённые лиды
 	IsActive  bool   `json:"is_active"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
@@ -1329,7 +1748,7 @@ type CRMLeadStatus = string
 type CRMLossReason struct {
 	ID   UUID   `json:"id"`
 	Name string `json:"name"`
-	// Kind — deal - почему проиграна сделка, lead - почему лид оказался не наш
+	// Kind — Из какого справочника запись: deal - crm_loss_reason (почему проиграна сделка), lead - crm_lead_reject_reason (почему лид оказался не наш)
 	Kind      string `json:"kind"`
 	IsActive  bool   `json:"is_active"`
 	CreatedAt string `json:"created_at"`
@@ -4985,6 +5404,326 @@ type DocflowAddressRequisites struct {
 	Info *string `json:"info,omitempty"`
 }
 
+// DocflowApproval — Один проход предмета по маршруту. Согласование ничего не проводит и ни строки регистра не пишет: оно отвечает на один вопрос — можно ли уже выполнить действие, выпускающее бумагу или деньги наружу. Возврат на доработку проход не закрывает: предмет правят и продолжают тот же проход, сохраняя чужие визы.
+type DocflowApproval struct {
+	ID            UUID                   `json:"id"`
+	Subject       DocflowApprovalSubject `json:"subject"`
+	SubjectTitle  *string                `json:"subject_title,omitempty"`
+	SubjectNumber *string                `json:"subject_number,omitempty"`
+	CompanyID     *UUID                  `json:"company_id,omitempty"`
+	ContactID     *UUID                  `json:"contact_id,omitempty"`
+	ItemID        *UUID                  `json:"item_id,omitempty"`
+	RouteID       *UUID                  `json:"route_id,omitempty"`
+	RouteName     *string                `json:"route_name,omitempty"`
+	ReworkMode    string                 `json:"rework_mode"`
+	// Amount — Пусто законно: у рамочного договора суммы нет
+	Amount   *string `json:"amount,omitempty"`
+	Currency *string `json:"currency,omitempty"`
+	// ContentVersion — Редакция предмета, по которой решают
+	ContentVersion int64  `json:"content_version"`
+	State          string `json:"state"`
+	// ActiveStage — Номер текущего этапа
+	ActiveStage   int64                  `json:"active_stage"`
+	RequestedBy   int64                  `json:"requested_by"`
+	RequestedName *string                `json:"requested_name,omitempty"`
+	RequestedAt   string                 `json:"requested_at"`
+	FinishedAt    *string                `json:"finished_at,omitempty"`
+	RemindedAt    *string                `json:"reminded_at,omitempty"`
+	EscalatedAt   *string                `json:"escalated_at,omitempty"`
+	UpdatedAt     string                 `json:"updated_at"`
+	Stages        []DocflowApprovalStage `json:"stages"`
+	Events        []DocflowApprovalEvent `json:"events,omitempty"`
+}
+
+// DocflowApprovalActionCheck — Вердикт по одному действию вместе с причинами отказа.
+type DocflowApprovalActionCheck struct {
+	Allowed bool                         `json:"allowed"`
+	Reasons []DocflowApprovalBlockReason `json:"reasons"`
+}
+
+// DocflowApprovalBlockReason — Почему действие запрещено, словами, а не кодом состояния.
+type DocflowApprovalBlockReason struct {
+	Code       string  `json:"code"`
+	Message    string  `json:"message"`
+	ApprovalID *UUID   `json:"approval_id,omitempty"`
+	StageTitle *string `json:"stage_title,omitempty"`
+}
+
+// DocflowApprovalBlockers — Что можно сделать с предметом прямо сейчас и почему нельзя остальное. Согласование блокирует РОВНО ДВА действия — отправку контрагенту и отправку заявки в банк; editing_stays_unlocked говорит прямо, что редактирование карточки не глушится никогда. Это СНИМОК: между чтением и нажатием кнопки мир может измениться, и настоящую защиту держит транзакция самого действия.
+type DocflowApprovalBlockers struct {
+	Subject DocflowApprovalSubject `json:"subject"`
+	// Required — Объявлен ли вид предмета требующим согласования
+	Required           bool                       `json:"required"`
+	ApprovalID         *UUID                      `json:"approval_id,omitempty"`
+	State              *string                    `json:"state,omitempty"`
+	SendToCounterparty DocflowApprovalActionCheck `json:"send_to_counterparty"`
+	SendToBank         DocflowApprovalActionCheck `json:"send_to_bank"`
+	CanSubmit          bool                       `json:"can_submit"`
+	CanDecide          bool                       `json:"can_decide"`
+	CanCancel          bool                       `json:"can_cancel"`
+	CanResubmit        bool                       `json:"can_resubmit"`
+	MatchedRouteID     *UUID                      `json:"matched_route_id,omitempty"`
+	MatchedRouteName   *string                    `json:"matched_route_name,omitempty"`
+	// EditingStaysUnlocked — Всегда истинно: редактирование карточки согласование не глушит
+	EditingStaysUnlocked bool `json:"editing_stays_unlocked"`
+}
+
+type DocflowApprovalCancelInput struct {
+	// Comment — Причина отзыва остаётся в истории прохода
+	Comment string `json:"comment"`
+}
+
+// DocflowApprovalDecisionInput — Одно решение. Комментарий обязателен у return и reject и не требуется у approve: отказ без слов отправляет автора чинить неизвестно что.
+type DocflowApprovalDecisionInput struct {
+	// ApprovalID — Заполняется из адреса; значение в теле роли не играет
+	ApprovalID *UUID `json:"approval_id,omitempty"`
+	// ReviewerID — ЧЬЯ виза закрывается. Не обязательно тот, кто нажимает: замещающий закрывает визу отсутствующего, оставаясь собой в истории
+	ReviewerID *int64  `json:"reviewer_id,omitempty"`
+	Decision   string  `json:"decision"`
+	Comment    *string `json:"comment,omitempty"`
+}
+
+type DocflowApprovalDelegateInput struct {
+	// UserID — Кому поручается решение по этому проходу
+	UserID int64 `json:"user_id"`
+}
+
+// DocflowApprovalDepartment — Подразделение справочника ядра глазами согласования.
+type DocflowApprovalDepartment struct {
+	ID    UUID   `json:"id"`
+	Code  string `json:"code"`
+	Label string `json:"label"`
+}
+
+// DocflowApprovalDirectories — Справочники конструктора маршрутов ОДНИМ ответом: три отдельных запроса ради одной формы означают три повода ей мигнуть и три места, где список окажется из разных моментов времени.
+type DocflowApprovalDirectories struct {
+	Departments []DocflowApprovalDepartment `json:"departments"`
+	Roles       []DocflowApprovalRoleRef    `json:"roles"`
+	People      []DocflowApprovalPerson     `json:"people"`
+	// Subjects — Виды предметов, которые сегодня умеют согласовываться, вместе с их обязательностью
+	Subjects []DocflowApprovalPolicy `json:"subjects"`
+}
+
+// DocflowApprovalEvent — Строка истории прохода. Не переписывается.
+type DocflowApprovalEvent struct {
+	ID            UUID    `json:"id"`
+	StagePosition *int64  `json:"stage_position,omitempty"`
+	Action        string  `json:"action"`
+	UserID        *int64  `json:"user_id,omitempty"`
+	UserName      *string `json:"user_name,omitempty"`
+	Comment       *string `json:"comment,omitempty"`
+	CreatedAt     string  `json:"created_at"`
+}
+
+// DocflowApprovalInboxItem — Строка очереди. Это НЕ урезанный предмет: ни файлов, ни строк, ни связей здесь нет — очередь открывают, чтобы решить, что открывать дальше.
+type DocflowApprovalInboxItem struct {
+	ApprovalID    UUID                   `json:"approval_id"`
+	Subject       DocflowApprovalSubject `json:"subject"`
+	SubjectTitle  string                 `json:"subject_title"`
+	SubjectNumber *string                `json:"subject_number,omitempty"`
+	RouteName     *string                `json:"route_name,omitempty"`
+	StageTitle    *string                `json:"stage_title,omitempty"`
+	StagePosition int64                  `json:"stage_position"`
+	// StageCount — Сколько этапов в маршруте всего
+	StageCount    int64   `json:"stage_count"`
+	StageMode     string  `json:"stage_mode"`
+	Amount        *string `json:"amount,omitempty"`
+	Currency      *string `json:"currency,omitempty"`
+	CompanyName   *string `json:"company_name,omitempty"`
+	ContactName   *string `json:"contact_name,omitempty"`
+	RequestedName *string `json:"requested_name,omitempty"`
+	RequestedAt   string  `json:"requested_at"`
+	DueAt         *string `json:"due_at,omitempty"`
+	Overdue       bool    `json:"overdue"`
+	// OnBehalfOf — Чью визу вы ставите, если это не ваша собственная
+	OnBehalfOf  *string `json:"on_behalf_of,omitempty"`
+	OnBehalfVia *string `json:"on_behalf_via,omitempty"`
+	// ReturnedToMe — Истинно у собственной отправки, которую вернули на доработку
+	ReturnedToMe bool `json:"returned_to_me"`
+}
+
+type DocflowApprovalInboxPage struct {
+	Items   []DocflowApprovalInboxItem `json:"items"`
+	HasMore bool                       `json:"has_more"`
+}
+
+// DocflowApprovalPerson — Человек в списках согласования. Логин, роли и права наружу не отдаются.
+type DocflowApprovalPerson struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
+// DocflowApprovalPolicy — Обязательность согласования у ОДНОГО вида предмета, а не глобальный выключатель кабинета: у заявки на оплату согласование может быть обязательным, а у письма контрагенту — нет.
+type DocflowApprovalPolicy struct {
+	SubjectModule string `json:"subject_module"`
+	SubjectKind   string `json:"subject_kind"`
+	Required      bool   `json:"required"`
+}
+
+// DocflowApprovalResubmitInput — Повторная отправка после доработки. Что произойдёт с визами, решает настройка маршрута: restart гасит все, returner_only сохраняет визы всех, кроме вернувшего.
+type DocflowApprovalResubmitInput struct {
+	// ApprovalID — Заполняется из адреса; значение в теле роли не играет
+	ApprovalID *UUID `json:"approval_id,omitempty"`
+	// AskAgain — Кого инициатор решил переспросить дополнительно. Вернувший этап переспрашивается всегда и в списке не нужен
+	AskAgain []UUID  `json:"ask_again,omitempty"`
+	Comment  *string `json:"comment,omitempty"`
+}
+
+// DocflowApprovalReview — Персональная виза. actor_id — чья она, decided_by — чья рука её поставила, если это не сам согласующий, а decided_via — на каком основании: замещение, поручение или вмешательство администратора.
+type DocflowApprovalReview struct {
+	ID            UUID    `json:"id"`
+	ActorID       int64   `json:"actor_id"`
+	ActorName     *string `json:"actor_name,omitempty"`
+	DecidedBy     *int64  `json:"decided_by,omitempty"`
+	DecidedByName *string `json:"decided_by_name,omitempty"`
+	DecidedVia    *string `json:"decided_via,omitempty"`
+	DelegatedTo   *int64  `json:"delegated_to,omitempty"`
+	// Decision — Пусто, пока человек не решил
+	Decision *string `json:"decision,omitempty"`
+	// Comment — Обязателен у return и reject: без слов автор не узнает, что исправлять
+	Comment   *string `json:"comment,omitempty"`
+	DecidedAt *string `json:"decided_at,omitempty"`
+}
+
+// DocflowApprovalRoleRef — Роль кабинета глазами согласования: идентификатор и имя, без состава прав.
+type DocflowApprovalRoleRef struct {
+	ID   UUID   `json:"id"`
+	Name string `json:"name"`
+}
+
+// DocflowApprovalRoute — Именованный ШАБЛОН маршрута, а не разовый список людей. Подошло несколько — берётся самый конкретный; нижняя граница суммы включается, верхняя нет, поэтому смежные диапазоны стыкуются без щели и без нахлёста. Названия юрлица, контрагента, папки и статьи подставляются на чтении: в шаблоне хранятся только ссылки.
+type DocflowApprovalRoute struct {
+	ID            UUID   `json:"id"`
+	Name          string `json:"name"`
+	SubjectModule string `json:"subject_module"`
+	// SubjectKind — any — любой вид предмета своего модуля
+	SubjectKind string `json:"subject_kind"`
+	// DocumentKind — Вид бумаги у владельца предмета
+	DocumentKind    *string `json:"document_kind,omitempty"`
+	CompanyID       *UUID   `json:"company_id,omitempty"`
+	CompanyName     *string `json:"company_name,omitempty"`
+	ContactID       *UUID   `json:"contact_id,omitempty"`
+	ContactName     *string `json:"contact_name,omitempty"`
+	ContactFolderID *UUID   `json:"contact_folder_id,omitempty"`
+	ContactFolder   *string `json:"contact_folder,omitempty"`
+	ItemID          *UUID   `json:"item_id,omitempty"`
+	ItemName        *string `json:"item_name,omitempty"`
+	// AmountFrom — Нижняя граница суммы ВКЛЮЧАЕТСЯ
+	AmountFrom *string `json:"amount_from,omitempty"`
+	// AmountTo — Верхняя граница суммы НЕ включается
+	AmountTo *string `json:"amount_to,omitempty"`
+	// ReworkMode — Что будет после возврата на доработку: весь путь заново либо продолжает вернувший, визы остальных сохраняются
+	ReworkMode string `json:"rework_mode"`
+	// IsActive — Выключенный маршрут не подбирается новым проходам, но остаётся на месте
+	IsActive  bool                        `json:"is_active"`
+	Stages    []DocflowApprovalRouteStage `json:"stages"`
+	CreatedAt string                      `json:"created_at"`
+	UpdatedAt string                      `json:"updated_at"`
+}
+
+type DocflowApprovalRouteActiveInput struct {
+	Active bool `json:"active"`
+}
+
+type DocflowApprovalRouteList struct {
+	Items []DocflowApprovalRoute `json:"items"`
+}
+
+// DocflowApprovalRouteStage — Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался».
+type DocflowApprovalRouteStage struct {
+	ID *UUID `json:"id,omitempty"`
+	// Position — Порядок этапа в маршруте
+	Position             int64   `json:"position"`
+	Title                *string `json:"title,omitempty"`
+	AssigneeKind         string  `json:"assignee_kind"`
+	AssigneeUserID       *int64  `json:"assignee_user_id,omitempty"`
+	AssigneeDepartmentID *UUID   `json:"assignee_department_id,omitempty"`
+	AssigneeRoleID       *UUID   `json:"assignee_role_id,omitempty"`
+	// AssigneeLabel — Как назначение читается человеком. Подставляется на чтении; в шаблоне не хранится
+	AssigneeLabel *string `json:"assignee_label,omitempty"`
+	// Mode — Решают все или достаточно одного. Кворума с процентом нет
+	Mode string `json:"mode"`
+	// DueHours — Срок ЭТАПА в часах. Просрочка даёт напоминание и эскалацию на одно звено; автоотклонения по сроку нет
+	DueHours *int64 `json:"due_hours,omitempty"`
+	// MinAmount — Лимит по сумме УСЛОВИЕМ НА ЭТАП: выполнять только при сумме от N. Этап, чей лимит не достигнут, остаётся в проходе строкой skipped
+	MinAmount *string `json:"min_amount,omitempty"`
+}
+
+// DocflowApprovalStage — Этап ПРОХОДА: кого спросили на самом деле. Состояние skipped означает «этап не выполняется, его лимит по сумме не достигнут»; строка всё равно есть, чтобы человек видел, ПОЧЕМУ финансового директора не спросили.
+type DocflowApprovalStage struct {
+	ID            UUID                    `json:"id"`
+	Position      int64                   `json:"position"`
+	Title         *string                 `json:"title,omitempty"`
+	Mode          string                  `json:"mode"`
+	AssigneeKind  string                  `json:"assignee_kind"`
+	AssigneeLabel *string                 `json:"assignee_label,omitempty"`
+	MinAmount     *string                 `json:"min_amount,omitempty"`
+	DueHours      *int64                  `json:"due_hours,omitempty"`
+	DueAt         *string                 `json:"due_at,omitempty"`
+	State         string                  `json:"state"`
+	StartedAt     *string                 `json:"started_at,omitempty"`
+	DecidedAt     *string                 `json:"decided_at,omitempty"`
+	Reviews       []DocflowApprovalReview `json:"reviews"`
+}
+
+// DocflowApprovalSubject — Предмет согласования НЕЙТРАЛЬНОЙ ТРОЙКОЙ «модуль — вид — идентификатор». Внешнего ключа на предмет нет вовсе: без этого приёма к заявке на оплату, живущей в модуле finance (счета, выписки и расчёты), лист было бы не прицепить.
+type DocflowApprovalSubject struct {
+	// Module — Модуль-владелец предмета
+	Module string `json:"module"`
+	// Kind — Вид предмета: карточка документооборота или заявка на оплату
+	Kind string `json:"kind"`
+	// ID — Идентификатор предмета у его владельца
+	ID UUID `json:"id"`
+}
+
+// DocflowApprovalSubjectFacts — Что владелец предмета рассказывает о нём согласованию своим портом. Пустая сумма законна — у рамочного договора её нет, и ноль вместо неё назвал бы сумму, которой не называли.
+type DocflowApprovalSubjectFacts struct {
+	Subject DocflowApprovalSubject `json:"subject"`
+	Title   string                 `json:"title"`
+	Number  *string                `json:"number,omitempty"`
+	// DocumentKind — Вид бумаги у владельца: договор, счёт, акт
+	DocumentKind    *string `json:"document_kind,omitempty"`
+	CompanyID       *UUID   `json:"company_id,omitempty"`
+	ContactID       *UUID   `json:"contact_id,omitempty"`
+	ContactFolderID *UUID   `json:"contact_folder_id,omitempty"`
+	// ItemID — Статья расхода предмета
+	ItemID *UUID `json:"item_id,omitempty"`
+	// Amount — Сумма десятичным текстом; пусто там, где суммы нет
+	Amount   *string `json:"amount,omitempty"`
+	Currency *string `json:"currency,omitempty"`
+	// ContentVersion — Редакция предмета у владельца — основание значимой правки
+	ContentVersion int64 `json:"content_version"`
+	// AuthorID — Кто завёл предмет; нужен этапу «руководитель автора»
+	AuthorID int64 `json:"author_id"`
+}
+
+// DocflowApprovalSubjectState — Согласование одного предмета глазами его карточки.
+type DocflowApprovalSubjectState struct {
+	Blockers DocflowApprovalBlockers `json:"blockers"`
+	// Approval — Отсутствует, пока предмет ни разу не отправляли
+	Approval *DocflowApproval            `json:"approval,omitempty"`
+	Facts    DocflowApprovalSubjectFacts `json:"facts"`
+}
+
+// DocflowApprovalSubstitution — Замещение согласующего на период. Бессрочное замещение законно — ends_on можно не называть.
+type DocflowApprovalSubstitution struct {
+	ID UUID `json:"id"`
+	// PrincipalID — Кого замещают
+	PrincipalID   int64   `json:"principal_id"`
+	PrincipalName *string `json:"principal_name,omitempty"`
+	// SubstituteID — Кто замещает
+	SubstituteID   int64   `json:"substitute_id"`
+	SubstituteName *string `json:"substitute_name,omitempty"`
+	StartsOn       string  `json:"starts_on"`
+	// EndsOn — Пусто — замещение бессрочно
+	EndsOn  *string `json:"ends_on,omitempty"`
+	Comment *string `json:"comment,omitempty"`
+}
+
+type DocflowApprovalSubstitutionList struct {
+	Items []DocflowApprovalSubstitution `json:"items"`
+}
+
 // DocflowAttachment — Файл внутри пакета. Внутреннего пути в хранилище здесь нет: снаружи файл получают отдельной операцией, а путь не часть контракта и не подсказка для перебора.
 type DocflowAttachment struct {
 	ID      UUID `json:"id"`
@@ -5354,104 +6093,6 @@ type DocflowFlowAccrualStage struct {
 	ActualAmount string `json:"actual_amount"`
 }
 
-// DocflowFlowApproval — Маршрут согласования, закреплённый за той версией документа, которую видел отправитель. Согласование — мнение, а не проведение: учётных движений оно не делает и черновик не замораживает.
-type DocflowFlowApproval struct {
-	ID UUID `json:"id"`
-	// ContentVersion — Версия документа, по которой решают
-	ContentVersion int64                      `json:"content_version"`
-	State          string                     `json:"state"`
-	RequestedBy    int64                      `json:"requested_by"`
-	RequestedName  *string                    `json:"requested_name,omitempty"`
-	RequestedAt    string                     `json:"requested_at"`
-	DueAt          *string                    `json:"due_at,omitempty"`
-	Stages         []DocflowFlowApprovalStage `json:"stages"`
-	// ActiveStage — Номер текущего этапа с нуля
-	ActiveStage int64 `json:"active_stage"`
-	// WaitingFor — Кто ещё не решил на текущем этапе
-	WaitingFor   []int64            `json:"waiting_for,omitempty"`
-	Cancellation *DocflowFlowReview `json:"cancellation,omitempty"`
-}
-
-type DocflowFlowApprovalCancel struct {
-	ExpectedVersion int64 `json:"expected_version"`
-	ApprovalID      UUID  `json:"approval_id"`
-	// Comment — Причина отзыва остаётся в истории маршрута
-	Comment string `json:"comment"`
-}
-
-// DocflowFlowApprovalContext — Текущие возможности текущего человека, а не снимок прошлых прав.
-type DocflowFlowApprovalContext struct {
-	Version   int64 `json:"version"`
-	CanSubmit bool  `json:"can_submit"`
-	// CanDecide — Истинно только у участника активного этапа с правом docflow.flow:approve
-	CanDecide bool `json:"can_decide"`
-	// CanCancel — Истинно только у того, кто отправлял
-	CanCancel bool `json:"can_cancel"`
-}
-
-type DocflowFlowApprovalDecision struct {
-	ExpectedVersion int64   `json:"expected_version"`
-	ApprovalID      UUID    `json:"approval_id"`
-	Decision        string  `json:"decision"`
-	Comment         *string `json:"comment,omitempty"`
-}
-
-// DocflowFlowApprovalInboxItem — Одна строка очереди решений. Файлов, состава маршрута, товарных строк и учётных связей здесь нет: за ними идут в карточку документа.
-type DocflowFlowApprovalInboxItem struct {
-	ID UUID `json:"id"`
-	// Version — Версия, которую подставляют в решение как expected_version
-	Version       int64           `json:"version"`
-	Kind          DocflowFlowKind `json:"kind"`
-	Number        *string         `json:"number,omitempty"`
-	Title         string          `json:"title"`
-	Date          string          `json:"date"`
-	CompanyID     UUID            `json:"company_id"`
-	CompanyName   *string         `json:"company_name,omitempty"`
-	ContactID     UUID            `json:"contact_id"`
-	ContactName   *string         `json:"contact_name,omitempty"`
-	RequestedBy   int64           `json:"requested_by"`
-	RequestedName *string         `json:"requested_name,omitempty"`
-	RequestedAt   string          `json:"requested_at"`
-	// DueAt — Срок решения; отсутствует, когда срок не назначали
-	DueAt *string `json:"due_at,omitempty"`
-	// ActiveStage — Номер текущего этапа с нуля
-	ActiveStage int64 `json:"active_stage"`
-	// StageCount — Сколько этапов в маршруте всего
-	StageCount int64 `json:"stage_count"`
-	// Amount — Сумма документа десятичным текстом; пусто у рамочного договора — нуля вместо неё не бывает
-	Amount *string `json:"amount,omitempty"`
-	// Currency — Валюта суммы; пусто там же, где пуста сумма
-	Currency *string `json:"currency,omitempty"`
-}
-
-type DocflowFlowApprovalInboxPage struct {
-	Items   []DocflowFlowApprovalInboxItem `json:"items"`
-	HasMore bool                           `json:"has_more"`
-}
-
-type DocflowFlowApprovalPeoplePage struct {
-	Items []DocflowFlowApprovalPerson `json:"items"`
-	// NextAfter — Продолжение листания; отсутствует на последней странице
-	NextAfter *int64 `json:"next_after,omitempty"`
-}
-
-type DocflowFlowApprovalPerson struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-}
-
-type DocflowFlowApprovalStage struct {
-	Reviewers []DocflowFlowReview `json:"reviewers"`
-}
-
-type DocflowFlowApprovalSubmit struct {
-	ExpectedVersion int64 `json:"expected_version"`
-	// Stages — Этапы по порядку; каждый — список идентификаторов людей. Всего не больше пятидесяти участников
-	Stages [][]int64 `json:"stages"`
-	// DueAt — Срок решения; если назван, обязан быть в будущем
-	DueAt *string `json:"due_at,omitempty"`
-}
-
 // DocflowFlowChangeInput — Одна команда правки. Поля, не относящиеся к названному действию, отвергаются, а не игнорируются: запрос, просящий две разные вещи сразу, сам не знает, чего хочет.
 type DocflowFlowChangeInput struct {
 	// ExpectedVersion — Версия, которую видел клиент. Разошлась — 409 docflow.flow.version_conflict
@@ -5467,10 +6108,10 @@ type DocflowFlowChangeInput struct {
 	RelationID      *UUID                     `json:"relation_id,omitempty"`
 }
 
-// DocflowFlowCommercial — Коммерческая часть бумаги — сумма, валюта, строки и графики.
+// DocflowFlowCommercial — Коммерческая часть бумаги — сумма, валюта, строки и графики. Пустая amount законна только вместе с payment_rule, у которого названа сумма платежа: у бессрочного договора итога нет и быть не может, а строк оригинала и этапов работ у такой сделки не бывает — их суммы обязаны сойтись с итогом.
 type DocflowFlowCommercial struct {
 	Currency string `json:"currency"`
-	// Amount — Десятичным текстом
+	// Amount — Десятичным текстом; пусто — итога нет или его выводит правило графика
 	Amount       string                      `json:"amount"`
 	PaymentTerms *string                     `json:"payment_terms,omitempty"`
 	DueDate      *string                     `json:"due_date,omitempty"`
@@ -5503,9 +6144,10 @@ type DocflowFlowContent struct {
 	Date       string                    `json:"date"`
 	Contract   *DocflowFlowContractTerms `json:"contract,omitempty"`
 	Commercial *DocflowFlowCommercial    `json:"commercial,omitempty"`
+	Recognized *DocflowFlowRecognized    `json:"recognized,omitempty"`
 }
 
-// DocflowFlowContractTerms — Условия договора в старой форме. Остаётся читаемой и принимается, но новую коммерческую часть описывает commercial. У рамочного договора суммы и валюты нет вовсе — искусственного нуля здесь не бывает.
+// DocflowFlowContractTerms — Условия договора в старой форме. Остаётся читаемой и принимается, но новую коммерческую часть описывает commercial. У договора без лимита (mode=framework) суммы и валюты в условиях нет вовсе — искусственного нуля здесь не бывает. Коммерческая часть рядом с ним законна только с payment_rule, у которого названа сумма платежа: это бессрочный договор с регулярным платежом. Без неё это рамочный договор, суммы которого ведутся спецификациями, и commercial с ним не сохраняется.
 type DocflowFlowContractTerms struct {
 	Mode       string  `json:"mode"`
 	Subject    string  `json:"subject"`
@@ -5544,14 +6186,28 @@ type DocflowFlowDocument struct {
 	Content          DocflowFlowContent          `json:"content"`
 	Files            []DocflowFlowFile           `json:"files,omitempty"`
 	Relations        []DocflowFlowRelation       `json:"relations,omitempty"`
-	Approval         *DocflowFlowApproval        `json:"approval,omitempty"`
 	AccountingLinks  []DocflowFlowAccountingLink `json:"accounting_links,omitempty"`
 	Edo              *DocflowFlowEDOState        `json:"edo,omitempty"`
 	// EdoLinks — Конверты, которыми карточка уходила и приходила. Заполняется только при чтении карточки и в редакцию не пишется: связь живёт своей строкой, её правит синхронизация, а редакция неизменяема
-	EdoLinks  []DocflowFlowEDOLink `json:"edo_links,omitempty"`
-	CreatedAt string               `json:"created_at"`
-	UpdatedAt string               `json:"updated_at"`
-	UpdatedBy int64                `json:"updated_by"`
+	EdoLinks []DocflowFlowEDOLink `json:"edo_links,omitempty"`
+	// Gaps — Чего карточке не хватает до полноты: содержательного файла, подтверждённой суммы, срока действия (последний — только у договора и дополнительного соглашения). Считается при чтении одной карточки и в редакцию не пишется. Пустой список у карточки из ЭДО означает, что приёмка зарегистрировала её сразу; непустой — что карточка осталась черновиком и ждёт подтверждения человека.
+	Gaps      []string `json:"gaps,omitempty"`
+	CreatedAt string   `json:"created_at"`
+	UpdatedAt string   `json:"updated_at"`
+	UpdatedBy int64    `json:"updated_by"`
+}
+
+// DocflowFlowEDOAttachment — Файл конверта глазами карточки: чем оператор его назвал, чем он является, сколько весит и есть ли он у нас. Скачивается адресом вложения пакета.
+type DocflowFlowEDOAttachment struct {
+	ID      UUID   `json:"id"`
+	Message UUID   `json:"message"`
+	Name    string `json:"name"`
+	// Kind — document, title либо пусто
+	Kind        string `json:"kind"`
+	ContentType string `json:"content_type"`
+	SizeBytes   int64  `json:"size_bytes"`
+	// Stored — Байты скачаны в наше хранилище; ложь — файл пока живёт только у оператора
+	Stored bool `json:"stored"`
 }
 
 // DocflowFlowEDOLink — Конверт, которым карточка уехала или пришла. Пакет — канал доставки, и здесь видно, чем карточка ему приходится и каким файлом она в нём поехала. Содержания конверта тут нет: за ним идут в сам пакет.
@@ -5576,8 +6232,10 @@ type DocflowFlowEDOLink struct {
 	Date      string `json:"date"`
 	StateCode string `json:"state_code"`
 	StateName string `json:"state_name"`
-	CreatedBy *int64 `json:"created_by,omitempty"`
-	CreatedAt string `json:"created_at"`
+	// Attachments — Содержательные файлы конверта, показанные в карточке ссылкой, а не копией: байты лежат в хранилище кабинета один раз. Извещений здесь нет. Заполняется только при чтении одной карточки
+	Attachments []DocflowFlowEDOAttachment `json:"attachments,omitempty"`
+	CreatedBy   *int64                     `json:"created_by,omitempty"`
+	CreatedAt   string                     `json:"created_at"`
 }
 
 // DocflowFlowEDOState — Ответ контрагента по документу, как его понимает карточка: подписал, отказал или аннулировали по соглашению сторон. Пересказа состояний оператора здесь нет — регламентов у него десятки, и свой словарь на них отстал бы от первой же правки закона. Живёт в редакции карточки и поэтому попадает в её историю сам.
@@ -5640,9 +6298,9 @@ type DocflowFlowPage struct {
 	HasMore bool                  `json:"has_more"`
 }
 
-// DocflowFlowPaymentRule — Регулярный график оплат одним правилом: сумма платежа, период, день, начало и либо число платежей, либо последняя дата. Сервер раскрывает правило в строки payments сам; план финансов и расчёты видят только строки, как при ручном графике.
+// DocflowFlowPaymentRule — Регулярный график оплат одним правилом: сумма платежа, период, день, начало и ровно одно из трёх окончаний — число платежей, последняя дата или open («пока действует договор»). Сервер раскрывает правило в строки payments сам; план финансов и расчёты видят только строки, как при ручном графике. При названной сумме платежа сумма документа (commercial.amount) может быть пустой: с count или until она вычисляется как N × платёж, с open её нет вовсе. Бессрочное правило раскрывается на горизонт в 12 ближайших платежей — это план, а не весь договор.
 type DocflowFlowPaymentRule struct {
-	// Amount — Сумма одного платежа десятичным текстом; пусто — сумма документа делится поровну
+	// Amount — Сумма одного платежа десятичным текстом; пусто — сумма документа делится поровну. Обязательна, когда суммы документа нет
 	Amount *string `json:"amount,omitempty"`
 	Period string  `json:"period"`
 	// Day — День месяца (month, quarter; короткий месяц прижимает к своему концу) или день недели ISO 1..7 (week)
@@ -5653,6 +6311,19 @@ type DocflowFlowPaymentRule struct {
 	Count *int64 `json:"count,omitempty"`
 	// Until — Последняя допустимая дата включительно; задаётся вместо count
 	Until *string `json:"until,omitempty"`
+	// Open — Пока действует договор: окончания нет, итога нет, раскрываются ближайшие 12 платежей
+	Open *bool `json:"open,omitempty"`
+}
+
+// DocflowFlowRecognized — Прочитанное машиной из файла карточки — НА ПРОВЕРКУ. Живёт отдельно от условий договора: в условия сумма и срок попадают только рукой человека. Пустое поле означает «не прочиталось», а не ноль. Приёмка входящего договора в PDF заполняет его текстом бумаги.
+type DocflowFlowRecognized struct {
+	// Source — Имя вложения словами оператора: по нему человек откроет ту же бумагу и сверит
+	Source *string `json:"source,omitempty"`
+	// Amount — Десятичная строка
+	Amount     *string `json:"amount,omitempty"`
+	Currency   *string `json:"currency,omitempty"`
+	ValidFrom  *string `json:"valid_from,omitempty"`
+	ValidUntil *string `json:"valid_until,omitempty"`
 }
 
 type DocflowFlowReference struct {
@@ -5683,16 +6354,6 @@ type DocflowFlowRelationInput struct {
 	TargetVersion int64  `json:"target_version"`
 }
 
-// DocflowFlowReview — Один участник маршрута и его решение, если оно принято.
-type DocflowFlowReview struct {
-	ActorID   int64   `json:"actor_id"`
-	ActorName *string `json:"actor_name,omitempty"`
-	// Decision — Пусто, пока человек не решил
-	Decision  *string `json:"decision,omitempty"`
-	Comment   *string `json:"comment,omitempty"`
-	DecidedAt *string `json:"decided_at,omitempty"`
-}
-
 // DocflowFlowScheduleStage — Плановая сумма этапа работ или платежа. Ни выполнения, ни оплаты она не утверждает — это то, о чём договорились.
 type DocflowFlowScheduleStage struct {
 	ID    UUID    `json:"id"`
@@ -5715,7 +6376,7 @@ type DocflowFormatIssues struct {
 	Issues []DocflowIssue `json:"issues"`
 }
 
-// DocflowIntakeCounterparty — Вторая сторона и то, с кем мы её свели. Своей догадки по ИНН у приёмки нет вовсе: контрагента сводит механизм синхронизации, а второй механизм сопоставления рядом с существующим разошёлся бы с ним на первой же правке.
+// DocflowIntakeCounterparty — Вторая сторона и то, с кем мы её свели. Порядок узнавания жёсткий, и каждая ступень сильнее следующей: решение человека этим же запросом, сопоставление зеркала пакета, ЗАПИСАННОЕ решение по этому участнику обмена и, наконец, поиск в справочнике по ИНН и КПП. Последняя ступень — догадка, и она называет себя догадкой (match: guess), а не выдаёт себя за чьё-то решение. Разбор у неё общий с автоматчем выгрузок: второй механизм узнавания рядом с существующим разошёлся бы с ним на первой же правке — молча и в пользу дубля. Неоднозначность не разрешается никогда: ИНН, совпавший у двух юрлиц, которых не развёл КПП, уходит человеку списком options.
 type DocflowIntakeCounterparty struct {
 	// Contact — Карточка контрагента кабинета; null — свести не с кем, и приёмка отвечает проверкой docflow.edo.contact_required
 	Contact *UUID `json:"contact"`
@@ -5725,8 +6386,17 @@ type DocflowIntakeCounterparty struct {
 	Name string `json:"name"`
 	INN  string `json:"inn"`
 	KPP  string `json:"kpp"`
-	// Match — Откуда взялся контрагент: manual — прислал человек, auto — свело зеркало, none — не свели ни с кем
+	// Match — Откуда взялся контрагент: manual — решение человека, auto — записанное сопоставление, guess — наша догадка по реквизитам прямо сейчас, нигде не записанная, none — не свели ни с кем
 	Match string `json:"match"`
+	// Options — Наши контрагенты с тем же ИНН, когда выбрать между ними обязан человек. Непустой список означает «такие у нас уже есть, выбери» — и потому же означает, что заводить нового НЕ НАДО: там, где контрагент с такими реквизитами уже заведён, место кнопке «связать с существующим», а не «завести».
+	Options []DocflowIntakeCounterpartyOption `json:"options,omitempty"`
+}
+
+// DocflowIntakeCounterpartyOption — Один наш контрагент на выбор человеку. КПП здесь не для полноты: он единственное, чем два юрлица с одним ИНН различаются.
+type DocflowIntakeCounterpartyOption struct {
+	ID   UUID   `json:"id"`
+	Name string `json:"name"`
+	KPP  string `json:"kpp"`
 }
 
 // DocflowIntakeInput — Решение человека, которым подтверждается приёмка. Сам пакет назван в адресе. Решения по строкам приезжают СПИСКОМ, а не картой «номер → товар»: пропуск строки — это тоже решение, и картой его пришлось бы выражать отсутствием ключа, то есть неотличимо от «человек про эту строку не сказал ничего», а разница между ними принципиальная.
@@ -5827,8 +6497,9 @@ type DocflowIntakeProductOption struct {
 
 // DocflowIntakeResult — Что вышло из приёмки. Вместе с документом возвращается ПЕРЕСОБРАННОЕ предложение: экран после приёмки показывает то же, что показывал до неё, но уже с проставленными решениями — иначе ему пришлось бы спрашивать состояние вторым запросом и показывать между ними полупустую форму.
 type DocflowIntakeResult struct {
-	Document DocflowAcceptedDocument `json:"document"`
-	Preview  DocflowIntakePreview    `json:"preview"`
+	// Document — Учётный документ. ОТСУТСТВУЕТ, когда пакет его не порождает: у договора, дополнительного соглашения и спецификации в PDF результат приёмки — одна карточка документооборота, и экран ведёт человека в неё, а не в журнал учёта.
+	Document *DocflowAcceptedDocument `json:"document,omitempty"`
+	Preview  DocflowIntakePreview     `json:"preview"`
 	// FlowDocument — Карточка документооборота, если этот пакет её заводит: договор, дополнительное соглашение, спецификация, акт. Отсутствует у первички — счёт и УПД идут в учёт и привязываются к договору. У неформализованного договора приходит ОДНА карточка без учётного документа: принимать к учёту там нечего, а согласовывать есть что.
 	FlowDocument *DocflowFlowDocument `json:"flow_document,omitempty"`
 }
@@ -6036,7 +6707,10 @@ type DocflowMessage struct {
 	DeletedAt *string `json:"deleted_at,omitempty"`
 	DeletedBy *int64  `json:"deleted_by,omitempty"`
 	// DeletedReason — Возвращают из корзины только trashed: у draft_removed документа у оператора больше нет
-	DeletedReason string `json:"deleted_reason"`
+	DeletedReason string             `json:"deleted_reason"`
+	Recognized    *DocflowRecognized `json:"recognized,omitempty"`
+	// Payment — Что стало с оплатой этого счёта. Приходит И В СПИСКЕ, в отличие от состава пакета: состояние оплаты — ровно то, что человек читает глазами в каждой строке. Считает его модуль finance (счета, выписки и расчёты) одним запросом на всю страницу. null означает «этот счёт никто не оплачивает»: ни заведённой заявки, ни платежа, — именно там и остаётся кнопка «Отправить в оплату».
+	Payment *DocflowMessagePayment `json:"payment,omitempty"`
 }
 
 // DocflowMessageActionInput — Действие над пакетом словами ОПЕРАТОРА. Что именно можно сделать сейчас, говорит сам пакет: stages[].actions[]. Подписания среди этих действий нет — подпись идёт контуром /api/v1/docflow/edo/signing/tasks.
@@ -6070,6 +6744,17 @@ type DocflowMessageFlowLink struct {
 type DocflowMessageList struct {
 	Count   int64            `json:"count"`
 	Results []DocflowMessage `json:"results"`
+}
+
+// DocflowMessagePayment — Состояние оплаты входящего счёта. Два состояния, а не шесть: путь заявки внутри финансов подробнее (план, отправлена, ждёт подписи, исполнена, отклонена, отменена), но ленте нужен ответ на один вопрос — деньги уже ушли или ещё нет. Оплаченным платёж делает ВЫПИСКА, а не наша кнопка и не слово банка: «отправлено в банк» означает лишь, что платёжка легла в интернет-банк на подпись.
+type DocflowMessagePayment struct {
+	// State — requested — заявка заведена, денег ещё нет; paid — платёж подтверждён выпиской
+	State   string `json:"state"`
+	Request UUID   `json:"request"`
+	// Number — Номер заявки на оплату словами для человека
+	Number *string `json:"number,omitempty"`
+	// PaidOn — Дата оплаты из выписки в форме ГГГГ-ММ-ДД. Заполнена только у state=paid
+	PaidOn *string `json:"paid_on,omitempty"`
 }
 
 // DocflowOutgoingFile — Произвольный файл на отправку рядом с формализованным.
@@ -6133,16 +6818,39 @@ type DocflowPaymentDetails struct {
 	// Company — Юрлицо кабинета, найденное по ИНН плательщика из счёта; null — такого юрлица в кабинете нет, и выбирает человек
 	Company     *UUID               `json:"company"`
 	CompanyName DocflowPaymentField `json:"company_name"`
-	Amount      DocflowPaymentField `json:"amount"`
-	Currency    DocflowPaymentField `json:"currency"`
-	DueDate     DocflowPaymentField `json:"due_date"`
-	Number      DocflowPaymentField `json:"number"`
-	Date        DocflowPaymentField `json:"date"`
-	Basis       DocflowPaymentField `json:"basis"`
-	Subject     DocflowPaymentField `json:"subject"`
-	VATAmount   DocflowPaymentField `json:"vat_amount"`
+	// Contact — Наш контрагент, с которым сведён участник обмена, — той же лестницей, что и в приёмке: сопоставление зеркала пакета → ЗАПИСАННОЕ решение по этому участнику (ИНН+КПП у этого оператора) → поиск в справочнике по ИНН и КПП. Зеркало одного конверта здесь не источник истины: пакет, загруженный раньше решения человека, стоит в нём без сопоставления, а решение по партнёру уже записано. null — свести не с кем, либо два юрлица с одним ИНН, между которыми выбирает человек.
+	Contact *UUID `json:"contact"`
+	// ContactName — Имя этой карточки в кабинете. origin=auto — записанное решение (человека или синхронизации), проверять его незачем; origin=guess — найдено по реквизитам прямо сейчас и нигде не записано, форма ставит рядом «проверьте».
+	ContactName DocflowPaymentDetailsContactName `json:"contact_name"`
+	Amount      DocflowPaymentField              `json:"amount"`
+	Currency    DocflowPaymentField              `json:"currency"`
+	// DueDate — Срок оплаты в форме ГГГГ-ММ-ДД из первого доступного источника: «оплатить до» из самого счёта; иначе дата счёта плюс отсрочка по условиям оплаты контрагента у модуля finance (finance_counterparty_terms на дату счёта); иначе дата счёта плюс отсрочка, которую finance применяет без заведённых условий. Всегда origin=guess — за срок отвечает человек. Пусто только без даты счёта: прибавлять отсрочку не к чему.
+	DueDate DocflowPaymentDetailsDueDate `json:"due_date"`
+	Number  DocflowPaymentField          `json:"number"`
+	Date    DocflowPaymentField          `json:"date"`
+	Basis   DocflowPaymentField          `json:"basis"`
+	// Contract — НАША карточка договора, к которой привязан конверт. Рядом с basis, а не вместо него: basis — строка из чужой бумаги («по договору №17»), contract — карточка в кабинете, по которой договор открывается. Строку в карточку сервер не превращает: угадывать договор по номеру из PDF значит однажды повесить платёж на чужую бумагу. Заполнено только там, где связь «конверт ↔ карточка» уже записана человеком и договор ровно один; два договора дают null — выбирать за человека нельзя.
+	Contract  *UUID               `json:"contract,omitempty"`
+	Subject   DocflowPaymentField `json:"subject"`
+	VATAmount DocflowPaymentField `json:"vat_amount"`
 	// VATWithout — В счёте стояла отметка «без налога (НДС)». Пустая сумма при снятой отметке означает «про налог не сказано», а не «налога нет»
 	VATWithout bool `json:"vat_without"`
+}
+
+// DocflowPaymentDetailsContactName — Имя этой карточки в кабинете. origin=auto — записанное решение (человека или синхронизации), проверять его незачем; origin=guess — найдено по реквизитам прямо сейчас и нигде не записано, форма ставит рядом «проверьте».
+type DocflowPaymentDetailsContactName struct {
+	// Value — Прочитанное значение; пустая строка означает «не нашлось»
+	Value string `json:"value"`
+	// Origin — auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое.
+	Origin string `json:"origin"`
+}
+
+// DocflowPaymentDetailsDueDate — Срок оплаты в форме ГГГГ-ММ-ДД из первого доступного источника: «оплатить до» из самого счёта; иначе дата счёта плюс отсрочка по условиям оплаты контрагента у модуля finance (finance_counterparty_terms на дату счёта); иначе дата счёта плюс отсрочка, которую finance применяет без заведённых условий. Всегда origin=guess — за срок отвечает человек. Пусто только без даты счёта: прибавлять отсрочку не к чему.
+type DocflowPaymentDetailsDueDate struct {
+	// Value — Прочитанное значение; пустая строка означает «не нашлось»
+	Value string `json:"value"`
+	// Origin — auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое.
+	Origin string `json:"origin"`
 }
 
 // DocflowPaymentDocumentRequisites — СвПРД: платёжно-расчётный документ.
@@ -6250,6 +6958,23 @@ type DocflowPreflightTotals struct {
 	VAT string `json:"vat"`
 	// WithVAT — Стоимость с налогом
 	WithVAT string `json:"with_vat"`
+}
+
+// DocflowRecognized — Сумма и реквизиты, прочитанные ИЗ ФАЙЛА пакета, а не присланные оператором. Оператор присылает сумму отдельным реквизитом только у формализованных документов — УПД и счёта-фактуры; у счёта на оплату и договора она живёт внутри PDF. Поле стоит РЯДОМ с amount, а не вместо него: amount — слова оператора, по ним сверяют переписку спустя годы, и подменять их нашим чтением чужой бумаги нельзя. Разбор локальный и детерминированный: текстовый слой PDF, у скана — распознавание изображения; ни одной нейросети и ни одного обращения к платному справочнику. Строк товарной таблицы здесь нет: со скана они не восстанавливаются и фактом не выдаются.
+type DocflowRecognized struct {
+	// At — Когда разбирали. Пусто — попытки ещё не было; это не то же самое, что source=none («читали и брать оказалось нечего»)
+	At *string `json:"at,omitempty"`
+	// Source — Чем прочитано, и заодно насколько верить. title — подписанный файл обмена ФНС, проверять нечего; text — вытащено якорными правилами из чужой раскладки, и рядом со значением интерфейс ставит «проверьте»; none — читали и брать было нечего; пустая строка — разбора не было
+	Source string `json:"source"`
+	// Document — Имя вложения СЛОВАМИ ОПЕРАТОРА: по нему человек откроет ту же бумагу и сверит показанную цифру
+	Document string `json:"document"`
+	// Amount — Итог к оплате строкой, как и amount: через число с плавающей точкой здесь теряются копейки. Пустая строка — итог в бумаге не нашёлся
+	Amount string `json:"amount"`
+	// Currency — Валюта счёта, если бумага её назвала. Пусто означает «не сказано»: подставлять рубль молча нельзя
+	Currency string `json:"currency"`
+	Number   string `json:"number"`
+	// Date — Дата документа в форме ГГГГ-ММ-ДД; пустая строка означает, что даты нет
+	Date string `json:"date"`
 }
 
 // DocflowRequisites — Исключения одного отправления поверх повторяющихся реквизитов карточек юрлица, контрагента и единицы измерения. Здесь остаются ставка отдельной строки, выбранный расчётный счёт, подписант, содержание операции и идентификаторы участников обмена. У одного и того же товара в разных накладных ставка бывает разной. Каждое поле отвечает ровно одному реквизиту приказа, и имя ФНС названо в его описании. Все поля необязательны: чего не прислали, то и покажет предполётная проверка. Явное значение отправления сильнее карточки; валютой по умолчанию остаётся рубль.
@@ -7655,27 +8380,40 @@ type FinancePaymentCalendar struct {
 	ValuationDate *string `json:"valuation_date,omitempty"`
 	Project       *string `json:"project,omitempty"`
 	// BalanceAvailable — При фильтре проекта false; opening/closing/balance пустые, остатки счетов проекту не приписываются
-	BalanceAvailable *bool                           `json:"balance_available,omitempty"`
-	From             string                          `json:"from"`
-	To               string                          `json:"to"`
-	Currency         string                          `json:"currency"`
-	DerivedAvailable bool                            `json:"derived_available"`
-	DerivedNote      string                          `json:"derived_note"`
-	Opening          string                          `json:"opening"`
-	Inflow           string                          `json:"inflow"`
-	Outflow          string                          `json:"outflow"`
-	Closing          string                          `json:"closing"`
-	OverdueIn        string                          `json:"overdue_in"`
-	OverdueOut       string                          `json:"overdue_out"`
-	DoneIn           string                          `json:"done_in"`
-	DoneOut          string                          `json:"done_out"`
-	Companies        []FinancePaymentCalendarCompany `json:"companies"`
-	Step             string                          `json:"step"`
-	Periods          []FinancePaymentCalendarPeriod  `json:"periods"`
-	Totals           []FinancePaymentCalendarCell    `json:"totals"`
-	Days             []FinancePaymentCalendarDay     `json:"days"`
-	Rows             []FinancePaymentCalendarRow     `json:"rows"`
-	Overdue          []FinancePaymentCalendarRow     `json:"overdue"`
+	BalanceAvailable *bool  `json:"balance_available,omitempty"`
+	From             string `json:"from"`
+	To               string `json:"to"`
+	Currency         string `json:"currency"`
+	DerivedAvailable bool   `json:"derived_available"`
+	DerivedNote      string `json:"derived_note"`
+	Opening          string `json:"opening"`
+	Inflow           string `json:"inflow"`
+	Outflow          string `json:"outflow"`
+	Closing          string `json:"closing"`
+	OverdueIn        string `json:"overdue_in"`
+	OverdueOut       string `json:"overdue_out"`
+	DoneIn           string `json:"done_in"`
+	DoneOut          string `json:"done_out"`
+	// CommittedIn — «Должны» — поступления, выведенные из регистра расчётов: долг записан, его можно требовать
+	CommittedIn string `json:"committed_in"`
+	// ExpectedIn — «С ожиданиями» — то же плюс выставленные счета и этапы графиков договоров
+	ExpectedIn string                          `json:"expected_in"`
+	Undated    *FinancePaymentCalendarUndated  `json:"undated,omitempty"`
+	Companies  []FinancePaymentCalendarCompany `json:"companies"`
+	Step       string                          `json:"step"`
+	Periods    []FinancePaymentCalendarPeriod  `json:"periods"`
+	Totals     []FinancePaymentCalendarCell    `json:"totals"`
+	Days       []FinancePaymentCalendarDay     `json:"days"`
+	Rows       []FinancePaymentCalendarRow     `json:"rows"`
+	Overdue    []FinancePaymentCalendarRow     `json:"overdue"`
+}
+
+type FinancePaymentCalendarUndated struct {
+	CountIn   int64                       `json:"count_in"`
+	CountOut  int64                       `json:"count_out"`
+	AmountIn  string                      `json:"amount_in"`
+	AmountOut string                      `json:"amount_out"`
+	Rows      []FinancePaymentCalendarRow `json:"rows"`
 }
 
 type FinancePaymentCalendarCell struct {
@@ -7741,7 +8479,13 @@ type FinancePaymentCalendarRow struct {
 	OperationKind    *string                  `json:"operation_kind,omitempty"`
 	OperationVersion *int64                   `json:"operation_version,omitempty"`
 	ContractID       *UUID                    `json:"contract_id,omitempty"`
-	Fact             *FinancePaymentFact      `json:"fact,omitempty"`
+	// InvoiceID — Карточка выставленного счёта у происхождения invoice; учётным документом счёт не является
+	InvoiceID *UUID `json:"invoice_id,omitempty"`
+	// Expectation — Строка ожидания, а не долга: счёт и этап договора обещают деньги, но требовать по ним нельзя
+	Expectation *bool `json:"expectation,omitempty"`
+	// Undated — Обязательство без срока оплаты: рядом со шкалой, а не на ней
+	Undated *bool               `json:"undated,omitempty"`
+	Fact    *FinancePaymentFact `json:"fact,omitempty"`
 }
 
 type FinancePaymentCalendarSource struct {
@@ -9951,7 +10695,12 @@ type MarketplaceCostImportRequest struct {
 }
 
 type MarketplaceCostImportResult struct {
-	Applied int64                           `json:"applied"`
+	// Applied — Сколько строк завели новую ставку
+	Applied int64 `json:"applied"`
+	// Unchanged — Строки с той же ценой, что уже действует: новая ставка не заводилась
+	Unchanged *int64 `json:"unchanged,omitempty"`
+	// Skipped — Строки с пустой себестоимостью: пустая ячейка — «не заведена», а не ноль
+	Skipped *int64                          `json:"skipped,omitempty"`
 	Failed  int64                           `json:"failed"`
 	Errors  []MarketplaceCostImportRowError `json:"errors"`
 }
@@ -10542,9 +11291,11 @@ type MarketplaceOzonPnl struct {
 	// Demo — Аналитика не подключена — цифры синтетические
 	Demo *bool `json:"demo,omitempty"`
 	// Breakdown — Расшифровка прочего по периодам
-	Breakdown   map[string][]MarketplaceOzonDecompositionOtherItem `json:"breakdown,omitempty"`
-	Freshness   *MarketplaceComponentFreshness                     `json:"freshness,omitempty"`
-	DataThrough *MarketplaceComponentDataThrough                   `json:"data_through,omitempty"`
+	Breakdown map[string][]MarketplaceOzonDecompositionOtherItem `json:"breakdown,omitempty"`
+	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
+	CostMissing map[string]float64               `json:"cost_missing,omitempty"`
+	Freshness   *MarketplaceComponentFreshness   `json:"freshness,omitempty"`
+	DataThrough *MarketplaceComponentDataThrough `json:"data_through,omitempty"`
 	// Incomplete — Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
 	Incomplete *bool `json:"incomplete,omitempty"`
 }
@@ -10934,8 +11685,10 @@ type MarketplaceStorePatch struct {
 	Name *string `json:"name,omitempty"`
 	// TaxPercent — Пустая строка оставляет сохранённую ставку
 	TaxPercent *string `json:"tax_percent,omitempty"`
-	IsActive   *bool   `json:"is_active,omitempty"`
-	HasFbs     *bool   `json:"has_fbs,omitempty"`
+	// TaxEffectiveFrom — С какого дня действует новая ставка налога (ГГГГ-ММ-ДД). Пусто — с сегодняшнего дня по Москве. Не позже сегодня и не раньше начала действующей ставки: прошлые периоды считаются по ставке своего времени
+	TaxEffectiveFrom *string `json:"tax_effective_from,omitempty"`
+	IsActive         *bool   `json:"is_active,omitempty"`
+	HasFbs           *bool   `json:"has_fbs,omitempty"`
 	// HasJam — Используется для Wildberries
 	HasJam *bool `json:"has_jam,omitempty"`
 	// ArticleSizeSeparator — Правило именования артикула Ozon: «БАЗА<разделитель>РАЗМЕР». Список закрыт; пустая строка означает «правила нет». Официальные поля размера площадки всегда старше этого правила. Отсутствие поля оставляет сохранённое правило, пустая строка его снимает
@@ -11372,9 +12125,11 @@ type MarketplaceWbPnl struct {
 	// Demo — Аналитическая база не подключена и цифры синтетические
 	Demo *bool `json:"demo,omitempty"`
 	// Breakdown — Разбор строки «Прочее» по периодам
-	Breakdown   map[string][]MarketplaceWbDecompOtherItem `json:"breakdown,omitempty"`
-	Freshness   *MarketplaceComponentFreshness            `json:"freshness,omitempty"`
-	DataThrough *MarketplaceComponentDataThrough          `json:"data_through,omitempty"`
+	Breakdown map[string][]MarketplaceWbDecompOtherItem `json:"breakdown,omitempty"`
+	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
+	CostMissing map[string]float64               `json:"cost_missing,omitempty"`
+	Freshness   *MarketplaceComponentFreshness   `json:"freshness,omitempty"`
+	DataThrough *MarketplaceComponentDataThrough `json:"data_through,omitempty"`
 	// Incomplete — Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
 	Incomplete *bool `json:"incomplete,omitempty"`
 }
@@ -11673,6 +12428,8 @@ type MarketplaceYandexPnl struct {
 	Range   MarketplaceYandexPnlRange    `json:"range"`
 	Periods []MarketplaceYandexPnlPeriod `json:"periods"`
 	Rows    []MarketplaceYandexPnlRow    `json:"rows"`
+	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
+	CostMissing map[string]float64 `json:"cost_missing,omitempty"`
 	// Note — Пояснение к неполноте источника
 	Note *string `json:"note,omitempty"`
 	// Demo — Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические
@@ -13316,9 +14073,74 @@ type SettingsRoleTransferResult struct {
 	TargetRoleID UUID  `json:"target_role_id"`
 }
 
+type SettingsUsage struct {
+	Snapshot *BillingUsageSnapshot `json:"snapshot"`
+	// Modules — Разбивка по убыванию занятого; пустая, пока снимка нет
+	Modules []BillingUsageModuleBytes `json:"modules"`
+}
+
 type SettingsVatRates struct {
 	// Rates — Фиксированный профиль 22, 20, 10 и 0 процентов
 	Rates []int64 `json:"rates"`
+}
+
+type SignupAccepted struct {
+	// Status — Единственное значение: исход не различается снаружи ни телом, ни кодом
+	Status string `json:"status"`
+	// Detail — Условная формулировка «если на этот адрес можно завести кабинет — мы отправили письмо»: она правдива при любом исходе
+	Detail string `json:"detail"`
+}
+
+type SignupCompleteInput struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
+
+type SignupRequestInfo struct {
+	Email       string `json:"email"`
+	CompanyName string `json:"company_name"`
+	// SuggestedSlug — Свободный адрес будущего кабинета на момент чтения
+	SuggestedSlug string `json:"suggested_slug"`
+	Status        string `json:"status"`
+	IsExpired     bool   `json:"is_expired"`
+	// TenantSlug — Адрес уже заведённого кабинета; пусто, пока его нет
+	TenantSlug string `json:"tenant_slug"`
+	// ProvisioningPending — Кабинет заведён, а его база не поднялась: на экране нужна кнопка повтора, а не форма
+	ProvisioningPending bool `json:"provisioning_pending"`
+	// AccountExists — У адреса уже есть учётная запись. Владельцу ссылки это известно и так; наружу без ссылки не уходит
+	AccountExists bool `json:"account_exists"`
+	// SessionState — Состояние активной browser-сессии относительно адреса ссылки
+	SessionState string `json:"session_state"`
+	SessionEmail string `json:"session_email"`
+}
+
+type SignupRequestInput struct {
+	// Email — Рабочая почта будущего владельца кабинета
+	Email string `json:"email"`
+	// CompanyName — Название компании; становится названием кабинета
+	CompanyName string `json:"company_name"`
+	// Slug — Пожелание адреса кабинета. Пусто — адрес выводится транслитерацией названия компании
+	Slug *string `json:"slug,omitempty"`
+	// Website — Ловушка для роботов: поле скрыто на форме, человек его не заполняет. Заполненное принимается как успех, но письма не отправляет
+	Website *string `json:"website,omitempty"`
+}
+
+type SignupSession struct {
+	// Token — ERP-сессия владельца: тот же go_-токен, что выдаёт мост Kratos-сессии
+	Token string            `json:"token"`
+	User  SignupSessionUser `json:"user"`
+	// Memberships — Кабинеты человека; у нового владельца ровно один
+	Memberships []map[string]json.RawMessage `json:"memberships"`
+	Source      *string                      `json:"source,omitempty"`
+}
+
+type SignupSessionUser struct {
+	Username        *string  `json:"username,omitempty"`
+	Name            *string  `json:"name,omitempty"`
+	AvatarURL       *string  `json:"avatar_url,omitempty"`
+	PlatformRole    *string  `json:"platform_role,omitempty"`
+	PlatformScopes  []string `json:"platform_scopes,omitempty"`
+	IsPlatformAdmin *bool    `json:"is_platform_admin,omitempty"`
 }
 
 type SprintAgingTask struct {
@@ -14992,6 +15814,11 @@ type CoreSetBusinessActiveRequest struct {
 
 type CoreListBusinessOwnershipResponse struct {
 	Results []CoreOwnershipVersion `json:"results"`
+}
+
+type DocflowLinkIntakeCounterpartyRequest struct {
+	// Contact — Контрагент справочника, с которым сводится участник обмена
+	Contact map[string]json.RawMessage `json:"contact"`
 }
 
 type FilesAccessCheckRequest struct {
