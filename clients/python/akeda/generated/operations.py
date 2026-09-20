@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb6a0123455578df86f2b64cf353da516b4d61dac2ffdf9ae19a49a0c89cd9ee).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 96144e40f43790fcae2a6d33cbd19e1fcd2172857d874215d3e4755f9f377561).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -883,6 +883,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'stockCancelDocument': OperationSpec('POST', '/api/v1/stock/documents/{id}/cancel', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockCloseSupplierOrder': OperationSpec('POST', '/api/v1/stock/documents/{id}/close', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockCreateAccountTransfer': OperationSpec('POST', '/api/v1/stock/account-transfers', 'stock', 'preview', 'stock:write', True, True, (), 'none', None, None),
+    'stockCreateAssemblySpec': OperationSpec('POST', '/api/v1/stock/assembly-specs', 'stock', 'preview', 'stock:write', True, True, (), 'none', None, None),
     'stockCreateClaimWriteoff': OperationSpec('POST', '/api/v1/stock/claim-writeoffs', 'stock', 'preview', 'stock:write', True, True, (), 'none', None, None),
     'stockCreateDocument': OperationSpec('POST', '/api/v1/stock/documents', 'stock', 'preview', 'stock:write', True, True, (), 'none', None, None),
     'stockCreateExport': OperationSpec('POST', '/api/v1/stock/exports', 'stock', 'preview', 'stock:write', False, True, (), 'none', None, None),
@@ -892,11 +893,14 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'stockCreateWarehouse': OperationSpec('POST', '/api/v1/stock/warehouses', 'stock', 'preview', 'stock:write', False, True, (), 'none', None, None),
     'stockCreateWarehouseZone': OperationSpec('POST', '/api/v1/stock/warehouses/{id}/zones', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockDeactivateWarehouse': OperationSpec('POST', '/api/v1/stock/warehouses/{id}/deactivate', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
+    'stockDeleteAssemblySpec': OperationSpec('DELETE', '/api/v1/stock/assembly-specs/{id}', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockDeriveInventoryActs': OperationSpec('POST', '/api/v1/stock/documents/{id}/derive', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockDisableWarehouseZones': OperationSpec('POST', '/api/v1/stock/warehouses/{id}/zones/disable', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockDropWarehouseZoneAllocationDraft': OperationSpec('DELETE', '/api/v1/stock/warehouses/{id}/zones/allocation/draft', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockEnableWarehouseZones': OperationSpec('POST', '/api/v1/stock/warehouses/{id}/zones/enable', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockFinishInventoryCount': OperationSpec('POST', '/api/v1/stock/documents/{id}/inventory-finish', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
+    'stockGetAssemblySpec': OperationSpec('GET', '/api/v1/stock/assembly-specs/{id}', 'stock', 'preview', 'stock:read', False, True, ('id',), 'none', None, None),
+    'stockGetAvailability': OperationSpec('GET', '/api/v1/stock/availability', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
     'stockGetBatch': OperationSpec('GET', '/api/v1/stock/batches/{id}', 'stock', 'preview', 'stock:read', False, True, ('id',), 'none', None, None),
     'stockGetCompanyPolicy': OperationSpec('GET', '/api/v1/stock/company-policies/{companyId}', 'stock', 'preview', 'stock:read', False, True, ('companyId',), 'none', None, None),
     'stockGetDocument': OperationSpec('GET', '/api/v1/stock/documents/{id}', 'stock', 'preview', 'stock:read', False, True, ('id',), 'none', None, None),
@@ -924,6 +928,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'stockGetWarehouseBlockers': OperationSpec('GET', '/api/v1/stock/warehouses/{id}/blockers', 'stock', 'preview', 'stock:read', False, True, ('id',), 'none', None, None),
     'stockGetWarehouseZoneAllocation': OperationSpec('GET', '/api/v1/stock/warehouses/{id}/zones/allocation', 'stock', 'preview', 'stock:read', False, True, ('id',), 'none', None, None),
     'stockInspectImport': OperationSpec('POST', '/api/v1/stock/imports/{id}/inspect', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
+    'stockListAssemblySpecs': OperationSpec('GET', '/api/v1/stock/assembly-specs', 'stock', 'preview', 'stock:read', False, True, (), 'limit_offset', 200, 50),
     'stockListBatches': OperationSpec('GET', '/api/v1/stock/batches', 'stock', 'preview', 'stock:read', False, True, (), 'limit_offset', 500, 100),
     'stockListBusinesses': OperationSpec('GET', '/api/v1/stock/businesses', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
     'stockListCompanies': OperationSpec('GET', '/api/v1/stock/companies', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
@@ -948,6 +953,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'stockSaveReorderRule': OperationSpec('PUT', '/api/v1/stock/reorder-rules', 'stock', 'preview', 'stock:write', False, True, (), 'none', None, None),
     'stockSaveWarehouseZoneAllocationDraft': OperationSpec('PUT', '/api/v1/stock/warehouses/{id}/zones/allocation/draft', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockScanProduct': OperationSpec('GET', '/api/v1/stock/products/scan', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
+    'stockSetAssemblySpecStatus': OperationSpec('POST', '/api/v1/stock/assembly-specs/{id}/status', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockSuggestHandlingUnits': OperationSpec('GET', '/api/v1/stock/handling-units/suggestions', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
     'stockUpdateCompanyPolicy': OperationSpec('PATCH', '/api/v1/stock/company-policies/{companyId}', 'stock', 'preview', 'stock:write', False, True, ('companyId',), 'none', None, None),
     'stockUpdateDocument': OperationSpec('PATCH', '/api/v1/stock/documents/{id}', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),

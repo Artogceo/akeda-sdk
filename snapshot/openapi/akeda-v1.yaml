@@ -276,6 +276,8 @@ tags:
     description: Модуль stock (склад) — физические единицы хранения, их состояние и подсказки размещения
   - name: Stock batches
     description: Модуль stock (склад) — партии
+  - name: Stock assembly specs
+    description: Модуль stock (склад) — версионируемый состав изделия для комплектации и разукомплектации
   - name: Stock product units
     description: Модуль stock (склад) — единицы измерения товара и их пересчёт
   - name: Stock references
@@ -27290,6 +27292,16 @@ paths:
         Инвентаризация не проводится: её результат — производные акты.
         Накладные расходы проводятся пересчётом стоимости
         (`/api/v1/stock/valuation/rebuild`), а не этой ручкой.
+        Комплектация на основании резерва снимает его хвост по `basis_line_id`
+        (сборка под заказ). Без основания комплектация и перемещение берут
+        только свободный остаток: если нужное количество держат чужие резервы,
+        ответ 409 с кодом `assembly_consumes_reserved`
+        или `transfer_moves_reserved` называет товар, свободное количество и
+        держателей резерва (`holds`). Списание проходит и по зарезервированному
+        и резерв не уменьшает: обещание ждёт поступления, а отчёт резервов
+        показывает его без обеспечения (`unbacked_qty`). Чьи обещания подвисли
+        из-за этого списания — в `payload.posting.unbacked_reservations`;
+        распроведение списания и любой приход возвращают обеспечение.
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -28284,6 +28296,292 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StockBatch'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/stock/availability:
+    get:
+      tags:
+        - Stock assembly specs
+      operationId: stockGetAvailability
+      summary: Узнать свободный остаток товаров на складе
+      description: 'Остаток, резерв и свободная часть в разрезе документа: бизнес обязателен, пустое юрлицо означает документ без юрлица, а не любое юрлицо. Держатели резерва — резервы под заказ и производственные резервы с номерами документов. Форма комплектации показывает по ним, что товар есть, но занят.'
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: business_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: company_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: warehouse_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: product_ids
+          in: query
+          required: true
+          description: UUID товаров через запятую, не больше 200
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Свободный остаток по товарам
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockAvailabilityList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/stock/assembly-specs:
+    get:
+      tags:
+        - Stock assembly specs
+      operationId: stockListAssemblySpecs
+      summary: Получить версии спецификаций изделий
+      description: Спецификация версионируется, и список отдаёт версии. Отбор по товару отвечает на вопрос «из чего это собирают», отбор по состоянию — «что действует сейчас».
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: spec_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: product_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - draft
+              - active
+              - archived
+        - name: q
+          in: query
+          description: Название спецификации, название или SKU товара
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Страница версий спецификаций
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockAssemblySpecPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Stock assembly specs
+      operationId: stockCreateAssemblySpec
+      summary: Завести новую версию спецификации
+      description: |
+        Правки существующей версии нет: документ хранит её снимок, и новая
+        редакция заводится новой версией. Версия рождается черновиком —
+        действующей её делает отдельное действие, потому что активация
+        архивирует прежнюю редакцию.
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockAssemblySpecCreate'
+      responses:
+        '201':
+          description: Созданная версия
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockAssemblySpec'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/IdempotencyKeyMismatch'
+        '503':
+          $ref: '#/components/responses/IdempotencyUnavailable'
+  /api/v1/stock/assembly-specs/{id}:
+    get:
+      tags:
+        - Stock assembly specs
+      operationId: stockGetAssemblySpec
+      summary: Получить версию спецификации
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Версия спецификации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockAssemblySpec'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Stock assembly specs
+      operationId: stockDeleteAssemblySpec
+      summary: Удалить черновик версии
+      description: 'Удаляется только черновик. Опубликованная версия остаётся навсегда: её снимок уже мог попасть в проведённый документ, и удаление оборвало бы расшифровку.'
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Черновик удалён
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/stock/assembly-specs/{id}/status:
+    post:
+      tags:
+        - Stock assembly specs
+      operationId: stockSetAssemblySpecStatus
+      summary: Сделать версию действующей или архивной
+      description: 'Действующая версия у товара ровно одна: активация архивирует прежнюю. Иначе «из чего это собирают» перестало бы отвечать однозначно, а форма документа выбирала бы молча.'
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockAssemblySpecStatus'
+      responses:
+        '200':
+          description: Версия спецификации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockAssemblySpec'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -65809,6 +66107,12 @@ components:
             - string
             - 'null'
           format: date-time
+        executor_id:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Исполнитель; по умолчанию — тот, кто создаёт задачу
     CRMCreateEventLinkInput:
       type: object
       additionalProperties: false
@@ -68061,6 +68365,8 @@ components:
         - stock_inventory
         - stock_reservation
         - stock_landed_cost
+        - stock_assembly
+        - stock_disassembly
         - stock_reservation_release
         - stock_supplier_order_close
         - stock_opening_balance
@@ -68082,6 +68388,8 @@ components:
         - stock_inventory
         - stock_reservation
         - stock_landed_cost
+        - stock_assembly
+        - stock_disassembly
     StockDocumentRefs:
       type: object
       additionalProperties: false
@@ -68096,7 +68404,9 @@ components:
         warehouse_from:
           $ref: '#/components/schemas/UUID'
         warehouse_to:
-          $ref: '#/components/schemas/UUID'
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Склад-получатель перемещения; у комплектации и разукомплектации — необязательный склад выпуска, без него выпуск появляется на складе списания
         contact:
           $ref: '#/components/schemas/UUID'
     StockDocumentLineHandlingUnit:
@@ -68158,10 +68468,14 @@ components:
           description: Товарная единица представления
         base_qty:
           type: string
-          description: Количество в базовой единице номенклатуры; присланное значение обязано совпасть с серверным пересчётом
+          description: Количество в базовой единице номенклатуры; присланное значение обязано совпасть с серверным пересчётом. У прихода в единице с переменной мерой — сумма фактических мер handling_units
+        variable_measure:
+          type: boolean
+          readOnly: true
+          description: 'Ставит сервер: строка введена в единице с переменной мерой. qty — число конкретных единиц, base_qty — сумма их фактических мер, price — цена за базовую единицу'
         price:
           type: string
-          description: Decimal string
+          description: Decimal string; за единицу строки, а у единицы с переменной мерой — за базовую единицу
         amount:
           type: string
           description: Decimal string
@@ -68196,6 +68510,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StockDocumentLineHandlingAllocation'
+        share:
+          type: string
+          description: Доля стоимости рождённой строки; только у разукомплектации на несколько частей
     StockDocumentLandedCostTarget:
       type: object
       additionalProperties: false
@@ -68239,6 +68556,14 @@ components:
           maxItems: 1000
           items:
             $ref: '#/components/schemas/StockDocumentLine'
+        produced:
+          type: array
+          maxItems: 1000
+          description: 'Строки, которые документ РОЖДАЕТ на складе. Только у комплектации и разукомплектации: их `items` — сторона расхода. Цена и сумма здесь не задаются, стоимость выхода равна списанной.'
+          items:
+            $ref: '#/components/schemas/StockDocumentLine'
+        spec:
+          $ref: '#/components/schemas/StockAssemblySpecRef'
         paper_amount:
           type: string
           description: 'Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается'
@@ -69087,6 +69412,7 @@ components:
         - status
         - state
         - warehouse_name
+        - is_remnant
         - custom
         - received_at
         - created_at
@@ -69126,6 +69452,9 @@ components:
         remaining_base_qty:
           type: string
           description: Считается из движений регистра stock
+        is_remnant:
+          type: boolean
+          description: 'Остаток меньше порога обрезка у единицы товара: вычисляется по остатку, а не хранится'
         reserved_base_qty:
           type: string
           description: Считается из движений регистра stock_reserved
@@ -69339,12 +69668,245 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StockBatch'
+    StockAssemblySpecRef:
+      type: object
+      additionalProperties: false
+      required:
+        - spec_id
+        - version_id
+        - version
+      description: 'Снимок версии спецификации, по которой заполнен документ. Ссылка на версию, а не на справочник: состав уже скопирован в строки, и правка спецификации завтра не меняет смысл проведённого вчера.'
+      properties:
+        spec_id:
+          $ref: '#/components/schemas/UUID'
+        version_id:
+          $ref: '#/components/schemas/UUID'
+        version:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+    StockReservationHold:
+      type: object
+      additionalProperties: false
+      required:
+        - document_id
+        - number
+        - type_key
+        - qty
+      description: Документ, который держит часть остатка — резерв под заказ или производственный резерв.
+      properties:
+        document_id:
+          $ref: '#/components/schemas/UUID'
+        number:
+          type: string
+        type_key:
+          type: string
+        qty:
+          type: string
+        expires_at:
+          type: string
+          format: date
+    StockAvailability:
+      type: object
+      additionalProperties: false
+      required:
+        - product_id
+        - on_hand
+        - reserved
+        - available
+        - holds
+      properties:
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        on_hand:
+          type: string
+          description: Физический остаток на складе
+        reserved:
+          type: string
+          description: Держат резервы
+        available:
+          type: string
+          description: 'Свободно: остаток минус резерв, не меньше нуля'
+        holds:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockReservationHold'
+    StockAvailabilityList:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockAvailability'
+    StockAssemblySpecLine:
+      type: object
+      additionalProperties: false
+      required:
+        - product_id
+        - qty
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        product_sku:
+          type: string
+        product_name:
+          type: string
+        unit:
+          type: string
+        product_uom_id:
+          $ref: '#/components/schemas/UUID'
+          description: Единица товара, в которой задано qty (рулон, грамм); пусто — базовая единица карточки
+        uom_name:
+          type: string
+          readOnly: true
+          description: Название единицы товара
+        qty:
+          type: string
+          description: Положительная decimal string в единице товара или в базовой единице карточки
+        base_qty:
+          type: string
+          readOnly: true
+          description: 'То же количество в базовой единице на момент заведения версии; считает сервер. Смысл состава — это число: коэффициент упаковки может измениться позже'
+        share:
+          type: string
+          description: Доля стоимости при разукомплектации; задаётся сразу для всего состава или не задаётся вовсе
+        position:
+          type: integer
+          minimum: 0
+    StockAssemblySpec:
+      type: object
+      additionalProperties: true
+      description: Одна версия спецификации изделия. Состав опубликованной версии неизменяем — новая редакция заводится новой версией.
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        spec_id:
+          $ref: '#/components/schemas/UUID'
+        version:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        status:
+          type: string
+          enum:
+            - draft
+            - active
+            - archived
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        product_sku:
+          type: string
+        product_name:
+          type: string
+        unit:
+          type: string
+        output_qty:
+          type: string
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        activated_at:
+          type: string
+          format: date-time
+        archived_at:
+          type: string
+          format: date-time
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockAssemblySpecLine'
+    StockAssemblySpecPage:
+      type: object
+      additionalProperties: false
+      required:
+        - count
+        - limit
+        - offset
+        - results
+      properties:
+        count:
+          type: integer
+          minimum: 0
+        limit:
+          type: integer
+          minimum: 0
+        offset:
+          type: integer
+          minimum: 0
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockAssemblySpec'
+    StockAssemblySpecCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - product_id
+        - output_qty
+        - lines
+      description: Новая версия состава. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком.
+      properties:
+        spec_id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        output_qty:
+          type: string
+          description: Сколько выходного товара даёт этот состав
+        comment:
+          type: string
+        lines:
+          type: array
+          minItems: 1
+          maxItems: 1000
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - product_id
+              - qty
+            properties:
+              product_id:
+                $ref: '#/components/schemas/UUID'
+              qty:
+                type: string
+              share:
+                type: string
+    StockAssemblySpecStatus:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - active
+            - archived
     StockProductUOMUsage:
       type: string
       enum:
         - purchase
         - receipt
         - packaging
+        - consumption
+        - sale
+      description: 'Где единицу предлагают первой: purchase — заказ поставщику, receipt — поступление, consumption — комплектация и списание, sale — отгрузка, packaging — тара без своего места. Выбор в документах не ограничивает'
     StockProductUOM:
       type: object
       additionalProperties: false
@@ -69387,6 +69949,15 @@ components:
           type: integer
         creates_handling_units:
           type: boolean
+        variable_measure:
+          type: boolean
+          description: 'Коэффициент — номинал: фактическая мера у каждой конкретной единицы своя (рулон ~50 м)'
+        qty_step:
+          type: string
+          description: 'Шаг количества в этой единице: «режем по 10 см». Пусто — без ограничения'
+        remnant_threshold:
+          type: string
+          description: 'Порог обрезка: остаток конкретной единицы меньше порога считается обрезком. Только для единиц с учётом конкретных единиц'
         is_default_receipt:
           type: boolean
         is_active:
@@ -69440,6 +70011,15 @@ components:
         creates_handling_units:
           type: boolean
           description: Требует единицы измерения с целой точностью
+        variable_measure:
+          type: boolean
+          description: 'Переменная мера: приход складывает количество из фактических мер конкретных единиц, цена за базовую единицу; расход в такой единице невозможен. Требует creates_handling_units'
+        qty_step:
+          type: string
+          description: 'Положительный decimal или пусто: количество строки в этой единице обязано быть кратно шагу'
+        remnant_threshold:
+          type: string
+          description: Положительный decimal или пусто. Требует creates_handling_units
         is_default_receipt:
           type: boolean
         is_active:
@@ -70409,6 +70989,7 @@ components:
         - shipped_qty
         - released_qty
         - remaining_qty
+        - unbacked_qty
       properties:
         basis_line_id:
           $ref: '#/components/schemas/UUID'
@@ -70426,6 +71007,9 @@ components:
         remaining_qty:
           type: string
           description: Decimal string
+        unbacked_qty:
+          type: string
+          description: 'Часть остатка строки, не покрытая остатком склада: обещание ждёт поступления'
     StockReportReservationSummary:
       type: object
       additionalProperties: false
@@ -70435,6 +71019,7 @@ components:
         - shipped_qty
         - released_qty
         - remaining_qty
+        - unbacked_qty
         - state
         - is_overdue
         - lines
@@ -70453,6 +71038,9 @@ components:
         remaining_qty:
           type: string
           description: Decimal string
+        unbacked_qty:
+          type: string
+          description: 'Часть остатка резерва, не покрытая остатком склада: списание товар забрало, обещание ждёт поступления. Без товара остаются самые новые обещания'
         state:
           type: string
           enum:
@@ -70915,6 +71503,7 @@ components:
         - block_shipment_over_free
         - block_reservation_over_available
         - auto_cancel_expired_reservations
+        - transfer_carries_reservation
         - default_reservation_days
         - updated_at
       properties:
@@ -70927,6 +71516,9 @@ components:
         auto_cancel_expired_reservations:
           type: boolean
           description: Снимать просроченные резервы автоматически
+        transfer_carries_reservation:
+          type: boolean
+          description: 'Перемещение зарезервированного: везти резерв на склад-получатель вместо отказа'
         default_reservation_days:
           type: integer
           minimum: 1
@@ -70944,6 +71536,8 @@ components:
         block_reservation_over_available:
           type: boolean
         auto_cancel_expired_reservations:
+          type: boolean
+        transfer_carries_reservation:
           type: boolean
         default_reservation_days:
           type: integer

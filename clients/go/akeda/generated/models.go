@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb6a0123455578df86f2b64cf353da516b4d61dac2ffdf9ae19a49a0c89cd9ee).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 96144e40f43790fcae2a6d33cbd19e1fcd2172857d874215d3e4755f9f377561).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -841,6 +841,8 @@ type CRMCreateTaskLinkInput struct {
 	Title       string  `json:"title"`
 	Description *string `json:"description,omitempty"`
 	DueAt       *string `json:"due_at,omitempty"`
+	// ExecutorID — Исполнитель; по умолчанию — тот, кто создаёт задачу
+	ExecutorID *int64 `json:"executor_id,omitempty"`
 }
 
 type CRMCustomer struct {
@@ -14540,6 +14542,96 @@ type StockAccountTransferProposal struct {
 	Results []StockAccountTransferLine `json:"results"`
 }
 
+// StockAssemblySpec — Одна версия спецификации изделия. Состав опубликованной версии неизменяем — новая редакция заводится новой версией.
+type StockAssemblySpec struct {
+	ID          *UUID                   `json:"id,omitempty"`
+	SpecID      *UUID                   `json:"spec_id,omitempty"`
+	Version     *int64                  `json:"version,omitempty"`
+	Name        *string                 `json:"name,omitempty"`
+	Status      *string                 `json:"status,omitempty"`
+	ProductID   *UUID                   `json:"product_id,omitempty"`
+	ProductSKU  *string                 `json:"product_sku,omitempty"`
+	ProductName *string                 `json:"product_name,omitempty"`
+	Unit        *string                 `json:"unit,omitempty"`
+	OutputQty   *string                 `json:"output_qty,omitempty"`
+	Comment     *string                 `json:"comment,omitempty"`
+	CreatedAt   *string                 `json:"created_at,omitempty"`
+	UpdatedAt   *string                 `json:"updated_at,omitempty"`
+	ActivatedAt *string                 `json:"activated_at,omitempty"`
+	ArchivedAt  *string                 `json:"archived_at,omitempty"`
+	Lines       []StockAssemblySpecLine `json:"lines,omitempty"`
+}
+
+// StockAssemblySpecCreate — Новая версия состава. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком.
+type StockAssemblySpecCreate struct {
+	SpecID    *UUID  `json:"spec_id,omitempty"`
+	Name      string `json:"name"`
+	ProductID UUID   `json:"product_id"`
+	// OutputQty — Сколько выходного товара даёт этот состав
+	OutputQty string                             `json:"output_qty"`
+	Comment   *string                            `json:"comment,omitempty"`
+	Lines     []StockAssemblySpecCreateLinesItem `json:"lines"`
+}
+
+type StockAssemblySpecCreateLinesItem struct {
+	ProductID UUID    `json:"product_id"`
+	Qty       string  `json:"qty"`
+	Share     *string `json:"share,omitempty"`
+}
+
+type StockAssemblySpecLine struct {
+	ID          *UUID   `json:"id,omitempty"`
+	ProductID   UUID    `json:"product_id"`
+	ProductSKU  *string `json:"product_sku,omitempty"`
+	ProductName *string `json:"product_name,omitempty"`
+	Unit        *string `json:"unit,omitempty"`
+	// ProductUomID — Единица товара, в которой задано qty (рулон, грамм); пусто — базовая единица карточки
+	ProductUomID *UUID `json:"product_uom_id,omitempty"`
+	// UomName — Название единицы товара
+	UomName *string `json:"uom_name,omitempty"`
+	// Qty — Положительная decimal string в единице товара или в базовой единице карточки
+	Qty string `json:"qty"`
+	// BaseQty — То же количество в базовой единице на момент заведения версии; считает сервер. Смысл состава — это число: коэффициент упаковки может измениться позже
+	BaseQty *string `json:"base_qty,omitempty"`
+	// Share — Доля стоимости при разукомплектации; задаётся сразу для всего состава или не задаётся вовсе
+	Share    *string `json:"share,omitempty"`
+	Position *int64  `json:"position,omitempty"`
+}
+
+type StockAssemblySpecPage struct {
+	Count   int64               `json:"count"`
+	Limit   int64               `json:"limit"`
+	Offset  int64               `json:"offset"`
+	Results []StockAssemblySpec `json:"results"`
+}
+
+// StockAssemblySpecRef — Снимок версии спецификации, по которой заполнен документ. Ссылка на версию, а не на справочник: состав уже скопирован в строки, и правка спецификации завтра не меняет смысл проведённого вчера.
+type StockAssemblySpecRef struct {
+	SpecID    UUID    `json:"spec_id"`
+	VersionID UUID    `json:"version_id"`
+	Version   int64   `json:"version"`
+	Name      *string `json:"name,omitempty"`
+}
+
+type StockAssemblySpecStatus struct {
+	Status string `json:"status"`
+}
+
+type StockAvailability struct {
+	ProductID UUID `json:"product_id"`
+	// OnHand — Физический остаток на складе
+	OnHand string `json:"on_hand"`
+	// Reserved — Держат резервы
+	Reserved string `json:"reserved"`
+	// Available — Свободно: остаток минус резерв, не меньше нуля
+	Available string                 `json:"available"`
+	Holds     []StockReservationHold `json:"holds"`
+}
+
+type StockAvailabilityList struct {
+	Results []StockAvailability `json:"results"`
+}
+
 type StockBatch struct {
 	ID UUID `json:"id"`
 	// BusinessID — Бизнес партии — учётная единица, которой принадлежит товар
@@ -14685,9 +14777,11 @@ type StockDocumentLine struct {
 	UnitID *UUID `json:"unit_id,omitempty"`
 	// ProductUomID — Товарная единица представления
 	ProductUomID *UUID `json:"product_uom_id,omitempty"`
-	// BaseQty — Количество в базовой единице номенклатуры; присланное значение обязано совпасть с серверным пересчётом
+	// BaseQty — Количество в базовой единице номенклатуры; присланное значение обязано совпасть с серверным пересчётом. У прихода в единице с переменной мерой — сумма фактических мер handling_units
 	BaseQty *string `json:"base_qty,omitempty"`
-	// Price — Decimal string
+	// VariableMeasure — Ставит сервер: строка введена в единице с переменной мерой. qty — число конкретных единиц, base_qty — сумма их фактических мер, price — цена за базовую единицу
+	VariableMeasure *bool `json:"variable_measure,omitempty"`
+	// Price — Decimal string; за единицу строки, а у единицы с переменной мерой — за базовую единицу
 	Price *string `json:"price,omitempty"`
 	// Amount — Decimal string
 	Amount *string `json:"amount,omitempty"`
@@ -14703,6 +14797,8 @@ type StockDocumentLine struct {
 	ExpiresAt               *string                               `json:"expires_at,omitempty"`
 	HandlingUnits           []StockDocumentLineHandlingUnit       `json:"handling_units,omitempty"`
 	HandlingUnitAllocations []StockDocumentLineHandlingAllocation `json:"handling_unit_allocations,omitempty"`
+	// Share — Доля стоимости рождённой строки; только у разукомплектации на несколько частей
+	Share *string `json:"share,omitempty"`
 }
 
 // StockDocumentLineHandlingAllocation — Списание количества с конкретной физической единицы в расходной строке.
@@ -14746,6 +14842,9 @@ type StockDocumentPayload struct {
 	// ExpiresAt — Срок резерва; не раньше даты документа
 	ExpiresAt *string             `json:"expires_at,omitempty"`
 	Items     []StockDocumentLine `json:"items,omitempty"`
+	// Produced — Строки, которые документ РОЖДАЕТ на складе. Только у комплектации и разукомплектации: их `items` — сторона расхода. Цена и сумма здесь не задаются, стоимость выхода равна списанной.
+	Produced []StockDocumentLine   `json:"produced,omitempty"`
+	Spec     *StockAssemblySpecRef `json:"spec,omitempty"`
 	// PaperAmount — Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается
 	PaperAmount *string `json:"paper_amount,omitempty"`
 	// PaperVATAmount — В т.ч. НДС документа поставщика, одна сумма (ERP-484, подшаг 5.3). Обязательна, если на дату документа бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне этого периода непустое значение — 400. Сервер раскладывает сумму по строкам
@@ -14774,8 +14873,9 @@ type StockDocumentRefs struct {
 	Company       UUID  `json:"company"`
 	Warehouse     *UUID `json:"warehouse,omitempty"`
 	WarehouseFrom *UUID `json:"warehouse_from,omitempty"`
-	WarehouseTo   *UUID `json:"warehouse_to,omitempty"`
-	Contact       *UUID `json:"contact,omitempty"`
+	// WarehouseTo — Склад-получатель перемещения; у комплектации и разукомплектации — необязательный склад выпуска, без него выпуск появляется на складе списания
+	WarehouseTo map[string]json.RawMessage `json:"warehouse_to,omitempty"`
+	Contact     *UUID                      `json:"contact,omitempty"`
 }
 
 type StockDocumentTypeKey = string
@@ -14822,6 +14922,8 @@ type StockHandlingUnit struct {
 	InitialBaseQty       string             `json:"initial_base_qty"`
 	// RemainingBaseQty — Считается из движений регистра stock
 	RemainingBaseQty string `json:"remaining_base_qty"`
+	// IsRemnant — Остаток меньше порога обрезка у единицы товара: вычисляется по остатку, а не хранится
+	IsRemnant bool `json:"is_remnant"`
 	// ReservedBaseQty — Считается из движений регистра stock_reserved
 	ReservedBaseQty string                  `json:"reserved_base_qty"`
 	Amount          string                  `json:"amount"`
@@ -15035,9 +15137,15 @@ type StockProductUOM struct {
 	FactorToBase         string `json:"factor_to_base"`
 	Precision            int64  `json:"precision"`
 	CreatesHandlingUnits bool   `json:"creates_handling_units"`
-	IsDefaultReceipt     bool   `json:"is_default_receipt"`
-	IsActive             bool   `json:"is_active"`
-	UpdatedAt            string `json:"updated_at"`
+	// VariableMeasure — Коэффициент — номинал: фактическая мера у каждой конкретной единицы своя (рулон ~50 м)
+	VariableMeasure *bool `json:"variable_measure,omitempty"`
+	// QtyStep — Шаг количества в этой единице: «режем по 10 см». Пусто — без ограничения
+	QtyStep *string `json:"qty_step,omitempty"`
+	// RemnantThreshold — Порог обрезка: остаток конкретной единицы меньше порога считается обрезком. Только для единиц с учётом конкретных единиц
+	RemnantThreshold *string `json:"remnant_threshold,omitempty"`
+	IsDefaultReceipt bool    `json:"is_default_receipt"`
+	IsActive         bool    `json:"is_active"`
+	UpdatedAt        string  `json:"updated_at"`
 }
 
 type StockProductUOMInput struct {
@@ -15051,7 +15159,13 @@ type StockProductUOMInput struct {
 	FactorToBase string                `json:"factor_to_base"`
 	// CreatesHandlingUnits — Требует единицы измерения с целой точностью
 	CreatesHandlingUnits *bool `json:"creates_handling_units,omitempty"`
-	IsDefaultReceipt     *bool `json:"is_default_receipt,omitempty"`
+	// VariableMeasure — Переменная мера: приход складывает количество из фактических мер конкретных единиц, цена за базовую единицу; расход в такой единице невозможен. Требует creates_handling_units
+	VariableMeasure *bool `json:"variable_measure,omitempty"`
+	// QtyStep — Положительный decimal или пусто: количество строки в этой единице обязано быть кратно шагу
+	QtyStep *string `json:"qty_step,omitempty"`
+	// RemnantThreshold — Положительный decimal или пусто. Требует creates_handling_units
+	RemnantThreshold *string `json:"remnant_threshold,omitempty"`
+	IsDefaultReceipt *bool   `json:"is_default_receipt,omitempty"`
 	// IsActive — По умолчанию единица активна
 	IsActive *bool `json:"is_active,omitempty"`
 }
@@ -15365,6 +15479,8 @@ type StockReportReservationLine struct {
 	ReleasedQty string `json:"released_qty"`
 	// RemainingQty — Decimal string
 	RemainingQty string `json:"remaining_qty"`
+	// UnbackedQty — Часть остатка строки, не покрытая остатком склада: обещание ждёт поступления
+	UnbackedQty string `json:"unbacked_qty"`
 }
 
 type StockReportReservationPage struct {
@@ -15381,10 +15497,12 @@ type StockReportReservationSummary struct {
 	// ReleasedQty — Decimal string
 	ReleasedQty string `json:"released_qty"`
 	// RemainingQty — Decimal string
-	RemainingQty string                       `json:"remaining_qty"`
-	State        string                       `json:"state"`
-	IsOverdue    bool                         `json:"is_overdue"`
-	Lines        []StockReportReservationLine `json:"lines"`
+	RemainingQty string `json:"remaining_qty"`
+	// UnbackedQty — Часть остатка резерва, не покрытая остатком склада: списание товар забрало, обещание ждёт поступления. Без товара остаются самые новые обещания
+	UnbackedQty string                       `json:"unbacked_qty"`
+	State       string                       `json:"state"`
+	IsOverdue   bool                         `json:"is_overdue"`
+	Lines       []StockReportReservationLine `json:"lines"`
 }
 
 type StockReportRow struct {
@@ -15459,6 +15577,15 @@ type StockReportWarehouseTotal struct {
 	Amount string `json:"amount"`
 }
 
+// StockReservationHold — Документ, который держит часть остатка — резерв под заказ или производственный резерв.
+type StockReservationHold struct {
+	DocumentID UUID    `json:"document_id"`
+	Number     string  `json:"number"`
+	TypeKey    string  `json:"type_key"`
+	Qty        string  `json:"qty"`
+	ExpiresAt  *string `json:"expires_at,omitempty"`
+}
+
 type StockScanResult struct {
 	IdentifierID   UUID   `json:"identifier_id"`
 	Barcode        string `json:"barcode"`
@@ -15479,15 +15606,18 @@ type StockSettings struct {
 	// BlockReservationOverAvailable — Запрещать резерв сверх доступного остатка
 	BlockReservationOverAvailable bool `json:"block_reservation_over_available"`
 	// AutoCancelExpiredReservations — Снимать просроченные резервы автоматически
-	AutoCancelExpiredReservations bool   `json:"auto_cancel_expired_reservations"`
-	DefaultReservationDays        int64  `json:"default_reservation_days"`
-	UpdatedAt                     string `json:"updated_at"`
+	AutoCancelExpiredReservations bool `json:"auto_cancel_expired_reservations"`
+	// TransferCarriesReservation — Перемещение зарезервированного: везти резерв на склад-получатель вместо отказа
+	TransferCarriesReservation bool   `json:"transfer_carries_reservation"`
+	DefaultReservationDays     int64  `json:"default_reservation_days"`
+	UpdatedAt                  string `json:"updated_at"`
 }
 
 type StockSettingsPatch struct {
 	BlockShipmentOverFree         *bool  `json:"block_shipment_over_free,omitempty"`
 	BlockReservationOverAvailable *bool  `json:"block_reservation_over_available,omitempty"`
 	AutoCancelExpiredReservations *bool  `json:"auto_cancel_expired_reservations,omitempty"`
+	TransferCarriesReservation    *bool  `json:"transfer_carries_reservation,omitempty"`
 	DefaultReservationDays        *int64 `json:"default_reservation_days,omitempty"`
 }
 

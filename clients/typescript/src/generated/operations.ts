@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb6a0123455578df86f2b64cf353da516b4d61dac2ffdf9ae19a49a0c89cd9ee).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 96144e40f43790fcae2a6d33cbd19e1fcd2172857d874215d3e4755f9f377561).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -5998,6 +5998,13 @@ export interface OperationTypes {
     body: models.StockAccountTransferCreate;
     response: models.CoreDocument;
   };
+  /** POST /api/v1/stock/assembly-specs — Завести новую версию спецификации */
+  stockCreateAssemblySpec: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.StockAssemblySpecCreate;
+    response: models.StockAssemblySpec;
+  };
   /** POST /api/v1/stock/claim-writeoffs — Создать черновик списания претензии поставщику */
   stockCreateClaimWriteoff: {
     params: Record<string, never>;
@@ -6061,6 +6068,13 @@ export interface OperationTypes {
     body: never;
     response: models.StockWarehouse;
   };
+  /** DELETE /api/v1/stock/assembly-specs/{id} — Удалить черновик версии */
+  stockDeleteAssemblySpec: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** POST /api/v1/stock/documents/{id}/derive — Создать акты списания и оприходования по инвентаризации */
   stockDeriveInventoryActs: {
     params: { "id": models.UUID };
@@ -6095,6 +6109,20 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.StockInventoryFinishInput;
     response: models.CoreDocument;
+  };
+  /** GET /api/v1/stock/assembly-specs/{id} — Получить версию спецификации */
+  stockGetAssemblySpec: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.StockAssemblySpec;
+  };
+  /** GET /api/v1/stock/availability — Узнать свободный остаток товаров на складе */
+  stockGetAvailability: {
+    params: Record<string, never>;
+    query: { "business_id": models.UUID; "company_id"?: models.UUID; "product_ids": string; "warehouse_id": models.UUID };
+    body: never;
+    response: models.StockAvailabilityList;
   };
   /** GET /api/v1/stock/batches/{id} — Получить партию */
   stockGetBatch: {
@@ -6285,6 +6313,13 @@ export interface OperationTypes {
     body: models.StockImportInspectRequest;
     response: models.StockImportRun;
   };
+  /** GET /api/v1/stock/assembly-specs — Получить версии спецификаций изделий */
+  stockListAssemblySpecs: {
+    params: Record<string, never>;
+    query: { "limit"?: number; "offset"?: number; "product_id"?: models.UUID; "q"?: string; "spec_id"?: models.UUID; "status"?: "draft" | "active" | "archived" };
+    body: never;
+    response: models.StockAssemblySpecPage;
+  };
   /** GET /api/v1/stock/batches — Получить список партий */
   stockListBatches: {
     params: Record<string, never>;
@@ -6452,6 +6487,13 @@ export interface OperationTypes {
     query: { "code": string };
     body: never;
     response: models.StockScanResult;
+  };
+  /** POST /api/v1/stock/assembly-specs/{id}/status — Сделать версию действующей или архивной */
+  stockSetAssemblySpecStatus: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.StockAssemblySpecStatus;
+    response: models.StockAssemblySpec;
   };
   /** GET /api/v1/stock/handling-units/suggestions — Подобрать физические единицы под требуемое количество */
   stockSuggestHandlingUnits: {
@@ -8284,6 +8326,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockCancelDocument: { method: "POST", path: "/api/v1/stock/documents/{id}/cancel", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCloseSupplierOrder: { method: "POST", path: "/api/v1/stock/documents/{id}/close", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateAccountTransfer: { method: "POST", path: "/api/v1/stock/account-transfers", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockCreateAssemblySpec: { method: "POST", path: "/api/v1/stock/assembly-specs", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateClaimWriteoff: { method: "POST", path: "/api/v1/stock/claim-writeoffs", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateDocument: { method: "POST", path: "/api/v1/stock/documents", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateExport: { method: "POST", path: "/api/v1/stock/exports", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8293,11 +8336,14 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockCreateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateWarehouseZone: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockDeactivateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses/{id}/deactivate", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockDeleteAssemblySpec: { method: "DELETE", path: "/api/v1/stock/assembly-specs/{id}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockDeriveInventoryActs: { method: "POST", path: "/api/v1/stock/documents/{id}/derive", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockDisableWarehouseZones: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones/disable", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockDropWarehouseZoneAllocationDraft: { method: "DELETE", path: "/api/v1/stock/warehouses/{id}/zones/allocation/draft", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockEnableWarehouseZones: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones/enable", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockFinishInventoryCount: { method: "POST", path: "/api/v1/stock/documents/{id}/inventory-finish", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetAssemblySpec: { method: "GET", path: "/api/v1/stock/assembly-specs/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetAvailability: { method: "GET", path: "/api/v1/stock/availability", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetBatch: { method: "GET", path: "/api/v1/stock/batches/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetCompanyPolicy: { method: "GET", path: "/api/v1/stock/company-policies/{companyId}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetDocument: { method: "GET", path: "/api/v1/stock/documents/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8325,6 +8371,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockGetWarehouseBlockers: { method: "GET", path: "/api/v1/stock/warehouses/{id}/blockers", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetWarehouseZoneAllocation: { method: "GET", path: "/api/v1/stock/warehouses/{id}/zones/allocation", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockInspectImport: { method: "POST", path: "/api/v1/stock/imports/{id}/inspect", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockListAssemblySpecs: { method: "GET", path: "/api/v1/stock/assembly-specs", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   stockListBatches: { method: "GET", path: "/api/v1/stock/batches", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
   stockListBusinesses: { method: "GET", path: "/api/v1/stock/businesses", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockListCompanies: { method: "GET", path: "/api/v1/stock/companies", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8349,6 +8396,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockSaveReorderRule: { method: "PUT", path: "/api/v1/stock/reorder-rules", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockSaveWarehouseZoneAllocationDraft: { method: "PUT", path: "/api/v1/stock/warehouses/{id}/zones/allocation/draft", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockScanProduct: { method: "GET", path: "/api/v1/stock/products/scan", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockSetAssemblySpecStatus: { method: "POST", path: "/api/v1/stock/assembly-specs/{id}/status", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockSuggestHandlingUnits: { method: "GET", path: "/api/v1/stock/handling-units/suggestions", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockUpdateCompanyPolicy: { method: "PATCH", path: "/api/v1/stock/company-policies/{companyId}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockUpdateDocument: { method: "PATCH", path: "/api/v1/stock/documents/{id}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

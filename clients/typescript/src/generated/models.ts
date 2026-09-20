@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb6a0123455578df86f2b64cf353da516b4d61dac2ffdf9ae19a49a0c89cd9ee).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 96144e40f43790fcae2a6d33cbd19e1fcd2172857d874215d3e4755f9f377561).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -851,6 +851,8 @@ export interface CRMCreateTaskLinkInput {
   "title": string;
   "description"?: string;
   "due_at"?: string | null;
+  /** Исполнитель; по умолчанию — тот, кто создаёт задачу */
+  "executor_id"?: number | null;
 }
 
 export interface CRMCustomer {
@@ -14606,6 +14608,96 @@ export interface StockAccountTransferProposal {
   "results": Array<StockAccountTransferLine>;
 }
 
+/** Одна версия спецификации изделия. Состав опубликованной версии неизменяем — новая редакция заводится новой версией. */
+export interface StockAssemblySpec {
+  "id"?: UUID;
+  "spec_id"?: UUID;
+  "version"?: number;
+  "name"?: string;
+  "status"?: "draft" | "active" | "archived";
+  "product_id"?: UUID;
+  "product_sku"?: string;
+  "product_name"?: string;
+  "unit"?: string;
+  "output_qty"?: string;
+  "comment"?: string;
+  "created_at"?: string;
+  "updated_at"?: string;
+  "activated_at"?: string;
+  "archived_at"?: string;
+  "lines"?: Array<StockAssemblySpecLine>;
+}
+
+/** Новая версия состава. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком. */
+export interface StockAssemblySpecCreate {
+  "spec_id"?: UUID;
+  "name": string;
+  "product_id": UUID;
+  /** Сколько выходного товара даёт этот состав */
+  "output_qty": string;
+  "comment"?: string;
+  "lines": Array<StockAssemblySpecCreateLinesItem>;
+}
+
+export interface StockAssemblySpecCreateLinesItem {
+  "product_id": UUID;
+  "qty": string;
+  "share"?: string;
+}
+
+export interface StockAssemblySpecLine {
+  "id"?: UUID;
+  "product_id": UUID;
+  "product_sku"?: string;
+  "product_name"?: string;
+  "unit"?: string;
+  /** Единица товара, в которой задано qty (рулон, грамм); пусто — базовая единица карточки */
+  "product_uom_id"?: UUID;
+  /** Название единицы товара */
+  "uom_name"?: string;
+  /** Положительная decimal string в единице товара или в базовой единице карточки */
+  "qty": string;
+  /** То же количество в базовой единице на момент заведения версии; считает сервер. Смысл состава — это число: коэффициент упаковки может измениться позже */
+  "base_qty"?: string;
+  /** Доля стоимости при разукомплектации; задаётся сразу для всего состава или не задаётся вовсе */
+  "share"?: string;
+  "position"?: number;
+}
+
+export interface StockAssemblySpecPage {
+  "count": number;
+  "limit": number;
+  "offset": number;
+  "results": Array<StockAssemblySpec>;
+}
+
+/** Снимок версии спецификации, по которой заполнен документ. Ссылка на версию, а не на справочник: состав уже скопирован в строки, и правка спецификации завтра не меняет смысл проведённого вчера. */
+export interface StockAssemblySpecRef {
+  "spec_id": UUID;
+  "version_id": UUID;
+  "version": number;
+  "name"?: string;
+}
+
+export interface StockAssemblySpecStatus {
+  "status": "active" | "archived";
+}
+
+export interface StockAvailability {
+  "product_id": UUID;
+  /** Физический остаток на складе */
+  "on_hand": string;
+  /** Держат резервы */
+  "reserved": string;
+  /** Свободно: остаток минус резерв, не меньше нуля */
+  "available": string;
+  "holds": Array<StockReservationHold>;
+}
+
+export interface StockAvailabilityList {
+  "results": Array<StockAvailability>;
+}
+
 export interface StockBatch {
   "id": UUID;
   /** Бизнес партии — учётная единица, которой принадлежит товар */
@@ -14707,7 +14799,7 @@ export interface StockDocumentCreate {
   "comment"?: string;
 }
 
-export type StockDocumentCreateTypeKey = "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_purchase_request" | "stock_supplier_order" | "stock_inventory" | "stock_reservation" | "stock_landed_cost";
+export type StockDocumentCreateTypeKey = "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_purchase_request" | "stock_supplier_order" | "stock_inventory" | "stock_reservation" | "stock_landed_cost" | "stock_assembly" | "stock_disassembly";
 
 export interface StockDocumentFulfillment {
   "document_id": UUID;
@@ -14751,9 +14843,11 @@ export interface StockDocumentLine {
   "unit_id"?: UUID | null;
   /** Товарная единица представления */
   "product_uom_id"?: UUID | null;
-  /** Количество в базовой единице номенклатуры; присланное значение обязано совпасть с серверным пересчётом */
+  /** Количество в базовой единице номенклатуры; присланное значение обязано совпасть с серверным пересчётом. У прихода в единице с переменной мерой — сумма фактических мер handling_units */
   "base_qty"?: string;
-  /** Decimal string */
+  /** Ставит сервер: строка введена в единице с переменной мерой. qty — число конкретных единиц, base_qty — сумма их фактических мер, price — цена за базовую единицу */
+  "variable_measure"?: boolean;
+  /** Decimal string; за единицу строки, а у единицы с переменной мерой — за базовую единицу */
   "price"?: string;
   /** Decimal string */
   "amount"?: string;
@@ -14769,6 +14863,8 @@ export interface StockDocumentLine {
   "expires_at"?: string;
   "handling_units"?: Array<StockDocumentLineHandlingUnit>;
   "handling_unit_allocations"?: Array<StockDocumentLineHandlingAllocation>;
+  /** Доля стоимости рождённой строки; только у разукомплектации на несколько частей */
+  "share"?: string;
 }
 
 /** Списание количества с конкретной физической единицы в расходной строке. */
@@ -14812,6 +14908,9 @@ export interface StockDocumentPayload {
   /** Срок резерва; не раньше даты документа */
   "expires_at"?: string;
   "items"?: Array<StockDocumentLine>;
+  /** Строки, которые документ РОЖДАЕТ на складе. Только у комплектации и разукомплектации: их `items` — сторона расхода. Цена и сумма здесь не задаются, стоимость выхода равна списанной. */
+  "produced"?: Array<StockDocumentLine>;
+  "spec"?: StockAssemblySpecRef;
   /** Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается */
   "paper_amount"?: string;
   /** В т.ч. НДС документа поставщика, одна сумма (ERP-484, подшаг 5.3). Обязательна, если на дату документа бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне этого периода непустое значение — 400. Сервер раскладывает сумму по строкам */
@@ -14840,11 +14939,12 @@ export interface StockDocumentRefs {
   "company": UUID;
   "warehouse"?: UUID;
   "warehouse_from"?: UUID;
-  "warehouse_to"?: UUID;
+  /** Склад-получатель перемещения; у комплектации и разукомплектации — необязательный склад выпуска, без него выпуск появляется на складе списания */
+  "warehouse_to"?: { [key: string]: unknown };
   "contact"?: UUID;
 }
 
-export type StockDocumentTypeKey = "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_purchase_request" | "stock_supplier_order" | "stock_inventory" | "stock_reservation" | "stock_landed_cost" | "stock_reservation_release" | "stock_supplier_order_close" | "stock_opening_balance" | "stock_marketplace_return" | "stock_account_transfer";
+export type StockDocumentTypeKey = "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_purchase_request" | "stock_supplier_order" | "stock_inventory" | "stock_reservation" | "stock_landed_cost" | "stock_assembly" | "stock_disassembly" | "stock_reservation_release" | "stock_supplier_order_close" | "stock_opening_balance" | "stock_marketplace_return" | "stock_account_transfer";
 
 export interface StockExport {
   "id": UUID;
@@ -14888,6 +14988,8 @@ export interface StockHandlingUnit {
   "initial_base_qty": string;
   /** Считается из движений регистра stock */
   "remaining_base_qty": string;
+  /** Остаток меньше порога обрезка у единицы товара: вычисляется по остатку, а не хранится */
+  "is_remnant": boolean;
   /** Считается из движений регистра stock_reserved */
   "reserved_base_qty": string;
   "amount": string;
@@ -15101,6 +15203,12 @@ export interface StockProductUOM {
   "factor_to_base": string;
   "precision": number;
   "creates_handling_units": boolean;
+  /** Коэффициент — номинал: фактическая мера у каждой конкретной единицы своя (рулон ~50 м) */
+  "variable_measure"?: boolean;
+  /** Шаг количества в этой единице: «режем по 10 см». Пусто — без ограничения */
+  "qty_step"?: string;
+  /** Порог обрезка: остаток конкретной единицы меньше порога считается обрезком. Только для единиц с учётом конкретных единиц */
+  "remnant_threshold"?: string;
   "is_default_receipt": boolean;
   "is_active": boolean;
   "updated_at": string;
@@ -15117,6 +15225,12 @@ export interface StockProductUOMInput {
   "factor_to_base": string;
   /** Требует единицы измерения с целой точностью */
   "creates_handling_units"?: boolean;
+  /** Переменная мера: приход складывает количество из фактических мер конкретных единиц, цена за базовую единицу; расход в такой единице невозможен. Требует creates_handling_units */
+  "variable_measure"?: boolean;
+  /** Положительный decimal или пусто: количество строки в этой единице обязано быть кратно шагу */
+  "qty_step"?: string;
+  /** Положительный decimal или пусто. Требует creates_handling_units */
+  "remnant_threshold"?: string;
   "is_default_receipt"?: boolean;
   /** По умолчанию единица активна */
   "is_active"?: boolean | null;
@@ -15127,7 +15241,7 @@ export interface StockProductUOMPage {
   "results": Array<StockProductUOM>;
 }
 
-export type StockProductUOMUsage = "purchase" | "receipt" | "packaging";
+export type StockProductUOMUsage = "purchase" | "receipt" | "packaging" | "consumption" | "sale";
 
 export interface StockPurchaseOrderCreate {
   "company_id": UUID;
@@ -15444,6 +15558,8 @@ export interface StockReportReservationLine {
   "released_qty": string;
   /** Decimal string */
   "remaining_qty": string;
+  /** Часть остатка строки, не покрытая остатком склада: обещание ждёт поступления */
+  "unbacked_qty": string;
 }
 
 export interface StockReportReservationPage {
@@ -15461,6 +15577,8 @@ export interface StockReportReservationSummary {
   "released_qty": string;
   /** Decimal string */
   "remaining_qty": string;
+  /** Часть остатка резерва, не покрытая остатком склада: списание товар забрало, обещание ждёт поступления. Без товара остаются самые новые обещания */
+  "unbacked_qty": string;
   "state": "active" | "partially_shipped" | "fulfilled" | "released";
   "is_overdue": boolean;
   "lines": Array<StockReportReservationLine>;
@@ -15538,6 +15656,15 @@ export interface StockReportWarehouseTotal {
   "amount": string;
 }
 
+/** Документ, который держит часть остатка — резерв под заказ или производственный резерв. */
+export interface StockReservationHold {
+  "document_id": UUID;
+  "number": string;
+  "type_key": string;
+  "qty": string;
+  "expires_at"?: string;
+}
+
 export interface StockScanResult {
   "identifier_id": UUID;
   "barcode": string;
@@ -15559,6 +15686,8 @@ export interface StockSettings {
   "block_reservation_over_available": boolean;
   /** Снимать просроченные резервы автоматически */
   "auto_cancel_expired_reservations": boolean;
+  /** Перемещение зарезервированного: везти резерв на склад-получатель вместо отказа */
+  "transfer_carries_reservation": boolean;
   "default_reservation_days": number;
   "updated_at": string;
 }
@@ -15567,6 +15696,7 @@ export interface StockSettingsPatch {
   "block_shipment_over_free"?: boolean;
   "block_reservation_over_available"?: boolean;
   "auto_cancel_expired_reservations"?: boolean;
+  "transfer_carries_reservation"?: boolean;
   "default_reservation_days"?: number;
 }
 

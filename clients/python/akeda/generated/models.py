@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb6a0123455578df86f2b64cf353da516b4d61dac2ffdf9ae19a49a0c89cd9ee).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 96144e40f43790fcae2a6d33cbd19e1fcd2172857d874215d3e4755f9f377561).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1363,6 +1363,15 @@ __all__ = [
     "StockAccountTransferCreate",
     "StockAccountTransferLine",
     "StockAccountTransferProposal",
+    "StockAssemblySpec",
+    "StockAssemblySpecCreate",
+    "StockAssemblySpecCreateLinesItem",
+    "StockAssemblySpecLine",
+    "StockAssemblySpecPage",
+    "StockAssemblySpecRef",
+    "StockAssemblySpecStatus",
+    "StockAvailability",
+    "StockAvailabilityList",
     "StockBatch",
     "StockBatchPage",
     "StockBusinessRef",
@@ -1446,6 +1455,7 @@ __all__ = [
     "StockReportRow",
     "StockReportTotals",
     "StockReportWarehouseTotal",
+    "StockReservationHold",
     "StockScanResult",
     "StockSettings",
     "StockSettingsPatch",
@@ -2378,6 +2388,8 @@ class _CRMCreateTaskLinkInputRequired(TypedDict):
 class CRMCreateTaskLinkInput(_CRMCreateTaskLinkInputRequired, total=False):
     description: str
     due_at: Optional[str]
+    #: Исполнитель; по умолчанию — тот, кто создаёт задачу
+    executor_id: Optional[int]
 
 class _CRMCustomerRequired(TypedDict):
     id: "UUID"
@@ -15670,6 +15682,98 @@ class StockAccountTransferProposal(TypedDict):
     count: int
     results: List["StockAccountTransferLine"]
 
+class StockAssemblySpec(TypedDict, total=False):
+    """Одна версия спецификации изделия. Состав опубликованной версии неизменяем — новая редакция заводится новой версией."""
+
+    id: "UUID"
+    spec_id: "UUID"
+    version: int
+    name: str
+    status: Literal['draft', 'active', 'archived']
+    product_id: "UUID"
+    product_sku: str
+    product_name: str
+    unit: str
+    output_qty: str
+    comment: str
+    created_at: str
+    updated_at: str
+    activated_at: str
+    archived_at: str
+    lines: List["StockAssemblySpecLine"]
+
+class _StockAssemblySpecCreateRequired(TypedDict):
+    name: str
+    product_id: "UUID"
+    #: Сколько выходного товара даёт этот состав
+    output_qty: str
+    lines: List["StockAssemblySpecCreateLinesItem"]
+
+class StockAssemblySpecCreate(_StockAssemblySpecCreateRequired, total=False):
+    """Новая версия состава. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком."""
+
+    spec_id: "UUID"
+    comment: str
+
+class _StockAssemblySpecCreateLinesItemRequired(TypedDict):
+    product_id: "UUID"
+    qty: str
+
+class StockAssemblySpecCreateLinesItem(_StockAssemblySpecCreateLinesItemRequired, total=False):
+    share: str
+
+class _StockAssemblySpecLineRequired(TypedDict):
+    product_id: "UUID"
+    #: Положительная decimal string в единице товара или в базовой единице карточки
+    qty: str
+
+class StockAssemblySpecLine(_StockAssemblySpecLineRequired, total=False):
+    id: "UUID"
+    product_sku: str
+    product_name: str
+    unit: str
+    #: Единица товара, в которой задано qty (рулон, грамм); пусто — базовая единица карточки
+    product_uom_id: "UUID"
+    #: Название единицы товара
+    uom_name: str
+    #: То же количество в базовой единице на момент заведения версии; считает сервер. Смысл состава — это число: коэффициент упаковки может измениться позже
+    base_qty: str
+    #: Доля стоимости при разукомплектации; задаётся сразу для всего состава или не задаётся вовсе
+    share: str
+    position: int
+
+class StockAssemblySpecPage(TypedDict):
+    count: int
+    limit: int
+    offset: int
+    results: List["StockAssemblySpec"]
+
+class _StockAssemblySpecRefRequired(TypedDict):
+    spec_id: "UUID"
+    version_id: "UUID"
+    version: int
+
+class StockAssemblySpecRef(_StockAssemblySpecRefRequired, total=False):
+    """Снимок версии спецификации, по которой заполнен документ. Ссылка на версию, а не на справочник: состав уже скопирован в строки, и правка спецификации завтра не меняет смысл проведённого вчера."""
+
+    name: str
+
+class StockAssemblySpecStatus(TypedDict):
+    status: Literal['active', 'archived']
+
+class StockAvailability(TypedDict):
+    product_id: "UUID"
+    #: Физический остаток на складе
+    on_hand: str
+    #: Держат резервы
+    reserved: str
+    #: Свободно: остаток минус резерв, не меньше нуля
+    available: str
+    holds: List["StockReservationHold"]
+
+class StockAvailabilityList(TypedDict):
+    results: List["StockAvailability"]
+
 class StockBatch(TypedDict):
     id: "UUID"
     #: Бизнес партии — учётная единица, которой принадлежит товар
@@ -15765,7 +15869,7 @@ class StockDocumentCreate(_StockDocumentCreateRequired, total=False):
     basis_id: Optional["UUID"]
     comment: str
 
-StockDocumentCreateTypeKey = Literal['stock_receipt', 'stock_shipment', 'stock_transfer', 'stock_writeoff', 'stock_capitalization', 'stock_supplier_return', 'stock_customer_return', 'stock_purchase_request', 'stock_supplier_order', 'stock_inventory', 'stock_reservation', 'stock_landed_cost']
+StockDocumentCreateTypeKey = Literal['stock_receipt', 'stock_shipment', 'stock_transfer', 'stock_writeoff', 'stock_capitalization', 'stock_supplier_return', 'stock_customer_return', 'stock_purchase_request', 'stock_supplier_order', 'stock_inventory', 'stock_reservation', 'stock_landed_cost', 'stock_assembly', 'stock_disassembly']
 
 class StockDocumentFulfillment(TypedDict):
     document_id: "UUID"
@@ -15810,9 +15914,11 @@ class StockDocumentLine(_StockDocumentLineRequired, total=False):
     unit_id: Optional["UUID"]
     #: Товарная единица представления
     product_uom_id: Optional["UUID"]
-    #: Количество в базовой единице номенклатуры; присланное значение обязано совпасть с серверным пересчётом
+    #: Количество в базовой единице номенклатуры; присланное значение обязано совпасть с серверным пересчётом. У прихода в единице с переменной мерой — сумма фактических мер handling_units
     base_qty: str
-    #: Decimal string
+    #: Ставит сервер: строка введена в единице с переменной мерой. qty — число конкретных единиц, base_qty — сумма их фактических мер, price — цена за базовую единицу
+    variable_measure: bool
+    #: Decimal string; за единицу строки, а у единицы с переменной мерой — за базовую единицу
     price: str
     #: Decimal string
     amount: str
@@ -15828,6 +15934,8 @@ class StockDocumentLine(_StockDocumentLineRequired, total=False):
     expires_at: str
     handling_units: List["StockDocumentLineHandlingUnit"]
     handling_unit_allocations: List["StockDocumentLineHandlingAllocation"]
+    #: Доля стоимости рождённой строки; только у разукомплектации на несколько частей
+    share: str
 
 class StockDocumentLineHandlingAllocation(TypedDict):
     """Списание количества с конкретной физической единицы в расходной строке."""
@@ -15871,6 +15979,9 @@ class StockDocumentPayload(_StockDocumentPayloadRequired, total=False):
     #: Срок резерва; не раньше даты документа
     expires_at: str
     items: List["StockDocumentLine"]
+    #: Строки, которые документ РОЖДАЕТ на складе. Только у комплектации и разукомплектации: их `items` — сторона расхода. Цена и сумма здесь не задаются, стоимость выхода равна списанной.
+    produced: List["StockDocumentLine"]
+    spec: "StockAssemblySpecRef"
     #: Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается
     paper_amount: str
     #: В т.ч. НДС документа поставщика, одна сумма (ERP-484, подшаг 5.3). Обязательна, если на дату документа бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне этого периода непустое значение — 400. Сервер раскладывает сумму по строкам
@@ -15901,10 +16012,11 @@ class StockDocumentRefs(_StockDocumentRefsRequired, total=False):
 
     warehouse: "UUID"
     warehouse_from: "UUID"
-    warehouse_to: "UUID"
+    #: Склад-получатель перемещения; у комплектации и разукомплектации — необязательный склад выпуска, без него выпуск появляется на складе списания
+    warehouse_to: Dict[str, Any]
     contact: "UUID"
 
-StockDocumentTypeKey = Literal['stock_receipt', 'stock_shipment', 'stock_transfer', 'stock_writeoff', 'stock_capitalization', 'stock_supplier_return', 'stock_customer_return', 'stock_purchase_request', 'stock_supplier_order', 'stock_inventory', 'stock_reservation', 'stock_landed_cost', 'stock_reservation_release', 'stock_supplier_order_close', 'stock_opening_balance', 'stock_marketplace_return', 'stock_account_transfer']
+StockDocumentTypeKey = Literal['stock_receipt', 'stock_shipment', 'stock_transfer', 'stock_writeoff', 'stock_capitalization', 'stock_supplier_return', 'stock_customer_return', 'stock_purchase_request', 'stock_supplier_order', 'stock_inventory', 'stock_reservation', 'stock_landed_cost', 'stock_assembly', 'stock_disassembly', 'stock_reservation_release', 'stock_supplier_order_close', 'stock_opening_balance', 'stock_marketplace_return', 'stock_account_transfer']
 
 class _StockExportRequired(TypedDict):
     id: "UUID"
@@ -15949,6 +16061,8 @@ class _StockHandlingUnitRequired(TypedDict):
     initial_base_qty: str
     #: Считается из движений регистра stock
     remaining_base_qty: str
+    #: Остаток меньше порога обрезка у единицы товара: вычисляется по остатку, а не хранится
+    is_remnant: bool
     #: Считается из движений регистра stock_reserved
     reserved_base_qty: str
     amount: str
@@ -16152,7 +16266,7 @@ class StockOpeningBalanceCreate(_StockOpeningBalanceCreateRequired, total=False)
     date: str
     comment: str
 
-class StockProductUOM(TypedDict):
+class _StockProductUOMRequired(TypedDict):
     id: "UUID"
     product_id: "UUID"
     code: str
@@ -16169,6 +16283,14 @@ class StockProductUOM(TypedDict):
     is_active: bool
     updated_at: str
 
+class StockProductUOM(_StockProductUOMRequired, total=False):
+    #: Коэффициент — номинал: фактическая мера у каждой конкретной единицы своя (рулон ~50 м)
+    variable_measure: bool
+    #: Шаг количества в этой единице: «режем по 10 см». Пусто — без ограничения
+    qty_step: str
+    #: Порог обрезка: остаток конкретной единицы меньше порога считается обрезком. Только для единиц с учётом конкретных единиц
+    remnant_threshold: str
+
 class _StockProductUOMInputRequired(TypedDict):
     product_id: "UUID"
     code: str
@@ -16182,6 +16304,12 @@ class StockProductUOMInput(_StockProductUOMInputRequired, total=False):
     usage: "StockProductUOMUsage"
     #: Требует единицы измерения с целой точностью
     creates_handling_units: bool
+    #: Переменная мера: приход складывает количество из фактических мер конкретных единиц, цена за базовую единицу; расход в такой единице невозможен. Требует creates_handling_units
+    variable_measure: bool
+    #: Положительный decimal или пусто: количество строки в этой единице обязано быть кратно шагу
+    qty_step: str
+    #: Положительный decimal или пусто. Требует creates_handling_units
+    remnant_threshold: str
     is_default_receipt: bool
     #: По умолчанию единица активна
     is_active: Optional[bool]
@@ -16190,7 +16318,7 @@ class StockProductUOMPage(TypedDict):
     count: int
     results: List["StockProductUOM"]
 
-StockProductUOMUsage = Literal['purchase', 'receipt', 'packaging']
+StockProductUOMUsage = Literal['purchase', 'receipt', 'packaging', 'consumption', 'sale']
 
 class _StockPurchaseOrderCreateRequired(TypedDict):
     company_id: "UUID"
@@ -16484,6 +16612,8 @@ class StockReportReservationLine(TypedDict):
     released_qty: str
     #: Decimal string
     remaining_qty: str
+    #: Часть остатка строки, не покрытая остатком склада: обещание ждёт поступления
+    unbacked_qty: str
 
 class StockReportReservationPage(TypedDict):
     count: int
@@ -16499,6 +16629,8 @@ class StockReportReservationSummary(TypedDict):
     released_qty: str
     #: Decimal string
     remaining_qty: str
+    #: Часть остатка резерва, не покрытая остатком склада: списание товар забрало, обещание ждёт поступления. Без товара остаются самые новые обещания
+    unbacked_qty: str
     state: Literal['active', 'partially_shipped', 'fulfilled', 'released']
     is_overdue: bool
     lines: List["StockReportReservationLine"]
@@ -16574,6 +16706,17 @@ class StockReportWarehouseTotal(TypedDict):
     #: Decimal string
     amount: str
 
+class _StockReservationHoldRequired(TypedDict):
+    document_id: "UUID"
+    number: str
+    type_key: str
+    qty: str
+
+class StockReservationHold(_StockReservationHoldRequired, total=False):
+    """Документ, который держит часть остатка — резерв под заказ или производственный резерв."""
+
+    expires_at: str
+
 class StockScanResult(TypedDict):
     identifier_id: "UUID"
     barcode: str
@@ -16594,6 +16737,8 @@ class StockSettings(TypedDict):
     block_reservation_over_available: bool
     #: Снимать просроченные резервы автоматически
     auto_cancel_expired_reservations: bool
+    #: Перемещение зарезервированного: везти резерв на склад-получатель вместо отказа
+    transfer_carries_reservation: bool
     default_reservation_days: int
     updated_at: str
 
@@ -16601,6 +16746,7 @@ class StockSettingsPatch(TypedDict, total=False):
     block_shipment_over_free: bool
     block_reservation_over_available: bool
     auto_cancel_expired_reservations: bool
+    transfer_carries_reservation: bool
     default_reservation_days: int
 
 class StockSupplier(TypedDict):
