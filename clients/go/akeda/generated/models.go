@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 45dcff42ccfb9f45d44cd2874aa80f3763f5d6c00f638f786e320f27f475f215).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb6a0123455578df86f2b64cf353da516b4d61dac2ffdf9ae19a49a0c89cd9ee).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -3055,6 +3055,15 @@ type CoreBalanceShortage struct {
 
 type CoreBulkResult struct {
 	Updated int64 `json:"updated"`
+	// Skipped — Контрагенты, которым групповое изменение не применилось по правилу ИНН (ERP-1147): роль поставщика физлицу без ИНН и т. п. Остальные изменены.
+	Skipped []CoreBulkResultSkippedItem `json:"skipped,omitempty"`
+}
+
+type CoreBulkResultSkippedItem struct {
+	ID     UUID   `json:"id"`
+	Name   string `json:"name"`
+	Code   string `json:"code"`
+	Detail string `json:"detail"`
 }
 
 type CoreBusiness struct {
@@ -3109,6 +3118,8 @@ type CoreBusinessPolicy struct {
 	AccrualFrom      *string                            `json:"accrual_from,omitempty"`
 	VATPresentation  []CorePolicyVATPresentationVersion `json:"vat_presentation"`
 	VATPending       []CorePolicyVATPendingVersion      `json:"vat_pending"`
+	// AccountableDays — Срок авансового отчёта, дней (ERP-1176); пусто — умолчание 30
+	AccountableDays []CorePolicyAccountableDaysVersion `json:"accountable_days,omitempty"`
 }
 
 type CoreCabinetPreferences struct {
@@ -3190,6 +3201,14 @@ type CoreContact struct {
 	IsActive     bool                       `json:"is_active"`
 	CreatedAt    string                     `json:"created_at"`
 	UpdatedAt    string                     `json:"updated_at"`
+	// Country — Нерезидент: страна регистрации кодом ISO 3166 (две буквы). Пусто — Россия.
+	Country *string `json:"country,omitempty"`
+	// TaxNumber — Нерезидент: налоговый номер страны регистрации вместо ИНН.
+	TaxNumber *string `json:"tax_number,omitempty"`
+	// SystemKey — Код системного контрагента (fns, sfr, bank:<БИК>). Только чтение.
+	SystemKey *string `json:"system_key,omitempty"`
+	// RequisitesIssue — Что подсветить в реквизитах по правилу ИНН. Пусто — всё в порядке.
+	RequisitesIssue *string `json:"requisites_issue,omitempty"`
 }
 
 type CoreContactAddress struct {
@@ -3235,7 +3254,11 @@ type CoreContactCreate struct {
 	BankBIC      *string                    `json:"bank_bic,omitempty"`
 	BankAccount  *string                    `json:"bank_account,omitempty"`
 	ExternalID   *string                    `json:"external_id,omitempty"`
-	Custom       map[string]json.RawMessage `json:"custom,omitempty"`
+	// Country — Нерезидент: страна регистрации кодом ISO 3166 (две буквы).
+	Country *string `json:"country,omitempty"`
+	// TaxNumber — Нерезидент: налоговый номер страны регистрации вместо ИНН.
+	TaxNumber *string                    `json:"tax_number,omitempty"`
+	Custom    map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
 type CoreContactEntityType = string
@@ -3267,6 +3290,8 @@ type CoreContactPatch struct {
 	BankBIC      *string                    `json:"bank_bic,omitempty"`
 	BankAccount  *string                    `json:"bank_account,omitempty"`
 	ExternalID   *string                    `json:"external_id,omitempty"`
+	Country      *string                    `json:"country,omitempty"`
+	TaxNumber    *string                    `json:"tax_number,omitempty"`
 	Custom       map[string]json.RawMessage `json:"custom,omitempty"`
 	IsCustomer   *bool                      `json:"is_customer,omitempty"`
 	IsSupplier   *bool                      `json:"is_supplier,omitempty"`
@@ -4093,6 +4118,20 @@ type CoreOwnershipVersionInput struct {
 
 type CorePhotoResult struct {
 	PhotoURL string `json:"photo_url"`
+}
+
+type CorePolicyAccountableDaysInput struct {
+	ValidFrom string `json:"valid_from"`
+	Days      int64  `json:"days"`
+}
+
+type CorePolicyAccountableDaysVersion struct {
+	ID UUID `json:"id"`
+	// ValidFrom — Начало версии; 0001-01-01 означает «с начала учёта»
+	ValidFrom string `json:"valid_from"`
+	// ValidTo — Последний день версии; отсутствует у открытой версии
+	ValidTo *string `json:"valid_to,omitempty"`
+	Days    int64   `json:"days"`
 }
 
 type CorePolicyPeriod struct {
@@ -7549,6 +7588,32 @@ type FinanceAccountPatch struct {
 	BankTimezone *string `json:"bank_timezone,omitempty"`
 }
 
+type FinanceAccountableBalance struct {
+	Business *string `json:"business,omitempty"`
+	// Employee — Сотрудник; пусто — проводки 71 без сотрудника
+	Employee     string `json:"employee"`
+	EmployeeName string `json:"employee_name"`
+	// Issued — Выдано под отчёт
+	Issued string `json:"issued"`
+	// Reported — Отчитано авансовыми отчётами
+	Reported string `json:"reported"`
+	// Returned — Возвращено деньгами
+	Returned string `json:"returned"`
+	// Balance — На руках; минус — перерасход
+	Balance string `json:"balance"`
+	// OldestOpen — Старейшая непокрытая выдача
+	OldestOpen *string `json:"oldest_open,omitempty"`
+	DaysOpen   int64   `json:"days_open"`
+	// Deadline — Срок авансового отчёта бизнеса, дней
+	Deadline int64 `json:"deadline"`
+	Overdue  bool  `json:"overdue"`
+}
+
+type FinanceAccountableBalances struct {
+	On   string                      `json:"on"`
+	Rows []FinanceAccountableBalance `json:"rows"`
+}
+
 type FinanceBalanceItem struct {
 	Code   string `json:"code"`
 	Name   string `json:"name"`
@@ -8095,6 +8160,40 @@ type FinanceExchangeQuarantine struct {
 
 type FinanceExchangeStatus = string
 
+type FinanceExpenseReportCreate struct {
+	Date    *string `json:"date,omitempty"`
+	Comment *string `json:"comment,omitempty"`
+	// Refs — business или company обязателен; item — статья вида «подотчёт»; for_contact — сотрудник (контрагент из папки «Сотрудники»)
+	Refs    map[string]string                  `json:"refs"`
+	Payload *FinanceExpenseReportCreatePayload `json:"payload,omitempty"`
+	// Post — Провести сразу
+	Post *bool `json:"post,omitempty"`
+}
+
+type FinanceExpenseReportCreatePayload struct {
+	// Currency — Валюта учёта; другая отклоняется
+	Currency *string                   `json:"currency,omitempty"`
+	Rows     []FinanceExpenseReportRow `json:"rows,omitempty"`
+}
+
+type FinanceExpenseReportRow struct {
+	// Item — Статья траты — любая
+	Item UUID `json:"item"`
+	// Amount — Сумма в валюте учёта, больше нуля
+	Amount string `json:"amount"`
+	// Contact — Продавец, кому заплатил сотрудник
+	Contact *UUID `json:"contact,omitempty"`
+	// ForContact — «За кого» у статей, которым нужен человек
+	ForContact    *UUID   `json:"for_contact,omitempty"`
+	ReceiptDate   *string `json:"receipt_date,omitempty"`
+	ReceiptNumber *string `json:"receipt_number,omitempty"`
+	Project       *UUID   `json:"project,omitempty"`
+	Deal          *UUID   `json:"deal,omitempty"`
+	Comment       *string `json:"comment,omitempty"`
+	// Closes — «Закрывает» — долг поставщику (закупка, счёт), который гасит строка по статье расчётов с поставщиками (ERP-1249); пусто — долг подберёт правило
+	Closes *UUID `json:"closes,omitempty"`
+}
+
 type FinanceImportApply struct {
 	ConfirmWarnings *bool `json:"confirm_warnings,omitempty"`
 }
@@ -8484,8 +8583,10 @@ type FinancePaymentCalendarRow struct {
 	// Expectation — Строка ожидания, а не долга: счёт и этап договора обещают деньги, но требовать по ним нельзя
 	Expectation *bool `json:"expectation,omitempty"`
 	// Undated — Обязательство без срока оплаты: рядом со шкалой, а не на ней
-	Undated *bool               `json:"undated,omitempty"`
-	Fact    *FinancePaymentFact `json:"fact,omitempty"`
+	Undated *bool `json:"undated,omitempty"`
+	// WithheldFromPayout — Сумма удерживается контрагентом из будущей выплаты нам, а не уходит переводом: строка стоит во входящих с отрицательной суммой (неделя маркетплейса с перевесом возвратов)
+	WithheldFromPayout *bool               `json:"withheld_from_payout,omitempty"`
+	Fact               *FinancePaymentFact `json:"fact,omitempty"`
 }
 
 type FinancePaymentCalendarSource struct {
@@ -8624,6 +8725,12 @@ type FinancePayrollAccrualRow struct {
 	Bonus1 *string `json:"bonus1,omitempty"`
 	// Bonus2 — Decimal string; вторая премия
 	Bonus2 *string `json:"bonus2,omitempty"`
+	// Bonuses — Премии строки
+	Bonuses []FinancePayrollAccrualRowBonusesItem `json:"bonuses,omitempty"`
+	// Withheld — Decimal string; прочие удержания, уменьшают постоянную зарплату
+	Withheld *string `json:"withheld,omitempty"`
+	// SalaryBasis — Строка справочника «Оклад указан»: до удержаний или на руки
+	SalaryBasis *string `json:"salary_basis,omitempty"`
 	// Official — Decimal string; официальная часть начисления, не больше суммы оклада и премий
 	Official *string `json:"official,omitempty"`
 	// Tax — Decimal string; НДФЛ, удержанный из официальной части
@@ -8638,6 +8745,15 @@ type FinancePayrollAccrualRow struct {
 	Cfo *string `json:"cfo,omitempty"`
 }
 
+type FinancePayrollAccrualRowBonusesItem struct {
+	// Item — Статья ручной премии; пусто — «Зарплата постоянная». У премии с variable не читается
+	Item *string `json:"item,omitempty"`
+	// Amount — Decimal string; сумма премии
+	Amount string `json:"amount"`
+	// Variable — Премия начислена правилом от выручки — в ОПиУ «Зарплата переменная», НДФЛ и взносы делятся в той же доле
+	Variable *bool `json:"variable,omitempty"`
+}
+
 type FinancePayrollDocumentCreate struct {
 	Type    FinancePayrollDocumentTypeKey `json:"type"`
 	Date    *string                       `json:"date,omitempty"`
@@ -8649,14 +8765,14 @@ type FinancePayrollDocumentCreate struct {
 	Post *bool `json:"post,omitempty"`
 }
 
-// FinancePayrollDocumentRefs — Ссылки зарплатного документа. Юрлицо обязательно уже при заведении: главная книга отвечает на вопрос, чьи это деньги. Статьи нужны проведению начисления, а не заведению черновика.
+// FinancePayrollDocumentRefs — Ссылки зарплатного документа. Юрлицо обязательно уже при заведении: главная книга отвечает на вопрос, чьи это деньги. Статьи оклада, НДФЛ и взносов начисление не передаёт: проведение берёт системные статьи постоянной и переменной зарплаты (ERP-988).
 type FinancePayrollDocumentRefs struct {
 	Company UUID `json:"company"`
-	// Item — Статья затрат на оплату труда; нужна проведению начисления и выдаче наличными
+	// Item — Статья оплаты труда для выдачи наличными по реестру; проведение начисления её не читает
 	Item *string `json:"item,omitempty"`
-	// TaxItem — Статья НДФЛ; нужна проведению начисления с удержанием
+	// TaxItem — Не читается с ERP-988: НДФЛ идёт системными статьями
 	TaxItem *string `json:"tax_item,omitempty"`
-	// InsuranceItem — Статья страховых взносов; нужна проведению начисления со взносами
+	// InsuranceItem — Не читается с ERP-988: взносы идут системными статьями
 	InsuranceItem *string `json:"insurance_item,omitempty"`
 	// Account — Счёт списания реестра; его проставляет выгрузка списка на оплату
 	Account *string `json:"account,omitempty"`
@@ -8893,15 +9009,19 @@ type FinancePnlItemPage struct {
 }
 
 type FinancePnlLayout struct {
-	ID        UUID                  `json:"id"`
-	Name      string                `json:"name"`
+	ID   UUID   `json:"id"`
+	Name string `json:"name"`
+	// Report — Вид отчёта макета: прибыли и убытки или движение денег.
+	Report    *string               `json:"report,omitempty"`
 	IsDefault bool                  `json:"is_default"`
 	Rows      []FinancePnlLayoutRow `json:"rows"`
 }
 
 type FinancePnlLayoutCreate struct {
-	Name      string `json:"name"`
-	IsDefault *bool  `json:"is_default,omitempty"`
+	Name string `json:"name"`
+	// Report — Вид отчёта макета. Задаётся при заведении и дальше не меняется.
+	Report    *string `json:"report,omitempty"`
+	IsDefault *bool   `json:"is_default,omitempty"`
 }
 
 type FinancePnlLayoutPage struct {
@@ -9245,6 +9365,77 @@ type FinanceResponsiblePatch struct {
 	Responsible *string `json:"responsible"`
 }
 
+type FinanceSaleLine struct {
+	LineID    UUID    `json:"line_id"`
+	ProductID *string `json:"product_id,omitempty"`
+	UnitID    *string `json:"unit_id,omitempty"`
+	Unit      *string `json:"unit,omitempty"`
+	Name      *string `json:"name,omitempty"`
+	// Kind — ПрТовРаб: 1 товар, 3 услуга
+	Kind     string  `json:"kind"`
+	Quantity string  `json:"quantity"`
+	Price    string  `json:"price"`
+	Discount *string `json:"discount,omitempty"`
+	// Amount — Сумма строки к оплате, с налогом
+	Amount string `json:"amount"`
+	// VATRate — Ставка строки в записи ФНС; пусто — налог у продажи на дату не выделяется
+	VATRate *string `json:"vat_rate,omitempty"`
+	// VATRateFrom — Откуда взят вид ставки
+	VATRateFrom      *string `json:"vat_rate_from,omitempty"`
+	AmountWithoutVAT *string `json:"amount_without_vat,omitempty"`
+	// VATAmount — Пусто у «без НДС»: налога нет вовсе, это не ноль
+	VATAmount *string `json:"vat_amount,omitempty"`
+}
+
+type FinanceSaleLineInput struct {
+	// ProductID — Товар строки; без него строка обязана назвать name
+	ProductID *string `json:"product_id,omitempty"`
+	// UnitID — Единица измерения строки
+	UnitID *string `json:"unit_id,omitempty"`
+	// Unit — Единица словами, когда справочной нет
+	Unit *string `json:"unit,omitempty"`
+	// Name — Наименование строки; у строки с товаром необязательно — его даёт карточка товара
+	Name *string `json:"name,omitempty"`
+	// Quantity — Положительная decimal string
+	Quantity string `json:"quantity"`
+	// Price — Цена единицы в режиме prices_include_vat документа
+	Price string `json:"price"`
+	// Discount — Скидка строки суммой, в том же режиме цены
+	Discount *string `json:"discount,omitempty"`
+	// Kind — ПрТовРаб формата ФНС: 1 товар, 3 услуга; пусто — товар, если назван товар, иначе услуга
+	Kind *string `json:"kind,omitempty"`
+}
+
+type FinanceSaleLinesPreview struct {
+	Lines  []FinanceSaleLine      `json:"lines"`
+	Totals FinanceSaleLinesTotals `json:"totals"`
+	// VATApplies — Налог у продажи на дату выделяется
+	VATApplies bool `json:"vat_applies"`
+}
+
+type FinanceSaleLinesPreviewRequest struct {
+	// Date — Дата продажи — на неё берутся режим и ставки юрлица
+	Date string `json:"date"`
+	// CompanyID — Юрлицо продажи; без него налог не выделяется
+	CompanyID  *string `json:"company_id,omitempty"`
+	BusinessID *string `json:"business_id,omitempty"`
+	// ItemID — Статья ОПиУ: её вид ставки берут строки без товара
+	ItemID           *string                `json:"item_id,omitempty"`
+	Currency         string                 `json:"currency"`
+	PricesIncludeVAT *bool                  `json:"prices_include_vat,omitempty"`
+	Lines            []FinanceSaleLineInput `json:"lines"`
+}
+
+type FinanceSaleLinesTotals struct {
+	// Amount — Сумма строк к оплате
+	Amount           string  `json:"amount"`
+	AmountWithoutVAT *string `json:"amount_without_vat,omitempty"`
+	VATAmount        *string `json:"vat_amount,omitempty"`
+	// VATRate — Общая ставка строк либо «по строкам», когда ставки разные; пусто — налог не выделяется
+	VATRate     *string `json:"vat_rate,omitempty"`
+	VATRateFrom *string `json:"vat_rate_from,omitempty"`
+}
+
 type FinanceSaleVATTerms struct {
 	// Applies — На дату бизнес очищает суммы от налога и у сделки есть юрлицо
 	Applies bool `json:"applies"`
@@ -9311,6 +9502,10 @@ type FinanceSettlementDocumentCreate struct {
 	// VATAmount — Только закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаг 5.3). Обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне периода непустое значение — 400
 	VATAmount        *string           `json:"vat_amount,omitempty"`
 	SupplierDocument *SupplierDocument `json:"supplier_document,omitempty"`
+	// Lines — Только продажа (ERP-1265): строки товаров и услуг. Сумма продажи — сумма строк; переданная рядом amount обязана с ней совпасть. Налог считается по строке — по виду товара строки и режиму юрлица на дату
+	Lines []FinanceSaleLineInput `json:"lines,omitempty"`
+	// PricesIncludeVAT — Только вместе со строками: цены строк включают налог (умолчание) либо налог начисляется сверху
+	PricesIncludeVAT *bool `json:"prices_include_vat,omitempty"`
 }
 
 type FinanceSettlementDocumentType = string
@@ -9616,17 +9811,29 @@ type FinanceVATBookOurRow struct {
 	Number       string  `json:"number"`
 	Date         string  `json:"date"`
 	VAT          string  `json:"vat"`
-	Action       *string `json:"action,omitempty"`
-	Restoration  *bool   `json:"restoration,omitempty"`
+	// Base — Сумма без налога в налоговой валюте: у покупок — остаток источника, у продаж — база регистра выходного налога
+	Base *string `json:"base,omitempty"`
+	// Rate — Ставка продажи («22%»); у покупок пусто — налог поставщика одной суммой документа
+	Rate        *string `json:"rate,omitempty"`
+	Action      *string `json:"action,omitempty"`
+	Restoration *bool   `json:"restoration,omitempty"`
+}
+
+type FinanceVATBookRateTotal struct {
+	Rate string `json:"rate"`
+	Base string `json:"base"`
+	VAT  string `json:"vat"`
 }
 
 type FinanceVATBookReconciliation struct {
 	// Currency — Налоговая валюта юрлица — валюта книг 1С и нашего налога.
-	Currency        string             `json:"currency"`
-	QuarterDocument *string            `json:"quarter_document,omitempty"`
-	QuarterNumber   *string            `json:"quarter_number,omitempty"`
-	Purchase        FinanceVATBookSide `json:"purchase"`
-	Sales           FinanceVATBookSide `json:"sales"`
+	Currency        string  `json:"currency"`
+	QuarterDocument *string `json:"quarter_document,omitempty"`
+	QuarterNumber   *string `json:"quarter_number,omitempty"`
+	// QuarterStatus — Откуда строки покупок: проведённый документ квартала или черновик; нет поля — документа нет, строки предварительные
+	QuarterStatus *string            `json:"quarter_status,omitempty"`
+	Purchase      FinanceVATBookSide `json:"purchase"`
+	Sales         FinanceVATBookSide `json:"sales"`
 }
 
 type FinanceVATBookRow struct {
@@ -9648,7 +9855,16 @@ type FinanceVATBookSide struct {
 	Matches   []FinanceVATBookMatch  `json:"matches"`
 	Counts    map[string]int64       `json:"counts"`
 	Attention int64                  `json:"attention"`
-	OurVAT    string                 `json:"our_vat"`
+	// OurVAT — Итог книги Акеды: у покупок — принятое к вычету, у продаж — начисленное без восстановления
+	OurVAT string `json:"our_vat"`
+	// Rows — Книга Акеды этой стороны — строки нашего учёта; отдаётся и без загруженной книги 1С
+	Rows []FinanceVATBookOurRow `json:"rows"`
+	// OurBase — Сумма без налога тех же строк, что our_vat
+	OurBase string `json:"our_base"`
+	// Rates — Итоги по ставкам (у продаж); у покупок пусто
+	Rates []FinanceVATBookRateTotal `json:"rates"`
+	// Restored — Налог, восстановленный в квартале (у продаж)
+	Restored string `json:"restored"`
 }
 
 type FinanceVATBookUploadPage struct {
@@ -14366,6 +14582,17 @@ type StockBusinessRefPage struct {
 	Results []StockBusinessRef `json:"results"`
 }
 
+// StockClaimWriteoffCreate — Тело черновика списания претензии поставщику по недостаче приёмки.
+type StockClaimWriteoffCreate struct {
+	BasisID UUID `json:"basis_id"`
+	// Date — Пусто или отсутствует означает рабочую дату кабинета
+	Date *string `json:"date,omitempty"`
+	// Amount — Сумма в валюте приёмки; пусто — весь остаток претензии
+	Amount  *string `json:"amount,omitempty"`
+	ItemID  UUID    `json:"item_id"`
+	Comment *string `json:"comment,omitempty"`
+}
+
 type StockCompanyPolicy struct {
 	ID                 UUID   `json:"id"`
 	CompanyID          UUID   `json:"company_id"`
@@ -14452,6 +14679,8 @@ type StockDocumentLine struct {
 	ProductID UUID `json:"product_id"`
 	// Qty — Положительная decimal string в единице строки
 	Qty string `json:"qty"`
+	// DocumentQty — Количество по документу поставщика, если пришло меньше (ERP-1230): сумма строки — по документу, склад и налог к вычету — по qty, разница — претензия поставщику (сторона claim, 76.02). Только у stock_receipt; меньше qty — 400
+	DocumentQty *string `json:"document_qty,omitempty"`
 	// UnitID — Физическая единица справочника
 	UnitID *UUID `json:"unit_id,omitempty"`
 	// ProductUomID — Товарная единица представления
@@ -14524,6 +14753,14 @@ type StockDocumentPayload struct {
 	SupplierDocument *SupplierDocument `json:"supplier_document,omitempty"`
 	// TaxCurrency — Налоговая валюта юрлица на дату приёмки (ERP-484, Р21). Пишет сервер вместе с разбивкой налога; присланное значение перезаписывается
 	TaxCurrency *string `json:"tax_currency,omitempty"`
+	// VATFromLines — Налог строк взят из документа поставщика как есть (ERP-1230): сервер не раскладывает paper_vat_amount, а проверяет vat_amount строк и пишет их сумму в paper_vat_amount
+	VATFromLines *bool `json:"vat_from_lines,omitempty"`
+	// Currency — Валюта приёмки (ERP-1230): ISO-код валюты документа поставщика; пусто или валюта учёта — документ в валюте учёта. Только у stock_receipt
+	Currency *string `json:"currency,omitempty"`
+	// Rate — Курс валюты документа: единиц валюты учёта за 1 единицу валюты документа. Без rate_manual сервер берёт его из справочника курсов на дату документа; нет курса — черновик без курса, проведение — 400
+	Rate *string `json:"rate,omitempty"`
+	// RateManual — Курс введён вручную: справочник его не перезаписывает
+	RateManual *bool `json:"rate_manual,omitempty"`
 	// Amount — Decimal string; сумма накладных расходов
 	Amount           *string                         `json:"amount,omitempty"`
 	AllocationMethod *string                         `json:"allocation_method,omitempty"`

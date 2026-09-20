@@ -15082,7 +15082,7 @@
           {
             "name": "folder",
             "in": "query",
-            "description": "UUID, root или пусто без фильтра",
+            "description": "UUID папки, root, пусто без фильтра или вычисляемая папка: owners, employees, customers, suppliers, state, banks",
             "schema": {
               "type": "string"
             }
@@ -19860,6 +19860,166 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CorePolicyVATPendingInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Учётная политика после записи",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreAccountingPolicy"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/core/accounting-policy/businesses/{id}/accountable-days": {
+      "post": {
+        "tags": [
+          "Core accounting"
+        ],
+        "operationId": "coreAddPolicyAccountableDays",
+        "summary": "Срок авансового отчёта у бизнеса с даты",
+        "description": "Сколько дней сотрудник держит деньги под отчёт, прежде чем закрытие периода предупредит о просрочке (ERP-1176); умолчание 30 дней. Срок не меняет проводок — только предупреждение закрытия, — поэтому проведённые документы его не запирают. Новая версия начинается строго позже открытой и закрывает её днём раньше.",
+        "x-akeda-module": "core",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "core:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorePolicyAccountableDaysInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Учётная политика после записи",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreAccountingPolicy"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/core/accounting-policy/businesses/{id}/accountable-days/open": {
+      "put": {
+        "tags": [
+          "Core accounting"
+        ],
+        "operationId": "coreEditPolicyAccountableDays",
+        "summary": "Поправить открытую версию — срок авансового отчёта у бизнеса с даты",
+        "description": "Сколько дней сотрудник держит деньги под отчёт, прежде чем закрытие периода предупредит о просрочке (ERP-1176). Правит дату или значение открытой версии; дата не раньше начала предыдущей версии.",
+        "x-akeda-module": "core",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "core:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorePolicyAccountableDaysInput"
               }
             }
           }
@@ -27206,6 +27366,81 @@
         }
       }
     },
+    "/api/v1/finance/sale-lines/preview": {
+      "post": {
+        "tags": [
+          "Finance operations"
+        ],
+        "operationId": "financePreviewSaleLines",
+        "summary": "Посчитать строки продажи до сохранения",
+        "description": "Считает суммы и налог строк продажи, ничего не сохраняя: ставка строки — по виду её товара (у строки без товара — по виду статьи) и режиму юрлица на дату продажи. Экран показывает посчитанное, но сам налог не выводит: второе определение налога в браузере разошлось бы с учётом на первой же смене учётной политики.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.operations:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "$ref": "#/components/parameters/BusinessQuery"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceSaleLinesPreviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Строки и итоги",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceSaleLinesPreview"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
     "/api/v1/finance/operations/{id}": {
       "get": {
         "tags": [
@@ -32423,6 +32658,19 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "report",
+            "in": "query",
+            "description": "Вид отчёта, форму которого собирает макет; без него — ОПиУ.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pnl",
+                "cashflow"
+              ],
+              "default": "pnl"
+            }
           }
         ],
         "responses": {
@@ -32510,6 +32758,65 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/cashflow-layouts/template": {
+      "post": {
+        "tags": [
+          "Finance P&L layouts"
+        ],
+        "operationId": "financeApplyCashflowTemplate",
+        "summary": "Собрать макет отчёта о движении денег по шаблону",
+        "description": "Статьи не создаются: справочник ДДС у кабинета уже есть, и у каждой статьи записан раздел деятельности. Заводится новый макет — настроенная форма отчёта не переписывается.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.pnl_layouts:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Собранный макет со строками",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancePnlLayout"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
           }
         }
       }
@@ -33938,6 +34245,14 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "layout",
+            "in": "query",
+            "description": "Макет формы отчёта; без него — макет кабинета по умолчанию, а если его нет, встроенная форма с тремя разделами.",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
             }
           }
         ],
@@ -44430,6 +44745,92 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/StockAccountTransferCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Созданный черновик",
+            "headers": {
+              "Idempotent-Replay": {
+                "$ref": "#/components/headers/IdempotentReplay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/IdempotencyKeyMismatch"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/stock/claim-writeoffs": {
+      "post": {
+        "tags": [
+          "Stock documents"
+        ],
+        "operationId": "stockCreateClaimWriteoff",
+        "summary": "Создать черновик списания претензии поставщику",
+        "description": "Черновик вида `stock_claim_writeoff` («Списание претензии») на основании\nпроведённой приёмки с недостачей (ERP-1230). Претензия — недостача и её\nНДС, записанные приёмкой на 76.02 (сторона расчётов `claim`). Проведённое\nсписание склад не двигает: Кт 76.02 и расход по статье `item_id` в ОПиУ.\n`amount` — в валюте приёмки; пусто — весь остаток претензии на дату\nпроведения, больше остатка — 400 при проведении. Проводится и\nотменяется общими `stockPostDocument` и `stockCancelDocument`.\n\nЧитает `Idempotency-Key` так же, как `stockCreateDocument`.\n",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockClaimWriteoffCreate"
               }
             }
           }
@@ -58552,6 +58953,424 @@
         "responses": {
           "200": {
             "description": "Документ со снятым проведением",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/accountable/balances": {
+      "get": {
+        "tags": [
+          "Finance payroll"
+        ],
+        "operationId": "financeAccountableBalances",
+        "summary": "Получить остатки подотчётных лиц",
+        "description": "Сколько денег у каждого сотрудника на руках и с какого дня (ERP-1176).\nИсточник — главная книга, счёт 71 в разрезе сотрудника: выдача (касса\nили банк со статьёй вида «подотчёт») — дебет, авансовый отчёт и возврат\nостатка — кредит. Отчёты и возвраты гасят выдачи по очереди, и срок\nсчитается по старейшей непокрытой выдаче против срока авансового отчёта\nиз учётной политики бизнеса (умолчание 30 дней). Отрицательный остаток —\nперерасход: компания должна сотруднику.\n",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.accountable:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "on",
+            "in": "query",
+            "description": "Дата остатков; по умолчанию сегодня кабинета",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "business",
+            "in": "query",
+            "description": "Отбор по бизнесу",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Остатки по сотрудникам (просроченные сверху)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceAccountableBalances"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/accountable/reports": {
+      "get": {
+        "tags": [
+          "Finance payroll"
+        ],
+        "operationId": "financeExpenseReports",
+        "summary": "Получить авансовые отчёты",
+        "description": "Авансовые отчёты кабинета, свежие сверху.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.accountable:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Значение вне диапазона заменяется на 200",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Авансовые отчёты",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreDocumentPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Finance payroll"
+        ],
+        "operationId": "financeCreateExpenseReport",
+        "summary": "Создать авансовый отчёт",
+        "description": "Заводит черновик авансового отчёта сотрудника. Строка ведёт себя как\nплатёж со своей статьёй: расход — Дт счёт статьи / Кт 71, налог гасит\n68, поставщик уходит на клиринговый 76.09. Ограничений по статьям нет.\nДДС: отчёт переносит выбытие со статьи подотчёта на статьи строк; денег\nне двигает.\n\n`post: true` проводит тем же вызовом. Неудачное проведение не отменяет\nзаведение: документ остаётся черновиком, ответом приходит отказ.\n",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.accountable:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceExpenseReportCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Заведённый черновик или он же проведённый",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/accountable/reports/{id}": {
+      "put": {
+        "tags": [
+          "Finance payroll"
+        ],
+        "operationId": "financeUpdateExpenseReport",
+        "summary": "Изменить авансовый отчёт",
+        "description": "Правит черновик. Проведённый отчёт отклоняется с объяснением: сначала\nотмените проведение. `post: true` проводит после сохранения.\n",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.accountable:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceExpenseReportCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Сохранённый или проведённый отчёт",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/accountable/reports/{id}/post": {
+      "post": {
+        "tags": [
+          "Finance payroll"
+        ],
+        "operationId": "financePostExpenseReport",
+        "summary": "Провести авансовый отчёт",
+        "description": "Проводит черновик. Документ другого вида отклоняется.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.accountable:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Проведённый отчёт",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/accountable/reports/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Finance payroll"
+        ],
+        "operationId": "financeCancelExpenseReport",
+        "summary": "Отменить проведение авансового отчёта",
+        "description": "Снимает движения книги и ДДС: сумма возвращается на счёт 71 сотрудника\nи на статью подотчёта.\n",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.accountable:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Отчёт со снятым проведением",
             "content": {
               "application/json": {
                 "schema": {
@@ -84145,6 +84964,26 @@
           }
         ]
       },
+      "CorePolicyAccountableDaysVersion": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CorePolicyPeriod"
+          },
+          {
+            "type": "object",
+            "required": [
+              "days"
+            ],
+            "properties": {
+              "days": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 365
+              }
+            }
+          }
+        ]
+      },
       "CorePolicyTaxModeVersion": {
         "allOf": [
           {
@@ -84241,6 +85080,13 @@
             "items": {
               "$ref": "#/components/schemas/CorePolicyVATPendingVersion"
             }
+          },
+          "accountable_days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CorePolicyAccountableDaysVersion"
+            },
+            "description": "Срок авансового отчёта, дней (ERP-1176); пусто — умолчание 30"
           }
         }
       },
@@ -84341,6 +85187,25 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 120
+          }
+        }
+      },
+      "CorePolicyAccountableDaysInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "valid_from",
+          "days"
+        ],
+        "properties": {
+          "valid_from": {
+            "type": "string",
+            "format": "date"
+          },
+          "days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 365
           }
         }
       },
@@ -84775,6 +85640,30 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "country": {
+            "type": "string",
+            "description": "Нерезидент: страна регистрации кодом ISO 3166 (две буквы). Пусто — Россия."
+          },
+          "tax_number": {
+            "type": "string",
+            "description": "Нерезидент: налоговый номер страны регистрации вместо ИНН."
+          },
+          "system_key": {
+            "type": "string",
+            "description": "Код системного контрагента (fns, sfr, bank:<БИК>). Только чтение."
+          },
+          "requisites_issue": {
+            "type": "string",
+            "enum": [
+              "",
+              "inn_missing",
+              "inn_invalid",
+              "kpp_invalid",
+              "foreign_tax_missing",
+              "country_invalid"
+            ],
+            "description": "Что подсветить в реквизитах по правилу ИНН. Пусто — всё в порядке."
           }
         }
       },
@@ -84867,6 +85756,14 @@
           "external_id": {
             "type": "string"
           },
+          "country": {
+            "type": "string",
+            "description": "Нерезидент: страна регистрации кодом ISO 3166 (две буквы)."
+          },
+          "tax_number": {
+            "type": "string",
+            "description": "Нерезидент: налоговый номер страны регистрации вместо ИНН."
+          },
           "custom": {
             "type": "object",
             "additionalProperties": true,
@@ -84939,6 +85836,12 @@
           "external_id": {
             "type": "string"
           },
+          "country": {
+            "type": "string"
+          },
+          "tax_number": {
+            "type": "string"
+          },
           "custom": {
             "type": "object",
             "additionalProperties": true
@@ -85003,6 +85906,34 @@
           "updated": {
             "type": "integer",
             "minimum": 0
+          },
+          "skipped": {
+            "type": "array",
+            "description": "Контрагенты, которым групповое изменение не применилось по правилу ИНН (ERP-1147): роль поставщика физлицу без ИНН и т. п. Остальные изменены.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "name",
+                "code",
+                "detail"
+              ],
+              "properties": {
+                "id": {
+                  "$ref": "#/components/schemas/UUID"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "detail": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       },
@@ -90829,6 +91760,223 @@
           }
         }
       },
+      "FinanceSaleLineInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "quantity",
+          "price"
+        ],
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Товар строки; без него строка обязана назвать name"
+          },
+          "unit_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Единица измерения строки"
+          },
+          "unit": {
+            "type": "string",
+            "description": "Единица словами, когда справочной нет"
+          },
+          "name": {
+            "type": "string",
+            "description": "Наименование строки; у строки с товаром необязательно — его даёт карточка товара"
+          },
+          "quantity": {
+            "type": "string",
+            "description": "Положительная decimal string"
+          },
+          "price": {
+            "type": "string",
+            "description": "Цена единицы в режиме prices_include_vat документа"
+          },
+          "discount": {
+            "type": "string",
+            "description": "Скидка строки суммой, в том же режиме цены"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "1",
+              "3"
+            ],
+            "description": "ПрТовРаб формата ФНС: 1 товар, 3 услуга; пусто — товар, если назван товар, иначе услуга"
+          }
+        }
+      },
+      "FinanceSaleLine": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "line_id",
+          "kind",
+          "quantity",
+          "price",
+          "amount"
+        ],
+        "properties": {
+          "line_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "product_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "unit_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "1",
+              "3"
+            ],
+            "description": "ПрТовРаб: 1 товар, 3 услуга"
+          },
+          "quantity": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "discount": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Сумма строки к оплате, с налогом"
+          },
+          "vat_rate": {
+            "type": "string",
+            "description": "Ставка строки в записи ФНС; пусто — налог у продажи на дату не выделяется"
+          },
+          "vat_rate_from": {
+            "type": "string",
+            "enum": [
+              "",
+              "product",
+              "item",
+              "default"
+            ],
+            "description": "Откуда взят вид ставки"
+          },
+          "amount_without_vat": {
+            "type": "string"
+          },
+          "vat_amount": {
+            "type": "string",
+            "description": "Пусто у «без НДС»: налога нет вовсе, это не ноль"
+          }
+        }
+      },
+      "FinanceSaleLinesTotals": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "amount"
+        ],
+        "properties": {
+          "amount": {
+            "type": "string",
+            "description": "Сумма строк к оплате"
+          },
+          "amount_without_vat": {
+            "type": "string"
+          },
+          "vat_amount": {
+            "type": "string"
+          },
+          "vat_rate": {
+            "type": "string",
+            "description": "Общая ставка строк либо «по строкам», когда ставки разные; пусто — налог не выделяется"
+          },
+          "vat_rate_from": {
+            "type": "string"
+          }
+        }
+      },
+      "FinanceSaleLinesPreviewRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "date",
+          "currency",
+          "lines"
+        ],
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Дата продажи — на неё берутся режим и ставки юрлица"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Юрлицо продажи; без него налог не выделяется"
+          },
+          "business_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "item_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Статья ОПиУ: её вид ставки берут строки без товара"
+          },
+          "currency": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 3
+          },
+          "prices_include_vat": {
+            "type": "boolean",
+            "default": true
+          },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/FinanceSaleLineInput"
+            }
+          }
+        }
+      },
+      "FinanceSaleLinesPreview": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "lines",
+          "totals",
+          "vat_applies"
+        ],
+        "properties": {
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceSaleLine"
+            }
+          },
+          "totals": {
+            "$ref": "#/components/schemas/FinanceSaleLinesTotals"
+          },
+          "vat_applies": {
+            "type": "boolean",
+            "description": "Налог у продажи на дату выделяется"
+          }
+        }
+      },
       "FinanceSaleVATTerms": {
         "type": "object",
         "additionalProperties": false,
@@ -91510,6 +92658,20 @@
           },
           "supplier_document": {
             "$ref": "#/components/schemas/SupplierDocument"
+          },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/FinanceSaleLineInput"
+            },
+            "description": "Только продажа (ERP-1265): строки товаров и услуг. Сумма продажи — сумма строк; переданная рядом amount обязана с ней совпасть. Налог считается по строке — по виду товара строки и режиму юрлица на дату"
+          },
+          "prices_include_vat": {
+            "type": "boolean",
+            "default": true,
+            "description": "Только вместе со строками: цены строк включают налог (умолчание) либо налог начисляется сверху"
           }
         }
       },
@@ -95801,6 +96963,10 @@
             "type": "boolean",
             "description": "Обязательство без срока оплаты: рядом со шкалой, а не на ней"
           },
+          "withheld_from_payout": {
+            "type": "boolean",
+            "description": "Сумма удерживается контрагентом из будущей выплаты нам, а не уходит переводом: строка стоит во входящих с отрицательной суммой (неделя маркетплейса с перевесом возвратов)"
+          },
           "fact": {
             "$ref": "#/components/schemas/FinancePaymentFact"
           }
@@ -96272,11 +97438,39 @@
           "vat": {
             "type": "string"
           },
+          "base": {
+            "type": "string",
+            "description": "Сумма без налога в налоговой валюте: у покупок — остаток источника, у продаж — база регистра выходного налога"
+          },
+          "rate": {
+            "type": "string",
+            "description": "Ставка продажи («22%»); у покупок пусто — налог поставщика одной суммой документа"
+          },
           "action": {
             "type": "string"
           },
           "restoration": {
             "type": "boolean"
+          }
+        }
+      },
+      "FinanceVATBookRateTotal": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rate",
+          "base",
+          "vat"
+        ],
+        "properties": {
+          "rate": {
+            "type": "string"
+          },
+          "base": {
+            "type": "string"
+          },
+          "vat": {
+            "type": "string"
           }
         }
       },
@@ -96453,7 +97647,11 @@
           "matches",
           "counts",
           "attention",
-          "our_vat"
+          "our_vat",
+          "rows",
+          "our_base",
+          "rates",
+          "restored"
         ],
         "properties": {
           "kind": {
@@ -96495,7 +97693,30 @@
             "type": "integer"
           },
           "our_vat": {
-            "type": "string"
+            "type": "string",
+            "description": "Итог книги Акеды: у покупок — принятое к вычету, у продаж — начисленное без восстановления"
+          },
+          "rows": {
+            "type": "array",
+            "description": "Книга Акеды этой стороны — строки нашего учёта; отдаётся и без загруженной книги 1С",
+            "items": {
+              "$ref": "#/components/schemas/FinanceVATBookOurRow"
+            }
+          },
+          "our_base": {
+            "type": "string",
+            "description": "Сумма без налога тех же строк, что our_vat"
+          },
+          "rates": {
+            "type": "array",
+            "description": "Итоги по ставкам (у продаж); у покупок пусто",
+            "items": {
+              "$ref": "#/components/schemas/FinanceVATBookRateTotal"
+            }
+          },
+          "restored": {
+            "type": "string",
+            "description": "Налог, восстановленный в квартале (у продаж)"
           }
         }
       },
@@ -96517,6 +97738,14 @@
           },
           "quarter_number": {
             "type": "string"
+          },
+          "quarter_status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "posted"
+            ],
+            "description": "Откуда строки покупок: проведённый документ квартала или черновик; нет поля — документа нет, строки предварительные"
           },
           "purchase": {
             "$ref": "#/components/schemas/FinanceVATBookSide"
@@ -97052,6 +98281,15 @@
             "type": "string",
             "minLength": 1
           },
+          "report": {
+            "type": "string",
+            "enum": [
+              "pnl",
+              "cashflow"
+            ],
+            "default": "pnl",
+            "description": "Вид отчёта макета. Задаётся при заведении и дальше не меняется."
+          },
           "is_default": {
             "type": "boolean",
             "default": false
@@ -97097,6 +98335,14 @@
           },
           "name": {
             "type": "string"
+          },
+          "report": {
+            "type": "string",
+            "enum": [
+              "pnl",
+              "cashflow"
+            ],
+            "description": "Вид отчёта макета: прибыли и убытки или движение денег."
           },
           "is_default": {
             "type": "boolean"
@@ -104277,6 +105523,10 @@
             "type": "string",
             "description": "Положительная decimal string в единице строки"
           },
+          "document_qty": {
+            "type": "string",
+            "description": "Количество по документу поставщика, если пришло меньше (ERP-1230): сумма строки — по документу, склад и налог к вычету — по qty, разница — претензия поставщику (сторона claim, 76.02). Только у stock_receipt; меньше qty — 400"
+          },
           "unit_id": {
             "oneOf": [
               {
@@ -104438,6 +105688,23 @@
             "type": "string",
             "readOnly": true,
             "description": "Налоговая валюта юрлица на дату приёмки (ERP-484, Р21). Пишет сервер вместе с разбивкой налога; присланное значение перезаписывается"
+          },
+          "vat_from_lines": {
+            "type": "boolean",
+            "description": "Налог строк взят из документа поставщика как есть (ERP-1230): сервер не раскладывает paper_vat_amount, а проверяет vat_amount строк и пишет их сумму в paper_vat_amount"
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Za-z]{3}$",
+            "description": "Валюта приёмки (ERP-1230): ISO-код валюты документа поставщика; пусто или валюта учёта — документ в валюте учёта. Только у stock_receipt"
+          },
+          "rate": {
+            "type": "string",
+            "description": "Курс валюты документа: единиц валюты учёта за 1 единицу валюты документа. Без rate_manual сервер берёт его из справочника курсов на дату документа; нет курса — черновик без курса, проведение — 400"
+          },
+          "rate_manual": {
+            "type": "boolean",
+            "description": "Курс введён вручную: справочник его не перезаписывает"
           },
           "amount": {
             "type": "string",
@@ -104688,6 +105955,35 @@
             "description": "Пусто или отсутствует означает рабочую дату кабинета"
           },
           "business_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "StockClaimWriteoffCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "basis_id",
+          "item_id"
+        ],
+        "description": "Тело черновика списания претензии поставщику по недостаче приёмки.",
+        "properties": {
+          "basis_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Пусто или отсутствует означает рабочую дату кабинета"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Сумма в валюте приёмки; пусто — весь остаток претензии"
+          },
+          "item_id": {
             "$ref": "#/components/schemas/UUID"
           },
           "comment": {
@@ -114915,6 +116211,8 @@
             "enum": [
               "source_unavailable",
               "report_incomplete",
+              "report_empty",
+              "week_open",
               "source_semantics_unverified",
               "accounting_setup_incomplete",
               "cost_evidence_missing"
@@ -117672,7 +118970,7 @@
         "required": [
           "company"
         ],
-        "description": "Ссылки зарплатного документа. Юрлицо обязательно уже при заведении:\nглавная книга отвечает на вопрос, чьи это деньги. Статьи нужны\nпроведению начисления, а не заведению черновика.\n",
+        "description": "Ссылки зарплатного документа. Юрлицо обязательно уже при заведении:\nглавная книга отвечает на вопрос, чьи это деньги. Статьи оклада, НДФЛ\nи взносов начисление не передаёт: проведение берёт системные статьи\nпостоянной и переменной зарплаты (ERP-988).\n",
         "properties": {
           "company": {
             "$ref": "#/components/schemas/UUID"
@@ -117680,17 +118978,19 @@
           "item": {
             "type": "string",
             "format": "uuid",
-            "description": "Статья затрат на оплату труда; нужна проведению начисления и выдаче наличными"
+            "description": "Статья оплаты труда для выдачи наличными по реестру; проведение начисления её не читает"
           },
           "tax_item": {
             "type": "string",
             "format": "uuid",
-            "description": "Статья НДФЛ; нужна проведению начисления с удержанием"
+            "deprecated": true,
+            "description": "Не читается с ERP-988: НДФЛ идёт системными статьями"
           },
           "insurance_item": {
             "type": "string",
             "format": "uuid",
-            "description": "Статья страховых взносов; нужна проведению начисления со взносами"
+            "deprecated": true,
+            "description": "Не читается с ERP-988: взносы идут системными статьями"
           },
           "account": {
             "type": "string",
@@ -117726,6 +119026,39 @@
           "bonus2": {
             "type": "string",
             "description": "Decimal string; вторая премия"
+          },
+          "bonuses": {
+            "type": "array",
+            "description": "Премии строки",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "amount"
+              ],
+              "properties": {
+                "item": {
+                  "type": "string",
+                  "description": "Статья ручной премии; пусто — «Зарплата постоянная». У премии с variable не читается"
+                },
+                "amount": {
+                  "type": "string",
+                  "description": "Decimal string; сумма премии"
+                },
+                "variable": {
+                  "type": "boolean",
+                  "description": "Премия начислена правилом от выручки — в ОПиУ «Зарплата переменная», НДФЛ и взносы делятся в той же доле"
+                }
+              }
+            }
+          },
+          "withheld": {
+            "type": "string",
+            "description": "Decimal string; прочие удержания, уменьшают постоянную зарплату"
+          },
+          "salary_basis": {
+            "type": "string",
+            "description": "Строка справочника «Оклад указан»: до удержаний или на руки"
           },
           "official": {
             "type": "string",
@@ -117854,6 +119187,174 @@
             "type": "boolean",
             "default": false,
             "description": "Провести сразу; для реестра выплаты флаг игнорируется"
+          }
+        }
+      },
+      "FinanceExpenseReportRow": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "item",
+          "amount"
+        ],
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Статья траты — любая"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Сумма в валюте учёта, больше нуля"
+          },
+          "contact": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Продавец, кому заплатил сотрудник"
+          },
+          "for_contact": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "«За кого» у статей, которым нужен человек"
+          },
+          "receipt_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "receipt_number": {
+            "type": "string"
+          },
+          "project": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "deal": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "closes": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "«Закрывает» — долг поставщику (закупка, счёт), который гасит строка по статье расчётов с поставщиками (ERP-1249); пусто — долг подберёт правило"
+          }
+        }
+      },
+      "FinanceExpenseReportCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "refs"
+        ],
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "refs": {
+            "type": "object",
+            "description": "business или company обязателен; item — статья вида «подотчёт»; for_contact — сотрудник (контрагент из папки «Сотрудники»)",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "currency": {
+                "type": "string",
+                "description": "Валюта учёта; другая отклоняется"
+              },
+              "rows": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/FinanceExpenseReportRow"
+                }
+              }
+            }
+          },
+          "post": {
+            "type": "boolean",
+            "default": false,
+            "description": "Провести сразу"
+          }
+        }
+      },
+      "FinanceAccountableBalance": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "employee",
+          "employee_name",
+          "issued",
+          "reported",
+          "returned",
+          "balance",
+          "days_open",
+          "deadline",
+          "overdue"
+        ],
+        "properties": {
+          "business": {
+            "type": "string"
+          },
+          "employee": {
+            "type": "string",
+            "description": "Сотрудник; пусто — проводки 71 без сотрудника"
+          },
+          "employee_name": {
+            "type": "string"
+          },
+          "issued": {
+            "type": "string",
+            "description": "Выдано под отчёт"
+          },
+          "reported": {
+            "type": "string",
+            "description": "Отчитано авансовыми отчётами"
+          },
+          "returned": {
+            "type": "string",
+            "description": "Возвращено деньгами"
+          },
+          "balance": {
+            "type": "string",
+            "description": "На руках; минус — перерасход"
+          },
+          "oldest_open": {
+            "type": "string",
+            "format": "date",
+            "description": "Старейшая непокрытая выдача"
+          },
+          "days_open": {
+            "type": "integer"
+          },
+          "deadline": {
+            "type": "integer",
+            "description": "Срок авансового отчёта бизнеса, дней"
+          },
+          "overdue": {
+            "type": "boolean"
+          }
+        }
+      },
+      "FinanceAccountableBalances": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "on",
+          "rows"
+        ],
+        "properties": {
+          "on": {
+            "type": "string",
+            "format": "date"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceAccountableBalance"
+            }
           }
         }
       },

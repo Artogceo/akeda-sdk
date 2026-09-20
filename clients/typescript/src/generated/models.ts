@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 45dcff42ccfb9f45d44cd2874aa80f3763f5d6c00f638f786e320f27f475f215).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb6a0123455578df86f2b64cf353da516b4d61dac2ffdf9ae19a49a0c89cd9ee).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -3068,6 +3068,15 @@ export interface CoreBalanceShortage {
 
 export interface CoreBulkResult {
   "updated": number;
+  /** Контрагенты, которым групповое изменение не применилось по правилу ИНН (ERP-1147): роль поставщика физлицу без ИНН и т. п. Остальные изменены. */
+  "skipped"?: Array<CoreBulkResultSkippedItem>;
+}
+
+export interface CoreBulkResultSkippedItem {
+  "id": UUID;
+  "name": string;
+  "code": string;
+  "detail": string;
 }
 
 export interface CoreBusiness {
@@ -3122,6 +3131,8 @@ export interface CoreBusinessPolicy {
   "accrual_from"?: string;
   "vat_presentation": Array<CorePolicyVATPresentationVersion>;
   "vat_pending": Array<CorePolicyVATPendingVersion>;
+  /** Срок авансового отчёта, дней (ERP-1176); пусто — умолчание 30 */
+  "accountable_days"?: Array<CorePolicyAccountableDaysVersion>;
 }
 
 export interface CoreCabinetPreferences {
@@ -3203,6 +3214,14 @@ export interface CoreContact {
   "is_active": boolean;
   "created_at": string;
   "updated_at": string;
+  /** Нерезидент: страна регистрации кодом ISO 3166 (две буквы). Пусто — Россия. */
+  "country"?: string;
+  /** Нерезидент: налоговый номер страны регистрации вместо ИНН. */
+  "tax_number"?: string;
+  /** Код системного контрагента (fns, sfr, bank:<БИК>). Только чтение. */
+  "system_key"?: string;
+  /** Что подсветить в реквизитах по правилу ИНН. Пусто — всё в порядке. */
+  "requisites_issue"?: "" | "inn_missing" | "inn_invalid" | "kpp_invalid" | "foreign_tax_missing" | "country_invalid";
 }
 
 export interface CoreContactAddress {
@@ -3248,6 +3267,10 @@ export interface CoreContactCreate {
   "bank_bic"?: string;
   "bank_account"?: string;
   "external_id"?: string;
+  /** Нерезидент: страна регистрации кодом ISO 3166 (две буквы). */
+  "country"?: string;
+  /** Нерезидент: налоговый номер страны регистрации вместо ИНН. */
+  "tax_number"?: string;
   "custom"?: { [key: string]: unknown };
 }
 
@@ -3280,6 +3303,8 @@ export interface CoreContactPatch {
   "bank_bic"?: string;
   "bank_account"?: string;
   "external_id"?: string;
+  "country"?: string;
+  "tax_number"?: string;
   "custom"?: { [key: string]: unknown };
   "is_customer"?: boolean;
   "is_supplier"?: boolean;
@@ -4106,6 +4131,20 @@ export interface CoreOwnershipVersionInput {
 
 export interface CorePhotoResult {
   "photo_url": string;
+}
+
+export interface CorePolicyAccountableDaysInput {
+  "valid_from": string;
+  "days": number;
+}
+
+export interface CorePolicyAccountableDaysVersion {
+  "id": UUID;
+  /** Начало версии; 0001-01-01 означает «с начала учёта» */
+  "valid_from": string;
+  /** Последний день версии; отсутствует у открытой версии */
+  "valid_to"?: string;
+  "days": number;
 }
 
 export interface CorePolicyPeriod {
@@ -7584,6 +7623,32 @@ export interface FinanceAccountPatch {
   "bank_timezone"?: string;
 }
 
+export interface FinanceAccountableBalance {
+  "business"?: string;
+  /** Сотрудник; пусто — проводки 71 без сотрудника */
+  "employee": string;
+  "employee_name": string;
+  /** Выдано под отчёт */
+  "issued": string;
+  /** Отчитано авансовыми отчётами */
+  "reported": string;
+  /** Возвращено деньгами */
+  "returned": string;
+  /** На руках; минус — перерасход */
+  "balance": string;
+  /** Старейшая непокрытая выдача */
+  "oldest_open"?: string;
+  "days_open": number;
+  /** Срок авансового отчёта бизнеса, дней */
+  "deadline": number;
+  "overdue": boolean;
+}
+
+export interface FinanceAccountableBalances {
+  "on": string;
+  "rows": Array<FinanceAccountableBalance>;
+}
+
 export interface FinanceBalanceItem {
   "code": string;
   "name": string;
@@ -8130,6 +8195,40 @@ export interface FinanceExchangeQuarantine {
 
 export type FinanceExchangeStatus = "received" | "applied" | "quarantined";
 
+export interface FinanceExpenseReportCreate {
+  "date"?: string;
+  "comment"?: string;
+  /** business или company обязателен; item — статья вида «подотчёт»; for_contact — сотрудник (контрагент из папки «Сотрудники») */
+  "refs": { [key: string]: string };
+  "payload"?: FinanceExpenseReportCreatePayload;
+  /** Провести сразу */
+  "post"?: boolean;
+}
+
+export interface FinanceExpenseReportCreatePayload {
+  /** Валюта учёта; другая отклоняется */
+  "currency"?: string;
+  "rows"?: Array<FinanceExpenseReportRow>;
+}
+
+export interface FinanceExpenseReportRow {
+  /** Статья траты — любая */
+  "item": UUID;
+  /** Сумма в валюте учёта, больше нуля */
+  "amount": string;
+  /** Продавец, кому заплатил сотрудник */
+  "contact"?: UUID;
+  /** «За кого» у статей, которым нужен человек */
+  "for_contact"?: UUID;
+  "receipt_date"?: string;
+  "receipt_number"?: string;
+  "project"?: UUID;
+  "deal"?: UUID;
+  "comment"?: string;
+  /** «Закрывает» — долг поставщику (закупка, счёт), который гасит строка по статье расчётов с поставщиками (ERP-1249); пусто — долг подберёт правило */
+  "closes"?: UUID;
+}
+
 export interface FinanceImportApply {
   "confirm_warnings"?: boolean;
 }
@@ -8520,6 +8619,8 @@ export interface FinancePaymentCalendarRow {
   "expectation"?: boolean;
   /** Обязательство без срока оплаты: рядом со шкалой, а не на ней */
   "undated"?: boolean;
+  /** Сумма удерживается контрагентом из будущей выплаты нам, а не уходит переводом: строка стоит во входящих с отрицательной суммой (неделя маркетплейса с перевесом возвратов) */
+  "withheld_from_payout"?: boolean;
   "fact"?: FinancePaymentFact;
 }
 
@@ -8663,6 +8764,12 @@ export interface FinancePayrollAccrualRow {
   "bonus1"?: string;
   /** Decimal string; вторая премия */
   "bonus2"?: string;
+  /** Премии строки */
+  "bonuses"?: Array<FinancePayrollAccrualRowBonusesItem>;
+  /** Decimal string; прочие удержания, уменьшают постоянную зарплату */
+  "withheld"?: string;
+  /** Строка справочника «Оклад указан»: до удержаний или на руки */
+  "salary_basis"?: string;
   /** Decimal string; официальная часть начисления, не больше суммы оклада и премий */
   "official"?: string;
   /** Decimal string; НДФЛ, удержанный из официальной части */
@@ -8675,6 +8782,15 @@ export interface FinancePayrollAccrualRow {
   "department"?: string;
   /** Разрез центра финансовой ответственности; пустой в регистр не идёт */
   "cfo"?: string;
+}
+
+export interface FinancePayrollAccrualRowBonusesItem {
+  /** Статья ручной премии; пусто — «Зарплата постоянная». У премии с variable не читается */
+  "item"?: string;
+  /** Decimal string; сумма премии */
+  "amount": string;
+  /** Премия начислена правилом от выручки — в ОПиУ «Зарплата переменная», НДФЛ и взносы делятся в той же доле */
+  "variable"?: boolean;
 }
 
 export interface FinancePayrollDocumentCreate {
@@ -8690,16 +8806,17 @@ export interface FinancePayrollDocumentCreate {
 
 /**
  * Ссылки зарплатного документа. Юрлицо обязательно уже при заведении:
- * главная книга отвечает на вопрос, чьи это деньги. Статьи нужны
- * проведению начисления, а не заведению черновика.
+ * главная книга отвечает на вопрос, чьи это деньги. Статьи оклада, НДФЛ
+ * и взносов начисление не передаёт: проведение берёт системные статьи
+ * постоянной и переменной зарплаты (ERP-988).
  */
 export interface FinancePayrollDocumentRefs {
   "company": UUID;
-  /** Статья затрат на оплату труда; нужна проведению начисления и выдаче наличными */
+  /** Статья оплаты труда для выдачи наличными по реестру; проведение начисления её не читает */
   "item"?: string;
-  /** Статья НДФЛ; нужна проведению начисления с удержанием */
+  /** Не читается с ERP-988: НДФЛ идёт системными статьями */
   "tax_item"?: string;
-  /** Статья страховых взносов; нужна проведению начисления со взносами */
+  /** Не читается с ERP-988: взносы идут системными статьями */
   "insurance_item"?: string;
   /** Счёт списания реестра; его проставляет выгрузка списка на оплату */
   "account"?: string;
@@ -8940,12 +9057,16 @@ export interface FinancePnlItemPage {
 export interface FinancePnlLayout {
   "id": UUID;
   "name": string;
+  /** Вид отчёта макета: прибыли и убытки или движение денег. */
+  "report"?: "pnl" | "cashflow";
   "is_default": boolean;
   "rows": Array<FinancePnlLayoutRow>;
 }
 
 export interface FinancePnlLayoutCreate {
   "name": string;
+  /** Вид отчёта макета. Задаётся при заведении и дальше не меняется. */
+  "report"?: "pnl" | "cashflow";
   "is_default"?: boolean;
 }
 
@@ -9290,6 +9411,77 @@ export interface FinanceResponsiblePatch {
   "responsible": string | null;
 }
 
+export interface FinanceSaleLine {
+  "line_id": UUID;
+  "product_id"?: string;
+  "unit_id"?: string;
+  "unit"?: string;
+  "name"?: string;
+  /** ПрТовРаб: 1 товар, 3 услуга */
+  "kind": "1" | "3";
+  "quantity": string;
+  "price": string;
+  "discount"?: string;
+  /** Сумма строки к оплате, с налогом */
+  "amount": string;
+  /** Ставка строки в записи ФНС; пусто — налог у продажи на дату не выделяется */
+  "vat_rate"?: string;
+  /** Откуда взят вид ставки */
+  "vat_rate_from"?: "" | "product" | "item" | "default";
+  "amount_without_vat"?: string;
+  /** Пусто у «без НДС»: налога нет вовсе, это не ноль */
+  "vat_amount"?: string;
+}
+
+export interface FinanceSaleLineInput {
+  /** Товар строки; без него строка обязана назвать name */
+  "product_id"?: string;
+  /** Единица измерения строки */
+  "unit_id"?: string;
+  /** Единица словами, когда справочной нет */
+  "unit"?: string;
+  /** Наименование строки; у строки с товаром необязательно — его даёт карточка товара */
+  "name"?: string;
+  /** Положительная decimal string */
+  "quantity": string;
+  /** Цена единицы в режиме prices_include_vat документа */
+  "price": string;
+  /** Скидка строки суммой, в том же режиме цены */
+  "discount"?: string;
+  /** ПрТовРаб формата ФНС: 1 товар, 3 услуга; пусто — товар, если назван товар, иначе услуга */
+  "kind"?: "1" | "3";
+}
+
+export interface FinanceSaleLinesPreview {
+  "lines": Array<FinanceSaleLine>;
+  "totals": FinanceSaleLinesTotals;
+  /** Налог у продажи на дату выделяется */
+  "vat_applies": boolean;
+}
+
+export interface FinanceSaleLinesPreviewRequest {
+  /** Дата продажи — на неё берутся режим и ставки юрлица */
+  "date": string;
+  /** Юрлицо продажи; без него налог не выделяется */
+  "company_id"?: string;
+  "business_id"?: string;
+  /** Статья ОПиУ: её вид ставки берут строки без товара */
+  "item_id"?: string;
+  "currency": string;
+  "prices_include_vat"?: boolean;
+  "lines": Array<FinanceSaleLineInput>;
+}
+
+export interface FinanceSaleLinesTotals {
+  /** Сумма строк к оплате */
+  "amount": string;
+  "amount_without_vat"?: string;
+  "vat_amount"?: string;
+  /** Общая ставка строк либо «по строкам», когда ставки разные; пусто — налог не выделяется */
+  "vat_rate"?: string;
+  "vat_rate_from"?: string;
+}
+
 export interface FinanceSaleVATTerms {
   /** На дату бизнес очищает суммы от налога и у сделки есть юрлицо */
   "applies": boolean;
@@ -9356,6 +9548,10 @@ export interface FinanceSettlementDocumentCreate {
   /** Только закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаг 5.3). Обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне периода непустое значение — 400 */
   "vat_amount"?: string;
   "supplier_document"?: SupplierDocument;
+  /** Только продажа (ERP-1265): строки товаров и услуг. Сумма продажи — сумма строк; переданная рядом amount обязана с ней совпасть. Налог считается по строке — по виду товара строки и режиму юрлица на дату */
+  "lines"?: Array<FinanceSaleLineInput>;
+  /** Только вместе со строками: цены строк включают налог (умолчание) либо налог начисляется сверху */
+  "prices_include_vat"?: boolean;
 }
 
 export type FinanceSettlementDocumentType = "finance_settlement_baseline" | "finance_receivable_opening" | "finance_receivable" | "finance_payable_opening" | "finance_payable" | "finance_advance" | "finance_advance_offset" | "finance_sale" | "finance_purchase" | "finance_payment_allocation" | "finance_sale_return";
@@ -9661,8 +9857,18 @@ export interface FinanceVATBookOurRow {
   "number": string;
   "date": string;
   "vat": string;
+  /** Сумма без налога в налоговой валюте: у покупок — остаток источника, у продаж — база регистра выходного налога */
+  "base"?: string;
+  /** Ставка продажи («22%»); у покупок пусто — налог поставщика одной суммой документа */
+  "rate"?: string;
   "action"?: string;
   "restoration"?: boolean;
+}
+
+export interface FinanceVATBookRateTotal {
+  "rate": string;
+  "base": string;
+  "vat": string;
 }
 
 export interface FinanceVATBookReconciliation {
@@ -9670,6 +9876,8 @@ export interface FinanceVATBookReconciliation {
   "currency": string;
   "quarter_document"?: string;
   "quarter_number"?: string;
+  /** Откуда строки покупок: проведённый документ квартала или черновик; нет поля — документа нет, строки предварительные */
+  "quarter_status"?: "draft" | "posted";
   "purchase": FinanceVATBookSide;
   "sales": FinanceVATBookSide;
 }
@@ -9693,7 +9901,16 @@ export interface FinanceVATBookSide {
   "matches": Array<FinanceVATBookMatch>;
   "counts": { [key: string]: number };
   "attention": number;
+  /** Итог книги Акеды: у покупок — принятое к вычету, у продаж — начисленное без восстановления */
   "our_vat": string;
+  /** Книга Акеды этой стороны — строки нашего учёта; отдаётся и без загруженной книги 1С */
+  "rows": Array<FinanceVATBookOurRow>;
+  /** Сумма без налога тех же строк, что our_vat */
+  "our_base": string;
+  /** Итоги по ставкам (у продаж); у покупок пусто */
+  "rates": Array<FinanceVATBookRateTotal>;
+  /** Налог, восстановленный в квартале (у продаж) */
+  "restored": string;
 }
 
 export interface FinanceVATBookUploadPage {
@@ -12378,7 +12595,7 @@ export interface MarketplaceWeeklyFinanceRun {
   "source_hash": string;
   "report_complete": boolean;
   "report_ready": boolean;
-  "blocking_code"?: "source_unavailable" | "report_incomplete" | "source_semantics_unverified" | "accounting_setup_incomplete" | "cost_evidence_missing";
+  "blocking_code"?: "source_unavailable" | "report_incomplete" | "report_empty" | "week_open" | "source_semantics_unverified" | "accounting_setup_incomplete" | "cost_evidence_missing";
   "captured_at"?: string;
   "row_count": number;
   "expense_row_count": number;
@@ -14431,6 +14648,17 @@ export interface StockBusinessRefPage {
   "results": Array<StockBusinessRef>;
 }
 
+/** Тело черновика списания претензии поставщику по недостаче приёмки. */
+export interface StockClaimWriteoffCreate {
+  "basis_id": UUID;
+  /** Пусто или отсутствует означает рабочую дату кабинета */
+  "date"?: string;
+  /** Сумма в валюте приёмки; пусто — весь остаток претензии */
+  "amount"?: string;
+  "item_id": UUID;
+  "comment"?: string;
+}
+
 export interface StockCompanyPolicy {
   "id": UUID;
   "company_id": UUID;
@@ -14517,6 +14745,8 @@ export interface StockDocumentLine {
   "product_id": UUID;
   /** Положительная decimal string в единице строки */
   "qty": string;
+  /** Количество по документу поставщика, если пришло меньше (ERP-1230): сумма строки — по документу, склад и налог к вычету — по qty, разница — претензия поставщику (сторона claim, 76.02). Только у stock_receipt; меньше qty — 400 */
+  "document_qty"?: string;
   /** Физическая единица справочника */
   "unit_id"?: UUID | null;
   /** Товарная единица представления */
@@ -14589,6 +14819,14 @@ export interface StockDocumentPayload {
   "supplier_document"?: SupplierDocument;
   /** Налоговая валюта юрлица на дату приёмки (ERP-484, Р21). Пишет сервер вместе с разбивкой налога; присланное значение перезаписывается */
   "tax_currency"?: string;
+  /** Налог строк взят из документа поставщика как есть (ERP-1230): сервер не раскладывает paper_vat_amount, а проверяет vat_amount строк и пишет их сумму в paper_vat_amount */
+  "vat_from_lines"?: boolean;
+  /** Валюта приёмки (ERP-1230): ISO-код валюты документа поставщика; пусто или валюта учёта — документ в валюте учёта. Только у stock_receipt */
+  "currency"?: string;
+  /** Курс валюты документа: единиц валюты учёта за 1 единицу валюты документа. Без rate_manual сервер берёт его из справочника курсов на дату документа; нет курса — черновик без курса, проведение — 400 */
+  "rate"?: string;
+  /** Курс введён вручную: справочник его не перезаписывает */
+  "rate_manual"?: boolean;
   /** Decimal string; сумма накладных расходов */
   "amount"?: string;
   "allocation_method"?: "quantity" | "cost" | "manual";

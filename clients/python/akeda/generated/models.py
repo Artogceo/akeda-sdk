@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 45dcff42ccfb9f45d44cd2874aa80f3763f5d6c00f638f786e320f27f475f215).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb6a0123455578df86f2b64cf353da516b4d61dac2ffdf9ae19a49a0c89cd9ee).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -328,6 +328,7 @@ __all__ = [
     "CoreAccountingSettingsInput",
     "CoreBalanceShortage",
     "CoreBulkResult",
+    "CoreBulkResultSkippedItem",
     "CoreBusiness",
     "CoreBusinessAccountingMethodInput",
     "CoreBusinessInput",
@@ -448,6 +449,8 @@ __all__ = [
     "CoreOwnershipVersion",
     "CoreOwnershipVersionInput",
     "CorePhotoResult",
+    "CorePolicyAccountableDaysInput",
+    "CorePolicyAccountableDaysVersion",
     "CorePolicyPeriod",
     "CorePolicyTaxModeInput",
     "CorePolicyTaxModeVersion",
@@ -753,6 +756,8 @@ __all__ = [
     "FinanceAccountCreate",
     "FinanceAccountPage",
     "FinanceAccountPatch",
+    "FinanceAccountableBalance",
+    "FinanceAccountableBalances",
     "FinanceBalanceItem",
     "FinanceBalanceReport",
     "FinanceBalanceSection",
@@ -809,6 +814,9 @@ __all__ = [
     "FinanceExchangePage",
     "FinanceExchangeQuarantine",
     "FinanceExchangeStatus",
+    "FinanceExpenseReportCreate",
+    "FinanceExpenseReportCreatePayload",
+    "FinanceExpenseReportRow",
     "FinanceImportApply",
     "FinanceImportDiff",
     "FinanceImportField",
@@ -856,6 +864,7 @@ __all__ = [
     "FinancePayoutSheetRow",
     "FinancePayrollAccrualPayload",
     "FinancePayrollAccrualRow",
+    "FinancePayrollAccrualRowBonusesItem",
     "FinancePayrollDocumentCreate",
     "FinancePayrollDocumentRefs",
     "FinancePayrollDocumentTypeKey",
@@ -919,6 +928,11 @@ __all__ = [
     "FinanceRequisitesPerson",
     "FinanceRequisitesSuggestions",
     "FinanceResponsiblePatch",
+    "FinanceSaleLine",
+    "FinanceSaleLineInput",
+    "FinanceSaleLinesPreview",
+    "FinanceSaleLinesPreviewRequest",
+    "FinanceSaleLinesTotals",
     "FinanceSaleVATTerms",
     "FinanceSettlementBalance",
     "FinanceSettlementBalancePage",
@@ -947,6 +961,7 @@ __all__ = [
     "FinanceVATBookImport",
     "FinanceVATBookMatch",
     "FinanceVATBookOurRow",
+    "FinanceVATBookRateTotal",
     "FinanceVATBookReconciliation",
     "FinanceVATBookRow",
     "FinanceVATBookSide",
@@ -1352,6 +1367,7 @@ __all__ = [
     "StockBatchPage",
     "StockBusinessRef",
     "StockBusinessRefPage",
+    "StockClaimWriteoffCreate",
     "StockCompanyPolicy",
     "StockCompanyPolicyPage",
     "StockCompanyPolicyPatch",
@@ -4517,8 +4533,18 @@ class CoreBalanceShortage(TypedDict):
     shortage: str
     conflicts: List["CoreConflictingRegistrar"]
 
-class CoreBulkResult(TypedDict):
+class _CoreBulkResultRequired(TypedDict):
     updated: int
+
+class CoreBulkResult(_CoreBulkResultRequired, total=False):
+    #: Контрагенты, которым групповое изменение не применилось по правилу ИНН (ERP-1147): роль поставщика физлицу без ИНН и т. п. Остальные изменены.
+    skipped: List["CoreBulkResultSkippedItem"]
+
+class CoreBulkResultSkippedItem(TypedDict):
+    id: "UUID"
+    name: str
+    code: str
+    detail: str
 
 class _CoreBusinessRequired(TypedDict):
     id: "UUID"
@@ -4577,6 +4603,8 @@ class _CoreBusinessPolicyRequired(TypedDict):
 
 class CoreBusinessPolicy(_CoreBusinessPolicyRequired, total=False):
     accrual_from: str
+    #: Срок авансового отчёта, дней (ERP-1176); пусто — умолчание 30
+    accountable_days: List["CorePolicyAccountableDaysVersion"]
 
 class CoreCabinetPreferences(TypedDict):
     locale: Literal['ru-RU', 'en-US']
@@ -4624,7 +4652,7 @@ class CoreConflictingRegistrar(TypedDict):
     status: "CoreDocumentStatus"
     sign: int
 
-class CoreContact(TypedDict):
+class _CoreContactRequired(TypedDict):
     id: "UUID"
     name: str
     kind: "CoreContactKind"
@@ -4652,6 +4680,16 @@ class CoreContact(TypedDict):
     is_active: bool
     created_at: str
     updated_at: str
+
+class CoreContact(_CoreContactRequired, total=False):
+    #: Нерезидент: страна регистрации кодом ISO 3166 (две буквы). Пусто — Россия.
+    country: str
+    #: Нерезидент: налоговый номер страны регистрации вместо ИНН.
+    tax_number: str
+    #: Код системного контрагента (fns, sfr, bank:<БИК>). Только чтение.
+    system_key: str
+    #: Что подсветить в реквизитах по правилу ИНН. Пусто — всё в порядке.
+    requisites_issue: Literal['', 'inn_missing', 'inn_invalid', 'kpp_invalid', 'foreign_tax_missing', 'country_invalid']
 
 class CoreContactAddress(TypedDict):
     postal_code: str
@@ -4698,6 +4736,10 @@ class CoreContactCreate(_CoreContactCreateRequired, total=False):
     bank_bic: str
     bank_account: str
     external_id: str
+    #: Нерезидент: страна регистрации кодом ISO 3166 (две буквы).
+    country: str
+    #: Нерезидент: налоговый номер страны регистрации вместо ИНН.
+    tax_number: str
     custom: Dict[str, Any]
 
 CoreContactEntityType = Literal['legal', 'individual', 'sole_prop']
@@ -4728,6 +4770,8 @@ class CoreContactPatch(TypedDict, total=False):
     bank_bic: str
     bank_account: str
     external_id: str
+    country: str
+    tax_number: str
     custom: Dict[str, Any]
     is_customer: bool
     is_supplier: bool
@@ -5527,6 +5571,20 @@ class CoreOwnershipVersionInput(TypedDict):
 
 class CorePhotoResult(TypedDict):
     photo_url: str
+
+class CorePolicyAccountableDaysInput(TypedDict):
+    valid_from: str
+    days: int
+
+class _CorePolicyAccountableDaysVersionRequired(TypedDict):
+    id: "UUID"
+    #: Начало версии; 0001-01-01 означает «с начала учёта»
+    valid_from: str
+    days: int
+
+class CorePolicyAccountableDaysVersion(_CorePolicyAccountableDaysVersionRequired, total=False):
+    #: Последний день версии; отсутствует у открытой версии
+    valid_to: str
 
 class _CorePolicyPeriodRequired(TypedDict):
     id: "UUID"
@@ -9048,6 +9106,32 @@ class FinanceAccountPatch(TypedDict, total=False):
     #: Часовой пояс банковских суток (IANA). Источник пояса становится manual.
     bank_timezone: str
 
+class _FinanceAccountableBalanceRequired(TypedDict):
+    #: Сотрудник; пусто — проводки 71 без сотрудника
+    employee: str
+    employee_name: str
+    #: Выдано под отчёт
+    issued: str
+    #: Отчитано авансовыми отчётами
+    reported: str
+    #: Возвращено деньгами
+    returned: str
+    #: На руках; минус — перерасход
+    balance: str
+    days_open: int
+    #: Срок авансового отчёта бизнеса, дней
+    deadline: int
+    overdue: bool
+
+class FinanceAccountableBalance(_FinanceAccountableBalanceRequired, total=False):
+    business: str
+    #: Старейшая непокрытая выдача
+    oldest_open: str
+
+class FinanceAccountableBalances(TypedDict):
+    on: str
+    rows: List["FinanceAccountableBalance"]
+
 class FinanceBalanceItem(TypedDict):
     code: str
     name: str
@@ -9566,6 +9650,41 @@ class FinanceExchangeQuarantine(TypedDict):
 
 FinanceExchangeStatus = Literal['received', 'applied', 'quarantined']
 
+class _FinanceExpenseReportCreateRequired(TypedDict):
+    #: business или company обязателен; item — статья вида «подотчёт»; for_contact — сотрудник (контрагент из папки «Сотрудники»)
+    refs: Dict[str, str]
+
+class FinanceExpenseReportCreate(_FinanceExpenseReportCreateRequired, total=False):
+    date: str
+    comment: str
+    payload: "FinanceExpenseReportCreatePayload"
+    #: Провести сразу
+    post: bool
+
+class FinanceExpenseReportCreatePayload(TypedDict, total=False):
+    #: Валюта учёта; другая отклоняется
+    currency: str
+    rows: List["FinanceExpenseReportRow"]
+
+class _FinanceExpenseReportRowRequired(TypedDict):
+    #: Статья траты — любая
+    item: "UUID"
+    #: Сумма в валюте учёта, больше нуля
+    amount: str
+
+class FinanceExpenseReportRow(_FinanceExpenseReportRowRequired, total=False):
+    #: Продавец, кому заплатил сотрудник
+    contact: "UUID"
+    #: «За кого» у статей, которым нужен человек
+    for_contact: "UUID"
+    receipt_date: str
+    receipt_number: str
+    project: "UUID"
+    deal: "UUID"
+    comment: str
+    #: «Закрывает» — долг поставщику (закупка, счёт), который гасит строка по статье расчётов с поставщиками (ERP-1249); пусто — долг подберёт правило
+    closes: "UUID"
+
 class FinanceImportApply(TypedDict, total=False):
     confirm_warnings: bool
 
@@ -9925,6 +10044,8 @@ class FinancePaymentCalendarRow(_FinancePaymentCalendarRowRequired, total=False)
     expectation: bool
     #: Обязательство без срока оплаты: рядом со шкалой, а не на ней
     undated: bool
+    #: Сумма удерживается контрагентом из будущей выплаты нам, а не уходит переводом: строка стоит во входящих с отрицательной суммой (неделя маркетплейса с перевесом возвратов)
+    withheld_from_payout: bool
     fact: "FinancePaymentFact"
 
 class FinancePaymentCalendarSource(TypedDict):
@@ -10068,6 +10189,12 @@ class FinancePayrollAccrualRow(_FinancePayrollAccrualRowRequired, total=False):
     bonus1: str
     #: Decimal string; вторая премия
     bonus2: str
+    #: Премии строки
+    bonuses: List["FinancePayrollAccrualRowBonusesItem"]
+    #: Decimal string; прочие удержания, уменьшают постоянную зарплату
+    withheld: str
+    #: Строка справочника «Оклад указан»: до удержаний или на руки
+    salary_basis: str
     #: Decimal string; официальная часть начисления, не больше суммы оклада и премий
     official: str
     #: Decimal string; НДФЛ, удержанный из официальной части
@@ -10080,6 +10207,16 @@ class FinancePayrollAccrualRow(_FinancePayrollAccrualRowRequired, total=False):
     department: str
     #: Разрез центра финансовой ответственности; пустой в регистр не идёт
     cfo: str
+
+class _FinancePayrollAccrualRowBonusesItemRequired(TypedDict):
+    #: Decimal string; сумма премии
+    amount: str
+
+class FinancePayrollAccrualRowBonusesItem(_FinancePayrollAccrualRowBonusesItemRequired, total=False):
+    #: Статья ручной премии; пусто — «Зарплата постоянная». У премии с variable не читается
+    item: str
+    #: Премия начислена правилом от выручки — в ОПиУ «Зарплата переменная», НДФЛ и взносы делятся в той же доле
+    variable: bool
 
 class _FinancePayrollDocumentCreateRequired(TypedDict):
     type: "FinancePayrollDocumentTypeKey"
@@ -10097,13 +10234,13 @@ class _FinancePayrollDocumentRefsRequired(TypedDict):
     company: "UUID"
 
 class FinancePayrollDocumentRefs(_FinancePayrollDocumentRefsRequired, total=False):
-    """Ссылки зарплатного документа. Юрлицо обязательно уже при заведении: главная книга отвечает на вопрос, чьи это деньги. Статьи нужны проведению начисления, а не заведению черновика."""
+    """Ссылки зарплатного документа. Юрлицо обязательно уже при заведении: главная книга отвечает на вопрос, чьи это деньги. Статьи оклада, НДФЛ и взносов начисление не передаёт: проведение берёт системные статьи постоянной и переменной зарплаты (ERP-988)."""
 
-    #: Статья затрат на оплату труда; нужна проведению начисления и выдаче наличными
+    #: Статья оплаты труда для выдачи наличными по реестру; проведение начисления её не читает
     item: str
-    #: Статья НДФЛ; нужна проведению начисления с удержанием
+    #: Не читается с ERP-988: НДФЛ идёт системными статьями
     tax_item: str
-    #: Статья страховых взносов; нужна проведению начисления со взносами
+    #: Не читается с ERP-988: взносы идут системными статьями
     insurance_item: str
     #: Счёт списания реестра; его проставляет выгрузка списка на оплату
     account: str
@@ -10322,16 +10459,22 @@ class FinancePnlItemPage(TypedDict):
     count: int
     results: List["FinancePnlItem"]
 
-class FinancePnlLayout(TypedDict):
+class _FinancePnlLayoutRequired(TypedDict):
     id: "UUID"
     name: str
     is_default: bool
     rows: List["FinancePnlLayoutRow"]
 
+class FinancePnlLayout(_FinancePnlLayoutRequired, total=False):
+    #: Вид отчёта макета: прибыли и убытки или движение денег.
+    report: Literal['pnl', 'cashflow']
+
 class _FinancePnlLayoutCreateRequired(TypedDict):
     name: str
 
 class FinancePnlLayoutCreate(_FinancePnlLayoutCreateRequired, total=False):
+    #: Вид отчёта макета. Задаётся при заведении и дальше не меняется.
+    report: Literal['pnl', 'cashflow']
     is_default: bool
 
 class FinancePnlLayoutPage(TypedDict):
@@ -10626,6 +10769,80 @@ class FinanceRequisitesSuggestions(TypedDict):
 class FinanceResponsiblePatch(TypedDict):
     responsible: Optional[str]
 
+class _FinanceSaleLineRequired(TypedDict):
+    line_id: "UUID"
+    #: ПрТовРаб: 1 товар, 3 услуга
+    kind: Literal['1', '3']
+    quantity: str
+    price: str
+    #: Сумма строки к оплате, с налогом
+    amount: str
+
+class FinanceSaleLine(_FinanceSaleLineRequired, total=False):
+    product_id: str
+    unit_id: str
+    unit: str
+    name: str
+    discount: str
+    #: Ставка строки в записи ФНС; пусто — налог у продажи на дату не выделяется
+    vat_rate: str
+    #: Откуда взят вид ставки
+    vat_rate_from: Literal['', 'product', 'item', 'default']
+    amount_without_vat: str
+    #: Пусто у «без НДС»: налога нет вовсе, это не ноль
+    vat_amount: str
+
+class _FinanceSaleLineInputRequired(TypedDict):
+    #: Положительная decimal string
+    quantity: str
+    #: Цена единицы в режиме prices_include_vat документа
+    price: str
+
+class FinanceSaleLineInput(_FinanceSaleLineInputRequired, total=False):
+    #: Товар строки; без него строка обязана назвать name
+    product_id: str
+    #: Единица измерения строки
+    unit_id: str
+    #: Единица словами, когда справочной нет
+    unit: str
+    #: Наименование строки; у строки с товаром необязательно — его даёт карточка товара
+    name: str
+    #: Скидка строки суммой, в том же режиме цены
+    discount: str
+    #: ПрТовРаб формата ФНС: 1 товар, 3 услуга; пусто — товар, если назван товар, иначе услуга
+    kind: Literal['1', '3']
+
+class FinanceSaleLinesPreview(TypedDict):
+    lines: List["FinanceSaleLine"]
+    totals: "FinanceSaleLinesTotals"
+    #: Налог у продажи на дату выделяется
+    vat_applies: bool
+
+class _FinanceSaleLinesPreviewRequestRequired(TypedDict):
+    #: Дата продажи — на неё берутся режим и ставки юрлица
+    date: str
+    currency: str
+    lines: List["FinanceSaleLineInput"]
+
+class FinanceSaleLinesPreviewRequest(_FinanceSaleLinesPreviewRequestRequired, total=False):
+    #: Юрлицо продажи; без него налог не выделяется
+    company_id: str
+    business_id: str
+    #: Статья ОПиУ: её вид ставки берут строки без товара
+    item_id: str
+    prices_include_vat: bool
+
+class _FinanceSaleLinesTotalsRequired(TypedDict):
+    #: Сумма строк к оплате
+    amount: str
+
+class FinanceSaleLinesTotals(_FinanceSaleLinesTotalsRequired, total=False):
+    amount_without_vat: str
+    vat_amount: str
+    #: Общая ставка строк либо «по строкам», когда ставки разные; пусто — налог не выделяется
+    vat_rate: str
+    vat_rate_from: str
+
 FinanceSaleVATTerms = TypedDict("FinanceSaleVATTerms", {"applies": bool, "charged": bool, "mode": Literal['', 'deductible', 'non_deductible', 'none'], "rate": str, "kind": Literal['', 'general', 'reduced', 'zero', 'exempt'], "from": Literal['', 'item', 'default'], "problem": Literal['', 'mode_unset', 'rate_missing'], "detail": str}, total=False)
 
 class FinanceSettlementBalance(TypedDict):
@@ -10675,6 +10892,10 @@ class FinanceSettlementDocumentCreate(_FinanceSettlementDocumentCreateRequired, 
     #: Только закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаг 5.3). Обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне периода непустое значение — 400
     vat_amount: str
     supplier_document: "SupplierDocument"
+    #: Только продажа (ERP-1265): строки товаров и услуг. Сумма продажи — сумма строк; переданная рядом amount обязана с ней совпасть. Налог считается по строке — по виду товара строки и режиму юрлица на дату
+    lines: List["FinanceSaleLineInput"]
+    #: Только вместе со строками: цены строк включают налог (умолчание) либо налог начисляется сверху
+    prices_include_vat: bool
 
 FinanceSettlementDocumentType = Literal['finance_settlement_baseline', 'finance_receivable_opening', 'finance_receivable', 'finance_payable_opening', 'finance_payable', 'finance_advance', 'finance_advance_offset', 'finance_sale', 'finance_purchase', 'finance_payment_allocation', 'finance_sale_return']
 
@@ -10974,8 +11195,17 @@ class FinanceVATBookOurRow(_FinanceVATBookOurRowRequired, total=False):
     contact_name: str
     inn: str
     kpp: str
+    #: Сумма без налога в налоговой валюте: у покупок — остаток источника, у продаж — база регистра выходного налога
+    base: str
+    #: Ставка продажи («22%»); у покупок пусто — налог поставщика одной суммой документа
+    rate: str
     action: str
     restoration: bool
+
+class FinanceVATBookRateTotal(TypedDict):
+    rate: str
+    base: str
+    vat: str
 
 class _FinanceVATBookReconciliationRequired(TypedDict):
     #: Налоговая валюта юрлица — валюта книг 1С и нашего налога.
@@ -10986,6 +11216,8 @@ class _FinanceVATBookReconciliationRequired(TypedDict):
 class FinanceVATBookReconciliation(_FinanceVATBookReconciliationRequired, total=False):
     quarter_document: str
     quarter_number: str
+    #: Откуда строки покупок: проведённый документ квартала или черновик; нет поля — документа нет, строки предварительные
+    quarter_status: Literal['draft', 'posted']
 
 class _FinanceVATBookRowRequired(TypedDict):
     line: int
@@ -11007,7 +11239,16 @@ class FinanceVATBookSide(TypedDict):
     matches: List["FinanceVATBookMatch"]
     counts: Dict[str, int]
     attention: int
+    #: Итог книги Акеды: у покупок — принятое к вычету, у продаж — начисленное без восстановления
     our_vat: str
+    #: Книга Акеды этой стороны — строки нашего учёта; отдаётся и без загруженной книги 1С
+    rows: List["FinanceVATBookOurRow"]
+    #: Сумма без налога тех же строк, что our_vat
+    our_base: str
+    #: Итоги по ставкам (у продаж); у покупок пусто
+    rates: List["FinanceVATBookRateTotal"]
+    #: Налог, восстановленный в квартале (у продаж)
+    restored: str
 
 class FinanceVATBookUploadPage(TypedDict):
     items: List["FinanceVATBookUploadPageItemsItem"]
@@ -13508,7 +13749,7 @@ class _MarketplaceWeeklyFinanceRunRequired(TypedDict):
     expense_row_count: int
 
 class MarketplaceWeeklyFinanceRun(_MarketplaceWeeklyFinanceRunRequired, total=False):
-    blocking_code: Literal['source_unavailable', 'report_incomplete', 'source_semantics_unverified', 'accounting_setup_incomplete', 'cost_evidence_missing']
+    blocking_code: Literal['source_unavailable', 'report_incomplete', 'report_empty', 'week_open', 'source_semantics_unverified', 'accounting_setup_incomplete', 'cost_evidence_missing']
     captured_at: str
 
 class MarketplaceWeeklyFinanceRuns(TypedDict):
@@ -15467,6 +15708,19 @@ class StockBusinessRefPage(TypedDict):
     count: int
     results: List["StockBusinessRef"]
 
+class _StockClaimWriteoffCreateRequired(TypedDict):
+    basis_id: "UUID"
+    item_id: "UUID"
+
+class StockClaimWriteoffCreate(_StockClaimWriteoffCreateRequired, total=False):
+    """Тело черновика списания претензии поставщику по недостаче приёмки."""
+
+    #: Пусто или отсутствует означает рабочую дату кабинета
+    date: str
+    #: Сумма в валюте приёмки; пусто — весь остаток претензии
+    amount: str
+    comment: str
+
 class StockCompanyPolicy(TypedDict):
     id: "UUID"
     company_id: "UUID"
@@ -15550,6 +15804,8 @@ class _StockDocumentLineRequired(TypedDict):
     qty: str
 
 class StockDocumentLine(_StockDocumentLineRequired, total=False):
+    #: Количество по документу поставщика, если пришло меньше (ERP-1230): сумма строки — по документу, склад и налог к вычету — по qty, разница — претензия поставщику (сторона claim, 76.02). Только у stock_receipt; меньше qty — 400
+    document_qty: str
     #: Физическая единица справочника
     unit_id: Optional["UUID"]
     #: Товарная единица представления
@@ -15622,6 +15878,14 @@ class StockDocumentPayload(_StockDocumentPayloadRequired, total=False):
     supplier_document: "SupplierDocument"
     #: Налоговая валюта юрлица на дату приёмки (ERP-484, Р21). Пишет сервер вместе с разбивкой налога; присланное значение перезаписывается
     tax_currency: str
+    #: Налог строк взят из документа поставщика как есть (ERP-1230): сервер не раскладывает paper_vat_amount, а проверяет vat_amount строк и пишет их сумму в paper_vat_amount
+    vat_from_lines: bool
+    #: Валюта приёмки (ERP-1230): ISO-код валюты документа поставщика; пусто или валюта учёта — документ в валюте учёта. Только у stock_receipt
+    currency: str
+    #: Курс валюты документа: единиц валюты учёта за 1 единицу валюты документа. Без rate_manual сервер берёт его из справочника курсов на дату документа; нет курса — черновик без курса, проведение — 400
+    rate: str
+    #: Курс введён вручную: справочник его не перезаписывает
+    rate_manual: bool
     #: Decimal string; сумма накладных расходов
     amount: str
     allocation_method: Literal['quantity', 'cost', 'manual']
