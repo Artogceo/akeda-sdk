@@ -64142,9 +64142,9 @@ components:
         title:
           type: string
         amount:
-          type: integer
-          format: int64
-          minimum: 0
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
         currency:
           type: string
           description: Код валюты из справочника ERP
@@ -64209,9 +64209,9 @@ components:
           type: string
           minLength: 1
         amount:
-          type: integer
-          format: int64
-          minimum: 0
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
         currency:
           type: string
           description: Обязателен при ненулевой сумме
@@ -64256,9 +64256,9 @@ components:
           type: string
           minLength: 1
         amount:
-          type: integer
-          format: int64
-          minimum: 0
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
         currency:
           type: string
         source:
@@ -64366,14 +64366,13 @@ components:
             - object
             - 'null'
           additionalProperties:
-            type: integer
-            format: int64
-          description: Суммы по валютам сделок колонки
+            type: string
+          description: Суммы по валютам сделок колонки, десятичными строками
         amount_in_accounting:
-          type: number
-          description: Сумма в валюте учёта; отсутствует при неполном покрытии курсами
+          type: string
+          description: Сумма в валюте учёта десятичной строкой; отсутствует при неполном покрытии курсами
         weighted_in_accounting:
-          type: number
+          type: string
         cards:
           type:
             - array
@@ -64444,10 +64443,9 @@ components:
         unit:
           type: string
         price:
-          type: integer
-          format: int64
-          minimum: 0
-          description: В тех же единицах, что и сумма сделки
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
         discount_percent:
           type: number
           minimum: 0
@@ -64483,9 +64481,9 @@ components:
         unit:
           type: string
         price:
-          type: integer
-          format: int64
-          minimum: 0
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
         discount_percent:
           type: number
           minimum: 0
@@ -64953,9 +64951,9 @@ components:
           type: string
           minLength: 1
         amount:
-          type: integer
-          format: int64
-          minimum: 0
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
         currency:
           type: string
         probability:
@@ -66303,8 +66301,9 @@ components:
           type: integer
           format: int64
         deal_amount:
-          type: integer
-          format: int64
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
         updated_at:
           type: string
           format: date-time
@@ -66325,8 +66324,9 @@ components:
           type: integer
           format: int64
         open_amount:
-          type: integer
-          format: int64
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
         stages:
           type:
             - array
@@ -66386,8 +66386,9 @@ components:
           type: integer
           format: int64
         amount:
-          type: integer
-          format: int64
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
     CRMConversionMetric:
       type: object
       additionalProperties: false
@@ -66422,8 +66423,9 @@ components:
           type: integer
           format: int64
         amount:
-          type: integer
-          format: int64
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
     CRMSLAMetric:
       type: object
       additionalProperties: false
@@ -66479,20 +66481,20 @@ components:
           type: integer
           format: int64
         won_amount:
-          type: integer
-          format: int64
-          description: Выиграно за всё время
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
         lost_deals:
           type: integer
           format: int64
         plan_amount:
-          type: integer
-          format: int64
-          description: План на текущий месяц; 0 - план не задан
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
         won_amount_month:
-          type: integer
-          format: int64
-          description: Закрыто в текущем месяце - с этим и сравнивают план
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
     CRMSalesPlan:
       type: object
       additionalProperties: false
@@ -66515,8 +66517,9 @@ components:
           format: date
           description: Первое число месяца
         amount:
-          type: integer
-          format: int64
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
         currency:
           type: string
     CRMSalesPlansInput:
@@ -66544,8 +66547,9 @@ components:
                 format: int64
                 description: Пусто - план на весь отдел
               amount:
-                type: integer
-                format: int64
+                type: string
+                pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+                description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
               currency:
                 type: string
     CRMSourceMetric:
@@ -66592,9 +66596,9 @@ components:
         conversion:
           $ref: '#/components/schemas/CRMConversionMetric'
         weighted_forecast:
-          type: integer
-          format: int64
-          description: Сумма открытых сделок, взвешенная вероятностью
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
         loss_reasons:
           type:
             - array
@@ -67210,9 +67214,9 @@ components:
         stage_id:
           $ref: '#/components/schemas/UUID'
         amount:
-          type: integer
-          format: int64
-          minimum: 0
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]{1,3})?$
+          description: 'Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)'
         currency:
           type: string
     CRMInboxTemplate:
@@ -89103,6 +89107,7 @@ components:
         - trial_days
         - plans
         - modules
+        - constructor_modules
       properties:
         currency:
           type: string
@@ -89120,14 +89125,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BillingPublicPlan'
+          description: Отдельные карточки модулей, которые оператор оставил видимыми
+        constructor_modules:
+          type: array
+          items:
+            $ref: '#/components/schemas/BillingPublicPlan'
+          description: 'Все неархивные модули с действующей ценой, которые можно выбрать в конструкторе. Включает модули со скрытой самостоятельной карточкой: глаз управляет одним предложением, а не составом другого'
         constructor:
           oneOf:
             - $ref: '#/components/schemas/BillingPublicPlan'
             - type: 'null'
-          description: 'Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой'
+          description: 'Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из constructor_modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой'
     BillingCatalog:
       type: object
-      description: 'Витрина кабинета: только публичные и неархивные предложения. Полный список заведённого у оператора — GET /platform/billing/plans'
+      description: 'Витрина кабинета: публичные и неархивные тарифы плюс все неархивные модули с действующей ценой для конструктора. У модуля is_public управляет только самостоятельной карточкой. Полный список заведённого у оператора — GET /platform/billing/plans'
       required:
         - plans
         - modules
@@ -89141,6 +89152,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BillingPlan'
+          description: Неархивные модули с действующей ценой. Клиентская витрина показывает отдельными карточками только is_public=true, но конструктор использует весь список
         constructor:
           oneOf:
             - $ref: '#/components/schemas/BillingPlan'

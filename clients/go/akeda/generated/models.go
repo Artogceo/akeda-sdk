@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e8c5e3dc242e4d192c16e19a1c8d3d648b19feeeb75eb6f631621ac2c5cd6601).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1f94e575d48562d17b07284253910b4216a393fa570609b3f20648ac8ca8719c).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -358,9 +358,10 @@ type BillingCabinetSubscription struct {
 	Entitlements  BillingEntitlements   `json:"entitlements"`
 }
 
-// BillingCatalog — Витрина кабинета: только публичные и неархивные предложения. Полный список заведённого у оператора — GET /platform/billing/plans
+// BillingCatalog — Витрина кабинета: публичные и неархивные тарифы плюс все неархивные модули с действующей ценой для конструктора. У модуля is_public управляет только самостоятельной карточкой. Полный список заведённого у оператора — GET /platform/billing/plans
 type BillingCatalog struct {
-	Plans   []BillingPlan `json:"plans"`
+	Plans []BillingPlan `json:"plans"`
+	// Modules — Неархивные модули с действующей ценой. Клиентская витрина показывает отдельными карточками только is_public=true, но конструктор использует весь список
 	Modules []BillingPlan `json:"modules"`
 	// Constructor — Основание тарифа-конструктора «Соберите свой». Модулей в нём нет: клиент набирает их из modules теми же дополнениями. null означает, что конструктора нет или он снят с витрины
 	Constructor *BillingPlan `json:"constructor,omitempty"`
@@ -556,8 +557,11 @@ type BillingPublicCatalog struct {
 	// TrialDays — Сколько дней бесплатной работы получает новый кабинет. Приходит из правил платформы, а не из вёрстки: правка срока оператором обязана доехать до посетителя тем же днём
 	TrialDays int64               `json:"trial_days"`
 	Plans     []BillingPublicPlan `json:"plans"`
-	Modules   []BillingPublicPlan `json:"modules"`
-	// Constructor — Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой
+	// Modules — Отдельные карточки модулей, которые оператор оставил видимыми
+	Modules []BillingPublicPlan `json:"modules"`
+	// ConstructorModules — Все неархивные модули с действующей ценой, которые можно выбрать в конструкторе. Включает модули со скрытой самостоятельной карточкой: глаз управляет одним предложением, а не составом другого
+	ConstructorModules []BillingPublicPlan `json:"constructor_modules"`
+	// Constructor — Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из constructor_modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой
 	Constructor *BillingPublicPlan `json:"constructor,omitempty"`
 }
 
@@ -728,8 +732,8 @@ type CRMActivity struct {
 type CRMAnalytics struct {
 	Stages     []CRMStageMetric    `json:"stages"`
 	Conversion CRMConversionMetric `json:"conversion"`
-	// WeightedForecast — Сумма открытых сделок, взвешенная вероятностью
-	WeightedForecast int64                 `json:"weighted_forecast"`
+	// WeightedForecast — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	WeightedForecast string                `json:"weighted_forecast"`
 	LossReasons      []CRMLossReasonMetric `json:"loss_reasons"`
 	SLA              CRMSLAMetric          `json:"sla"`
 	ManagerWorkload  []CRMManagerWorkload  `json:"manager_workload"`
@@ -818,10 +822,11 @@ type CRMConversionMetric struct {
 }
 
 type CRMConvertLeadInput struct {
-	PipelineID      UUID    `json:"pipeline_id"`
-	StageID         UUID    `json:"stage_id"`
-	Title           string  `json:"title"`
-	Amount          *int64  `json:"amount,omitempty"`
+	PipelineID UUID   `json:"pipeline_id"`
+	StageID    UUID   `json:"stage_id"`
+	Title      string `json:"title"`
+	// Amount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Amount          *string `json:"amount,omitempty"`
 	Currency        *string `json:"currency,omitempty"`
 	Probability     *int64  `json:"probability,omitempty"`
 	ExpectedCloseAt *string `json:"expected_close_at,omitempty"`
@@ -967,7 +972,8 @@ type CRMDeal struct {
 	PipelineID UUID   `json:"pipeline_id"`
 	StageID    UUID   `json:"stage_id"`
 	Title      string `json:"title"`
-	Amount     int64  `json:"amount"`
+	// Amount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Amount string `json:"amount"`
 	// Currency — Код валюты из справочника ERP
 	Currency string `json:"currency"`
 	// Source — Канал обращения; manual для ручного заведения
@@ -998,11 +1004,11 @@ type CRMDealBoard struct {
 type CRMDealBoardStage struct {
 	Stage      CRMStage `json:"stage"`
 	TotalCount int64    `json:"total_count"`
-	// OriginalTotals — Суммы по валютам сделок колонки
-	OriginalTotals map[string]int64 `json:"original_totals"`
-	// AmountInAccounting — Сумма в валюте учёта; отсутствует при неполном покрытии курсами
-	AmountInAccounting   *float64      `json:"amount_in_accounting,omitempty"`
-	WeightedInAccounting *float64      `json:"weighted_in_accounting,omitempty"`
+	// OriginalTotals — Суммы по валютам сделок колонки, десятичными строками
+	OriginalTotals map[string]string `json:"original_totals"`
+	// AmountInAccounting — Сумма в валюте учёта десятичной строкой; отсутствует при неполном покрытии курсами
+	AmountInAccounting   *string       `json:"amount_in_accounting,omitempty"`
+	WeightedInAccounting *string       `json:"weighted_in_accounting,omitempty"`
 	Cards                []CRMDealCard `json:"cards"`
 	HasMore              bool          `json:"has_more"`
 }
@@ -1012,7 +1018,8 @@ type CRMDealCard struct {
 	PipelineID UUID   `json:"pipeline_id"`
 	StageID    UUID   `json:"stage_id"`
 	Title      string `json:"title"`
-	Amount     int64  `json:"amount"`
+	// Amount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Amount string `json:"amount"`
 	// Currency — Код валюты из справочника ERP
 	Currency string `json:"currency"`
 	// Source — Канал обращения; manual для ручного заведения
@@ -1050,7 +1057,8 @@ type CRMDealInput struct {
 	PipelineID UUID   `json:"pipeline_id"`
 	StageID    UUID   `json:"stage_id"`
 	Title      string `json:"title"`
-	Amount     *int64 `json:"amount,omitempty"`
+	// Amount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Amount *string `json:"amount,omitempty"`
 	// Currency — Обязателен при ненулевой сумме
 	Currency        *string `json:"currency,omitempty"`
 	Source          *string `json:"source,omitempty"`
@@ -1072,8 +1080,8 @@ type CRMDealItem struct {
 	ProductID *UUID   `json:"product_id,omitempty"`
 	Quantity  float64 `json:"quantity"`
 	Unit      string  `json:"unit"`
-	// Price — В тех же единицах, что и сумма сделки
-	Price           int64   `json:"price"`
+	// Price — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Price           string  `json:"price"`
 	DiscountPercent float64 `json:"discount_percent"`
 	// Total — Сумма строки со скидкой; считает сервер, чтобы клиенты не разошлись на округлении
 	Total     int64  `json:"total"`
@@ -1082,17 +1090,19 @@ type CRMDealItem struct {
 }
 
 type CRMDealItemInput struct {
-	Name            string   `json:"name"`
-	ProductID       *string  `json:"product_id,omitempty"`
-	Quantity        float64  `json:"quantity"`
-	Unit            *string  `json:"unit,omitempty"`
-	Price           *int64   `json:"price,omitempty"`
+	Name      string  `json:"name"`
+	ProductID *string `json:"product_id,omitempty"`
+	Quantity  float64 `json:"quantity"`
+	Unit      *string `json:"unit,omitempty"`
+	// Price — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Price           *string  `json:"price,omitempty"`
 	DiscountPercent *float64 `json:"discount_percent,omitempty"`
 }
 
 type CRMDealPatch struct {
-	Title           *string `json:"title,omitempty"`
-	Amount          *int64  `json:"amount,omitempty"`
+	Title *string `json:"title,omitempty"`
+	// Amount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Amount          *string `json:"amount,omitempty"`
 	Currency        *string `json:"currency,omitempty"`
 	Source          *string `json:"source,omitempty"`
 	Probability     *int64  `json:"probability,omitempty"`
@@ -1481,11 +1491,12 @@ type CRMInboxConversationLink struct {
 type CRMInboxConversationStatus = string
 
 type CRMInboxDealInput struct {
-	Title      string  `json:"title"`
-	PipelineID UUID    `json:"pipeline_id"`
-	StageID    UUID    `json:"stage_id"`
-	Amount     *int64  `json:"amount,omitempty"`
-	Currency   *string `json:"currency,omitempty"`
+	Title      string `json:"title"`
+	PipelineID UUID   `json:"pipeline_id"`
+	StageID    UUID   `json:"stage_id"`
+	// Amount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Amount   *string `json:"amount,omitempty"`
+	Currency *string `json:"currency,omitempty"`
 }
 
 type CRMInboxEntityMessage struct {
@@ -1787,10 +1798,11 @@ type CRMLossReasonInput struct {
 }
 
 type CRMLossReasonMetric struct {
-	ID     *string `json:"id,omitempty"`
-	Name   string  `json:"name"`
-	Count  int64   `json:"count"`
-	Amount int64   `json:"amount"`
+	ID    *string `json:"id,omitempty"`
+	Name  string  `json:"name"`
+	Count int64   `json:"count"`
+	// Amount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Amount string `json:"amount"`
 }
 
 type CRMManagerWorkload struct {
@@ -1800,13 +1812,13 @@ type CRMManagerWorkload struct {
 	OpenDeals         int64   `json:"open_deals"`
 	OpenConversations int64   `json:"open_conversations"`
 	WonDeals          int64   `json:"won_deals"`
-	// WonAmount — Выиграно за всё время
-	WonAmount int64 `json:"won_amount"`
-	LostDeals int64 `json:"lost_deals"`
-	// PlanAmount — План на текущий месяц; 0 - план не задан
-	PlanAmount *int64 `json:"plan_amount,omitempty"`
-	// WonAmountMonth — Закрыто в текущем месяце - с этим и сравнивают план
-	WonAmountMonth *int64 `json:"won_amount_month,omitempty"`
+	// WonAmount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	WonAmount string `json:"won_amount"`
+	LostDeals int64  `json:"lost_deals"`
+	// PlanAmount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	PlanAmount *string `json:"plan_amount,omitempty"`
+	// WonAmountMonth — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	WonAmountMonth *string `json:"won_amount_month,omitempty"`
 }
 
 // CRMMergeLeadsInput — Какие обращения свести в это
@@ -1849,11 +1861,12 @@ type CRMPipelineInput struct {
 }
 
 type CRMPipelineOverview struct {
-	PipelineID   UUID               `json:"pipeline_id"`
-	PipelineName string             `json:"pipeline_name"`
-	OpenCount    int64              `json:"open_count"`
-	OpenAmount   int64              `json:"open_amount"`
-	Stages       []CRMStageOverview `json:"stages,omitempty"`
+	PipelineID   UUID   `json:"pipeline_id"`
+	PipelineName string `json:"pipeline_name"`
+	OpenCount    int64  `json:"open_count"`
+	// OpenAmount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	OpenAmount string             `json:"open_amount"`
+	Stages     []CRMStageOverview `json:"stages,omitempty"`
 }
 
 type CRMPipelinePatch struct {
@@ -1908,8 +1921,9 @@ type CRMSalesPlan struct {
 	OwnerID   *int64  `json:"owner_id,omitempty"`
 	OwnerName *string `json:"owner_name,omitempty"`
 	// Period — Первое число месяца
-	Period   string `json:"period"`
-	Amount   int64  `json:"amount"`
+	Period string `json:"period"`
+	// Amount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Amount   string `json:"amount"`
 	Currency string `json:"currency"`
 }
 
@@ -1922,8 +1936,9 @@ type CRMSalesPlansInput struct {
 
 type CRMSalesPlansInputItemsItem struct {
 	// OwnerID — Пусто - план на весь отдел
-	OwnerID  *int64  `json:"owner_id,omitempty"`
-	Amount   int64   `json:"amount"`
+	OwnerID *int64 `json:"owner_id,omitempty"`
+	// Amount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Amount   string  `json:"amount"`
 	Currency *string `json:"currency,omitempty"`
 }
 
@@ -1970,16 +1985,18 @@ type CRMStageMetric struct {
 	StageName    string           `json:"stage_name"`
 	Category     CRMStageCategory `json:"category"`
 	Count        int64            `json:"count"`
-	Amount       int64            `json:"amount"`
+	// Amount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Amount string `json:"amount"`
 }
 
 type CRMStageOverview struct {
-	StageID    UUID             `json:"stage_id"`
-	StageName  string           `json:"stage_name"`
-	Category   CRMStageCategory `json:"category"`
-	DealCount  int64            `json:"deal_count"`
-	DealAmount int64            `json:"deal_amount"`
-	UpdatedAt  string           `json:"updated_at"`
+	StageID   UUID             `json:"stage_id"`
+	StageName string           `json:"stage_name"`
+	Category  CRMStageCategory `json:"category"`
+	DealCount int64            `json:"deal_count"`
+	// DealAmount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	DealAmount string `json:"deal_amount"`
+	UpdatedAt  string `json:"updated_at"`
 }
 
 type CRMStagePatch struct {

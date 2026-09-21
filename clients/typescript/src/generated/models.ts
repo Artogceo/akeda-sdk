@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e8c5e3dc242e4d192c16e19a1c8d3d648b19feeeb75eb6f631621ac2c5cd6601).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1f94e575d48562d17b07284253910b4216a393fa570609b3f20648ac8ca8719c).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -360,9 +360,10 @@ export interface BillingCabinetSubscription {
   "entitlements": BillingEntitlements;
 }
 
-/** Витрина кабинета: только публичные и неархивные предложения. Полный список заведённого у оператора — GET /platform/billing/plans */
+/** Витрина кабинета: публичные и неархивные тарифы плюс все неархивные модули с действующей ценой для конструктора. У модуля is_public управляет только самостоятельной карточкой. Полный список заведённого у оператора — GET /platform/billing/plans */
 export interface BillingCatalog {
   "plans": Array<BillingPlan>;
+  /** Неархивные модули с действующей ценой. Клиентская витрина показывает отдельными карточками только is_public=true, но конструктор использует весь список */
   "modules": Array<BillingPlan>;
   /** Основание тарифа-конструктора «Соберите свой». Модулей в нём нет: клиент набирает их из modules теми же дополнениями. null означает, что конструктора нет или он снят с витрины */
   "constructor"?: BillingPlan | null;
@@ -562,8 +563,11 @@ export interface BillingPublicCatalog {
   /** Сколько дней бесплатной работы получает новый кабинет. Приходит из правил платформы, а не из вёрстки: правка срока оператором обязана доехать до посетителя тем же днём */
   "trial_days": number;
   "plans": Array<BillingPublicPlan>;
+  /** Отдельные карточки модулей, которые оператор оставил видимыми */
   "modules": Array<BillingPublicPlan>;
-  /** Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой */
+  /** Все неархивные модули с действующей ценой, которые можно выбрать в конструкторе. Включает модули со скрытой самостоятельной карточкой: глаз управляет одним предложением, а не составом другого */
+  "constructor_modules": Array<BillingPublicPlan>;
+  /** Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из constructor_modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой */
   "constructor"?: BillingPublicPlan | null;
 }
 
@@ -738,8 +742,8 @@ export interface CRMActivity {
 export interface CRMAnalytics {
   "stages": Array<CRMStageMetric> | null;
   "conversion": CRMConversionMetric;
-  /** Сумма открытых сделок, взвешенная вероятностью */
-  "weighted_forecast": number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "weighted_forecast": string;
   "loss_reasons": Array<CRMLossReasonMetric> | null;
   "sla": CRMSLAMetric;
   "manager_workload": Array<CRMManagerWorkload> | null;
@@ -831,7 +835,8 @@ export interface CRMConvertLeadInput {
   "pipeline_id": UUID;
   "stage_id": UUID;
   "title": string;
-  "amount"?: number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "amount"?: string;
   "currency"?: string;
   "probability"?: number;
   "expected_close_at"?: string | null;
@@ -977,7 +982,8 @@ export interface CRMDeal {
   "pipeline_id": UUID;
   "stage_id": UUID;
   "title": string;
-  "amount": number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "amount": string;
   /** Код валюты из справочника ERP */
   "currency": string;
   /** Канал обращения; manual для ручного заведения */
@@ -1008,11 +1014,11 @@ export interface CRMDealBoard {
 export interface CRMDealBoardStage {
   "stage": CRMStage;
   "total_count": number;
-  /** Суммы по валютам сделок колонки */
-  "original_totals": { [key: string]: number } | null;
-  /** Сумма в валюте учёта; отсутствует при неполном покрытии курсами */
-  "amount_in_accounting"?: number;
-  "weighted_in_accounting"?: number;
+  /** Суммы по валютам сделок колонки, десятичными строками */
+  "original_totals": { [key: string]: string } | null;
+  /** Сумма в валюте учёта десятичной строкой; отсутствует при неполном покрытии курсами */
+  "amount_in_accounting"?: string;
+  "weighted_in_accounting"?: string;
   "cards": Array<CRMDealCard> | null;
   "has_more": boolean;
 }
@@ -1022,7 +1028,8 @@ export interface CRMDealCard {
   "pipeline_id": UUID;
   "stage_id": UUID;
   "title": string;
-  "amount": number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "amount": string;
   /** Код валюты из справочника ERP */
   "currency": string;
   /** Канал обращения; manual для ручного заведения */
@@ -1060,7 +1067,8 @@ export interface CRMDealInput {
   "pipeline_id": UUID;
   "stage_id": UUID;
   "title": string;
-  "amount"?: number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "amount"?: string;
   /** Обязателен при ненулевой сумме */
   "currency"?: string;
   "source"?: string;
@@ -1082,8 +1090,8 @@ export interface CRMDealItem {
   "product_id"?: UUID;
   "quantity": number;
   "unit": string;
-  /** В тех же единицах, что и сумма сделки */
-  "price": number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "price": string;
   "discount_percent": number;
   /** Сумма строки со скидкой; считает сервер, чтобы клиенты не разошлись на округлении */
   "total": number;
@@ -1096,13 +1104,15 @@ export interface CRMDealItemInput {
   "product_id"?: string | null;
   "quantity": number;
   "unit"?: string;
-  "price"?: number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "price"?: string;
   "discount_percent"?: number;
 }
 
 export interface CRMDealPatch {
   "title"?: string;
-  "amount"?: number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "amount"?: string;
   "currency"?: string;
   "source"?: string;
   "probability"?: number;
@@ -1494,7 +1504,8 @@ export interface CRMInboxDealInput {
   "title": string;
   "pipeline_id": UUID;
   "stage_id": UUID;
-  "amount"?: number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "amount"?: string;
   "currency"?: string;
 }
 
@@ -1800,7 +1811,8 @@ export interface CRMLossReasonMetric {
   "id"?: string;
   "name": string;
   "count": number;
-  "amount": number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "amount": string;
 }
 
 export interface CRMManagerWorkload {
@@ -1810,13 +1822,13 @@ export interface CRMManagerWorkload {
   "open_deals": number;
   "open_conversations": number;
   "won_deals": number;
-  /** Выиграно за всё время */
-  "won_amount": number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "won_amount": string;
   "lost_deals": number;
-  /** План на текущий месяц; 0 - план не задан */
-  "plan_amount"?: number;
-  /** Закрыто в текущем месяце - с этим и сравнивают план */
-  "won_amount_month"?: number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "plan_amount"?: string;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "won_amount_month"?: string;
 }
 
 /** Какие обращения свести в это */
@@ -1862,7 +1874,8 @@ export interface CRMPipelineOverview {
   "pipeline_id": UUID;
   "pipeline_name": string;
   "open_count": number;
-  "open_amount": number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "open_amount": string;
   "stages"?: Array<CRMStageOverview> | null;
 }
 
@@ -1919,7 +1932,8 @@ export interface CRMSalesPlan {
   "owner_name"?: string;
   /** Первое число месяца */
   "period": string;
-  "amount": number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "amount": string;
   "currency": string;
 }
 
@@ -1933,7 +1947,8 @@ export interface CRMSalesPlansInput {
 export interface CRMSalesPlansInputItemsItem {
   /** Пусто - план на весь отдел */
   "owner_id"?: number | null;
-  "amount": number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "amount": string;
   "currency"?: string;
 }
 
@@ -1980,7 +1995,8 @@ export interface CRMStageMetric {
   "stage_name": string;
   "category": CRMStageCategory;
   "count": number;
-  "amount": number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "amount": string;
 }
 
 export interface CRMStageOverview {
@@ -1988,7 +2004,8 @@ export interface CRMStageOverview {
   "stage_name": string;
   "category": CRMStageCategory;
   "deal_count": number;
-  "deal_amount": number;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "deal_amount": string;
   "updated_at": string;
 }
 

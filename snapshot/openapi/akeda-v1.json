@@ -100109,9 +100109,9 @@
             "type": "string"
           },
           "amount": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 0
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           },
           "currency": {
             "type": "string",
@@ -100206,9 +100206,9 @@
             "minLength": 1
           },
           "amount": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 0
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           },
           "currency": {
             "type": "string",
@@ -100271,9 +100271,9 @@
             "minLength": 1
           },
           "amount": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 0
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           },
           "currency": {
             "type": "string"
@@ -100423,17 +100423,16 @@
               "null"
             ],
             "additionalProperties": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string"
             },
-            "description": "Суммы по валютам сделок колонки"
+            "description": "Суммы по валютам сделок колонки, десятичными строками"
           },
           "amount_in_accounting": {
-            "type": "number",
-            "description": "Сумма в валюте учёта; отсутствует при неполном покрытии курсами"
+            "type": "string",
+            "description": "Сумма в валюте учёта десятичной строкой; отсутствует при неполном покрытии курсами"
           },
           "weighted_in_accounting": {
-            "type": "number"
+            "type": "string"
           },
           "cards": {
             "type": [
@@ -100531,10 +100530,9 @@
             "type": "string"
           },
           "price": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 0,
-            "description": "В тех же единицах, что и сумма сделки"
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           },
           "discount_percent": {
             "type": "number",
@@ -100583,9 +100581,9 @@
             "type": "string"
           },
           "price": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 0
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           },
           "discount_percent": {
             "type": "number",
@@ -101232,9 +101230,9 @@
             "minLength": 1
           },
           "amount": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 0
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           },
           "currency": {
             "type": "string"
@@ -103094,8 +103092,9 @@
             "format": "int64"
           },
           "deal_amount": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           },
           "updated_at": {
             "type": "string",
@@ -103124,8 +103123,9 @@
             "format": "int64"
           },
           "open_amount": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           },
           "stages": {
             "type": [
@@ -103210,8 +103210,9 @@
             "format": "int64"
           },
           "amount": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           }
         }
       },
@@ -103259,8 +103260,9 @@
             "format": "int64"
           },
           "amount": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           }
         }
       },
@@ -103334,23 +103336,23 @@
             "format": "int64"
           },
           "won_amount": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Выиграно за всё время"
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           },
           "lost_deals": {
             "type": "integer",
             "format": "int64"
           },
           "plan_amount": {
-            "type": "integer",
-            "format": "int64",
-            "description": "План на текущий месяц; 0 - план не задан"
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           },
           "won_amount_month": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Закрыто в текущем месяце - с этим и сравнивают план"
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           }
         }
       },
@@ -103381,8 +103383,9 @@
             "description": "Первое число месяца"
           },
           "amount": {
-            "type": "integer",
-            "format": "int64"
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           },
           "currency": {
             "type": "string"
@@ -103419,8 +103422,9 @@
                   "description": "Пусто - план на весь отдел"
                 },
                 "amount": {
-                  "type": "integer",
-                  "format": "int64"
+                  "type": "string",
+                  "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+                  "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
                 },
                 "currency": {
                   "type": "string"
@@ -103486,9 +103490,9 @@
             "$ref": "#/components/schemas/CRMConversionMetric"
           },
           "weighted_forecast": {
-            "type": "integer",
-            "format": "int64",
-            "description": "Сумма открытых сделок, взвешенная вероятностью"
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           },
           "loss_reasons": {
             "type": [
@@ -104341,9 +104345,9 @@
             "$ref": "#/components/schemas/UUID"
           },
           "amount": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 0
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
           },
           "currency": {
             "type": "string"
@@ -134382,7 +134386,8 @@
           "currency",
           "trial_days",
           "plans",
-          "modules"
+          "modules",
+          "constructor_modules"
         ],
         "properties": {
           "currency": {
@@ -134405,7 +134410,15 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/BillingPublicPlan"
-            }
+            },
+            "description": "Отдельные карточки модулей, которые оператор оставил видимыми"
+          },
+          "constructor_modules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BillingPublicPlan"
+            },
+            "description": "Все неархивные модули с действующей ценой, которые можно выбрать в конструкторе. Включает модули со скрытой самостоятельной карточкой: глаз управляет одним предложением, а не составом другого"
           },
           "constructor": {
             "oneOf": [
@@ -134416,13 +134429,13 @@
                 "type": "null"
               }
             ],
-            "description": "Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой"
+            "description": "Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из constructor_modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой"
           }
         }
       },
       "BillingCatalog": {
         "type": "object",
-        "description": "Витрина кабинета: только публичные и неархивные предложения. Полный список заведённого у оператора — GET /platform/billing/plans",
+        "description": "Витрина кабинета: публичные и неархивные тарифы плюс все неархивные модули с действующей ценой для конструктора. У модуля is_public управляет только самостоятельной карточкой. Полный список заведённого у оператора — GET /platform/billing/plans",
         "required": [
           "plans",
           "modules",
@@ -134439,7 +134452,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/BillingPlan"
-            }
+            },
+            "description": "Неархивные модули с действующей ценой. Клиентская витрина показывает отдельными карточками только is_public=true, но конструктор использует весь список"
           },
           "constructor": {
             "oneOf": [

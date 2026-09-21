@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e8c5e3dc242e4d192c16e19a1c8d3d648b19feeeb75eb6f631621ac2c5cd6601).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1f94e575d48562d17b07284253910b4216a393fa570609b3f20648ac8ca8719c).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1897,11 +1897,12 @@ class BillingCabinetSubscription(TypedDict):
 
 class _BillingCatalogRequired(TypedDict):
     plans: List["BillingPlan"]
+    #: Неархивные модули с действующей ценой. Клиентская витрина показывает отдельными карточками только is_public=true, но конструктор использует весь список
     modules: List["BillingPlan"]
     trial_days: int
 
 class BillingCatalog(_BillingCatalogRequired, total=False):
-    """Витрина кабинета: только публичные и неархивные предложения. Полный список заведённого у оператора — GET /platform/billing/plans"""
+    """Витрина кабинета: публичные и неархивные тарифы плюс все неархивные модули с действующей ценой для конструктора. У модуля is_public управляет только самостоятельной карточкой. Полный список заведённого у оператора — GET /platform/billing/plans"""
 
     #: Основание тарифа-конструктора «Соберите свой». Модулей в нём нет: клиент набирает их из modules теми же дополнениями. null означает, что конструктора нет или он снят с витрины
     constructor: Optional["BillingPlan"]
@@ -2097,12 +2098,15 @@ class _BillingPublicCatalogRequired(TypedDict):
     #: Сколько дней бесплатной работы получает новый кабинет. Приходит из правил платформы, а не из вёрстки: правка срока оператором обязана доехать до посетителя тем же днём
     trial_days: int
     plans: List["BillingPublicPlan"]
+    #: Отдельные карточки модулей, которые оператор оставил видимыми
     modules: List["BillingPublicPlan"]
+    #: Все неархивные модули с действующей ценой, которые можно выбрать в конструкторе. Включает модули со скрытой самостоятельной карточкой: глаз управляет одним предложением, а не составом другого
+    constructor_modules: List["BillingPublicPlan"]
 
 class BillingPublicCatalog(_BillingPublicCatalogRequired, total=False):
     """Публичная витрина: только продаваемые сегодня предложения. Пустые списки приходят как [], а не null — клиент, получивший null, показал бы «не загрузилось» вместо честной пустой страницы"""
 
-    #: Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой
+    #: Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из constructor_modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой
     constructor: Optional["BillingPublicPlan"]
 
 class BillingPublicPlan(TypedDict):
@@ -2274,8 +2278,8 @@ class CRMAnalytics(TypedDict):
 
     stages: Optional[List["CRMStageMetric"]]
     conversion: "CRMConversionMetric"
-    #: Сумма открытых сделок, взвешенная вероятностью
-    weighted_forecast: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    weighted_forecast: str
     loss_reasons: Optional[List["CRMLossReasonMetric"]]
     sla: "CRMSLAMetric"
     manager_workload: Optional[List["CRMManagerWorkload"]]
@@ -2370,7 +2374,8 @@ class _CRMConvertLeadInputRequired(TypedDict):
     title: str
 
 class CRMConvertLeadInput(_CRMConvertLeadInputRequired, total=False):
-    amount: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    amount: str
     currency: str
     probability: int
     expected_close_at: Optional[str]
@@ -2518,7 +2523,8 @@ class _CRMDealRequired(TypedDict):
     pipeline_id: "UUID"
     stage_id: "UUID"
     title: str
-    amount: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    amount: str
     #: Код валюты из справочника ERP
     currency: str
     #: Канал обращения; manual для ручного заведения
@@ -2551,22 +2557,23 @@ class CRMDealBoard(_CRMDealBoardRequired, total=False):
 class _CRMDealBoardStageRequired(TypedDict):
     stage: "CRMStage"
     total_count: int
-    #: Суммы по валютам сделок колонки
-    original_totals: Optional[Dict[str, int]]
+    #: Суммы по валютам сделок колонки, десятичными строками
+    original_totals: Optional[Dict[str, str]]
     cards: Optional[List["CRMDealCard"]]
     has_more: bool
 
 class CRMDealBoardStage(_CRMDealBoardStageRequired, total=False):
-    #: Сумма в валюте учёта; отсутствует при неполном покрытии курсами
-    amount_in_accounting: float
-    weighted_in_accounting: float
+    #: Сумма в валюте учёта десятичной строкой; отсутствует при неполном покрытии курсами
+    amount_in_accounting: str
+    weighted_in_accounting: str
 
 class _CRMDealCardRequired(TypedDict):
     id: "UUID"
     pipeline_id: "UUID"
     stage_id: "UUID"
     title: str
-    amount: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    amount: str
     #: Код валюты из справочника ERP
     currency: str
     #: Канал обращения; manual для ручного заведения
@@ -2607,7 +2614,8 @@ class _CRMDealInputRequired(TypedDict):
     title: str
 
 class CRMDealInput(_CRMDealInputRequired, total=False):
-    amount: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    amount: str
     #: Обязателен при ненулевой сумме
     currency: str
     source: str
@@ -2626,8 +2634,8 @@ class _CRMDealItemRequired(TypedDict):
     name: str
     quantity: float
     unit: str
-    #: В тех же единицах, что и сумма сделки
-    price: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    price: str
     discount_percent: float
     #: Сумма строки со скидкой; считает сервер, чтобы клиенты не разошлись на округлении
     total: int
@@ -2645,12 +2653,14 @@ class _CRMDealItemInputRequired(TypedDict):
 class CRMDealItemInput(_CRMDealItemInputRequired, total=False):
     product_id: Optional[str]
     unit: str
-    price: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    price: str
     discount_percent: float
 
 class CRMDealPatch(TypedDict, total=False):
     title: str
-    amount: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    amount: str
     currency: str
     source: str
     probability: int
@@ -3034,7 +3044,8 @@ class _CRMInboxDealInputRequired(TypedDict):
     stage_id: "UUID"
 
 class CRMInboxDealInput(_CRMInboxDealInputRequired, total=False):
-    amount: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    amount: str
     currency: str
 
 class _CRMInboxEntityMessageRequired(TypedDict):
@@ -3342,7 +3353,8 @@ class CRMLossReasonInput(_CRMLossReasonInputRequired, total=False):
 class _CRMLossReasonMetricRequired(TypedDict):
     name: str
     count: int
-    amount: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    amount: str
 
 class CRMLossReasonMetric(_CRMLossReasonMetricRequired, total=False):
     id: str
@@ -3353,16 +3365,16 @@ class _CRMManagerWorkloadRequired(TypedDict):
     open_deals: int
     open_conversations: int
     won_deals: int
-    #: Выиграно за всё время
-    won_amount: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    won_amount: str
     lost_deals: int
 
 class CRMManagerWorkload(_CRMManagerWorkloadRequired, total=False):
     owner_name: str
-    #: План на текущий месяц; 0 - план не задан
-    plan_amount: int
-    #: Закрыто в текущем месяце - с этим и сравнивают план
-    won_amount_month: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    plan_amount: str
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    won_amount_month: str
 
 class CRMMergeLeadsInput(TypedDict):
     """Какие обращения свести в это"""
@@ -3409,7 +3421,8 @@ class _CRMPipelineOverviewRequired(TypedDict):
     pipeline_id: "UUID"
     pipeline_name: str
     open_count: int
-    open_amount: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    open_amount: str
 
 class CRMPipelineOverview(_CRMPipelineOverviewRequired, total=False):
     stages: Optional[List["CRMStageOverview"]]
@@ -3461,7 +3474,8 @@ class _CRMSalesPlanRequired(TypedDict):
     id: "UUID"
     #: Первое число месяца
     period: str
-    amount: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    amount: str
     currency: str
 
 class CRMSalesPlan(_CRMSalesPlanRequired, total=False):
@@ -3480,7 +3494,8 @@ class CRMSalesPlansInput(_CRMSalesPlansInputRequired, total=False):
     period: str
 
 class _CRMSalesPlansInputItemsItemRequired(TypedDict):
-    amount: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    amount: str
 
 class CRMSalesPlansInputItemsItem(_CRMSalesPlansInputItemsItemRequired, total=False):
     #: Пусто - план на весь отдел
@@ -3530,14 +3545,16 @@ class CRMStageMetric(TypedDict):
     stage_name: str
     category: "CRMStageCategory"
     count: int
-    amount: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    amount: str
 
 class CRMStageOverview(TypedDict):
     stage_id: "UUID"
     stage_name: str
     category: "CRMStageCategory"
     deal_count: int
-    deal_amount: int
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    deal_amount: str
     updated_at: str
 
 class CRMStagePatch(TypedDict, total=False):
