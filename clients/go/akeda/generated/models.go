@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1f94e575d48562d17b07284253910b4216a393fa570609b3f20648ac8ca8719c).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f6b38b3f9c13d7656a43ba53baf8fa291e888225998147bce737702f2c0051e2).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -13614,25 +13614,23 @@ type ScrumTeamMember struct {
 }
 
 type Section struct {
-	ID           UUID    `json:"id"`
-	Project      *UUID   `json:"project"`
-	ProjectKey   *string `json:"project_key"`
-	ProjectName  *string `json:"project_name"`
-	Key          string  `json:"key"`
-	Name         string  `json:"name"`
-	Description  string  `json:"description"`
-	Color        string  `json:"color"`
-	Icon         string  `json:"icon"`
-	Status       string  `json:"status"`
-	Lead         *int64  `json:"lead"`
-	LeadName     *string `json:"lead_name"`
-	TargetDate   *string `json:"target_date"`
-	TasksTotal   int64   `json:"tasks_total"`
-	TasksActive  int64   `json:"tasks_active"`
-	TasksDone    int64   `json:"tasks_done"`
-	TasksOverdue int64   `json:"tasks_overdue"`
-	// SystemCode — Код системного раздела. `inbox` — «Входящие» проекта: удалить и перенести в другой проект нельзя, переименовать можно. У раздела клиента поле отсутствует.
-	SystemCode   *string                `json:"system_code,omitempty"`
+	ID           UUID                   `json:"id"`
+	Project      *UUID                  `json:"project"`
+	ProjectKey   *string                `json:"project_key"`
+	ProjectName  *string                `json:"project_name"`
+	Key          string                 `json:"key"`
+	Name         string                 `json:"name"`
+	Description  string                 `json:"description"`
+	Color        string                 `json:"color"`
+	Icon         string                 `json:"icon"`
+	Status       string                 `json:"status"`
+	Lead         *int64                 `json:"lead"`
+	LeadName     *string                `json:"lead_name"`
+	TargetDate   *string                `json:"target_date"`
+	TasksTotal   int64                  `json:"tasks_total"`
+	TasksActive  int64                  `json:"tasks_active"`
+	TasksDone    int64                  `json:"tasks_done"`
+	TasksOverdue int64                  `json:"tasks_overdue"`
 	MembersCount int64                  `json:"members_count"`
 	Members      []SectionMemberPreview `json:"members"`
 }
@@ -15950,30 +15948,27 @@ type Task struct {
 	BlockedByCount     int64                        `json:"blocked_by_count"`
 }
 
-// TaskCreate — Нужен `section` или `project`: задача без раздела попадает в системный раздел «Входящие» указанного проекта.
 type TaskCreate struct {
-	Section *UUID `json:"section,omitempty"`
-	// Project — Проект задач для задачи без раздела; при заданном `section` не читается.
-	Project            map[string]json.RawMessage `json:"project,omitempty"`
-	Title              string                     `json:"title"`
-	Description        *string                    `json:"description,omitempty"`
-	Status             *UUID                      `json:"status,omitempty"`
-	Priority           *TaskPriority              `json:"priority,omitempty"`
-	IsImportant        *bool                      `json:"is_important,omitempty"`
-	Creator            *int64                     `json:"creator,omitempty"`
-	Executor           *int64                     `json:"executor,omitempty"`
-	Assignee           *int64                     `json:"assignee,omitempty"`
-	CoexecutorIds      []int64                    `json:"coexecutor_ids,omitempty"`
-	WatcherIds         []int64                    `json:"watcher_ids,omitempty"`
-	TagIds             []UUID                     `json:"tag_ids,omitempty"`
-	StartAt            *string                    `json:"start_at,omitempty"`
-	DueAt              *string                    `json:"due_at,omitempty"`
-	Estimate           *float64                   `json:"estimate,omitempty"`
-	Parent             *UUID                      `json:"parent,omitempty"`
-	Recurrence         *string                    `json:"recurrence,omitempty"`
-	RecurrenceInterval *int64                     `json:"recurrence_interval,omitempty"`
-	RecurrenceUntil    *string                    `json:"recurrence_until,omitempty"`
-	Cycle              *string                    `json:"cycle,omitempty"`
+	Section            UUID          `json:"section"`
+	Title              string        `json:"title"`
+	Description        *string       `json:"description,omitempty"`
+	Status             *UUID         `json:"status,omitempty"`
+	Priority           *TaskPriority `json:"priority,omitempty"`
+	IsImportant        *bool         `json:"is_important,omitempty"`
+	Creator            *int64        `json:"creator,omitempty"`
+	Executor           *int64        `json:"executor,omitempty"`
+	Assignee           *int64        `json:"assignee,omitempty"`
+	CoexecutorIds      []int64       `json:"coexecutor_ids,omitempty"`
+	WatcherIds         []int64       `json:"watcher_ids,omitempty"`
+	TagIds             []UUID        `json:"tag_ids,omitempty"`
+	StartAt            *string       `json:"start_at,omitempty"`
+	DueAt              *string       `json:"due_at,omitempty"`
+	Estimate           *float64      `json:"estimate,omitempty"`
+	Parent             *UUID         `json:"parent,omitempty"`
+	Recurrence         *string       `json:"recurrence,omitempty"`
+	RecurrenceInterval *int64        `json:"recurrence_interval,omitempty"`
+	RecurrenceUntil    *string       `json:"recurrence_until,omitempty"`
+	Cycle              *string       `json:"cycle,omitempty"`
 	// Milestone — Веха: UUID или имя этапа своего проекта задач
 	Milestone *string                    `json:"milestone,omitempty"`
 	Custom    map[string]json.RawMessage `json:"custom,omitempty"`

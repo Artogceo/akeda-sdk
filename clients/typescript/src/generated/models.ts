@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1f94e575d48562d17b07284253910b4216a393fa570609b3f20648ac8ca8719c).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f6b38b3f9c13d7656a43ba53baf8fa291e888225998147bce737702f2c0051e2).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -13687,8 +13687,6 @@ export interface Section {
   "tasks_active": number;
   "tasks_done": number;
   "tasks_overdue": number;
-  /** Код системного раздела. `inbox` — «Входящие» проекта: удалить и перенести в другой проект нельзя, переименовать можно. У раздела клиента поле отсутствует. */
-  "system_code"?: "inbox";
   "members_count": number;
   "members": Array<SectionMemberPreview>;
 }
@@ -16029,11 +16027,8 @@ export interface Task {
   "blocked_by_count": number;
 }
 
-/** Нужен `section` или `project`: задача без раздела попадает в системный раздел «Входящие» указанного проекта. */
 export interface TaskCreate {
-  "section"?: UUID;
-  /** Проект задач для задачи без раздела; при заданном `section` не читается. */
-  "project"?: { [key: string]: unknown };
+  "section": UUID;
   "title": string;
   "description"?: string;
   "status"?: UUID;

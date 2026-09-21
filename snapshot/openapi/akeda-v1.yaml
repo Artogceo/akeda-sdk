@@ -1193,7 +1193,7 @@ paths:
         - Tasks
       operationId: tasksArchiveSection
       summary: Архивировать проект задач
-      description: Задачи раздела уезжают в системный раздел «Входящие» того же проекта; меняется только раздел, перенос каждой задачи виден в её истории. Поле `target_section` прежних клиентов игнорируется. Системный раздел (`system_code` = `inbox`) удалить нельзя — ответ 400.
+      description: Если внутри остались задачи, передайте другой проект в `target_section`.
       x-akeda-module: tasks
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -46936,16 +46936,12 @@ components:
     TaskCreate:
       type: object
       additionalProperties: false
-      description: 'Нужен `section` или `project`: задача без раздела попадает в системный раздел «Входящие» указанного проекта.'
       required:
+        - section
         - title
       properties:
         section:
           $ref: '#/components/schemas/UUID'
-        project:
-          allOf:
-            - $ref: '#/components/schemas/UUID'
-          description: Проект задач для задачи без раздела; при заданном `section` не читается.
         title:
           type: string
           minLength: 1
@@ -47695,11 +47691,6 @@ components:
         tasks_overdue:
           type: integer
           minimum: 0
-        system_code:
-          type: string
-          enum:
-            - inbox
-          description: 'Код системного раздела. `inbox` — «Входящие» проекта: удалить и перенести в другой проект нельзя, переименовать можно. У раздела клиента поле отсутствует.'
         members_count:
           type: integer
           minimum: 0

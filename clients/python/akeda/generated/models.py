@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1f94e575d48562d17b07284253910b4216a393fa570609b3f20648ac8ca8719c).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f6b38b3f9c13d7656a43ba53baf8fa291e888225998147bce737702f2c0051e2).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -14786,7 +14786,7 @@ class ScrumTeamMember(TypedDict):
     in_team: bool
     sections: int
 
-class _SectionRequired(TypedDict):
+class Section(TypedDict):
     id: "UUID"
     project: Optional["UUID"]
     project_key: Optional[str]
@@ -14806,10 +14806,6 @@ class _SectionRequired(TypedDict):
     tasks_overdue: int
     members_count: int
     members: List["SectionMemberPreview"]
-
-class Section(_SectionRequired, total=False):
-    #: Код системного раздела. `inbox` — «Входящие» проекта: удалить и перенести в другой проект нельзя, переименовать можно. У раздела клиента поле отсутствует.
-    system_code: Literal['inbox']
 
 class _SectionCreateRequired(TypedDict):
     project: "UUID"
@@ -17079,14 +17075,10 @@ class Task(_TaskRequired, total=False):
     assignee_name: Optional[str]
 
 class _TaskCreateRequired(TypedDict):
+    section: "UUID"
     title: str
 
 class TaskCreate(_TaskCreateRequired, total=False):
-    """Нужен `section` или `project`: задача без раздела попадает в системный раздел «Входящие» указанного проекта."""
-
-    section: "UUID"
-    #: Проект задач для задачи без раздела; при заданном `section` не читается.
-    project: Dict[str, Any]
     description: str
     status: "UUID"
     priority: "TaskPriority"
