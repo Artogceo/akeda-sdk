@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 96144e40f43790fcae2a6d33cbd19e1fcd2172857d874215d3e4755f9f377561).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 99d247390af280d006001d86f1bee9317d4885b4bc54f8dd3b1d78deabc19c03).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -794,6 +794,13 @@ export interface CRMAutomationRun {
   "id": UUID;
   "rule_id": UUID;
   "event_id": UUID;
+  /** Имя правила — журнал отвечает, что сработало */
+  "rule_name"?: string;
+  /** Событие, вызвавшее запуск */
+  "event_type"?: string;
+  /** lead или deal — по какой записи был запуск */
+  "entity_type"?: string;
+  "entity_id"?: UUID;
   "status": "queued" | "running" | "success" | "failed" | "skipped";
   "attempts": number;
   "action_errors": Array<string> | null;
@@ -878,6 +885,8 @@ export interface CRMCustomer {
   "promoted_at"?: string;
   "archived_at"?: string;
   "open_deals": number;
+  /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
+  "custom"?: { [key: string]: unknown } | null;
   "created_at": string;
   "updated_at": string;
 }
@@ -905,6 +914,8 @@ export interface CRMCustomerDuplicate {
   "promoted_at"?: string;
   "archived_at"?: string;
   "open_deals": number;
+  /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
+  "custom"?: { [key: string]: unknown } | null;
   "created_at": string;
   "updated_at": string;
   "matched_by": "inn" | "phone" | "name";
@@ -925,6 +936,8 @@ export interface CRMCustomerInput {
   "source"?: string;
   "owner_id"?: number | null;
   "note"?: string;
+  /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
+  "custom"?: { [key: string]: unknown } | null;
 }
 
 export interface CRMCustomerLinkInput {
@@ -948,6 +961,8 @@ export interface CRMCustomerPatch {
   "owner_id"?: number | null;
   "note"?: string;
   "archived"?: boolean;
+  /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
+  "custom"?: { [key: string]: unknown } | null;
 }
 
 export interface CRMCustomerRelations {
@@ -1616,6 +1631,8 @@ export interface CRMLead {
   "converted_deal_id"?: UUID;
   /** Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника */
   "merged_into_lead_id"?: UUID;
+  /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
+  "custom"?: { [key: string]: unknown } | null;
   "created_at": string;
   "updated_at": string;
 }
@@ -1645,6 +1662,8 @@ export interface CRMLeadCard {
   "converted_deal_id"?: UUID;
   /** Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника */
   "merged_into_lead_id"?: UUID;
+  /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
+  "custom"?: { [key: string]: unknown } | null;
   "created_at": string;
   "updated_at": string;
   "customer_name"?: string;
@@ -1689,6 +1708,8 @@ export interface CRMLeadDuplicate {
   "converted_deal_id"?: UUID;
   /** Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника */
   "merged_into_lead_id"?: UUID;
+  /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
+  "custom"?: { [key: string]: unknown } | null;
   "created_at": string;
   "updated_at": string;
   "customer_name"?: string;
@@ -1710,6 +1731,8 @@ export interface CRMLeadInput {
   "crm_customer_id"?: string | null;
   "next_action"?: string;
   "next_action_at"?: string | null;
+  /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
+  "custom"?: { [key: string]: unknown } | null;
 }
 
 export interface CRMLeadPatch {
@@ -1725,6 +1748,8 @@ export interface CRMLeadPatch {
   "next_action"?: string;
   "next_action_at"?: string | null;
   "archived"?: boolean;
+  /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
+  "custom"?: { [key: string]: unknown } | null;
 }
 
 export interface CRMLeadSource {

@@ -64594,6 +64594,12 @@ components:
         merged_into_lead_id:
           $ref: '#/components/schemas/UUID'
           description: Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
+        custom:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+          description: 'Дополнительные поля кабинета: состав задаёт «Настройки → Поля»'
         created_at:
           type: string
           format: date-time
@@ -64660,6 +64666,12 @@ components:
         merged_into_lead_id:
           $ref: '#/components/schemas/UUID'
           description: Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
+        custom:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+          description: 'Дополнительные поля кабинета: состав задаёт «Настройки → Поля»'
         created_at:
           type: string
           format: date-time
@@ -64759,6 +64771,12 @@ components:
             - string
             - 'null'
           format: date-time
+        custom:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+          description: 'Дополнительные поля кабинета: состав задаёт «Настройки → Поля»'
     CRMLeadPatch:
       type: object
       additionalProperties: false
@@ -64803,6 +64821,12 @@ components:
           format: date-time
         archived:
           type: boolean
+        custom:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+          description: 'Дополнительные поля кабинета: состав задаёт «Настройки → Поля»'
     CRMQualifyLeadInput:
       type: object
       additionalProperties: false
@@ -64962,6 +64986,12 @@ components:
           type: integer
           format: int64
           minimum: 0
+        custom:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+          description: 'Дополнительные поля кабинета: состав задаёт «Настройки → Поля»'
         created_at:
           type: string
           format: date-time
@@ -65016,6 +65046,12 @@ components:
           format: int64
         note:
           type: string
+        custom:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+          description: 'Дополнительные поля кабинета: состав задаёт «Настройки → Поля»'
     CRMCustomerPatch:
       type: object
       additionalProperties: false
@@ -65063,6 +65099,12 @@ components:
           type: string
         archived:
           type: boolean
+        custom:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+          description: 'Дополнительные поля кабинета: состав задаёт «Настройки → Поля»'
     CRMCustomerDuplicate:
       allOf:
         - $ref: '#/components/schemas/CRMCustomer'
@@ -66615,6 +66657,17 @@ components:
         rule_id:
           $ref: '#/components/schemas/UUID'
         event_id:
+          $ref: '#/components/schemas/UUID'
+        rule_name:
+          type: string
+          description: Имя правила — журнал отвечает, что сработало
+        event_type:
+          type: string
+          description: Событие, вызвавшее запуск
+        entity_type:
+          type: string
+          description: lead или deal — по какой записи был запуск
+        entity_id:
           $ref: '#/components/schemas/UUID'
         status:
           type: string

@@ -100724,6 +100724,14 @@
             "$ref": "#/components/schemas/UUID",
             "description": "Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника"
           },
+          "custom": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "description": "Дополнительные поля кабинета: состав задаёт «Настройки → Поля»"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -100812,6 +100820,14 @@
           "merged_into_lead_id": {
             "$ref": "#/components/schemas/UUID",
             "description": "Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника"
+          },
+          "custom": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "description": "Дополнительные поля кабинета: состав задаёт «Настройки → Поля»"
           },
           "created_at": {
             "type": "string",
@@ -100952,6 +100968,14 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "custom": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "description": "Дополнительные поля кабинета: состав задаёт «Настройки → Поля»"
           }
         }
       },
@@ -101015,6 +101039,14 @@
           },
           "archived": {
             "type": "boolean"
+          },
+          "custom": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "description": "Дополнительные поля кабинета: состав задаёт «Настройки → Поля»"
           }
         }
       },
@@ -101231,6 +101263,14 @@
             "format": "int64",
             "minimum": 0
           },
+          "custom": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "description": "Дополнительные поля кабинета: состав задаёт «Настройки → Поля»"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -101307,6 +101347,14 @@
           },
           "note": {
             "type": "string"
+          },
+          "custom": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "description": "Дополнительные поля кабинета: состав задаёт «Настройки → Поля»"
           }
         }
       },
@@ -101375,6 +101423,14 @@
           },
           "archived": {
             "type": "boolean"
+          },
+          "custom": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "description": "Дополнительные поля кабинета: состав задаёт «Настройки → Поля»"
           }
         }
       },
@@ -103508,6 +103564,21 @@
             "$ref": "#/components/schemas/UUID"
           },
           "event_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "rule_name": {
+            "type": "string",
+            "description": "Имя правила — журнал отвечает, что сработало"
+          },
+          "event_type": {
+            "type": "string",
+            "description": "Событие, вызвавшее запуск"
+          },
+          "entity_type": {
+            "type": "string",
+            "description": "lead или deal — по какой записи был запуск"
+          },
+          "entity_id": {
             "$ref": "#/components/schemas/UUID"
           },
           "status": {

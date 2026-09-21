@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 96144e40f43790fcae2a6d33cbd19e1fcd2172857d874215d3e4755f9f377561).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 99d247390af280d006001d86f1bee9317d4885b4bc54f8dd3b1d78deabc19c03).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -2322,7 +2322,7 @@ class CRMAutomationRuleInput(_CRMAutomationRuleInputRequired, total=False):
     conditions: Optional[Dict[str, str]]
     is_enabled: bool
 
-class CRMAutomationRun(TypedDict):
+class _CRMAutomationRunRequired(TypedDict):
     id: "UUID"
     rule_id: "UUID"
     event_id: "UUID"
@@ -2331,6 +2331,15 @@ class CRMAutomationRun(TypedDict):
     action_errors: Optional[List[str]]
     created_at: str
     updated_at: str
+
+class CRMAutomationRun(_CRMAutomationRunRequired, total=False):
+    #: Имя правила — журнал отвечает, что сработало
+    rule_name: str
+    #: Событие, вызвавшее запуск
+    event_type: str
+    #: lead или deal — по какой записи был запуск
+    entity_type: str
+    entity_id: "UUID"
 
 class _CRMContactRefRequired(TypedDict):
     id: "UUID"
@@ -2418,6 +2427,8 @@ class CRMCustomer(_CRMCustomerRequired, total=False):
     #: Момент переноса в справочник контрагентов ERP
     promoted_at: str
     archived_at: str
+    #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+    custom: Optional[Dict[str, Any]]
 
 class _CRMCustomerDuplicateRequired(TypedDict):
     id: "UUID"
@@ -2447,6 +2458,8 @@ class CRMCustomerDuplicate(_CRMCustomerDuplicateRequired, total=False):
     #: Момент переноса в справочник контрагентов ERP
     promoted_at: str
     archived_at: str
+    #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+    custom: Optional[Dict[str, Any]]
 
 class _CRMCustomerInputRequired(TypedDict):
     name: str
@@ -2465,6 +2478,8 @@ class CRMCustomerInput(_CRMCustomerInputRequired, total=False):
     source: str
     owner_id: Optional[int]
     note: str
+    #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+    custom: Optional[Dict[str, Any]]
 
 class CRMCustomerLinkInput(TypedDict, total=False):
     #: Должность человека в компании
@@ -2486,6 +2501,8 @@ class CRMCustomerPatch(TypedDict, total=False):
     owner_id: Optional[int]
     note: str
     archived: bool
+    #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+    custom: Optional[Dict[str, Any]]
 
 class CRMCustomerRelations(TypedDict):
     #: Компании, в которых работает человек
@@ -3153,6 +3170,8 @@ class CRMLead(_CRMLeadRequired, total=False):
     converted_deal_id: "UUID"
     #: Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
     merged_into_lead_id: "UUID"
+    #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+    custom: Optional[Dict[str, Any]]
 
 class _CRMLeadCardRequired(TypedDict):
     id: "UUID"
@@ -3184,6 +3203,8 @@ class CRMLeadCard(_CRMLeadCardRequired, total=False):
     converted_deal_id: "UUID"
     #: Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
     merged_into_lead_id: "UUID"
+    #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+    custom: Optional[Dict[str, Any]]
     customer_name: str
     customer_phone: str
     customer_messengers: Optional[Dict[str, str]]
@@ -3231,6 +3252,8 @@ class CRMLeadDuplicate(_CRMLeadDuplicateRequired, total=False):
     converted_deal_id: "UUID"
     #: Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
     merged_into_lead_id: "UUID"
+    #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+    custom: Optional[Dict[str, Any]]
     customer_name: str
     customer_phone: str
     customer_messengers: Optional[Dict[str, str]]
@@ -3251,6 +3274,8 @@ class CRMLeadInput(_CRMLeadInputRequired, total=False):
     crm_customer_id: Optional[str]
     next_action: str
     next_action_at: Optional[str]
+    #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+    custom: Optional[Dict[str, Any]]
 
 class CRMLeadPatch(TypedDict, total=False):
     title: str
@@ -3265,6 +3290,8 @@ class CRMLeadPatch(TypedDict, total=False):
     next_action: str
     next_action_at: Optional[str]
     archived: bool
+    #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+    custom: Optional[Dict[str, Any]]
 
 class CRMLeadSource(TypedDict):
     id: "UUID"

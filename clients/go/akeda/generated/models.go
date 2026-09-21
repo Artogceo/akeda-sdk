@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 96144e40f43790fcae2a6d33cbd19e1fcd2172857d874215d3e4755f9f377561).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 99d247390af280d006001d86f1bee9317d4885b4bc54f8dd3b1d78deabc19c03).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -781,9 +781,16 @@ type CRMAutomationRuleInput struct {
 }
 
 type CRMAutomationRun struct {
-	ID           UUID     `json:"id"`
-	RuleID       UUID     `json:"rule_id"`
-	EventID      UUID     `json:"event_id"`
+	ID      UUID `json:"id"`
+	RuleID  UUID `json:"rule_id"`
+	EventID UUID `json:"event_id"`
+	// RuleName — Имя правила — журнал отвечает, что сработало
+	RuleName *string `json:"rule_name,omitempty"`
+	// EventType — Событие, вызвавшее запуск
+	EventType *string `json:"event_type,omitempty"`
+	// EntityType — lead или deal — по какой записи был запуск
+	EntityType   *string  `json:"entity_type,omitempty"`
+	EntityID     *UUID    `json:"entity_id,omitempty"`
 	Status       string   `json:"status"`
 	Attempts     int64    `json:"attempts"`
 	ActionErrors []string `json:"action_errors"`
@@ -868,8 +875,10 @@ type CRMCustomer struct {
 	PromotedAt *string `json:"promoted_at,omitempty"`
 	ArchivedAt *string `json:"archived_at,omitempty"`
 	OpenDeals  int64   `json:"open_deals"`
-	CreatedAt  string  `json:"created_at"`
-	UpdatedAt  string  `json:"updated_at"`
+	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+	Custom    map[string]json.RawMessage `json:"custom,omitempty"`
+	CreatedAt string                     `json:"created_at"`
+	UpdatedAt string                     `json:"updated_at"`
 }
 
 type CRMCustomerDuplicate struct {
@@ -895,9 +904,11 @@ type CRMCustomerDuplicate struct {
 	PromotedAt *string `json:"promoted_at,omitempty"`
 	ArchivedAt *string `json:"archived_at,omitempty"`
 	OpenDeals  int64   `json:"open_deals"`
-	CreatedAt  string  `json:"created_at"`
-	UpdatedAt  string  `json:"updated_at"`
-	MatchedBy  string  `json:"matched_by"`
+	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+	Custom    map[string]json.RawMessage `json:"custom,omitempty"`
+	CreatedAt string                     `json:"created_at"`
+	UpdatedAt string                     `json:"updated_at"`
+	MatchedBy string                     `json:"matched_by"`
 }
 
 type CRMCustomerInput struct {
@@ -915,6 +926,8 @@ type CRMCustomerInput struct {
 	Source     *string           `json:"source,omitempty"`
 	OwnerID    *int64            `json:"owner_id,omitempty"`
 	Note       *string           `json:"note,omitempty"`
+	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
 type CRMCustomerLinkInput struct {
@@ -938,6 +951,8 @@ type CRMCustomerPatch struct {
 	OwnerID    *int64            `json:"owner_id,omitempty"`
 	Note       *string           `json:"note,omitempty"`
 	Archived   *bool             `json:"archived,omitempty"`
+	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
 type CRMCustomerRelations struct {
@@ -1605,9 +1620,11 @@ type CRMLead struct {
 	RejectReasonID      *UUID         `json:"reject_reason_id,omitempty"`
 	ConvertedDealID     *UUID         `json:"converted_deal_id,omitempty"`
 	// MergedIntoLeadID — Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
-	MergedIntoLeadID *UUID  `json:"merged_into_lead_id,omitempty"`
-	CreatedAt        string `json:"created_at"`
-	UpdatedAt        string `json:"updated_at"`
+	MergedIntoLeadID *UUID `json:"merged_into_lead_id,omitempty"`
+	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+	Custom    map[string]json.RawMessage `json:"custom,omitempty"`
+	CreatedAt string                     `json:"created_at"`
+	UpdatedAt string                     `json:"updated_at"`
 }
 
 // CRMLeadCard — Лид для экрана: тот же лид плюс человек за обращением и ответственный читаемыми именами
@@ -1634,14 +1651,16 @@ type CRMLeadCard struct {
 	RejectReasonID      *UUID         `json:"reject_reason_id,omitempty"`
 	ConvertedDealID     *UUID         `json:"converted_deal_id,omitempty"`
 	// MergedIntoLeadID — Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
-	MergedIntoLeadID   *UUID             `json:"merged_into_lead_id,omitempty"`
-	CreatedAt          string            `json:"created_at"`
-	UpdatedAt          string            `json:"updated_at"`
-	CustomerName       *string           `json:"customer_name,omitempty"`
-	CustomerPhone      *string           `json:"customer_phone,omitempty"`
-	CustomerMessengers map[string]string `json:"customer_messengers,omitempty"`
-	OwnerName          *string           `json:"owner_name,omitempty"`
-	RejectReason       *string           `json:"reject_reason,omitempty"`
+	MergedIntoLeadID *UUID `json:"merged_into_lead_id,omitempty"`
+	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+	Custom             map[string]json.RawMessage `json:"custom,omitempty"`
+	CreatedAt          string                     `json:"created_at"`
+	UpdatedAt          string                     `json:"updated_at"`
+	CustomerName       *string                    `json:"customer_name,omitempty"`
+	CustomerPhone      *string                    `json:"customer_phone,omitempty"`
+	CustomerMessengers map[string]string          `json:"customer_messengers,omitempty"`
+	OwnerName          *string                    `json:"owner_name,omitempty"`
+	RejectReason       *string                    `json:"reject_reason,omitempty"`
 }
 
 type CRMLeadDecision struct {
@@ -1678,14 +1697,16 @@ type CRMLeadDuplicate struct {
 	RejectReasonID      *UUID         `json:"reject_reason_id,omitempty"`
 	ConvertedDealID     *UUID         `json:"converted_deal_id,omitempty"`
 	// MergedIntoLeadID — Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
-	MergedIntoLeadID   *UUID             `json:"merged_into_lead_id,omitempty"`
-	CreatedAt          string            `json:"created_at"`
-	UpdatedAt          string            `json:"updated_at"`
-	CustomerName       *string           `json:"customer_name,omitempty"`
-	CustomerPhone      *string           `json:"customer_phone,omitempty"`
-	CustomerMessengers map[string]string `json:"customer_messengers,omitempty"`
-	OwnerName          *string           `json:"owner_name,omitempty"`
-	RejectReason       *string           `json:"reject_reason,omitempty"`
+	MergedIntoLeadID *UUID `json:"merged_into_lead_id,omitempty"`
+	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+	Custom             map[string]json.RawMessage `json:"custom,omitempty"`
+	CreatedAt          string                     `json:"created_at"`
+	UpdatedAt          string                     `json:"updated_at"`
+	CustomerName       *string                    `json:"customer_name,omitempty"`
+	CustomerPhone      *string                    `json:"customer_phone,omitempty"`
+	CustomerMessengers map[string]string          `json:"customer_messengers,omitempty"`
+	OwnerName          *string                    `json:"owner_name,omitempty"`
+	RejectReason       *string                    `json:"reject_reason,omitempty"`
 }
 
 type CRMLeadInput struct {
@@ -1700,6 +1721,8 @@ type CRMLeadInput struct {
 	CRMCustomerID *string `json:"crm_customer_id,omitempty"`
 	NextAction    *string `json:"next_action,omitempty"`
 	NextActionAt  *string `json:"next_action_at,omitempty"`
+	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
 type CRMLeadPatch struct {
@@ -1715,6 +1738,8 @@ type CRMLeadPatch struct {
 	NextAction    *string `json:"next_action,omitempty"`
 	NextActionAt  *string `json:"next_action_at,omitempty"`
 	Archived      *bool   `json:"archived,omitempty"`
+	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
 type CRMLeadSource struct {
