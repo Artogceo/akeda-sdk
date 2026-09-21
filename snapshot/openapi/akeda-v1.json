@@ -51504,6 +51504,138 @@
         }
       }
     },
+    "/api/v1/marketplace/ozon/ads-absence": {
+      "post": {
+        "tags": [
+          "Marketplace Ozon"
+        ],
+        "operationId": "marketplaceOzonConfirmAdsAbsence",
+        "summary": "Подтвердить, что рекламы не было",
+        "description": "Ответ человека «рекламы не было» из плашки «Отчёт пока неполный».\nДействует по конец текущего месяца: до этого дня строка рекламы в\nплашке не показывается, со следующего месяца вопрос задаётся снова,\nесли данных так и нет. Упавшую загрузку рекламы ответ не прячет.\nПустой список магазинов — все активные магазины площадки; выключенные\nмагазины ответа не получают.\n",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketplaceAdsAbsenceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Срок ответа и число магазинов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceAdsAbsence"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/marketplace/wb/ads-absence": {
+      "post": {
+        "tags": [
+          "Marketplace Wildberries"
+        ],
+        "operationId": "marketplaceWbConfirmAdsAbsence",
+        "summary": "Подтвердить, что рекламы не было",
+        "description": "Ответ человека «рекламы не было» из плашки «Отчёт пока неполный».\nДействует по конец текущего месяца: до этого дня строка рекламы в\nплашке не показывается, со следующего месяца вопрос задаётся снова,\nесли данных так и нет. Упавшую загрузку рекламы ответ не прячет.\nПустой список магазинов — все активные магазины площадки; выключенные\nмагазины ответа не получают.\n",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketplaceAdsAbsenceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Срок ответа и число магазинов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceAdsAbsence"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
     "/api/v1/marketplace/ozon/pricing": {
       "get": {
         "tags": [
@@ -117191,6 +117323,61 @@
           "expense_row_count": {
             "type": "integer",
             "minimum": 0
+          },
+          "zero_cost": {
+            "type": "array",
+            "description": "Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "offer_id",
+                "units"
+              ],
+              "properties": {
+                "offer_id": {
+                  "type": "string"
+                },
+                "units": {
+                  "type": "string",
+                  "description": "Штуки — точная десятичная строка"
+                }
+              }
+            }
+          }
+        }
+      },
+      "MarketplaceAdsAbsenceRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "stores": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Магазины отчёта; пусто — все активные магазины площадки"
+          }
+        }
+      },
+      "MarketplaceAdsAbsence": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "through",
+          "stores"
+        ],
+        "properties": {
+          "through": {
+            "type": "string",
+            "format": "date",
+            "description": "По какой день включительно ответ действует"
+          },
+          "stores": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Сколько магазинов получили ответ"
           }
         }
       },

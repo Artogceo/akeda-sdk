@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 99d247390af280d006001d86f1bee9317d4885b4bc54f8dd3b1d78deabc19c03).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 7b6d873cf7ec6d8829148aa6add54e2d876949394801452f36bd940815367d2e).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -10860,6 +10860,18 @@ export interface ManagedChecklistPatch {
   "items": Array<ManagedChecklistItem>;
 }
 
+export interface MarketplaceAdsAbsence {
+  /** По какой день включительно ответ действует */
+  "through": string;
+  /** Сколько магазинов получили ответ */
+  "stores": number;
+}
+
+export interface MarketplaceAdsAbsenceRequest {
+  /** Магазины отчёта; пусто — все активные магазины площадки */
+  "stores"?: Array<string>;
+}
+
 export interface MarketplaceCatalogCandidate {
   "product_id": UUID;
   "sku": string;
@@ -12626,6 +12638,14 @@ export interface MarketplaceWeeklyFinanceRun {
   "captured_at"?: string;
   "row_count": number;
   "expense_row_count": number;
+  /** Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж. */
+  "zero_cost"?: Array<MarketplaceWeeklyFinanceRunZeroCostItem>;
+}
+
+export interface MarketplaceWeeklyFinanceRunZeroCostItem {
+  "offer_id": string;
+  /** Штуки — точная десятичная строка */
+  "units": string;
 }
 
 export interface MarketplaceWeeklyFinanceRuns {

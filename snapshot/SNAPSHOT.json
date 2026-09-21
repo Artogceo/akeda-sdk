@@ -3,7 +3,7 @@
     "license": "LicenseRef-Akeda-Proprietary",
     "operations": {
       "by_audience": {
-        "external": 1063
+        "external": 1065
       },
       "by_module": {
         "billing": 1,
@@ -17,7 +17,7 @@
         "finance": 148,
         "knowledge": 38,
         "mail": 36,
-        "marketplace": 72,
+        "marketplace": 74,
         "platform": 4,
         "settings": 53,
         "signup": 4,
@@ -25,22 +25,22 @@
         "tasks": 131
       },
       "by_stage": {
-        "preview": 1033,
+        "preview": 1035,
         "public": 30
       },
       "installation_by_module": {
         "calendar": 33,
         "core": 161,
         "finance": 134,
-        "marketplace": 72,
+        "marketplace": 74,
         "platform": 4,
         "stock": 86,
         "tasks": 131
       },
-      "installation_reachable": 621,
-      "total": 1063
+      "installation_reachable": 623,
+      "total": 1065
     },
-    "schemas": 1473,
+    "schemas": 1475,
     "servers": [
       "https://erp.akeda.ru"
     ],
@@ -59,14 +59,14 @@
       "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 4271397,
+      "bytes": 4278192,
       "path": "openapi/akeda-v1.json",
-      "sha256": "99d247390af280d006001d86f1bee9317d4885b4bc54f8dd3b1d78deabc19c03"
+      "sha256": "7b6d873cf7ec6d8829148aa6add54e2d876949394801452f36bd940815367d2e"
     },
     {
-      "bytes": 3233425,
+      "bytes": 3238779,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "f46d8f62561847c2dd445ec137260be3905b81c4442707cd3336d1dd8468e056"
+      "sha256": "b4c0f8792c46ae3def767e97dc3760bf970031c181e012bd7a631ff3a81d7615"
     },
     {
       "bytes": 18414,
@@ -79,6 +79,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "d00c25206c4e592a95c959ba9c500204288d479869893630b9bf392522178562",
+  "snapshot_digest": "9980036bc673fda15aca885f3f24696942cf7812cebdb41dde9a3a7200c0a641",
   "snapshot_version": 1
 }

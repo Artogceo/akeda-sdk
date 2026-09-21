@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 99d247390af280d006001d86f1bee9317d4885b4bc54f8dd3b1d78deabc19c03).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 7b6d873cf7ec6d8829148aa6add54e2d876949394801452f36bd940815367d2e).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -5207,6 +5207,13 @@ export interface OperationTypes {
     body: never;
     response: models.MarketplaceWeeklyFinanceRuns;
   };
+  /** POST /api/v1/marketplace/ozon/ads-absence — Подтвердить, что рекламы не было */
+  marketplaceOzonConfirmAdsAbsence: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.MarketplaceAdsAbsenceRequest;
+    response: models.MarketplaceAdsAbsence;
+  };
   /** GET /api/v1/marketplace/ozon/decomposition — Получить декомпозицию юнит-экономики Ozon */
   marketplaceOzonDecomposition: {
     params: Record<string, never>;
@@ -5416,6 +5423,13 @@ export interface OperationTypes {
     query: { "store": models.UUID };
     body: never;
     response: models.MarketplaceWbCardOptions;
+  };
+  /** POST /api/v1/marketplace/wb/ads-absence — Подтвердить, что рекламы не было */
+  marketplaceWbConfirmAdsAbsence: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.MarketplaceAdsAbsenceRequest;
+    response: models.MarketplaceAdsAbsence;
   };
   /** GET /api/v1/marketplace/wb/decomposition — Получить декомпозицию прибыли Wildberries */
   marketplaceWbDecomposition: {
@@ -8213,6 +8227,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   marketplaceLinkCatalogProduct: { method: "POST", path: "/api/v1/marketplace/{platform}/stores/{id}/catalog/links", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceListCatalogCandidates: { method: "GET", path: "/api/v1/marketplace/{platform}/stores/{id}/catalog/candidates", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   marketplaceListWeeklyFinanceRuns: { method: "GET", path: "/api/v1/marketplace/{platform}/stores/{id}/finance/weeks", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonConfirmAdsAbsence: { method: "POST", path: "/api/v1/marketplace/ozon/ads-absence", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonDecomposition: { method: "GET", path: "/api/v1/marketplace/ozon/decomposition", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonDecompositionOther: { method: "GET", path: "/api/v1/marketplace/ozon/decomposition-other", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonFbs: { method: "GET", path: "/api/v1/marketplace/ozon/fbs", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8243,6 +8258,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   marketplaceUpdateYandexStore: { method: "PATCH", path: "/api/v1/marketplace/yandex/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbCardBoard: { method: "GET", path: "/api/v1/marketplace/wb/card/board", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbCardOptions: { method: "GET", path: "/api/v1/marketplace/wb/card/options", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbConfirmAdsAbsence: { method: "POST", path: "/api/v1/marketplace/wb/ads-absence", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbDecomposition: { method: "GET", path: "/api/v1/marketplace/wb/decomposition", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbDecompositionOther: { method: "GET", path: "/api/v1/marketplace/wb/decomposition-other", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbFunnel: { method: "GET", path: "/api/v1/marketplace/wb/funnel", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

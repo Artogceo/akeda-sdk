@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 99d247390af280d006001d86f1bee9317d4885b4bc54f8dd3b1d78deabc19c03).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 7b6d873cf7ec6d8829148aa6add54e2d876949394801452f36bd940815367d2e).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -770,6 +770,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'marketplaceLinkCatalogProduct': OperationSpec('POST', '/api/v1/marketplace/{platform}/stores/{id}/catalog/links', 'marketplace', 'preview', 'marketplace:write', False, True, ('id', 'platform',), 'none', None, None),
     'marketplaceListCatalogCandidates': OperationSpec('GET', '/api/v1/marketplace/{platform}/stores/{id}/catalog/candidates', 'marketplace', 'preview', 'marketplace:read', False, True, ('id', 'platform',), 'limit_offset', 200, 50),
     'marketplaceListWeeklyFinanceRuns': OperationSpec('GET', '/api/v1/marketplace/{platform}/stores/{id}/finance/weeks', 'marketplace', 'preview', 'marketplace:read', False, True, ('id', 'platform',), 'none', None, None),
+    'marketplaceOzonConfirmAdsAbsence': OperationSpec('POST', '/api/v1/marketplace/ozon/ads-absence', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
     'marketplaceOzonDecomposition': OperationSpec('GET', '/api/v1/marketplace/ozon/decomposition', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceOzonDecompositionOther': OperationSpec('GET', '/api/v1/marketplace/ozon/decomposition-other', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceOzonFbs': OperationSpec('GET', '/api/v1/marketplace/ozon/fbs', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
@@ -800,6 +801,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'marketplaceUpdateYandexStore': OperationSpec('PATCH', '/api/v1/marketplace/yandex/stores/{id}', 'marketplace', 'preview', 'marketplace:write', False, True, ('id',), 'none', None, None),
     'marketplaceWbCardBoard': OperationSpec('GET', '/api/v1/marketplace/wb/card/board', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceWbCardOptions': OperationSpec('GET', '/api/v1/marketplace/wb/card/options', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
+    'marketplaceWbConfirmAdsAbsence': OperationSpec('POST', '/api/v1/marketplace/wb/ads-absence', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
     'marketplaceWbDecomposition': OperationSpec('GET', '/api/v1/marketplace/wb/decomposition', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceWbDecompositionOther': OperationSpec('GET', '/api/v1/marketplace/wb/decomposition-other', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceWbFunnel': OperationSpec('GET', '/api/v1/marketplace/wb/funnel', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),

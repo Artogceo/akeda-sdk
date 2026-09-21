@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 99d247390af280d006001d86f1bee9317d4885b4bc54f8dd3b1d78deabc19c03).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 7b6d873cf7ec6d8829148aa6add54e2d876949394801452f36bd940815367d2e).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1047,6 +1047,8 @@ __all__ = [
     "MailThread",
     "ManagedChecklistItem",
     "ManagedChecklistPatch",
+    "MarketplaceAdsAbsence",
+    "MarketplaceAdsAbsenceRequest",
     "MarketplaceCatalogCandidate",
     "MarketplaceCatalogCandidatePage",
     "MarketplaceCatalogImportResult",
@@ -1175,6 +1177,7 @@ __all__ = [
     "MarketplaceWeeklyFinanceOutcome",
     "MarketplaceWeeklyFinancePostingResult",
     "MarketplaceWeeklyFinanceRun",
+    "MarketplaceWeeklyFinanceRunZeroCostItem",
     "MarketplaceWeeklyFinanceRuns",
     "MarketplaceYandexCost",
     "MarketplaceYandexCostInput",
@@ -12210,6 +12213,16 @@ class ManagedChecklistPatch(TypedDict):
     #: Пустой массив удаляет только группу с переданным id.
     items: List["ManagedChecklistItem"]
 
+class MarketplaceAdsAbsence(TypedDict):
+    #: По какой день включительно ответ действует
+    through: str
+    #: Сколько магазинов получили ответ
+    stores: int
+
+class MarketplaceAdsAbsenceRequest(TypedDict, total=False):
+    #: Магазины отчёта; пусто — все активные магазины площадки
+    stores: List[str]
+
 class MarketplaceCatalogCandidate(TypedDict):
     product_id: "UUID"
     sku: str
@@ -13790,6 +13803,13 @@ class _MarketplaceWeeklyFinanceRunRequired(TypedDict):
 class MarketplaceWeeklyFinanceRun(_MarketplaceWeeklyFinanceRunRequired, total=False):
     blocking_code: Literal['source_unavailable', 'report_incomplete', 'report_empty', 'week_open', 'source_semantics_unverified', 'accounting_setup_incomplete', 'cost_evidence_missing']
     captured_at: str
+    #: Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж.
+    zero_cost: List["MarketplaceWeeklyFinanceRunZeroCostItem"]
+
+class MarketplaceWeeklyFinanceRunZeroCostItem(TypedDict):
+    offer_id: str
+    #: Штуки — точная десятичная строка
+    units: str
 
 class MarketplaceWeeklyFinanceRuns(TypedDict):
     results: List["MarketplaceWeeklyFinanceRun"]

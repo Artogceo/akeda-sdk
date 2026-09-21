@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 99d247390af280d006001d86f1bee9317d4885b4bc54f8dd3b1d78deabc19c03).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 7b6d873cf7ec6d8829148aa6add54e2d876949394801452f36bd940815367d2e).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -10814,6 +10814,18 @@ type ManagedChecklistPatch struct {
 	Items []ManagedChecklistItem `json:"items"`
 }
 
+type MarketplaceAdsAbsence struct {
+	// Through — По какой день включительно ответ действует
+	Through string `json:"through"`
+	// Stores — Сколько магазинов получили ответ
+	Stores int64 `json:"stores"`
+}
+
+type MarketplaceAdsAbsenceRequest struct {
+	// Stores — Магазины отчёта; пусто — все активные магазины площадки
+	Stores []string `json:"stores,omitempty"`
+}
+
 type MarketplaceCatalogCandidate struct {
 	ProductID UUID   `json:"product_id"`
 	SKU       string `json:"sku"`
@@ -12570,6 +12582,14 @@ type MarketplaceWeeklyFinanceRun struct {
 	CapturedAt      *string `json:"captured_at,omitempty"`
 	RowCount        int64   `json:"row_count"`
 	ExpenseRowCount int64   `json:"expense_row_count"`
+	// ZeroCost — Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж.
+	ZeroCost []MarketplaceWeeklyFinanceRunZeroCostItem `json:"zero_cost,omitempty"`
+}
+
+type MarketplaceWeeklyFinanceRunZeroCostItem struct {
+	OfferID string `json:"offer_id"`
+	// Units — Штуки — точная десятичная строка
+	Units string `json:"units"`
 }
 
 type MarketplaceWeeklyFinanceRuns struct {
