@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 7b6d873cf7ec6d8829148aa6add54e2d876949394801452f36bd940815367d2e).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e8c5e3dc242e4d192c16e19a1c8d3d648b19feeeb75eb6f631621ac2c5cd6601).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -11170,6 +11170,10 @@ type MarketplaceOzonDecompositionArticle struct {
 	URL      string          `json:"url"`
 	// ByPeriod — Ключ — идентификатор периода
 	ByPeriod map[string]MarketplaceOzonDecompositionCell `json:"by_period"`
+	// CostMissing — Себестоимость артикула не заведена: прибыль завышена (ERP-1169)
+	CostMissing *bool `json:"cost_missing,omitempty"`
+	// UnitsMissing — Площадка прислала выручку, но не количество проданных штук: себестоимость посчитана нулём (ERP-1217)
+	UnitsMissing *bool `json:"units_missing,omitempty"`
 }
 
 type MarketplaceOzonDecompositionCell struct {
@@ -11548,9 +11552,11 @@ type MarketplaceOzonPnl struct {
 	// Breakdown — Расшифровка прочего по периодам
 	Breakdown map[string][]MarketplaceOzonDecompositionOtherItem `json:"breakdown,omitempty"`
 	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
-	CostMissing map[string]float64               `json:"cost_missing,omitempty"`
-	Freshness   *MarketplaceComponentFreshness   `json:"freshness,omitempty"`
-	DataThrough *MarketplaceComponentDataThrough `json:"data_through,omitempty"`
+	CostMissing map[string]float64 `json:"cost_missing,omitempty"`
+	// UnitsMissing — Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
+	UnitsMissing map[string]float64               `json:"units_missing,omitempty"`
+	Freshness    *MarketplaceComponentFreshness   `json:"freshness,omitempty"`
+	DataThrough  *MarketplaceComponentDataThrough `json:"data_through,omitempty"`
 	// Incomplete — Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
 	Incomplete *bool `json:"incomplete,omitempty"`
 }
@@ -12129,6 +12135,10 @@ type MarketplaceWbDecompositionArticle struct {
 	URL string `json:"url"`
 	// ByPeriod — Ключ — идентификатор блока периода
 	ByPeriod map[string]MarketplaceWbMetricCell `json:"by_period"`
+	// CostMissing — Себестоимость артикула не заведена: прибыль завышена (ERP-1169)
+	CostMissing *bool `json:"cost_missing,omitempty"`
+	// UnitsMissing — Площадка прислала выручку, но не количество проданных штук: себестоимость посчитана нулём (ERP-1217)
+	UnitsMissing *bool `json:"units_missing,omitempty"`
 }
 
 type MarketplaceWbDecompositionMonth struct {
@@ -12382,9 +12392,11 @@ type MarketplaceWbPnl struct {
 	// Breakdown — Разбор строки «Прочее» по периодам
 	Breakdown map[string][]MarketplaceWbDecompOtherItem `json:"breakdown,omitempty"`
 	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
-	CostMissing map[string]float64               `json:"cost_missing,omitempty"`
-	Freshness   *MarketplaceComponentFreshness   `json:"freshness,omitempty"`
-	DataThrough *MarketplaceComponentDataThrough `json:"data_through,omitempty"`
+	CostMissing map[string]float64 `json:"cost_missing,omitempty"`
+	// UnitsMissing — Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
+	UnitsMissing map[string]float64               `json:"units_missing,omitempty"`
+	Freshness    *MarketplaceComponentFreshness   `json:"freshness,omitempty"`
+	DataThrough  *MarketplaceComponentDataThrough `json:"data_through,omitempty"`
 	// Incomplete — Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
 	Incomplete *bool `json:"incomplete,omitempty"`
 }
@@ -12693,6 +12705,8 @@ type MarketplaceYandexPnl struct {
 	Rows    []MarketplaceYandexPnlRow    `json:"rows"`
 	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
 	CostMissing map[string]float64 `json:"cost_missing,omitempty"`
+	// UnitsMissing — Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
+	UnitsMissing map[string]float64 `json:"units_missing,omitempty"`
 	// Note — Пояснение к неполноте источника
 	Note *string `json:"note,omitempty"`
 	// Demo — Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические

@@ -72362,6 +72362,12 @@ components:
           additionalProperties:
             $ref: '#/components/schemas/MarketplaceOzonDecompositionCell'
           description: Ключ — идентификатор периода
+        cost_missing:
+          type: boolean
+          description: 'Себестоимость артикула не заведена: прибыль завышена (ERP-1169)'
+        units_missing:
+          type: boolean
+          description: 'Площадка прислала выручку, но не количество проданных штук: себестоимость посчитана нулём (ERP-1217)'
     MarketplaceOzonDecompositionOtherItem:
       type: object
       additionalProperties: false
@@ -72574,6 +72580,12 @@ components:
             type: number
             minimum: 0
           description: 'Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода'
+        units_missing:
+          type: object
+          additionalProperties:
+            type: number
+            minimum: 0
+          description: 'Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon'
         freshness:
           $ref: '#/components/schemas/MarketplaceComponentFreshness'
         data_through:
@@ -74629,6 +74641,12 @@ components:
           additionalProperties:
             $ref: '#/components/schemas/MarketplaceWbMetricCell'
           description: Ключ — идентификатор блока периода
+        cost_missing:
+          type: boolean
+          description: 'Себестоимость артикула не заведена: прибыль завышена (ERP-1169)'
+        units_missing:
+          type: boolean
+          description: 'Площадка прислала выручку, но не количество проданных штук: себестоимость посчитана нулём (ERP-1217)'
     MarketplaceWbDecompositionOther:
       type: object
       additionalProperties: false
@@ -74838,6 +74856,12 @@ components:
             type: number
             minimum: 0
           description: 'Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода'
+        units_missing:
+          type: object
+          additionalProperties:
+            type: number
+            minimum: 0
+          description: 'Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon'
         freshness:
           $ref: '#/components/schemas/MarketplaceComponentFreshness'
         data_through:
@@ -76241,6 +76265,12 @@ components:
             type: number
             minimum: 0
           description: 'Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода'
+        units_missing:
+          type: object
+          additionalProperties:
+            type: number
+            minimum: 0
+          description: 'Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon'
         note:
           type: string
           description: Пояснение к неполноте источника

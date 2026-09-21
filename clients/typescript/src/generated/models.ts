@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 7b6d873cf7ec6d8829148aa6add54e2d876949394801452f36bd940815367d2e).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e8c5e3dc242e4d192c16e19a1c8d3d648b19feeeb75eb6f631621ac2c5cd6601).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -11216,6 +11216,10 @@ export interface MarketplaceOzonDecompositionArticle {
   "url": string;
   /** Ключ — идентификатор периода */
   "by_period": { [key: string]: MarketplaceOzonDecompositionCell };
+  /** Себестоимость артикула не заведена: прибыль завышена (ERP-1169) */
+  "cost_missing"?: boolean;
+  /** Площадка прислала выручку, но не количество проданных штук: себестоимость посчитана нулём (ERP-1217) */
+  "units_missing"?: boolean;
 }
 
 export interface MarketplaceOzonDecompositionCell {
@@ -11597,6 +11601,8 @@ export interface MarketplaceOzonPnl {
   "breakdown"?: { [key: string]: Array<MarketplaceOzonDecompositionOtherItem> };
   /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода */
   "cost_missing"?: { [key: string]: number };
+  /** Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon */
+  "units_missing"?: { [key: string]: number };
   "freshness"?: MarketplaceComponentFreshness;
   "data_through"?: MarketplaceComponentDataThrough;
   /** Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась */
@@ -12177,6 +12183,10 @@ export interface MarketplaceWbDecompositionArticle {
   "url": string;
   /** Ключ — идентификатор блока периода */
   "by_period": { [key: string]: MarketplaceWbMetricCell };
+  /** Себестоимость артикула не заведена: прибыль завышена (ERP-1169) */
+  "cost_missing"?: boolean;
+  /** Площадка прислала выручку, но не количество проданных штук: себестоимость посчитана нулём (ERP-1217) */
+  "units_missing"?: boolean;
 }
 
 export interface MarketplaceWbDecompositionMonth {
@@ -12439,6 +12449,8 @@ export interface MarketplaceWbPnl {
   "breakdown"?: { [key: string]: Array<MarketplaceWbDecompOtherItem> };
   /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода */
   "cost_missing"?: { [key: string]: number };
+  /** Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon */
+  "units_missing"?: { [key: string]: number };
   "freshness"?: MarketplaceComponentFreshness;
   "data_through"?: MarketplaceComponentDataThrough;
   /** Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась */
@@ -12749,6 +12761,8 @@ export interface MarketplaceYandexPnl {
   "rows": Array<MarketplaceYandexPnlRow>;
   /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода */
   "cost_missing"?: { [key: string]: number };
+  /** Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon */
+  "units_missing"?: { [key: string]: number };
   /** Пояснение к неполноте источника */
   "note"?: string;
   /** Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические */

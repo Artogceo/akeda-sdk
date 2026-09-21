@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 7b6d873cf7ec6d8829148aa6add54e2d876949394801452f36bd940815367d2e).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e8c5e3dc242e4d192c16e19a1c8d3d648b19feeeb75eb6f631621ac2c5cd6601).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -12542,7 +12542,7 @@ class MarketplaceOzonDecomposition(_MarketplaceOzonDecompositionRequired, total=
     #: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
     incomplete: bool
 
-class MarketplaceOzonDecompositionArticle(TypedDict):
+class _MarketplaceOzonDecompositionArticleRequired(TypedDict):
     #: Внешний числовой идентификатор магазина
     store_id: Optional[int]
     store_name: str
@@ -12556,6 +12556,12 @@ class MarketplaceOzonDecompositionArticle(TypedDict):
     url: str
     #: Ключ — идентификатор периода
     by_period: Dict[str, "MarketplaceOzonDecompositionCell"]
+
+class MarketplaceOzonDecompositionArticle(_MarketplaceOzonDecompositionArticleRequired, total=False):
+    #: Себестоимость артикула не заведена: прибыль завышена (ERP-1169)
+    cost_missing: bool
+    #: Площадка прислала выручку, но не количество проданных штук: себестоимость посчитана нулём (ERP-1217)
+    units_missing: bool
 
 class _MarketplaceOzonDecompositionCellRequired(TypedDict):
     revenue: int
@@ -12860,6 +12866,8 @@ class MarketplaceOzonPnl(_MarketplaceOzonPnlRequired, total=False):
     breakdown: Dict[str, List["MarketplaceOzonDecompositionOtherItem"]]
     #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
     cost_missing: Dict[str, float]
+    #: Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
+    units_missing: Dict[str, float]
     freshness: "MarketplaceComponentFreshness"
     data_through: "MarketplaceComponentDataThrough"
     #: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
@@ -13403,7 +13411,7 @@ class MarketplaceWbDecomposition(_MarketplaceWbDecompositionRequired, total=Fals
     #: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
     incomplete: bool
 
-class MarketplaceWbDecompositionArticle(TypedDict):
+class _MarketplaceWbDecompositionArticleRequired(TypedDict):
     #: Внешний идентификатор магазина в аналитике
     store_id: int
     store_name: str
@@ -13420,6 +13428,12 @@ class MarketplaceWbDecompositionArticle(TypedDict):
     url: str
     #: Ключ — идентификатор блока периода
     by_period: Dict[str, "MarketplaceWbMetricCell"]
+
+class MarketplaceWbDecompositionArticle(_MarketplaceWbDecompositionArticleRequired, total=False):
+    #: Себестоимость артикула не заведена: прибыль завышена (ERP-1169)
+    cost_missing: bool
+    #: Площадка прислала выручку, но не количество проданных штук: себестоимость посчитана нулём (ERP-1217)
+    units_missing: bool
 
 class MarketplaceWbDecompositionMonth(TypedDict):
     key: str
@@ -13614,6 +13628,8 @@ class MarketplaceWbPnl(_MarketplaceWbPnlRequired, total=False):
     breakdown: Dict[str, List["MarketplaceWbDecompOtherItem"]]
     #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
     cost_missing: Dict[str, float]
+    #: Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
+    units_missing: Dict[str, float]
     freshness: "MarketplaceComponentFreshness"
     data_through: "MarketplaceComponentDataThrough"
     #: Хотя бы один обязательный компонент не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
@@ -13894,6 +13910,8 @@ class _MarketplaceYandexPnlRequired(TypedDict):
 class MarketplaceYandexPnl(_MarketplaceYandexPnlRequired, total=False):
     #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
     cost_missing: Dict[str, float]
+    #: Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
+    units_missing: Dict[str, float]
     #: Пояснение к неполноте источника
     note: str
     #: Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические
