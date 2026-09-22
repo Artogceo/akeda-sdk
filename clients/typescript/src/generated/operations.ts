@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f6b38b3f9c13d7656a43ba53baf8fa291e888225998147bce737702f2c0051e2).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bc2b0882bc0aa6ec44fd67ee512ae02853b0da0e8ae0dd20355e78afc973109).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -5711,6 +5711,13 @@ export interface OperationTypes {
     body: never;
     response: models.BillingCabinetInvoice;
   };
+  /** GET /api/v1/settings/referrals — Получить реферальную программу кабинета */
+  settingsGetReferrals: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.BillingReferralCabinetSummary;
+  };
   /** GET /api/v1/settings/subscription — Получить подписку кабинета */
   settingsGetSubscription: {
     params: Record<string, never>;
@@ -5948,6 +5955,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.SignupRequestInfo;
+  };
+  /** POST /api/v1/signup/attribution/touches — Зафиксировать обезличенное маркетинговое касание */
+  signupRecordAttributionTouch: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.SignupAttributionTouchInput;
+    response: models.SignupAttributionAccepted;
   };
   /** POST /api/v1/signup/requests — Оставить заявку на кабинет */
   signupRequest: {
@@ -8299,6 +8313,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   settingsEnableAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/enable", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsGetFieldSchema: { method: "GET", path: "/api/v1/settings/field-schema", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsGetInvoice: { method: "GET", path: "/api/v1/settings/billing/invoices/{id}", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  settingsGetReferrals: { method: "GET", path: "/api/v1/settings/referrals", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsGetSubscription: { method: "GET", path: "/api/v1/settings/subscription", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsGetSubscriptionNotice: { method: "GET", path: "/api/v1/settings/subscription/notice", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsGetUsage: { method: "GET", path: "/api/v1/settings/usage", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8333,6 +8348,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   settingsUpdateRole: { method: "PATCH", path: "/api/v1/settings/roles/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   signupCompleteRequest: { method: "POST", path: "/api/v1/signup/requests/{token}/complete", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   signupInspectRequest: { method: "GET", path: "/api/v1/signup/requests/{token}", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  signupRecordAttributionTouch: { method: "POST", path: "/api/v1/signup/attribution/touches", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   signupRequest: { method: "POST", path: "/api/v1/signup/requests", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   signupRetryProvisioning: { method: "POST", path: "/api/v1/signup/requests/{token}/retry-provisioning", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockAccountTransferProposal: { method: "GET", path: "/api/v1/stock/account-transfers/proposal", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

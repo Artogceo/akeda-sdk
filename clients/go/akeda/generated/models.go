@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f6b38b3f9c13d7656a43ba53baf8fa291e888225998147bce737702f2c0051e2).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bc2b0882bc0aa6ec44fd67ee512ae02853b0da0e8ae0dd20355e78afc973109).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -596,6 +596,44 @@ type BillingPublicPlanVersion struct {
 	PricePerSeat map[string]json.RawMessage `json:"price_per_seat"`
 	// PricePerGb — Цена гигабайта сверх пакета, за месяц
 	PricePerGb map[string]json.RawMessage `json:"price_per_gb"`
+}
+
+type BillingReferralCabinetRow struct {
+	TenantName string  `json:"tenant_name"`
+	JoinedAt   string  `json:"joined_at"`
+	PaidAt     *string `json:"paid_at,omitempty"`
+	RewardType *string `json:"reward_type,omitempty"`
+	Reward     *string `json:"reward,omitempty"`
+	RewardCode *string `json:"reward_code,omitempty"`
+	EarnedAt   *string `json:"earned_at,omitempty"`
+	AppliedAt  *string `json:"applied_at,omitempty"`
+	Status     string  `json:"status"`
+}
+
+type BillingReferralCabinetSummary struct {
+	Code           string                      `json:"code"`
+	Status         string                      `json:"status"`
+	Offer          *BillingReferralOffer       `json:"offer,omitempty"`
+	Clicks         int64                       `json:"clicks"`
+	Registrations  int64                       `json:"registrations"`
+	PaidClients    int64                       `json:"paid_clients"`
+	PendingRewards int64                       `json:"pending_rewards"`
+	Currency       string                      `json:"currency"`
+	Referrals      []BillingReferralCabinetRow `json:"referrals"`
+}
+
+type BillingReferralOffer struct {
+	ProgramID         string       `json:"program_id"`
+	Name              string       `json:"name"`
+	RewardType        string       `json:"reward_type"`
+	RewardCalculation string       `json:"reward_calculation"`
+	RewardAmount      BillingMoney `json:"reward_amount"`
+	RewardPercent     BillingMoney `json:"reward_percent"`
+	RewardCap         BillingMoney `json:"reward_cap"`
+	RewardDays        int64        `json:"reward_days"`
+	MinimumPayment    BillingMoney `json:"minimum_payment"`
+	HoldDays          int64        `json:"hold_days"`
+	Currency          string       `json:"currency"`
 }
 
 // BillingRequisites — Реквизиты получателя для счёта «по реквизитам». Пустые значения законны, пока владелец их не задал: вкладку «По реквизитам» кабинету тогда просто не показывают
@@ -14383,6 +14421,33 @@ type SignupAccepted struct {
 	Detail string `json:"detail"`
 }
 
+type SignupAttributionAccepted struct {
+	Status string `json:"status"`
+}
+
+type SignupAttributionTouchInput struct {
+	// EventID — Клиентский ключ идемпотентности одного касания
+	EventID UUID `json:"event_id"`
+	// VisitorID — Непрозрачный first-party идентификатор посетителя без ПДн
+	VisitorID UUID `json:"visitor_id"`
+	// SessionID — Непрозрачный идентификатор браузерной сессии
+	SessionID UUID `json:"session_id"`
+	// LandingPath — Только локальный путь без query и fragment
+	LandingPath string `json:"landing_path"`
+	// Referrer — Сервер оставляет только hostname и только при согласии на аналитику
+	Referrer     *string `json:"referrer,omitempty"`
+	UtmSource    *string `json:"utm_source,omitempty"`
+	UtmMedium    *string `json:"utm_medium,omitempty"`
+	UtmCampaign  *string `json:"utm_campaign,omitempty"`
+	UtmContent   *string `json:"utm_content,omitempty"`
+	UtmTerm      *string `json:"utm_term,omitempty"`
+	ReferralCode *string `json:"referral_code,omitempty"`
+	// Analytics — Есть действующее согласие текущей редакции cookie-политики
+	Analytics bool `json:"analytics"`
+	// ConsentVersion — Редакция cookie-политики; обязательна, когда analytics=true
+	ConsentVersion *string `json:"consent_version,omitempty"`
+}
+
 type SignupCompleteInput struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
@@ -14413,6 +14478,8 @@ type SignupRequestInput struct {
 	CompanyName string `json:"company_name"`
 	// Slug — Пожелание адреса кабинета. Пусто — адрес выводится транслитерацией названия компании
 	Slug *string `json:"slug,omitempty"`
+	// AttributionVisitorID — Необязательный opaque visitor ID: по нему сервер фиксирует атрибуцию заявки; неверное значение не блокирует регистрацию
+	AttributionVisitorID *UUID `json:"attribution_visitor_id,omitempty"`
 	// Website — Ловушка для роботов: поле скрыто на форме, человек его не заполняет. Заполненное принимается как успех, но письма не отправляет
 	Website *string `json:"website,omitempty"`
 }

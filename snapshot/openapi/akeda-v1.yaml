@@ -45551,6 +45551,30 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/settings/referrals:
+    get:
+      tags:
+        - Settings subscription
+      operationId: settingsGetReferrals
+      summary: Получить реферальную программу кабинета
+      description: Персональная ссылка кабинета, действующее предложение, показатели приглашений и история наград. Доступна администратору только своего кабинета; условия программы настраивает оператор платформы отдельно.
+      x-akeda-module: settings
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: settings:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Реферальная программа кабинета
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingReferralCabinetSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/settings/subscription:
     get:
       tags:
@@ -45772,6 +45796,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BillingPublicCatalog'
+  /api/v1/signup/attribution/touches:
+    post:
+      tags:
+        - Signup
+      operationId: signupRecordAttributionTouch
+      x-akeda-audience: external
+      summary: Зафиксировать обезличенное маркетинговое касание
+      description: Принимает касание публичного сайта до появления кабинета. Повтор одного event_id идемпотентен. UTM и referrer сохраняются только при действующем согласии на аналитику; referral-код остаётся функциональной частью ссылки и может быть сохранён без аналитических cookies. Email, телефон, название компании и полный IP операция не принимает.
+      x-akeda-module: signup
+      x-akeda-release-stage: preview
+      x-akeda-permission: signup:anonymous
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupAttributionTouchInput'
+      responses:
+        '202':
+          description: Касание принято либо такой event_id уже был принят
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupAttributionAccepted'
+        '400':
+          description: Некорректный UUID, referral-код или согласие без версии политики
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Самостоятельная регистрация выключена на этом стенде
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Окно частоты по клиенту исчерпано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/signup/requests:
     post:
       tags:
@@ -81775,9 +81842,75 @@ components:
           type: string
           maxLength: 63
           description: Пожелание адреса кабинета. Пусто — адрес выводится транслитерацией названия компании
+        attribution_visitor_id:
+          $ref: '#/components/schemas/UUID'
+          description: 'Необязательный opaque visitor ID: по нему сервер фиксирует атрибуцию заявки; неверное значение не блокирует регистрацию'
         website:
           type: string
           description: 'Ловушка для роботов: поле скрыто на форме, человек его не заполняет. Заполненное принимается как успех, но письма не отправляет'
+    SignupAttributionTouchInput:
+      type: object
+      additionalProperties: false
+      required:
+        - event_id
+        - visitor_id
+        - session_id
+        - landing_path
+        - analytics
+      properties:
+        event_id:
+          $ref: '#/components/schemas/UUID'
+          description: Клиентский ключ идемпотентности одного касания
+        visitor_id:
+          $ref: '#/components/schemas/UUID'
+          description: Непрозрачный first-party идентификатор посетителя без ПДн
+        session_id:
+          $ref: '#/components/schemas/UUID'
+          description: Непрозрачный идентификатор браузерной сессии
+        landing_path:
+          type: string
+          maxLength: 1024
+          description: Только локальный путь без query и fragment
+        referrer:
+          type: string
+          maxLength: 2048
+          description: Сервер оставляет только hostname и только при согласии на аналитику
+        utm_source:
+          type: string
+          maxLength: 128
+        utm_medium:
+          type: string
+          maxLength: 128
+        utm_campaign:
+          type: string
+          maxLength: 256
+        utm_content:
+          type: string
+          maxLength: 256
+        utm_term:
+          type: string
+          maxLength: 256
+        referral_code:
+          type: string
+          maxLength: 64
+          pattern: ^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$
+        analytics:
+          type: boolean
+          description: Есть действующее согласие текущей редакции cookie-политики
+        consent_version:
+          type: string
+          maxLength: 64
+          description: Редакция cookie-политики; обязательна, когда analytics=true
+    SignupAttributionAccepted:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - accepted
     SignupAccepted:
       type: object
       additionalProperties: false
@@ -89169,6 +89302,126 @@ components:
         days_total:
           type: integer
           minimum: 0
+    BillingReferralOffer:
+      type: object
+      required:
+        - program_id
+        - name
+        - reward_type
+        - reward_calculation
+        - reward_amount
+        - reward_percent
+        - reward_cap
+        - reward_days
+        - minimum_payment
+        - hold_days
+        - currency
+      properties:
+        program_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        reward_type:
+          type: string
+          enum:
+            - coupon
+            - free_days
+        reward_calculation:
+          type: string
+          enum:
+            - fixed
+            - percent_of_first_payment
+            - match_first_payment
+        reward_amount:
+          $ref: '#/components/schemas/BillingMoney'
+        reward_percent:
+          $ref: '#/components/schemas/BillingMoney'
+        reward_cap:
+          $ref: '#/components/schemas/BillingMoney'
+        reward_days:
+          type: integer
+          minimum: 0
+        minimum_payment:
+          $ref: '#/components/schemas/BillingMoney'
+        hold_days:
+          type: integer
+          minimum: 0
+        currency:
+          type: string
+    BillingReferralCabinetRow:
+      type: object
+      required:
+        - tenant_name
+        - joined_at
+        - status
+      properties:
+        tenant_name:
+          type: string
+        joined_at:
+          type: string
+          format: date-time
+        paid_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        reward_type:
+          type: string
+        reward:
+          type: string
+        reward_code:
+          type: string
+        earned_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        applied_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        status:
+          type: string
+    BillingReferralCabinetSummary:
+      type: object
+      required:
+        - code
+        - status
+        - clicks
+        - registrations
+        - paid_clients
+        - pending_rewards
+        - currency
+        - referrals
+      properties:
+        code:
+          type: string
+        status:
+          type: string
+        offer:
+          oneOf:
+            - $ref: '#/components/schemas/BillingReferralOffer'
+            - type: 'null'
+        clicks:
+          type: integer
+          minimum: 0
+        registrations:
+          type: integer
+          minimum: 0
+        paid_clients:
+          type: integer
+          minimum: 0
+        pending_rewards:
+          type: integer
+          minimum: 0
+        currency:
+          type: string
+        referrals:
+          type: array
+          items:
+            $ref: '#/components/schemas/BillingReferralCabinetRow'
     BillingPilotState:
       type: object
       description: Идущее внедрение глазами клиента

@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f6b38b3f9c13d7656a43ba53baf8fa291e888225998147bce737702f2c0051e2).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bc2b0882bc0aa6ec44fd67ee512ae02853b0da0e8ae0dd20355e78afc973109).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -602,6 +602,44 @@ export interface BillingPublicPlanVersion {
   "price_per_seat": { [key: string]: unknown };
   /** Цена гигабайта сверх пакета, за месяц */
   "price_per_gb": { [key: string]: unknown };
+}
+
+export interface BillingReferralCabinetRow {
+  "tenant_name": string;
+  "joined_at": string;
+  "paid_at"?: string | null;
+  "reward_type"?: string;
+  "reward"?: string;
+  "reward_code"?: string;
+  "earned_at"?: string | null;
+  "applied_at"?: string | null;
+  "status": string;
+}
+
+export interface BillingReferralCabinetSummary {
+  "code": string;
+  "status": string;
+  "offer"?: BillingReferralOffer | null;
+  "clicks": number;
+  "registrations": number;
+  "paid_clients": number;
+  "pending_rewards": number;
+  "currency": string;
+  "referrals": Array<BillingReferralCabinetRow>;
+}
+
+export interface BillingReferralOffer {
+  "program_id": string;
+  "name": string;
+  "reward_type": "coupon" | "free_days";
+  "reward_calculation": "fixed" | "percent_of_first_payment" | "match_first_payment";
+  "reward_amount": BillingMoney;
+  "reward_percent": BillingMoney;
+  "reward_cap": BillingMoney;
+  "reward_days": number;
+  "minimum_payment": BillingMoney;
+  "hold_days": number;
+  "currency": string;
 }
 
 /** Реквизиты получателя для счёта «по реквизитам». Пустые значения законны, пока владелец их не задал: вкладку «По реквизитам» кабинету тогда просто не показывают */
@@ -14449,6 +14487,33 @@ export interface SignupAccepted {
   "detail": string;
 }
 
+export interface SignupAttributionAccepted {
+  "status": "accepted";
+}
+
+export interface SignupAttributionTouchInput {
+  /** Клиентский ключ идемпотентности одного касания */
+  "event_id": UUID;
+  /** Непрозрачный first-party идентификатор посетителя без ПДн */
+  "visitor_id": UUID;
+  /** Непрозрачный идентификатор браузерной сессии */
+  "session_id": UUID;
+  /** Только локальный путь без query и fragment */
+  "landing_path": string;
+  /** Сервер оставляет только hostname и только при согласии на аналитику */
+  "referrer"?: string;
+  "utm_source"?: string;
+  "utm_medium"?: string;
+  "utm_campaign"?: string;
+  "utm_content"?: string;
+  "utm_term"?: string;
+  "referral_code"?: string;
+  /** Есть действующее согласие текущей редакции cookie-политики */
+  "analytics": boolean;
+  /** Редакция cookie-политики; обязательна, когда analytics=true */
+  "consent_version"?: string;
+}
+
 export interface SignupCompleteInput {
   "first_name": string;
   "last_name": string;
@@ -14479,6 +14544,8 @@ export interface SignupRequestInput {
   "company_name": string;
   /** Пожелание адреса кабинета. Пусто — адрес выводится транслитерацией названия компании */
   "slug"?: string;
+  /** Необязательный opaque visitor ID: по нему сервер фиксирует атрибуцию заявки; неверное значение не блокирует регистрацию */
+  "attribution_visitor_id"?: UUID;
   /** Ловушка для роботов: поле скрыто на форме, человек его не заполняет. Заполненное принимается как успех, но письма не отправляет */
   "website"?: string;
 }

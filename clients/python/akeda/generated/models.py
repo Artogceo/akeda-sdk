@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f6b38b3f9c13d7656a43ba53baf8fa291e888225998147bce737702f2c0051e2).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bc2b0882bc0aa6ec44fd67ee512ae02853b0da0e8ae0dd20355e78afc973109).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -66,6 +66,9 @@ __all__ = [
     "BillingPublicCatalog",
     "BillingPublicPlan",
     "BillingPublicPlanVersion",
+    "BillingReferralCabinetRow",
+    "BillingReferralCabinetSummary",
+    "BillingReferralOffer",
     "BillingRequisites",
     "BillingSnap",
     "BillingSubscription",
@@ -1338,6 +1341,8 @@ __all__ = [
     "SettingsUsage",
     "SettingsVatRates",
     "SignupAccepted",
+    "SignupAttributionAccepted",
+    "SignupAttributionTouchInput",
     "SignupCompleteInput",
     "SignupRequestInfo",
     "SignupRequestInput",
@@ -2141,6 +2146,45 @@ class BillingPublicPlanVersion(TypedDict):
     price_per_seat: Dict[str, Any]
     #: Цена гигабайта сверх пакета, за месяц
     price_per_gb: Dict[str, Any]
+
+class _BillingReferralCabinetRowRequired(TypedDict):
+    tenant_name: str
+    joined_at: str
+    status: str
+
+class BillingReferralCabinetRow(_BillingReferralCabinetRowRequired, total=False):
+    paid_at: Optional[str]
+    reward_type: str
+    reward: str
+    reward_code: str
+    earned_at: Optional[str]
+    applied_at: Optional[str]
+
+class _BillingReferralCabinetSummaryRequired(TypedDict):
+    code: str
+    status: str
+    clicks: int
+    registrations: int
+    paid_clients: int
+    pending_rewards: int
+    currency: str
+    referrals: List["BillingReferralCabinetRow"]
+
+class BillingReferralCabinetSummary(_BillingReferralCabinetSummaryRequired, total=False):
+    offer: Optional["BillingReferralOffer"]
+
+class BillingReferralOffer(TypedDict):
+    program_id: str
+    name: str
+    reward_type: Literal['coupon', 'free_days']
+    reward_calculation: Literal['fixed', 'percent_of_first_payment', 'match_first_payment']
+    reward_amount: "BillingMoney"
+    reward_percent: "BillingMoney"
+    reward_cap: "BillingMoney"
+    reward_days: int
+    minimum_payment: "BillingMoney"
+    hold_days: int
+    currency: str
 
 class BillingRequisites(TypedDict):
     """Реквизиты получателя для счёта «по реквизитам». Пустые значения законны, пока владелец их не задал: вкладку «По реквизитам» кабинету тогда просто не показывают"""
@@ -15538,6 +15582,33 @@ class SignupAccepted(TypedDict):
     #: Условная формулировка «если на этот адрес можно завести кабинет — мы отправили письмо»: она правдива при любом исходе
     detail: str
 
+class SignupAttributionAccepted(TypedDict):
+    status: Literal['accepted']
+
+class _SignupAttributionTouchInputRequired(TypedDict):
+    #: Клиентский ключ идемпотентности одного касания
+    event_id: "UUID"
+    #: Непрозрачный first-party идентификатор посетителя без ПДн
+    visitor_id: "UUID"
+    #: Непрозрачный идентификатор браузерной сессии
+    session_id: "UUID"
+    #: Только локальный путь без query и fragment
+    landing_path: str
+    #: Есть действующее согласие текущей редакции cookie-политики
+    analytics: bool
+
+class SignupAttributionTouchInput(_SignupAttributionTouchInputRequired, total=False):
+    #: Сервер оставляет только hostname и только при согласии на аналитику
+    referrer: str
+    utm_source: str
+    utm_medium: str
+    utm_campaign: str
+    utm_content: str
+    utm_term: str
+    referral_code: str
+    #: Редакция cookie-политики; обязательна, когда analytics=true
+    consent_version: str
+
 class SignupCompleteInput(TypedDict):
     first_name: str
     last_name: str
@@ -15568,6 +15639,8 @@ class _SignupRequestInputRequired(TypedDict):
 class SignupRequestInput(_SignupRequestInputRequired, total=False):
     #: Пожелание адреса кабинета. Пусто — адрес выводится транслитерацией названия компании
     slug: str
+    #: Необязательный opaque visitor ID: по нему сервер фиксирует атрибуцию заявки; неверное значение не блокирует регистрацию
+    attribution_visitor_id: "UUID"
     #: Ловушка для роботов: поле скрыто на форме, человек его не заполняет. Заполненное принимается как успех, но письма не отправляет
     website: str
 

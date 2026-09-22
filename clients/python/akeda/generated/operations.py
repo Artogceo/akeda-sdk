@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f6b38b3f9c13d7656a43ba53baf8fa291e888225998147bce737702f2c0051e2).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bc2b0882bc0aa6ec44fd67ee512ae02853b0da0e8ae0dd20355e78afc973109).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -842,6 +842,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'settingsEnableAppInstallation': OperationSpec('POST', '/api/v1/settings/app-installations/{id}/enable', 'settings', 'preview', 'settings:write', False, False, ('id',), 'none', None, None),
     'settingsGetFieldSchema': OperationSpec('GET', '/api/v1/settings/field-schema', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
     'settingsGetInvoice': OperationSpec('GET', '/api/v1/settings/billing/invoices/{id}', 'settings', 'preview', 'settings:read', False, False, ('id',), 'none', None, None),
+    'settingsGetReferrals': OperationSpec('GET', '/api/v1/settings/referrals', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
     'settingsGetSubscription': OperationSpec('GET', '/api/v1/settings/subscription', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
     'settingsGetSubscriptionNotice': OperationSpec('GET', '/api/v1/settings/subscription/notice', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
     'settingsGetUsage': OperationSpec('GET', '/api/v1/settings/usage', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
@@ -876,6 +877,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'settingsUpdateRole': OperationSpec('PATCH', '/api/v1/settings/roles/{id}', 'settings', 'preview', 'settings:write', False, False, ('id',), 'none', None, None),
     'signupCompleteRequest': OperationSpec('POST', '/api/v1/signup/requests/{token}/complete', 'signup', 'preview', 'signup:anonymous', False, False, ('token',), 'none', None, None),
     'signupInspectRequest': OperationSpec('GET', '/api/v1/signup/requests/{token}', 'signup', 'preview', 'signup:anonymous', False, False, ('token',), 'none', None, None),
+    'signupRecordAttributionTouch': OperationSpec('POST', '/api/v1/signup/attribution/touches', 'signup', 'preview', 'signup:anonymous', False, False, (), 'none', None, None),
     'signupRequest': OperationSpec('POST', '/api/v1/signup/requests', 'signup', 'preview', 'signup:anonymous', False, False, (), 'none', None, None),
     'signupRetryProvisioning': OperationSpec('POST', '/api/v1/signup/requests/{token}/retry-provisioning', 'signup', 'preview', 'signup:anonymous', False, False, ('token',), 'none', None, None),
     'stockAccountTransferProposal': OperationSpec('GET', '/api/v1/stock/account-transfers/proposal', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
