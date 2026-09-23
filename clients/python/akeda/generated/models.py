@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bc2b0882bc0aa6ec44fd67ee512ae02853b0da0e8ae0dd20355e78afc973109).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3d6355b69fc8bd480d1b29ca9f44279ada5aa3270429eebcfc8d8a130fda7584).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -698,6 +698,7 @@ __all__ = [
     "DocflowMessageList",
     "DocflowMessagePayment",
     "DocflowOutgoingFile",
+    "DocflowOutgoingFlowInput",
     "DocflowOutgoingInput",
     "DocflowPaperPoARequisites",
     "DocflowPartyRequisites",
@@ -1037,6 +1038,7 @@ __all__ = [
     "MailOutbound",
     "MailOutboundPage",
     "MailOutboundUpload",
+    "MailPerson",
     "MailProvider",
     "MailRule",
     "MailRuleAction",
@@ -1519,9 +1521,12 @@ __all__ = [
     "TenantCredentialRequestPage",
     "UUID",
     "WorkflowStatusUpdate",
+    "CoreGetAccountingStartResponse",
     "CoreListBusinessesResponse",
     "CoreSetBusinessActiveRequest",
     "CoreListBusinessOwnershipResponse",
+    "DocflowFlowDocumentRevisionsResponse",
+    "DocflowFlowDocumentRevisionsResponseItemsItem",
     "DocflowLinkIntakeCounterpartyRequest",
     "FilesAccessCheckRequest",
     "FilesAccessCheckResponse",
@@ -1546,12 +1551,19 @@ __all__ = [
     "MailApplyRulesRequest",
     "MailApplyRulesResponse",
     "MailAttachStoredFileRequest",
+    "MailReadBatchRequest",
+    "MailReadBatchResponse",
     "MailListMessageAttachmentsResponse",
     "MailFlagMessageRequest",
     "MailMoveMessageRequest",
     "MailCompleteGoogleOAuthRequest",
     "MailStartGoogleOAuthResponse",
+    "MailListPeopleResponse",
     "MailListProvidersResponse",
+    "MailListVIPSendersResponse",
+    "MailListVIPSendersResponseItemsItem",
+    "MailSetVIPSenderRequest",
+    "MailCountVIPUnreadResponse",
 ]
 
 AccountingBasis = Literal['cash', 'accrual', 'mixed']
@@ -8403,6 +8415,16 @@ class DocflowOutgoingFile(TypedDict):
     #: Содержимое файла в base64
     content_base64: str
 
+class _DocflowOutgoingFlowInputRequired(TypedDict):
+    connection: "UUID"
+    file: "UUID"
+
+class DocflowOutgoingFlowInput(_DocflowOutgoingFlowInputRequired, total=False):
+    role: Literal['primary', 'attachment', 'basis']
+    comment: str
+    #: Явное решение отправить документ без подписи
+    unsigned: bool
+
 class _DocflowOutgoingInputRequired(TypedDict):
     connection: "UUID"
     document: "UUID"
@@ -12135,6 +12157,10 @@ class MailOutboundUpload(TypedDict):
     status: Literal['ready', 'consumed', 'expired']
     expires_at: str
     created_at: str
+
+class MailPerson(TypedDict):
+    user_id: int
+    name: str
 
 class MailProvider(TypedDict):
     """Подсказка настроек для формы подключения ящика"""
@@ -17438,6 +17464,12 @@ class WorkflowStatusUpdate(TypedDict, total=False):
     is_default: bool
     is_final: bool
 
+class CoreGetAccountingStartResponse(TypedDict):
+    #: День первой проводки, ГГГГ-ММ-ДД. Пусто — учёт ещё не начинался.
+    started_at: str
+    #: День накануне начала учёта, ГГГГ-ММ-ДД. Пусто, когда учёта ещё не было.
+    opening_date: str
+
 class CoreListBusinessesResponse(TypedDict):
     results: List["CoreBusiness"]
 
@@ -17446,6 +17478,20 @@ class CoreSetBusinessActiveRequest(TypedDict):
 
 class CoreListBusinessOwnershipResponse(TypedDict):
     results: List["CoreOwnershipVersion"]
+
+class DocflowFlowDocumentRevisionsResponse(TypedDict):
+    items: List["DocflowFlowDocumentRevisionsResponseItemsItem"]
+
+class _DocflowFlowDocumentRevisionsResponseItemsItemRequired(TypedDict):
+    version: int
+    created_at: str
+    author_id: int
+    status: Literal['draft', 'registered', 'archived']
+    files: int
+    has_approval: bool
+
+class DocflowFlowDocumentRevisionsResponseItemsItem(_DocflowFlowDocumentRevisionsResponseItemsItemRequired, total=False):
+    author_name: str
 
 class DocflowLinkIntakeCounterpartyRequest(TypedDict):
     #: Контрагент справочника, с которым сводится участник обмена
@@ -17552,6 +17598,14 @@ class MailAttachStoredFileRequest(TypedDict):
     #: Файл в хранилище кабинета
     file_id: str
 
+class MailReadBatchRequest(TypedDict, total=False):
+    ids: List["UUID"]
+    folder_id: "UUID"
+    read: bool
+
+class MailReadBatchResponse(TypedDict):
+    updated: int
+
 class MailListMessageAttachmentsResponse(TypedDict):
     items: List["MailAttachment"]
 
@@ -17570,8 +17624,26 @@ class MailStartGoogleOAuthResponse(TypedDict, total=False):
     auth_url: str
     provider: str
 
+class MailListPeopleResponse(TypedDict):
+    items: List["MailPerson"]
+
 class _MailListProvidersResponseRequired(TypedDict):
     items: List["MailProvider"]
 
 class MailListProvidersResponse(_MailListProvidersResponseRequired, total=False):
     suggestion: "MailProvider"
+
+class MailListVIPSendersResponse(TypedDict):
+    items: List["MailListVIPSendersResponseItemsItem"]
+
+class MailListVIPSendersResponseItemsItem(TypedDict):
+    address: str
+
+class _MailSetVIPSenderRequestRequired(TypedDict):
+    address: str
+
+class MailSetVIPSenderRequest(_MailSetVIPSenderRequestRequired, total=False):
+    important: bool
+
+class MailCountVIPUnreadResponse(TypedDict):
+    unread: int

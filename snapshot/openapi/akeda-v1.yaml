@@ -67,9 +67,9 @@ info:
     расчёт юнит-экономики. Данные площадок читаются из внешней аналитической
     базы, а часть витрин ходит в API площадки напрямую; ключи доступа к
     площадкам не попадают в ответ ни одной операции.
-    У модуля docflow (документы) три крыла, и опубликованы 73 операции из 99
-    живых: непубличными остаются операторские маршруты. Крыло внутреннего
-    документооборота — 20 операций: карточки договоров, спецификаций и актов с
+    У модуля docflow (документы) три крыла, и опубликованы 79 операций из 110
+    живых: непубличными остаются операторские маршруты и ещё не принятые
+    сценарии заказов. Крыло внутреннего документооборота — 23 операции: карточки договоров, спецификаций и актов с
     неизменяемыми редакциями, файлы до 25 МБ, связи между бумагами и связь
     бумаги с учётом — ручные ссылки на документы финансов и склада, создание
     плановой операции и приёмка акта. Учётного факта это крыло не создаёт ни
@@ -89,7 +89,7 @@ info:
     Команды крыла требуют ключ повтора обязательно, а защита от одновременной
     правки передаётся полем тела expected_version. Набор строк в списках крыла
     называется items, тогда как крыло обмена исторически называет его results.
-    Для крыла обмена с контрагентами (ЭДО) опубликованы 35 операций:
+    Для крыла обмена с контрагентами (ЭДО) опубликованы 38 операций:
     подключения юрлиц к операторам ЭДО с отбором по юрлицу, проверка связи,
     запуск синхронизации по требованию, зеркало документов оператора вместе с
     составом пакета, выдача файлов вложений и контейнеров подписи, приглашение
@@ -12029,6 +12029,56 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/core/accounting-start:
+    get:
+      tags:
+        - Core accounting
+      operationId: coreGetAccountingStart
+      summary: Узнать день первой проводки и день для начальных остатков
+      description: 'Дата начала учёта вычисляется по книге, а не хранится настройкой: начало учёта — факт. Вводы начальных остатков (денег и склада) учёт не начинают, иначе первый же ввод объявлял бы себя началом. `opening_date` — день накануне: им вводят начальные остатки, чтобы они встали в «Остаток на начало», а не выглядели поступлением внутри периода.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: business
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Бизнес; без него ответ про весь кабинет.
+      responses:
+        '200':
+          description: Дата начала учёта и дата начальных остатков
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - started_at
+                  - opening_date
+                properties:
+                  started_at:
+                    type: string
+                    description: День первой проводки, ГГГГ-ММ-ДД. Пусто — учёт ещё не начинался.
+                  opening_date:
+                    type: string
+                    description: День накануне начала учёта, ГГГГ-ММ-ДД. Пусто, когда учёта ещё не было.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/core/accounting-settings:
     get:
       tags:
@@ -41074,6 +41124,111 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/docflow/messages/{id}/trash:
+    post:
+      tags:
+        - Docflow actions
+      operationId: docflowTrashMessage
+      x-akeda-audience: external
+      summary: Убрать пакет в корзину
+      description: Убирает пакет только из рабочих папок Akeda. Контрагент этого не видит, состояние документа у оператора не меняется.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.edo:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Пакет убран из рабочих папок
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/docflow/messages/{id}/restore:
+    post:
+      tags:
+        - Docflow actions
+      operationId: docflowRestoreMessage
+      x-akeda-audience: external
+      summary: Вернуть пакет из корзины
+      description: Возвращает пакет в рабочую папку Akeda, если связанный черновик не был удалён у оператора.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.edo:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Пакет возвращён из корзины
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/docflow/messages/{id}/draft:
+    delete:
+      tags:
+        - Docflow actions
+      operationId: docflowDeleteMessageDraft
+      x-akeda-audience: external
+      summary: Удалить неотправленный черновик у оператора
+      description: Удаляет только неотправленный операторский черновик. Уже отправленный документ отзывается отдельным процессом аннулирования.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.edo:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Черновик удалён у оператора
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/docflow/messages/{id}/actions/approve:
     post:
       tags:
@@ -43275,6 +43430,84 @@ paths:
           $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/revisions:
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowDocumentRevisions
+      x-akeda-audience: external
+      summary: Получить историю редакций документа
+      description: 'Лёгкий список версий: когда и кем записана, состояние карточки, число файлов и наличие маршрута согласования. Снимок редакции читается отдельной операцией.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: История редакций
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - items
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: false
+                      required:
+                        - version
+                        - created_at
+                        - author_id
+                        - status
+                        - files
+                        - has_approval
+                      properties:
+                        version:
+                          type: integer
+                          minimum: 1
+                        created_at:
+                          type: string
+                          format: date-time
+                        author_id:
+                          type: integer
+                          format: int64
+                        author_name:
+                          type: string
+                        status:
+                          type: string
+                          enum:
+                            - draft
+                            - registered
+                            - archived
+                        files:
+                          type: integer
+                          minimum: 0
+                        has_approval:
+                          type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/docflow/flow/documents/{id}/revisions/{version}:
     get:
       tags:
@@ -43319,6 +43552,95 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/edo:
+    post:
+      tags:
+        - Docflow flow
+      operationId: docflowSendFlowDocumentByEDO
+      x-akeda-audience: external
+      summary: Отправить файл карточки через ЭДО
+      description: Отправляет выбранный файл карточки во внешнюю организацию через подключение к оператору. Это внешнее необратимое действие под отдельным правом docflow.edo:send; MCP не публикует его как обычный инструмент создания или правки документа.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.edo:send
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowOutgoingFlowInput'
+      responses:
+        '201':
+          description: Связь карточки с конвертом ЭДО
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowEDOLink'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/edo/{link}:
+    delete:
+      tags:
+        - Docflow flow
+      operationId: docflowDeleteFlowEDODraft
+      x-akeda-audience: external
+      summary: Удалить неотправленный черновик карточки у оператора
+      description: Удаляет только связь с черновиком, который ещё не отправлен контрагенту. Для отправленного документа применяется аннулирование.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.edo:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: link
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Черновик удалён у оператора
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/docflow/flow/documents/{id}/files:
@@ -44128,6 +44450,175 @@ paths:
           $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/mail/sender-icon:
+    get:
+      tags:
+        - Mail
+      operationId: mailGetSenderIcon
+      summary: Получить значок домена отправителя
+      description: Домен без адреса человека; если значка нет, возвращается 404.
+      x-akeda-module: mail
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: mail:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: domain
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Значок
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/mail/vip-senders:
+    get:
+      tags:
+        - Mail
+      operationId: mailListVIPSenders
+      summary: Список важных отправителей кабинета
+      x-akeda-module: mail
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: mail:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Адреса
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - address
+                      properties:
+                        address:
+                          type: string
+                          format: email
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Mail
+      operationId: mailSetVIPSender
+      summary: Добавить или убрать важного отправителя
+      x-akeda-module: mail
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: mail:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - address
+              properties:
+                address:
+                  type: string
+                  format: email
+                important:
+                  type: boolean
+                  default: true
+      responses:
+        '204':
+          description: Изменение сохранено
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/mail/vip-senders/unread:
+    get:
+      tags:
+        - Mail
+      operationId: mailCountVIPUnread
+      summary: Число непрочитанных писем от важных отправителей
+      x-akeda-module: mail
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: mail:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Число писем
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - unread
+                properties:
+                  unread:
+                    type: integer
+                    minimum: 0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/mail/people:
+    get:
+      tags:
+        - Mail accounts
+      operationId: mailListPeople
+      summary: Получить сотрудников для поимённого доступа к ящику
+      description: Возвращает только идентификатор и отображаемое имя активных сотрудников текущего кабинета; роли, логины и чужие кабинеты не раскрываются.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: mail
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: mail:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Сотрудники текущего кабинета
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - items
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MailPerson'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/mail/providers:
     get:
       tags:
@@ -45173,6 +45664,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MailMessagePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/mail/messages/read:
+    post:
+      tags:
+        - Mail
+      operationId: mailReadBatch
+      summary: Отметить письма или всю папку прочитанными
+      description: При folder_id отмечает всю папку; иначе обрабатывает ids. Для списка ids параметр read может снять отметку прочтения.
+      x-akeda-module: mail
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: mail:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                ids:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/UUID'
+                folder_id:
+                  $ref: '#/components/schemas/UUID'
+                read:
+                  type: boolean
+                  default: true
+      responses:
+        '200':
+          description: Число обновлённых писем
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - updated
+                properties:
+                  updated:
+                    type: integer
+                    minimum: 0
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -83734,6 +84274,30 @@ components:
         stored:
           type: boolean
           description: Байты скачаны в наше хранилище; ложь — файл пока живёт только у оператора
+    DocflowOutgoingFlowInput:
+      type: object
+      additionalProperties: false
+      required:
+        - connection
+        - file
+      properties:
+        connection:
+          $ref: '#/components/schemas/UUID'
+        file:
+          $ref: '#/components/schemas/UUID'
+        role:
+          type: string
+          enum:
+            - primary
+            - attachment
+            - basis
+          default: primary
+        comment:
+          type: string
+        unsigned:
+          type: boolean
+          default: false
+          description: Явное решение отправить документ без подписи
     DocflowFlowPage:
       type: object
       additionalProperties: false
@@ -87465,6 +88029,18 @@ components:
         - clean
         - infected
         - skipped
+    MailPerson:
+      type: object
+      additionalProperties: false
+      required:
+        - user_id
+        - name
+      properties:
+        user_id:
+          type: integer
+          format: int64
+        name:
+          type: string
     MailProvider:
       type: object
       additionalProperties: false
@@ -89700,6 +90276,7 @@ x-akeda-contract-coverage:
   - platform-app-blocks
   - platform-demo-data
   - billing-usage
+  - platform-analytics
   - settings-apps
   - docflow-connections
   - docflow-mirror

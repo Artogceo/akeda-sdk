@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bc2b0882bc0aa6ec44fd67ee512ae02853b0da0e8ae0dd20355e78afc973109).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3d6355b69fc8bd480d1b29ca9f44279ada5aa3270429eebcfc8d8a130fda7584).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1125,6 +1125,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.CoreAccountingSettings;
+  };
+  /** GET /api/v1/core/accounting-start — Узнать день первой проводки и день для начальных остатков */
+  coreGetAccountingStart: {
+    params: Record<string, never>;
+    query: { "business"?: string };
+    body: never;
+    response: models.CoreGetAccountingStartResponse;
   };
   /** GET /api/v1/core/businesses/{id} — Получить управленческий бизнес */
   coreGetBusiness: {
@@ -3009,6 +3016,20 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
+  /** DELETE /api/v1/docflow/flow/documents/{id}/edo/{link} — Удалить неотправленный черновик карточки у оператора */
+  docflowDeleteFlowEDODraft: {
+    params: { "id": models.UUID; "link": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** DELETE /api/v1/docflow/messages/{id}/draft — Удалить неотправленный черновик у оператора */
+  docflowDeleteMessageDraft: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** POST /api/v1/docflow/messages/{id}/stages/drop — Убрать этап из очереди */
   docflowDropStage: {
     params: { "id": models.UUID };
@@ -3099,6 +3120,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.DocflowFlowDocument;
+  };
+  /** GET /api/v1/docflow/flow/documents/{id}/revisions — Получить историю редакций документа */
+  docflowFlowDocumentRevisions: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowFlowDocumentRevisionsResponse;
   };
   /** GET /api/v1/docflow/flow/documents — Получить документы внутреннего контура */
   docflowFlowDocuments: {
@@ -3310,6 +3338,13 @@ export interface OperationTypes {
     body: models.DocflowCancellationInput;
     response: models.DocflowActionResult;
   };
+  /** POST /api/v1/docflow/messages/{id}/restore — Вернуть пакет из корзины */
+  docflowRestoreMessage: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** POST /api/v1/docflow/approvals/{id}/resubmit — Отправить предмет повторно после доработки */
   docflowResubmitApproval: {
     params: { "id": models.UUID };
@@ -3344,6 +3379,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.DocflowBuyerTitleInput;
     response: models.DocflowTitle;
+  };
+  /** POST /api/v1/docflow/flow/documents/{id}/edo — Отправить файл карточки через ЭДО */
+  docflowSendFlowDocumentByEDO: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.DocflowOutgoingFlowInput;
+    response: models.DocflowFlowEDOLink;
   };
   /** POST /api/v1/docflow/outgoing — Собрать титул продавца и записать его оператору */
   docflowSendOutgoing: {
@@ -3386,6 +3428,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.DocflowSyncOutcome;
+  };
+  /** POST /api/v1/docflow/messages/{id}/trash — Убрать пакет в корзину */
+  docflowTrashMessage: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
   };
   /** PATCH /api/v1/docflow/connections/{id} — Изменить подключение */
   docflowUpdateConnection: {
@@ -4829,6 +4878,13 @@ export interface OperationTypes {
     body: models.MailComposeInput;
     response: models.MailComposeMessageResponse;
   };
+  /** GET /api/v1/mail/vip-senders/unread — Число непрочитанных писем от важных отправителей */
+  mailCountVIPUnread: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.MailCountVIPUnreadResponse;
+  };
   /** POST /api/v1/mail/accounts — Подключить почтовый ящик */
   mailCreateAccount: {
     params: Record<string, never>;
@@ -4913,6 +4969,13 @@ export interface OperationTypes {
     body: never;
     response: models.MailMessage;
   };
+  /** GET /api/v1/mail/sender-icon — Получить значок домена отправителя */
+  mailGetSenderIcon: {
+    params: Record<string, never>;
+    query: { "domain": string };
+    body: never;
+    response: void;
+  };
   /** GET /api/v1/mail/threads/{id} — Получить переписку целиком */
   mailGetThread: {
     params: { "id": models.UUID };
@@ -4955,6 +5018,13 @@ export interface OperationTypes {
     body: never;
     response: models.MailOutboundPage;
   };
+  /** GET /api/v1/mail/people — Получить сотрудников для поимённого доступа к ящику */
+  mailListPeople: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.MailListPeopleResponse;
+  };
   /** GET /api/v1/mail/providers — Получить подсказки почтовых провайдеров */
   mailListProviders: {
     params: Record<string, never>;
@@ -4968,6 +5038,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.MailListRulesResponse;
+  };
+  /** GET /api/v1/mail/vip-senders — Список важных отправителей кабинета */
+  mailListVIPSenders: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.MailListVIPSendersResponse;
   };
   /** POST /api/v1/mail/messages/{id}/not-spam — Вернуть письмо из спама */
   mailMarkMessageNotSpam: {
@@ -5004,12 +5081,26 @@ export interface OperationTypes {
     body: models.MailMoveMessageRequest;
     response: void;
   };
+  /** POST /api/v1/mail/messages/read — Отметить письма или всю папку прочитанными */
+  mailReadBatch: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.MailReadBatchRequest;
+    response: models.MailReadBatchResponse;
+  };
   /** PATCH /api/v1/mail/folders/{id} — Переименовать папку ящика */
   mailRenameFolder: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.MailFolderInput;
     response: models.MailFolder;
+  };
+  /** POST /api/v1/mail/vip-senders — Добавить или убрать важного отправителя */
+  mailSetVIPSender: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.MailSetVIPSenderRequest;
+    response: void;
   };
   /** GET /api/v1/mail/oauth/google/start — Начать подключение Gmail через вход в Google */
   mailStartGoogleOAuth: {
@@ -7658,6 +7749,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreGetAccountingPeriodState: { method: "GET", path: "/api/v1/core/accounting-periods", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetAccountingPolicy: { method: "GET", path: "/api/v1/core/accounting-policy", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetAccountingSettings: { method: "GET", path: "/api/v1/core/accounting-settings", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetAccountingStart: { method: "GET", path: "/api/v1/core/accounting-start", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetBusiness: { method: "GET", path: "/api/v1/core/businesses/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetCabinetPreferences: { method: "GET", path: "/api/v1/core/cabinet-preferences", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetContact: { method: "GET", path: "/api/v1/core/contacts/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7927,6 +8019,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowDelegateApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/delegate", module: "docflow", stage: "preview", permission: "docflow.flow:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowDeleteApprovalSubstitution: { method: "DELETE", path: "/api/v1/docflow/approval-substitutions/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowDeleteConnection: { method: "DELETE", path: "/api/v1/docflow/connections/{id}", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowDeleteFlowEDODraft: { method: "DELETE", path: "/api/v1/docflow/flow/documents/{id}/edo/{link}", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowDeleteMessageDraft: { method: "DELETE", path: "/api/v1/docflow/messages/{id}/draft", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowDropStage: { method: "POST", path: "/api/v1/docflow/messages/{id}/stages/drop", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowAcceptFinanceAct: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/finance-act", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowAccountingCandidates: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/accounting-candidates", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7940,6 +8034,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowFlowCreateFinancePlan: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/finance-plan", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocument: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocumentRevision: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/revisions/{version}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowFlowDocumentRevisions: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/revisions", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocuments: { method: "GET", path: "/api/v1/docflow/flow/documents", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   docflowFlowFileContent: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/files/{fileId}/content", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowLinkAccountingDocument: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/accounting-links", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7970,17 +8065,20 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowRejectMessage: { method: "POST", path: "/api/v1/docflow/messages/{id}/actions/reject", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowRepeatStage: { method: "POST", path: "/api/v1/docflow/messages/{id}/stages/repeat", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowRequestCancellation: { method: "POST", path: "/api/v1/docflow/messages/{id}/cancellation", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowRestoreMessage: { method: "POST", path: "/api/v1/docflow/messages/{id}/restore", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowResubmitApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/resubmit", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSaveApprovalPolicy: { method: "PUT", path: "/api/v1/docflow/approval-policies", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSaveApprovalRoute: { method: "PUT", path: "/api/v1/docflow/approval-routes/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSaveApprovalSubstitution: { method: "POST", path: "/api/v1/docflow/approval-substitutions", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSendBuyerTitle: { method: "POST", path: "/api/v1/docflow/messages/{id}/buyer-title", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowSendFlowDocumentByEDO: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/edo", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSendOutgoing: { method: "POST", path: "/api/v1/docflow/outgoing", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSetApprovalRouteActive: { method: "POST", path: "/api/v1/docflow/approval-routes/{id}/active", module: "docflow", stage: "preview", permission: "docflow.flow:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSetConnectionMode: { method: "PUT", path: "/api/v1/docflow/connections/{id}/mode", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSubmitApproval: { method: "POST", path: "/api/v1/docflow/approvals", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSubmitSignature: { method: "POST", path: "/api/v1/docflow/edo/signing/tasks/{task_id}/signature", module: "docflow", stage: "preview", permission: "docflow.edo:sign", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSyncConnection: { method: "POST", path: "/api/v1/docflow/connections/{id}/sync", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowTrashMessage: { method: "POST", path: "/api/v1/docflow/messages/{id}/trash", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowUpdateConnection: { method: "PATCH", path: "/api/v1/docflow/connections/{id}", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesAbortUpload: { method: "DELETE", path: "/api/v1/files/uploads/{id}", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesAccessCheck: { method: "POST", path: "/api/v1/files/items/access-check", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8187,6 +8285,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   mailCheckAccount: { method: "POST", path: "/api/v1/mail/accounts/{id}/check", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailCompleteGoogleOAuth: { method: "POST", path: "/api/v1/mail/oauth/google/complete", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailComposeMessage: { method: "POST", path: "/api/v1/mail/accounts/{id}/messages", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailCountVIPUnread: { method: "GET", path: "/api/v1/mail/vip-senders/unread", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailCreateAccount: { method: "POST", path: "/api/v1/mail/accounts", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailCreateFolder: { method: "POST", path: "/api/v1/mail/accounts/{id}/folders", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailCreateRule: { method: "POST", path: "/api/v1/mail/accounts/{id}/rules", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8199,20 +8298,25 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   mailGetAccount: { method: "GET", path: "/api/v1/mail/accounts/{id}", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailGetAttachmentContent: { method: "GET", path: "/api/v1/mail/attachments/{id}/content", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailGetMessage: { method: "GET", path: "/api/v1/mail/messages/{id}", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailGetSenderIcon: { method: "GET", path: "/api/v1/mail/sender-icon", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailGetThread: { method: "GET", path: "/api/v1/mail/threads/{id}", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailListAccounts: { method: "GET", path: "/api/v1/mail/accounts", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailListFolders: { method: "GET", path: "/api/v1/mail/accounts/{id}/folders", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailListMessageAttachments: { method: "GET", path: "/api/v1/mail/messages/{id}/attachments", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailListMessages: { method: "GET", path: "/api/v1/mail/messages", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   mailListOutbox: { method: "GET", path: "/api/v1/mail/accounts/{id}/outbox", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
+  mailListPeople: { method: "GET", path: "/api/v1/mail/people", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailListProviders: { method: "GET", path: "/api/v1/mail/providers", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailListRules: { method: "GET", path: "/api/v1/mail/accounts/{id}/rules", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailListVIPSenders: { method: "GET", path: "/api/v1/mail/vip-senders", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailMarkMessageNotSpam: { method: "POST", path: "/api/v1/mail/messages/{id}/not-spam", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailMarkMessageRead: { method: "POST", path: "/api/v1/mail/messages/{id}/read", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailMarkMessageSpam: { method: "POST", path: "/api/v1/mail/messages/{id}/spam", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailMarkMessageUnread: { method: "POST", path: "/api/v1/mail/messages/{id}/unread", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailMoveMessage: { method: "POST", path: "/api/v1/mail/messages/{id}/move", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailReadBatch: { method: "POST", path: "/api/v1/mail/messages/read", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailRenameFolder: { method: "PATCH", path: "/api/v1/mail/folders/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailSetVIPSender: { method: "POST", path: "/api/v1/mail/vip-senders", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailStartGoogleOAuth: { method: "GET", path: "/api/v1/mail/oauth/google/start", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailSyncAccount: { method: "POST", path: "/api/v1/mail/accounts/{id}/sync", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailUpdateAccount: { method: "PATCH", path: "/api/v1/mail/accounts/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

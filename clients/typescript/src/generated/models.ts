@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bc2b0882bc0aa6ec44fd67ee512ae02853b0da0e8ae0dd20355e78afc973109).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3d6355b69fc8bd480d1b29ca9f44279ada5aa3270429eebcfc8d8a130fda7584).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -6917,6 +6917,15 @@ export interface DocflowOutgoingFile {
   "content_base64": string;
 }
 
+export interface DocflowOutgoingFlowInput {
+  "connection": UUID;
+  "file": UUID;
+  "role"?: "primary" | "attachment" | "basis";
+  "comment"?: string;
+  /** Явное решение отправить документ без подписи */
+  "unsigned"?: boolean;
+}
+
 /** Что проверяем и что отправляем. Реквизиты приезжают ОДНИМ объектом, а не россыпью полей: это дополнение к учётному документу, оно хранится целиком и целиком же участвует в пересборке. */
 export interface DocflowOutgoingInput {
   "connection": UUID;
@@ -10785,6 +10794,11 @@ export interface MailOutboundUpload {
   "status": "ready" | "consumed" | "expired";
   "expires_at": string;
   "created_at": string;
+}
+
+export interface MailPerson {
+  "user_id": number;
+  "name": string;
 }
 
 /** Подсказка настроек для формы подключения ящика */
@@ -16388,6 +16402,13 @@ export interface WorkflowStatusUpdate {
   "is_final"?: boolean;
 }
 
+export interface CoreGetAccountingStartResponse {
+  /** День первой проводки, ГГГГ-ММ-ДД. Пусто — учёт ещё не начинался. */
+  "started_at": string;
+  /** День накануне начала учёта, ГГГГ-ММ-ДД. Пусто, когда учёта ещё не было. */
+  "opening_date": string;
+}
+
 export interface CoreListBusinessesResponse {
   "results": Array<CoreBusiness>;
 }
@@ -16398,6 +16419,20 @@ export interface CoreSetBusinessActiveRequest {
 
 export interface CoreListBusinessOwnershipResponse {
   "results": Array<CoreOwnershipVersion>;
+}
+
+export interface DocflowFlowDocumentRevisionsResponse {
+  "items": Array<DocflowFlowDocumentRevisionsResponseItemsItem>;
+}
+
+export interface DocflowFlowDocumentRevisionsResponseItemsItem {
+  "version": number;
+  "created_at": string;
+  "author_id": number;
+  "author_name"?: string;
+  "status": "draft" | "registered" | "archived";
+  "files": number;
+  "has_approval": boolean;
 }
 
 export interface DocflowLinkIntakeCounterpartyRequest {
@@ -16525,6 +16560,16 @@ export interface MailAttachStoredFileRequest {
   "file_id": string;
 }
 
+export interface MailReadBatchRequest {
+  "ids"?: Array<UUID>;
+  "folder_id"?: UUID;
+  "read"?: boolean;
+}
+
+export interface MailReadBatchResponse {
+  "updated": number;
+}
+
 export interface MailListMessageAttachmentsResponse {
   "items": Array<MailAttachment>;
 }
@@ -16548,7 +16593,28 @@ export interface MailStartGoogleOAuthResponse {
   "provider"?: string;
 }
 
+export interface MailListPeopleResponse {
+  "items": Array<MailPerson>;
+}
+
 export interface MailListProvidersResponse {
   "items": Array<MailProvider>;
   "suggestion"?: MailProvider;
+}
+
+export interface MailListVIPSendersResponse {
+  "items": Array<MailListVIPSendersResponseItemsItem>;
+}
+
+export interface MailListVIPSendersResponseItemsItem {
+  "address": string;
+}
+
+export interface MailSetVIPSenderRequest {
+  "address": string;
+  "important"?: boolean;
+}
+
+export interface MailCountVIPUnreadResponse {
+  "unread": number;
 }

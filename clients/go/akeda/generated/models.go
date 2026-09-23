@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bc2b0882bc0aa6ec44fd67ee512ae02853b0da0e8ae0dd20355e78afc973109).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3d6355b69fc8bd480d1b29ca9f44279ada5aa3270429eebcfc8d8a130fda7584).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -6886,6 +6886,15 @@ type DocflowOutgoingFile struct {
 	ContentBase64 string `json:"content_base64"`
 }
 
+type DocflowOutgoingFlowInput struct {
+	Connection UUID    `json:"connection"`
+	File       UUID    `json:"file"`
+	Role       *string `json:"role,omitempty"`
+	Comment    *string `json:"comment,omitempty"`
+	// Unsigned — Явное решение отправить документ без подписи
+	Unsigned *bool `json:"unsigned,omitempty"`
+}
+
 // DocflowOutgoingInput — Что проверяем и что отправляем. Реквизиты приезжают ОДНИМ объектом, а не россыпью полей: это дополнение к учётному документу, оно хранится целиком и целиком же участвует в пересборке.
 type DocflowOutgoingInput struct {
 	Connection UUID               `json:"connection"`
@@ -10739,6 +10748,11 @@ type MailOutboundUpload struct {
 	Status      string         `json:"status"`
 	ExpiresAt   string         `json:"expires_at"`
 	CreatedAt   string         `json:"created_at"`
+}
+
+type MailPerson struct {
+	UserID int64  `json:"user_id"`
+	Name   string `json:"name"`
 }
 
 // MailProvider — Подсказка настроек для формы подключения ящика
@@ -16309,6 +16323,13 @@ type WorkflowStatusUpdate struct {
 	IsFinal   *bool           `json:"is_final,omitempty"`
 }
 
+type CoreGetAccountingStartResponse struct {
+	// StartedAt — День первой проводки, ГГГГ-ММ-ДД. Пусто — учёт ещё не начинался.
+	StartedAt string `json:"started_at"`
+	// OpeningDate — День накануне начала учёта, ГГГГ-ММ-ДД. Пусто, когда учёта ещё не было.
+	OpeningDate string `json:"opening_date"`
+}
+
 type CoreListBusinessesResponse struct {
 	Results []CoreBusiness `json:"results"`
 }
@@ -16319,6 +16340,20 @@ type CoreSetBusinessActiveRequest struct {
 
 type CoreListBusinessOwnershipResponse struct {
 	Results []CoreOwnershipVersion `json:"results"`
+}
+
+type DocflowFlowDocumentRevisionsResponse struct {
+	Items []DocflowFlowDocumentRevisionsResponseItemsItem `json:"items"`
+}
+
+type DocflowFlowDocumentRevisionsResponseItemsItem struct {
+	Version     int64   `json:"version"`
+	CreatedAt   string  `json:"created_at"`
+	AuthorID    int64   `json:"author_id"`
+	AuthorName  *string `json:"author_name,omitempty"`
+	Status      string  `json:"status"`
+	Files       int64   `json:"files"`
+	HasApproval bool    `json:"has_approval"`
 }
 
 type DocflowLinkIntakeCounterpartyRequest struct {
@@ -16446,6 +16481,16 @@ type MailAttachStoredFileRequest struct {
 	FileID string `json:"file_id"`
 }
 
+type MailReadBatchRequest struct {
+	Ids      []UUID `json:"ids,omitempty"`
+	FolderID *UUID  `json:"folder_id,omitempty"`
+	Read     *bool  `json:"read,omitempty"`
+}
+
+type MailReadBatchResponse struct {
+	Updated int64 `json:"updated"`
+}
+
 type MailListMessageAttachmentsResponse struct {
 	Items []MailAttachment `json:"items"`
 }
@@ -16469,7 +16514,28 @@ type MailStartGoogleOAuthResponse struct {
 	Provider *string `json:"provider,omitempty"`
 }
 
+type MailListPeopleResponse struct {
+	Items []MailPerson `json:"items"`
+}
+
 type MailListProvidersResponse struct {
 	Items      []MailProvider `json:"items"`
 	Suggestion *MailProvider  `json:"suggestion,omitempty"`
+}
+
+type MailListVIPSendersResponse struct {
+	Items []MailListVIPSendersResponseItemsItem `json:"items"`
+}
+
+type MailListVIPSendersResponseItemsItem struct {
+	Address string `json:"address"`
+}
+
+type MailSetVIPSenderRequest struct {
+	Address   string `json:"address"`
+	Important *bool  `json:"important,omitempty"`
+}
+
+type MailCountVIPUnreadResponse struct {
+	Unread int64 `json:"unread"`
 }
