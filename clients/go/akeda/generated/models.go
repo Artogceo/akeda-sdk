@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3d6355b69fc8bd480d1b29ca9f44279ada5aa3270429eebcfc8d8a130fda7584).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8f00218feb4afe805c640c83d8a059de1be0e98a731ee18ef74f0fc68d7f48a9).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -10503,15 +10503,17 @@ type MailAccount struct {
 	// OwnerUserID — Сотрудник, которому принадлежит ящик
 	OwnerUserID int64 `json:"owner_user_id"`
 	// Shared — Общий ящик отдела виден всем, у кого есть право на модуль; личный — владельцу и тому, кто видит все записи
-	Shared         bool           `json:"shared"`
-	Email          string         `json:"email"`
-	DisplayName    string         `json:"display_name"`
-	ImapHost       string         `json:"imap_host"`
-	ImapPort       int64          `json:"imap_port"`
-	ImapEncryption MailEncryption `json:"imap_encryption"`
-	SmtpHost       string         `json:"smtp_host"`
-	SmtpPort       int64          `json:"smtp_port"`
-	SmtpEncryption MailEncryption `json:"smtp_encryption"`
+	Shared      bool   `json:"shared"`
+	Email       string `json:"email"`
+	DisplayName string `json:"display_name"`
+	// NotificationMode — Уведомления владельца ящика о новой почте: все письма, только важные отправители или выключено
+	NotificationMode string         `json:"notification_mode"`
+	ImapHost         string         `json:"imap_host"`
+	ImapPort         int64          `json:"imap_port"`
+	ImapEncryption   MailEncryption `json:"imap_encryption"`
+	SmtpHost         string         `json:"smtp_host"`
+	SmtpPort         int64          `json:"smtp_port"`
+	SmtpEncryption   MailEncryption `json:"smtp_encryption"`
 	// Username — Логин подключения; по умолчанию равен адресу
 	Username string `json:"username"`
 	// HasCredentials — Пароль приложения сохранён. Самого пароля не отдаёт ни одна операция
@@ -10537,6 +10539,8 @@ type MailAccountInput struct {
 	Email *string `json:"email,omitempty"`
 	// DisplayName — Без значения берётся адрес
 	DisplayName *string `json:"display_name,omitempty"`
+	// NotificationMode — Режим уведомлений владельца ящика; если не передан, прежний режим сохраняется
+	NotificationMode *string `json:"notification_mode,omitempty"`
 	// Shared — Сделать ящик общим ящиком отдела
 	Shared *bool `json:"shared,omitempty"`
 	// ImapHost — Схема, завершающая точка и порт внутри значения снимаются

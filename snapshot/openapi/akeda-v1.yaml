@@ -460,8 +460,15 @@ paths:
         - $ref: '#/components/parameters/TenantHeader'
         - name: q
           in: query
+          description: Слова запроса ищутся по коду, названию и описанию задачи; все слова должны совпасть
           schema:
             type: string
+        - name: search_rank
+          in: query
+          description: Сначала точный код и номер задачи, затем совпадение в начале названия
+          schema:
+            type: boolean
+            default: false
         - name: section
           in: query
           schema:
@@ -88101,6 +88108,7 @@ components:
         - shared
         - email
         - display_name
+        - notification_mode
         - imap_host
         - imap_port
         - imap_encryption
@@ -88133,6 +88141,13 @@ components:
           type: string
         display_name:
           type: string
+        notification_mode:
+          type: string
+          enum:
+            - all
+            - important
+            - 'off'
+          description: 'Уведомления владельца ящика о новой почте: все письма, только важные отправители или выключено'
         imap_host:
           type: string
         imap_port:
@@ -88197,6 +88212,13 @@ components:
         display_name:
           type: string
           description: Без значения берётся адрес
+        notification_mode:
+          type: string
+          enum:
+            - all
+            - important
+            - 'off'
+          description: Режим уведомлений владельца ящика; если не передан, прежний режим сохраняется
         shared:
           type:
             - boolean
