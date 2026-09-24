@@ -23,7 +23,8 @@ info:
     и папки.
     Для модуля core (справочники) опубликованы
     141 из 142 операций, включая публичный слой ссылок на справочники: единый каталог, конструктор справочников, папки,
-    контрагенты, номенклатура, сотрудники, кадровые операции, валюты,
+    контрагенты, номенклатура, заказы покупателей и поставщикам, сотрудники,
+    кадровые операции, валюты,
     пользовательские настройки, внешние соответствия, документы, регистры,
     учётный контур, импорт/экспорт номенклатуры и разбор ОСВ 1С. Ссылка на
     значение справочника — это пара «ключ справочника плюс код», а не голый
@@ -179,6 +180,8 @@ tags:
     description: Модуль core (справочники) — товары, услуги, семейства, варианты и внешние идентификаторы
   - name: Core documents
     description: Модуль core (справочники) — типы документов, журнал, проведение, связи и блокировки
+  - name: Core orders
+    description: Модуль core (справочники, документы и проведение) — заказы покупателей и поставщикам, статусы кабинета и загрузка
   - name: Core registers
     description: Модуль core (справочники) — определения регистров, остатки, обороты и движения
   - name: Core accounting
@@ -10334,6 +10337,785 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/core/orders:
+    get:
+      tags:
+        - Core orders
+      operationId: coreListOrders
+      summary: Получить журнал заказов
+      description: 'Заказы покупателей и поставщикам в области юрлиц действующего: заказ без юрлица виден только тому, кому видны все юрлица; приложение видит только заказы своего источника. Строка несёт итоги, стороны словами и статус кабинета. `total` — сколько заказов под отбором всего.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: side
+          in: query
+          schema:
+            $ref: '#/components/schemas/CoreOrderSide'
+        - name: status
+          in: query
+          description: 'Состояние по канону или несколько через запятую: draft, confirmed, executing, executed, closed, cancelled'
+          schema:
+            type: string
+        - name: contact_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: company_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: business_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: contract_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: project_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: responsible_id
+          in: query
+          description: Сотрудник среди ответственных заказа
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: search
+          in: query
+          description: Номер, название, внешний номер, покупатель или контрагент
+          schema:
+            type: string
+        - name: external_id
+          in: query
+          description: Внешний номер у источника загрузки
+          schema:
+            type: string
+        - name: source
+          in: query
+          schema:
+            $ref: '#/components/schemas/CoreOrderSourceKind'
+        - name: limit
+          in: query
+          description: Размер страницы; больше потолка срезается до 200
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 25
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Страница журнала заказов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Core orders
+      operationId: coreCreateOrder
+      summary: Завести заказ
+      description: 'Заводит черновик заказа покупателя (side=sale, серия ЗКЛ) или поставщику (side=purchase, серия ЗП); `confirm: true` сразу подтверждает его той же транзакцией — обязательство встаёт в регистр «Заказы». Номер пустой — его выдаёт счётчик вида, свой номер берётся как есть. Скидка заказа раскладывается по строкам пропорционально их суммам до разложения НДС. Читает Idempotency-Key: повтор с тем же ключом отдаёт заведённый заказ, а не второй. Ответ — карточка заказа.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderInput'
+      responses:
+        '201':
+          description: Карточка заведённого заказа
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/IdempotencyKeyMismatch'
+        '503':
+          $ref: '#/components/responses/IdempotencyUnavailable'
+  /api/v1/core/orders/import:
+    post:
+      tags:
+        - Core orders
+      operationId: coreImportOrder
+      summary: Загрузить заказ из внешней системы
+      description: 'Загрузка интернет-магазина, CRM или учётной системы клиента. Повтор узнаётся по стороне и внешнему номеру: тот же `external_id` правит заказ (новая версия), а не заводит второй — 200 вместо 201. Номер, занятый заказом другого источника, отвечает 409 `core.order.foreign_source`. Покупатель без id узнаётся по ИНН или заводится физлицом; позиция — по артикулу. Каждая попытка, включая отказ, попадает в журнал загрузок.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:import
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderImportInput'
+      responses:
+        '200':
+          description: Заказ уже был — загрузка его обновила
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '201':
+          description: Заказ заведён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/core/orders/{id}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Core orders
+      operationId: coreGetOrder
+      summary: Получить карточку заказа
+      description: 'Заказ целиком: заголовок, строки с суммами после скидок, итоги, ответственные, статус кабинета; обязательство из регистра «Заказы» (`obligation`: заказано и осталось — у подтверждённого и следующих состояний) и действия экрана с причинами отказа (`allowed_actions`). Чужой заказ и заказ вне области юрлиц отвечают 404.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Карточка заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Core orders
+      operationId: coreReviseOrder
+      summary: Изменить заказ
+      description: 'Правка заказа целиком. У черновика — просто правка; у подтверждённого — новая версия и перепроведение одной транзакцией: прежнее обязательство сторнируется, новое записывается. `expected_version` — версия, которую видел правящий: устаревшая отвечает 409 `core.order.changed`. Строки правятся по id; строку с исполнением удалить нельзя.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderRevision'
+      responses:
+        '200':
+          description: Карточка заказа после правки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/core/orders/{id}/confirm:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    post:
+      tags:
+        - Core orders
+      operationId: coreConfirmOrder
+      summary: Подтвердить заказ
+      description: 'Проведение черновика: обязательство встаёт в регистр «Заказы» на итог заказа. У валюты без курса на дату заказа — 409 `core.order.rate_missing`. Повтор у подтверждённого — тот же ответ, а не ошибка.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Карточка заказа после команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/core/orders/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    post:
+      tags:
+        - Core orders
+      operationId: coreCancelOrder
+      summary: Отменить заказ
+      description: Черновик отменяется без движений; подтверждённый — отменой проведения (сторно обязательства). Пока заказ держат живые исполнения (акт, отгрузка, приёмка) — 409 `core.order.has_executions`; закрытый сначала возвращают в работу (409 `core.order.closed`).
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Карточка заказа после команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/core/orders/{id}/close:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    post:
+      tags:
+        - Core orders
+      operationId: coreCloseOrder
+      summary: Закрыть заказ с остатком
+      description: Документ «Закрытие заказа» снимает весь остаток обязательства. Причина закрытия сохраняется в заказе и журнале.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderCloseInput'
+      responses:
+        '200':
+          description: Карточка заказа после команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/core/orders/{id}/reopen:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    post:
+      tags:
+        - Core orders
+      operationId: coreReopenOrder
+      summary: Вернуть заказ в работу
+      description: 'Отмена живого закрытия: остаток обязательства возвращается, заказ снова «подтверждён» или «исполняется».'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Карточка заказа после команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/core/orders/{id}/history:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Core orders
+      operationId: coreGetOrderHistory
+      summary: Получить ленту заказа
+      description: Журнал событий заказа (создан, новая версия, подтверждён, статус, ответственные, закрыт, возвращён, отменён) с автором и датой статуса, плюс документы модулей, выросшие из заказа.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Лента заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderHistory'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/orders/{id}/blockers:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Core orders
+      operationId: coreGetOrderBlockers
+      summary: Проверить, что мешает подтвердить или отменить заказ
+      description: Пробный прогон подтверждения и отмены под теми же сторожами, что у команды, без записи.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Что мешает
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocumentBlockers'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/orders/{id}/responsibles:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    put:
+      tags:
+        - Core orders
+      operationId: coreSetOrderResponsibles
+      summary: Назначить ответственных заказа
+      description: Заменяет ответственных сотрудников и их доли. Доля больше нуля и не больше ста, сумма долей не больше ста процентов.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderResponsiblesInput'
+      responses:
+        '200':
+          description: Карточка заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/orders/{id}/cabinet-status:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    put:
+      tags:
+        - Core orders
+      operationId: coreSetOrderCabinetStatus
+      summary: Поставить статус кабинета
+      description: Статус кабинета — надстройка над состоянием заказа. Статус другой категории отвечает 409 `core.order.status_category`.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderCabinetStatusInput'
+      responses:
+        '200':
+          description: Карточка заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/order-statuses:
+    get:
+      tags:
+        - Core orders
+      operationId: coreListOrderStatuses
+      summary: Получить статусы заказа кабинета
+      description: Системные статусы (по одному на состояние) и свои статусы кабинета, включая выключенные.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Статусы заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderStatusList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Core orders
+      operationId: coreCreateOrderStatus
+      summary: Завести свой статус заказа
+      description: Свой статус кабинета внутри состояния по канону, при желании только для одной стороны.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderStatusInput'
+      responses:
+        '201':
+          description: Статус заведён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/order-statuses/{id}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    patch:
+      tags:
+        - Core orders
+      operationId: coreUpdateOrderStatus
+      summary: Изменить статус заказа кабинета
+      description: У системного статуса меняются только название и цвет (409 `core.order.status_system`); состояние и сторону статуса, который уже стоит на заказах, не меняют (409 `core.order.status_in_use`). Удаления нет.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderStatusPatch'
+      responses:
+        '200':
+          description: Статус после правки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderStatus'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/order-imports:
+    get:
+      tags:
+        - Core orders
+      operationId: coreListOrderImports
+      summary: Получить журнал загрузок заказов
+      description: Что пришло из внешних систем, чем закончилось и почему отклонено — новые записи первыми.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:import
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: limit
+          in: query
+          description: Сколько записей; больше потолка срезается до 200
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 25
+      responses:
+        '200':
+          description: Журнал загрузок
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderImportList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/core/document-types:
     get:
       tags:
@@ -10522,6 +11304,7 @@ paths:
         - Core documents
       operationId: coreListDocuments
       summary: Получить журнал документов конструктора
+      description: 'Документы всех модулей, кроме заказов: заказ покупателя, заказ поставщику и закрытие заказа видны по юрлицу в области участника и только с правом `core.orders:read`, поэтому их журнал — coreListOrders.'
       x-akeda-module: core
       x-akeda-release-stage: public
       x-akeda-audience: external
@@ -10648,6 +11431,7 @@ paths:
         - Core documents
       operationId: coreGetDocument
       summary: Получить документ конструктора
+      description: Документ любого модуля. Заказ и его закрытие общая дверь отдаёт только при праве `core.orders:read` и заказе в области юрлиц читающего, иначе — 404, как несуществующий; карточка заказа — coreGetOrder.
       x-akeda-module: core
       x-akeda-release-stage: public
       x-akeda-audience: external
@@ -16814,6 +17598,7 @@ paths:
         - Finance trade
       operationId: financeGetTradeJournal
       summary: Получить журнал продаж или закупок
+      description: 'С этапа 2 эпика ERP-1427 строки журнала — заказы ядра (customer_order у продаж, supplier_order у закупок) с колонками «заказано · исполнено · оплачено · аванс · долг»; по умолчанию — подтверждённые заказы и дальше, черновики и отменённые — отбором status. Аванс и долг вычисляются из «исполнено» и «оплачено» (computed_columns), разреза «заказ» в регистре расчётов до этапа 3 нет. Документы без заказа отдаёт group=without_order («Поступления без заказа»). Это ломающее изменение preview-контракта: прежняя строка-документ осталась только в группе without_order.'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -16902,12 +17687,40 @@ paths:
             maxLength: 3
         - name: record_id
           in: query
+          description: Точная строка; у заказа раскрывается всегда
           schema:
             type: string
             format: uuid
+        - name: group
+          in: query
+          description: orders — строки-заказы; without_order — документы без заказа
+          schema:
+            type: string
+            enum:
+              - orders
+              - without_order
+            default: orders
+        - name: expand
+          in: query
+          description: Раскрыть строки страницы — исполнения и оплаты заказа
+          schema:
+            type: boolean
+            default: false
+        - name: responsible_id
+          in: query
+          description: Заказы, где сотрудник ответственный
+          schema:
+            type: string
+            format: uuid
+        - name: mine
+          in: query
+          description: Заказы, где ответственный — сам вызывающий
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
-          description: Сделки и остатки из регистра расчётов
+          description: Заказы с колонками журнала или документы без заказа
           content:
             application/json:
               schema:
@@ -26997,15 +27810,17 @@ paths:
       operationId: stockCloseSupplierOrder
       summary: Закрыть недовезённый заказ поставщику
       description: |
-        Применяется к проведённому заказу поставщику. Недовезённый хвост снимается
-        отдельным служебным регистратором на основании заказа: сам заказ остаётся
-        проведённым, а уже принятые поступления не трогаются. Снятое ожидание
+        Применяется к проведённому заказу поставщику — документу ядра supplier_order
+        (этап 2 ERP-1427). Фасад над закрытием заказа ядра: служебный документ ядра
+        order_close на основании заказа снимает остаток «Заказов», а вклад склада в
+        его проведение — недовезённый хвост ожидания. Сам заказ остаётся
+        проведённым, уже принятые поступления не трогаются. Снятое ожидание
         возвращается потребностью в заявку-основание — недовезённое снова видно
         закупщику как незакрытую нужду, и заказать это можно заново.
         Ручка идемпотентна: повторный вызов возвращает тот же заказ и второго
-        закрытия не заводит. Нулевой хвост — не ошибка: заказ без недовоза
-        возвращается как есть, документ закрытия при этом не создаётся.
-        Действие необратимо. Ответ — исходный заказ.
+        закрытия не заводит, а перепроводит то же — ожившее после отмены приёмки
+        ожидание снимается им же. Вернуть заказ в работу можно дверью заказов ядра.
+        Ответ — складской вид заказа.
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -30548,7 +31363,7 @@ paths:
         - Stock purchasing
       operationId: stockCreatePurchaseOrder
       summary: Создать заказ поставщику по рассчитанной потребности
-      description: 'Создаётся ЧЕРНОВИК документа вида stock_supplier_order — заказ не проводится и не двигает регистры; проведение выполняет POST /api/v1/stock/documents/{id}/post. Строки берут из отчёта по закупкам GET /api/v1/stock/report/purchasing. Поля request_id и basis_line_id указываются только парой; когда все строки ссылаются на одну заявку на закупку, она становится основанием документа. Заявка-основание проверяется: она должна быть проведена, относиться к тому же юрлицу и складу и содержать эту строку с этим товаром, иначе приходит 409. Пустой date означает текущую бизнес-дату кабинета, пропущенный price записывается нулём. Читает `Idempotency-Key` — повтор того же запроса с тем же ключом отдаёт созданный заказ, а не второй такой же на ту же потребность.'
+      description: 'Создаётся ЧЕРНОВИК заказа поставщику — документа ядра вида supplier_order (этап 2 ERP-1427): дверь склада — фасад над службой заказов ядра, ответ — складской вид заказа (строки заказа в payload.items с теми же id, срок поставки в payload.delivery_at). Черновик не двигает регистры; подтверждение выполняет POST /api/v1/stock/documents/{id}/post — оно записывает «Заказы» ядра и ожидание поступления склада одной транзакцией. Цены строк считаются конечными, с налогом; валюта — валюта учёта на дату заказа. Строки берут из отчёта по закупкам GET /api/v1/stock/report/purchasing. Поля request_id и basis_line_id указываются только парой; когда все строки ссылаются на одну заявку на закупку, она становится основанием документа. Заявка-основание проверяется: она должна быть проведена, относиться к тому же юрлицу и складу и содержать эту строку с этим товаром, иначе приходит 409. Пустой date означает текущую бизнес-дату кабинета, пропущенный price записывается нулём. Читает `Idempotency-Key` — повтор того же запроса с тем же ключом отдаёт созданный заказ, а не второй такой же на ту же потребность.'
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -55949,6 +56764,921 @@ components:
           type: object
           additionalProperties: true
           description: 'У штрихкода: type ∈ ean13|ean8|upc_a|gtin14|code128 и product_uom_id упаковки. Названный type проверяется строго, включая контрольную цифру EAN/UPC/GTIN (400 с текстом ошибки). Без type символика угадывается по форме значения, и несошедшаяся контрольная цифра не отказ, а code128. Поле заменяет объект целиком, а не сливается с прежним'
+    CoreOrderSide:
+      type: string
+      enum:
+        - sale
+        - purchase
+    CoreOrderState:
+      type: string
+      enum:
+        - draft
+        - confirmed
+        - executing
+        - executed
+        - closed
+        - cancelled
+    CoreOrderSourceKind:
+      type: string
+      enum:
+        - manual
+        - app
+        - import
+        - marketplace
+        - crm
+        - migration
+    CoreOrderLineKind:
+      type: string
+      enum:
+        - goods
+        - service
+        - material
+        - semi_product
+    CoreOrderBuyer:
+      type: object
+      description: 'Покупатель-физлицо: розничный заказ стоит на общей карточке покупателя, и различает покупателей только это.'
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+    CoreOrderCounterparty:
+      type: object
+      description: 'Покупатель загрузки без id: юрлицо узнаётся по ИНН и КПП, физлицо — по телефону или заводится.'
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        inn:
+          type: string
+        kpp:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+    CoreOrderLine:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - position
+        - kind
+        - title
+        - quantity
+        - price
+        - discount
+        - discount_amount
+        - amount_net
+        - vat_amount
+        - amount_gross
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        position:
+          type: integer
+        kind:
+          $ref: '#/components/schemas/CoreOrderLineKind'
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        title:
+          type: string
+        unit:
+          type: string
+        unit_id:
+          $ref: '#/components/schemas/UUID'
+        quantity:
+          type: string
+          description: Десятичное число строкой
+        price:
+          type: string
+          description: Десятичное число строкой
+        discount:
+          type: string
+          description: Скидка самой строки
+        discount_amount:
+          type: string
+          description: Доля скидки заказа на этой строке; суммы строки посчитаны после обеих скидок
+        vat_rate:
+          type: string
+          description: Ставка, как её ввели; пусто — по учётной политике
+        vat_rate_applied:
+          type: string
+          description: Ставка, по которой строка посчитана; пусто — налог не выделен
+        amount_net:
+          type: string
+          description: Сумма строкой в разрядности валюты заказа
+        vat_amount:
+          type: string
+          description: Сумма строкой в разрядности валюты заказа
+        amount_gross:
+          type: string
+          description: Сумма строкой в разрядности валюты заказа
+        base_qty:
+          type: string
+          description: Количество в базовой единице склада
+        basis_document_id:
+          $ref: '#/components/schemas/UUID'
+        basis_line_id:
+          $ref: '#/components/schemas/UUID'
+    CoreOrderLineInput:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - quantity
+        - price
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+          description: Id существующей строки — её правка; без id — новая строка
+        kind:
+          $ref: '#/components/schemas/CoreOrderLineKind'
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        article:
+          type: string
+          description: Артикул — позиция узнаётся по нему, если id не назван
+        title:
+          type: string
+        unit:
+          type: string
+        unit_id:
+          $ref: '#/components/schemas/UUID'
+        quantity:
+          type: string
+          description: Десятичное число строкой
+        price:
+          type: string
+          description: Десятичное число строкой
+        discount:
+          type: string
+          description: Десятичное число строкой
+        vat_rate:
+          type: string
+          description: Ставка НДС строки; пусто — по учётной политике юрлица на дату заказа
+        base_qty:
+          type: string
+          description: Десятичное число строкой
+        basis_document_id:
+          $ref: '#/components/schemas/UUID'
+        basis_line_id:
+          $ref: '#/components/schemas/UUID'
+    CoreOrderResponsible:
+      type: object
+      additionalProperties: false
+      required:
+        - employee_id
+        - share
+      properties:
+        employee_id:
+          $ref: '#/components/schemas/UUID'
+        employee_name:
+          type: string
+          readOnly: true
+        share:
+          type: string
+          description: 'Доля в процентах: больше нуля, не больше ста'
+    CoreOrderTotals:
+      type: object
+      description: 'Итоги — сумма строк: скидка заказа уже разложена по строкам и второй раз не вычитается.'
+      additionalProperties: false
+      required:
+        - net
+        - vat
+        - gross
+        - goods_gross
+        - services_gross
+        - currency
+      properties:
+        net:
+          type: string
+          description: Сумма строкой в разрядности валюты заказа
+        vat:
+          type: string
+          description: Сумма строкой в разрядности валюты заказа
+        gross:
+          type: string
+          description: Сумма строкой в разрядности валюты заказа
+        goods_gross:
+          type: string
+          description: Сумма строкой в разрядности валюты заказа
+        services_gross:
+          type: string
+          description: Сумма строкой в разрядности валюты заказа
+        currency:
+          type: string
+    CoreOrderObligation:
+      type: object
+      additionalProperties: false
+      required:
+        - ordered
+        - remaining
+      properties:
+        ordered:
+          type: string
+          description: Действующий приход подтверждения в регистре «Заказы»
+        remaining:
+          type: string
+          description: 'Остаток регистра «Заказы» по заказу: заказано минус снятое закрытием и исполненное'
+    CoreOrderAllowedAction:
+      type: object
+      additionalProperties: false
+      required:
+        - action
+        - allowed
+      properties:
+        action:
+          type: string
+          enum:
+            - edit
+            - confirm
+            - cancel
+            - close
+            - reopen
+            - cabinet_status
+            - responsibles
+        allowed:
+          type: boolean
+        reason_code:
+          type: string
+          description: 'Код отказа: core.order.has_executions, core.order.closed, core.order.forbidden'
+        reason:
+          type: string
+          description: Причина словами на языке запроса
+    CoreOrder:
+      type: object
+      description: Заказ — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе.
+      additionalProperties: false
+      required:
+        - id
+        - side
+        - type_key
+        - number
+        - date
+        - document_status
+        - state
+        - business_id
+        - contact_id
+        - title
+        - currency
+        - prices_include_vat
+        - discount
+        - scenario
+        - source_kind
+        - version
+        - lines
+        - responsibles
+        - totals
+        - created_at
+        - updated_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        side:
+          $ref: '#/components/schemas/CoreOrderSide'
+        type_key:
+          type: string
+          enum:
+            - customer_order
+            - supplier_order
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        document_status:
+          $ref: '#/components/schemas/CoreDocumentStatus'
+        state:
+          $ref: '#/components/schemas/CoreOrderState'
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        business_name:
+          type: string
+        company_name:
+          type: string
+        contact_name:
+          type: string
+        contract_id:
+          $ref: '#/components/schemas/UUID'
+        project_id:
+          $ref: '#/components/schemas/UUID'
+        warehouse_id:
+          $ref: '#/components/schemas/UUID'
+        basis_id:
+          $ref: '#/components/schemas/UUID'
+        title:
+          type: string
+        currency:
+          type: string
+        prices_include_vat:
+          type: boolean
+        discount:
+          type: string
+          description: Скидка на заказ целиком, как её ввели; в суммах строк уже учтена
+        delivery_date:
+          type: string
+          format: date
+        due_date:
+          type: string
+          format: date
+        scenario:
+          type: string
+        manager_note:
+          type: string
+        comment:
+          type: string
+        buyer:
+          $ref: '#/components/schemas/CoreOrderBuyer'
+        source_kind:
+          $ref: '#/components/schemas/CoreOrderSourceKind'
+        source_system:
+          type: string
+        external_id:
+          type: string
+        cabinet_status_id:
+          $ref: '#/components/schemas/UUID'
+        cabinet_status_name:
+          type: string
+        version:
+          type: integer
+          minimum: 1
+        closed_at:
+          type: string
+        closed_reason:
+          type: string
+        close_document_id:
+          $ref: '#/components/schemas/UUID'
+        migrated_from:
+          type: string
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderLine'
+        responsibles:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderResponsible'
+        totals:
+          $ref: '#/components/schemas/CoreOrderTotals'
+        created_by:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        posted_at:
+          type: string
+        cancelled_at:
+          type: string
+        obligation:
+          $ref: '#/components/schemas/CoreOrderObligation'
+        allowed_actions:
+          type: array
+          description: Только в карточке и ответах команд
+          items:
+            $ref: '#/components/schemas/CoreOrderAllowedAction'
+    CoreOrderPage:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - total
+        - limit
+        - offset
+        - has_more
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrder'
+        total:
+          type: integer
+          minimum: 0
+          description: Сколько заказов под отбором всего
+        limit:
+          type: integer
+        offset:
+          type: integer
+        has_more:
+          type: boolean
+    CoreOrderInput:
+      type: object
+      description: 'Заказ из запроса: поля одни для формы, загрузки и фасадов модулей.'
+      additionalProperties: false
+      required:
+        - side
+        - date
+        - currency
+        - lines
+      properties:
+        side:
+          $ref: '#/components/schemas/CoreOrderSide'
+        number:
+          type: string
+          description: Свой номер; пусто — номер выдаёт счётчик вида
+        date:
+          type: string
+          format: date
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+          description: Контрагент; у загрузки вместо него можно прислать counterparty
+        counterparty:
+          $ref: '#/components/schemas/CoreOrderCounterparty'
+        contract_id:
+          $ref: '#/components/schemas/UUID'
+        project_id:
+          $ref: '#/components/schemas/UUID'
+        warehouse_id:
+          $ref: '#/components/schemas/UUID'
+        basis_id:
+          $ref: '#/components/schemas/UUID'
+          description: Основание — например, заявка на закупку
+        title:
+          type: string
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+        prices_include_vat:
+          type: boolean
+          description: Цены с НДС («в том числе»); по умолчанию true
+        discount:
+          type: string
+          description: Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+        delivery_date:
+          type: string
+          format: date
+        due_date:
+          type: string
+          format: date
+        scenario:
+          type: string
+          enum:
+            - one_off_sale
+            - contract_sale
+            - self_service
+        manager_note:
+          type: string
+        comment:
+          type: string
+        buyer:
+          $ref: '#/components/schemas/CoreOrderBuyer'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderLineInput'
+        responsibles:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderResponsible'
+        cabinet_status_id:
+          $ref: '#/components/schemas/UUID'
+        confirm:
+          type: boolean
+          description: Сразу подтвердить созданный заказ
+    CoreOrderRevision:
+      type: object
+      additionalProperties: false
+      required:
+        - side
+        - date
+        - currency
+        - lines
+      properties:
+        side:
+          $ref: '#/components/schemas/CoreOrderSide'
+        number:
+          type: string
+          description: Свой номер; пусто — номер выдаёт счётчик вида
+        date:
+          type: string
+          format: date
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+          description: Контрагент; у загрузки вместо него можно прислать counterparty
+        counterparty:
+          $ref: '#/components/schemas/CoreOrderCounterparty'
+        contract_id:
+          $ref: '#/components/schemas/UUID'
+        project_id:
+          $ref: '#/components/schemas/UUID'
+        warehouse_id:
+          $ref: '#/components/schemas/UUID'
+        basis_id:
+          $ref: '#/components/schemas/UUID'
+          description: Основание — например, заявка на закупку
+        title:
+          type: string
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+        prices_include_vat:
+          type: boolean
+          description: Цены с НДС («в том числе»); по умолчанию true
+        discount:
+          type: string
+          description: Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+        delivery_date:
+          type: string
+          format: date
+        due_date:
+          type: string
+          format: date
+        scenario:
+          type: string
+          enum:
+            - one_off_sale
+            - contract_sale
+            - self_service
+        manager_note:
+          type: string
+        comment:
+          type: string
+        buyer:
+          $ref: '#/components/schemas/CoreOrderBuyer'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderLineInput'
+        responsibles:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderResponsible'
+        cabinet_status_id:
+          $ref: '#/components/schemas/UUID'
+        expected_version:
+          type: integer
+          minimum: 0
+          description: Версия, которую видел правящий; 0 — без сверки
+    CoreOrderImportInput:
+      type: object
+      additionalProperties: false
+      required:
+        - side
+        - date
+        - currency
+        - lines
+        - external_id
+      properties:
+        side:
+          $ref: '#/components/schemas/CoreOrderSide'
+        number:
+          type: string
+          description: Свой номер; пусто — номер выдаёт счётчик вида
+        date:
+          type: string
+          format: date
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+          description: Контрагент; у загрузки вместо него можно прислать counterparty
+        counterparty:
+          $ref: '#/components/schemas/CoreOrderCounterparty'
+        contract_id:
+          $ref: '#/components/schemas/UUID'
+        project_id:
+          $ref: '#/components/schemas/UUID'
+        warehouse_id:
+          $ref: '#/components/schemas/UUID'
+        basis_id:
+          $ref: '#/components/schemas/UUID'
+          description: Основание — например, заявка на закупку
+        title:
+          type: string
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+        prices_include_vat:
+          type: boolean
+          description: Цены с НДС («в том числе»); по умолчанию true
+        discount:
+          type: string
+          description: Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+        delivery_date:
+          type: string
+          format: date
+        due_date:
+          type: string
+          format: date
+        scenario:
+          type: string
+          enum:
+            - one_off_sale
+            - contract_sale
+            - self_service
+        manager_note:
+          type: string
+        comment:
+          type: string
+        buyer:
+          $ref: '#/components/schemas/CoreOrderBuyer'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderLineInput'
+        responsibles:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderResponsible'
+        cabinet_status_id:
+          $ref: '#/components/schemas/UUID'
+        confirm:
+          type: boolean
+          description: Подтвердить заказ, если он ещё черновик
+        external_id:
+          type: string
+          minLength: 1
+          description: Номер заказа у источника; по стороне и нему узнаётся повтор
+        source_system:
+          type: string
+          description: 'Имя источника для журнала загрузок: сайт, CRM'
+    CoreOrderCloseInput:
+      type: object
+      additionalProperties: false
+      properties:
+        reason:
+          type: string
+          description: Почему остаток больше не нужен
+    CoreOrderResponsiblesInput:
+      type: object
+      additionalProperties: false
+      required:
+        - responsibles
+      properties:
+        responsibles:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderResponsible'
+    CoreOrderCabinetStatusInput:
+      type: object
+      additionalProperties: false
+      required:
+        - status_id
+      properties:
+        status_id:
+          $ref: '#/components/schemas/UUID'
+    CoreOrderStatus:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - category
+        - position
+        - is_active
+        - is_system
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        key:
+          type: string
+          description: Есть только у системной строки
+        side:
+          type: string
+          enum:
+            - ''
+            - sale
+            - purchase
+          description: Пусто — статус годится обеим сторонам
+        name:
+          type: string
+        category:
+          $ref: '#/components/schemas/CoreOrderState'
+        position:
+          type: integer
+        color:
+          type: string
+        is_active:
+          type: boolean
+        is_system:
+          type: boolean
+    CoreOrderStatusList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderStatus'
+    CoreOrderStatusInput:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - category
+      properties:
+        name:
+          type: string
+          minLength: 1
+        category:
+          $ref: '#/components/schemas/CoreOrderState'
+        side:
+          type: string
+          enum:
+            - ''
+            - sale
+            - purchase
+        position:
+          type: integer
+          minimum: 1
+        color:
+          type: string
+          description: 'Цвет: #RRGGBB или имя токена'
+    CoreOrderStatusPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+        category:
+          $ref: '#/components/schemas/CoreOrderState'
+        side:
+          type: string
+          enum:
+            - ''
+            - sale
+            - purchase
+        position:
+          type: integer
+          minimum: 1
+        color:
+          type: string
+        is_active:
+          type: boolean
+    CoreOrderEvent:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - order_id
+        - kind
+        - created_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        order_id:
+          $ref: '#/components/schemas/UUID'
+        kind:
+          type: string
+          description: created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated
+        detail:
+          type: string
+        effective_date:
+          type: string
+          format: date
+        status_id:
+          $ref: '#/components/schemas/UUID'
+        actor_id:
+          type: integer
+          format: int64
+        actor_kind:
+          type: string
+          enum:
+            - user
+            - app
+            - system
+        actor_name:
+          type: string
+        status_name:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+          description: 'Разница версий: у revised — версия и что изменилось'
+        created_at:
+          type: string
+          format: date-time
+    CoreOrderHistoryDocument:
+      type: object
+      description: 'Документ модуля, выросший из заказа: акт, отгрузка, счёт.'
+      additionalProperties: false
+      required:
+        - source
+        - module
+        - section
+        - id
+        - kind
+        - number
+        - date
+        - status
+        - created_at
+      properties:
+        source:
+          type: string
+        module:
+          type: string
+        section:
+          type: string
+        id:
+          $ref: '#/components/schemas/UUID'
+        kind:
+          type: string
+        kind_name:
+          type: string
+        number:
+          type: string
+        date:
+          type: string
+        due_date:
+          type: string
+        amount:
+          type: string
+        currency:
+          type: string
+        direction:
+          type: string
+        status:
+          type: string
+        status_name:
+          type: string
+        title:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    CoreOrderHistory:
+      type: object
+      additionalProperties: false
+      required:
+        - events
+        - documents
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderEvent'
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderHistoryDocument'
+    CoreOrderImportEntry:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - side
+        - external_id
+        - source
+        - outcome
+        - created_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        side:
+          $ref: '#/components/schemas/CoreOrderSide'
+        external_id:
+          type: string
+        source:
+          type: string
+        outcome:
+          type: string
+          enum:
+            - accepted
+            - updated
+            - rejected
+        reason:
+          type: string
+        detail:
+          type: string
+        order_id:
+          $ref: '#/components/schemas/UUID'
+        created_at:
+          type: string
+          format: date-time
+    CoreOrderImportList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderImportEntry'
     CoreNumberReset:
       type: string
       enum:
@@ -55956,8 +57686,10 @@ components:
         - never
     CoreNumberSource:
       type: string
+      description: sequence — номер выдаёт счётчик вида; external — номер приходит извне и обязателен; sequence_or_given — свой номер берётся как есть, пустой выдаёт счётчик (виды заказа ядра).
       enum:
         - sequence
+        - sequence_or_given
         - external
     CoreDocumentStatus:
       type: string
@@ -60194,6 +61926,83 @@ components:
         paid_stages:
           type: integer
           minimum: 0
+        group:
+          type: string
+          enum:
+            - orders
+            - without_order
+        state:
+          type: string
+          description: Состояние заказа по канону
+          enum:
+            - draft
+            - confirmed
+            - executing
+            - executed
+            - closed
+            - cancelled
+        title:
+          type: string
+        contract_id:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        cabinet_status_name:
+          type: string
+        ordered:
+          type: string
+          description: Итог заказа, decimal string
+        executed:
+          type: string
+          description: Долг, рождённый исполнениями заказа, decimal string
+        debt:
+          type: string
+          description: Вычисленный max(0, исполнено − оплачено), decimal string
+        execution_count:
+          type: integer
+          minimum: 0
+        executions:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceTradeJournalDocument'
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceTradeJournalDocument'
+    FinanceTradeJournalDocument:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - type_key
+        - type_name
+        - number
+        - date
+        - status
+        - amount
+        - currency
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        type_key:
+          type: string
+        type_name:
+          type: string
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+        amount:
+          type: string
+          description: Доля документа в колонке, decimal string
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
     FinanceTradeJournalPage:
       type: object
       additionalProperties: false
@@ -60218,6 +62027,19 @@ components:
           type: boolean
         limit_reached:
           type: boolean
+        group:
+          type: string
+          enum:
+            - orders
+            - without_order
+        computed_columns:
+          type: array
+          description: Колонки, вычисленные до разреза «заказ» в расчётах (этап 3)
+          items:
+            type: string
+            enum:
+              - advance
+              - debt
     FinanceOpenAdvance:
       type: object
       additionalProperties: false
@@ -69394,7 +71216,7 @@ components:
           type: string
     StockDocumentTypeKey:
       type: string
-      description: 'Вид складского документа. Служебные виды заводит только модуль: `stock_reservation_release` — при снятии остатка резерва, `stock_supplier_order_close` — при закрытии недовезённого заказа поставщику. Виды `stock_opening_balance` и `stock_marketplace_return` заводит ввод остатков и учёт склада площадки, `stock_account_transfer` — `stockCreateAccountTransfer`; общей ручкой они не создаются.'
+      description: 'Вид складского документа. Служебные виды заводит только модуль: `stock_reservation_release` — при снятии остатка резерва. Виды `stock_opening_balance` и `stock_marketplace_return` заводит ввод остатков и учёт склада площадки, `stock_account_transfer` — `stockCreateAccountTransfer`; общей ручкой они не создаются. Заказ поставщику — документ ядра `supplier_order` (этап 2 ERP-1427): склад отдаёт его своим видом, и отбор журнала принимает оба имени. Прежние виды `stock_supplier_order` и `stock_supplier_order_close` остались в истории движений; новых документов этих видов нет.'
       enum:
         - stock_receipt
         - stock_shipment
@@ -69415,9 +71237,10 @@ components:
         - stock_opening_balance
         - stock_marketplace_return
         - stock_account_transfer
+        - supplier_order
     StockDocumentCreateTypeKey:
       type: string
-      description: Виды, которые создаются извне. Служебные снятие резерва и закрытие заказа в список не входят.
+      description: 'Виды, которые создаются извне. Служебные снятие резерва и закрытие заказа в список не входят. Вид `stock_supplier_order` — прежнее имя заказа поставщику: запрос заводит заказ ядра `supplier_order` и отвечает его складским видом.'
       enum:
         - stock_receipt
         - stock_shipment
@@ -90894,6 +92717,7 @@ x-akeda-contract-coverage:
   - core-contacts
   - core-products
   - core-documents
+  - core-orders
   - core-registers
   - core-accounting
   - core-ledger

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 76ff123bd41e65620f652792c3c871058a5ef04a6227b996900e48fcf0e25ee5).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 39eccc6ff4448f674ea1532859b79e9ec3ac401cb886f10e1a895c9ed12305cb).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -450,6 +450,35 @@ __all__ = [
     "CoreNumberSource",
     "CoreObjectUsage",
     "CoreObjectUsageRow",
+    "CoreOrder",
+    "CoreOrderAllowedAction",
+    "CoreOrderBuyer",
+    "CoreOrderCabinetStatusInput",
+    "CoreOrderCloseInput",
+    "CoreOrderCounterparty",
+    "CoreOrderEvent",
+    "CoreOrderHistory",
+    "CoreOrderHistoryDocument",
+    "CoreOrderImportEntry",
+    "CoreOrderImportInput",
+    "CoreOrderImportList",
+    "CoreOrderInput",
+    "CoreOrderLine",
+    "CoreOrderLineInput",
+    "CoreOrderLineKind",
+    "CoreOrderObligation",
+    "CoreOrderPage",
+    "CoreOrderResponsible",
+    "CoreOrderResponsiblesInput",
+    "CoreOrderRevision",
+    "CoreOrderSide",
+    "CoreOrderSourceKind",
+    "CoreOrderState",
+    "CoreOrderStatus",
+    "CoreOrderStatusInput",
+    "CoreOrderStatusList",
+    "CoreOrderStatusPatch",
+    "CoreOrderTotals",
     "CoreOwnershipVersion",
     "CoreOwnershipVersionInput",
     "CorePhotoResult",
@@ -966,6 +995,7 @@ __all__ = [
     "FinanceStatementLinkResult",
     "FinanceStatementPage",
     "FinanceTradeAdvance",
+    "FinanceTradeJournalDocument",
     "FinanceTradeJournalPage",
     "FinanceTradeJournalRow",
     "FinanceTransaction",
@@ -5682,7 +5712,7 @@ class CoreItemPage(TypedDict):
 
 CoreNumberReset = Literal['year', 'never']
 
-CoreNumberSource = Literal['sequence', 'external']
+CoreNumberSource = Literal['sequence', 'sequence_or_given', 'external']
 
 class CoreObjectUsage(TypedDict):
     blocked: bool
@@ -5694,6 +5724,407 @@ class CoreObjectUsageRow(TypedDict):
     key: str
     name: str
     count: int
+
+class _CoreOrderRequired(TypedDict):
+    id: "UUID"
+    side: "CoreOrderSide"
+    type_key: Literal['customer_order', 'supplier_order']
+    number: str
+    date: str
+    document_status: "CoreDocumentStatus"
+    state: "CoreOrderState"
+    business_id: "UUID"
+    contact_id: "UUID"
+    title: str
+    currency: str
+    prices_include_vat: bool
+    #: Скидка на заказ целиком, как её ввели; в суммах строк уже учтена
+    discount: str
+    scenario: str
+    source_kind: "CoreOrderSourceKind"
+    version: int
+    lines: List["CoreOrderLine"]
+    responsibles: List["CoreOrderResponsible"]
+    totals: "CoreOrderTotals"
+    created_at: str
+    updated_at: str
+
+class CoreOrder(_CoreOrderRequired, total=False):
+    """Заказ — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе."""
+
+    company_id: "UUID"
+    business_name: str
+    company_name: str
+    contact_name: str
+    contract_id: "UUID"
+    project_id: "UUID"
+    warehouse_id: "UUID"
+    basis_id: "UUID"
+    delivery_date: str
+    due_date: str
+    manager_note: str
+    comment: str
+    buyer: "CoreOrderBuyer"
+    source_system: str
+    external_id: str
+    cabinet_status_id: "UUID"
+    cabinet_status_name: str
+    closed_at: str
+    closed_reason: str
+    close_document_id: "UUID"
+    migrated_from: str
+    created_by: int
+    posted_at: str
+    cancelled_at: str
+    obligation: "CoreOrderObligation"
+    #: Только в карточке и ответах команд
+    allowed_actions: List["CoreOrderAllowedAction"]
+
+class _CoreOrderAllowedActionRequired(TypedDict):
+    action: Literal['edit', 'confirm', 'cancel', 'close', 'reopen', 'cabinet_status', 'responsibles']
+    allowed: bool
+
+class CoreOrderAllowedAction(_CoreOrderAllowedActionRequired, total=False):
+    #: Код отказа: core.order.has_executions, core.order.closed, core.order.forbidden
+    reason_code: str
+    #: Причина словами на языке запроса
+    reason: str
+
+class CoreOrderBuyer(TypedDict, total=False):
+    """Покупатель-физлицо: розничный заказ стоит на общей карточке покупателя, и различает покупателей только это."""
+
+    name: str
+    phone: str
+    email: str
+
+class CoreOrderCabinetStatusInput(TypedDict):
+    status_id: "UUID"
+
+class CoreOrderCloseInput(TypedDict, total=False):
+    #: Почему остаток больше не нужен
+    reason: str
+
+class CoreOrderCounterparty(TypedDict, total=False):
+    """Покупатель загрузки без id: юрлицо узнаётся по ИНН и КПП, физлицо — по телефону или заводится."""
+
+    name: str
+    inn: str
+    kpp: str
+    phone: str
+    email: str
+
+class _CoreOrderEventRequired(TypedDict):
+    id: "UUID"
+    order_id: "UUID"
+    #: created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated
+    kind: str
+    created_at: str
+
+class CoreOrderEvent(_CoreOrderEventRequired, total=False):
+    detail: str
+    effective_date: str
+    status_id: "UUID"
+    actor_id: int
+    actor_kind: Literal['user', 'app', 'system']
+    actor_name: str
+    status_name: str
+    #: Разница версий: у revised — версия и что изменилось
+    payload: Dict[str, Any]
+
+class CoreOrderHistory(TypedDict):
+    events: List["CoreOrderEvent"]
+    documents: List["CoreOrderHistoryDocument"]
+
+class _CoreOrderHistoryDocumentRequired(TypedDict):
+    source: str
+    module: str
+    section: str
+    id: "UUID"
+    kind: str
+    number: str
+    date: str
+    status: str
+    created_at: str
+
+class CoreOrderHistoryDocument(_CoreOrderHistoryDocumentRequired, total=False):
+    """Документ модуля, выросший из заказа: акт, отгрузка, счёт."""
+
+    kind_name: str
+    due_date: str
+    amount: str
+    currency: str
+    direction: str
+    status_name: str
+    title: str
+
+class _CoreOrderImportEntryRequired(TypedDict):
+    id: "UUID"
+    side: "CoreOrderSide"
+    external_id: str
+    source: str
+    outcome: Literal['accepted', 'updated', 'rejected']
+    created_at: str
+
+class CoreOrderImportEntry(_CoreOrderImportEntryRequired, total=False):
+    reason: str
+    detail: str
+    order_id: "UUID"
+
+class _CoreOrderImportInputRequired(TypedDict):
+    side: "CoreOrderSide"
+    date: str
+    currency: str
+    lines: List["CoreOrderLineInput"]
+    #: Номер заказа у источника; по стороне и нему узнаётся повтор
+    external_id: str
+
+class CoreOrderImportInput(_CoreOrderImportInputRequired, total=False):
+    #: Свой номер; пусто — номер выдаёт счётчик вида
+    number: str
+    business_id: "UUID"
+    company_id: "UUID"
+    #: Контрагент; у загрузки вместо него можно прислать counterparty
+    contact_id: "UUID"
+    counterparty: "CoreOrderCounterparty"
+    contract_id: "UUID"
+    project_id: "UUID"
+    warehouse_id: "UUID"
+    #: Основание — например, заявка на закупку
+    basis_id: "UUID"
+    title: str
+    #: Цены с НДС («в том числе»); по умолчанию true
+    prices_include_vat: bool
+    #: Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+    discount: str
+    delivery_date: str
+    due_date: str
+    scenario: Literal['one_off_sale', 'contract_sale', 'self_service']
+    manager_note: str
+    comment: str
+    buyer: "CoreOrderBuyer"
+    responsibles: List["CoreOrderResponsible"]
+    cabinet_status_id: "UUID"
+    #: Подтвердить заказ, если он ещё черновик
+    confirm: bool
+    #: Имя источника для журнала загрузок: сайт, CRM
+    source_system: str
+
+class CoreOrderImportList(TypedDict):
+    items: List["CoreOrderImportEntry"]
+
+class _CoreOrderInputRequired(TypedDict):
+    side: "CoreOrderSide"
+    date: str
+    currency: str
+    lines: List["CoreOrderLineInput"]
+
+class CoreOrderInput(_CoreOrderInputRequired, total=False):
+    """Заказ из запроса: поля одни для формы, загрузки и фасадов модулей."""
+
+    #: Свой номер; пусто — номер выдаёт счётчик вида
+    number: str
+    business_id: "UUID"
+    company_id: "UUID"
+    #: Контрагент; у загрузки вместо него можно прислать counterparty
+    contact_id: "UUID"
+    counterparty: "CoreOrderCounterparty"
+    contract_id: "UUID"
+    project_id: "UUID"
+    warehouse_id: "UUID"
+    #: Основание — например, заявка на закупку
+    basis_id: "UUID"
+    title: str
+    #: Цены с НДС («в том числе»); по умолчанию true
+    prices_include_vat: bool
+    #: Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+    discount: str
+    delivery_date: str
+    due_date: str
+    scenario: Literal['one_off_sale', 'contract_sale', 'self_service']
+    manager_note: str
+    comment: str
+    buyer: "CoreOrderBuyer"
+    responsibles: List["CoreOrderResponsible"]
+    cabinet_status_id: "UUID"
+    #: Сразу подтвердить созданный заказ
+    confirm: bool
+
+class _CoreOrderLineRequired(TypedDict):
+    id: "UUID"
+    position: int
+    kind: "CoreOrderLineKind"
+    title: str
+    #: Десятичное число строкой
+    quantity: str
+    #: Десятичное число строкой
+    price: str
+    #: Скидка самой строки
+    discount: str
+    #: Доля скидки заказа на этой строке; суммы строки посчитаны после обеих скидок
+    discount_amount: str
+    #: Сумма строкой в разрядности валюты заказа
+    amount_net: str
+    #: Сумма строкой в разрядности валюты заказа
+    vat_amount: str
+    #: Сумма строкой в разрядности валюты заказа
+    amount_gross: str
+
+class CoreOrderLine(_CoreOrderLineRequired, total=False):
+    product_id: "UUID"
+    unit: str
+    unit_id: "UUID"
+    #: Ставка, как её ввели; пусто — по учётной политике
+    vat_rate: str
+    #: Ставка, по которой строка посчитана; пусто — налог не выделен
+    vat_rate_applied: str
+    #: Количество в базовой единице склада
+    base_qty: str
+    basis_document_id: "UUID"
+    basis_line_id: "UUID"
+
+class _CoreOrderLineInputRequired(TypedDict):
+    title: str
+    #: Десятичное число строкой
+    quantity: str
+    #: Десятичное число строкой
+    price: str
+
+class CoreOrderLineInput(_CoreOrderLineInputRequired, total=False):
+    #: Id существующей строки — её правка; без id — новая строка
+    id: "UUID"
+    kind: "CoreOrderLineKind"
+    product_id: "UUID"
+    #: Артикул — позиция узнаётся по нему, если id не назван
+    article: str
+    unit: str
+    unit_id: "UUID"
+    #: Десятичное число строкой
+    discount: str
+    #: Ставка НДС строки; пусто — по учётной политике юрлица на дату заказа
+    vat_rate: str
+    #: Десятичное число строкой
+    base_qty: str
+    basis_document_id: "UUID"
+    basis_line_id: "UUID"
+
+CoreOrderLineKind = Literal['goods', 'service', 'material', 'semi_product']
+
+class CoreOrderObligation(TypedDict):
+    #: Действующий приход подтверждения в регистре «Заказы»
+    ordered: str
+    #: Остаток регистра «Заказы» по заказу: заказано минус снятое закрытием и исполненное
+    remaining: str
+
+class CoreOrderPage(TypedDict):
+    items: List["CoreOrder"]
+    #: Сколько заказов под отбором всего
+    total: int
+    limit: int
+    offset: int
+    has_more: bool
+
+class _CoreOrderResponsibleRequired(TypedDict):
+    employee_id: "UUID"
+    #: Доля в процентах: больше нуля, не больше ста
+    share: str
+
+class CoreOrderResponsible(_CoreOrderResponsibleRequired, total=False):
+    employee_name: str
+
+class CoreOrderResponsiblesInput(TypedDict):
+    responsibles: List["CoreOrderResponsible"]
+
+class _CoreOrderRevisionRequired(TypedDict):
+    side: "CoreOrderSide"
+    date: str
+    currency: str
+    lines: List["CoreOrderLineInput"]
+
+class CoreOrderRevision(_CoreOrderRevisionRequired, total=False):
+    #: Свой номер; пусто — номер выдаёт счётчик вида
+    number: str
+    business_id: "UUID"
+    company_id: "UUID"
+    #: Контрагент; у загрузки вместо него можно прислать counterparty
+    contact_id: "UUID"
+    counterparty: "CoreOrderCounterparty"
+    contract_id: "UUID"
+    project_id: "UUID"
+    warehouse_id: "UUID"
+    #: Основание — например, заявка на закупку
+    basis_id: "UUID"
+    title: str
+    #: Цены с НДС («в том числе»); по умолчанию true
+    prices_include_vat: bool
+    #: Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+    discount: str
+    delivery_date: str
+    due_date: str
+    scenario: Literal['one_off_sale', 'contract_sale', 'self_service']
+    manager_note: str
+    comment: str
+    buyer: "CoreOrderBuyer"
+    responsibles: List["CoreOrderResponsible"]
+    cabinet_status_id: "UUID"
+    #: Версия, которую видел правящий; 0 — без сверки
+    expected_version: int
+
+CoreOrderSide = Literal['sale', 'purchase']
+
+CoreOrderSourceKind = Literal['manual', 'app', 'import', 'marketplace', 'crm', 'migration']
+
+CoreOrderState = Literal['draft', 'confirmed', 'executing', 'executed', 'closed', 'cancelled']
+
+class _CoreOrderStatusRequired(TypedDict):
+    id: "UUID"
+    name: str
+    category: "CoreOrderState"
+    position: int
+    is_active: bool
+    is_system: bool
+
+class CoreOrderStatus(_CoreOrderStatusRequired, total=False):
+    #: Есть только у системной строки
+    key: str
+    #: Пусто — статус годится обеим сторонам
+    side: Literal['', 'sale', 'purchase']
+    color: str
+
+class _CoreOrderStatusInputRequired(TypedDict):
+    name: str
+    category: "CoreOrderState"
+
+class CoreOrderStatusInput(_CoreOrderStatusInputRequired, total=False):
+    side: Literal['', 'sale', 'purchase']
+    position: int
+    #: Цвет: #RRGGBB или имя токена
+    color: str
+
+class CoreOrderStatusList(TypedDict):
+    items: List["CoreOrderStatus"]
+
+class CoreOrderStatusPatch(TypedDict, total=False):
+    name: str
+    category: "CoreOrderState"
+    side: Literal['', 'sale', 'purchase']
+    position: int
+    color: str
+    is_active: bool
+
+class CoreOrderTotals(TypedDict):
+    """Итоги — сумма строк: скидка заказа уже разложена по строкам и второй раз не вычитается."""
+
+    #: Сумма строкой в разрядности валюты заказа
+    net: str
+    #: Сумма строкой в разрядности валюты заказа
+    vat: str
+    #: Сумма строкой в разрядности валюты заказа
+    gross: str
+    #: Сумма строкой в разрядности валюты заказа
+    goods_gross: str
+    #: Сумма строкой в разрядности валюты заказа
+    services_gross: str
+    currency: str
 
 class _CoreOwnershipVersionRequired(TypedDict):
     id: "UUID"
@@ -11309,6 +11740,17 @@ class FinanceTradeAdvance(TypedDict):
     amount: str
     advances: List["FinanceOpenAdvance"]
 
+class FinanceTradeJournalDocument(TypedDict):
+    id: "UUID"
+    type_key: str
+    type_name: str
+    number: str
+    date: str
+    status: str
+    #: Доля документа в колонке, decimal string
+    amount: str
+    currency: str
+
 class _FinanceTradeJournalPageRequired(TypedDict):
     count: int
     results: List["FinanceTradeJournalRow"]
@@ -11318,6 +11760,9 @@ class FinanceTradeJournalPage(_FinanceTradeJournalPageRequired, total=False):
     offset: int
     has_more: bool
     limit_reached: bool
+    group: Literal['orders', 'without_order']
+    #: Колонки, вычисленные до разреза «заказ» в расчётах (этап 3)
+    computed_columns: List[Literal['advance', 'debt']]
 
 class _FinanceTradeJournalRowRequired(TypedDict):
     id: "UUID"
@@ -11360,6 +11805,21 @@ class FinanceTradeJournalRow(_FinanceTradeJournalRowRequired, total=False):
     payment_stages: int
     accrued_stages: int
     paid_stages: int
+    group: Literal['orders', 'without_order']
+    #: Состояние заказа по канону
+    state: Literal['draft', 'confirmed', 'executing', 'executed', 'closed', 'cancelled']
+    title: str
+    contract_id: Optional[str]
+    cabinet_status_name: str
+    #: Итог заказа, decimal string
+    ordered: str
+    #: Долг, рождённый исполнениями заказа, decimal string
+    executed: str
+    #: Вычисленный max(0, исполнено − оплачено), decimal string
+    debt: str
+    execution_count: int
+    executions: List["FinanceTradeJournalDocument"]
+    payments: List["FinanceTradeJournalDocument"]
 
 class _FinanceTransactionRequired(TypedDict):
     id: "UUID"
@@ -16393,7 +16853,7 @@ class StockDocumentRefs(_StockDocumentRefsRequired, total=False):
     warehouse_to: Dict[str, Any]
     contact: "UUID"
 
-StockDocumentTypeKey = Literal['stock_receipt', 'stock_shipment', 'stock_transfer', 'stock_writeoff', 'stock_capitalization', 'stock_supplier_return', 'stock_customer_return', 'stock_purchase_request', 'stock_supplier_order', 'stock_inventory', 'stock_reservation', 'stock_landed_cost', 'stock_assembly', 'stock_disassembly', 'stock_reservation_release', 'stock_supplier_order_close', 'stock_opening_balance', 'stock_marketplace_return', 'stock_account_transfer']
+StockDocumentTypeKey = Literal['stock_receipt', 'stock_shipment', 'stock_transfer', 'stock_writeoff', 'stock_capitalization', 'stock_supplier_return', 'stock_customer_return', 'stock_purchase_request', 'stock_supplier_order', 'stock_inventory', 'stock_reservation', 'stock_landed_cost', 'stock_assembly', 'stock_disassembly', 'stock_reservation_release', 'stock_supplier_order_close', 'stock_opening_balance', 'stock_marketplace_return', 'stock_account_transfer', 'supplier_order']
 
 class _StockExportRequired(TypedDict):
     id: "UUID"

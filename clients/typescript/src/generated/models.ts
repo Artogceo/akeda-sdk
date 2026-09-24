@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 76ff123bd41e65620f652792c3c871058a5ef04a6227b996900e48fcf0e25ee5).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 39eccc6ff4448f674ea1532859b79e9ec3ac401cb886f10e1a895c9ed12305cb).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -4193,7 +4193,7 @@ export interface CoreItemPage {
 
 export type CoreNumberReset = "year" | "never";
 
-export type CoreNumberSource = "sequence" | "external";
+export type CoreNumberSource = "sequence" | "sequence_or_given" | "external";
 
 export interface CoreObjectUsage {
   "blocked": boolean;
@@ -4206,6 +4206,400 @@ export interface CoreObjectUsageRow {
   "key": string;
   "name": string;
   "count": number;
+}
+
+/** Заказ — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе. */
+export interface CoreOrder {
+  "id": UUID;
+  "side": CoreOrderSide;
+  "type_key": "customer_order" | "supplier_order";
+  "number": string;
+  "date": string;
+  "document_status": CoreDocumentStatus;
+  "state": CoreOrderState;
+  "business_id": UUID;
+  "company_id"?: UUID;
+  "contact_id": UUID;
+  "business_name"?: string;
+  "company_name"?: string;
+  "contact_name"?: string;
+  "contract_id"?: UUID;
+  "project_id"?: UUID;
+  "warehouse_id"?: UUID;
+  "basis_id"?: UUID;
+  "title": string;
+  "currency": string;
+  "prices_include_vat": boolean;
+  /** Скидка на заказ целиком, как её ввели; в суммах строк уже учтена */
+  "discount": string;
+  "delivery_date"?: string;
+  "due_date"?: string;
+  "scenario": string;
+  "manager_note"?: string;
+  "comment"?: string;
+  "buyer"?: CoreOrderBuyer;
+  "source_kind": CoreOrderSourceKind;
+  "source_system"?: string;
+  "external_id"?: string;
+  "cabinet_status_id"?: UUID;
+  "cabinet_status_name"?: string;
+  "version": number;
+  "closed_at"?: string;
+  "closed_reason"?: string;
+  "close_document_id"?: UUID;
+  "migrated_from"?: string;
+  "lines": Array<CoreOrderLine>;
+  "responsibles": Array<CoreOrderResponsible>;
+  "totals": CoreOrderTotals;
+  "created_by"?: number;
+  "created_at": string;
+  "updated_at": string;
+  "posted_at"?: string;
+  "cancelled_at"?: string;
+  "obligation"?: CoreOrderObligation;
+  /** Только в карточке и ответах команд */
+  "allowed_actions"?: Array<CoreOrderAllowedAction>;
+}
+
+export interface CoreOrderAllowedAction {
+  "action": "edit" | "confirm" | "cancel" | "close" | "reopen" | "cabinet_status" | "responsibles";
+  "allowed": boolean;
+  /** Код отказа: core.order.has_executions, core.order.closed, core.order.forbidden */
+  "reason_code"?: string;
+  /** Причина словами на языке запроса */
+  "reason"?: string;
+}
+
+/** Покупатель-физлицо: розничный заказ стоит на общей карточке покупателя, и различает покупателей только это. */
+export interface CoreOrderBuyer {
+  "name"?: string;
+  "phone"?: string;
+  "email"?: string;
+}
+
+export interface CoreOrderCabinetStatusInput {
+  "status_id": UUID;
+}
+
+export interface CoreOrderCloseInput {
+  /** Почему остаток больше не нужен */
+  "reason"?: string;
+}
+
+/** Покупатель загрузки без id: юрлицо узнаётся по ИНН и КПП, физлицо — по телефону или заводится. */
+export interface CoreOrderCounterparty {
+  "name"?: string;
+  "inn"?: string;
+  "kpp"?: string;
+  "phone"?: string;
+  "email"?: string;
+}
+
+export interface CoreOrderEvent {
+  "id": UUID;
+  "order_id": UUID;
+  /** created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated */
+  "kind": string;
+  "detail"?: string;
+  "effective_date"?: string;
+  "status_id"?: UUID;
+  "actor_id"?: number;
+  "actor_kind"?: "user" | "app" | "system";
+  "actor_name"?: string;
+  "status_name"?: string;
+  /** Разница версий: у revised — версия и что изменилось */
+  "payload"?: { [key: string]: unknown };
+  "created_at": string;
+}
+
+export interface CoreOrderHistory {
+  "events": Array<CoreOrderEvent>;
+  "documents": Array<CoreOrderHistoryDocument>;
+}
+
+/** Документ модуля, выросший из заказа: акт, отгрузка, счёт. */
+export interface CoreOrderHistoryDocument {
+  "source": string;
+  "module": string;
+  "section": string;
+  "id": UUID;
+  "kind": string;
+  "kind_name"?: string;
+  "number": string;
+  "date": string;
+  "due_date"?: string;
+  "amount"?: string;
+  "currency"?: string;
+  "direction"?: string;
+  "status": string;
+  "status_name"?: string;
+  "title"?: string;
+  "created_at": string;
+}
+
+export interface CoreOrderImportEntry {
+  "id": UUID;
+  "side": CoreOrderSide;
+  "external_id": string;
+  "source": string;
+  "outcome": "accepted" | "updated" | "rejected";
+  "reason"?: string;
+  "detail"?: string;
+  "order_id"?: UUID;
+  "created_at": string;
+}
+
+export interface CoreOrderImportInput {
+  "side": CoreOrderSide;
+  /** Свой номер; пусто — номер выдаёт счётчик вида */
+  "number"?: string;
+  "date": string;
+  "business_id"?: UUID;
+  "company_id"?: UUID;
+  /** Контрагент; у загрузки вместо него можно прислать counterparty */
+  "contact_id"?: UUID;
+  "counterparty"?: CoreOrderCounterparty;
+  "contract_id"?: UUID;
+  "project_id"?: UUID;
+  "warehouse_id"?: UUID;
+  /** Основание — например, заявка на закупку */
+  "basis_id"?: UUID;
+  "title"?: string;
+  "currency": string;
+  /** Цены с НДС («в том числе»); по умолчанию true */
+  "prices_include_vat"?: boolean;
+  /** Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС */
+  "discount"?: string;
+  "delivery_date"?: string;
+  "due_date"?: string;
+  "scenario"?: "one_off_sale" | "contract_sale" | "self_service";
+  "manager_note"?: string;
+  "comment"?: string;
+  "buyer"?: CoreOrderBuyer;
+  "lines": Array<CoreOrderLineInput>;
+  "responsibles"?: Array<CoreOrderResponsible>;
+  "cabinet_status_id"?: UUID;
+  /** Подтвердить заказ, если он ещё черновик */
+  "confirm"?: boolean;
+  /** Номер заказа у источника; по стороне и нему узнаётся повтор */
+  "external_id": string;
+  /** Имя источника для журнала загрузок: сайт, CRM */
+  "source_system"?: string;
+}
+
+export interface CoreOrderImportList {
+  "items": Array<CoreOrderImportEntry>;
+}
+
+/** Заказ из запроса: поля одни для формы, загрузки и фасадов модулей. */
+export interface CoreOrderInput {
+  "side": CoreOrderSide;
+  /** Свой номер; пусто — номер выдаёт счётчик вида */
+  "number"?: string;
+  "date": string;
+  "business_id"?: UUID;
+  "company_id"?: UUID;
+  /** Контрагент; у загрузки вместо него можно прислать counterparty */
+  "contact_id"?: UUID;
+  "counterparty"?: CoreOrderCounterparty;
+  "contract_id"?: UUID;
+  "project_id"?: UUID;
+  "warehouse_id"?: UUID;
+  /** Основание — например, заявка на закупку */
+  "basis_id"?: UUID;
+  "title"?: string;
+  "currency": string;
+  /** Цены с НДС («в том числе»); по умолчанию true */
+  "prices_include_vat"?: boolean;
+  /** Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС */
+  "discount"?: string;
+  "delivery_date"?: string;
+  "due_date"?: string;
+  "scenario"?: "one_off_sale" | "contract_sale" | "self_service";
+  "manager_note"?: string;
+  "comment"?: string;
+  "buyer"?: CoreOrderBuyer;
+  "lines": Array<CoreOrderLineInput>;
+  "responsibles"?: Array<CoreOrderResponsible>;
+  "cabinet_status_id"?: UUID;
+  /** Сразу подтвердить созданный заказ */
+  "confirm"?: boolean;
+}
+
+export interface CoreOrderLine {
+  "id": UUID;
+  "position": number;
+  "kind": CoreOrderLineKind;
+  "product_id"?: UUID;
+  "title": string;
+  "unit"?: string;
+  "unit_id"?: UUID;
+  /** Десятичное число строкой */
+  "quantity": string;
+  /** Десятичное число строкой */
+  "price": string;
+  /** Скидка самой строки */
+  "discount": string;
+  /** Доля скидки заказа на этой строке; суммы строки посчитаны после обеих скидок */
+  "discount_amount": string;
+  /** Ставка, как её ввели; пусто — по учётной политике */
+  "vat_rate"?: string;
+  /** Ставка, по которой строка посчитана; пусто — налог не выделен */
+  "vat_rate_applied"?: string;
+  /** Сумма строкой в разрядности валюты заказа */
+  "amount_net": string;
+  /** Сумма строкой в разрядности валюты заказа */
+  "vat_amount": string;
+  /** Сумма строкой в разрядности валюты заказа */
+  "amount_gross": string;
+  /** Количество в базовой единице склада */
+  "base_qty"?: string;
+  "basis_document_id"?: UUID;
+  "basis_line_id"?: UUID;
+}
+
+export interface CoreOrderLineInput {
+  /** Id существующей строки — её правка; без id — новая строка */
+  "id"?: UUID;
+  "kind"?: CoreOrderLineKind;
+  "product_id"?: UUID;
+  /** Артикул — позиция узнаётся по нему, если id не назван */
+  "article"?: string;
+  "title": string;
+  "unit"?: string;
+  "unit_id"?: UUID;
+  /** Десятичное число строкой */
+  "quantity": string;
+  /** Десятичное число строкой */
+  "price": string;
+  /** Десятичное число строкой */
+  "discount"?: string;
+  /** Ставка НДС строки; пусто — по учётной политике юрлица на дату заказа */
+  "vat_rate"?: string;
+  /** Десятичное число строкой */
+  "base_qty"?: string;
+  "basis_document_id"?: UUID;
+  "basis_line_id"?: UUID;
+}
+
+export type CoreOrderLineKind = "goods" | "service" | "material" | "semi_product";
+
+export interface CoreOrderObligation {
+  /** Действующий приход подтверждения в регистре «Заказы» */
+  "ordered": string;
+  /** Остаток регистра «Заказы» по заказу: заказано минус снятое закрытием и исполненное */
+  "remaining": string;
+}
+
+export interface CoreOrderPage {
+  "items": Array<CoreOrder>;
+  /** Сколько заказов под отбором всего */
+  "total": number;
+  "limit": number;
+  "offset": number;
+  "has_more": boolean;
+}
+
+export interface CoreOrderResponsible {
+  "employee_id": UUID;
+  "employee_name"?: string;
+  /** Доля в процентах: больше нуля, не больше ста */
+  "share": string;
+}
+
+export interface CoreOrderResponsiblesInput {
+  "responsibles": Array<CoreOrderResponsible>;
+}
+
+export interface CoreOrderRevision {
+  "side": CoreOrderSide;
+  /** Свой номер; пусто — номер выдаёт счётчик вида */
+  "number"?: string;
+  "date": string;
+  "business_id"?: UUID;
+  "company_id"?: UUID;
+  /** Контрагент; у загрузки вместо него можно прислать counterparty */
+  "contact_id"?: UUID;
+  "counterparty"?: CoreOrderCounterparty;
+  "contract_id"?: UUID;
+  "project_id"?: UUID;
+  "warehouse_id"?: UUID;
+  /** Основание — например, заявка на закупку */
+  "basis_id"?: UUID;
+  "title"?: string;
+  "currency": string;
+  /** Цены с НДС («в том числе»); по умолчанию true */
+  "prices_include_vat"?: boolean;
+  /** Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС */
+  "discount"?: string;
+  "delivery_date"?: string;
+  "due_date"?: string;
+  "scenario"?: "one_off_sale" | "contract_sale" | "self_service";
+  "manager_note"?: string;
+  "comment"?: string;
+  "buyer"?: CoreOrderBuyer;
+  "lines": Array<CoreOrderLineInput>;
+  "responsibles"?: Array<CoreOrderResponsible>;
+  "cabinet_status_id"?: UUID;
+  /** Версия, которую видел правящий; 0 — без сверки */
+  "expected_version"?: number;
+}
+
+export type CoreOrderSide = "sale" | "purchase";
+
+export type CoreOrderSourceKind = "manual" | "app" | "import" | "marketplace" | "crm" | "migration";
+
+export type CoreOrderState = "draft" | "confirmed" | "executing" | "executed" | "closed" | "cancelled";
+
+export interface CoreOrderStatus {
+  "id": UUID;
+  /** Есть только у системной строки */
+  "key"?: string;
+  /** Пусто — статус годится обеим сторонам */
+  "side"?: "" | "sale" | "purchase";
+  "name": string;
+  "category": CoreOrderState;
+  "position": number;
+  "color"?: string;
+  "is_active": boolean;
+  "is_system": boolean;
+}
+
+export interface CoreOrderStatusInput {
+  "name": string;
+  "category": CoreOrderState;
+  "side"?: "" | "sale" | "purchase";
+  "position"?: number;
+  /** Цвет: #RRGGBB или имя токена */
+  "color"?: string;
+}
+
+export interface CoreOrderStatusList {
+  "items": Array<CoreOrderStatus>;
+}
+
+export interface CoreOrderStatusPatch {
+  "name"?: string;
+  "category"?: CoreOrderState;
+  "side"?: "" | "sale" | "purchase";
+  "position"?: number;
+  "color"?: string;
+  "is_active"?: boolean;
+}
+
+/** Итоги — сумма строк: скидка заказа уже разложена по строкам и второй раз не вычитается. */
+export interface CoreOrderTotals {
+  /** Сумма строкой в разрядности валюты заказа */
+  "net": string;
+  /** Сумма строкой в разрядности валюты заказа */
+  "vat": string;
+  /** Сумма строкой в разрядности валюты заказа */
+  "gross": string;
+  /** Сумма строкой в разрядности валюты заказа */
+  "goods_gross": string;
+  /** Сумма строкой в разрядности валюты заказа */
+  "services_gross": string;
+  "currency": string;
 }
 
 export interface CoreOwnershipVersion {
@@ -9924,6 +10318,18 @@ export interface FinanceTradeAdvance {
   "advances": Array<FinanceOpenAdvance>;
 }
 
+export interface FinanceTradeJournalDocument {
+  "id": UUID;
+  "type_key": string;
+  "type_name": string;
+  "number": string;
+  "date": string;
+  "status": string;
+  /** Доля документа в колонке, decimal string */
+  "amount": string;
+  "currency": string;
+}
+
 export interface FinanceTradeJournalPage {
   "count": number;
   "results": Array<FinanceTradeJournalRow>;
@@ -9931,6 +10337,9 @@ export interface FinanceTradeJournalPage {
   "offset"?: number;
   "has_more"?: boolean;
   "limit_reached"?: boolean;
+  "group"?: "orders" | "without_order";
+  /** Колонки, вычисленные до разреза «заказ» в расчётах (этап 3) */
+  "computed_columns"?: Array<"advance" | "debt">;
 }
 
 export interface FinanceTradeJournalRow {
@@ -9972,6 +10381,21 @@ export interface FinanceTradeJournalRow {
   "payment_stages"?: number;
   "accrued_stages"?: number;
   "paid_stages"?: number;
+  "group"?: "orders" | "without_order";
+  /** Состояние заказа по канону */
+  "state"?: "draft" | "confirmed" | "executing" | "executed" | "closed" | "cancelled";
+  "title"?: string;
+  "contract_id"?: string | null;
+  "cabinet_status_name"?: string;
+  /** Итог заказа, decimal string */
+  "ordered"?: string;
+  /** Долг, рождённый исполнениями заказа, decimal string */
+  "executed"?: string;
+  /** Вычисленный max(0, исполнено − оплачено), decimal string */
+  "debt"?: string;
+  "execution_count"?: number;
+  "executions"?: Array<FinanceTradeJournalDocument>;
+  "payments"?: Array<FinanceTradeJournalDocument>;
 }
 
 export interface FinanceTransaction {
@@ -15280,7 +15704,7 @@ export interface StockDocumentRefs {
   "contact"?: UUID;
 }
 
-export type StockDocumentTypeKey = "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_purchase_request" | "stock_supplier_order" | "stock_inventory" | "stock_reservation" | "stock_landed_cost" | "stock_assembly" | "stock_disassembly" | "stock_reservation_release" | "stock_supplier_order_close" | "stock_opening_balance" | "stock_marketplace_return" | "stock_account_transfer";
+export type StockDocumentTypeKey = "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_purchase_request" | "stock_supplier_order" | "stock_inventory" | "stock_reservation" | "stock_landed_cost" | "stock_assembly" | "stock_disassembly" | "stock_reservation_release" | "stock_supplier_order_close" | "stock_opening_balance" | "stock_marketplace_return" | "stock_account_transfer" | "supplier_order";
 
 export interface StockExport {
   "id": UUID;
