@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8f00218feb4afe805c640c83d8a059de1be0e98a731ee18ef74f0fc68d7f48a9).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f4dcd9d59d4b186659d1fe8dd928c55e759ad05610622ad82ca129344fc97989).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -30,6 +30,11 @@ class OperationSpec(NamedTuple):
 
 
 OPERATIONS: Dict[str, OperationSpec] = {
+    'appDocflowCancelSalesOrder': OperationSpec('POST', '/api/v1/app/docflow/orders/{id}/cancel', 'docflow', 'preview', 'docflow.orders:import', False, True, ('id',), 'none', None, None),
+    'appDocflowGetSalesOrder': OperationSpec('GET', '/api/v1/app/docflow/orders/{id}', 'docflow', 'preview', 'docflow.orders:import', False, True, ('id',), 'none', None, None),
+    'appDocflowImportSalesOrder': OperationSpec('POST', '/api/v1/app/docflow/orders/import', 'docflow', 'preview', 'docflow.orders:import', False, True, (), 'none', None, None),
+    'appDocflowListSalesOrderImports': OperationSpec('GET', '/api/v1/app/docflow/order-imports', 'docflow', 'preview', 'docflow.orders:import', False, True, (), 'limit', 200, 50),
+    'appDocflowSetSalesOrderStatus': OperationSpec('POST', '/api/v1/app/docflow/orders/{id}/status', 'docflow', 'preview', 'docflow.orders:import', False, True, ('id',), 'none', None, None),
     'appFinanceCancelOperation': OperationSpec('POST', '/api/v1/app/finance/operations/{id}/cancel', 'finance', 'preview', 'finance.operations:write', False, True, ('id',), 'none', None, None),
     'appFinanceCreateOperation': OperationSpec('POST', '/api/v1/app/finance/operations', 'finance', 'preview', 'finance.operations:write', False, True, (), 'none', None, None),
     'appFinanceCreateOperationAccrual': OperationSpec('POST', '/api/v1/app/finance/operations/{id}/accruals', 'finance', 'preview', 'finance.operations:write', False, True, ('id',), 'none', None, None),
@@ -276,6 +281,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreSaveUIState': OperationSpec('PUT', '/api/v1/core/ui-state/{screen}', 'core', 'preview', 'core:write', False, False, ('screen',), 'none', None, None),
     'coreSetBusinessAccountingMethod': OperationSpec('POST', '/api/v1/core/businesses/{id}/accounting-method', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreSetBusinessActive': OperationSpec('POST', '/api/v1/core/businesses/{id}/activation', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
+    'coreSetDocumentCustom': OperationSpec('PUT', '/api/v1/core/documents/{id}/custom', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreSuggestRequisitesParties': OperationSpec('GET', '/api/v1/core/lookup/parties', 'finance', 'preview', 'core:read', False, False, (), 'none', None, None),
     'coreUnlinkExternalRef': OperationSpec('POST', '/api/v1/core/external-refs/{id}/unlink', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreUpdateAccountingDimension': OperationSpec('PATCH', '/api/v1/core/accounting-dimensions/{key}', 'core', 'preview', 'core:write', False, True, ('key',), 'none', None, None),

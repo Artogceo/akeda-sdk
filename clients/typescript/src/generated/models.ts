@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8f00218feb4afe805c640c83d8a059de1be0e98a731ee18ef74f0fc68d7f48a9).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f4dcd9d59d4b186659d1fe8dd928c55e759ad05610622ad82ca129344fc97989).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -3616,6 +3616,8 @@ export interface CoreDocument {
   "updated_at": string;
   "posted_at": string;
   "cancelled_at": string;
+  /** Значения своих полей кабинета (графы вида core.document.<ключ вида>). Отдаёт карточка документа; списки поле не несут */
+  "custom"?: { [key: string]: unknown };
 }
 
 export interface CoreDocumentActionCheck {
@@ -3652,6 +3654,11 @@ export interface CoreDocumentCreate {
   "entity_refs"?: { [key: string]: unknown };
   "payload"?: { [key: string]: unknown };
   "comment"?: string;
+}
+
+export interface CoreDocumentCustom {
+  /** Графа → значение. Заменяет значения целиком; проверяется по типу графы */
+  "custom": { [key: string]: unknown };
 }
 
 export interface CoreDocumentLinkNode {
@@ -5542,6 +5549,75 @@ export interface DocflowAddressRequisites {
   "info"?: string;
 }
 
+/** Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в заказе как реквизиты плательщика */
+export interface DocflowAppSalesOrderCounterparty {
+  "name"?: string;
+  "inn"?: string;
+  "kpp"?: string;
+  "phone"?: string;
+  "email"?: string;
+}
+
+export interface DocflowAppSalesOrderInput {
+  "company_id": UUID;
+  "contact_id"?: UUID;
+  "contract_document_id"?: UUID;
+  "counterparty"?: DocflowAppSalesOrderCounterparty;
+  /** Номер заказа у магазина — ключ идемпотентности загрузки */
+  "external_id": string;
+  /** Пусто — кабинет выдаст следующий номер */
+  "number"?: string;
+  "title"?: string;
+  /** Код валюты сделки, например RUB */
+  "currency": string;
+  "manager"?: string;
+  "comment"?: string;
+  "order_date": string;
+  "ship_date"?: string;
+  "due_date"?: string;
+  "discount"?: string;
+  /** Цены включают налог; пусто — умолчание кабинета */
+  "prices_include_vat"?: boolean;
+  /** Путь сделки; заказ с оплатой на сайте — self_service */
+  "scenario"?: "self_service" | "one_off_sale" | "contract_sale";
+  "payment"?: DocflowAppSalesOrderPayment;
+  /** Не используется контуром приложения: источник журнала — пространство приложения из токена */
+  "source"?: string;
+  "warehouse_id"?: UUID;
+  "items": Array<DocflowAppSalesOrderItem>;
+}
+
+export interface DocflowAppSalesOrderItem {
+  /** Артикул или штрихкод позиции у магазина; узнаётся справочником номенклатуры точным совпадением */
+  "article"?: string;
+  "product_id"?: UUID;
+  /** Пусто — название берётся из номенклатуры */
+  "title"?: string;
+  /** Пусто — вид номенклатуры */
+  "kind"?: "goods" | "service" | "material" | "semi_product";
+  "unit"?: string;
+  "quantity": string;
+  "price": string;
+  "discount"?: string;
+  /** Ставка строки: 22%, 10%, без НДС; пусто — учётная политика юрлица на дату заказа */
+  "vat_rate"?: string;
+}
+
+/** Сообщение эквайринга о заказе. Идемпотентно по паре provider + external_id */
+export interface DocflowAppSalesOrderPayment {
+  /** Кто подтвердил списание: yookassa, tochka, имя платёжного кабинета сайта */
+  "provider": string;
+  /** Номер платежа у провайдера */
+  "external_id": string;
+  /** Пусто — списание (payment) */
+  "kind"?: "payment" | "refund";
+  /** Сумма больше нуля; возврат присылается видом refund, а не минусом */
+  "amount": string;
+  "currency"?: string;
+  /** Когда провайдер списал; пусто — момент сообщения */
+  "paid_at"?: string;
+}
+
 /** Один проход предмета по маршруту. Согласование ничего не проводит и ни строки регистра не пишет: оно отвечает на один вопрос — можно ли уже выполнить действие, выпускающее бумагу или деньги наружу. Возврат на доработку проход не закрывает: предмет правят и продолжают тот же проход, сохраняя чужие визы. */
 export interface DocflowApproval {
   "id": UUID;
@@ -6239,8 +6315,10 @@ export interface DocflowFlowAccrualStage {
 export interface DocflowFlowChangeInput {
   /** Версия, которую видел клиент. Разошлась — 409 docflow.flow.version_conflict */
   "expected_version": number;
-  "action": "save" | "link" | "unlink" | "remove_file" | "register" | "revise" | "archive" | "restore" | "delete";
+  "action": "save" | "link" | "unlink" | "remove_file" | "register" | "revise" | "archive" | "restore" | "delete" | "custom";
   "content"?: DocflowFlowContent;
+  /** Для action=custom: значения своих полей целиком. Правятся у черновика и зарегистрированной карточки; значение, не подходящее к типу графы, — 422 с названиями граф */
+  "custom"?: { [key: string]: unknown };
   "company_id"?: UUID;
   "contact_id"?: UUID;
   "kind"?: DocflowFlowKind;
@@ -6287,6 +6365,8 @@ export interface DocflowFlowContent {
   "contract"?: DocflowFlowContractTerms;
   "commercial"?: DocflowFlowCommercial;
   "recognized"?: DocflowFlowRecognized;
+  /** Значения своих полей кабинета (графы вида docflow.document.<вид>). В save не прислано — не меняются; правятся действием custom */
+  "custom"?: { [key: string]: unknown };
 }
 
 /** Условия договора в старой форме. Остаётся читаемой и принимается, но новую коммерческую часть описывает commercial. У договора без лимита (mode=framework) суммы и валюты в условиях нет вовсе — искусственного нуля здесь не бывает. Коммерческая часть рядом с ним законна только с payment_rule, у которого названа сумма платежа: это бессрочный договор с регулярным платежом. Без неё это рамочный договор, суммы которого ведутся спецификациями, и commercial с ним не сохраняется. */
@@ -6909,6 +6989,26 @@ export interface DocflowMessagePayment {
   "paid_on"?: string;
 }
 
+export interface DocflowOrderImport {
+  "id": UUID;
+  "external_id"?: string;
+  /** Пространство приложения, которое загружало */
+  "source"?: string;
+  "outcome": "accepted" | "updated" | "rejected";
+  /** Машинный код отказа, например docflow.sales_order.contact_unknown */
+  "reason"?: string;
+  /** Причина отказа словами */
+  "detail"?: string;
+  "order_id"?: UUID;
+  /** Тело загрузки, как его прислали, — для повтора */
+  "payload"?: string;
+  "created_at": string;
+}
+
+export interface DocflowOrderImportPage {
+  "results": Array<DocflowOrderImport>;
+}
+
 /** Произвольный файл на отправку рядом с формализованным. */
 export interface DocflowOutgoingFile {
   /** Имя файла. Без него файл отклоняется: у оператора файл без имени не показывается никому */
@@ -7165,6 +7265,76 @@ export interface DocflowRequisites {
   /** ИнфПолФХЖ1: дополнительные сведения факта хозяйственной жизни */
   "extra"?: Array<DocflowTextInfoRequisites>;
   "lines"?: Array<DocflowLineRequisites>;
+}
+
+export interface DocflowSalesOrder {
+  "id": UUID;
+  "company_id": UUID;
+  "contact_id": UUID;
+  "contract_document_id"?: UUID;
+  "number"?: string;
+  "title": string;
+  "status": "draft" | "confirmed" | "done" | "cancelled";
+  "status_id"?: UUID;
+  /** Имя статуса, которое придумал кабинет */
+  "status_name"?: string;
+  "scenario": "self_service" | "one_off_sale" | "contract_sale";
+  "steps": Array<string>;
+  "currency": string;
+  "manager"?: string;
+  "comment"?: string;
+  "external_id"?: string;
+  "buyer"?: DocflowSalesOrderBuyer;
+  /** Сколько подтвердил эквайринг — списания минус возвраты */
+  "acquiring_amount"?: string;
+  "order_date"?: string;
+  "ship_date"?: string;
+  "due_date"?: string;
+  "discount"?: string;
+  "prices_include_vat": boolean;
+  "items": Array<DocflowSalesOrderItem>;
+  "amount": string;
+  "goods_amount": string;
+  "service_amount": string;
+  /** Сколько денег пришло на счёт по заказу */
+  "paid_amount": string;
+  "shipped_amount": string;
+  "invoiced_amount": string;
+  "closed_amount": string;
+  "payment_status": "unpaid" | "partial" | "paid";
+  "shipment_status": "not_shipped" | "partial" | "shipped";
+  "company_name"?: string;
+  "contact_name"?: string;
+  "contract_title"?: string;
+  "company_archived"?: boolean;
+  "contact_archived"?: boolean;
+  "created_at": string;
+  "updated_at": string;
+}
+
+/** Как покупатель представился в заказе */
+export interface DocflowSalesOrderBuyer {
+  "name"?: string;
+  "phone"?: string;
+  "email"?: string;
+}
+
+export interface DocflowSalesOrderItem {
+  "id": UUID;
+  "product_id"?: UUID;
+  "title": string;
+  "kind": string;
+  "unit"?: string;
+  "quantity": string;
+  "price": string;
+  "discount"?: string;
+  "vat_rate"?: string;
+  "position": number;
+  "amount"?: string;
+}
+
+export interface DocflowSalesOrderStatusInput {
+  "status": "draft" | "confirmed" | "done" | "cancelled";
 }
 
 /** Подпись под вложением или под пакетом целиком. Подписей под одним файлом несколько — наша и контрагента, — и каждая приходит своим файлом со своим сертификатом. */
@@ -14272,6 +14442,8 @@ export interface SettingsCompany {
   "legal_address": SettingsCompanyAddress;
   "entrepreneur": SettingsCompanyPerson;
   "is_active": boolean;
+  /** Значения своих полей кабинета: графа («Настройки → Поля», вид core.company) → значение */
+  "custom": { [key: string]: unknown };
 }
 
 export interface SettingsCompanyAddress {
@@ -14308,6 +14480,8 @@ export interface SettingsCompanyInput {
   "vat_accounting_mode"?: "" | "deductible" | "non_deductible" | "none";
   "legal_address"?: SettingsCompanyAddress;
   "entrepreneur"?: SettingsCompanyPerson;
+  /** Значения своих полей: не передано — не менять. Значение проверяется по типу графы; неподходящее — 422 с названиями граф */
+  "custom"?: { [key: string]: unknown };
 }
 
 export interface SettingsCompanyPage {

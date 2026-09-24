@@ -3,16 +3,16 @@
     "license": "LicenseRef-Akeda-Proprietary",
     "operations": {
       "by_audience": {
-        "external": 1080
+        "external": 1086
       },
       "by_module": {
         "billing": 1,
         "calendar": 36,
         "chat": 51,
-        "core": 175,
+        "core": 176,
         "crm": 114,
         "developer": 22,
-        "docflow": 79,
+        "docflow": 84,
         "files": 20,
         "finance": 148,
         "knowledge": 38,
@@ -25,22 +25,23 @@
         "tasks": 131
       },
       "by_stage": {
-        "preview": 1050,
+        "preview": 1056,
         "public": 30
       },
       "installation_by_module": {
         "calendar": 33,
-        "core": 162,
+        "core": 163,
+        "docflow": 5,
         "finance": 134,
         "marketplace": 74,
         "platform": 4,
         "stock": 86,
         "tasks": 131
       },
-      "installation_reachable": 624,
-      "total": 1080
+      "installation_reachable": 630,
+      "total": 1086
     },
-    "schemas": 1482,
+    "schemas": 1493,
     "servers": [
       "https://erp.akeda.ru"
     ],
@@ -59,14 +60,14 @@
       "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 4324448,
+      "bytes": 4360011,
       "path": "openapi/akeda-v1.json",
-      "sha256": "8f00218feb4afe805c640c83d8a059de1be0e98a731ee18ef74f0fc68d7f48a9"
+      "sha256": "f4dcd9d59d4b186659d1fe8dd928c55e759ad05610622ad82ca129344fc97989"
     },
     {
-      "bytes": 3274302,
+      "bytes": 3302518,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "4a57660e1f3cd72ad1f691af6d7755c944bd796a1911eed841bc8660339deebd"
+      "sha256": "476082adf8b67a6debe9b93fa2e2485ed86a10f64769ca7fdb9b21a02ca799b5"
     },
     {
       "bytes": 18414,
@@ -79,6 +80,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "2e736591801df2ee26e817ca2152013b30428b0fa0b035d86373de50b543f030",
+  "snapshot_digest": "2e65997b22e5851c7c8d5919260e78815fbceebbd07081e5391998daabf2bfa1",
   "snapshot_version": 1
 }

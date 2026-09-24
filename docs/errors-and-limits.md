@@ -72,12 +72,19 @@ go run ./cmd/akeda contract op coreListContacts
 #   листание      limit_offset (умолчание 100, потолок 500)
 ```
 
-## 3. Идемпотентность: пять операций, а не все
+## 3. Идемпотентность: 24 команды, а не все
 
-Заголовок `Idempotency-Key` читают ровно пять команд:
-`coreCreateContact`, `coreCreateProduct`, `coreCreateDocument`,
-`corePostDocument`, `tasksCreateTask`. Остальные его не читают, и контракт этого
-не скрывает: параметр стоит только там, где на маршруте стоит мидлварь.
+Заголовок `Idempotency-Key` читают ровно 24 команды — полный список отдаёт
+`akeda.IdempotentOperations()`:
+
+- ядро: `coreCreateContact`, `coreCreateDocument`, `coreCreateProduct`, `coreGenerateProductVariants`, `corePostDocument`;
+- документооборот: `docflowFlowAcceptFinanceAct`, `docflowFlowChangeDocument`, `docflowFlowCreateAccountingOriginal`, `docflowFlowCreateDocument`, `docflowFlowCreateFinancePlan`, `docflowFlowLinkAccountingDocument`, `docflowFlowUnlinkAccountingDocument`, `docflowFlowUploadFile`;
+- финансы: `financeCreateDividendDecision`, `financeCreateSettlementDocument`;
+- склад: `stockCreateAccountTransfer`, `stockCreateAssemblySpec`, `stockCreateClaimWriteoff`, `stockCreateDocument`, `stockCreateOpeningBalance`, `stockCreatePurchaseOrder`;
+- задачи: `tasksCreateProject`, `tasksCreateSection`, `tasksCreateTask`.
+
+Остальные его не читают, и контракт этого не скрывает: параметр стоит только
+там, где на маршруте стоит мидлварь.
 
 Клиенты **отказываются отправить** заголовок операции, которая его не читает.
 Заголовок, тихо выброшенный по дороге, — это защита, в которую вызывающий
