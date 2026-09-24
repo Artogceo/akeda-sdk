@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f4dcd9d59d4b186659d1fe8dd928c55e759ad05610622ad82ca129344fc97989).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 76ff123bd41e65620f652792c3c871058a5ef04a6227b996900e48fcf0e25ee5).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -2375,7 +2375,7 @@ class CRMAutomationActionJournal(TypedDict):
 
 CRMAutomationEventType = Literal['lead.created', 'lead.qualified', 'deal.created', 'deal.stage_changed', 'inbox.message_received']
 
-class CRMAutomationRule(TypedDict):
+class _CRMAutomationRuleRequired(TypedDict):
     id: "UUID"
     name: str
     event_type: "CRMAutomationEventType"
@@ -2386,6 +2386,11 @@ class CRMAutomationRule(TypedDict):
     created_by: int
     created_at: str
     updated_at: str
+
+class CRMAutomationRule(_CRMAutomationRuleRequired, total=False):
+    #: Правило перенесено на общий движок: события после этого момента исполняет правило adopted_rule_id; здесь оно не правится (409)
+    adopted_at: str
+    adopted_rule_id: "UUID"
 
 class _CRMAutomationRuleInputRequired(TypedDict):
     name: str

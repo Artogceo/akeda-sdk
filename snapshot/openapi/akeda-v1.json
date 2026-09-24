@@ -39312,6 +39312,7 @@
         ],
         "operationId": "crmCreateAutomationRule",
         "summary": "Создать правило автоматизации",
+        "description": "Правила «когда → если → то» живут в общем движке кабинета (/api/platform/automation/rules, «Настройки → Автоматизации»): новое правило CRM не заводится — 409 crm.automation_adopted.",
         "security": [
           {
             "erpUserToken": []
@@ -39360,6 +39361,9 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           }
         }
       }
@@ -39470,6 +39474,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           }
         }
       }
@@ -105016,6 +105023,14 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "adopted_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Правило перенесено на общий движок: события после этого момента исполняет правило adopted_rule_id; здесь оно не правится (409)"
+          },
+          "adopted_rule_id": {
+            "$ref": "#/components/schemas/UUID"
           }
         }
       },

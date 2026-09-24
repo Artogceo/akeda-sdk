@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f4dcd9d59d4b186659d1fe8dd928c55e759ad05610622ad82ca129344fc97989).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 76ff123bd41e65620f652792c3c871058a5ef04a6227b996900e48fcf0e25ee5).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
