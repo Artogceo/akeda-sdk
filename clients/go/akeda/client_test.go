@@ -335,8 +335,15 @@ func TestContractFactsMatchDocumentation(t *testing.T) {
 	}
 	want := []string{
 		"coreCreateContact", "coreCreateDocument", "coreCreateProduct",
-		"corePostDocument", "financeCreateDividendDecision", "financeCreateSettlementDocument",
-		"stockCreateDocument", "stockCreatePurchaseOrder", "tasksCreateTask",
+		"coreGenerateProductVariants", "corePostDocument", "docflowFlowAcceptFinanceAct",
+		"docflowFlowChangeDocument", "docflowFlowCreateAccountingOriginal",
+		"docflowFlowCreateDocument", "docflowFlowCreateFinancePlan",
+		"docflowFlowLinkAccountingDocument", "docflowFlowUnlinkAccountingDocument",
+		"docflowFlowUploadFile", "financeCreateDividendDecision",
+		"financeCreateSettlementDocument", "stockCreateAccountTransfer",
+		"stockCreateAssemblySpec", "stockCreateClaimWriteoff", "stockCreateDocument",
+		"stockCreateOpeningBalance", "stockCreatePurchaseOrder", "tasksCreateProject",
+		"tasksCreateSection", "tasksCreateTask",
 	}
 	got := akeda.IdempotentOperations()
 	if strings.Join(got, ",") != strings.Join(want, ",") {

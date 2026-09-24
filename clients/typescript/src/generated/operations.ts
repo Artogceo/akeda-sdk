@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8f00218feb4afe805c640c83d8a059de1be0e98a731ee18ef74f0fc68d7f48a9).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f4dcd9d59d4b186659d1fe8dd928c55e759ad05610622ad82ca129344fc97989).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -27,6 +27,41 @@ export interface OperationSpec {
 
 /** Типы запроса и ответа каждой операции. Ключ — operationId контракта. */
 export interface OperationTypes {
+  /** POST /api/v1/app/docflow/orders/{id}/cancel — Отменить заказ покупателя, загруженный этим приложением */
+  appDocflowCancelSalesOrder: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowSalesOrder;
+  };
+  /** GET /api/v1/app/docflow/orders/{id} — Получить заказ покупателя, загруженный этим приложением */
+  appDocflowGetSalesOrder: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowSalesOrder;
+  };
+  /** POST /api/v1/app/docflow/orders/import — Загрузить заказ покупателя от имени установки */
+  appDocflowImportSalesOrder: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.DocflowAppSalesOrderInput;
+    response: models.DocflowSalesOrder;
+  };
+  /** GET /api/v1/app/docflow/order-imports — Прочитать журнал загрузок заказов этого приложения */
+  appDocflowListSalesOrderImports: {
+    params: Record<string, never>;
+    query: { "limit"?: number };
+    body: never;
+    response: models.DocflowOrderImportPage;
+  };
+  /** POST /api/v1/app/docflow/orders/{id}/status — Сменить состояние заказа покупателя, загруженного этим приложением */
+  appDocflowSetSalesOrderStatus: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.DocflowSalesOrderStatusInput;
+    response: models.DocflowSalesOrder;
+  };
   /** POST /api/v1/app/finance/operations/{id}/cancel — Отменить операцию от имени установки */
   appFinanceCancelOperation: {
     params: { "id": models.UUID };
@@ -1748,6 +1783,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CoreSetBusinessActiveRequest;
     response: models.CoreBusiness;
+  };
+  /** PUT /api/v1/core/documents/{id}/custom — Заменить значения своих полей черновика */
+  coreSetDocumentCustom: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CoreDocumentCustom;
+    response: models.CoreDocument;
   };
   /** GET /api/v1/core/lookup/parties — Найти организации по части ИНН, ОГРН или названия */
   coreSuggestRequisitesParties: {
@@ -7592,6 +7634,11 @@ export interface OperationTypes {
 export type OperationId = keyof OperationTypes;
 
 export const operationSpecs: Record<OperationId, OperationSpec> = {
+  appDocflowCancelSalesOrder: { method: "POST", path: "/api/v1/app/docflow/orders/{id}/cancel", module: "docflow", stage: "preview", permission: "docflow.orders:import", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  appDocflowGetSalesOrder: { method: "GET", path: "/api/v1/app/docflow/orders/{id}", module: "docflow", stage: "preview", permission: "docflow.orders:import", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  appDocflowImportSalesOrder: { method: "POST", path: "/api/v1/app/docflow/orders/import", module: "docflow", stage: "preview", permission: "docflow.orders:import", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  appDocflowListSalesOrderImports: { method: "GET", path: "/api/v1/app/docflow/order-imports", module: "docflow", stage: "preview", permission: "docflow.orders:import", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 50 },
+  appDocflowSetSalesOrderStatus: { method: "POST", path: "/api/v1/app/docflow/orders/{id}/status", module: "docflow", stage: "preview", permission: "docflow.orders:import", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appFinanceCancelOperation: { method: "POST", path: "/api/v1/app/finance/operations/{id}/cancel", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appFinanceCreateOperation: { method: "POST", path: "/api/v1/app/finance/operations", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appFinanceCreateOperationAccrual: { method: "POST", path: "/api/v1/app/finance/operations/{id}/accruals", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7838,6 +7885,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreSaveUIState: { method: "PUT", path: "/api/v1/core/ui-state/{screen}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetBusinessAccountingMethod: { method: "POST", path: "/api/v1/core/businesses/{id}/accounting-method", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetBusinessActive: { method: "POST", path: "/api/v1/core/businesses/{id}/activation", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreSetDocumentCustom: { method: "PUT", path: "/api/v1/core/documents/{id}/custom", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSuggestRequisitesParties: { method: "GET", path: "/api/v1/core/lookup/parties", module: "finance", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUnlinkExternalRef: { method: "POST", path: "/api/v1/core/external-refs/{id}/unlink", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateAccountingDimension: { method: "PATCH", path: "/api/v1/core/accounting-dimensions/{key}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

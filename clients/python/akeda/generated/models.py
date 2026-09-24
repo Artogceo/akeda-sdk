@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8f00218feb4afe805c640c83d8a059de1be0e98a731ee18ef74f0fc68d7f48a9).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f4dcd9d59d4b186659d1fe8dd928c55e759ad05610622ad82ca129344fc97989).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -377,6 +377,7 @@ __all__ = [
     "CoreDocumentBlockReason",
     "CoreDocumentBlockers",
     "CoreDocumentCreate",
+    "CoreDocumentCustom",
     "CoreDocumentLinkNode",
     "CoreDocumentLinks",
     "CoreDocumentMarkDeleted",
@@ -593,6 +594,10 @@ __all__ = [
     "DocflowAcceptedDocument",
     "DocflowActionResult",
     "DocflowAddressRequisites",
+    "DocflowAppSalesOrderCounterparty",
+    "DocflowAppSalesOrderInput",
+    "DocflowAppSalesOrderItem",
+    "DocflowAppSalesOrderPayment",
     "DocflowApproval",
     "DocflowApprovalActionCheck",
     "DocflowApprovalBlockReason",
@@ -697,6 +702,8 @@ __all__ = [
     "DocflowMessageFlowLink",
     "DocflowMessageList",
     "DocflowMessagePayment",
+    "DocflowOrderImport",
+    "DocflowOrderImportPage",
     "DocflowOutgoingFile",
     "DocflowOutgoingFlowInput",
     "DocflowOutgoingInput",
@@ -716,6 +723,10 @@ __all__ = [
     "DocflowPreflightTotals",
     "DocflowRecognized",
     "DocflowRequisites",
+    "DocflowSalesOrder",
+    "DocflowSalesOrderBuyer",
+    "DocflowSalesOrderItem",
+    "DocflowSalesOrderStatusInput",
     "DocflowSignature",
     "DocflowSignatureShape",
     "DocflowSignatureSubmission",
@@ -5092,7 +5103,7 @@ class CoreDirectoryPage(TypedDict):
     truncated: bool
     results: List["CoreDirectory"]
 
-class CoreDocument(TypedDict):
+class _CoreDocumentRequired(TypedDict):
     id: "UUID"
     type_id: "UUID"
     type_key: str
@@ -5113,6 +5124,10 @@ class CoreDocument(TypedDict):
     updated_at: str
     posted_at: str
     cancelled_at: str
+
+class CoreDocument(_CoreDocumentRequired, total=False):
+    #: Значения своих полей кабинета (графы вида core.document.<ключ вида>). Отдаёт карточка документа; списки поле не несут
+    custom: Dict[str, Any]
 
 class CoreDocumentActionCheck(TypedDict):
     allowed: bool
@@ -5149,6 +5164,10 @@ class CoreDocumentCreate(_CoreDocumentCreateRequired, total=False):
     entity_refs: Dict[str, Any]
     payload: Dict[str, Any]
     comment: str
+
+class CoreDocumentCustom(TypedDict):
+    #: Графа → значение. Заменяет значения целиком; проверяется по типу графы
+    custom: Dict[str, Any]
 
 class CoreDocumentLinkNode(TypedDict):
     direction: Literal['self', 'basis', 'dependent']
@@ -6985,6 +7004,79 @@ class DocflowAddressRequisites(TypedDict, total=False):
     #: ИныеСвед
     info: str
 
+class DocflowAppSalesOrderCounterparty(TypedDict, total=False):
+    """Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в заказе как реквизиты плательщика"""
+
+    name: str
+    inn: str
+    kpp: str
+    phone: str
+    email: str
+
+class _DocflowAppSalesOrderInputRequired(TypedDict):
+    company_id: "UUID"
+    #: Номер заказа у магазина — ключ идемпотентности загрузки
+    external_id: str
+    #: Код валюты сделки, например RUB
+    currency: str
+    order_date: str
+    items: List["DocflowAppSalesOrderItem"]
+
+class DocflowAppSalesOrderInput(_DocflowAppSalesOrderInputRequired, total=False):
+    contact_id: "UUID"
+    contract_document_id: "UUID"
+    counterparty: "DocflowAppSalesOrderCounterparty"
+    #: Пусто — кабинет выдаст следующий номер
+    number: str
+    title: str
+    manager: str
+    comment: str
+    ship_date: str
+    due_date: str
+    discount: str
+    #: Цены включают налог; пусто — умолчание кабинета
+    prices_include_vat: bool
+    #: Путь сделки; заказ с оплатой на сайте — self_service
+    scenario: Literal['self_service', 'one_off_sale', 'contract_sale']
+    payment: "DocflowAppSalesOrderPayment"
+    #: Не используется контуром приложения: источник журнала — пространство приложения из токена
+    source: str
+    warehouse_id: "UUID"
+
+class _DocflowAppSalesOrderItemRequired(TypedDict):
+    quantity: str
+    price: str
+
+class DocflowAppSalesOrderItem(_DocflowAppSalesOrderItemRequired, total=False):
+    #: Артикул или штрихкод позиции у магазина; узнаётся справочником номенклатуры точным совпадением
+    article: str
+    product_id: "UUID"
+    #: Пусто — название берётся из номенклатуры
+    title: str
+    #: Пусто — вид номенклатуры
+    kind: Literal['goods', 'service', 'material', 'semi_product']
+    unit: str
+    discount: str
+    #: Ставка строки: 22%, 10%, без НДС; пусто — учётная политика юрлица на дату заказа
+    vat_rate: str
+
+class _DocflowAppSalesOrderPaymentRequired(TypedDict):
+    #: Кто подтвердил списание: yookassa, tochka, имя платёжного кабинета сайта
+    provider: str
+    #: Номер платежа у провайдера
+    external_id: str
+    #: Сумма больше нуля; возврат присылается видом refund, а не минусом
+    amount: str
+
+class DocflowAppSalesOrderPayment(_DocflowAppSalesOrderPaymentRequired, total=False):
+    """Сообщение эквайринга о заказе. Идемпотентно по паре provider + external_id"""
+
+    #: Пусто — списание (payment)
+    kind: Literal['payment', 'refund']
+    currency: str
+    #: Когда провайдер списал; пусто — момент сообщения
+    paid_at: str
+
 class _DocflowApprovalRequired(TypedDict):
     id: "UUID"
     subject: "DocflowApprovalSubject"
@@ -7710,12 +7802,14 @@ class DocflowFlowAccrualStage(_DocflowFlowAccrualStageRequired, total=False):
 class _DocflowFlowChangeInputRequired(TypedDict):
     #: Версия, которую видел клиент. Разошлась — 409 docflow.flow.version_conflict
     expected_version: int
-    action: Literal['save', 'link', 'unlink', 'remove_file', 'register', 'revise', 'archive', 'restore', 'delete']
+    action: Literal['save', 'link', 'unlink', 'remove_file', 'register', 'revise', 'archive', 'restore', 'delete', 'custom']
 
 class DocflowFlowChangeInput(_DocflowFlowChangeInputRequired, total=False):
     """Одна команда правки. Поля, не относящиеся к названному действию, отвергаются, а не игнорируются: запрос, просящий две разные вещи сразу, сам не знает, чего хочет."""
 
     content: "DocflowFlowContent"
+    #: Для action=custom: значения своих полей целиком. Правятся у черновика и зарегистрированной карточки; значение, не подходящее к типу графы, — 422 с названиями граф
+    custom: Dict[str, Any]
     company_id: "UUID"
     contact_id: "UUID"
     kind: "DocflowFlowKind"
@@ -7768,6 +7862,8 @@ class DocflowFlowContent(_DocflowFlowContentRequired, total=False):
     contract: "DocflowFlowContractTerms"
     commercial: "DocflowFlowCommercial"
     recognized: "DocflowFlowRecognized"
+    #: Значения своих полей кабинета (графы вида docflow.document.<вид>). В save не прислано — не меняются; правятся действием custom
+    custom: Dict[str, Any]
 
 class _DocflowFlowContractTermsRequired(TypedDict):
     mode: Literal['framework', 'fixed']
@@ -8407,6 +8503,26 @@ class DocflowMessagePayment(_DocflowMessagePaymentRequired, total=False):
     #: Дата оплаты из выписки в форме ГГГГ-ММ-ДД. Заполнена только у state=paid
     paid_on: str
 
+class _DocflowOrderImportRequired(TypedDict):
+    id: "UUID"
+    outcome: Literal['accepted', 'updated', 'rejected']
+    created_at: str
+
+class DocflowOrderImport(_DocflowOrderImportRequired, total=False):
+    external_id: str
+    #: Пространство приложения, которое загружало
+    source: str
+    #: Машинный код отказа, например docflow.sales_order.contact_unknown
+    reason: str
+    #: Причина отказа словами
+    detail: str
+    order_id: "UUID"
+    #: Тело загрузки, как его прислали, — для повтора
+    payload: str
+
+class DocflowOrderImportPage(TypedDict):
+    results: List["DocflowOrderImport"]
+
 class DocflowOutgoingFile(TypedDict):
     """Произвольный файл на отправку рядом с формализованным."""
 
@@ -8667,6 +8783,77 @@ class DocflowRequisites(TypedDict, total=False):
     #: ИнфПолФХЖ1: дополнительные сведения факта хозяйственной жизни
     extra: List["DocflowTextInfoRequisites"]
     lines: List["DocflowLineRequisites"]
+
+class _DocflowSalesOrderRequired(TypedDict):
+    id: "UUID"
+    company_id: "UUID"
+    contact_id: "UUID"
+    title: str
+    status: Literal['draft', 'confirmed', 'done', 'cancelled']
+    scenario: Literal['self_service', 'one_off_sale', 'contract_sale']
+    steps: List[str]
+    currency: str
+    prices_include_vat: bool
+    items: List["DocflowSalesOrderItem"]
+    amount: str
+    goods_amount: str
+    service_amount: str
+    #: Сколько денег пришло на счёт по заказу
+    paid_amount: str
+    shipped_amount: str
+    invoiced_amount: str
+    closed_amount: str
+    payment_status: Literal['unpaid', 'partial', 'paid']
+    shipment_status: Literal['not_shipped', 'partial', 'shipped']
+    created_at: str
+    updated_at: str
+
+class DocflowSalesOrder(_DocflowSalesOrderRequired, total=False):
+    contract_document_id: "UUID"
+    number: str
+    status_id: "UUID"
+    #: Имя статуса, которое придумал кабинет
+    status_name: str
+    manager: str
+    comment: str
+    external_id: str
+    buyer: "DocflowSalesOrderBuyer"
+    #: Сколько подтвердил эквайринг — списания минус возвраты
+    acquiring_amount: str
+    order_date: str
+    ship_date: str
+    due_date: str
+    discount: str
+    company_name: str
+    contact_name: str
+    contract_title: str
+    company_archived: bool
+    contact_archived: bool
+
+class DocflowSalesOrderBuyer(TypedDict, total=False):
+    """Как покупатель представился в заказе"""
+
+    name: str
+    phone: str
+    email: str
+
+class _DocflowSalesOrderItemRequired(TypedDict):
+    id: "UUID"
+    title: str
+    kind: str
+    quantity: str
+    price: str
+    position: int
+
+class DocflowSalesOrderItem(_DocflowSalesOrderItemRequired, total=False):
+    product_id: "UUID"
+    unit: str
+    discount: str
+    vat_rate: str
+    amount: str
+
+class DocflowSalesOrderStatusInput(TypedDict):
+    status: Literal['draft', 'confirmed', 'done', 'cancelled']
 
 class _DocflowSignatureRequired(TypedDict):
     id: "UUID"
@@ -15394,6 +15581,8 @@ class SettingsCompany(TypedDict):
     legal_address: "SettingsCompanyAddress"
     entrepreneur: "SettingsCompanyPerson"
     is_active: bool
+    #: Значения своих полей кабинета: графа («Настройки → Поля», вид core.company) → значение
+    custom: Dict[str, Any]
 
 class SettingsCompanyAddress(TypedDict):
     postal_code: str
@@ -15430,6 +15619,8 @@ class SettingsCompanyInput(_SettingsCompanyInputRequired, total=False):
     vat_accounting_mode: Literal['', 'deductible', 'non_deductible', 'none']
     legal_address: "SettingsCompanyAddress"
     entrepreneur: "SettingsCompanyPerson"
+    #: Значения своих полей: не передано — не менять. Значение проверяется по типу графы; неподходящее — 422 с названиями граф
+    custom: Dict[str, Any]
 
 class SettingsCompanyPage(TypedDict):
     #: Число отданных строк, страниц у справочника нет

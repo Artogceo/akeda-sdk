@@ -67,9 +67,12 @@ info:
     расчёт юнит-экономики. Данные площадок читаются из внешней аналитической
     базы, а часть витрин ходит в API площадки напрямую; ключи доступа к
     площадкам не попадают в ответ ни одной операции.
-    У модуля docflow (документы) три крыла, и опубликованы 79 операций из 110
-    живых: непубличными остаются операторские маршруты и ещё не принятые
-    сценарии заказов. Крыло внутреннего документооборота — 23 операции: карточки договоров, спецификаций и актов с
+    У модуля docflow (документы) три крыла и контур заказов приложения, и
+    опубликованы 84 операции из 120 живых: непубличными остаются операторские
+    маршруты и сценарии заказов, которые ведёт человек. Контур заказов
+    приложения — 5 операций под одной областью docflow.orders:import: загрузка
+    заказа интернет-магазина или CRM, чтение, отмена, смена состояния и журнал
+    загрузок, только для заказов, заведённых этим приложением. Крыло внутреннего документооборота — 23 операции: карточки договоров, спецификаций и актов с
     неизменяемыми редакциями, файлы до 25 МБ, связи между бумагами и связь
     бумаги с учётом — ручные ссылки на документы финансов и склада, создание
     плановой операции и приёмка акта. Учётного факта это крыло не создаёт ни
@@ -10709,6 +10712,55 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/core/documents/{id}/custom:
+    put:
+      tags:
+        - Core documents
+      operationId: coreSetDocumentCustom
+      summary: Заменить значения своих полей черновика
+      description: Свои поля кабинета у документа любого вида — графы core.document.<ключ вида> из «Настроек → Поля». Значения лежат отдельно от payload проводчика и в проведении не участвуют. Правятся только у черновика; значение, не подходящее к типу графы, отклоняется 422 с названиями граф. Незаполненная обязательная графа не запрещает проведение, а показывается предупреждением custom_fields_missing в blockers.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreDocumentCustom'
+      responses:
+        '200':
+          description: Документ со своими полями
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
   /api/v1/core/documents/{id}/mark-deleted:
     post:
       tags:
@@ -34266,6 +34318,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
   /api/v1/settings/companies/selectable:
     get:
       tags:
@@ -34331,6 +34385,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
     delete:
       tags:
         - Settings companies
@@ -38166,6 +38222,214 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/app/docflow/orders/import:
+    post:
+      tags:
+        - App runtime
+      operationId: appDocflowImportSalesOrder
+      summary: Загрузить заказ покупателя от имени установки
+      description: |-
+        Интернет-магазин или CRM загружает заказ своим токеном. Повтор того же external_id обновляет ЭТОТ ЖЕ заказ, а не заводит второй, поэтому ответ 200. Внешний номер, уже занятый заказом другого источника (человека, ключа кабинета или другого приложения), отвечает 409 docflow.sales_order.foreign_source.
+
+        Покупатель называется человеческими ключами. Названный ИНН узнаётся строго; заказ сайта (scenario self_service) без ИНН — в том числе вовсе без покупателя — ложится на системную карточку «Розничный покупатель», а имя, телефон и почта плательщика остаются в самом заказе; в остальных сценариях покупатель с телефоном получает именную карточку физлица. Позиции узнаются по артикулу. Статусы оплаты и отгрузки не принимаются — они считаются из фактов.
+
+        Если у юрлица есть склад (warehouse_id или склад по умолчанию политики склада) и в заказе есть складские позиции, под заказ ставится штатный резерв склада на срок из настроек склада; свободный остаток (stockGetAvailability) уменьшается на него. Резерв, который склад поставить не смог, заказу не отказывает.
+
+        Кабинет, пространство приложения и автор изменений берутся из токена установки. Строка журнала загрузок получает источником пространство приложения, а не поле source тела.
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: docflow.orders:import
+      security:
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowAppSalesOrderInput'
+      responses:
+        '200':
+          description: 'Заказ после загрузки: новый или обновлённый'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowSalesOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          description: Покупателя или позицию не узнали в справочниках кабинета
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/app/docflow/orders/{id}:
+    get:
+      tags:
+        - App runtime
+      operationId: appDocflowGetSalesOrder
+      summary: Получить заказ покупателя, загруженный этим приложением
+      description: 'Заказ вместе с состояниями оплаты и отгрузки, посчитанными из фактов. Видны только заказы, которые завело это приложение: чужой заказ отвечает 404 — тем же, чем несуществующий.'
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: docflow.orders:import
+      security:
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Заказ покупателя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowSalesOrder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/app/docflow/orders/{id}/cancel:
+    post:
+      tags:
+        - App runtime
+      operationId: appDocflowCancelSalesOrder
+      summary: Отменить заказ покупателя, загруженный этим приложением
+      description: 'Покупатель передумал или не оплатил. Отмена снимает резерв склада той же транзакцией и публикует docflow.sales_order.status_changed. Идемпотентно: уже отменённый заказ отвечает сам собой, второго события нет. Выполненный заказ отвечает 409 docflow.sales_order.closed, заказ с уже отгруженным товаром — 409 docflow.sales_order.cancel_shipped: сначала оформляется возврат от покупателя.'
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: docflow.orders:import
+      security:
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Отменённый заказ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowSalesOrder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/app/docflow/orders/{id}/status:
+    post:
+      tags:
+        - App runtime
+      operationId: appDocflowSetSalesOrderStatus
+      summary: Сменить состояние заказа покупателя, загруженного этим приложением
+      description: Состояние самого заказа — draft, confirmed, done или cancelled. Отмена этим путём — та же отмена, что у appDocflowCancelSalesOrder, со всеми её отказами; выполненный заказ снимает недовезённый остаток резерва. Отменённый заказ приложение обратно не открывает (409). Состояния оплаты и отгрузки не назначаются — 409 docflow.sales_order.state_derived. Повтор того же состояния ничего не меняет и событий не даёт.
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: docflow.orders:import
+      security:
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowSalesOrderStatusInput'
+      responses:
+        '200':
+          description: Заказ в новом состоянии
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowSalesOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/app/docflow/order-imports:
+    get:
+      tags:
+        - App runtime
+      operationId: appDocflowListSalesOrderImports
+      summary: Прочитать журнал загрузок заказов этого приложения
+      description: 'Каждая попытка загрузки — принятая, обновившая и отклонённая с кодом и словами причины, свежие сверху. Только строки этого приложения: загрузки людей, ключей кабинета и других приложений сюда не попадают.'
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: docflow.orders:import
+      security:
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        '200':
+          description: Журнал загрузок
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowOrderImportPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/app/slot-launch:
     post:
       tags:
@@ -38182,6 +38446,8 @@ paths:
         NONCE придумывает САМА страница расширения и присылает его оболочке сообщением akeda.slot.ready; оболочка запрашивает запуск под этим значением и возвращает его тем же сообщением. Благодаря этому страница отличает ответ на свой запрос от чужого сообщения, посланного ей извне: проверки источника для этого мало — она доказывает, КТО прислал, но не то, что прислано в ответ. Неверный nonce отвечает 400 и живой запуск НЕ сжигает.
 
         Кабинета в адресе нет: он берётся из токена установки. Чужой запуск отвечает 404 — тем же, чем отвечает несуществующий, потому что «есть, но не ваш» рассказало бы о запуске в соседнем кабинете.
+
+        КАКИМ ТОКЕНОМ ГАСИТЬ. Сообщение akeda.slot.launch несёт поле tenant — slug кабинета, в котором выдан запуск; тот же slug сервер приложения называет при самовыдаче токена установки (POST /api/v1/app/token). Сервер, обслуживающий много кабинетов, берёт токен установки этого кабинета и не перебирает остальные. Поле — открытая метка, а не доверие: страница могла назвать любой кабинет, и гашение его не читает. Запуск, предъявленный токеном установки другого кабинета, отвечает 404 и живым для своей установки остаётся. Поле может отсутствовать (оболочка прежней версии) — тогда приложение выбирает установку так же, как до его появления.
       x-akeda-module: platform
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -43386,6 +43652,8 @@ paths:
         Все правки идут одной командой с полем action, и каждая принятая команда рождает НОВУЮ неизменяемую редакцию — прежняя остаётся читаемой по своему адресу. Правка снимков задним числом не бывает.
 
         Поле expected_version обязательно в каждой команде: это защита от одновременной правки, и передаётся она полем ТЕЛА, а не заголовком. Разошлась с текущей версией — 409 docflow.flow.version_conflict, и клиент обязан перечитать документ, а не повторять с тем же числом.
+
+        Команда custom меняет только свои поля кабинета — у черновика и у зарегистрированной карточки: это пометки кабинета, а не текст бумаги, и каждая правка остаётся редакцией в истории.
 
         Команды save, link, unlink и remove_file работают только по черновику; register переводит его в зарегистрированный, revise возвращает в черновик, archive и restore ведут архив. Стороны и вид документа, уже закреплённые зарегистрированной редакцией или учётной связью, не меняются вовсе — отказ docflow.flow.identity_locked.
 
@@ -55872,6 +56140,10 @@ components:
           type: string
         cancelled_at:
           type: string
+        custom:
+          type: object
+          additionalProperties: true
+          description: Значения своих полей кабинета (графы вида core.document.<ключ вида>). Отдаёт карточка документа; списки поле не несут
     CoreDocumentPage:
       type: object
       additionalProperties: false
@@ -55942,6 +56214,16 @@ components:
         marked:
           type: boolean
           default: true
+    CoreDocumentCustom:
+      type: object
+      additionalProperties: false
+      required:
+        - custom
+      properties:
+        custom:
+          type: object
+          additionalProperties: true
+          description: Графа → значение. Заменяет значения целиком; проверяется по типу графы
     CoreDocumentLinkNode:
       type: object
       additionalProperties: false
@@ -77796,6 +78078,7 @@ components:
         - legal_address
         - entrepreneur
         - is_active
+        - custom
       properties:
         id:
           $ref: '#/components/schemas/UUID'
@@ -77845,6 +78128,10 @@ components:
           $ref: '#/components/schemas/SettingsCompanyPerson'
         is_active:
           type: boolean
+        custom:
+          type: object
+          additionalProperties: true
+          description: 'Значения своих полей кабинета: графа («Настройки → Поля», вид core.company) → значение'
     SettingsCompanyPerson:
       type: object
       additionalProperties: false
@@ -77961,6 +78248,10 @@ components:
           $ref: '#/components/schemas/SettingsCompanyAddress'
         entrepreneur:
           $ref: '#/components/schemas/SettingsCompanyPerson'
+        custom:
+          type: object
+          additionalProperties: true
+          description: 'Значения своих полей: не передано — не менять. Значение проверяется по типу графы; неподходящее — 422 с названиями граф'
     SettingsVatRates:
       type: object
       additionalProperties: false
@@ -80995,6 +81286,386 @@ components:
         updated:
           type: integer
           description: Сколько существующих кодов обновлено
+    DocflowAppSalesOrderCounterparty:
+      type: object
+      additionalProperties: false
+      description: Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в заказе как реквизиты плательщика
+      properties:
+        name:
+          type: string
+        inn:
+          type: string
+        kpp:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+    DocflowAppSalesOrderPayment:
+      type: object
+      additionalProperties: false
+      required:
+        - provider
+        - external_id
+        - amount
+      description: Сообщение эквайринга о заказе. Идемпотентно по паре provider + external_id
+      properties:
+        provider:
+          type: string
+          description: 'Кто подтвердил списание: yookassa, tochka, имя платёжного кабинета сайта'
+        external_id:
+          type: string
+          description: Номер платежа у провайдера
+        kind:
+          type: string
+          enum:
+            - payment
+            - refund
+          description: Пусто — списание (payment)
+        amount:
+          type: string
+          description: Сумма больше нуля; возврат присылается видом refund, а не минусом
+        currency:
+          type: string
+        paid_at:
+          type: string
+          description: Когда провайдер списал; пусто — момент сообщения
+    DocflowAppSalesOrderItem:
+      type: object
+      additionalProperties: false
+      required:
+        - quantity
+        - price
+      properties:
+        article:
+          type: string
+          description: Артикул или штрихкод позиции у магазина; узнаётся справочником номенклатуры точным совпадением
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        title:
+          type: string
+          description: Пусто — название берётся из номенклатуры
+        kind:
+          type: string
+          enum:
+            - goods
+            - service
+            - material
+            - semi_product
+          description: Пусто — вид номенклатуры
+        unit:
+          type: string
+        quantity:
+          type: string
+        price:
+          type: string
+        discount:
+          type: string
+        vat_rate:
+          type: string
+          description: 'Ставка строки: 22%, 10%, без НДС; пусто — учётная политика юрлица на дату заказа'
+    DocflowAppSalesOrderInput:
+      type: object
+      additionalProperties: false
+      required:
+        - company_id
+        - external_id
+        - currency
+        - order_date
+        - items
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        contract_document_id:
+          $ref: '#/components/schemas/UUID'
+        counterparty:
+          $ref: '#/components/schemas/DocflowAppSalesOrderCounterparty'
+        external_id:
+          type: string
+          minLength: 1
+          description: Номер заказа у магазина — ключ идемпотентности загрузки
+        number:
+          type: string
+          description: Пусто — кабинет выдаст следующий номер
+        title:
+          type: string
+        currency:
+          type: string
+          description: Код валюты сделки, например RUB
+        manager:
+          type: string
+        comment:
+          type: string
+        order_date:
+          type: string
+          format: date
+        ship_date:
+          type: string
+          format: date
+        due_date:
+          type: string
+          format: date
+        discount:
+          type: string
+        prices_include_vat:
+          type: boolean
+          description: Цены включают налог; пусто — умолчание кабинета
+        scenario:
+          type: string
+          enum:
+            - self_service
+            - one_off_sale
+            - contract_sale
+          description: Путь сделки; заказ с оплатой на сайте — self_service
+        payment:
+          $ref: '#/components/schemas/DocflowAppSalesOrderPayment'
+        source:
+          type: string
+          description: 'Не используется контуром приложения: источник журнала — пространство приложения из токена'
+        warehouse_id:
+          $ref: '#/components/schemas/UUID'
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/DocflowAppSalesOrderItem'
+    DocflowSalesOrderStatusInput:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - draft
+            - confirmed
+            - done
+            - cancelled
+    DocflowSalesOrderBuyer:
+      type: object
+      additionalProperties: false
+      description: Как покупатель представился в заказе
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+    DocflowSalesOrderItem:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - kind
+        - quantity
+        - price
+        - position
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        title:
+          type: string
+        kind:
+          type: string
+        unit:
+          type: string
+        quantity:
+          type: string
+        price:
+          type: string
+        discount:
+          type: string
+        vat_rate:
+          type: string
+        position:
+          type: integer
+        amount:
+          type: string
+    DocflowSalesOrder:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - company_id
+        - contact_id
+        - title
+        - status
+        - scenario
+        - steps
+        - currency
+        - prices_include_vat
+        - items
+        - amount
+        - goods_amount
+        - service_amount
+        - paid_amount
+        - shipped_amount
+        - invoiced_amount
+        - closed_amount
+        - payment_status
+        - shipment_status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        contract_document_id:
+          $ref: '#/components/schemas/UUID'
+        number:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+          enum:
+            - draft
+            - confirmed
+            - done
+            - cancelled
+        status_id:
+          $ref: '#/components/schemas/UUID'
+        status_name:
+          type: string
+          description: Имя статуса, которое придумал кабинет
+        scenario:
+          type: string
+          enum:
+            - self_service
+            - one_off_sale
+            - contract_sale
+        steps:
+          type: array
+          items:
+            type: string
+        currency:
+          type: string
+        manager:
+          type: string
+        comment:
+          type: string
+        external_id:
+          type: string
+        buyer:
+          $ref: '#/components/schemas/DocflowSalesOrderBuyer'
+        acquiring_amount:
+          type: string
+          description: Сколько подтвердил эквайринг — списания минус возвраты
+        order_date:
+          type: string
+          format: date
+        ship_date:
+          type: string
+          format: date
+        due_date:
+          type: string
+          format: date
+        discount:
+          type: string
+        prices_include_vat:
+          type: boolean
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowSalesOrderItem'
+        amount:
+          type: string
+        goods_amount:
+          type: string
+        service_amount:
+          type: string
+        paid_amount:
+          type: string
+          description: Сколько денег пришло на счёт по заказу
+        shipped_amount:
+          type: string
+        invoiced_amount:
+          type: string
+        closed_amount:
+          type: string
+        payment_status:
+          type: string
+          enum:
+            - unpaid
+            - partial
+            - paid
+        shipment_status:
+          type: string
+          enum:
+            - not_shipped
+            - partial
+            - shipped
+        company_name:
+          type: string
+        contact_name:
+          type: string
+        contract_title:
+          type: string
+        company_archived:
+          type: boolean
+        contact_archived:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    DocflowOrderImport:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - outcome
+        - created_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        external_id:
+          type: string
+        source:
+          type: string
+          description: Пространство приложения, которое загружало
+        outcome:
+          type: string
+          enum:
+            - accepted
+            - updated
+            - rejected
+        reason:
+          type: string
+          description: Машинный код отказа, например docflow.sales_order.contact_unknown
+        detail:
+          type: string
+          description: Причина отказа словами
+        order_id:
+          $ref: '#/components/schemas/UUID'
+        payload:
+          type: string
+          description: Тело загрузки, как его прислали, — для повтора
+        created_at:
+          type: string
+          format: date-time
+    DocflowOrderImportPage:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowOrderImport'
     AppRuntimeSlotLaunchInput:
       type: object
       additionalProperties: false
@@ -83929,6 +84600,10 @@ components:
           $ref: '#/components/schemas/DocflowFlowCommercial'
         recognized:
           $ref: '#/components/schemas/DocflowFlowRecognized'
+        custom:
+          type: object
+          additionalProperties: true
+          description: Значения своих полей кабинета (графы вида docflow.document.<вид>). В save не прислано — не меняются; правятся действием custom
     DocflowFlowRecognized:
       type: object
       additionalProperties: false
@@ -84367,8 +85042,13 @@ components:
             - archive
             - restore
             - delete
+            - custom
         content:
           $ref: '#/components/schemas/DocflowFlowContent'
+        custom:
+          type: object
+          additionalProperties: true
+          description: 'Для action=custom: значения своих полей целиком. Правятся у черновика и зарегистрированной карточки; значение, не подходящее к типу графы, — 422 с названиями граф'
         company_id:
           $ref: '#/components/schemas/UUID'
         contact_id:

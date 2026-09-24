@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8f00218feb4afe805c640c83d8a059de1be0e98a731ee18ef74f0fc68d7f48a9).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f4dcd9d59d4b186659d1fe8dd928c55e759ad05610622ad82ca129344fc97989).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -3603,6 +3603,8 @@ type CoreDocument struct {
 	UpdatedAt       string                     `json:"updated_at"`
 	PostedAt        string                     `json:"posted_at"`
 	CancelledAt     string                     `json:"cancelled_at"`
+	// Custom — Значения своих полей кабинета (графы вида core.document.<ключ вида>). Отдаёт карточка документа; списки поле не несут
+	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
 type CoreDocumentActionCheck struct {
@@ -3639,6 +3641,11 @@ type CoreDocumentCreate struct {
 	EntityRefs map[string]json.RawMessage `json:"entity_refs,omitempty"`
 	Payload    map[string]json.RawMessage `json:"payload,omitempty"`
 	Comment    *string                    `json:"comment,omitempty"`
+}
+
+type CoreDocumentCustom struct {
+	// Custom — Графа → значение. Заменяет значения целиком; проверяется по типу графы
+	Custom map[string]json.RawMessage `json:"custom"`
 }
 
 type CoreDocumentLinkNode struct {
@@ -5525,6 +5532,75 @@ type DocflowAddressRequisites struct {
 	Info *string `json:"info,omitempty"`
 }
 
+// DocflowAppSalesOrderCounterparty — Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в заказе как реквизиты плательщика
+type DocflowAppSalesOrderCounterparty struct {
+	Name  *string `json:"name,omitempty"`
+	INN   *string `json:"inn,omitempty"`
+	KPP   *string `json:"kpp,omitempty"`
+	Phone *string `json:"phone,omitempty"`
+	Email *string `json:"email,omitempty"`
+}
+
+type DocflowAppSalesOrderInput struct {
+	CompanyID          UUID                              `json:"company_id"`
+	ContactID          *UUID                             `json:"contact_id,omitempty"`
+	ContractDocumentID *UUID                             `json:"contract_document_id,omitempty"`
+	Counterparty       *DocflowAppSalesOrderCounterparty `json:"counterparty,omitempty"`
+	// ExternalID — Номер заказа у магазина — ключ идемпотентности загрузки
+	ExternalID string `json:"external_id"`
+	// Number — Пусто — кабинет выдаст следующий номер
+	Number *string `json:"number,omitempty"`
+	Title  *string `json:"title,omitempty"`
+	// Currency — Код валюты сделки, например RUB
+	Currency  string  `json:"currency"`
+	Manager   *string `json:"manager,omitempty"`
+	Comment   *string `json:"comment,omitempty"`
+	OrderDate string  `json:"order_date"`
+	ShipDate  *string `json:"ship_date,omitempty"`
+	DueDate   *string `json:"due_date,omitempty"`
+	Discount  *string `json:"discount,omitempty"`
+	// PricesIncludeVAT — Цены включают налог; пусто — умолчание кабинета
+	PricesIncludeVAT *bool `json:"prices_include_vat,omitempty"`
+	// Scenario — Путь сделки; заказ с оплатой на сайте — self_service
+	Scenario *string                      `json:"scenario,omitempty"`
+	Payment  *DocflowAppSalesOrderPayment `json:"payment,omitempty"`
+	// Source — Не используется контуром приложения: источник журнала — пространство приложения из токена
+	Source      *string                    `json:"source,omitempty"`
+	WarehouseID *UUID                      `json:"warehouse_id,omitempty"`
+	Items       []DocflowAppSalesOrderItem `json:"items"`
+}
+
+type DocflowAppSalesOrderItem struct {
+	// Article — Артикул или штрихкод позиции у магазина; узнаётся справочником номенклатуры точным совпадением
+	Article   *string `json:"article,omitempty"`
+	ProductID *UUID   `json:"product_id,omitempty"`
+	// Title — Пусто — название берётся из номенклатуры
+	Title *string `json:"title,omitempty"`
+	// Kind — Пусто — вид номенклатуры
+	Kind     *string `json:"kind,omitempty"`
+	Unit     *string `json:"unit,omitempty"`
+	Quantity string  `json:"quantity"`
+	Price    string  `json:"price"`
+	Discount *string `json:"discount,omitempty"`
+	// VATRate — Ставка строки: 22%, 10%, без НДС; пусто — учётная политика юрлица на дату заказа
+	VATRate *string `json:"vat_rate,omitempty"`
+}
+
+// DocflowAppSalesOrderPayment — Сообщение эквайринга о заказе. Идемпотентно по паре provider + external_id
+type DocflowAppSalesOrderPayment struct {
+	// Provider — Кто подтвердил списание: yookassa, tochka, имя платёжного кабинета сайта
+	Provider string `json:"provider"`
+	// ExternalID — Номер платежа у провайдера
+	ExternalID string `json:"external_id"`
+	// Kind — Пусто — списание (payment)
+	Kind *string `json:"kind,omitempty"`
+	// Amount — Сумма больше нуля; возврат присылается видом refund, а не минусом
+	Amount   string  `json:"amount"`
+	Currency *string `json:"currency,omitempty"`
+	// PaidAt — Когда провайдер списал; пусто — момент сообщения
+	PaidAt *string `json:"paid_at,omitempty"`
+}
+
 // DocflowApproval — Один проход предмета по маршруту. Согласование ничего не проводит и ни строки регистра не пишет: оно отвечает на один вопрос — можно ли уже выполнить действие, выпускающее бумагу или деньги наружу. Возврат на доработку проход не закрывает: предмет правят и продолжают тот же проход, сохраняя чужие визы.
 type DocflowApproval struct {
 	ID            UUID                   `json:"id"`
@@ -6217,16 +6293,18 @@ type DocflowFlowAccrualStage struct {
 // DocflowFlowChangeInput — Одна команда правки. Поля, не относящиеся к названному действию, отвергаются, а не игнорируются: запрос, просящий две разные вещи сразу, сам не знает, чего хочет.
 type DocflowFlowChangeInput struct {
 	// ExpectedVersion — Версия, которую видел клиент. Разошлась — 409 docflow.flow.version_conflict
-	ExpectedVersion int64                     `json:"expected_version"`
-	Action          string                    `json:"action"`
-	Content         *DocflowFlowContent       `json:"content,omitempty"`
-	CompanyID       *UUID                     `json:"company_id,omitempty"`
-	ContactID       *UUID                     `json:"contact_id,omitempty"`
-	Kind            *DocflowFlowKind          `json:"kind,omitempty"`
-	Direction       *string                   `json:"direction,omitempty"`
-	FileID          *UUID                     `json:"file_id,omitempty"`
-	Relation        *DocflowFlowRelationInput `json:"relation,omitempty"`
-	RelationID      *UUID                     `json:"relation_id,omitempty"`
+	ExpectedVersion int64               `json:"expected_version"`
+	Action          string              `json:"action"`
+	Content         *DocflowFlowContent `json:"content,omitempty"`
+	// Custom — Для action=custom: значения своих полей целиком. Правятся у черновика и зарегистрированной карточки; значение, не подходящее к типу графы, — 422 с названиями граф
+	Custom     map[string]json.RawMessage `json:"custom,omitempty"`
+	CompanyID  *UUID                      `json:"company_id,omitempty"`
+	ContactID  *UUID                      `json:"contact_id,omitempty"`
+	Kind       *DocflowFlowKind           `json:"kind,omitempty"`
+	Direction  *string                    `json:"direction,omitempty"`
+	FileID     *UUID                      `json:"file_id,omitempty"`
+	Relation   *DocflowFlowRelationInput  `json:"relation,omitempty"`
+	RelationID *UUID                      `json:"relation_id,omitempty"`
 }
 
 // DocflowFlowCommercial — Коммерческая часть бумаги — сумма, валюта, строки и графики. Пустая amount законна только вместе с payment_rule, у которого названа сумма платежа: у бессрочного договора итога нет и быть не может, а строк оригинала и этапов работ у такой сделки не бывает — их суммы обязаны сойтись с итогом.
@@ -6266,6 +6344,8 @@ type DocflowFlowContent struct {
 	Contract   *DocflowFlowContractTerms `json:"contract,omitempty"`
 	Commercial *DocflowFlowCommercial    `json:"commercial,omitempty"`
 	Recognized *DocflowFlowRecognized    `json:"recognized,omitempty"`
+	// Custom — Значения своих полей кабинета (графы вида docflow.document.<вид>). В save не прислано — не меняются; правятся действием custom
+	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
 // DocflowFlowContractTerms — Условия договора в старой форме. Остаётся читаемой и принимается, но новую коммерческую часть описывает commercial. У договора без лимита (mode=framework) суммы и валюты в условиях нет вовсе — искусственного нуля здесь не бывает. Коммерческая часть рядом с ним законна только с payment_rule, у которого названа сумма платежа: это бессрочный договор с регулярным платежом. Без неё это рамочный договор, суммы которого ведутся спецификациями, и commercial с ним не сохраняется.
@@ -6878,6 +6958,26 @@ type DocflowMessagePayment struct {
 	PaidOn *string `json:"paid_on,omitempty"`
 }
 
+type DocflowOrderImport struct {
+	ID         UUID    `json:"id"`
+	ExternalID *string `json:"external_id,omitempty"`
+	// Source — Пространство приложения, которое загружало
+	Source  *string `json:"source,omitempty"`
+	Outcome string  `json:"outcome"`
+	// Reason — Машинный код отказа, например docflow.sales_order.contact_unknown
+	Reason *string `json:"reason,omitempty"`
+	// Detail — Причина отказа словами
+	Detail  *string `json:"detail,omitempty"`
+	OrderID *UUID   `json:"order_id,omitempty"`
+	// Payload — Тело загрузки, как его прислали, — для повтора
+	Payload   *string `json:"payload,omitempty"`
+	CreatedAt string  `json:"created_at"`
+}
+
+type DocflowOrderImportPage struct {
+	Results []DocflowOrderImport `json:"results"`
+}
+
 // DocflowOutgoingFile — Произвольный файл на отправку рядом с формализованным.
 type DocflowOutgoingFile struct {
 	// Name — Имя файла. Без него файл отклоняется: у оператора файл без имени не показывается никому
@@ -7130,6 +7230,76 @@ type DocflowRequisites struct {
 	// Extra — ИнфПолФХЖ1: дополнительные сведения факта хозяйственной жизни
 	Extra []DocflowTextInfoRequisites `json:"extra,omitempty"`
 	Lines []DocflowLineRequisites     `json:"lines,omitempty"`
+}
+
+type DocflowSalesOrder struct {
+	ID                 UUID    `json:"id"`
+	CompanyID          UUID    `json:"company_id"`
+	ContactID          UUID    `json:"contact_id"`
+	ContractDocumentID *UUID   `json:"contract_document_id,omitempty"`
+	Number             *string `json:"number,omitempty"`
+	Title              string  `json:"title"`
+	Status             string  `json:"status"`
+	StatusID           *UUID   `json:"status_id,omitempty"`
+	// StatusName — Имя статуса, которое придумал кабинет
+	StatusName *string                 `json:"status_name,omitempty"`
+	Scenario   string                  `json:"scenario"`
+	Steps      []string                `json:"steps"`
+	Currency   string                  `json:"currency"`
+	Manager    *string                 `json:"manager,omitempty"`
+	Comment    *string                 `json:"comment,omitempty"`
+	ExternalID *string                 `json:"external_id,omitempty"`
+	Buyer      *DocflowSalesOrderBuyer `json:"buyer,omitempty"`
+	// AcquiringAmount — Сколько подтвердил эквайринг — списания минус возвраты
+	AcquiringAmount  *string                 `json:"acquiring_amount,omitempty"`
+	OrderDate        *string                 `json:"order_date,omitempty"`
+	ShipDate         *string                 `json:"ship_date,omitempty"`
+	DueDate          *string                 `json:"due_date,omitempty"`
+	Discount         *string                 `json:"discount,omitempty"`
+	PricesIncludeVAT bool                    `json:"prices_include_vat"`
+	Items            []DocflowSalesOrderItem `json:"items"`
+	Amount           string                  `json:"amount"`
+	GoodsAmount      string                  `json:"goods_amount"`
+	ServiceAmount    string                  `json:"service_amount"`
+	// PaidAmount — Сколько денег пришло на счёт по заказу
+	PaidAmount      string  `json:"paid_amount"`
+	ShippedAmount   string  `json:"shipped_amount"`
+	InvoicedAmount  string  `json:"invoiced_amount"`
+	ClosedAmount    string  `json:"closed_amount"`
+	PaymentStatus   string  `json:"payment_status"`
+	ShipmentStatus  string  `json:"shipment_status"`
+	CompanyName     *string `json:"company_name,omitempty"`
+	ContactName     *string `json:"contact_name,omitempty"`
+	ContractTitle   *string `json:"contract_title,omitempty"`
+	CompanyArchived *bool   `json:"company_archived,omitempty"`
+	ContactArchived *bool   `json:"contact_archived,omitempty"`
+	CreatedAt       string  `json:"created_at"`
+	UpdatedAt       string  `json:"updated_at"`
+}
+
+// DocflowSalesOrderBuyer — Как покупатель представился в заказе
+type DocflowSalesOrderBuyer struct {
+	Name  *string `json:"name,omitempty"`
+	Phone *string `json:"phone,omitempty"`
+	Email *string `json:"email,omitempty"`
+}
+
+type DocflowSalesOrderItem struct {
+	ID        UUID    `json:"id"`
+	ProductID *UUID   `json:"product_id,omitempty"`
+	Title     string  `json:"title"`
+	Kind      string  `json:"kind"`
+	Unit      *string `json:"unit,omitempty"`
+	Quantity  string  `json:"quantity"`
+	Price     string  `json:"price"`
+	Discount  *string `json:"discount,omitempty"`
+	VATRate   *string `json:"vat_rate,omitempty"`
+	Position  int64   `json:"position"`
+	Amount    *string `json:"amount,omitempty"`
+}
+
+type DocflowSalesOrderStatusInput struct {
+	Status string `json:"status"`
 }
 
 // DocflowSignature — Подпись под вложением или под пакетом целиком. Подписей под одним файлом несколько — наша и контрагента, — и каждая приходит своим файлом со своим сертификатом.
@@ -14206,6 +14376,8 @@ type SettingsCompany struct {
 	LegalAddress            SettingsCompanyAddress `json:"legal_address"`
 	Entrepreneur            SettingsCompanyPerson  `json:"entrepreneur"`
 	IsActive                bool                   `json:"is_active"`
+	// Custom — Значения своих полей кабинета: графа («Настройки → Поля», вид core.company) → значение
+	Custom map[string]json.RawMessage `json:"custom"`
 }
 
 type SettingsCompanyAddress struct {
@@ -14242,6 +14414,8 @@ type SettingsCompanyInput struct {
 	VATAccountingMode *string                 `json:"vat_accounting_mode,omitempty"`
 	LegalAddress      *SettingsCompanyAddress `json:"legal_address,omitempty"`
 	Entrepreneur      *SettingsCompanyPerson  `json:"entrepreneur,omitempty"`
+	// Custom — Значения своих полей: не передано — не менять. Значение проверяется по типу графы; неподходящее — 422 с названиями граф
+	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
 type SettingsCompanyPage struct {
