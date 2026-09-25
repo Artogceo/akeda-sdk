@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 28652e3a57f9c61c5e3304491796fb3dfa297958b23aa6950993e5bd4429aea0).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb53cf1adb295227efcde555a372ace737ba43709500a10af8054cd07e7a681e).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -515,11 +515,15 @@ __all__ = [
     "CoreOrderLineKind",
     "CoreOrderObligation",
     "CoreOrderPage",
+    "CoreOrderPaymentTerm",
     "CoreOrderResponsible",
     "CoreOrderResponsiblesInput",
+    "CoreOrderRevenueItemRule",
+    "CoreOrderRevenueItemsInput",
     "CoreOrderRevision",
     "CoreOrderSide",
     "CoreOrderSourceKind",
+    "CoreOrderStage",
     "CoreOrderState",
     "CoreOrderStatus",
     "CoreOrderStatusInput",
@@ -528,6 +532,7 @@ __all__ = [
     "CoreOrderStepDueInput",
     "CoreOrderStepState",
     "CoreOrderTotals",
+    "CoreOrderVATWarning",
     "CoreOwnershipVersion",
     "CoreOwnershipVersionInput",
     "CorePhotoResult",
@@ -5194,6 +5199,8 @@ class CoreBusinessPolicy(_CoreBusinessPolicyRequired, total=False):
     accrual_from: str
     #: Срок авансового отчёта, дней (ERP-1176); пусто — умолчание 30
     accountable_days: List["CorePolicyAccountableDaysVersion"]
+    #: Статьи выручки исполнений заказа по виду строки (этап 4 ERP-1427)
+    revenue_items: List["CoreOrderRevenueItemRule"]
 
 class CoreCabinetPreferences(TypedDict):
     locale: Literal['ru-RU', 'en-US']
@@ -6208,6 +6215,10 @@ class CoreOrder(_CoreOrderRequired, total=False):
     contact_name: str
     contract_id: "UUID"
     project_id: "UUID"
+    #: Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья
+    pnl_item_id: Dict[str, Any]
+    #: Бизнес заказа прошёл отсечку этапа 4: исполнения пишут «Заказы» и выручку, «Сделать акт» на экране одна
+    execution_cutover: bool
     warehouse_id: "UUID"
     basis_id: "UUID"
     delivery_date: str
@@ -6224,12 +6235,18 @@ class CoreOrder(_CoreOrderRequired, total=False):
     closed_reason: str
     close_document_id: "UUID"
     migrated_from: str
+    #: Этапы работ заказа (этап 4 ERP-1427)
+    stages: List["CoreOrderStage"]
+    #: График оплат заказа; id строки — разрез stage регистра расчётов
+    payment_terms: List["CoreOrderPaymentTerm"]
     created_by: int
     posted_at: str
     cancelled_at: str
     obligation: "CoreOrderObligation"
     #: Только в карточке и ответах команд
     allowed_actions: List["CoreOrderAllowedAction"]
+    #: Только в карточке: строки со ставкой, названной человеком, равной прежней общей ставке юрлица, когда на сегодня общая ставка уже другая — «проверьте ставку», не отказ
+    vat_warnings: List["CoreOrderVATWarning"]
 
 class _CoreOrderAllowedActionRequired(TypedDict):
     action: Literal['edit', 'confirm', 'cancel', 'close', 'reopen', 'cabinet_status', 'responsibles']
@@ -6469,6 +6486,8 @@ class CoreOrderInput(_CoreOrderInputRequired, total=False):
     counterparty: "CoreOrderCounterparty"
     contract_id: "UUID"
     project_id: "UUID"
+    #: Статья исполнений заказа; не названа при правке — сохраняется прежняя
+    pnl_item_id: Dict[str, Any]
     warehouse_id: "UUID"
     #: Основание — например, заявка на закупку
     basis_id: "UUID"
@@ -6484,6 +6503,10 @@ class CoreOrderInput(_CoreOrderInputRequired, total=False):
     comment: str
     buyer: "CoreOrderBuyer"
     responsibles: List["CoreOrderResponsible"]
+    #: Этапы работ целиком, правка по id; не названы — не меняются
+    stages: List["CoreOrderStage"]
+    #: График оплат целиком, правка по id; не назван — не меняется
+    payment_terms: List["CoreOrderPaymentTerm"]
     cabinet_status_id: "UUID"
     #: Сразу подтвердить созданный заказ
     confirm: bool
@@ -6566,6 +6589,19 @@ class CoreOrderPage(TypedDict):
     offset: int
     has_more: bool
 
+class CoreOrderPaymentTerm(TypedDict, total=False):
+    """Строка графика оплат заказа — когда и сколько платят (ERP-1427, этап 4)."""
+
+    id: "UUID"
+    position: int
+    title: str
+    amount: str
+    due_date: str
+    #: '' — срок датой; after_stage — через delay_days после исполнения этапа stage_id
+    due_trigger: Literal['', 'after_stage']
+    stage_id: "UUID"
+    delay_days: int
+
 class _CoreOrderResponsibleRequired(TypedDict):
     employee_id: "UUID"
     #: Доля в процентах: больше нуля, не больше ста
@@ -6576,6 +6612,20 @@ class CoreOrderResponsible(_CoreOrderResponsibleRequired, total=False):
 
 class CoreOrderResponsiblesInput(TypedDict):
     responsibles: List["CoreOrderResponsible"]
+
+class CoreOrderRevenueItemRule(TypedDict, total=False):
+    kind: Literal['goods', 'service']
+    item_id: "UUID"
+    item_name: str
+    valid_from: str
+
+class CoreOrderRevenueItemsInput(TypedDict, total=False):
+    #: Статья выручки товарных строк; пусто — правило снимается
+    goods_item_id: Dict[str, Any]
+    #: Статья выручки работ и услуг; пусто — правило снимается
+    service_item_id: Dict[str, Any]
+    #: С какой даты; пусто — сегодня
+    valid_from: str
 
 class _CoreOrderRevisionRequired(TypedDict):
     side: "CoreOrderSide"
@@ -6608,6 +6658,10 @@ class CoreOrderRevision(_CoreOrderRevisionRequired, total=False):
     comment: str
     buyer: "CoreOrderBuyer"
     responsibles: List["CoreOrderResponsible"]
+    #: Этапы работ целиком, правка по id; не названы — не меняются
+    stages: List["CoreOrderStage"]
+    #: График оплат целиком, правка по id; не назван — не меняется
+    payment_terms: List["CoreOrderPaymentTerm"]
     cabinet_status_id: "UUID"
     #: Версия, которую видел правящий; 0 — без сверки
     expected_version: int
@@ -6615,6 +6669,18 @@ class CoreOrderRevision(_CoreOrderRevisionRequired, total=False):
 CoreOrderSide = Literal['sale', 'purchase']
 
 CoreOrderSourceKind = Literal['manual', 'app', 'import', 'marketplace', 'crm', 'migration']
+
+class CoreOrderStage(TypedDict, total=False):
+    """Этап работ заказа — что и когда сдаём (ERP-1427, этап 4)."""
+
+    id: "UUID"
+    position: int
+    title: str
+    planned_date: str
+    #: Сумма этапа в валюте заказа с налогом
+    amount: str
+    #: Строки заказа, которые закрывает этап; пусто — строки-услуги по порядку
+    line_ids: List["UUID"]
 
 CoreOrderState = Literal['draft', 'confirmed', 'executing', 'executed', 'closed', 'cancelled']
 
@@ -6689,6 +6755,15 @@ class CoreOrderTotals(TypedDict):
     #: Сумма строкой в разрядности валюты заказа
     services_gross: str
     currency: str
+
+class CoreOrderVATWarning(TypedDict):
+    line_id: "UUID"
+    title: str
+    #: Ставка строки, названная человеком
+    rate: str
+    #: Общая ставка юрлица на дату
+    general: str
+    date: str
 
 class _CoreOwnershipVersionRequired(TypedDict):
     id: "UUID"
@@ -8911,6 +8986,8 @@ class _DocflowFlowDocumentRequired(TypedDict):
 class DocflowFlowDocument(_DocflowFlowDocumentRequired, total=False):
     """Карточка документа внутреннего контура в одной редакции. Каждая принятая команда рождает новую неизменяемую редакцию, а прежняя остаётся читаемой по своему адресу."""
 
+    #: Бизнес юрлица бумаги прошёл отсечку этапа 4: мастер «Принять акт» и «Создать продажу / закупку» у бумаги сняты
+    execution_cutover: bool
     #: Из какого состояния бумага ушла в архив
     archived_from: Literal['draft', 'registered']
     files: List["DocflowFlowFile"]
@@ -11307,6 +11384,8 @@ class _FinanceOperationAccrualResultRequired(TypedDict):
 
 class FinanceOperationAccrualResult(_FinanceOperationAccrualResultRequired, total=False):
     accrual_id: str
+    #: Акт по заказу: строки со ставкой человека, равной прежней общей ставке юрлица, а на дату акта общая ставка другая
+    vat_warnings: List["CoreOrderVATWarning"]
 
 class _FinanceOperationActionRequired(TypedDict):
     source: "FinanceOperationSource"

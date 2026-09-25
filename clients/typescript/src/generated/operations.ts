@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 28652e3a57f9c61c5e3304491796fb3dfa297958b23aa6950993e5bd4429aea0).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb53cf1adb295227efcde555a372ace737ba43709500a10af8054cd07e7a681e).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1937,6 +1937,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CoreAccountingDimensionVersionInput;
     response: models.CoreAccountingDimension;
+  };
+  /** PUT /api/v1/core/accounting-policy/businesses/{id}/revenue-items — Статьи выручки исполнений заказа по виду строки у бизнеса с даты */
+  coreSaveOrderRevenueItems: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CoreOrderRevenueItemsInput;
+    response: models.CoreAccountingPolicy;
   };
   /** PUT /api/v1/core/ui-state/{screen} — Заменить сохранённое состояние одного экрана */
   coreSaveUIState: {
@@ -8194,6 +8201,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreRestoreProduct: { method: "POST", path: "/api/v1/core/products/{id}/restore", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreReviseOrder: { method: "PUT", path: "/api/v1/core/orders/{id}", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSaveAccountingDimensionVersion: { method: "POST", path: "/api/v1/core/accounting-dimensions/{key}/versions", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreSaveOrderRevenueItems: { method: "PUT", path: "/api/v1/core/accounting-policy/businesses/{id}/revenue-items", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSaveUIState: { method: "PUT", path: "/api/v1/core/ui-state/{screen}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetBusinessAccountingMethod: { method: "POST", path: "/api/v1/core/businesses/{id}/accounting-method", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetBusinessActive: { method: "POST", path: "/api/v1/core/businesses/{id}/activation", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

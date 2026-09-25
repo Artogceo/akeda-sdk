@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 28652e3a57f9c61c5e3304491796fb3dfa297958b23aa6950993e5bd4429aea0).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb53cf1adb295227efcde555a372ace737ba43709500a10af8054cd07e7a681e).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -302,6 +302,7 @@ var Operations = map[string]Operation{
 	"coreRestoreProduct":                         {ID: "coreRestoreProduct", Method: "POST", Path: "/api/v1/core/products/{id}/restore", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreReviseOrder":                            {ID: "coreReviseOrder", Method: "PUT", Path: "/api/v1/core/orders/{id}", Module: "core", Stage: "preview", Permission: "core.orders:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreSaveAccountingDimensionVersion":         {ID: "coreSaveAccountingDimensionVersion", Method: "POST", Path: "/api/v1/core/accounting-dimensions/{key}/versions", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"key"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
+	"coreSaveOrderRevenueItems":                  {ID: "coreSaveOrderRevenueItems", Method: "PUT", Path: "/api/v1/core/accounting-policy/businesses/{id}/revenue-items", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreSaveUIState":                            {ID: "coreSaveUIState", Method: "PUT", Path: "/api/v1/core/ui-state/{screen}", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: false, PathParams: []string{"screen"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreSetBusinessAccountingMethod":            {ID: "coreSetBusinessAccountingMethod", Method: "POST", Path: "/api/v1/core/businesses/{id}/accounting-method", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreSetBusinessActive":                      {ID: "coreSetBusinessActive", Method: "POST", Path: "/api/v1/core/businesses/{id}/activation", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},

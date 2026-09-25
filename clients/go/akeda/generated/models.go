@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 28652e3a57f9c61c5e3304491796fb3dfa297958b23aa6950993e5bd4429aea0).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb53cf1adb295227efcde555a372ace737ba43709500a10af8054cd07e7a681e).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -3546,6 +3546,8 @@ type CoreBusinessPolicy struct {
 	VATPending       []CorePolicyVATPendingVersion      `json:"vat_pending"`
 	// AccountableDays — Срок авансового отчёта, дней (ERP-1176); пусто — умолчание 30
 	AccountableDays []CorePolicyAccountableDaysVersion `json:"accountable_days,omitempty"`
+	// RevenueItems — Статьи выручки исполнений заказа по виду строки (этап 4 ERP-1427)
+	RevenueItems []CoreOrderRevenueItemRule `json:"revenue_items,omitempty"`
 }
 
 type CoreCabinetPreferences struct {
@@ -4560,26 +4562,30 @@ type CoreObjectUsageRow struct {
 
 // CoreOrder — Заказ — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе.
 type CoreOrder struct {
-	ID               UUID               `json:"id"`
-	Side             CoreOrderSide      `json:"side"`
-	TypeKey          string             `json:"type_key"`
-	Number           string             `json:"number"`
-	Date             string             `json:"date"`
-	DocumentStatus   CoreDocumentStatus `json:"document_status"`
-	State            CoreOrderState     `json:"state"`
-	BusinessID       UUID               `json:"business_id"`
-	CompanyID        *UUID              `json:"company_id,omitempty"`
-	ContactID        UUID               `json:"contact_id"`
-	BusinessName     *string            `json:"business_name,omitempty"`
-	CompanyName      *string            `json:"company_name,omitempty"`
-	ContactName      *string            `json:"contact_name,omitempty"`
-	ContractID       *UUID              `json:"contract_id,omitempty"`
-	ProjectID        *UUID              `json:"project_id,omitempty"`
-	WarehouseID      *UUID              `json:"warehouse_id,omitempty"`
-	BasisID          *UUID              `json:"basis_id,omitempty"`
-	Title            string             `json:"title"`
-	Currency         string             `json:"currency"`
-	PricesIncludeVAT bool               `json:"prices_include_vat"`
+	ID             UUID               `json:"id"`
+	Side           CoreOrderSide      `json:"side"`
+	TypeKey        string             `json:"type_key"`
+	Number         string             `json:"number"`
+	Date           string             `json:"date"`
+	DocumentStatus CoreDocumentStatus `json:"document_status"`
+	State          CoreOrderState     `json:"state"`
+	BusinessID     UUID               `json:"business_id"`
+	CompanyID      *UUID              `json:"company_id,omitempty"`
+	ContactID      UUID               `json:"contact_id"`
+	BusinessName   *string            `json:"business_name,omitempty"`
+	CompanyName    *string            `json:"company_name,omitempty"`
+	ContactName    *string            `json:"contact_name,omitempty"`
+	ContractID     *UUID              `json:"contract_id,omitempty"`
+	ProjectID      *UUID              `json:"project_id,omitempty"`
+	// PNLItemID — Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья
+	PNLItemID map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
+	// ExecutionCutover — Бизнес заказа прошёл отсечку этапа 4: исполнения пишут «Заказы» и выручку, «Сделать акт» на экране одна
+	ExecutionCutover *bool  `json:"execution_cutover,omitempty"`
+	WarehouseID      *UUID  `json:"warehouse_id,omitempty"`
+	BasisID          *UUID  `json:"basis_id,omitempty"`
+	Title            string `json:"title"`
+	Currency         string `json:"currency"`
+	PricesIncludeVAT bool   `json:"prices_include_vat"`
 	// Discount — Скидка на заказ целиком, как её ввели; в суммах строк уже учтена
 	Discount          string                 `json:"discount"`
 	DeliveryDate      *string                `json:"delivery_date,omitempty"`
@@ -4601,15 +4607,21 @@ type CoreOrder struct {
 	MigratedFrom      *string                `json:"migrated_from,omitempty"`
 	Lines             []CoreOrderLine        `json:"lines"`
 	Responsibles      []CoreOrderResponsible `json:"responsibles"`
-	Totals            CoreOrderTotals        `json:"totals"`
-	CreatedBy         *int64                 `json:"created_by,omitempty"`
-	CreatedAt         string                 `json:"created_at"`
-	UpdatedAt         string                 `json:"updated_at"`
-	PostedAt          *string                `json:"posted_at,omitempty"`
-	CancelledAt       *string                `json:"cancelled_at,omitempty"`
-	Obligation        *CoreOrderObligation   `json:"obligation,omitempty"`
+	// Stages — Этапы работ заказа (этап 4 ERP-1427)
+	Stages []CoreOrderStage `json:"stages,omitempty"`
+	// PaymentTerms — График оплат заказа; id строки — разрез stage регистра расчётов
+	PaymentTerms []CoreOrderPaymentTerm `json:"payment_terms,omitempty"`
+	Totals       CoreOrderTotals        `json:"totals"`
+	CreatedBy    *int64                 `json:"created_by,omitempty"`
+	CreatedAt    string                 `json:"created_at"`
+	UpdatedAt    string                 `json:"updated_at"`
+	PostedAt     *string                `json:"posted_at,omitempty"`
+	CancelledAt  *string                `json:"cancelled_at,omitempty"`
+	Obligation   *CoreOrderObligation   `json:"obligation,omitempty"`
 	// AllowedActions — Только в карточке и ответах команд
 	AllowedActions []CoreOrderAllowedAction `json:"allowed_actions,omitempty"`
+	// VATWarnings — Только в карточке: строки со ставкой, названной человеком, равной прежней общей ставке юрлица, когда на сегодня общая ставка уже другая — «проверьте ставку», не отказ
+	VATWarnings []CoreOrderVATWarning `json:"vat_warnings,omitempty"`
 }
 
 type CoreOrderAllowedAction struct {
@@ -4845,7 +4857,9 @@ type CoreOrderInput struct {
 	Counterparty *CoreOrderCounterparty `json:"counterparty,omitempty"`
 	ContractID   *UUID                  `json:"contract_id,omitempty"`
 	ProjectID    *UUID                  `json:"project_id,omitempty"`
-	WarehouseID  *UUID                  `json:"warehouse_id,omitempty"`
+	// PNLItemID — Статья исполнений заказа; не названа при правке — сохраняется прежняя
+	PNLItemID   map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
+	WarehouseID *UUID                      `json:"warehouse_id,omitempty"`
 	// BasisID — Основание — например, заявка на закупку
 	BasisID  *UUID   `json:"basis_id,omitempty"`
 	Title    *string `json:"title,omitempty"`
@@ -4853,15 +4867,19 @@ type CoreOrderInput struct {
 	// PricesIncludeVAT — Цены с НДС («в том числе»); по умолчанию true
 	PricesIncludeVAT *bool `json:"prices_include_vat,omitempty"`
 	// Discount — Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
-	Discount        *string                `json:"discount,omitempty"`
-	DeliveryDate    *string                `json:"delivery_date,omitempty"`
-	DueDate         *string                `json:"due_date,omitempty"`
-	Scenario        *string                `json:"scenario,omitempty"`
-	ManagerNote     *string                `json:"manager_note,omitempty"`
-	Comment         *string                `json:"comment,omitempty"`
-	Buyer           *CoreOrderBuyer        `json:"buyer,omitempty"`
-	Lines           []CoreOrderLineInput   `json:"lines"`
-	Responsibles    []CoreOrderResponsible `json:"responsibles,omitempty"`
+	Discount     *string                `json:"discount,omitempty"`
+	DeliveryDate *string                `json:"delivery_date,omitempty"`
+	DueDate      *string                `json:"due_date,omitempty"`
+	Scenario     *string                `json:"scenario,omitempty"`
+	ManagerNote  *string                `json:"manager_note,omitempty"`
+	Comment      *string                `json:"comment,omitempty"`
+	Buyer        *CoreOrderBuyer        `json:"buyer,omitempty"`
+	Lines        []CoreOrderLineInput   `json:"lines"`
+	Responsibles []CoreOrderResponsible `json:"responsibles,omitempty"`
+	// Stages — Этапы работ целиком, правка по id; не названы — не меняются
+	Stages []CoreOrderStage `json:"stages,omitempty"`
+	// PaymentTerms — График оплат целиком, правка по id; не назван — не меняется
+	PaymentTerms    []CoreOrderPaymentTerm `json:"payment_terms,omitempty"`
 	CabinetStatusID *UUID                  `json:"cabinet_status_id,omitempty"`
 	// Confirm — Сразу подтвердить созданный заказ
 	Confirm *bool `json:"confirm,omitempty"`
@@ -4945,6 +4963,19 @@ type CoreOrderPage struct {
 	HasMore bool  `json:"has_more"`
 }
 
+// CoreOrderPaymentTerm — Строка графика оплат заказа — когда и сколько платят (ERP-1427, этап 4).
+type CoreOrderPaymentTerm struct {
+	ID       *UUID   `json:"id,omitempty"`
+	Position *int64  `json:"position,omitempty"`
+	Title    *string `json:"title,omitempty"`
+	Amount   *string `json:"amount,omitempty"`
+	DueDate  *string `json:"due_date,omitempty"`
+	// DueTrigger — '' — срок датой; after_stage — через delay_days после исполнения этапа stage_id
+	DueTrigger *string `json:"due_trigger,omitempty"`
+	StageID    *UUID   `json:"stage_id,omitempty"`
+	DelayDays  *int64  `json:"delay_days,omitempty"`
+}
+
 type CoreOrderResponsible struct {
 	EmployeeID   UUID    `json:"employee_id"`
 	EmployeeName *string `json:"employee_name,omitempty"`
@@ -4954,6 +4985,22 @@ type CoreOrderResponsible struct {
 
 type CoreOrderResponsiblesInput struct {
 	Responsibles []CoreOrderResponsible `json:"responsibles"`
+}
+
+type CoreOrderRevenueItemRule struct {
+	Kind      *string `json:"kind,omitempty"`
+	ItemID    *UUID   `json:"item_id,omitempty"`
+	ItemName  *string `json:"item_name,omitempty"`
+	ValidFrom *string `json:"valid_from,omitempty"`
+}
+
+type CoreOrderRevenueItemsInput struct {
+	// GoodsItemID — Статья выручки товарных строк; пусто — правило снимается
+	GoodsItemID map[string]json.RawMessage `json:"goods_item_id,omitempty"`
+	// ServiceItemID — Статья выручки работ и услуг; пусто — правило снимается
+	ServiceItemID map[string]json.RawMessage `json:"service_item_id,omitempty"`
+	// ValidFrom — С какой даты; пусто — сегодня
+	ValidFrom *string `json:"valid_from,omitempty"`
 }
 
 type CoreOrderRevision struct {
@@ -4976,15 +5023,19 @@ type CoreOrderRevision struct {
 	// PricesIncludeVAT — Цены с НДС («в том числе»); по умолчанию true
 	PricesIncludeVAT *bool `json:"prices_include_vat,omitempty"`
 	// Discount — Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
-	Discount        *string                `json:"discount,omitempty"`
-	DeliveryDate    *string                `json:"delivery_date,omitempty"`
-	DueDate         *string                `json:"due_date,omitempty"`
-	Scenario        *string                `json:"scenario,omitempty"`
-	ManagerNote     *string                `json:"manager_note,omitempty"`
-	Comment         *string                `json:"comment,omitempty"`
-	Buyer           *CoreOrderBuyer        `json:"buyer,omitempty"`
-	Lines           []CoreOrderLineInput   `json:"lines"`
-	Responsibles    []CoreOrderResponsible `json:"responsibles,omitempty"`
+	Discount     *string                `json:"discount,omitempty"`
+	DeliveryDate *string                `json:"delivery_date,omitempty"`
+	DueDate      *string                `json:"due_date,omitempty"`
+	Scenario     *string                `json:"scenario,omitempty"`
+	ManagerNote  *string                `json:"manager_note,omitempty"`
+	Comment      *string                `json:"comment,omitempty"`
+	Buyer        *CoreOrderBuyer        `json:"buyer,omitempty"`
+	Lines        []CoreOrderLineInput   `json:"lines"`
+	Responsibles []CoreOrderResponsible `json:"responsibles,omitempty"`
+	// Stages — Этапы работ целиком, правка по id; не названы — не меняются
+	Stages []CoreOrderStage `json:"stages,omitempty"`
+	// PaymentTerms — График оплат целиком, правка по id; не назван — не меняется
+	PaymentTerms    []CoreOrderPaymentTerm `json:"payment_terms,omitempty"`
 	CabinetStatusID *UUID                  `json:"cabinet_status_id,omitempty"`
 	// ExpectedVersion — Версия, которую видел правящий; 0 — без сверки
 	ExpectedVersion *int64 `json:"expected_version,omitempty"`
@@ -4993,6 +5044,18 @@ type CoreOrderRevision struct {
 type CoreOrderSide = string
 
 type CoreOrderSourceKind = string
+
+// CoreOrderStage — Этап работ заказа — что и когда сдаём (ERP-1427, этап 4).
+type CoreOrderStage struct {
+	ID          *UUID   `json:"id,omitempty"`
+	Position    *int64  `json:"position,omitempty"`
+	Title       *string `json:"title,omitempty"`
+	PlannedDate *string `json:"planned_date,omitempty"`
+	// Amount — Сумма этапа в валюте заказа с налогом
+	Amount *string `json:"amount,omitempty"`
+	// LineIds — Строки заказа, которые закрывает этап; пусто — строки-услуги по порядку
+	LineIds []UUID `json:"line_ids,omitempty"`
+}
 
 type CoreOrderState = string
 
@@ -5064,6 +5127,16 @@ type CoreOrderTotals struct {
 	// ServicesGross — Сумма строкой в разрядности валюты заказа
 	ServicesGross string `json:"services_gross"`
 	Currency      string `json:"currency"`
+}
+
+type CoreOrderVATWarning struct {
+	LineID UUID   `json:"line_id"`
+	Title  string `json:"title"`
+	// Rate — Ставка строки, названная человеком
+	Rate string `json:"rate"`
+	// General — Общая ставка юрлица на дату
+	General string `json:"general"`
+	Date    string `json:"date"`
 }
 
 type CoreOwnershipVersion struct {
@@ -7249,14 +7322,16 @@ type DocflowFlowCreateInput struct {
 
 // DocflowFlowDocument — Карточка документа внутреннего контура в одной редакции. Каждая принятая команда рождает новую неизменяемую редакцию, а прежняя остаётся читаемой по своему адресу.
 type DocflowFlowDocument struct {
-	ID          UUID            `json:"id"`
-	CompanyID   UUID            `json:"company_id"`
-	CompanyName string          `json:"company_name"`
-	ContactID   UUID            `json:"contact_id"`
-	ContactName string          `json:"contact_name"`
-	Kind        DocflowFlowKind `json:"kind"`
-	Direction   string          `json:"direction"`
-	Status      string          `json:"status"`
+	ID        UUID `json:"id"`
+	CompanyID UUID `json:"company_id"`
+	// ExecutionCutover — Бизнес юрлица бумаги прошёл отсечку этапа 4: мастер «Принять акт» и «Создать продажу / закупку» у бумаги сняты
+	ExecutionCutover *bool           `json:"execution_cutover,omitempty"`
+	CompanyName      string          `json:"company_name"`
+	ContactID        UUID            `json:"contact_id"`
+	ContactName      string          `json:"contact_name"`
+	Kind             DocflowFlowKind `json:"kind"`
+	Direction        string          `json:"direction"`
+	Status           string          `json:"status"`
 	// ArchivedFrom — Из какого состояния бумага ушла в архив
 	ArchivedFrom *string `json:"archived_from,omitempty"`
 	Version      int64   `json:"version"`
@@ -9628,6 +9703,8 @@ type FinanceOperationAccrualResult struct {
 	Allocations []FinanceOperationAccrualAllocation `json:"allocations"`
 	Document    CoreDocument                        `json:"document"`
 	Operation   FinanceOperation                    `json:"operation"`
+	// VATWarnings — Акт по заказу: строки со ставкой человека, равной прежней общей ставке юрлица, а на дату акта общая ставка другая
+	VATWarnings []CoreOrderVATWarning `json:"vat_warnings,omitempty"`
 }
 
 type FinanceOperationAction struct {

@@ -22201,6 +22201,86 @@
         }
       }
     },
+    "/api/v1/core/accounting-policy/businesses/{id}/revenue-items": {
+      "put": {
+        "tags": [
+          "Core accounting"
+        ],
+        "operationId": "coreSaveOrderRevenueItems",
+        "summary": "Статьи выручки исполнений заказа по виду строки у бизнеса с даты",
+        "description": "Статья, которой отгрузка и акт признают выручку, если у заказа своя статья не названа (ERP-1427, этап 4). Отдельно для товаров и для работ и услуг; пустая статья снимает правило — действует системная «Выручка от продажи товаров» или «Выручка от услуг». Прежнее правило закрывается накануне даты.",
+        "x-akeda-module": "core",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "core:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoreOrderRevenueItemsInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Учётная политика после записи",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreAccountingPolicy"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/v1/core/accounting-policy/companies/{id}/tax-mode": {
       "post": {
         "tags": [
@@ -75586,7 +75666,7 @@
         "operationId": "docflowFlowCreateFinancePlan",
         "x-akeda-audience": "external",
         "summary": "Создать продажу или закупку по бумаге",
-        "description": "Просит модуль финансов завести плановую операцию по сумме и графикам этой бумаги. Экономическая роль называется явно: входящий договор всё ещё может быть продажей, и выводить её из направления документа нельзя.\n\nЗаписывает не крыло документов, а владелец: операция зовёт его порт, и регистры с главной книгой остаются его же делом. Сумма и валюта берутся из бумаги; без них команда отвечает отказом, а не подставляет ноль.\n\nУ бессрочного договора с регулярным платежом итога нет, и плана по нему не бывает: команда отвечает именным 409 docflow.flow.open_ended_no_total. Делить между этапами нечего, а план на горизонт выглядел бы во взаиморасчётах и ОПиУ целым договором. Акты и оплаты по такому договору принимаются обычным порядком по строкам его графика платежей.\n\nТребует, кроме права записи в крыле, права работать с документами модуля финансов. Поле expected_version и заголовок Idempotency-Key обязательны.",
+        "description": "После отсечки этапа 4 ERP-1427 у бизнеса бумаги операция снята и отвечает 410 с текстом: продажа и закупка заводятся экраном заказа. До отсечки работает как прежде.\n\nПросит модуль финансов завести плановую операцию по сумме и графикам этой бумаги. Экономическая роль называется явно: входящий договор всё ещё может быть продажей, и выводить её из направления документа нельзя.\n\nЗаписывает не крыло документов, а владелец: операция зовёт его порт, и регистры с главной книгой остаются его же делом. Сумма и валюта берутся из бумаги; без них команда отвечает отказом, а не подставляет ноль.\n\nУ бессрочного договора с регулярным платежом итога нет, и плана по нему не бывает: команда отвечает именным 409 docflow.flow.open_ended_no_total. Делить между этапами нечего, а план на горизонт выглядел бы во взаиморасчётах и ОПиУ целым договором. Акты и оплаты по такому договору принимаются обычным порядком по строкам его графика платежей.\n\nТребует, кроме права записи в крыле, права работать с документами модуля финансов. Поле expected_version и заголовок Idempotency-Key обязательны.",
         "security": [
           {
             "erpUserToken": []
@@ -75656,6 +75736,16 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "410": {
+            "description": "После отсечки этапа 4 — дверь снята: действие выполняется на экране заказа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "422": {
             "$ref": "#/components/responses/DocflowFlowIdempotencyConflict"
@@ -75740,7 +75830,7 @@
         "operationId": "docflowFlowAccrualPlan",
         "x-akeda-audience": "external",
         "summary": "Получить этапы работ выбранного плана",
-        "description": "Показывает, сколько по каждому этапу запланировано и сколько уже принято актами. По этим остаткам распределяют новый акт.\n\nОперация стоит под правом ЗАПИСИ и дополнительно требует права работать с документами модуля финансов: это рабочий шаг приёмки акта, а не отчёт.",
+        "description": "После отсечки этапа 4 ERP-1427 у бизнеса бумаги операция снята и отвечает 410 с текстом: акт принимается командой «Сделать акт» на заказе — бумага и исполнение одной командой. До отсечки работает как прежде.\n\nПоказывает, сколько по каждому этапу запланировано и сколько уже принято актами. По этим остаткам распределяют новый акт.\n\nОперация стоит под правом ЗАПИСИ и дополнительно требует права работать с документами модуля финансов: это рабочий шаг приёмки акта, а не отчёт.",
         "security": [
           {
             "erpUserToken": []
@@ -75800,6 +75890,16 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           },
+          "410": {
+            "description": "После отсечки этапа 4 — дверь снята: действие выполняется на экране заказа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "503": {
             "$ref": "#/components/responses/ServiceUnavailable"
           }
@@ -75814,7 +75914,7 @@
         "operationId": "docflowFlowAccrualCandidates",
         "x-akeda-audience": "external",
         "summary": "Получить планы, к которым можно принять акт",
-        "description": "Плановые операции модуля финансов с теми же сторонами и валютой, что у акта. Из них выбирают тот план, работы по которому закрывает акт.\n\nПлан ДОГОВОРА, на который акт сослан связью основания, идёт первым и несёт его номер и дату (contract_number, contract_date). Поднимается он только на первой странице: строка стоит вне общего порядка, и повторять её на каждой следующей значило бы показывать один и тот же план столько раз, сколько страниц человек пролистал.\n\nКак и соседняя выборка этапов, стоит под правом записи и требует права работать с документами модуля финансов. Страница — 100 строк; продолжение спрашивают значением next_offset.",
+        "description": "После отсечки этапа 4 ERP-1427 у бизнеса бумаги операция снята и отвечает 410 с текстом: акт принимается командой «Сделать акт» на заказе — бумага и исполнение одной командой. До отсечки работает как прежде.\n\nПлановые операции модуля финансов с теми же сторонами и валютой, что у акта. Из них выбирают тот план, работы по которому закрывает акт.\n\nПлан ДОГОВОРА, на который акт сослан связью основания, идёт первым и несёт его номер и дату (contract_number, contract_date). Поднимается он только на первой странице: строка стоит вне общего порядка, и повторять её на каждой следующей значило бы показывать один и тот же план столько раз, сколько страниц человек пролистал.\n\nКак и соседняя выборка этапов, стоит под правом записи и требует права работать с документами модуля финансов. Страница — 100 строк; продолжение спрашивают значением next_offset.",
         "security": [
           {
             "erpUserToken": []
@@ -75883,6 +75983,16 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           },
+          "410": {
+            "description": "После отсечки этапа 4 — дверь снята: действие выполняется на экране заказа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "503": {
             "$ref": "#/components/responses/ServiceUnavailable"
           }
@@ -75897,7 +76007,7 @@
         "operationId": "docflowFlowAcceptFinanceAct",
         "x-akeda-audience": "external",
         "summary": "Подтвердить выполнение актом",
-        "description": "Распределяет сумму акта по этапам работ выбранного плана и просит модуль финансов записать факт. Сумма распределения не превышает остаток этапа — иначе отказ docflow.flow.accrual_limit; этапы с разными сроками оплаты в один акт не собираются — docflow.flow.accrual_due_date_conflict; дата выполнения в закрытом периоде — docflow.flow.period_closed.\n\nФактическая дата называется явно и может отличаться от плановой даты завершения этапа.\n\nЗаписывает факт владелец — модуль финансов, через свой порт; регистры и главная книга остаются за ним. Крыло документов держит только бумагу и связь с ней.\n\nТребует права работать с документами модуля финансов. Поля expected_version и expected_operation_version и заголовок Idempotency-Key обязательны.",
+        "description": "После отсечки этапа 4 ERP-1427 у бизнеса бумаги операция снята и отвечает 410 с текстом: акт принимается командой «Сделать акт» на заказе — бумага и исполнение одной командой. До отсечки работает как прежде.\n\nРаспределяет сумму акта по этапам работ выбранного плана и просит модуль финансов записать факт. Сумма распределения не превышает остаток этапа — иначе отказ docflow.flow.accrual_limit; этапы с разными сроками оплаты в один акт не собираются — docflow.flow.accrual_due_date_conflict; дата выполнения в закрытом периоде — docflow.flow.period_closed.\n\nФактическая дата называется явно и может отличаться от плановой даты завершения этапа.\n\nЗаписывает факт владелец — модуль финансов, через свой порт; регистры и главная книга остаются за ним. Крыло документов держит только бумагу и связь с ней.\n\nТребует права работать с документами модуля финансов. Поля expected_version и expected_operation_version и заголовок Idempotency-Key обязательны.",
         "security": [
           {
             "erpUserToken": []
@@ -75967,6 +76077,16 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "410": {
+            "description": "После отсечки этапа 4 — дверь снята: действие выполняется на экране заказа",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "422": {
             "$ref": "#/components/responses/DocflowFlowIdempotencyConflict"
@@ -91329,6 +91449,13 @@
               "$ref": "#/components/schemas/CorePolicyAccountableDaysVersion"
             },
             "description": "Срок авансового отчёта, дней (ERP-1176); пусто — умолчание 30"
+          },
+          "revenue_items": {
+            "type": "array",
+            "description": "Статьи выручки исполнений заказа по виду строки (этап 4 ERP-1427)",
+            "items": {
+              "$ref": "#/components/schemas/CoreOrderRevenueItemRule"
+            }
           }
         }
       },
@@ -93628,6 +93755,125 @@
           }
         }
       },
+      "CoreOrderRevenueItemsInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "goods_item_id": {
+            "description": "Статья выручки товарных строк; пусто — правило снимается",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              }
+            ]
+          },
+          "service_item_id": {
+            "description": "Статья выручки работ и услуг; пусто — правило снимается",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              }
+            ]
+          },
+          "valid_from": {
+            "type": "string",
+            "format": "date",
+            "description": "С какой даты; пусто — сегодня"
+          }
+        }
+      },
+      "CoreOrderRevenueItemRule": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "goods",
+              "service"
+            ]
+          },
+          "item_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "item_name": {
+            "type": "string"
+          },
+          "valid_from": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "CoreOrderStage": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Этап работ заказа — что и когда сдаём (ERP-1427, этап 4).",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "planned_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Сумма этапа в валюте заказа с налогом"
+          },
+          "line_ids": {
+            "type": "array",
+            "description": "Строки заказа, которые закрывает этап; пусто — строки-услуги по порядку",
+            "items": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        }
+      },
+      "CoreOrderPaymentTerm": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Строка графика оплат заказа — когда и сколько платят (ERP-1427, этап 4).",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "due_trigger": {
+            "type": "string",
+            "enum": [
+              "",
+              "after_stage"
+            ],
+            "description": "'' — срок датой; after_stage — через delay_days после исполнения этапа stage_id"
+          },
+          "stage_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "delay_days": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
       "CoreOrder": {
         "type": "object",
         "description": "Заказ — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе.",
@@ -93705,6 +93951,18 @@
           },
           "project_id": {
             "$ref": "#/components/schemas/UUID"
+          },
+          "pnl_item_id": {
+            "description": "Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              }
+            ]
+          },
+          "execution_cutover": {
+            "type": "boolean",
+            "description": "Бизнес заказа прошёл отсечку этапа 4: исполнения пишут «Заказы» и выручку, «Сделать акт» на экране одна"
           },
           "warehouse_id": {
             "$ref": "#/components/schemas/UUID"
@@ -93791,6 +94049,20 @@
               "$ref": "#/components/schemas/CoreOrderResponsible"
             }
           },
+          "stages": {
+            "type": "array",
+            "description": "Этапы работ заказа (этап 4 ERP-1427)",
+            "items": {
+              "$ref": "#/components/schemas/CoreOrderStage"
+            }
+          },
+          "payment_terms": {
+            "type": "array",
+            "description": "График оплат заказа; id строки — разрез stage регистра расчётов",
+            "items": {
+              "$ref": "#/components/schemas/CoreOrderPaymentTerm"
+            }
+          },
           "totals": {
             "$ref": "#/components/schemas/CoreOrderTotals"
           },
@@ -93821,6 +94093,44 @@
             "items": {
               "$ref": "#/components/schemas/CoreOrderAllowedAction"
             }
+          },
+          "vat_warnings": {
+            "type": "array",
+            "description": "Только в карточке: строки со ставкой, названной человеком, равной прежней общей ставке юрлица, когда на сегодня общая ставка уже другая — «проверьте ставку», не отказ",
+            "items": {
+              "$ref": "#/components/schemas/CoreOrderVATWarning"
+            }
+          }
+        }
+      },
+      "CoreOrderVATWarning": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "line_id",
+          "title",
+          "rate",
+          "general",
+          "date"
+        ],
+        "properties": {
+          "line_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "title": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "string",
+            "description": "Ставка строки, названная человеком"
+          },
+          "general": {
+            "type": "string",
+            "description": "Общая ставка юрлица на дату"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
           }
         }
       },
@@ -93898,6 +94208,14 @@
           "project_id": {
             "$ref": "#/components/schemas/UUID"
           },
+          "pnl_item_id": {
+            "description": "Статья исполнений заказа; не названа при правке — сохраняется прежняя",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              }
+            ]
+          },
           "warehouse_id": {
             "$ref": "#/components/schemas/UUID"
           },
@@ -93955,6 +94273,20 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CoreOrderResponsible"
+            }
+          },
+          "stages": {
+            "type": "array",
+            "description": "Этапы работ целиком, правка по id; не названы — не меняются",
+            "items": {
+              "$ref": "#/components/schemas/CoreOrderStage"
+            }
+          },
+          "payment_terms": {
+            "type": "array",
+            "description": "График оплат целиком, правка по id; не назван — не меняется",
+            "items": {
+              "$ref": "#/components/schemas/CoreOrderPaymentTerm"
             }
           },
           "cabinet_status_id": {
@@ -94063,6 +94395,20 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/CoreOrderResponsible"
+            }
+          },
+          "stages": {
+            "type": "array",
+            "description": "Этапы работ целиком, правка по id; не названы — не меняются",
+            "items": {
+              "$ref": "#/components/schemas/CoreOrderStage"
+            }
+          },
+          "payment_terms": {
+            "type": "array",
+            "description": "График оплат целиком, правка по id; не назван — не меняется",
+            "items": {
+              "$ref": "#/components/schemas/CoreOrderPaymentTerm"
             }
           },
           "cabinet_status_id": {
@@ -100521,6 +100867,13 @@
           },
           "operation": {
             "$ref": "#/components/schemas/FinanceOperation"
+          },
+          "vat_warnings": {
+            "type": "array",
+            "description": "Акт по заказу: строки со ставкой человека, равной прежней общей ставке юрлица, а на дату акта общая ставка другая",
+            "items": {
+              "$ref": "#/components/schemas/CoreOrderVATWarning"
+            }
           }
         }
       },
@@ -135038,6 +135391,10 @@
           },
           "company_id": {
             "$ref": "#/components/schemas/UUID"
+          },
+          "execution_cutover": {
+            "type": "boolean",
+            "description": "Бизнес юрлица бумаги прошёл отсечку этапа 4: мастер «Принять акт» и «Создать продажу / закупку» у бумаги сняты"
           },
           "company_name": {
             "type": "string"

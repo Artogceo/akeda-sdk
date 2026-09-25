@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 28652e3a57f9c61c5e3304491796fb3dfa297958b23aa6950993e5bd4429aea0).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb53cf1adb295227efcde555a372ace737ba43709500a10af8054cd07e7a681e).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -303,6 +303,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreRestoreProduct': OperationSpec('POST', '/api/v1/core/products/{id}/restore', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreReviseOrder': OperationSpec('PUT', '/api/v1/core/orders/{id}', 'core', 'preview', 'core.orders:write', False, True, ('id',), 'none', None, None),
     'coreSaveAccountingDimensionVersion': OperationSpec('POST', '/api/v1/core/accounting-dimensions/{key}/versions', 'core', 'preview', 'core:write', False, True, ('key',), 'none', None, None),
+    'coreSaveOrderRevenueItems': OperationSpec('PUT', '/api/v1/core/accounting-policy/businesses/{id}/revenue-items', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreSaveUIState': OperationSpec('PUT', '/api/v1/core/ui-state/{screen}', 'core', 'preview', 'core:write', False, False, ('screen',), 'none', None, None),
     'coreSetBusinessAccountingMethod': OperationSpec('POST', '/api/v1/core/businesses/{id}/accounting-method', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreSetBusinessActive': OperationSpec('POST', '/api/v1/core/businesses/{id}/activation', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),

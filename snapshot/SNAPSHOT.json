@@ -3,14 +3,14 @@
     "license": "LicenseRef-Akeda-Proprietary",
     "operations": {
       "by_audience": {
-        "external": 1127
+        "external": 1128
       },
       "by_module": {
         "automation": 3,
         "billing": 1,
         "calendar": 36,
         "chat": 51,
-        "core": 204,
+        "core": 205,
         "crm": 114,
         "developer": 22,
         "docflow": 90,
@@ -26,12 +26,12 @@
         "tasks": 131
       },
       "by_stage": {
-        "preview": 1097,
+        "preview": 1098,
         "public": 30
       },
       "installation_by_module": {
         "calendar": 33,
-        "core": 187,
+        "core": 188,
         "docflow": 5,
         "finance": 134,
         "marketplace": 74,
@@ -39,10 +39,10 @@
         "stock": 89,
         "tasks": 131
       },
-      "installation_reachable": 657,
-      "total": 1127
+      "installation_reachable": 658,
+      "total": 1128
     },
-    "schemas": 1565,
+    "schemas": 1570,
     "servers": [
       "https://erp.akeda.ru"
     ],
@@ -61,14 +61,14 @@
       "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 4574432,
+      "bytes": 4589000,
       "path": "openapi/akeda-v1.json",
-      "sha256": "28652e3a57f9c61c5e3304491796fb3dfa297958b23aa6950993e5bd4429aea0"
+      "sha256": "eb53cf1adb295227efcde555a372ace737ba43709500a10af8054cd07e7a681e"
     },
     {
-      "bytes": 3463338,
+      "bytes": 3475009,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "b7ee17eb25ec564d8e0a45957b1714aeef67cdf0ed8be4ebc3934f9dd7785466"
+      "sha256": "108af82beeefa44f46b5387829830f5d16126eb5b1170a6748bc72cce84b822d"
     },
     {
       "bytes": 18414,
@@ -81,6 +81,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "c59055166b9f2d6a3d1d90dfbd2408bad2aac70866eeaa6a226a73fcc9e474b8",
+  "snapshot_digest": "f05f8326708fa938a722d2109cba5247dfbed1a17d3c8a9bfc1655acc7567186",
   "snapshot_version": 1
 }

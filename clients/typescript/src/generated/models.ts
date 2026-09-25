@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 28652e3a57f9c61c5e3304491796fb3dfa297958b23aa6950993e5bd4429aea0).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb53cf1adb295227efcde555a372ace737ba43709500a10af8054cd07e7a681e).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -3559,6 +3559,8 @@ export interface CoreBusinessPolicy {
   "vat_pending": Array<CorePolicyVATPendingVersion>;
   /** Срок авансового отчёта, дней (ERP-1176); пусто — умолчание 30 */
   "accountable_days"?: Array<CorePolicyAccountableDaysVersion>;
+  /** Статьи выручки исполнений заказа по виду строки (этап 4 ERP-1427) */
+  "revenue_items"?: Array<CoreOrderRevenueItemRule>;
 }
 
 export interface CoreCabinetPreferences {
@@ -4588,6 +4590,10 @@ export interface CoreOrder {
   "contact_name"?: string;
   "contract_id"?: UUID;
   "project_id"?: UUID;
+  /** Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья */
+  "pnl_item_id"?: { [key: string]: unknown };
+  /** Бизнес заказа прошёл отсечку этапа 4: исполнения пишут «Заказы» и выручку, «Сделать акт» на экране одна */
+  "execution_cutover"?: boolean;
   "warehouse_id"?: UUID;
   "basis_id"?: UUID;
   "title": string;
@@ -4614,6 +4620,10 @@ export interface CoreOrder {
   "migrated_from"?: string;
   "lines": Array<CoreOrderLine>;
   "responsibles": Array<CoreOrderResponsible>;
+  /** Этапы работ заказа (этап 4 ERP-1427) */
+  "stages"?: Array<CoreOrderStage>;
+  /** График оплат заказа; id строки — разрез stage регистра расчётов */
+  "payment_terms"?: Array<CoreOrderPaymentTerm>;
   "totals": CoreOrderTotals;
   "created_by"?: number;
   "created_at": string;
@@ -4623,6 +4633,8 @@ export interface CoreOrder {
   "obligation"?: CoreOrderObligation;
   /** Только в карточке и ответах команд */
   "allowed_actions"?: Array<CoreOrderAllowedAction>;
+  /** Только в карточке: строки со ставкой, названной человеком, равной прежней общей ставке юрлица, когда на сегодня общая ставка уже другая — «проверьте ставку», не отказ */
+  "vat_warnings"?: Array<CoreOrderVATWarning>;
 }
 
 export interface CoreOrderAllowedAction {
@@ -4858,6 +4870,8 @@ export interface CoreOrderInput {
   "counterparty"?: CoreOrderCounterparty;
   "contract_id"?: UUID;
   "project_id"?: UUID;
+  /** Статья исполнений заказа; не названа при правке — сохраняется прежняя */
+  "pnl_item_id"?: { [key: string]: unknown };
   "warehouse_id"?: UUID;
   /** Основание — например, заявка на закупку */
   "basis_id"?: UUID;
@@ -4875,6 +4889,10 @@ export interface CoreOrderInput {
   "buyer"?: CoreOrderBuyer;
   "lines": Array<CoreOrderLineInput>;
   "responsibles"?: Array<CoreOrderResponsible>;
+  /** Этапы работ целиком, правка по id; не названы — не меняются */
+  "stages"?: Array<CoreOrderStage>;
+  /** График оплат целиком, правка по id; не назван — не меняется */
+  "payment_terms"?: Array<CoreOrderPaymentTerm>;
   "cabinet_status_id"?: UUID;
   /** Сразу подтвердить созданный заказ */
   "confirm"?: boolean;
@@ -4958,6 +4976,19 @@ export interface CoreOrderPage {
   "has_more": boolean;
 }
 
+/** Строка графика оплат заказа — когда и сколько платят (ERP-1427, этап 4). */
+export interface CoreOrderPaymentTerm {
+  "id"?: UUID;
+  "position"?: number;
+  "title"?: string;
+  "amount"?: string;
+  "due_date"?: string;
+  /** '' — срок датой; after_stage — через delay_days после исполнения этапа stage_id */
+  "due_trigger"?: "" | "after_stage";
+  "stage_id"?: UUID;
+  "delay_days"?: number;
+}
+
 export interface CoreOrderResponsible {
   "employee_id": UUID;
   "employee_name"?: string;
@@ -4967,6 +4998,22 @@ export interface CoreOrderResponsible {
 
 export interface CoreOrderResponsiblesInput {
   "responsibles": Array<CoreOrderResponsible>;
+}
+
+export interface CoreOrderRevenueItemRule {
+  "kind"?: "goods" | "service";
+  "item_id"?: UUID;
+  "item_name"?: string;
+  "valid_from"?: string;
+}
+
+export interface CoreOrderRevenueItemsInput {
+  /** Статья выручки товарных строк; пусто — правило снимается */
+  "goods_item_id"?: { [key: string]: unknown };
+  /** Статья выручки работ и услуг; пусто — правило снимается */
+  "service_item_id"?: { [key: string]: unknown };
+  /** С какой даты; пусто — сегодня */
+  "valid_from"?: string;
 }
 
 export interface CoreOrderRevision {
@@ -4998,6 +5045,10 @@ export interface CoreOrderRevision {
   "buyer"?: CoreOrderBuyer;
   "lines": Array<CoreOrderLineInput>;
   "responsibles"?: Array<CoreOrderResponsible>;
+  /** Этапы работ целиком, правка по id; не названы — не меняются */
+  "stages"?: Array<CoreOrderStage>;
+  /** График оплат целиком, правка по id; не назван — не меняется */
+  "payment_terms"?: Array<CoreOrderPaymentTerm>;
   "cabinet_status_id"?: UUID;
   /** Версия, которую видел правящий; 0 — без сверки */
   "expected_version"?: number;
@@ -5006,6 +5057,18 @@ export interface CoreOrderRevision {
 export type CoreOrderSide = "sale" | "purchase";
 
 export type CoreOrderSourceKind = "manual" | "app" | "import" | "marketplace" | "crm" | "migration";
+
+/** Этап работ заказа — что и когда сдаём (ERP-1427, этап 4). */
+export interface CoreOrderStage {
+  "id"?: UUID;
+  "position"?: number;
+  "title"?: string;
+  "planned_date"?: string;
+  /** Сумма этапа в валюте заказа с налогом */
+  "amount"?: string;
+  /** Строки заказа, которые закрывает этап; пусто — строки-услуги по порядку */
+  "line_ids"?: Array<UUID>;
+}
 
 export type CoreOrderState = "draft" | "confirmed" | "executing" | "executed" | "closed" | "cancelled";
 
@@ -5077,6 +5140,16 @@ export interface CoreOrderTotals {
   /** Сумма строкой в разрядности валюты заказа */
   "services_gross": string;
   "currency": string;
+}
+
+export interface CoreOrderVATWarning {
+  "line_id": UUID;
+  "title": string;
+  /** Ставка строки, названная человеком */
+  "rate": string;
+  /** Общая ставка юрлица на дату */
+  "general": string;
+  "date": string;
 }
 
 export interface CoreOwnershipVersion {
@@ -7272,6 +7345,8 @@ export interface DocflowFlowCreateInput {
 export interface DocflowFlowDocument {
   "id": UUID;
   "company_id": UUID;
+  /** Бизнес юрлица бумаги прошёл отсечку этапа 4: мастер «Принять акт» и «Создать продажу / закупку» у бумаги сняты */
+  "execution_cutover"?: boolean;
   "company_name": string;
   "contact_id": UUID;
   "contact_name": string;
@@ -9663,6 +9738,8 @@ export interface FinanceOperationAccrualResult {
   "allocations": Array<FinanceOperationAccrualAllocation>;
   "document": CoreDocument;
   "operation": FinanceOperation;
+  /** Акт по заказу: строки со ставкой человека, равной прежней общей ставке юрлица, а на дату акта общая ставка другая */
+  "vat_warnings"?: Array<CoreOrderVATWarning>;
 }
 
 export interface FinanceOperationAction {
