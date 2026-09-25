@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb53cf1adb295227efcde555a372ace737ba43709500a10af8054cd07e7a681e).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f79d710dd6c50b81a29a1d39abc3ba72fb87d42101b75908c59d2443160471b0).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -4640,7 +4640,7 @@ export interface CoreOrder {
 export interface CoreOrderAllowedAction {
   "action": "edit" | "confirm" | "cancel" | "close" | "reopen" | "cabinet_status" | "responsibles";
   "allowed": boolean;
-  /** Код отказа: core.order.has_executions, core.order.closed, core.order.forbidden */
+  /** Код отказа: core.order.has_executions, core.order.has_dependents (оплаты, авансы, черновики исполнений), core.order.closed, core.order.forbidden */
   "reason_code"?: string;
   /** Причина словами на языке запроса */
   "reason"?: string;
@@ -7424,6 +7424,22 @@ export interface DocflowFlowEDOState {
   "occurred_at": string;
 }
 
+/** Проверка, сборка и отправка выпуска карточки в формате ФНС. Реквизиты — тот же объект, что у отправки продажи: подписант, содержание операции, адреса сторон, идентификаторы участников обмена. Подписанта «по умолчанию» нет: это подпись за человека. */
+export interface DocflowFlowFNSInput {
+  "connection"?: UUID;
+  "requisites"?: DocflowRequisites;
+  /** Примечание документа у оператора */
+  "comment"?: string;
+  /** Приложения после формализованного файла. Счёт на оплату кладёт сюда PDF-бланк той же редакции */
+  "files"?: Array<DocflowOutgoingFile>;
+}
+
+/** Итог отправки выпуска — строка выпуска и связь карточки с конвертом оператора. */
+export interface DocflowFlowFNSSent {
+  "title": DocflowTitle;
+  "link": DocflowFlowEDOLink;
+}
+
 /** Приложенный файл. Всё это описание делает владелец при загрузке, и командой правки оно не принимается. */
 export interface DocflowFlowFile {
   "id": UUID;
@@ -7900,6 +7916,13 @@ export interface DocflowMessage {
   "recognized"?: DocflowRecognized;
   /** Что стало с оплатой этого счёта. Приходит И В СПИСКЕ, в отличие от состава пакета: состояние оплаты — ровно то, что человек читает глазами в каждой строке. Считает его модуль finance (счета, выписки и расчёты) одним запросом на всю страницу. null означает «этот счёт никто не оплачивает»: ни заведённой заявки, ни платежа, — именно там и остаётся кнопка «Отправить в оплату». */
   "payment"?: DocflowMessagePayment | null;
+  /** Открывал ли карточку пакета текущий сотрудник — личная отметка, а не состояние у оператора. Считается в ленте одним запросом на страницу; карточка отдаёт false, потому что её открытие само ставит отметку дверью viewed. */
+  "viewed": boolean;
+  "state_category": DocflowStateCategory;
+  /** Карточка документа в кабинете нашей организации у оператора («СсылкаДляНашаОрганизация»); пусто, пока карточку не перечитали */
+  "operator_link": string;
+  /** Печатный вид пакета (GET .../print); null — показать нечего */
+  "print_form": DocflowMessagePrintForm | null;
 }
 
 /** Действие над пакетом словами ОПЕРАТОРА. Что именно можно сделать сейчас, говорит сам пакет: stages[].actions[]. Подписания среди этих действий нет — подпись идёт контуром /api/v1/docflow/edo/signing/tasks. */
@@ -7944,6 +7967,19 @@ export interface DocflowMessagePayment {
   "number"?: string;
   /** Дата оплаты из выписки в форме ГГГГ-ММ-ДД. Заполнена только у state=paid */
   "paid_on"?: string;
+  /** Шаг заявки словарём хода заявки «Документов»: до согласования — состояние документа заявки, после — строка очереди финансов */
+  "step"?: "draft" | "on_approval" | "rework" | "approved" | "scheduled" | "sent" | "paid" | "payment_cancelled";
+  /** Заявка «Документов» по этому счёту, если она есть */
+  "docflow_request"?: { [key: string]: unknown };
+}
+
+/** Печатный вид пакета. operator — PDF оператора с впечатанными подписями, лежащий у нас; ours — наша форма счёта или УПД по формализованному XML, когда оператор своего вида не отдал (штампа подписи оператора на ней нет). */
+export interface DocflowMessagePrintForm {
+  "source": "operator" | "ours";
+  "size": number;
+  /** Редакция пакета, с которой снят PDF оператора */
+  "revision": string;
+  "fetched_at": string;
 }
 
 export interface DocflowOrderImport {
@@ -8218,6 +8254,10 @@ export interface DocflowPersonRequisites {
 
 /** Ответ на вопрос «соберётся ли документ и что уйдёт». Не булево «годится», а список непройденных проверок плюс разложенная товарная таблица: отказ приёмки приходит от контрагента через сутки и звучит невнятно, а эта проверка обязана назвать всё сразу. */
 export interface DocflowPreflight {
+  /** Формат выпуска карточки: upd — УПД 5.03, chetop — счёт на оплату 5.01. Отсутствует у проверки продажи: там формат всегда УПД */
+  "format"?: "upd" | "chetop";
+  /** Файл схемы ФНС без расширения, которой отвечает выпуск. Версия схемы — не версия формата: у счёта 5.01 схема выбирается по дате документа (_03 до 2026 года, _04 с 01.01.2026) */
+  "schema"?: string;
   /** Редакция формата ФНС */
   "format_version": string;
   /** Функция документа: СЧФ — счёт-фактура, ДОП — документ о передаче, СЧФДОП — оба сразу. Пусто у ответного титула покупателя: функции у него нет вовсе */
@@ -8527,6 +8567,8 @@ export interface DocflowStage {
   "closed": boolean;
   /** Служебный этап оператора — извещение о получении, подтверждение, квитанция. Технология обмена, а не решение по документу: клиент обрабатывает все служебные этапы пакета одним действием, а не по кнопке на каждый */
   "service": boolean;
+  /** С какого момента этап ждёт человека: дата этапа у оператора, без неё — когда зеркало увидело его открытым; открытый снова этап считается заново */
+  "started_at": string;
   "created_at": string;
   "updated_at": string;
 }
@@ -8546,6 +8588,8 @@ export interface DocflowStageRef {
   /** Название действия этапа: очередь у оператора адресуется этапом ВМЕСТЕ с действием, а не одним этапом */
   "action"?: string;
 }
+
+export type DocflowStateCategory = "in_work" | "awaiting_signature" | "cancellation_requested" | "cancellation_refused" | "draft" | "error" | "signer_invalid" | "approved" | "rejected" | "cancelled" | "interrupted";
 
 /** Итог одного прохода синхронизации ленты оператора. */
 export interface DocflowSyncOutcome {
@@ -8575,11 +8619,17 @@ export interface DocflowTitle {
   "kind": "seller" | "buyer";
   /** Учётный документ кабинета у титула продавца. Ссылка мягкая: документа нет — титул показывается как титул по удалённому документу */
   "document": string | null;
+  /** Карточка документооборота, из которой выпущен XML (УПД, акт, накладная, счёт). У титула продавца цель одна из двух: учётный документ либо редакция карточки */
+  "flow_document"?: UUID;
+  /** Редакция карточки, из которой выпущен XML. Новая редакция — новый выпуск: отправленный файл прежней остаётся нетронутым */
+  "flow_version"?: number;
+  /** Формат выпуска: upd — УПД 5.03 (ЕД-7-26/970@), chetop — счёт на оплату 5.01 (ЕД-7-26/29@) */
+  "format": "upd" | "chetop";
   /** Пакет зеркала. У титула покупателя — входящий, на который отвечаем; у титула продавца — НАШ конверт, найденный синхронизацией после записи оператору */
   "message": string | null;
   /** Редакция формата ФНС */
   "format_version": string;
-  /** Функция документа: СЧФ, ДОП, СЧФДОП. Пусто у титула покупателя */
+  /** Функция документа: у УПД — СЧФ, ДОП, СЧФДОП (пусто у титула покупателя); у счёта на оплату — 0 (счёт) или 1 (счёт-оферта) */
   "function": string;
   "requisites": DocflowRequisites;
   /** Имя файла обмена ФНС. Повторяется внутри файла в ИдФайл: пересобранный титул обязан быть тем же самым */
@@ -17798,9 +17848,22 @@ export interface DocflowFlowDocumentRevisionsResponseItemsItem {
   "has_approval": boolean;
 }
 
+export interface DocflowPreviewMessageActionResponse {
+  "next": Array<DocflowPreviewMessageActionResponseNextItem>;
+}
+
+export interface DocflowPreviewMessageActionResponseNextItem {
+  "name": string;
+  "executors": Array<string>;
+}
+
 export interface DocflowLinkIntakeCounterpartyRequest {
   /** Контрагент справочника, с которым сводится участник обмена */
   "contact": { [key: string]: unknown };
+}
+
+export interface DocflowRefreshMessageResponse {
+  "refreshed": boolean;
 }
 
 export interface FilesAccessCheckRequest {

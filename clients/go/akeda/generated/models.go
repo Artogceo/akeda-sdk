@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb53cf1adb295227efcde555a372ace737ba43709500a10af8054cd07e7a681e).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f79d710dd6c50b81a29a1d39abc3ba72fb87d42101b75908c59d2443160471b0).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -4627,7 +4627,7 @@ type CoreOrder struct {
 type CoreOrderAllowedAction struct {
 	Action  string `json:"action"`
 	Allowed bool   `json:"allowed"`
-	// ReasonCode — Код отказа: core.order.has_executions, core.order.closed, core.order.forbidden
+	// ReasonCode — Код отказа: core.order.has_executions, core.order.has_dependents (оплаты, авансы, черновики исполнений), core.order.closed, core.order.forbidden
 	ReasonCode *string `json:"reason_code,omitempty"`
 	// Reason — Причина словами на языке запроса
 	Reason *string `json:"reason,omitempty"`
@@ -7403,6 +7403,22 @@ type DocflowFlowEDOState struct {
 	OccurredAt string `json:"occurred_at"`
 }
 
+// DocflowFlowFNSInput — Проверка, сборка и отправка выпуска карточки в формате ФНС. Реквизиты — тот же объект, что у отправки продажи: подписант, содержание операции, адреса сторон, идентификаторы участников обмена. Подписанта «по умолчанию» нет: это подпись за человека.
+type DocflowFlowFNSInput struct {
+	Connection *UUID              `json:"connection,omitempty"`
+	Requisites *DocflowRequisites `json:"requisites,omitempty"`
+	// Comment — Примечание документа у оператора
+	Comment *string `json:"comment,omitempty"`
+	// Files — Приложения после формализованного файла. Счёт на оплату кладёт сюда PDF-бланк той же редакции
+	Files []DocflowOutgoingFile `json:"files,omitempty"`
+}
+
+// DocflowFlowFNSSent — Итог отправки выпуска — строка выпуска и связь карточки с конвертом оператора.
+type DocflowFlowFNSSent struct {
+	Title DocflowTitle       `json:"title"`
+	Link  DocflowFlowEDOLink `json:"link"`
+}
+
 // DocflowFlowFile — Приложенный файл. Всё это описание делает владелец при загрузке, и командой правки оно не принимается.
 type DocflowFlowFile struct {
 	ID   UUID   `json:"id"`
@@ -7869,6 +7885,13 @@ type DocflowMessage struct {
 	Recognized    *DocflowRecognized `json:"recognized,omitempty"`
 	// Payment — Что стало с оплатой этого счёта. Приходит И В СПИСКЕ, в отличие от состава пакета: состояние оплаты — ровно то, что человек читает глазами в каждой строке. Считает его модуль finance (счета, выписки и расчёты) одним запросом на всю страницу. null означает «этот счёт никто не оплачивает»: ни заведённой заявки, ни платежа, — именно там и остаётся кнопка «Отправить в оплату».
 	Payment *DocflowMessagePayment `json:"payment,omitempty"`
+	// Viewed — Открывал ли карточку пакета текущий сотрудник — личная отметка, а не состояние у оператора. Считается в ленте одним запросом на страницу; карточка отдаёт false, потому что её открытие само ставит отметку дверью viewed.
+	Viewed        bool                 `json:"viewed"`
+	StateCategory DocflowStateCategory `json:"state_category"`
+	// OperatorLink — Карточка документа в кабинете нашей организации у оператора («СсылкаДляНашаОрганизация»); пусто, пока карточку не перечитали
+	OperatorLink string `json:"operator_link"`
+	// PrintForm — Печатный вид пакета (GET .../print); null — показать нечего
+	PrintForm *DocflowMessagePrintForm `json:"print_form"`
 }
 
 // DocflowMessageActionInput — Действие над пакетом словами ОПЕРАТОРА. Что именно можно сделать сейчас, говорит сам пакет: stages[].actions[]. Подписания среди этих действий нет — подпись идёт контуром /api/v1/docflow/edo/signing/tasks.
@@ -7913,6 +7936,19 @@ type DocflowMessagePayment struct {
 	Number *string `json:"number,omitempty"`
 	// PaidOn — Дата оплаты из выписки в форме ГГГГ-ММ-ДД. Заполнена только у state=paid
 	PaidOn *string `json:"paid_on,omitempty"`
+	// Step — Шаг заявки словарём хода заявки «Документов»: до согласования — состояние документа заявки, после — строка очереди финансов
+	Step *string `json:"step,omitempty"`
+	// DocflowRequest — Заявка «Документов» по этому счёту, если она есть
+	DocflowRequest map[string]json.RawMessage `json:"docflow_request,omitempty"`
+}
+
+// DocflowMessagePrintForm — Печатный вид пакета. operator — PDF оператора с впечатанными подписями, лежащий у нас; ours — наша форма счёта или УПД по формализованному XML, когда оператор своего вида не отдал (штампа подписи оператора на ней нет).
+type DocflowMessagePrintForm struct {
+	Source string `json:"source"`
+	Size   int64  `json:"size"`
+	// Revision — Редакция пакета, с которой снят PDF оператора
+	Revision  string `json:"revision"`
+	FetchedAt string `json:"fetched_at"`
 }
 
 type DocflowOrderImport struct {
@@ -8187,6 +8223,10 @@ type DocflowPersonRequisites struct {
 
 // DocflowPreflight — Ответ на вопрос «соберётся ли документ и что уйдёт». Не булево «годится», а список непройденных проверок плюс разложенная товарная таблица: отказ приёмки приходит от контрагента через сутки и звучит невнятно, а эта проверка обязана назвать всё сразу.
 type DocflowPreflight struct {
+	// Format — Формат выпуска карточки: upd — УПД 5.03, chetop — счёт на оплату 5.01. Отсутствует у проверки продажи: там формат всегда УПД
+	Format *string `json:"format,omitempty"`
+	// Schema — Файл схемы ФНС без расширения, которой отвечает выпуск. Версия схемы — не версия формата: у счёта 5.01 схема выбирается по дате документа (_03 до 2026 года, _04 с 01.01.2026)
+	Schema *string `json:"schema,omitempty"`
 	// FormatVersion — Редакция формата ФНС
 	FormatVersion string `json:"format_version"`
 	// Function — Функция документа: СЧФ — счёт-фактура, ДОП — документ о передаче, СЧФДОП — оба сразу. Пусто у ответного титула покупателя: функции у него нет вовсе
@@ -8491,7 +8531,9 @@ type DocflowStage struct {
 	// Closed — Ход не за нами. Закрытые этапы не показываются и не считаются
 	Closed bool `json:"closed"`
 	// Service — Служебный этап оператора — извещение о получении, подтверждение, квитанция. Технология обмена, а не решение по документу: клиент обрабатывает все служебные этапы пакета одним действием, а не по кнопке на каждый
-	Service   bool   `json:"service"`
+	Service bool `json:"service"`
+	// StartedAt — С какого момента этап ждёт человека: дата этапа у оператора, без неё — когда зеркало увидело его открытым; открытый снова этап считается заново
+	StartedAt string `json:"started_at"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
@@ -8511,6 +8553,8 @@ type DocflowStageRef struct {
 	// Action — Название действия этапа: очередь у оператора адресуется этапом ВМЕСТЕ с действием, а не одним этапом
 	Action *string `json:"action,omitempty"`
 }
+
+type DocflowStateCategory = string
 
 // DocflowSyncOutcome — Итог одного прохода синхронизации ленты оператора.
 type DocflowSyncOutcome struct {
@@ -8540,11 +8584,17 @@ type DocflowTitle struct {
 	Kind string `json:"kind"`
 	// Document — Учётный документ кабинета у титула продавца. Ссылка мягкая: документа нет — титул показывается как титул по удалённому документу
 	Document *string `json:"document"`
+	// FlowDocument — Карточка документооборота, из которой выпущен XML (УПД, акт, накладная, счёт). У титула продавца цель одна из двух: учётный документ либо редакция карточки
+	FlowDocument *UUID `json:"flow_document,omitempty"`
+	// FlowVersion — Редакция карточки, из которой выпущен XML. Новая редакция — новый выпуск: отправленный файл прежней остаётся нетронутым
+	FlowVersion *int64 `json:"flow_version,omitempty"`
+	// Format — Формат выпуска: upd — УПД 5.03 (ЕД-7-26/970@), chetop — счёт на оплату 5.01 (ЕД-7-26/29@)
+	Format string `json:"format"`
 	// Message — Пакет зеркала. У титула покупателя — входящий, на который отвечаем; у титула продавца — НАШ конверт, найденный синхронизацией после записи оператору
 	Message *string `json:"message"`
 	// FormatVersion — Редакция формата ФНС
 	FormatVersion string `json:"format_version"`
-	// Function — Функция документа: СЧФ, ДОП, СЧФДОП. Пусто у титула покупателя
+	// Function — Функция документа: у УПД — СЧФ, ДОП, СЧФДОП (пусто у титула покупателя); у счёта на оплату — 0 (счёт) или 1 (счёт-оферта)
 	Function   string            `json:"function"`
 	Requisites DocflowRequisites `json:"requisites"`
 	// FileName — Имя файла обмена ФНС. Повторяется внутри файла в ИдФайл: пересобранный титул обязан быть тем же самым
@@ -17719,9 +17769,22 @@ type DocflowFlowDocumentRevisionsResponseItemsItem struct {
 	HasApproval bool    `json:"has_approval"`
 }
 
+type DocflowPreviewMessageActionResponse struct {
+	Next []DocflowPreviewMessageActionResponseNextItem `json:"next"`
+}
+
+type DocflowPreviewMessageActionResponseNextItem struct {
+	Name      string   `json:"name"`
+	Executors []string `json:"executors"`
+}
+
 type DocflowLinkIntakeCounterpartyRequest struct {
 	// Contact — Контрагент справочника, с которым сводится участник обмена
 	Contact map[string]json.RawMessage `json:"contact"`
+}
+
+type DocflowRefreshMessageResponse struct {
+	Refreshed bool `json:"refreshed"`
 }
 
 type FilesAccessCheckRequest struct {

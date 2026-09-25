@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb53cf1adb295227efcde555a372ace737ba43709500a10af8054cd07e7a681e).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f79d710dd6c50b81a29a1d39abc3ba72fb87d42101b75908c59d2443160471b0).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -748,6 +748,8 @@ __all__ = [
     "DocflowFlowEDOAttachment",
     "DocflowFlowEDOLink",
     "DocflowFlowEDOState",
+    "DocflowFlowFNSInput",
+    "DocflowFlowFNSSent",
     "DocflowFlowFile",
     "DocflowFlowFinanceAccrualAllocation",
     "DocflowFlowFinanceAccrualInput",
@@ -785,6 +787,7 @@ __all__ = [
     "DocflowMessageFlowLink",
     "DocflowMessageList",
     "DocflowMessagePayment",
+    "DocflowMessagePrintForm",
     "DocflowOrderImport",
     "DocflowOrderImportPage",
     "DocflowOutgoingFile",
@@ -832,6 +835,7 @@ __all__ = [
     "DocflowStage",
     "DocflowStageAction",
     "DocflowStageRef",
+    "DocflowStateCategory",
     "DocflowSyncOutcome",
     "DocflowTextInfoRequisites",
     "DocflowTitle",
@@ -1642,7 +1646,10 @@ __all__ = [
     "CoreListBusinessOwnershipResponse",
     "DocflowFlowDocumentRevisionsResponse",
     "DocflowFlowDocumentRevisionsResponseItemsItem",
+    "DocflowPreviewMessageActionResponse",
+    "DocflowPreviewMessageActionResponseNextItem",
     "DocflowLinkIntakeCounterpartyRequest",
+    "DocflowRefreshMessageResponse",
     "FilesAccessCheckRequest",
     "FilesAccessCheckResponse",
     "FilesAccessCheckResponseItemsItem",
@@ -6253,7 +6260,7 @@ class _CoreOrderAllowedActionRequired(TypedDict):
     allowed: bool
 
 class CoreOrderAllowedAction(_CoreOrderAllowedActionRequired, total=False):
-    #: Код отказа: core.order.has_executions, core.order.closed, core.order.forbidden
+    #: Код отказа: core.order.has_executions, core.order.has_dependents (оплаты, авансы, черновики исполнений), core.order.closed, core.order.forbidden
     reason_code: str
     #: Причина словами на языке запроса
     reason: str
@@ -9055,6 +9062,22 @@ class DocflowFlowEDOState(_DocflowFlowEDOStateRequired, total=False):
     #: Состояние словами оператора: показывается как есть, человек сверяет его с кабинетом оператора
     state_name: str
 
+class DocflowFlowFNSInput(TypedDict, total=False):
+    """Проверка, сборка и отправка выпуска карточки в формате ФНС. Реквизиты — тот же объект, что у отправки продажи: подписант, содержание операции, адреса сторон, идентификаторы участников обмена. Подписанта «по умолчанию» нет: это подпись за человека."""
+
+    connection: "UUID"
+    requisites: "DocflowRequisites"
+    #: Примечание документа у оператора
+    comment: str
+    #: Приложения после формализованного файла. Счёт на оплату кладёт сюда PDF-бланк той же редакции
+    files: List["DocflowOutgoingFile"]
+
+class DocflowFlowFNSSent(TypedDict):
+    """Итог отправки выпуска — строка выпуска и связь карточки с конвертом оператора."""
+
+    title: "DocflowTitle"
+    link: "DocflowFlowEDOLink"
+
 class DocflowFlowFile(TypedDict):
     """Приложенный файл. Всё это описание делает владелец при загрузке, и командой правки оно не принимается."""
 
@@ -9515,6 +9538,13 @@ class _DocflowMessageRequired(TypedDict):
     draft: bool
     #: Возвращают из корзины только trashed: у draft_removed документа у оператора больше нет
     deleted_reason: Literal['', 'trashed', 'draft_removed']
+    #: Открывал ли карточку пакета текущий сотрудник — личная отметка, а не состояние у оператора. Считается в ленте одним запросом на страницу; карточка отдаёт false, потому что её открытие само ставит отметку дверью viewed.
+    viewed: bool
+    state_category: "DocflowStateCategory"
+    #: Карточка документа в кабинете нашей организации у оператора («СсылкаДляНашаОрганизация»); пусто, пока карточку не перечитали
+    operator_link: str
+    #: Печатный вид пакета (GET .../print); null — показать нечего
+    print_form: Optional["DocflowMessagePrintForm"]
 
 class DocflowMessage(_DocflowMessageRequired, total=False):
     """Пакет документов у оператора — конверт, а не учётный документ Акеды."""
@@ -9589,6 +9619,19 @@ class DocflowMessagePayment(_DocflowMessagePaymentRequired, total=False):
     number: str
     #: Дата оплаты из выписки в форме ГГГГ-ММ-ДД. Заполнена только у state=paid
     paid_on: str
+    #: Шаг заявки словарём хода заявки «Документов»: до согласования — состояние документа заявки, после — строка очереди финансов
+    step: Literal['draft', 'on_approval', 'rework', 'approved', 'scheduled', 'sent', 'paid', 'payment_cancelled']
+    #: Заявка «Документов» по этому счёту, если она есть
+    docflow_request: Dict[str, Any]
+
+class DocflowMessagePrintForm(TypedDict):
+    """Печатный вид пакета. operator — PDF оператора с впечатанными подписями, лежащий у нас; ours — наша форма счёта или УПД по формализованному XML, когда оператор своего вида не отдал (штампа подписи оператора на ней нет)."""
+
+    source: Literal['operator', 'ours']
+    size: int
+    #: Редакция пакета, с которой снят PDF оператора
+    revision: str
+    fetched_at: str
 
 class _DocflowOrderImportRequired(TypedDict):
     id: "UUID"
@@ -9868,9 +9911,7 @@ class DocflowPersonRequisites(TypedDict, total=False):
     name: str
     patronymic: str
 
-class DocflowPreflight(TypedDict):
-    """Ответ на вопрос «соберётся ли документ и что уйдёт». Не булево «годится», а список непройденных проверок плюс разложенная товарная таблица: отказ приёмки приходит от контрагента через сутки и звучит невнятно, а эта проверка обязана назвать всё сразу."""
-
+class _DocflowPreflightRequired(TypedDict):
     #: Редакция формата ФНС
     format_version: str
     #: Функция документа: СЧФ — счёт-фактура, ДОП — документ о передаче, СЧФДОП — оба сразу. Пусто у ответного титула покупателя: функции у него нет вовсе
@@ -9887,6 +9928,14 @@ class DocflowPreflight(TypedDict):
     buyer: "DocflowPreflightParty"
     #: Товарная таблица с посчитанным налогом. У ответного титула покупателя пуста: он отвечает на документ продавца, а не повторяет его
     lines: List["DocflowPreflightLine"]
+
+class DocflowPreflight(_DocflowPreflightRequired, total=False):
+    """Ответ на вопрос «соберётся ли документ и что уйдёт». Не булево «годится», а список непройденных проверок плюс разложенная товарная таблица: отказ приёмки приходит от контрагента через сутки и звучит невнятно, а эта проверка обязана назвать всё сразу."""
+
+    #: Формат выпуска карточки: upd — УПД 5.03, chetop — счёт на оплату 5.01. Отсутствует у проверки продажи: там формат всегда УПД
+    format: Literal['upd', 'chetop']
+    #: Файл схемы ФНС без расширения, которой отвечает выпуск. Версия схемы — не версия формата: у счёта 5.01 схема выбирается по дате документа (_03 до 2026 года, _04 с 01.01.2026)
+    schema: str
 
 class DocflowPreflightDocument(TypedDict):
     """Учётный документ кабинета, который формализуем."""
@@ -10190,6 +10239,8 @@ class DocflowStage(TypedDict):
     closed: bool
     #: Служебный этап оператора — извещение о получении, подтверждение, квитанция. Технология обмена, а не решение по документу: клиент обрабатывает все служебные этапы пакета одним действием, а не по кнопке на каждый
     service: bool
+    #: С какого момента этап ждёт человека: дата этапа у оператора, без неё — когда зеркало увидело его открытым; открытый снова этап считается заново
+    started_at: str
     created_at: str
     updated_at: str
 
@@ -10208,6 +10259,8 @@ class DocflowStageRef(TypedDict, total=False):
     stage_name: str
     #: Название действия этапа: очередь у оператора адресуется этапом ВМЕСТЕ с действием, а не одним этапом
     action: str
+
+DocflowStateCategory = Literal['in_work', 'awaiting_signature', 'cancellation_requested', 'cancellation_refused', 'draft', 'error', 'signer_invalid', 'approved', 'rejected', 'cancelled', 'interrupted']
 
 class DocflowSyncOutcome(TypedDict):
     """Итог одного прохода синхронизации ленты оператора."""
@@ -10229,20 +10282,20 @@ class DocflowTextInfoRequisites(TypedDict, total=False):
     id: str
     value: str
 
-class DocflowTitle(TypedDict):
-    """Строка исходящего титула. Одна форма на оба вида: титул продавца (КНД 1115131) и титул покупателя (КНД 1115132) — разные файлы разных схем, но судьба у них одна: собрать XML, положить в хранилище, записать оператору, запомнить, чем он ответил. Самого XML здесь нет: он лежит в объектном хранилище кабинета и выдаётся отдельным маршрутом, а ключ к нему наружу не уходит."""
-
+class _DocflowTitleRequired(TypedDict):
     id: "UUID"
     connection: "UUID"
     #: seller — титул продавца по учётному документу кабинета; buyer — ответный титул покупателя на входящий пакет
     kind: Literal['seller', 'buyer']
     #: Учётный документ кабинета у титула продавца. Ссылка мягкая: документа нет — титул показывается как титул по удалённому документу
     document: Optional[str]
+    #: Формат выпуска: upd — УПД 5.03 (ЕД-7-26/970@), chetop — счёт на оплату 5.01 (ЕД-7-26/29@)
+    format: Literal['upd', 'chetop']
     #: Пакет зеркала. У титула покупателя — входящий, на который отвечаем; у титула продавца — НАШ конверт, найденный синхронизацией после записи оператору
     message: Optional[str]
     #: Редакция формата ФНС
     format_version: str
-    #: Функция документа: СЧФ, ДОП, СЧФДОП. Пусто у титула покупателя
+    #: Функция документа: у УПД — СЧФ, ДОП, СЧФДОП (пусто у титула покупателя); у счёта на оплату — 0 (счёт) или 1 (счёт-оферта)
     function: str
     requisites: "DocflowRequisites"
     #: Имя файла обмена ФНС. Повторяется внутри файла в ИдФайл: пересобранный титул обязан быть тем же самым
@@ -10263,6 +10316,14 @@ class DocflowTitle(TypedDict):
     created_by_user_id: Optional[int]
     created_at: str
     updated_at: str
+
+class DocflowTitle(_DocflowTitleRequired, total=False):
+    """Строка исходящего титула. Одна форма на оба вида: титул продавца (КНД 1115131) и титул покупателя (КНД 1115132) — разные файлы разных схем, но судьба у них одна: собрать XML, положить в хранилище, записать оператору, запомнить, чем он ответил. Самого XML здесь нет: он лежит в объектном хранилище кабинета и выдаётся отдельным маршрутом, а ключ к нему наружу не уходит."""
+
+    #: Карточка документооборота, из которой выпущен XML (УПД, акт, накладная, счёт). У титула продавца цель одна из двух: учётный документ либо редакция карточки
+    flow_document: "UUID"
+    #: Редакция карточки, из которой выпущен XML. Новая редакция — новый выпуск: отправленный файл прежней остаётся нетронутым
+    flow_version: int
 
 class DocflowTitleList(TypedDict):
     count: int
@@ -19009,9 +19070,19 @@ class _DocflowFlowDocumentRevisionsResponseItemsItemRequired(TypedDict):
 class DocflowFlowDocumentRevisionsResponseItemsItem(_DocflowFlowDocumentRevisionsResponseItemsItemRequired, total=False):
     author_name: str
 
+class DocflowPreviewMessageActionResponse(TypedDict):
+    next: List["DocflowPreviewMessageActionResponseNextItem"]
+
+class DocflowPreviewMessageActionResponseNextItem(TypedDict):
+    name: str
+    executors: List[str]
+
 class DocflowLinkIntakeCounterpartyRequest(TypedDict):
     #: Контрагент справочника, с которым сводится участник обмена
     contact: Dict[str, Any]
+
+class DocflowRefreshMessageResponse(TypedDict):
+    refreshed: bool
 
 class FilesAccessCheckRequest(TypedDict):
     file_ids: List["UUID"]

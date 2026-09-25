@@ -18064,7 +18064,7 @@
         ],
         "operationId": "coreCancelOrder",
         "summary": "Отменить заказ",
-        "description": "Черновик отменяется без движений; подтверждённый — отменой проведения (сторно обязательства). Пока заказ держат живые исполнения (акт, отгрузка, приёмка) — 409 `core.order.has_executions`; закрытый сначала возвращают в работу (409 `core.order.closed`).",
+        "description": "Черновик отменяется без движений; подтверждённый — отменой проведения (сторно обязательства). Пока заказ держат живые исполнения (акт, отгрузка, приёмка) — 409 `core.order.has_executions`; оплаты, авансы или черновики исполнений — 409 `core.order.has_dependents` (оплаты перекидывают или возвращают, документы отменяют); закрытый сначала возвращают в работу (409 `core.order.closed`).",
         "x-akeda-module": "core",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -70042,6 +70042,14 @@
             }
           },
           {
+            "name": "state_category",
+            "in": "query",
+            "description": "Состояние нашими словами поверх кода оператора — тот же словарь, что поле state_category строки. «Подписант не прошёл проверку» узнаётся словами оператора, «в работе» — всё, чего нет в справочнике кодов оператора.",
+            "schema": {
+              "$ref": "#/components/schemas/DocflowStateCategory"
+            }
+          },
+          {
             "name": "actions_due",
             "in": "query",
             "description": "1 — только пакеты, ждущие действия от нас (есть незакрытый этап). Отбор общего списка, а не отдельная очередь",
@@ -70503,6 +70511,96 @@
         }
       }
     },
+    "/api/v1/docflow/messages/{id}/archive": {
+      "get": {
+        "tags": [
+          "Docflow mirror"
+        ],
+        "operationId": "docflowGetMessageArchive",
+        "x-akeda-audience": "external",
+        "summary": "Скачать архив пакета ЭДО с подписями",
+        "description": "Собирает zip из НАШЕГО хранилища, а не по ссылке оператора: ссылка оператора живёт около месяца, а комплект на требование налоговой или аудитору нужен и через годы. В архиве — каждое скачанное вложение под своим именем, подписи рядом с ним (`<имя>.sig`, вторая и следующие — `<имя>.2.sig`), извещения оператора — в папке «Служебные». Имена в архиве — в UTF-8. Пакет, файлы которого ещё не скачаны, отвечает 409 docflow.edo.attachment_not_stored, а не пустым архивом.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.edo:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Архив пакета; имя архива приходит в Content-Disposition",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                }
+              }
+            },
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
     "/api/v1/docflow/attachments/{id}/content": {
       "get": {
         "tags": [
@@ -70700,6 +70798,197 @@
         }
       }
     },
+    "/api/v1/docflow/messages/{id}/viewed": {
+      "post": {
+        "tags": [
+          "Docflow actions"
+        ],
+        "operationId": "docflowMarkMessageViewed",
+        "x-akeda-audience": "external",
+        "summary": "Отметить, что сотрудник открыл пакет",
+        "description": "Личная отметка текущего сотрудника «открыл карточку пакета». Гасит значок новизны в папках «Входящие», «Исходящие» и видах документов только у него; у пакета у оператора и у коллег ничего не меняется. Повторный вызов безопасен и лишь обновляет время отметки. Дела папки «Ждут меня» отметка не закрывает.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.edo:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Отметка поставлена"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/docflow/messages/{id}/refresh": {
+      "post": {
+        "tags": [
+          "Docflow mirror"
+        ],
+        "operationId": "docflowRefreshMessage",
+        "x-akeda-audience": "external",
+        "summary": "Перечитать карточку пакета у оператора",
+        "description": "Только чтение у оператора. После извещения о получении оператор переводит документ на следующий этап («Утверждение») без события в ленте изменений, поэтому карточка перечитывается при открытии — не чаще раза в пять минут. refreshed=false: карточку читали недавно либо подключение приостановлено, перезапрашивать пакет незачем. Вместе с карточкой забирается печатный вид оператора и ссылка в его кабинет.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.edo:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Перечитана ли карточка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "refreshed"
+                  ],
+                  "properties": {
+                    "refreshed": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/docflow/messages/{id}/print": {
+      "get": {
+        "tags": [
+          "Docflow mirror"
+        ],
+        "operationId": "docflowMessagePrintForm",
+        "x-akeda-audience": "external",
+        "summary": "Печатный вид пакета",
+        "description": "PDF оператора с впечатанными подписями («СсылкаНаPDF»), скачанный в наше хранилище: ссылка оператора живёт месяц. Если оператор своего вида не отдал, формализованный XML пакета (счёт на оплату ON_SCHET или УПД) печатается нашей формой счёта или УПД — PDF, а без службы рендера HTML той же формы. print_form пакета называет, какой из двух видов доступен.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.edo:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Печатный вид",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
     "/api/v1/docflow/messages/{id}/trash": {
       "post": {
         "tags": [
@@ -70867,6 +71156,114 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/docflow/messages/{id}/actions/preview": {
+      "post": {
+        "tags": [
+          "Docflow actions"
+        ],
+        "operationId": "docflowPreviewMessageAction",
+        "x-akeda-audience": "external",
+        "summary": "Последствие действия этапа",
+        "description": "Панель действия до нажатия: «Утвердить → Отправка ответа, Бисс ООО». Последствие называет ОПЕРАТОР в ответе подготовки действия («СледующийЭтап»), выполнения нет — между подготовкой и выполнением стоит решение человека. Пустой next означает, что оператор последствия не назвал; экран его не придумывает. Под тем же правом и сторожем «только чтение», что само действие (409 docflow.edo.read_only).",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.edo:send",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocflowMessageActionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Следующие этапы, названные оператором",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "next"
+                  ],
+                  "properties": {
+                    "next": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "name",
+                          "executors"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "executors": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
           }
         }
       }
@@ -74848,6 +75245,350 @@
         }
       }
     },
+    "/api/v1/docflow/flow/documents/{id}/fns": {
+      "get": {
+        "tags": [
+          "Docflow flow"
+        ],
+        "operationId": "docflowFlowFNSIssue",
+        "x-akeda-audience": "external",
+        "summary": "Скачать отправленный XML бумаги в формате ФНС",
+        "description": "«Скачать как XML» у бумаги с форматом ФНС (УПД, акт и товарная накладная — УПД 5.03; счёт на оплату — ON_CHETOP 5.01). Отдаёт ровно те байты, что ушли контрагенту: выпуск текущей редакции карточки, а если её ещё не отправляли — последний отправленный. Бумага, XML которой ещё не отправлялся, отвечает 404 с кодом docflow.flow.fns_not_issued; собрать файл до отправки можно операцией docflowFlowFNSFile.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.flow:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Файл обмена ФНС в кодировке windows-1251; имя файла по формату приходит в Content-Disposition и повторяется внутри файла в ИдФайл",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                }
+              }
+            },
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/docflow/flow/documents/{id}/fns/file": {
+      "post": {
+        "tags": [
+          "Docflow flow"
+        ],
+        "operationId": "docflowFlowFNSFile",
+        "x-akeda-audience": "external",
+        "summary": "Собрать XML бумаги в формате ФНС для скачивания",
+        "description": "Собирает XML из данных карточки сейчас и отдаёт его файлом. Ничего не хранит: хранится то, что отправлено или подписано. Подписанта и прочие реквизиты отправки вносит человек (requisites); без ящика оператора участники обмена в имени файла называются по правилу формата для передачи не через оператора — кодом «000» и GUID юрлица и контрагента. Негодный документ отвечает 422 docflow.formats.invalid со списком issues, как у отправки. Бумага без формата ФНС (договор, письмо) — 409 docflow.flow.fns_unsupported.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.flow:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocflowFlowFNSInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Файл обмена ФНС в кодировке windows-1251; имя файла по формату приходит в Content-Disposition и повторяется внутри файла в ИдФайл",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                }
+              }
+            },
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/docflow/flow/documents/{id}/fns/preflight": {
+      "post": {
+        "tags": [
+          "Docflow flow"
+        ],
+        "operationId": "docflowPreflightFlowFNS",
+        "x-akeda-audience": "external",
+        "summary": "Проверить XML бумаги в формате ФНС до отправки",
+        "description": "Переводит карточку (УПД, акт, товарная накладная, счёт на оплату) в формат ФНС тем же сборщиком, что у продажи, и отвечает, соберётся ли файл и что уйдёт: формат, схема, функция, стороны, строки с налогом и список непройденных проверок. Строки и налог — те же, что печатает бланк карточки. НИЧЕГО НЕ МЕНЯЕТ и никуда не ходит, поэтому работает и при режиме «только чтение». Умолчания перевода (функция по налогу, наименование документа, содержание операции) видны в ответе и перебиваются реквизитами.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.edo:write",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocflowFlowFNSInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Итог проверки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocflowPreflight"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/docflow/flow/documents/{id}/fns/send": {
+      "post": {
+        "tags": [
+          "Docflow flow"
+        ],
+        "operationId": "docflowSendFlowFNS",
+        "x-akeda-audience": "external",
+        "summary": "Отправить бумагу по ЭДО в формате ФНС",
+        "description": "Собирает XML карточки, кладёт его в хранилище кабинета байт в байт (строка выпуска с карточкой и её редакцией), записывает оператору формализованный документ и связывает карточку с конвертом. Приложения (files) уходят следом отдельными вложениями — счёт кладёт сюда свой PDF-бланк. Повтор той же редакции перезаписывает тот же черновик; выпуск, уже ушедший контрагенту, не пересобирается (409 docflow.edo.draft_sent) — правка карточки даёт новую редакцию и новый выпуск. Внешнее необратимое действие под правом docflow.edo:send; режим «только чтение» отвечает 409 docflow.edo.read_only до обращения к оператору.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.edo:send",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocflowFlowFNSInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Выпуск записан оператору",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocflowFlowFNSSent"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
     "/api/v1/docflow/flow/documents/{id}/files": {
       "post": {
         "tags": [
@@ -78080,8 +78821,8 @@
           "Mail"
         ],
         "operationId": "mailReadBatch",
-        "summary": "Отметить письма или всю папку прочитанными",
-        "description": "При folder_id отмечает всю папку; иначе обрабатывает ids. Для списка ids параметр read может снять отметку прочтения.",
+        "summary": "Отметить письма, папку или весь выбранный вид прочитанными",
+        "description": "При folder_id в теле отмечает всю папку; при all_matching=true отмечает все непрочитанные письма, подходящие под фильтр списка, включая следующие страницы. Для списка ids параметр read может снять отметку прочтения. Массовый отбор требует folder_id, folder_role, folder_name или is_vip=true.",
         "x-akeda-module": "mail",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -78089,6 +78830,80 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "all_matching",
+            "in": "query",
+            "description": "Прочитать все подходящие письма, а не только страницу",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "account_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "folder_id",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "folder_role",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "folder_name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "is_vip",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "is_read",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "sent_after",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "sent_before",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
           }
         ],
         "requestBody": {
@@ -93747,7 +94562,7 @@
           },
           "reason_code": {
             "type": "string",
-            "description": "Код отказа: core.order.has_executions, core.order.closed, core.order.forbidden"
+            "description": "Код отказа: core.order.has_executions, core.order.has_dependents (оплаты, авансы, черновики исполнений), core.order.closed, core.order.forbidden"
           },
           "reason": {
             "type": "string",
@@ -138007,7 +138822,11 @@
           "sign_required",
           "notice_sign_required",
           "draft",
-          "deleted_reason"
+          "deleted_reason",
+          "viewed",
+          "state_category",
+          "operator_link",
+          "print_form"
         ],
         "properties": {
           "id": {
@@ -138241,8 +139060,79 @@
               }
             ],
             "description": "Что стало с оплатой этого счёта. Приходит И В СПИСКЕ, в отличие от состава пакета: состояние оплаты — ровно то, что человек читает глазами в каждой строке. Считает его модуль finance (счета, выписки и расчёты) одним запросом на всю страницу. null означает «этот счёт никто не оплачивает»: ни заведённой заявки, ни платежа, — именно там и остаётся кнопка «Отправить в оплату»."
+          },
+          "viewed": {
+            "type": "boolean",
+            "description": "Открывал ли карточку пакета текущий сотрудник — личная отметка, а не состояние у оператора. Считается в ленте одним запросом на страницу; карточка отдаёт false, потому что её открытие само ставит отметку дверью viewed."
+          },
+          "state_category": {
+            "$ref": "#/components/schemas/DocflowStateCategory"
+          },
+          "operator_link": {
+            "type": "string",
+            "description": "Карточка документа в кабинете нашей организации у оператора («СсылкаДляНашаОрганизация»); пусто, пока карточку не перечитали"
+          },
+          "print_form": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DocflowMessagePrintForm"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Печатный вид пакета (GET .../print); null — показать нечего"
           }
         }
+      },
+      "DocflowMessagePrintForm": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Печатный вид пакета. operator — PDF оператора с впечатанными подписями, лежащий у нас; ours — наша форма счёта или УПД по формализованному XML, когда оператор своего вида не отдал (штампа подписи оператора на ней нет).",
+        "required": [
+          "source",
+          "size",
+          "revision",
+          "fetched_at"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "operator",
+              "ours"
+            ]
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "revision": {
+            "type": "string",
+            "description": "Редакция пакета, с которой снят PDF оператора"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DocflowStateCategory": {
+        "type": "string",
+        "enum": [
+          "in_work",
+          "awaiting_signature",
+          "cancellation_requested",
+          "cancellation_refused",
+          "draft",
+          "error",
+          "signer_invalid",
+          "approved",
+          "rejected",
+          "cancelled",
+          "interrupted"
+        ],
+        "description": "Состояние пакета нашими словами поверх кода оператора (справочник «Код состояния документа»): в работе, ждёт подписи, запрос на аннулирование, отказ в аннулировании, черновик, с ошибкой, подписант не прошёл проверку, утверждён, отклонён, аннулирован, прервано. Слово оператора остаётся в state_name."
       },
       "DocflowMessagePayment": {
         "type": "object",
@@ -138271,6 +139161,28 @@
           "paid_on": {
             "type": "string",
             "description": "Дата оплаты из выписки в форме ГГГГ-ММ-ДД. Заполнена только у state=paid"
+          },
+          "step": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "on_approval",
+              "rework",
+              "approved",
+              "scheduled",
+              "sent",
+              "paid",
+              "payment_cancelled"
+            ],
+            "description": "Шаг заявки словарём хода заявки «Документов»: до согласования — состояние документа заявки, после — строка очереди финансов"
+          },
+          "docflow_request": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              }
+            ],
+            "description": "Заявка «Документов» по этому счёту, если она есть"
           }
         }
       },
@@ -138569,6 +139481,7 @@
           "requires_signature",
           "closed",
           "service",
+          "started_at",
           "created_at",
           "updated_at"
         ],
@@ -138603,6 +139516,11 @@
           "service": {
             "type": "boolean",
             "description": "Служебный этап оператора — извещение о получении, подтверждение, квитанция. Технология обмена, а не решение по документу: клиент обрабатывает все служебные этапы пакета одним действием, а не по кнопке на каждый"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "С какого момента этап ждёт человека: дата этапа у оператора, без неё — когда зеркало увидело его открытым; открытый снова этап считается заново"
           },
           "created_at": {
             "type": "string",
@@ -139376,6 +140294,18 @@
           "lines"
         ],
         "properties": {
+          "format": {
+            "type": "string",
+            "enum": [
+              "upd",
+              "chetop"
+            ],
+            "description": "Формат выпуска карточки: upd — УПД 5.03, chetop — счёт на оплату 5.01. Отсутствует у проверки продажи: там формат всегда УПД"
+          },
+          "schema": {
+            "type": "string",
+            "description": "Файл схемы ФНС без расширения, которой отвечает выпуск. Версия схемы — не версия формата: у счёта 5.01 схема выбирается по дате документа (_03 до 2026 года, _04 с 01.01.2026)"
+          },
           "format_version": {
             "type": "string",
             "description": "Редакция формата ФНС"
@@ -139579,6 +140509,7 @@
           "kind",
           "document",
           "message",
+          "format",
           "format_version",
           "function",
           "requisites",
@@ -139617,6 +140548,22 @@
             "format": "uuid",
             "description": "Учётный документ кабинета у титула продавца. Ссылка мягкая: документа нет — титул показывается как титул по удалённому документу"
           },
+          "flow_document": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Карточка документооборота, из которой выпущен XML (УПД, акт, накладная, счёт). У титула продавца цель одна из двух: учётный документ либо редакция карточки"
+          },
+          "flow_version": {
+            "type": "integer",
+            "description": "Редакция карточки, из которой выпущен XML. Новая редакция — новый выпуск: отправленный файл прежней остаётся нетронутым"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "upd",
+              "chetop"
+            ],
+            "description": "Формат выпуска: upd — УПД 5.03 (ЕД-7-26/970@), chetop — счёт на оплату 5.01 (ЕД-7-26/29@)"
+          },
           "message": {
             "type": [
               "string",
@@ -139631,7 +140578,7 @@
           },
           "function": {
             "type": "string",
-            "description": "Функция документа: СЧФ, ДОП, СЧФДОП. Пусто у титула покупателя"
+            "description": "Функция документа: у УПД — СЧФ, ДОП, СЧФДОП (пусто у титула покупателя); у счёта на оплату — 0 (счёт) или 1 (счёт-оферта)"
           },
           "requisites": {
             "$ref": "#/components/schemas/DocflowRequisites"
@@ -139688,6 +140635,47 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "DocflowFlowFNSInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Проверка, сборка и отправка выпуска карточки в формате ФНС. Реквизиты — тот же объект, что у отправки продажи: подписант, содержание операции, адреса сторон, идентификаторы участников обмена. Подписанта «по умолчанию» нет: это подпись за человека.",
+        "properties": {
+          "connection": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "requisites": {
+            "$ref": "#/components/schemas/DocflowRequisites"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Примечание документа у оператора"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocflowOutgoingFile"
+            },
+            "description": "Приложения после формализованного файла. Счёт на оплату кладёт сюда PDF-бланк той же редакции"
+          }
+        }
+      },
+      "DocflowFlowFNSSent": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Итог отправки выпуска — строка выпуска и связь карточки с конвертом оператора.",
+        "required": [
+          "title",
+          "link"
+        ],
+        "properties": {
+          "title": {
+            "$ref": "#/components/schemas/DocflowTitle"
+          },
+          "link": {
+            "$ref": "#/components/schemas/DocflowFlowEDOLink"
           }
         }
       },

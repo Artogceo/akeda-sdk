@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eb53cf1adb295227efcde555a372ace737ba43709500a10af8054cd07e7a681e).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f79d710dd6c50b81a29a1d39abc3ba72fb87d42101b75908c59d2443160471b0).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -515,6 +515,8 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowFlowDocumentRevision': OperationSpec('GET', '/api/v1/docflow/flow/documents/{id}/revisions/{version}', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id', 'version',), 'none', None, None),
     'docflowFlowDocumentRevisions': OperationSpec('GET', '/api/v1/docflow/flow/documents/{id}/revisions', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
     'docflowFlowDocuments': OperationSpec('GET', '/api/v1/docflow/flow/documents', 'docflow', 'preview', 'docflow.flow:read', False, False, (), 'limit_offset', 100, 50),
+    'docflowFlowFNSFile': OperationSpec('POST', '/api/v1/docflow/flow/documents/{id}/fns/file', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
+    'docflowFlowFNSIssue': OperationSpec('GET', '/api/v1/docflow/flow/documents/{id}/fns', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
     'docflowFlowFileContent': OperationSpec('GET', '/api/v1/docflow/flow/documents/{id}/files/{fileId}/content', 'docflow', 'preview', 'docflow.flow:read', False, False, ('fileId', 'id',), 'none', None, None),
     'docflowFlowLinkAccountingDocument': OperationSpec('POST', '/api/v1/docflow/flow/documents/{id}/accounting-links', 'docflow', 'preview', 'docflow.flow:write', True, False, ('id',), 'none', None, None),
     'docflowFlowPreviewPaymentSchedule': OperationSpec('POST', '/api/v1/docflow/flow/schedule-preview', 'docflow', 'preview', 'docflow.flow:read', False, False, (), 'none', None, None),
@@ -525,6 +527,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowGetAttachmentContent': OperationSpec('GET', '/api/v1/docflow/attachments/{id}/content', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
     'docflowGetConnection': OperationSpec('GET', '/api/v1/docflow/connections/{id}', 'docflow', 'preview', 'docflow.edo:admin', False, False, ('id',), 'none', None, None),
     'docflowGetMessage': OperationSpec('GET', '/api/v1/docflow/messages/{id}', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
+    'docflowGetMessageArchive': OperationSpec('GET', '/api/v1/docflow/messages/{id}/archive', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
     'docflowGetSignatureContent': OperationSpec('GET', '/api/v1/docflow/signatures/{id}/content', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
     'docflowGetTitleContent': OperationSpec('GET', '/api/v1/docflow/outgoing/{id}/content', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
     'docflowIntakePreview': OperationSpec('GET', '/api/v1/docflow/messages/{id}/intake', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
@@ -536,12 +539,17 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowListMessages': OperationSpec('GET', '/api/v1/docflow/messages', 'docflow', 'preview', 'docflow.edo:read', False, False, (), 'limit_offset', 200, 50),
     'docflowListSigningTasks': OperationSpec('GET', '/api/v1/docflow/edo/signing/tasks', 'docflow', 'preview', 'docflow.edo:sign', False, False, (), 'limit_offset', 50, 20),
     'docflowListTitles': OperationSpec('GET', '/api/v1/docflow/outgoing', 'docflow', 'preview', 'docflow.edo:read', False, False, (), 'none', None, None),
+    'docflowMarkMessageViewed': OperationSpec('POST', '/api/v1/docflow/messages/{id}/viewed', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
+    'docflowMessagePrintForm': OperationSpec('GET', '/api/v1/docflow/messages/{id}/print', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
     'docflowPaymentDetails': OperationSpec('GET', '/api/v1/docflow/messages/{id}/payment-details', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
     'docflowPaymentRequest': OperationSpec('GET', '/api/v1/docflow/payment-requests/{id}', 'docflow', 'preview', 'docflow.flow:request', False, False, ('id',), 'none', None, None),
     'docflowPaymentRequests': OperationSpec('GET', '/api/v1/docflow/payment-requests', 'docflow', 'preview', 'docflow.flow:request', False, False, (), 'none', None, None),
     'docflowPostponeStage': OperationSpec('POST', '/api/v1/docflow/messages/{id}/stages/postpone', 'docflow', 'preview', 'docflow.edo:write', False, False, ('id',), 'none', None, None),
     'docflowPreflightBuyerTitle': OperationSpec('POST', '/api/v1/docflow/messages/{id}/buyer-title/preflight', 'docflow', 'preview', 'docflow.edo:write', False, False, ('id',), 'none', None, None),
+    'docflowPreflightFlowFNS': OperationSpec('POST', '/api/v1/docflow/flow/documents/{id}/fns/preflight', 'docflow', 'preview', 'docflow.edo:write', False, False, ('id',), 'none', None, None),
     'docflowPreflightOutgoing': OperationSpec('POST', '/api/v1/docflow/outgoing/preflight', 'docflow', 'preview', 'docflow.edo:write', False, False, (), 'none', None, None),
+    'docflowPreviewMessageAction': OperationSpec('POST', '/api/v1/docflow/messages/{id}/actions/preview', 'docflow', 'preview', 'docflow.edo:send', False, False, ('id',), 'none', None, None),
+    'docflowRefreshMessage': OperationSpec('POST', '/api/v1/docflow/messages/{id}/refresh', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
     'docflowRejectCancellation': OperationSpec('POST', '/api/v1/docflow/messages/{id}/cancellation/reject', 'docflow', 'preview', 'docflow.edo:send', False, False, ('id',), 'none', None, None),
     'docflowRejectMessage': OperationSpec('POST', '/api/v1/docflow/messages/{id}/actions/reject', 'docflow', 'preview', 'docflow.edo:send', False, False, ('id',), 'none', None, None),
     'docflowRepeatStage': OperationSpec('POST', '/api/v1/docflow/messages/{id}/stages/repeat', 'docflow', 'preview', 'docflow.edo:send', False, False, ('id',), 'none', None, None),
@@ -553,6 +561,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowSaveApprovalSubstitution': OperationSpec('POST', '/api/v1/docflow/approval-substitutions', 'docflow', 'preview', 'docflow.flow:admin', False, False, (), 'none', None, None),
     'docflowSendBuyerTitle': OperationSpec('POST', '/api/v1/docflow/messages/{id}/buyer-title', 'docflow', 'preview', 'docflow.edo:send', False, False, ('id',), 'none', None, None),
     'docflowSendFlowDocumentByEDO': OperationSpec('POST', '/api/v1/docflow/flow/documents/{id}/edo', 'docflow', 'preview', 'docflow.edo:send', False, False, ('id',), 'none', None, None),
+    'docflowSendFlowFNS': OperationSpec('POST', '/api/v1/docflow/flow/documents/{id}/fns/send', 'docflow', 'preview', 'docflow.edo:send', False, False, ('id',), 'none', None, None),
     'docflowSendOutgoing': OperationSpec('POST', '/api/v1/docflow/outgoing', 'docflow', 'preview', 'docflow.edo:send', False, False, (), 'none', None, None),
     'docflowSetApprovalRouteActive': OperationSpec('POST', '/api/v1/docflow/approval-routes/{id}/active', 'docflow', 'preview', 'docflow.flow:admin', False, False, ('id',), 'none', None, None),
     'docflowSetConnectionMode': OperationSpec('PUT', '/api/v1/docflow/connections/{id}/mode', 'docflow', 'preview', 'docflow.edo:admin', False, False, ('id',), 'none', None, None),
