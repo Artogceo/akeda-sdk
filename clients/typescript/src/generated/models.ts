@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 39eccc6ff4448f674ea1532859b79e9ec3ac401cb886f10e1a895c9ed12305cb).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 28652e3a57f9c61c5e3304491796fb3dfa297958b23aa6950993e5bd4429aea0).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -295,6 +295,347 @@ export interface AttachmentUploadSessionCreate {
   "mime_type"?: string;
   "size_bytes": number;
   "sha256"?: string;
+}
+
+/** Документ akeda.automation.manifest версии 1 (AUTOMATION.md § 10.1). */
+export interface AutomationManifest {
+  "$schema"?: string;
+  "format": "akeda.automation.manifest";
+  "version": number;
+  /** Отпечаток содержимого sha256:… */
+  "revision": string;
+  "locale": "ru" | "en";
+  "detail": "full" | "brief";
+  "events": Array<AutomationManifestEvent>;
+  "conditions": AutomationManifestConditions;
+  "actions": Array<AutomationManifestAction>;
+  "references": Array<AutomationManifestReferencesItem>;
+  "placeholders": Array<AutomationManifestPlaceholdersItem>;
+  "limits": AutomationManifestLimits;
+}
+
+export interface AutomationManifestConditions {
+  "combinator": "all";
+  "operators": Array<AutomationManifestConditionsOperatorsItem>;
+  "max_clauses": number;
+  "max_value_length": number;
+}
+
+export interface AutomationManifestConditionsOperatorsItem {
+  "op": string;
+  "label": string;
+  "field_types": Array<string>;
+  "needs_value": boolean;
+  "case_insensitive": boolean;
+}
+
+export interface AutomationManifestReferencesItem {
+  "kind": string;
+  "module": string;
+  "label": string;
+  /** MCP-инструмент поиска значения по имени */
+  "lookup_tool": string;
+  "parameter_kind": boolean;
+  "status": "live" | "unavailable";
+}
+
+export interface AutomationManifestPlaceholdersItem {
+  "syntax": string;
+  "meaning": string;
+  "status": string;
+}
+
+export interface AutomationManifestLimits {
+  "max_actions": number;
+  "max_conditions": number;
+  "max_condition_length": number;
+  "chain_depth": number;
+  "runs_per_tenant_per_minute": number;
+  "max_attempts": number;
+}
+
+export interface AutomationManifestAction {
+  "command": string;
+  "module": string;
+  "label_key": string;
+  "label": string;
+  "description": string;
+  "when_to_use": string;
+  "status": "live" | "declared" | "unavailable";
+  "unavailable_reason"?: string;
+  "permission": string;
+  "reversible": boolean;
+  "danger": "none" | "external" | "irreversible";
+  "idempotency": string;
+  "target": "new" | "event_entity";
+  "event_entities"?: Array<string>;
+  "mcp_twin"?: string;
+  "inputs"?: Array<AutomationManifestActionInputsItem>;
+  "example_inputs"?: { [key: string]: string };
+}
+
+export interface AutomationManifestActionInputsItem {
+  "key": string;
+  "type": "string" | "number" | "bool" | "reference" | "datetime" | "choice";
+  "required": boolean;
+  "label": string;
+  "options"?: Array<AutomationManifestOption>;
+  "ref"?: string;
+  "accepts_placeholders": boolean;
+}
+
+export interface AutomationManifestEvent {
+  "topic": string;
+  "module": string;
+  "entity": string;
+  "fact": string;
+  "label_key": string;
+  "label": string;
+  "description": string;
+  "when_to_use": string;
+  "status": "live" | "unavailable";
+  "unavailable_reason"?: string;
+  /** Правило сработает, только если исполнитель видит источник */
+  "source_visibility": boolean;
+  "fields"?: Array<AutomationManifestEventFieldsItem>;
+  "example_payload"?: { [key: string]: unknown };
+}
+
+export interface AutomationManifestEventFieldsItem {
+  "key": string;
+  "type": "string" | "number" | "bool" | "timestamp";
+  "label": string;
+  "options"?: Array<AutomationManifestOption>;
+  "ref"?: string;
+  "operators": Array<string>;
+}
+
+export interface AutomationManifestOption {
+  "value": string;
+  "label": string;
+}
+
+export interface AutomationRuleDocument {
+  "id": string;
+  "name": string;
+  "event_type": string;
+  /** Выражение вычислителя; у правила из конструктора собрано из conditions */
+  "condition": string;
+  "conditions": Array<AutomationRuleDocumentConditionsItem>;
+  "actions": Array<AutomationRuleDocumentActionsItem>;
+  "executor_user_id": number;
+  "is_enabled": boolean;
+  "origin": "manual" | "configuration";
+  "version": number;
+  "created_by"?: number;
+  "created_at"?: string;
+  "updated_at"?: string;
+}
+
+export interface AutomationRuleDocumentConditionsItem {
+  "field": string;
+  "op": string;
+  "value"?: string;
+  "value_to"?: string;
+  "of"?: string;
+  "group"?: number;
+}
+
+export interface AutomationRuleDocumentActionsItem {
+  "command": string;
+  "inputs"?: { [key: string]: string };
+}
+
+export interface AutomationRuleProblem {
+  /** Путь в документе правила: event_type, conditions[1].op, actions[0].inputs.title */
+  "field": string;
+  "code": string;
+  "message": string;
+  "hint"?: string;
+  "params"?: { [key: string]: string };
+  "allowed"?: Array<string>;
+}
+
+export interface AutomationRuleSimulateRequest {
+  /** Документ правила в той же форме, что у проверки правила (event_type, conditions, actions); название и исполнитель не нужны. */
+  "rule": AutomationRuleSimulateRequestRule;
+  /** Сохранённое правило: его версия на тех же фактах — «было» */
+  "rule_id"?: string;
+  /** Период прогона в днях; по умолчанию 30 */
+  "days"?: number;
+}
+
+/** Документ правила в той же форме, что у проверки правила (event_type, conditions, actions); название и исполнитель не нужны. */
+export interface AutomationRuleSimulateRequestRule {
+  "event_type": string;
+}
+
+export interface AutomationRuleSimulation {
+  "days": number;
+  "since": string;
+  /** Фактов события за период, видимых вызывающему */
+  "events": number;
+  /** Сколько раз правило сработало бы */
+  "fired": number;
+  /** Учтены только последние 2000 фактов периода */
+  "truncated": boolean;
+  /** Больше всего срабатываний за один день */
+  "max_per_day": number;
+  "records": Array<AutomationRuleSimulationRecordsItem>;
+  "actions": Array<AutomationRuleSimulationActionsItem>;
+  "before"?: AutomationRuleSimulationBefore;
+  /** Всегда false: прогон ничего не исполняет */
+  "executed": boolean;
+}
+
+export interface AutomationRuleSimulationRecordsItem {
+  "key": string;
+  "entity_id": string;
+  /** Номер, идентификатор или тема записи */
+  "title"?: string;
+  "occurred_at": string;
+}
+
+export interface AutomationRuleSimulationActionsItem {
+  "index": number;
+  "command": string;
+  "label": string;
+  "permission": string;
+  "allowed": boolean;
+  "connected": boolean;
+  /** Сколько раз действие выполнилось бы; 0 — его заблокировали права или нет исполнителя */
+  "count": number;
+  "code"?: string;
+  "message"?: string;
+}
+
+export interface AutomationRuleSimulationBefore {
+  "enabled": boolean;
+  "version": number;
+  /** Сколько раз сработала бы сохранённая версия; выключенное правило — 0 */
+  "fired": number;
+}
+
+export interface AutomationRuleTestRequest {
+  /** Документ правила в той же форме, что у записи правила; название и исполнитель не нужны. */
+  "rule": AutomationRuleTestRequestRule;
+  /** Ключ факта из выборки последних фактов события; пусто — последний факт */
+  "sample_key"?: string;
+  /** Тело события для проверки «что если» вместо настоящего факта */
+  "payload"?: { [key: string]: string };
+}
+
+/** Документ правила в той же форме, что у записи правила; название и исполнитель не нужны. */
+export interface AutomationRuleTestRequestRule {
+  "name"?: string;
+  "event_type": string;
+  "condition"?: string;
+  "conditions"?: Array<AutomationRuleTestRequestRuleConditionsItem>;
+  "actions"?: Array<AutomationRuleTestRequestRuleActionsItem>;
+}
+
+export interface AutomationRuleTestRequestRuleConditionsItem {
+  "field": string;
+  /** equals, not_equals, contains, starts_with, ends_with, is_true, is_false; числа — gt, gte, lt, lte, between; даты — before, on_or_before, after, on_or_after, between */
+  "op": string;
+  "value"?: string;
+  /** Верхняя граница «между», включительно */
+  "value_to"?: string;
+  /** Числовое поле-основа: value и value_to — проценты от него */
+  "of"?: string;
+  /** Группа «или»: сравнения группы — «и», группы между собой — «или» */
+  "group"?: number;
+}
+
+export interface AutomationRuleTestRequestRuleActionsItem {
+  "command": string;
+  "inputs"?: { [key: string]: string };
+}
+
+export interface AutomationRuleTestResult {
+  "sample"?: AutomationRuleTestResultSample | null;
+  "executor_user_id": number;
+  "when": AutomationRuleTestResultWhen;
+  "condition": AutomationRuleTestResultCondition;
+  "matched": boolean;
+  "actions": Array<AutomationRuleTestResultActionsItem>;
+  "problem"?: AutomationRuleProblem;
+  /** Всегда false: проверка ничего не делает */
+  "executed": boolean;
+}
+
+export interface AutomationRuleTestResultSample {
+  "key": string;
+  "event_type": string;
+  "entity": string;
+  "entity_id": string;
+  /** Номер, идентификатор или тема записи */
+  "title"?: string;
+  "occurred_at": string;
+  "payload": { [key: string]: string };
+  "source": "outbox" | "direct" | "payload";
+}
+
+export interface AutomationRuleTestResultWhen {
+  "ok": boolean;
+  "event_label": string;
+  "values": Array<AutomationRuleTestResultWhenValuesItem>;
+  /** no_sample — фактов события за 30 дней нет */
+  "code"?: string;
+  "message"?: string;
+}
+
+export interface AutomationRuleTestResultWhenValuesItem {
+  "key": string;
+  "label": string;
+  "value": string;
+}
+
+export interface AutomationRuleTestResultCondition {
+  "ok": boolean;
+  "empty": boolean;
+  "expression": boolean;
+  "clauses": Array<AutomationRuleTestResultConditionClausesItem>;
+  "code"?: string;
+  "message"?: string;
+}
+
+export interface AutomationRuleTestResultConditionClausesItem {
+  "index": number;
+  "field": string;
+  "field_label": string;
+  "op": string;
+  "op_label": string;
+  "expected"?: string;
+  "expected_to"?: string;
+  "of"?: string;
+  "of_label"?: string;
+  "of_actual"?: string;
+  "group"?: number;
+  "actual": string;
+  "present": boolean;
+  "ok": boolean;
+}
+
+export interface AutomationRuleTestResultActionsItem {
+  "index": number;
+  "command": string;
+  "label": string;
+  "permission": string;
+  "allowed": boolean;
+  "connected": boolean;
+  "status": "would_run" | "not_reached" | "blocked";
+  "code"?: string;
+  "message"?: string;
+  "inputs": Array<AutomationRuleTestResultActionsItemInputsItem>;
+}
+
+export interface AutomationRuleTestResultActionsItemInputsItem {
+  "key": string;
+  "label": string;
+  "template": string;
+  "value": string;
+  "missing"?: Array<string>;
 }
 
 /** Счёт вместе с реквизитами для оплаты. Реквизиты идут в том же ответе, а не отдельным маршрутом: экран оплаты показывает их на одной вкладке со счётом, и второй запрос означал бы мгновение, в котором сумма уже есть, а платить по ней некуда */
@@ -3396,6 +3737,28 @@ export interface CoreContactPatch {
   "folder_id"?: UUID | null;
 }
 
+export interface CoreContractSettlementDetailInput {
+  "settlement_detail": "order" | "contract" | "execution";
+}
+
+export interface CoreContractTerms {
+  "id": UUID;
+  "business_id": UUID;
+  "company_id"?: string;
+  "contact_id": UUID;
+  "side": "sale" | "purchase";
+  "number": string;
+  "date"?: string;
+  "currency"?: string;
+  /** По заказу (умолчание), по договору — аванс договора закрывает его заказы по ФИФО, по документу исполнения — только явный зачёт */
+  "settlement_detail": "order" | "contract" | "execution";
+  /** Первая операция по договору: после неё детализация не меняется */
+  "detail_locked_at"?: string;
+  "fifo_allowed": boolean;
+  "version": number;
+  "funnel_id"?: UUID;
+}
+
 export interface CoreCurrencyRate {
   "id": UUID;
   "currency_code": string;
@@ -4243,6 +4606,7 @@ export interface CoreOrder {
   "external_id"?: string;
   "cabinet_status_id"?: UUID;
   "cabinet_status_name"?: string;
+  "funnel_id"?: UUID;
   "version": number;
   "closed_at"?: string;
   "closed_reason"?: string;
@@ -4298,7 +4662,7 @@ export interface CoreOrderCounterparty {
 export interface CoreOrderEvent {
   "id": UUID;
   "order_id": UUID;
-  /** created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated */
+  /** created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed) */
   "kind": string;
   "detail"?: string;
   "effective_date"?: string;
@@ -4310,6 +4674,96 @@ export interface CoreOrderEvent {
   /** Разница версий: у revised — версия и что изменилось */
   "payload"?: { [key: string]: unknown };
   "created_at": string;
+}
+
+export interface CoreOrderFunnel {
+  "id": UUID;
+  "side": "sale" | "purchase";
+  "name": string;
+  "source": string;
+  "is_default": boolean;
+  "is_archived": boolean;
+  "version": number;
+  "steps": Array<CoreOrderFunnelStep>;
+  "stages": Array<CoreOrderFunnelStage>;
+  "updated_at": string;
+}
+
+export interface CoreOrderFunnelChoice {
+  /** null — заказ без воронки */
+  "funnel_id": UUID | null;
+}
+
+export interface CoreOrderFunnelInput {
+  "side": "sale" | "purchase";
+  "name": string;
+  /** Заказы этого источника идут в воронку; пусто — по источнику не выбирается */
+  "source"?: "" | "manual" | "app" | "import" | "marketplace" | "crm";
+  /** Воронка стороны по умолчанию — одна на сторону */
+  "is_default"?: boolean;
+  "is_archived"?: boolean;
+  "steps"?: Array<CoreOrderFunnelStep>;
+  "stages"?: Array<CoreOrderFunnelStage>;
+}
+
+export interface CoreOrderFunnelList {
+  "funnels": Array<CoreOrderFunnel>;
+}
+
+export interface CoreOrderFunnelStage {
+  "id"?: UUID;
+  "name": string;
+  "category": CoreOrderState;
+  "color"?: string;
+  "position"?: number;
+}
+
+export interface CoreOrderFunnelStep {
+  /** Пусто — вид и номер шага */
+  "key"?: string;
+  "kind": "contract" | "approval" | "prepayment_invoice" | "payment" | "shipment" | "act" | "upd" | "closing" | "custom";
+  "title": string;
+  /** Участвует ли шаг в воронке: ненужный шаг заказу не строится */
+  "required"?: boolean;
+  "due"?: CoreOrderFunnelStepDue;
+  /** Что закрывает шаг: manual — человек отметит (пусто так же); state:<состояние> — заказ дошёл до состояния; paid:<N> — оплачено не меньше N % суммы заказа (финансы); paper:act_signed, paper:upd_signed — контрагент подписал акт или УПД в ЭДО (документооборот) */
+  "done_when"?: string;
+  /** За сколько дней до срока прийти событию «срок подходит» */
+  "remind_days"?: number;
+}
+
+export interface CoreOrderFunnelStepDue {
+  /** От чего считается срок; пусто — без срока */
+  "after"?: "" | "created" | "confirmed" | "delivery_date";
+  "days"?: number;
+}
+
+export interface CoreOrderFunnelTemplate {
+  "key": string;
+  "name": string;
+  "description": string;
+  "funnel": CoreOrderFunnelInput;
+}
+
+export interface CoreOrderFunnelTemplateList {
+  "templates": Array<CoreOrderFunnelTemplate>;
+}
+
+export interface CoreOrderFunnelVersion {
+  "version": number;
+  "document": CoreOrderFunnelInput;
+  "author_user_id"?: number;
+  "created_at": string;
+}
+
+export interface CoreOrderFunnelVersionList {
+  "versions": Array<CoreOrderFunnelVersion>;
+}
+
+export interface CoreOrderFunnelView {
+  "funnel_id"?: UUID;
+  "funnel_name"?: string;
+  "steps": Array<CoreOrderStepState>;
 }
 
 export interface CoreOrderHistory {
@@ -4487,8 +4941,12 @@ export type CoreOrderLineKind = "goods" | "service" | "material" | "semi_product
 export interface CoreOrderObligation {
   /** Действующий приход подтверждения в регистре «Заказы» */
   "ordered": string;
-  /** Остаток регистра «Заказы» по заказу: заказано минус снятое закрытием и исполненное */
+  /** Остаток регистра «Заказы» по заказу. До этапа 4 его уменьшает только закрытие, поэтому это не «осталось исполнить» */
   "remaining": string;
+  /** Исполнено: сумма проведённых исполнений заказа (акт, продажа, закупка, приёмка) за вычетом возвратов, в валюте заказа. То же число, что в журнале продаж и закупок финансов (core_order_executed) */
+  "executed": string;
+  /** Осталось исполнить: заказано минус исполнено, не меньше нуля */
+  "remaining_to_execute": string;
 }
 
 export interface CoreOrderPage {
@@ -4563,6 +5021,7 @@ export interface CoreOrderStatus {
   "color"?: string;
   "is_active": boolean;
   "is_system": boolean;
+  "funnel_id"?: UUID;
 }
 
 export interface CoreOrderStatusInput {
@@ -4585,6 +5044,24 @@ export interface CoreOrderStatusPatch {
   "position"?: number;
   "color"?: string;
   "is_active"?: boolean;
+}
+
+export interface CoreOrderStepDueInput {
+  "due_date": string;
+  /** Сдвинуть следующие невыполненные шаги с датой на ту же разницу */
+  "shift_next"?: boolean;
+}
+
+export interface CoreOrderStepState {
+  "key": string;
+  "kind": string;
+  "title": string;
+  "position": number;
+  "due_date"?: string;
+  "done_at"?: string;
+  "status": "done" | "overdue" | "waiting";
+  /** Что закрывает шаг; manual — отмечает человек */
+  "done_when"?: string;
 }
 
 /** Итоги — сумма строк: скидка заказа уже разложена по строкам и второй раз не вычитается. */
@@ -6171,7 +6648,7 @@ export interface DocflowApprovalPerson {
 /** Обязательность согласования у ОДНОГО вида предмета, а не глобальный выключатель кабинета: у заявки на оплату согласование может быть обязательным, а у письма контрагенту — нет. */
 export interface DocflowApprovalPolicy {
   "subject_module": "docflow" | "finance";
-  "subject_kind": "flow_document" | "payment_request";
+  "subject_kind": "flow_document" | "payment_request" | "edo_message";
   "required": boolean;
 }
 
@@ -6212,7 +6689,7 @@ export interface DocflowApprovalRoute {
   "name": string;
   "subject_module": "docflow" | "finance";
   /** any — любой вид предмета своего модуля */
-  "subject_kind": "flow_document" | "payment_request" | "any";
+  "subject_kind": "flow_document" | "payment_request" | "edo_message" | "any";
   /** Вид бумаги у владельца предмета */
   "document_kind"?: string;
   "company_id"?: UUID;
@@ -6229,6 +6706,8 @@ export interface DocflowApprovalRoute {
   "amount_to"?: string;
   /** Что будет после возврата на доработку: весь путь заново либо продолжает вернувший, визы остальных сохраняются */
   "rework_mode": "restart" | "returner_only";
+  /** Для заявки на оплату (docflow / payment_request): куда идёт согласованная — сразу в платёжный календарь (дата оплаты = срок) или казначею, который ставит дату платежа (ERP-1427, этап 6) */
+  "payment_destination"?: "calendar" | "treasury";
   /** Выключенный маршрут не подбирается новым проходам, но остаётся на месте */
   "is_active": boolean;
   "stages": Array<DocflowApprovalRouteStage>;
@@ -6285,8 +6764,8 @@ export interface DocflowApprovalStage {
 export interface DocflowApprovalSubject {
   /** Модуль-владелец предмета */
   "module": "docflow" | "finance";
-  /** Вид предмета: карточка документооборота или заявка на оплату */
-  "kind": "flow_document" | "payment_request";
+  /** Вид предмета: карточка документооборота, заявка на оплату или входящий документ ЭДО */
+  "kind": "flow_document" | "payment_request" | "edo_message";
   /** Идентификатор предмета у его владельца */
   "id": UUID;
 }
@@ -6777,6 +7256,8 @@ export interface DocflowFlowContractTerms {
   "currency"?: string;
   "payment_terms"?: string;
   "renewal_terms"?: string;
+  /** Воронка заказов договора: заказы по договору идут в неё (пометка кабинета, не текст бумаги) */
+  "order_funnel_id"?: string;
 }
 
 export interface DocflowFlowCreateInput {
@@ -7217,10 +7698,14 @@ export interface DocflowInvitationPage {
 export interface DocflowInvitationSender {
   "id": UUID;
   "name": string;
+  /** Юрлицо подключения: бумагу отправляют только через подключение её юрлица */
+  "company"?: string | null;
   "company_name": string;
   "company_inn": string;
   "company_kpp": string;
   "provider": string;
+  /** Имя оператора словами */
+  "provider_name"?: string;
   "status": "connected" | "paused" | "error" | "reauth_required" | "disconnected";
   "read_only": boolean;
   /** Идентификатор собственного абонентского ящика; пусто — нужно повторно проверить связь */
@@ -7535,6 +8020,118 @@ export interface DocflowPaymentParty {
   "bic": DocflowPaymentField;
   "bank_name": DocflowPaymentField;
   "corr_account": DocflowPaymentField;
+}
+
+export interface DocflowPaymentRequest {
+  "id": UUID;
+  "number": string;
+  "status": DocflowPaymentRequestStatus;
+  /** Ход заявки глазами автора: состояние документа, после согласования — состояние оплаты */
+  "progress": "draft" | "on_approval" | "rework" | "approved" | "rejected" | "cancelled" | "scheduled" | "sent" | "paid" | "payment_cancelled";
+  "company_id": UUID;
+  "company_name": string;
+  "contact_id"?: UUID;
+  "contact_name": string;
+  "item_id"?: UUID;
+  "item_name": string;
+  "payee": DocflowPaymentRequestPayee;
+  "amount": string;
+  "currency": string;
+  "due_date": string;
+  "purpose": string;
+  "basis": DocflowPaymentRequestBasis;
+  /** Куда ушла согласованная заявка: снимок флага маршрута */
+  "destination": "" | "calendar" | "treasury";
+  /** Причина отказа или возврата на доработку */
+  "reason"?: string;
+  "payment"?: DocflowPaymentRequestPayment;
+  "created_by"?: number;
+  "created_by_name": string;
+  "created_at": string;
+  "updated_at": string;
+  "version": number;
+  "can_edit": boolean;
+  "can_submit": boolean;
+  "can_cancel": boolean;
+}
+
+export interface DocflowPaymentRequestBasis {
+  /** Модуль основания */
+  "module"?: "docflow";
+  /** Вид основания: входящий документ ЭДО, карточка документооборота или основание словами */
+  "kind"?: "edo_message" | "flow_document" | "manual";
+  "id"?: UUID | null;
+  "title"?: string;
+  "contract_id"?: UUID | null;
+}
+
+export interface DocflowPaymentRequestInput {
+  "company_id": UUID;
+  "contact_id"?: UUID | null;
+  "item_id"?: UUID | null;
+  "payee": DocflowPaymentRequestPayee;
+  /** Сумма; не больше двух знаков копеек, лишние нули отбрасываются */
+  "amount": string;
+  "currency"?: string;
+  "due_date": string;
+  "purpose": string;
+  "basis"?: DocflowPaymentRequestBasis;
+}
+
+export interface DocflowPaymentRequestList {
+  "results": Array<DocflowPaymentRequest>;
+}
+
+/** Платёжное поручение, которым заявка оплачена, — реквизиты проведённого документа денежной операции */
+export interface DocflowPaymentRequestOrder {
+  "document_id": UUID;
+  "number": string;
+  "date": string;
+  "amount": string;
+  "currency": string;
+}
+
+export interface DocflowPaymentRequestPayee {
+  "name": string;
+  "inn"?: string;
+  "kpp"?: string;
+  "account"?: string;
+  "bic"?: string;
+  "bank_name"?: string;
+  "corr_account"?: string;
+}
+
+/** Что стало с оплатой у модуля finance (строка очереди оплат) */
+export interface DocflowPaymentRequestPayment {
+  "request_id": UUID;
+  /** Состояние строки очереди: planned, sent, awaiting_signature, executed, rejected, cancelled, returned */
+  "status": string;
+  /** Дата оплаты; пусто, пока заявка ждёт даты у казначея */
+  "planned_on"?: string;
+  "awaiting_schedule": boolean;
+  "sent_at"?: string;
+  "executed_on"?: string;
+  "payment_order"?: DocflowPaymentRequestOrder;
+}
+
+export type DocflowPaymentRequestStatus = "draft" | "on_approval" | "rework" | "approved" | "rejected" | "cancelled";
+
+export interface DocflowPaymentRequestUpdate {
+  "company_id": UUID;
+  "contact_id"?: UUID | null;
+  "item_id"?: UUID | null;
+  "payee": DocflowPaymentRequestPayee;
+  /** Сумма; не больше двух знаков копеек, лишние нули отбрасываются */
+  "amount": string;
+  "currency"?: string;
+  "due_date": string;
+  "purpose": string;
+  "basis"?: DocflowPaymentRequestBasis;
+  "version": number;
+}
+
+export interface DocflowPaymentRequestVersion {
+  "version": number;
 }
 
 /** ФИО предпринимателя или физического лица. Спрашивается, потому что в карточке контрагента имя лежит ОДНОЙ строкой («ИП Иванов Иван Иванович»), а формат требует фамилию, имя и отчество порознь. Разобрать строку догадкой нельзя: «Ли Ван Чуань» и «Иванов Иван» ломают любое правило, а ошибка в ФИО подписанта — это недействительный счёт-фактура. */
@@ -8362,6 +8959,10 @@ export interface FinanceCashOperation {
   "employee_name": string;
   "owner": string | null;
   "project": string | null;
+  /** Заказ, который оплатили наличные */
+  "order"?: string | null;
+  /** Номер заказа; пусто — заказа нет */
+  "order_number"?: string;
   "note": string;
   "created_at": string;
 }
@@ -8384,6 +8985,8 @@ export interface FinanceCashOperationCreate {
   "owner"?: string | null;
   /** Разрез «проект», если он включён в кабинете */
   "project"?: string | null;
+  /** Заказ, который оплачивают наличные: приход — заказ покупателя, расход — заказ поставщику того же контрагента; отменённый заказ не принимается. Входит в «оплачено» заказа */
+  "order"?: string | null;
   /** Имя плательщика или получателя текстом, когда карточки контрагента нет */
   "counterparty"?: string;
   /** Назначение операции словами человека */
@@ -8426,6 +9029,8 @@ export interface FinanceCashflowEntryCategorize {
   "contact"?: string;
   /** «За кого»: контрагент сотрудника или собственника, чей расчёт гасит выдача. Пусто — как контрагент; не присланное поле остаётся как было */
   "for_contact"?: string | null;
+  /** Заказ, который оплачивают наличные (приход — заказ покупателя, расход — заказ поставщику того же контрагента). Пустая строка снимает заказ; не присланное поле остаётся как было */
+  "order"?: string | null;
 }
 
 export type FinanceCashflowEntryKind = "bank" | "cash";
@@ -10338,7 +10943,7 @@ export interface FinanceTradeJournalPage {
   "has_more"?: boolean;
   "limit_reached"?: boolean;
   "group"?: "orders" | "without_order";
-  /** Колонки, вычисленные до разреза «заказ» в расчётах (этап 3) */
+  /** Колонки, вычисленные до отсечки расчётов по заказам (этап 3); нет, когда все строки ответа — из регистра */
   "computed_columns"?: Array<"advance" | "debt">;
 }
 
@@ -10394,6 +10999,8 @@ export interface FinanceTradeJournalRow {
   /** Вычисленный max(0, исполнено − оплачено), decimal string */
   "debt"?: string;
   "execution_count"?: number;
+  /** Аванс, долг и оплачено — остатками регистра расчётов по заказу: бизнес прошёл отсечку расчётов по заказам (этап 3 ERP-1427) */
+  "money_from_register"?: boolean;
   "executions"?: Array<FinanceTradeJournalDocument>;
   "payments"?: Array<FinanceTradeJournalDocument>;
 }
@@ -15950,6 +16557,66 @@ export interface StockOpeningBalanceCreate {
   "comment"?: string;
 }
 
+export interface StockOrderShipInput {
+  "warehouse_id": UUID;
+  /** Дата отгрузки; пусто — текущая бизнес-дата */
+  "date"?: string;
+  "comment"?: string;
+  "lines": Array<StockOrderShipInputLinesItem>;
+}
+
+export interface StockOrderShipInputLinesItem {
+  "item_id": UUID;
+  "quantity": string;
+}
+
+export interface StockOrderShipment {
+  "id": UUID;
+  "order_id": UUID;
+  "number": string;
+  "date": string;
+  "status": string;
+  "warehouse_id"?: UUID;
+  "deal"?: UUID;
+  "lines": Array<StockOrderShipmentLine>;
+}
+
+export interface StockOrderShipmentLine {
+  "product_id": UUID;
+  "qty": string;
+}
+
+export interface StockOrderShipping {
+  "order_id": UUID;
+  "number": string;
+  "date": string;
+  "state": string;
+  "contact_id": UUID;
+  "contact_name"?: string;
+  "company_id"?: UUID;
+  "warehouse_id"?: UUID;
+  "lines": Array<StockOrderShippingLine>;
+  "shipments": Array<StockOrderShipment>;
+  "reserved": boolean;
+  "can_ship": boolean;
+  "ship_blocked"?: string;
+}
+
+export interface StockOrderShippingLine {
+  "line_id": UUID;
+  "product_id": UUID;
+  "title": string;
+  "unit"?: string;
+  "ordered_qty": string;
+  "shipped_qty": string;
+  "remaining_qty": string;
+}
+
+export interface StockOrderShippingPage {
+  "results": Array<StockOrderShipping>;
+  "count": number;
+}
+
 export interface StockProductUOM {
   "id": UUID;
   "product_id": UUID;
@@ -17005,6 +17672,20 @@ export interface WorkflowStatusUpdate {
   "order"?: number;
   "is_default"?: boolean;
   "is_final"?: boolean;
+}
+
+export interface AutomationRulesResponse {
+  "rules": Array<AutomationRuleDocument>;
+}
+
+export interface AutomationRuleSimulateResponse {
+  "result": AutomationRuleSimulation;
+  "problem"?: AutomationRuleProblem;
+}
+
+export interface AutomationRuleTestResponse {
+  "result": AutomationRuleTestResult;
+  "problem"?: AutomationRuleProblem;
 }
 
 export interface CoreGetAccountingStartResponse {

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 39eccc6ff4448f674ea1532859b79e9ec3ac401cb886f10e1a895c9ed12305cb).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 28652e3a57f9c61c5e3304491796fb3dfa297958b23aa6950993e5bd4429aea0).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -40,6 +40,39 @@ __all__ = [
     "AttachmentReplacementSessionCreate",
     "AttachmentUploadSession",
     "AttachmentUploadSessionCreate",
+    "AutomationManifest",
+    "AutomationManifestConditions",
+    "AutomationManifestConditionsOperatorsItem",
+    "AutomationManifestReferencesItem",
+    "AutomationManifestPlaceholdersItem",
+    "AutomationManifestLimits",
+    "AutomationManifestAction",
+    "AutomationManifestActionInputsItem",
+    "AutomationManifestEvent",
+    "AutomationManifestEventFieldsItem",
+    "AutomationManifestOption",
+    "AutomationRuleDocument",
+    "AutomationRuleDocumentConditionsItem",
+    "AutomationRuleDocumentActionsItem",
+    "AutomationRuleProblem",
+    "AutomationRuleSimulateRequest",
+    "AutomationRuleSimulateRequestRule",
+    "AutomationRuleSimulation",
+    "AutomationRuleSimulationRecordsItem",
+    "AutomationRuleSimulationActionsItem",
+    "AutomationRuleSimulationBefore",
+    "AutomationRuleTestRequest",
+    "AutomationRuleTestRequestRule",
+    "AutomationRuleTestRequestRuleConditionsItem",
+    "AutomationRuleTestRequestRuleActionsItem",
+    "AutomationRuleTestResult",
+    "AutomationRuleTestResultSample",
+    "AutomationRuleTestResultWhen",
+    "AutomationRuleTestResultWhenValuesItem",
+    "AutomationRuleTestResultCondition",
+    "AutomationRuleTestResultConditionClausesItem",
+    "AutomationRuleTestResultActionsItem",
+    "AutomationRuleTestResultActionsItemInputsItem",
     "BillingCabinetInvoice",
     "BillingCabinetNotice",
     "BillingCabinetNoticeInvoice",
@@ -352,6 +385,8 @@ __all__ = [
     "CoreContactKind",
     "CoreContactPage",
     "CoreContactPatch",
+    "CoreContractSettlementDetailInput",
+    "CoreContractTerms",
     "CoreCurrencyRate",
     "CoreCurrencyRateInput",
     "CoreCurrencyRatePage",
@@ -457,6 +492,18 @@ __all__ = [
     "CoreOrderCloseInput",
     "CoreOrderCounterparty",
     "CoreOrderEvent",
+    "CoreOrderFunnel",
+    "CoreOrderFunnelChoice",
+    "CoreOrderFunnelInput",
+    "CoreOrderFunnelList",
+    "CoreOrderFunnelStage",
+    "CoreOrderFunnelStep",
+    "CoreOrderFunnelStepDue",
+    "CoreOrderFunnelTemplate",
+    "CoreOrderFunnelTemplateList",
+    "CoreOrderFunnelVersion",
+    "CoreOrderFunnelVersionList",
+    "CoreOrderFunnelView",
     "CoreOrderHistory",
     "CoreOrderHistoryDocument",
     "CoreOrderImportEntry",
@@ -478,6 +525,8 @@ __all__ = [
     "CoreOrderStatusInput",
     "CoreOrderStatusList",
     "CoreOrderStatusPatch",
+    "CoreOrderStepDueInput",
+    "CoreOrderStepState",
     "CoreOrderTotals",
     "CoreOwnershipVersion",
     "CoreOwnershipVersionInput",
@@ -744,6 +793,16 @@ __all__ = [
     "DocflowPaymentDocumentRequisites",
     "DocflowPaymentField",
     "DocflowPaymentParty",
+    "DocflowPaymentRequest",
+    "DocflowPaymentRequestBasis",
+    "DocflowPaymentRequestInput",
+    "DocflowPaymentRequestList",
+    "DocflowPaymentRequestOrder",
+    "DocflowPaymentRequestPayee",
+    "DocflowPaymentRequestPayment",
+    "DocflowPaymentRequestStatus",
+    "DocflowPaymentRequestUpdate",
+    "DocflowPaymentRequestVersion",
     "DocflowPersonRequisites",
     "DocflowPreflight",
     "DocflowPreflightDocument",
@@ -1477,6 +1536,13 @@ __all__ = [
     "StockInventoryRefreshInput",
     "StockInventoryWorkflow",
     "StockOpeningBalanceCreate",
+    "StockOrderShipInput",
+    "StockOrderShipInputLinesItem",
+    "StockOrderShipment",
+    "StockOrderShipmentLine",
+    "StockOrderShipping",
+    "StockOrderShippingLine",
+    "StockOrderShippingPage",
     "StockProductUOM",
     "StockProductUOMInput",
     "StockProductUOMPage",
@@ -1562,6 +1628,9 @@ __all__ = [
     "TenantCredentialRequestPage",
     "UUID",
     "WorkflowStatusUpdate",
+    "AutomationRulesResponse",
+    "AutomationRuleSimulateResponse",
+    "AutomationRuleTestResponse",
     "CoreGetAccountingStartResponse",
     "CoreListBusinessesResponse",
     "CoreSetBusinessActiveRequest",
@@ -1891,6 +1960,365 @@ class _AttachmentUploadSessionCreateRequired(TypedDict):
 class AttachmentUploadSessionCreate(_AttachmentUploadSessionCreateRequired, total=False):
     mime_type: str
     sha256: str
+
+class _AutomationManifestRequired(TypedDict):
+    format: Literal['akeda.automation.manifest']
+    version: int
+    #: Отпечаток содержимого sha256:…
+    revision: str
+    locale: Literal['ru', 'en']
+    detail: Literal['full', 'brief']
+    events: List["AutomationManifestEvent"]
+    conditions: "AutomationManifestConditions"
+    actions: List["AutomationManifestAction"]
+    references: List["AutomationManifestReferencesItem"]
+    placeholders: List["AutomationManifestPlaceholdersItem"]
+    limits: "AutomationManifestLimits"
+
+class AutomationManifest(_AutomationManifestRequired, total=False):
+    """Документ akeda.automation.manifest версии 1 (AUTOMATION.md § 10.1)."""
+
+    $schema: str
+
+class AutomationManifestConditions(TypedDict):
+    combinator: Literal['all']
+    operators: List["AutomationManifestConditionsOperatorsItem"]
+    max_clauses: int
+    max_value_length: int
+
+class AutomationManifestConditionsOperatorsItem(TypedDict):
+    op: str
+    label: str
+    field_types: List[str]
+    needs_value: bool
+    case_insensitive: bool
+
+class AutomationManifestReferencesItem(TypedDict):
+    kind: str
+    module: str
+    label: str
+    #: MCP-инструмент поиска значения по имени
+    lookup_tool: str
+    parameter_kind: bool
+    status: Literal['live', 'unavailable']
+
+class AutomationManifestPlaceholdersItem(TypedDict):
+    syntax: str
+    meaning: str
+    status: str
+
+class AutomationManifestLimits(TypedDict):
+    max_actions: int
+    max_conditions: int
+    max_condition_length: int
+    chain_depth: int
+    runs_per_tenant_per_minute: int
+    max_attempts: int
+
+class _AutomationManifestActionRequired(TypedDict):
+    command: str
+    module: str
+    label_key: str
+    label: str
+    description: str
+    when_to_use: str
+    status: Literal['live', 'declared', 'unavailable']
+    permission: str
+    reversible: bool
+    danger: Literal['none', 'external', 'irreversible']
+    idempotency: str
+    target: Literal['new', 'event_entity']
+
+class AutomationManifestAction(_AutomationManifestActionRequired, total=False):
+    unavailable_reason: str
+    event_entities: List[str]
+    mcp_twin: str
+    inputs: List["AutomationManifestActionInputsItem"]
+    example_inputs: Dict[str, str]
+
+class _AutomationManifestActionInputsItemRequired(TypedDict):
+    key: str
+    type: Literal['string', 'number', 'bool', 'reference', 'datetime', 'choice']
+    required: bool
+    label: str
+    accepts_placeholders: bool
+
+class AutomationManifestActionInputsItem(_AutomationManifestActionInputsItemRequired, total=False):
+    options: List["AutomationManifestOption"]
+    ref: str
+
+class _AutomationManifestEventRequired(TypedDict):
+    topic: str
+    module: str
+    entity: str
+    fact: str
+    label_key: str
+    label: str
+    description: str
+    when_to_use: str
+    status: Literal['live', 'unavailable']
+    #: Правило сработает, только если исполнитель видит источник
+    source_visibility: bool
+
+class AutomationManifestEvent(_AutomationManifestEventRequired, total=False):
+    unavailable_reason: str
+    fields: List["AutomationManifestEventFieldsItem"]
+    example_payload: Dict[str, Any]
+
+class _AutomationManifestEventFieldsItemRequired(TypedDict):
+    key: str
+    type: Literal['string', 'number', 'bool', 'timestamp']
+    label: str
+    operators: List[str]
+
+class AutomationManifestEventFieldsItem(_AutomationManifestEventFieldsItemRequired, total=False):
+    options: List["AutomationManifestOption"]
+    ref: str
+
+class AutomationManifestOption(TypedDict):
+    value: str
+    label: str
+
+class _AutomationRuleDocumentRequired(TypedDict):
+    id: str
+    name: str
+    event_type: str
+    #: Выражение вычислителя; у правила из конструктора собрано из conditions
+    condition: str
+    conditions: List["AutomationRuleDocumentConditionsItem"]
+    actions: List["AutomationRuleDocumentActionsItem"]
+    executor_user_id: int
+    is_enabled: bool
+    origin: Literal['manual', 'configuration']
+    version: int
+
+class AutomationRuleDocument(_AutomationRuleDocumentRequired, total=False):
+    created_by: int
+    created_at: str
+    updated_at: str
+
+class _AutomationRuleDocumentConditionsItemRequired(TypedDict):
+    field: str
+    op: str
+
+class AutomationRuleDocumentConditionsItem(_AutomationRuleDocumentConditionsItemRequired, total=False):
+    value: str
+    value_to: str
+    of: str
+    group: int
+
+class _AutomationRuleDocumentActionsItemRequired(TypedDict):
+    command: str
+
+class AutomationRuleDocumentActionsItem(_AutomationRuleDocumentActionsItemRequired, total=False):
+    inputs: Dict[str, str]
+
+class _AutomationRuleProblemRequired(TypedDict):
+    #: Путь в документе правила: event_type, conditions[1].op, actions[0].inputs.title
+    field: str
+    code: str
+    message: str
+
+class AutomationRuleProblem(_AutomationRuleProblemRequired, total=False):
+    hint: str
+    params: Dict[str, str]
+    allowed: List[str]
+
+class _AutomationRuleSimulateRequestRequired(TypedDict):
+    #: Документ правила в той же форме, что у проверки правила (event_type, conditions, actions); название и исполнитель не нужны.
+    rule: "AutomationRuleSimulateRequestRule"
+
+class AutomationRuleSimulateRequest(_AutomationRuleSimulateRequestRequired, total=False):
+    #: Сохранённое правило: его версия на тех же фактах — «было»
+    rule_id: str
+    #: Период прогона в днях; по умолчанию 30
+    days: int
+
+class AutomationRuleSimulateRequestRule(TypedDict):
+    """Документ правила в той же форме, что у проверки правила (event_type, conditions, actions); название и исполнитель не нужны."""
+
+    event_type: str
+
+class _AutomationRuleSimulationRequired(TypedDict):
+    days: int
+    since: str
+    #: Фактов события за период, видимых вызывающему
+    events: int
+    #: Сколько раз правило сработало бы
+    fired: int
+    #: Учтены только последние 2000 фактов периода
+    truncated: bool
+    #: Больше всего срабатываний за один день
+    max_per_day: int
+    records: List["AutomationRuleSimulationRecordsItem"]
+    actions: List["AutomationRuleSimulationActionsItem"]
+    #: Всегда false: прогон ничего не исполняет
+    executed: bool
+
+class AutomationRuleSimulation(_AutomationRuleSimulationRequired, total=False):
+    before: "AutomationRuleSimulationBefore"
+
+class _AutomationRuleSimulationRecordsItemRequired(TypedDict):
+    key: str
+    entity_id: str
+    occurred_at: str
+
+class AutomationRuleSimulationRecordsItem(_AutomationRuleSimulationRecordsItemRequired, total=False):
+    #: Номер, идентификатор или тема записи
+    title: str
+
+class _AutomationRuleSimulationActionsItemRequired(TypedDict):
+    index: int
+    command: str
+    label: str
+    permission: str
+    allowed: bool
+    connected: bool
+    #: Сколько раз действие выполнилось бы; 0 — его заблокировали права или нет исполнителя
+    count: int
+
+class AutomationRuleSimulationActionsItem(_AutomationRuleSimulationActionsItemRequired, total=False):
+    code: str
+    message: str
+
+class AutomationRuleSimulationBefore(TypedDict):
+    enabled: bool
+    version: int
+    #: Сколько раз сработала бы сохранённая версия; выключенное правило — 0
+    fired: int
+
+class _AutomationRuleTestRequestRequired(TypedDict):
+    #: Документ правила в той же форме, что у записи правила; название и исполнитель не нужны.
+    rule: "AutomationRuleTestRequestRule"
+
+class AutomationRuleTestRequest(_AutomationRuleTestRequestRequired, total=False):
+    #: Ключ факта из выборки последних фактов события; пусто — последний факт
+    sample_key: str
+    #: Тело события для проверки «что если» вместо настоящего факта
+    payload: Dict[str, str]
+
+class _AutomationRuleTestRequestRuleRequired(TypedDict):
+    event_type: str
+
+class AutomationRuleTestRequestRule(_AutomationRuleTestRequestRuleRequired, total=False):
+    """Документ правила в той же форме, что у записи правила; название и исполнитель не нужны."""
+
+    name: str
+    condition: str
+    conditions: List["AutomationRuleTestRequestRuleConditionsItem"]
+    actions: List["AutomationRuleTestRequestRuleActionsItem"]
+
+class _AutomationRuleTestRequestRuleConditionsItemRequired(TypedDict):
+    field: str
+    #: equals, not_equals, contains, starts_with, ends_with, is_true, is_false; числа — gt, gte, lt, lte, between; даты — before, on_or_before, after, on_or_after, between
+    op: str
+
+class AutomationRuleTestRequestRuleConditionsItem(_AutomationRuleTestRequestRuleConditionsItemRequired, total=False):
+    value: str
+    #: Верхняя граница «между», включительно
+    value_to: str
+    #: Числовое поле-основа: value и value_to — проценты от него
+    of: str
+    #: Группа «или»: сравнения группы — «и», группы между собой — «или»
+    group: int
+
+class _AutomationRuleTestRequestRuleActionsItemRequired(TypedDict):
+    command: str
+
+class AutomationRuleTestRequestRuleActionsItem(_AutomationRuleTestRequestRuleActionsItemRequired, total=False):
+    inputs: Dict[str, str]
+
+class _AutomationRuleTestResultRequired(TypedDict):
+    executor_user_id: int
+    when: "AutomationRuleTestResultWhen"
+    condition: "AutomationRuleTestResultCondition"
+    matched: bool
+    actions: List["AutomationRuleTestResultActionsItem"]
+    #: Всегда false: проверка ничего не делает
+    executed: bool
+
+class AutomationRuleTestResult(_AutomationRuleTestResultRequired, total=False):
+    sample: Optional["AutomationRuleTestResultSample"]
+    problem: "AutomationRuleProblem"
+
+class _AutomationRuleTestResultSampleRequired(TypedDict):
+    key: str
+    event_type: str
+    entity: str
+    entity_id: str
+    occurred_at: str
+    payload: Dict[str, str]
+    source: Literal['outbox', 'direct', 'payload']
+
+class AutomationRuleTestResultSample(_AutomationRuleTestResultSampleRequired, total=False):
+    #: Номер, идентификатор или тема записи
+    title: str
+
+class _AutomationRuleTestResultWhenRequired(TypedDict):
+    ok: bool
+    event_label: str
+    values: List["AutomationRuleTestResultWhenValuesItem"]
+
+class AutomationRuleTestResultWhen(_AutomationRuleTestResultWhenRequired, total=False):
+    #: no_sample — фактов события за 30 дней нет
+    code: str
+    message: str
+
+class AutomationRuleTestResultWhenValuesItem(TypedDict):
+    key: str
+    label: str
+    value: str
+
+class _AutomationRuleTestResultConditionRequired(TypedDict):
+    ok: bool
+    empty: bool
+    expression: bool
+    clauses: List["AutomationRuleTestResultConditionClausesItem"]
+
+class AutomationRuleTestResultCondition(_AutomationRuleTestResultConditionRequired, total=False):
+    code: str
+    message: str
+
+class _AutomationRuleTestResultConditionClausesItemRequired(TypedDict):
+    index: int
+    field: str
+    field_label: str
+    op: str
+    op_label: str
+    actual: str
+    present: bool
+    ok: bool
+
+class AutomationRuleTestResultConditionClausesItem(_AutomationRuleTestResultConditionClausesItemRequired, total=False):
+    expected: str
+    expected_to: str
+    of: str
+    of_label: str
+    of_actual: str
+    group: int
+
+class _AutomationRuleTestResultActionsItemRequired(TypedDict):
+    index: int
+    command: str
+    label: str
+    permission: str
+    allowed: bool
+    connected: bool
+    status: Literal['would_run', 'not_reached', 'blocked']
+    inputs: List["AutomationRuleTestResultActionsItemInputsItem"]
+
+class AutomationRuleTestResultActionsItem(_AutomationRuleTestResultActionsItemRequired, total=False):
+    code: str
+    message: str
+
+class _AutomationRuleTestResultActionsItemInputsItemRequired(TypedDict):
+    key: str
+    label: str
+    template: str
+    value: str
+
+class AutomationRuleTestResultActionsItemInputsItem(_AutomationRuleTestResultActionsItemInputsItemRequired, total=False):
+    missing: List[str]
 
 class BillingCabinetInvoice(TypedDict):
     """Счёт вместе с реквизитами для оплаты. Реквизиты идут в том же ответе, а не отдельным маршрутом: экран оплаты показывает их на одной вкладке со счётом, и второй запрос означал бы мгновение, в котором сумма уже есть, а платить по ней некуда"""
@@ -4938,6 +5366,28 @@ class CoreContactPatch(TypedDict, total=False):
     is_supplier: bool
     folder_id: Optional["UUID"]
 
+class CoreContractSettlementDetailInput(TypedDict):
+    settlement_detail: Literal['order', 'contract', 'execution']
+
+class _CoreContractTermsRequired(TypedDict):
+    id: "UUID"
+    business_id: "UUID"
+    contact_id: "UUID"
+    side: Literal['sale', 'purchase']
+    number: str
+    #: По заказу (умолчание), по договору — аванс договора закрывает его заказы по ФИФО, по документу исполнения — только явный зачёт
+    settlement_detail: Literal['order', 'contract', 'execution']
+    fifo_allowed: bool
+    version: int
+
+class CoreContractTerms(_CoreContractTermsRequired, total=False):
+    company_id: str
+    date: str
+    currency: str
+    #: Первая операция по договору: после неё детализация не меняется
+    detail_locked_at: str
+    funnel_id: "UUID"
+
 class _CoreCurrencyRateRequired(TypedDict):
     id: "UUID"
     currency_code: str
@@ -5769,6 +6219,7 @@ class CoreOrder(_CoreOrderRequired, total=False):
     external_id: str
     cabinet_status_id: "UUID"
     cabinet_status_name: str
+    funnel_id: "UUID"
     closed_at: str
     closed_reason: str
     close_document_id: "UUID"
@@ -5816,7 +6267,7 @@ class CoreOrderCounterparty(TypedDict, total=False):
 class _CoreOrderEventRequired(TypedDict):
     id: "UUID"
     order_id: "UUID"
-    #: created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated
+    #: created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)
     kind: str
     created_at: str
 
@@ -5830,6 +6281,94 @@ class CoreOrderEvent(_CoreOrderEventRequired, total=False):
     status_name: str
     #: Разница версий: у revised — версия и что изменилось
     payload: Dict[str, Any]
+
+class CoreOrderFunnel(TypedDict):
+    id: "UUID"
+    side: Literal['sale', 'purchase']
+    name: str
+    source: str
+    is_default: bool
+    is_archived: bool
+    version: int
+    steps: List["CoreOrderFunnelStep"]
+    stages: List["CoreOrderFunnelStage"]
+    updated_at: str
+
+class CoreOrderFunnelChoice(TypedDict):
+    #: null — заказ без воронки
+    funnel_id: Optional["UUID"]
+
+class _CoreOrderFunnelInputRequired(TypedDict):
+    side: Literal['sale', 'purchase']
+    name: str
+
+class CoreOrderFunnelInput(_CoreOrderFunnelInputRequired, total=False):
+    #: Заказы этого источника идут в воронку; пусто — по источнику не выбирается
+    source: Literal['', 'manual', 'app', 'import', 'marketplace', 'crm']
+    #: Воронка стороны по умолчанию — одна на сторону
+    is_default: bool
+    is_archived: bool
+    steps: List["CoreOrderFunnelStep"]
+    stages: List["CoreOrderFunnelStage"]
+
+class CoreOrderFunnelList(TypedDict):
+    funnels: List["CoreOrderFunnel"]
+
+class _CoreOrderFunnelStageRequired(TypedDict):
+    name: str
+    category: "CoreOrderState"
+
+class CoreOrderFunnelStage(_CoreOrderFunnelStageRequired, total=False):
+    id: "UUID"
+    color: str
+    position: int
+
+class _CoreOrderFunnelStepRequired(TypedDict):
+    kind: Literal['contract', 'approval', 'prepayment_invoice', 'payment', 'shipment', 'act', 'upd', 'closing', 'custom']
+    title: str
+
+class CoreOrderFunnelStep(_CoreOrderFunnelStepRequired, total=False):
+    #: Пусто — вид и номер шага
+    key: str
+    #: Участвует ли шаг в воронке: ненужный шаг заказу не строится
+    required: bool
+    due: "CoreOrderFunnelStepDue"
+    #: Что закрывает шаг: manual — человек отметит (пусто так же); state:<состояние> — заказ дошёл до состояния; paid:<N> — оплачено не меньше N % суммы заказа (финансы); paper:act_signed, paper:upd_signed — контрагент подписал акт или УПД в ЭДО (документооборот)
+    done_when: str
+    #: За сколько дней до срока прийти событию «срок подходит»
+    remind_days: int
+
+class CoreOrderFunnelStepDue(TypedDict, total=False):
+    #: От чего считается срок; пусто — без срока
+    after: Literal['', 'created', 'confirmed', 'delivery_date']
+    days: int
+
+class CoreOrderFunnelTemplate(TypedDict):
+    key: str
+    name: str
+    description: str
+    funnel: "CoreOrderFunnelInput"
+
+class CoreOrderFunnelTemplateList(TypedDict):
+    templates: List["CoreOrderFunnelTemplate"]
+
+class _CoreOrderFunnelVersionRequired(TypedDict):
+    version: int
+    document: "CoreOrderFunnelInput"
+    created_at: str
+
+class CoreOrderFunnelVersion(_CoreOrderFunnelVersionRequired, total=False):
+    author_user_id: int
+
+class CoreOrderFunnelVersionList(TypedDict):
+    versions: List["CoreOrderFunnelVersion"]
+
+class _CoreOrderFunnelViewRequired(TypedDict):
+    steps: List["CoreOrderStepState"]
+
+class CoreOrderFunnelView(_CoreOrderFunnelViewRequired, total=False):
+    funnel_id: "UUID"
+    funnel_name: str
 
 class CoreOrderHistory(TypedDict):
     events: List["CoreOrderEvent"]
@@ -6012,8 +6551,12 @@ CoreOrderLineKind = Literal['goods', 'service', 'material', 'semi_product']
 class CoreOrderObligation(TypedDict):
     #: Действующий приход подтверждения в регистре «Заказы»
     ordered: str
-    #: Остаток регистра «Заказы» по заказу: заказано минус снятое закрытием и исполненное
+    #: Остаток регистра «Заказы» по заказу. До этапа 4 его уменьшает только закрытие, поэтому это не «осталось исполнить»
     remaining: str
+    #: Исполнено: сумма проведённых исполнений заказа (акт, продажа, закупка, приёмка) за вычетом возвратов, в валюте заказа. То же число, что в журнале продаж и закупок финансов (core_order_executed)
+    executed: str
+    #: Осталось исполнить: заказано минус исполнено, не меньше нуля
+    remaining_to_execute: str
 
 class CoreOrderPage(TypedDict):
     items: List["CoreOrder"]
@@ -6089,6 +6632,7 @@ class CoreOrderStatus(_CoreOrderStatusRequired, total=False):
     #: Пусто — статус годится обеим сторонам
     side: Literal['', 'sale', 'purchase']
     color: str
+    funnel_id: "UUID"
 
 class _CoreOrderStatusInputRequired(TypedDict):
     name: str
@@ -6110,6 +6654,26 @@ class CoreOrderStatusPatch(TypedDict, total=False):
     position: int
     color: str
     is_active: bool
+
+class _CoreOrderStepDueInputRequired(TypedDict):
+    due_date: str
+
+class CoreOrderStepDueInput(_CoreOrderStepDueInputRequired, total=False):
+    #: Сдвинуть следующие невыполненные шаги с датой на ту же разницу
+    shift_next: bool
+
+class _CoreOrderStepStateRequired(TypedDict):
+    key: str
+    kind: str
+    title: str
+    position: int
+    status: Literal['done', 'overdue', 'waiting']
+
+class CoreOrderStepState(_CoreOrderStepStateRequired, total=False):
+    due_date: str
+    done_at: str
+    #: Что закрывает шаг; manual — отмечает человек
+    done_when: str
 
 class CoreOrderTotals(TypedDict):
     """Итоги — сумма строк: скидка заказа уже разложена по строкам и второй раз не вычитается."""
@@ -7675,7 +8239,7 @@ class DocflowApprovalPolicy(TypedDict):
     """Обязательность согласования у ОДНОГО вида предмета, а не глобальный выключатель кабинета: у заявки на оплату согласование может быть обязательным, а у письма контрагенту — нет."""
 
     subject_module: Literal['docflow', 'finance']
-    subject_kind: Literal['flow_document', 'payment_request']
+    subject_kind: Literal['flow_document', 'payment_request', 'edo_message']
     required: bool
 
 class DocflowApprovalResubmitInput(TypedDict, total=False):
@@ -7716,7 +8280,7 @@ class _DocflowApprovalRouteRequired(TypedDict):
     name: str
     subject_module: Literal['docflow', 'finance']
     #: any — любой вид предмета своего модуля
-    subject_kind: Literal['flow_document', 'payment_request', 'any']
+    subject_kind: Literal['flow_document', 'payment_request', 'edo_message', 'any']
     #: Что будет после возврата на доработку: весь путь заново либо продолжает вернувший, визы остальных сохраняются
     rework_mode: Literal['restart', 'returner_only']
     #: Выключенный маршрут не подбирается новым проходам, но остаётся на месте
@@ -7742,6 +8306,8 @@ class DocflowApprovalRoute(_DocflowApprovalRouteRequired, total=False):
     amount_from: str
     #: Верхняя граница суммы НЕ включается
     amount_to: str
+    #: Для заявки на оплату (docflow / payment_request): куда идёт согласованная — сразу в платёжный календарь (дата оплаты = срок) или казначею, который ставит дату платежа (ERP-1427, этап 6)
+    payment_destination: Literal['calendar', 'treasury']
 
 class DocflowApprovalRouteActiveInput(TypedDict):
     active: bool
@@ -7795,8 +8361,8 @@ class DocflowApprovalSubject(TypedDict):
 
     #: Модуль-владелец предмета
     module: Literal['docflow', 'finance']
-    #: Вид предмета: карточка документооборота или заявка на оплату
-    kind: Literal['flow_document', 'payment_request']
+    #: Вид предмета: карточка документооборота, заявка на оплату или входящий документ ЭДО
+    kind: Literal['flow_document', 'payment_request', 'edo_message']
     #: Идентификатор предмета у его владельца
     id: "UUID"
 
@@ -8315,6 +8881,8 @@ class DocflowFlowContractTerms(_DocflowFlowContractTermsRequired, total=False):
     currency: str
     payment_terms: str
     renewal_terms: str
+    #: Воронка заказов договора: заказы по договору идут в неё (пометка кабинета, не текст бумаги)
+    order_funnel_id: str
 
 class DocflowFlowCreateInput(TypedDict):
     company_id: "UUID"
@@ -8759,7 +9327,7 @@ class DocflowInvitationPage(TypedDict):
     #: Безопасный список подключений без учётных данных для формы приглашения
     senders: List["DocflowInvitationSender"]
 
-class DocflowInvitationSender(TypedDict):
+class _DocflowInvitationSenderRequired(TypedDict):
     id: "UUID"
     name: str
     company_name: str
@@ -8770,6 +9338,12 @@ class DocflowInvitationSender(TypedDict):
     read_only: bool
     #: Идентификатор собственного абонентского ящика; пусто — нужно повторно проверить связь
     external_org_id: str
+
+class DocflowInvitationSender(_DocflowInvitationSenderRequired, total=False):
+    #: Юрлицо подключения: бумагу отправляют только через подключение её юрлица
+    company: Optional[str]
+    #: Имя оператора словами
+    provider_name: str
 
 class _DocflowIssueRequired(TypedDict):
     #: Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои пять: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке документа не сопоставлена номенклатура) и docflow.edo.sign_first (документ ещё не подписан: в учёт его принимают после подписи)
@@ -9094,6 +9668,121 @@ class DocflowPaymentParty(TypedDict):
     bic: "DocflowPaymentField"
     bank_name: "DocflowPaymentField"
     corr_account: "DocflowPaymentField"
+
+class _DocflowPaymentRequestRequired(TypedDict):
+    id: "UUID"
+    number: str
+    status: "DocflowPaymentRequestStatus"
+    #: Ход заявки глазами автора: состояние документа, после согласования — состояние оплаты
+    progress: Literal['draft', 'on_approval', 'rework', 'approved', 'rejected', 'cancelled', 'scheduled', 'sent', 'paid', 'payment_cancelled']
+    company_id: "UUID"
+    company_name: str
+    contact_name: str
+    item_name: str
+    payee: "DocflowPaymentRequestPayee"
+    amount: str
+    currency: str
+    due_date: str
+    purpose: str
+    basis: "DocflowPaymentRequestBasis"
+    #: Куда ушла согласованная заявка: снимок флага маршрута
+    destination: Literal['', 'calendar', 'treasury']
+    created_by_name: str
+    created_at: str
+    updated_at: str
+    version: int
+    can_edit: bool
+    can_submit: bool
+    can_cancel: bool
+
+class DocflowPaymentRequest(_DocflowPaymentRequestRequired, total=False):
+    contact_id: "UUID"
+    item_id: "UUID"
+    #: Причина отказа или возврата на доработку
+    reason: str
+    payment: "DocflowPaymentRequestPayment"
+    created_by: int
+
+class DocflowPaymentRequestBasis(TypedDict, total=False):
+    #: Модуль основания
+    module: Literal['docflow']
+    #: Вид основания: входящий документ ЭДО, карточка документооборота или основание словами
+    kind: Literal['edo_message', 'flow_document', 'manual']
+    id: Optional["UUID"]
+    title: str
+    contract_id: Optional["UUID"]
+
+class _DocflowPaymentRequestInputRequired(TypedDict):
+    company_id: "UUID"
+    payee: "DocflowPaymentRequestPayee"
+    #: Сумма; не больше двух знаков копеек, лишние нули отбрасываются
+    amount: str
+    due_date: str
+    purpose: str
+
+class DocflowPaymentRequestInput(_DocflowPaymentRequestInputRequired, total=False):
+    contact_id: Optional["UUID"]
+    item_id: Optional["UUID"]
+    currency: str
+    basis: "DocflowPaymentRequestBasis"
+
+class DocflowPaymentRequestList(TypedDict):
+    results: List["DocflowPaymentRequest"]
+
+class DocflowPaymentRequestOrder(TypedDict):
+    """Платёжное поручение, которым заявка оплачена, — реквизиты проведённого документа денежной операции"""
+
+    document_id: "UUID"
+    number: str
+    date: str
+    amount: str
+    currency: str
+
+class _DocflowPaymentRequestPayeeRequired(TypedDict):
+    name: str
+
+class DocflowPaymentRequestPayee(_DocflowPaymentRequestPayeeRequired, total=False):
+    inn: str
+    kpp: str
+    account: str
+    bic: str
+    bank_name: str
+    corr_account: str
+
+class _DocflowPaymentRequestPaymentRequired(TypedDict):
+    request_id: "UUID"
+    #: Состояние строки очереди: planned, sent, awaiting_signature, executed, rejected, cancelled, returned
+    status: str
+    awaiting_schedule: bool
+
+class DocflowPaymentRequestPayment(_DocflowPaymentRequestPaymentRequired, total=False):
+    """Что стало с оплатой у модуля finance (строка очереди оплат)"""
+
+    #: Дата оплаты; пусто, пока заявка ждёт даты у казначея
+    planned_on: str
+    sent_at: str
+    executed_on: str
+    payment_order: "DocflowPaymentRequestOrder"
+
+DocflowPaymentRequestStatus = Literal['draft', 'on_approval', 'rework', 'approved', 'rejected', 'cancelled']
+
+class _DocflowPaymentRequestUpdateRequired(TypedDict):
+    company_id: "UUID"
+    payee: "DocflowPaymentRequestPayee"
+    #: Сумма; не больше двух знаков копеек, лишние нули отбрасываются
+    amount: str
+    due_date: str
+    purpose: str
+    version: int
+
+class DocflowPaymentRequestUpdate(_DocflowPaymentRequestUpdateRequired, total=False):
+    contact_id: Optional["UUID"]
+    item_id: Optional["UUID"]
+    currency: str
+    basis: "DocflowPaymentRequestBasis"
+
+class DocflowPaymentRequestVersion(TypedDict):
+    version: int
 
 class DocflowPersonRequisites(TypedDict, total=False):
     """ФИО предпринимателя или физического лица. Спрашивается, потому что в карточке контрагента имя лежит ОДНОЙ строкой («ИП Иванов Иван Иванович»), а формат требует фамилию, имя и отчество порознь. Разобрать строку догадкой нельзя: «Ли Ван Чуань» и «Иванов Иван» ломают любое правило, а ошибка в ФИО подписанта — это недействительный счёт-фактура."""
@@ -9903,7 +10592,7 @@ class FinanceBalanceSection(TypedDict):
     total: str
     items: List["FinanceBalanceItem"]
 
-class FinanceCashOperation(TypedDict):
+class _FinanceCashOperationRequired(TypedDict):
     id: "UUID"
     #: Номер документа; его выдаёт нумератор кабинета
     number: str
@@ -9937,6 +10626,12 @@ class FinanceCashOperation(TypedDict):
     note: str
     created_at: str
 
+class FinanceCashOperation(_FinanceCashOperationRequired, total=False):
+    #: Заказ, который оплатили наличные
+    order: Optional[str]
+    #: Номер заказа; пусто — заказа нет
+    order_number: str
+
 class _FinanceCashOperationCreateRequired(TypedDict):
     wallet: "UUID"
     #: Обязательно; умолчания нет, иначе непонятная операция молча стала бы тратой
@@ -9957,6 +10652,8 @@ class FinanceCashOperationCreate(_FinanceCashOperationCreateRequired, total=Fals
     owner: Optional[str]
     #: Разрез «проект», если он включён в кабинете
     project: Optional[str]
+    #: Заказ, который оплачивают наличные: приход — заказ покупателя, расход — заказ поставщику того же контрагента; отменённый заказ не принимается. Входит в «оплачено» заказа
+    order: Optional[str]
     #: Имя плательщика или получателя текстом, когда карточки контрагента нет
     counterparty: str
     #: Назначение операции словами человека
@@ -9999,6 +10696,8 @@ class FinanceCashflowEntryCategorize(TypedDict, total=False):
     contact: str
     #: «За кого»: контрагент сотрудника или собственника, чей расчёт гасит выдача. Пусто — как контрагент; не присланное поле остаётся как было
     for_contact: Optional[str]
+    #: Заказ, который оплачивают наличные (приход — заказ покупателя, расход — заказ поставщику того же контрагента). Пустая строка снимает заказ; не присланное поле остаётся как было
+    order: Optional[str]
 
 FinanceCashflowEntryKind = Literal['bank', 'cash']
 
@@ -11761,7 +12460,7 @@ class FinanceTradeJournalPage(_FinanceTradeJournalPageRequired, total=False):
     has_more: bool
     limit_reached: bool
     group: Literal['orders', 'without_order']
-    #: Колонки, вычисленные до разреза «заказ» в расчётах (этап 3)
+    #: Колонки, вычисленные до отсечки расчётов по заказам (этап 3); нет, когда все строки ответа — из регистра
     computed_columns: List[Literal['advance', 'debt']]
 
 class _FinanceTradeJournalRowRequired(TypedDict):
@@ -11818,6 +12517,8 @@ class FinanceTradeJournalRow(_FinanceTradeJournalRowRequired, total=False):
     #: Вычисленный max(0, исполнено − оплачено), decimal string
     debt: str
     execution_count: int
+    #: Аванс, долг и оплачено — остатками регистра расчётов по заказу: бизнес прошёл отсечку расчётов по заказам (этап 3 ERP-1427)
+    money_from_register: bool
     executions: List["FinanceTradeJournalDocument"]
     payments: List["FinanceTradeJournalDocument"]
 
@@ -17103,6 +17804,67 @@ class StockOpeningBalanceCreate(_StockOpeningBalanceCreateRequired, total=False)
     date: str
     comment: str
 
+class _StockOrderShipInputRequired(TypedDict):
+    warehouse_id: "UUID"
+    lines: List["StockOrderShipInputLinesItem"]
+
+class StockOrderShipInput(_StockOrderShipInputRequired, total=False):
+    #: Дата отгрузки; пусто — текущая бизнес-дата
+    date: str
+    comment: str
+
+class StockOrderShipInputLinesItem(TypedDict):
+    item_id: "UUID"
+    quantity: str
+
+class _StockOrderShipmentRequired(TypedDict):
+    id: "UUID"
+    order_id: "UUID"
+    number: str
+    date: str
+    status: str
+    lines: List["StockOrderShipmentLine"]
+
+class StockOrderShipment(_StockOrderShipmentRequired, total=False):
+    warehouse_id: "UUID"
+    deal: "UUID"
+
+class StockOrderShipmentLine(TypedDict):
+    product_id: "UUID"
+    qty: str
+
+class _StockOrderShippingRequired(TypedDict):
+    order_id: "UUID"
+    number: str
+    date: str
+    state: str
+    contact_id: "UUID"
+    lines: List["StockOrderShippingLine"]
+    shipments: List["StockOrderShipment"]
+    reserved: bool
+    can_ship: bool
+
+class StockOrderShipping(_StockOrderShippingRequired, total=False):
+    contact_name: str
+    company_id: "UUID"
+    warehouse_id: "UUID"
+    ship_blocked: str
+
+class _StockOrderShippingLineRequired(TypedDict):
+    line_id: "UUID"
+    product_id: "UUID"
+    title: str
+    ordered_qty: str
+    shipped_qty: str
+    remaining_qty: str
+
+class StockOrderShippingLine(_StockOrderShippingLineRequired, total=False):
+    unit: str
+
+class StockOrderShippingPage(TypedDict):
+    results: List["StockOrderShipping"]
+    count: int
+
 class _StockProductUOMRequired(TypedDict):
     id: "UUID"
     product_id: "UUID"
@@ -18123,6 +18885,21 @@ class WorkflowStatusUpdate(TypedDict, total=False):
     order: int
     is_default: bool
     is_final: bool
+
+class AutomationRulesResponse(TypedDict):
+    rules: List["AutomationRuleDocument"]
+
+class _AutomationRuleSimulateResponseRequired(TypedDict):
+    result: "AutomationRuleSimulation"
+
+class AutomationRuleSimulateResponse(_AutomationRuleSimulateResponseRequired, total=False):
+    problem: "AutomationRuleProblem"
+
+class _AutomationRuleTestResponseRequired(TypedDict):
+    result: "AutomationRuleTestResult"
+
+class AutomationRuleTestResponse(_AutomationRuleTestResponseRequired, total=False):
+    problem: "AutomationRuleProblem"
 
 class CoreGetAccountingStartResponse(TypedDict):
     #: День первой проводки, ГГГГ-ММ-ДД. Пусто — учёт ещё не начинался.

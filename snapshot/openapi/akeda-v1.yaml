@@ -164,6 +164,8 @@ security:
 tags:
   - name: Tasks
     description: Модуль tasks (задачник)
+  - name: Automation
+    description: Манифест возможностей автоматизаций «когда → если → то»
   - name: Calendar
     description: Модуль calendar (события, занятость и внешняя синхронизация)
   - name: Calendar public booking
@@ -350,6 +352,8 @@ tags:
     description: 'Модуль docflow (документы) — исходящий формализованный документ: титул продавца по учётному документу кабинета и ответный титул покупателя на входящий пакет. Предполётная проверка ничего не меняет и никуда не ходит, поэтому работает и при действующем ограничении «только чтение»; отправка при нём отвечает отказом docflow.edo.read_only до расшифровки учётных данных оператора'
   - name: Docflow flow
     description: 'Модуль docflow (документы) — внутренний документооборот кабинета: карточки договоров, спецификаций и актов, их неизменяемые редакции, файлы и связи между документами. Учётного факта это крыло не создаёт: регистры и главную книгу оно не трогает вовсе'
+  - name: Docflow payment requests
+    description: 'Модуль docflow (документы) — заявка на оплату как документ: автор заводит её и отправляет по маршруту согласования, согласованная уходит в модуль finance (счета, выписки и расчёты) в платёжный календарь или казначею по флагу маршрута, а автор видит ход оплаты и платёжку без доступа к финансам.'
   - name: Docflow approvals
     description: 'Модуль docflow (документы) — согласование как САМОСТОЯТЕЛЬНАЯ сущность: лист больше не часть карточки. Предмет назван нейтральной тройкой «модуль — вид — идентификатор», и внешнего ключа на него нет вовсе, поэтому одним и тем же крылом согласуются и карточка документооборота, и заявка на оплату модуля finance (счета, выписки и расчёты). Согласование ничего не проводит и ни строки регистра не пишет: оно отвечает на один вопрос — можно ли уже выполнить действие, выпускающее бумагу или деньги наружу. Таких действий ровно два: отправить документ контрагенту и отправить заявку в банк; редактирование карточки не глушится никогда. Решение стоит под ОТДЕЛЬНЫМ правом docflow.flow:approve, а настройка маршрутов, замещений и обязательности — под docflow.flow:admin: маршрут решает, кого будут спрашивать про чужие бумаги, и это работа администратора кабинета. Согласование не является подписью: усиленная квалифицированная подпись живёт в крыле обмена с контрагентами и вычисляется на машине человека'
   - name: Docflow flow accounting
@@ -10962,6 +10966,90 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/core/contracts/{id}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Core orders
+      operationId: coreGetContractTerms
+      summary: Получить учётный реквизит договора
+      description: 'Договор как учётный реквизит ядра: стороны, номер, дата, валюта и детализация расчётов (по заказу, по договору, по документу исполнения). Идентификатор — тот же, что у карточки договора документооборота.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Реквизит договора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreContractTerms'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/contracts/{id}/settlement-detail:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    put:
+      tags:
+        - Core orders
+      operationId: coreSetContractSettlementDetail
+      summary: Изменить детализацию расчётов договора
+      description: 'Детализация меняется до первой операции по договору. После неё — 409 `core.contract.detail_locked`: по договору уже есть расчёты.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreContractSettlementDetailInput'
+      responses:
+        '200':
+          description: Реквизит договора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreContractTerms'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/core/order-statuses:
     get:
       tags:
@@ -11082,6 +11170,353 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/core/order-funnels:
+    get:
+      tags:
+        - Core orders
+      operationId: coreListOrderFunnels
+      summary: Получить воронки заказов кабинета
+      description: 'Воронки кабинета с этапами (статусы кабинета на состояниях заказа) и ожидаемыми шагами: сторона, источник заказа, умолчание стороны, версия.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Воронки кабинета
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderFunnelList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Core orders
+      operationId: coreCreateOrderFunnel
+      summary: Завести воронку заказов
+      description: 'Документ воронки целиком: этапы на состояниях, шаги со сроком по правилу и «сделано, когда». Проверка отвечает 400 `core.order.invalid` с причиной словами. Каждое сохранение — версия. Настраивает тот, кому доверены настройки кабинета (settings:write), как правила автоматизаций.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: settings:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderFunnelInput'
+      responses:
+        '201':
+          description: Воронка заведена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderFunnel'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/order-funnels/templates:
+    get:
+      tags:
+        - Core orders
+      operationId: coreListOrderFunnelTemplates
+      summary: Получить шаблоны воронок заказов
+      description: Стартовые воронки — интернет-магазин, поставка с монтажом, услуги по договору — документами на языке запроса. Применённый шаблон становится данными кабинета.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Шаблоны воронок
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderFunnelTemplateList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/order-funnels/{id}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    put:
+      tags:
+        - Core orders
+      operationId: coreUpdateOrderFunnel
+      summary: Изменить воронку заказов
+      description: Новая версия воронки. Этап с id правится, без id — заводится, убранный — выключается (на него ссылается история заказов). Состояние этапа, на котором стоят заказы, не меняется.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: settings:write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderFunnelInput'
+      responses:
+        '200':
+          description: Воронка после правки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderFunnel'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/order-funnels/{id}/versions:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Core orders
+      operationId: coreListOrderFunnelVersions
+      summary: Получить версии воронки заказов
+      description: Сохранённые версии воронки — документ целиком и кто сохранил, свежие сверху.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Версии воронки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderFunnelVersionList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/orders/{id}/funnel:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Core orders
+      operationId: coreGetOrderFunnel
+      summary: Получить воронку и шаги заказа
+      description: 'Цепочка шапки заказа: воронка и ожидаемые шаги со сроком и статусом — выполнен, ждём, просрочен. Шаги ничего не блокируют.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Воронка и шаги заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderFunnelView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Core orders
+      operationId: coreSetOrderFunnel
+      summary: Сменить воронку заказа
+      description: 'Другая воронка одним выбором (или null — без воронки): невыполненные шаги прежней убираются, шаги новой строятся, выполненные остаются; этап — первый этап новой воронки в текущем состоянии.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderFunnelChoice'
+      responses:
+        '200':
+          description: Воронка и шаги заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderFunnelView'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/orders/{id}/steps/{key}/done:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: key
+        in: path
+        required: true
+        description: Ключ шага воронки
+        schema:
+          type: string
+    post:
+      tags:
+        - Core orders
+      operationId: coreCompleteOrderStep
+      summary: Отметить шаг заказа выполненным
+      description: 'Шаг «человек отметит» выполнен: один раз, с фактом `core.order_step.done`. Повтор ничего не меняет.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Воронка и шаги заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderFunnelView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/orders/{id}/steps/{key}/due:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: key
+        in: path
+        required: true
+        description: Ключ шага воронки
+        schema:
+          type: string
+    put:
+      tags:
+        - Core orders
+      operationId: coreSetOrderStepDue
+      summary: Изменить срок шага заказа
+      description: 'Исключение правится на самом шаге: новая дата и, по выбору, сдвиг следующих невыполненных шагов с датой на ту же разницу. Напоминания шага пересчитываются; правка пишется в журнал заказа. Выполненному шагу срок не правят (400).'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderStepDueInput'
+      responses:
+        '200':
+          description: Воронка и шаги заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderFunnelView'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/core/order-imports:
     get:
       tags:
@@ -17598,7 +18033,7 @@ paths:
         - Finance trade
       operationId: financeGetTradeJournal
       summary: Получить журнал продаж или закупок
-      description: 'С этапа 2 эпика ERP-1427 строки журнала — заказы ядра (customer_order у продаж, supplier_order у закупок) с колонками «заказано · исполнено · оплачено · аванс · долг»; по умолчанию — подтверждённые заказы и дальше, черновики и отменённые — отбором status. Аванс и долг вычисляются из «исполнено» и «оплачено» (computed_columns), разреза «заказ» в регистре расчётов до этапа 3 нет. Документы без заказа отдаёт group=without_order («Поступления без заказа»). Это ломающее изменение preview-контракта: прежняя строка-документ осталась только в группе without_order.'
+      description: 'С этапа 2 эпика ERP-1427 строки журнала — заказы ядра (customer_order у продаж, supplier_order у закупок) с колонками «заказано · исполнено · оплачено · аванс · долг»; по умолчанию — подтверждённые заказы и дальше, черновики и отменённые — отбором status. У бизнеса, прошедшего отсечку расчётов по заказам (этап 3), аванс и долг — остатки регистра расчётов по заказу (money_from_register у строки); до отсечки они вычисляются из «исполнено» и «оплачено» (computed_columns есть, пока в ответе есть такие строки). Документы без заказа отдаёт group=without_order («Поступления без заказа»). Это ломающее изменение preview-контракта: прежняя строка-документ осталась только в группе without_order.'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -21272,9 +21707,19 @@ paths:
           description: Разрез по проекту или путешествию; без него — по всем.
           schema:
             $ref: '#/components/schemas/UUID'
+        - name: step
+          in: query
+          description: Ширина колонки отчёта; неизвестное значение означает месяцы.
+          schema:
+            type: string
+            enum:
+              - month
+              - quarter
+              - total
+            default: month
       responses:
         '200':
-          description: ОПиУ за период и помесячные колонки
+          description: ОПиУ за период и колонки по выбранному шагу
           content:
             application/json:
               schema:
@@ -30704,6 +31149,125 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/v1/stock/orders/to-ship:
+    get:
+      tags:
+        - Stock purchasing
+      operationId: stockGetOrdersToShip
+      summary: Получить очередь заказов покупателей к отгрузке
+      description: 'Очередь склада «К отгрузке» (этап 2 ERP-1427): подтверждённые и исполняемые заказы покупателей ядра, у которых отгружен не весь товар. По каждому заказу — товарные строки (заказано, отгружено, осталось), отгрузки склада по заказу, признак живого резерва и доступность «Отгрузить» с кодом причины. Услуги в строки не попадают. Документооборот не нужен. Потолок очереди — 200 заказов.'
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Заказы к отгрузке
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockOrderShippingPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/stock/orders/{id}/shipping:
+    get:
+      tags:
+        - Stock purchasing
+      operationId: stockGetOrderShipping
+      summary: Получить исполнение заказа покупателя складом
+      description: 'Товарные строки заказа покупателя ядра с раскладкой отгруженного по порядку состава, отгрузки склада по заказу, признак резерва и доступность «Отгрузить» (can_ship, ship_blocked: closed, no_goods, shipped, no_counterparty, no_company; черновик отгружается — дверь его подтвердит). Документооборот не нужен.'
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Исполнение заказа складом
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockOrderShipping'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/stock/orders/{id}/shipment:
+    post:
+      tags:
+        - Stock purchasing
+      operationId: stockShipOrder
+      summary: Отгрузить по заказу покупателя
+      description: '«Отгрузить» дверью склада без документооборота: создаётся и сразу проводится отгрузка склада с реквизитом «заказ» — та же сборка, что у фасада документооборота; резерв заказа гасится ею же. Количество по строке не больше остатка к отгрузке, строки без количества пропускаются, без строк — отгружается весь остаток. Черновик заказа дверь сначала подтверждает (КЦ § 2.1) и пишет «Заказы» +; фасад документооборота /docflow/orders/{id}/shipment зовёт эту же дверь. Читает `Idempotency-Key` — повтор с тем же ключом отдаёт ту же отгрузку.'
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockOrderShipInput'
+      responses:
+        '201':
+          description: Проведённая отгрузка по заказу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockOrderShipment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/IdempotencyKeyMismatch'
+        '503':
+          $ref: '#/components/responses/IdempotencyUnavailable'
   /api/v1/stock/report/supplier-orders/overdue:
     get:
       tags:
@@ -38655,6 +39219,277 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/automation/manifest:
+    get:
+      tags:
+        - Automation
+      operationId: automationManifest
+      summary: Получить манифест возможностей автоматизаций
+      description: |
+        Один документ всего, из чего собирается правило «когда → если → то»:
+        события с описанием, «когда применять», полями условия и примером тела;
+        сравнения условия; действия с правом, опасностью, повтором, входами и
+        примером; справочники выбора с инструментом поиска значения;
+        подстановки и пределы. Документ порождается кодом каталогов, а не
+        ведётся руками; тексты — на языке `locale` или `Accept-Language`.
+
+        Доступность считается для этого кабинета и этого человека: событие и
+        действие модуля, не подключённого в кабинете, и действие, на которое у
+        вызывающего нет права, приходят со статусом `unavailable` и причиной
+        словами. Вызывающий станет исполнителем правила, поэтому предлагать
+        ему недоступное бессмысленно. `declared` — действие объявлено модулем,
+        но пока не выполняется автоматически. `revision` меняется вместе с
+        содержимым. Схема документа —
+        `docs/architecture/automation/manifest.schema.json`.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: platform
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: settings:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: locale
+          in: query
+          description: 'Язык слов: ru или en; без него — по Accept-Language'
+          schema:
+            type: string
+            enum:
+              - ru
+              - en
+        - name: detail
+          in: query
+          description: full — с полями, входами и примерами; brief — ключи, слова и доступность
+          schema:
+            type: string
+            enum:
+              - full
+              - brief
+            default: full
+      responses:
+        '200':
+          description: Манифест возможностей
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationManifest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/automation/rules/test:
+    post:
+      tags:
+        - Automation
+      operationId: automationRuleTest
+      summary: Проверить правило автоматизации на настоящем факте
+      description: |
+        Прогоняет документ правила «когда → если → то» по одному настоящему
+        факту кабинета и отвечает итогом каждого блока: «когда» — какой факт
+        и его поля словами; «если» — каждое сравнение с настоящим значением и
+        отметкой; «то» — что сделало бы каждое действие: входы после подстановки
+        полей факта, право исполнителя и подключён ли исполнитель действия.
+
+        Ничего не исполняется и не записывается: правило не сохраняется,
+        прогон не заводится, исполнитель действия не вызывается (`executed`
+        всегда `false`). Исполнитель проверки — вызывающий: после сохранения
+        правило будет работать с его правами.
+
+        Факт выбирается `sample_key` из выборки последних фактов события за 30
+        дней; без него — последний факт. Факты видны только те, что вызывающий
+        вправе видеть: письмо — из его ящиков, остальное — при праве чтения
+        модуля-источника. `payload` — проверить на присланном теле события
+        («что если»), без настоящего факта.
+
+        Кривое событие или условие — 422 со словами, как у записи правила.
+        Недозаполненное действие проверке не мешает: итог приходит с `problem`.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: automation
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: settings:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: locale
+          in: query
+          description: 'Язык слов: ru или en; без него — по Accept-Language'
+          schema:
+            type: string
+            enum:
+              - ru
+              - en
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationRuleTestRequest'
+      responses:
+        '200':
+          description: Итог проверки по блокам
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                properties:
+                  result:
+                    $ref: '#/components/schemas/AutomationRuleTestResult'
+                  problem:
+                    $ref: '#/components/schemas/AutomationRuleProblem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Событие или условие правила не проходит проверку
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - detail
+                  - problem
+                properties:
+                  detail:
+                    type: string
+                  problem:
+                    $ref: '#/components/schemas/AutomationRuleProblem'
+  /api/v1/automation/rules:
+    get:
+      tags:
+        - Automation
+      operationId: automationRules
+      summary: Получить правила автоматизаций кабинета
+      description: |
+        Правила кабинета документами «когда → если → то» в той же форме, что
+        сохраняет конструктор: событие, условие сравнениями, действия со
+        входами, исполнитель, включено ли, версия. Ассистент смотрит их, прежде
+        чем предложить новое правило, — чтобы не собрать второе такое же.
+        Только чтение.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: automation
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: settings:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Правила кабинета
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - rules
+                properties:
+                  rules:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AutomationRuleDocument'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/automation/rules/simulate:
+    post:
+      tags:
+        - Automation
+      operationId: automationRuleSimulate
+      summary: Прогнать правило автоматизации на истории кабинета
+      description: |
+        Прогоняет документ правила «когда → если → то» по настоящим фактам
+        кабинета за последние `days` дней (по умолчанию 30, не больше 90) тем
+        же вычислителем условия, что и живой прогон, и отвечает: сколько фактов
+        события было, сколько раз правило сработало бы, в какой день больше
+        всего, на каких записях (до 50), что сделали бы действия и кому не
+        хватило бы прав.
+
+        С `rule_id` в ответе есть и «было» (`before`): сохранённая версия
+        правила на тех же фактах; выключенное правило — 0. Так экран показывает
+        «было 0 → станет 12» до включения.
+
+        Ничего не исполняется и не записывается (`executed` всегда `false`).
+        Факты видны только те, что вызывающий вправе видеть: письмо — из его
+        ящиков, остальное — при праве чтения модуля-источника. Учитываются
+        последние 2000 фактов периода (`truncated`).
+
+        Кривое событие или условие — 422 со словами, как у записи правила.
+        Недозаполненное действие прогону не мешает: итог приходит с `problem`.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: automation
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: settings:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: locale
+          in: query
+          description: 'Язык слов: ru или en; без него — по Accept-Language'
+          schema:
+            type: string
+            enum:
+              - ru
+              - en
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationRuleSimulateRequest'
+      responses:
+        '200':
+          description: Итог прогона на истории
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - result
+                properties:
+                  result:
+                    $ref: '#/components/schemas/AutomationRuleSimulation'
+                  problem:
+                    $ref: '#/components/schemas/AutomationRuleProblem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          description: Событие или условие правила не проходит проверку
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - detail
+                  - problem
+                properties:
+                  detail:
+                    type: string
+                  problem:
+                    $ref: '#/components/schemas/AutomationRuleProblem'
   /api/v1/app/installation:
     get:
       tags:
@@ -43270,7 +44105,7 @@ paths:
       x-akeda-audience: external
       summary: Прочитать платёжные реквизиты входящего счёта
       description: |-
-        Чем заполняется заявка на оплату по входящему счёту: получатель с его расчётным счётом, БИК и банком, плательщик, сумма, валюта, основание, предмет и налог. Метод НИЧЕГО НЕ МЕНЯЕТ — он разбирает файл, который уже лежит у нас на диске, — поэтому право docflow.edo:read. Право готовить заявку (finance.payment-requests:request) проверяет форма финансов и сама заявка при сохранении: показать реквизиты счёта тому, кто вправе видеть сам счёт, полномочием платить не является.
+        Чем заполняется заявка на оплату по входящему счёту: получатель с его расчётным счётом, БИК и банком, плательщик, сумма, валюта, основание, предмет и налог. Метод НИЧЕГО НЕ МЕНЯЕТ — он разбирает файл, который уже лежит у нас на диске, — поэтому право docflow.edo:read. Право заводить заявку (docflow.flow:request) проверяет сама заявка документооборота при сохранении: показать реквизиты счёта тому, кто вправе видеть сам счёт, полномочием платить не является.
 
         Отдельный адрес, а не поле предпросмотра приёмки. Предпросмотр отвечает на вопрос «что мы заведём в учёт» и открывается у накладной, у которой платёжных реквизитов нет вовсе; оплату нажимают у счёта, у которого нет ни товарной таблицы в нашем смысле, ни приёмки — счёт формализованного титула не имеет и учётным документом не становится. Одним ответом они заставили бы каждую сторону платить за чужой разбор.
 
@@ -43556,6 +44391,7 @@ paths:
             enum:
               - flow_document
               - payment_request
+              - edo_message
         - name: id
           in: query
           required: true
@@ -43827,6 +44663,278 @@ paths:
           $ref: '#/components/responses/Conflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/payment-requests:
+    get:
+      tags:
+        - Docflow payment requests
+      operationId: docflowPaymentRequests
+      x-akeda-audience: external
+      summary: Получить заявки на оплату
+      description: 'Заявка на оплату — документ модуля docflow (документы): её заводят и согласуют здесь, а в модуль finance (счета, выписки и расчёты) приходит только согласованная. Автор с правом docflow.flow:request видит свои заявки; scope=all отдаёт все заявки кабинета тем, у кого есть docflow.flow:read или docflow.flow:approve. Строка несёт ход оплаты (progress) и, когда платёж прошёл, реквизиты платёжного поручения — доступа к финансам для этого не нужно.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:request
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: scope
+          in: query
+          description: mine — свои заявки (по умолчанию); all — все заявки кабинета при праве чтения или согласования
+          schema:
+            type: string
+            enum:
+              - mine
+              - all
+            default: mine
+        - name: status
+          in: query
+          description: Состояние документа заявки
+          schema:
+            $ref: '#/components/schemas/DocflowPaymentRequestStatus'
+      responses:
+        '200':
+          description: Заявки на оплату
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowPaymentRequestList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Docflow payment requests
+      operationId: docflowCreatePaymentRequest
+      x-akeda-audience: external
+      summary: Завести заявку на оплату
+      description: 'Заводит черновик заявки. Основание — нейтральная тройка: входящий документ ЭДО (docflow / edo_message), карточка документооборота (docflow / flow_document) или основание словами (docflow / manual). Отказ проверки называет поле (422, code docflow.payment_request.field, поле field): юрлицо, получатель, БИК, сумма, валюта, срок, назначение.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:request
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowPaymentRequestInput'
+      responses:
+        '201':
+          description: Черновик заявки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowPaymentRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/payment-requests/{id}:
+    get:
+      tags:
+        - Docflow payment requests
+      operationId: docflowPaymentRequest
+      x-akeda-audience: external
+      summary: Получить заявку на оплату
+      description: 'Карточка заявки с ходом оплаты. Чужая заявка без права чтения или согласования отвечает 404, а не 403: ответ «запрещено» подтверждал бы, что такая заявка есть.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:request
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Заявка на оплату
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowPaymentRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    put:
+      tags:
+        - Docflow payment requests
+      operationId: docflowUpdatePaymentRequest
+      x-akeda-audience: external
+      summary: Изменить заявку на оплату
+      description: 'Правит черновик или заявку, возвращённую на доработку. Версия обязательна: заявку, которую уже изменили, правка не перезапишет (409).'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:request
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowPaymentRequestUpdate'
+      responses:
+        '200':
+          description: Заявка после правки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowPaymentRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/payment-requests/{id}/submit:
+    post:
+      tags:
+        - Docflow payment requests
+      operationId: docflowSubmitPaymentRequest
+      x-akeda-audience: external
+      summary: Отправить заявку на оплату на согласование
+      description: 'Сначала заявку проверяет владелец денег своим правилом (ключ счёта получателя к БИК) — отказ называет поле. Маршрут подбирается по фактам заявки, его флаг «после согласования» записывается в заявку снимком. Маршрута нет и согласование заявок не объявлено обязательным — заявка согласована сразу и в той же транзакции уходит в платёжный календарь. Согласованная заявка приходит в finance по флагу маршрута: в календарь (дата оплаты — срок) или казначею без даты.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:request
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowPaymentRequestVersion'
+      responses:
+        '200':
+          description: Заявка после отправки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowPaymentRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/payment-requests/{id}/cancel:
+    post:
+      tags:
+        - Docflow payment requests
+      operationId: docflowCancelPaymentRequest
+      x-akeda-audience: external
+      summary: Отозвать заявку на оплату
+      description: 'Отзывает свою заявку до согласования; открытый проход согласования отзывается вместе с ней. Согласованную заявку отсюда не снять: деньги по ней уже в очереди финансов, и снимает их казначей.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:request
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowPaymentRequestVersion'
+      responses:
+        '200':
+          description: Заявка после отзыва
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowPaymentRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/docflow/approval-routes:
     get:
       tags:
@@ -43863,6 +44971,7 @@ paths:
             enum:
               - flow_document
               - payment_request
+              - edo_message
               - any
       responses:
         '200':
@@ -48256,6 +49365,828 @@ components:
             type: string
             format: binary
   schemas:
+    AutomationManifest:
+      type: object
+      description: Документ akeda.automation.manifest версии 1 (AUTOMATION.md § 10.1).
+      required:
+        - format
+        - version
+        - revision
+        - locale
+        - detail
+        - events
+        - conditions
+        - actions
+        - references
+        - placeholders
+        - limits
+      properties:
+        $schema:
+          type: string
+        format:
+          type: string
+          enum:
+            - akeda.automation.manifest
+        version:
+          type: integer
+        revision:
+          type: string
+          description: Отпечаток содержимого sha256:…
+        locale:
+          type: string
+          enum:
+            - ru
+            - en
+        detail:
+          type: string
+          enum:
+            - full
+            - brief
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/AutomationManifestEvent'
+        conditions:
+          type: object
+          required:
+            - combinator
+            - operators
+            - max_clauses
+            - max_value_length
+          properties:
+            combinator:
+              type: string
+              enum:
+                - all
+            operators:
+              type: array
+              items:
+                type: object
+                required:
+                  - op
+                  - label
+                  - field_types
+                  - needs_value
+                  - case_insensitive
+                properties:
+                  op:
+                    type: string
+                  label:
+                    type: string
+                  field_types:
+                    type: array
+                    items:
+                      type: string
+                  needs_value:
+                    type: boolean
+                  case_insensitive:
+                    type: boolean
+            max_clauses:
+              type: integer
+            max_value_length:
+              type: integer
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AutomationManifestAction'
+        references:
+          type: array
+          items:
+            type: object
+            required:
+              - kind
+              - module
+              - label
+              - lookup_tool
+              - parameter_kind
+              - status
+            properties:
+              kind:
+                type: string
+              module:
+                type: string
+              label:
+                type: string
+              lookup_tool:
+                type: string
+                description: MCP-инструмент поиска значения по имени
+              parameter_kind:
+                type: boolean
+              status:
+                type: string
+                enum:
+                  - live
+                  - unavailable
+        placeholders:
+          type: array
+          items:
+            type: object
+            required:
+              - syntax
+              - meaning
+              - status
+            properties:
+              syntax:
+                type: string
+              meaning:
+                type: string
+              status:
+                type: string
+        limits:
+          type: object
+          required:
+            - max_actions
+            - max_conditions
+            - max_condition_length
+            - chain_depth
+            - runs_per_tenant_per_minute
+            - max_attempts
+          properties:
+            max_actions:
+              type: integer
+            max_conditions:
+              type: integer
+            max_condition_length:
+              type: integer
+            chain_depth:
+              type: integer
+            runs_per_tenant_per_minute:
+              type: integer
+            max_attempts:
+              type: integer
+    AutomationRuleTestRequest:
+      type: object
+      required:
+        - rule
+      properties:
+        rule:
+          type: object
+          description: Документ правила в той же форме, что у записи правила; название и исполнитель не нужны.
+          required:
+            - event_type
+          properties:
+            name:
+              type: string
+            event_type:
+              type: string
+            condition:
+              type: string
+            conditions:
+              type: array
+              items:
+                type: object
+                required:
+                  - field
+                  - op
+                properties:
+                  field:
+                    type: string
+                  op:
+                    type: string
+                    description: equals, not_equals, contains, starts_with, ends_with, is_true, is_false; числа — gt, gte, lt, lte, between; даты — before, on_or_before, after, on_or_after, between
+                  value:
+                    type: string
+                  value_to:
+                    type: string
+                    description: Верхняя граница «между», включительно
+                  of:
+                    type: string
+                    description: 'Числовое поле-основа: value и value_to — проценты от него'
+                  group:
+                    type: integer
+                    minimum: 0
+                    description: 'Группа «или»: сравнения группы — «и», группы между собой — «или»'
+            actions:
+              type: array
+              items:
+                type: object
+                required:
+                  - command
+                properties:
+                  command:
+                    type: string
+                  inputs:
+                    type: object
+                    additionalProperties:
+                      type: string
+        sample_key:
+          type: string
+          description: Ключ факта из выборки последних фактов события; пусто — последний факт
+        payload:
+          type: object
+          additionalProperties:
+            type: string
+          description: Тело события для проверки «что если» вместо настоящего факта
+    AutomationRuleDocument:
+      type: object
+      required:
+        - id
+        - name
+        - event_type
+        - condition
+        - conditions
+        - actions
+        - executor_user_id
+        - is_enabled
+        - origin
+        - version
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        event_type:
+          type: string
+        condition:
+          type: string
+          description: Выражение вычислителя; у правила из конструктора собрано из conditions
+        conditions:
+          type: array
+          items:
+            type: object
+            required:
+              - field
+              - op
+            properties:
+              field:
+                type: string
+              op:
+                type: string
+              value:
+                type: string
+              value_to:
+                type: string
+              of:
+                type: string
+              group:
+                type: integer
+        actions:
+          type: array
+          items:
+            type: object
+            required:
+              - command
+            properties:
+              command:
+                type: string
+              inputs:
+                type: object
+                additionalProperties:
+                  type: string
+        executor_user_id:
+          type: integer
+          format: int64
+        is_enabled:
+          type: boolean
+        origin:
+          type: string
+          enum:
+            - manual
+            - configuration
+        version:
+          type: integer
+        created_by:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    AutomationRuleSimulateRequest:
+      type: object
+      required:
+        - rule
+      properties:
+        rule:
+          type: object
+          description: Документ правила в той же форме, что у проверки правила (event_type, conditions, actions); название и исполнитель не нужны.
+          required:
+            - event_type
+          additionalProperties: true
+          properties:
+            event_type:
+              type: string
+        rule_id:
+          type: string
+          format: uuid
+          description: 'Сохранённое правило: его версия на тех же фактах — «было»'
+        days:
+          type: integer
+          minimum: 1
+          maximum: 90
+          description: Период прогона в днях; по умолчанию 30
+    AutomationRuleSimulation:
+      type: object
+      required:
+        - days
+        - since
+        - events
+        - fired
+        - truncated
+        - max_per_day
+        - records
+        - actions
+        - executed
+      properties:
+        days:
+          type: integer
+        since:
+          type: string
+          format: date-time
+        events:
+          type: integer
+          description: Фактов события за период, видимых вызывающему
+        fired:
+          type: integer
+          description: Сколько раз правило сработало бы
+        truncated:
+          type: boolean
+          description: Учтены только последние 2000 фактов периода
+        max_per_day:
+          type: integer
+          description: Больше всего срабатываний за один день
+        records:
+          type: array
+          items:
+            type: object
+            required:
+              - key
+              - entity_id
+              - occurred_at
+            properties:
+              key:
+                type: string
+              entity_id:
+                type: string
+              title:
+                type: string
+                description: Номер, идентификатор или тема записи
+              occurred_at:
+                type: string
+                format: date-time
+        actions:
+          type: array
+          items:
+            type: object
+            required:
+              - index
+              - command
+              - label
+              - permission
+              - allowed
+              - connected
+              - count
+            properties:
+              index:
+                type: integer
+              command:
+                type: string
+              label:
+                type: string
+              permission:
+                type: string
+              allowed:
+                type: boolean
+              connected:
+                type: boolean
+              count:
+                type: integer
+                description: Сколько раз действие выполнилось бы; 0 — его заблокировали права или нет исполнителя
+              code:
+                type: string
+              message:
+                type: string
+        before:
+          type: object
+          required:
+            - enabled
+            - version
+            - fired
+          properties:
+            enabled:
+              type: boolean
+            version:
+              type: integer
+            fired:
+              type: integer
+              description: Сколько раз сработала бы сохранённая версия; выключенное правило — 0
+        executed:
+          type: boolean
+          description: 'Всегда false: прогон ничего не исполняет'
+    AutomationRuleProblem:
+      type: object
+      required:
+        - field
+        - code
+        - message
+      properties:
+        field:
+          type: string
+          description: 'Путь в документе правила: event_type, conditions[1].op, actions[0].inputs.title'
+        code:
+          type: string
+        message:
+          type: string
+        hint:
+          type: string
+        params:
+          type: object
+          additionalProperties:
+            type: string
+        allowed:
+          type: array
+          items:
+            type: string
+    AutomationRuleTestResult:
+      type: object
+      required:
+        - executor_user_id
+        - when
+        - condition
+        - matched
+        - actions
+        - executed
+      properties:
+        sample:
+          type:
+            - object
+            - 'null'
+          required:
+            - key
+            - event_type
+            - entity
+            - entity_id
+            - occurred_at
+            - payload
+            - source
+          properties:
+            key:
+              type: string
+            event_type:
+              type: string
+            entity:
+              type: string
+            entity_id:
+              type: string
+            title:
+              type: string
+              description: Номер, идентификатор или тема записи
+            occurred_at:
+              type: string
+              format: date-time
+            payload:
+              type: object
+              additionalProperties:
+                type: string
+            source:
+              type: string
+              enum:
+                - outbox
+                - direct
+                - payload
+        executor_user_id:
+          type: integer
+          format: int64
+        when:
+          type: object
+          required:
+            - ok
+            - event_label
+            - values
+          properties:
+            ok:
+              type: boolean
+            event_label:
+              type: string
+            values:
+              type: array
+              items:
+                type: object
+                required:
+                  - key
+                  - label
+                  - value
+                properties:
+                  key:
+                    type: string
+                  label:
+                    type: string
+                  value:
+                    type: string
+            code:
+              type: string
+              description: no_sample — фактов события за 30 дней нет
+            message:
+              type: string
+        condition:
+          type: object
+          required:
+            - ok
+            - empty
+            - expression
+            - clauses
+          properties:
+            ok:
+              type: boolean
+            empty:
+              type: boolean
+            expression:
+              type: boolean
+            clauses:
+              type: array
+              items:
+                type: object
+                required:
+                  - index
+                  - field
+                  - field_label
+                  - op
+                  - op_label
+                  - actual
+                  - present
+                  - ok
+                properties:
+                  index:
+                    type: integer
+                  field:
+                    type: string
+                  field_label:
+                    type: string
+                  op:
+                    type: string
+                  op_label:
+                    type: string
+                  expected:
+                    type: string
+                  expected_to:
+                    type: string
+                  of:
+                    type: string
+                  of_label:
+                    type: string
+                  of_actual:
+                    type: string
+                  group:
+                    type: integer
+                  actual:
+                    type: string
+                  present:
+                    type: boolean
+                  ok:
+                    type: boolean
+            code:
+              type: string
+            message:
+              type: string
+        matched:
+          type: boolean
+        actions:
+          type: array
+          items:
+            type: object
+            required:
+              - index
+              - command
+              - label
+              - permission
+              - allowed
+              - connected
+              - status
+              - inputs
+            properties:
+              index:
+                type: integer
+              command:
+                type: string
+              label:
+                type: string
+              permission:
+                type: string
+              allowed:
+                type: boolean
+              connected:
+                type: boolean
+              status:
+                type: string
+                enum:
+                  - would_run
+                  - not_reached
+                  - blocked
+              code:
+                type: string
+              message:
+                type: string
+              inputs:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - key
+                    - label
+                    - template
+                    - value
+                  properties:
+                    key:
+                      type: string
+                    label:
+                      type: string
+                    template:
+                      type: string
+                    value:
+                      type: string
+                    missing:
+                      type: array
+                      items:
+                        type: string
+        problem:
+          $ref: '#/components/schemas/AutomationRuleProblem'
+        executed:
+          type: boolean
+          description: 'Всегда false: проверка ничего не делает'
+    AutomationManifestOption:
+      type: object
+      required:
+        - value
+        - label
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+    AutomationManifestEvent:
+      type: object
+      required:
+        - topic
+        - module
+        - entity
+        - fact
+        - label_key
+        - label
+        - description
+        - when_to_use
+        - status
+        - source_visibility
+      properties:
+        topic:
+          type: string
+        module:
+          type: string
+        entity:
+          type: string
+        fact:
+          type: string
+        label_key:
+          type: string
+        label:
+          type: string
+        description:
+          type: string
+        when_to_use:
+          type: string
+        status:
+          type: string
+          enum:
+            - live
+            - unavailable
+        unavailable_reason:
+          type: string
+        source_visibility:
+          type: boolean
+          description: Правило сработает, только если исполнитель видит источник
+        fields:
+          type: array
+          items:
+            type: object
+            required:
+              - key
+              - type
+              - label
+              - operators
+            properties:
+              key:
+                type: string
+              type:
+                type: string
+                enum:
+                  - string
+                  - number
+                  - bool
+                  - timestamp
+              label:
+                type: string
+              options:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AutomationManifestOption'
+              ref:
+                type: string
+              operators:
+                type: array
+                items:
+                  type: string
+        example_payload:
+          type: object
+          additionalProperties: true
+    AutomationManifestAction:
+      type: object
+      required:
+        - command
+        - module
+        - label_key
+        - label
+        - description
+        - when_to_use
+        - status
+        - permission
+        - reversible
+        - danger
+        - idempotency
+        - target
+      properties:
+        command:
+          type: string
+        module:
+          type: string
+        label_key:
+          type: string
+        label:
+          type: string
+        description:
+          type: string
+        when_to_use:
+          type: string
+        status:
+          type: string
+          enum:
+            - live
+            - declared
+            - unavailable
+        unavailable_reason:
+          type: string
+        permission:
+          type: string
+        reversible:
+          type: boolean
+        danger:
+          type: string
+          enum:
+            - none
+            - external
+            - irreversible
+        idempotency:
+          type: string
+        target:
+          type: string
+          enum:
+            - new
+            - event_entity
+        event_entities:
+          type: array
+          items:
+            type: string
+        mcp_twin:
+          type: string
+        inputs:
+          type: array
+          items:
+            type: object
+            required:
+              - key
+              - type
+              - required
+              - label
+              - accepts_placeholders
+            properties:
+              key:
+                type: string
+              type:
+                type: string
+                enum:
+                  - string
+                  - number
+                  - bool
+                  - reference
+                  - datetime
+                  - choice
+              required:
+                type: boolean
+              label:
+                type: string
+              options:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AutomationManifestOption'
+              ref:
+                type: string
+              accepts_placeholders:
+                type: boolean
+        example_inputs:
+          type: object
+          additionalProperties:
+            type: string
     EmptyObject:
       type: object
       additionalProperties: false
@@ -56977,13 +58908,21 @@ components:
       required:
         - ordered
         - remaining
+        - executed
+        - remaining_to_execute
       properties:
         ordered:
           type: string
           description: Действующий приход подтверждения в регистре «Заказы»
         remaining:
           type: string
-          description: 'Остаток регистра «Заказы» по заказу: заказано минус снятое закрытием и исполненное'
+          description: Остаток регистра «Заказы» по заказу. До этапа 4 его уменьшает только закрытие, поэтому это не «осталось исполнить»
+        executed:
+          type: string
+          description: 'Исполнено: сумма проведённых исполнений заказа (акт, продажа, закупка, приёмка) за вычетом возвратов, в валюте заказа. То же число, что в журнале продаж и закупок финансов (core_order_executed)'
+        remaining_to_execute:
+          type: string
+          description: 'Осталось исполнить: заказано минус исполнено, не меньше нуля'
     CoreOrderAllowedAction:
       type: object
       additionalProperties: false
@@ -57107,6 +59046,8 @@ components:
           $ref: '#/components/schemas/UUID'
         cabinet_status_name:
           type: string
+        funnel_id:
+          $ref: '#/components/schemas/UUID'
         version:
           type: integer
           minimum: 1
@@ -57430,6 +59371,69 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CoreOrderResponsible'
+    CoreContractTerms:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - business_id
+        - contact_id
+        - side
+        - number
+        - settlement_detail
+        - fifo_allowed
+        - version
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          type: string
+          format: uuid
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        side:
+          type: string
+          enum:
+            - sale
+            - purchase
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        currency:
+          type: string
+        settlement_detail:
+          type: string
+          enum:
+            - order
+            - contract
+            - execution
+          description: По заказу (умолчание), по договору — аванс договора закрывает его заказы по ФИФО, по документу исполнения — только явный зачёт
+        detail_locked_at:
+          type: string
+          format: date-time
+          description: 'Первая операция по договору: после неё детализация не меняется'
+        fifo_allowed:
+          type: boolean
+        version:
+          type: integer
+        funnel_id:
+          $ref: '#/components/schemas/UUID'
+    CoreContractSettlementDetailInput:
+      type: object
+      additionalProperties: false
+      required:
+        - settlement_detail
+      properties:
+        settlement_detail:
+          type: string
+          enum:
+            - order
+            - contract
+            - execution
     CoreOrderCabinetStatusInput:
       type: object
       additionalProperties: false
@@ -57473,6 +59477,8 @@ components:
           type: boolean
         is_system:
           type: boolean
+        funnel_id:
+          $ref: '#/components/schemas/UUID'
     CoreOrderStatusList:
       type: object
       additionalProperties: false
@@ -57529,6 +59535,300 @@ components:
           type: string
         is_active:
           type: boolean
+    CoreOrderFunnelStepDue:
+      type: object
+      additionalProperties: false
+      properties:
+        after:
+          type: string
+          enum:
+            - ''
+            - created
+            - confirmed
+            - delivery_date
+          description: От чего считается срок; пусто — без срока
+        days:
+          type: integer
+          minimum: 0
+          maximum: 365
+    CoreOrderFunnelStep:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - title
+      properties:
+        key:
+          type: string
+          pattern: ^[a-z][a-z0-9_]{0,39}$
+          description: Пусто — вид и номер шага
+        kind:
+          type: string
+          enum:
+            - contract
+            - approval
+            - prepayment_invoice
+            - payment
+            - shipment
+            - act
+            - upd
+            - closing
+            - custom
+        title:
+          type: string
+          minLength: 1
+        required:
+          type: boolean
+          description: 'Участвует ли шаг в воронке: ненужный шаг заказу не строится'
+        due:
+          $ref: '#/components/schemas/CoreOrderFunnelStepDue'
+        done_when:
+          type: string
+          pattern: ^(manual|state:(confirmed|executing|executed|closed)|paid:([1-9][0-9]?|100)|paper:(act_signed|upd_signed))$
+          description: 'Что закрывает шаг: manual — человек отметит (пусто так же); state:<состояние> — заказ дошёл до состояния; paid:<N> — оплачено не меньше N % суммы заказа (финансы); paper:act_signed, paper:upd_signed — контрагент подписал акт или УПД в ЭДО (документооборот)'
+        remind_days:
+          type: integer
+          minimum: 0
+          maximum: 30
+          description: За сколько дней до срока прийти событию «срок подходит»
+    CoreOrderFunnelStage:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - category
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          minLength: 1
+        category:
+          $ref: '#/components/schemas/CoreOrderState'
+        color:
+          type: string
+        position:
+          type: integer
+    CoreOrderFunnelInput:
+      type: object
+      additionalProperties: false
+      required:
+        - side
+        - name
+      properties:
+        side:
+          type: string
+          enum:
+            - sale
+            - purchase
+        name:
+          type: string
+          minLength: 1
+        source:
+          type: string
+          enum:
+            - ''
+            - manual
+            - app
+            - import
+            - marketplace
+            - crm
+          description: Заказы этого источника идут в воронку; пусто — по источнику не выбирается
+        is_default:
+          type: boolean
+          description: Воронка стороны по умолчанию — одна на сторону
+        is_archived:
+          type: boolean
+        steps:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/CoreOrderFunnelStep'
+        stages:
+          type: array
+          maxItems: 30
+          items:
+            $ref: '#/components/schemas/CoreOrderFunnelStage'
+    CoreOrderFunnel:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - side
+        - name
+        - source
+        - is_default
+        - is_archived
+        - version
+        - steps
+        - stages
+        - updated_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        side:
+          type: string
+          enum:
+            - sale
+            - purchase
+        name:
+          type: string
+        source:
+          type: string
+        is_default:
+          type: boolean
+        is_archived:
+          type: boolean
+        version:
+          type: integer
+          minimum: 1
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderFunnelStep'
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderFunnelStage'
+        updated_at:
+          type: string
+          format: date-time
+    CoreOrderFunnelList:
+      type: object
+      additionalProperties: false
+      required:
+        - funnels
+      properties:
+        funnels:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderFunnel'
+    CoreOrderFunnelTemplate:
+      type: object
+      additionalProperties: false
+      required:
+        - key
+        - name
+        - description
+        - funnel
+      properties:
+        key:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        funnel:
+          $ref: '#/components/schemas/CoreOrderFunnelInput'
+    CoreOrderFunnelTemplateList:
+      type: object
+      additionalProperties: false
+      required:
+        - templates
+      properties:
+        templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderFunnelTemplate'
+    CoreOrderFunnelVersion:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+        - document
+        - created_at
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        document:
+          $ref: '#/components/schemas/CoreOrderFunnelInput'
+        author_user_id:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+    CoreOrderFunnelVersionList:
+      type: object
+      additionalProperties: false
+      required:
+        - versions
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderFunnelVersion'
+    CoreOrderStepState:
+      type: object
+      additionalProperties: false
+      required:
+        - key
+        - kind
+        - title
+        - position
+        - status
+      properties:
+        key:
+          type: string
+        kind:
+          type: string
+        title:
+          type: string
+        position:
+          type: integer
+        due_date:
+          type: string
+          format: date
+        done_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - done
+            - overdue
+            - waiting
+        done_when:
+          type: string
+          description: Что закрывает шаг; manual — отмечает человек
+    CoreOrderFunnelView:
+      type: object
+      additionalProperties: false
+      required:
+        - steps
+      properties:
+        funnel_id:
+          $ref: '#/components/schemas/UUID'
+        funnel_name:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderStepState'
+    CoreOrderStepDueInput:
+      type: object
+      additionalProperties: false
+      required:
+        - due_date
+      properties:
+        due_date:
+          type: string
+          format: date
+        shift_next:
+          type: boolean
+          description: Сдвинуть следующие невыполненные шаги с датой на ту же разницу
+    CoreOrderFunnelChoice:
+      type: object
+      additionalProperties: false
+      required:
+        - funnel_id
+      properties:
+        funnel_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: null — заказ без воронки
     CoreOrderEvent:
       type: object
       additionalProperties: false
@@ -57544,7 +59844,7 @@ components:
           $ref: '#/components/schemas/UUID'
         kind:
           type: string
-          description: created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated
+          description: 'created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)'
         detail:
           type: string
         effective_date:
@@ -61962,6 +64262,9 @@ components:
         execution_count:
           type: integer
           minimum: 0
+        money_from_register:
+          type: boolean
+          description: 'Аванс, долг и оплачено — остатками регистра расчётов по заказу: бизнес прошёл отсечку расчётов по заказам (этап 3 ERP-1427)'
         executions:
           type: array
           items:
@@ -62034,7 +64337,7 @@ components:
             - without_order
         computed_columns:
           type: array
-          description: Колонки, вычисленные до разреза «заказ» в расчётах (этап 3)
+          description: Колонки, вычисленные до отсечки расчётов по заказам (этап 3); нет, когда все строки ответа — из регистра
           items:
             type: string
             enum:
@@ -63327,6 +65630,15 @@ components:
             - string
             - 'null'
           format: uuid
+        order:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Заказ, который оплатили наличные
+        order_number:
+          type: string
+          description: Номер заказа; пусто — заказа нет
         note:
           type: string
         created_at:
@@ -63397,6 +65709,12 @@ components:
             - 'null'
           format: uuid
           description: Разрез «проект», если он включён в кабинете
+        order:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: 'Заказ, который оплачивают наличные: приход — заказ покупателя, расход — заказ поставщику того же контрагента; отменённый заказ не принимается. Входит в «оплачено» заказа'
         counterparty:
           type: string
           description: Имя плательщика или получателя текстом, когда карточки контрагента нет
@@ -74043,6 +76361,148 @@ components:
         product_count:
           type: integer
           minimum: 0
+    StockOrderShipmentLine:
+      type: object
+      required:
+        - product_id
+        - qty
+      properties:
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        qty:
+          type: string
+    StockOrderShipment:
+      type: object
+      required:
+        - id
+        - order_id
+        - number
+        - date
+        - status
+        - lines
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        order_id:
+          $ref: '#/components/schemas/UUID'
+        number:
+          type: string
+        date:
+          type: string
+        status:
+          type: string
+        warehouse_id:
+          $ref: '#/components/schemas/UUID'
+        deal:
+          $ref: '#/components/schemas/UUID'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockOrderShipmentLine'
+    StockOrderShippingLine:
+      type: object
+      required:
+        - line_id
+        - product_id
+        - title
+        - ordered_qty
+        - shipped_qty
+        - remaining_qty
+      properties:
+        line_id:
+          $ref: '#/components/schemas/UUID'
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        title:
+          type: string
+        unit:
+          type: string
+        ordered_qty:
+          type: string
+        shipped_qty:
+          type: string
+        remaining_qty:
+          type: string
+    StockOrderShipping:
+      type: object
+      required:
+        - order_id
+        - number
+        - date
+        - state
+        - contact_id
+        - lines
+        - shipments
+        - reserved
+        - can_ship
+      properties:
+        order_id:
+          $ref: '#/components/schemas/UUID'
+        number:
+          type: string
+        date:
+          type: string
+        state:
+          type: string
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        contact_name:
+          type: string
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        warehouse_id:
+          $ref: '#/components/schemas/UUID'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockOrderShippingLine'
+        shipments:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockOrderShipment'
+        reserved:
+          type: boolean
+        can_ship:
+          type: boolean
+        ship_blocked:
+          type: string
+    StockOrderShippingPage:
+      type: object
+      required:
+        - results
+        - count
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockOrderShipping'
+        count:
+          type: integer
+    StockOrderShipInput:
+      type: object
+      required:
+        - warehouse_id
+        - lines
+      properties:
+        warehouse_id:
+          $ref: '#/components/schemas/UUID'
+        date:
+          type: string
+          description: Дата отгрузки; пусто — текущая бизнес-дата
+        comment:
+          type: string
+        lines:
+          type: array
+          items:
+            type: object
+            required:
+              - item_id
+              - quantity
+            properties:
+              item_id:
+                $ref: '#/components/schemas/UUID'
+              quantity:
+                type: string
     StockReportOverdueSupplierOrderPage:
       type: object
       additionalProperties: false
@@ -81071,6 +83531,11 @@ components:
             - string
             - 'null'
           description: '«За кого»: контрагент сотрудника или собственника, чей расчёт гасит выдача. Пусто — как контрагент; не присланное поле остаётся как было'
+        order:
+          type:
+            - string
+            - 'null'
+          description: Заказ, который оплачивают наличные (приход — заказ покупателя, расход — заказ поставщику того же контрагента). Пустая строка снимает заказ; не присланное поле остаётся как было
     FinancePnlEntry:
       type: object
       additionalProperties: false
@@ -86411,6 +88876,10 @@ components:
         renewal_terms:
           type: string
           maxLength: 10000
+        order_funnel_id:
+          type: string
+          format: uuid
+          description: 'Воронка заказов договора: заказы по договору идут в неё (пометка кабинета, не текст бумаги)'
     DocflowFlowContent:
       type: object
       additionalProperties: false
@@ -86921,7 +89390,8 @@ components:
           enum:
             - flow_document
             - payment_request
-          description: 'Вид предмета: карточка документооборота или заявка на оплату'
+            - edo_message
+          description: 'Вид предмета: карточка документооборота, заявка на оплату или входящий документ ЭДО'
         id:
           $ref: '#/components/schemas/UUID'
           description: Идентификатор предмета у его владельца
@@ -87079,6 +89549,7 @@ components:
           enum:
             - flow_document
             - payment_request
+            - edo_message
             - any
           description: any — любой вид предмета своего модуля
         document_kind:
@@ -87112,6 +89583,12 @@ components:
             - restart
             - returner_only
           description: 'Что будет после возврата на доработку: весь путь заново либо продолжает вернувший, визы остальных сохраняются'
+        payment_destination:
+          type: string
+          enum:
+            - calendar
+            - treasury
+          description: 'Для заявки на оплату (docflow / payment_request): куда идёт согласованная — сразу в платёжный календарь (дата оплаты = срок) или казначею, который ставит дату платежа (ERP-1427, этап 6)'
         is_active:
           type: boolean
           description: Выключенный маршрут не подбирается новым проходам, но остаётся на месте
@@ -87125,6 +89602,291 @@ components:
         updated_at:
           type: string
           format: date-time
+    DocflowPaymentRequestStatus:
+      type: string
+      enum:
+        - draft
+        - on_approval
+        - rework
+        - approved
+        - rejected
+        - cancelled
+      description: 'Состояние документа заявки: черновик, на согласовании, на доработке, согласована, отклонена, отозвана'
+    DocflowPaymentRequestPayee:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 500
+        inn:
+          type: string
+          maxLength: 12
+        kpp:
+          type: string
+          maxLength: 9
+        account:
+          type: string
+          maxLength: 20
+        bic:
+          type: string
+          maxLength: 9
+        bank_name:
+          type: string
+          maxLength: 500
+        corr_account:
+          type: string
+          maxLength: 20
+    DocflowPaymentRequestBasis:
+      type: object
+      additionalProperties: false
+      properties:
+        module:
+          type: string
+          enum:
+            - docflow
+          description: Модуль основания
+        kind:
+          type: string
+          enum:
+            - edo_message
+            - flow_document
+            - manual
+          description: 'Вид основания: входящий документ ЭДО, карточка документооборота или основание словами'
+        id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+        title:
+          type: string
+          maxLength: 500
+        contract_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+    DocflowPaymentRequestInput:
+      type: object
+      additionalProperties: false
+      required:
+        - company_id
+        - payee
+        - amount
+        - due_date
+        - purpose
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+        item_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+        payee:
+          $ref: '#/components/schemas/DocflowPaymentRequestPayee'
+        amount:
+          type: string
+          pattern: ^[0-9]+([.,][0-9]+)?$
+          description: Сумма; не больше двух знаков копеек, лишние нули отбрасываются
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          default: RUB
+        due_date:
+          type: string
+          format: date
+        purpose:
+          type: string
+          maxLength: 210
+        basis:
+          $ref: '#/components/schemas/DocflowPaymentRequestBasis'
+    DocflowPaymentRequestUpdate:
+      allOf:
+        - $ref: '#/components/schemas/DocflowPaymentRequestInput'
+        - type: object
+          required:
+            - version
+          properties:
+            version:
+              type: integer
+              minimum: 1
+    DocflowPaymentRequestVersion:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          minimum: 1
+    DocflowPaymentRequestOrder:
+      type: object
+      additionalProperties: false
+      required:
+        - document_id
+        - number
+        - date
+        - amount
+        - currency
+      description: Платёжное поручение, которым заявка оплачена, — реквизиты проведённого документа денежной операции
+      properties:
+        document_id:
+          $ref: '#/components/schemas/UUID'
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        amount:
+          type: string
+        currency:
+          type: string
+    DocflowPaymentRequestPayment:
+      type: object
+      additionalProperties: false
+      required:
+        - request_id
+        - status
+        - awaiting_schedule
+      description: Что стало с оплатой у модуля finance (строка очереди оплат)
+      properties:
+        request_id:
+          $ref: '#/components/schemas/UUID'
+        status:
+          type: string
+          description: 'Состояние строки очереди: planned, sent, awaiting_signature, executed, rejected, cancelled, returned'
+        planned_on:
+          type: string
+          format: date
+          description: Дата оплаты; пусто, пока заявка ждёт даты у казначея
+        awaiting_schedule:
+          type: boolean
+        sent_at:
+          type: string
+          format: date-time
+        executed_on:
+          type: string
+          format: date
+        payment_order:
+          $ref: '#/components/schemas/DocflowPaymentRequestOrder'
+    DocflowPaymentRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - number
+        - status
+        - progress
+        - company_id
+        - company_name
+        - contact_name
+        - item_name
+        - payee
+        - amount
+        - currency
+        - due_date
+        - purpose
+        - basis
+        - destination
+        - created_by_name
+        - created_at
+        - updated_at
+        - version
+        - can_edit
+        - can_submit
+        - can_cancel
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        number:
+          type: string
+        status:
+          $ref: '#/components/schemas/DocflowPaymentRequestStatus'
+        progress:
+          type: string
+          enum:
+            - draft
+            - on_approval
+            - rework
+            - approved
+            - rejected
+            - cancelled
+            - scheduled
+            - sent
+            - paid
+            - payment_cancelled
+          description: 'Ход заявки глазами автора: состояние документа, после согласования — состояние оплаты'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        company_name:
+          type: string
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        contact_name:
+          type: string
+        item_id:
+          $ref: '#/components/schemas/UUID'
+        item_name:
+          type: string
+        payee:
+          $ref: '#/components/schemas/DocflowPaymentRequestPayee'
+        amount:
+          type: string
+        currency:
+          type: string
+        due_date:
+          type: string
+          format: date
+        purpose:
+          type: string
+        basis:
+          $ref: '#/components/schemas/DocflowPaymentRequestBasis'
+        destination:
+          type: string
+          enum:
+            - ''
+            - calendar
+            - treasury
+          description: 'Куда ушла согласованная заявка: снимок флага маршрута'
+        reason:
+          type: string
+          description: Причина отказа или возврата на доработку
+        payment:
+          $ref: '#/components/schemas/DocflowPaymentRequestPayment'
+        created_by:
+          type: integer
+          format: int64
+        created_by_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        version:
+          type: integer
+        can_edit:
+          type: boolean
+        can_submit:
+          type: boolean
+        can_cancel:
+          type: boolean
+    DocflowPaymentRequestList:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowPaymentRequest'
     DocflowApprovalRouteList:
       type: object
       additionalProperties: false
@@ -87162,6 +89924,7 @@ components:
           enum:
             - flow_document
             - payment_request
+            - edo_message
         required:
           type: boolean
     DocflowApprovalReview:
@@ -88766,6 +91529,12 @@ components:
           $ref: '#/components/schemas/UUID'
         name:
           type: string
+        company:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: 'Юрлицо подключения: бумагу отправляют только через подключение её юрлица'
         company_name:
           type: string
         company_inn:
@@ -88774,6 +91543,9 @@ components:
           type: string
         provider:
           type: string
+        provider_name:
+          type: string
+          description: Имя оператора словами
         status:
           type: string
           enum:

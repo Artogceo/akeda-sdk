@@ -3,45 +3,46 @@
     "license": "LicenseRef-Akeda-Proprietary",
     "operations": {
       "by_audience": {
-        "external": 1103
+        "external": 1127
       },
       "by_module": {
+        "automation": 3,
         "billing": 1,
         "calendar": 36,
         "chat": 51,
-        "core": 193,
+        "core": 204,
         "crm": 114,
         "developer": 22,
-        "docflow": 84,
+        "docflow": 90,
         "files": 20,
         "finance": 148,
         "knowledge": 38,
         "mail": 42,
         "marketplace": 74,
-        "platform": 4,
+        "platform": 5,
         "settings": 54,
         "signup": 5,
-        "stock": 86,
+        "stock": 89,
         "tasks": 131
       },
       "by_stage": {
-        "preview": 1073,
+        "preview": 1097,
         "public": 30
       },
       "installation_by_module": {
         "calendar": 33,
-        "core": 178,
+        "core": 187,
         "docflow": 5,
         "finance": 134,
         "marketplace": 74,
         "platform": 4,
-        "stock": 86,
+        "stock": 89,
         "tasks": 131
       },
-      "installation_reachable": 645,
-      "total": 1103
+      "installation_reachable": 657,
+      "total": 1127
     },
-    "schemas": 1523,
+    "schemas": 1565,
     "servers": [
       "https://erp.akeda.ru"
     ],
@@ -60,14 +61,14 @@
       "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 4446412,
+      "bytes": 4574432,
       "path": "openapi/akeda-v1.json",
-      "sha256": "39eccc6ff4448f674ea1532859b79e9ec3ac401cb886f10e1a895c9ed12305cb"
+      "sha256": "28652e3a57f9c61c5e3304491796fb3dfa297958b23aa6950993e5bd4429aea0"
     },
     {
-      "bytes": 3367622,
+      "bytes": 3463338,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "2df2a2ec45ba26d8d1b23d7a003b99ddd0b513a33b262fc84ca4e67ff180e47f"
+      "sha256": "b7ee17eb25ec564d8e0a45957b1714aeef67cdf0ed8be4ebc3934f9dd7785466"
     },
     {
       "bytes": 18414,
@@ -80,6 +81,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "b863e527b135992a23287c2afccedd7ff059d0468acbb26287b8bbe0839b2ef6",
+  "snapshot_digest": "c59055166b9f2d6a3d1d90dfbd2408bad2aac70866eeaa6a226a73fcc9e474b8",
   "snapshot_version": 1
 }
