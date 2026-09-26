@@ -354,6 +354,8 @@ tags:
     description: 'Модуль docflow (документы) — внутренний документооборот кабинета: карточки договоров, спецификаций и актов, их неизменяемые редакции, файлы и связи между документами. Учётного факта это крыло не создаёт: регистры и главную книгу оно не трогает вовсе'
   - name: Docflow payment requests
     description: 'Модуль docflow (документы) — заявка на оплату как документ: автор заводит её и отправляет по маршруту согласования, согласованная уходит в модуль finance (счета, выписки и расчёты) в платёжный календарь или казначею по флагу маршрута, а автор видит ход оплаты и платёжку без доступа к финансам.'
+  - name: Docflow tax
+    description: 'Модуль docflow (документы) — раздел «Налоговая»: требования, письма и рассылки госорганов и статусы сданной отчётности из ленты отчётности оператора. Только чтение и одна локальная отметка «ответ дан»: квитанцию, ответ и отчётность подписывают у оператора. В регистры раздел не пишет ничего'
   - name: Docflow approvals
     description: 'Модуль docflow (документы) — согласование как САМОСТОЯТЕЛЬНАЯ сущность: лист больше не часть карточки. Предмет назван нейтральной тройкой «модуль — вид — идентификатор», и внешнего ключа на него нет вовсе, поэтому одним и тем же крылом согласуются и карточка документооборота, и заявка на оплату модуля finance (счета, выписки и расчёты). Согласование ничего не проводит и ни строки регистра не пишет: оно отвечает на один вопрос — можно ли уже выполнить действие, выпускающее бумагу или деньги наружу. Таких действий ровно два: отправить документ контрагенту и отправить заявку в банк; редактирование карточки не глушится никогда. Решение стоит под ОТДЕЛЬНЫМ правом docflow.flow:approve, а настройка маршрутов, замещений и обязательности — под docflow.flow:admin: маршрут решает, кого будут спрашивать про чужие бумаги, и это работа администратора кабинета. Согласование не является подписью: усиленная квалифицированная подпись живёт в крыле обмена с контрагентами и вычисляется на машине человека'
   - name: Docflow flow accounting
@@ -7648,6 +7650,43 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/chat/attachments/{attachmentId}/thumbnail:
+    get:
+      tags:
+        - Chat
+      operationId: chatOpenVideoThumbnail
+      summary: Получить первый кадр доступного видео
+      description: Возвращает небольшой JPEG только для чистого, привязанного к видимому сообщению видео или видеокружка. Сервер строит производную в кабинете при загрузке или первом чтении старого вложения; исходный файл и object key клиенту не раскрываются.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: chat
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: chat:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/ChatAttachmentID'
+      responses:
+        '200':
+          description: Первый кадр JPEG
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/chat/conversations/{id}/delivered:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -10542,6 +10581,56 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/core/orders/execute-now:
+    post:
+      tags:
+        - Core orders
+      operationId: coreExecuteOrderNow
+      summary: Продать сразу — заказ и акт одной командой
+      description: '«Заказ сразу исполненным» для внешней системы, программы или модуля: заказ заводится или узнаётся по стороне и внешнему номеру, подтверждается, и по нему выпускается акт на всю сумму — одной транзакцией кабинета. Акт выпускает владелец исполнения: при включённом документообороте после отсечки этапа 4 бизнеса (и в кабинете без финансов) — «Сделать акт» документооборота, бумага и исполнение одной командой, бумага с исполнением сразу зарегистрирована; иначе — акт финансов по заказу. Кроме `core.orders:write` нужно право двери владельца: `docflow.flow:write` или `finance.operations:write` (403 `core.order.execution_forbidden`). Повтор с тем же `external_id` той же стороны отвечает 200 с `replayed: true` и тем, что сделано в первый раз: второго заказа, бумаги и акта нет; ключ идемпотентности не нужен. Отказ любого шага откатывает всё — заказ не остаётся. Акт закрывает работы и услуги; товар при включённом складе исполняет отгрузка (409 `core.order.goods_by_shipment`), товар без склада при документообороте — УПД, выпуск которого по заказу ещё не сделан (409 `core.order.goods_need_upd`). Закупка при документообороте после отсечки — бумагой поставщика (409 `core.order.purchase_needs_paper`). Без финансов и документооборота — 409 `core.order.no_executor`.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderNowInput'
+      responses:
+        '200':
+          description: Повтор — заказ уже исполнен этой командой
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderNowResult'
+        '201':
+          description: Заказ заведён или узнан, подтверждён и исполнен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderNowResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
   /api/v1/core/orders/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -11723,6 +11812,77 @@ paths:
       responses:
         '204':
           description: Тип удалён
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/document-numbering:
+    get:
+      tags:
+        - Core documents
+      operationId: coreListDocumentNumbering
+      summary: Получить нумерацию документов кабинета
+      description: 'Виды документов с нумератором (`sequence`, `sequence_or_given`) во включённых модулях кабинета, кроме ушедших на покой: шаблон номера, сброс, разбор шаблона на префикс, год и разрядность, следующий номер на сегодня кабинета и признак «нумерацию выбрал кабинет». Виды с внешним номером не входят: шаблона и счётчика у них нет.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Нумерация видов документов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocumentNumberingList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/core/document-numbering/{id}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    put:
+      tags:
+        - Core documents
+      operationId: coreUpdateDocumentNumbering
+      summary: Изменить нумерацию вида документа
+      description: 'Правило кабинета: префикс (без пробелов; буквы, цифры и «- _ . /», до 12 знаков), год в номере, разрядность 3–8 и сброс. Шаблон собирает сервер: «ЗКЛ», yy, 5 → `ЗКЛ-{YY}-{N:5}`. Выданные номера не меняются; смена сброса продолжает счётчик; правило помечается выбором кабинета, и повторный посев его не перепишет. Годится и для видов модулей (финансы, склад): документы остаются под их защитой, номер выдаёт нумератор ядра. Отказы — 400 `core.document_numbering.<причина>`, у вида с внешним номером — 409 `core.document_numbering.external_number`.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreDocumentNumberingInput'
+      responses:
+        '200':
+          description: Нумерация вида после правки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocumentNumbering'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -17686,6 +17846,62 @@ paths:
                 $ref: '#/components/schemas/Error'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/orders/{id}/acts:
+    post:
+      tags:
+        - Finance operations
+      operationId: financeCreateOrderAct
+      summary: Выставить акт финансов по заказу
+      description: 'Исполнение заказа ядра актом финансов: документ продажи (у заказа поставщику — закупки) с основанием заказ, проводится сразу — долг в расчётах и выручка (расход) по статье. Черновик заказа первый акт подтверждает той же транзакцией. После отсечки этапа 4 бизнеса акт раскладывается по неисполненным строкам заказа (услуги; товар — только когда склада нет) и снимает «Заказы»; `stage_id` — этап работ. Если в кабинете включён документооборот и бизнес прошёл отсечку, дверь закрыта (409 `finance.order.act_needs_paper`): акт выпускает «Сделать акт» документооборота или составная команда `POST /api/v1/core/orders/execute-now`. Повтор узнаётся конвертом `source` (или заголовком Idempotency-Key, который становится его `idempotency_key`): тот же конверт — тот же акт.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.operations:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          description: Заказ ядра
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceOrderActInput'
+      responses:
+        '201':
+          description: Проведённый акт и операция заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOperationAccrualResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          description: Конверт источника уже использован для другой команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/finance/operations/{id}/documents/{documentId}/links:
     get:
       tags:
@@ -18175,12 +18391,13 @@ paths:
             format: uuid
         - name: group
           in: query
-          description: orders — строки-заказы; without_order — документы без заказа
+          description: orders — строки-заказы; without_order — документы без заказа; executions — все документы исполнения («Реализации» / «Поступления») со ссылкой на заказ order_id, order_number
           schema:
             type: string
             enum:
               - orders
               - without_order
+              - executions
             default: orders
         - name: expand
           in: query
@@ -18924,6 +19141,13 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/FinanceDirection'
+        - name: allocation
+          in: query
+          description: 'unallocated — только то, что ждёт имени от человека: без статьи, статья именного расчёта без человека или статья, ждущая контрагента, без контрагента. Внутренние переводы и то, чему контрагент ставится правилом (налоги, взносы, банк), сюда не попадают'
+          schema:
+            type: string
+            enum:
+              - unallocated
         - name: limit
           in: query
           description: 'Сколько операций вернуть. Потолок и умолчание совпадают: выписка всегда отдаётся страницами по 500'
@@ -19330,6 +19554,13 @@ paths:
           description: true — только со статьёй ДДС, false — только без неё
           schema:
             type: boolean
+        - name: allocation
+          in: query
+          description: 'unallocated — только то, что ждёт имени от человека: без статьи, статья именного расчёта без человека или статья, ждущая контрагента, без контрагента. Внутренние переводы и то, чему контрагент ставится правилом (налоги, взносы, банк), сюда не попадают'
+          schema:
+            type: string
+            enum:
+              - unallocated
         - name: q
           in: query
           description: Подстрока по номеру, назначению, контрагенту и сумме
@@ -19495,6 +19726,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FinanceReconciliation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/transactions/unallocated:
+    get:
+      tags:
+        - Finance transactions
+      operationId: financeGetUnallocatedMoney
+      summary: Получить счётчик неразнесённых денег
+      description: |-
+        Сколько операций ждут имени от человека и на какую сумму — по кабинету и по каждому банковскому счёту и кассе, где неразнесённое есть.
+
+        Неразнесённой считается операция без статьи ДДС, операция со статьёй именного расчёта (оплата труда, расчёты с собственником, подотчёт) без человека и операция со статьёй, которая ждёт контрагента, без контрагента. Внутренние переводы не считаются — контрагента у них нет и быть не может; налоги, взносы и банковское обслуживание тоже: контрагента им ставит правило, а не человек.
+
+        Периода у счётчика нет намеренно: неразнесённое опаснее всего тем, что стареет, и счётчик, послушный периоду экрана, молчал бы ровно о той операции, ради которой заведён. Места без неразнесённого в ответ не попадают: «0 операций» — не новость, а шум.
+
+        Тот же отбор выражается параметром `allocation=unallocated` у списков операций и журнала кассы — одним правилом, чтобы число и список всегда говорили об одних и тех же операциях.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.transactions:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/BusinessQuery'
+      responses:
+        '200':
+          description: Счётчик неразнесённого
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceUnallocatedSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -45228,6 +45501,223 @@ paths:
           $ref: '#/components/responses/Conflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/gov/summary:
+    get:
+      tags:
+        - Docflow tax
+      operationId: docflowGovSummary
+      x-akeda-audience: external
+      summary: Сводка раздела «Налоговая»
+      description: 'Счётчики частей раздела (требования, письма и рассылки, отчёты), сколько требований ещё ждут квитанции или ответа и сколько из них просрочены или близки к блокировке счёта, и доступ каждого подключения к ленте отчётности оператора. access=denied — оператор отказал приложению в разделе «Отчётность»: note несёт его слова, чинится это в правах приложения у оператора.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.edo:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Сводка раздела
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowGovSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/gov/documents:
+    get:
+      tags:
+        - Docflow tax
+      operationId: docflowGovDocuments
+      x-akeda-audience: external
+      summary: Документы госорганов
+      description: 'Список части раздела: claims — требования со сроками «Квитанция до» и «Ответ до» (рабочие дни пн–пт, производственного календаря нет), letters — входящие письма и рассылки, наши письма, заявления и ответы, reports — сданные отчёты и квитанции по ним. Состояние требования приходит кодом оператора (0/3/4/6/7/9/41/10) и его словами; urgency считает сервер на сегодняшний день.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.edo:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: part
+          in: query
+          description: Часть раздела
+          schema:
+            type: string
+            enum:
+              - claims
+              - letters
+              - reports
+            default: claims
+        - name: open
+          in: query
+          description: 1 — только требования, которые ждут квитанции или ответа
+          schema:
+            type: string
+            enum:
+              - '1'
+        - name: company
+          in: query
+          description: Юрлицо подключения
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Документы части раздела
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowGovList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/gov/documents/{id}:
+    get:
+      tags:
+        - Docflow tax
+      operationId: docflowGovDocument
+      x-akeda-audience: external
+      summary: Карточка документа госоргана
+      description: 'Документ госоргана с файлами и событиями пакета. operator_link — карточка у оператора («СсылкаДляНашаОрганизация»): там отвечают и подписывают. Пакет не госоргана отвечает 404.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.edo:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Документ госоргана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowGovDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/gov/documents/{id}/answered:
+    post:
+      tags:
+        - Docflow tax
+      operationId: docflowMarkGovAnswered
+      x-akeda-audience: external
+      summary: Отметить «ответ дан»
+      description: 'Локальная отметка у требования: ответ ушёл мимо ленты оператора (бумагой, лично, через другого оператора). Оператору ничего не уходит; требование уходит из «Ждут меня». Не требование — 400 docflow.gov.invalid.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.edo:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Требование после отметки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowGovDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    delete:
+      tags:
+        - Docflow tax
+      operationId: docflowUnmarkGovAnswered
+      x-akeda-audience: external
+      summary: Снять отметку «ответ дан»
+      description: Снимает ручную отметку. Ответ, увиденный в ленте оператора, снять нельзя — 409 docflow.gov.answer_from_operator.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.edo:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Требование после снятия отметки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowGovDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/docflow/approval-routes:
     get:
       tags:
@@ -45803,6 +46293,116 @@ paths:
       responses:
         '201':
           description: Заведённый черновик первой редакции
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/orders/{id}/invoice:
+    post:
+      tags:
+        - Docflow flow
+      operationId: docflowIssueOrderInvoice
+      x-akeda-audience: external
+      summary: Выставить счёт на оплату по заказу
+      description: 'Счёт на оплату — бумага документооборота по заказу покупателя: пустая сумма — на весь заказ с его строками, названная — частичный счёт (аванс, остаток); вместе счета не превышают сумму заказа. Номер пустой — следующий по счётчику. Выставленный счёт сразу зарегистрирован (`draft` — черновик). Учётного факта счёт не рождает: «оплачен» — по разнесённой оплате. Заголовок Idempotency-Key обязателен: повтор того же ключа тем же автором отдаёт первый счёт.'
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          description: Заказ покупателя ядра
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowOrderInvoiceInput'
+      responses:
+        '201':
+          description: Выставленный счёт
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/orders/{id}/act:
+    post:
+      tags:
+        - Docflow flow
+      operationId: docflowIssueOrderAct
+      x-akeda-audience: external
+      summary: Сделать акт по заказу
+      description: '«Сделать акт» по строкам-услугам заказа покупателя: пустая сумма — все услуги, меньшая — частичный акт (этап работ). После отсечки этапа 4 бизнеса при включённых финансах — бумага и исполнение одной командой: финансы проводят акт (выручка и долг), ядро снимает «Заказы», у бумаги — ссылка на исполнение в `accounting_links`, и бумага сразу зарегистрирована. До отсечки и без финансов — только бумага (черновик). Заголовок Idempotency-Key обязателен: повтор того же ключа тем же автором отдаёт первую бумагу. Заказ «продать сразу» одной командой — `POST /api/v1/core/orders/execute-now`.'
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          description: Заказ покупателя ядра
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowOrderActInput'
+      responses:
+        '201':
+          description: Бумага акта (после отсечки при финансах — с исполнением)
           headers:
             Idempotent-Replay:
               $ref: '#/components/headers/IdempotentReplay'
@@ -60090,6 +60690,151 @@ components:
         source_system:
           type: string
           description: 'Имя источника для журнала загрузок: сайт, CRM'
+    CoreOrderNowAct:
+      type: object
+      additionalProperties: false
+      description: Реквизиты акта; пусто — дата заказа, номер по счётчику, название по заказу
+      properties:
+        date:
+          type: string
+          format: date
+        number:
+          type: string
+        title:
+          type: string
+    CoreOrderNowInput:
+      type: object
+      additionalProperties: false
+      description: Заказ целиком, его внешний номер и акт. Поля заказа — те же, что у загрузки; подтверждение подразумевается.
+      required:
+        - side
+        - date
+        - currency
+        - lines
+        - external_id
+      properties:
+        side:
+          $ref: '#/components/schemas/CoreOrderSide'
+        number:
+          type: string
+          description: Свой номер; пусто — номер выдаёт счётчик вида
+        date:
+          type: string
+          format: date
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+          description: Контрагент; вместо него можно прислать counterparty
+        counterparty:
+          $ref: '#/components/schemas/CoreOrderCounterparty'
+        contract_id:
+          $ref: '#/components/schemas/UUID'
+        project_id:
+          $ref: '#/components/schemas/UUID'
+        pnl_item_id:
+          description: Статья выручки (у закупки — расхода) исполнения; пусто — по учётной политике бизнеса
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+        warehouse_id:
+          $ref: '#/components/schemas/UUID'
+        basis_id:
+          $ref: '#/components/schemas/UUID'
+        title:
+          type: string
+        currency:
+          type: string
+          pattern: ^[A-Z]{3}$
+        prices_include_vat:
+          type: boolean
+          description: Цены с НДС («в том числе»); по умолчанию true
+        discount:
+          type: string
+        delivery_date:
+          type: string
+          format: date
+        due_date:
+          type: string
+          format: date
+        scenario:
+          type: string
+          enum:
+            - one_off_sale
+            - contract_sale
+            - self_service
+        manager_note:
+          type: string
+        comment:
+          type: string
+        buyer:
+          $ref: '#/components/schemas/CoreOrderBuyer'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderLineInput'
+        responsibles:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderResponsible'
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderStage'
+        payment_terms:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderPaymentTerm'
+        cabinet_status_id:
+          $ref: '#/components/schemas/UUID'
+        external_id:
+          type: string
+          minLength: 1
+          description: Номер заказа у источника; по стороне и нему узнаётся повтор
+        source_system:
+          type: string
+          description: 'Имя источника: сайт, CRM, маркетплейс'
+        act:
+          $ref: '#/components/schemas/CoreOrderNowAct'
+    CoreOrderNowExecution:
+      type: object
+      additionalProperties: false
+      required:
+        - owner
+      description: Что выпустил владелец исполнения. docflow — бумага документооборота (paper_*), при финансах после отсечки — с учётным документом исполнения (execution_*); finance — акт финансов без бумаги.
+      properties:
+        owner:
+          type: string
+          enum:
+            - docflow
+            - finance
+        paper_id:
+          $ref: '#/components/schemas/UUID'
+        paper_number:
+          type: string
+        paper_status:
+          type: string
+          description: registered — бумага с проведённым исполнением; draft — бумага без книги (финансы выключены)
+        execution_id:
+          $ref: '#/components/schemas/UUID'
+        execution_number:
+          type: string
+    CoreOrderNowResult:
+      type: object
+      additionalProperties: false
+      required:
+        - order
+        - execution
+        - replayed
+      properties:
+        order:
+          $ref: '#/components/schemas/CoreOrder'
+        execution:
+          $ref: '#/components/schemas/CoreOrderNowExecution'
+        replayed:
+          type: boolean
+          description: true — заказ уже был исполнен этой командой; ничего не записано
     CoreOrderCloseInput:
       type: object
       additionalProperties: false
@@ -60836,6 +61581,123 @@ components:
         settings:
           type: object
           additionalProperties: true
+    CoreNumberYear:
+      type: string
+      description: Год в номере — без года, две цифры или четыре.
+      enum:
+        - none
+        - yy
+        - yyyy
+    CoreDocumentNumberingInput:
+      type: object
+      additionalProperties: false
+      required:
+        - prefix
+        - year
+        - width
+        - reset
+      properties:
+        prefix:
+          type: string
+          maxLength: 16
+          description: Серия номера; дефисы и пробелы по краям снимаются, разделитель «-» ставит сервер.
+        year:
+          $ref: '#/components/schemas/CoreNumberYear'
+        width:
+          type: integer
+          minimum: 3
+          maximum: 8
+        reset:
+          $ref: '#/components/schemas/CoreNumberReset'
+    CoreDocumentNumberingParts:
+      type: object
+      additionalProperties: false
+      required:
+        - prefix
+        - year
+        - width
+        - structured
+      properties:
+        prefix:
+          type: string
+        year:
+          $ref: '#/components/schemas/CoreNumberYear'
+        width:
+          type: integer
+        structured:
+          type: boolean
+          description: false — шаблон сложнее «префикс, год, счётчик»; правка заменит его простым правилом.
+    CoreDocumentNumberingCounters:
+      type: object
+      additionalProperties: false
+      required:
+        - year
+        - never
+      properties:
+        year:
+          type: integer
+          format: int64
+          description: Следующее значение счётчика текущего года
+        never:
+          type: integer
+          format: int64
+          description: Следующее значение сквозного счётчика
+    CoreDocumentNumbering:
+      type: object
+      additionalProperties: false
+      required:
+        - type_id
+        - key
+        - name
+        - module
+        - is_system
+        - number_source
+        - number_template
+        - number_reset
+        - parts
+        - next_number
+        - next_value
+        - customized
+      properties:
+        type_id:
+          $ref: '#/components/schemas/UUID'
+        key:
+          type: string
+        name:
+          type: string
+        module:
+          type: string
+        is_system:
+          type: boolean
+        number_source:
+          $ref: '#/components/schemas/CoreNumberSource'
+        number_template:
+          type: string
+        number_reset:
+          $ref: '#/components/schemas/CoreNumberReset'
+        parts:
+          $ref: '#/components/schemas/CoreDocumentNumberingParts'
+        next_number:
+          type: string
+        next_value:
+          $ref: '#/components/schemas/CoreDocumentNumberingCounters'
+        customized:
+          type: boolean
+          description: Нумерацию выбрал кабинет — посев её не перепишет
+    CoreDocumentNumberingList:
+      type: object
+      additionalProperties: false
+      required:
+        - today
+        - results
+      properties:
+        today:
+          type: string
+          format: date
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreDocumentNumbering'
     CoreDocument:
       type: object
       additionalProperties: false
@@ -64031,6 +64893,40 @@ components:
           type: string
           minLength: 1
           maxLength: 300
+    FinanceOrderActInput:
+      type: object
+      additionalProperties: false
+      required:
+        - source
+        - date
+        - amount
+      properties:
+        source:
+          $ref: '#/components/schemas/FinanceOperationSource'
+        date:
+          type: string
+          format: date
+        amount:
+          type: string
+          description: Сумма акта с НДС в валюте заказа, decimal string
+        due_date:
+          type: string
+          format: date
+          description: Срок оплаты; пусто — по строке графика заказа или условиям контрагента
+        reason:
+          type: string
+        pnl_item_id:
+          description: Статья выручки (расхода); пусто — статья заказа, политика бизнеса или системная
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+        stage_id:
+          description: Этап работ заказа, который закрывает акт
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+        vat_amount:
+          type: string
+        prices_include_vat:
+          type: boolean
     FinanceOperationStageInput:
       type: object
       additionalProperties: false
@@ -64593,6 +65489,7 @@ components:
         - cash_paid
         - advance
         - cash_payments
+        - unattributed_facts
         - id
         - kind
         - company_id
@@ -64622,6 +65519,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FinanceOperationFact'
+        unattributed_facts:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceOperationFact'
+          description: Применения к долгу, не привязанные к строке графика (ERP-1417)
         id:
           $ref: '#/components/schemas/UUID'
         kind:
@@ -64972,6 +65874,7 @@ components:
           enum:
             - orders
             - without_order
+            - executions
         state:
           type: string
           description: Состояние заказа по канону
@@ -65006,6 +65909,16 @@ components:
         money_from_register:
           type: boolean
           description: 'Аванс, долг и оплачено — остатками регистра расчётов по заказу: бизнес прошёл отсечку расчётов по заказам (этап 3 ERP-1427)'
+        execution_cutover:
+          type: boolean
+          description: 'Бизнес заказа прошёл отсечку исполнения (этап 4 ERP-1427): при включённом документообороте акт по заказу выпускают «Документы» заказа — бумага и исполнение одной командой; прямой акт финансов отвечает 409 finance.order.act_needs_paper'
+        order_id:
+          type: string
+          format: uuid
+          description: Заказ документа исполнения по цепочке оснований (группы without_order и executions)
+        order_number:
+          type: string
+          description: Номер заказа документа исполнения
         executions:
           type: array
           items:
@@ -65076,6 +65989,7 @@ components:
           enum:
             - orders
             - without_order
+            - executions
         computed_columns:
           type: array
           description: Колонки, вычисленные до отсечки расчётов по заказам (этап 3); нет, когда все строки ответа — из регистра
@@ -67354,6 +68268,62 @@ components:
           maxItems: 50
           items:
             $ref: '#/components/schemas/FinanceTransaction'
+    FinanceUnallocatedMoney:
+      type: object
+      additionalProperties: false
+      required:
+        - count
+        - amount
+        - currency
+        - unconverted_count
+      properties:
+        count:
+          type: integer
+          description: Сколько операций ждут имени
+        amount:
+          type:
+            - string
+            - 'null'
+          description: Их сумма в валюте учёта. null — часть операций к ней не сведена, и называть неполную сумму нельзя
+        currency:
+          type: string
+          description: Валюта учёта кабинета
+        unconverted_count:
+          type: integer
+          description: Сколько операций не сведено к валюте учёта
+    FinanceUnallocatedScope:
+      allOf:
+        - $ref: '#/components/schemas/FinanceUnallocatedMoney'
+        - type: object
+          required:
+            - kind
+            - id
+            - name
+          properties:
+            kind:
+              type: string
+              enum:
+                - account
+                - wallet
+              description: account — банковский счёт, wallet — касса
+            id:
+              $ref: '#/components/schemas/UUID'
+            name:
+              type: string
+              description: Как место хранения названо в справочнике
+    FinanceUnallocatedSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - total
+        - scopes
+      properties:
+        total:
+          $ref: '#/components/schemas/FinanceUnallocatedMoney'
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceUnallocatedScope'
     FinanceImportKind:
       type: string
       enum:
@@ -90041,6 +91011,55 @@ components:
             $ref: '#/components/schemas/DocflowFlowDocument'
         has_more:
           type: boolean
+    DocflowOrderActInput:
+      type: object
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+          format: date
+          description: Дата акта; пусто — дата заказа
+        number:
+          type: string
+          description: Пусто — следующий номер счётчика актов
+        title:
+          type: string
+        amount:
+          type: string
+          description: Пусто — все услуги заказа; меньше — частичный акт суммой
+    DocflowOrderInvoiceInput:
+      type: object
+      additionalProperties: false
+      required:
+        - due_date
+      properties:
+        due_date:
+          type: string
+          format: date
+          description: Оплатить до
+        expected_until:
+          type: string
+          format: date
+        payment_purpose:
+          type: string
+        payment_purpose_auto:
+          type: boolean
+          description: Собрать назначение платежа умолчанием
+        amount:
+          type: string
+          description: Пусто — на весь заказ; меньше — частичный счёт
+        date:
+          type: string
+          format: date
+          description: Дата счёта; пусто — дата заказа
+        number:
+          type: string
+          description: Пусто — следующий номер счётчика счетов
+        title:
+          type: string
+        draft:
+          type: boolean
+          description: Сохранить черновиком вместо «Выставить»
     DocflowFlowCreateInput:
       type: object
       additionalProperties: false
@@ -90631,6 +91650,246 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DocflowPaymentRequest'
+    DocflowGovDocument:
+      type: object
+      additionalProperties: false
+      description: Документ госоргана в зеркале оператора. doc_type, doc_subtype, state_code и state_name — слова оператора; kind, claim_kind и authority — наш вид по одному правилу сервера. Сроки — календарные даты ГГГГ-ММ-ДД; пустая строка — срока нет (не требование или дата отправки неизвестна).
+      required:
+        - id
+        - connection
+        - company
+        - company_name
+        - kind
+        - claim_kind
+        - authority
+        - authority_name
+        - authority_code
+        - external_id
+        - doc_type
+        - doc_subtype
+        - number
+        - date
+        - note
+        - kit_id
+        - state_code
+        - state_name
+        - state_description
+        - sent_on
+        - receipt_due
+        - answer_due
+        - block_after
+        - receipt_sent_at
+        - answered_at
+        - answered_by
+        - answered_by_name
+        - answer_message
+        - receipt_pending
+        - answer_pending
+        - receipt_late
+        - answer_late
+        - open
+        - urgency
+        - operator_link
+        - received_at
+        - updated_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        connection:
+          $ref: '#/components/schemas/UUID'
+        company:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        company_name:
+          type: string
+        kind:
+          type: string
+          enum:
+            - claim
+            - letter
+            - outgoing
+            - answer
+            - receipt
+            - report
+        claim_kind:
+          type: string
+          enum:
+            - ''
+            - explanations
+            - documents
+            - general
+        authority:
+          type: string
+          description: fns, sfr, rosstat, fsrar, rpn или пусто
+        authority_name:
+          type: string
+        authority_code:
+          type: string
+        external_id:
+          type: string
+        doc_type:
+          type: string
+        doc_subtype:
+          type: string
+        number:
+          type: string
+        date:
+          type: string
+        note:
+          type: string
+        kit_id:
+          type: string
+        state_code:
+          type: string
+        state_name:
+          type: string
+        state_description:
+          type: string
+        sent_on:
+          type: string
+        receipt_due:
+          type: string
+        answer_due:
+          type: string
+        block_after:
+          type: string
+          description: С этого дня без квитанции инспекция вправе приостановить операции по счетам
+        receipt_sent_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        answered_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        answered_by:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Сотрудник, отметивший ответ вручную; null — ответ виден в ленте или его нет
+        answered_by_name:
+          type: string
+        answer_message:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        receipt_pending:
+          type: boolean
+        answer_pending:
+          type: boolean
+        receipt_late:
+          type: boolean
+          description: Срок квитанции прошёл или до блокировки счёта не больше двух рабочих дней, а квитанции нет
+        answer_late:
+          type: boolean
+          description: Срок ответа прошёл, а ответа нет
+        open:
+          type: boolean
+        urgency:
+          type: string
+          enum:
+            - ''
+            - soon
+            - overdue
+            - blocking
+        operator_link:
+          type: string
+        received_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowAttachment'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowEvent'
+    DocflowGovList:
+      type: object
+      additionalProperties: false
+      required:
+        - count
+        - results
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowGovDocument'
+    DocflowGovConnectionState:
+      type: object
+      additionalProperties: false
+      required:
+        - connection
+        - company
+        - company_name
+        - access
+        - checked_at
+        - note
+      properties:
+        connection:
+          $ref: '#/components/schemas/UUID'
+        company:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        company_name:
+          type: string
+        access:
+          type: string
+          enum:
+            - ''
+            - ok
+            - denied
+            - failed
+          description: Пусто — ленту отчётности ещё не читали
+        checked_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        note:
+          type: string
+          description: Слова оператора при отказе
+    DocflowGovSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - claims
+        - claims_open
+        - claims_urgent
+        - letters
+        - reports
+        - connections
+      properties:
+        claims:
+          type: integer
+        claims_open:
+          type: integer
+        claims_urgent:
+          type: integer
+        letters:
+          type: integer
+        reports:
+          type: integer
+        connections:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowGovConnectionState'
     DocflowApprovalRouteList:
       type: object
       additionalProperties: false
@@ -90798,6 +92057,11 @@ components:
             - delegated
             - escalated
             - reminded
+            - operator_replied
+            - operator_refused
+            - operator_signature_required
+            - operator_skipped
+          description: operator_* — ответ оператору по входящему пакету ЭДО после прохода (настройка подключения reply_after_approval); comment несёт слова оператора или машинный код отказа docflow.edo.*
         user_id:
           type: integer
           format: int64
@@ -91494,6 +92758,7 @@ components:
         - status_name
         - has_credentials
         - read_only
+        - reply_after_approval
         - external_org_id
         - granted_by_name
         - last_sync_status
@@ -91542,6 +92807,9 @@ components:
         read_only:
           type: boolean
           description: 'Действующее ограничение: отправка, подписание и изменение состояний в ЭДО отключены'
+        reply_after_approval:
+          type: boolean
+          description: '«После нашего согласования — ответить у оператора». Когда проход внутреннего маршрута по входящему пакету закончен, документооборот выполняет у оператора действие текущего этапа: «согласован» — «Утвердить», «отклонён» — «Отклонить» с причиной из визы. Этап с подписью не закрывается: пакет ждёт человека в «Ждут меня → Подписать». Итог — строкой журнала прохода (operator_*). По умолчанию выключено.'
         external_org_id:
           type: string
           description: Идентификатор нашей организации у оператора; выясняется сопоставлением по ИНН и КПП, руками не вводится
@@ -91640,6 +92908,9 @@ components:
             - error
             - reauth_required
             - disconnected
+        reply_after_approval:
+          type: boolean
+          description: 'Включает ответ у оператора после нашего согласования. Режим «только чтение» этим не снимается: ответ оператору проходит его сторож'
         app_client_id:
           type: string
         app_secret:
@@ -92179,6 +93450,9 @@ components:
           type: string
         name:
           type: string
+        requires_signature:
+          type: boolean
+          description: 'Действие закрывается подписью («ТребуетПодписания» оператора). Точнее признака этапа: на этапе «Утверждение» подписи требует «Утвердить», а «Переназначить» — нет. У этапов, записанных до появления признака, false у всех действий — тогда судят по requires_signature этапа'
     DocflowStage:
       type: object
       additionalProperties: false
@@ -92450,7 +93724,7 @@ components:
     DocflowSigningTaskInput:
       type: object
       additionalProperties: false
-      description: Просьба выдать задание на подпись.
+      description: 'Просьба выдать задание на подпись. Сертификат человек выбирает ДО задания: оператор готовит действие под конкретного подписанта и без ФИО и ИНН владельца сертификата может отказать уже в подготовке.'
       required:
         - message_id
       properties:
@@ -92460,10 +93734,25 @@ components:
           $ref: '#/components/schemas/UUID'
         stage:
           type: string
-          description: 'Идентификатор этапа у оператора. Не нужен в обычном сценарии: этап выбирает сервер по тому, что сказал оператор'
+          description: Идентификатор этапа у оператора. Карточка называет его вместе с action; без них этап выбирает сервер
         action:
           type: string
-          description: Код команды оператора; нужен, когда на этапе их несколько
+          description: Код команды оператора из stage.actions[].code («Утвердить», «Отклонить»). Без него сервер берёт согласие этапа, закрываемое подписью, и никогда — отказ
+        comment:
+          type: string
+          description: Комментарий к действию словами человека; при отказе обязателен
+        certificate_thumbprint:
+          type: string
+          description: Отпечаток выбранного сертификата. Подпись другим сертификатом под этим заданием не принимается
+        certificate_holder:
+          type: string
+          description: ФИО владельца сертификата из поля «Субъект»
+        certificate_inn:
+          type: string
+          description: 'ИНН из сертификата: организации, если он в сертификате есть, иначе владельца'
+        certificate_position:
+          type: string
+          description: Должность владельца сертификата
     DocflowSigningTask:
       type: object
       additionalProperties: false
@@ -92568,6 +93857,18 @@ components:
         certificate:
           type: string
           description: 'Открытая часть сертификата Base64. Удобство, а не обязанность: найти сертификат оператор умеет и по отпечатку'
+        certificate_holder:
+          type: string
+          description: ФИО владельца сертификата. Оператор требует его и при выполнении действия
+        certificate_inn:
+          type: string
+          description: ИНН из сертификата, как в задании
+        certificate_position:
+          type: string
+          description: Должность владельца сертификата
+        comment:
+          type: string
+          description: Комментарий к действию; уходит второй стороне
         signed_at:
           type: string
           format: date-time

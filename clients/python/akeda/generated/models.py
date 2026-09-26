@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f79d710dd6c50b81a29a1d39abc3ba72fb87d42101b75908c59d2443160471b0).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a4fad0a9a1e120161f9196b223837e8ee64d4e98e553adba966bb44f0be3ea9).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -417,6 +417,11 @@ __all__ = [
     "CoreDocumentLinks",
     "CoreDocumentMarkDeleted",
     "CoreDocumentMovementSummary",
+    "CoreDocumentNumbering",
+    "CoreDocumentNumberingCounters",
+    "CoreDocumentNumberingInput",
+    "CoreDocumentNumberingList",
+    "CoreDocumentNumberingParts",
     "CoreDocumentPage",
     "CoreDocumentPatch",
     "CoreDocumentStatus",
@@ -483,6 +488,7 @@ __all__ = [
     "CoreItemPage",
     "CoreNumberReset",
     "CoreNumberSource",
+    "CoreNumberYear",
     "CoreObjectUsage",
     "CoreObjectUsageRow",
     "CoreOrder",
@@ -513,6 +519,10 @@ __all__ = [
     "CoreOrderLine",
     "CoreOrderLineInput",
     "CoreOrderLineKind",
+    "CoreOrderNowAct",
+    "CoreOrderNowExecution",
+    "CoreOrderNowInput",
+    "CoreOrderNowResult",
     "CoreOrderObligation",
     "CoreOrderPage",
     "CoreOrderPaymentTerm",
@@ -764,6 +774,10 @@ __all__ = [
     "DocflowFlowRelationInput",
     "DocflowFlowScheduleStage",
     "DocflowFormatIssues",
+    "DocflowGovConnectionState",
+    "DocflowGovDocument",
+    "DocflowGovList",
+    "DocflowGovSummary",
     "DocflowIntakeCounterparty",
     "DocflowIntakeCounterpartyOption",
     "DocflowIntakeInput",
@@ -788,8 +802,10 @@ __all__ = [
     "DocflowMessageList",
     "DocflowMessagePayment",
     "DocflowMessagePrintForm",
+    "DocflowOrderActInput",
     "DocflowOrderImport",
     "DocflowOrderImportPage",
+    "DocflowOrderInvoiceInput",
     "DocflowOutgoingFile",
     "DocflowOutgoingFlowInput",
     "DocflowOutgoingInput",
@@ -955,6 +971,7 @@ __all__ = [
     "FinanceOperationStage",
     "FinanceOperationStageInput",
     "FinanceOperationVersion",
+    "FinanceOrderActInput",
     "FinancePaymentCalendar",
     "FinancePaymentCalendarUndated",
     "FinancePaymentCalendarCell",
@@ -1071,6 +1088,9 @@ __all__ = [
     "FinanceTransactionCreate",
     "FinanceTransactionPage",
     "FinanceTransactionTotals",
+    "FinanceUnallocatedMoney",
+    "FinanceUnallocatedScope",
+    "FinanceUnallocatedSummary",
     "FinanceVATBookImport",
     "FinanceVATBookMatch",
     "FinanceVATBookOurRow",
@@ -5701,6 +5721,45 @@ class CoreDocumentMovementSummary(TypedDict):
     values: Dict[str, Any]
     entry_count: int
 
+class CoreDocumentNumbering(TypedDict):
+    type_id: "UUID"
+    key: str
+    name: str
+    module: str
+    is_system: bool
+    number_source: "CoreNumberSource"
+    number_template: str
+    number_reset: "CoreNumberReset"
+    parts: "CoreDocumentNumberingParts"
+    next_number: str
+    next_value: "CoreDocumentNumberingCounters"
+    #: Нумерацию выбрал кабинет — посев её не перепишет
+    customized: bool
+
+class CoreDocumentNumberingCounters(TypedDict):
+    #: Следующее значение счётчика текущего года
+    year: int
+    #: Следующее значение сквозного счётчика
+    never: int
+
+class CoreDocumentNumberingInput(TypedDict):
+    #: Серия номера; дефисы и пробелы по краям снимаются, разделитель «-» ставит сервер.
+    prefix: str
+    year: "CoreNumberYear"
+    width: int
+    reset: "CoreNumberReset"
+
+class CoreDocumentNumberingList(TypedDict):
+    today: str
+    results: List["CoreDocumentNumbering"]
+
+class CoreDocumentNumberingParts(TypedDict):
+    prefix: str
+    year: "CoreNumberYear"
+    width: int
+    #: false — шаблон сложнее «префикс, год, счётчик»; правка заменит его простым правилом.
+    structured: bool
+
 class CoreDocumentPage(TypedDict):
     count: int
     results: List["CoreDocument"]
@@ -6178,6 +6237,8 @@ CoreNumberReset = Literal['year', 'never']
 
 CoreNumberSource = Literal['sequence', 'sequence_or_given', 'external']
 
+CoreNumberYear = Literal['none', 'yy', 'yyyy']
+
 class CoreObjectUsage(TypedDict):
     blocked: bool
     rows: List["CoreObjectUsageRow"]
@@ -6577,6 +6638,74 @@ class CoreOrderLineInput(_CoreOrderLineInputRequired, total=False):
     basis_line_id: "UUID"
 
 CoreOrderLineKind = Literal['goods', 'service', 'material', 'semi_product']
+
+class CoreOrderNowAct(TypedDict, total=False):
+    """Реквизиты акта; пусто — дата заказа, номер по счётчику, название по заказу"""
+
+    date: str
+    number: str
+    title: str
+
+class _CoreOrderNowExecutionRequired(TypedDict):
+    owner: Literal['docflow', 'finance']
+
+class CoreOrderNowExecution(_CoreOrderNowExecutionRequired, total=False):
+    """Что выпустил владелец исполнения. docflow — бумага документооборота (paper_*), при финансах после отсечки — с учётным документом исполнения (execution_*); finance — акт финансов без бумаги."""
+
+    paper_id: "UUID"
+    paper_number: str
+    #: registered — бумага с проведённым исполнением; draft — бумага без книги (финансы выключены)
+    paper_status: str
+    execution_id: "UUID"
+    execution_number: str
+
+class _CoreOrderNowInputRequired(TypedDict):
+    side: "CoreOrderSide"
+    date: str
+    currency: str
+    lines: List["CoreOrderLineInput"]
+    #: Номер заказа у источника; по стороне и нему узнаётся повтор
+    external_id: str
+
+class CoreOrderNowInput(_CoreOrderNowInputRequired, total=False):
+    """Заказ целиком, его внешний номер и акт. Поля заказа — те же, что у загрузки; подтверждение подразумевается."""
+
+    #: Свой номер; пусто — номер выдаёт счётчик вида
+    number: str
+    business_id: "UUID"
+    company_id: "UUID"
+    #: Контрагент; вместо него можно прислать counterparty
+    contact_id: "UUID"
+    counterparty: "CoreOrderCounterparty"
+    contract_id: "UUID"
+    project_id: "UUID"
+    #: Статья выручки (у закупки — расхода) исполнения; пусто — по учётной политике бизнеса
+    pnl_item_id: Dict[str, Any]
+    warehouse_id: "UUID"
+    basis_id: "UUID"
+    title: str
+    #: Цены с НДС («в том числе»); по умолчанию true
+    prices_include_vat: bool
+    discount: str
+    delivery_date: str
+    due_date: str
+    scenario: Literal['one_off_sale', 'contract_sale', 'self_service']
+    manager_note: str
+    comment: str
+    buyer: "CoreOrderBuyer"
+    responsibles: List["CoreOrderResponsible"]
+    stages: List["CoreOrderStage"]
+    payment_terms: List["CoreOrderPaymentTerm"]
+    cabinet_status_id: "UUID"
+    #: Имя источника: сайт, CRM, маркетплейс
+    source_system: str
+    act: "CoreOrderNowAct"
+
+class CoreOrderNowResult(TypedDict):
+    order: "CoreOrder"
+    execution: "CoreOrderNowExecution"
+    #: true — заказ уже был исполнен этой командой; ничего не записано
+    replayed: bool
 
 class CoreOrderObligation(TypedDict):
     #: Действующий приход подтверждения в регистре «Заказы»
@@ -8267,7 +8396,8 @@ class DocflowApprovalDirectories(TypedDict):
 
 class _DocflowApprovalEventRequired(TypedDict):
     id: "UUID"
-    action: Literal['submitted', 'approved', 'returned', 'rejected', 'cancelled', 'resubmitted', 'reset_significant_change', 'delegated', 'escalated', 'reminded']
+    #: operator_* — ответ оператору по входящему пакету ЭДО после прохода (настройка подключения reply_after_approval); comment несёт слова оператора или машинный код отказа docflow.edo.*
+    action: Literal['submitted', 'approved', 'returned', 'rejected', 'cancelled', 'resubmitted', 'reset_significant_change', 'delegated', 'escalated', 'reminded', 'operator_replied', 'operator_refused', 'operator_signature_required', 'operator_skipped']
     created_at: str
 
 class DocflowApprovalEvent(_DocflowApprovalEventRequired, total=False):
@@ -8627,6 +8757,8 @@ class _DocflowConnectionRequired(TypedDict):
     has_credentials: bool
     #: Действующее ограничение: отправка, подписание и изменение состояний в ЭДО отключены
     read_only: bool
+    #: «После нашего согласования — ответить у оператора». Когда проход внутреннего маршрута по входящему пакету закончен, документооборот выполняет у оператора действие текущего этапа: «согласован» — «Утвердить», «отклонён» — «Отклонить» с причиной из визы. Этап с подписью не закрывается: пакет ждёт человека в «Ждут меня → Подписать». Итог — строкой журнала прохода (operator_*). По умолчанию выключено.
+    reply_after_approval: bool
     #: Идентификатор нашей организации у оператора; выясняется сопоставлением по ИНН и КПП, руками не вводится
     external_org_id: str
     granted_by_name: str
@@ -8681,6 +8813,8 @@ class DocflowConnectionPatch(TypedDict, total=False):
 
     display_name: str
     status: Literal['connected', 'paused', 'error', 'reauth_required', 'disconnected']
+    #: Включает ответ у оператора после нашего согласования. Режим «только чтение» этим не снимается: ответ оператору проходит его сторож
+    reply_after_approval: bool
     app_client_id: str
     app_secret: str
     service_key: str
@@ -9209,6 +9343,78 @@ class DocflowFormatIssues(TypedDict):
     code: Literal['docflow.formats.invalid']
     issues: List["DocflowIssue"]
 
+class DocflowGovConnectionState(TypedDict):
+    connection: "UUID"
+    company: Optional[str]
+    company_name: str
+    #: Пусто — ленту отчётности ещё не читали
+    access: Literal['', 'ok', 'denied', 'failed']
+    checked_at: Optional[str]
+    #: Слова оператора при отказе
+    note: str
+
+class _DocflowGovDocumentRequired(TypedDict):
+    id: "UUID"
+    connection: "UUID"
+    company: Optional[str]
+    company_name: str
+    kind: Literal['claim', 'letter', 'outgoing', 'answer', 'receipt', 'report']
+    claim_kind: Literal['', 'explanations', 'documents', 'general']
+    #: fns, sfr, rosstat, fsrar, rpn или пусто
+    authority: str
+    authority_name: str
+    authority_code: str
+    external_id: str
+    doc_type: str
+    doc_subtype: str
+    number: str
+    date: str
+    note: str
+    kit_id: str
+    state_code: str
+    state_name: str
+    state_description: str
+    sent_on: str
+    receipt_due: str
+    answer_due: str
+    #: С этого дня без квитанции инспекция вправе приостановить операции по счетам
+    block_after: str
+    receipt_sent_at: Optional[str]
+    answered_at: Optional[str]
+    #: Сотрудник, отметивший ответ вручную; null — ответ виден в ленте или его нет
+    answered_by: Optional[int]
+    answered_by_name: str
+    answer_message: Optional[str]
+    receipt_pending: bool
+    answer_pending: bool
+    #: Срок квитанции прошёл или до блокировки счёта не больше двух рабочих дней, а квитанции нет
+    receipt_late: bool
+    #: Срок ответа прошёл, а ответа нет
+    answer_late: bool
+    open: bool
+    urgency: Literal['', 'soon', 'overdue', 'blocking']
+    operator_link: str
+    received_at: Optional[str]
+    updated_at: str
+
+class DocflowGovDocument(_DocflowGovDocumentRequired, total=False):
+    """Документ госоргана в зеркале оператора. doc_type, doc_subtype, state_code и state_name — слова оператора; kind, claim_kind и authority — наш вид по одному правилу сервера. Сроки — календарные даты ГГГГ-ММ-ДД; пустая строка — срока нет (не требование или дата отправки неизвестна)."""
+
+    attachments: List["DocflowAttachment"]
+    events: List["DocflowEvent"]
+
+class DocflowGovList(TypedDict):
+    count: int
+    results: List["DocflowGovDocument"]
+
+class DocflowGovSummary(TypedDict):
+    claims: int
+    claims_open: int
+    claims_urgent: int
+    letters: int
+    reports: int
+    connections: List["DocflowGovConnectionState"]
+
 class _DocflowIntakeCounterpartyRequired(TypedDict):
     #: Карточка контрагента кабинета; null — свести не с кем, и приёмка отвечает проверкой docflow.edo.contact_required
     contact: Optional["UUID"]
@@ -9633,6 +9839,15 @@ class DocflowMessagePrintForm(TypedDict):
     revision: str
     fetched_at: str
 
+class DocflowOrderActInput(TypedDict, total=False):
+    #: Дата акта; пусто — дата заказа
+    date: str
+    #: Пусто — следующий номер счётчика актов
+    number: str
+    title: str
+    #: Пусто — все услуги заказа; меньше — частичный акт суммой
+    amount: str
+
 class _DocflowOrderImportRequired(TypedDict):
     id: "UUID"
     outcome: Literal['accepted', 'updated', 'rejected']
@@ -9652,6 +9867,25 @@ class DocflowOrderImport(_DocflowOrderImportRequired, total=False):
 
 class DocflowOrderImportPage(TypedDict):
     results: List["DocflowOrderImport"]
+
+class _DocflowOrderInvoiceInputRequired(TypedDict):
+    #: Оплатить до
+    due_date: str
+
+class DocflowOrderInvoiceInput(_DocflowOrderInvoiceInputRequired, total=False):
+    expected_until: str
+    payment_purpose: str
+    #: Собрать назначение платежа умолчанием
+    payment_purpose_auto: bool
+    #: Пусто — на весь заказ; меньше — частичный счёт
+    amount: str
+    #: Дата счёта; пусто — дата заказа
+    date: str
+    #: Пусто — следующий номер счётчика счетов
+    number: str
+    title: str
+    #: Сохранить черновиком вместо «Выставить»
+    draft: bool
 
 class DocflowOutgoingFile(TypedDict):
     """Произвольный файл на отправку рядом с формализованным."""
@@ -10145,6 +10379,14 @@ class DocflowSignatureSubmission(_DocflowSignatureSubmissionRequired, total=Fals
 
     #: Открытая часть сертификата Base64. Удобство, а не обязанность: найти сертификат оператор умеет и по отпечатку
     certificate: str
+    #: ФИО владельца сертификата. Оператор требует его и при выполнении действия
+    certificate_holder: str
+    #: ИНН из сертификата, как в задании
+    certificate_inn: str
+    #: Должность владельца сертификата
+    certificate_position: str
+    #: Комментарий к действию; уходит второй стороне
+    comment: str
     #: Время по часам браузера; хранится справкой
     signed_at: str
     attorney: "DocflowAttorneySubmission"
@@ -10212,13 +10454,23 @@ class _DocflowSigningTaskInputRequired(TypedDict):
     message_id: "UUID"
 
 class DocflowSigningTaskInput(_DocflowSigningTaskInputRequired, total=False):
-    """Просьба выдать задание на подпись."""
+    """Просьба выдать задание на подпись. Сертификат человек выбирает ДО задания: оператор готовит действие под конкретного подписанта и без ФИО и ИНН владельца сертификата может отказать уже в подготовке."""
 
     attachment_id: "UUID"
-    #: Идентификатор этапа у оператора. Не нужен в обычном сценарии: этап выбирает сервер по тому, что сказал оператор
+    #: Идентификатор этапа у оператора. Карточка называет его вместе с action; без них этап выбирает сервер
     stage: str
-    #: Код команды оператора; нужен, когда на этапе их несколько
+    #: Код команды оператора из stage.actions[].code («Утвердить», «Отклонить»). Без него сервер берёт согласие этапа, закрываемое подписью, и никогда — отказ
     action: str
+    #: Комментарий к действию словами человека; при отказе обязателен
+    comment: str
+    #: Отпечаток выбранного сертификата. Подпись другим сертификатом под этим заданием не принимается
+    certificate_thumbprint: str
+    #: ФИО владельца сертификата из поля «Субъект»
+    certificate_holder: str
+    #: ИНН из сертификата: организации, если он в сертификате есть, иначе владельца
+    certificate_inn: str
+    #: Должность владельца сертификата
+    certificate_position: str
 
 class DocflowSigningTaskList(TypedDict):
     count: int
@@ -10244,11 +10496,15 @@ class DocflowStage(TypedDict):
     created_at: str
     updated_at: str
 
-class DocflowStageAction(TypedDict):
-    """Действие, которое оператор разрешает на этапе. Код отправляют оператору, надпись показывают человеку."""
-
+class _DocflowStageActionRequired(TypedDict):
     code: str
     name: str
+
+class DocflowStageAction(_DocflowStageActionRequired, total=False):
+    """Действие, которое оператор разрешает на этапе. Код отправляют оператору, надпись показывают человеку."""
+
+    #: Действие закрывается подписью («ТребуетПодписания» оператора). Точнее признака этапа: на этапе «Утверждение» подписи требует «Утвердить», а «Переназначить» — нет. У этапов, записанных до появления признака, false у всех действий — тогда судят по requires_signature этапа
+    requires_signature: bool
 
 class DocflowStageRef(TypedDict, total=False):
     """Ссылка на строку очереди этапов. Пустое тело означает единственный незакрытый этап пакета: у обычного документа он один, и требовать его имя не с чего."""
@@ -11390,6 +11646,8 @@ class _FinanceOperationRequired(TypedDict):
     #: Оплата сверх признанного начисления
     advance: str
     cash_payments: List["FinanceOperationFact"]
+    #: Применения к долгу, не привязанные к строке графика (ERP-1417)
+    unattributed_facts: List["FinanceOperationFact"]
     id: "UUID"
     kind: Literal['sale', 'purchase']
     company_id: "UUID"
@@ -11556,6 +11814,23 @@ class _FinanceOperationVersionRequired(TypedDict):
 class FinanceOperationVersion(_FinanceOperationVersionRequired, total=False):
     previous_version_id: str
     reason: str
+
+class _FinanceOrderActInputRequired(TypedDict):
+    source: "FinanceOperationSource"
+    date: str
+    #: Сумма акта с НДС в валюте заказа, decimal string
+    amount: str
+
+class FinanceOrderActInput(_FinanceOrderActInputRequired, total=False):
+    #: Срок оплаты; пусто — по строке графика заказа или условиям контрагента
+    due_date: str
+    reason: str
+    #: Статья выручки (расхода); пусто — статья заказа, политика бизнеса или системная
+    pnl_item_id: Dict[str, Any]
+    #: Этап работ заказа, который закрывает акт
+    stage_id: Dict[str, Any]
+    vat_amount: str
+    prices_include_vat: bool
 
 FinancePaymentCalendar = TypedDict("FinancePaymentCalendar", {"valuation_date": str, "project": str, "balance_available": bool, "from": str, "to": str, "currency": str, "derived_available": bool, "derived_note": str, "opening": str, "inflow": str, "outflow": str, "closing": str, "overdue_in": str, "overdue_out": str, "done_in": str, "done_out": str, "committed_in": str, "expected_in": str, "undated": "FinancePaymentCalendarUndated", "companies": List["FinancePaymentCalendarCompany"], "step": Literal['day', 'month', 'quarter'], "periods": List["FinancePaymentCalendarPeriod"], "totals": List["FinancePaymentCalendarCell"], "days": List["FinancePaymentCalendarDay"], "rows": List["FinancePaymentCalendarRow"], "overdue": List["FinancePaymentCalendarRow"]}, total=False)
 
@@ -12599,7 +12874,7 @@ class FinanceTradeJournalPage(_FinanceTradeJournalPageRequired, total=False):
     offset: int
     has_more: bool
     limit_reached: bool
-    group: Literal['orders', 'without_order']
+    group: Literal['orders', 'without_order', 'executions']
     #: Колонки, вычисленные до отсечки расчётов по заказам (этап 3); нет, когда все строки ответа — из регистра
     computed_columns: List[Literal['advance', 'debt']]
 
@@ -12644,7 +12919,7 @@ class FinanceTradeJournalRow(_FinanceTradeJournalRowRequired, total=False):
     payment_stages: int
     accrued_stages: int
     paid_stages: int
-    group: Literal['orders', 'without_order']
+    group: Literal['orders', 'without_order', 'executions']
     #: Состояние заказа по канону
     state: Literal['draft', 'confirmed', 'executing', 'executed', 'closed', 'cancelled']
     title: str
@@ -12659,6 +12934,12 @@ class FinanceTradeJournalRow(_FinanceTradeJournalRowRequired, total=False):
     execution_count: int
     #: Аванс, долг и оплачено — остатками регистра расчётов по заказу: бизнес прошёл отсечку расчётов по заказам (этап 3 ERP-1427)
     money_from_register: bool
+    #: Бизнес заказа прошёл отсечку исполнения (этап 4 ERP-1427): при включённом документообороте акт по заказу выпускают «Документы» заказа — бумага и исполнение одной командой; прямой акт финансов отвечает 409 finance.order.act_needs_paper
+    execution_cutover: bool
+    #: Заказ документа исполнения по цепочке оснований (группы without_order и executions)
+    order_id: str
+    #: Номер заказа документа исполнения
+    order_number: str
     executions: List["FinanceTradeJournalDocument"]
     payments: List["FinanceTradeJournalDocument"]
 
@@ -12758,6 +13039,35 @@ class FinanceTransactionTotals(TypedDict):
     currency: str
     #: Сколько операций осталось без пересчёта в валюту учёта: неполный пересчёт не должен выглядеть верным итогом
     unconverted_count: int
+
+class FinanceUnallocatedMoney(TypedDict):
+    #: Сколько операций ждут имени
+    count: int
+    #: Их сумма в валюте учёта. null — часть операций к ней не сведена, и называть неполную сумму нельзя
+    amount: Optional[str]
+    #: Валюта учёта кабинета
+    currency: str
+    #: Сколько операций не сведено к валюте учёта
+    unconverted_count: int
+
+class FinanceUnallocatedScope(TypedDict):
+    #: Сколько операций ждут имени
+    count: int
+    #: Их сумма в валюте учёта. null — часть операций к ней не сведена, и называть неполную сумму нельзя
+    amount: Optional[str]
+    #: Валюта учёта кабинета
+    currency: str
+    #: Сколько операций не сведено к валюте учёта
+    unconverted_count: int
+    #: account — банковский счёт, wallet — касса
+    kind: Literal['account', 'wallet']
+    id: "UUID"
+    #: Как место хранения названо в справочнике
+    name: str
+
+class FinanceUnallocatedSummary(TypedDict):
+    total: "FinanceUnallocatedMoney"
+    scopes: List["FinanceUnallocatedScope"]
 
 class _FinanceVATBookImportRequired(TypedDict):
     id: str

@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f79d710dd6c50b81a29a1d39abc3ba72fb87d42101b75908c59d2443160471b0).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a4fad0a9a1e120161f9196b223837e8ee64d4e98e553adba966bb44f0be3ea9).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -4066,6 +4066,50 @@ export interface CoreDocumentMovementSummary {
   "entry_count": number;
 }
 
+export interface CoreDocumentNumbering {
+  "type_id": UUID;
+  "key": string;
+  "name": string;
+  "module": string;
+  "is_system": boolean;
+  "number_source": CoreNumberSource;
+  "number_template": string;
+  "number_reset": CoreNumberReset;
+  "parts": CoreDocumentNumberingParts;
+  "next_number": string;
+  "next_value": CoreDocumentNumberingCounters;
+  /** Нумерацию выбрал кабинет — посев её не перепишет */
+  "customized": boolean;
+}
+
+export interface CoreDocumentNumberingCounters {
+  /** Следующее значение счётчика текущего года */
+  "year": number;
+  /** Следующее значение сквозного счётчика */
+  "never": number;
+}
+
+export interface CoreDocumentNumberingInput {
+  /** Серия номера; дефисы и пробелы по краям снимаются, разделитель «-» ставит сервер. */
+  "prefix": string;
+  "year": CoreNumberYear;
+  "width": number;
+  "reset": CoreNumberReset;
+}
+
+export interface CoreDocumentNumberingList {
+  "today": string;
+  "results": Array<CoreDocumentNumbering>;
+}
+
+export interface CoreDocumentNumberingParts {
+  "prefix": string;
+  "year": CoreNumberYear;
+  "width": number;
+  /** false — шаблон сложнее «префикс, год, счётчик»; правка заменит его простым правилом. */
+  "structured": boolean;
+}
+
 export interface CoreDocumentPage {
   "count": number;
   "results": Array<CoreDocument>;
@@ -4560,6 +4604,8 @@ export type CoreNumberReset = "year" | "never";
 
 export type CoreNumberSource = "sequence" | "sequence_or_given" | "external";
 
+export type CoreNumberYear = "none" | "yy" | "yyyy";
+
 export interface CoreObjectUsage {
   "blocked": boolean;
   "rows": Array<CoreObjectUsageRow>;
@@ -4955,6 +5001,71 @@ export interface CoreOrderLineInput {
 }
 
 export type CoreOrderLineKind = "goods" | "service" | "material" | "semi_product";
+
+/** Реквизиты акта; пусто — дата заказа, номер по счётчику, название по заказу */
+export interface CoreOrderNowAct {
+  "date"?: string;
+  "number"?: string;
+  "title"?: string;
+}
+
+/** Что выпустил владелец исполнения. docflow — бумага документооборота (paper_*), при финансах после отсечки — с учётным документом исполнения (execution_*); finance — акт финансов без бумаги. */
+export interface CoreOrderNowExecution {
+  "owner": "docflow" | "finance";
+  "paper_id"?: UUID;
+  "paper_number"?: string;
+  /** registered — бумага с проведённым исполнением; draft — бумага без книги (финансы выключены) */
+  "paper_status"?: string;
+  "execution_id"?: UUID;
+  "execution_number"?: string;
+}
+
+/** Заказ целиком, его внешний номер и акт. Поля заказа — те же, что у загрузки; подтверждение подразумевается. */
+export interface CoreOrderNowInput {
+  "side": CoreOrderSide;
+  /** Свой номер; пусто — номер выдаёт счётчик вида */
+  "number"?: string;
+  "date": string;
+  "business_id"?: UUID;
+  "company_id"?: UUID;
+  /** Контрагент; вместо него можно прислать counterparty */
+  "contact_id"?: UUID;
+  "counterparty"?: CoreOrderCounterparty;
+  "contract_id"?: UUID;
+  "project_id"?: UUID;
+  /** Статья выручки (у закупки — расхода) исполнения; пусто — по учётной политике бизнеса */
+  "pnl_item_id"?: { [key: string]: unknown };
+  "warehouse_id"?: UUID;
+  "basis_id"?: UUID;
+  "title"?: string;
+  "currency": string;
+  /** Цены с НДС («в том числе»); по умолчанию true */
+  "prices_include_vat"?: boolean;
+  "discount"?: string;
+  "delivery_date"?: string;
+  "due_date"?: string;
+  "scenario"?: "one_off_sale" | "contract_sale" | "self_service";
+  "manager_note"?: string;
+  "comment"?: string;
+  "buyer"?: CoreOrderBuyer;
+  "lines": Array<CoreOrderLineInput>;
+  "responsibles"?: Array<CoreOrderResponsible>;
+  "stages"?: Array<CoreOrderStage>;
+  "payment_terms"?: Array<CoreOrderPaymentTerm>;
+  "cabinet_status_id"?: UUID;
+  /** Номер заказа у источника; по стороне и нему узнаётся повтор */
+  "external_id": string;
+  /** Имя источника: сайт, CRM, маркетплейс */
+  "source_system"?: string;
+  "act"?: CoreOrderNowAct;
+}
+
+export interface CoreOrderNowResult {
+  "order": CoreOrder;
+  "execution": CoreOrderNowExecution;
+  /** true — заказ уже был исполнен этой командой; ничего не записано */
+  "replayed": boolean;
+}
 
 export interface CoreOrderObligation {
   /** Действующий приход подтверждения в регистре «Заказы» */
@@ -6673,7 +6784,8 @@ export interface DocflowApprovalDirectories {
 export interface DocflowApprovalEvent {
   "id": UUID;
   "stage_position"?: number;
-  "action": "submitted" | "approved" | "returned" | "rejected" | "cancelled" | "resubmitted" | "reset_significant_change" | "delegated" | "escalated" | "reminded";
+  /** operator_* — ответ оператору по входящему пакету ЭДО после прохода (настройка подключения reply_after_approval); comment несёт слова оператора или машинный код отказа docflow.edo.* */
+  "action": "submitted" | "approved" | "returned" | "rejected" | "cancelled" | "resubmitted" | "reset_significant_change" | "delegated" | "escalated" | "reminded" | "operator_replied" | "operator_refused" | "operator_signature_required" | "operator_skipped";
   "user_id"?: number;
   "user_name"?: string;
   "comment"?: string;
@@ -7013,6 +7125,8 @@ export interface DocflowConnection {
   "has_credentials": boolean;
   /** Действующее ограничение: отправка, подписание и изменение состояний в ЭДО отключены */
   "read_only": boolean;
+  /** «После нашего согласования — ответить у оператора». Когда проход внутреннего маршрута по входящему пакету закончен, документооборот выполняет у оператора действие текущего этапа: «согласован» — «Утвердить», «отклонён» — «Отклонить» с причиной из визы. Этап с подписью не закрывается: пакет ждёт человека в «Ждут меня → Подписать». Итог — строкой журнала прохода (operator_*). По умолчанию выключено. */
+  "reply_after_approval": boolean;
   /** Идентификатор нашей организации у оператора; выясняется сопоставлением по ИНН и КПП, руками не вводится */
   "external_org_id": string;
   /** Кто из ERP выдал доступ; имя человека на стороне оператора нам неизвестно */
@@ -7061,6 +7175,8 @@ export interface DocflowConnectionModeInput {
 export interface DocflowConnectionPatch {
   "display_name"?: string;
   "status"?: "connected" | "paused" | "error" | "reauth_required" | "disconnected";
+  /** Включает ответ у оператора после нашего согласования. Режим «только чтение» этим не снимается: ответ оператору проходит его сторож */
+  "reply_after_approval"?: boolean;
   "app_client_id"?: string;
   "app_secret"?: string;
   "service_key"?: string;
@@ -7571,6 +7687,79 @@ export interface DocflowFormatIssues {
   "issues": Array<DocflowIssue>;
 }
 
+export interface DocflowGovConnectionState {
+  "connection": UUID;
+  "company": string | null;
+  "company_name": string;
+  /** Пусто — ленту отчётности ещё не читали */
+  "access": "" | "ok" | "denied" | "failed";
+  "checked_at": string | null;
+  /** Слова оператора при отказе */
+  "note": string;
+}
+
+/** Документ госоргана в зеркале оператора. doc_type, doc_subtype, state_code и state_name — слова оператора; kind, claim_kind и authority — наш вид по одному правилу сервера. Сроки — календарные даты ГГГГ-ММ-ДД; пустая строка — срока нет (не требование или дата отправки неизвестна). */
+export interface DocflowGovDocument {
+  "id": UUID;
+  "connection": UUID;
+  "company": string | null;
+  "company_name": string;
+  "kind": "claim" | "letter" | "outgoing" | "answer" | "receipt" | "report";
+  "claim_kind": "" | "explanations" | "documents" | "general";
+  /** fns, sfr, rosstat, fsrar, rpn или пусто */
+  "authority": string;
+  "authority_name": string;
+  "authority_code": string;
+  "external_id": string;
+  "doc_type": string;
+  "doc_subtype": string;
+  "number": string;
+  "date": string;
+  "note": string;
+  "kit_id": string;
+  "state_code": string;
+  "state_name": string;
+  "state_description": string;
+  "sent_on": string;
+  "receipt_due": string;
+  "answer_due": string;
+  /** С этого дня без квитанции инспекция вправе приостановить операции по счетам */
+  "block_after": string;
+  "receipt_sent_at": string | null;
+  "answered_at": string | null;
+  /** Сотрудник, отметивший ответ вручную; null — ответ виден в ленте или его нет */
+  "answered_by": number | null;
+  "answered_by_name": string;
+  "answer_message": string | null;
+  "receipt_pending": boolean;
+  "answer_pending": boolean;
+  /** Срок квитанции прошёл или до блокировки счёта не больше двух рабочих дней, а квитанции нет */
+  "receipt_late": boolean;
+  /** Срок ответа прошёл, а ответа нет */
+  "answer_late": boolean;
+  "open": boolean;
+  "urgency": "" | "soon" | "overdue" | "blocking";
+  "operator_link": string;
+  "received_at": string | null;
+  "updated_at": string;
+  "attachments"?: Array<DocflowAttachment>;
+  "events"?: Array<DocflowEvent>;
+}
+
+export interface DocflowGovList {
+  "count": number;
+  "results": Array<DocflowGovDocument>;
+}
+
+export interface DocflowGovSummary {
+  "claims": number;
+  "claims_open": number;
+  "claims_urgent": number;
+  "letters": number;
+  "reports": number;
+  "connections": Array<DocflowGovConnectionState>;
+}
+
 /**
  * Вторая сторона и то, с кем мы её свели.
  * 
@@ -7982,6 +8171,16 @@ export interface DocflowMessagePrintForm {
   "fetched_at": string;
 }
 
+export interface DocflowOrderActInput {
+  /** Дата акта; пусто — дата заказа */
+  "date"?: string;
+  /** Пусто — следующий номер счётчика актов */
+  "number"?: string;
+  "title"?: string;
+  /** Пусто — все услуги заказа; меньше — частичный акт суммой */
+  "amount"?: string;
+}
+
 export interface DocflowOrderImport {
   "id": UUID;
   "external_id"?: string;
@@ -8000,6 +8199,24 @@ export interface DocflowOrderImport {
 
 export interface DocflowOrderImportPage {
   "results": Array<DocflowOrderImport>;
+}
+
+export interface DocflowOrderInvoiceInput {
+  /** Оплатить до */
+  "due_date": string;
+  "expected_until"?: string;
+  "payment_purpose"?: string;
+  /** Собрать назначение платежа умолчанием */
+  "payment_purpose_auto"?: boolean;
+  /** Пусто — на весь заказ; меньше — частичный счёт */
+  "amount"?: string;
+  /** Дата счёта; пусто — дата заказа */
+  "date"?: string;
+  /** Пусто — следующий номер счётчика счетов */
+  "number"?: string;
+  "title"?: string;
+  /** Сохранить черновиком вместо «Выставить» */
+  "draft"?: boolean;
 }
 
 /** Произвольный файл на отправку рядом с формализованным. */
@@ -8480,6 +8697,14 @@ export interface DocflowSignatureSubmission {
   "certificate_thumbprint": string;
   /** Открытая часть сертификата Base64. Удобство, а не обязанность: найти сертификат оператор умеет и по отпечатку */
   "certificate"?: string;
+  /** ФИО владельца сертификата. Оператор требует его и при выполнении действия */
+  "certificate_holder"?: string;
+  /** ИНН из сертификата, как в задании */
+  "certificate_inn"?: string;
+  /** Должность владельца сертификата */
+  "certificate_position"?: string;
+  /** Комментарий к действию; уходит второй стороне */
+  "comment"?: string;
   /** Время по часам браузера; хранится справкой */
   "signed_at"?: string;
   "attorney"?: DocflowAttorneySubmission;
@@ -8538,14 +8763,24 @@ export interface DocflowSigningTask {
   "created_at": string;
 }
 
-/** Просьба выдать задание на подпись. */
+/** Просьба выдать задание на подпись. Сертификат человек выбирает ДО задания: оператор готовит действие под конкретного подписанта и без ФИО и ИНН владельца сертификата может отказать уже в подготовке. */
 export interface DocflowSigningTaskInput {
   "message_id": UUID;
   "attachment_id"?: UUID;
-  /** Идентификатор этапа у оператора. Не нужен в обычном сценарии: этап выбирает сервер по тому, что сказал оператор */
+  /** Идентификатор этапа у оператора. Карточка называет его вместе с action; без них этап выбирает сервер */
   "stage"?: string;
-  /** Код команды оператора; нужен, когда на этапе их несколько */
+  /** Код команды оператора из stage.actions[].code («Утвердить», «Отклонить»). Без него сервер берёт согласие этапа, закрываемое подписью, и никогда — отказ */
   "action"?: string;
+  /** Комментарий к действию словами человека; при отказе обязателен */
+  "comment"?: string;
+  /** Отпечаток выбранного сертификата. Подпись другим сертификатом под этим заданием не принимается */
+  "certificate_thumbprint"?: string;
+  /** ФИО владельца сертификата из поля «Субъект» */
+  "certificate_holder"?: string;
+  /** ИНН из сертификата: организации, если он в сертификате есть, иначе владельца */
+  "certificate_inn"?: string;
+  /** Должность владельца сертификата */
+  "certificate_position"?: string;
 }
 
 export interface DocflowSigningTaskList {
@@ -8577,6 +8812,8 @@ export interface DocflowStage {
 export interface DocflowStageAction {
   "code": string;
   "name": string;
+  /** Действие закрывается подписью («ТребуетПодписания» оператора). Точнее признака этапа: на этапе «Утверждение» подписи требует «Утвердить», а «Переназначить» — нет. У этапов, записанных до появления признака, false у всех действий — тогда судят по requires_signature этапа */
+  "requires_signature"?: boolean;
 }
 
 /** Ссылка на строку очереди этапов. Пустое тело означает единственный незакрытый этап пакета: у обычного документа он один, и требовать его имя не с чего. */
@@ -9737,6 +9974,8 @@ export interface FinanceOperation {
   /** Оплата сверх признанного начисления */
   "advance": string;
   "cash_payments": Array<FinanceOperationFact>;
+  /** Применения к долгу, не привязанные к строке графика (ERP-1417) */
+  "unattributed_facts": Array<FinanceOperationFact>;
   "id": UUID;
   "kind": "sale" | "purchase";
   "company_id": UUID;
@@ -9897,6 +10136,22 @@ export interface FinanceOperationVersion {
   "reason"?: string;
   "accruals": Array<FinanceOperationStage>;
   "payments": Array<FinanceOperationStage>;
+}
+
+export interface FinanceOrderActInput {
+  "source": FinanceOperationSource;
+  "date": string;
+  /** Сумма акта с НДС в валюте заказа, decimal string */
+  "amount": string;
+  /** Срок оплаты; пусто — по строке графика заказа или условиям контрагента */
+  "due_date"?: string;
+  "reason"?: string;
+  /** Статья выручки (расхода); пусто — статья заказа, политика бизнеса или системная */
+  "pnl_item_id"?: { [key: string]: unknown };
+  /** Этап работ заказа, который закрывает акт */
+  "stage_id"?: { [key: string]: unknown };
+  "vat_amount"?: string;
+  "prices_include_vat"?: boolean;
 }
 
 export interface FinancePaymentCalendar {
@@ -11069,7 +11324,7 @@ export interface FinanceTradeJournalPage {
   "offset"?: number;
   "has_more"?: boolean;
   "limit_reached"?: boolean;
-  "group"?: "orders" | "without_order";
+  "group"?: "orders" | "without_order" | "executions";
   /** Колонки, вычисленные до отсечки расчётов по заказам (этап 3); нет, когда все строки ответа — из регистра */
   "computed_columns"?: Array<"advance" | "debt">;
 }
@@ -11113,7 +11368,7 @@ export interface FinanceTradeJournalRow {
   "payment_stages"?: number;
   "accrued_stages"?: number;
   "paid_stages"?: number;
-  "group"?: "orders" | "without_order";
+  "group"?: "orders" | "without_order" | "executions";
   /** Состояние заказа по канону */
   "state"?: "draft" | "confirmed" | "executing" | "executed" | "closed" | "cancelled";
   "title"?: string;
@@ -11128,6 +11383,12 @@ export interface FinanceTradeJournalRow {
   "execution_count"?: number;
   /** Аванс, долг и оплачено — остатками регистра расчётов по заказу: бизнес прошёл отсечку расчётов по заказам (этап 3 ERP-1427) */
   "money_from_register"?: boolean;
+  /** Бизнес заказа прошёл отсечку исполнения (этап 4 ERP-1427): при включённом документообороте акт по заказу выпускают «Документы» заказа — бумага и исполнение одной командой; прямой акт финансов отвечает 409 finance.order.act_needs_paper */
+  "execution_cutover"?: boolean;
+  /** Заказ документа исполнения по цепочке оснований (группы without_order и executions) */
+  "order_id"?: string;
+  /** Номер заказа документа исполнения */
+  "order_number"?: string;
   "executions"?: Array<FinanceTradeJournalDocument>;
   "payments"?: Array<FinanceTradeJournalDocument>;
 }
@@ -11227,6 +11488,38 @@ export interface FinanceTransactionTotals {
   "currency": string;
   /** Сколько операций осталось без пересчёта в валюту учёта: неполный пересчёт не должен выглядеть верным итогом */
   "unconverted_count": number;
+}
+
+export interface FinanceUnallocatedMoney {
+  /** Сколько операций ждут имени */
+  "count": number;
+  /** Их сумма в валюте учёта. null — часть операций к ней не сведена, и называть неполную сумму нельзя */
+  "amount": string | null;
+  /** Валюта учёта кабинета */
+  "currency": string;
+  /** Сколько операций не сведено к валюте учёта */
+  "unconverted_count": number;
+}
+
+export interface FinanceUnallocatedScope {
+  /** Сколько операций ждут имени */
+  "count": number;
+  /** Их сумма в валюте учёта. null — часть операций к ней не сведена, и называть неполную сумму нельзя */
+  "amount": string | null;
+  /** Валюта учёта кабинета */
+  "currency": string;
+  /** Сколько операций не сведено к валюте учёта */
+  "unconverted_count": number;
+  /** account — банковский счёт, wallet — касса */
+  "kind": "account" | "wallet";
+  "id": UUID;
+  /** Как место хранения названо в справочнике */
+  "name": string;
+}
+
+export interface FinanceUnallocatedSummary {
+  "total": FinanceUnallocatedMoney;
+  "scopes": Array<FinanceUnallocatedScope>;
 }
 
 export interface FinanceVATBookImport {

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f79d710dd6c50b81a29a1d39abc3ba72fb87d42101b75908c59d2443160471b0).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a4fad0a9a1e120161f9196b223837e8ee64d4e98e553adba966bb44f0be3ea9).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -4053,6 +4053,50 @@ type CoreDocumentMovementSummary struct {
 	EntryCount   int64                      `json:"entry_count"`
 }
 
+type CoreDocumentNumbering struct {
+	TypeID         UUID                          `json:"type_id"`
+	Key            string                        `json:"key"`
+	Name           string                        `json:"name"`
+	Module         string                        `json:"module"`
+	IsSystem       bool                          `json:"is_system"`
+	NumberSource   CoreNumberSource              `json:"number_source"`
+	NumberTemplate string                        `json:"number_template"`
+	NumberReset    CoreNumberReset               `json:"number_reset"`
+	Parts          CoreDocumentNumberingParts    `json:"parts"`
+	NextNumber     string                        `json:"next_number"`
+	NextValue      CoreDocumentNumberingCounters `json:"next_value"`
+	// Customized — Нумерацию выбрал кабинет — посев её не перепишет
+	Customized bool `json:"customized"`
+}
+
+type CoreDocumentNumberingCounters struct {
+	// Year — Следующее значение счётчика текущего года
+	Year int64 `json:"year"`
+	// Never — Следующее значение сквозного счётчика
+	Never int64 `json:"never"`
+}
+
+type CoreDocumentNumberingInput struct {
+	// Prefix — Серия номера; дефисы и пробелы по краям снимаются, разделитель «-» ставит сервер.
+	Prefix string          `json:"prefix"`
+	Year   CoreNumberYear  `json:"year"`
+	Width  int64           `json:"width"`
+	Reset  CoreNumberReset `json:"reset"`
+}
+
+type CoreDocumentNumberingList struct {
+	Today   string                  `json:"today"`
+	Results []CoreDocumentNumbering `json:"results"`
+}
+
+type CoreDocumentNumberingParts struct {
+	Prefix string         `json:"prefix"`
+	Year   CoreNumberYear `json:"year"`
+	Width  int64          `json:"width"`
+	// Structured — false — шаблон сложнее «префикс, год, счётчик»; правка заменит его простым правилом.
+	Structured bool `json:"structured"`
+}
+
 type CoreDocumentPage struct {
 	Count   int64          `json:"count"`
 	Results []CoreDocument `json:"results"`
@@ -4547,6 +4591,8 @@ type CoreNumberReset = string
 
 type CoreNumberSource = string
 
+type CoreNumberYear = string
+
 type CoreObjectUsage struct {
 	Blocked bool                 `json:"blocked"`
 	Rows    []CoreObjectUsageRow `json:"rows"`
@@ -4942,6 +4988,71 @@ type CoreOrderLineInput struct {
 }
 
 type CoreOrderLineKind = string
+
+// CoreOrderNowAct — Реквизиты акта; пусто — дата заказа, номер по счётчику, название по заказу
+type CoreOrderNowAct struct {
+	Date   *string `json:"date,omitempty"`
+	Number *string `json:"number,omitempty"`
+	Title  *string `json:"title,omitempty"`
+}
+
+// CoreOrderNowExecution — Что выпустил владелец исполнения. docflow — бумага документооборота (paper_*), при финансах после отсечки — с учётным документом исполнения (execution_*); finance — акт финансов без бумаги.
+type CoreOrderNowExecution struct {
+	Owner       string  `json:"owner"`
+	PaperID     *UUID   `json:"paper_id,omitempty"`
+	PaperNumber *string `json:"paper_number,omitempty"`
+	// PaperStatus — registered — бумага с проведённым исполнением; draft — бумага без книги (финансы выключены)
+	PaperStatus     *string `json:"paper_status,omitempty"`
+	ExecutionID     *UUID   `json:"execution_id,omitempty"`
+	ExecutionNumber *string `json:"execution_number,omitempty"`
+}
+
+// CoreOrderNowInput — Заказ целиком, его внешний номер и акт. Поля заказа — те же, что у загрузки; подтверждение подразумевается.
+type CoreOrderNowInput struct {
+	Side CoreOrderSide `json:"side"`
+	// Number — Свой номер; пусто — номер выдаёт счётчик вида
+	Number     *string `json:"number,omitempty"`
+	Date       string  `json:"date"`
+	BusinessID *UUID   `json:"business_id,omitempty"`
+	CompanyID  *UUID   `json:"company_id,omitempty"`
+	// ContactID — Контрагент; вместо него можно прислать counterparty
+	ContactID    *UUID                  `json:"contact_id,omitempty"`
+	Counterparty *CoreOrderCounterparty `json:"counterparty,omitempty"`
+	ContractID   *UUID                  `json:"contract_id,omitempty"`
+	ProjectID    *UUID                  `json:"project_id,omitempty"`
+	// PNLItemID — Статья выручки (у закупки — расхода) исполнения; пусто — по учётной политике бизнеса
+	PNLItemID   map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
+	WarehouseID *UUID                      `json:"warehouse_id,omitempty"`
+	BasisID     *UUID                      `json:"basis_id,omitempty"`
+	Title       *string                    `json:"title,omitempty"`
+	Currency    string                     `json:"currency"`
+	// PricesIncludeVAT — Цены с НДС («в том числе»); по умолчанию true
+	PricesIncludeVAT *bool                  `json:"prices_include_vat,omitempty"`
+	Discount         *string                `json:"discount,omitempty"`
+	DeliveryDate     *string                `json:"delivery_date,omitempty"`
+	DueDate          *string                `json:"due_date,omitempty"`
+	Scenario         *string                `json:"scenario,omitempty"`
+	ManagerNote      *string                `json:"manager_note,omitempty"`
+	Comment          *string                `json:"comment,omitempty"`
+	Buyer            *CoreOrderBuyer        `json:"buyer,omitempty"`
+	Lines            []CoreOrderLineInput   `json:"lines"`
+	Responsibles     []CoreOrderResponsible `json:"responsibles,omitempty"`
+	Stages           []CoreOrderStage       `json:"stages,omitempty"`
+	PaymentTerms     []CoreOrderPaymentTerm `json:"payment_terms,omitempty"`
+	CabinetStatusID  *UUID                  `json:"cabinet_status_id,omitempty"`
+	// ExternalID — Номер заказа у источника; по стороне и нему узнаётся повтор
+	ExternalID string `json:"external_id"`
+	// SourceSystem — Имя источника: сайт, CRM, маркетплейс
+	SourceSystem *string          `json:"source_system,omitempty"`
+	Act          *CoreOrderNowAct `json:"act,omitempty"`
+}
+
+type CoreOrderNowResult struct {
+	Order     CoreOrder             `json:"order"`
+	Execution CoreOrderNowExecution `json:"execution"`
+	// Replayed — true — заказ уже был исполнен этой командой; ничего не записано
+	Replayed bool `json:"replayed"`
+}
 
 type CoreOrderObligation struct {
 	// Ordered — Действующий приход подтверждения в регистре «Заказы»
@@ -6650,13 +6761,14 @@ type DocflowApprovalDirectories struct {
 
 // DocflowApprovalEvent — Строка истории прохода. Не переписывается.
 type DocflowApprovalEvent struct {
-	ID            UUID    `json:"id"`
-	StagePosition *int64  `json:"stage_position,omitempty"`
-	Action        string  `json:"action"`
-	UserID        *int64  `json:"user_id,omitempty"`
-	UserName      *string `json:"user_name,omitempty"`
-	Comment       *string `json:"comment,omitempty"`
-	CreatedAt     string  `json:"created_at"`
+	ID            UUID   `json:"id"`
+	StagePosition *int64 `json:"stage_position,omitempty"`
+	// Action — operator_* — ответ оператору по входящему пакету ЭДО после прохода (настройка подключения reply_after_approval); comment несёт слова оператора или машинный код отказа docflow.edo.*
+	Action    string  `json:"action"`
+	UserID    *int64  `json:"user_id,omitempty"`
+	UserName  *string `json:"user_name,omitempty"`
+	Comment   *string `json:"comment,omitempty"`
+	CreatedAt string  `json:"created_at"`
 }
 
 // DocflowApprovalInboxItem — Строка очереди. Это НЕ урезанный предмет: ни файлов, ни строк, ни связей здесь нет — очередь открывают, чтобы решить, что открывать дальше.
@@ -6992,6 +7104,8 @@ type DocflowConnection struct {
 	HasCredentials bool `json:"has_credentials"`
 	// ReadOnly — Действующее ограничение: отправка, подписание и изменение состояний в ЭДО отключены
 	ReadOnly bool `json:"read_only"`
+	// ReplyAfterApproval — «После нашего согласования — ответить у оператора». Когда проход внутреннего маршрута по входящему пакету закончен, документооборот выполняет у оператора действие текущего этапа: «согласован» — «Утвердить», «отклонён» — «Отклонить» с причиной из визы. Этап с подписью не закрывается: пакет ждёт человека в «Ждут меня → Подписать». Итог — строкой журнала прохода (operator_*). По умолчанию выключено.
+	ReplyAfterApproval bool `json:"reply_after_approval"`
 	// ExternalOrgID — Идентификатор нашей организации у оператора; выясняется сопоставлением по ИНН и КПП, руками не вводится
 	ExternalOrgID string `json:"external_org_id"`
 	// GrantedByUserID — Кто из ERP выдал доступ; имя человека на стороне оператора нам неизвестно
@@ -7040,9 +7154,11 @@ type DocflowConnectionModeInput struct {
 type DocflowConnectionPatch struct {
 	DisplayName *string `json:"display_name,omitempty"`
 	Status      *string `json:"status,omitempty"`
-	AppClientID *string `json:"app_client_id,omitempty"`
-	AppSecret   *string `json:"app_secret,omitempty"`
-	ServiceKey  *string `json:"service_key,omitempty"`
+	// ReplyAfterApproval — Включает ответ у оператора после нашего согласования. Режим «только чтение» этим не снимается: ответ оператору проходит его сторож
+	ReplyAfterApproval *bool   `json:"reply_after_approval,omitempty"`
+	AppClientID        *string `json:"app_client_id,omitempty"`
+	AppSecret          *string `json:"app_secret,omitempty"`
+	ServiceKey         *string `json:"service_key,omitempty"`
 }
 
 // DocflowContactRequisites — Контакт: телефоны, почта и прочие сведения для связи.
@@ -7546,6 +7662,79 @@ type DocflowFormatIssues struct {
 	Issues []DocflowIssue `json:"issues"`
 }
 
+type DocflowGovConnectionState struct {
+	Connection  UUID    `json:"connection"`
+	Company     *string `json:"company"`
+	CompanyName string  `json:"company_name"`
+	// Access — Пусто — ленту отчётности ещё не читали
+	Access    string  `json:"access"`
+	CheckedAt *string `json:"checked_at"`
+	// Note — Слова оператора при отказе
+	Note string `json:"note"`
+}
+
+// DocflowGovDocument — Документ госоргана в зеркале оператора. doc_type, doc_subtype, state_code и state_name — слова оператора; kind, claim_kind и authority — наш вид по одному правилу сервера. Сроки — календарные даты ГГГГ-ММ-ДД; пустая строка — срока нет (не требование или дата отправки неизвестна).
+type DocflowGovDocument struct {
+	ID          UUID    `json:"id"`
+	Connection  UUID    `json:"connection"`
+	Company     *string `json:"company"`
+	CompanyName string  `json:"company_name"`
+	Kind        string  `json:"kind"`
+	ClaimKind   string  `json:"claim_kind"`
+	// Authority — fns, sfr, rosstat, fsrar, rpn или пусто
+	Authority        string `json:"authority"`
+	AuthorityName    string `json:"authority_name"`
+	AuthorityCode    string `json:"authority_code"`
+	ExternalID       string `json:"external_id"`
+	DocType          string `json:"doc_type"`
+	DocSubtype       string `json:"doc_subtype"`
+	Number           string `json:"number"`
+	Date             string `json:"date"`
+	Note             string `json:"note"`
+	KitID            string `json:"kit_id"`
+	StateCode        string `json:"state_code"`
+	StateName        string `json:"state_name"`
+	StateDescription string `json:"state_description"`
+	SentOn           string `json:"sent_on"`
+	ReceiptDue       string `json:"receipt_due"`
+	AnswerDue        string `json:"answer_due"`
+	// BlockAfter — С этого дня без квитанции инспекция вправе приостановить операции по счетам
+	BlockAfter    string  `json:"block_after"`
+	ReceiptSentAt *string `json:"receipt_sent_at"`
+	AnsweredAt    *string `json:"answered_at"`
+	// AnsweredBy — Сотрудник, отметивший ответ вручную; null — ответ виден в ленте или его нет
+	AnsweredBy     *int64  `json:"answered_by"`
+	AnsweredByName string  `json:"answered_by_name"`
+	AnswerMessage  *string `json:"answer_message"`
+	ReceiptPending bool    `json:"receipt_pending"`
+	AnswerPending  bool    `json:"answer_pending"`
+	// ReceiptLate — Срок квитанции прошёл или до блокировки счёта не больше двух рабочих дней, а квитанции нет
+	ReceiptLate bool `json:"receipt_late"`
+	// AnswerLate — Срок ответа прошёл, а ответа нет
+	AnswerLate   bool                `json:"answer_late"`
+	Open         bool                `json:"open"`
+	Urgency      string              `json:"urgency"`
+	OperatorLink string              `json:"operator_link"`
+	ReceivedAt   *string             `json:"received_at"`
+	UpdatedAt    string              `json:"updated_at"`
+	Attachments  []DocflowAttachment `json:"attachments,omitempty"`
+	Events       []DocflowEvent      `json:"events,omitempty"`
+}
+
+type DocflowGovList struct {
+	Count   int64                `json:"count"`
+	Results []DocflowGovDocument `json:"results"`
+}
+
+type DocflowGovSummary struct {
+	Claims       int64                       `json:"claims"`
+	ClaimsOpen   int64                       `json:"claims_open"`
+	ClaimsUrgent int64                       `json:"claims_urgent"`
+	Letters      int64                       `json:"letters"`
+	Reports      int64                       `json:"reports"`
+	Connections  []DocflowGovConnectionState `json:"connections"`
+}
+
 // DocflowIntakeCounterparty — Вторая сторона и то, с кем мы её свели. Порядок узнавания жёсткий, и каждая ступень сильнее следующей: решение человека этим же запросом, сопоставление зеркала пакета, ЗАПИСАННОЕ решение по этому участнику обмена и, наконец, поиск в справочнике по ИНН и КПП. Последняя ступень — догадка, и она называет себя догадкой (match: guess), а не выдаёт себя за чьё-то решение. Разбор у неё общий с автоматчем выгрузок: второй механизм узнавания рядом с существующим разошёлся бы с ним на первой же правке — молча и в пользу дубля. Неоднозначность не разрешается никогда: ИНН, совпавший у двух юрлиц, которых не развёл КПП, уходит человеку списком options.
 type DocflowIntakeCounterparty struct {
 	// Contact — Карточка контрагента кабинета; null — свести не с кем, и приёмка отвечает проверкой docflow.edo.contact_required
@@ -7951,6 +8140,16 @@ type DocflowMessagePrintForm struct {
 	FetchedAt string `json:"fetched_at"`
 }
 
+type DocflowOrderActInput struct {
+	// Date — Дата акта; пусто — дата заказа
+	Date *string `json:"date,omitempty"`
+	// Number — Пусто — следующий номер счётчика актов
+	Number *string `json:"number,omitempty"`
+	Title  *string `json:"title,omitempty"`
+	// Amount — Пусто — все услуги заказа; меньше — частичный акт суммой
+	Amount *string `json:"amount,omitempty"`
+}
+
 type DocflowOrderImport struct {
 	ID         UUID    `json:"id"`
 	ExternalID *string `json:"external_id,omitempty"`
@@ -7969,6 +8168,24 @@ type DocflowOrderImport struct {
 
 type DocflowOrderImportPage struct {
 	Results []DocflowOrderImport `json:"results"`
+}
+
+type DocflowOrderInvoiceInput struct {
+	// DueDate — Оплатить до
+	DueDate        string  `json:"due_date"`
+	ExpectedUntil  *string `json:"expected_until,omitempty"`
+	PaymentPurpose *string `json:"payment_purpose,omitempty"`
+	// PaymentPurposeAuto — Собрать назначение платежа умолчанием
+	PaymentPurposeAuto *bool `json:"payment_purpose_auto,omitempty"`
+	// Amount — Пусто — на весь заказ; меньше — частичный счёт
+	Amount *string `json:"amount,omitempty"`
+	// Date — Дата счёта; пусто — дата заказа
+	Date *string `json:"date,omitempty"`
+	// Number — Пусто — следующий номер счётчика счетов
+	Number *string `json:"number,omitempty"`
+	Title  *string `json:"title,omitempty"`
+	// Draft — Сохранить черновиком вместо «Выставить»
+	Draft *bool `json:"draft,omitempty"`
 }
 
 // DocflowOutgoingFile — Произвольный файл на отправку рядом с формализованным.
@@ -8445,6 +8662,14 @@ type DocflowSignatureSubmission struct {
 	CertificateThumbprint string `json:"certificate_thumbprint"`
 	// Certificate — Открытая часть сертификата Base64. Удобство, а не обязанность: найти сертификат оператор умеет и по отпечатку
 	Certificate *string `json:"certificate,omitempty"`
+	// CertificateHolder — ФИО владельца сертификата. Оператор требует его и при выполнении действия
+	CertificateHolder *string `json:"certificate_holder,omitempty"`
+	// CertificateINN — ИНН из сертификата, как в задании
+	CertificateINN *string `json:"certificate_inn,omitempty"`
+	// CertificatePosition — Должность владельца сертификата
+	CertificatePosition *string `json:"certificate_position,omitempty"`
+	// Comment — Комментарий к действию; уходит второй стороне
+	Comment *string `json:"comment,omitempty"`
 	// SignedAt — Время по часам браузера; хранится справкой
 	SignedAt *string                    `json:"signed_at,omitempty"`
 	Attorney *DocflowAttorneySubmission `json:"attorney,omitempty"`
@@ -8503,14 +8728,24 @@ type DocflowSigningTask struct {
 	CreatedAt string  `json:"created_at"`
 }
 
-// DocflowSigningTaskInput — Просьба выдать задание на подпись.
+// DocflowSigningTaskInput — Просьба выдать задание на подпись. Сертификат человек выбирает ДО задания: оператор готовит действие под конкретного подписанта и без ФИО и ИНН владельца сертификата может отказать уже в подготовке.
 type DocflowSigningTaskInput struct {
 	MessageID    UUID  `json:"message_id"`
 	AttachmentID *UUID `json:"attachment_id,omitempty"`
-	// Stage — Идентификатор этапа у оператора. Не нужен в обычном сценарии: этап выбирает сервер по тому, что сказал оператор
+	// Stage — Идентификатор этапа у оператора. Карточка называет его вместе с action; без них этап выбирает сервер
 	Stage *string `json:"stage,omitempty"`
-	// Action — Код команды оператора; нужен, когда на этапе их несколько
+	// Action — Код команды оператора из stage.actions[].code («Утвердить», «Отклонить»). Без него сервер берёт согласие этапа, закрываемое подписью, и никогда — отказ
 	Action *string `json:"action,omitempty"`
+	// Comment — Комментарий к действию словами человека; при отказе обязателен
+	Comment *string `json:"comment,omitempty"`
+	// CertificateThumbprint — Отпечаток выбранного сертификата. Подпись другим сертификатом под этим заданием не принимается
+	CertificateThumbprint *string `json:"certificate_thumbprint,omitempty"`
+	// CertificateHolder — ФИО владельца сертификата из поля «Субъект»
+	CertificateHolder *string `json:"certificate_holder,omitempty"`
+	// CertificateINN — ИНН из сертификата: организации, если он в сертификате есть, иначе владельца
+	CertificateINN *string `json:"certificate_inn,omitempty"`
+	// CertificatePosition — Должность владельца сертификата
+	CertificatePosition *string `json:"certificate_position,omitempty"`
 }
 
 type DocflowSigningTaskList struct {
@@ -8542,6 +8777,8 @@ type DocflowStage struct {
 type DocflowStageAction struct {
 	Code string `json:"code"`
 	Name string `json:"name"`
+	// RequiresSignature — Действие закрывается подписью («ТребуетПодписания» оператора). Точнее признака этапа: на этапе «Утверждение» подписи требует «Утвердить», а «Переназначить» — нет. У этапов, записанных до появления признака, false у всех действий — тогда судят по requires_signature этапа
+	RequiresSignature *bool `json:"requires_signature,omitempty"`
 }
 
 // DocflowStageRef — Ссылка на строку очереди этапов. Пустое тело означает единственный незакрытый этап пакета: у обычного документа он один, и требовать его имя не с чего.
@@ -9702,11 +9939,13 @@ type FinanceOperation struct {
 	// Advance — Оплата сверх признанного начисления
 	Advance      string                 `json:"advance"`
 	CashPayments []FinanceOperationFact `json:"cash_payments"`
-	ID           UUID                   `json:"id"`
-	Kind         string                 `json:"kind"`
-	CompanyID    UUID                   `json:"company_id"`
-	ContactID    UUID                   `json:"contact_id"`
-	Currency     string                 `json:"currency"`
+	// UnattributedFacts — Применения к долгу, не привязанные к строке графика (ERP-1417)
+	UnattributedFacts []FinanceOperationFact `json:"unattributed_facts"`
+	ID                UUID                   `json:"id"`
+	Kind              string                 `json:"kind"`
+	CompanyID         UUID                   `json:"company_id"`
+	ContactID         UUID                   `json:"contact_id"`
+	Currency          string                 `json:"currency"`
 	// Amount — Decimal string
 	Amount        string                    `json:"amount"`
 	DueDate       *string                   `json:"due_date,omitempty"`
@@ -9862,6 +10101,22 @@ type FinanceOperationVersion struct {
 	Reason            *string                 `json:"reason,omitempty"`
 	Accruals          []FinanceOperationStage `json:"accruals"`
 	Payments          []FinanceOperationStage `json:"payments"`
+}
+
+type FinanceOrderActInput struct {
+	Source FinanceOperationSource `json:"source"`
+	Date   string                 `json:"date"`
+	// Amount — Сумма акта с НДС в валюте заказа, decimal string
+	Amount string `json:"amount"`
+	// DueDate — Срок оплаты; пусто — по строке графика заказа или условиям контрагента
+	DueDate *string `json:"due_date,omitempty"`
+	Reason  *string `json:"reason,omitempty"`
+	// PNLItemID — Статья выручки (расхода); пусто — статья заказа, политика бизнеса или системная
+	PNLItemID map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
+	// StageID — Этап работ заказа, который закрывает акт
+	StageID          map[string]json.RawMessage `json:"stage_id,omitempty"`
+	VATAmount        *string                    `json:"vat_amount,omitempty"`
+	PricesIncludeVAT *bool                      `json:"prices_include_vat,omitempty"`
 }
 
 type FinancePaymentCalendar struct {
@@ -11081,9 +11336,15 @@ type FinanceTradeJournalRow struct {
 	Debt           *string `json:"debt,omitempty"`
 	ExecutionCount *int64  `json:"execution_count,omitempty"`
 	// MoneyFromRegister — Аванс, долг и оплачено — остатками регистра расчётов по заказу: бизнес прошёл отсечку расчётов по заказам (этап 3 ERP-1427)
-	MoneyFromRegister *bool                         `json:"money_from_register,omitempty"`
-	Executions        []FinanceTradeJournalDocument `json:"executions,omitempty"`
-	Payments          []FinanceTradeJournalDocument `json:"payments,omitempty"`
+	MoneyFromRegister *bool `json:"money_from_register,omitempty"`
+	// ExecutionCutover — Бизнес заказа прошёл отсечку исполнения (этап 4 ERP-1427): при включённом документообороте акт по заказу выпускают «Документы» заказа — бумага и исполнение одной командой; прямой акт финансов отвечает 409 finance.order.act_needs_paper
+	ExecutionCutover *bool `json:"execution_cutover,omitempty"`
+	// OrderID — Заказ документа исполнения по цепочке оснований (группы without_order и executions)
+	OrderID *string `json:"order_id,omitempty"`
+	// OrderNumber — Номер заказа документа исполнения
+	OrderNumber *string                       `json:"order_number,omitempty"`
+	Executions  []FinanceTradeJournalDocument `json:"executions,omitempty"`
+	Payments    []FinanceTradeJournalDocument `json:"payments,omitempty"`
 }
 
 type FinanceTransaction struct {
@@ -11181,6 +11442,38 @@ type FinanceTransactionTotals struct {
 	Currency string  `json:"currency"`
 	// UnconvertedCount — Сколько операций осталось без пересчёта в валюту учёта: неполный пересчёт не должен выглядеть верным итогом
 	UnconvertedCount int64 `json:"unconverted_count"`
+}
+
+type FinanceUnallocatedMoney struct {
+	// Count — Сколько операций ждут имени
+	Count int64 `json:"count"`
+	// Amount — Их сумма в валюте учёта. null — часть операций к ней не сведена, и называть неполную сумму нельзя
+	Amount *string `json:"amount"`
+	// Currency — Валюта учёта кабинета
+	Currency string `json:"currency"`
+	// UnconvertedCount — Сколько операций не сведено к валюте учёта
+	UnconvertedCount int64 `json:"unconverted_count"`
+}
+
+type FinanceUnallocatedScope struct {
+	// Count — Сколько операций ждут имени
+	Count int64 `json:"count"`
+	// Amount — Их сумма в валюте учёта. null — часть операций к ней не сведена, и называть неполную сумму нельзя
+	Amount *string `json:"amount"`
+	// Currency — Валюта учёта кабинета
+	Currency string `json:"currency"`
+	// UnconvertedCount — Сколько операций не сведено к валюте учёта
+	UnconvertedCount int64 `json:"unconverted_count"`
+	// Kind — account — банковский счёт, wallet — касса
+	Kind string `json:"kind"`
+	ID   UUID   `json:"id"`
+	// Name — Как место хранения названо в справочнике
+	Name string `json:"name"`
+}
+
+type FinanceUnallocatedSummary struct {
+	Total  FinanceUnallocatedMoney   `json:"total"`
+	Scopes []FinanceUnallocatedScope `json:"scopes"`
 }
 
 type FinanceVATBookImport struct {

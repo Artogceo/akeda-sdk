@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 f79d710dd6c50b81a29a1d39abc3ba72fb87d42101b75908c59d2443160471b0).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a4fad0a9a1e120161f9196b223837e8ee64d4e98e553adba966bb44f0be3ea9).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -678,6 +678,13 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
+  /** GET /api/v1/chat/attachments/{attachmentId}/thumbnail — Получить первый кадр доступного видео */
+  chatOpenVideoThumbnail: {
+    params: { "attachmentId": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** PUT /api/v1/chat/conversations/{id}/messages/{messageId}/pin — Закрепить сообщение в чате */
   chatPinMessage: {
     params: { "id": models.UUID; "messageId": models.UUID };
@@ -1203,6 +1210,13 @@ export interface OperationTypes {
     body: models.CorePolicyVATRatesInput;
     response: models.CoreAccountingPolicy;
   };
+  /** POST /api/v1/core/orders/execute-now — Продать сразу — заказ и акт одной командой */
+  coreExecuteOrderNow: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.CoreOrderNowInput;
+    response: models.CoreOrderNowResult;
+  };
   /** POST /api/v1/core/product-identifiers/generate — Сгенерировать внутренний штрихкод */
   coreGenerateProductBarcode: {
     params: Record<string, never>;
@@ -1622,6 +1636,13 @@ export interface OperationTypes {
     query: { "date_from"?: string; "date_to"?: string; "dim.<key>"?: string; "limit"?: number };
     body: never;
     response: models.CoreRegisterEntryPage;
+  };
+  /** GET /api/v1/core/document-numbering — Получить нумерацию документов кабинета */
+  coreListDocumentNumbering: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.CoreDocumentNumberingList;
   };
   /** GET /api/v1/core/document-types — Получить типы документов конструктора */
   coreListDocumentTypes: {
@@ -2077,6 +2098,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CoreDocumentPatch;
     response: models.CoreDocument;
+  };
+  /** PUT /api/v1/core/document-numbering/{id} — Изменить нумерацию вида документа */
+  coreUpdateDocumentNumbering: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CoreDocumentNumberingInput;
+    response: models.CoreDocumentNumbering;
   };
   /** PATCH /api/v1/core/document-types/{id} — Частично изменить тип документа */
   coreUpdateDocumentType: {
@@ -3527,6 +3555,27 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
+  /** GET /api/v1/docflow/gov/documents/{id} — Карточка документа госоргана */
+  docflowGovDocument: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowGovDocument;
+  };
+  /** GET /api/v1/docflow/gov/documents — Документы госорганов */
+  docflowGovDocuments: {
+    params: Record<string, never>;
+    query: { "company"?: models.UUID; "limit"?: number; "offset"?: number; "open"?: "1"; "part"?: "claims" | "letters" | "reports" };
+    body: never;
+    response: models.DocflowGovList;
+  };
+  /** GET /api/v1/docflow/gov/summary — Сводка раздела «Налоговая» */
+  docflowGovSummary: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowGovSummary;
+  };
   /** GET /api/v1/docflow/messages/{id}/intake — Посмотреть, что предлагается принять к учёту */
   docflowIntakePreview: {
     params: { "id": models.UUID };
@@ -3540,6 +3589,20 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.DocflowInvitationInput;
     response: void;
+  };
+  /** POST /api/v1/docflow/orders/{id}/act — Сделать акт по заказу */
+  docflowIssueOrderAct: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.DocflowOrderActInput;
+    response: models.DocflowFlowDocument;
+  };
+  /** POST /api/v1/docflow/orders/{id}/invoice — Выставить счёт на оплату по заказу */
+  docflowIssueOrderInvoice: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.DocflowOrderInvoiceInput;
+    response: models.DocflowFlowDocument;
   };
   /** POST /api/v1/docflow/edo/signing/tasks — Получить задание на подпись */
   docflowIssueSigningTask: {
@@ -3589,6 +3652,13 @@ export interface OperationTypes {
     query: { "document"?: models.UUID; "kind"?: "seller" | "buyer"; "message"?: models.UUID };
     body: never;
     response: models.DocflowTitleList;
+  };
+  /** POST /api/v1/docflow/gov/documents/{id}/answered — Отметить «ответ дан» */
+  docflowMarkGovAnswered: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowGovDocument;
   };
   /** POST /api/v1/docflow/messages/{id}/viewed — Отметить, что сотрудник открыл пакет */
   docflowMarkMessageViewed: {
@@ -3806,6 +3876,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: void;
+  };
+  /** DELETE /api/v1/docflow/gov/documents/{id}/answered — Снять отметку «ответ дан» */
+  docflowUnmarkGovAnswered: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowGovDocument;
   };
   /** PATCH /api/v1/docflow/connections/{id} — Изменить подключение */
   docflowUpdateConnection: {
@@ -4157,6 +4234,13 @@ export interface OperationTypes {
     body: models.FinanceOperationAccrualCreate;
     response: models.FinanceOperationAccrualResult;
   };
+  /** POST /api/v1/finance/orders/{id}/acts — Выставить акт финансов по заказу */
+  financeCreateOrderAct: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.FinanceOrderActInput;
+    response: models.FinanceOperationAccrualResult;
+  };
   /** POST /api/v1/finance/payment-calendar/plans — Создать ручную плановую строку */
   financeCreatePaymentPlan: {
     params: Record<string, never>;
@@ -4412,7 +4496,7 @@ export interface OperationTypes {
   /** GET /api/v1/finance/trade-journal — Получить журнал продаж или закупок */
   financeGetTradeJournal: {
     params: Record<string, never>;
-    query: { "business"?: models.UUID; "company_id"?: string; "currency"?: string; "date_from"?: string; "date_to"?: string; "direction": "sales" | "purchases"; "expand"?: boolean; "group"?: "orders" | "without_order"; "limit"?: number; "mine"?: boolean; "offset"?: number; "q"?: string; "record_id"?: string; "responsible_id"?: string; "settlement_state"?: "all" | "unaccrued" | "open" | "overdue" | "advance"; "status"?: "draft" | "posted" | "cancelled"; "view"?: "all" | "control" | "due" };
+    query: { "business"?: models.UUID; "company_id"?: string; "currency"?: string; "date_from"?: string; "date_to"?: string; "direction": "sales" | "purchases"; "expand"?: boolean; "group"?: "orders" | "without_order" | "executions"; "limit"?: number; "mine"?: boolean; "offset"?: number; "q"?: string; "record_id"?: string; "responsible_id"?: string; "settlement_state"?: "all" | "unaccrued" | "open" | "overdue" | "advance"; "status"?: "draft" | "posted" | "cancelled"; "view"?: "all" | "control" | "due" };
     body: never;
     response: models.FinanceTradeJournalPage;
   };
@@ -4422,6 +4506,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.FinanceTransaction;
+  };
+  /** GET /api/v1/finance/transactions/unallocated — Получить счётчик неразнесённых денег */
+  financeGetUnallocatedMoney: {
+    params: Record<string, never>;
+    query: { "business"?: models.UUID };
+    body: never;
+    response: models.FinanceUnallocatedSummary;
   };
   /** GET /api/v1/finance/vat-quarters/books/{id}/source — Скачать исходный файл загруженной книги 1С */
   financeGetVATBookSource: {
@@ -4468,7 +4559,7 @@ export interface OperationTypes {
   /** GET /api/v1/finance/cash-operations — Прочитать журнал кассы */
   financeListCashOperations: {
     params: Record<string, never>;
-    query: { "allocated"?: boolean; "business"?: models.UUID; "contact"?: models.UUID; "direction"?: models.FinanceDirection; "employee"?: models.UUID; "from"?: string; "item"?: models.UUID; "limit"?: number; "offset"?: number; "q"?: string; "to"?: string; "wallet"?: models.UUID };
+    query: { "allocated"?: boolean; "allocation"?: "unallocated"; "business"?: models.UUID; "contact"?: models.UUID; "direction"?: models.FinanceDirection; "employee"?: models.UUID; "from"?: string; "item"?: models.UUID; "limit"?: number; "offset"?: number; "q"?: string; "to"?: string; "wallet"?: models.UUID };
     body: never;
     response: models.FinanceCashOperationPage;
   };
@@ -4601,7 +4692,7 @@ export interface OperationTypes {
   /** GET /api/v1/finance/transactions — Получить банковские операции */
   financeListTransactions: {
     params: Record<string, never>;
-    query: { "account"?: models.UUID; "business"?: models.UUID; "direction"?: models.FinanceDirection; "limit"?: number; "match_state"?: string; "offset"?: number };
+    query: { "account"?: models.UUID; "allocation"?: "unallocated"; "business"?: models.UUID; "direction"?: models.FinanceDirection; "limit"?: number; "match_state"?: string; "offset"?: number };
     body: never;
     response: models.FinanceTransactionPage;
   };
@@ -8084,6 +8175,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   chatMarkMentionRead: { method: "POST", path: "/api/v1/chat/conversations/{id}/mentions/{messageId}/read", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatMarkRead: { method: "POST", path: "/api/v1/chat/conversations/{id}/read", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatOpenMedia: { method: "GET", path: "/api/v1/chat/attachments/{attachmentId}/content", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatOpenVideoThumbnail: { method: "GET", path: "/api/v1/chat/attachments/{attachmentId}/thumbnail", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatPinMessage: { method: "PUT", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/pin", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatPulsePresence: { method: "POST", path: "/api/v1/chat/conversations/{id}/typing", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatRegisterMobileDevice: { method: "POST", path: "/api/v1/chat/mobile/devices", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8159,6 +8251,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreEditPolicyVATPending: { method: "PUT", path: "/api/v1/core/accounting-policy/businesses/{id}/vat-pending/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreEditPolicyVATPresentation: { method: "PUT", path: "/api/v1/core/accounting-policy/businesses/{id}/vat-presentation/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreEditPolicyVATRates: { method: "PUT", path: "/api/v1/core/accounting-policy/companies/{id}/vat-rates/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreExecuteOrderNow: { method: "POST", path: "/api/v1/core/orders/execute-now", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGenerateProductBarcode: { method: "POST", path: "/api/v1/core/product-identifiers/generate", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGenerateProductVariants: { method: "POST", path: "/api/v1/core/products/{id}/variants/generate", module: "core", stage: "preview", permission: "core:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetAccountingPeriodState: { method: "GET", path: "/api/v1/core/accounting-periods", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8219,6 +8312,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreListDictionaryItems: { method: "GET", path: "/api/v1/core/dictionaries/{id}/items", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 500 },
   coreListDirectories: { method: "GET", path: "/api/v1/core/directories", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListDocumentEntries: { method: "GET", path: "/api/v1/core/documents/{id}/entries", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
+  coreListDocumentNumbering: { method: "GET", path: "/api/v1/core/document-numbering", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListDocumentTypes: { method: "GET", path: "/api/v1/core/document-types", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListDocuments: { method: "GET", path: "/api/v1/core/documents", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
   coreListEmployeeEquipment: { method: "GET", path: "/api/v1/core/employee-equipment", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8284,6 +8378,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreUpdateDictionary: { method: "PATCH", path: "/api/v1/core/dictionaries/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateDictionaryItem: { method: "PATCH", path: "/api/v1/core/dictionaries/{id}/items/{itemId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateDocument: { method: "PATCH", path: "/api/v1/core/documents/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateDocumentNumbering: { method: "PUT", path: "/api/v1/core/document-numbering/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateDocumentType: { method: "PATCH", path: "/api/v1/core/document-types/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateEmployee: { method: "PATCH", path: "/api/v1/core/employees/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateEmployeeEquipment: { method: "PATCH", path: "/api/v1/core/employee-equipment/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8491,8 +8586,13 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowGetMessageArchive: { method: "GET", path: "/api/v1/docflow/messages/{id}/archive", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowGetSignatureContent: { method: "GET", path: "/api/v1/docflow/signatures/{id}/content", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowGetTitleContent: { method: "GET", path: "/api/v1/docflow/outgoing/{id}/content", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowGovDocument: { method: "GET", path: "/api/v1/docflow/gov/documents/{id}", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowGovDocuments: { method: "GET", path: "/api/v1/docflow/gov/documents", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: null },
+  docflowGovSummary: { method: "GET", path: "/api/v1/docflow/gov/summary", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowIntakePreview: { method: "GET", path: "/api/v1/docflow/messages/{id}/intake", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowInviteCounterparty: { method: "POST", path: "/api/v1/docflow/connections/{id}/invitations", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowIssueOrderAct: { method: "POST", path: "/api/v1/docflow/orders/{id}/act", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowIssueOrderInvoice: { method: "POST", path: "/api/v1/docflow/orders/{id}/invoice", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowIssueSigningTask: { method: "POST", path: "/api/v1/docflow/edo/signing/tasks", module: "docflow", stage: "preview", permission: "docflow.edo:sign", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowLinkIntakeCounterparty: { method: "PUT", path: "/api/v1/docflow/messages/{id}/intake/counterparty", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowListConnections: { method: "GET", path: "/api/v1/docflow/connections", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8500,6 +8600,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowListMessages: { method: "GET", path: "/api/v1/docflow/messages", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   docflowListSigningTasks: { method: "GET", path: "/api/v1/docflow/edo/signing/tasks", module: "docflow", stage: "preview", permission: "docflow.edo:sign", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 50, pageSizeDefault: 20 },
   docflowListTitles: { method: "GET", path: "/api/v1/docflow/outgoing", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowMarkGovAnswered: { method: "POST", path: "/api/v1/docflow/gov/documents/{id}/answered", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowMarkMessageViewed: { method: "POST", path: "/api/v1/docflow/messages/{id}/viewed", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowMessagePrintForm: { method: "GET", path: "/api/v1/docflow/messages/{id}/print", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowPaymentDetails: { method: "GET", path: "/api/v1/docflow/messages/{id}/payment-details", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8531,6 +8632,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowSubmitSignature: { method: "POST", path: "/api/v1/docflow/edo/signing/tasks/{task_id}/signature", module: "docflow", stage: "preview", permission: "docflow.edo:sign", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSyncConnection: { method: "POST", path: "/api/v1/docflow/connections/{id}/sync", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowTrashMessage: { method: "POST", path: "/api/v1/docflow/messages/{id}/trash", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowUnmarkGovAnswered: { method: "DELETE", path: "/api/v1/docflow/gov/documents/{id}/answered", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowUpdateConnection: { method: "PATCH", path: "/api/v1/docflow/connections/{id}", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowUpdatePaymentRequest: { method: "PUT", path: "/api/v1/docflow/payment-requests/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:request", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesAbortUpload: { method: "DELETE", path: "/api/v1/files/uploads/{id}", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8581,6 +8683,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeCreateExpenseReport: { method: "POST", path: "/api/v1/finance/accountable/reports", module: "finance", stage: "preview", permission: "finance.accountable:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOperation: { method: "POST", path: "/api/v1/finance/operations", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOperationAccrual: { method: "POST", path: "/api/v1/finance/operations/{id}/accruals", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateOrderAct: { method: "POST", path: "/api/v1/finance/orders/{id}/acts", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreatePaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreatePayrollDocument: { method: "POST", path: "/api/v1/finance/payroll/documents", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreatePnlLayout: { method: "POST", path: "/api/v1/finance/pnl-layouts", module: "finance", stage: "preview", permission: "finance.pnl_layouts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8619,6 +8722,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeGetTradeAdvance: { method: "GET", path: "/api/v1/finance/trade-journal/advance", module: "finance", stage: "preview", permission: "finance.reports.trade:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetTradeJournal: { method: "GET", path: "/api/v1/finance/trade-journal", module: "finance", stage: "preview", permission: "finance.reports.trade:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 500 },
   financeGetTransaction: { method: "GET", path: "/api/v1/finance/transactions/{id}", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetUnallocatedMoney: { method: "GET", path: "/api/v1/finance/transactions/unallocated", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetVATBookSource: { method: "GET", path: "/api/v1/finance/vat-quarters/books/{id}/source", module: "finance", stage: "preview", permission: "finance.period:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetVATQuarter: { method: "GET", path: "/api/v1/finance/vat-quarters/{id}", module: "finance", stage: "preview", permission: "finance.period:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeInspectImport: { method: "POST", path: "/api/v1/finance/imports/{id}/inspect", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
