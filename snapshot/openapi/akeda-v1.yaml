@@ -10900,7 +10900,7 @@ paths:
         - Core orders
       operationId: coreGetOrderHistory
       summary: Получить ленту заказа
-      description: Журнал событий заказа (создан, новая версия, подтверждён, статус, ответственные, закрыт, возвращён, отменён) с автором и датой статуса, плюс документы модулей, выросшие из заказа.
+      description: Журнал событий заказа (создан, новая версия, подтверждён, исполняется, исполнен, исполнение снято, статус, ответственные, закрыт, возвращён, отменён) с автором и датой статуса, плюс документы модулей, выросшие из заказа.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -14020,6 +14020,13 @@ paths:
           schema:
             type: boolean
             default: false
+        - name: group
+          in: query
+          description: contact — строка на пару «счёт и контрагент» (только счета, где есть проводки с контрагентом; без контрагента — строка без contact_id); без параметра — строка на счёт.
+          schema:
+            type: string
+            enum:
+              - contact
       responses:
         '200':
           description: ОСВ с итогами и balanced
@@ -61325,7 +61332,7 @@ components:
           $ref: '#/components/schemas/UUID'
         kind:
           type: string
-          description: 'created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)'
+          description: 'created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, executing, executed, execution_reverted (состояние исполнения сменилось само после акта, отгрузки, приёмки, их отмены или возврата: payload state, previous_state, baseline — true у строки досева заказа, исполненного до появления этих событий, без вебхука; автор — система; execution_reverted — заказ снова confirmed), step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)'
         detail:
           type: string
         effective_date:
@@ -62916,6 +62923,10 @@ components:
           type: integer
           format: int64
           minimum: 0
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        employee_id:
+          $ref: '#/components/schemas/UUID'
     CoreTrialBalanceTotals:
       type: object
       additionalProperties: false

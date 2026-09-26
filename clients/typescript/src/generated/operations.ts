@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a4fad0a9a1e120161f9196b223837e8ee64d4e98e553adba966bb44f0be3ea9).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a0e430f1225c4cee3a4b1d14c6edaf3206bf2947c806faf0d869c6677e17d1dd).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1514,7 +1514,7 @@ export interface OperationTypes {
   /** GET /api/v1/core/ledger/trial-balance — Получить оборотно-сальдовую ведомость и проверку баланса */
   coreGetTrialBalance: {
     params: Record<string, never>;
-    query: { "business"?: models.UUID; "company"?: models.UUID; "date_from"?: string; "date_to"?: string; "include_empty"?: boolean };
+    query: { "business"?: models.UUID; "company"?: models.UUID; "date_from"?: string; "date_to"?: string; "group"?: "contact"; "include_empty"?: boolean };
     body: never;
     response: models.CoreTrialBalance;
   };

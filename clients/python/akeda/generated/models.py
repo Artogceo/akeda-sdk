@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a4fad0a9a1e120161f9196b223837e8ee64d4e98e553adba966bb44f0be3ea9).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a0e430f1225c4cee3a4b1d14c6edaf3206bf2947c806faf0d869c6677e17d1dd).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -6352,7 +6352,7 @@ class CoreOrderCounterparty(TypedDict, total=False):
 class _CoreOrderEventRequired(TypedDict):
     id: "UUID"
     order_id: "UUID"
-    #: created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)
+    #: created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, executing, executed, execution_reverted (состояние исполнения сменилось само после акта, отгрузки, приёмки, их отмены или возврата: payload state, previous_state, baseline — true у строки досева заказа, исполненного до появления этих событий, без вебхука; автор — система; execution_reverted — заказ снова confirmed), step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)
     kind: str
     created_at: str
 
@@ -7600,7 +7600,7 @@ class _CoreTrialBalanceRequired(TypedDict):
 class CoreTrialBalance(_CoreTrialBalanceRequired, total=False):
     accounting_basis: "AccountingBasis"
 
-class CoreTrialBalanceRow(TypedDict):
+class _CoreTrialBalanceRowRequired(TypedDict):
     account_id: "UUID"
     code: str
     name: str
@@ -7612,6 +7612,10 @@ class CoreTrialBalanceRow(TypedDict):
     closing_debit: str
     closing_credit: str
     entry_count: int
+
+class CoreTrialBalanceRow(_CoreTrialBalanceRowRequired, total=False):
+    contact_id: "UUID"
+    employee_id: "UUID"
 
 class CoreTrialBalanceTotals(TypedDict):
     opening_debit: str

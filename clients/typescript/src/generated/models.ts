@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a4fad0a9a1e120161f9196b223837e8ee64d4e98e553adba966bb44f0be3ea9).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a0e430f1225c4cee3a4b1d14c6edaf3206bf2947c806faf0d869c6677e17d1dd).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -4720,7 +4720,7 @@ export interface CoreOrderCounterparty {
 export interface CoreOrderEvent {
   "id": UUID;
   "order_id": UUID;
-  /** created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed) */
+  /** created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, executing, executed, execution_reverted (состояние исполнения сменилось само после акта, отгрузки, приёмки, их отмены или возврата: payload state, previous_state, baseline — true у строки досева заказа, исполненного до появления этих событий, без вебхука; автор — система; execution_reverted — заказ снова confirmed), step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed) */
   "kind": string;
   "detail"?: string;
   "effective_date"?: string;
@@ -5985,6 +5985,8 @@ export interface CoreTrialBalanceRow {
   "closing_debit": string;
   "closing_credit": string;
   "entry_count": number;
+  "contact_id"?: UUID;
+  "employee_id"?: UUID;
 }
 
 export interface CoreTrialBalanceTotals {

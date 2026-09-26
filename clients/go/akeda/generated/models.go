@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4a4fad0a9a1e120161f9196b223837e8ee64d4e98e553adba966bb44f0be3ea9).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a0e430f1225c4cee3a4b1d14c6edaf3206bf2947c806faf0d869c6677e17d1dd).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -4707,7 +4707,7 @@ type CoreOrderCounterparty struct {
 type CoreOrderEvent struct {
 	ID      UUID `json:"id"`
 	OrderID UUID `json:"order_id"`
-	// Kind — created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)
+	// Kind — created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, executing, executed, execution_reverted (состояние исполнения сменилось само после акта, отгрузки, приёмки, их отмены или возврата: payload state, previous_state, baseline — true у строки досева заказа, исполненного до появления этих событий, без вебхука; автор — система; execution_reverted — заказ снова confirmed), step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)
 	Kind          string  `json:"kind"`
 	Detail        *string `json:"detail,omitempty"`
 	EffectiveDate *string `json:"effective_date,omitempty"`
@@ -5972,6 +5972,8 @@ type CoreTrialBalanceRow struct {
 	ClosingDebit   string            `json:"closing_debit"`
 	ClosingCredit  string            `json:"closing_credit"`
 	EntryCount     int64             `json:"entry_count"`
+	ContactID      *UUID             `json:"contact_id,omitempty"`
+	EmployeeID     *UUID             `json:"employee_id,omitempty"`
 }
 
 type CoreTrialBalanceTotals struct {
