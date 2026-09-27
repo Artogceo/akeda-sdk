@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a0e430f1225c4cee3a4b1d14c6edaf3206bf2947c806faf0d869c6677e17d1dd).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 49b1a40bf433296e7094b649feb1761ac6e85fb929001b007a33acded37c95fa).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -16096,14 +16096,11 @@ type SignupAttributionTouchInput struct {
 	ConsentVersion *string `json:"consent_version,omitempty"`
 }
 
-type SignupCompleteInput struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-}
-
 type SignupRequestInfo struct {
 	Email       string `json:"email"`
 	CompanyName string `json:"company_name"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
 	// SuggestedSlug — Свободный адрес будущего кабинета на момент чтения
 	SuggestedSlug string `json:"suggested_slug"`
 	Status        string `json:"status"`
@@ -16122,9 +16119,13 @@ type SignupRequestInfo struct {
 type SignupRequestInput struct {
 	// Email — Рабочая почта будущего владельца кабинета
 	Email string `json:"email"`
-	// CompanyName — Название компании; становится названием кабинета
+	// CompanyName — Название будущего кабинета
 	CompanyName string `json:"company_name"`
-	// Slug — Пожелание адреса кабинета. Пусто — адрес выводится транслитерацией названия компании
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	// Phone — Номер с +7, 7, 8 или 9; сервер приводит к +7XXXXXXXXXX
+	Phone string `json:"phone"`
+	// Slug — Исторический необязательный параметр API; публичная форма его не показывает
 	Slug *string `json:"slug,omitempty"`
 	// AttributionVisitorID — Необязательный opaque visitor ID: по нему сервер фиксирует атрибуцию заявки; неверное значение не блокирует регистрацию
 	AttributionVisitorID *UUID `json:"attribution_visitor_id,omitempty"`

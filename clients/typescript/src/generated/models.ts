@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a0e430f1225c4cee3a4b1d14c6edaf3206bf2947c806faf0d869c6677e17d1dd).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 49b1a40bf433296e7094b649feb1761ac6e85fb929001b007a33acded37c95fa).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -16162,14 +16162,11 @@ export interface SignupAttributionTouchInput {
   "consent_version"?: string;
 }
 
-export interface SignupCompleteInput {
-  "first_name": string;
-  "last_name": string;
-}
-
 export interface SignupRequestInfo {
   "email": string;
   "company_name": string;
+  "first_name": string;
+  "last_name": string;
   /** Свободный адрес будущего кабинета на момент чтения */
   "suggested_slug": string;
   "status": "pending" | "confirmed" | "completed" | "expired" | "revoked";
@@ -16188,9 +16185,13 @@ export interface SignupRequestInfo {
 export interface SignupRequestInput {
   /** Рабочая почта будущего владельца кабинета */
   "email": string;
-  /** Название компании; становится названием кабинета */
+  /** Название будущего кабинета */
   "company_name": string;
-  /** Пожелание адреса кабинета. Пусто — адрес выводится транслитерацией названия компании */
+  "first_name": string;
+  "last_name": string;
+  /** Номер с +7, 7, 8 или 9; сервер приводит к +7XXXXXXXXXX */
+  "phone": string;
+  /** Исторический необязательный параметр API; публичная форма его не показывает */
   "slug"?: string;
   /** Необязательный opaque visitor ID: по нему сервер фиксирует атрибуцию заявки; неверное значение не блокирует регистрацию */
   "attribution_visitor_id"?: UUID;

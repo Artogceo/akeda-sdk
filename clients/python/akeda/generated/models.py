@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a0e430f1225c4cee3a4b1d14c6edaf3206bf2947c806faf0d869c6677e17d1dd).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 49b1a40bf433296e7094b649feb1761ac6e85fb929001b007a33acded37c95fa).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1474,7 +1474,6 @@ __all__ = [
     "SignupAccepted",
     "SignupAttributionAccepted",
     "SignupAttributionTouchInput",
-    "SignupCompleteInput",
     "SignupRequestInfo",
     "SignupRequestInput",
     "SignupSession",
@@ -17450,13 +17449,11 @@ class SignupAttributionTouchInput(_SignupAttributionTouchInputRequired, total=Fa
     #: Редакция cookie-политики; обязательна, когда analytics=true
     consent_version: str
 
-class SignupCompleteInput(TypedDict):
-    first_name: str
-    last_name: str
-
 class SignupRequestInfo(TypedDict):
     email: str
     company_name: str
+    first_name: str
+    last_name: str
     #: Свободный адрес будущего кабинета на момент чтения
     suggested_slug: str
     status: Literal['pending', 'confirmed', 'completed', 'expired', 'revoked']
@@ -17474,11 +17471,15 @@ class SignupRequestInfo(TypedDict):
 class _SignupRequestInputRequired(TypedDict):
     #: Рабочая почта будущего владельца кабинета
     email: str
-    #: Название компании; становится названием кабинета
+    #: Название будущего кабинета
     company_name: str
+    first_name: str
+    last_name: str
+    #: Номер с +7, 7, 8 или 9; сервер приводит к +7XXXXXXXXXX
+    phone: str
 
 class SignupRequestInput(_SignupRequestInputRequired, total=False):
-    #: Пожелание адреса кабинета. Пусто — адрес выводится транслитерацией названия компании
+    #: Исторический необязательный параметр API; публичная форма его не показывает
     slug: str
     #: Необязательный opaque visitor ID: по нему сервер фиксирует атрибуцию заявки; неверное значение не блокирует регистрацию
     attribution_visitor_id: "UUID"
