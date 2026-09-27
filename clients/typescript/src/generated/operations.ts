@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18d95ab3c2ab343b3fbac1d68d52209e480112ccf94a279ca4caba72f49a1d76).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 295e27afffc229cb314a30a2f71227b5b7e132a8be2d7694e7e97e179e229fa2).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -674,7 +674,7 @@ export interface OperationTypes {
   /** GET /api/v1/chat/attachments/{attachmentId}/content — Открыть содержимое доступного медиавложения */
   chatOpenMedia: {
     params: { "attachmentId": models.UUID };
-    query: Record<string, never>;
+    query: { "playback"?: "m4a" };
     body: never;
     response: void;
   };

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18d95ab3c2ab343b3fbac1d68d52209e480112ccf94a279ca4caba72f49a1d76).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 295e27afffc229cb314a30a2f71227b5b7e132a8be2d7694e7e97e179e229fa2).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -4551,11 +4551,13 @@ type CoreItem struct {
 	CashflowParentID    *UUID   `json:"cashflow_parent_id,omitempty"`
 	CashflowSortOrder   int64   `json:"cashflow_sort_order"`
 	UsePNL              bool    `json:"use_pnl"`
-	PNLSign             *int64  `json:"pnl_sign,omitempty"`
-	IsSystem            bool    `json:"is_system"`
-	PNLParentID         *UUID   `json:"pnl_parent_id,omitempty"`
-	PNLSortOrder        int64   `json:"pnl_sort_order"`
-	UsageCount          int64   `json:"usage_count"`
+	// InternalTurnover — Статья внутреннего оборота между ЦФО; обороты исключаются из сводного ОПиУ (ERP-1493)
+	InternalTurnover *bool  `json:"internal_turnover,omitempty"`
+	PNLSign          *int64 `json:"pnl_sign,omitempty"`
+	IsSystem         bool   `json:"is_system"`
+	PNLParentID      *UUID  `json:"pnl_parent_id,omitempty"`
+	PNLSortOrder     int64  `json:"pnl_sort_order"`
+	UsageCount       int64  `json:"usage_count"`
 	// VATKind — Вид ставки НДС сделки без товара по статье дохода; пусто — общая
 	VATKind *string `json:"vat_kind,omitempty"`
 }
@@ -4568,9 +4570,11 @@ type CoreItemInput struct {
 	CashflowParentID  *UUID   `json:"cashflow_parent_id,omitempty"`
 	CashflowSortOrder *int64  `json:"cashflow_sort_order,omitempty"`
 	UsePNL            *bool   `json:"use_pnl,omitempty"`
-	PNLSign           *int64  `json:"pnl_sign,omitempty"`
-	PNLParentID       *UUID   `json:"pnl_parent_id,omitempty"`
-	PNLSortOrder      *int64  `json:"pnl_sort_order,omitempty"`
+	// InternalTurnover — Статья внутреннего оборота между ЦФО; обороты исключаются из сводного ОПиУ (ERP-1493)
+	InternalTurnover *bool  `json:"internal_turnover,omitempty"`
+	PNLSign          *int64 `json:"pnl_sign,omitempty"`
+	PNLParentID      *UUID  `json:"pnl_parent_id,omitempty"`
+	PNLSortOrder     *int64 `json:"pnl_sort_order,omitempty"`
 	// VATKind — Вид ставки НДС статьи дохода; не передан — не меняется; у статьи не дохода — 400
 	VATKind *string `json:"vat_kind,omitempty"`
 }

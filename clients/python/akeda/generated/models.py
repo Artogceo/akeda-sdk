@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18d95ab3c2ab343b3fbac1d68d52209e480112ccf94a279ca4caba72f49a1d76).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 295e27afffc229cb314a30a2f71227b5b7e132a8be2d7694e7e97e179e229fa2).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -6200,6 +6200,8 @@ class _CoreItemRequired(TypedDict):
 class CoreItem(_CoreItemRequired, total=False):
     cashflow_section_name: str
     cashflow_parent_id: "UUID"
+    #: Статья внутреннего оборота между ЦФО; обороты исключаются из сводного ОПиУ (ERP-1493)
+    internal_turnover: bool
     pnl_sign: int
     pnl_parent_id: "UUID"
     #: Вид ставки НДС сделки без товара по статье дохода; пусто — общая
@@ -6215,6 +6217,8 @@ class CoreItemInput(_CoreItemInputRequired, total=False):
     cashflow_parent_id: "UUID"
     cashflow_sort_order: int
     use_pnl: bool
+    #: Статья внутреннего оборота между ЦФО; обороты исключаются из сводного ОПиУ (ERP-1493)
+    internal_turnover: bool
     pnl_sign: int
     pnl_parent_id: "UUID"
     pnl_sort_order: int

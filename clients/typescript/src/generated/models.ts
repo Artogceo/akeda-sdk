@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18d95ab3c2ab343b3fbac1d68d52209e480112ccf94a279ca4caba72f49a1d76).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 295e27afffc229cb314a30a2f71227b5b7e132a8be2d7694e7e97e179e229fa2).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -4564,6 +4564,8 @@ export interface CoreItem {
   "cashflow_parent_id"?: UUID;
   "cashflow_sort_order": number;
   "use_pnl": boolean;
+  /** Статья внутреннего оборота между ЦФО; обороты исключаются из сводного ОПиУ (ERP-1493) */
+  "internal_turnover"?: boolean;
   "pnl_sign"?: number;
   "is_system": boolean;
   "pnl_parent_id"?: UUID;
@@ -4581,6 +4583,8 @@ export interface CoreItemInput {
   "cashflow_parent_id"?: UUID;
   "cashflow_sort_order"?: number;
   "use_pnl"?: boolean;
+  /** Статья внутреннего оборота между ЦФО; обороты исключаются из сводного ОПиУ (ERP-1493) */
+  "internal_turnover"?: boolean;
   "pnl_sign"?: number;
   "pnl_parent_id"?: UUID;
   "pnl_sort_order"?: number;

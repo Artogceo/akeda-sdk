@@ -7611,6 +7611,14 @@ paths:
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
         - $ref: '#/components/parameters/ChatAttachmentID'
+        - name: playback
+          in: query
+          required: false
+          description: '`m4a` возвращает AAC/M4A для проверенного голосового WebM/Ogg; оригинал без параметра не меняется.'
+          schema:
+            type: string
+            enum:
+              - m4a
       responses:
         '200':
           description: Байты аудио или видео с фактическим Content-Type
@@ -7618,7 +7626,7 @@ paths:
             Cache-Control:
               schema:
                 type: string
-                example: private, max-age=300
+                example: private, no-store
           content:
             audio/mp4:
               schema:
@@ -7650,6 +7658,10 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          description: Запрошена совместимая версия не голосового или неподдержанного медиа
+        '503':
+          description: Совместимую аудиоверсию временно не удалось подготовить
   /api/v1/chat/attachments/{attachmentId}/thumbnail:
     get:
       tags:
@@ -63019,6 +63031,9 @@ components:
           type: integer
         use_pnl:
           type: boolean
+        internal_turnover:
+          type: boolean
+          description: Статья внутреннего оборота между ЦФО; обороты исключаются из сводного ОПиУ (ERP-1493)
         pnl_sign:
           type: integer
           enum:
@@ -63085,6 +63100,10 @@ components:
         use_pnl:
           type: boolean
           default: false
+        internal_turnover:
+          type: boolean
+          default: false
+          description: Статья внутреннего оборота между ЦФО; обороты исключаются из сводного ОПиУ (ERP-1493)
         pnl_sign:
           type: integer
           enum:
