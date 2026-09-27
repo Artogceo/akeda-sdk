@@ -59904,6 +59904,7 @@ components:
         - cancelled
     CoreOrderSourceKind:
       type: string
+      description: 'Откуда заказ. contract — заказ периода регулярного договора документооборота (commerce-cycle.md § 2.6): его external_id — «<id договора>/<период>» (2026-10, 2026-Q4, 2026-W41), и загрузка с тем же внешним номером отвечает core.order.foreign_source.'
       enum:
         - manual
         - app
@@ -59911,6 +59912,7 @@ components:
         - marketplace
         - crm
         - migration
+        - contract
     CoreOrderLineKind:
       type: string
       enum:
@@ -90503,6 +90505,24 @@ components:
         open:
           type: boolean
           description: 'Пока действует договор: окончания нет, итога нет, раскрываются ближайшие 12 платежей'
+        orders:
+          $ref: '#/components/schemas/DocflowFlowPaymentRuleOrders'
+    DocflowFlowPaymentRuleOrders:
+      type: object
+      additionalProperties: false
+      description: '«Заводить заказ на каждый период» — только у договора (kind=contract). Зарегистрированный договор сам заводит на каждую наступившую стадию правила подтверждённый заказ ядра (source_kind=contract, external_id «<id договора>/<период>»): сразу после регистрации и фоновым проходом раз в час. Один договор и один период — один заказ навсегда: отменённый не воскресает, период не позже последнего заказа договора не заводится. Будущие периоды не заводятся; исполнение и бумаги периода — вручную.'
+      properties:
+        from:
+          type: string
+          format: date
+          description: 'Первый период: стадии раньше этой даты заказов не получают. Пусто — с начала правила, прошедшие периоды догоняются'
+        product_id:
+          $ref: '#/components/schemas/UUID'
+          description: Услуга строки заказа — активная номенклатура вида service; пусто — строка без номенклатуры, названная предметом договора
+        product_name:
+          type: string
+          readOnly: true
+          description: Название услуги на момент выбора; пишет сервер, присланное не читается
     DocflowFlowCommercialLine:
       type: object
       additionalProperties: false

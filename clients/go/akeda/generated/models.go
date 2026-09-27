@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 49b1a40bf433296e7094b649feb1761ac6e85fb929001b007a33acded37c95fa).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18d95ab3c2ab343b3fbac1d68d52209e480112ccf94a279ca4caba72f49a1d76).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -7600,7 +7600,18 @@ type DocflowFlowPaymentRule struct {
 	// Until — Последняя допустимая дата включительно; задаётся вместо count
 	Until *string `json:"until,omitempty"`
 	// Open — Пока действует договор: окончания нет, итога нет, раскрываются ближайшие 12 платежей
-	Open *bool `json:"open,omitempty"`
+	Open   *bool                         `json:"open,omitempty"`
+	Orders *DocflowFlowPaymentRuleOrders `json:"orders,omitempty"`
+}
+
+// DocflowFlowPaymentRuleOrders — «Заводить заказ на каждый период» — только у договора (kind=contract). Зарегистрированный договор сам заводит на каждую наступившую стадию правила подтверждённый заказ ядра (source_kind=contract, external_id «<id договора>/<период>»): сразу после регистрации и фоновым проходом раз в час. Один договор и один период — один заказ навсегда: отменённый не воскресает, период не позже последнего заказа договора не заводится. Будущие периоды не заводятся; исполнение и бумаги периода — вручную.
+type DocflowFlowPaymentRuleOrders struct {
+	// From — Первый период: стадии раньше этой даты заказов не получают. Пусто — с начала правила, прошедшие периоды догоняются
+	From *string `json:"from,omitempty"`
+	// ProductID — Услуга строки заказа — активная номенклатура вида service; пусто — строка без номенклатуры, названная предметом договора
+	ProductID *UUID `json:"product_id,omitempty"`
+	// ProductName — Название услуги на момент выбора; пишет сервер, присланное не читается
+	ProductName *string `json:"product_name,omitempty"`
 }
 
 // DocflowFlowRecognized — Прочитанное машиной из файла карточки — НА ПРОВЕРКУ. Живёт отдельно от условий договора: в условия сумма и срок попадают только рукой человека. Пустое поле означает «не прочиталось», а не ноль. Приёмка входящего договора в PDF заполняет его текстом бумаги.

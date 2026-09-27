@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 49b1a40bf433296e7094b649feb1761ac6e85fb929001b007a33acded37c95fa).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18d95ab3c2ab343b3fbac1d68d52209e480112ccf94a279ca4caba72f49a1d76).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -767,6 +767,7 @@ __all__ = [
     "DocflowFlowKind",
     "DocflowFlowPage",
     "DocflowFlowPaymentRule",
+    "DocflowFlowPaymentRuleOrders",
     "DocflowFlowRecognized",
     "DocflowFlowReference",
     "DocflowFlowReferencePage",
@@ -6803,7 +6804,7 @@ class CoreOrderRevision(_CoreOrderRevisionRequired, total=False):
 
 CoreOrderSide = Literal['sale', 'purchase']
 
-CoreOrderSourceKind = Literal['manual', 'app', 'import', 'marketplace', 'crm', 'migration']
+CoreOrderSourceKind = Literal['manual', 'app', 'import', 'marketplace', 'crm', 'migration', 'contract']
 
 class CoreOrderStage(TypedDict, total=False):
     """Этап работ заказа — что и когда сдаём (ERP-1427, этап 4)."""
@@ -9283,6 +9284,9 @@ class DocflowFlowPaymentRule(_DocflowFlowPaymentRuleRequired, total=False):
     until: str
     #: Пока действует договор: окончания нет, итога нет, раскрываются ближайшие 12 платежей
     open: bool
+    orders: "DocflowFlowPaymentRuleOrders"
+
+DocflowFlowPaymentRuleOrders = TypedDict("DocflowFlowPaymentRuleOrders", {"from": str, "product_id": "UUID", "product_name": str}, total=False)
 
 class DocflowFlowRecognized(TypedDict, total=False):
     """Прочитанное машиной из файла карточки — НА ПРОВЕРКУ. Живёт отдельно от условий договора: в условия сумма и срок попадают только рукой человека. Пустое поле означает «не прочиталось», а не ноль. Приёмка входящего договора в PDF заполняет его текстом бумаги."""

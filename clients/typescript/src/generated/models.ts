@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 49b1a40bf433296e7094b649feb1761ac6e85fb929001b007a33acded37c95fa).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 18d95ab3c2ab343b3fbac1d68d52209e480112ccf94a279ca4caba72f49a1d76).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -5167,7 +5167,7 @@ export interface CoreOrderRevision {
 
 export type CoreOrderSide = "sale" | "purchase";
 
-export type CoreOrderSourceKind = "manual" | "app" | "import" | "marketplace" | "crm" | "migration";
+export type CoreOrderSourceKind = "manual" | "app" | "import" | "marketplace" | "crm" | "migration" | "contract";
 
 /** Этап работ заказа — что и когда сдаём (ERP-1427, этап 4). */
 export interface CoreOrderStage {
@@ -7626,6 +7626,17 @@ export interface DocflowFlowPaymentRule {
   "until"?: string;
   /** Пока действует договор: окончания нет, итога нет, раскрываются ближайшие 12 платежей */
   "open"?: boolean;
+  "orders"?: DocflowFlowPaymentRuleOrders;
+}
+
+/** «Заводить заказ на каждый период» — только у договора (kind=contract). Зарегистрированный договор сам заводит на каждую наступившую стадию правила подтверждённый заказ ядра (source_kind=contract, external_id «<id договора>/<период>»): сразу после регистрации и фоновым проходом раз в час. Один договор и один период — один заказ навсегда: отменённый не воскресает, период не позже последнего заказа договора не заводится. Будущие периоды не заводятся; исполнение и бумаги периода — вручную. */
+export interface DocflowFlowPaymentRuleOrders {
+  /** Первый период: стадии раньше этой даты заказов не получают. Пусто — с начала правила, прошедшие периоды догоняются */
+  "from"?: string;
+  /** Услуга строки заказа — активная номенклатура вида service; пусто — строка без номенклатуры, названная предметом договора */
+  "product_id"?: UUID;
+  /** Название услуги на момент выбора; пишет сервер, присланное не читается */
+  "product_name"?: string;
 }
 
 /** Прочитанное машиной из файла карточки — НА ПРОВЕРКУ. Живёт отдельно от условий договора: в условия сумма и срок попадают только рукой человека. Пустое поле означает «не прочиталось», а не ноль. Приёмка входящего договора в PDF заполняет его текстом бумаги. */
