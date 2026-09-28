@@ -71,9 +71,11 @@ info:
     У модуля docflow (документы) три крыла и контур заказов приложения, и
     опубликованы 84 операции из 120 живых: непубличными остаются операторские
     маршруты и сценарии заказов, которые ведёт человек. Контур заказов
-    приложения — 5 операций под одной областью docflow.orders:import: загрузка
+    приложения — 8 операций: загрузка
     заказа интернет-магазина или CRM, чтение, отмена, смена состояния и журнал
-    загрузок, только для заказов, заведённых этим приложением. Крыло внутреннего документооборота — 23 операции: карточки договоров, спецификаций и актов с
+    загрузок, выпуск счёта и акта и подтверждение эквайринга только для заказов,
+    заведённых этим приложением. Для бумаг и платежей требуются отдельные
+    области docflow.orders:issue и docflow.orders:payments. Крыло внутреннего документооборота — 23 операции: карточки договоров, спецификаций и актов с
     неизменяемыми редакциями, файлы до 25 МБ, связи между бумагами и связь
     бумаги с учётом — ручные ссылки на документы финансов и склада, создание
     плановой операции и приёмка акта. Учётного факта это крыло не создаёт ни
@@ -10469,6 +10471,11 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/CoreOrderSourceKind'
+        - name: with
+          in: query
+          description: 'Дополнения ответа через запятую: progress — ход каждого заказа (исполнено, оплачено, счёт/акт/УПД), counts — число заказов по состояниям без отбора состояний'
+          schema:
+            type: string
         - name: limit
           in: query
           description: Размер страницы; больше потолка срезается до 200
@@ -11020,6 +11027,53 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/core/orders/{id}/contract:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    put:
+      tags:
+        - Core orders
+      operationId: coreSetOrderContract
+      summary: Поставить заказ на договор, сменить или снять договор
+      description: Договор заказа одной командой, без полной правки. Договор другого контрагента, юрлица или стороны — 409 `core.order.contract_mismatch`; в архиве или снятый — 409 `core.order.contract_unavailable`; срок действия кончился раньше даты заказа — 409 `core.order.contract_expired`; по заказу уже есть расчёты или документы — 409 `core.order.contract_locked`. У подтверждённого заказа — новая версия и перепроведение.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderContractInput'
+      responses:
+        '200':
+          description: Карточка заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/core/orders/{id}/cabinet-status:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -11067,6 +11121,66 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/core/contracts:
+    get:
+      tags:
+        - Core orders
+      operationId: coreListOrderContracts
+      summary: Получить договоры, на которые можно поставить заказ
+      description: Договоры того же контрагента и той же стороны, того же юрлица или без юрлица, не в архиве и действующие на дату заказа. Договор из include возвращается всегда — это договор, который уже стоит на заказе.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: contact_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: side
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - sale
+              - purchase
+        - name: company_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: date
+          in: query
+          description: Дата заказа
+          schema:
+            type: string
+            format: date
+        - name: include
+          in: query
+          description: Договор, который уже стоит на заказе
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Договоры
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreContractList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/core/contracts/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -31129,6 +31243,11 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/UUID'
+        - name: product_ids
+          in: query
+          description: 'Несколько товаров через запятую, не больше 200: форма продажи спрашивает свободный остаток юрлица по всем своим строкам одним запросом. Сравнивается товар после объединения номенклатуры, как у product_id'
+          schema:
+            type: string
         - name: q
           in: query
           description: Артикул или наименование номенклатуры
@@ -31524,7 +31643,7 @@ paths:
         - Stock purchasing
       operationId: stockGetOrderShipping
       summary: Получить исполнение заказа покупателя складом
-      description: 'Товарные строки заказа покупателя ядра с раскладкой отгруженного по порядку состава, отгрузки склада по заказу, признак резерва и доступность «Отгрузить» (can_ship, ship_blocked: closed, no_goods, shipped, no_counterparty, no_company; черновик отгружается — дверь его подтвердит). Документооборот не нужен.'
+      description: 'Товарные строки заказа покупателя ядра с раскладкой отгруженного по порядку состава, отгрузки склада по заказу, признак резерва и доступность «Отгрузить» (can_ship, ship_blocked: closed, no_goods, shipped, no_counterparty, no_company; черновик отгружается — дверь его подтвердит). ship_warehouse — склад, с которого пойдёт отгрузка, если его не назвать: склад продажи, склад её резерва, склад по умолчанию юрлица или склад юрлица, где свободного остатка хватает на все оставшиеся строки (source: order, reservation, policy, stock); нет такого — поля нет. Документооборот не нужен.'
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -31561,7 +31680,7 @@ paths:
         - Stock purchasing
       operationId: stockShipOrder
       summary: Отгрузить по заказу покупателя
-      description: '«Отгрузить» дверью склада без документооборота: создаётся и сразу проводится отгрузка склада с реквизитом «заказ» — та же сборка, что у фасада документооборота; резерв заказа гасится ею же. Количество по строке не больше остатка к отгрузке, строки без количества пропускаются, без строк — отгружается весь остаток. Черновик заказа дверь сначала подтверждает (КЦ § 2.1) и пишет «Заказы» +; фасад документооборота /docflow/orders/{id}/shipment зовёт эту же дверь. Читает `Idempotency-Key` — повтор с тем же ключом отдаёт ту же отгрузку.'
+      description: '«Отгрузить» дверью склада без документооборота: создаётся и сразу проводится отгрузка склада с реквизитом «заказ» — та же сборка, что у фасада документооборота; резерв заказа гасится ею же. Количество по строке не больше остатка к отгрузке, строки без количества пропускаются, без строк — отгружается весь остаток. warehouse_id можно не передавать: склад выбирает сервер тем же правилом, что ship_warehouse у GET …/shipping (для отгружаемых количеств); не нашёл — 400 с просьбой выбрать склад. Черновик заказа дверь сначала подтверждает (КЦ § 2.1) и пишет «Заказы» +; фасад документооборота /docflow/orders/{id}/shipment зовёт эту же дверь. Читает `Idempotency-Key` — повтор с тем же ключом отдаёт ту же отгрузку.'
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -40386,6 +40505,214 @@ paths:
           $ref: '#/components/responses/Conflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/app/docflow/orders/{id}/invoice:
+    post:
+      tags:
+        - App runtime
+      operationId: appDocflowIssueSalesOrderInvoice
+      summary: Выставить счёт по своему заказу приложения
+      description: Повтор того же Idempotency-Key возвращает тот же документ; чужой заказ отвечает 404. Номер, реквизиты и печатная форма принадлежат документообороту.
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: docflow.orders:issue
+      security:
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowOrderInvoiceInput'
+      responses:
+        '201':
+          description: Выставленный счёт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/app/docflow/orders/{id}/act:
+    post:
+      tags:
+        - App runtime
+      operationId: appDocflowIssueSalesOrderAct
+      summary: Выпустить акт по своему заказу приложения
+      description: Та же команда документооборота и проведения, что в карточке заказа. Повтор Idempotency-Key возвращает тот же акт.
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: docflow.orders:issue
+      security:
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowOrderActInput'
+      responses:
+        '201':
+          description: Выпущенный акт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/app/docflow/orders/{id}/upd:
+    post:
+      tags:
+        - App runtime
+      operationId: appDocflowIssueSalesOrderUPD
+      summary: Выпустить УПД и исполнить свой заказ приложения
+      description: Для заказа с услугой одной командой создаёт исполнение, номерную запись реестра и зарегистрированный УПД. Повтор Idempotency-Key возвращает тот же документ; отдельный акт не выпускается.
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: docflow.orders:issue
+      security:
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowOrderActInput'
+      responses:
+        '201':
+          description: Выпущенный УПД
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/app/docflow/orders/{id}/payments:
+    post:
+      tags:
+        - App runtime
+      operationId: appDocflowRecordSalesOrderPayment
+      summary: Подтвердить эквайринг по своему заказу приложения
+      description: Устойчивый ключ платежа — provider плюс external_id; повтор не добавляет вторую оплату. Это подтверждение списания, а не зачисление агрегированной выплаты на расчётный счёт.
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: docflow.orders:payments
+      security:
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - provider
+                - external_id
+                - amount
+              properties:
+                provider:
+                  type: string
+                external_id:
+                  type: string
+                kind:
+                  type: string
+                  enum:
+                    - payment
+                    - refund
+                amount:
+                  type: string
+                currency:
+                  type: string
+                paid_at:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Заказ с обновлённым состоянием оплаты
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowSalesOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/app/docflow/order-imports:
     get:
       tags:
@@ -43093,6 +43420,68 @@ paths:
       responses:
         '202':
           description: Приглашение принято оператором к отправке
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/connections/{id}/participants/lookup:
+    post:
+      tags:
+        - Docflow connections
+      operationId: docflowLookupParticipant
+      x-akeda-audience: external
+      summary: Найти ящик контрагента у оператора
+      description: Идентификатор участника обмена (ящик) контрагента у оператора по ИНН и КПП его карточки — для имени файла формата ФНС (ИмяФайла/A), когда обмена с контрагентом ещё не было и в зеркале его нет. Только чтение у оператора (клиент без права записи); ответ сервер помнит, и следующая проверка отправки берёт ящик сама, наружу не ходя. Пустой participant_id — оператор контрагента не знает (не подключён к обмену или ИНН/КПП не те). Без ИНН в карточке — 400 docflow.participant.no_inn.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.edo:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          description: Подключение к оператору
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - contact_id
+              properties:
+                contact_id:
+                  $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Ящик контрагента у оператора; пусто — не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - participant_id
+                properties:
+                  participant_id:
+                    type: string
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -46211,7 +46600,7 @@ paths:
         - $ref: '#/components/parameters/TenantHeader'
         - name: search
           in: query
-          description: Поиск подстрокой по заголовку, номеру, контрагенту и юрлицу; до 200 знаков
+          description: Поиск подстрокой по заголовку, номеру, контрагенту, юрлицу, предмету договора и ИНН контрагента; до 200 знаков
           schema:
             type: string
             maxLength: 200
@@ -46250,6 +46639,30 @@ paths:
             enum:
               - 'true'
               - 'false'
+        - name: validity
+          in: query
+          description: 'Срок договора на сегодняшний московский день: active — зарегистрирован и срок не прошёл (или бессрочный), expiring — зарегистрирован и истекает в ближайшие 30 дней, expired — зарегистрирован, срок прошёл. Вместе со status, отличным от registered, — отказ'
+          schema:
+            type: string
+            enum:
+              - active
+              - expiring
+              - expired
+        - name: regular
+          in: query
+          description: true — только карточки с правилом графика платежей (регулярный договор)
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: with
+          in: query
+          description: 'counts — вернуть state_counts: пилюли списка договоров при тех же отборах, кроме status и validity'
+          schema:
+            type: string
+            enum:
+              - counts
         - name: limit
           in: query
           schema:
@@ -46422,6 +46835,61 @@ paths:
       responses:
         '201':
           description: Бумага акта (после отсечки при финансах — с исполнением)
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/orders/{id}/upd:
+    post:
+      tags:
+        - Docflow flow
+      operationId: docflowIssueOrderUPD
+      x-akeda-audience: external
+      summary: Сделать УПД по заказу
+      description: '«Сделать УПД» по строкам-услугам заказа покупателя — бумага, исполнение и счёт-фактура одной командой и одной транзакцией: финансы проводят исполнение (выручка и долг), выставляют УПД по получившейся реализации с номером из реестра счетов-фактур юрлица, документооборот заводит зарегистрированную карточку вида `upd` со ссылками на исполнение и на выставленную бумагу в `accounting_links`. Функция — `СЧФДОП` (по умолчанию) или `ДОП`. Только после отсечки исполнения бизнеса (до неё — 409 `docflow.sales_order.upd_needs_execution`). Сумма и этап — как у акта. Заголовок Idempotency-Key обязателен: повтор того же ключа тем же автором отдаёт первую бумагу.'
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: id
+          in: path
+          required: true
+          description: Заказ покупателя ядра
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowOrderUPDInput'
+      responses:
+        '201':
+          description: Зарегистрированная карточка УПД с исполнением и выставленной бумагой
           headers:
             Idempotent-Replay:
               $ref: '#/components/headers/IdempotentReplay'
@@ -49700,6 +50168,141 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BillingCabinetInvoice'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/settings/billing/invoices/{id}/order:
+    post:
+      tags:
+        - Settings subscription
+      operationId: settingsEnsureCheckoutOrder
+      summary: Создать заказ продавца для оплаты начисления
+      description: Создаёт один заказ в документообороте до выбора карты, СБП или перевода. Повтор возвращает тот же заказ; счёт этим действием не выпускается.
+      x-akeda-module: settings
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: settings:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/BillingInvoiceID'
+      responses:
+        '200':
+          description: Начисление с внешним номером заказа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingInvoiceResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/settings/billing/invoices/{id}/document:
+    post:
+      tags:
+        - Settings subscription
+      operationId: settingsIssueBankInvoiceDocument
+      summary: Сформировать счёт по реквизитам в документообороте продавца
+      description: Повтор по тому же начислению возвращает тот же заказ и ту же бумагу. Плательщик берётся из сохранённых реквизитов начисления.
+      x-akeda-module: settings
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: settings:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/BillingInvoiceID'
+      responses:
+        '200':
+          description: Начисление со ссылкой и номером родного счёта
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingInvoiceResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    get:
+      tags:
+        - Settings subscription
+      operationId: settingsGetBankInvoiceDocument
+      summary: Просмотреть или скачать родной счёт продавца
+      description: Бумага отдаётся только кабинету-плательщику и собирается тем же движком печати, что и счёт в документообороте продавца.
+      x-akeda-module: settings
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: settings:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/BillingInvoiceID'
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum:
+              - html
+              - pdf
+            default: html
+      responses:
+        '200':
+          description: Печатная форма счёта
+          content:
+            text/html:
+              schema:
+                type: string
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/settings/billing/invoices/{id}/upd:
+    get:
+      tags:
+        - Settings subscription
+      operationId: settingsGetBillingUPD
+      summary: Скачать или распечатать УПД после оплаты
+      description: УПД выпускается в родном документообороте продавца после подтверждения эквайринга и отдаётся только кабинету-плательщику.
+      x-akeda-module: settings
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: settings:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/BillingInvoiceID'
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum:
+              - html
+              - pdf
+            default: html
+      responses:
+        '200':
+          description: Печатная форма УПД
+          content:
+            text/html:
+              schema:
+                type: string
+            application/pdf:
+              schema:
+                type: string
+                format: binary
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -60147,6 +60750,7 @@ components:
             - reopen
             - cabinet_status
             - responsibles
+            - contract
         allowed:
           type: boolean
         reason_code:
@@ -60295,6 +60899,15 @@ components:
           type: string
         contract_id:
           $ref: '#/components/schemas/UUID'
+        contract_number:
+          type: string
+          description: Номер договора заказа — для экрана
+        contract_date:
+          type: string
+          format: date
+          description: Дата договора заказа — для экрана
+        progress:
+          $ref: '#/components/schemas/CoreOrderProgress'
         project_id:
           $ref: '#/components/schemas/UUID'
         pnl_item_id:
@@ -60446,6 +61059,29 @@ components:
           type: integer
         has_more:
           type: boolean
+        state_counts:
+          type: object
+          description: 'Только с with=counts: число заказов по состояниям при том же отборе без отбора состояний'
+          additionalProperties:
+            type: integer
+    CoreOrderProgress:
+      type: object
+      description: 'Ход заказа для строки списка (with=progress). executed — исполнено в валюте заказа; paid — оплачено, нет поля — финансы выключены; papers — счёт, акт и УПД: done — есть, wait — ждём подписи, нет ключа — нет; нет поля — документооборот выключен.'
+      additionalProperties: false
+      required:
+        - executed
+      properties:
+        executed:
+          type: string
+        paid:
+          type: string
+        papers:
+          type: object
+          additionalProperties:
+            type: string
+            enum:
+              - done
+              - wait
     CoreOrderInput:
       type: object
       description: 'Заказ из запроса: поля одни для формы, загрузки и фасадов модулей.'
@@ -60924,6 +61560,38 @@ components:
           type: integer
         funnel_id:
           $ref: '#/components/schemas/UUID'
+        valid_until:
+          type: string
+          format: date
+          description: Последний день действия договора (копия карточки документооборота); нет — бессрочный
+        archived:
+          type: boolean
+          description: 'Карточка договора в архиве: новые заказы договор не выбирают'
+        retired:
+          type: boolean
+          description: Карточки договора больше нет, но заказы или расчёты на реквизит ссылаются
+    CoreContractList:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreContractTerms'
+    CoreOrderContractInput:
+      type: object
+      additionalProperties: false
+      properties:
+        contract_id:
+          description: Договор заказа; null или пусто — снять договор
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+        expected_version:
+          type: integer
+          description: Версия заказа, которую видел человек; 0 — не сверять
     CoreContractSettlementDetailInput:
       type: object
       additionalProperties: false
@@ -78205,10 +78873,44 @@ components:
             $ref: '#/components/schemas/StockOrderShipment'
         reserved:
           type: boolean
+        reservations:
+          type: array
+          description: Остаток резерва самой продажи по складам (товар → количество). Свободный остаток склада его уже вычел, а отгрузка по продаже гасит свой резерв
+          items:
+            type: object
+            required:
+              - warehouse_id
+              - products
+            properties:
+              warehouse_id:
+                $ref: '#/components/schemas/UUID'
+              products:
+                type: object
+                additionalProperties:
+                  type: string
         can_ship:
           type: boolean
         ship_blocked:
           type: string
+        ship_warehouse:
+          type: object
+          description: Склад отгрузки по умолчанию; нет поля — сервер склад не подобрал, его выбирает человек
+          required:
+            - id
+            - name
+            - source
+          properties:
+            id:
+              $ref: '#/components/schemas/UUID'
+            name:
+              type: string
+            source:
+              type: string
+              enum:
+                - order
+                - reservation
+                - policy
+                - stock
     StockOrderShippingPage:
       type: object
       required:
@@ -78223,8 +78925,8 @@ components:
           type: integer
     StockOrderShipInput:
       type: object
+      description: warehouse_id необязателен — без него склад выбирает сервер тем же правилом, что ship_warehouse
       required:
-        - warehouse_id
         - lines
       properties:
         warehouse_id:
@@ -84163,6 +84865,8 @@ components:
           $ref: '#/components/schemas/SettingsCompanyAddress'
         entrepreneur:
           $ref: '#/components/schemas/SettingsCompanyPerson'
+        head:
+          $ref: '#/components/schemas/SettingsCompanyHead'
         is_active:
           type: boolean
         custom:
@@ -84182,6 +84886,19 @@ components:
         name:
           type: string
         patronymic:
+          type: string
+    SettingsCompanyHead:
+      type: object
+      additionalProperties: false
+      description: Руководитель юрлица полным ФИО и должностью — подписант документов без доверенности; ФИО как в сертификате подписи
+      properties:
+        surname:
+          type: string
+        name:
+          type: string
+        patronymic:
+          type: string
+        position:
           type: string
     SettingsCompanyAddress:
       type: object
@@ -84285,6 +85002,8 @@ components:
           $ref: '#/components/schemas/SettingsCompanyAddress'
         entrepreneur:
           $ref: '#/components/schemas/SettingsCompanyPerson'
+        head:
+          $ref: '#/components/schemas/SettingsCompanyHead'
         custom:
           type: object
           additionalProperties: true
@@ -90572,6 +91291,21 @@ components:
             - string
             - 'null'
           description: null означает, что налог не переписывали, а не что строка без налога
+    DocflowFlowCommercialTaxLine:
+      type: object
+      additionalProperties: false
+      description: 'Вычисленная строка НДС для чтения карточки: тот же результат, что в печатной форме, но не часть сохранённого оригинала'
+      required:
+        - line_id
+      properties:
+        line_id:
+          $ref: '#/components/schemas/UUID'
+        rate:
+          type: string
+          description: Ставка для показа; пусто, если политика не дала ставку
+        amount:
+          type: string
+          description: НДС десятичным текстом; пусто, если налог не определён
     DocflowFlowCommercial:
       type: object
       additionalProperties: false
@@ -90876,6 +91610,12 @@ components:
           maxItems: 100
           items:
             $ref: '#/components/schemas/DocflowFlowAccountingLink'
+        commercial_tax:
+          type: array
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/DocflowFlowCommercialTaxLine'
+          description: 'Только в ответе чтения карточки: вычисленные суммы НДС строк из источника печати. В редакцию документа не записываются'
         edo:
           $ref: '#/components/schemas/DocflowFlowEDOState'
         edo_links:
@@ -91068,6 +91808,32 @@ components:
             $ref: '#/components/schemas/DocflowFlowDocument'
         has_more:
           type: boolean
+        state_counts:
+          type: object
+          additionalProperties: false
+          description: 'Только по запросу with=counts. Сколько карточек в каждой пилюле списка договоров при прочих отборах: expiring входит в active, а удалённые не считаются нигде.'
+          required:
+            - draft
+            - active
+            - expiring
+            - expired
+            - archived
+          properties:
+            draft:
+              type: integer
+              minimum: 0
+            active:
+              type: integer
+              minimum: 0
+            expiring:
+              type: integer
+              minimum: 0
+            expired:
+              type: integer
+              minimum: 0
+            archived:
+              type: integer
+              minimum: 0
     DocflowOrderActInput:
       type: object
       additionalProperties: false
@@ -91084,6 +91850,25 @@ components:
         amount:
           type: string
           description: Пусто — все услуги заказа; меньше — частичный акт суммой
+    DocflowOrderUPDInput:
+      type: object
+      additionalProperties: false
+      properties:
+        date:
+          type: string
+          format: date
+          description: Дата УПД; пусто — дата заказа
+        amount:
+          type: string
+          description: Пусто — все услуги заказа; меньше — частичный УПД суммой
+        stage_id:
+          $ref: '#/components/schemas/UUID'
+        function:
+          type: string
+          enum:
+            - СЧФДОП
+            - ДОП
+          description: Пусто — СЧФДОП
     DocflowOrderInvoiceInput:
       type: object
       additionalProperties: false
@@ -94258,6 +95043,9 @@ components:
         address_hint:
           type: string
           description: 'Прежний адрес одной строкой для карточек, заведённых до структурированного адреса. Сервер не разбирает его на части догадкой: «улица Мира, 1» и «Мира, 1» неотличимы от «город Мира» ни одним правилом. Новая карточка подставляет готовые части прямо в реквизиты формата.'
+        head:
+          $ref: '#/components/schemas/SettingsCompanyHead'
+          description: Только у продавца — руководитель своего юрлица из его карточки (у ИП — сам предприниматель без должности); форма предлагает его подписантом по нажатию
     DocflowPreflightLine:
       type: object
       additionalProperties: false
@@ -97041,8 +97829,26 @@ components:
           format: uuid
         number:
           type: string
-          description: '«ГГГГ-НННН». Сплошной внутри года: пропуск бухгалтерия читает как утерянный документ'
+          description: Внутренний номер начисления control plane; юридический номер счёта — document_number
           example: 2026-0041
+        order_external_id:
+          type: string
+          description: Устойчивый внешний номер заказа в кабинете продавца
+        document_id:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Счёт в документообороте продавца
+        document_number:
+          type: string
+          description: Номер родного счёта продавца для назначения платежа
+        act_document_id:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Закрывающий акт по подтверждённой оплате картой или СБП
         tenant:
           $ref: '#/components/schemas/BillingTenantRef'
         subscription_id:
@@ -97105,6 +97911,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/BillingInvoice'
+    BillingInvoiceResult:
+      type: object
+      required:
+        - invoice
+      properties:
+        invoice:
+          $ref: '#/components/schemas/BillingInvoice'
     BillingCabinetInvoice:
       type: object
       description: 'Счёт вместе с реквизитами для оплаты. Реквизиты идут в том же ответе, а не отдельным маршрутом: экран оплаты показывает их на одной вкладке со счётом, и второй запрос означал бы мгновение, в котором сумма уже есть, а платить по ней некуда'

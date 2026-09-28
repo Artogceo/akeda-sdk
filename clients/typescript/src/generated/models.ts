@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 295e27afffc229cb314a30a2f71227b5b7e132a8be2d7694e7e97e179e229fa2).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 acc102e634289a792b8e0dfdec73b4540e10397d39c28bb74bb20aeb42c228c5).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -769,8 +769,16 @@ export interface BillingEntitlements {
 /** Счёт Akeda кабинету. Живёт в control plane, а не в базе клиента: иначе администратор кабинета правил бы собственный счёт, а история платежей не пережила бы пересоздание его базы */
 export interface BillingInvoice {
   "id": string;
-  /** «ГГГГ-НННН». Сплошной внутри года: пропуск бухгалтерия читает как утерянный документ */
+  /** Внутренний номер начисления control plane; юридический номер счёта — document_number */
   "number": string;
+  /** Устойчивый внешний номер заказа в кабинете продавца */
+  "order_external_id"?: string;
+  /** Счёт в документообороте продавца */
+  "document_id"?: string | null;
+  /** Номер родного счёта продавца для назначения платежа */
+  "document_number"?: string;
+  /** Закрывающий акт по подтверждённой оплате картой или СБП */
+  "act_document_id"?: string | null;
   "tenant": BillingTenantRef;
   "subscription_id": string | null;
   /** issued — выставлен, срок не вышел; overdue — срок вышел, доступ ещё полный; paid — оплачен; cancelled — отозван. Удаления нет вовсе */
@@ -801,6 +809,10 @@ export interface BillingInvoiceLine {
 
 export interface BillingInvoicePage {
   "invoices": Array<BillingInvoice>;
+}
+
+export interface BillingInvoiceResult {
+  "invoice": BillingInvoice;
 }
 
 /** Модуль, который привести к составу подписки не удалось */
@@ -3739,6 +3751,10 @@ export interface CoreContactPatch {
   "folder_id"?: UUID | null;
 }
 
+export interface CoreContractList {
+  "results": Array<CoreContractTerms>;
+}
+
 export interface CoreContractSettlementDetailInput {
   "settlement_detail": "order" | "contract" | "execution";
 }
@@ -3759,6 +3775,12 @@ export interface CoreContractTerms {
   "fifo_allowed": boolean;
   "version": number;
   "funnel_id"?: UUID;
+  /** Последний день действия договора (копия карточки документооборота); нет — бессрочный */
+  "valid_until"?: string;
+  /** Карточка договора в архиве: новые заказы договор не выбирают */
+  "archived"?: boolean;
+  /** Карточки договора больше нет, но заказы или расчёты на реквизит ссылаются */
+  "retired"?: boolean;
 }
 
 export interface CoreCurrencyRate {
@@ -4639,6 +4661,11 @@ export interface CoreOrder {
   "company_name"?: string;
   "contact_name"?: string;
   "contract_id"?: UUID;
+  /** Номер договора заказа — для экрана */
+  "contract_number"?: string;
+  /** Дата договора заказа — для экрана */
+  "contract_date"?: string;
+  "progress"?: CoreOrderProgress;
   "project_id"?: UUID;
   /** Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья */
   "pnl_item_id"?: { [key: string]: unknown };
@@ -4688,7 +4715,7 @@ export interface CoreOrder {
 }
 
 export interface CoreOrderAllowedAction {
-  "action": "edit" | "confirm" | "cancel" | "close" | "reopen" | "cabinet_status" | "responsibles";
+  "action": "edit" | "confirm" | "cancel" | "close" | "reopen" | "cabinet_status" | "responsibles" | "contract";
   "allowed": boolean;
   /** Код отказа: core.order.has_executions, core.order.has_dependents (оплаты, авансы, черновики исполнений), core.order.closed, core.order.forbidden */
   "reason_code"?: string;
@@ -4710,6 +4737,13 @@ export interface CoreOrderCabinetStatusInput {
 export interface CoreOrderCloseInput {
   /** Почему остаток больше не нужен */
   "reason"?: string;
+}
+
+export interface CoreOrderContractInput {
+  /** Договор заказа; null или пусто — снять договор */
+  "contract_id"?: UUID | null;
+  /** Версия заказа, которую видел человек; 0 — не сверять */
+  "expected_version"?: number;
 }
 
 /** Покупатель загрузки без id: юрлицо узнаётся по ИНН и КПП, физлицо — по телефону или заводится. */
@@ -5089,6 +5123,8 @@ export interface CoreOrderPage {
   "limit": number;
   "offset": number;
   "has_more": boolean;
+  /** Только с with=counts: число заказов по состояниям при том же отборе без отбора состояний */
+  "state_counts"?: { [key: string]: number };
 }
 
 /** Строка графика оплат заказа — когда и сколько платят (ERP-1427, этап 4). */
@@ -5102,6 +5138,13 @@ export interface CoreOrderPaymentTerm {
   "due_trigger"?: "" | "after_stage";
   "stage_id"?: UUID;
   "delay_days"?: number;
+}
+
+/** Ход заказа для строки списка (with=progress). executed — исполнено в валюте заказа; paid — оплачено, нет поля — финансы выключены; papers — счёт, акт и УПД: done — есть, wait — ждём подписи, нет ключа — нет; нет поля — документооборот выключен. */
+export interface CoreOrderProgress {
+  "executed": string;
+  "paid"?: string;
+  "papers"?: { [key: string]: "done" | "wait" };
 }
 
 export interface CoreOrderResponsible {
@@ -7428,6 +7471,15 @@ export interface DocflowFlowCommercialLine {
   "vat_amount"?: string | null;
 }
 
+/** Вычисленная строка НДС для чтения карточки: тот же результат, что в печатной форме, но не часть сохранённого оригинала */
+export interface DocflowFlowCommercialTaxLine {
+  "line_id": UUID;
+  /** Ставка для показа; пусто, если политика не дала ставку */
+  "rate"?: string;
+  /** НДС десятичным текстом; пусто, если налог не определён */
+  "amount"?: string;
+}
+
 /** Реквизиты бумаги — то, что переписано с документа. */
 export interface DocflowFlowContent {
   "title": string;
@@ -7484,6 +7536,8 @@ export interface DocflowFlowDocument {
   "files"?: Array<DocflowFlowFile>;
   "relations"?: Array<DocflowFlowRelation>;
   "accounting_links"?: Array<DocflowFlowAccountingLink>;
+  /** Только в ответе чтения карточки: вычисленные суммы НДС строк из источника печати. В редакцию документа не записываются */
+  "commercial_tax"?: Array<DocflowFlowCommercialTaxLine>;
   "edo"?: DocflowFlowEDOState;
   /** Конверты, которыми карточка уходила и приходила. Заполняется только при чтении карточки и в редакцию не пишется: связь живёт своей строкой, её правит синхронизация, а редакция неизменяема */
   "edo_links"?: Array<DocflowFlowEDOLink>;
@@ -7609,6 +7663,17 @@ export type DocflowFlowKind = "contract" | "specification" | "amendment" | "invo
 export interface DocflowFlowPage {
   "items": Array<DocflowFlowDocument>;
   "has_more": boolean;
+  /** Только по запросу with=counts. Сколько карточек в каждой пилюле списка договоров при прочих отборах: expiring входит в active, а удалённые не считаются нигде. */
+  "state_counts"?: DocflowFlowPageStateCounts;
+}
+
+/** Только по запросу with=counts. Сколько карточек в каждой пилюле списка договоров при прочих отборах: expiring входит в active, а удалённые не считаются нигде. */
+export interface DocflowFlowPageStateCounts {
+  "draft": number;
+  "active": number;
+  "expiring": number;
+  "expired": number;
+  "archived": number;
 }
 
 /**
@@ -8236,6 +8301,16 @@ export interface DocflowOrderInvoiceInput {
   "draft"?: boolean;
 }
 
+export interface DocflowOrderUPDInput {
+  /** Дата УПД; пусто — дата заказа */
+  "date"?: string;
+  /** Пусто — все услуги заказа; меньше — частичный УПД суммой */
+  "amount"?: string;
+  "stage_id"?: UUID;
+  /** Пусто — СЧФДОП */
+  "function"?: "СЧФДОП" | "ДОП";
+}
+
 /** Произвольный файл на отправку рядом с формализованным. */
 export interface DocflowOutgoingFile {
   /** Имя файла. Без него файл отклоняется: у оператора файл без имени не показывается никому */
@@ -8552,6 +8627,8 @@ export interface DocflowPreflightParty {
   "entity_type": string;
   /** Прежний адрес одной строкой для карточек, заведённых до структурированного адреса. Сервер не разбирает его на части догадкой: «улица Мира, 1» и «Мира, 1» неотличимы от «город Мира» ни одним правилом. Новая карточка подставляет готовые части прямо в реквизиты формата. */
   "address_hint": string;
+  /** Только у продавца — руководитель своего юрлица из его карточки (у ИП — сам предприниматель без должности); форма предлагает его подписантом по нажатию */
+  "head"?: SettingsCompanyHead;
 }
 
 /** Итоги товарной таблицы. Складываются из уже напечатанных строк, а не пересчитываются от исходных величин: итог обязан сойтись со строками до копейки. */
@@ -15912,6 +15989,7 @@ export interface SettingsCompany {
   "vat_accounting_mode_source": "manual" | "import";
   "legal_address": SettingsCompanyAddress;
   "entrepreneur": SettingsCompanyPerson;
+  "head"?: SettingsCompanyHead;
   "is_active": boolean;
   /** Значения своих полей кабинета: графа («Настройки → Поля», вид core.company) → значение */
   "custom": { [key: string]: unknown };
@@ -15934,6 +16012,14 @@ export interface SettingsCompanyAddress {
   "info": string;
 }
 
+/** Руководитель юрлица полным ФИО и должностью — подписант документов без доверенности; ФИО как в сертификате подписи */
+export interface SettingsCompanyHead {
+  "surname"?: string;
+  "name"?: string;
+  "patronymic"?: string;
+  "position"?: string;
+}
+
 export interface SettingsCompanyInput {
   "business_id": UUID;
   /** Пробельное название отклоняется */
@@ -15951,6 +16037,7 @@ export interface SettingsCompanyInput {
   "vat_accounting_mode"?: "" | "deductible" | "non_deductible" | "none";
   "legal_address"?: SettingsCompanyAddress;
   "entrepreneur"?: SettingsCompanyPerson;
+  "head"?: SettingsCompanyHead;
   /** Значения своих полей: не передано — не менять. Значение проверяется по типу графы; неподходящее — 422 с названиями граф */
   "custom"?: { [key: string]: unknown };
 }
@@ -16995,8 +17082,9 @@ export interface StockOpeningBalanceCreate {
   "comment"?: string;
 }
 
+/** warehouse_id необязателен — без него склад выбирает сервер тем же правилом, что ship_warehouse */
 export interface StockOrderShipInput {
-  "warehouse_id": UUID;
+  "warehouse_id"?: UUID;
   /** Дата отгрузки; пусто — текущая бизнес-дата */
   "date"?: string;
   "comment"?: string;
@@ -17036,8 +17124,24 @@ export interface StockOrderShipping {
   "lines": Array<StockOrderShippingLine>;
   "shipments": Array<StockOrderShipment>;
   "reserved": boolean;
+  /** Остаток резерва самой продажи по складам (товар → количество). Свободный остаток склада его уже вычел, а отгрузка по продаже гасит свой резерв */
+  "reservations"?: Array<StockOrderShippingReservationsItem>;
   "can_ship": boolean;
   "ship_blocked"?: string;
+  /** Склад отгрузки по умолчанию; нет поля — сервер склад не подобрал, его выбирает человек */
+  "ship_warehouse"?: StockOrderShippingShipWarehouse;
+}
+
+export interface StockOrderShippingReservationsItem {
+  "warehouse_id": UUID;
+  "products": { [key: string]: string };
+}
+
+/** Склад отгрузки по умолчанию; нет поля — сервер склад не подобрал, его выбирает человек */
+export interface StockOrderShippingShipWarehouse {
+  "id": UUID;
+  "name": string;
+  "source": "order" | "reservation" | "policy" | "stock";
 }
 
 export interface StockOrderShippingLine {
@@ -18112,6 +18216,15 @@ export interface WorkflowStatusUpdate {
   "is_final"?: boolean;
 }
 
+export interface AppDocflowRecordSalesOrderPaymentRequest {
+  "provider": string;
+  "external_id": string;
+  "kind"?: "payment" | "refund";
+  "amount": string;
+  "currency"?: string;
+  "paid_at"?: string;
+}
+
 export interface AutomationRulesResponse {
   "rules": Array<AutomationRuleDocument>;
 }
@@ -18143,6 +18256,14 @@ export interface CoreSetBusinessActiveRequest {
 
 export interface CoreListBusinessOwnershipResponse {
   "results": Array<CoreOwnershipVersion>;
+}
+
+export interface DocflowLookupParticipantRequest {
+  "contact_id": UUID;
+}
+
+export interface DocflowLookupParticipantResponse {
+  "participant_id": string;
 }
 
 export interface DocflowFlowDocumentRevisionsResponse {

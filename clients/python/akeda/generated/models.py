@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 295e27afffc229cb314a30a2f71227b5b7e132a8be2d7694e7e97e179e229fa2).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 acc102e634289a792b8e0dfdec73b4540e10397d39c28bb74bb20aeb42c228c5).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -87,6 +87,7 @@ __all__ = [
     "BillingInvoice",
     "BillingInvoiceLine",
     "BillingInvoicePage",
+    "BillingInvoiceResult",
     "BillingModuleSyncFailure",
     "BillingModuleSyncReport",
     "BillingMoney",
@@ -385,6 +386,7 @@ __all__ = [
     "CoreContactKind",
     "CoreContactPage",
     "CoreContactPatch",
+    "CoreContractList",
     "CoreContractSettlementDetailInput",
     "CoreContractTerms",
     "CoreCurrencyRate",
@@ -496,6 +498,7 @@ __all__ = [
     "CoreOrderBuyer",
     "CoreOrderCabinetStatusInput",
     "CoreOrderCloseInput",
+    "CoreOrderContractInput",
     "CoreOrderCounterparty",
     "CoreOrderEvent",
     "CoreOrderFunnel",
@@ -526,6 +529,7 @@ __all__ = [
     "CoreOrderObligation",
     "CoreOrderPage",
     "CoreOrderPaymentTerm",
+    "CoreOrderProgress",
     "CoreOrderResponsible",
     "CoreOrderResponsiblesInput",
     "CoreOrderRevenueItemRule",
@@ -751,6 +755,7 @@ __all__ = [
     "DocflowFlowChangeInput",
     "DocflowFlowCommercial",
     "DocflowFlowCommercialLine",
+    "DocflowFlowCommercialTaxLine",
     "DocflowFlowContent",
     "DocflowFlowContractTerms",
     "DocflowFlowCreateInput",
@@ -766,6 +771,7 @@ __all__ = [
     "DocflowFlowFinancePlanInput",
     "DocflowFlowKind",
     "DocflowFlowPage",
+    "DocflowFlowPageStateCounts",
     "DocflowFlowPaymentRule",
     "DocflowFlowPaymentRuleOrders",
     "DocflowFlowRecognized",
@@ -807,6 +813,7 @@ __all__ = [
     "DocflowOrderImport",
     "DocflowOrderImportPage",
     "DocflowOrderInvoiceInput",
+    "DocflowOrderUPDInput",
     "DocflowOutgoingFile",
     "DocflowOutgoingFlowInput",
     "DocflowOutgoingInput",
@@ -1452,6 +1459,7 @@ __all__ = [
     "SettingsAppVersion",
     "SettingsCompany",
     "SettingsCompanyAddress",
+    "SettingsCompanyHead",
     "SettingsCompanyInput",
     "SettingsCompanyPage",
     "SettingsCompanyPerson",
@@ -1570,6 +1578,8 @@ __all__ = [
     "StockOrderShipment",
     "StockOrderShipmentLine",
     "StockOrderShipping",
+    "StockOrderShippingReservationsItem",
+    "StockOrderShippingShipWarehouse",
     "StockOrderShippingLine",
     "StockOrderShippingPage",
     "StockProductUOM",
@@ -1657,6 +1667,7 @@ __all__ = [
     "TenantCredentialRequestPage",
     "UUID",
     "WorkflowStatusUpdate",
+    "AppDocflowRecordSalesOrderPaymentRequest",
     "AutomationRulesResponse",
     "AutomationRuleSimulateResponse",
     "AutomationRuleTestResponse",
@@ -1664,6 +1675,8 @@ __all__ = [
     "CoreListBusinessesResponse",
     "CoreSetBusinessActiveRequest",
     "CoreListBusinessOwnershipResponse",
+    "DocflowLookupParticipantRequest",
+    "DocflowLookupParticipantResponse",
     "DocflowFlowDocumentRevisionsResponse",
     "DocflowFlowDocumentRevisionsResponseItemsItem",
     "DocflowPreviewMessageActionResponse",
@@ -2478,11 +2491,9 @@ class BillingEntitlements(TypedDict):
     #: Кабинету оставлено только чтение: подписка приостановлена за неплатёж или расторгнута. Модули при этом НЕ отбираются — данные остаются видимыми и выгружаемыми, — а любая изменяющая операция отвечает 402 billing.read_only
     read_only: bool
 
-class BillingInvoice(TypedDict):
-    """Счёт Akeda кабинету. Живёт в control plane, а не в базе клиента: иначе администратор кабинета правил бы собственный счёт, а история платежей не пережила бы пересоздание его базы"""
-
+class _BillingInvoiceRequired(TypedDict):
     id: str
-    #: «ГГГГ-НННН». Сплошной внутри года: пропуск бухгалтерия читает как утерянный документ
+    #: Внутренний номер начисления control plane; юридический номер счёта — document_number
     number: str
     tenant: "BillingTenantRef"
     subscription_id: Optional[str]
@@ -2505,6 +2516,18 @@ class BillingInvoice(TypedDict):
     #: Личность платежа у банка. По ней уведомление об оплате находит свой счёт: номер заказа провайдер возвращать не обязан, а искать счёт по сумме значило бы засчитать чужие деньги
     provider_payment_id: str
 
+class BillingInvoice(_BillingInvoiceRequired, total=False):
+    """Счёт Akeda кабинету. Живёт в control plane, а не в базе клиента: иначе администратор кабинета правил бы собственный счёт, а история платежей не пережила бы пересоздание его базы"""
+
+    #: Устойчивый внешний номер заказа в кабинете продавца
+    order_external_id: str
+    #: Счёт в документообороте продавца
+    document_id: Optional[str]
+    #: Номер родного счёта продавца для назначения платежа
+    document_number: str
+    #: Закрывающий акт по подтверждённой оплате картой или СБП
+    act_document_id: Optional[str]
+
 class BillingInvoiceLine(TypedDict):
     """Строка счёта как она напечатана: за что и сколько"""
 
@@ -2513,6 +2536,9 @@ class BillingInvoiceLine(TypedDict):
 
 class BillingInvoicePage(TypedDict):
     invoices: List["BillingInvoice"]
+
+class BillingInvoiceResult(TypedDict):
+    invoice: "BillingInvoice"
 
 class BillingModuleSyncFailure(TypedDict):
     """Модуль, который привести к составу подписки не удалось"""
@@ -5400,6 +5426,9 @@ class CoreContactPatch(TypedDict, total=False):
     is_supplier: bool
     folder_id: Optional["UUID"]
 
+class CoreContractList(TypedDict):
+    results: List["CoreContractTerms"]
+
 class CoreContractSettlementDetailInput(TypedDict):
     settlement_detail: Literal['order', 'contract', 'execution']
 
@@ -5421,6 +5450,12 @@ class CoreContractTerms(_CoreContractTermsRequired, total=False):
     #: Первая операция по договору: после неё детализация не меняется
     detail_locked_at: str
     funnel_id: "UUID"
+    #: Последний день действия договора (копия карточки документооборота); нет — бессрочный
+    valid_until: str
+    #: Карточка договора в архиве: новые заказы договор не выбирают
+    archived: bool
+    #: Карточки договора больше нет, но заказы или расчёты на реквизит ссылаются
+    retired: bool
 
 class _CoreCurrencyRateRequired(TypedDict):
     id: "UUID"
@@ -6286,6 +6321,11 @@ class CoreOrder(_CoreOrderRequired, total=False):
     company_name: str
     contact_name: str
     contract_id: "UUID"
+    #: Номер договора заказа — для экрана
+    contract_number: str
+    #: Дата договора заказа — для экрана
+    contract_date: str
+    progress: "CoreOrderProgress"
     project_id: "UUID"
     #: Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья
     pnl_item_id: Dict[str, Any]
@@ -6321,7 +6361,7 @@ class CoreOrder(_CoreOrderRequired, total=False):
     vat_warnings: List["CoreOrderVATWarning"]
 
 class _CoreOrderAllowedActionRequired(TypedDict):
-    action: Literal['edit', 'confirm', 'cancel', 'close', 'reopen', 'cabinet_status', 'responsibles']
+    action: Literal['edit', 'confirm', 'cancel', 'close', 'reopen', 'cabinet_status', 'responsibles', 'contract']
     allowed: bool
 
 class CoreOrderAllowedAction(_CoreOrderAllowedActionRequired, total=False):
@@ -6343,6 +6383,12 @@ class CoreOrderCabinetStatusInput(TypedDict):
 class CoreOrderCloseInput(TypedDict, total=False):
     #: Почему остаток больше не нужен
     reason: str
+
+class CoreOrderContractInput(TypedDict, total=False):
+    #: Договор заказа; null или пусто — снять договор
+    contract_id: Optional["UUID"]
+    #: Версия заказа, которую видел человек; 0 — не сверять
+    expected_version: int
 
 class CoreOrderCounterparty(TypedDict, total=False):
     """Покупатель загрузки без id: юрлицо узнаётся по ИНН и КПП, физлицо — по телефону или заводится."""
@@ -6721,13 +6767,17 @@ class CoreOrderObligation(TypedDict):
     #: Осталось исполнить: заказано минус исполнено, не меньше нуля
     remaining_to_execute: str
 
-class CoreOrderPage(TypedDict):
+class _CoreOrderPageRequired(TypedDict):
     items: List["CoreOrder"]
     #: Сколько заказов под отбором всего
     total: int
     limit: int
     offset: int
     has_more: bool
+
+class CoreOrderPage(_CoreOrderPageRequired, total=False):
+    #: Только с with=counts: число заказов по состояниям при том же отборе без отбора состояний
+    state_counts: Dict[str, int]
 
 class CoreOrderPaymentTerm(TypedDict, total=False):
     """Строка графика оплат заказа — когда и сколько платят (ERP-1427, этап 4)."""
@@ -6741,6 +6791,15 @@ class CoreOrderPaymentTerm(TypedDict, total=False):
     due_trigger: Literal['', 'after_stage']
     stage_id: "UUID"
     delay_days: int
+
+class _CoreOrderProgressRequired(TypedDict):
+    executed: str
+
+class CoreOrderProgress(_CoreOrderProgressRequired, total=False):
+    """Ход заказа для строки списка (with=progress). executed — исполнено в валюте заказа; paid — оплачено, нет поля — финансы выключены; papers — счёт, акт и УПД: done — есть, wait — ждём подписи, нет ключа — нет; нет поля — документооборот выключен."""
+
+    paid: str
+    papers: Dict[str, Literal['done', 'wait']]
 
 class _CoreOrderResponsibleRequired(TypedDict):
     employee_id: "UUID"
@@ -9077,6 +9136,17 @@ class DocflowFlowCommercialLine(_DocflowFlowCommercialLineRequired, total=False)
     #: null означает, что налог не переписывали, а не что строка без налога
     vat_amount: Optional[str]
 
+class _DocflowFlowCommercialTaxLineRequired(TypedDict):
+    line_id: "UUID"
+
+class DocflowFlowCommercialTaxLine(_DocflowFlowCommercialTaxLineRequired, total=False):
+    """Вычисленная строка НДС для чтения карточки: тот же результат, что в печатной форме, но не часть сохранённого оригинала"""
+
+    #: Ставка для показа; пусто, если политика не дала ставку
+    rate: str
+    #: НДС десятичным текстом; пусто, если налог не определён
+    amount: str
+
 class _DocflowFlowContentRequired(TypedDict):
     title: str
     date: str
@@ -9142,6 +9212,8 @@ class DocflowFlowDocument(_DocflowFlowDocumentRequired, total=False):
     files: List["DocflowFlowFile"]
     relations: List["DocflowFlowRelation"]
     accounting_links: List["DocflowFlowAccountingLink"]
+    #: Только в ответе чтения карточки: вычисленные суммы НДС строк из источника печати. В редакцию документа не записываются
+    commercial_tax: List["DocflowFlowCommercialTaxLine"]
     edo: "DocflowFlowEDOState"
     #: Конверты, которыми карточка уходила и приходила. Заполняется только при чтении карточки и в редакцию не пишется: связь живёт своей строкой, её правит синхронизация, а редакция неизменяема
     edo_links: List["DocflowFlowEDOLink"]
@@ -9264,11 +9336,24 @@ class DocflowFlowFinancePlanInput(TypedDict):
 
 DocflowFlowKind = Literal['contract', 'specification', 'amendment', 'invoice', 'act', 'upd', 'goods_waybill', 'transport_waybill', 'consignment_note', 'transport_order', 'tax_invoice', 'correction', 'return', 'discrepancy_act', 'reconciliation_act', 'power_of_attorney', 'other']
 
-class DocflowFlowPage(TypedDict):
-    """Страница карточек. Набор строк называется items — как у остальных страниц этого крыла; крыло обмена с контрагентами в том же модуле исторически называет его results."""
-
+class _DocflowFlowPageRequired(TypedDict):
     items: List["DocflowFlowDocument"]
     has_more: bool
+
+class DocflowFlowPage(_DocflowFlowPageRequired, total=False):
+    """Страница карточек. Набор строк называется items — как у остальных страниц этого крыла; крыло обмена с контрагентами в том же модуле исторически называет его results."""
+
+    #: Только по запросу with=counts. Сколько карточек в каждой пилюле списка договоров при прочих отборах: expiring входит в active, а удалённые не считаются нигде.
+    state_counts: "DocflowFlowPageStateCounts"
+
+class DocflowFlowPageStateCounts(TypedDict):
+    """Только по запросу with=counts. Сколько карточек в каждой пилюле списка договоров при прочих отборах: expiring входит в active, а удалённые не считаются нигде."""
+
+    draft: int
+    active: int
+    expiring: int
+    expired: int
+    archived: int
 
 class _DocflowFlowPaymentRuleRequired(TypedDict):
     period: Literal['month', 'week', 'quarter']
@@ -9898,6 +9983,15 @@ class DocflowOrderInvoiceInput(_DocflowOrderInvoiceInputRequired, total=False):
     #: Сохранить черновиком вместо «Выставить»
     draft: bool
 
+class DocflowOrderUPDInput(TypedDict, total=False):
+    #: Дата УПД; пусто — дата заказа
+    date: str
+    #: Пусто — все услуги заказа; меньше — частичный УПД суммой
+    amount: str
+    stage_id: "UUID"
+    #: Пусто — СЧФДОП
+    function: Literal['СЧФДОП', 'ДОП']
+
 class DocflowOutgoingFile(TypedDict):
     """Произвольный файл на отправку рядом с формализованным."""
 
@@ -10215,9 +10309,7 @@ class DocflowPreflightLine(TypedDict):
     amount_without_vat: str
     amount_with_vat: str
 
-class DocflowPreflightParty(TypedDict):
-    """Сторона сделки в том виде, в каком она уедет в файл."""
-
+class _DocflowPreflightPartyRequired(TypedDict):
     name: str
     inn: str
     kpp: str
@@ -10225,6 +10317,12 @@ class DocflowPreflightParty(TypedDict):
     entity_type: str
     #: Прежний адрес одной строкой для карточек, заведённых до структурированного адреса. Сервер не разбирает его на части догадкой: «улица Мира, 1» и «Мира, 1» неотличимы от «город Мира» ни одним правилом. Новая карточка подставляет готовые части прямо в реквизиты формата.
     address_hint: str
+
+class DocflowPreflightParty(_DocflowPreflightPartyRequired, total=False):
+    """Сторона сделки в том виде, в каком она уедет в файл."""
+
+    #: Только у продавца — руководитель своего юрлица из его карточки (у ИП — сам предприниматель без должности); форма предлагает его подписантом по нажатию
+    head: "SettingsCompanyHead"
 
 class DocflowPreflightTotals(TypedDict):
     """Итоги товарной таблицы. Складываются из уже напечатанных строк, а не пересчитываются от исходных величин: итог обязан сойтись со строками до копейки."""
@@ -17185,7 +17283,7 @@ class SettingsAppVersion(_SettingsAppVersionRequired, total=False):
 
     released_at: str
 
-class SettingsCompany(TypedDict):
+class _SettingsCompanyRequired(TypedDict):
     id: "UUID"
     business_id: "UUID"
     name: str
@@ -17211,6 +17309,9 @@ class SettingsCompany(TypedDict):
     #: Значения своих полей кабинета: графа («Настройки → Поля», вид core.company) → значение
     custom: Dict[str, Any]
 
+class SettingsCompany(_SettingsCompanyRequired, total=False):
+    head: "SettingsCompanyHead"
+
 class SettingsCompanyAddress(TypedDict):
     postal_code: str
     #: Код субъекта РФ для формализованного документа
@@ -17226,6 +17327,14 @@ class SettingsCompanyAddress(TypedDict):
     flat: str
     #: Дополнение, которое не раскладывается по остальным частям адреса
     info: str
+
+class SettingsCompanyHead(TypedDict, total=False):
+    """Руководитель юрлица полным ФИО и должностью — подписант документов без доверенности; ФИО как в сертификате подписи"""
+
+    surname: str
+    name: str
+    patronymic: str
+    position: str
 
 class _SettingsCompanyInputRequired(TypedDict):
     business_id: "UUID"
@@ -17246,6 +17355,7 @@ class SettingsCompanyInput(_SettingsCompanyInputRequired, total=False):
     vat_accounting_mode: Literal['', 'deductible', 'non_deductible', 'none']
     legal_address: "SettingsCompanyAddress"
     entrepreneur: "SettingsCompanyPerson"
+    head: "SettingsCompanyHead"
     #: Значения своих полей: не передано — не менять. Значение проверяется по типу графы; неподходящее — 422 с названиями граф
     custom: Dict[str, Any]
 
@@ -18268,10 +18378,12 @@ class StockOpeningBalanceCreate(_StockOpeningBalanceCreateRequired, total=False)
     comment: str
 
 class _StockOrderShipInputRequired(TypedDict):
-    warehouse_id: "UUID"
     lines: List["StockOrderShipInputLinesItem"]
 
 class StockOrderShipInput(_StockOrderShipInputRequired, total=False):
+    """warehouse_id необязателен — без него склад выбирает сервер тем же правилом, что ship_warehouse"""
+
+    warehouse_id: "UUID"
     #: Дата отгрузки; пусто — текущая бизнес-дата
     date: str
     comment: str
@@ -18311,7 +18423,22 @@ class StockOrderShipping(_StockOrderShippingRequired, total=False):
     contact_name: str
     company_id: "UUID"
     warehouse_id: "UUID"
+    #: Остаток резерва самой продажи по складам (товар → количество). Свободный остаток склада его уже вычел, а отгрузка по продаже гасит свой резерв
+    reservations: List["StockOrderShippingReservationsItem"]
     ship_blocked: str
+    #: Склад отгрузки по умолчанию; нет поля — сервер склад не подобрал, его выбирает человек
+    ship_warehouse: "StockOrderShippingShipWarehouse"
+
+class StockOrderShippingReservationsItem(TypedDict):
+    warehouse_id: "UUID"
+    products: Dict[str, str]
+
+class StockOrderShippingShipWarehouse(TypedDict):
+    """Склад отгрузки по умолчанию; нет поля — сервер склад не подобрал, его выбирает человек"""
+
+    id: "UUID"
+    name: str
+    source: Literal['order', 'reservation', 'policy', 'stock']
 
 class _StockOrderShippingLineRequired(TypedDict):
     line_id: "UUID"
@@ -19349,6 +19476,16 @@ class WorkflowStatusUpdate(TypedDict, total=False):
     is_default: bool
     is_final: bool
 
+class _AppDocflowRecordSalesOrderPaymentRequestRequired(TypedDict):
+    provider: str
+    external_id: str
+    amount: str
+
+class AppDocflowRecordSalesOrderPaymentRequest(_AppDocflowRecordSalesOrderPaymentRequestRequired, total=False):
+    kind: Literal['payment', 'refund']
+    currency: str
+    paid_at: str
+
 class AutomationRulesResponse(TypedDict):
     rules: List["AutomationRuleDocument"]
 
@@ -19378,6 +19515,12 @@ class CoreSetBusinessActiveRequest(TypedDict):
 
 class CoreListBusinessOwnershipResponse(TypedDict):
     results: List["CoreOwnershipVersion"]
+
+class DocflowLookupParticipantRequest(TypedDict):
+    contact_id: "UUID"
+
+class DocflowLookupParticipantResponse(TypedDict):
+    participant_id: str
 
 class DocflowFlowDocumentRevisionsResponse(TypedDict):
     items: List["DocflowFlowDocumentRevisionsResponseItemsItem"]

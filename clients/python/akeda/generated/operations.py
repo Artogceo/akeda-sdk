@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 295e27afffc229cb314a30a2f71227b5b7e132a8be2d7694e7e97e179e229fa2).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 acc102e634289a792b8e0dfdec73b4540e10397d39c28bb74bb20aeb42c228c5).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -33,7 +33,11 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'appDocflowCancelSalesOrder': OperationSpec('POST', '/api/v1/app/docflow/orders/{id}/cancel', 'docflow', 'preview', 'docflow.orders:import', False, True, ('id',), 'none', None, None),
     'appDocflowGetSalesOrder': OperationSpec('GET', '/api/v1/app/docflow/orders/{id}', 'docflow', 'preview', 'docflow.orders:import', False, True, ('id',), 'none', None, None),
     'appDocflowImportSalesOrder': OperationSpec('POST', '/api/v1/app/docflow/orders/import', 'docflow', 'preview', 'docflow.orders:import', False, True, (), 'none', None, None),
+    'appDocflowIssueSalesOrderAct': OperationSpec('POST', '/api/v1/app/docflow/orders/{id}/act', 'docflow', 'preview', 'docflow.orders:issue', True, True, ('id',), 'none', None, None),
+    'appDocflowIssueSalesOrderInvoice': OperationSpec('POST', '/api/v1/app/docflow/orders/{id}/invoice', 'docflow', 'preview', 'docflow.orders:issue', True, True, ('id',), 'none', None, None),
+    'appDocflowIssueSalesOrderUPD': OperationSpec('POST', '/api/v1/app/docflow/orders/{id}/upd', 'docflow', 'preview', 'docflow.orders:issue', True, True, ('id',), 'none', None, None),
     'appDocflowListSalesOrderImports': OperationSpec('GET', '/api/v1/app/docflow/order-imports', 'docflow', 'preview', 'docflow.orders:import', False, True, (), 'limit', 200, 50),
+    'appDocflowRecordSalesOrderPayment': OperationSpec('POST', '/api/v1/app/docflow/orders/{id}/payments', 'docflow', 'preview', 'docflow.orders:payments', False, True, ('id',), 'none', None, None),
     'appDocflowSetSalesOrderStatus': OperationSpec('POST', '/api/v1/app/docflow/orders/{id}/status', 'docflow', 'preview', 'docflow.orders:import', False, True, ('id',), 'none', None, None),
     'appFinanceCancelOperation': OperationSpec('POST', '/api/v1/app/finance/operations/{id}/cancel', 'finance', 'preview', 'finance.operations:write', False, True, ('id',), 'none', None, None),
     'appFinanceCreateOperation': OperationSpec('POST', '/api/v1/app/finance/operations', 'finance', 'preview', 'finance.operations:write', False, True, (), 'none', None, None),
@@ -272,6 +276,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreListGLMappings': OperationSpec('GET', '/api/v1/core/gl-mappings', 'core', 'preview', 'core:read', False, True, (), 'none', None, None),
     'coreListGLOpeningImports': OperationSpec('GET', '/api/v1/core/gl-opening-imports', 'core', 'preview', 'core:read', False, True, (), 'limit', 100, 20),
     'coreListItems': OperationSpec('GET', '/api/v1/core/items', 'core', 'preview', 'core:read', False, True, (), 'none', None, None),
+    'coreListOrderContracts': OperationSpec('GET', '/api/v1/core/contracts', 'core', 'preview', 'core.orders:read', False, True, (), 'none', None, None),
     'coreListOrderFunnelTemplates': OperationSpec('GET', '/api/v1/core/order-funnels/templates', 'core', 'preview', 'core.orders:read', False, True, (), 'none', None, None),
     'coreListOrderFunnelVersions': OperationSpec('GET', '/api/v1/core/order-funnels/{id}/versions', 'core', 'preview', 'core.orders:read', False, True, ('id',), 'none', None, None),
     'coreListOrderFunnels': OperationSpec('GET', '/api/v1/core/order-funnels', 'core', 'preview', 'core.orders:read', False, True, (), 'none', None, None),
@@ -313,6 +318,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreSetContractSettlementDetail': OperationSpec('PUT', '/api/v1/core/contracts/{id}/settlement-detail', 'core', 'preview', 'core.orders:write', False, True, ('id',), 'none', None, None),
     'coreSetDocumentCustom': OperationSpec('PUT', '/api/v1/core/documents/{id}/custom', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreSetOrderCabinetStatus': OperationSpec('PUT', '/api/v1/core/orders/{id}/cabinet-status', 'core', 'preview', 'core.orders:write', False, True, ('id',), 'none', None, None),
+    'coreSetOrderContract': OperationSpec('PUT', '/api/v1/core/orders/{id}/contract', 'core', 'preview', 'core.orders:write', False, True, ('id',), 'none', None, None),
     'coreSetOrderFunnel': OperationSpec('PUT', '/api/v1/core/orders/{id}/funnel', 'core', 'preview', 'core.orders:write', False, True, ('id',), 'none', None, None),
     'coreSetOrderResponsibles': OperationSpec('PUT', '/api/v1/core/orders/{id}/responsibles', 'core', 'preview', 'core.orders:write', False, True, ('id',), 'none', None, None),
     'coreSetOrderStepDue': OperationSpec('PUT', '/api/v1/core/orders/{id}/steps/{key}/due', 'core', 'preview', 'core.orders:write', False, True, ('id', 'key',), 'none', None, None),
@@ -541,6 +547,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowInviteCounterparty': OperationSpec('POST', '/api/v1/docflow/connections/{id}/invitations', 'docflow', 'preview', 'docflow.edo:send', False, False, ('id',), 'none', None, None),
     'docflowIssueOrderAct': OperationSpec('POST', '/api/v1/docflow/orders/{id}/act', 'docflow', 'preview', 'docflow.flow:write', True, False, ('id',), 'none', None, None),
     'docflowIssueOrderInvoice': OperationSpec('POST', '/api/v1/docflow/orders/{id}/invoice', 'docflow', 'preview', 'docflow.flow:write', True, False, ('id',), 'none', None, None),
+    'docflowIssueOrderUPD': OperationSpec('POST', '/api/v1/docflow/orders/{id}/upd', 'docflow', 'preview', 'docflow.flow:write', True, False, ('id',), 'none', None, None),
     'docflowIssueSigningTask': OperationSpec('POST', '/api/v1/docflow/edo/signing/tasks', 'docflow', 'preview', 'docflow.edo:sign', False, False, (), 'none', None, None),
     'docflowLinkIntakeCounterparty': OperationSpec('PUT', '/api/v1/docflow/messages/{id}/intake/counterparty', 'docflow', 'preview', 'docflow.edo:write', False, False, ('id',), 'none', None, None),
     'docflowListConnections': OperationSpec('GET', '/api/v1/docflow/connections', 'docflow', 'preview', 'docflow.edo:admin', False, False, (), 'none', None, None),
@@ -548,6 +555,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowListMessages': OperationSpec('GET', '/api/v1/docflow/messages', 'docflow', 'preview', 'docflow.edo:read', False, False, (), 'limit_offset', 200, 50),
     'docflowListSigningTasks': OperationSpec('GET', '/api/v1/docflow/edo/signing/tasks', 'docflow', 'preview', 'docflow.edo:sign', False, False, (), 'limit_offset', 50, 20),
     'docflowListTitles': OperationSpec('GET', '/api/v1/docflow/outgoing', 'docflow', 'preview', 'docflow.edo:read', False, False, (), 'none', None, None),
+    'docflowLookupParticipant': OperationSpec('POST', '/api/v1/docflow/connections/{id}/participants/lookup', 'docflow', 'preview', 'docflow.edo:write', False, False, ('id',), 'none', None, None),
     'docflowMarkGovAnswered': OperationSpec('POST', '/api/v1/docflow/gov/documents/{id}/answered', 'docflow', 'preview', 'docflow.edo:write', False, False, ('id',), 'none', None, None),
     'docflowMarkMessageViewed': OperationSpec('POST', '/api/v1/docflow/messages/{id}/viewed', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
     'docflowMessagePrintForm': OperationSpec('GET', '/api/v1/docflow/messages/{id}/print', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
@@ -920,6 +928,9 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'settingsDeleteFieldDefinition': OperationSpec('DELETE', '/api/v1/settings/field-definitions/{id}', 'settings', 'preview', 'settings:write', False, False, ('id',), 'none', None, None),
     'settingsDisableAppInstallation': OperationSpec('POST', '/api/v1/settings/app-installations/{id}/disable', 'settings', 'preview', 'settings:write', False, False, ('id',), 'none', None, None),
     'settingsEnableAppInstallation': OperationSpec('POST', '/api/v1/settings/app-installations/{id}/enable', 'settings', 'preview', 'settings:write', False, False, ('id',), 'none', None, None),
+    'settingsEnsureCheckoutOrder': OperationSpec('POST', '/api/v1/settings/billing/invoices/{id}/order', 'settings', 'preview', 'settings:read', False, False, ('id',), 'none', None, None),
+    'settingsGetBankInvoiceDocument': OperationSpec('GET', '/api/v1/settings/billing/invoices/{id}/document', 'settings', 'preview', 'settings:read', False, False, ('id',), 'none', None, None),
+    'settingsGetBillingUPD': OperationSpec('GET', '/api/v1/settings/billing/invoices/{id}/upd', 'settings', 'preview', 'settings:read', False, False, ('id',), 'none', None, None),
     'settingsGetFieldSchema': OperationSpec('GET', '/api/v1/settings/field-schema', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
     'settingsGetInvoice': OperationSpec('GET', '/api/v1/settings/billing/invoices/{id}', 'settings', 'preview', 'settings:read', False, False, ('id',), 'none', None, None),
     'settingsGetReferrals': OperationSpec('GET', '/api/v1/settings/referrals', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
@@ -927,6 +938,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'settingsGetSubscriptionNotice': OperationSpec('GET', '/api/v1/settings/subscription/notice', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
     'settingsGetUsage': OperationSpec('GET', '/api/v1/settings/usage', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
     'settingsInstallApp': OperationSpec('POST', '/api/v1/settings/apps/{publisher}/{key}/installation', 'settings', 'preview', 'settings:write', False, False, ('key', 'publisher',), 'none', None, None),
+    'settingsIssueBankInvoiceDocument': OperationSpec('POST', '/api/v1/settings/billing/invoices/{id}/document', 'settings', 'preview', 'settings:read', False, False, ('id',), 'none', None, None),
     'settingsListApiKeyAccess': OperationSpec('GET', '/api/v1/settings/api-keys/{id}/access', 'settings', 'preview', 'settings:read', False, False, ('id',), 'none', None, None),
     'settingsListApiKeys': OperationSpec('GET', '/api/v1/settings/api-keys', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
     'settingsListAppInstallations': OperationSpec('GET', '/api/v1/settings/app-installations', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
