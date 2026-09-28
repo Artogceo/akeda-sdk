@@ -5930,6 +5930,12 @@ paths:
           description: Идентификаторы пользователей через запятую
           schema:
             type: string
+        - name: exclude_event
+          in: query
+          description: Исключить редактируемую встречу и её повторения из занятости
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: Занятые интервалы
@@ -33143,6 +33149,57 @@ paths:
           description: all — все карточки магазина; иначе только артикулы с движением
           schema:
             type: string
+        - name: days
+          in: query
+          description: Глубина окна в днях по сегодня, 1–92; по умолчанию 14
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 92
+        - name: from
+          in: query
+          description: Начало своего отрезка (вместе с to); длиннее 92 дней обрезается до последних 92
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Конец своего отрезка; будущее обрезается сегодняшним днём
+          schema:
+            type: string
+            format: date
+        - name: slice
+          in: query
+          description: 'Срез вместо одного артикула: store, list, model, brand, subject; пусто — артикул'
+          schema:
+            type: string
+            enum:
+              - article
+              - store
+              - list
+              - model
+              - brand
+              - subject
+        - name: sliceValue
+          in: query
+          description: Значение среза model/brand/subject; пусто — самый крупный вариант
+          schema:
+            type: string
+        - name: groupBy
+          in: query
+          description: 'Разложить срез по группам по дням (ERP-1309): subject, model, brand или article; работает вместе с groupMetrics'
+          schema:
+            type: string
+            enum:
+              - subject
+              - model
+              - brand
+              - article
+        - name: groupMetrics
+          in: query
+          description: Ряды групп через запятую — ключи series, не больше 4; без них группы не считаются
+          schema:
+            type: string
       responses:
         '200':
           description: Дневная воронка артикула
@@ -33874,6 +33931,57 @@ paths:
         - name: sku
           in: query
           description: Артикул поставщика; пустой заменяется первым артикулом по выручке
+          schema:
+            type: string
+        - name: days
+          in: query
+          description: Глубина окна в днях по сегодня, 1–92; по умолчанию 14
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 92
+        - name: from
+          in: query
+          description: Начало своего отрезка (вместе с to); длиннее 92 дней обрезается до последних 92
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Конец своего отрезка; будущее обрезается сегодняшним днём
+          schema:
+            type: string
+            format: date
+        - name: slice
+          in: query
+          description: 'Срез вместо одного артикула: store, list, model, brand, subject; пусто — артикул'
+          schema:
+            type: string
+            enum:
+              - article
+              - store
+              - list
+              - model
+              - brand
+              - subject
+        - name: sliceValue
+          in: query
+          description: Значение среза model/brand/subject; пусто — самый крупный вариант
+          schema:
+            type: string
+        - name: groupBy
+          in: query
+          description: 'Разложить срез по группам по дням (ERP-1309): subject, model, brand или article; работает вместе с groupMetrics'
+          schema:
+            type: string
+            enum:
+              - subject
+              - model
+              - brand
+              - article
+        - name: groupMetrics
+          in: query
+          description: Ряды групп через запятую — ключи series, не больше 4; без них группы не считаются
           schema:
             type: string
       responses:
@@ -79655,6 +79763,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MarketplaceOzonStockProduct'
+        truncated:
+          type: boolean
+          description: 'Строк «товар × склад» больше предела 8000: хвост артикулов не пришёл, отсутствие товара не значит «остатка нет»'
     MarketplaceOzonCostRequest:
       type: object
       additionalProperties: false
@@ -80865,6 +80976,66 @@ components:
             type:
               - number
               - 'null'
+        sales:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        salesSum:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        costSales:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        romi:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        feesSum:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        commissionSum:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        acquiringSum:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        logisticsSum:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        otherSum:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+        taxSum:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
     MarketplaceOzonFunnelDailyTotals:
       type: object
       additionalProperties:
@@ -80968,6 +81139,39 @@ components:
         - days
         - series
       properties:
+        slice:
+          type: string
+          description: Срез ответа, когда запрошен slice
+        sliceValue:
+          type: string
+        sliceLabel:
+          type: string
+        slices:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: object
+          description: Варианты срезов с числом артикулов
+        breakdown:
+          type: array
+          items:
+            type: object
+          description: Итоги каждого артикула среза за окно
+        articlesTruncated:
+          type: boolean
+        groupBy:
+          type: string
+          description: Чем разложен срез, когда запрошен groupBy
+        groups:
+          type: array
+          description: |
+            Группы среза по дням: value (пусто — артикулы без значения группы),
+            label, count артикулов, series и totals только по groupMetrics.
+            Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно;
+            сверх 200 групп хвост сложен в одну строку с rest: true.
+          items:
+            type: object
         platform:
           type: string
           const: ozon
@@ -81916,6 +82120,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MarketplaceWbStockProduct'
+        truncated:
+          type: boolean
+          description: 'Строк «товар × склад» больше предела 8000: хвост артикулов не пришёл, отсутствие товара не значит «остатка нет»'
     MarketplaceWbCostRequest:
       type: object
       additionalProperties: false
@@ -82881,6 +83088,39 @@ components:
         - days
         - series
       properties:
+        slice:
+          type: string
+          description: Срез ответа, когда запрошен slice
+        sliceValue:
+          type: string
+        sliceLabel:
+          type: string
+        slices:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: object
+          description: Варианты срезов с числом артикулов
+        breakdown:
+          type: array
+          items:
+            type: object
+          description: Итоги каждого артикула среза за окно
+        articlesTruncated:
+          type: boolean
+        groupBy:
+          type: string
+          description: Чем разложен срез, когда запрошен groupBy
+        groups:
+          type: array
+          description: |
+            Группы среза по дням: value (пусто — артикулы без значения группы),
+            label, count артикулов, series и totals только по groupMetrics.
+            Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно;
+            сверх 200 групп хвост сложен в одну строку с rest: true.
+          items:
+            type: object
         platform:
           type: string
           const: wb
@@ -82919,7 +83159,9 @@ components:
             spp, position, adSpend, drrOrders, drrSales, buyoutRate,
             expectedUnits, expectedRevenue, costUnit, acquiringRate,
             commissionRate, logisticsUnit, otherUnit, taxRate, margin,
-            marginSheet, umd, roi, roiOrders, marginTot и marginSheetTot.
+            marginSheet, umd, roi, roiOrders, marginTot, marginSheetTot, sales,
+            salesSum, costSales, romi и удержания в рублях: feesSum,
+            commissionSum, acquiringSum, logisticsSum, otherSum, taxSum.
             Отсутствующий источник даёт null, а не ложный ноль.
         totals:
           type: object
@@ -92308,10 +92550,25 @@ components:
         purpose:
           type: string
           maxLength: 210
+        priority:
+          type: string
+          enum:
+            - high
+            - normal
+            - low
+          default: normal
+          description: Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP
+        payment_method:
+          type: string
+          enum:
+            - bank
+            - cash
+          default: bank
+          description: 'Форма оплаты: безналичная или наличные (без банковских реквизитов, платит касса)'
         justification:
           type: string
           maxLength: 4000
-          description: «Зачем платим» — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
+          description: Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
         basis:
           $ref: '#/components/schemas/DocflowPaymentRequestBasis'
     DocflowPaymentRequestUpdate:
@@ -92401,6 +92658,8 @@ components:
         - due_date
         - purpose
         - justification
+        - priority
+        - payment_method
         - basis
         - destination
         - created_by_name
@@ -92456,7 +92715,20 @@ components:
           type: string
         justification:
           type: string
-          description: «Зачем платим» — обоснование автора для согласующего
+          description: Обоснование автора для согласующего
+        priority:
+          type: string
+          enum:
+            - high
+            - normal
+            - low
+          description: Приоритет оплаты
+        payment_method:
+          type: string
+          enum:
+            - bank
+            - cash
+          description: Форма оплаты
         basis:
           $ref: '#/components/schemas/DocflowPaymentRequestBasis'
         destination:

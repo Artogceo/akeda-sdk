@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0435f2eb60db2fcb5a856ff12f16822a17c57de2cdbffe148e13b27eddd9e255).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3559a81b0db1c002a2e835d5235e454c12a46edfff77388838833b13bfbf50f5).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -8428,8 +8428,12 @@ type DocflowPaymentRequest struct {
 	Currency    string                     `json:"currency"`
 	DueDate     string                     `json:"due_date"`
 	Purpose     string                     `json:"purpose"`
-	// Justification — «Зачем платим» — обоснование автора для согласующего
-	Justification string                     `json:"justification"`
+	// Justification — Обоснование автора для согласующего
+	Justification string `json:"justification"`
+	// Priority — Приоритет оплаты
+	Priority string `json:"priority"`
+	// PaymentMethod — Форма оплаты
+	PaymentMethod string                     `json:"payment_method"`
 	Basis         DocflowPaymentRequestBasis `json:"basis"`
 	// Destination — Куда ушла согласованная заявка: снимок флага маршрута
 	Destination string `json:"destination"`
@@ -8466,7 +8470,11 @@ type DocflowPaymentRequestInput struct {
 	Currency *string `json:"currency,omitempty"`
 	DueDate  string  `json:"due_date"`
 	Purpose  string  `json:"purpose"`
-	// Justification — «Зачем платим» — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
+	// Priority — Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP
+	Priority *string `json:"priority,omitempty"`
+	// PaymentMethod — Форма оплаты: безналичная или наличные (без банковских реквизитов, платит касса)
+	PaymentMethod *string `json:"payment_method,omitempty"`
+	// Justification — Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
 	Justification *string                     `json:"justification,omitempty"`
 	Basis         *DocflowPaymentRequestBasis `json:"basis,omitempty"`
 }
@@ -8519,7 +8527,11 @@ type DocflowPaymentRequestUpdate struct {
 	Currency *string `json:"currency,omitempty"`
 	DueDate  string  `json:"due_date"`
 	Purpose  string  `json:"purpose"`
-	// Justification — «Зачем платим» — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
+	// Priority — Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP
+	Priority *string `json:"priority,omitempty"`
+	// PaymentMethod — Форма оплаты: безналичная или наличные (без банковских реквизитов, платит касса)
+	PaymentMethod *string `json:"payment_method,omitempty"`
+	// Justification — Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
 	Justification *string                     `json:"justification,omitempty"`
 	Basis         *DocflowPaymentRequestBasis `json:"basis,omitempty"`
 	Version       int64                       `json:"version"`
@@ -13140,9 +13152,22 @@ type MarketplaceOzonFunnel struct {
 }
 
 type MarketplaceOzonFunnelDaily struct {
-	Platform      string  `json:"platform"`
-	Source        *string `json:"source,omitempty"`
-	EstimateModel *string `json:"estimateModel,omitempty"`
+	// Slice — Срез ответа, когда запрошен slice
+	Slice      *string `json:"slice,omitempty"`
+	SliceValue *string `json:"sliceValue,omitempty"`
+	SliceLabel *string `json:"sliceLabel,omitempty"`
+	// Slices — Варианты срезов с числом артикулов
+	Slices map[string][]map[string]json.RawMessage `json:"slices,omitempty"`
+	// Breakdown — Итоги каждого артикула среза за окно
+	Breakdown         []map[string]json.RawMessage `json:"breakdown,omitempty"`
+	ArticlesTruncated *bool                        `json:"articlesTruncated,omitempty"`
+	// GroupBy — Чем разложен срез, когда запрошен groupBy
+	GroupBy *string `json:"groupBy,omitempty"`
+	// Groups — Группы среза по дням: value (пусто — артикулы без значения группы), label, count артикулов, series и totals только по groupMetrics. Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно; сверх 200 групп хвост сложен в одну строку с rest: true.
+	Groups        []map[string]json.RawMessage `json:"groups,omitempty"`
+	Platform      string                       `json:"platform"`
+	Source        *string                      `json:"source,omitempty"`
+	EstimateModel *string                      `json:"estimateModel,omitempty"`
 	// SKU — Артикул за который построена матрица
 	SKU  *string `json:"sku,omitempty"`
 	From *string `json:"from,omitempty"`
@@ -13226,6 +13251,16 @@ type MarketplaceOzonFunnelDailySeries struct {
 	RoiOrders       []*float64 `json:"roiOrders,omitempty"`
 	MarginTot       []*float64 `json:"marginTot"`
 	MarginSheetTot  []*float64 `json:"marginSheetTot"`
+	Sales           []*float64 `json:"sales,omitempty"`
+	SalesSum        []*float64 `json:"salesSum,omitempty"`
+	CostSales       []*float64 `json:"costSales,omitempty"`
+	Romi            []*float64 `json:"romi,omitempty"`
+	FeesSum         []*float64 `json:"feesSum,omitempty"`
+	CommissionSum   []*float64 `json:"commissionSum,omitempty"`
+	AcquiringSum    []*float64 `json:"acquiringSum,omitempty"`
+	LogisticsSum    []*float64 `json:"logisticsSum,omitempty"`
+	OtherSum        []*float64 `json:"otherSum,omitempty"`
+	TaxSum          []*float64 `json:"taxSum,omitempty"`
 }
 
 // MarketplaceOzonFunnelDailyTotals — Каждый итог — массив из одного значения, чтобы колонка ИТОГО рисовалась тем же кодом что и дни
@@ -13530,6 +13565,8 @@ type MarketplaceOzonStocksPage struct {
 	// Warehouses — Склады встреченные в выборке
 	Warehouses []string                      `json:"warehouses"`
 	Results    []MarketplaceOzonStockProduct `json:"results"`
+	// Truncated — Строк «товар × склад» больше предела 8000: хвост артикулов не пришёл, отсутствие товара не значит «остатка нет»
+	Truncated *bool `json:"truncated,omitempty"`
 }
 
 type MarketplaceOzonSyncJob struct {
@@ -13993,16 +14030,29 @@ type MarketplaceWbFunnel struct {
 }
 
 type MarketplaceWbFunnelDaily struct {
-	Platform      string  `json:"platform"`
-	Source        *string `json:"source,omitempty"`
-	EstimateModel *string `json:"estimateModel,omitempty"`
+	// Slice — Срез ответа, когда запрошен slice
+	Slice      *string `json:"slice,omitempty"`
+	SliceValue *string `json:"sliceValue,omitempty"`
+	SliceLabel *string `json:"sliceLabel,omitempty"`
+	// Slices — Варианты срезов с числом артикулов
+	Slices map[string][]map[string]json.RawMessage `json:"slices,omitempty"`
+	// Breakdown — Итоги каждого артикула среза за окно
+	Breakdown         []map[string]json.RawMessage `json:"breakdown,omitempty"`
+	ArticlesTruncated *bool                        `json:"articlesTruncated,omitempty"`
+	// GroupBy — Чем разложен срез, когда запрошен groupBy
+	GroupBy *string `json:"groupBy,omitempty"`
+	// Groups — Группы среза по дням: value (пусто — артикулы без значения группы), label, count артикулов, series и totals только по groupMetrics. Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно; сверх 200 групп хвост сложен в одну строку с rest: true.
+	Groups        []map[string]json.RawMessage `json:"groups,omitempty"`
+	Platform      string                       `json:"platform"`
+	Source        *string                      `json:"source,omitempty"`
+	EstimateModel *string                      `json:"estimateModel,omitempty"`
 	// SKU — Артикул поставщика выбранной строки
 	SKU  *string `json:"sku,omitempty"`
 	From *string `json:"from,omitempty"`
 	To   *string `json:"to,omitempty"`
 	// Days — Окно 14 дней по опорный включительно
 	Days []string `json:"days"`
-	// Series — Ряды по дням окна той же длины, что days. Ключи traffic, views, cv2, cart, cv3, orders, adShare, ordersSum, buyouts, buyoutsSum, avgBuyer, spp, position, adSpend, drrOrders, drrSales, buyoutRate, expectedUnits, expectedRevenue, costUnit, acquiringRate, commissionRate, logisticsUnit, otherUnit, taxRate, margin, marginSheet, umd, roi, roiOrders, marginTot и marginSheetTot. Отсутствующий источник даёт null, а не ложный ноль.
+	// Series — Ряды по дням окна той же длины, что days. Ключи traffic, views, cv2, cart, cv3, orders, adShare, ordersSum, buyouts, buyoutsSum, avgBuyer, spp, position, adSpend, drrOrders, drrSales, buyoutRate, expectedUnits, expectedRevenue, costUnit, acquiringRate, commissionRate, logisticsUnit, otherUnit, taxRate, margin, marginSheet, umd, roi, roiOrders, marginTot, marginSheetTot, sales, salesSum, costSales, romi и удержания в рублях: feesSum, commissionSum, acquiringSum, logisticsSum, otherSum, taxSum. Отсутствующий источник даёт null, а не ложный ноль.
 	Series map[string][]*float64 `json:"series"`
 	// Totals — Итог по каждому ряду одним элементом массива
 	Totals map[string][]*float64         `json:"totals,omitempty"`
@@ -14342,6 +14392,8 @@ type MarketplaceWbStockPage struct {
 	// Warehouses — Склады в порядке первого появления
 	Warehouses []string                    `json:"warehouses"`
 	Results    []MarketplaceWbStockProduct `json:"results"`
+	// Truncated — Строк «товар × склад» больше предела 8000: хвост артикулов не пришёл, отсутствие товара не значит «остатка нет»
+	Truncated *bool `json:"truncated,omitempty"`
 }
 
 type MarketplaceWbStockProduct struct {

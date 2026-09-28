@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0435f2eb60db2fcb5a856ff12f16822a17c57de2cdbffe148e13b27eddd9e255).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3559a81b0db1c002a2e835d5235e454c12a46edfff77388838833b13bfbf50f5).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -10143,8 +10143,12 @@ class _DocflowPaymentRequestRequired(TypedDict):
     currency: str
     due_date: str
     purpose: str
-    #: «Зачем платим» — обоснование автора для согласующего
+    #: Обоснование автора для согласующего
     justification: str
+    #: Приоритет оплаты
+    priority: Literal['high', 'normal', 'low']
+    #: Форма оплаты
+    payment_method: Literal['bank', 'cash']
     basis: "DocflowPaymentRequestBasis"
     #: Куда ушла согласованная заявка: снимок флага маршрута
     destination: Literal['', 'calendar', 'treasury']
@@ -10185,7 +10189,11 @@ class DocflowPaymentRequestInput(_DocflowPaymentRequestInputRequired, total=Fals
     contact_id: Optional["UUID"]
     item_id: Optional["UUID"]
     currency: str
-    #: «Зачем платим» — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
+    #: Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP
+    priority: Literal['high', 'normal', 'low']
+    #: Форма оплаты: безналичная или наличные (без банковских реквизитов, платит касса)
+    payment_method: Literal['bank', 'cash']
+    #: Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
     justification: str
     basis: "DocflowPaymentRequestBasis"
 
@@ -10242,7 +10250,11 @@ class DocflowPaymentRequestUpdate(_DocflowPaymentRequestUpdateRequired, total=Fa
     contact_id: Optional["UUID"]
     item_id: Optional["UUID"]
     currency: str
-    #: «Зачем платим» — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
+    #: Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP
+    priority: Literal['high', 'normal', 'low']
+    #: Форма оплаты: безналичная или наличные (без банковских реквизитов, платит касса)
+    payment_method: Literal['bank', 'cash']
+    #: Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
     justification: str
     basis: "DocflowPaymentRequestBasis"
 
@@ -14701,7 +14713,7 @@ class MarketplaceOzonFbsWarehouse(TypedDict):
 
 MarketplaceOzonFunnel = TypedDict("MarketplaceOzonFunnel", {"platform": Literal['ozon'], "source": Literal['ozon_analytics'], "from": str, "to": str, "totals": "MarketplaceOzonFunnelTotals", "rows": List["MarketplaceOzonFunnelRow"], "note": str, "analytics": bool}, total=False)
 
-MarketplaceOzonFunnelDaily = TypedDict("MarketplaceOzonFunnelDaily", {"platform": Literal['ozon'], "source": Literal['ozon_orders_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": "MarketplaceOzonFunnelDailySeries", "totals": "MarketplaceOzonFunnelDailyTotals", "card": "MarketplaceOzonFunnelDailyCard", "articles": List["MarketplaceOzonFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
+MarketplaceOzonFunnelDaily = TypedDict("MarketplaceOzonFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['ozon'], "source": Literal['ozon_orders_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": "MarketplaceOzonFunnelDailySeries", "totals": "MarketplaceOzonFunnelDailyTotals", "card": "MarketplaceOzonFunnelDailyCard", "articles": List["MarketplaceOzonFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
 
 class MarketplaceOzonFunnelDailyArticle(TypedDict):
     sku: str
@@ -14771,6 +14783,16 @@ class MarketplaceOzonFunnelDailySeries(_MarketplaceOzonFunnelDailySeriesRequired
     otherUnit: List[Optional[float]]
     taxRate: List[Optional[float]]
     roiOrders: List[Optional[float]]
+    sales: List[Optional[float]]
+    salesSum: List[Optional[float]]
+    costSales: List[Optional[float]]
+    romi: List[Optional[float]]
+    feesSum: List[Optional[float]]
+    commissionSum: List[Optional[float]]
+    acquiringSum: List[Optional[float]]
+    logisticsSum: List[Optional[float]]
+    otherSum: List[Optional[float]]
+    taxSum: List[Optional[float]]
 
 class _MarketplaceOzonFunnelDailyTotalsRequired(TypedDict):
     traffic: List[Optional[float]]
@@ -15030,11 +15052,15 @@ class _MarketplaceOzonStockWarehouseRequired(TypedDict):
 class MarketplaceOzonStockWarehouse(_MarketplaceOzonStockWarehouseRequired, total=False):
     cluster: str
 
-class MarketplaceOzonStocksPage(TypedDict):
+class _MarketplaceOzonStocksPageRequired(TypedDict):
     count: int
     #: Склады встреченные в выборке
     warehouses: List[str]
     results: List["MarketplaceOzonStockProduct"]
+
+class MarketplaceOzonStocksPage(_MarketplaceOzonStocksPageRequired, total=False):
+    #: Строк «товар × склад» больше предела 8000: хвост артикулов не пришёл, отсутствие товара не значит «остатка нет»
+    truncated: bool
 
 class MarketplaceOzonSyncJob(TypedDict):
     id: "UUID"
@@ -15480,7 +15506,7 @@ class MarketplaceWbFacets(TypedDict):
 
 MarketplaceWbFunnel = TypedDict("MarketplaceWbFunnel", {"platform": Literal['wildberries'], "store": str, "source": Literal['jam', 'v3', 'v3_pending'], "from": str, "to": str, "totals": "MarketplaceWbFunnelTotals", "rows": List["MarketplaceWbFunnelRow"], "note": str, "analytics": bool}, total=False)
 
-MarketplaceWbFunnelDaily = TypedDict("MarketplaceWbFunnelDaily", {"platform": Literal['wb'], "source": Literal['wb_orders_sales_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": Dict[str, List[Optional[float]]], "totals": Dict[str, List[Optional[float]]], "card": "MarketplaceWbFunnelDailyCard", "articles": List["MarketplaceWbFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
+MarketplaceWbFunnelDaily = TypedDict("MarketplaceWbFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['wb'], "source": Literal['wb_orders_sales_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": Dict[str, List[Optional[float]]], "totals": Dict[str, List[Optional[float]]], "card": "MarketplaceWbFunnelDailyCard", "articles": List["MarketplaceWbFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
 
 class MarketplaceWbFunnelDailyArticle(TypedDict):
     #: Артикул поставщика
@@ -15770,12 +15796,16 @@ class MarketplaceWbPromotions(_MarketplaceWbPromotionsRequired, total=False):
     #: Причина пустого списка: нет токена WB либо площадка недоступна
     note: str
 
-class MarketplaceWbStockPage(TypedDict):
+class _MarketplaceWbStockPageRequired(TypedDict):
     #: Число товаров, а не строк «товар × склад»
     count: int
     #: Склады в порядке первого появления
     warehouses: List[str]
     results: List["MarketplaceWbStockProduct"]
+
+class MarketplaceWbStockPage(_MarketplaceWbStockPageRequired, total=False):
+    #: Строк «товар × склад» больше предела 8000: хвост артикулов не пришёл, отсутствие товара не значит «остатка нет»
+    truncated: bool
 
 class MarketplaceWbStockProduct(TypedDict):
     store: "UUID"

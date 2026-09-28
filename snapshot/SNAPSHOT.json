@@ -61,14 +61,14 @@
       "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 4750965,
+      "bytes": 4763606,
       "path": "openapi/akeda-v1.json",
-      "sha256": "0435f2eb60db2fcb5a856ff12f16822a17c57de2cdbffe148e13b27eddd9e255"
+      "sha256": "3559a81b0db1c002a2e835d5235e454c12a46edfff77388838833b13bfbf50f5"
     },
     {
-      "bytes": 3602998,
+      "bytes": 3612760,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "a03ff5cd0a764b12260d8563459ed94f2feb174dbcb0105468d7c6ce67ec8f63"
+      "sha256": "0179ac1fa5926cf766745ca7a407141ebf20de1bc72055235e3d1bf744005e99"
     },
     {
       "bytes": 18414,
@@ -81,6 +81,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "beb751b8c19f2a6b91d8d68a481ba6013eea86a4ee2a9753389f6aaea041a3a3",
+  "snapshot_digest": "7194537be1e4e695fbf768b754cc8a8e084dc80817d33045341a5281451dc3fe",
   "snapshot_version": 1
 }

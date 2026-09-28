@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0435f2eb60db2fcb5a856ff12f16822a17c57de2cdbffe148e13b27eddd9e255).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3559a81b0db1c002a2e835d5235e454c12a46edfff77388838833b13bfbf50f5).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -8459,8 +8459,12 @@ export interface DocflowPaymentRequest {
   "currency": string;
   "due_date": string;
   "purpose": string;
-  /** «Зачем платим» — обоснование автора для согласующего */
+  /** Обоснование автора для согласующего */
   "justification": string;
+  /** Приоритет оплаты */
+  "priority": "high" | "normal" | "low";
+  /** Форма оплаты */
+  "payment_method": "bank" | "cash";
   "basis": DocflowPaymentRequestBasis;
   /** Куда ушла согласованная заявка: снимок флага маршрута */
   "destination": "" | "calendar" | "treasury";
@@ -8497,7 +8501,11 @@ export interface DocflowPaymentRequestInput {
   "currency"?: string;
   "due_date": string;
   "purpose": string;
-  /** «Зачем платим» — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет */
+  /** Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP */
+  "priority"?: "high" | "normal" | "low";
+  /** Форма оплаты: безналичная или наличные (без банковских реквизитов, платит касса) */
+  "payment_method"?: "bank" | "cash";
+  /** Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет */
   "justification"?: string;
   "basis"?: DocflowPaymentRequestBasis;
 }
@@ -8550,7 +8558,11 @@ export interface DocflowPaymentRequestUpdate {
   "currency"?: string;
   "due_date": string;
   "purpose": string;
-  /** «Зачем платим» — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет */
+  /** Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP */
+  "priority"?: "high" | "normal" | "low";
+  /** Форма оплаты: безналичная или наличные (без банковских реквизитов, платит касса) */
+  "payment_method"?: "bank" | "cash";
+  /** Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет */
   "justification"?: string;
   "basis"?: DocflowPaymentRequestBasis;
   "version": number;
@@ -13186,6 +13198,24 @@ export interface MarketplaceOzonFunnel {
 }
 
 export interface MarketplaceOzonFunnelDaily {
+  /** Срез ответа, когда запрошен slice */
+  "slice"?: string;
+  "sliceValue"?: string;
+  "sliceLabel"?: string;
+  /** Варианты срезов с числом артикулов */
+  "slices"?: { [key: string]: Array<{ [key: string]: unknown }> };
+  /** Итоги каждого артикула среза за окно */
+  "breakdown"?: Array<{ [key: string]: unknown }>;
+  "articlesTruncated"?: boolean;
+  /** Чем разложен срез, когда запрошен groupBy */
+  "groupBy"?: string;
+  /**
+   * Группы среза по дням: value (пусто — артикулы без значения группы),
+   * label, count артикулов, series и totals только по groupMetrics.
+   * Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно;
+   * сверх 200 групп хвост сложен в одну строку с rest: true.
+   */
+  "groups"?: Array<{ [key: string]: unknown }>;
   "platform": "ozon";
   "source"?: "ozon_orders_and_finance";
   "estimateModel"?: "sales_and_orders_weekly";
@@ -13275,6 +13305,16 @@ export interface MarketplaceOzonFunnelDailySeries {
   "roiOrders"?: Array<number | null>;
   "marginTot": Array<number | null>;
   "marginSheetTot": Array<number | null>;
+  "sales"?: Array<number | null>;
+  "salesSum"?: Array<number | null>;
+  "costSales"?: Array<number | null>;
+  "romi"?: Array<number | null>;
+  "feesSum"?: Array<number | null>;
+  "commissionSum"?: Array<number | null>;
+  "acquiringSum"?: Array<number | null>;
+  "logisticsSum"?: Array<number | null>;
+  "otherSum"?: Array<number | null>;
+  "taxSum"?: Array<number | null>;
 }
 
 /** Каждый итог — массив из одного значения, чтобы колонка ИТОГО рисовалась тем же кодом что и дни */
@@ -13578,6 +13618,8 @@ export interface MarketplaceOzonStocksPage {
   /** Склады встреченные в выборке */
   "warehouses": Array<string>;
   "results": Array<MarketplaceOzonStockProduct>;
+  /** Строк «товар × склад» больше предела 8000: хвост артикулов не пришёл, отсутствие товара не значит «остатка нет» */
+  "truncated"?: boolean;
 }
 
 export interface MarketplaceOzonSyncJob {
@@ -14041,6 +14083,24 @@ export interface MarketplaceWbFunnel {
 }
 
 export interface MarketplaceWbFunnelDaily {
+  /** Срез ответа, когда запрошен slice */
+  "slice"?: string;
+  "sliceValue"?: string;
+  "sliceLabel"?: string;
+  /** Варианты срезов с числом артикулов */
+  "slices"?: { [key: string]: Array<{ [key: string]: unknown }> };
+  /** Итоги каждого артикула среза за окно */
+  "breakdown"?: Array<{ [key: string]: unknown }>;
+  "articlesTruncated"?: boolean;
+  /** Чем разложен срез, когда запрошен groupBy */
+  "groupBy"?: string;
+  /**
+   * Группы среза по дням: value (пусто — артикулы без значения группы),
+   * label, count артикулов, series и totals только по groupMetrics.
+   * Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно;
+   * сверх 200 групп хвост сложен в одну строку с rest: true.
+   */
+  "groups"?: Array<{ [key: string]: unknown }>;
   "platform": "wb";
   "source"?: "wb_orders_sales_and_finance";
   "estimateModel"?: "sales_and_orders_weekly";
@@ -14056,7 +14116,9 @@ export interface MarketplaceWbFunnelDaily {
    * spp, position, adSpend, drrOrders, drrSales, buyoutRate,
    * expectedUnits, expectedRevenue, costUnit, acquiringRate,
    * commissionRate, logisticsUnit, otherUnit, taxRate, margin,
-   * marginSheet, umd, roi, roiOrders, marginTot и marginSheetTot.
+   * marginSheet, umd, roi, roiOrders, marginTot, marginSheetTot, sales,
+   * salesSum, costSales, romi и удержания в рублях: feesSum,
+   * commissionSum, acquiringSum, logisticsSum, otherSum, taxSum.
    * Отсутствующий источник даёт null, а не ложный ноль.
    */
   "series": { [key: string]: Array<number | null> };
@@ -14398,6 +14460,8 @@ export interface MarketplaceWbStockPage {
   /** Склады в порядке первого появления */
   "warehouses": Array<string>;
   "results": Array<MarketplaceWbStockProduct>;
+  /** Строк «товар × склад» больше предела 8000: хвост артикулов не пришёл, отсутствие товара не значит «остатка нет» */
+  "truncated"?: boolean;
 }
 
 export interface MarketplaceWbStockProduct {
