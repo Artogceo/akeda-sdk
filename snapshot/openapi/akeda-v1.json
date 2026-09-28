@@ -139987,6 +139987,11 @@
             "type": "string",
             "maxLength": 210
           },
+          "justification": {
+            "type": "string",
+            "maxLength": 4000,
+            "description": "«Зачем платим» — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет"
+          },
           "basis": {
             "$ref": "#/components/schemas/DocflowPaymentRequestBasis"
           }
@@ -140109,6 +140114,7 @@
           "currency",
           "due_date",
           "purpose",
+          "justification",
           "basis",
           "destination",
           "created_by_name",
@@ -140178,6 +140184,10 @@
           },
           "purpose": {
             "type": "string"
+          },
+          "justification": {
+            "type": "string",
+            "description": "«Зачем платим» — обоснование автора для согласующего"
           },
           "basis": {
             "$ref": "#/components/schemas/DocflowPaymentRequestBasis"

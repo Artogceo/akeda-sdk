@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 acc102e634289a792b8e0dfdec73b4540e10397d39c28bb74bb20aeb42c228c5).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0435f2eb60db2fcb5a856ff12f16822a17c57de2cdbffe148e13b27eddd9e255).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -8428,7 +8428,9 @@ type DocflowPaymentRequest struct {
 	Currency    string                     `json:"currency"`
 	DueDate     string                     `json:"due_date"`
 	Purpose     string                     `json:"purpose"`
-	Basis       DocflowPaymentRequestBasis `json:"basis"`
+	// Justification — «Зачем платим» — обоснование автора для согласующего
+	Justification string                     `json:"justification"`
+	Basis         DocflowPaymentRequestBasis `json:"basis"`
 	// Destination — Куда ушла согласованная заявка: снимок флага маршрута
 	Destination string `json:"destination"`
 	// Reason — Причина отказа или возврата на доработку
@@ -8460,11 +8462,13 @@ type DocflowPaymentRequestInput struct {
 	ItemID    *UUID                      `json:"item_id,omitempty"`
 	Payee     DocflowPaymentRequestPayee `json:"payee"`
 	// Amount — Сумма; не больше двух знаков копеек, лишние нули отбрасываются
-	Amount   string                      `json:"amount"`
-	Currency *string                     `json:"currency,omitempty"`
-	DueDate  string                      `json:"due_date"`
-	Purpose  string                      `json:"purpose"`
-	Basis    *DocflowPaymentRequestBasis `json:"basis,omitempty"`
+	Amount   string  `json:"amount"`
+	Currency *string `json:"currency,omitempty"`
+	DueDate  string  `json:"due_date"`
+	Purpose  string  `json:"purpose"`
+	// Justification — «Зачем платим» — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
+	Justification *string                     `json:"justification,omitempty"`
+	Basis         *DocflowPaymentRequestBasis `json:"basis,omitempty"`
 }
 
 type DocflowPaymentRequestList struct {
@@ -8511,12 +8515,14 @@ type DocflowPaymentRequestUpdate struct {
 	ItemID    *UUID                      `json:"item_id,omitempty"`
 	Payee     DocflowPaymentRequestPayee `json:"payee"`
 	// Amount — Сумма; не больше двух знаков копеек, лишние нули отбрасываются
-	Amount   string                      `json:"amount"`
-	Currency *string                     `json:"currency,omitempty"`
-	DueDate  string                      `json:"due_date"`
-	Purpose  string                      `json:"purpose"`
-	Basis    *DocflowPaymentRequestBasis `json:"basis,omitempty"`
-	Version  int64                       `json:"version"`
+	Amount   string  `json:"amount"`
+	Currency *string `json:"currency,omitempty"`
+	DueDate  string  `json:"due_date"`
+	Purpose  string  `json:"purpose"`
+	// Justification — «Зачем платим» — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
+	Justification *string                     `json:"justification,omitempty"`
+	Basis         *DocflowPaymentRequestBasis `json:"basis,omitempty"`
+	Version       int64                       `json:"version"`
 }
 
 type DocflowPaymentRequestVersion struct {

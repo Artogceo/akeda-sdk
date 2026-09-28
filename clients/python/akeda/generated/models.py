@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 acc102e634289a792b8e0dfdec73b4540e10397d39c28bb74bb20aeb42c228c5).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0435f2eb60db2fcb5a856ff12f16822a17c57de2cdbffe148e13b27eddd9e255).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -10143,6 +10143,8 @@ class _DocflowPaymentRequestRequired(TypedDict):
     currency: str
     due_date: str
     purpose: str
+    #: «Зачем платим» — обоснование автора для согласующего
+    justification: str
     basis: "DocflowPaymentRequestBasis"
     #: Куда ушла согласованная заявка: снимок флага маршрута
     destination: Literal['', 'calendar', 'treasury']
@@ -10183,6 +10185,8 @@ class DocflowPaymentRequestInput(_DocflowPaymentRequestInputRequired, total=Fals
     contact_id: Optional["UUID"]
     item_id: Optional["UUID"]
     currency: str
+    #: «Зачем платим» — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
+    justification: str
     basis: "DocflowPaymentRequestBasis"
 
 class DocflowPaymentRequestList(TypedDict):
@@ -10238,6 +10242,8 @@ class DocflowPaymentRequestUpdate(_DocflowPaymentRequestUpdateRequired, total=Fa
     contact_id: Optional["UUID"]
     item_id: Optional["UUID"]
     currency: str
+    #: «Зачем платим» — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
+    justification: str
     basis: "DocflowPaymentRequestBasis"
 
 class DocflowPaymentRequestVersion(TypedDict):
