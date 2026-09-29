@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d095bc72bcefdbd3f224ba4fe5e7f71c6dca91d1e26987d99e7d79d382ec4b28).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 027397b6bb2b815685fb3e2dbc880fe1c1ec6239ea1fbee72b3acde48245c27b).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -4654,6 +4654,10 @@ type CoreOrder struct {
 	ContractDate *string            `json:"contract_date,omitempty"`
 	Progress     *CoreOrderProgress `json:"progress,omitempty"`
 	ProjectID    *UUID              `json:"project_id,omitempty"`
+	// DepartmentID — Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	DepartmentID map[string]json.RawMessage `json:"department_id,omitempty"`
+	// CfoID — ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	CfoID map[string]json.RawMessage `json:"cfo_id,omitempty"`
 	// PNLItemID — Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья
 	PNLItemID map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
 	// ExecutionCutover — Бизнес заказа прошёл отсечку этапа 4: исполнения пишут «Заказы» и выручку, «Сделать акт» на экране одна
@@ -4898,7 +4902,11 @@ type CoreOrderImportInput struct {
 	Counterparty *CoreOrderCounterparty `json:"counterparty,omitempty"`
 	ContractID   *UUID                  `json:"contract_id,omitempty"`
 	ProjectID    *UUID                  `json:"project_id,omitempty"`
-	WarehouseID  *UUID                  `json:"warehouse_id,omitempty"`
+	// DepartmentID — Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	DepartmentID map[string]json.RawMessage `json:"department_id,omitempty"`
+	// CfoID — ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	CfoID       map[string]json.RawMessage `json:"cfo_id,omitempty"`
+	WarehouseID *UUID                      `json:"warehouse_id,omitempty"`
 	// BasisID — Основание — например, заявка на закупку
 	BasisID  *UUID   `json:"basis_id,omitempty"`
 	Title    *string `json:"title,omitempty"`
@@ -4941,6 +4949,10 @@ type CoreOrderInput struct {
 	Counterparty *CoreOrderCounterparty `json:"counterparty,omitempty"`
 	ContractID   *UUID                  `json:"contract_id,omitempty"`
 	ProjectID    *UUID                  `json:"project_id,omitempty"`
+	// DepartmentID — Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	DepartmentID map[string]json.RawMessage `json:"department_id,omitempty"`
+	// CfoID — ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	CfoID map[string]json.RawMessage `json:"cfo_id,omitempty"`
 	// PNLItemID — Статья исполнений заказа; не названа при правке — сохраняется прежняя
 	PNLItemID   map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
 	WarehouseID *UUID                      `json:"warehouse_id,omitempty"`
@@ -5058,6 +5070,10 @@ type CoreOrderNowInput struct {
 	Counterparty *CoreOrderCounterparty `json:"counterparty,omitempty"`
 	ContractID   *UUID                  `json:"contract_id,omitempty"`
 	ProjectID    *UUID                  `json:"project_id,omitempty"`
+	// DepartmentID — Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	DepartmentID map[string]json.RawMessage `json:"department_id,omitempty"`
+	// CfoID — ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	CfoID map[string]json.RawMessage `json:"cfo_id,omitempty"`
 	// PNLItemID — Статья выручки (у закупки — расхода) исполнения; пусто — по учётной политике бизнеса
 	PNLItemID   map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
 	WarehouseID *UUID                      `json:"warehouse_id,omitempty"`
@@ -5173,7 +5189,11 @@ type CoreOrderRevision struct {
 	Counterparty *CoreOrderCounterparty `json:"counterparty,omitempty"`
 	ContractID   *UUID                  `json:"contract_id,omitempty"`
 	ProjectID    *UUID                  `json:"project_id,omitempty"`
-	WarehouseID  *UUID                  `json:"warehouse_id,omitempty"`
+	// DepartmentID — Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	DepartmentID map[string]json.RawMessage `json:"department_id,omitempty"`
+	// CfoID — ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	CfoID       map[string]json.RawMessage `json:"cfo_id,omitempty"`
+	WarehouseID *UUID                      `json:"warehouse_id,omitempty"`
 	// BasisID — Основание — например, заявка на закупку
 	BasisID  *UUID   `json:"basis_id,omitempty"`
 	Title    *string `json:"title,omitempty"`
@@ -5471,23 +5491,25 @@ type CoreProductAxisValue struct {
 }
 
 type CoreProductBulkPatch struct {
-	Ids           []UUID `json:"ids"`
-	FolderID      *UUID  `json:"folder_id,omitempty"`
-	IsSellable    *bool  `json:"is_sellable,omitempty"`
-	IsStockable   *bool  `json:"is_stockable,omitempty"`
-	IsPurchasable *bool  `json:"is_purchasable,omitempty"`
-	IsProducible  *bool  `json:"is_producible,omitempty"`
+	Ids        []UUID `json:"ids"`
+	FolderID   *UUID  `json:"folder_id,omitempty"`
+	IsSellable *bool  `json:"is_sellable,omitempty"`
+	// IsStockable — Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547)
+	IsStockable   *bool `json:"is_stockable,omitempty"`
+	IsPurchasable *bool `json:"is_purchasable,omitempty"`
+	IsProducible  *bool `json:"is_producible,omitempty"`
 }
 
 type CoreProductCreate struct {
-	SKU             *string                    `json:"sku,omitempty"`
-	Name            string                     `json:"name"`
-	Unit            *string                    `json:"unit,omitempty"`
-	UnitID          *UUID                      `json:"unit_id,omitempty"`
-	Price           *string                    `json:"price,omitempty"`
-	ExternalID      *string                    `json:"external_id,omitempty"`
-	Kind            *CoreProductKind           `json:"kind,omitempty"`
-	IsSellable      *bool                      `json:"is_sellable,omitempty"`
+	SKU        *string          `json:"sku,omitempty"`
+	Name       string           `json:"name"`
+	Unit       *string          `json:"unit,omitempty"`
+	UnitID     *UUID            `json:"unit_id,omitempty"`
+	Price      *string          `json:"price,omitempty"`
+	ExternalID *string          `json:"external_id,omitempty"`
+	Kind       *CoreProductKind `json:"kind,omitempty"`
+	IsSellable *bool            `json:"is_sellable,omitempty"`
+	// IsStockable — Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547)
 	IsStockable     *bool                      `json:"is_stockable,omitempty"`
 	IsPurchasable   *bool                      `json:"is_purchasable,omitempty"`
 	IsProducible    *bool                      `json:"is_producible,omitempty"`
@@ -5772,19 +5794,20 @@ type CoreProductPage struct {
 }
 
 type CoreProductPatch struct {
-	SKU           *string          `json:"sku,omitempty"`
-	Name          *string          `json:"name,omitempty"`
-	Unit          *string          `json:"unit,omitempty"`
-	UnitID        *UUID            `json:"unit_id,omitempty"`
-	Price         *string          `json:"price,omitempty"`
-	ExternalID    *string          `json:"external_id,omitempty"`
-	Kind          *CoreProductKind `json:"kind,omitempty"`
-	IsSellable    *bool            `json:"is_sellable,omitempty"`
-	IsStockable   *bool            `json:"is_stockable,omitempty"`
-	IsPurchasable *bool            `json:"is_purchasable,omitempty"`
-	IsProducible  *bool            `json:"is_producible,omitempty"`
-	CategoryID    *UUID            `json:"category_id,omitempty"`
-	FolderID      *UUID            `json:"folder_id,omitempty"`
+	SKU        *string          `json:"sku,omitempty"`
+	Name       *string          `json:"name,omitempty"`
+	Unit       *string          `json:"unit,omitempty"`
+	UnitID     *UUID            `json:"unit_id,omitempty"`
+	Price      *string          `json:"price,omitempty"`
+	ExternalID *string          `json:"external_id,omitempty"`
+	Kind       *CoreProductKind `json:"kind,omitempty"`
+	IsSellable *bool            `json:"is_sellable,omitempty"`
+	// IsStockable — Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547)
+	IsStockable   *bool `json:"is_stockable,omitempty"`
+	IsPurchasable *bool `json:"is_purchasable,omitempty"`
+	IsProducible  *bool `json:"is_producible,omitempty"`
+	CategoryID    *UUID `json:"category_id,omitempty"`
+	FolderID      *UUID `json:"folder_id,omitempty"`
 	// PurchasePrice — Закупочная цена десятичной строкой; подставляется в строку приёмки
 	PurchasePrice *string `json:"purchase_price,omitempty"`
 	// VATKind — Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)
@@ -6764,10 +6787,12 @@ type DocflowApprovalBlockers struct {
 	SendToBank         DocflowApprovalActionCheck `json:"send_to_bank"`
 	CanSubmit          bool                       `json:"can_submit"`
 	CanDecide          bool                       `json:"can_decide"`
-	CanCancel          bool                       `json:"can_cancel"`
-	CanResubmit        bool                       `json:"can_resubmit"`
-	MatchedRouteID     *UUID                      `json:"matched_route_id,omitempty"`
-	MatchedRouteName   *string                    `json:"matched_route_name,omitempty"`
+	// CanAcknowledge — У человека есть неотмеченное «ознакомиться» в этом проходе — своё или делегированное
+	CanAcknowledge   *bool   `json:"can_acknowledge,omitempty"`
+	CanCancel        bool    `json:"can_cancel"`
+	CanResubmit      bool    `json:"can_resubmit"`
+	MatchedRouteID   *UUID   `json:"matched_route_id,omitempty"`
+	MatchedRouteName *string `json:"matched_route_name,omitempty"`
 	// EditingStaysUnlocked — Всегда истинно: редактирование карточки согласование не глушит
 	EditingStaysUnlocked bool `json:"editing_stays_unlocked"`
 }
@@ -6775,6 +6800,41 @@ type DocflowApprovalBlockers struct {
 type DocflowApprovalCancelInput struct {
 	// Comment — Причина отзыва остаётся в истории прохода
 	Comment string `json:"comment"`
+}
+
+// DocflowApprovalChainPreview — Кто согласует предмет по его фактам: маршрут, этапы, пропуски по сумме и люди.
+type DocflowApprovalChainPreview struct {
+	// Outcome — auto — маршрут подошёл, но все его этапы согласования отсечены порогами по сумме: предмет согласуется автоматически, без виз
+	Outcome string `json:"outcome"`
+	// Required — Согласование вида объявлено обязательным
+	Required  bool    `json:"required"`
+	RouteID   *UUID   `json:"route_id,omitempty"`
+	RouteName *string `json:"route_name,omitempty"`
+	// RouteStandard — Подобран стандартный маршрут: ни один маршрут кабинета не подошёл
+	RouteStandard      *bool                       `json:"route_standard,omitempty"`
+	PaymentDestination *string                     `json:"payment_destination,omitempty"`
+	Stages             []DocflowApprovalChainStage `json:"stages"`
+}
+
+// DocflowApprovalChainStage — Этап маршрута глазами «кто согласует» до отправки.
+type DocflowApprovalChainStage struct {
+	Position int64   `json:"position"`
+	Title    *string `json:"title,omitempty"`
+	// StageKind — Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve
+	StageKind     *string `json:"stage_kind,omitempty"`
+	Mode          string  `json:"mode"`
+	AssigneeKind  string  `json:"assignee_kind"`
+	AssigneeLabel *string `json:"assignee_label,omitempty"`
+	// MinAmount — Лимит этапа: выполняется при сумме от этого значения
+	MinAmount *string `json:"min_amount,omitempty"`
+	DueHours  *int64  `json:"due_hours,omitempty"`
+	// Applies — Этап выполнится при этих фактах
+	Applies bool `json:"applies"`
+	// SkipReason — Почему этап не выполнится
+	SkipReason *string `json:"skip_reason,omitempty"`
+	// Problem — Этап выполнится, но спросить некого
+	Problem *string                 `json:"problem,omitempty"`
+	People  []DocflowApprovalPerson `json:"people"`
 }
 
 // DocflowApprovalDecisionInput — Одно решение. Комментарий обязателен у return и reject и не требуется у approve: отказ без слов отправляет автора чинить неизвестно что.
@@ -6812,7 +6872,7 @@ type DocflowApprovalDirectories struct {
 type DocflowApprovalEvent struct {
 	ID            UUID   `json:"id"`
 	StagePosition *int64 `json:"stage_position,omitempty"`
-	// Action — operator_* — ответ оператору по входящему пакету ЭДО после прохода (настройка подключения reply_after_approval); comment несёт слова оператора или машинный код отказа docflow.edo.*
+	// Action — auto_approved — согласовано автоматически: сумма меньше порогов маршрута. operator_* — ответ оператору по входящему пакету ЭДО после прохода (настройка подключения reply_after_approval); comment несёт слова оператора или машинный код отказа docflow.edo.*
 	Action    string  `json:"action"`
 	UserID    *int64  `json:"user_id,omitempty"`
 	UserName  *string `json:"user_name,omitempty"`
@@ -6845,6 +6905,8 @@ type DocflowApprovalInboxItem struct {
 	OnBehalfVia *string `json:"on_behalf_via,omitempty"`
 	// ReturnedToMe — Истинно у собственной отправки, которую вернули на доработку
 	ReturnedToMe bool `json:"returned_to_me"`
+	// Informational — Строка этапа «ознакомиться»: решения не ждут, нужна отметка POST /approvals/{id}/acknowledge
+	Informational *bool `json:"informational,omitempty"`
 }
 
 type DocflowApprovalInboxPage struct {
@@ -6883,7 +6945,7 @@ type DocflowApprovalReview struct {
 	DecidedByName *string `json:"decided_by_name,omitempty"`
 	DecidedVia    *string `json:"decided_via,omitempty"`
 	DelegatedTo   *int64  `json:"delegated_to,omitempty"`
-	// Decision — Пусто, пока человек не решил
+	// Decision — Пусто, пока человек не решил; acknowledge — отметка «ознакомлен» на этапе ознакомления
 	Decision *string `json:"decision,omitempty"`
 	// Comment — Обязателен у return и reject: без слов автор не узнает, что исправлять
 	Comment   *string `json:"comment,omitempty"`
@@ -6921,6 +6983,8 @@ type DocflowApprovalRoute struct {
 	ReworkMode string `json:"rework_mode"`
 	// PaymentDestination — Для заявки на оплату (docflow / payment_request): куда идёт согласованная — сразу в платёжный календарь (дата оплаты = срок) или казначею, который ставит дату платежа (ERP-1427, этап 6)
 	PaymentDestination *string `json:"payment_destination,omitempty"`
+	// SystemKey — Код стандартного маршрута кабинета. Его заводит система выключенным; включённый, он подбирается последним — когда ни один другой маршрут не подошёл. Пусто — маршрут заведён кабинетом
+	SystemKey *string `json:"system_key,omitempty"`
 	// IsActive — Выключенный маршрут не подбирается новым проходам, но остаётся на месте
 	IsActive  bool                        `json:"is_active"`
 	Stages    []DocflowApprovalRouteStage `json:"stages"`
@@ -6936,7 +7000,7 @@ type DocflowApprovalRouteList struct {
 	Items []DocflowApprovalRoute `json:"items"`
 }
 
-// DocflowApprovalRouteStage — Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался».
+// DocflowApprovalRouteStage — Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался». Согласующий может быть не выбран (способ назван, ссылки нет) только у выключенного маршрута: так сеется этап «Финансы» стандартного маршрута заявок.
 type DocflowApprovalRouteStage struct {
 	ID *UUID `json:"id,omitempty"`
 	// Position — Порядок этапа в маршруте
@@ -6948,6 +7012,8 @@ type DocflowApprovalRouteStage struct {
 	AssigneeRoleID       *UUID   `json:"assignee_role_id,omitempty"`
 	// AssigneeLabel — Как назначение читается человеком. Подставляется на чтении; в шаблоне не хранится
 	AssigneeLabel *string `json:"assignee_label,omitempty"`
+	// StageKind — Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve
+	StageKind *string `json:"stage_kind,omitempty"`
 	// Mode — Решают все или достаточно одного. Кворума с процентом нет
 	Mode string `json:"mode"`
 	// DueHours — Срок ЭТАПА в часах. Просрочка даёт напоминание и эскалацию на одно звено; автоотклонения по сроку нет
@@ -6958,19 +7024,22 @@ type DocflowApprovalRouteStage struct {
 
 // DocflowApprovalStage — Этап ПРОХОДА: кого спросили на самом деле. Состояние skipped означает «этап не выполняется, его лимит по сумме не достигнут»; строка всё равно есть, чтобы человек видел, ПОЧЕМУ финансового директора не спросили.
 type DocflowApprovalStage struct {
-	ID            UUID                    `json:"id"`
-	Position      int64                   `json:"position"`
-	Title         *string                 `json:"title,omitempty"`
-	Mode          string                  `json:"mode"`
-	AssigneeKind  string                  `json:"assignee_kind"`
-	AssigneeLabel *string                 `json:"assignee_label,omitempty"`
-	MinAmount     *string                 `json:"min_amount,omitempty"`
-	DueHours      *int64                  `json:"due_hours,omitempty"`
-	DueAt         *string                 `json:"due_at,omitempty"`
-	State         string                  `json:"state"`
-	StartedAt     *string                 `json:"started_at,omitempty"`
-	DecidedAt     *string                 `json:"decided_at,omitempty"`
-	Reviews       []DocflowApprovalReview `json:"reviews"`
+	ID       UUID    `json:"id"`
+	Position int64   `json:"position"`
+	Title    *string `json:"title,omitempty"`
+	// StageKind — Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve
+	StageKind     *string `json:"stage_kind,omitempty"`
+	Mode          string  `json:"mode"`
+	AssigneeKind  string  `json:"assignee_kind"`
+	AssigneeLabel *string `json:"assignee_label,omitempty"`
+	MinAmount     *string `json:"min_amount,omitempty"`
+	DueHours      *int64  `json:"due_hours,omitempty"`
+	DueAt         *string `json:"due_at,omitempty"`
+	// State — notified — этап ознакомления известил участников и пропустил проход дальше; acknowledged — все отметились
+	State     string                  `json:"state"`
+	StartedAt *string                 `json:"started_at,omitempty"`
+	DecidedAt *string                 `json:"decided_at,omitempty"`
+	Reviews   []DocflowApprovalReview `json:"reviews"`
 }
 
 // DocflowApprovalSubject — Предмет согласования НЕЙТРАЛЬНОЙ ТРОЙКОЙ «модуль — вид — идентификатор». Внешнего ключа на предмет нет вовсе: без этого приёма к заявке на оплату, живущей в модуле finance (счета, выписки и расчёты), лист было бы не прицепить.
@@ -7010,6 +7079,8 @@ type DocflowApprovalSubjectState struct {
 	// Approval — Отсутствует, пока предмет ни разу не отправляли
 	Approval *DocflowApproval            `json:"approval,omitempty"`
 	Facts    DocflowApprovalSubjectFacts `json:"facts"`
+	// Preview — Кто согласует, если отправить сейчас; есть, только когда открытого или согласованного прохода нет
+	Preview *DocflowApprovalChainPreview `json:"preview,omitempty"`
 }
 
 // DocflowApprovalSubstitution — Замещение согласующего на период. Бессрочное замещение законно — ends_on можно не называть.
@@ -7153,6 +7224,8 @@ type DocflowConnection struct {
 	HasCredentials bool `json:"has_credentials"`
 	// ReadOnly — Действующее ограничение: отправка, подписание и изменение состояний в ЭДО отключены
 	ReadOnly bool `json:"read_only"`
+	// DraftWrite — Режим «Черновики в ЭДО» (ERP-1551): при read_only=true оператору уходят черновики; подпись, отправка и ответы остаются закрытыми
+	DraftWrite *bool `json:"draft_write,omitempty"`
 	// ReplyAfterApproval — «После нашего согласования — ответить у оператора». Когда проход внутреннего маршрута по входящему пакету закончен, документооборот выполняет у оператора действие текущего этапа: «согласован» — «Утвердить», «отклонён» — «Отклонить» с причиной из визы. Этап с подписью не закрывается: пакет ждёт человека в «Ждут меня → Подписать». Итог — строкой журнала прохода (operator_*). По умолчанию выключено.
 	ReplyAfterApproval bool `json:"reply_after_approval"`
 	// ExternalOrgID — Идентификатор нашей организации у оператора; выясняется сопоставлением по ИНН и КПП, руками не вводится
@@ -7194,9 +7267,11 @@ type DocflowConnectionList struct {
 	Results []DocflowConnection `json:"results"`
 }
 
-// DocflowConnectionModeInput — Явный выбор режима. false разрешает юридически значимые действия через это подключение; true немедленно возвращает безопасный режим.
+// DocflowConnectionModeInput — Явный выбор режима. mode: read_only — только чтение; drafts — «Черновики в ЭДО» (ERP-1551): оператору уходят только черновики, подпись, отправка и ответы закрыты; write — все действия. Прежняя форма read_only (true — read_only, false — write) принимается, если mode не задан. Без обоих полей — 400 docflow.mode_required.
 type DocflowConnectionModeInput struct {
-	ReadOnly bool `json:"read_only"`
+	Mode *string `json:"mode,omitempty"`
+	// ReadOnly — Прежняя форма; используется, только когда mode не задан
+	ReadOnly *bool `json:"read_only,omitempty"`
 }
 
 // DocflowConnectionPatch — Частичное изменение. Учётные данные обновляются только всеми тремя значениями сразу: у оператора это одно неделимое сочетание.
@@ -8039,6 +8114,8 @@ type DocflowInvitationSender struct {
 	ProviderName *string `json:"provider_name,omitempty"`
 	Status       string  `json:"status"`
 	ReadOnly     bool    `json:"read_only"`
+	// DraftWrite — Режим «Черновики в ЭДО»: черновик у оператора записывается и при read_only=true
+	DraftWrite *bool `json:"draft_write,omitempty"`
 	// ExternalOrgID — Идентификатор собственного абонентского ящика; пусто — нужно повторно проверить связь
 	ExternalOrgID string `json:"external_org_id"`
 }
@@ -8362,8 +8439,10 @@ type DocflowPaymentDetails struct {
 	Date    DocflowPaymentField          `json:"date"`
 	Basis   DocflowPaymentField          `json:"basis"`
 	// Contract — НАША карточка договора, к которой привязан конверт. Рядом с basis, а не вместо него: basis — строка из чужой бумаги («по договору №17»), contract — карточка в кабинете, по которой договор открывается. Строку в карточку сервер не превращает: угадывать договор по номеру из PDF значит однажды повесить платёж на чужую бумагу. Заполнено только там, где связь «конверт ↔ карточка» уже записана человеком и договор ровно один; два договора дают null — выбирать за человека нельзя.
-	Contract  *UUID               `json:"contract,omitempty"`
-	Subject   DocflowPaymentField `json:"subject"`
+	Contract *UUID               `json:"contract,omitempty"`
+	Subject  DocflowPaymentField `json:"subject"`
+	// Purpose — Назначение платежа словами поставщика — строка у подписи «Назначение платежа» в счёте; пусто — не названо, форма собирает своё
+	Purpose   DocflowPaymentField `json:"purpose"`
 	VATAmount DocflowPaymentField `json:"vat_amount"`
 	// VATWithout — В счёте стояла отметка «без налога (НДС)». Пустая сумма при снятой отметке означает «про налог не сказано», а не «налога нет»
 	VATWithout bool `json:"vat_without"`
@@ -8437,17 +8516,23 @@ type DocflowPaymentRequest struct {
 	Basis         DocflowPaymentRequestBasis `json:"basis"`
 	// Destination — Куда ушла согласованная заявка: снимок флага маршрута
 	Destination string `json:"destination"`
-	// Reason — Причина отказа или возврата на доработку
-	Reason        *string                       `json:"reason,omitempty"`
-	Payment       *DocflowPaymentRequestPayment `json:"payment,omitempty"`
-	CreatedBy     *int64                        `json:"created_by,omitempty"`
-	CreatedByName string                        `json:"created_by_name"`
-	CreatedAt     string                        `json:"created_at"`
-	UpdatedAt     string                        `json:"updated_at"`
-	Version       int64                         `json:"version"`
-	CanEdit       bool                          `json:"can_edit"`
-	CanSubmit     bool                          `json:"can_submit"`
-	CanCancel     bool                          `json:"can_cancel"`
+	// Reason — Причина отказа, возврата на доработку или отклонения казначеем
+	Reason  *string                       `json:"reason,omitempty"`
+	Payment *DocflowPaymentRequestPayment `json:"payment,omitempty"`
+	// FinanceRequestID — Строка очереди оплат модуля finance, куда ушла согласованная заявка
+	FinanceRequestID *UUID `json:"finance_request_id,omitempty"`
+	// ApprovalAuto — Согласована автоматически: маршрута для заявки нет и согласование не обязательно, прохода согласования не было
+	ApprovalAuto bool `json:"approval_auto"`
+	// RejectedByFinance — Согласованную заявку отклонил казначей в модуле finance; причина — в reason
+	RejectedByFinance bool   `json:"rejected_by_finance"`
+	CreatedBy         *int64 `json:"created_by,omitempty"`
+	CreatedByName     string `json:"created_by_name"`
+	CreatedAt         string `json:"created_at"`
+	UpdatedAt         string `json:"updated_at"`
+	Version           int64  `json:"version"`
+	CanEdit           bool   `json:"can_edit"`
+	CanSubmit         bool   `json:"can_submit"`
+	CanCancel         bool   `json:"can_cancel"`
 }
 
 type DocflowPaymentRequestBasis struct {
@@ -9367,6 +9452,16 @@ type FinanceBalanceSection struct {
 	Label string               `json:"label"`
 	Total string               `json:"total"`
 	Items []FinanceBalanceItem `json:"items"`
+}
+
+type FinanceBankLookup struct {
+	DirectoryConfigured bool                   `json:"directory_configured"`
+	Bank                *FinanceRequisitesBank `json:"bank"`
+}
+
+type FinanceBankSuggestions struct {
+	DirectoryConfigured bool                    `json:"directory_configured"`
+	Banks               []FinanceRequisitesBank `json:"banks"`
 }
 
 type FinanceCashOperation struct {
@@ -11085,6 +11180,10 @@ type FinanceRequisitesBank struct {
 	BIC                  string `json:"bic"`
 	CorrespondentAccount string `json:"correspondent_account"`
 	City                 string `json:"city"`
+	// INN — ИНН банка; пусто — справочник не назвал
+	INN *string `json:"inn,omitempty"`
+	// KPP — КПП банка; пусто — справочник не назвал
+	KPP *string `json:"kpp,omitempty"`
 }
 
 type FinanceRequisitesLookup struct {
@@ -16787,8 +16886,10 @@ type StockDocumentPatch struct {
 
 // StockDocumentPayload — Содержимое складского документа. Разбор строгий — незнакомое поле отклоняется. У документа-факта, заявки, заказа и резерва `items` обязателен и не длиннее 1000 строк.
 type StockDocumentPayload struct {
-	Version    int64   `json:"version"`
-	Reason     *string `json:"reason,omitempty"`
+	Version int64   `json:"version"`
+	Reason  *string `json:"reason,omitempty"`
+	// ReasonID — Причина списания из справочника stock.stock_writeoff_reasons. Есть только у списания. Текст reason при этом остаётся: ссылка даёт единое значение причины, текст несёт подробности. Не прислан — сервер сам пробует узнать текст в справочнике; прислан явно, в том числе null, — решение вызывающего не переигрывается; неизвестная ссылка отклоняется
+	ReasonID   *UUID   `json:"reason_id,omitempty"`
 	DesiredAt  *string `json:"desired_at,omitempty"`
 	DeliveryAt *string `json:"delivery_at,omitempty"`
 	// ExpiresAt — Срок резерва; не раньше даты документа
@@ -17641,9 +17742,11 @@ type StockSettings struct {
 	// AutoCancelExpiredReservations — Снимать просроченные резервы автоматически
 	AutoCancelExpiredReservations bool `json:"auto_cancel_expired_reservations"`
 	// TransferCarriesReservation — Перемещение зарезервированного: везти резерв на склад-получатель вместо отказа
-	TransferCarriesReservation bool   `json:"transfer_carries_reservation"`
-	DefaultReservationDays     int64  `json:"default_reservation_days"`
-	UpdatedAt                  string `json:"updated_at"`
+	TransferCarriesReservation bool `json:"transfer_carries_reservation"`
+	// PurchaseRequestsEnabled — Кабинет работает с заявками на закупку (ERP-1523). Выключено — новая заявка не заводится, открытые учитываются до закрытия. Пока владелец не выбирал, следует факту: включено, если заявки в кабинете уже заводили
+	PurchaseRequestsEnabled bool   `json:"purchase_requests_enabled"`
+	DefaultReservationDays  int64  `json:"default_reservation_days"`
+	UpdatedAt               string `json:"updated_at"`
 }
 
 type StockSettingsPatch struct {
@@ -17651,6 +17754,7 @@ type StockSettingsPatch struct {
 	BlockReservationOverAvailable *bool  `json:"block_reservation_over_available,omitempty"`
 	AutoCancelExpiredReservations *bool  `json:"auto_cancel_expired_reservations,omitempty"`
 	TransferCarriesReservation    *bool  `json:"transfer_carries_reservation,omitempty"`
+	PurchaseRequestsEnabled       *bool  `json:"purchase_requests_enabled,omitempty"`
 	DefaultReservationDays        *int64 `json:"default_reservation_days,omitempty"`
 }
 

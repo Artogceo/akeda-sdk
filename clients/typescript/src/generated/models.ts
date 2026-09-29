@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d095bc72bcefdbd3f224ba4fe5e7f71c6dca91d1e26987d99e7d79d382ec4b28).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 027397b6bb2b815685fb3e2dbc880fe1c1ec6239ea1fbee72b3acde48245c27b).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -4667,6 +4667,10 @@ export interface CoreOrder {
   "contract_date"?: string;
   "progress"?: CoreOrderProgress;
   "project_id"?: UUID;
+  /** Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  "department_id"?: { [key: string]: unknown };
+  /** ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  "cfo_id"?: { [key: string]: unknown };
   /** Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья */
   "pnl_item_id"?: { [key: string]: unknown };
   /** Бизнес заказа прошёл отсечку этапа 4: исполнения пишут «Заказы» и выручку, «Сделать акт» на экране одна */
@@ -4911,6 +4915,10 @@ export interface CoreOrderImportInput {
   "counterparty"?: CoreOrderCounterparty;
   "contract_id"?: UUID;
   "project_id"?: UUID;
+  /** Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  "department_id"?: { [key: string]: unknown };
+  /** ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  "cfo_id"?: { [key: string]: unknown };
   "warehouse_id"?: UUID;
   /** Основание — например, заявка на закупку */
   "basis_id"?: UUID;
@@ -4954,6 +4962,10 @@ export interface CoreOrderInput {
   "counterparty"?: CoreOrderCounterparty;
   "contract_id"?: UUID;
   "project_id"?: UUID;
+  /** Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  "department_id"?: { [key: string]: unknown };
+  /** ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  "cfo_id"?: { [key: string]: unknown };
   /** Статья исполнений заказа; не названа при правке — сохраняется прежняя */
   "pnl_item_id"?: { [key: string]: unknown };
   "warehouse_id"?: UUID;
@@ -5071,6 +5083,10 @@ export interface CoreOrderNowInput {
   "counterparty"?: CoreOrderCounterparty;
   "contract_id"?: UUID;
   "project_id"?: UUID;
+  /** Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  "department_id"?: { [key: string]: unknown };
+  /** ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  "cfo_id"?: { [key: string]: unknown };
   /** Статья выручки (у закупки — расхода) исполнения; пусто — по учётной политике бизнеса */
   "pnl_item_id"?: { [key: string]: unknown };
   "warehouse_id"?: UUID;
@@ -5186,6 +5202,10 @@ export interface CoreOrderRevision {
   "counterparty"?: CoreOrderCounterparty;
   "contract_id"?: UUID;
   "project_id"?: UUID;
+  /** Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  "department_id"?: { [key: string]: unknown };
+  /** ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  "cfo_id"?: { [key: string]: unknown };
   "warehouse_id"?: UUID;
   /** Основание — например, заявка на закупку */
   "basis_id"?: UUID;
@@ -5487,6 +5507,7 @@ export interface CoreProductBulkPatch {
   "ids": Array<UUID>;
   "folder_id"?: UUID | null;
   "is_sellable"?: boolean;
+  /** Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547) */
   "is_stockable"?: boolean;
   "is_purchasable"?: boolean;
   "is_producible"?: boolean;
@@ -5501,6 +5522,7 @@ export interface CoreProductCreate {
   "external_id"?: string;
   "kind"?: CoreProductKind;
   "is_sellable"?: boolean;
+  /** Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547) */
   "is_stockable"?: boolean;
   "is_purchasable"?: boolean;
   "is_producible"?: boolean;
@@ -5793,6 +5815,7 @@ export interface CoreProductPatch {
   "external_id"?: string;
   "kind"?: CoreProductKind;
   "is_sellable"?: boolean;
+  /** Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547) */
   "is_stockable"?: boolean;
   "is_purchasable"?: boolean;
   "is_producible"?: boolean;
@@ -6785,6 +6808,8 @@ export interface DocflowApprovalBlockers {
   "send_to_bank": DocflowApprovalActionCheck;
   "can_submit": boolean;
   "can_decide": boolean;
+  /** У человека есть неотмеченное «ознакомиться» в этом проходе — своё или делегированное */
+  "can_acknowledge"?: boolean;
   "can_cancel": boolean;
   "can_resubmit": boolean;
   "matched_route_id"?: UUID;
@@ -6796,6 +6821,41 @@ export interface DocflowApprovalBlockers {
 export interface DocflowApprovalCancelInput {
   /** Причина отзыва остаётся в истории прохода */
   "comment": string;
+}
+
+/** Кто согласует предмет по его фактам: маршрут, этапы, пропуски по сумме и люди. */
+export interface DocflowApprovalChainPreview {
+  /** auto — маршрут подошёл, но все его этапы согласования отсечены порогами по сумме: предмет согласуется автоматически, без виз */
+  "outcome": "route" | "direct" | "blocked" | "auto";
+  /** Согласование вида объявлено обязательным */
+  "required": boolean;
+  "route_id"?: UUID;
+  "route_name"?: string;
+  /** Подобран стандартный маршрут: ни один маршрут кабинета не подошёл */
+  "route_standard"?: boolean;
+  "payment_destination"?: "calendar" | "treasury";
+  "stages": Array<DocflowApprovalChainStage>;
+}
+
+/** Этап маршрута глазами «кто согласует» до отправки. */
+export interface DocflowApprovalChainStage {
+  "position": number;
+  "title"?: string;
+  /** Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve */
+  "stage_kind"?: "approve" | "acknowledge";
+  "mode": "all" | "any";
+  "assignee_kind": "user" | "department" | "role" | "manager";
+  "assignee_label"?: string;
+  /** Лимит этапа: выполняется при сумме от этого значения */
+  "min_amount"?: string;
+  "due_hours"?: number;
+  /** Этап выполнится при этих фактах */
+  "applies": boolean;
+  /** Почему этап не выполнится */
+  "skip_reason"?: "amount_below";
+  /** Этап выполнится, но спросить некого */
+  "problem"?: "no_reviewers";
+  "people": Array<DocflowApprovalPerson>;
 }
 
 /** Одно решение. Комментарий обязателен у return и reject и не требуется у approve: отказ без слов отправляет автора чинить неизвестно что. */
@@ -6833,8 +6893,8 @@ export interface DocflowApprovalDirectories {
 export interface DocflowApprovalEvent {
   "id": UUID;
   "stage_position"?: number;
-  /** operator_* — ответ оператору по входящему пакету ЭДО после прохода (настройка подключения reply_after_approval); comment несёт слова оператора или машинный код отказа docflow.edo.* */
-  "action": "submitted" | "approved" | "returned" | "rejected" | "cancelled" | "resubmitted" | "reset_significant_change" | "delegated" | "escalated" | "reminded" | "operator_replied" | "operator_refused" | "operator_signature_required" | "operator_skipped";
+  /** auto_approved — согласовано автоматически: сумма меньше порогов маршрута. operator_* — ответ оператору по входящему пакету ЭДО после прохода (настройка подключения reply_after_approval); comment несёт слова оператора или машинный код отказа docflow.edo.* */
+  "action": "submitted" | "approved" | "returned" | "rejected" | "cancelled" | "resubmitted" | "reset_significant_change" | "delegated" | "escalated" | "reminded" | "operator_replied" | "operator_refused" | "operator_signature_required" | "operator_skipped" | "acknowledged" | "auto_approved";
   "user_id"?: number;
   "user_name"?: string;
   "comment"?: string;
@@ -6866,6 +6926,8 @@ export interface DocflowApprovalInboxItem {
   "on_behalf_via"?: "self" | "substitute" | "delegate" | "administrator";
   /** Истинно у собственной отправки, которую вернули на доработку */
   "returned_to_me": boolean;
+  /** Строка этапа «ознакомиться»: решения не ждут, нужна отметка POST /approvals/{id}/acknowledge */
+  "informational"?: boolean;
 }
 
 export interface DocflowApprovalInboxPage {
@@ -6904,8 +6966,8 @@ export interface DocflowApprovalReview {
   "decided_by_name"?: string;
   "decided_via"?: "self" | "substitute" | "delegate" | "administrator";
   "delegated_to"?: number;
-  /** Пусто, пока человек не решил */
-  "decision"?: "approve" | "return" | "reject";
+  /** Пусто, пока человек не решил; acknowledge — отметка «ознакомлен» на этапе ознакомления */
+  "decision"?: "approve" | "return" | "reject" | "acknowledge";
   /** Обязателен у return и reject: без слов автор не узнает, что исправлять */
   "comment"?: string;
   "decided_at"?: string;
@@ -6942,6 +7004,8 @@ export interface DocflowApprovalRoute {
   "rework_mode": "restart" | "returner_only";
   /** Для заявки на оплату (docflow / payment_request): куда идёт согласованная — сразу в платёжный календарь (дата оплаты = срок) или казначею, который ставит дату платежа (ERP-1427, этап 6) */
   "payment_destination"?: "calendar" | "treasury";
+  /** Код стандартного маршрута кабинета. Его заводит система выключенным; включённый, он подбирается последним — когда ни один другой маршрут не подошёл. Пусто — маршрут заведён кабинетом */
+  "system_key"?: "payment_request" | "invoice" | "contract";
   /** Выключенный маршрут не подбирается новым проходам, но остаётся на месте */
   "is_active": boolean;
   "stages": Array<DocflowApprovalRouteStage>;
@@ -6957,7 +7021,7 @@ export interface DocflowApprovalRouteList {
   "items": Array<DocflowApprovalRoute>;
 }
 
-/** Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался». */
+/** Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался». Согласующий может быть не выбран (способ назван, ссылки нет) только у выключенного маршрута: так сеется этап «Финансы» стандартного маршрута заявок. */
 export interface DocflowApprovalRouteStage {
   "id"?: UUID;
   /** Порядок этапа в маршруте */
@@ -6969,6 +7033,8 @@ export interface DocflowApprovalRouteStage {
   "assignee_role_id"?: UUID;
   /** Как назначение читается человеком. Подставляется на чтении; в шаблоне не хранится */
   "assignee_label"?: string;
+  /** Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve */
+  "stage_kind"?: "approve" | "acknowledge";
   /** Решают все или достаточно одного. Кворума с процентом нет */
   "mode": "all" | "any";
   /** Срок ЭТАПА в часах. Просрочка даёт напоминание и эскалацию на одно звено; автоотклонения по сроку нет */
@@ -6982,13 +7048,16 @@ export interface DocflowApprovalStage {
   "id": UUID;
   "position": number;
   "title"?: string;
+  /** Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve */
+  "stage_kind"?: "approve" | "acknowledge";
   "mode": "all" | "any";
   "assignee_kind": "user" | "department" | "role" | "manager";
   "assignee_label"?: string;
   "min_amount"?: string;
   "due_hours"?: number;
   "due_at"?: string;
-  "state": "waiting" | "active" | "approved" | "rejected" | "returned" | "skipped";
+  /** notified — этап ознакомления известил участников и пропустил проход дальше; acknowledged — все отметились */
+  "state": "waiting" | "active" | "approved" | "rejected" | "returned" | "skipped" | "notified" | "acknowledged";
   "started_at"?: string;
   "decided_at"?: string;
   "reviews": Array<DocflowApprovalReview>;
@@ -7031,6 +7100,8 @@ export interface DocflowApprovalSubjectState {
   /** Отсутствует, пока предмет ни разу не отправляли */
   "approval"?: DocflowApproval;
   "facts": DocflowApprovalSubjectFacts;
+  /** Кто согласует, если отправить сейчас; есть, только когда открытого или согласованного прохода нет */
+  "preview"?: DocflowApprovalChainPreview;
 }
 
 /** Замещение согласующего на период. Бессрочное замещение законно — ends_on можно не называть. */
@@ -7174,6 +7245,8 @@ export interface DocflowConnection {
   "has_credentials": boolean;
   /** Действующее ограничение: отправка, подписание и изменение состояний в ЭДО отключены */
   "read_only": boolean;
+  /** Режим «Черновики в ЭДО» (ERP-1551): при read_only=true оператору уходят черновики; подпись, отправка и ответы остаются закрытыми */
+  "draft_write"?: boolean;
   /** «После нашего согласования — ответить у оператора». Когда проход внутреннего маршрута по входящему пакету закончен, документооборот выполняет у оператора действие текущего этапа: «согласован» — «Утвердить», «отклонён» — «Отклонить» с причиной из визы. Этап с подписью не закрывается: пакет ждёт человека в «Ждут меня → Подписать». Итог — строкой журнала прохода (operator_*). По умолчанию выключено. */
   "reply_after_approval": boolean;
   /** Идентификатор нашей организации у оператора; выясняется сопоставлением по ИНН и КПП, руками не вводится */
@@ -7215,9 +7288,11 @@ export interface DocflowConnectionList {
   "results": Array<DocflowConnection>;
 }
 
-/** Явный выбор режима. false разрешает юридически значимые действия через это подключение; true немедленно возвращает безопасный режим. */
+/** Явный выбор режима. mode: read_only — только чтение; drafts — «Черновики в ЭДО» (ERP-1551): оператору уходят только черновики, подпись, отправка и ответы закрыты; write — все действия. Прежняя форма read_only (true — read_only, false — write) принимается, если mode не задан. Без обоих полей — 400 docflow.mode_required. */
 export interface DocflowConnectionModeInput {
-  "read_only": boolean;
+  "mode"?: "read_only" | "drafts" | "write";
+  /** Прежняя форма; используется, только когда mode не задан */
+  "read_only"?: boolean;
 }
 
 /** Частичное изменение. Учётные данные обновляются только всеми тремя значениями сразу: у оператора это одно неделимое сочетание. */
@@ -8070,6 +8145,8 @@ export interface DocflowInvitationSender {
   "provider_name"?: string;
   "status": "connected" | "paused" | "error" | "reauth_required" | "disconnected";
   "read_only": boolean;
+  /** Режим «Черновики в ЭДО»: черновик у оператора записывается и при read_only=true */
+  "draft_write"?: boolean;
   /** Идентификатор собственного абонентского ящика; пусто — нужно повторно проверить связь */
   "external_org_id": string;
 }
@@ -8395,6 +8472,8 @@ export interface DocflowPaymentDetails {
   /** НАША карточка договора, к которой привязан конверт. Рядом с basis, а не вместо него: basis — строка из чужой бумаги («по договору №17»), contract — карточка в кабинете, по которой договор открывается. Строку в карточку сервер не превращает: угадывать договор по номеру из PDF значит однажды повесить платёж на чужую бумагу. Заполнено только там, где связь «конверт ↔ карточка» уже записана человеком и договор ровно один; два договора дают null — выбирать за человека нельзя. */
   "contract"?: UUID | null;
   "subject": DocflowPaymentField;
+  /** Назначение платежа словами поставщика — строка у подписи «Назначение платежа» в счёте; пусто — не названо, форма собирает своё */
+  "purpose": DocflowPaymentField;
   "vat_amount": DocflowPaymentField;
   /** В счёте стояла отметка «без налога (НДС)». Пустая сумма при снятой отметке означает «про налог не сказано», а не «налога нет» */
   "vat_without": boolean;
@@ -8468,9 +8547,15 @@ export interface DocflowPaymentRequest {
   "basis": DocflowPaymentRequestBasis;
   /** Куда ушла согласованная заявка: снимок флага маршрута */
   "destination": "" | "calendar" | "treasury";
-  /** Причина отказа или возврата на доработку */
+  /** Причина отказа, возврата на доработку или отклонения казначеем */
   "reason"?: string;
   "payment"?: DocflowPaymentRequestPayment;
+  /** Строка очереди оплат модуля finance, куда ушла согласованная заявка */
+  "finance_request_id"?: UUID;
+  /** Согласована автоматически: маршрута для заявки нет и согласование не обязательно, прохода согласования не было */
+  "approval_auto": boolean;
+  /** Согласованную заявку отклонил казначей в модуле finance; причина — в reason */
+  "rejected_by_finance": boolean;
   "created_by"?: number;
   "created_by_name": string;
   "created_at": string;
@@ -9402,6 +9487,16 @@ export interface FinanceBalanceSection {
   "label": string;
   "total": string;
   "items": Array<FinanceBalanceItem>;
+}
+
+export interface FinanceBankLookup {
+  "directory_configured": boolean;
+  "bank": FinanceRequisitesBank | null;
+}
+
+export interface FinanceBankSuggestions {
+  "directory_configured": boolean;
+  "banks": Array<FinanceRequisitesBank>;
 }
 
 export interface FinanceCashOperation {
@@ -11131,6 +11226,10 @@ export interface FinanceRequisitesBank {
   "bic": string;
   "correspondent_account": string;
   "city": string;
+  /** ИНН банка; пусто — справочник не назвал */
+  "inn"?: string;
+  /** КПП банка; пусто — справочник не назвал */
+  "kpp"?: string;
 }
 
 export interface FinanceRequisitesLookup {
@@ -16867,6 +16966,8 @@ export interface StockDocumentPatch {
 export interface StockDocumentPayload {
   "version": number;
   "reason"?: string;
+  /** Причина списания из справочника stock.stock_writeoff_reasons. Есть только у списания. Текст reason при этом остаётся: ссылка даёт единое значение причины, текст несёт подробности. Не прислан — сервер сам пробует узнать текст в справочнике; прислан явно, в том числе null, — решение вызывающего не переигрывается; неизвестная ссылка отклоняется */
+  "reason_id"?: UUID | null;
   "desired_at"?: string;
   "delivery_at"?: string;
   /** Срок резерва; не раньше даты документа */
@@ -17733,6 +17834,8 @@ export interface StockSettings {
   "auto_cancel_expired_reservations": boolean;
   /** Перемещение зарезервированного: везти резерв на склад-получатель вместо отказа */
   "transfer_carries_reservation": boolean;
+  /** Кабинет работает с заявками на закупку (ERP-1523). Выключено — новая заявка не заводится, открытые учитываются до закрытия. Пока владелец не выбирал, следует факту: включено, если заявки в кабинете уже заводили */
+  "purchase_requests_enabled": boolean;
   "default_reservation_days": number;
   "updated_at": string;
 }
@@ -17742,6 +17845,7 @@ export interface StockSettingsPatch {
   "block_reservation_over_available"?: boolean;
   "auto_cancel_expired_reservations"?: boolean;
   "transfer_carries_reservation"?: boolean;
+  "purchase_requests_enabled"?: boolean;
   "default_reservation_days"?: number;
 }
 

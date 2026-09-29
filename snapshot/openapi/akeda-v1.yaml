@@ -9401,7 +9401,7 @@ paths:
             type: string
         - name: kind
           in: query
-          description: Вид позиции; пусто — любой
+          description: Вид позиции или несколько видов через запятую; пусто — любой. Срез «Товары и материалы» — goods,material,semi_product, «Услуги» — service
           schema:
             type: string
             enum:
@@ -9409,6 +9409,7 @@ paths:
               - service
               - material
               - semi_product
+              - goods,material,semi_product
         - name: profile
           in: query
           description: Назначение; пусто — любое
@@ -17489,6 +17490,78 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/core/lookup/bank:
+    get:
+      tags:
+        - Finance requisites
+      operationId: coreLookupBank
+      summary: Найти банк по БИК
+      description: Название банка и корреспондентский счёт по девяти цифрам БИК для карточек контрагента и юрлица. Справочник не настроен или банк не найден — bank=null без ошибки.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: bic
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: ^\d{9}$
+      responses:
+        '200':
+          description: Банк и признак настройки справочника
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceBankLookup'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '502':
+          description: Внешний справочник временно недоступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /api/v1/core/lookup/banks:
+    get:
+      tags:
+        - Finance requisites
+      operationId: coreSuggestBanks
+      summary: Подсказать банки по части БИК или названия
+      description: Выпадающий список поля БИК. Выбор банка ставит БИК, название и корреспондентский счёт; короче трёх знаков — пустой список без запроса к справочнику.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 3
+      responses:
+        '200':
+          description: Подходящие банки и признак настройки справочника
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceBankSuggestions'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '502':
+          description: Внешний справочник временно недоступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/finance/counterparties/{contactId}/terms:
     get:
       tags:
@@ -19441,6 +19514,57 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/transactions/{id}/mark-deleted:
+    post:
+      tags:
+        - Finance transactions
+      operationId: financeMarkTransactionDeleted
+      summary: Пометить банковскую операцию на удаление
+      description: Атомарно отменяет движения документа и помечает его удалённым. Операция исчезает из банковских выписок, сверки и отчётов. История доступна только в Справочники → Документы → Отменённые. Платёж в банке не отменяется. Закрытый период и зависимые распределения оплаты блокируют действие без изменения учётных движений.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.transactions:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Отменённый документ с пометкой удаления
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Операция не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Закрытый период или зависимые документы
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/finance/transactions/{id}/categorize:
@@ -43316,8 +43440,8 @@ paths:
         - Docflow connections
       operationId: docflowSetConnectionMode
       x-akeda-audience: external
-      summary: Выбрать безопасный или рабочий режим подключения
-      description: 'Отдельная административная операция: обычная правка карточки не может попутно разрешить юридически значимые действия. Новое подключение всегда создаётся с read_only=true. Снять ограничение можно только у подключённой карточки с рабочими учётными данными, выбранным юрлицом и определённым оператором идентификатором его абонентского ящика. Сам вызов ничего не отправляет оператору; он лишь открывает последующим действиям доступ через этот ящик. Возврат read_only=true снова гасит отправку, подписание и изменение состояний до обращения к оператору.'
+      summary: Выбрать режим подключения — только чтение, черновики в ЭДО или запись
+      description: 'Отдельная административная операция: обычная правка карточки не может попутно разрешить юридически значимые действия. Новое подключение всегда создаётся с read_only=true. Снять ограничение можно только у подключённой карточки с рабочими учётными данными, выбранным юрлицом и определённым оператором идентификатором его абонентского ящика. Сам вызов ничего не отправляет оператору; он лишь открывает последующим действиям доступ через этот ящик. Возврат read_only=true снова гасит отправку, подписание и изменение состояний до обращения к оператору. Режим drafts («Черновики в ЭДО») требует той же готовности и пускает к оператору только запись и удаление черновика: принятый оператором черновик подтверждает оформление, а подпись и отправка остаются закрытыми (отказ 409 docflow.edo.drafts_only).'
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -45364,6 +45488,7 @@ paths:
               - product
               - sale_item
               - purchase_item
+              - contact_folder
         - name: search
           in: query
           description: Поиск подстрокой по названию; до 200 знаков
@@ -45500,7 +45625,7 @@ paths:
 
         Подошло несколько шаблонов — берётся САМЫЙ КОНКРЕТНЫЙ: маршрут, названный на юрлицо и вид документа, выигрывает у маршрута на весь модуль. Нижняя граница суммы маршрута включается, верхняя нет, поэтому смежные диапазоны стыкуются без щели и без нахлёста.
 
-        Маршрута под предмет не нашлось, а вид объявлен требующим согласования — отказ docflow.approval.route_not_found. Это НЕДОНАСТРОЙКА кабинета, и назвать её надо именно так: «согласуйте сами» здесь неверный совет. Если у подобранного маршрута все этапы отсечены лимитом по сумме, отказ другой — docflow.approval.route_empty, и чинится он в другом месте.
+        Маршрута под предмет не нашлось, а вид объявлен требующим согласования — отказ docflow.approval.route_not_found. Это НЕДОНАСТРОЙКА кабинета, и назвать её надо именно так: «согласуйте сами» здесь неверный совет. Если у подобранного маршрута все этапы согласования отсечены лимитом по сумме, проход согласуется в момент отправки (state approved) со строкой журнала auto_approved: маршрут сам сказал, что бумагу такой суммы визировать не нужно (ERP-1566).
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -45631,6 +45756,90 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DocflowApproval'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/approvals/{id}/acknowledge:
+    post:
+      tags:
+        - Docflow approvals
+      operationId: docflowAcknowledgeApproval
+      x-akeda-audience: external
+      summary: Отметить «ознакомлен»
+      description: 'Отметка на этапе «ознакомиться»: своя или делегированная. Маршрут от неё не движется — этап уже известил участников и пропустил проход дальше; отметиться можно и после итога, пока проход не отозван. Карточка «для ознакомления» в центре уведомлений гаснет той же транзакцией. Отметки нет — 403 docflow.approval.not_yours.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Проход после отметки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowApproval'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/approvals/{id}/sheet:
+    get:
+      tags:
+        - Docflow approvals
+      operationId: docflowApprovalSheetDocument
+      x-akeda-audience: external
+      summary: Скачать лист согласования
+      description: 'Лист согласования для печати и архива: предмет, маршрут, автор, итог и согласованная редакция предмета; этапы и визы текущего круга — кто решил, чьей рукой поставлена виза замещающего («Петров за Иванова (замещение)»), решение, дата и время, комментарий; пропущенный по сумме этап — строкой «не требуется»; журнал всех кругов с причиной нового круга. Язык листа — язык того, кто выгружает. PDF той же службой рендера, что печатные формы; без неё — HTML.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Лист согласования
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            text/html:
+              schema:
+                type: string
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -46344,7 +46553,9 @@ paths:
       x-akeda-audience: external
       summary: Получить маршруты согласования
       description: |-
-        Именованные шаблоны, из которых подбирается проход. Крыло настройки стоит под правом docflow.flow:admin намеренно: заведение маршрута решает, кого будут спрашивать про ЧУЖИЕ бумаги, и это работа администратора кабинета, а не всякого, кто вправе завести документ.
+        Именованные шаблоны, из которых подбирается проход. Крыло настройки стоит под отдельным правом docflow.flow:configure (его покрывает и docflow.flow:admin) намеренно: заведение маршрута решает, кого будут спрашивать про ЧУЖИЕ бумаги, и выдают его адресно — не всякому, кто вправе завести документ или согласовать свой этап.
+
+        Двери маршрутов пускают и узкое право docflow.flow:configure_payments («Настраивать маршруты заявок», ERP-1566): с ним в списке только маршруты заявок на оплату и маршруты «на любой вид» (последние только для чтения), а сохранить, выключить и проверить можно лишь маршрут заявки; configure и admin узкое право покрывают.
 
         Отборы module и kind сужают список до предметов одного вида. Значение kind=any у маршрута означает «любой вид предмета своего модуля» и принадлежит только шаблону: у прохода вид всегда конкретен.
       security:
@@ -46353,7 +46564,7 @@ paths:
             - akeda:delegate
       x-akeda-module: docflow
       x-akeda-release-stage: preview
-      x-akeda-permission: docflow.flow:admin
+      x-akeda-permission: docflow.flow:configure_payments
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
         - name: module
@@ -46413,7 +46624,7 @@ paths:
             - akeda:delegate
       x-akeda-module: docflow
       x-akeda-release-stage: preview
-      x-akeda-permission: docflow.flow:admin
+      x-akeda-permission: docflow.flow:configure_payments
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
       requestBody:
@@ -46441,6 +46652,98 @@ paths:
           $ref: '#/components/responses/Conflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/approval-routes/check:
+    get:
+      tags:
+        - Docflow approvals
+      operationId: docflowCheckApprovalRoute
+      x-akeda-audience: external
+      summary: Проверить, по какому маршруту пойдёт предмет
+      description: |-
+        «Проверка маршрута» из настроек документов: по фактам без живого документа — вид предмета, юрлицо, контрагент или группа контрагентов, статья, сумма — сервер отвечает теми же правилами, что и отправка, какой маршрут подберётся, какие этапы выполнятся, какие будут пропущены по лимиту суммы и кого спросят на каждом этапе. Ничего не пишет.
+
+        Исход outcome: route — пойдёт по маршруту; direct — маршрута нет и согласование вида не обязательно (заявка на оплату согласуется сама); blocked — маршрута нет, а согласование обязательно, отправка будет отклонена; empty — все этапы отсечены лимитом. Этап, за которым некого спросить, помечен problem=no_reviewers и проверку не роняет. Этап «руководитель автора» показывает руководителя того, кто проверяет.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:configure_payments
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: module
+          in: query
+          description: Модуль-владелец предмета; по умолчанию docflow
+          schema:
+            type: string
+            enum:
+              - docflow
+        - name: kind
+          in: query
+          required: true
+          description: Вид предмета
+          schema:
+            type: string
+            enum:
+              - flow_document
+              - payment_request
+              - edo_message
+        - name: document_kind
+          in: query
+          description: Вид документа карточки
+          schema:
+            type: string
+            maxLength: 100
+        - name: company_id
+          in: query
+          description: Юрлицо
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: contact_id
+          in: query
+          description: Контрагент
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: contact_folder_id
+          in: query
+          description: Группа контрагентов (папка справочника); условие маршрута ловит и её подгруппы. Без неё группа названного контрагента подставляется из справочника
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: item_id
+          in: query
+          description: Статья
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: amount
+          in: query
+          description: Сумма числом
+          schema:
+            type: string
+            maxLength: 40
+        - name: currency
+          in: query
+          description: Код валюты
+          schema:
+            type: string
+            maxLength: 3
+      responses:
+        '200':
+          description: Кто согласует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowApprovalChainPreview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/docflow/approval-routes/{id}:
     get:
       tags:
@@ -46455,7 +46758,7 @@ paths:
             - akeda:delegate
       x-akeda-module: docflow
       x-akeda-release-stage: preview
-      x-akeda-permission: docflow.flow:admin
+      x-akeda-permission: docflow.flow:configure_payments
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
         - name: id
@@ -46490,13 +46793,15 @@ paths:
         Переписывает шаблон целиком вместе с составом этапов: частичной правки одного этапа отдельным адресом нет — порядок этапов и их лимиты имеют смысл только вместе, и править их по одному значит на полпути иметь маршрут, которого никто не задумывал.
 
         Правка шаблона не трогает уже идущие проходы: снимок назначения и лимитов они забрали при отправке, и переписывать их задним числом означало бы, что согласующий решал по одному маршруту, а в истории остался другой. Идентификатор берётся из адреса; значение id в теле роли не играет.
+
+        У стандартного маршрута (system_key) предмет и условия не меняются — 409 docflow.approval.route_standard; имя, этапы и пороги — выбор кабинета. Этап без выбранного согласующего допустим только у выключенного маршрута, иначе 409 docflow.approval.route_unassigned.
       security:
         - erpUserToken: []
         - mcpOAuth:
             - akeda:delegate
       x-akeda-module: docflow
       x-akeda-release-stage: preview
-      x-akeda-permission: docflow.flow:admin
+      x-akeda-permission: docflow.flow:configure_payments
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
         - name: id
@@ -46536,14 +46841,17 @@ paths:
       operationId: docflowSetApprovalRouteActive
       x-akeda-audience: external
       summary: Включить или выключить маршрут согласования
-      description: 'Выключенный маршрут не подбирается новым проходам, но остаётся на месте. Удаления шаблона здесь нет намеренно: по маршруту уже прошли бумаги, его имя стоит в их проходах, и стирание шаблона обесценило бы историю ровно там, где она нужна — при разборе, почему бумагу согласовали именно так.'
+      description: |-
+        Выключенный маршрут не подбирается новым проходам, но остаётся на месте. Удаления шаблона здесь нет намеренно: по маршруту уже прошли бумаги, его имя стоит в их проходах, и стирание шаблона обесценило бы историю ровно там, где она нужна — при разборе, почему бумагу согласовали именно так.
+
+        Включить маршрут, у этапа которого не выбран согласующий, нельзя — 409 docflow.approval.route_unassigned (так сеется этап «Финансы» стандартного маршрута заявок).
       security:
         - erpUserToken: []
         - mcpOAuth:
             - akeda:delegate
       x-akeda-module: docflow
       x-akeda-release-stage: preview
-      x-akeda-permission: docflow.flow:admin
+      x-akeda-permission: docflow.flow:configure_payments
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
         - name: id
@@ -46568,6 +46876,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/docflow/approval-settings:
@@ -46587,7 +46897,7 @@ paths:
             - akeda:delegate
       x-akeda-module: docflow
       x-akeda-release-stage: preview
-      x-akeda-permission: docflow.flow:admin
+      x-akeda-permission: docflow.flow:configure_payments
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
         - name: search
@@ -46630,7 +46940,7 @@ paths:
             - akeda:delegate
       x-akeda-module: docflow
       x-akeda-release-stage: preview
-      x-akeda-permission: docflow.flow:admin
+      x-akeda-permission: docflow.flow:configure_payments
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
       requestBody:
@@ -46669,7 +46979,7 @@ paths:
             - akeda:delegate
       x-akeda-module: docflow
       x-akeda-release-stage: preview
-      x-akeda-permission: docflow.flow:admin
+      x-akeda-permission: docflow.flow:configure
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
         - name: principal
@@ -46721,7 +47031,7 @@ paths:
             - akeda:delegate
       x-akeda-module: docflow
       x-akeda-release-stage: preview
-      x-akeda-permission: docflow.flow:admin
+      x-akeda-permission: docflow.flow:configure
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
       requestBody:
@@ -46763,7 +47073,7 @@ paths:
             - akeda:delegate
       x-akeda-module: docflow
       x-akeda-release-stage: preview
-      x-akeda-permission: docflow.flow:admin
+      x-akeda-permission: docflow.flow:configure
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
         - name: id
@@ -60226,6 +60536,7 @@ components:
           type: boolean
         is_stockable:
           type: boolean
+          description: 'Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547)'
         is_purchasable:
           type: boolean
         is_producible:
@@ -60322,6 +60633,7 @@ components:
           type: boolean
         is_stockable:
           type: boolean
+          description: 'Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547)'
         is_purchasable:
           type: boolean
         is_producible:
@@ -60476,6 +60788,7 @@ components:
           type: boolean
         is_stockable:
           type: boolean
+          description: 'Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547)'
         is_purchasable:
           type: boolean
         is_producible:
@@ -61186,6 +61499,14 @@ components:
           $ref: '#/components/schemas/CoreOrderProgress'
         project_id:
           $ref: '#/components/schemas/UUID'
+        department_id:
+          description: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+        cfo_id:
+          description: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          allOf:
+            - $ref: '#/components/schemas/UUID'
         pnl_item_id:
           description: Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья
           allOf:
@@ -61389,6 +61710,14 @@ components:
           $ref: '#/components/schemas/UUID'
         project_id:
           $ref: '#/components/schemas/UUID'
+        department_id:
+          description: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+        cfo_id:
+          description: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          allOf:
+            - $ref: '#/components/schemas/UUID'
         pnl_item_id:
           description: Статья исполнений заказа; не названа при правке — сохраняется прежняя
           allOf:
@@ -61480,6 +61809,14 @@ components:
           $ref: '#/components/schemas/UUID'
         project_id:
           $ref: '#/components/schemas/UUID'
+        department_id:
+          description: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+        cfo_id:
+          description: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          allOf:
+            - $ref: '#/components/schemas/UUID'
         warehouse_id:
           $ref: '#/components/schemas/UUID'
         basis_id:
@@ -61569,6 +61906,14 @@ components:
           $ref: '#/components/schemas/UUID'
         project_id:
           $ref: '#/components/schemas/UUID'
+        department_id:
+          description: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+        cfo_id:
+          description: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          allOf:
+            - $ref: '#/components/schemas/UUID'
         warehouse_id:
           $ref: '#/components/schemas/UUID'
         basis_id:
@@ -61667,6 +62012,14 @@ components:
           $ref: '#/components/schemas/UUID'
         project_id:
           $ref: '#/components/schemas/UUID'
+        department_id:
+          description: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+        cfo_id:
+          description: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          allOf:
+            - $ref: '#/components/schemas/UUID'
         pnl_item_id:
           description: Статья выручки (у закупки — расхода) исполнения; пусто — по учётной политике бизнеса
           allOf:
@@ -67974,6 +68327,38 @@ components:
           type: string
         city:
           type: string
+        inn:
+          type: string
+          description: ИНН банка; пусто — справочник не назвал
+        kpp:
+          type: string
+          description: КПП банка; пусто — справочник не назвал
+    FinanceBankLookup:
+      type: object
+      additionalProperties: false
+      required:
+        - directory_configured
+        - bank
+      properties:
+        directory_configured:
+          type: boolean
+        bank:
+          oneOf:
+            - $ref: '#/components/schemas/FinanceRequisitesBank'
+            - type: 'null'
+    FinanceBankSuggestions:
+      type: object
+      additionalProperties: false
+      required:
+        - directory_configured
+        - banks
+      properties:
+        directory_configured:
+          type: boolean
+        banks:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceRequisitesBank'
     FinanceRequisitesLookup:
       type: object
       additionalProperties: false
@@ -76416,6 +76801,11 @@ components:
             - 1
         reason:
           type: string
+        reason_id:
+          description: 'Причина списания из справочника stock.stock_writeoff_reasons. Есть только у списания. Текст reason при этом остаётся: ссылка даёт единое значение причины, текст несёт подробности. Не прислан — сервер сам пробует узнать текст в справочнике; прислан явно, в том числе null, — решение вызывающего не переигрывается; неизвестная ссылка отклоняется'
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
         desired_at:
           type: string
           format: date
@@ -79563,6 +79953,7 @@ components:
         - block_reservation_over_available
         - auto_cancel_expired_reservations
         - transfer_carries_reservation
+        - purchase_requests_enabled
         - default_reservation_days
         - updated_at
       properties:
@@ -79578,6 +79969,9 @@ components:
         transfer_carries_reservation:
           type: boolean
           description: 'Перемещение зарезервированного: везти резерв на склад-получатель вместо отказа'
+        purchase_requests_enabled:
+          type: boolean
+          description: 'Кабинет работает с заявками на закупку (ERP-1523). Выключено — новая заявка не заводится, открытые учитываются до закрытия. Пока владелец не выбирал, следует факту: включено, если заявки в кабинете уже заводили'
         default_reservation_days:
           type: integer
           minimum: 1
@@ -79597,6 +79991,8 @@ components:
         auto_cancel_expired_reservations:
           type: boolean
         transfer_carries_reservation:
+          type: boolean
+        purchase_requests_enabled:
           type: boolean
         default_reservation_days:
           type: integer
@@ -92505,7 +92901,7 @@ components:
     DocflowApprovalRouteStage:
       type: object
       additionalProperties: false
-      description: 'Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался».'
+      description: 'Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался». Согласующий может быть не выбран (способ назван, ссылки нет) только у выключенного маршрута: так сеется этап «Финансы» стандартного маршрута заявок.'
       required:
         - position
         - assignee_kind
@@ -92535,6 +92931,12 @@ components:
         assignee_label:
           type: string
           description: Как назначение читается человеком. Подставляется на чтении; в шаблоне не хранится
+        stage_kind:
+          type: string
+          enum:
+            - approve
+            - acknowledge
+          description: 'Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve'
         mode:
           type: string
           enum:
@@ -92616,6 +93018,14 @@ components:
             - calendar
             - treasury
           description: 'Для заявки на оплату (docflow / payment_request): куда идёт согласованная — сразу в платёжный календарь (дата оплаты = срок) или казначею, который ставит дату платежа (ERP-1427, этап 6)'
+        system_key:
+          type: string
+          enum:
+            - payment_request
+            - invoice
+            - contract
+          readOnly: true
+          description: Код стандартного маршрута кабинета. Его заводит система выключенным; включённый, он подбирается последним — когда ни один другой маршрут не подошёл. Пусто — маршрут заведён кабинетом
         is_active:
           type: boolean
           description: Выключенный маршрут не подбирается новым проходам, но остаётся на месте
@@ -92842,6 +93252,8 @@ components:
         - payment_method
         - basis
         - destination
+        - approval_auto
+        - rejected_by_finance
         - created_by_name
         - created_at
         - updated_at
@@ -92920,9 +93332,18 @@ components:
           description: 'Куда ушла согласованная заявка: снимок флага маршрута'
         reason:
           type: string
-          description: Причина отказа или возврата на доработку
+          description: Причина отказа, возврата на доработку или отклонения казначеем
         payment:
           $ref: '#/components/schemas/DocflowPaymentRequestPayment'
+        finance_request_id:
+          $ref: '#/components/schemas/UUID'
+          description: Строка очереди оплат модуля finance, куда ушла согласованная заявка
+        approval_auto:
+          type: boolean
+          description: 'Согласована автоматически: маршрута для заявки нет и согласование не обязательно, прохода согласования не было'
+        rejected_by_finance:
+          type: boolean
+          description: Согласованную заявку отклонил казначей в модуле finance; причина — в reason
         created_by:
           type: integer
           format: int64
@@ -93268,7 +93689,8 @@ components:
             - approve
             - return
             - reject
-          description: Пусто, пока человек не решил
+            - acknowledge
+          description: Пусто, пока человек не решил; acknowledge — отметка «ознакомлен» на этапе ознакомления
         comment:
           type: string
           description: 'Обязателен у return и reject: без слов автор не узнает, что исправлять'
@@ -93293,6 +93715,12 @@ components:
           type: integer
         title:
           type: string
+        stage_kind:
+          type: string
+          enum:
+            - approve
+            - acknowledge
+          description: 'Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve'
         mode:
           type: string
           enum:
@@ -93323,6 +93751,9 @@ components:
             - rejected
             - returned
             - skipped
+            - notified
+            - acknowledged
+          description: notified — этап ознакомления известил участников и пропустил проход дальше; acknowledged — все отметились
         started_at:
           type: string
           format: date-time
@@ -93363,7 +93794,9 @@ components:
             - operator_refused
             - operator_signature_required
             - operator_skipped
-          description: operator_* — ответ оператору по входящему пакету ЭДО после прохода (настройка подключения reply_after_approval); comment несёт слова оператора или машинный код отказа docflow.edo.*
+            - acknowledged
+            - auto_approved
+          description: 'auto_approved — согласовано автоматически: сумма меньше порогов маршрута. operator_* — ответ оператору по входящему пакету ЭДО после прохода (настройка подключения reply_after_approval); comment несёт слова оператора или машинный код отказа docflow.edo.*'
         user_id:
           type: integer
           format: int64
@@ -93634,6 +94067,9 @@ components:
           type: boolean
         can_decide:
           type: boolean
+        can_acknowledge:
+          type: boolean
+          description: У человека есть неотмеченное «ознакомиться» в этом проходе — своё или делегированное
         can_cancel:
           type: boolean
         can_resubmit:
@@ -93660,6 +94096,102 @@ components:
           description: Отсутствует, пока предмет ни разу не отправляли
         facts:
           $ref: '#/components/schemas/DocflowApprovalSubjectFacts'
+        preview:
+          $ref: '#/components/schemas/DocflowApprovalChainPreview'
+          description: Кто согласует, если отправить сейчас; есть, только когда открытого или согласованного прохода нет
+    DocflowApprovalChainStage:
+      type: object
+      additionalProperties: false
+      description: Этап маршрута глазами «кто согласует» до отправки.
+      required:
+        - position
+        - mode
+        - assignee_kind
+        - applies
+        - people
+      properties:
+        position:
+          type: integer
+        title:
+          type: string
+        stage_kind:
+          type: string
+          enum:
+            - approve
+            - acknowledge
+          description: 'Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve'
+        mode:
+          type: string
+          enum:
+            - all
+            - any
+        assignee_kind:
+          type: string
+          enum:
+            - user
+            - department
+            - role
+            - manager
+        assignee_label:
+          type: string
+        min_amount:
+          type: string
+          description: 'Лимит этапа: выполняется при сумме от этого значения'
+        due_hours:
+          type: integer
+        applies:
+          type: boolean
+          description: Этап выполнится при этих фактах
+        skip_reason:
+          type: string
+          enum:
+            - amount_below
+          description: Почему этап не выполнится
+        problem:
+          type: string
+          enum:
+            - no_reviewers
+          description: Этап выполнится, но спросить некого
+        people:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowApprovalPerson'
+    DocflowApprovalChainPreview:
+      type: object
+      additionalProperties: false
+      description: 'Кто согласует предмет по его фактам: маршрут, этапы, пропуски по сумме и люди.'
+      required:
+        - outcome
+        - required
+        - stages
+      properties:
+        outcome:
+          type: string
+          enum:
+            - route
+            - direct
+            - blocked
+            - auto
+          description: 'auto — маршрут подошёл, но все его этапы согласования отсечены порогами по сумме: предмет согласуется автоматически, без виз'
+        required:
+          type: boolean
+          description: Согласование вида объявлено обязательным
+        route_id:
+          $ref: '#/components/schemas/UUID'
+        route_name:
+          type: string
+        route_standard:
+          type: boolean
+          description: 'Подобран стандартный маршрут: ни один маршрут кабинета не подошёл'
+        payment_destination:
+          type: string
+          enum:
+            - calendar
+            - treasury
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowApprovalChainStage'
     DocflowApprovalDirectories:
       type: object
       additionalProperties: false
@@ -93756,6 +94288,9 @@ components:
         returned_to_me:
           type: boolean
           description: Истинно у собственной отправки, которую вернули на доработку
+        informational:
+          type: boolean
+          description: 'Строка этапа «ознакомиться»: решения не ждут, нужна отметка POST /approvals/{id}/acknowledge'
     DocflowApprovalInboxPage:
       type: object
       additionalProperties: false
@@ -94109,6 +94644,9 @@ components:
         read_only:
           type: boolean
           description: 'Действующее ограничение: отправка, подписание и изменение состояний в ЭДО отключены'
+        draft_write:
+          type: boolean
+          description: 'Режим «Черновики в ЭДО» (ERP-1551): при read_only=true оператору уходят черновики; подпись, отправка и ответы остаются закрытыми'
         reply_after_approval:
           type: boolean
           description: '«После нашего согласования — ответить у оператора». Когда проход внутреннего маршрута по входящему пакету закончен, документооборот выполняет у оператора действие текущего этапа: «согласован» — «Утвердить», «отклонён» — «Отклонить» с причиной из визы. Этап с подписью не закрывается: пакет ждёт человека в «Ждут меня → Подписать». Итог — строкой журнала прохода (operator_*). По умолчанию выключено.'
@@ -94222,12 +94760,17 @@ components:
     DocflowConnectionModeInput:
       type: object
       additionalProperties: false
-      required:
-        - read_only
-      description: Явный выбор режима. false разрешает юридически значимые действия через это подключение; true немедленно возвращает безопасный режим.
+      description: 'Явный выбор режима. mode: read_only — только чтение; drafts — «Черновики в ЭДО» (ERP-1551): оператору уходят только черновики, подпись, отправка и ответы закрыты; write — все действия. Прежняя форма read_only (true — read_only, false — write) принимается, если mode не задан. Без обоих полей — 400 docflow.mode_required.'
       properties:
+        mode:
+          type: string
+          enum:
+            - read_only
+            - drafts
+            - write
         read_only:
           type: boolean
+          description: Прежняя форма; используется, только когда mode не задан
     DocflowCounterparty:
       type: object
       additionalProperties: false
@@ -94953,6 +95496,9 @@ components:
             - disconnected
         read_only:
           type: boolean
+        draft_write:
+          type: boolean
+          description: 'Режим «Черновики в ЭДО»: черновик у оператора записывается и при read_only=true'
         external_org_id:
           type: string
           description: Идентификатор собственного абонентского ящика; пусто — нужно повторно проверить связь
@@ -95897,6 +96443,7 @@ components:
         - date
         - basis
         - subject
+        - purpose
         - vat_amount
         - vat_without
       properties:
@@ -95956,6 +96503,9 @@ components:
           description: 'НАША карточка договора, к которой привязан конверт. Рядом с basis, а не вместо него: basis — строка из чужой бумаги («по договору №17»), contract — карточка в кабинете, по которой договор открывается. Строку в карточку сервер не превращает: угадывать договор по номеру из PDF значит однажды повесить платёж на чужую бумагу. Заполнено только там, где связь «конверт ↔ карточка» уже записана человеком и договор ровно один; два договора дают null — выбирать за человека нельзя.'
         subject:
           $ref: '#/components/schemas/DocflowPaymentField'
+        purpose:
+          $ref: '#/components/schemas/DocflowPaymentField'
+          description: Назначение платежа словами поставщика — строка у подписи «Назначение платежа» в счёте; пусто — не названо, форма собирает своё
         vat_amount:
           $ref: '#/components/schemas/DocflowPaymentField'
         vat_without:

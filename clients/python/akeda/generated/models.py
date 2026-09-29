@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d095bc72bcefdbd3f224ba4fe5e7f71c6dca91d1e26987d99e7d79d382ec4b28).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 027397b6bb2b815685fb3e2dbc880fe1c1ec6239ea1fbee72b3acde48245c27b).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -700,6 +700,8 @@ __all__ = [
     "DocflowApprovalBlockReason",
     "DocflowApprovalBlockers",
     "DocflowApprovalCancelInput",
+    "DocflowApprovalChainPreview",
+    "DocflowApprovalChainStage",
     "DocflowApprovalDecisionInput",
     "DocflowApprovalDelegateInput",
     "DocflowApprovalDepartment",
@@ -897,6 +899,8 @@ __all__ = [
     "FinanceBalanceItem",
     "FinanceBalanceReport",
     "FinanceBalanceSection",
+    "FinanceBankLookup",
+    "FinanceBankSuggestions",
     "FinanceCashOperation",
     "FinanceCashOperationCreate",
     "FinanceCashOperationPage",
@@ -6330,6 +6334,10 @@ class CoreOrder(_CoreOrderRequired, total=False):
     contract_date: str
     progress: "CoreOrderProgress"
     project_id: "UUID"
+    #: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    department_id: Dict[str, Any]
+    #: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    cfo_id: Dict[str, Any]
     #: Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья
     pnl_item_id: Dict[str, Any]
     #: Бизнес заказа прошёл отсечку этапа 4: исполнения пишут «Заказы» и выручку, «Сделать акт» на экране одна
@@ -6565,6 +6573,10 @@ class CoreOrderImportInput(_CoreOrderImportInputRequired, total=False):
     counterparty: "CoreOrderCounterparty"
     contract_id: "UUID"
     project_id: "UUID"
+    #: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    department_id: Dict[str, Any]
+    #: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    cfo_id: Dict[str, Any]
     warehouse_id: "UUID"
     #: Основание — например, заявка на закупку
     basis_id: "UUID"
@@ -6607,6 +6619,10 @@ class CoreOrderInput(_CoreOrderInputRequired, total=False):
     counterparty: "CoreOrderCounterparty"
     contract_id: "UUID"
     project_id: "UUID"
+    #: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    department_id: Dict[str, Any]
+    #: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    cfo_id: Dict[str, Any]
     #: Статья исполнений заказа; не названа при правке — сохраняется прежняя
     pnl_item_id: Dict[str, Any]
     warehouse_id: "UUID"
@@ -6732,6 +6748,10 @@ class CoreOrderNowInput(_CoreOrderNowInputRequired, total=False):
     counterparty: "CoreOrderCounterparty"
     contract_id: "UUID"
     project_id: "UUID"
+    #: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    department_id: Dict[str, Any]
+    #: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    cfo_id: Dict[str, Any]
     #: Статья выручки (у закупки — расхода) исполнения; пусто — по учётной политике бизнеса
     pnl_item_id: Dict[str, Any]
     warehouse_id: "UUID"
@@ -6845,6 +6865,10 @@ class CoreOrderRevision(_CoreOrderRevisionRequired, total=False):
     counterparty: "CoreOrderCounterparty"
     contract_id: "UUID"
     project_id: "UUID"
+    #: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    department_id: Dict[str, Any]
+    #: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    cfo_id: Dict[str, Any]
     warehouse_id: "UUID"
     #: Основание — например, заявка на закупку
     basis_id: "UUID"
@@ -7149,6 +7173,7 @@ class _CoreProductBulkPatchRequired(TypedDict):
 class CoreProductBulkPatch(_CoreProductBulkPatchRequired, total=False):
     folder_id: Optional["UUID"]
     is_sellable: bool
+    #: Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547)
     is_stockable: bool
     is_purchasable: bool
     is_producible: bool
@@ -7164,6 +7189,7 @@ class CoreProductCreate(_CoreProductCreateRequired, total=False):
     external_id: str
     kind: "CoreProductKind"
     is_sellable: bool
+    #: Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547)
     is_stockable: bool
     is_purchasable: bool
     is_producible: bool
@@ -7444,6 +7470,7 @@ class CoreProductPatch(TypedDict, total=False):
     external_id: str
     kind: "CoreProductKind"
     is_sellable: bool
+    #: Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547)
     is_stockable: bool
     is_purchasable: bool
     is_producible: bool
@@ -8425,12 +8452,53 @@ class DocflowApprovalBlockers(_DocflowApprovalBlockersRequired, total=False):
 
     approval_id: "UUID"
     state: Literal['pending', 'approved', 'rejected', 'returned', 'cancelled']
+    #: У человека есть неотмеченное «ознакомиться» в этом проходе — своё или делегированное
+    can_acknowledge: bool
     matched_route_id: "UUID"
     matched_route_name: str
 
 class DocflowApprovalCancelInput(TypedDict):
     #: Причина отзыва остаётся в истории прохода
     comment: str
+
+class _DocflowApprovalChainPreviewRequired(TypedDict):
+    #: auto — маршрут подошёл, но все его этапы согласования отсечены порогами по сумме: предмет согласуется автоматически, без виз
+    outcome: Literal['route', 'direct', 'blocked', 'auto']
+    #: Согласование вида объявлено обязательным
+    required: bool
+    stages: List["DocflowApprovalChainStage"]
+
+class DocflowApprovalChainPreview(_DocflowApprovalChainPreviewRequired, total=False):
+    """Кто согласует предмет по его фактам: маршрут, этапы, пропуски по сумме и люди."""
+
+    route_id: "UUID"
+    route_name: str
+    #: Подобран стандартный маршрут: ни один маршрут кабинета не подошёл
+    route_standard: bool
+    payment_destination: Literal['calendar', 'treasury']
+
+class _DocflowApprovalChainStageRequired(TypedDict):
+    position: int
+    mode: Literal['all', 'any']
+    assignee_kind: Literal['user', 'department', 'role', 'manager']
+    #: Этап выполнится при этих фактах
+    applies: bool
+    people: List["DocflowApprovalPerson"]
+
+class DocflowApprovalChainStage(_DocflowApprovalChainStageRequired, total=False):
+    """Этап маршрута глазами «кто согласует» до отправки."""
+
+    title: str
+    #: Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve
+    stage_kind: Literal['approve', 'acknowledge']
+    assignee_label: str
+    #: Лимит этапа: выполняется при сумме от этого значения
+    min_amount: str
+    due_hours: int
+    #: Почему этап не выполнится
+    skip_reason: Literal['amount_below']
+    #: Этап выполнится, но спросить некого
+    problem: Literal['no_reviewers']
 
 class _DocflowApprovalDecisionInputRequired(TypedDict):
     decision: Literal['approve', 'return', 'reject']
@@ -8466,8 +8534,8 @@ class DocflowApprovalDirectories(TypedDict):
 
 class _DocflowApprovalEventRequired(TypedDict):
     id: "UUID"
-    #: operator_* — ответ оператору по входящему пакету ЭДО после прохода (настройка подключения reply_after_approval); comment несёт слова оператора или машинный код отказа docflow.edo.*
-    action: Literal['submitted', 'approved', 'returned', 'rejected', 'cancelled', 'resubmitted', 'reset_significant_change', 'delegated', 'escalated', 'reminded', 'operator_replied', 'operator_refused', 'operator_signature_required', 'operator_skipped']
+    #: auto_approved — согласовано автоматически: сумма меньше порогов маршрута. operator_* — ответ оператору по входящему пакету ЭДО после прохода (настройка подключения reply_after_approval); comment несёт слова оператора или машинный код отказа docflow.edo.*
+    action: Literal['submitted', 'approved', 'returned', 'rejected', 'cancelled', 'resubmitted', 'reset_significant_change', 'delegated', 'escalated', 'reminded', 'operator_replied', 'operator_refused', 'operator_signature_required', 'operator_skipped', 'acknowledged', 'auto_approved']
     created_at: str
 
 class DocflowApprovalEvent(_DocflowApprovalEventRequired, total=False):
@@ -8506,6 +8574,8 @@ class DocflowApprovalInboxItem(_DocflowApprovalInboxItemRequired, total=False):
     #: Чью визу вы ставите, если это не ваша собственная
     on_behalf_of: str
     on_behalf_via: Literal['self', 'substitute', 'delegate', 'administrator']
+    #: Строка этапа «ознакомиться»: решения не ждут, нужна отметка POST /approvals/{id}/acknowledge
+    informational: bool
 
 class DocflowApprovalInboxPage(TypedDict):
     items: List["DocflowApprovalInboxItem"]
@@ -8545,8 +8615,8 @@ class DocflowApprovalReview(_DocflowApprovalReviewRequired, total=False):
     decided_by_name: str
     decided_via: Literal['self', 'substitute', 'delegate', 'administrator']
     delegated_to: int
-    #: Пусто, пока человек не решил
-    decision: Literal['approve', 'return', 'reject']
+    #: Пусто, пока человек не решил; acknowledge — отметка «ознакомлен» на этапе ознакомления
+    decision: Literal['approve', 'return', 'reject', 'acknowledge']
     #: Обязателен у return и reject: без слов автор не узнает, что исправлять
     comment: str
     decided_at: str
@@ -8590,6 +8660,8 @@ class DocflowApprovalRoute(_DocflowApprovalRouteRequired, total=False):
     amount_to: str
     #: Для заявки на оплату (docflow / payment_request): куда идёт согласованная — сразу в платёжный календарь (дата оплаты = срок) или казначею, который ставит дату платежа (ERP-1427, этап 6)
     payment_destination: Literal['calendar', 'treasury']
+    #: Код стандартного маршрута кабинета. Его заводит система выключенным; включённый, он подбирается последним — когда ни один другой маршрут не подошёл. Пусто — маршрут заведён кабинетом
+    system_key: Literal['payment_request', 'invoice', 'contract']
 
 class DocflowApprovalRouteActiveInput(TypedDict):
     active: bool
@@ -8605,7 +8677,7 @@ class _DocflowApprovalRouteStageRequired(TypedDict):
     mode: Literal['all', 'any']
 
 class DocflowApprovalRouteStage(_DocflowApprovalRouteStageRequired, total=False):
-    """Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался»."""
+    """Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался». Согласующий может быть не выбран (способ назван, ссылки нет) только у выключенного маршрута: так сеется этап «Финансы» стандартного маршрута заявок."""
 
     id: "UUID"
     title: str
@@ -8614,6 +8686,8 @@ class DocflowApprovalRouteStage(_DocflowApprovalRouteStageRequired, total=False)
     assignee_role_id: "UUID"
     #: Как назначение читается человеком. Подставляется на чтении; в шаблоне не хранится
     assignee_label: str
+    #: Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve
+    stage_kind: Literal['approve', 'acknowledge']
     #: Срок ЭТАПА в часах. Просрочка даёт напоминание и эскалацию на одно звено; автоотклонения по сроку нет
     due_hours: int
     #: Лимит по сумме УСЛОВИЕМ НА ЭТАП: выполнять только при сумме от N. Этап, чей лимит не достигнут, остаётся в проходе строкой skipped
@@ -8624,13 +8698,16 @@ class _DocflowApprovalStageRequired(TypedDict):
     position: int
     mode: Literal['all', 'any']
     assignee_kind: Literal['user', 'department', 'role', 'manager']
-    state: Literal['waiting', 'active', 'approved', 'rejected', 'returned', 'skipped']
+    #: notified — этап ознакомления известил участников и пропустил проход дальше; acknowledged — все отметились
+    state: Literal['waiting', 'active', 'approved', 'rejected', 'returned', 'skipped', 'notified', 'acknowledged']
     reviews: List["DocflowApprovalReview"]
 
 class DocflowApprovalStage(_DocflowApprovalStageRequired, total=False):
     """Этап ПРОХОДА: кого спросили на самом деле. Состояние skipped означает «этап не выполняется, его лимит по сумме не достигнут»; строка всё равно есть, чтобы человек видел, ПОЧЕМУ финансового директора не спросили."""
 
     title: str
+    #: Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve
+    stage_kind: Literal['approve', 'acknowledge']
     assignee_label: str
     min_amount: str
     due_hours: int
@@ -8680,6 +8757,8 @@ class DocflowApprovalSubjectState(_DocflowApprovalSubjectStateRequired, total=Fa
 
     #: Отсутствует, пока предмет ни разу не отправляли
     approval: "DocflowApproval"
+    #: Кто согласует, если отправить сейчас; есть, только когда открытого или согласованного прохода нет
+    preview: "DocflowApprovalChainPreview"
 
 class _DocflowApprovalSubstitutionRequired(TypedDict):
     id: "UUID"
@@ -8848,6 +8927,8 @@ class DocflowConnection(_DocflowConnectionRequired, total=False):
     """Подключение юрлица к оператору ЭДО. Учётных данных здесь нет ни одним полем: снаружи виден только признак has_credentials."""
 
     company: "UUID"
+    #: Режим «Черновики в ЭДО» (ERP-1551): при read_only=true оператору уходят черновики; подпись, отправка и ответы остаются закрытыми
+    draft_write: bool
     #: Кто из ERP выдал доступ; имя человека на стороне оператора нам неизвестно
     granted_by_user_id: int
     granted_at: str
@@ -8873,9 +8954,11 @@ class DocflowConnectionList(TypedDict):
     count: int
     results: List["DocflowConnection"]
 
-class DocflowConnectionModeInput(TypedDict):
-    """Явный выбор режима. false разрешает юридически значимые действия через это подключение; true немедленно возвращает безопасный режим."""
+class DocflowConnectionModeInput(TypedDict, total=False):
+    """Явный выбор режима. mode: read_only — только чтение; drafts — «Черновики в ЭДО» (ERP-1551): оператору уходят только черновики, подпись, отправка и ответы закрыты; write — все действия. Прежняя форма read_only (true — read_only, false — write) принимается, если mode не задан. Без обоих полей — 400 docflow.mode_required."""
 
+    mode: Literal['read_only', 'drafts', 'write']
+    #: Прежняя форма; используется, только когда mode не задан
     read_only: bool
 
 class DocflowConnectionPatch(TypedDict, total=False):
@@ -9749,6 +9832,8 @@ class DocflowInvitationSender(_DocflowInvitationSenderRequired, total=False):
     company: Optional[str]
     #: Имя оператора словами
     provider_name: str
+    #: Режим «Черновики в ЭДО»: черновик у оператора записывается и при read_only=true
+    draft_write: bool
 
 class _DocflowIssueRequired(TypedDict):
     #: Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои пять: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке документа не сопоставлена номенклатура) и docflow.edo.sign_first (документ ещё не подписан: в учёт его принимают после подписи)
@@ -10079,6 +10164,8 @@ class _DocflowPaymentDetailsRequired(TypedDict):
     date: "DocflowPaymentField"
     basis: "DocflowPaymentField"
     subject: "DocflowPaymentField"
+    #: Назначение платежа словами поставщика — строка у подписи «Назначение платежа» в счёте; пусто — не названо, форма собирает своё
+    purpose: "DocflowPaymentField"
     vat_amount: "DocflowPaymentField"
     #: В счёте стояла отметка «без налога (НДС)». Пустая сумма при снятой отметке означает «про налог не сказано», а не «налога нет»
     vat_without: bool
@@ -10155,6 +10242,10 @@ class _DocflowPaymentRequestRequired(TypedDict):
     basis: "DocflowPaymentRequestBasis"
     #: Куда ушла согласованная заявка: снимок флага маршрута
     destination: Literal['', 'calendar', 'treasury']
+    #: Согласована автоматически: маршрута для заявки нет и согласование не обязательно, прохода согласования не было
+    approval_auto: bool
+    #: Согласованную заявку отклонил казначей в модуле finance; причина — в reason
+    rejected_by_finance: bool
     created_by_name: str
     created_at: str
     updated_at: str
@@ -10166,9 +10257,11 @@ class _DocflowPaymentRequestRequired(TypedDict):
 class DocflowPaymentRequest(_DocflowPaymentRequestRequired, total=False):
     contact_id: "UUID"
     item_id: "UUID"
-    #: Причина отказа или возврата на доработку
+    #: Причина отказа, возврата на доработку или отклонения казначеем
     reason: str
     payment: "DocflowPaymentRequestPayment"
+    #: Строка очереди оплат модуля finance, куда ушла согласованная заявка
+    finance_request_id: "UUID"
     created_by: int
 
 class DocflowPaymentRequestBasis(TypedDict, total=False):
@@ -11117,6 +11210,14 @@ class FinanceBalanceSection(TypedDict):
     label: str
     total: str
     items: List["FinanceBalanceItem"]
+
+class FinanceBankLookup(TypedDict):
+    directory_configured: bool
+    bank: Optional["FinanceRequisitesBank"]
+
+class FinanceBankSuggestions(TypedDict):
+    directory_configured: bool
+    banks: List["FinanceRequisitesBank"]
 
 class _FinanceCashOperationRequired(TypedDict):
     id: "UUID"
@@ -12725,11 +12826,17 @@ class FinanceRequisitesAddress(TypedDict):
     block: str
     flat: str
 
-class FinanceRequisitesBank(TypedDict):
+class _FinanceRequisitesBankRequired(TypedDict):
     name: str
     bic: str
     correspondent_account: str
     city: str
+
+class FinanceRequisitesBank(_FinanceRequisitesBankRequired, total=False):
+    #: ИНН банка; пусто — справочник не назвал
+    inn: str
+    #: КПП банка; пусто — справочник не назвал
+    kpp: str
 
 class FinanceRequisitesLookup(TypedDict):
     organization: Optional["FinanceRequisitesParty"]
@@ -18126,6 +18233,8 @@ class StockDocumentPayload(_StockDocumentPayloadRequired, total=False):
     """Содержимое складского документа. Разбор строгий — незнакомое поле отклоняется. У документа-факта, заявки, заказа и резерва `items` обязателен и не длиннее 1000 строк."""
 
     reason: str
+    #: Причина списания из справочника stock.stock_writeoff_reasons. Есть только у списания. Текст reason при этом остаётся: ссылка даёт единое значение причины, текст несёт подробности. Не прислан — сервер сам пробует узнать текст в справочнике; прислан явно, в том числе null, — решение вызывающего не переигрывается; неизвестная ссылка отклоняется
+    reason_id: Optional["UUID"]
     desired_at: str
     delivery_at: str
     #: Срок резерва; не раньше даты документа
@@ -18973,6 +19082,8 @@ class StockSettings(TypedDict):
     auto_cancel_expired_reservations: bool
     #: Перемещение зарезервированного: везти резерв на склад-получатель вместо отказа
     transfer_carries_reservation: bool
+    #: Кабинет работает с заявками на закупку (ERP-1523). Выключено — новая заявка не заводится, открытые учитываются до закрытия. Пока владелец не выбирал, следует факту: включено, если заявки в кабинете уже заводили
+    purchase_requests_enabled: bool
     default_reservation_days: int
     updated_at: str
 
@@ -18981,6 +19092,7 @@ class StockSettingsPatch(TypedDict, total=False):
     block_reservation_over_available: bool
     auto_cancel_expired_reservations: bool
     transfer_carries_reservation: bool
+    purchase_requests_enabled: bool
     default_reservation_days: int
 
 class StockSupplier(TypedDict):
