@@ -7627,14 +7627,43 @@ paths:
             type: string
             enum:
               - m4a
+        - name: w
+          in: query
+          required: false
+          description: Для фото — уменьшенная копия ближайшей ступени лестницы ширин (JPEG, например 800). Без копии или не для фото отдаётся оригинал.
+          schema:
+            type: integer
+            minimum: 0
+        - name: Range
+          in: header
+          required: false
+          description: Один диапазон байтов (`bytes=N-`, `bytes=N-M`, `bytes=-S`) для докачки оборванной загрузки. Работает, только если в ответе был `ETag`; несколько диапазонов игнорируются.
+          schema:
+            type: string
+            example: bytes=130848-
+        - name: If-Range
+          in: header
+          required: false
+          description: '`ETag` прежнего ответа. Не совпал — сервер отдаёт файл целиком (200), а не хвост другого файла.'
+          schema:
+            type: string
       responses:
         '200':
-          description: Байты аудио или видео с фактическим Content-Type
+          description: Байты аудио, видео, фото или файла с фактическим Content-Type
           headers:
             Cache-Control:
               schema:
                 type: string
                 example: private, no-store
+            Accept-Ranges:
+              description: '`bytes`, если ответ можно докачивать'
+              schema:
+                type: string
+                example: bytes
+            ETag:
+              description: Сильный валидатор байтов; у уменьшенной копии фото отсутствует
+              schema:
+                type: string
           content:
             audio/mp4:
               schema:
@@ -7660,12 +7689,34 @@ paths:
               schema:
                 type: string
                 format: binary
+        '206':
+          description: Хвост файла для докачки по `Range` при совпавшем `If-Range`
+          headers:
+            Content-Range:
+              schema:
+                type: string
+                example: bytes 130848-230321/230322
+            ETag:
+              schema:
+                type: string
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '416':
+          description: Диапазон начинается за концом файла; клиент начинает загрузку заново
+          headers:
+            Content-Range:
+              schema:
+                type: string
+                example: bytes */230322
         '422':
           description: Запрошена совместимая версия не голосового или неподдержанного медиа
         '503':
