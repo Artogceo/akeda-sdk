@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 027397b6bb2b815685fb3e2dbc880fe1c1ec6239ea1fbee72b3acde48245c27b).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1b8a276ba06fb42749336df27f0f60e0382a0c7a083aa540f41f1539ec99bc2d).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -4199,7 +4199,9 @@ export interface CoreEmployee {
   "location": string;
   "manager_employee_id": string | null;
   "manager_name": string;
+  /** Пусто у чужой карточки без права core.employee_requisites:read */
   "phone": string;
+  /** Пусто у чужой карточки без права core.employee_requisites:read */
   "email": string;
   "user_id": number | null;
   "username": string;
@@ -4207,10 +4209,17 @@ export interface CoreEmployee {
   /** Date or empty string */
   "employed_at": string;
   "is_active": boolean;
+  /** Пусто у чужой карточки без права core.employee_requisites:read */
   "notes": string;
   "has_photo": boolean;
   "created_at": string;
   "updated_at": string;
+  /** ИНН для выплаты; пусто у чужой карточки без права core.employee_requisites:read */
+  "inn"?: string;
+  /** БИК банка выплаты; пусто у чужой карточки без права core.employee_requisites:read */
+  "bank_bic"?: string;
+  /** Счёт или карта выплаты; пусто у чужой карточки без права core.employee_requisites:read */
+  "bank_account"?: string;
 }
 
 export interface CoreEmployeeCreateVariant1 {
@@ -4312,6 +4321,12 @@ export interface CoreEmployeePatch {
   "employed_at"?: string | null;
   "is_active"?: boolean;
   "notes"?: string;
+  /** Применяется только с правом core.employee_requisites:write */
+  "inn"?: string;
+  /** Применяется только с правом core.employee_requisites:write */
+  "bank_bic"?: string;
+  /** Применяется только с правом core.employee_requisites:write */
+  "bank_account"?: string;
 }
 
 export interface CoreExternalContactCandidate {
@@ -16164,6 +16179,8 @@ export interface SettingsCompany {
   "is_active": boolean;
   /** Значения своих полей кабинета: графа («Настройки → Поля», вид core.company) → значение */
   "custom": { [key: string]: unknown };
+  /** Контроль закрывающих документов по выданным авансам: вкладка «Ждём закрывающие» ведёт авансы этого юрлица. Для режима «доходы минус расходы» обязателен, на «доходах» не нужен */
+  "closing_control"?: boolean;
 }
 
 export interface SettingsCompanyAddress {
@@ -16211,6 +16228,8 @@ export interface SettingsCompanyInput {
   "head"?: SettingsCompanyHead;
   /** Значения своих полей: не передано — не менять. Значение проверяется по типу графы; неподходящее — 422 с названиями граф */
   "custom"?: { [key: string]: unknown };
+  /** Включить или выключить контроль закрывающих документов по выданным авансам. Не передано — не менять */
+  "closing_control"?: boolean;
 }
 
 export interface SettingsCompanyPage {

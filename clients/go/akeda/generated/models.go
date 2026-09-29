@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 027397b6bb2b815685fb3e2dbc880fe1c1ec6239ea1fbee72b3acde48245c27b).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1b8a276ba06fb42749336df27f0f60e0382a0c7a083aa540f41f1539ec99bc2d).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -4186,18 +4186,27 @@ type CoreEmployee struct {
 	Location          string  `json:"location"`
 	ManagerEmployeeID *string `json:"manager_employee_id"`
 	ManagerName       string  `json:"manager_name"`
-	Phone             string  `json:"phone"`
-	Email             string  `json:"email"`
-	UserID            *int64  `json:"user_id"`
-	Username          string  `json:"username"`
-	RoleName          string  `json:"role_name"`
+	// Phone — Пусто у чужой карточки без права core.employee_requisites:read
+	Phone string `json:"phone"`
+	// Email — Пусто у чужой карточки без права core.employee_requisites:read
+	Email    string `json:"email"`
+	UserID   *int64 `json:"user_id"`
+	Username string `json:"username"`
+	RoleName string `json:"role_name"`
 	// EmployedAt — Date or empty string
 	EmployedAt string `json:"employed_at"`
 	IsActive   bool   `json:"is_active"`
-	Notes      string `json:"notes"`
-	HasPhoto   bool   `json:"has_photo"`
-	CreatedAt  string `json:"created_at"`
-	UpdatedAt  string `json:"updated_at"`
+	// Notes — Пусто у чужой карточки без права core.employee_requisites:read
+	Notes     string `json:"notes"`
+	HasPhoto  bool   `json:"has_photo"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+	// INN — ИНН для выплаты; пусто у чужой карточки без права core.employee_requisites:read
+	INN *string `json:"inn,omitempty"`
+	// BankBIC — БИК банка выплаты; пусто у чужой карточки без права core.employee_requisites:read
+	BankBIC *string `json:"bank_bic,omitempty"`
+	// BankAccount — Счёт или карта выплаты; пусто у чужой карточки без права core.employee_requisites:read
+	BankAccount *string `json:"bank_account,omitempty"`
 }
 
 type CoreEmployeeCreateVariant1 struct {
@@ -4299,6 +4308,12 @@ type CoreEmployeePatch struct {
 	EmployedAt        *string `json:"employed_at,omitempty"`
 	IsActive          *bool   `json:"is_active,omitempty"`
 	Notes             *string `json:"notes,omitempty"`
+	// INN — Применяется только с правом core.employee_requisites:write
+	INN *string `json:"inn,omitempty"`
+	// BankBIC — Применяется только с правом core.employee_requisites:write
+	BankBIC *string `json:"bank_bic,omitempty"`
+	// BankAccount — Применяется только с правом core.employee_requisites:write
+	BankAccount *string `json:"bank_account,omitempty"`
 }
 
 type CoreExternalContactCandidate struct {
@@ -16086,6 +16101,8 @@ type SettingsCompany struct {
 	IsActive                bool                   `json:"is_active"`
 	// Custom — Значения своих полей кабинета: графа («Настройки → Поля», вид core.company) → значение
 	Custom map[string]json.RawMessage `json:"custom"`
+	// ClosingControl — Контроль закрывающих документов по выданным авансам: вкладка «Ждём закрывающие» ведёт авансы этого юрлица. Для режима «доходы минус расходы» обязателен, на «доходах» не нужен
+	ClosingControl *bool `json:"closing_control,omitempty"`
 }
 
 type SettingsCompanyAddress struct {
@@ -16133,6 +16150,8 @@ type SettingsCompanyInput struct {
 	Head              *SettingsCompanyHead    `json:"head,omitempty"`
 	// Custom — Значения своих полей: не передано — не менять. Значение проверяется по типу графы; неподходящее — 422 с названиями граф
 	Custom map[string]json.RawMessage `json:"custom,omitempty"`
+	// ClosingControl — Включить или выключить контроль закрывающих документов по выданным авансам. Не передано — не менять
+	ClosingControl *bool `json:"closing_control,omitempty"`
 }
 
 type SettingsCompanyPage struct {

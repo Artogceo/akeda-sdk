@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 027397b6bb2b815685fb3e2dbc880fe1c1ec6239ea1fbee72b3acde48245c27b).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1b8a276ba06fb42749336df27f0f60e0382a0c7a083aa540f41f1539ec99bc2d).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -5850,7 +5850,7 @@ class CoreDocumentTypePatch(TypedDict, total=False):
     number_reset: "CoreNumberReset"
     settings: Dict[str, Any]
 
-class CoreEmployee(TypedDict):
+class _CoreEmployeeRequired(TypedDict):
     id: "UUID"
     full_name: str
     first_name: str
@@ -5865,7 +5865,9 @@ class CoreEmployee(TypedDict):
     location: str
     manager_employee_id: Optional[str]
     manager_name: str
+    #: Пусто у чужой карточки без права core.employee_requisites:read
     phone: str
+    #: Пусто у чужой карточки без права core.employee_requisites:read
     email: str
     user_id: Optional[int]
     username: str
@@ -5873,10 +5875,19 @@ class CoreEmployee(TypedDict):
     #: Date or empty string
     employed_at: str
     is_active: bool
+    #: Пусто у чужой карточки без права core.employee_requisites:read
     notes: str
     has_photo: bool
     created_at: str
     updated_at: str
+
+class CoreEmployee(_CoreEmployeeRequired, total=False):
+    #: ИНН для выплаты; пусто у чужой карточки без права core.employee_requisites:read
+    inn: str
+    #: БИК банка выплаты; пусто у чужой карточки без права core.employee_requisites:read
+    bank_bic: str
+    #: Счёт или карта выплаты; пусто у чужой карточки без права core.employee_requisites:read
+    bank_account: str
 
 class CoreEmployeeCreateVariant1(TypedDict):
     full_name: str
@@ -5970,6 +5981,12 @@ class CoreEmployeePatch(TypedDict, total=False):
     employed_at: Optional[str]
     is_active: bool
     notes: str
+    #: Применяется только с правом core.employee_requisites:write
+    inn: str
+    #: Применяется только с правом core.employee_requisites:write
+    bank_bic: str
+    #: Применяется только с правом core.employee_requisites:write
+    bank_account: str
 
 class CoreExternalContactCandidate(TypedDict):
     external_id: str
@@ -17459,6 +17476,8 @@ class _SettingsCompanyRequired(TypedDict):
 
 class SettingsCompany(_SettingsCompanyRequired, total=False):
     head: "SettingsCompanyHead"
+    #: Контроль закрывающих документов по выданным авансам: вкладка «Ждём закрывающие» ведёт авансы этого юрлица. Для режима «доходы минус расходы» обязателен, на «доходах» не нужен
+    closing_control: bool
 
 class SettingsCompanyAddress(TypedDict):
     postal_code: str
@@ -17506,6 +17525,8 @@ class SettingsCompanyInput(_SettingsCompanyInputRequired, total=False):
     head: "SettingsCompanyHead"
     #: Значения своих полей: не передано — не менять. Значение проверяется по типу графы; неподходящее — 422 с названиями граф
     custom: Dict[str, Any]
+    #: Включить или выключить контроль закрывающих документов по выданным авансам. Не передано — не менять
+    closing_control: bool
 
 class SettingsCompanyPage(TypedDict):
     #: Число отданных строк, страниц у справочника нет

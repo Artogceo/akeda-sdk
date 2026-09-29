@@ -14477,7 +14477,7 @@ paths:
         - Core employees
       operationId: coreListEmployees
       summary: Получить сотрудников кабинета
-      description: 'Страница карточек: сначала активные, затем по ФИО. Ответ называет применённые limit и offset; страница ровно в limit строк означает, что дальше может быть ещё, — запрашивайте следующую с offset += limit.'
+      description: 'Страница карточек: сначала активные, затем по ФИО. Ответ называет применённые limit и offset; страница ровно в limit строк означает, что дальше может быть ещё, — запрашивайте следующую с offset += limit. Реквизиты (inn, bank_bic, bank_account, phone, email, notes) чужих карточек без права `core.employee_requisites:read` приходят пустыми строками; своя карточка — целиком.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -14492,7 +14492,7 @@ paths:
         - $ref: '#/components/parameters/TenantHeader'
         - name: q
           in: query
-          description: Поиск по ФИО, должности, отделу и контактам
+          description: Поиск по ФИО, должности, отделу и локации; по телефону и почте — только с правом `core.employee_requisites:read`
           schema:
             type: string
         - name: limit
@@ -14526,7 +14526,7 @@ paths:
         - Core employees
       operationId: coreCreateEmployee
       summary: Создать карточку сотрудника
-      description: Учётная запись необязательна; роль и логин меняются в настройках кабинета, а не здесь.
+      description: Учётная запись необязательна; роль и логин меняются в настройках кабинета, а не здесь. Реквизиты (inn, bank_bic, bank_account, phone, email, notes) без права `core.employee_requisites:write` не сохраняются.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -14573,6 +14573,7 @@ paths:
         - Core employees
       operationId: coreGetEmployee
       summary: Получить карточку сотрудника
+      description: Реквизиты (inn, bank_bic, bank_account, phone, email, notes) чужой карточки без права `core.employee_requisites:read` приходят пустыми строками; своя карточка — целиком.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -14601,7 +14602,7 @@ paths:
         - Core employees
       operationId: coreUpdateEmployee
       summary: Частично изменить карточку сотрудника
-      description: Nullable-ссылки и employed_at можно явно очистить значением null.
+      description: Nullable-ссылки и employed_at можно явно очистить значением null. Реквизиты (inn, bank_bic, bank_account, phone, email, notes) без права `core.employee_requisites:write` не применяются, хранимые значения остаются прежними.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -64513,8 +64514,10 @@ components:
           type: string
         phone:
           type: string
+          description: Пусто у чужой карточки без права core.employee_requisites:read
         email:
           type: string
+          description: Пусто у чужой карточки без права core.employee_requisites:read
         user_id:
           type:
             - integer
@@ -64533,6 +64536,7 @@ components:
           type: boolean
         notes:
           type: string
+          description: Пусто у чужой карточки без права core.employee_requisites:read
         has_photo:
           type: boolean
         created_at:
@@ -64541,6 +64545,15 @@ components:
         updated_at:
           type: string
           format: date-time
+        inn:
+          type: string
+          description: ИНН для выплаты; пусто у чужой карточки без права core.employee_requisites:read
+        bank_bic:
+          type: string
+          description: БИК банка выплаты; пусто у чужой карточки без права core.employee_requisites:read
+        bank_account:
+          type: string
+          description: Счёт или карта выплаты; пусто у чужой карточки без права core.employee_requisites:read
     CoreEmployeePage:
       type: object
       additionalProperties: false
@@ -64645,6 +64658,15 @@ components:
           default: true
         notes:
           type: string
+        inn:
+          type: string
+          description: Применяется только с правом core.employee_requisites:write
+        bank_bic:
+          type: string
+          description: Применяется только с правом core.employee_requisites:write
+        bank_account:
+          type: string
+          description: Применяется только с правом core.employee_requisites:write
     CoreEmployeePatch:
       type: object
       additionalProperties: false
@@ -64702,6 +64724,15 @@ components:
           type: boolean
         notes:
           type: string
+        inn:
+          type: string
+          description: Применяется только с правом core.employee_requisites:write
+        bank_bic:
+          type: string
+          description: Применяется только с правом core.employee_requisites:write
+        bank_account:
+          type: string
+          description: Применяется только с правом core.employee_requisites:write
     CorePhotoResult:
       type: object
       additionalProperties: false
@@ -85691,6 +85722,9 @@ components:
           type: object
           additionalProperties: true
           description: 'Значения своих полей кабинета: графа («Настройки → Поля», вид core.company) → значение'
+        closing_control:
+          type: boolean
+          description: 'Контроль закрывающих документов по выданным авансам: вкладка «Ждём закрывающие» ведёт авансы этого юрлица. Для режима «доходы минус расходы» обязателен, на «доходах» не нужен'
     SettingsCompanyPerson:
       type: object
       additionalProperties: false
@@ -85826,6 +85860,9 @@ components:
           type: object
           additionalProperties: true
           description: 'Значения своих полей: не передано — не менять. Значение проверяется по типу графы; неподходящее — 422 с названиями граф'
+        closing_control:
+          type: boolean
+          description: Включить или выключить контроль закрывающих документов по выданным авансам. Не передано — не менять
     SettingsVatRates:
       type: object
       additionalProperties: false
