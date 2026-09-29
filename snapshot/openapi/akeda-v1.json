@@ -76232,6 +76232,85 @@
         }
       }
     },
+    "/api/v1/docflow/flow/contacts": {
+      "get": {
+        "tags": [
+          "Docflow flow"
+        ],
+        "operationId": "docflowFlowContactStats",
+        "x-akeda-audience": "external",
+        "summary": "Документы по контрагентам",
+        "description": "Сколько живых карточек внутреннего документооборота у каждого контрагента и дата последнего документа — строка раздела «Контрагенты» документооборота. Удалённые карточки не считаются, архивные считаются. Юрлица, недоступные текущему человеку, в сводку не входят.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.flow:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Сводка по контрагентам",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "contact_id",
+                          "documents",
+                          "last_date"
+                        ],
+                        "properties": {
+                          "contact_id": {
+                            "$ref": "#/components/schemas/UUID"
+                          },
+                          "documents": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "last_date": {
+                            "type": "string",
+                            "description": "Дата последнего документа, YYYY-MM-DD; пусто — без даты"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
     "/api/v1/docflow/flow/documents": {
       "get": {
         "tags": [
@@ -76348,14 +76427,39 @@
             }
           },
           {
-            "name": "with",
+            "name": "kinds",
             "in": "query",
-            "description": "counts — вернуть state_counts: пилюли списка договоров при тех же отборах, кроме status и validity",
+            "description": "Виды карточек через запятую — отбор галочками в шапке общего списка; складывается с kind и group",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "contact_ids",
+            "in": "query",
+            "description": "Контрагенты через запятую (UUID) — отбор галочками в шапке общего списка",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "deal",
+            "in": "query",
+            "description": "yes — только бумаги, лежащие в сделке (связь «основание» с продажей, закупкой или договором), no — только без сделки",
             "schema": {
               "type": "string",
               "enum": [
-                "counts"
+                "yes",
+                "no"
               ]
+            }
+          },
+          {
+            "name": "with",
+            "in": "query",
+            "description": "Через запятую. counts — вернуть state_counts: пилюли списка договоров при тех же отборах, кроме status и validity; marks — отметки строк (канал ЭДО и ход за нами, сделка, оплата счёта); total — число документов при отборах (на первой странице). Порядок строк — по дате документа, свежие сверху",
+            "schema": {
+              "type": "string"
             }
           },
           {

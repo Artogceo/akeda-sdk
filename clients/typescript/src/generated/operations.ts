@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8fbfcad51c915893528993d3d7fcce0c9fdb8c9c8a0d51e72e5050029a66740b).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 65ba16a7013940083db056577f9da82c28749390eefcf9beb5549eedf8aef22b).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -3443,6 +3443,13 @@ export interface OperationTypes {
     body: models.DocflowFlowChangeInput;
     response: models.DocflowFlowDocument;
   };
+  /** GET /api/v1/docflow/flow/contacts — Документы по контрагентам */
+  docflowFlowContactStats: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowFlowContactStatsResponse;
+  };
   /** POST /api/v1/docflow/flow/accounting-documents/{owner}/{document}/originals — Завести бумагу по учётному документу */
   docflowFlowCreateAccountingOriginal: {
     params: { "document": models.UUID; "owner": "finance" | "stock" };
@@ -3488,7 +3495,7 @@ export interface OperationTypes {
   /** GET /api/v1/docflow/flow/documents — Получить документы внутреннего контура */
   docflowFlowDocuments: {
     params: Record<string, never>;
-    query: { "awaiting_my_approval"?: "true" | "false"; "company_id"?: models.UUID; "contact_id"?: models.UUID; "kind"?: models.DocflowFlowKind; "limit"?: number; "offset"?: number; "regular"?: "true" | "false"; "related_to"?: models.UUID; "search"?: string; "status"?: "draft" | "registered" | "archived"; "validity"?: "active" | "expiring" | "expired"; "with"?: "counts" };
+    query: { "awaiting_my_approval"?: "true" | "false"; "company_id"?: models.UUID; "contact_id"?: models.UUID; "contact_ids"?: string; "deal"?: "yes" | "no"; "kind"?: models.DocflowFlowKind; "kinds"?: string; "limit"?: number; "offset"?: number; "regular"?: "true" | "false"; "related_to"?: models.UUID; "search"?: string; "status"?: "draft" | "registered" | "archived"; "validity"?: "active" | "expiring" | "expired"; "with"?: string };
     body: never;
     response: models.DocflowFlowPage;
   };
@@ -8661,6 +8668,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowFlowAccrualCandidates: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/accrual-candidates", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowAccrualPlan: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/accrual-plan", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowChangeDocument: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/commands", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowFlowContactStats: { method: "GET", path: "/api/v1/docflow/flow/contacts", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowCreateAccountingOriginal: { method: "POST", path: "/api/v1/docflow/flow/accounting-documents/{owner}/{document}/originals", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowCreateDocument: { method: "POST", path: "/api/v1/docflow/flow/documents", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowCreateFinancePlan: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/finance-plan", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8fbfcad51c915893528993d3d7fcce0c9fdb8c9c8a0d51e72e5050029a66740b).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 65ba16a7013940083db056577f9da82c28749390eefcf9beb5549eedf8aef22b).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -518,6 +518,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowFlowAccrualCandidates': OperationSpec('GET', '/api/v1/docflow/flow/documents/{id}/accrual-candidates', 'docflow', 'preview', 'docflow.flow:write', False, False, ('id',), 'none', None, None),
     'docflowFlowAccrualPlan': OperationSpec('GET', '/api/v1/docflow/flow/documents/{id}/accrual-plan', 'docflow', 'preview', 'docflow.flow:write', False, False, ('id',), 'none', None, None),
     'docflowFlowChangeDocument': OperationSpec('POST', '/api/v1/docflow/flow/documents/{id}/commands', 'docflow', 'preview', 'docflow.flow:write', True, False, ('id',), 'none', None, None),
+    'docflowFlowContactStats': OperationSpec('GET', '/api/v1/docflow/flow/contacts', 'docflow', 'preview', 'docflow.flow:read', False, False, (), 'none', None, None),
     'docflowFlowCreateAccountingOriginal': OperationSpec('POST', '/api/v1/docflow/flow/accounting-documents/{owner}/{document}/originals', 'docflow', 'preview', 'docflow.flow:write', True, False, ('document', 'owner',), 'none', None, None),
     'docflowFlowCreateDocument': OperationSpec('POST', '/api/v1/docflow/flow/documents', 'docflow', 'preview', 'docflow.flow:write', True, False, (), 'none', None, None),
     'docflowFlowCreateFinancePlan': OperationSpec('POST', '/api/v1/docflow/flow/documents/{id}/finance-plan', 'docflow', 'preview', 'docflow.flow:write', True, False, ('id',), 'none', None, None),

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8fbfcad51c915893528993d3d7fcce0c9fdb8c9c8a0d51e72e5050029a66740b).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 65ba16a7013940083db056577f9da82c28749390eefcf9beb5549eedf8aef22b).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -517,6 +517,7 @@ var Operations = map[string]Operation{
 	"docflowFlowAccrualCandidates":               {ID: "docflowFlowAccrualCandidates", Method: "GET", Path: "/api/v1/docflow/flow/documents/{id}/accrual-candidates", Module: "docflow", Stage: "preview", Permission: "docflow.flow:write", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"docflowFlowAccrualPlan":                     {ID: "docflowFlowAccrualPlan", Method: "GET", Path: "/api/v1/docflow/flow/documents/{id}/accrual-plan", Module: "docflow", Stage: "preview", Permission: "docflow.flow:write", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"docflowFlowChangeDocument":                  {ID: "docflowFlowChangeDocument", Method: "POST", Path: "/api/v1/docflow/flow/documents/{id}/commands", Module: "docflow", Stage: "preview", Permission: "docflow.flow:write", Idempotent: true, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
+	"docflowFlowContactStats":                    {ID: "docflowFlowContactStats", Method: "GET", Path: "/api/v1/docflow/flow/contacts", Module: "docflow", Stage: "preview", Permission: "docflow.flow:read", Idempotent: false, Installation: false, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"docflowFlowCreateAccountingOriginal":        {ID: "docflowFlowCreateAccountingOriginal", Method: "POST", Path: "/api/v1/docflow/flow/accounting-documents/{owner}/{document}/originals", Module: "docflow", Stage: "preview", Permission: "docflow.flow:write", Idempotent: true, Installation: false, PathParams: []string{"document", "owner"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"docflowFlowCreateDocument":                  {ID: "docflowFlowCreateDocument", Method: "POST", Path: "/api/v1/docflow/flow/documents", Module: "docflow", Stage: "preview", Permission: "docflow.flow:write", Idempotent: true, Installation: false, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"docflowFlowCreateFinancePlan":               {ID: "docflowFlowCreateFinancePlan", Method: "POST", Path: "/api/v1/docflow/flow/documents/{id}/finance-plan", Module: "docflow", Stage: "preview", Permission: "docflow.flow:write", Idempotent: true, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},

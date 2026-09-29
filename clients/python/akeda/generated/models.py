@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8fbfcad51c915893528993d3d7fcce0c9fdb8c9c8a0d51e72e5050029a66740b).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 65ba16a7013940083db056577f9da82c28749390eefcf9beb5549eedf8aef22b).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1677,6 +1677,8 @@ __all__ = [
     "CoreListBusinessOwnershipResponse",
     "DocflowLookupParticipantRequest",
     "DocflowLookupParticipantResponse",
+    "DocflowFlowContactStatsResponse",
+    "DocflowFlowContactStatsResponseItemsItem",
     "DocflowFlowDocumentRevisionsResponse",
     "DocflowFlowDocumentRevisionsResponseItemsItem",
     "DocflowPreviewMessageActionResponse",
@@ -19564,6 +19566,15 @@ class DocflowLookupParticipantRequest(TypedDict):
 
 class DocflowLookupParticipantResponse(TypedDict):
     participant_id: str
+
+class DocflowFlowContactStatsResponse(TypedDict):
+    items: List["DocflowFlowContactStatsResponseItemsItem"]
+
+class DocflowFlowContactStatsResponseItemsItem(TypedDict):
+    contact_id: "UUID"
+    documents: int
+    #: Дата последнего документа, YYYY-MM-DD; пусто — без даты
+    last_date: str
 
 class DocflowFlowDocumentRevisionsResponse(TypedDict):
     items: List["DocflowFlowDocumentRevisionsResponseItemsItem"]
