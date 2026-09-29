@@ -27229,6 +27229,57 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/v1/files/shortcuts:
+    post:
+      tags:
+        - Files
+      operationId: filesCreateShortcut
+      x-akeda-audience: external
+      summary: Создать ярлык на внешний ресурс
+      description: Создаёт переносимый .url файл с наследуемыми правами папки. Принимает только HTTP(S) без credentials и управляющих символов; сервер не запрашивает внешний адрес. Доступ к внешнему ресурсу определяет его провайдер.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: files
+      x-akeda-release-stage: preview
+      x-akeda-permission: files:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - folder_id
+                - name
+                - url
+              properties:
+                folder_id:
+                  $ref: '#/components/schemas/UUID'
+                name:
+                  type: string
+                  maxLength: 255
+                url:
+                  type: string
+                  format: uri
+                  maxLength: 4096
+      responses:
+        '201':
+          description: Ярлык
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilesFile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/files/folders:
     post:
       tags:
@@ -75004,6 +75055,10 @@ components:
           $ref: '#/components/schemas/UUID'
         name:
           type: string
+        external_url:
+          type: string
+          format: uri
+          description: HTTP(S)-адрес внешнего ярлыка; отсутствует у обычных файлов
         extension:
           type: string
         mime_type:
@@ -78545,10 +78600,12 @@ components:
         - warehouse_id
         - warehouse_code
         - warehouse_name
+        - warehouse_parent_name
         - product_id
         - product_sku
         - product_name
         - unit
+        - purchase_price
         - on_hand
         - reserved
         - available
@@ -78587,6 +78644,9 @@ components:
           type: string
         warehouse_name:
           type: string
+        warehouse_parent_name:
+          type: string
+          description: Склад над зоной (дочерним складом); у склада верхнего уровня пусто. Витрина пишет «склад · зона» (ERP-1522).
         product_id:
           $ref: '#/components/schemas/UUID'
         product_sku:
@@ -78595,6 +78655,9 @@ components:
           type: string
         unit:
           type: string
+        purchase_price:
+          type: string
+          description: Decimal string. Закупочная цена карточки — умолчание цены строки закупки из витрины (ERP-1522); ноль — цены в карточке нет.
         on_hand:
           type: string
           description: Decimal string

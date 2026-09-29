@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3559a81b0db1c002a2e835d5235e454c12a46edfff77388838833b13bfbf50f5).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8fbfcad51c915893528993d3d7fcce0c9fdb8c9c8a0d51e72e5050029a66740b).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1690,6 +1690,7 @@ __all__ = [
     "FilesListRootsResponse",
     "FilesSearchResponse",
     "FilesListSharesResponse",
+    "FilesCreateShortcutRequest",
     "FilesPurgeTrashResponse",
     "FinanceListDividendAccessUsersResponse",
     "FinanceListDividendAccessUsersResponseResultsItem",
@@ -10835,6 +10836,8 @@ class _FilesFileRequired(TypedDict):
     is_favorite: bool
 
 class FilesFile(_FilesFileRequired, total=False):
+    #: HTTP(S)-адрес внешнего ярлыка; отсутствует у обычных файлов
+    external_url: str
     version_id: "UUID"
     updated_by: int
     trashed_at: str
@@ -18785,10 +18788,14 @@ class StockReportPurchasingRow(TypedDict):
     warehouse_id: Optional["UUID"]
     warehouse_code: str
     warehouse_name: str
+    #: Склад над зоной (дочерним складом); у склада верхнего уровня пусто. Витрина пишет «склад · зона» (ERP-1522).
+    warehouse_parent_name: str
     product_id: "UUID"
     product_sku: str
     product_name: str
     unit: str
+    #: Decimal string. Закупочная цена карточки — умолчание цены строки закупки из витрины (ERP-1522); ноль — цены в карточке нет.
+    purchase_price: str
     #: Decimal string
     on_hand: str
     #: Decimal string
@@ -19623,6 +19630,11 @@ class FilesSearchResponse(TypedDict):
 
 class FilesListSharesResponse(TypedDict):
     shares: List["FilesShare"]
+
+class FilesCreateShortcutRequest(TypedDict):
+    folder_id: "UUID"
+    name: str
+    url: str
 
 class FilesPurgeTrashResponse(TypedDict):
     purged: int

@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3559a81b0db1c002a2e835d5235e454c12a46edfff77388838833b13bfbf50f5).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8fbfcad51c915893528993d3d7fcce0c9fdb8c9c8a0d51e72e5050029a66740b).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -9115,6 +9115,8 @@ export interface FilesFile {
   "folder_id": UUID;
   "root_id": UUID;
   "name": string;
+  /** HTTP(S)-адрес внешнего ярлыка; отсутствует у обычных файлов */
+  "external_url"?: string;
   "extension": string;
   "mime_type": string;
   "size_bytes": number;
@@ -17543,10 +17545,14 @@ export interface StockReportPurchasingRow {
   "warehouse_id": UUID | null;
   "warehouse_code": string;
   "warehouse_name": string;
+  /** Склад над зоной (дочерним складом); у склада верхнего уровня пусто. Витрина пишет «склад · зона» (ERP-1522). */
+  "warehouse_parent_name": string;
   "product_id": UUID;
   "product_sku": string;
   "product_name": string;
   "unit": string;
+  /** Decimal string. Закупочная цена карточки — умолчание цены строки закупки из витрины (ERP-1522); ноль — цены в карточке нет. */
+  "purchase_price": string;
   /** Decimal string */
   "on_hand": string;
   /** Decimal string */
@@ -18407,6 +18413,12 @@ export interface FilesSearchResponse {
 
 export interface FilesListSharesResponse {
   "shares": Array<FilesShare>;
+}
+
+export interface FilesCreateShortcutRequest {
+  "folder_id": UUID;
+  "name": string;
+  "url": string;
 }
 
 export interface FilesPurgeTrashResponse {

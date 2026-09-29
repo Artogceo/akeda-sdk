@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3559a81b0db1c002a2e835d5235e454c12a46edfff77388838833b13bfbf50f5).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8fbfcad51c915893528993d3d7fcce0c9fdb8c9c8a0d51e72e5050029a66740b).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -598,6 +598,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'filesCreateFolder': OperationSpec('POST', '/api/v1/files/folders', 'files', 'preview', 'files:write', False, False, (), 'none', None, None),
     'filesCreateRoot': OperationSpec('POST', '/api/v1/files/roots', 'files', 'preview', 'files:admin', False, False, (), 'none', None, None),
     'filesCreateShare': OperationSpec('POST', '/api/v1/files/shares', 'files', 'preview', 'files:share', False, False, (), 'none', None, None),
+    'filesCreateShortcut': OperationSpec('POST', '/api/v1/files/shortcuts', 'files', 'preview', 'files:write', False, False, (), 'none', None, None),
     'filesDownloadFile': OperationSpec('GET', '/api/v1/files/items/{id}/content', 'files', 'preview', 'files:read', False, False, ('id',), 'none', None, None),
     'filesDownloadFolderArchive': OperationSpec('GET', '/api/v1/files/folders/{id}/archive', 'files', 'preview', 'files:read', False, False, ('id',), 'none', None, None),
     'filesFolderAccess': OperationSpec('GET', '/api/v1/files/folders/{id}/access', 'files', 'preview', 'files:read', False, False, ('id',), 'none', None, None),

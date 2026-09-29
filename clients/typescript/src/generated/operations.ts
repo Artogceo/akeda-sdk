@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3559a81b0db1c002a2e835d5235e454c12a46edfff77388838833b13bfbf50f5).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8fbfcad51c915893528993d3d7fcce0c9fdb8c9c8a0d51e72e5050029a66740b).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -4002,6 +4002,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.FilesShareInput;
     response: models.FilesShare;
+  };
+  /** POST /api/v1/files/shortcuts — Создать ярлык на внешний ресурс */
+  filesCreateShortcut: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FilesCreateShortcutRequest;
+    response: models.FilesFile;
   };
   /** GET /api/v1/files/items/{id}/content — Скачать файл */
   filesDownloadFile: {
@@ -8734,6 +8741,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   filesCreateFolder: { method: "POST", path: "/api/v1/files/folders", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesCreateRoot: { method: "POST", path: "/api/v1/files/roots", module: "files", stage: "preview", permission: "files:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesCreateShare: { method: "POST", path: "/api/v1/files/shares", module: "files", stage: "preview", permission: "files:share", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesCreateShortcut: { method: "POST", path: "/api/v1/files/shortcuts", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesDownloadFile: { method: "GET", path: "/api/v1/files/items/{id}/content", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesDownloadFolderArchive: { method: "GET", path: "/api/v1/files/folders/{id}/archive", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesFolderAccess: { method: "GET", path: "/api/v1/files/folders/{id}/access", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

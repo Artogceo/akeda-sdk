@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3559a81b0db1c002a2e835d5235e454c12a46edfff77388838833b13bfbf50f5).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8fbfcad51c915893528993d3d7fcce0c9fdb8c9c8a0d51e72e5050029a66740b).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -597,6 +597,7 @@ var Operations = map[string]Operation{
 	"filesCreateFolder":                          {ID: "filesCreateFolder", Method: "POST", Path: "/api/v1/files/folders", Module: "files", Stage: "preview", Permission: "files:write", Idempotent: false, Installation: false, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"filesCreateRoot":                            {ID: "filesCreateRoot", Method: "POST", Path: "/api/v1/files/roots", Module: "files", Stage: "preview", Permission: "files:admin", Idempotent: false, Installation: false, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"filesCreateShare":                           {ID: "filesCreateShare", Method: "POST", Path: "/api/v1/files/shares", Module: "files", Stage: "preview", Permission: "files:share", Idempotent: false, Installation: false, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
+	"filesCreateShortcut":                        {ID: "filesCreateShortcut", Method: "POST", Path: "/api/v1/files/shortcuts", Module: "files", Stage: "preview", Permission: "files:write", Idempotent: false, Installation: false, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"filesDownloadFile":                          {ID: "filesDownloadFile", Method: "GET", Path: "/api/v1/files/items/{id}/content", Module: "files", Stage: "preview", Permission: "files:read", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"filesDownloadFolderArchive":                 {ID: "filesDownloadFolderArchive", Method: "GET", Path: "/api/v1/files/folders/{id}/archive", Module: "files", Stage: "preview", Permission: "files:read", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"filesFolderAccess":                          {ID: "filesFolderAccess", Method: "GET", Path: "/api/v1/files/folders/{id}/access", Module: "files", Stage: "preview", Permission: "files:read", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},

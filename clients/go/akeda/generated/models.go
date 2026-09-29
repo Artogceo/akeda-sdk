@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3559a81b0db1c002a2e835d5235e454c12a46edfff77388838833b13bfbf50f5).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8fbfcad51c915893528993d3d7fcce0c9fdb8c9c8a0d51e72e5050029a66740b).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -9076,21 +9076,23 @@ type FilesEntry struct {
 }
 
 type FilesFile struct {
-	ID        UUID    `json:"id"`
-	FolderID  UUID    `json:"folder_id"`
-	RootID    UUID    `json:"root_id"`
-	Name      string  `json:"name"`
-	Extension string  `json:"extension"`
-	MimeType  string  `json:"mime_type"`
-	SizeBytes int64   `json:"size_bytes"`
-	VersionNo int64   `json:"version_no"`
-	VersionID *UUID   `json:"version_id,omitempty"`
-	OwnerID   int64   `json:"owner_id"`
-	CreatedBy int64   `json:"created_by"`
-	UpdatedBy *int64  `json:"updated_by,omitempty"`
-	TrashedAt *string `json:"trashed_at,omitempty"`
-	CreatedAt string  `json:"created_at"`
-	UpdatedAt string  `json:"updated_at"`
+	ID       UUID   `json:"id"`
+	FolderID UUID   `json:"folder_id"`
+	RootID   UUID   `json:"root_id"`
+	Name     string `json:"name"`
+	// ExternalURL — HTTP(S)-адрес внешнего ярлыка; отсутствует у обычных файлов
+	ExternalURL *string `json:"external_url,omitempty"`
+	Extension   string  `json:"extension"`
+	MimeType    string  `json:"mime_type"`
+	SizeBytes   int64   `json:"size_bytes"`
+	VersionNo   int64   `json:"version_no"`
+	VersionID   *UUID   `json:"version_id,omitempty"`
+	OwnerID     int64   `json:"owner_id"`
+	CreatedBy   int64   `json:"created_by"`
+	UpdatedBy   *int64  `json:"updated_by,omitempty"`
+	TrashedAt   *string `json:"trashed_at,omitempty"`
+	CreatedAt   string  `json:"created_at"`
+	UpdatedAt   string  `json:"updated_at"`
 	// ScanStatus — skipped — содержимое крупнее порога проверки: оно выдаётся, но честно помечено непроверенным
 	ScanStatus    string            `json:"scan_status"`
 	ScanVerdict   *string           `json:"scan_verdict,omitempty"`
@@ -17452,10 +17454,14 @@ type StockReportPurchasingRow struct {
 	WarehouseID   *UUID  `json:"warehouse_id"`
 	WarehouseCode string `json:"warehouse_code"`
 	WarehouseName string `json:"warehouse_name"`
-	ProductID     UUID   `json:"product_id"`
-	ProductSKU    string `json:"product_sku"`
-	ProductName   string `json:"product_name"`
-	Unit          string `json:"unit"`
+	// WarehouseParentName — Склад над зоной (дочерним складом); у склада верхнего уровня пусто. Витрина пишет «склад · зона» (ERP-1522).
+	WarehouseParentName string `json:"warehouse_parent_name"`
+	ProductID           UUID   `json:"product_id"`
+	ProductSKU          string `json:"product_sku"`
+	ProductName         string `json:"product_name"`
+	Unit                string `json:"unit"`
+	// PurchasePrice — Decimal string. Закупочная цена карточки — умолчание цены строки закупки из витрины (ERP-1522); ноль — цены в карточке нет.
+	PurchasePrice string `json:"purchase_price"`
 	// OnHand — Decimal string
 	OnHand string `json:"on_hand"`
 	// Reserved — Decimal string
@@ -18316,6 +18322,12 @@ type FilesSearchResponse struct {
 
 type FilesListSharesResponse struct {
 	Shares []FilesShare `json:"shares"`
+}
+
+type FilesCreateShortcutRequest struct {
+	FolderID UUID   `json:"folder_id"`
+	Name     string `json:"name"`
+	URL      string `json:"url"`
 }
 
 type FilesPurgeTrashResponse struct {
