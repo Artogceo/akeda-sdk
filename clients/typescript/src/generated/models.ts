@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9d4d4036e67fb26cb4cbd3fdd5009e1e9f2b76363f860583f6813e9c5ac3f67f).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 72060da199991a9c552d50860b58cc9ea88a67405e085241d02fb47db0af1bc4).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -5322,6 +5322,75 @@ export interface CoreOrderStepState {
   "status": "done" | "overdue" | "waiting";
   /** Что закрывает шаг; manual — отмечает человек */
   "done_when"?: string;
+}
+
+export interface CoreOrderTemplate {
+  "id": UUID;
+  "side": "sale" | "purchase";
+  "state": "active" | "paused" | "archived";
+  "order": CoreOrderInput;
+  "schedule": CoreOrderTemplateSchedule;
+  "actions": CoreOrderTemplateActions;
+  "resumed_from"?: string;
+  "version": number;
+  "created_by"?: number;
+  "updated_by"?: number;
+  "created_at"?: string;
+  "updated_at"?: string;
+  "contact_name"?: string;
+  "contract_number"?: string;
+  "contract_date"?: string;
+  "department_name"?: string;
+  /** Сумма строк шаблона — подсказка списка. */
+  "amount": string;
+  "upcoming"?: Array<CoreOrderTemplateRun>;
+  "last_run"?: string;
+  "last_error"?: string;
+  /** Причина отказа последнего срабатывания словами. */
+  "last_error_text"?: string;
+}
+
+export interface CoreOrderTemplateActions {
+  /** Провести заказ сразу; false — черновик. */
+  "confirm"?: boolean;
+  "invoice"?: "" | "issue" | "draft";
+  "invoice_days"?: number;
+  "closing"?: "" | "upd" | "act";
+  "closing_when"?: "" | "on_order" | "after_days" | "period_end";
+  "closing_days"?: number;
+}
+
+export interface CoreOrderTemplateInput {
+  "order": CoreOrderInput;
+  "schedule": CoreOrderTemplateSchedule;
+  "actions"?: CoreOrderTemplateActions;
+  /** Только при правке. */
+  "expected_version"?: number;
+}
+
+export interface CoreOrderTemplateList {
+  "results": Array<CoreOrderTemplate>;
+  "total": number;
+}
+
+export interface CoreOrderTemplateRun {
+  "key": string;
+  "date": string;
+  "invoice_date"?: string;
+  "closing_date"?: string;
+}
+
+export interface CoreOrderTemplateSchedule {
+  "period": "month" | "quarter" | "week";
+  /** Число месяца или день недели ISO (1 — понедельник). */
+  "day": number;
+  "from": string;
+  "until"?: string;
+}
+
+export interface CoreOrderTemplateStateInput {
+  "state": "active" | "paused" | "archived";
+  "expected_version": number;
 }
 
 /** Итоги — сумма строк: скидка заказа уже разложена по строкам и второй раз не вычитается. */

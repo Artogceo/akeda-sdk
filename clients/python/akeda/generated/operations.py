@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9d4d4036e67fb26cb4cbd3fdd5009e1e9f2b76363f860583f6813e9c5ac3f67f).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 72060da199991a9c552d50860b58cc9ea88a67405e085241d02fb47db0af1bc4).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -181,6 +181,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreCreateOrder': OperationSpec('POST', '/api/v1/core/orders', 'core', 'preview', 'core.orders:write', True, True, (), 'none', None, None),
     'coreCreateOrderFunnel': OperationSpec('POST', '/api/v1/core/order-funnels', 'core', 'preview', 'settings:write', False, False, (), 'none', None, None),
     'coreCreateOrderStatus': OperationSpec('POST', '/api/v1/core/order-statuses', 'core', 'preview', 'core.orders:write', False, True, (), 'none', None, None),
+    'coreCreateOrderTemplate': OperationSpec('POST', '/api/v1/core/order-templates', 'core', 'preview', 'core.orders:write', False, True, (), 'none', None, None),
     'coreCreateProduct': OperationSpec('POST', '/api/v1/core/products', 'core', 'preview', 'core:write', True, True, (), 'none', None, None),
     'coreCreateProductExport': OperationSpec('POST', '/api/v1/core/product-exports', 'core', 'preview', 'core:write', False, True, (), 'none', None, None),
     'coreCreateProductIdentifier': OperationSpec('POST', '/api/v1/core/products/{id}/identifiers', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
@@ -233,6 +234,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreGetOrderBlockers': OperationSpec('GET', '/api/v1/core/orders/{id}/blockers', 'core', 'preview', 'core.orders:read', False, True, ('id',), 'none', None, None),
     'coreGetOrderFunnel': OperationSpec('GET', '/api/v1/core/orders/{id}/funnel', 'core', 'preview', 'core.orders:read', False, True, ('id',), 'none', None, None),
     'coreGetOrderHistory': OperationSpec('GET', '/api/v1/core/orders/{id}/history', 'core', 'preview', 'core.orders:read', False, True, ('id',), 'none', None, None),
+    'coreGetOrderTemplate': OperationSpec('GET', '/api/v1/core/order-templates/{id}', 'core', 'preview', 'core.orders:read', False, True, ('id',), 'none', None, None),
     'coreGetProduct': OperationSpec('GET', '/api/v1/core/products/{id}', 'core', 'public', 'core:read', False, True, ('id',), 'none', None, None),
     'coreGetProductCustomFieldSchema': OperationSpec('GET', '/api/v1/core/products/custom-fields/schema', 'core', 'public', 'core:read', False, True, (), 'none', None, None),
     'coreGetProductExport': OperationSpec('GET', '/api/v1/core/product-exports/{id}', 'core', 'preview', 'core:read', False, True, ('id',), 'none', None, None),
@@ -284,6 +286,8 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreListOrderFunnels': OperationSpec('GET', '/api/v1/core/order-funnels', 'core', 'preview', 'core.orders:read', False, True, (), 'none', None, None),
     'coreListOrderImports': OperationSpec('GET', '/api/v1/core/order-imports', 'core', 'preview', 'core.orders:import', False, False, (), 'limit', 200, 25),
     'coreListOrderStatuses': OperationSpec('GET', '/api/v1/core/order-statuses', 'core', 'preview', 'core.orders:read', False, True, (), 'none', None, None),
+    'coreListOrderTemplateOrders': OperationSpec('GET', '/api/v1/core/order-templates/{id}/orders', 'core', 'preview', 'core.orders:read', False, True, ('id',), 'limit', 200, None),
+    'coreListOrderTemplates': OperationSpec('GET', '/api/v1/core/order-templates', 'core', 'preview', 'core.orders:read', False, True, (), 'limit_offset', 1000, None),
     'coreListOrders': OperationSpec('GET', '/api/v1/core/orders', 'core', 'preview', 'core.orders:read', False, True, (), 'limit_offset', 200, 25),
     'coreListPnlItems': OperationSpec('GET', '/api/v1/core/pnl-items', 'core', 'preview', 'core:read', False, True, (), 'none', None, None),
     'coreListProductFiles': OperationSpec('GET', '/api/v1/core/products/{id}/files', 'core', 'preview', 'core:read', False, True, ('id',), 'none', None, None),
@@ -325,6 +329,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreSetOrderFunnel': OperationSpec('PUT', '/api/v1/core/orders/{id}/funnel', 'core', 'preview', 'core.orders:write', False, True, ('id',), 'none', None, None),
     'coreSetOrderResponsibles': OperationSpec('PUT', '/api/v1/core/orders/{id}/responsibles', 'core', 'preview', 'core.orders:write', False, True, ('id',), 'none', None, None),
     'coreSetOrderStepDue': OperationSpec('PUT', '/api/v1/core/orders/{id}/steps/{key}/due', 'core', 'preview', 'core.orders:write', False, True, ('id', 'key',), 'none', None, None),
+    'coreSetOrderTemplateState': OperationSpec('POST', '/api/v1/core/order-templates/{id}/state', 'core', 'preview', 'core.orders:write', False, True, ('id',), 'none', None, None),
     'coreSuggestBanks': OperationSpec('GET', '/api/v1/core/lookup/banks', 'finance', 'preview', 'core:read', False, False, (), 'none', None, None),
     'coreSuggestRequisitesParties': OperationSpec('GET', '/api/v1/core/lookup/parties', 'finance', 'preview', 'core:read', False, False, (), 'none', None, None),
     'coreUnlinkExternalRef': OperationSpec('POST', '/api/v1/core/external-refs/{id}/unlink', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
@@ -346,6 +351,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreUpdateItem': OperationSpec('PATCH', '/api/v1/core/items/{id}', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreUpdateOrderFunnel': OperationSpec('PUT', '/api/v1/core/order-funnels/{id}', 'core', 'preview', 'settings:write', False, False, ('id',), 'none', None, None),
     'coreUpdateOrderStatus': OperationSpec('PATCH', '/api/v1/core/order-statuses/{id}', 'core', 'preview', 'core.orders:write', False, True, ('id',), 'none', None, None),
+    'coreUpdateOrderTemplate': OperationSpec('PUT', '/api/v1/core/order-templates/{id}', 'core', 'preview', 'core.orders:write', False, True, ('id',), 'none', None, None),
     'coreUpdateProduct': OperationSpec('PATCH', '/api/v1/core/products/{id}', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreUpdateProductCustom': OperationSpec('PATCH', '/api/v1/core/products/{id}/custom', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreUpdateProductFile': OperationSpec('PATCH', '/api/v1/core/products/{id}/files/{fileId}', 'core', 'preview', 'core:write', False, True, ('fileId', 'id',), 'none', None, None),

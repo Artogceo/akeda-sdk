@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9d4d4036e67fb26cb4cbd3fdd5009e1e9f2b76363f860583f6813e9c5ac3f67f).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 72060da199991a9c552d50860b58cc9ea88a67405e085241d02fb47db0af1bc4).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -545,6 +545,13 @@ __all__ = [
     "CoreOrderStatusPatch",
     "CoreOrderStepDueInput",
     "CoreOrderStepState",
+    "CoreOrderTemplate",
+    "CoreOrderTemplateActions",
+    "CoreOrderTemplateInput",
+    "CoreOrderTemplateList",
+    "CoreOrderTemplateRun",
+    "CoreOrderTemplateSchedule",
+    "CoreOrderTemplateStateInput",
     "CoreOrderTotals",
     "CoreOrderVATWarning",
     "CoreOwnershipVersion",
@@ -6993,6 +7000,69 @@ class CoreOrderStepState(_CoreOrderStepStateRequired, total=False):
     done_at: str
     #: Что закрывает шаг; manual — отмечает человек
     done_when: str
+
+class _CoreOrderTemplateRequired(TypedDict):
+    id: "UUID"
+    side: Literal['sale', 'purchase']
+    state: Literal['active', 'paused', 'archived']
+    order: "CoreOrderInput"
+    schedule: "CoreOrderTemplateSchedule"
+    actions: "CoreOrderTemplateActions"
+    version: int
+    #: Сумма строк шаблона — подсказка списка.
+    amount: str
+
+class CoreOrderTemplate(_CoreOrderTemplateRequired, total=False):
+    resumed_from: str
+    created_by: int
+    updated_by: int
+    created_at: str
+    updated_at: str
+    contact_name: str
+    contract_number: str
+    contract_date: str
+    department_name: str
+    upcoming: List["CoreOrderTemplateRun"]
+    last_run: str
+    last_error: str
+    #: Причина отказа последнего срабатывания словами.
+    last_error_text: str
+
+class CoreOrderTemplateActions(TypedDict, total=False):
+    #: Провести заказ сразу; false — черновик.
+    confirm: bool
+    invoice: Literal['', 'issue', 'draft']
+    invoice_days: int
+    closing: Literal['', 'upd', 'act']
+    closing_when: Literal['', 'on_order', 'after_days', 'period_end']
+    closing_days: int
+
+class _CoreOrderTemplateInputRequired(TypedDict):
+    order: "CoreOrderInput"
+    schedule: "CoreOrderTemplateSchedule"
+
+class CoreOrderTemplateInput(_CoreOrderTemplateInputRequired, total=False):
+    actions: "CoreOrderTemplateActions"
+    #: Только при правке.
+    expected_version: int
+
+class CoreOrderTemplateList(TypedDict):
+    results: List["CoreOrderTemplate"]
+    total: int
+
+class _CoreOrderTemplateRunRequired(TypedDict):
+    key: str
+    date: str
+
+class CoreOrderTemplateRun(_CoreOrderTemplateRunRequired, total=False):
+    invoice_date: str
+    closing_date: str
+
+CoreOrderTemplateSchedule = TypedDict("CoreOrderTemplateSchedule", {"period": Literal['month', 'quarter', 'week'], "day": int, "from": str, "until": str}, total=False)
+
+class CoreOrderTemplateStateInput(TypedDict):
+    state: Literal['active', 'paused', 'archived']
+    expected_version: int
 
 class CoreOrderTotals(TypedDict):
     """Итоги — сумма строк: скидка заказа уже разложена по строкам и второй раз не вычитается."""

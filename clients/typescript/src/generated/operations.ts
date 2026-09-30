@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9d4d4036e67fb26cb4cbd3fdd5009e1e9f2b76363f860583f6813e9c5ac3f67f).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 72060da199991a9c552d50860b58cc9ea88a67405e085241d02fb47db0af1bc4).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1084,6 +1084,13 @@ export interface OperationTypes {
     body: models.CoreOrderStatusInput;
     response: models.CoreOrderStatus;
   };
+  /** POST /api/v1/core/order-templates — Создать шаблон заказа */
+  coreCreateOrderTemplate: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.CoreOrderTemplateInput;
+    response: models.CoreOrderTemplate;
+  };
   /** POST /api/v1/core/products — Создать товар, услугу, материал, полуфабрикат, семейство или вариант */
   coreCreateProduct: {
     params: Record<string, never>;
@@ -1448,6 +1455,13 @@ export interface OperationTypes {
     body: never;
     response: models.CoreOrderHistory;
   };
+  /** GET /api/v1/core/order-templates/{id} — Получить шаблон заказа */
+  coreGetOrderTemplate: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CoreOrderTemplate;
+  };
   /** GET /api/v1/core/products/{id} — Получить карточку номенклатуры */
   coreGetProduct: {
     params: { "id": models.UUID };
@@ -1805,6 +1819,20 @@ export interface OperationTypes {
     body: never;
     response: models.CoreOrderStatusList;
   };
+  /** GET /api/v1/core/order-templates/{id}/orders — Получить заказы, созданные шаблоном */
+  coreListOrderTemplateOrders: {
+    params: { "id": models.UUID };
+    query: { "limit"?: number };
+    body: never;
+    response: models.CoreOrderPage;
+  };
+  /** GET /api/v1/core/order-templates — Получить шаблоны заказов */
+  coreListOrderTemplates: {
+    params: Record<string, never>;
+    query: { "archived"?: boolean; "contact_id"?: models.UUID; "contract_id"?: models.UUID; "department_id"?: models.UUID; "limit"?: number; "offset"?: number; "side"?: "sale" | "purchase"; "state"?: "active" | "paused" | "archived" };
+    body: never;
+    response: models.CoreOrderTemplateList;
+  };
   /** GET /api/v1/core/orders — Получить журнал заказов */
   coreListOrders: {
     params: Record<string, never>;
@@ -2092,6 +2120,13 @@ export interface OperationTypes {
     body: models.CoreOrderStepDueInput;
     response: models.CoreOrderFunnelView;
   };
+  /** POST /api/v1/core/order-templates/{id}/state — Приостановить, возобновить или архивировать шаблон заказа */
+  coreSetOrderTemplateState: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CoreOrderTemplateStateInput;
+    response: models.CoreOrderTemplate;
+  };
   /** GET /api/v1/core/lookup/banks — Подсказать банки по части БИК или названия */
   coreSuggestBanks: {
     params: Record<string, never>;
@@ -2238,6 +2273,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CoreOrderStatusPatch;
     response: models.CoreOrderStatus;
+  };
+  /** PUT /api/v1/core/order-templates/{id} — Изменить шаблон заказа */
+  coreUpdateOrderTemplate: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CoreOrderTemplateInput;
+    response: models.CoreOrderTemplate;
   };
   /** PATCH /api/v1/core/products/{id} — Частично изменить карточку номенклатуры */
   coreUpdateProduct: {
@@ -8394,6 +8436,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreCreateOrder: { method: "POST", path: "/api/v1/core/orders", module: "core", stage: "preview", permission: "core.orders:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateOrderFunnel: { method: "POST", path: "/api/v1/core/order-funnels", module: "core", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateOrderStatus: { method: "POST", path: "/api/v1/core/order-statuses", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreCreateOrderTemplate: { method: "POST", path: "/api/v1/core/order-templates", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateProduct: { method: "POST", path: "/api/v1/core/products", module: "core", stage: "preview", permission: "core:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateProductExport: { method: "POST", path: "/api/v1/core/product-exports", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateProductIdentifier: { method: "POST", path: "/api/v1/core/products/{id}/identifiers", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8446,6 +8489,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreGetOrderBlockers: { method: "GET", path: "/api/v1/core/orders/{id}/blockers", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetOrderFunnel: { method: "GET", path: "/api/v1/core/orders/{id}/funnel", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetOrderHistory: { method: "GET", path: "/api/v1/core/orders/{id}/history", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetOrderTemplate: { method: "GET", path: "/api/v1/core/order-templates/{id}", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetProduct: { method: "GET", path: "/api/v1/core/products/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetProductCustomFieldSchema: { method: "GET", path: "/api/v1/core/products/custom-fields/schema", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetProductExport: { method: "GET", path: "/api/v1/core/product-exports/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8497,6 +8541,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreListOrderFunnels: { method: "GET", path: "/api/v1/core/order-funnels", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListOrderImports: { method: "GET", path: "/api/v1/core/order-imports", module: "core", stage: "preview", permission: "core.orders:import", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 25 },
   coreListOrderStatuses: { method: "GET", path: "/api/v1/core/order-statuses", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreListOrderTemplateOrders: { method: "GET", path: "/api/v1/core/order-templates/{id}/orders", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 200, pageSizeDefault: null },
+  coreListOrderTemplates: { method: "GET", path: "/api/v1/core/order-templates", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: null },
   coreListOrders: { method: "GET", path: "/api/v1/core/orders", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 25 },
   coreListPnlItems: { method: "GET", path: "/api/v1/core/pnl-items", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListProductFiles: { method: "GET", path: "/api/v1/core/products/{id}/files", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8538,6 +8584,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreSetOrderFunnel: { method: "PUT", path: "/api/v1/core/orders/{id}/funnel", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetOrderResponsibles: { method: "PUT", path: "/api/v1/core/orders/{id}/responsibles", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetOrderStepDue: { method: "PUT", path: "/api/v1/core/orders/{id}/steps/{key}/due", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreSetOrderTemplateState: { method: "POST", path: "/api/v1/core/order-templates/{id}/state", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSuggestBanks: { method: "GET", path: "/api/v1/core/lookup/banks", module: "finance", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSuggestRequisitesParties: { method: "GET", path: "/api/v1/core/lookup/parties", module: "finance", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUnlinkExternalRef: { method: "POST", path: "/api/v1/core/external-refs/{id}/unlink", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8559,6 +8606,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreUpdateItem: { method: "PATCH", path: "/api/v1/core/items/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateOrderFunnel: { method: "PUT", path: "/api/v1/core/order-funnels/{id}", module: "core", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateOrderStatus: { method: "PATCH", path: "/api/v1/core/order-statuses/{id}", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreUpdateOrderTemplate: { method: "PUT", path: "/api/v1/core/order-templates/{id}", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateProduct: { method: "PATCH", path: "/api/v1/core/products/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateProductCustom: { method: "PATCH", path: "/api/v1/core/products/{id}/custom", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateProductFile: { method: "PATCH", path: "/api/v1/core/products/{id}/files/{fileId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

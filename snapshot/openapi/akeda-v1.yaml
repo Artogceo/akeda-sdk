@@ -11443,6 +11443,297 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/core/order-templates:
+    get:
+      tags:
+        - Core orders
+      operationId: coreListOrderTemplates
+      summary: Получить шаблоны заказов
+      description: 'Шаблоны заказов с повторением (ERP-1578): тело заказа, повторение, действия при создании, ближайшее срабатывание и дата последнего созданного заказа. Архивные — только с archived=true или state=archived.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: side
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - sale
+              - purchase
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - active
+              - paused
+              - archived
+        - name: contact_id
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: contract_id
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: department_id
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: archived
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Шаблоны заказов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderTemplateList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Core orders
+      operationId: coreCreateOrderTemplate
+      summary: Создать шаблон заказа
+      description: 'Шаблон — тот же заказ (order — тело заказа без номера и даты), повторение (schedule: period month|quarter|week, day, from, until) и действия (actions: confirm, invoice issue|draft через invoice_days, closing upd|act on_order|after_days|period_end). Дата from в прошлом сразу создаёт заказы прошедших периодов — по одному на период, ключ «шаблон/период». Счёт и закрывающий — только у продажи.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderTemplateInput'
+      responses:
+        '201':
+          description: Шаблон создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderTemplate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/core/order-templates/{id}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Core orders
+      operationId: coreGetOrderTemplate
+      summary: Получить шаблон заказа
+      description: 'Шаблон с ближайшими срабатываниями (upcoming: даты заказа, счёта и закрывающего), датой последнего созданного заказа и причиной отказа последнего срабатывания словами.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Шаблон
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderTemplate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Core orders
+      operationId: coreUpdateOrderTemplate
+      summary: Изменить шаблон заказа
+      description: 'Правка целиком от expected_version. Уже созданные заказы не меняются: шаблон только копируется в заказ при срабатывании. Смена цены с даты — окончание (until) у старого шаблона и новый шаблон с новой даты.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderTemplateInput'
+      responses:
+        '200':
+          description: Шаблон изменён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderTemplate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/core/order-templates/{id}/state:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    post:
+      tags:
+        - Core orders
+      operationId: coreSetOrderTemplateState
+      summary: Приостановить, возобновить или архивировать шаблон заказа
+      description: 'active, paused или archived от expected_version. Возобновлённый шаблон периоды паузы не догоняет: работает с сегодняшнего дня кабинета.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderTemplateStateInput'
+      responses:
+        '200':
+          description: Состояние изменено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderTemplate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/order-templates/{id}/orders:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Core orders
+      operationId: coreListOrderTemplateOrders
+      summary: Получить заказы, созданные шаблоном
+      description: Прошлые срабатывания шаблона — заказы с источником template и внешним номером «<id шаблона>/<период>», в любом состоянии.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.orders:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        '200':
+          description: Заказы шаблона
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/core/order-funnels:
     get:
       tags:
@@ -62700,6 +62991,201 @@ components:
         updated_at:
           type: string
           format: date-time
+    CoreOrderTemplateSchedule:
+      type: object
+      additionalProperties: false
+      required:
+        - period
+        - day
+        - from
+      properties:
+        period:
+          type: string
+          enum:
+            - month
+            - quarter
+            - week
+        day:
+          type: integer
+          minimum: 1
+          maximum: 31
+          description: Число месяца или день недели ISO (1 — понедельник).
+        from:
+          type: string
+          format: date
+        until:
+          type: string
+          format: date
+    CoreOrderTemplateActions:
+      type: object
+      additionalProperties: false
+      properties:
+        confirm:
+          type: boolean
+          description: Провести заказ сразу; false — черновик.
+        invoice:
+          type: string
+          enum:
+            - ''
+            - issue
+            - draft
+        invoice_days:
+          type: integer
+          minimum: 0
+          maximum: 366
+        closing:
+          type: string
+          enum:
+            - ''
+            - upd
+            - act
+        closing_when:
+          type: string
+          enum:
+            - ''
+            - on_order
+            - after_days
+            - period_end
+        closing_days:
+          type: integer
+          minimum: 0
+          maximum: 366
+    CoreOrderTemplateRun:
+      type: object
+      additionalProperties: false
+      required:
+        - key
+        - date
+      properties:
+        key:
+          type: string
+        date:
+          type: string
+          format: date
+        invoice_date:
+          type: string
+          format: date
+        closing_date:
+          type: string
+          format: date
+    CoreOrderTemplateInput:
+      type: object
+      additionalProperties: false
+      required:
+        - order
+        - schedule
+      properties:
+        order:
+          $ref: '#/components/schemas/CoreOrderInput'
+        schedule:
+          $ref: '#/components/schemas/CoreOrderTemplateSchedule'
+        actions:
+          $ref: '#/components/schemas/CoreOrderTemplateActions'
+        expected_version:
+          type: integer
+          minimum: 1
+          description: Только при правке.
+    CoreOrderTemplateStateInput:
+      type: object
+      additionalProperties: false
+      required:
+        - state
+        - expected_version
+      properties:
+        state:
+          type: string
+          enum:
+            - active
+            - paused
+            - archived
+        expected_version:
+          type: integer
+          minimum: 1
+    CoreOrderTemplate:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - side
+        - state
+        - order
+        - schedule
+        - actions
+        - version
+        - amount
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        side:
+          type: string
+          enum:
+            - sale
+            - purchase
+        state:
+          type: string
+          enum:
+            - active
+            - paused
+            - archived
+        order:
+          $ref: '#/components/schemas/CoreOrderInput'
+        schedule:
+          $ref: '#/components/schemas/CoreOrderTemplateSchedule'
+        actions:
+          $ref: '#/components/schemas/CoreOrderTemplateActions'
+        resumed_from:
+          type: string
+          format: date
+        version:
+          type: integer
+        created_by:
+          type: integer
+          format: int64
+        updated_by:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        contact_name:
+          type: string
+        contract_number:
+          type: string
+        contract_date:
+          type: string
+        department_name:
+          type: string
+        amount:
+          type: string
+          description: Сумма строк шаблона — подсказка списка.
+        upcoming:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderTemplateRun'
+        last_run:
+          type: string
+          format: date
+        last_error:
+          type: string
+        last_error_text:
+          type: string
+          description: Причина отказа последнего срабатывания словами.
+    CoreOrderTemplateList:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+        - total
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreOrderTemplate'
+        total:
+          type: integer
     CoreOrderFunnelList:
       type: object
       additionalProperties: false

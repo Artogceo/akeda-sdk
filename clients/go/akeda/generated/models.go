@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9d4d4036e67fb26cb4cbd3fdd5009e1e9f2b76363f860583f6813e9c5ac3f67f).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 72060da199991a9c552d50860b58cc9ea88a67405e085241d02fb47db0af1bc4).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -5309,6 +5309,75 @@ type CoreOrderStepState struct {
 	Status   string  `json:"status"`
 	// DoneWhen — Что закрывает шаг; manual — отмечает человек
 	DoneWhen *string `json:"done_when,omitempty"`
+}
+
+type CoreOrderTemplate struct {
+	ID             UUID                      `json:"id"`
+	Side           string                    `json:"side"`
+	State          string                    `json:"state"`
+	Order          CoreOrderInput            `json:"order"`
+	Schedule       CoreOrderTemplateSchedule `json:"schedule"`
+	Actions        CoreOrderTemplateActions  `json:"actions"`
+	ResumedFrom    *string                   `json:"resumed_from,omitempty"`
+	Version        int64                     `json:"version"`
+	CreatedBy      *int64                    `json:"created_by,omitempty"`
+	UpdatedBy      *int64                    `json:"updated_by,omitempty"`
+	CreatedAt      *string                   `json:"created_at,omitempty"`
+	UpdatedAt      *string                   `json:"updated_at,omitempty"`
+	ContactName    *string                   `json:"contact_name,omitempty"`
+	ContractNumber *string                   `json:"contract_number,omitempty"`
+	ContractDate   *string                   `json:"contract_date,omitempty"`
+	DepartmentName *string                   `json:"department_name,omitempty"`
+	// Amount — Сумма строк шаблона — подсказка списка.
+	Amount    string                 `json:"amount"`
+	Upcoming  []CoreOrderTemplateRun `json:"upcoming,omitempty"`
+	LastRun   *string                `json:"last_run,omitempty"`
+	LastError *string                `json:"last_error,omitempty"`
+	// LastErrorText — Причина отказа последнего срабатывания словами.
+	LastErrorText *string `json:"last_error_text,omitempty"`
+}
+
+type CoreOrderTemplateActions struct {
+	// Confirm — Провести заказ сразу; false — черновик.
+	Confirm     *bool   `json:"confirm,omitempty"`
+	Invoice     *string `json:"invoice,omitempty"`
+	InvoiceDays *int64  `json:"invoice_days,omitempty"`
+	Closing     *string `json:"closing,omitempty"`
+	ClosingWhen *string `json:"closing_when,omitempty"`
+	ClosingDays *int64  `json:"closing_days,omitempty"`
+}
+
+type CoreOrderTemplateInput struct {
+	Order    CoreOrderInput            `json:"order"`
+	Schedule CoreOrderTemplateSchedule `json:"schedule"`
+	Actions  *CoreOrderTemplateActions `json:"actions,omitempty"`
+	// ExpectedVersion — Только при правке.
+	ExpectedVersion *int64 `json:"expected_version,omitempty"`
+}
+
+type CoreOrderTemplateList struct {
+	Results []CoreOrderTemplate `json:"results"`
+	Total   int64               `json:"total"`
+}
+
+type CoreOrderTemplateRun struct {
+	Key         string  `json:"key"`
+	Date        string  `json:"date"`
+	InvoiceDate *string `json:"invoice_date,omitempty"`
+	ClosingDate *string `json:"closing_date,omitempty"`
+}
+
+type CoreOrderTemplateSchedule struct {
+	Period string `json:"period"`
+	// Day — Число месяца или день недели ISO (1 — понедельник).
+	Day   int64   `json:"day"`
+	From  string  `json:"from"`
+	Until *string `json:"until,omitempty"`
+}
+
+type CoreOrderTemplateStateInput struct {
+	State           string `json:"state"`
+	ExpectedVersion int64  `json:"expected_version"`
 }
 
 // CoreOrderTotals — Итоги — сумма строк: скидка заказа уже разложена по строкам и второй раз не вычитается.
