@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 72060da199991a9c552d50860b58cc9ea88a67405e085241d02fb47db0af1bc4).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 13bfd61a183df5b9db594b25da4226a5af09c645276a215e90ab4394065a5a64).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1003,6 +1003,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'stockCreateImport': OperationSpec('POST', '/api/v1/stock/imports', 'stock', 'preview', 'stock:write', False, True, (), 'none', None, None),
     'stockCreateOpeningBalance': OperationSpec('POST', '/api/v1/stock/opening-balances', 'stock', 'preview', 'stock:write', True, True, (), 'none', None, None),
     'stockCreatePurchaseOrder': OperationSpec('POST', '/api/v1/stock/purchasing/orders', 'stock', 'preview', 'stock:write', True, True, (), 'none', None, None),
+    'stockCreateReceiptCorrection': OperationSpec('POST', '/api/v1/stock/receipt-corrections', 'stock', 'preview', 'stock:write', True, True, (), 'none', None, None),
     'stockCreateWarehouse': OperationSpec('POST', '/api/v1/stock/warehouses', 'stock', 'preview', 'stock:write', False, True, (), 'none', None, None),
     'stockCreateWarehouseZone': OperationSpec('POST', '/api/v1/stock/warehouses/{id}/zones', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockDeactivateWarehouse': OperationSpec('POST', '/api/v1/stock/warehouses/{id}/deactivate', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),

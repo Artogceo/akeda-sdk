@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 72060da199991a9c552d50860b58cc9ea88a67405e085241d02fb47db0af1bc4).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 13bfd61a183df5b9db594b25da4226a5af09c645276a215e90ab4394065a5a64).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1602,6 +1602,8 @@ __all__ = [
     "StockProductUOMUsage",
     "StockPurchaseOrderCreate",
     "StockPurchaseOrderLineInput",
+    "StockReceiptCorrectionCreate",
+    "StockReceiptCorrectionCreateSupplierDocument",
     "StockReceiptVATTerms",
     "StockReceiptVATTermsInput",
     "StockReorderRule",
@@ -14975,12 +14977,20 @@ class MarketplaceOzonFbsWarehouse(TypedDict):
 
 MarketplaceOzonFunnel = TypedDict("MarketplaceOzonFunnel", {"platform": Literal['ozon'], "source": Literal['ozon_analytics'], "from": str, "to": str, "totals": "MarketplaceOzonFunnelTotals", "rows": List["MarketplaceOzonFunnelRow"], "note": str, "analytics": bool}, total=False)
 
-MarketplaceOzonFunnelDaily = TypedDict("MarketplaceOzonFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['ozon'], "source": Literal['ozon_orders_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": "MarketplaceOzonFunnelDailySeries", "totals": "MarketplaceOzonFunnelDailyTotals", "card": "MarketplaceOzonFunnelDailyCard", "articles": List["MarketplaceOzonFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
+MarketplaceOzonFunnelDaily = TypedDict("MarketplaceOzonFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "summary": Dict[str, Dict[str, Optional[float]]], "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['ozon'], "source": Literal['ozon_orders_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": "MarketplaceOzonFunnelDailySeries", "totals": "MarketplaceOzonFunnelDailyTotals", "card": "MarketplaceOzonFunnelDailyCard", "articles": List["MarketplaceOzonFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
 
-class MarketplaceOzonFunnelDailyArticle(TypedDict):
+class _MarketplaceOzonFunnelDailyArticleRequired(TypedDict):
     sku: str
     name: str
     photo: str
+
+class MarketplaceOzonFunnelDailyArticle(_MarketplaceOzonFunnelDailyArticleRequired, total=False):
+    #: Название магазина артикула — различает один артикул в нескольких магазинах
+    store: str
+    #: Магазин кабинета артикула: по нему экран закрепляет артикул за магазином
+    store_id: str
+    #: Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
+    brand: str
 
 class _MarketplaceOzonFunnelDailyCardRequired(TypedDict):
     #: Артикул продавца
@@ -14989,6 +14999,8 @@ class _MarketplaceOzonFunnelDailyCardRequired(TypedDict):
     photo: str
 
 class MarketplaceOzonFunnelDailyCard(_MarketplaceOzonFunnelDailyCardRequired, total=False):
+    #: Предмет товара — по нему берётся эталон воронки
+    subject: str
     store: str
     #: Общий остаток, только когда известны оба источника
     stock: Optional[float]
@@ -15006,6 +15018,12 @@ class MarketplaceOzonFunnelDailyCard(_MarketplaceOzonFunnelDailyCardRequired, to
     otherUnit: Optional[float]
     buyoutAll: Optional[float]
     buyoutRolling: Optional[float]
+    #: Цена до СПП последнего дня окна, где цена известна
+    priceBase: Optional[float]
+    #: Цена покупателя того же дня
+    priceBuyer: Optional[float]
+    #: СПП того же дня, %
+    spp: Optional[float]
 
 class _MarketplaceOzonFunnelDailySeriesRequired(TypedDict):
     traffic: List[Optional[float]]
@@ -15055,6 +15073,8 @@ class MarketplaceOzonFunnelDailySeries(_MarketplaceOzonFunnelDailySeriesRequired
     logisticsSum: List[Optional[float]]
     otherSum: List[Optional[float]]
     taxSum: List[Optional[float]]
+    #: К перечислению за день по отчёту площадки — формула ОПиУ; день без отчёта — null
+    payout: List[Optional[float]]
 
 class _MarketplaceOzonFunnelDailyTotalsRequired(TypedDict):
     traffic: List[Optional[float]]
@@ -15122,9 +15142,9 @@ class MarketplaceOzonOrdersKpi(TypedDict):
     delta_sum: Optional[float]
     delta_qty: Optional[float]
 
-MarketplaceOzonOrdersOverview = TypedDict("MarketplaceOzonOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "scheme": Literal['all', 'fbo', 'fbs'], "kpi": Dict[str, "MarketplaceOzonOrdersKpi"], "daily": List["MarketplaceOzonOrdersDailyRow"], "products": List["MarketplaceOzonOrdersProductRow"]}, total=False)
+MarketplaceOzonOrdersOverview = TypedDict("MarketplaceOzonOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "scheme": Literal['all', 'fbo', 'fbs'], "kpi": Dict[str, "MarketplaceOzonOrdersKpi"], "daily": List["MarketplaceOzonOrdersDailyRow"], "products": List["MarketplaceOzonOrdersProductRow"], "summary_total": Dict[str, int]}, total=False)
 
-class MarketplaceOzonOrdersProductRow(TypedDict):
+class _MarketplaceOzonOrdersProductRowRequired(TypedDict):
     #: Внешний числовой идентификатор магазина
     store_id: int
     offer_id: str
@@ -15139,6 +15159,12 @@ class MarketplaceOzonOrdersProductRow(TypedDict):
     url: str
     store_name: str
     status_name: str
+
+class MarketplaceOzonOrdersProductRow(_MarketplaceOzonOrdersProductRowRequired, total=False):
+    #: Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт
+    by_day: Dict[str, int]
+    #: Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук
+    summary: Dict[str, int]
 
 class _MarketplaceOzonPnlRequired(TypedDict):
     period_kind: Literal['week', 'month']
@@ -15298,7 +15324,7 @@ class MarketplaceOzonPromotions(_MarketplaceOzonPromotionsRequired, total=False)
     #: Почему список пуст
     note: str
 
-class MarketplaceOzonStockProduct(TypedDict):
+class _MarketplaceOzonStockProductRequired(TypedDict):
     store: "UUID"
     store_name: str
     offer_id: str
@@ -15306,6 +15332,14 @@ class MarketplaceOzonStockProduct(TypedDict):
     image: str
     total: int
     warehouses: List["MarketplaceOzonStockWarehouse"]
+
+class MarketplaceOzonStockProduct(_MarketplaceOzonStockProductRequired, total=False):
+    #: Товар в пути к покупателю, шт
+    to_client: int
+    #: Выкуп, % — когорта созревших заказов, как у воронки; нет — поля нет
+    buyout_pct: float
+    #: Остаток с возвратом невыкупленного из того, что в пути: остаток + в пути × (1 − выкуп)
+    effective: float
 
 class _MarketplaceOzonStockWarehouseRequired(TypedDict):
     warehouse: str
@@ -15768,14 +15802,22 @@ class MarketplaceWbFacets(TypedDict):
 
 MarketplaceWbFunnel = TypedDict("MarketplaceWbFunnel", {"platform": Literal['wildberries'], "store": str, "source": Literal['jam', 'v3', 'v3_pending'], "from": str, "to": str, "totals": "MarketplaceWbFunnelTotals", "rows": List["MarketplaceWbFunnelRow"], "note": str, "analytics": bool}, total=False)
 
-MarketplaceWbFunnelDaily = TypedDict("MarketplaceWbFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['wb'], "source": Literal['wb_orders_sales_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": Dict[str, List[Optional[float]]], "totals": Dict[str, List[Optional[float]]], "card": "MarketplaceWbFunnelDailyCard", "articles": List["MarketplaceWbFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
+MarketplaceWbFunnelDaily = TypedDict("MarketplaceWbFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "summary": Dict[str, Dict[str, Optional[float]]], "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['wb'], "source": Literal['wb_orders_sales_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": Dict[str, List[Optional[float]]], "totals": Dict[str, List[Optional[float]]], "card": "MarketplaceWbFunnelDailyCard", "articles": List["MarketplaceWbFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
 
-class MarketplaceWbFunnelDailyArticle(TypedDict):
+class _MarketplaceWbFunnelDailyArticleRequired(TypedDict):
     #: Артикул поставщика
     sku: str
     name: str
     #: В этом списке не заполняется и приходит пустой строкой
     photo: str
+
+class MarketplaceWbFunnelDailyArticle(_MarketplaceWbFunnelDailyArticleRequired, total=False):
+    #: Название магазина артикула — различает один артикул в нескольких магазинах
+    store: str
+    #: Магазин кабинета артикула: по нему экран закрепляет артикул за магазином
+    store_id: str
+    #: Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
+    brand: str
 
 class _MarketplaceWbFunnelDailyCardRequired(TypedDict):
     #: Артикул поставщика
@@ -15784,6 +15826,8 @@ class _MarketplaceWbFunnelDailyCardRequired(TypedDict):
     photo: str
 
 class MarketplaceWbFunnelDailyCard(_MarketplaceWbFunnelDailyCardRequired, total=False):
+    #: Предмет товара — по нему берётся эталон воронки
+    subject: str
     store: str
     stock: Optional[float]
     stockMarketplace: Optional[float]
@@ -15800,6 +15844,12 @@ class MarketplaceWbFunnelDailyCard(_MarketplaceWbFunnelDailyCardRequired, total=
     otherUnit: Optional[float]
     buyoutAll: Optional[float]
     buyoutRolling: Optional[float]
+    #: Цена до СПП последнего дня окна, где цена известна
+    priceBase: Optional[float]
+    #: Цена покупателя того же дня
+    priceBuyer: Optional[float]
+    #: СПП того же дня, %
+    spp: Optional[float]
 
 class MarketplaceWbFunnelRow(TypedDict):
     nm_id: int
@@ -15884,13 +15934,13 @@ class MarketplaceWbOrdersKpi(TypedDict):
     #: Изменение к предыдущему дню в процентах
     delta_qty: Optional[float]
 
-MarketplaceWbOrdersOverview = TypedDict("MarketplaceWbOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "kpi": "MarketplaceWbOrdersOverviewKpi", "daily": List["MarketplaceWbOrdersDay"], "products": List["MarketplaceWbOrdersProduct"], "demo": bool}, total=False)
+MarketplaceWbOrdersOverview = TypedDict("MarketplaceWbOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "kpi": "MarketplaceWbOrdersOverviewKpi", "daily": List["MarketplaceWbOrdersDay"], "products": List["MarketplaceWbOrdersProduct"], "summary_total": Dict[str, int], "demo": bool}, total=False)
 
 class MarketplaceWbOrdersOverviewKpi(TypedDict):
     orders: "MarketplaceWbOrdersKpi"
     sales: "MarketplaceWbOrdersKpi"
 
-class MarketplaceWbOrdersProduct(TypedDict):
+class _MarketplaceWbOrdersProductRequired(TypedDict):
     #: Внешний идентификатор магазина в аналитике
     store_id: int
     #: Артикул поставщика
@@ -15904,6 +15954,12 @@ class MarketplaceWbOrdersProduct(TypedDict):
     primary_image: str
     store_name: str
     brand: str
+
+class MarketplaceWbOrdersProduct(_MarketplaceWbOrdersProductRequired, total=False):
+    #: Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт
+    by_day: Dict[str, int]
+    #: Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук
+    summary: Dict[str, int]
 
 class _MarketplaceWbPnlRequired(TypedDict):
     period_kind: Literal['week', 'month']
@@ -16069,7 +16125,7 @@ class MarketplaceWbStockPage(_MarketplaceWbStockPageRequired, total=False):
     #: Строк «товар × склад» больше предела 8000: хвост артикулов не пришёл, отсутствие товара не значит «остатка нет»
     truncated: bool
 
-class MarketplaceWbStockProduct(TypedDict):
+class _MarketplaceWbStockProductRequired(TypedDict):
     store: "UUID"
     store_name: str
     #: Артикул поставщика
@@ -16078,6 +16134,14 @@ class MarketplaceWbStockProduct(TypedDict):
     image: str
     total: int
     warehouses: List["MarketplaceWbStockWarehouse"]
+
+class MarketplaceWbStockProduct(_MarketplaceWbStockProductRequired, total=False):
+    #: Товар в пути к покупателю, шт
+    to_client: int
+    #: Выкуп, % — когорта созревших заказов, как у воронки; нет — поля нет
+    buyout_pct: float
+    #: Остаток с возвратом невыкупленного из того, что в пути: остаток + в пути × (1 − выкуп)
+    effective: float
 
 class _MarketplaceWbStockWarehouseRequired(TypedDict):
     warehouse: str
@@ -16166,7 +16230,7 @@ class MarketplaceYandexOrdersKpi(TypedDict):
     #: Изменение количества ко вчерашнему дню в процентах; null когда вчера было пусто
     delta_qty: Optional[float]
 
-MarketplaceYandexOrdersOverview = TypedDict("MarketplaceYandexOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "kpi": "MarketplaceYandexOrdersOverviewKpi", "daily": List["MarketplaceYandexOrdersDay"], "products": List["MarketplaceYandexOrdersProduct"], "demo": bool}, total=False)
+MarketplaceYandexOrdersOverview = TypedDict("MarketplaceYandexOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "kpi": "MarketplaceYandexOrdersOverviewKpi", "daily": List["MarketplaceYandexOrdersDay"], "products": List["MarketplaceYandexOrdersProduct"], "summary_total": Dict[str, int], "demo": bool}, total=False)
 
 class MarketplaceYandexOrdersOverviewKpi(TypedDict):
     orders: "MarketplaceYandexOrdersKpi"
@@ -16194,6 +16258,10 @@ class MarketplaceYandexOrdersProduct(_MarketplaceYandexOrdersProductRequired, to
     market_sku: Optional[str]
     #: Только в офлайн-ответе без аналитической базы
     sku: int
+    #: Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт
+    by_day: Dict[str, int]
+    #: Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук
+    summary: Dict[str, int]
 
 class _MarketplaceYandexPnlRequired(TypedDict):
     period_kind: Literal['week', 'month']
@@ -18839,6 +18907,27 @@ class StockPurchaseOrderLineInput(_StockPurchaseOrderLineInputRequired, total=Fa
     basis_line_id: Optional["UUID"]
     #: Проведённая заявка на закупку того же юрлица и склада; указывается только вместе с basis_line_id
     request_id: Optional["UUID"]
+
+class _StockReceiptCorrectionCreateRequired(TypedDict):
+    basis_id: "UUID"
+    supplier_document: "StockReceiptCorrectionCreateSupplierDocument"
+    #: Уменьшение с налогом в валюте приёмки
+    amount: str
+
+class StockReceiptCorrectionCreate(_StockReceiptCorrectionCreateRequired, total=False):
+    """Тело черновика корректировки приёмки по УКД поставщика на уменьшение."""
+
+    #: Пусто или отсутствует означает рабочую дату кабинета
+    date: str
+    #: Налог уменьшения в валюте приёмки
+    vat: str
+    comment: str
+
+class StockReceiptCorrectionCreateSupplierDocument(TypedDict):
+    #: Номер УКД поставщика
+    number: str
+    #: Дата УКД поставщика
+    date: str
 
 class StockReceiptVATTerms(TypedDict):
     #: Обязательно ли на дату «в т.ч. НДС»: бизнес очищает суммы и юрлицо принимает налог к вычету

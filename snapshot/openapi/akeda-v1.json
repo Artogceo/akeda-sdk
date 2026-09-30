@@ -49013,6 +49013,92 @@
         }
       }
     },
+    "/api/v1/stock/receipt-corrections": {
+      "post": {
+        "tags": [
+          "Stock documents"
+        ],
+        "operationId": "stockCreateReceiptCorrection",
+        "summary": "Создать черновик корректировки приёмки по УКД поставщика",
+        "description": "Черновик вида `stock_receipt_correction` («Корректировка приёмки») на\nосновании проведённой приёмки (ERP-1259): корректировочный УПД\nпоставщика на уменьшение. `amount` — уменьшение с налогом в валюте\nприёмки, `vat` — его налог, `supplier_document` — номер и дата УКД.\nУменьшение в пределах открытой претензии по недостаче гасит её против\nдолга (Дт 60.01 / Кт 76.02), склад и вычет не меняются. Проводится и\nотменяется общими `stockPostDocument` и `stockCancelDocument`.\n\nЧитает `Idempotency-Key` так же, как `stockCreateDocument`.\n",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockReceiptCorrectionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Созданный черновик",
+            "headers": {
+              "Idempotent-Replay": {
+                "$ref": "#/components/headers/IdempotentReplay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/IdempotencyKeyMismatch"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyUnavailable"
+          }
+        }
+      }
+    },
     "/api/v1/stock/documents/fulfillments": {
       "get": {
         "tags": [
@@ -56427,6 +56513,17 @@
               "type": "string",
               "format": "date"
             }
+          },
+          {
+            "name": "summary",
+            "in": "query",
+            "description": "Недели и месяцы рядом с днями (1): products[].summary и summary_total",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
           }
         ],
         "responses": {
@@ -56663,6 +56760,17 @@
             "description": "Ряды групп через запятую — ключи series, не больше 4; без них группы не считаются",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "summary",
+            "in": "query",
+            "description": "Недели и месяцы (1): окно данных расширяется до начала прошлого месяца, ответ несёт summary и groups[].summary — показатель → окно (w3, w2, w1, prev_month, month) → значение",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
             }
           }
         ],
@@ -57671,6 +57779,17 @@
               "type": "string",
               "format": "date"
             }
+          },
+          {
+            "name": "summary",
+            "in": "query",
+            "description": "Недели и месяцы рядом с днями (1): products[].summary и summary_total",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
           }
         ],
         "responses": {
@@ -57892,6 +58011,17 @@
             "description": "Ряды групп через запятую — ключи series, не больше 4; без них группы не считаются",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "summary",
+            "in": "query",
+            "description": "Недели и месяцы (1): окно данных расширяется до начала прошлого месяца, ответ несёт summary и groups[].summary — показатель → окно (w3, w2, w1, prev_month, month) → значение",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
             }
           }
         ],
@@ -59369,6 +59499,17 @@
             "schema": {
               "type": "string",
               "format": "date"
+            }
+          },
+          {
+            "name": "summary",
+            "in": "query",
+            "description": "Недели и месяцы рядом с днями (1): products[].summary и summary_total",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
             }
           }
         ],
@@ -120352,6 +120493,56 @@
           }
         }
       },
+      "StockReceiptCorrectionCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "basis_id",
+          "supplier_document",
+          "amount"
+        ],
+        "description": "Тело черновика корректировки приёмки по УКД поставщика на уменьшение.",
+        "properties": {
+          "basis_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Пусто или отсутствует означает рабочую дату кабинета"
+          },
+          "supplier_document": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "number",
+              "date"
+            ],
+            "properties": {
+              "number": {
+                "type": "string",
+                "description": "Номер УКД поставщика"
+              },
+              "date": {
+                "type": "string",
+                "format": "date",
+                "description": "Дата УКД поставщика"
+              }
+            }
+          },
+          "amount": {
+            "type": "string",
+            "description": "Уменьшение с налогом в валюте приёмки"
+          },
+          "vat": {
+            "type": "string",
+            "description": "Налог уменьшения в валюте приёмки"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
       "StockDocumentPatch": {
         "type": "object",
         "additionalProperties": false,
@@ -124974,6 +125165,19 @@
             "items": {
               "$ref": "#/components/schemas/MarketplaceOzonStockWarehouse"
             }
+          },
+          "to_client": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Товар в пути к покупателю, шт"
+          },
+          "buyout_pct": {
+            "type": "number",
+            "description": "Выкуп, % — когорта созревших заказов, как у воронки; нет — поля нет"
+          },
+          "effective": {
+            "type": "number",
+            "description": "Остаток с возвратом невыкупленного из того, что в пути: остаток + в пути × (1 − выкуп)"
           }
         }
       },
@@ -125914,6 +126118,22 @@
           },
           "status_name": {
             "type": "string"
+          },
+          "by_day": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт"
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук"
           }
         }
       },
@@ -125985,6 +126205,14 @@
             "items": {
               "$ref": "#/components/schemas/MarketplaceOzonOrdersProductRow"
             }
+          },
+          "summary_total": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Недели и месяцы всего магазина (?summary=1): окно → заказано штук"
           }
         }
       },
@@ -126245,6 +126473,10 @@
           "photo"
         ],
         "properties": {
+          "subject": {
+            "type": "string",
+            "description": "Предмет товара — по нему берётся эталон воронки"
+          },
           "sku": {
             "type": "string",
             "description": "Артикул продавца"
@@ -126340,6 +126572,27 @@
               "number",
               "null"
             ]
+          },
+          "priceBase": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Цена до СПП последнего дня окна, где цена известна"
+          },
+          "priceBuyer": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Цена покупателя того же дня"
+          },
+          "spp": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "СПП того же дня, %"
           }
         }
       },
@@ -126360,6 +126613,19 @@
           },
           "photo": {
             "type": "string"
+          },
+          "store": {
+            "type": "string",
+            "description": "Название магазина артикула — различает один артикул в нескольких магазинах"
+          },
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Магазин кабинета артикула: по нему экран закрепляет артикул за магазином"
+          },
+          "brand": {
+            "type": "string",
+            "description": "Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом"
           }
         }
       },
@@ -126770,6 +127036,16 @@
                 "null"
               ]
             }
+          },
+          "payout": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "description": "К перечислению за день по отчёту площадки — формула ОПиУ; день без отчёта — null"
           }
         }
       },
@@ -126948,6 +127224,19 @@
           },
           "articlesTruncated": {
             "type": "boolean"
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "description": "Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null"
           },
           "groupBy": {
             "type": "string",
@@ -128237,6 +128526,19 @@
             "items": {
               "$ref": "#/components/schemas/MarketplaceWbStockWarehouse"
             }
+          },
+          "to_client": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Товар в пути к покупателю, шт"
+          },
+          "buyout_pct": {
+            "type": "number",
+            "description": "Выкуп, % — когорта созревших заказов, как у воронки; нет — поля нет"
+          },
+          "effective": {
+            "type": "number",
+            "description": "Остаток с возвратом невыкупленного из того, что в пути: остаток + в пути × (1 − выкуп)"
           }
         }
       },
@@ -129187,6 +129489,22 @@
           },
           "brand": {
             "type": "string"
+          },
+          "by_day": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт"
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук"
           }
         }
       },
@@ -129259,6 +129577,14 @@
               "$ref": "#/components/schemas/MarketplaceWbOrdersProduct"
             },
             "description": "Не более 200 товаров периода"
+          },
+          "summary_total": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Недели и месяцы всего магазина (?summary=1): окно → заказано штук"
           },
           "demo": {
             "type": "boolean",
@@ -129462,6 +129788,10 @@
           "photo"
         ],
         "properties": {
+          "subject": {
+            "type": "string",
+            "description": "Предмет товара — по нему берётся эталон воронки"
+          },
           "sku": {
             "type": "string",
             "description": "Артикул поставщика"
@@ -129556,6 +129886,27 @@
               "number",
               "null"
             ]
+          },
+          "priceBase": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Цена до СПП последнего дня окна, где цена известна"
+          },
+          "priceBuyer": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Цена покупателя того же дня"
+          },
+          "spp": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "СПП того же дня, %"
           }
         }
       },
@@ -129578,6 +129929,19 @@
           "photo": {
             "type": "string",
             "description": "В этом списке не заполняется и приходит пустой строкой"
+          },
+          "store": {
+            "type": "string",
+            "description": "Название магазина артикула — различает один артикул в нескольких магазинах"
+          },
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Магазин кабинета артикула: по нему экран закрепляет артикул за магазином"
+          },
+          "brand": {
+            "type": "string",
+            "description": "Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом"
           }
         }
       },
@@ -129619,6 +129983,19 @@
           },
           "articlesTruncated": {
             "type": "boolean"
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "description": "Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null"
           },
           "groupBy": {
             "type": "string",
@@ -129674,7 +130051,7 @@
                 ]
               }
             },
-            "description": "Ряды по дням окна той же длины, что days. Ключи traffic, views, cv2,\ncart, cv3, orders, adShare, ordersSum, buyouts, buyoutsSum, avgBuyer,\nspp, position, adSpend, drrOrders, drrSales, buyoutRate,\nexpectedUnits, expectedRevenue, costUnit, acquiringRate,\ncommissionRate, logisticsUnit, otherUnit, taxRate, margin,\nmarginSheet, umd, roi, roiOrders, marginTot, marginSheetTot, sales,\nsalesSum, costSales, romi и удержания в рублях: feesSum,\ncommissionSum, acquiringSum, logisticsSum, otherSum, taxSum.\nОтсутствующий источник даёт null, а не ложный ноль.\n"
+            "description": "Ряды по дням окна той же длины, что days. Ключи traffic, views, cv2,\ncart, cv3, orders, adShare, ordersSum, buyouts, buyoutsSum, avgBuyer,\nspp, position, adSpend, drrOrders, drrSales, buyoutRate,\nexpectedUnits, expectedRevenue, costUnit, acquiringRate,\ncommissionRate, logisticsUnit, otherUnit, taxRate, margin,\nmarginSheet, umd, roi, roiOrders, marginTot, marginSheetTot, sales,\nsalesSum, costSales, romi и удержания в рублях: feesSum,\ncommissionSum, acquiringSum, logisticsSum, otherSum, taxSum;\npayout — к перечислению за день по отчёту площадки (формула ОПиУ),\nдень без отчёта — null.\nОтсутствующий источник даёт null, а не ложный ноль.\n"
           },
           "totals": {
             "type": "object",
@@ -131152,6 +131529,22 @@
           },
           "url": {
             "type": "string"
+          },
+          "by_day": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт"
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук"
           }
         }
       },
@@ -131232,6 +131625,14 @@
               "$ref": "#/components/schemas/MarketplaceYandexOrdersProduct"
             },
             "description": "Товары периода по убыванию суммы"
+          },
+          "summary_total": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Недели и месяцы всего магазина (?summary=1): окно → заказано штук"
           },
           "demo": {
             "type": "boolean",

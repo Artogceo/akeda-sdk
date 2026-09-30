@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 72060da199991a9c552d50860b58cc9ea88a67405e085241d02fb47db0af1bc4).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 13bfd61a183df5b9db594b25da4226a5af09c645276a215e90ab4394065a5a64).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -13400,6 +13400,8 @@ type MarketplaceOzonFunnelDaily struct {
 	// Breakdown — Итоги каждого артикула среза за окно
 	Breakdown         []map[string]json.RawMessage `json:"breakdown,omitempty"`
 	ArticlesTruncated *bool                        `json:"articlesTruncated,omitempty"`
+	// Summary — Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null
+	Summary map[string]map[string]*float64 `json:"summary,omitempty"`
 	// GroupBy — Чем разложен срез, когда запрошен groupBy
 	GroupBy *string `json:"groupBy,omitempty"`
 	// Groups — Группы среза по дням: value (пусто — артикулы без значения группы), label, count артикулов, series и totals только по groupMetrics. Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно; сверх 200 групп хвост сложен в одну строку с rest: true.
@@ -13429,9 +13431,17 @@ type MarketplaceOzonFunnelDailyArticle struct {
 	SKU   string `json:"sku"`
 	Name  string `json:"name"`
 	Photo string `json:"photo"`
+	// Store — Название магазина артикула — различает один артикул в нескольких магазинах
+	Store *string `json:"store,omitempty"`
+	// StoreID — Магазин кабинета артикула: по нему экран закрепляет артикул за магазином
+	StoreID *string `json:"store_id,omitempty"`
+	// Brand — Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
+	Brand *string `json:"brand,omitempty"`
 }
 
 type MarketplaceOzonFunnelDailyCard struct {
+	// Subject — Предмет товара — по нему берётся эталон воронки
+	Subject *string `json:"subject,omitempty"`
 	// SKU — Артикул продавца
 	SKU   string  `json:"sku"`
 	Name  string  `json:"name"`
@@ -13453,6 +13463,12 @@ type MarketplaceOzonFunnelDailyCard struct {
 	OtherUnit     *float64 `json:"otherUnit,omitempty"`
 	BuyoutAll     *float64 `json:"buyoutAll,omitempty"`
 	BuyoutRolling *float64 `json:"buyoutRolling,omitempty"`
+	// PriceBase — Цена до СПП последнего дня окна, где цена известна
+	PriceBase *float64 `json:"priceBase,omitempty"`
+	// PriceBuyer — Цена покупателя того же дня
+	PriceBuyer *float64 `json:"priceBuyer,omitempty"`
+	// Spp — СПП того же дня, %
+	Spp *float64 `json:"spp,omitempty"`
 }
 
 // MarketplaceOzonFunnelDailySeries — Каждый ряд — значение на каждый день окна в том же порядке что days. Ряды без источника заполнены null целиком.
@@ -13500,6 +13516,8 @@ type MarketplaceOzonFunnelDailySeries struct {
 	LogisticsSum    []*float64 `json:"logisticsSum,omitempty"`
 	OtherSum        []*float64 `json:"otherSum,omitempty"`
 	TaxSum          []*float64 `json:"taxSum,omitempty"`
+	// Payout — К перечислению за день по отчёту площадки — формула ОПиУ; день без отчёта — null
+	Payout []*float64 `json:"payout,omitempty"`
 }
 
 // MarketplaceOzonFunnelDailyTotals — Каждый итог — массив из одного значения, чтобы колонка ИТОГО рисовалась тем же кодом что и дни
@@ -13588,6 +13606,8 @@ type MarketplaceOzonOrdersOverview struct {
 	// Daily — Дни подряд от chart_from по to: не меньше 14
 	Daily    []MarketplaceOzonOrdersDailyRow   `json:"daily"`
 	Products []MarketplaceOzonOrdersProductRow `json:"products"`
+	// SummaryTotal — Недели и месяцы всего магазина (?summary=1): окно → заказано штук
+	SummaryTotal map[string]int64 `json:"summary_total,omitempty"`
 }
 
 type MarketplaceOzonOrdersProductRow struct {
@@ -13605,6 +13625,10 @@ type MarketplaceOzonOrdersProductRow struct {
 	URL          string `json:"url"`
 	StoreName    string `json:"store_name"`
 	StatusName   string `json:"status_name"`
+	// ByDay — Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт
+	ByDay map[string]int64 `json:"by_day,omitempty"`
+	// Summary — Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук
+	Summary map[string]int64 `json:"summary,omitempty"`
 }
 
 type MarketplaceOzonPnl struct {
@@ -13791,6 +13815,12 @@ type MarketplaceOzonStockProduct struct {
 	Image      string                          `json:"image"`
 	Total      int64                           `json:"total"`
 	Warehouses []MarketplaceOzonStockWarehouse `json:"warehouses"`
+	// ToClient — Товар в пути к покупателю, шт
+	ToClient *int64 `json:"to_client,omitempty"`
+	// BuyoutPct — Выкуп, % — когорта созревших заказов, как у воронки; нет — поля нет
+	BuyoutPct *float64 `json:"buyout_pct,omitempty"`
+	// Effective — Остаток с возвратом невыкупленного из того, что в пути: остаток + в пути × (1 − выкуп)
+	Effective *float64 `json:"effective,omitempty"`
 }
 
 type MarketplaceOzonStockWarehouse struct {
@@ -14278,6 +14308,8 @@ type MarketplaceWbFunnelDaily struct {
 	// Breakdown — Итоги каждого артикула среза за окно
 	Breakdown         []map[string]json.RawMessage `json:"breakdown,omitempty"`
 	ArticlesTruncated *bool                        `json:"articlesTruncated,omitempty"`
+	// Summary — Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null
+	Summary map[string]map[string]*float64 `json:"summary,omitempty"`
 	// GroupBy — Чем разложен срез, когда запрошен groupBy
 	GroupBy *string `json:"groupBy,omitempty"`
 	// Groups — Группы среза по дням: value (пусто — артикулы без значения группы), label, count артикулов, series и totals только по groupMetrics. Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно; сверх 200 групп хвост сложен в одну строку с rest: true.
@@ -14291,7 +14323,7 @@ type MarketplaceWbFunnelDaily struct {
 	To   *string `json:"to,omitempty"`
 	// Days — Окно 14 дней по опорный включительно
 	Days []string `json:"days"`
-	// Series — Ряды по дням окна той же длины, что days. Ключи traffic, views, cv2, cart, cv3, orders, adShare, ordersSum, buyouts, buyoutsSum, avgBuyer, spp, position, adSpend, drrOrders, drrSales, buyoutRate, expectedUnits, expectedRevenue, costUnit, acquiringRate, commissionRate, logisticsUnit, otherUnit, taxRate, margin, marginSheet, umd, roi, roiOrders, marginTot, marginSheetTot, sales, salesSum, costSales, romi и удержания в рублях: feesSum, commissionSum, acquiringSum, logisticsSum, otherSum, taxSum. Отсутствующий источник даёт null, а не ложный ноль.
+	// Series — Ряды по дням окна той же длины, что days. Ключи traffic, views, cv2, cart, cv3, orders, adShare, ordersSum, buyouts, buyoutsSum, avgBuyer, spp, position, adSpend, drrOrders, drrSales, buyoutRate, expectedUnits, expectedRevenue, costUnit, acquiringRate, commissionRate, logisticsUnit, otherUnit, taxRate, margin, marginSheet, umd, roi, roiOrders, marginTot, marginSheetTot, sales, salesSum, costSales, romi и удержания в рублях: feesSum, commissionSum, acquiringSum, logisticsSum, otherSum, taxSum; payout — к перечислению за день по отчёту площадки (формула ОПиУ), день без отчёта — null. Отсутствующий источник даёт null, а не ложный ноль.
 	Series map[string][]*float64 `json:"series"`
 	// Totals — Итог по каждому ряду одним элементом массива
 	Totals map[string][]*float64         `json:"totals,omitempty"`
@@ -14311,9 +14343,17 @@ type MarketplaceWbFunnelDailyArticle struct {
 	Name string `json:"name"`
 	// Photo — В этом списке не заполняется и приходит пустой строкой
 	Photo string `json:"photo"`
+	// Store — Название магазина артикула — различает один артикул в нескольких магазинах
+	Store *string `json:"store,omitempty"`
+	// StoreID — Магазин кабинета артикула: по нему экран закрепляет артикул за магазином
+	StoreID *string `json:"store_id,omitempty"`
+	// Brand — Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
+	Brand *string `json:"brand,omitempty"`
 }
 
 type MarketplaceWbFunnelDailyCard struct {
+	// Subject — Предмет товара — по нему берётся эталон воронки
+	Subject *string `json:"subject,omitempty"`
 	// SKU — Артикул поставщика
 	SKU              string   `json:"sku"`
 	Name             string   `json:"name"`
@@ -14334,6 +14374,12 @@ type MarketplaceWbFunnelDailyCard struct {
 	OtherUnit     *float64 `json:"otherUnit,omitempty"`
 	BuyoutAll     *float64 `json:"buyoutAll,omitempty"`
 	BuyoutRolling *float64 `json:"buyoutRolling,omitempty"`
+	// PriceBase — Цена до СПП последнего дня окна, где цена известна
+	PriceBase *float64 `json:"priceBase,omitempty"`
+	// PriceBuyer — Цена покупателя того же дня
+	PriceBuyer *float64 `json:"priceBuyer,omitempty"`
+	// Spp — СПП того же дня, %
+	Spp *float64 `json:"spp,omitempty"`
 }
 
 type MarketplaceWbFunnelRow struct {
@@ -14436,6 +14482,8 @@ type MarketplaceWbOrdersOverview struct {
 	Daily []MarketplaceWbOrdersDay `json:"daily"`
 	// Products — Не более 200 товаров периода
 	Products []MarketplaceWbOrdersProduct `json:"products"`
+	// SummaryTotal — Недели и месяцы всего магазина (?summary=1): окно → заказано штук
+	SummaryTotal map[string]int64 `json:"summary_total,omitempty"`
 	// Demo — Аналитическая база не подключена и цифры синтетические
 	Demo *bool `json:"demo,omitempty"`
 }
@@ -14459,6 +14507,10 @@ type MarketplaceWbOrdersProduct struct {
 	PrimaryImage string `json:"primary_image"`
 	StoreName    string `json:"store_name"`
 	Brand        string `json:"brand"`
+	// ByDay — Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт
+	ByDay map[string]int64 `json:"by_day,omitempty"`
+	// Summary — Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук
+	Summary map[string]int64 `json:"summary,omitempty"`
 }
 
 type MarketplaceWbPnl struct {
@@ -14644,6 +14696,12 @@ type MarketplaceWbStockProduct struct {
 	Image      string                        `json:"image"`
 	Total      int64                         `json:"total"`
 	Warehouses []MarketplaceWbStockWarehouse `json:"warehouses"`
+	// ToClient — Товар в пути к покупателю, шт
+	ToClient *int64 `json:"to_client,omitempty"`
+	// BuyoutPct — Выкуп, % — когорта созревших заказов, как у воронки; нет — поля нет
+	BuyoutPct *float64 `json:"buyout_pct,omitempty"`
+	// Effective — Остаток с возвратом невыкупленного из того, что в пути: остаток + в пути × (1 − выкуп)
+	Effective *float64 `json:"effective,omitempty"`
 }
 
 type MarketplaceWbStockWarehouse struct {
@@ -14749,6 +14807,8 @@ type MarketplaceYandexOrdersOverview struct {
 	Daily []MarketplaceYandexOrdersDay `json:"daily"`
 	// Products — Товары периода по убыванию суммы
 	Products []MarketplaceYandexOrdersProduct `json:"products"`
+	// SummaryTotal — Недели и месяцы всего магазина (?summary=1): окно → заказано штук
+	SummaryTotal map[string]int64 `json:"summary_total,omitempty"`
 	// Demo — Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические
 	Demo *bool `json:"demo,omitempty"`
 }
@@ -14777,6 +14837,10 @@ type MarketplaceYandexOrdersProduct struct {
 	Total        string `json:"total"`
 	PrimaryImage string `json:"primary_image"`
 	URL          string `json:"url"`
+	// ByDay — Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт
+	ByDay map[string]int64 `json:"by_day,omitempty"`
+	// Summary — Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук
+	Summary map[string]int64 `json:"summary,omitempty"`
 }
 
 type MarketplaceYandexPnl struct {
@@ -17472,6 +17536,26 @@ type StockPurchaseOrderLineInput struct {
 	BasisLineID *UUID `json:"basis_line_id,omitempty"`
 	// RequestID — Проведённая заявка на закупку того же юрлица и склада; указывается только вместе с basis_line_id
 	RequestID *UUID `json:"request_id,omitempty"`
+}
+
+// StockReceiptCorrectionCreate — Тело черновика корректировки приёмки по УКД поставщика на уменьшение.
+type StockReceiptCorrectionCreate struct {
+	BasisID UUID `json:"basis_id"`
+	// Date — Пусто или отсутствует означает рабочую дату кабинета
+	Date             *string                                      `json:"date,omitempty"`
+	SupplierDocument StockReceiptCorrectionCreateSupplierDocument `json:"supplier_document"`
+	// Amount — Уменьшение с налогом в валюте приёмки
+	Amount string `json:"amount"`
+	// VAT — Налог уменьшения в валюте приёмки
+	VAT     *string `json:"vat,omitempty"`
+	Comment *string `json:"comment,omitempty"`
+}
+
+type StockReceiptCorrectionCreateSupplierDocument struct {
+	// Number — Номер УКД поставщика
+	Number string `json:"number"`
+	// Date — Дата УКД поставщика
+	Date string `json:"date"`
 }
 
 type StockReceiptVATTerms struct {

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 72060da199991a9c552d50860b58cc9ea88a67405e085241d02fb47db0af1bc4).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 13bfd61a183df5b9db594b25da4226a5af09c645276a215e90ab4394065a5a64).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1002,6 +1002,7 @@ var Operations = map[string]Operation{
 	"stockCreateImport":                          {ID: "stockCreateImport", Method: "POST", Path: "/api/v1/stock/imports", Module: "stock", Stage: "preview", Permission: "stock:write", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"stockCreateOpeningBalance":                  {ID: "stockCreateOpeningBalance", Method: "POST", Path: "/api/v1/stock/opening-balances", Module: "stock", Stage: "preview", Permission: "stock:write", Idempotent: true, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"stockCreatePurchaseOrder":                   {ID: "stockCreatePurchaseOrder", Method: "POST", Path: "/api/v1/stock/purchasing/orders", Module: "stock", Stage: "preview", Permission: "stock:write", Idempotent: true, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
+	"stockCreateReceiptCorrection":               {ID: "stockCreateReceiptCorrection", Method: "POST", Path: "/api/v1/stock/receipt-corrections", Module: "stock", Stage: "preview", Permission: "stock:write", Idempotent: true, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"stockCreateWarehouse":                       {ID: "stockCreateWarehouse", Method: "POST", Path: "/api/v1/stock/warehouses", Module: "stock", Stage: "preview", Permission: "stock:write", Idempotent: false, Installation: true, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"stockCreateWarehouseZone":                   {ID: "stockCreateWarehouseZone", Method: "POST", Path: "/api/v1/stock/warehouses/{id}/zones", Module: "stock", Stage: "preview", Permission: "stock:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"stockDeactivateWarehouse":                   {ID: "stockDeactivateWarehouse", Method: "POST", Path: "/api/v1/stock/warehouses/{id}/deactivate", Module: "stock", Stage: "preview", Permission: "stock:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},

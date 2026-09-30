@@ -29163,6 +29163,65 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyMismatch'
         '503':
           $ref: '#/components/responses/IdempotencyUnavailable'
+  /api/v1/stock/receipt-corrections:
+    post:
+      tags:
+        - Stock documents
+      operationId: stockCreateReceiptCorrection
+      summary: Создать черновик корректировки приёмки по УКД поставщика
+      description: |
+        Черновик вида `stock_receipt_correction` («Корректировка приёмки») на
+        основании проведённой приёмки (ERP-1259): корректировочный УПД
+        поставщика на уменьшение. `amount` — уменьшение с налогом в валюте
+        приёмки, `vat` — его налог, `supplier_document` — номер и дата УКД.
+        Уменьшение в пределах открытой претензии по недостаче гасит её против
+        долга (Дт 60.01 / Кт 76.02), склад и вычет не меняются. Проводится и
+        отменяется общими `stockPostDocument` и `stockCancelDocument`.
+
+        Читает `Idempotency-Key` так же, как `stockCreateDocument`.
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockReceiptCorrectionCreate'
+      responses:
+        '201':
+          description: Созданный черновик
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/IdempotencyKeyMismatch'
+        '503':
+          $ref: '#/components/responses/IdempotencyUnavailable'
   /api/v1/stock/documents/fulfillments:
     get:
       tags:
@@ -33706,6 +33765,13 @@ paths:
           schema:
             type: string
             format: date
+        - name: summary
+          in: query
+          description: 'Недели и месяцы рядом с днями (1): products[].summary и summary_total'
+          schema:
+            type: string
+            enum:
+              - '1'
       responses:
         '200':
           description: Сводка заказов и продаж
@@ -33864,6 +33930,13 @@ paths:
           description: Ряды групп через запятую — ключи series, не больше 4; без них группы не считаются
           schema:
             type: string
+        - name: summary
+          in: query
+          description: 'Недели и месяцы (1): окно данных расширяется до начала прошлого месяца, ответ несёт summary и groups[].summary — показатель → окно (w3, w2, w1, prev_month, month) → значение'
+          schema:
+            type: string
+            enum:
+              - '1'
       responses:
         '200':
           description: Дневная воронка артикула
@@ -34502,6 +34575,13 @@ paths:
           schema:
             type: string
             format: date
+        - name: summary
+          in: query
+          description: 'Недели и месяцы рядом с днями (1): products[].summary и summary_total'
+          schema:
+            type: string
+            enum:
+              - '1'
       responses:
         '200':
           description: Сводка заказов и продаж
@@ -34648,6 +34728,13 @@ paths:
           description: Ряды групп через запятую — ключи series, не больше 4; без них группы не считаются
           schema:
             type: string
+        - name: summary
+          in: query
+          description: 'Недели и месяцы (1): окно данных расширяется до начала прошлого месяца, ответ несёт summary и groups[].summary — показатель → окно (w3, w2, w1, prev_month, month) → значение'
+          schema:
+            type: string
+            enum:
+              - '1'
       responses:
         '200':
           description: Дневная экономика артикула
@@ -35548,6 +35635,13 @@ paths:
           schema:
             type: string
             format: date
+        - name: summary
+          in: query
+          description: 'Недели и месяцы рядом с днями (1): products[].summary и summary_total'
+          schema:
+            type: string
+            enum:
+              - '1'
       responses:
         '200':
           description: Сводка заказов
@@ -77846,6 +77940,43 @@ components:
           $ref: '#/components/schemas/UUID'
         comment:
           type: string
+    StockReceiptCorrectionCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - basis_id
+        - supplier_document
+        - amount
+      description: Тело черновика корректировки приёмки по УКД поставщика на уменьшение.
+      properties:
+        basis_id:
+          $ref: '#/components/schemas/UUID'
+        date:
+          type: string
+          format: date
+          description: Пусто или отсутствует означает рабочую дату кабинета
+        supplier_document:
+          type: object
+          additionalProperties: false
+          required:
+            - number
+            - date
+          properties:
+            number:
+              type: string
+              description: Номер УКД поставщика
+            date:
+              type: string
+              format: date
+              description: Дата УКД поставщика
+        amount:
+          type: string
+          description: Уменьшение с налогом в валюте приёмки
+        vat:
+          type: string
+          description: Налог уменьшения в валюте приёмки
+        comment:
+          type: string
     StockDocumentPatch:
       type: object
       additionalProperties: false
@@ -81111,6 +81242,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MarketplaceOzonStockWarehouse'
+        to_client:
+          type: integer
+          format: int64
+          description: Товар в пути к покупателю, шт
+        buyout_pct:
+          type: number
+          description: Выкуп, % — когорта созревших заказов, как у воронки; нет — поля нет
+        effective:
+          type: number
+          description: 'Остаток с возвратом невыкупленного из того, что в пути: остаток + в пути × (1 − выкуп)'
     MarketplaceOzonStocksPage:
       type: object
       additionalProperties: false
@@ -81797,6 +81938,18 @@ components:
           type: string
         status_name:
           type: string
+        by_day:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          description: 'Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт'
+        summary:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          description: 'Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук'
     MarketplaceOzonOrdersOverview:
       type: object
       additionalProperties: false
@@ -81851,6 +82004,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MarketplaceOzonOrdersProductRow'
+        summary_total:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          description: 'Недели и месяцы всего магазина (?summary=1): окно → заказано штук'
     MarketplaceOzonFunnelTotals:
       type: object
       additionalProperties: false
@@ -82042,6 +82201,9 @@ components:
         - name
         - photo
       properties:
+        subject:
+          type: string
+          description: Предмет товара — по нему берётся эталон воронки
         sku:
           type: string
           description: Артикул продавца
@@ -82107,6 +82269,21 @@ components:
           type:
             - number
             - 'null'
+        priceBase:
+          type:
+            - number
+            - 'null'
+          description: Цена до СПП последнего дня окна, где цена известна
+        priceBuyer:
+          type:
+            - number
+            - 'null'
+          description: Цена покупателя того же дня
+        spp:
+          type:
+            - number
+            - 'null'
+          description: СПП того же дня, %
     MarketplaceOzonFunnelDailyArticle:
       type: object
       additionalProperties: false
@@ -82121,6 +82298,16 @@ components:
           type: string
         photo:
           type: string
+        store:
+          type: string
+          description: Название магазина артикула — различает один артикул в нескольких магазинах
+        store_id:
+          type: string
+          format: uuid
+          description: 'Магазин кабинета артикула: по нему экран закрепляет артикул за магазином'
+        brand:
+          type: string
+          description: Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
     MarketplaceOzonFunnelDailySeries:
       type: object
       additionalProperties: false
@@ -82404,6 +82591,13 @@ components:
             type:
               - number
               - 'null'
+        payout:
+          type: array
+          items:
+            type:
+              - number
+              - 'null'
+          description: К перечислению за день по отчёту площадки — формула ОПиУ; день без отчёта — null
     MarketplaceOzonFunnelDailyTotals:
       type: object
       additionalProperties:
@@ -82528,6 +82722,15 @@ components:
           description: Итоги каждого артикула среза за окно
         articlesTruncated:
           type: boolean
+        summary:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type:
+                - number
+                - 'null'
+          description: 'Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null'
         groupBy:
           type: string
           description: Чем разложен срез, когда запрошен groupBy
@@ -83467,6 +83670,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MarketplaceWbStockWarehouse'
+        to_client:
+          type: integer
+          format: int64
+          description: Товар в пути к покупателю, шт
+        buyout_pct:
+          type: number
+          description: Выкуп, % — когорта созревших заказов, как у воронки; нет — поля нет
+        effective:
+          type: number
+          description: 'Остаток с возвратом невыкупленного из того, что в пути: остаток + в пути × (1 − выкуп)'
     MarketplaceWbStockPage:
       type: object
       additionalProperties: false
@@ -84164,6 +84377,18 @@ components:
           type: string
         brand:
           type: string
+        by_day:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          description: 'Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт'
+        summary:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          description: 'Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук'
     MarketplaceWbOrdersOverview:
       type: object
       additionalProperties: false
@@ -84218,6 +84443,12 @@ components:
           items:
             $ref: '#/components/schemas/MarketplaceWbOrdersProduct'
           description: Не более 200 товаров периода
+        summary_total:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          description: 'Недели и месяцы всего магазина (?summary=1): окно → заказано штук'
         demo:
           type: boolean
           description: Аналитическая база не подключена и цифры синтетические
@@ -84368,6 +84599,9 @@ components:
         - name
         - photo
       properties:
+        subject:
+          type: string
+          description: Предмет товара — по нему берётся эталон воронки
         sku:
           type: string
           description: Артикул поставщика
@@ -84432,6 +84666,21 @@ components:
           type:
             - number
             - 'null'
+        priceBase:
+          type:
+            - number
+            - 'null'
+          description: Цена до СПП последнего дня окна, где цена известна
+        priceBuyer:
+          type:
+            - number
+            - 'null'
+          description: Цена покупателя того же дня
+        spp:
+          type:
+            - number
+            - 'null'
+          description: СПП того же дня, %
     MarketplaceWbFunnelDailyArticle:
       type: object
       additionalProperties: false
@@ -84448,6 +84697,16 @@ components:
         photo:
           type: string
           description: В этом списке не заполняется и приходит пустой строкой
+        store:
+          type: string
+          description: Название магазина артикула — различает один артикул в нескольких магазинах
+        store_id:
+          type: string
+          format: uuid
+          description: 'Магазин кабинета артикула: по нему экран закрепляет артикул за магазином'
+        brand:
+          type: string
+          description: Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
     MarketplaceWbFunnelDaily:
       type: object
       additionalProperties: false
@@ -84477,6 +84736,15 @@ components:
           description: Итоги каждого артикула среза за окно
         articlesTruncated:
           type: boolean
+        summary:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type:
+                - number
+                - 'null'
+          description: 'Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null'
         groupBy:
           type: string
           description: Чем разложен срез, когда запрошен groupBy
@@ -84529,7 +84797,9 @@ components:
             commissionRate, logisticsUnit, otherUnit, taxRate, margin,
             marginSheet, umd, roi, roiOrders, marginTot, marginSheetTot, sales,
             salesSum, costSales, romi и удержания в рублях: feesSum,
-            commissionSum, acquiringSum, logisticsSum, otherSum, taxSum.
+            commissionSum, acquiringSum, logisticsSum, otherSum, taxSum;
+            payout — к перечислению за день по отчёту площадки (формула ОПиУ),
+            день без отчёта — null.
             Отсутствующий источник даёт null, а не ложный ноль.
         totals:
           type: object
@@ -85615,6 +85885,18 @@ components:
           type: string
         url:
           type: string
+        by_day:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          description: 'Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт'
+        summary:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          description: 'Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук'
     MarketplaceYandexOrdersOverview:
       type: object
       additionalProperties: false
@@ -85673,6 +85955,12 @@ components:
           items:
             $ref: '#/components/schemas/MarketplaceYandexOrdersProduct'
           description: Товары периода по убыванию суммы
+        summary_total:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          description: 'Недели и месяцы всего магазина (?summary=1): окно → заказано штук'
         demo:
           type: boolean
           description: Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические

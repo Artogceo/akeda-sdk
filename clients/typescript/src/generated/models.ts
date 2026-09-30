@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 72060da199991a9c552d50860b58cc9ea88a67405e085241d02fb47db0af1bc4).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 13bfd61a183df5b9db594b25da4226a5af09c645276a215e90ab4394065a5a64).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -13446,6 +13446,8 @@ export interface MarketplaceOzonFunnelDaily {
   /** Итоги каждого артикула среза за окно */
   "breakdown"?: Array<{ [key: string]: unknown }>;
   "articlesTruncated"?: boolean;
+  /** Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null */
+  "summary"?: { [key: string]: { [key: string]: number | null } };
   /** Чем разложен срез, когда запрошен groupBy */
   "groupBy"?: string;
   /**
@@ -13480,9 +13482,17 @@ export interface MarketplaceOzonFunnelDailyArticle {
   "sku": string;
   "name": string;
   "photo": string;
+  /** Название магазина артикула — различает один артикул в нескольких магазинах */
+  "store"?: string;
+  /** Магазин кабинета артикула: по нему экран закрепляет артикул за магазином */
+  "store_id"?: string;
+  /** Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом */
+  "brand"?: string;
 }
 
 export interface MarketplaceOzonFunnelDailyCard {
+  /** Предмет товара — по нему берётся эталон воронки */
+  "subject"?: string;
   /** Артикул продавца */
   "sku": string;
   "name": string;
@@ -13504,6 +13514,12 @@ export interface MarketplaceOzonFunnelDailyCard {
   "otherUnit"?: number | null;
   "buyoutAll"?: number | null;
   "buyoutRolling"?: number | null;
+  /** Цена до СПП последнего дня окна, где цена известна */
+  "priceBase"?: number | null;
+  /** Цена покупателя того же дня */
+  "priceBuyer"?: number | null;
+  /** СПП того же дня, % */
+  "spp"?: number | null;
 }
 
 /**
@@ -13554,6 +13570,8 @@ export interface MarketplaceOzonFunnelDailySeries {
   "logisticsSum"?: Array<number | null>;
   "otherSum"?: Array<number | null>;
   "taxSum"?: Array<number | null>;
+  /** К перечислению за день по отчёту площадки — формула ОПиУ; день без отчёта — null */
+  "payout"?: Array<number | null>;
 }
 
 /** Каждый итог — массив из одного значения, чтобы колонка ИТОГО рисовалась тем же кодом что и дни */
@@ -13641,6 +13659,8 @@ export interface MarketplaceOzonOrdersOverview {
   /** Дни подряд от chart_from по to: не меньше 14 */
   "daily": Array<MarketplaceOzonOrdersDailyRow>;
   "products": Array<MarketplaceOzonOrdersProductRow>;
+  /** Недели и месяцы всего магазина (?summary=1): окно → заказано штук */
+  "summary_total"?: { [key: string]: number };
 }
 
 export interface MarketplaceOzonOrdersProductRow {
@@ -13658,6 +13678,10 @@ export interface MarketplaceOzonOrdersProductRow {
   "url": string;
   "store_name": string;
   "status_name": string;
+  /** Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт */
+  "by_day"?: { [key: string]: number };
+  /** Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук */
+  "summary"?: { [key: string]: number };
 }
 
 export interface MarketplaceOzonPnl {
@@ -13844,6 +13868,12 @@ export interface MarketplaceOzonStockProduct {
   "image": string;
   "total": number;
   "warehouses": Array<MarketplaceOzonStockWarehouse>;
+  /** Товар в пути к покупателю, шт */
+  "to_client"?: number;
+  /** Выкуп, % — когорта созревших заказов, как у воронки; нет — поля нет */
+  "buyout_pct"?: number;
+  /** Остаток с возвратом невыкупленного из того, что в пути: остаток + в пути × (1 − выкуп) */
+  "effective"?: number;
 }
 
 export interface MarketplaceOzonStockWarehouse {
@@ -14331,6 +14361,8 @@ export interface MarketplaceWbFunnelDaily {
   /** Итоги каждого артикула среза за окно */
   "breakdown"?: Array<{ [key: string]: unknown }>;
   "articlesTruncated"?: boolean;
+  /** Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null */
+  "summary"?: { [key: string]: { [key: string]: number | null } };
   /** Чем разложен срез, когда запрошен groupBy */
   "groupBy"?: string;
   /**
@@ -14357,7 +14389,9 @@ export interface MarketplaceWbFunnelDaily {
    * commissionRate, logisticsUnit, otherUnit, taxRate, margin,
    * marginSheet, umd, roi, roiOrders, marginTot, marginSheetTot, sales,
    * salesSum, costSales, romi и удержания в рублях: feesSum,
-   * commissionSum, acquiringSum, logisticsSum, otherSum, taxSum.
+   * commissionSum, acquiringSum, logisticsSum, otherSum, taxSum;
+   * payout — к перечислению за день по отчёту площадки (формула ОПиУ),
+   * день без отчёта — null.
    * Отсутствующий источник даёт null, а не ложный ноль.
    */
   "series": { [key: string]: Array<number | null> };
@@ -14379,9 +14413,17 @@ export interface MarketplaceWbFunnelDailyArticle {
   "name": string;
   /** В этом списке не заполняется и приходит пустой строкой */
   "photo": string;
+  /** Название магазина артикула — различает один артикул в нескольких магазинах */
+  "store"?: string;
+  /** Магазин кабинета артикула: по нему экран закрепляет артикул за магазином */
+  "store_id"?: string;
+  /** Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом */
+  "brand"?: string;
 }
 
 export interface MarketplaceWbFunnelDailyCard {
+  /** Предмет товара — по нему берётся эталон воронки */
+  "subject"?: string;
   /** Артикул поставщика */
   "sku": string;
   "name": string;
@@ -14402,6 +14444,12 @@ export interface MarketplaceWbFunnelDailyCard {
   "otherUnit"?: number | null;
   "buyoutAll"?: number | null;
   "buyoutRolling"?: number | null;
+  /** Цена до СПП последнего дня окна, где цена известна */
+  "priceBase"?: number | null;
+  /** Цена покупателя того же дня */
+  "priceBuyer"?: number | null;
+  /** СПП того же дня, % */
+  "spp"?: number | null;
 }
 
 export interface MarketplaceWbFunnelRow {
@@ -14504,6 +14552,8 @@ export interface MarketplaceWbOrdersOverview {
   "daily": Array<MarketplaceWbOrdersDay>;
   /** Не более 200 товаров периода */
   "products": Array<MarketplaceWbOrdersProduct>;
+  /** Недели и месяцы всего магазина (?summary=1): окно → заказано штук */
+  "summary_total"?: { [key: string]: number };
   /** Аналитическая база не подключена и цифры синтетические */
   "demo"?: boolean;
 }
@@ -14527,6 +14577,10 @@ export interface MarketplaceWbOrdersProduct {
   "primary_image": string;
   "store_name": string;
   "brand": string;
+  /** Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт */
+  "by_day"?: { [key: string]: number };
+  /** Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук */
+  "summary"?: { [key: string]: number };
 }
 
 export interface MarketplaceWbPnl {
@@ -14712,6 +14766,12 @@ export interface MarketplaceWbStockProduct {
   "image": string;
   "total": number;
   "warehouses": Array<MarketplaceWbStockWarehouse>;
+  /** Товар в пути к покупателю, шт */
+  "to_client"?: number;
+  /** Выкуп, % — когорта созревших заказов, как у воронки; нет — поля нет */
+  "buyout_pct"?: number;
+  /** Остаток с возвратом невыкупленного из того, что в пути: остаток + в пути × (1 − выкуп) */
+  "effective"?: number;
 }
 
 export interface MarketplaceWbStockWarehouse {
@@ -14817,6 +14877,8 @@ export interface MarketplaceYandexOrdersOverview {
   "daily": Array<MarketplaceYandexOrdersDay>;
   /** Товары периода по убыванию суммы */
   "products": Array<MarketplaceYandexOrdersProduct>;
+  /** Недели и месяцы всего магазина (?summary=1): окно → заказано штук */
+  "summary_total"?: { [key: string]: number };
   /** Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические */
   "demo"?: boolean;
 }
@@ -14845,6 +14907,10 @@ export interface MarketplaceYandexOrdersProduct {
   "total": string;
   "primary_image": string;
   "url": string;
+  /** Заказано штук по дням периода: день ГГГГ-ММ-ДД → шт */
+  "by_day"?: { [key: string]: number };
+  /** Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук */
+  "summary"?: { [key: string]: number };
 }
 
 export interface MarketplaceYandexPnl {
@@ -17550,6 +17616,26 @@ export interface StockPurchaseOrderLineInput {
   "basis_line_id"?: UUID | null;
   /** Проведённая заявка на закупку того же юрлица и склада; указывается только вместе с basis_line_id */
   "request_id"?: UUID | null;
+}
+
+/** Тело черновика корректировки приёмки по УКД поставщика на уменьшение. */
+export interface StockReceiptCorrectionCreate {
+  "basis_id": UUID;
+  /** Пусто или отсутствует означает рабочую дату кабинета */
+  "date"?: string;
+  "supplier_document": StockReceiptCorrectionCreateSupplierDocument;
+  /** Уменьшение с налогом в валюте приёмки */
+  "amount": string;
+  /** Налог уменьшения в валюте приёмки */
+  "vat"?: string;
+  "comment"?: string;
+}
+
+export interface StockReceiptCorrectionCreateSupplierDocument {
+  /** Номер УКД поставщика */
+  "number": string;
+  /** Дата УКД поставщика */
+  "date": string;
 }
 
 export interface StockReceiptVATTerms {

@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 72060da199991a9c552d50860b58cc9ea88a67405e085241d02fb47db0af1bc4).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 13bfd61a183df5b9db594b25da4226a5af09c645276a215e90ab4394065a5a64).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -5980,14 +5980,14 @@ export interface OperationTypes {
   /** GET /api/v1/marketplace/ozon/funnel-daily — Получить дневную воронку одного артикула Ozon */
   marketplaceOzonFunnelDaily: {
     params: Record<string, never>;
-    query: { "days"?: number; "from"?: string; "group"?: string; "groupBy"?: "subject" | "model" | "brand" | "article"; "groupMetrics"?: string; "scope"?: string; "sku"?: string; "slice"?: "article" | "store" | "list" | "model" | "brand" | "subject"; "sliceValue"?: string; "store"?: string; "to"?: string };
+    query: { "days"?: number; "from"?: string; "group"?: string; "groupBy"?: "subject" | "model" | "brand" | "article"; "groupMetrics"?: string; "scope"?: string; "sku"?: string; "slice"?: "article" | "store" | "list" | "model" | "brand" | "subject"; "sliceValue"?: string; "store"?: string; "summary"?: "1"; "to"?: string };
     body: never;
     response: models.MarketplaceOzonFunnelDaily;
   };
   /** GET /api/v1/marketplace/ozon/orders/overview — Получить сводку заказов Ozon */
   marketplaceOzonOrdersOverview: {
     params: Record<string, never>;
-    query: { "from"?: string; "group"?: string; "scheme"?: "all" | "fbo" | "fbs"; "store"?: string; "to"?: string };
+    query: { "from"?: string; "group"?: string; "scheme"?: "all" | "fbo" | "fbs"; "store"?: string; "summary"?: "1"; "to"?: string };
     body: never;
     response: models.MarketplaceOzonOrdersOverview;
   };
@@ -6190,14 +6190,14 @@ export interface OperationTypes {
   /** GET /api/v1/marketplace/wb/funnel-daily — Получить дневную экономику артикула Wildberries */
   marketplaceWbFunnelDaily: {
     params: Record<string, never>;
-    query: { "days"?: number; "from"?: string; "groupBy"?: "subject" | "model" | "brand" | "article"; "groupMetrics"?: string; "sku"?: string; "slice"?: "article" | "store" | "list" | "model" | "brand" | "subject"; "sliceValue"?: string; "store"?: string; "to"?: string };
+    query: { "days"?: number; "from"?: string; "groupBy"?: "subject" | "model" | "brand" | "article"; "groupMetrics"?: string; "sku"?: string; "slice"?: "article" | "store" | "list" | "model" | "brand" | "subject"; "sliceValue"?: string; "store"?: string; "summary"?: "1"; "to"?: string };
     body: never;
     response: models.MarketplaceWbFunnelDaily;
   };
   /** GET /api/v1/marketplace/wb/orders/overview — Получить сводку заказов и продаж Wildberries */
   marketplaceWbOrdersOverview: {
     params: Record<string, never>;
-    query: { "from"?: string; "store"?: string; "to"?: string };
+    query: { "from"?: string; "store"?: string; "summary"?: "1"; "to"?: string };
     body: never;
     response: models.MarketplaceWbOrdersOverview;
   };
@@ -6274,7 +6274,7 @@ export interface OperationTypes {
   /** GET /api/v1/marketplace/yandex/orders/overview — Получить сводку заказов Яндекс Маркета */
   marketplaceYandexOrdersOverview: {
     params: Record<string, never>;
-    query: { "from"?: string; "group"?: string; "store"?: string; "to"?: string };
+    query: { "from"?: string; "group"?: string; "store"?: string; "summary"?: "1"; "to"?: string };
     body: never;
     response: models.MarketplaceYandexOrdersOverview;
   };
@@ -6836,6 +6836,13 @@ export interface OperationTypes {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.StockPurchaseOrderCreate;
+    response: models.CoreDocument;
+  };
+  /** POST /api/v1/stock/receipt-corrections — Создать черновик корректировки приёмки по УКД поставщика */
+  stockCreateReceiptCorrection: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.StockReceiptCorrectionCreate;
     response: models.CoreDocument;
   };
   /** POST /api/v1/stock/warehouses — Создать склад */
@@ -9258,6 +9265,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockCreateImport: { method: "POST", path: "/api/v1/stock/imports", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateOpeningBalance: { method: "POST", path: "/api/v1/stock/opening-balances", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreatePurchaseOrder: { method: "POST", path: "/api/v1/stock/purchasing/orders", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockCreateReceiptCorrection: { method: "POST", path: "/api/v1/stock/receipt-corrections", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateWarehouseZone: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockDeactivateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses/{id}/deactivate", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
