@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1b8a276ba06fb42749336df27f0f60e0382a0c7a083aa540f41f1539ec99bc2d).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9d4d4036e67fb26cb4cbd3fdd5009e1e9f2b76363f860583f6813e9c5ac3f67f).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -3614,6 +3614,10 @@ export interface CoreCompanyPolicy {
   "business_id": UUID;
   "tax_mode": Array<CorePolicyTaxModeVersion>;
   "vat_rates": Array<CorePolicyVATRatesVersion>;
+  /** Система налогообложения с историей (ERP-1579) */
+  "tax_regime"?: Array<CorePolicyTaxRegimeVersion>;
+  /** Юрлицо — ИП (вид организации в карточке): доступны ПСН, НПД и патент */
+  "sole_proprietor"?: boolean;
 }
 
 export interface CoreConflictingRegistrar {
@@ -5401,6 +5405,29 @@ export interface CorePolicyTaxModeVersion {
   "mode": "deductible" | "non_deductible" | "none";
   /** Налоговая валюта юрлица: в ней ведутся суммы налога регистров НДС и документа «НДС за квартал». По умолчанию RUB. */
   "tax_currency": string;
+}
+
+export interface CorePolicyTaxRegimeInput {
+  /** 0001-01-01 — с начала учёта */
+  "valid_from": string;
+  "regime": "osno" | "usn_income" | "usn_income_expense" | "ausn_income" | "ausn_income_expense" | "eshn" | "psn" | "npd";
+  /** Ставка режима, от 0 до 100; обязательна, кроме ПСН и НПД */
+  "regime_rate"?: string;
+  /** ИП совмещает основной режим с патентом; только ОСНО, УСН или ЕСХН */
+  "patent"?: boolean;
+}
+
+export interface CorePolicyTaxRegimeVersion {
+  "id": UUID;
+  /** Начало версии; 0001-01-01 означает «с начала учёта» */
+  "valid_from": string;
+  /** Последний день версии; отсутствует у открытой версии */
+  "valid_to"?: string;
+  "regime": "osno" | "usn_income" | "usn_income_expense" | "ausn_income" | "ausn_income_expense" | "eshn" | "psn" | "npd";
+  /** Ставка основного режима в процентах с двумя знаками; нет — не задана (у ПСН и НПД необязательна) */
+  "rate"?: string;
+  /** Вместе с основным режимом ИП применяет патент */
+  "patent": boolean;
 }
 
 export interface CorePolicyVATPendingInput {
@@ -9414,6 +9441,10 @@ export interface FinanceAccount {
   "bank_timezone"?: string | null;
   /** Откуда пояс: `bic` — определён по БИК, `default` — определить не удалось, стоит умолчание (проверьте пояс), `manual` — задан человеком; подключение банка ручной пояс не трогает. */
   "bank_timezone_source"?: "bic" | "default" | "manual" | null | null;
+  /** Вид счёта. `settlement` — расчётный (счёт книги 51), `deposit` — вклад (депозитный счёт, 55.03). Вклад — такие же деньги: он входит в итог денег, а размещение и возврат — внутренний перевод между своими счетами, не доход и не расход. */
+  "account_type"?: "settlement" | "deposit";
+  /** Откуда вид: `number` — выведен из номера счёта (421…–422… и 423…, 426… — вклад), `bank` — назван банком, `manual` — выбран человеком. Ручной выбор номер и банк не перебивают. */
+  "account_type_source"?: "number" | "bank" | "manual";
 }
 
 export interface FinanceAccountCreate {
@@ -10191,6 +10222,29 @@ export interface FinanceOpeningBalanceRequest {
   "comment"?: string;
 }
 
+export interface FinanceOpeningDebtRequest {
+  /** Дата остатков — дата старта учёта */
+  "date": string;
+  "business_id": UUID;
+  /** Юрлицо; пусто — долг без юрлица */
+  "company_id"?: UUID | null;
+  "contact_id": UUID;
+  /** Счёт долга: 60.01 — наш долг поставщику, 62.01 — долг покупателя */
+  "account_code": "60.01" | "62.01";
+  /** Сторона ноги книги. Кредит на 62.01 — отрицательная дебиторка, не аванс */
+  "direction": "debit" | "credit";
+  /** Сумма в валюте долга, больше нуля */
+  "amount": string;
+  /** Валюта долга (ISO 4217); пусто — валюта учёта кабинета */
+  "currency"?: string;
+  /** Срок оплаты; пусто — «без срока» */
+  "due_date"?: string;
+  /** Общий признак одного ввода остатков (entity_refs.opening_batch) */
+  "batch"?: string;
+  /** Откуда строка: введена вручную или загружена из 1С */
+  "source"?: "manual" | "onec";
+}
+
 export interface FinanceOperation {
   "recognition_mode": "document" | "plan";
   /** Фактически оплачено по проведённым распределениям */
@@ -10654,11 +10708,11 @@ export interface FinancePayrollAccrualRow {
 }
 
 export interface FinancePayrollAccrualRowBonusesItem {
-  /** Статья ручной премии; пусто — «Зарплата постоянная». У премии с variable не читается */
+  /** Статья ручной премии; пусто — «Заработная плата». У премии с variable не читается */
   "item"?: string;
   /** Decimal string; сумма премии */
   "amount": string;
-  /** Премия начислена правилом от выручки — в ОПиУ «Зарплата переменная», НДФЛ и взносы делятся в той же доле */
+  /** Премия начислена правилом от выручки — в ОПиУ «Переменная заработная плата», НДФЛ и взносы делятся в той же доле */
   "variable"?: boolean;
 }
 
@@ -18597,6 +18651,11 @@ export interface FinanceListDividendPoliciesResponse {
 export interface FinanceGetProjectBudgetHistoryResponse {
   "count": number;
   "results": Array<FinanceProjectBudget>;
+}
+
+export interface FinanceMarkTransactionDeletedRequest {
+  /** Согласие снять аванс и зачёты операции */
+  "confirm_release"?: boolean;
 }
 
 export interface MailListAccountsResponse {

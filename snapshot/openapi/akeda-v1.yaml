@@ -13604,6 +13604,100 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/core/accounting-policy/companies/{id}/tax-regime:
+    post:
+      tags:
+        - Core accounting
+      operationId: coreAddPolicyTaxRegime
+      summary: Система налогообложения юрлица с даты
+      description: Основной режим, его ставка и признак патента (ERP-1579). ПСН, НПД и патент — только у ИП; патент совмещается с ОСНО, УСН или ЕСХН. Налог по режиму система не считает, проведённые документы версию не запирают. Новая версия начинается строго позже открытой и закрывает её днём раньше.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorePolicyTaxRegimeInput'
+      responses:
+        '200':
+          description: Учётная политика после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreAccountingPolicy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/accounting-policy/companies/{id}/tax-regime/open:
+    put:
+      tags:
+        - Core accounting
+      operationId: coreEditPolicyTaxRegime
+      summary: Поправить открытую версию — система налогообложения юрлица
+      description: Правит дату или значение открытой версии системы налогообложения (ERP-1579); дата не раньше начала предыдущей версии.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorePolicyTaxRegimeInput'
+      responses:
+        '200':
+          description: Учётная политика после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreAccountingPolicy'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/core/accounting-policy/companies/{id}/vat-rates:
     post:
       tags:
@@ -19523,7 +19617,7 @@ paths:
         - Finance transactions
       operationId: financeMarkTransactionDeleted
       summary: Пометить банковскую операцию на удаление
-      description: Атомарно отменяет движения документа и помечает его удалённым. Операция исчезает из банковских выписок, сверки и отчётов. История доступна только в Справочники → Документы → Отменённые. Платёж в банке не отменяется. Закрытый период и зависимые распределения оплаты блокируют действие без изменения учётных движений.
+      description: 'Атомарно отменяет движения документа и помечает его удалённым. Операция исчезает из банковских выписок, сверки и отчётов. История доступна только в Справочники → Документы → Отменённые. Платёж в банке не отменяется. Закрытый период блокирует действие без изменения учётных движений. Аванс и зачёты, порождённые операцией, снимаются вместе с ней только с согласием: без confirm_release ответ 409 finance.repost.release_needs_consent со списком released.'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -19541,6 +19635,16 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirm_release:
+                  type: boolean
+                  description: Согласие снять аванс и зачёты операции
       responses:
         '200':
           description: Отменённый документ с пометкой удаления
@@ -22453,6 +22557,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/v1/finance/opening-debts:
+    post:
+      tags:
+        - Finance accounts
+      operationId: financeCreateOpeningDebt
+      summary: Завести начальный долг контрагента документом
+      description: 'Долг на счёте 60.01 (наш долг поставщику) или 62.01 (долг покупателя) на дату старта учёта. Сервер собирает корректировку сам — нога долга по контрагенту, встречная нога 80 «Капитал» и движение расчётов — и проводит её. Валютный долг пересчитывается по курсу дня остатков из курсов кабинета, исходная сумма и валюта сохраняются; нет курса — 422, один к одному долг не заводится. Срок оплаты необязателен: без него долг «без срока» и в просрочку не идёт. Отказ проведения не оставляет черновика.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounts:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceOpeningDebtRequest'
+      responses:
+        '201':
+          description: Начальный долг проведён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
   /api/v1/crm/pipelines:
     get:
       tags:
@@ -59681,6 +59827,31 @@ components:
             reduced:
               type: string
               description: Процент льготной ставки с двумя знаками; пусто — вид не заведён
+    CorePolicyTaxRegimeVersion:
+      allOf:
+        - $ref: '#/components/schemas/CorePolicyPeriod'
+        - type: object
+          required:
+            - regime
+            - patent
+          properties:
+            regime:
+              type: string
+              enum:
+                - osno
+                - usn_income
+                - usn_income_expense
+                - ausn_income
+                - ausn_income_expense
+                - eshn
+                - psn
+                - npd
+            rate:
+              type: string
+              description: Ставка основного режима в процентах с двумя знаками; нет — не задана (у ПСН и НПД необязательна)
+            patent:
+              type: boolean
+              description: Вместе с основным режимом ИП применяет патент
     CoreBusinessPolicy:
       type: object
       additionalProperties: false
@@ -59751,6 +59922,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CorePolicyVATRatesVersion'
+        tax_regime:
+          type: array
+          items:
+            $ref: '#/components/schemas/CorePolicyTaxRegimeVersion'
+          description: Система налогообложения с историей (ERP-1579)
+        sole_proprietor:
+          type: boolean
+          description: 'Юрлицо — ИП (вид организации в карточке): доступны ПСН, НПД и патент'
     CoreAccountingPolicy:
       type: object
       additionalProperties: false
@@ -59830,6 +60009,34 @@ components:
           type: string
           pattern: ^[A-Z]{3}$
           description: 'Налоговая валюта юрлица; не передана — RUB. Меняется вместе с версией режима: с даты, по которой есть проведённые документы, — отказ 409.'
+    CorePolicyTaxRegimeInput:
+      type: object
+      additionalProperties: false
+      required:
+        - valid_from
+        - regime
+      properties:
+        valid_from:
+          type: string
+          format: date
+          description: 0001-01-01 — с начала учёта
+        regime:
+          type: string
+          enum:
+            - osno
+            - usn_income
+            - usn_income_expense
+            - ausn_income
+            - ausn_income_expense
+            - eshn
+            - psn
+            - npd
+        regime_rate:
+          type: string
+          description: Ставка режима, от 0 до 100; обязательна, кроме ПСН и НПД
+        patent:
+          type: boolean
+          description: ИП совмещает основной режим с патентом; только ОСНО, УСН или ЕСХН
     CorePolicyVATRatesInput:
       type: object
       additionalProperties: false
@@ -68562,6 +68769,19 @@ components:
             - manual
             - null
           description: 'Откуда пояс: `bic` — определён по БИК, `default` — определить не удалось, стоит умолчание (проверьте пояс), `manual` — задан человеком; подключение банка ручной пояс не трогает.'
+        account_type:
+          type: string
+          enum:
+            - settlement
+            - deposit
+          description: 'Вид счёта. `settlement` — расчётный (счёт книги 51), `deposit` — вклад (депозитный счёт, 55.03). Вклад — такие же деньги: он входит в итог денег, а размещение и возврат — внутренний перевод между своими счетами, не доход и не расход.'
+        account_type_source:
+          type: string
+          enum:
+            - number
+            - bank
+            - manual
+          description: 'Откуда вид: `number` — выведен из номера счёта (421…–422… и 423…, 426… — вклад), `bank` — назван банком, `manual` — выбран человеком. Ручной выбор номер и банк не перебивают.'
     FinanceAccountPage:
       type: object
       additionalProperties: false
@@ -68856,6 +69076,61 @@ components:
           type: string
           minLength: 1
           description: Часовой пояс банковских суток (IANA). Источник пояса становится manual.
+    FinanceOpeningDebtRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - date
+        - business_id
+        - contact_id
+        - account_code
+        - direction
+        - amount
+      properties:
+        date:
+          type: string
+          format: date
+          description: Дата остатков — дата старта учёта
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Юрлицо; пусто — долг без юрлица
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        account_code:
+          type: string
+          enum:
+            - '60.01'
+            - '62.01'
+          description: 'Счёт долга: 60.01 — наш долг поставщику, 62.01 — долг покупателя'
+        direction:
+          type: string
+          enum:
+            - debit
+            - credit
+          description: Сторона ноги книги. Кредит на 62.01 — отрицательная дебиторка, не аванс
+        amount:
+          type: string
+          description: Сумма в валюте долга, больше нуля
+        currency:
+          type: string
+          description: Валюта долга (ISO 4217); пусто — валюта учёта кабинета
+        due_date:
+          type: string
+          format: date
+          description: Срок оплаты; пусто — «без срока»
+        batch:
+          type: string
+          description: Общий признак одного ввода остатков (entity_refs.opening_batch)
+        source:
+          type: string
+          enum:
+            - manual
+            - onec
+          description: 'Откуда строка: введена вручную или загружена из 1С'
     FinanceOpeningBalanceRequest:
       type: object
       additionalProperties: false
@@ -87179,13 +87454,13 @@ components:
             properties:
               item:
                 type: string
-                description: Статья ручной премии; пусто — «Зарплата постоянная». У премии с variable не читается
+                description: Статья ручной премии; пусто — «Заработная плата». У премии с variable не читается
               amount:
                 type: string
                 description: Decimal string; сумма премии
               variable:
                 type: boolean
-                description: Премия начислена правилом от выручки — в ОПиУ «Зарплата переменная», НДФЛ и взносы делятся в той же доле
+                description: Премия начислена правилом от выручки — в ОПиУ «Переменная заработная плата», НДФЛ и взносы делятся в той же доле
         withheld:
           type: string
           description: Decimal string; прочие удержания, уменьшают постоянную зарплату

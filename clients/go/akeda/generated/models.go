@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1b8a276ba06fb42749336df27f0f60e0382a0c7a083aa540f41f1539ec99bc2d).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9d4d4036e67fb26cb4cbd3fdd5009e1e9f2b76363f860583f6813e9c5ac3f67f).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -3601,6 +3601,10 @@ type CoreCompanyPolicy struct {
 	BusinessID UUID                        `json:"business_id"`
 	TaxMode    []CorePolicyTaxModeVersion  `json:"tax_mode"`
 	VATRates   []CorePolicyVATRatesVersion `json:"vat_rates"`
+	// TaxRegime — Система налогообложения с историей (ERP-1579)
+	TaxRegime []CorePolicyTaxRegimeVersion `json:"tax_regime,omitempty"`
+	// SoleProprietor — Юрлицо — ИП (вид организации в карточке): доступны ПСН, НПД и патент
+	SoleProprietor *bool `json:"sole_proprietor,omitempty"`
 }
 
 type CoreConflictingRegistrar struct {
@@ -5388,6 +5392,29 @@ type CorePolicyTaxModeVersion struct {
 	Mode    string  `json:"mode"`
 	// TaxCurrency — Налоговая валюта юрлица: в ней ведутся суммы налога регистров НДС и документа «НДС за квартал». По умолчанию RUB.
 	TaxCurrency string `json:"tax_currency"`
+}
+
+type CorePolicyTaxRegimeInput struct {
+	// ValidFrom — 0001-01-01 — с начала учёта
+	ValidFrom string `json:"valid_from"`
+	Regime    string `json:"regime"`
+	// RegimeRate — Ставка режима, от 0 до 100; обязательна, кроме ПСН и НПД
+	RegimeRate *string `json:"regime_rate,omitempty"`
+	// Patent — ИП совмещает основной режим с патентом; только ОСНО, УСН или ЕСХН
+	Patent *bool `json:"patent,omitempty"`
+}
+
+type CorePolicyTaxRegimeVersion struct {
+	ID UUID `json:"id"`
+	// ValidFrom — Начало версии; 0001-01-01 означает «с начала учёта»
+	ValidFrom string `json:"valid_from"`
+	// ValidTo — Последний день версии; отсутствует у открытой версии
+	ValidTo *string `json:"valid_to,omitempty"`
+	Regime  string  `json:"regime"`
+	// Rate — Ставка основного режима в процентах с двумя знаками; нет — не задана (у ПСН и НПД необязательна)
+	Rate *string `json:"rate,omitempty"`
+	// Patent — Вместе с основным режимом ИП применяет патент
+	Patent bool `json:"patent"`
 }
 
 type CorePolicyVATPendingInput struct {
@@ -9379,6 +9406,10 @@ type FinanceAccount struct {
 	BankTimezone *string `json:"bank_timezone,omitempty"`
 	// BankTimezoneSource — Откуда пояс: `bic` — определён по БИК, `default` — определить не удалось, стоит умолчание (проверьте пояс), `manual` — задан человеком; подключение банка ручной пояс не трогает.
 	BankTimezoneSource *json.RawMessage `json:"bank_timezone_source,omitempty"`
+	// AccountType — Вид счёта. `settlement` — расчётный (счёт книги 51), `deposit` — вклад (депозитный счёт, 55.03). Вклад — такие же деньги: он входит в итог денег, а размещение и возврат — внутренний перевод между своими счетами, не доход и не расход.
+	AccountType *string `json:"account_type,omitempty"`
+	// AccountTypeSource — Откуда вид: `number` — выведен из номера счёта (421…–422… и 423…, 426… — вклад), `bank` — назван банком, `manual` — выбран человеком. Ручной выбор номер и банк не перебивают.
+	AccountTypeSource *string `json:"account_type_source,omitempty"`
 }
 
 type FinanceAccountCreate struct {
@@ -10156,6 +10187,29 @@ type FinanceOpeningBalanceRequest struct {
 	Comment *string `json:"comment,omitempty"`
 }
 
+type FinanceOpeningDebtRequest struct {
+	// Date — Дата остатков — дата старта учёта
+	Date       string `json:"date"`
+	BusinessID UUID   `json:"business_id"`
+	// CompanyID — Юрлицо; пусто — долг без юрлица
+	CompanyID *UUID `json:"company_id,omitempty"`
+	ContactID UUID  `json:"contact_id"`
+	// AccountCode — Счёт долга: 60.01 — наш долг поставщику, 62.01 — долг покупателя
+	AccountCode string `json:"account_code"`
+	// Direction — Сторона ноги книги. Кредит на 62.01 — отрицательная дебиторка, не аванс
+	Direction string `json:"direction"`
+	// Amount — Сумма в валюте долга, больше нуля
+	Amount string `json:"amount"`
+	// Currency — Валюта долга (ISO 4217); пусто — валюта учёта кабинета
+	Currency *string `json:"currency,omitempty"`
+	// DueDate — Срок оплаты; пусто — «без срока»
+	DueDate *string `json:"due_date,omitempty"`
+	// Batch — Общий признак одного ввода остатков (entity_refs.opening_batch)
+	Batch *string `json:"batch,omitempty"`
+	// Source — Откуда строка: введена вручную или загружена из 1С
+	Source *string `json:"source,omitempty"`
+}
+
 type FinanceOperation struct {
 	RecognitionMode string `json:"recognition_mode"`
 	// CashPaid — Фактически оплачено по проведённым распределениям
@@ -10615,11 +10669,11 @@ type FinancePayrollAccrualRow struct {
 }
 
 type FinancePayrollAccrualRowBonusesItem struct {
-	// Item — Статья ручной премии; пусто — «Зарплата постоянная». У премии с variable не читается
+	// Item — Статья ручной премии; пусто — «Заработная плата». У премии с variable не читается
 	Item *string `json:"item,omitempty"`
 	// Amount — Decimal string; сумма премии
 	Amount string `json:"amount"`
-	// Variable — Премия начислена правилом от выручки — в ОПиУ «Зарплата переменная», НДФЛ и взносы делятся в той же доле
+	// Variable — Премия начислена правилом от выручки — в ОПиУ «Переменная заработная плата», НДФЛ и взносы делятся в той же доле
 	Variable *bool `json:"variable,omitempty"`
 }
 
@@ -18506,6 +18560,11 @@ type FinanceListDividendPoliciesResponse struct {
 type FinanceGetProjectBudgetHistoryResponse struct {
 	Count   int64                  `json:"count"`
 	Results []FinanceProjectBudget `json:"results"`
+}
+
+type FinanceMarkTransactionDeletedRequest struct {
+	// ConfirmRelease — Согласие снять аванс и зачёты операции
+	ConfirmRelease *bool `json:"confirm_release,omitempty"`
 }
 
 type MailListAccountsResponse struct {

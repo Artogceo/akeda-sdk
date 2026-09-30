@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1b8a276ba06fb42749336df27f0f60e0382a0c7a083aa540f41f1539ec99bc2d).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9d4d4036e67fb26cb4cbd3fdd5009e1e9f2b76363f860583f6813e9c5ac3f67f).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -839,6 +839,13 @@ export interface OperationTypes {
     body: models.CorePolicyTaxModeInput;
     response: models.CoreAccountingPolicy;
   };
+  /** POST /api/v1/core/accounting-policy/companies/{id}/tax-regime — Система налогообложения юрлица с даты */
+  coreAddPolicyTaxRegime: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CorePolicyTaxRegimeInput;
+    response: models.CoreAccountingPolicy;
+  };
   /** POST /api/v1/core/accounting-policy/businesses/{id}/vat-pending — Порог ожидания вычета у бизнеса с даты */
   coreAddPolicyVATPending: {
     params: { "id": models.UUID };
@@ -1215,6 +1222,13 @@ export interface OperationTypes {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.CorePolicyTaxModeInput;
+    response: models.CoreAccountingPolicy;
+  };
+  /** PUT /api/v1/core/accounting-policy/companies/{id}/tax-regime/open — Поправить открытую версию — система налогообложения юрлица */
+  coreEditPolicyTaxRegime: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CorePolicyTaxRegimeInput;
     response: models.CoreAccountingPolicy;
   };
   /** PUT /api/v1/core/accounting-policy/businesses/{id}/vat-pending/open — Поправить открытую версию — порог ожидания вычета у бизнеса с даты */
@@ -4325,6 +4339,13 @@ export interface OperationTypes {
     body: models.FinanceExpenseReportCreate;
     response: models.CoreDocument;
   };
+  /** POST /api/v1/finance/opening-debts — Завести начальный долг контрагента документом */
+  financeCreateOpeningDebt: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FinanceOpeningDebtRequest;
+    response: models.CoreDocument;
+  };
   /** POST /api/v1/finance/operations — Завести продажу или закупку */
   financeCreateOperation: {
     params: Record<string, never>;
@@ -4840,7 +4861,7 @@ export interface OperationTypes {
   financeMarkTransactionDeleted: {
     params: { "id": models.UUID };
     query: Record<string, never>;
-    body: never;
+    body: models.FinanceMarkTransactionDeletedRequest;
     response: models.CoreDocument;
   };
   /** GET /api/v1/finance/payroll/registers — Получить журнал реестров на выплату */
@@ -8338,6 +8359,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   chatUploadConversationAvatar: { method: "POST", path: "/api/v1/chat/conversations/{id}/avatar", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreAddPolicyAccountableDays: { method: "POST", path: "/api/v1/core/accounting-policy/businesses/{id}/accountable-days", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreAddPolicyTaxMode: { method: "POST", path: "/api/v1/core/accounting-policy/companies/{id}/tax-mode", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreAddPolicyTaxRegime: { method: "POST", path: "/api/v1/core/accounting-policy/companies/{id}/tax-regime", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreAddPolicyVATPending: { method: "POST", path: "/api/v1/core/accounting-policy/businesses/{id}/vat-pending", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreAddPolicyVATPresentation: { method: "POST", path: "/api/v1/core/accounting-policy/businesses/{id}/vat-presentation", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreAddPolicyVATRates: { method: "POST", path: "/api/v1/core/accounting-policy/companies/{id}/vat-rates", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8392,6 +8414,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreDeleteSelfEmployeePhoto: { method: "DELETE", path: "/api/v1/core/self/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreEditPolicyAccountableDays: { method: "PUT", path: "/api/v1/core/accounting-policy/businesses/{id}/accountable-days/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreEditPolicyTaxMode: { method: "PUT", path: "/api/v1/core/accounting-policy/companies/{id}/tax-mode/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreEditPolicyTaxRegime: { method: "PUT", path: "/api/v1/core/accounting-policy/companies/{id}/tax-regime/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreEditPolicyVATPending: { method: "PUT", path: "/api/v1/core/accounting-policy/businesses/{id}/vat-pending/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreEditPolicyVATPresentation: { method: "PUT", path: "/api/v1/core/accounting-policy/businesses/{id}/vat-presentation/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreEditPolicyVATRates: { method: "PUT", path: "/api/v1/core/accounting-policy/companies/{id}/vat-rates/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8836,6 +8859,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeCreateDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateDividendPolicy: { method: "POST", path: "/api/v1/finance/dividends/policies", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateExpenseReport: { method: "POST", path: "/api/v1/finance/accountable/reports", module: "finance", stage: "preview", permission: "finance.accountable:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateOpeningDebt: { method: "POST", path: "/api/v1/finance/opening-debts", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOperation: { method: "POST", path: "/api/v1/finance/operations", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOperationAccrual: { method: "POST", path: "/api/v1/finance/operations/{id}/accruals", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOrderAct: { method: "POST", path: "/api/v1/finance/orders/{id}/acts", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

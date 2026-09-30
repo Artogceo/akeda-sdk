@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1b8a276ba06fb42749336df27f0f60e0382a0c7a083aa540f41f1539ec99bc2d).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9d4d4036e67fb26cb4cbd3fdd5009e1e9f2b76363f860583f6813e9c5ac3f67f).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -146,6 +146,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'chatUploadConversationAvatar': OperationSpec('POST', '/api/v1/chat/conversations/{id}/avatar', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
     'coreAddPolicyAccountableDays': OperationSpec('POST', '/api/v1/core/accounting-policy/businesses/{id}/accountable-days', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreAddPolicyTaxMode': OperationSpec('POST', '/api/v1/core/accounting-policy/companies/{id}/tax-mode', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
+    'coreAddPolicyTaxRegime': OperationSpec('POST', '/api/v1/core/accounting-policy/companies/{id}/tax-regime', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreAddPolicyVATPending': OperationSpec('POST', '/api/v1/core/accounting-policy/businesses/{id}/vat-pending', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreAddPolicyVATPresentation': OperationSpec('POST', '/api/v1/core/accounting-policy/businesses/{id}/vat-presentation', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreAddPolicyVATRates': OperationSpec('POST', '/api/v1/core/accounting-policy/companies/{id}/vat-rates', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
@@ -200,6 +201,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreDeleteSelfEmployeePhoto': OperationSpec('DELETE', '/api/v1/core/self/photo', 'core', 'preview', 'core:write', False, False, (), 'none', None, None),
     'coreEditPolicyAccountableDays': OperationSpec('PUT', '/api/v1/core/accounting-policy/businesses/{id}/accountable-days/open', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreEditPolicyTaxMode': OperationSpec('PUT', '/api/v1/core/accounting-policy/companies/{id}/tax-mode/open', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
+    'coreEditPolicyTaxRegime': OperationSpec('PUT', '/api/v1/core/accounting-policy/companies/{id}/tax-regime/open', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreEditPolicyVATPending': OperationSpec('PUT', '/api/v1/core/accounting-policy/businesses/{id}/vat-pending/open', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreEditPolicyVATPresentation': OperationSpec('PUT', '/api/v1/core/accounting-policy/businesses/{id}/vat-presentation/open', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreEditPolicyVATRates': OperationSpec('PUT', '/api/v1/core/accounting-policy/companies/{id}/vat-rates/open', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
@@ -644,6 +646,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeCreateDividendDecision': OperationSpec('POST', '/api/v1/finance/dividends/decisions', 'finance', 'preview', 'finance.dividends:write', True, True, (), 'none', None, None),
     'financeCreateDividendPolicy': OperationSpec('POST', '/api/v1/finance/dividends/policies', 'finance', 'preview', 'finance.dividends:write', False, True, (), 'none', None, None),
     'financeCreateExpenseReport': OperationSpec('POST', '/api/v1/finance/accountable/reports', 'finance', 'preview', 'finance.accountable:write', False, True, (), 'none', None, None),
+    'financeCreateOpeningDebt': OperationSpec('POST', '/api/v1/finance/opening-debts', 'finance', 'preview', 'finance.accounts:write', False, True, (), 'none', None, None),
     'financeCreateOperation': OperationSpec('POST', '/api/v1/finance/operations', 'finance', 'preview', 'finance.operations:write', False, True, (), 'none', None, None),
     'financeCreateOperationAccrual': OperationSpec('POST', '/api/v1/finance/operations/{id}/accruals', 'finance', 'preview', 'finance.operations:write', False, True, ('id',), 'none', None, None),
     'financeCreateOrderAct': OperationSpec('POST', '/api/v1/finance/orders/{id}/acts', 'finance', 'preview', 'finance.operations:write', False, True, ('id',), 'none', None, None),

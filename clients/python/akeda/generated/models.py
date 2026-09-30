@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1b8a276ba06fb42749336df27f0f60e0382a0c7a083aa540f41f1539ec99bc2d).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9d4d4036e67fb26cb4cbd3fdd5009e1e9f2b76363f860583f6813e9c5ac3f67f).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -555,6 +555,8 @@ __all__ = [
     "CorePolicyPeriod",
     "CorePolicyTaxModeInput",
     "CorePolicyTaxModeVersion",
+    "CorePolicyTaxRegimeInput",
+    "CorePolicyTaxRegimeVersion",
     "CorePolicyVATPendingInput",
     "CorePolicyVATPendingVersion",
     "CorePolicyVATPresentationInput",
@@ -971,6 +973,7 @@ __all__ = [
     "FinanceImportUpload",
     "FinanceOpenAdvance",
     "FinanceOpeningBalanceRequest",
+    "FinanceOpeningDebtRequest",
     "FinanceOperation",
     "FinanceOperationAccrualAllocation",
     "FinanceOperationAccrualCreate",
@@ -1706,6 +1709,7 @@ __all__ = [
     "FinanceListDividendOwnersResponseResultsItem",
     "FinanceListDividendPoliciesResponse",
     "FinanceGetProjectBudgetHistoryResponse",
+    "FinanceMarkTransactionDeletedRequest",
     "MailListAccountsResponse",
     "MailListFoldersResponse",
     "MailComposeMessageResponse",
@@ -5291,13 +5295,19 @@ class CoreChangeFeedPage(TypedDict):
 
 CoreChangeOp = Literal['upsert', 'delete']
 
-class CoreCompanyPolicy(TypedDict):
+class _CoreCompanyPolicyRequired(TypedDict):
     id: "UUID"
     name: str
     is_active: bool
     business_id: "UUID"
     tax_mode: List["CorePolicyTaxModeVersion"]
     vat_rates: List["CorePolicyVATRatesVersion"]
+
+class CoreCompanyPolicy(_CoreCompanyPolicyRequired, total=False):
+    #: Система налогообложения с историей (ERP-1579)
+    tax_regime: List["CorePolicyTaxRegimeVersion"]
+    #: Юрлицо — ИП (вид организации в карточке): доступны ПСН, НПД и патент
+    sole_proprietor: bool
 
 class CoreConflictingRegistrar(TypedDict):
     id: "UUID"
@@ -7067,6 +7077,31 @@ class _CorePolicyTaxModeVersionRequired(TypedDict):
 class CorePolicyTaxModeVersion(_CorePolicyTaxModeVersionRequired, total=False):
     #: Последний день версии; отсутствует у открытой версии
     valid_to: str
+
+class _CorePolicyTaxRegimeInputRequired(TypedDict):
+    #: 0001-01-01 — с начала учёта
+    valid_from: str
+    regime: Literal['osno', 'usn_income', 'usn_income_expense', 'ausn_income', 'ausn_income_expense', 'eshn', 'psn', 'npd']
+
+class CorePolicyTaxRegimeInput(_CorePolicyTaxRegimeInputRequired, total=False):
+    #: Ставка режима, от 0 до 100; обязательна, кроме ПСН и НПД
+    regime_rate: str
+    #: ИП совмещает основной режим с патентом; только ОСНО, УСН или ЕСХН
+    patent: bool
+
+class _CorePolicyTaxRegimeVersionRequired(TypedDict):
+    id: "UUID"
+    #: Начало версии; 0001-01-01 означает «с начала учёта»
+    valid_from: str
+    regime: Literal['osno', 'usn_income', 'usn_income_expense', 'ausn_income', 'ausn_income_expense', 'eshn', 'psn', 'npd']
+    #: Вместе с основным режимом ИП применяет патент
+    patent: bool
+
+class CorePolicyTaxRegimeVersion(_CorePolicyTaxRegimeVersionRequired, total=False):
+    #: Последний день версии; отсутствует у открытой версии
+    valid_to: str
+    #: Ставка основного режима в процентах с двумя знаками; нет — не задана (у ПСН и НПД необязательна)
+    rate: str
 
 class CorePolicyVATPendingInput(TypedDict):
     valid_from: str
@@ -11141,6 +11176,10 @@ class FinanceAccount(_FinanceAccountRequired, total=False):
     bank_timezone: Optional[str]
     #: Откуда пояс: `bic` — определён по БИК, `default` — определить не удалось, стоит умолчание (проверьте пояс), `manual` — задан человеком; подключение банка ручной пояс не трогает.
     bank_timezone_source: Optional[Literal['bic', 'default', 'manual', None]]
+    #: Вид счёта. `settlement` — расчётный (счёт книги 51), `deposit` — вклад (депозитный счёт, 55.03). Вклад — такие же деньги: он входит в итог денег, а размещение и возврат — внутренний перевод между своими счетами, не доход и не расход.
+    account_type: Literal['settlement', 'deposit']
+    #: Откуда вид: `number` — выведен из номера счёта (421…–422… и 423…, 426… — вклад), `bank` — назван банком, `manual` — выбран человеком. Ручной выбор номер и банк не перебивают.
+    account_type_source: Literal['number', 'bank', 'manual']
 
 class _FinanceAccountCreateRequired(TypedDict):
     name: str
@@ -11889,6 +11928,30 @@ class FinanceOpeningBalanceRequest(_FinanceOpeningBalanceRequestRequired, total=
     #: Обязателен при исправлении сторно-документом
     comment: str
 
+class _FinanceOpeningDebtRequestRequired(TypedDict):
+    #: Дата остатков — дата старта учёта
+    date: str
+    business_id: "UUID"
+    contact_id: "UUID"
+    #: Счёт долга: 60.01 — наш долг поставщику, 62.01 — долг покупателя
+    account_code: Literal['60.01', '62.01']
+    #: Сторона ноги книги. Кредит на 62.01 — отрицательная дебиторка, не аванс
+    direction: Literal['debit', 'credit']
+    #: Сумма в валюте долга, больше нуля
+    amount: str
+
+class FinanceOpeningDebtRequest(_FinanceOpeningDebtRequestRequired, total=False):
+    #: Юрлицо; пусто — долг без юрлица
+    company_id: Optional["UUID"]
+    #: Валюта долга (ISO 4217); пусто — валюта учёта кабинета
+    currency: str
+    #: Срок оплаты; пусто — «без срока»
+    due_date: str
+    #: Общий признак одного ввода остатков (entity_refs.opening_batch)
+    batch: str
+    #: Откуда строка: введена вручную или загружена из 1С
+    source: Literal['manual', 'onec']
+
 class _FinanceOperationRequired(TypedDict):
     recognition_mode: Literal['document', 'plan']
     #: Фактически оплачено по проведённым распределениям
@@ -12325,9 +12388,9 @@ class _FinancePayrollAccrualRowBonusesItemRequired(TypedDict):
     amount: str
 
 class FinancePayrollAccrualRowBonusesItem(_FinancePayrollAccrualRowBonusesItemRequired, total=False):
-    #: Статья ручной премии; пусто — «Зарплата постоянная». У премии с variable не читается
+    #: Статья ручной премии; пусто — «Заработная плата». У премии с variable не читается
     item: str
-    #: Премия начислена правилом от выручки — в ОПиУ «Зарплата переменная», НДФЛ и взносы делятся в той же доле
+    #: Премия начислена правилом от выручки — в ОПиУ «Переменная заработная плата», НДФЛ и взносы делятся в той же доле
     variable: bool
 
 class _FinancePayrollDocumentCreateRequired(TypedDict):
@@ -19814,6 +19877,10 @@ class FinanceListDividendPoliciesResponse(TypedDict, total=False):
 class FinanceGetProjectBudgetHistoryResponse(TypedDict):
     count: int
     results: List["FinanceProjectBudget"]
+
+class FinanceMarkTransactionDeletedRequest(TypedDict, total=False):
+    #: Согласие снять аванс и зачёты операции
+    confirm_release: bool
 
 class MailListAccountsResponse(TypedDict):
     items: List["MailAccount"]
