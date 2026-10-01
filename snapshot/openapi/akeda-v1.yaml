@@ -189,6 +189,9 @@ tags:
     description: 'Модуль mail (почта сотрудника) — правила разбора входящей почты и их применение к уже накопившимся письмам. Набор полей и операторов закрытый: правило исполняется на сервере над чужой перепиской'
   - name: Finance acquiring
     description: Модуль finance (счета и выписки) — сверка эквайринга — деньги в пути по оплатам картой, выплаты эквайера, реестры провайдера и эквайеры юрлиц
+  - name: Dashboard metrics
+  - name: Assistant
+    description: Личные разговоры и подписные сводки встроенного помощника
 paths:
   /api/v1/tasks/tasks:
     get:
@@ -250,10 +253,17 @@ paths:
             type: string
         - name: scope
           in: query
+          description: 'mine — только мои задачи: где вызывающий исполнитель, постановщик, соисполнитель, наблюдатель или тим-лид раздела («участвую»). До 26.09.2026 — только исполнитель или соисполнитель'
           schema:
             type: string
             enum:
               - mine
+        - name: mine_roles
+          in: query
+          description: Сужает отбор «Мои» (scope=mine или counters=mine) до перечисленных ролей через запятую; пусто — все роли. Неизвестная роль — 400
+          schema:
+            type: string
+            example: executor,watcher
         - name: compact
           in: query
           schema:
@@ -625,6 +635,20 @@ paths:
         - mcpOAuth:
             - akeda:delegate
         - installationToken: []
+      parameters:
+        - name: counters
+          in: query
+          description: mine — счётчики задач (tasks_total/tasks_active/tasks_done/tasks_overdue) считают только мои задачи тем же правилом, что scope=mine в списке (бегунок «Только мои»)
+          schema:
+            type: string
+            enum:
+              - mine
+        - name: mine_roles
+          in: query
+          description: Сужает отбор «Мои» (scope=mine или counters=mine) до перечисленных ролей через запятую; пусто — все роли. Неизвестная роль — 400
+          schema:
+            type: string
+            example: executor,watcher
       responses:
         '200':
           description: Группы проектов со счётчиками
@@ -744,6 +768,20 @@ paths:
         - mcpOAuth:
             - akeda:delegate
         - installationToken: []
+      parameters:
+        - name: counters
+          in: query
+          description: mine — счётчики задач (tasks_total/tasks_active/tasks_done/tasks_overdue) считают только мои задачи тем же правилом, что scope=mine в списке (бегунок «Только мои»)
+          schema:
+            type: string
+            enum:
+              - mine
+        - name: mine_roles
+          in: query
+          description: Сужает отбор «Мои» (scope=mine или counters=mine) до перечисленных ролей через запятую; пусто — все роли. Неизвестная роль — 400
+          schema:
+            type: string
+            example: executor,watcher
       responses:
         '200':
           description: Проекты задач со счётчиками и участниками
@@ -7217,6 +7255,284 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/core/products/{id}/files:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Core products
+      operationId: coreListProductFiles
+      summary: Получить файлы и фото товара
+      description: Основное фото первым, затем в порядке, который расставил человек. Тип файла — элемент справочника product_file_kinds.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Файлы карточки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreProductFilePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/products/{id}/files/{fileId}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: fileId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    patch:
+      tags:
+        - Core products
+      operationId: coreUpdateProductFile
+      summary: Изменить тип, имя или основное фото
+      description: Тип — код из справочника product_file_kinds, пустая строка снимает тип; is_primary=true делает изображение основным фото товара.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreProductFilePatch'
+      responses:
+        '200':
+          description: Обновлённый файл
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreProductFile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Core products
+      operationId: coreDeleteProductFile
+      summary: Удалить файл товара
+      description: Строка и объект хранилища удаляются; если ушло основное фото, основным становится следующее изображение.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '204':
+          description: Файл удалён
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/products/{id}/files/{fileId}/content:
+    get:
+      tags:
+        - Core products
+      operationId: coreGetProductFileContent
+      summary: Скачать файл товара или миниатюру фото
+      description: Поток файла с фактическим Content-Type; для изображения параметр w отдаёт миниатюру. Агенту без токена API адрес выдаёт coreProductFileDownloadSession.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: w
+          in: query
+          description: Ширина миниатюры изображения; 0 возвращает оригинал
+          schema:
+            type: integer
+            minimum: 0
+        - name: download
+          in: query
+          description: true — Content-Disposition attachment с именем файла
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Байты файла с фактическим Content-Type
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/products/{id}/files/{fileId}/download-session:
+    get:
+      tags:
+        - Core products
+      operationId: coreProductFileDownloadSession
+      summary: Временный адрес файла товара
+      description: 'Подписанный адрес файла или фото товара на 15 минут: байты идут прямо из хранилища, без заголовка авторизации — так забирает файл агент по MCP. scan_status=skipped честно говорит, что файл антивирус не проверял (загружен формой). Файл, который антивирус ещё проверяет или признал заражённым, адреса не получает — 409 core.file_not_scanned. direct=false — хранилище подписывать не умеет, адрес ведёт на coreGetProductFileContent и требует авторизации.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Временный адрес файла
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDownloadLink'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/products/{id}/upload-sessions:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    post:
+      tags:
+        - Core products
+      operationId: coreCreateProductUploadSession
+      summary: Открыть сессию загрузки файла или фото товара
+      description: 'Файл кладётся прямо в хранилище кабинета по подписанному адресу, мимо API: так его загружают агент по MCP и клиенты с крупными файлами. Ответ называет путь байтов: post — один multipart POST на upload.url с полями upload.fields и файлом последним полем upload.file_field; parts — PUT каждой части на upload.direct_urls; api — хранилище подписывать не умеет, байты идут PUT на upload.url этого API с авторизацией. Затем coreFinishUploadSession проверяет размер, контрольную сумму и антивирус и заводит файл товара с номером сессии. Потолок — 25 МБ, изображений у товара не больше 5; kind — код типа из product_file_kinds, изображению без kind достаётся photo. Сессию открывает пользователь или агент от его имени.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreProductFileUploadRequest'
+      responses:
+        '201':
+          description: Сессия и адрес для байтов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/core/products/{id}/identifiers/{identifierId}:
     patch:
       tags:
@@ -10563,21 +10879,16 @@ paths:
       tags:
         - Core product transfers
       operationId: coreCreateProductImportUploadSession
-      summary: Создать сессию большой загрузки импорта
-      description: |
-        Резервирует запуск на один час и возвращает защищённый PUT URL внутри API.
-        Размер обязан точно совпасть с заявленным и не может превышать 25 МиБ.
-        Сессия принадлежит создавшему её пользователю или API-ключу.
+      summary: Открыть сессию загрузки файла импорта номенклатуры
+      description: 'Файл импорта (XLSX, XLS, ODS, CSV или TSV до 25 МиБ) кладётся прямо в хранилище кабинета по подписанному адресу, мимо API: путь байтов — как у coreCreateProductUploadSession (post, parts или api). Затем coreFinishUploadSession проверяет размер, контрольную сумму и антивирус, разбирает таблицу и заводит запуск импорта со статусом uploaded и номером сессии — дальше inspect, mapping, preview и apply. Прежний путь с POST /product-imports {file_id} завершает ту же сессию. Имена filename и size приняты как синонимы name и size_bytes. Запуск принадлежит открывшему сессию; её открывает пользователь или агент от его имени.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
       x-akeda-permission: core:write
       security:
         - erpUserToken: []
-        - tenantApiKey: []
         - mcpOAuth:
             - akeda:delegate
-        - installationToken: []
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
       requestBody:
@@ -10588,17 +10899,155 @@ paths:
               $ref: '#/components/schemas/CoreProductImportUploadSessionRequest'
       responses:
         '201':
-          description: Параметры защищённой бинарной загрузки
+          description: Сессия и адрес для байтов
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CoreProductImportUploadSession'
+                $ref: '#/components/schemas/TransferSession'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/core/upload-sessions/{id}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    get:
+      tags:
+        - Core product transfers
+      operationId: coreGetUploadSession
+      summary: Состояние сессии загрузки core
+      description: 'Сессию видит только её автор. status=pending — байты ждём или завершение можно повторить; attached — строка заведена, published_ref — номер файла товара или запуска импорта; failed — причина в failure. Адрес для байтов здесь не повторяется: он выдаётся один раз при открытии сессии.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      responses:
+        '200':
+          description: Состояние сессии
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Core product transfers
+      operationId: coreAbortUploadSession
+      summary: Отменить сессию загрузки core
+      description: Незавершённая сессия закрывается, уже загруженные байты удаляются из хранилища. Завершённую отменить нельзя — ответ 409.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      responses:
+        '204':
+          description: Сессия отменена
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/upload-sessions/{id}/finish:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    post:
+      tags:
+        - Core product transfers
+      operationId: coreFinishUploadSession
+      summary: Завершить загрузку файла товара или импорта
+      description: 'Проверяет, что файл лёг по выданному адресу: размер, контрольную сумму (если заявлена) и антивирус; подменённый после проверки файл отклоняется, заражённый удаляется и до товара не доходит. Затем заводит строку с номером сессии: у сессии товара — файл товара (product_file, миниатюры фото строятся из объекта), у сессии импорта — запуск импорта (product_import). Повтор возвращает ту же строку. 409 transfer.not_uploaded — байтов ещё нет; 422 transfer.infected — найдена угроза, файл удалён; 503 transfer.scanner_unavailable — антивирус недоступен, повторите позже.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:write
+      responses:
+        '200':
+          description: Сессия и заведённая строка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreUploadFinishResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/core/product-import-templates/{kind}/download-session:
+    get:
+      tags:
+        - Core product transfers
+      operationId: coreProductImportTemplateDownloadSession
+      summary: Временный адрес шаблона импорта номенклатуры
+      description: 'Шаблон XLSX собирается по полям кабинета, кладётся в хранилище под ключ по содержимому и отдаётся подписанным адресом. Подписанный адрес живёт 15 минут и открывается GET без заголовка авторизации — так файл забирает агент по MCP. direct=false — хранилище подписывать не умеет: адрес ведёт на поток этого API и требует авторизации (requires_authorization=true).'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: kind
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CoreProductTransferKind'
+      responses:
+        '200':
+          description: Временный адрес файла
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDownloadLink'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/core/product-imports:
     post:
       tags:
@@ -10607,7 +11056,8 @@ paths:
       summary: Загрузить небольшой импорт или завершить большую загрузку
       description: |
         Multipart принимает XLSX, XLS, ODS, CSV или TSV до 25 МиБ вместе с kind и mode.
-        JSON `{file_id}` завершает ранее загруженную сессию. Файл сохраняется в
+        JSON `{file_id}` отдаёт запуск по номеру сессии загрузки и, если сессию ещё не
+        завершали, завершает её (как coreFinishUploadSession). Файл сохраняется в
         tenant-scoped object storage; данные ещё не меняются.
       x-akeda-module: core
       x-akeda-release-stage: preview
@@ -10969,6 +11419,84 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/core/product-imports/{id}/errors/download-session:
+    get:
+      tags:
+        - Core product transfers
+      operationId: coreProductImportErrorsDownloadSession
+      summary: Временный адрес отчёта ошибок импорта
+      description: 'Отчёт errors.xlsx своего запуска импорта подписанным адресом; отчёта ещё нет (preview не строился) — 404. Подписанный адрес живёт 15 минут и открывается GET без заголовка авторизации — так файл забирает агент по MCP. direct=false — хранилище подписывать не умеет: адрес ведёт на поток этого API и требует авторизации (requires_authorization=true).'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Временный адрес файла
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDownloadLink'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/product-imports/{id}/source/download-session:
+    get:
+      tags:
+        - Core product transfers
+      operationId: coreProductImportSourceDownloadSession
+      summary: Временный адрес исходного файла импорта
+      description: 'Исходный файл своего запуска импорта подписанным адресом; чужой запуск — 404. Подписанный адрес живёт 15 минут и открывается GET без заголовка авторизации — так файл забирает агент по MCP. direct=false — хранилище подписывать не умеет: адрес ведёт на поток этого API и требует авторизации (requires_authorization=true).'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Временный адрес файла
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDownloadLink'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/core/product-exports:
     post:
       tags:
@@ -11073,6 +11601,45 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/TabularFile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/product-exports/{id}/download-session:
+    get:
+      tags:
+        - Core product transfers
+      operationId: coreProductExportDownloadSession
+      summary: Временный адрес файла своего экспорта
+      description: 'Файл своего экспорта номенклатуры подписанным адресом; чужой экспорт — 404. Подписанный адрес живёт 15 минут и открывается GET без заголовка авторизации — так файл забирает агент по MCP. direct=false — хранилище подписывать не умеет: адрес ведёт на поток этого API и требует авторизации (requires_authorization=true).'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Временный адрес файла
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDownloadLink'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -15079,7 +15646,7 @@ paths:
         - CRM deals
       operationId: crmCreateDeal
       summary: Создать сделку
-      description: Валюта суммы проверяется по справочнику валют ERP.
+      description: customer_id — UUID контрагента из справочника core, а не юрлицо продавца. Отдельного поля юрлица продавца у этой команды нет. Валюта суммы проверяется по справочнику валют ERP.
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -18376,7 +18943,7 @@ paths:
         - Knowledge files
       operationId: knowledgeUploadPageAsset
       summary: Прикрепить файл к странице базы знаний
-      description: Файл до 25 МБ. Идентификатор из ответа ставится в текст страницы разметкой [[file:id|имя]] или [[image:id|имя]] при сохранении редакции.
+      description: Файл до 25 МБ телом запроса; крупнее — сессией knowledgeCreateAssetUploadSession. До прикрепления файл проверяет антивирус — 422 transfer.infected, 503 transfer.scanner_unavailable. Идентификатор из ответа ставится в текст страницы разметкой [[file:id|имя]] или [[image:id|имя]] при сохранении редакции.
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -18408,6 +18975,10 @@ paths:
           $ref: '#/components/responses/NotFound'
         '413':
           $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/knowledge/assets/{id}/content:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -18448,6 +19019,199 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/knowledge/assets/{id}/download-session:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    post:
+      tags:
+        - Knowledge files
+      operationId: knowledgeCreateAssetDownloadSession
+      summary: Временный адрес файла базы знаний
+      description: 'Подписанный адрес файла страницы на 15 минут: байты идут прямо из хранилища, без заголовка авторизации — так забирает файл агент по MCP. Права те же, что у скачивания потоком: чтение страницы и граница публикации. direct=false — хранилище подписывать не умеет, адрес ведёт на knowledgeGetAssetContent и требует авторизации. scan_status=skipped честно говорит, что файл антивирус не проверял (загружен до проверок или антивирус не подключён). Файл, который ещё ждёт антивируса, адреса не получает — 409 knowledge.asset_not_scanned. Вызов ничего не меняет.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: knowledge
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: knowledge:read
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyObject'
+      responses:
+        '200':
+          description: Временный адрес файла
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KnowledgeAssetLink'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/knowledge/nodes/{id}/upload-sessions:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/KnowledgeNodeID'
+    post:
+      tags:
+        - Knowledge files
+      operationId: knowledgeCreateAssetUploadSession
+      summary: Открыть сессию загрузки файла на страницу
+      description: 'Файл кладётся прямо в хранилище кабинета по подписанному адресу, мимо API: так его загружают агент по MCP и клиенты с крупными файлами. Право записи на страницу проверяется до выдачи адреса. Ответ называет путь байтов: post — один multipart POST на upload.url с полями upload.fields и файлом последним полем upload.file_field; parts — PUT каждой части на upload.direct_urls; api — хранилище подписывать не умеет, байты идут PUT на upload.url этого API с авторизацией. Затем knowledgeFinishAssetUploadSession проверяет размер, контрольную сумму и антивирус и прикрепляет файл к странице. Потолок файла — 500 МиБ, порог антивируса.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: knowledge
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: knowledge:write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferUploadRequest'
+      responses:
+        '201':
+          description: Сессия и адрес для байтов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/knowledge/upload-sessions/{sessionId}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: sessionId
+        in: path
+        required: true
+        description: UUID сессии загрузки
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Knowledge files
+      operationId: knowledgeGetAssetUploadSession
+      summary: Состояние сессии загрузки файла страницы
+      description: 'Сессию видит только её автор. status=pending — байты ждём или завершение можно повторить; attached — файл прикреплён, published_ref — его id; failed — причина в failure. Адрес для байтов здесь не повторяется: он выдаётся один раз при открытии сессии.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: knowledge
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: knowledge:read
+      responses:
+        '200':
+          description: Состояние сессии
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Knowledge files
+      operationId: knowledgeAbortAssetUploadSession
+      summary: Отменить сессию загрузки файла страницы
+      description: Незавершённая сессия закрывается, уже загруженные байты удаляются из хранилища. Завершённую отменить нельзя — ответ 409; прикреплённый файл удаляется knowledgeDeleteAsset.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: knowledge
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: knowledge:write
+      responses:
+        '204':
+          description: Сессия отменена
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/knowledge/upload-sessions/{sessionId}/finish:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: sessionId
+        in: path
+        required: true
+        description: UUID сессии загрузки
+        schema:
+          $ref: '#/components/schemas/UUID'
+    post:
+      tags:
+        - Knowledge files
+      operationId: knowledgeFinishAssetUploadSession
+      summary: Завершить загрузку файла на страницу
+      description: 'Проверяет, что файл лёг по выданному адресу: право записи на страницу, размер, контрольную сумму (если заявлена) и антивирус; подменённый после проверки файл отклоняется. Затем прикрепляет файл к странице с id сессии; в поисковый разбор идёт только чистый файл. Повтор возвращает тот же файл. 409 transfer.not_uploaded — байтов ещё нет; 422 transfer.infected — найдена угроза, файл удалён; 503 transfer.scanner_unavailable — антивирус недоступен, повторите позже.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: knowledge
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: knowledge:write
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmptyObject'
+      responses:
+        '200':
+          description: Прикреплённый файл
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KnowledgeAsset'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/files/roots:
     get:
       tags:
@@ -20035,6 +20799,51 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/stock/documents/{id}/claim:
+    get:
+      tags:
+        - Stock documents
+      operationId: stockGetReceiptClaimBalance
+      summary: Получить остаток претензии приёмки по недостаче
+      description: |
+        Претензия поставщику по недостаче записана в снимке проведения
+        приёмки и там не меняется. Остаток читается из регистра расчётов:
+        обязательство — эта приёмка, сторона — претензия; допоставки и
+        списания претензии его уменьшают. У приёмки без претензии, черновика
+        и отменённой приёмки остаток ноль. Суммы — строки в разрядности
+        валюты претензии. Документ другого вида — 400.
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Претензия и её незакрытый остаток
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockReceiptClaimBalance'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/stock/documents/{id}/count-sheet:
     get:
       tags:
@@ -25340,6 +26149,38 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/knowledge/assets/{id}:
+    delete:
+      tags:
+        - Knowledge files
+      operationId: knowledgeDeleteAsset
+      summary: Удалить файл базы знаний
+      description: Файл снимается со страницы, стирается из объектного хранилища и уходит из поискового индекса вместе со своими фрагментами. Корзины у файла нет, восстановить его нельзя — только загрузить заново. Разметка [[file:id|имя]] в тексте страницы после удаления повисает и правится вручную. Нужен уровень «Редактирование» на странице.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: knowledge
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: knowledge:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          description: UUID файла базы знаний
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Файл удалён
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/chat/conversations/{id}/attachments:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -28779,6 +29620,100 @@ paths:
           $ref: '#/components/responses/NotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/approvals/{id}/sheet/download-session:
+    get:
+      tags:
+        - Docflow approvals
+      operationId: docflowApprovalSheetDownloadSession
+      x-akeda-audience: external
+      summary: Временный адрес листа согласования
+      description: 'Тот же лист, что у docflowApprovalSheetDocument, на языке того, кто его просит: собирается и кладётся во временный ключ хранилища, ответ — подписанный адрес на 15 минут, без заголовка авторизации, — так забирает лист агент по MCP. Права те же, что у карточки прохода. direct=false — хранилище подписывать не умеет, адрес ведёт на docflowApprovalSheetDocument и требует авторизации.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Временный адрес
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferDownloadLink'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/print/forms/{kind}/{id}/download-session:
+    get:
+      tags:
+        - Core documents
+      operationId: printFormDownloadSession
+      x-akeda-audience: external
+      summary: Временный адрес печатной формы документа
+      description: 'Печатная форма документа в PDF — счёт, акт, УПД, акт сверки, складская бумага: собирается тем же движком печати и с тем же отпечатком, что у экранной печати, кладётся в кэш готовых форм, и ответ — подписанный адрес этого файла на 15 минут, без заголовка авторизации, — так забирает форму агент по MCP. Право проверяется по модулю-владельцу вида документа (бумаги документооборота — docflow.flow:read, складские — stock:read): печать не открывает того, что человек не может открыть в журнале. facsimile=true просит оттиск печати и факсимиле; что из этого вышло, говорит поле facsimile. direct=false — кэш выключен или хранилище не подписывает адреса, адрес ведёт на печать этого API и требует авторизации. Без службы рендера PDF ответ 503.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-permission: core:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: kind
+          in: path
+          required: true
+          description: Вид формы, например docflow_invoice, docflow_act, docflow_upd, docflow_reconciliation_act, stock_handover_act
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: facsimile
+          in: query
+          description: true — с оттиском печати и факсимиле, если юрлицо их разрешило
+          schema:
+            type: boolean
+        - name: template
+          in: query
+          description: Код шаблона, если у вида их несколько
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Временный адрес
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferDownloadLink'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/docflow/approvals/{id}/decisions:
     post:
       tags:
@@ -30009,6 +30944,310 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/DocflowFlowFileContent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/upload-sessions:
+    post:
+      tags:
+        - Docflow flow
+      operationId: docflowCreateFlowUploadSession
+      x-akeda-audience: external
+      summary: Открыть сессию загрузки файла в документ
+      description: 'Файл кладётся прямо в хранилище кабинета по подписанному адресу, мимо API: так прикладывает файл агент по MCP и клиент с крупным файлом. Ожидаемая версия документа передаётся в теле, заголовок Idempotency-Key обязателен: оба называются сейчас, а проверяются командой документа при завершении. Один ключ — одна сессия: повтор ключа отвечает 422 docflow.flow.idempotency_conflict. Ответ называет путь байтов: post — один multipart POST на upload.url с полями upload.fields и файлом последним полем upload.file_field; parts — PUT каждой части на upload.direct_urls; api — хранилище подписывать не умеет, байты идут PUT на upload.url этого API с авторизацией. Затем docflowFinishFlowUploadSession. Предел файла 100 МБ, файлов у документа не больше ста; уже изменённый документ отвечает 409 docflow.flow.version_conflict.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowFlowUploadRequest'
+      responses:
+        '201':
+          description: Сессия и адрес для байтов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/upload-sessions/{id}:
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowGetFlowUploadSession
+      x-akeda-audience: external
+      summary: Состояние сессии загрузки файла в документ
+      description: 'Сессию видит только её автор. status=pending — байты ждём или завершение можно повторить; attached — файл приложен, published_ref — его id в документе; failed — причина в failure. Адрес для байтов здесь не повторяется: он выдаётся один раз при открытии сессии.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Состояние сессии
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    delete:
+      tags:
+        - Docflow flow
+      operationId: docflowAbortFlowUploadSession
+      x-akeda-audience: external
+      summary: Отменить сессию загрузки файла в документ
+      description: Незавершённая сессия закрывается, уже загруженные байты удаляются из хранилища. Завершённую отменить нельзя — ответ 409.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Сессия отменена
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/upload-sessions/{id}/finish:
+    post:
+      tags:
+        - Docflow flow
+      operationId: docflowFinishFlowUploadSession
+      x-akeda-audience: external
+      summary: Завершить загрузку и приложить файл к документу
+      description: 'Проверяет, что файл лёг по выданному адресу: размер, контрольную сумму (если заявлена) и антивирус; подменённый после проверки файл отклоняется. Затем приложение файла проводится командой документа с ожидаемой версией и ключом, названными при открытии сессии, и документ получает новую редакцию. Номер файла выводится из ключа: повтор завершения возвращает тот же документ и тот же файл, второго файла не появляется. 409 transfer.not_uploaded — байтов ещё нет; 409 docflow.flow.version_conflict — документ успели изменить, сессия закрыта; 422 transfer.infected — найдена угроза, файл удалён; 503 transfer.scanner_unavailable или transfer.publish_uncertain — повторите завершение позже.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Документ с приложенным файлом
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowUploadResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/files/{fileId}/download-session:
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowFileDownloadSession
+      x-akeda-audience: external
+      summary: Временный адрес файла документа
+      description: 'Подписанный адрес файла на 15 минут: байты идут прямо из хранилища, без заголовка авторизации — так забирает файл агент по MCP. Права те же, что у docflowFlowFileContent. direct=false — хранилище подписывать не умеет, адрес ведёт на docflowFlowFileContent и требует авторизации. scan_status=skipped честно говорит, что файл антивирус не проверял (положен формой или больше порога проверки).'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Временный адрес
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferDownloadLink'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/revisions/{version}/files/{fileId}/download-session:
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowRevisionFileDownloadSession
+      x-akeda-audience: external
+      summary: Временный адрес файла исторической редакции
+      description: Тот же подписанный адрес, но на файл в том виде, в каком он входил в названную редакцию, — то, что видел согласующий. direct=false — адрес ведёт на docflowFlowRevisionFileContent и требует авторизации.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Временный адрес
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferDownloadLink'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/signatures/sheet/download-session:
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowSignatureSheetDownloadSession
+      x-akeda-audience: external
+      summary: Временный адрес листа электронной подписи
+      description: Лист подписи собирается так же, как у docflowFlowSignatureSheet, и кладётся во временный ключ хранилища; ответ — подписанный адрес на 15 минут, без заголовка авторизации. direct=false — хранилище подписывать не умеет, адрес ведёт на docflowFlowSignatureSheet.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: signature
+          in: query
+          description: ID одной подписи; без него лист включает все подписи документа
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Временный адрес
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferDownloadLink'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -31552,6 +32791,223 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/dashboard/metrics:
+    get:
+      tags:
+        - Dashboard metrics
+      operationId: dashboardListMetrics
+      summary: Получить доступные показатели
+      description: Каталог серверных показателей для снимков и подписных сводок, объявленных модулями-владельцами. Нужны dashboard:read, включённый модуль-владелец и актуальное право сотрудника читать его данные. Показатели считают службы владельцев; клиент и модель не создают свои формулы. Пока этот каталог не перечисляет все настраиваемые карточки веб-дашборда; для остальных сценариев используются API модулей-владельцев. Каталог не содержит учётных фактов.
+      x-akeda-module: dashboard
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: dashboard:read
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Каталог доступных показателей
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - count
+                  - results
+                properties:
+                  count:
+                    type: integer
+                    minimum: 0
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DashboardMetricDefinition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/dashboard/metrics/{id}/snapshot:
+    get:
+      tags:
+        - Dashboard metrics
+      operationId: dashboardGetMetricSnapshot
+      summary: Рассчитать снимок показателя
+      description: Готовый результат владельца за from/to с отбором юрлица и проекта. Деньги передаются строками с валютой; пустая величина неизвестна. as_of означает время расчёта, а не свежесть выгрузки внешнего поставщика. Ответ ограничен форматом карточки, а не заменяет полный отчёт. До расчёта и выдачи повторно проверяются текущий доступ сотрудника к модулю-владельцу и подключение этого модуля. Токен виджета открывает только эту витрину и не выдаёт сотруднику новых прав.
+      x-akeda-module: dashboard
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: dashboard:read
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: company
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: project
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Снимок показателя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardMetricSnapshot'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/assistant/digests:
+    get:
+      tags:
+        - Assistant
+      operationId: assistantListDigests
+      summary: Получить свои подписки на сводки
+      description: Только подписки вошедшего сотрудника в текущем кабинете, включая подключение через пользовательский OAuth MCP. Список показывает последнюю ошибку и время следующего запуска; сам расчёт всегда повторно проверяет права сотрудника на показатель.
+      x-akeda-module: assistant
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: assistant:self
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Личные подписки
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - items
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AssistantDigest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Assistant
+      operationId: assistantCreateDigest
+      summary: Подписаться на личную сводку
+      description: До пяти подписок на сотрудника, до шести показателей в каждой; создание проверяет текущие права на dashboard и каждого владельца. Подписка работает от имени создавшего её человека, без сохранения его токена.
+      x-akeda-module: assistant
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: assistant:self
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssistantDigestInput'
+      responses:
+        '201':
+          description: Подписка создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssistantDigest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/assistant/digests/{id}:
+    put:
+      tags:
+        - Assistant
+      operationId: assistantReplaceDigest
+      summary: Изменить или отключить свою сводку
+      description: Полная замена своей подписки по версии; старая аренда фонового запуска теряет силу. Отключение разрешено даже после отзыва доступа к показателю.
+      x-akeda-module: assistant
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: assistant:self
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/AssistantDigestInput'
+                - type: object
+                  required:
+                    - version
+                  properties:
+                    version:
+                      type: integer
+                      minimum: 1
+      responses:
+        '200':
+          description: Подписка обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssistantDigest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
 components:
   securitySchemes:
     erpUserToken:
@@ -31927,6 +33383,90 @@ components:
             type: string
             format: binary
   schemas:
+    AssistantDigestInput:
+      type: object
+      required:
+        - name
+        - metric_ids
+        - period
+        - schedule_hour
+        - schedule_minute
+        - timezone
+        - weekdays_only
+        - locale
+        - enabled
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        metric_ids:
+          type: array
+          minItems: 1
+          maxItems: 6
+          uniqueItems: true
+          items:
+            type: string
+        company:
+          $ref: '#/components/schemas/UUID'
+        project:
+          $ref: '#/components/schemas/UUID'
+        period:
+          type: string
+          enum:
+            - this_month
+            - previous_month
+            - last_30_days
+        schedule_hour:
+          type: integer
+          minimum: 0
+          maximum: 23
+        schedule_minute:
+          type: integer
+          minimum: 0
+          maximum: 59
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 80
+        weekdays_only:
+          type: boolean
+        locale:
+          type: string
+          enum:
+            - ru-RU
+            - en-US
+        enabled:
+          type: boolean
+    AssistantDigest:
+      allOf:
+        - $ref: '#/components/schemas/AssistantDigestInput'
+        - type: object
+          required:
+            - id
+            - version
+            - next_run_at
+          properties:
+            id:
+              $ref: '#/components/schemas/UUID'
+            version:
+              type: integer
+              minimum: 1
+            next_run_at:
+              type: string
+              format: date-time
+            last_run_at:
+              type: string
+              format: date-time
+            last_error:
+              type: string
+              enum:
+                - ''
+                - access_removed
+                - source_unavailable
+            last_conversation_id:
+              $ref: '#/components/schemas/UUID'
     AutomationManifest:
       type: object
       description: Документ akeda.automation.manifest версии 1 (AUTOMATION.md § 10.1).
@@ -40137,6 +41677,93 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CoreProductIdentifier'
+    CoreProductFile:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - product_id
+        - kind_item_id
+        - kind_code
+        - kind_label
+        - name
+        - mime_type
+        - size_bytes
+        - is_image
+        - is_primary
+        - sort_order
+        - uploaded_by_name
+        - created_at
+        - scan_status
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        product_id:
+          $ref: '#/components/schemas/UUID'
+        kind_item_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+        kind_code:
+          type: string
+          description: Код элемента справочника product_file_kinds; пусто без типа
+        kind_label:
+          type: string
+        name:
+          type: string
+        mime_type:
+          type: string
+        size_bytes:
+          type: integer
+          minimum: 0
+        is_image:
+          type: boolean
+        is_primary:
+          type: boolean
+          description: Основное фото товара; бывает только у изображения
+        sort_order:
+          type: integer
+        uploaded_by_name:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        scan_status:
+          type: string
+          enum:
+            - pending
+            - clean
+            - infected
+            - skipped
+          description: Вердикт антивируса; skipped — файл не проверялся (загружен формой). Ссылку на скачивание получают clean и skipped
+    CoreProductFilePage:
+      type: object
+      additionalProperties: false
+      required:
+        - count
+        - results
+      properties:
+        count:
+          type: integer
+          minimum: 0
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoreProductFile'
+    CoreProductFilePatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        kind:
+          type: string
+          description: Код типа из product_file_kinds; пустая строка снимает тип
+        name:
+          type: string
+          minLength: 1
+        is_primary:
+          type: boolean
+          description: true делает изображение основным фото
     CoreProductIdentifierInput:
       type: object
       additionalProperties: false
@@ -43654,59 +45281,129 @@ components:
     CoreProductImportUploadSessionRequest:
       type: object
       additionalProperties: false
+      description: Заявка на сессию загрузки файла импорта. filename и size — прежние имена name и size_bytes.
       required:
         - kind
         - mode
-        - filename
-        - size
       properties:
         kind:
           $ref: '#/components/schemas/CoreProductTransferKind'
         mode:
           $ref: '#/components/schemas/CoreProductImportMode'
+        name:
+          type: string
+          minLength: 1
+          description: Имя файла с расширением xlsx, xls, ods, csv или tsv
+        mime_type:
+          type: string
+          description: Тип содержимого; по умолчанию — по расширению файла
+        size_bytes:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 26214400
+          description: Точный размер файла в байтах
+        sha256:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+          description: Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками
         filename:
           type: string
           minLength: 1
-          description: Имя с расширением xlsx, xls, ods, csv или tsv
+          description: Прежнее имя поля name
         size:
           type: integer
           format: int64
           minimum: 1
           maximum: 26214400
-    CoreProductImportUploadSession:
+          description: Прежнее имя поля size_bytes
+    CoreProductFileUploadRequest:
       type: object
       additionalProperties: false
+      description: Заявка на сессию загрузки файла или фото товара.
       required:
-        - file_id
-        - upload_url
-        - method
-        - headers
-        - max_bytes
-        - expires_at
-        - requires_authorization
+        - name
+        - size_bytes
       properties:
-        file_id:
-          $ref: '#/components/schemas/UUID'
-        upload_url:
+        name:
           type: string
-          description: Относительный защищённый API URL
-        method:
+          minLength: 1
+          description: Имя файла с расширением
+        mime_type:
           type: string
-          const: PUT
-        headers:
-          type: object
-          additionalProperties:
-            type: string
-        max_bytes:
+          description: Тип содержимого; изображения — image/*
+        size_bytes:
           type: integer
           format: int64
-          const: 26214400
+          minimum: 1
+          maximum: 26214400
+          description: Точный размер файла в байтах
+        sha256:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+          description: Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками
+        kind:
+          type: string
+          description: Код типа файла из справочника product_file_kinds; изображению без кода достаётся photo
+    CoreUploadFinishResult:
+      type: object
+      additionalProperties: false
+      description: 'Итог завершения сессии core: заведённый файл товара или запуск импорта.'
+      required:
+        - session
+      properties:
+        session:
+          $ref: '#/components/schemas/TransferSession'
+        product_file:
+          $ref: '#/components/schemas/CoreProductFile'
+        product_import:
+          $ref: '#/components/schemas/CoreProductImportRun'
+    CoreDownloadLink:
+      type: object
+      additionalProperties: false
+      description: 'Временный адрес файла core: подписанный адрес хранилища или адрес этого API.'
+      required:
+        - url
+        - method
+        - direct
+        - requires_authorization
+        - name
+        - mime_type
+        - size_bytes
+      properties:
+        url:
+          type: string
+        method:
+          type: string
+          enum:
+            - GET
+        direct:
+          type: boolean
+          description: true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией
+        requires_authorization:
+          type: boolean
+          description: true — адрес требует токен API, агенту по MCP он недоступен
         expires_at:
           type: string
           format: date-time
-        requires_authorization:
+          description: Срок подписанного адреса; у адреса API его нет
+        name:
           type: string
-          const: Bearer token or API key
+        mime_type:
+          type: string
+        size_bytes:
+          type: integer
+          format: int64
+          minimum: 0
+        sha256:
+          type: string
+          description: Контрольная сумма SHA-256, если известна
+        scan_status:
+          type: string
+          enum:
+            - clean
+            - skipped
+          description: Вердикт антивируса у файла от человека; skipped — файл антивирус не проверял
     CoreProductImportFinishRequest:
       type: object
       additionalProperties: false
@@ -51955,6 +53652,7 @@ components:
         - size_bytes
         - content_sha256
         - processing_status
+        - scan_status
         - uploaded_by
         - created_at
         - updated_at
@@ -51978,6 +53676,14 @@ components:
         processing_status:
           type: string
           description: 'Разбор файла для индекса: pending, processing, ready, failed или unsupported'
+        scan_status:
+          type: string
+          enum:
+            - pending
+            - clean
+            - infected
+            - skipped
+          description: Вердикт антивируса. В поисковый разбор идёт только clean; skipped — файл антивирус не проверял
         parser_name:
           type: string
         parser_version:
@@ -51996,6 +53702,50 @@ components:
         updated_at:
           type: string
           format: date-time
+    KnowledgeAssetLink:
+      type: object
+      additionalProperties: false
+      description: Временный адрес файла страницы базы знаний.
+      required:
+        - url
+        - direct
+        - method
+        - name
+        - mime_type
+        - size_bytes
+        - sha256
+        - scan_status
+      properties:
+        url:
+          type: string
+          description: Подписанный адрес хранилища при direct=true; иначе относительный адрес этого API с авторизацией
+        direct:
+          type: boolean
+          description: true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией
+        expires_at:
+          type: string
+          format: date-time
+          description: Срок подписанного адреса; у адреса API его нет
+        method:
+          type: string
+          enum:
+            - GET
+        name:
+          type: string
+        mime_type:
+          type: string
+        size_bytes:
+          type: integer
+          format: int64
+          minimum: 0
+        sha256:
+          type: string
+        scan_status:
+          type: string
+          enum:
+            - clean
+            - skipped
+          description: skipped — файл антивирус не проверял
     KnowledgeSearchResult:
       type: object
       additionalProperties: false
@@ -52665,6 +54415,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StockDocumentFulfillmentLine'
+    StockReceiptClaimBalance:
+      type: object
+      additionalProperties: false
+      required:
+        - document_id
+        - open_amount
+      properties:
+        document_id:
+          $ref: '#/components/schemas/UUID'
+        currency:
+          type: string
+          description: Валюта претензии; пусто — валюта учёта.
+        claimed_amount:
+          type: string
+          description: Претензия с налогом — движение расчётов самой приёмки; есть только у проведённой.
+        open_amount:
+          type: string
+          description: Незакрытый остаток претензии в расчётах.
     StockDocumentFulfillmentPage:
       type: object
       additionalProperties: false
@@ -61022,6 +62790,55 @@ components:
         uploaded_at:
           type: string
           format: date-time
+        scan_status:
+          type: string
+          enum:
+            - clean
+            - skipped
+          description: Вердикт антивируса у файла, пришедшего сессией загрузки; у файла формы поля нет
+    DocflowFlowUploadRequest:
+      type: object
+      additionalProperties: false
+      description: Заявка на сессию загрузки файла в документ.
+      required:
+        - expected_version
+        - name
+        - size_bytes
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+          description: Ожидаемая версия документа
+        replace_id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          maxLength: 255
+          description: Имя файла с расширением, без пути
+        mime_type:
+          type: string
+        size_bytes:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 104857600
+          description: Точный размер файла в байтах
+        sha256:
+          type: string
+          pattern: ^[0-9a-f]{64}$
+          description: Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками
+    DocflowFlowUploadResult:
+      type: object
+      additionalProperties: false
+      description: Документ после приложения файла и номер этого файла.
+      required:
+        - document
+        - file_id
+      properties:
+        document:
+          $ref: '#/components/schemas/DocflowFlowDocument'
+        file_id:
+          $ref: '#/components/schemas/UUID'
     DocflowFlowRelation:
       type: object
       additionalProperties: false
@@ -64032,6 +65849,55 @@ components:
           minimum: 0
         scan_status:
           $ref: '#/components/schemas/MailScanStatus'
+    TransferDownloadLink:
+      type: object
+      additionalProperties: false
+      description: 'Временный адрес файла: подписанный адрес хранилища или адрес этого API.'
+      required:
+        - url
+        - method
+        - direct
+        - requires_authorization
+        - name
+        - mime_type
+        - size_bytes
+      properties:
+        url:
+          type: string
+        method:
+          type: string
+          enum:
+            - GET
+        direct:
+          type: boolean
+          description: true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией
+        requires_authorization:
+          type: boolean
+          description: true — адрес требует токен API, агенту по MCP он недоступен
+        expires_at:
+          type: string
+          format: date-time
+          description: Срок подписанного адреса; у адреса API его нет
+        name:
+          type: string
+        mime_type:
+          type: string
+        size_bytes:
+          type: integer
+          format: int64
+          minimum: 0
+        scan_status:
+          type: string
+          enum:
+            - clean
+            - skipped
+          description: Вердикт антивируса; skipped — файл антивирус не проверял
+        facsimile:
+          type: string
+          enum:
+            - applied
+            - not_allowed
+          description: Что стало с просьбой о факсимиле у печатной формы
     TransferUploadRequest:
       type: object
       additionalProperties: false
@@ -64314,7 +66180,197 @@ components:
           minimum: 0
         has_more:
           type: boolean
+    DashboardMetricDefinition:
+      type: object
+      required:
+        - id
+        - module
+        - template
+        - title
+        - description
+        - deeplink
+      properties:
+        id:
+          type: string
+        module:
+          type: string
+        template:
+          type: string
+          enum:
+            - amount
+            - trend
+            - rows
+            - tiles
+            - bars
+            - table
+        title:
+          type: string
+        description:
+          type: string
+        deeplink:
+          type: string
+    DashboardMetricSnapshot:
+      type: object
+      required:
+        - id
+        - template
+        - title
+        - value
+        - currency
+        - caption
+        - as_of
+        - deeplink
+        - points
+        - rows
+        - tiles
+        - bars
+        - columns
+        - table
+      properties:
+        id:
+          type: string
+        template:
+          type: string
+          enum:
+            - amount
+            - trend
+            - rows
+            - tiles
+            - bars
+            - table
+        title:
+          type: string
+        value:
+          type: string
+        currency:
+          type: string
+        caption:
+          type: string
+        as_of:
+          type: string
+          format: date-time
+        deeplink:
+          type: string
+        points:
+          type: array
+          maxItems: 60
+          items:
+            type: object
+            required:
+              - label
+              - value
+            properties:
+              label:
+                type: string
+              value:
+                type: string
+        rows:
+          type: array
+          maxItems: 5
+          items:
+            type: object
+            required:
+              - title
+              - value
+              - detail
+            properties:
+              title:
+                type: string
+              value:
+                type: string
+              detail:
+                type: string
+        tiles:
+          type: array
+          maxItems: 6
+          items:
+            type: object
+            required:
+              - label
+              - value
+              - note
+              - tone
+            properties:
+              label:
+                type: string
+              value:
+                type: string
+              note:
+                type: string
+              tone:
+                type: string
+                enum:
+                  - ''
+                  - positive
+                  - negative
+        bars:
+          type: array
+          maxItems: 6
+          items:
+            type: object
+            required:
+              - title
+              - value
+              - note
+              - fill
+              - tone
+            properties:
+              title:
+                type: string
+              value:
+                type: string
+              note:
+                type: string
+              fill:
+                type: number
+                minimum: 0
+                maximum: 1
+              tone:
+                type: string
+                enum:
+                  - ''
+                  - positive
+                  - negative
+        columns:
+          type: array
+          maxItems: 3
+          items:
+            type: object
+            required:
+              - title
+            properties:
+              title:
+                type: string
+        table:
+          type: array
+          maxItems: 8
+          items:
+            type: object
+            required:
+              - title
+              - cells
+            properties:
+              title:
+                type: string
+              cells:
+                type: array
+                maxItems: 3
+                items:
+                  type: object
+                  required:
+                    - value
+                    - tone
+                  properties:
+                    value:
+                      type: string
+                    tone:
+                      type: string
+                      enum:
+                        - ''
+                        - positive
+                        - negative
 x-akeda-contract-coverage:
+  - dashboard-metrics
   - tasks-lifecycle
   - tasks-collaboration
   - tasks-workflow

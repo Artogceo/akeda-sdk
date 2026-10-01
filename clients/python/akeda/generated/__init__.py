@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 853c28b2f342f4446e4145e3eac14a01b5af32f1b7a8bc3e59f39236ce547bd8).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 fb032b7d52acfab1ce017148adce78d56cabf1095e32a8e651927932009d9140).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from .models import *  # noqa: F401,F403

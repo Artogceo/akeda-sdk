@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 853c28b2f342f4446e4145e3eac14a01b5af32f1b7a8bc3e59f39236ce547bd8).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 fb032b7d52acfab1ce017148adce78d56cabf1095e32a8e651927932009d9140).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -219,6 +219,40 @@ export interface AppRuntimeTenant {
 
 export interface ArchiveTransfer {
   "target_section"?: UUID;
+}
+
+export interface AssistantDigest {
+  "name": string;
+  "metric_ids": Array<string>;
+  "company"?: UUID;
+  "project"?: UUID;
+  "period": "this_month" | "previous_month" | "last_30_days";
+  "schedule_hour": number;
+  "schedule_minute": number;
+  "timezone": string;
+  "weekdays_only": boolean;
+  "locale": "ru-RU" | "en-US";
+  "enabled": boolean;
+  "id": UUID;
+  "version": number;
+  "next_run_at": string;
+  "last_run_at"?: string;
+  "last_error"?: "" | "access_removed" | "source_unavailable";
+  "last_conversation_id"?: UUID;
+}
+
+export interface AssistantDigestInput {
+  "name": string;
+  "metric_ids": Array<string>;
+  "company"?: UUID;
+  "project"?: UUID;
+  "period": "this_month" | "previous_month" | "last_30_days";
+  "schedule_hour": number;
+  "schedule_minute": number;
+  "timezone": string;
+  "weekdays_only": boolean;
+  "locale": "ru-RU" | "en-US";
+  "enabled": boolean;
 }
 
 export interface Attachment {
@@ -2994,6 +3028,25 @@ export interface CoreDocumentTypePage {
   "results": Array<CoreDocumentType>;
 }
 
+/** Временный адрес файла core: подписанный адрес хранилища или адрес этого API. */
+export interface CoreDownloadLink {
+  "url": string;
+  "method": "GET";
+  /** true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией */
+  "direct": boolean;
+  /** true — адрес требует токен API, агенту по MCP он недоступен */
+  "requires_authorization": boolean;
+  /** Срок подписанного адреса; у адреса API его нет */
+  "expires_at"?: string;
+  "name": string;
+  "mime_type": string;
+  "size_bytes": number;
+  /** Контрольная сумма SHA-256, если известна */
+  "sha256"?: string;
+  /** Вердикт антивируса у файла от человека; skipped — файл антивирус не проверял */
+  "scan_status"?: "clean" | "skipped";
+}
+
 export interface CoreEmployee {
   "id": UUID;
   "full_name": string;
@@ -4152,6 +4205,53 @@ export interface CoreProductFieldSchema {
   "fields": Array<CoreProductFieldDefinition>;
 }
 
+export interface CoreProductFile {
+  "id": UUID;
+  "product_id": UUID;
+  "kind_item_id": UUID | null;
+  /** Код элемента справочника product_file_kinds; пусто без типа */
+  "kind_code": string;
+  "kind_label": string;
+  "name": string;
+  "mime_type": string;
+  "size_bytes": number;
+  "is_image": boolean;
+  /** Основное фото товара; бывает только у изображения */
+  "is_primary": boolean;
+  "sort_order": number;
+  "uploaded_by_name": string;
+  "created_at": string;
+  /** Вердикт антивируса; skipped — файл не проверялся (загружен формой). Ссылку на скачивание получают clean и skipped */
+  "scan_status": "pending" | "clean" | "infected" | "skipped";
+}
+
+export interface CoreProductFilePage {
+  "count": number;
+  "results": Array<CoreProductFile>;
+}
+
+export interface CoreProductFilePatch {
+  /** Код типа из product_file_kinds; пустая строка снимает тип */
+  "kind"?: string;
+  "name"?: string;
+  /** true делает изображение основным фото */
+  "is_primary"?: boolean;
+}
+
+/** Заявка на сессию загрузки файла или фото товара. */
+export interface CoreProductFileUploadRequest {
+  /** Имя файла с расширением */
+  "name": string;
+  /** Тип содержимого; изображения — image/* */
+  "mime_type"?: string;
+  /** Точный размер файла в байтах */
+  "size_bytes": number;
+  /** Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками */
+  "sha256"?: string;
+  /** Код типа файла из справочника product_file_kinds; изображению без кода достаётся photo */
+  "kind"?: string;
+}
+
 export interface CoreProductIdentifier {
   "id": UUID;
   "product_id": UUID;
@@ -4287,23 +4387,22 @@ export interface CoreProductImportSheet {
 
 export type CoreProductImportStatus = "awaiting_upload" | "uploading" | "uploaded" | "mapped" | "previewed" | "failed" | "applied";
 
-export interface CoreProductImportUploadSession {
-  "file_id": UUID;
-  /** Относительный защищённый API URL */
-  "upload_url": string;
-  "method": "PUT";
-  "headers": { [key: string]: string };
-  "max_bytes": 26214400;
-  "expires_at": string;
-  "requires_authorization": "Bearer token or API key";
-}
-
+/** Заявка на сессию загрузки файла импорта. filename и size — прежние имена name и size_bytes. */
 export interface CoreProductImportUploadSessionRequest {
   "kind": CoreProductTransferKind;
   "mode": CoreProductImportMode;
-  /** Имя с расширением xlsx, xls, ods, csv или tsv */
-  "filename": string;
-  "size": number;
+  /** Имя файла с расширением xlsx, xls, ods, csv или tsv */
+  "name"?: string;
+  /** Тип содержимого; по умолчанию — по расширению файла */
+  "mime_type"?: string;
+  /** Точный размер файла в байтах */
+  "size_bytes"?: number;
+  /** Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками */
+  "sha256"?: string;
+  /** Прежнее имя поля name */
+  "filename"?: string;
+  /** Прежнее имя поля size_bytes */
+  "size"?: number;
 }
 
 export type CoreProductKind = "goods" | "service" | "material" | "semi_product";
@@ -4580,6 +4679,13 @@ export interface CoreTrialBalanceTotals {
   "balanced": boolean;
 }
 
+/** Итог завершения сессии core: заведённый файл товара или запуск импорта. */
+export interface CoreUploadFinishResult {
+  "session": TransferSession;
+  "product_file"?: CoreProductFile;
+  "product_import"?: CoreProductImportRun;
+}
+
 /** Окно, в котором обращения были, а записей о них нет: очередь писателя переполнилась либо база кабинета не приняла пачку. Признание в НАШЕЙ аварии, и печатается оно обеим сторонам — страница без него читалась бы как полная история. Кабинета в окне нет ни у одной из дверей. */
 export interface CredentialRequestGap {
   "started_at": string;
@@ -4727,6 +4833,72 @@ export interface CycleUpdate {
   "status"?: CycleStatus;
   "order"?: number;
   "is_archived"?: boolean;
+}
+
+export interface DashboardMetricDefinition {
+  "id": string;
+  "module": string;
+  "template": "amount" | "trend" | "rows" | "tiles" | "bars" | "table";
+  "title": string;
+  "description": string;
+  "deeplink": string;
+}
+
+export interface DashboardMetricSnapshot {
+  "id": string;
+  "template": "amount" | "trend" | "rows" | "tiles" | "bars" | "table";
+  "title": string;
+  "value": string;
+  "currency": string;
+  "caption": string;
+  "as_of": string;
+  "deeplink": string;
+  "points": Array<DashboardMetricSnapshotPointsItem>;
+  "rows": Array<DashboardMetricSnapshotRowsItem>;
+  "tiles": Array<DashboardMetricSnapshotTilesItem>;
+  "bars": Array<DashboardMetricSnapshotBarsItem>;
+  "columns": Array<DashboardMetricSnapshotColumnsItem>;
+  "table": Array<DashboardMetricSnapshotTableItem>;
+}
+
+export interface DashboardMetricSnapshotPointsItem {
+  "label": string;
+  "value": string;
+}
+
+export interface DashboardMetricSnapshotRowsItem {
+  "title": string;
+  "value": string;
+  "detail": string;
+}
+
+export interface DashboardMetricSnapshotTilesItem {
+  "label": string;
+  "value": string;
+  "note": string;
+  "tone": "" | "positive" | "negative";
+}
+
+export interface DashboardMetricSnapshotBarsItem {
+  "title": string;
+  "value": string;
+  "note": string;
+  "fill": number;
+  "tone": "" | "positive" | "negative";
+}
+
+export interface DashboardMetricSnapshotColumnsItem {
+  "title": string;
+}
+
+export interface DashboardMetricSnapshotTableItem {
+  "title": string;
+  "cells": Array<DashboardMetricSnapshotTableItemCellsItem>;
+}
+
+export interface DashboardMetricSnapshotTableItemCellsItem {
+  "value": string;
+  "tone": "" | "positive" | "negative";
 }
 
 /**
@@ -5867,6 +6039,8 @@ export interface DocflowFlowFile {
   "content_type": string;
   "uploaded_by": number;
   "uploaded_at": string;
+  /** Вердикт антивируса у файла, пришедшего сессией загрузки; у файла формы поля нет */
+  "scan_status"?: "clean" | "skipped";
 }
 
 export type DocflowFlowKind = "contract" | "specification" | "amendment" | "invoice" | "act" | "upd" | "goods_waybill" | "transport_waybill" | "consignment_note" | "transport_order" | "tax_invoice" | "correction" | "return" | "discrepancy_act" | "reconciliation_act" | "power_of_attorney" | "other";
@@ -5958,6 +6132,26 @@ export interface DocflowFlowScheduleStage {
   "after_stage_id"?: UUID;
   /** Дней после события срока */
   "delay_days"?: number;
+}
+
+/** Заявка на сессию загрузки файла в документ. */
+export interface DocflowFlowUploadRequest {
+  /** Ожидаемая версия документа */
+  "expected_version": number;
+  "replace_id"?: UUID;
+  /** Имя файла с расширением, без пути */
+  "name": string;
+  "mime_type"?: string;
+  /** Точный размер файла в байтах */
+  "size_bytes": number;
+  /** Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками */
+  "sha256"?: string;
+}
+
+/** Документ после приложения файла и номер этого файла. */
+export interface DocflowFlowUploadResult {
+  "document": DocflowFlowDocument;
+  "file_id": UUID;
 }
 
 /** Пакет документов у оператора — конверт, а не учётный документ Акеды. */
@@ -8336,6 +8530,8 @@ export interface KnowledgeAsset {
   "content_sha256": string;
   /** Разбор файла для индекса: pending, processing, ready, failed или unsupported */
   "processing_status": string;
+  /** Вердикт антивируса. В поисковый разбор идёт только clean; skipped — файл антивирус не проверял */
+  "scan_status": "pending" | "clean" | "infected" | "skipped";
   "parser_name"?: string;
   "parser_version"?: string;
   "processing_error"?: string;
@@ -8343,6 +8539,23 @@ export interface KnowledgeAsset {
   "uploaded_by": number;
   "created_at": string;
   "updated_at": string;
+}
+
+/** Временный адрес файла страницы базы знаний. */
+export interface KnowledgeAssetLink {
+  /** Подписанный адрес хранилища при direct=true; иначе относительный адрес этого API с авторизацией */
+  "url": string;
+  /** true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией */
+  "direct": boolean;
+  /** Срок подписанного адреса; у адреса API его нет */
+  "expires_at"?: string;
+  "method": "GET";
+  "name": string;
+  "mime_type": string;
+  "size_bytes": number;
+  "sha256": string;
+  /** skipped — файл антивирус не проверял */
+  "scan_status": "clean" | "skipped";
 }
 
 export interface KnowledgeCitation {
@@ -11339,6 +11552,16 @@ export interface StockPurchaseOrderLineInput {
   "request_id"?: UUID | null;
 }
 
+export interface StockReceiptClaimBalance {
+  "document_id": UUID;
+  /** Валюта претензии; пусто — валюта учёта. */
+  "currency"?: string;
+  /** Претензия с налогом — движение расчётов самой приёмки; есть только у проведённой. */
+  "claimed_amount"?: string;
+  /** Незакрытый остаток претензии в расчётах. */
+  "open_amount": string;
+}
+
 /** Тело черновика корректировки приёмки по УКД поставщика на уменьшение. */
 export interface StockReceiptCorrectionCreate {
   "basis_id": UUID;
@@ -12203,6 +12426,25 @@ export interface TemplateRunResult {
   "reason"?: string;
 }
 
+/** Временный адрес файла: подписанный адрес хранилища или адрес этого API. */
+export interface TransferDownloadLink {
+  "url": string;
+  "method": "GET";
+  /** true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией */
+  "direct": boolean;
+  /** true — адрес требует токен API, агенту по MCP он недоступен */
+  "requires_authorization": boolean;
+  /** Срок подписанного адреса; у адреса API его нет */
+  "expires_at"?: string;
+  "name": string;
+  "mime_type": string;
+  "size_bytes": number;
+  /** Вердикт антивируса; skipped — файл антивирус не проверял */
+  "scan_status"?: "clean" | "skipped";
+  /** Что стало с просьбой о факсимиле у печатной формы */
+  "facsimile"?: "applied" | "not_allowed";
+}
+
 /** Как передать байты. Выдаётся один раз, при открытии сессии. */
 export interface TransferInstructions {
   /** post — один multipart POST; parts — PUT каждой части; api — PUT через этот API с авторизацией */
@@ -12279,6 +12521,25 @@ export interface AppDocflowRecordSalesOrderPaymentRequest {
   "paid_at"?: string;
 }
 
+export interface AssistantListDigestsResponse {
+  "items": Array<AssistantDigest>;
+}
+
+export interface AssistantReplaceDigestRequest {
+  "name": string;
+  "metric_ids": Array<string>;
+  "company"?: UUID;
+  "project"?: UUID;
+  "period": "this_month" | "previous_month" | "last_30_days";
+  "schedule_hour": number;
+  "schedule_minute": number;
+  "timezone": string;
+  "weekdays_only": boolean;
+  "locale": "ru-RU" | "en-US";
+  "enabled": boolean;
+  "version": number;
+}
+
 export interface AutomationRulesResponse {
   "rules": Array<AutomationRuleDocument>;
 }
@@ -12303,6 +12564,11 @@ export interface CoreSetBusinessActiveRequest {
 
 export interface CoreListBusinessOwnershipResponse {
   "results": Array<CoreOwnershipVersion>;
+}
+
+export interface DashboardListMetricsResponse {
+  "count": number;
+  "results": Array<DashboardMetricDefinition>;
 }
 
 export interface DocflowFlowContactStatsResponse {

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 853c28b2f342f4446e4145e3eac14a01b5af32f1b7a8bc3e59f39236ce547bd8).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 fb032b7d52acfab1ce017148adce78d56cabf1095e32a8e651927932009d9140).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -217,6 +217,40 @@ type AppRuntimeTenant struct {
 
 type ArchiveTransfer struct {
 	TargetSection *UUID `json:"target_section,omitempty"`
+}
+
+type AssistantDigest struct {
+	Name               string   `json:"name"`
+	MetricIds          []string `json:"metric_ids"`
+	Company            *UUID    `json:"company,omitempty"`
+	Project            *UUID    `json:"project,omitempty"`
+	Period             string   `json:"period"`
+	ScheduleHour       int64    `json:"schedule_hour"`
+	ScheduleMinute     int64    `json:"schedule_minute"`
+	Timezone           string   `json:"timezone"`
+	WeekdaysOnly       bool     `json:"weekdays_only"`
+	Locale             string   `json:"locale"`
+	Enabled            bool     `json:"enabled"`
+	ID                 UUID     `json:"id"`
+	Version            int64    `json:"version"`
+	NextRunAt          string   `json:"next_run_at"`
+	LastRunAt          *string  `json:"last_run_at,omitempty"`
+	LastError          *string  `json:"last_error,omitempty"`
+	LastConversationID *UUID    `json:"last_conversation_id,omitempty"`
+}
+
+type AssistantDigestInput struct {
+	Name           string   `json:"name"`
+	MetricIds      []string `json:"metric_ids"`
+	Company        *UUID    `json:"company,omitempty"`
+	Project        *UUID    `json:"project,omitempty"`
+	Period         string   `json:"period"`
+	ScheduleHour   int64    `json:"schedule_hour"`
+	ScheduleMinute int64    `json:"schedule_minute"`
+	Timezone       string   `json:"timezone"`
+	WeekdaysOnly   bool     `json:"weekdays_only"`
+	Locale         string   `json:"locale"`
+	Enabled        bool     `json:"enabled"`
 }
 
 type Attachment struct {
@@ -2989,6 +3023,25 @@ type CoreDocumentTypePage struct {
 	Results []CoreDocumentType `json:"results"`
 }
 
+// CoreDownloadLink — Временный адрес файла core: подписанный адрес хранилища или адрес этого API.
+type CoreDownloadLink struct {
+	URL    string `json:"url"`
+	Method string `json:"method"`
+	// Direct — true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией
+	Direct bool `json:"direct"`
+	// RequiresAuthorization — true — адрес требует токен API, агенту по MCP он недоступен
+	RequiresAuthorization bool `json:"requires_authorization"`
+	// ExpiresAt — Срок подписанного адреса; у адреса API его нет
+	ExpiresAt *string `json:"expires_at,omitempty"`
+	Name      string  `json:"name"`
+	MimeType  string  `json:"mime_type"`
+	SizeBytes int64   `json:"size_bytes"`
+	// Sha256 — Контрольная сумма SHA-256, если известна
+	Sha256 *string `json:"sha256,omitempty"`
+	// ScanStatus — Вердикт антивируса у файла от человека; skipped — файл антивирус не проверял
+	ScanStatus *string `json:"scan_status,omitempty"`
+}
+
 type CoreEmployee struct {
 	ID                UUID    `json:"id"`
 	FullName          string  `json:"full_name"`
@@ -4147,6 +4200,53 @@ type CoreProductFieldSchema struct {
 	Fields []CoreProductFieldDefinition `json:"fields"`
 }
 
+type CoreProductFile struct {
+	ID         UUID  `json:"id"`
+	ProductID  UUID  `json:"product_id"`
+	KindItemID *UUID `json:"kind_item_id"`
+	// KindCode — Код элемента справочника product_file_kinds; пусто без типа
+	KindCode  string `json:"kind_code"`
+	KindLabel string `json:"kind_label"`
+	Name      string `json:"name"`
+	MimeType  string `json:"mime_type"`
+	SizeBytes int64  `json:"size_bytes"`
+	IsImage   bool   `json:"is_image"`
+	// IsPrimary — Основное фото товара; бывает только у изображения
+	IsPrimary      bool   `json:"is_primary"`
+	SortOrder      int64  `json:"sort_order"`
+	UploadedByName string `json:"uploaded_by_name"`
+	CreatedAt      string `json:"created_at"`
+	// ScanStatus — Вердикт антивируса; skipped — файл не проверялся (загружен формой). Ссылку на скачивание получают clean и skipped
+	ScanStatus string `json:"scan_status"`
+}
+
+type CoreProductFilePage struct {
+	Count   int64             `json:"count"`
+	Results []CoreProductFile `json:"results"`
+}
+
+type CoreProductFilePatch struct {
+	// Kind — Код типа из product_file_kinds; пустая строка снимает тип
+	Kind *string `json:"kind,omitempty"`
+	Name *string `json:"name,omitempty"`
+	// IsPrimary — true делает изображение основным фото
+	IsPrimary *bool `json:"is_primary,omitempty"`
+}
+
+// CoreProductFileUploadRequest — Заявка на сессию загрузки файла или фото товара.
+type CoreProductFileUploadRequest struct {
+	// Name — Имя файла с расширением
+	Name string `json:"name"`
+	// MimeType — Тип содержимого; изображения — image/*
+	MimeType *string `json:"mime_type,omitempty"`
+	// SizeBytes — Точный размер файла в байтах
+	SizeBytes int64 `json:"size_bytes"`
+	// Sha256 — Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками
+	Sha256 *string `json:"sha256,omitempty"`
+	// Kind — Код типа файла из справочника product_file_kinds; изображению без кода достаётся photo
+	Kind *string `json:"kind,omitempty"`
+}
+
 type CoreProductIdentifier struct {
 	ID              UUID                       `json:"id"`
 	ProductID       UUID                       `json:"product_id"`
@@ -4282,23 +4382,22 @@ type CoreProductImportSheet struct {
 
 type CoreProductImportStatus = string
 
-type CoreProductImportUploadSession struct {
-	FileID UUID `json:"file_id"`
-	// UploadURL — Относительный защищённый API URL
-	UploadURL             string            `json:"upload_url"`
-	Method                string            `json:"method"`
-	Headers               map[string]string `json:"headers"`
-	MaxBytes              json.RawMessage   `json:"max_bytes"`
-	ExpiresAt             string            `json:"expires_at"`
-	RequiresAuthorization string            `json:"requires_authorization"`
-}
-
+// CoreProductImportUploadSessionRequest — Заявка на сессию загрузки файла импорта. filename и size — прежние имена name и size_bytes.
 type CoreProductImportUploadSessionRequest struct {
 	Kind CoreProductTransferKind `json:"kind"`
 	Mode CoreProductImportMode   `json:"mode"`
-	// Filename — Имя с расширением xlsx, xls, ods, csv или tsv
-	Filename string `json:"filename"`
-	Size     int64  `json:"size"`
+	// Name — Имя файла с расширением xlsx, xls, ods, csv или tsv
+	Name *string `json:"name,omitempty"`
+	// MimeType — Тип содержимого; по умолчанию — по расширению файла
+	MimeType *string `json:"mime_type,omitempty"`
+	// SizeBytes — Точный размер файла в байтах
+	SizeBytes *int64 `json:"size_bytes,omitempty"`
+	// Sha256 — Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками
+	Sha256 *string `json:"sha256,omitempty"`
+	// Filename — Прежнее имя поля name
+	Filename *string `json:"filename,omitempty"`
+	// Size — Прежнее имя поля size_bytes
+	Size *int64 `json:"size,omitempty"`
 }
 
 type CoreProductKind = string
@@ -4575,6 +4674,13 @@ type CoreTrialBalanceTotals struct {
 	Balanced       bool   `json:"balanced"`
 }
 
+// CoreUploadFinishResult — Итог завершения сессии core: заведённый файл товара или запуск импорта.
+type CoreUploadFinishResult struct {
+	Session       TransferSession       `json:"session"`
+	ProductFile   *CoreProductFile      `json:"product_file,omitempty"`
+	ProductImport *CoreProductImportRun `json:"product_import,omitempty"`
+}
+
 // CredentialRequestGap — Окно, в котором обращения были, а записей о них нет: очередь писателя переполнилась либо база кабинета не приняла пачку. Признание в НАШЕЙ аварии, и печатается оно обеим сторонам — страница без него читалась бы как полная история. Кабинета в окне нет ни у одной из дверей.
 type CredentialRequestGap struct {
 	StartedAt string `json:"started_at"`
@@ -4722,6 +4828,72 @@ type CycleUpdate struct {
 	Status      *CycleStatus    `json:"status,omitempty"`
 	Order       *int64          `json:"order,omitempty"`
 	IsArchived  *bool           `json:"is_archived,omitempty"`
+}
+
+type DashboardMetricDefinition struct {
+	ID          string `json:"id"`
+	Module      string `json:"module"`
+	Template    string `json:"template"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Deeplink    string `json:"deeplink"`
+}
+
+type DashboardMetricSnapshot struct {
+	ID       string                               `json:"id"`
+	Template string                               `json:"template"`
+	Title    string                               `json:"title"`
+	Value    string                               `json:"value"`
+	Currency string                               `json:"currency"`
+	Caption  string                               `json:"caption"`
+	AsOf     string                               `json:"as_of"`
+	Deeplink string                               `json:"deeplink"`
+	Points   []DashboardMetricSnapshotPointsItem  `json:"points"`
+	Rows     []DashboardMetricSnapshotRowsItem    `json:"rows"`
+	Tiles    []DashboardMetricSnapshotTilesItem   `json:"tiles"`
+	Bars     []DashboardMetricSnapshotBarsItem    `json:"bars"`
+	Columns  []DashboardMetricSnapshotColumnsItem `json:"columns"`
+	Table    []DashboardMetricSnapshotTableItem   `json:"table"`
+}
+
+type DashboardMetricSnapshotPointsItem struct {
+	Label string `json:"label"`
+	Value string `json:"value"`
+}
+
+type DashboardMetricSnapshotRowsItem struct {
+	Title  string `json:"title"`
+	Value  string `json:"value"`
+	Detail string `json:"detail"`
+}
+
+type DashboardMetricSnapshotTilesItem struct {
+	Label string `json:"label"`
+	Value string `json:"value"`
+	Note  string `json:"note"`
+	Tone  string `json:"tone"`
+}
+
+type DashboardMetricSnapshotBarsItem struct {
+	Title string  `json:"title"`
+	Value string  `json:"value"`
+	Note  string  `json:"note"`
+	Fill  float64 `json:"fill"`
+	Tone  string  `json:"tone"`
+}
+
+type DashboardMetricSnapshotColumnsItem struct {
+	Title string `json:"title"`
+}
+
+type DashboardMetricSnapshotTableItem struct {
+	Title string                                      `json:"title"`
+	Cells []DashboardMetricSnapshotTableItemCellsItem `json:"cells"`
+}
+
+type DashboardMetricSnapshotTableItemCellsItem struct {
+	Value string `json:"value"`
+	Tone  string `json:"tone"`
 }
 
 // DeveloperAPICall — То же обращение глазами издателя. Правило отбора одно: издателю видно только то, что его собственный сервер уже держал в руках — он сам сформировал этот запрос и сам получил этот ответ. Чего нет: кабинета ни одним полем, идентификатора строки журнала, идентификатора выданного токена (нить в журнал установки, который принадлежит кабинету) и обращений кабинетными ключами.
@@ -5854,6 +6026,8 @@ type DocflowFlowFile struct {
 	ContentType string `json:"content_type"`
 	UploadedBy  int64  `json:"uploaded_by"`
 	UploadedAt  string `json:"uploaded_at"`
+	// ScanStatus — Вердикт антивируса у файла, пришедшего сессией загрузки; у файла формы поля нет
+	ScanStatus *string `json:"scan_status,omitempty"`
 }
 
 type DocflowFlowKind = string
@@ -5941,6 +6115,26 @@ type DocflowFlowScheduleStage struct {
 	AfterStageID *UUID   `json:"after_stage_id,omitempty"`
 	// DelayDays — Дней после события срока
 	DelayDays *int64 `json:"delay_days,omitempty"`
+}
+
+// DocflowFlowUploadRequest — Заявка на сессию загрузки файла в документ.
+type DocflowFlowUploadRequest struct {
+	// ExpectedVersion — Ожидаемая версия документа
+	ExpectedVersion int64 `json:"expected_version"`
+	ReplaceID       *UUID `json:"replace_id,omitempty"`
+	// Name — Имя файла с расширением, без пути
+	Name     string  `json:"name"`
+	MimeType *string `json:"mime_type,omitempty"`
+	// SizeBytes — Точный размер файла в байтах
+	SizeBytes int64 `json:"size_bytes"`
+	// Sha256 — Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками
+	Sha256 *string `json:"sha256,omitempty"`
+}
+
+// DocflowFlowUploadResult — Документ после приложения файла и номер этого файла.
+type DocflowFlowUploadResult struct {
+	Document DocflowFlowDocument `json:"document"`
+	FileID   UUID                `json:"file_id"`
 }
 
 // DocflowMessage — Пакет документов у оператора — конверт, а не учётный документ Акеды.
@@ -8318,14 +8512,33 @@ type KnowledgeAsset struct {
 	SizeBytes     int64  `json:"size_bytes"`
 	ContentSha256 string `json:"content_sha256"`
 	// ProcessingStatus — Разбор файла для индекса: pending, processing, ready, failed или unsupported
-	ProcessingStatus string  `json:"processing_status"`
-	ParserName       *string `json:"parser_name,omitempty"`
-	ParserVersion    *string `json:"parser_version,omitempty"`
-	ProcessingError  *string `json:"processing_error,omitempty"`
-	ProcessedAt      *string `json:"processed_at,omitempty"`
-	UploadedBy       int64   `json:"uploaded_by"`
-	CreatedAt        string  `json:"created_at"`
-	UpdatedAt        string  `json:"updated_at"`
+	ProcessingStatus string `json:"processing_status"`
+	// ScanStatus — Вердикт антивируса. В поисковый разбор идёт только clean; skipped — файл антивирус не проверял
+	ScanStatus      string  `json:"scan_status"`
+	ParserName      *string `json:"parser_name,omitempty"`
+	ParserVersion   *string `json:"parser_version,omitempty"`
+	ProcessingError *string `json:"processing_error,omitempty"`
+	ProcessedAt     *string `json:"processed_at,omitempty"`
+	UploadedBy      int64   `json:"uploaded_by"`
+	CreatedAt       string  `json:"created_at"`
+	UpdatedAt       string  `json:"updated_at"`
+}
+
+// KnowledgeAssetLink — Временный адрес файла страницы базы знаний.
+type KnowledgeAssetLink struct {
+	// URL — Подписанный адрес хранилища при direct=true; иначе относительный адрес этого API с авторизацией
+	URL string `json:"url"`
+	// Direct — true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией
+	Direct bool `json:"direct"`
+	// ExpiresAt — Срок подписанного адреса; у адреса API его нет
+	ExpiresAt *string `json:"expires_at,omitempty"`
+	Method    string  `json:"method"`
+	Name      string  `json:"name"`
+	MimeType  string  `json:"mime_type"`
+	SizeBytes int64   `json:"size_bytes"`
+	Sha256    string  `json:"sha256"`
+	// ScanStatus — skipped — файл антивирус не проверял
+	ScanStatus string `json:"scan_status"`
 }
 
 type KnowledgeCitation struct {
@@ -11322,6 +11535,16 @@ type StockPurchaseOrderLineInput struct {
 	RequestID *UUID `json:"request_id,omitempty"`
 }
 
+type StockReceiptClaimBalance struct {
+	DocumentID UUID `json:"document_id"`
+	// Currency — Валюта претензии; пусто — валюта учёта.
+	Currency *string `json:"currency,omitempty"`
+	// ClaimedAmount — Претензия с налогом — движение расчётов самой приёмки; есть только у проведённой.
+	ClaimedAmount *string `json:"claimed_amount,omitempty"`
+	// OpenAmount — Незакрытый остаток претензии в расчётах.
+	OpenAmount string `json:"open_amount"`
+}
+
 // StockReceiptCorrectionCreate — Тело черновика корректировки приёмки по УКД поставщика на уменьшение.
 type StockReceiptCorrectionCreate struct {
 	BasisID UUID `json:"basis_id"`
@@ -12173,6 +12396,25 @@ type TemplateRunResult struct {
 	Reason   *string      `json:"reason,omitempty"`
 }
 
+// TransferDownloadLink — Временный адрес файла: подписанный адрес хранилища или адрес этого API.
+type TransferDownloadLink struct {
+	URL    string `json:"url"`
+	Method string `json:"method"`
+	// Direct — true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией
+	Direct bool `json:"direct"`
+	// RequiresAuthorization — true — адрес требует токен API, агенту по MCP он недоступен
+	RequiresAuthorization bool `json:"requires_authorization"`
+	// ExpiresAt — Срок подписанного адреса; у адреса API его нет
+	ExpiresAt *string `json:"expires_at,omitempty"`
+	Name      string  `json:"name"`
+	MimeType  string  `json:"mime_type"`
+	SizeBytes int64   `json:"size_bytes"`
+	// ScanStatus — Вердикт антивируса; skipped — файл антивирус не проверял
+	ScanStatus *string `json:"scan_status,omitempty"`
+	// Facsimile — Что стало с просьбой о факсимиле у печатной формы
+	Facsimile *string `json:"facsimile,omitempty"`
+}
+
 // TransferInstructions — Как передать байты. Выдаётся один раз, при открытии сессии.
 type TransferInstructions struct {
 	// Mode — post — один multipart POST; parts — PUT каждой части; api — PUT через этот API с авторизацией
@@ -12249,6 +12491,25 @@ type AppDocflowRecordSalesOrderPaymentRequest struct {
 	PaidAt     *string `json:"paid_at,omitempty"`
 }
 
+type AssistantListDigestsResponse struct {
+	Items []AssistantDigest `json:"items"`
+}
+
+type AssistantReplaceDigestRequest struct {
+	Name           string   `json:"name"`
+	MetricIds      []string `json:"metric_ids"`
+	Company        *UUID    `json:"company,omitempty"`
+	Project        *UUID    `json:"project,omitempty"`
+	Period         string   `json:"period"`
+	ScheduleHour   int64    `json:"schedule_hour"`
+	ScheduleMinute int64    `json:"schedule_minute"`
+	Timezone       string   `json:"timezone"`
+	WeekdaysOnly   bool     `json:"weekdays_only"`
+	Locale         string   `json:"locale"`
+	Enabled        bool     `json:"enabled"`
+	Version        int64    `json:"version"`
+}
+
 type AutomationRulesResponse struct {
 	Rules []AutomationRuleDocument `json:"rules"`
 }
@@ -12273,6 +12534,11 @@ type CoreSetBusinessActiveRequest struct {
 
 type CoreListBusinessOwnershipResponse struct {
 	Results []CoreOwnershipVersion `json:"results"`
+}
+
+type DashboardListMetricsResponse struct {
+	Count   int64                       `json:"count"`
+	Results []DashboardMetricDefinition `json:"results"`
 }
 
 type DocflowFlowContactStatsResponse struct {

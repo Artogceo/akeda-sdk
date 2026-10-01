@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 853c28b2f342f4446e4145e3eac14a01b5af32f1b7a8bc3e59f39236ce547bd8).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 fb032b7d52acfab1ce017148adce78d56cabf1095e32a8e651927932009d9140).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -32,6 +32,8 @@ __all__ = [
     "AppRuntimeSlotLaunchInput",
     "AppRuntimeTenant",
     "ArchiveTransfer",
+    "AssistantDigest",
+    "AssistantDigestInput",
     "Attachment",
     "AttachmentOwnerType",
     "AttachmentPage",
@@ -299,6 +301,7 @@ __all__ = [
     "CoreDocumentType",
     "CoreDocumentTypeCreate",
     "CoreDocumentTypePage",
+    "CoreDownloadLink",
     "CoreEmployee",
     "CoreEmployeeCreateVariant1",
     "CoreEmployeeCreateVariant2",
@@ -396,6 +399,10 @@ __all__ = [
     "CoreProductExportRequest",
     "CoreProductFieldDefinition",
     "CoreProductFieldSchema",
+    "CoreProductFile",
+    "CoreProductFilePage",
+    "CoreProductFilePatch",
+    "CoreProductFileUploadRequest",
     "CoreProductIdentifier",
     "CoreProductIdentifierInput",
     "CoreProductIdentifierKind",
@@ -414,7 +421,6 @@ __all__ = [
     "CoreProductImportRun",
     "CoreProductImportSheet",
     "CoreProductImportStatus",
-    "CoreProductImportUploadSession",
     "CoreProductImportUploadSessionRequest",
     "CoreProductKind",
     "CoreProductPage",
@@ -446,6 +452,7 @@ __all__ = [
     "CoreTrialBalance",
     "CoreTrialBalanceRow",
     "CoreTrialBalanceTotals",
+    "CoreUploadFinishResult",
     "CredentialRequestGap",
     "Customer",
     "CustomerCreate",
@@ -461,6 +468,15 @@ __all__ = [
     "CyclePage",
     "CycleStatus",
     "CycleUpdate",
+    "DashboardMetricDefinition",
+    "DashboardMetricSnapshot",
+    "DashboardMetricSnapshotPointsItem",
+    "DashboardMetricSnapshotRowsItem",
+    "DashboardMetricSnapshotTilesItem",
+    "DashboardMetricSnapshotBarsItem",
+    "DashboardMetricSnapshotColumnsItem",
+    "DashboardMetricSnapshotTableItem",
+    "DashboardMetricSnapshotTableItemCellsItem",
     "DeveloperAPICall",
     "DeveloperAPICallPage",
     "DeveloperAccepted",
@@ -564,6 +580,8 @@ __all__ = [
     "DocflowFlowRelation",
     "DocflowFlowRelationInput",
     "DocflowFlowScheduleStage",
+    "DocflowFlowUploadRequest",
+    "DocflowFlowUploadResult",
     "DocflowMessage",
     "DocflowMessageFlowLink",
     "DocflowMessageList",
@@ -762,6 +780,7 @@ __all__ = [
     "KnowledgeAnswerInput",
     "KnowledgeAnswerTurn",
     "KnowledgeAsset",
+    "KnowledgeAssetLink",
     "KnowledgeCitation",
     "KnowledgeDocument",
     "KnowledgeMoveInput",
@@ -1030,6 +1049,7 @@ __all__ = [
     "StockProductUOMUsage",
     "StockPurchaseOrderCreate",
     "StockPurchaseOrderLineInput",
+    "StockReceiptClaimBalance",
     "StockReceiptCorrectionCreate",
     "StockReceiptCorrectionCreateSupplierDocument",
     "StockReorderRule",
@@ -1098,18 +1118,22 @@ __all__ = [
     "TemplateRecurrence",
     "TemplateRunPage",
     "TemplateRunResult",
+    "TransferDownloadLink",
     "TransferInstructions",
     "TransferSession",
     "TransferUploadRequest",
     "UUID",
     "WorkflowStatusUpdate",
     "AppDocflowRecordSalesOrderPaymentRequest",
+    "AssistantListDigestsResponse",
+    "AssistantReplaceDigestRequest",
     "AutomationRulesResponse",
     "AutomationRuleSimulateResponse",
     "AutomationRuleTestResponse",
     "CoreListBusinessesResponse",
     "CoreSetBusinessActiveRequest",
     "CoreListBusinessOwnershipResponse",
+    "DashboardListMetricsResponse",
     "DocflowFlowContactStatsResponse",
     "DocflowFlowContactStatsResponseItemsItem",
     "DocflowFlowDocumentRevisionsResponse",
@@ -1358,6 +1382,42 @@ class AppRuntimeTenant(TypedDict):
 
 class ArchiveTransfer(TypedDict, total=False):
     target_section: "UUID"
+
+class _AssistantDigestRequired(TypedDict):
+    name: str
+    metric_ids: List[str]
+    period: Literal['this_month', 'previous_month', 'last_30_days']
+    schedule_hour: int
+    schedule_minute: int
+    timezone: str
+    weekdays_only: bool
+    locale: Literal['ru-RU', 'en-US']
+    enabled: bool
+    id: "UUID"
+    version: int
+    next_run_at: str
+
+class AssistantDigest(_AssistantDigestRequired, total=False):
+    company: "UUID"
+    project: "UUID"
+    last_run_at: str
+    last_error: Literal['', 'access_removed', 'source_unavailable']
+    last_conversation_id: "UUID"
+
+class _AssistantDigestInputRequired(TypedDict):
+    name: str
+    metric_ids: List[str]
+    period: Literal['this_month', 'previous_month', 'last_30_days']
+    schedule_hour: int
+    schedule_minute: int
+    timezone: str
+    weekdays_only: bool
+    locale: Literal['ru-RU', 'en-US']
+    enabled: bool
+
+class AssistantDigestInput(_AssistantDigestInputRequired, total=False):
+    company: "UUID"
+    project: "UUID"
 
 class Attachment(TypedDict):
     id: "UUID"
@@ -4130,6 +4190,27 @@ class CoreDocumentTypePage(TypedDict):
     count: int
     results: List["CoreDocumentType"]
 
+class _CoreDownloadLinkRequired(TypedDict):
+    url: str
+    method: Literal['GET']
+    #: true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией
+    direct: bool
+    #: true — адрес требует токен API, агенту по MCP он недоступен
+    requires_authorization: bool
+    name: str
+    mime_type: str
+    size_bytes: int
+
+class CoreDownloadLink(_CoreDownloadLinkRequired, total=False):
+    """Временный адрес файла core: подписанный адрес хранилища или адрес этого API."""
+
+    #: Срок подписанного адреса; у адреса API его нет
+    expires_at: str
+    #: Контрольная сумма SHA-256, если известна
+    sha256: str
+    #: Вердикт антивируса у файла от человека; skipped — файл антивирус не проверял
+    scan_status: Literal['clean', 'skipped']
+
 class _CoreEmployeeRequired(TypedDict):
     id: "UUID"
     full_name: str
@@ -5300,6 +5381,52 @@ class CoreProductFieldDefinition(TypedDict):
 class CoreProductFieldSchema(TypedDict):
     fields: List["CoreProductFieldDefinition"]
 
+class CoreProductFile(TypedDict):
+    id: "UUID"
+    product_id: "UUID"
+    kind_item_id: Optional["UUID"]
+    #: Код элемента справочника product_file_kinds; пусто без типа
+    kind_code: str
+    kind_label: str
+    name: str
+    mime_type: str
+    size_bytes: int
+    is_image: bool
+    #: Основное фото товара; бывает только у изображения
+    is_primary: bool
+    sort_order: int
+    uploaded_by_name: str
+    created_at: str
+    #: Вердикт антивируса; skipped — файл не проверялся (загружен формой). Ссылку на скачивание получают clean и skipped
+    scan_status: Literal['pending', 'clean', 'infected', 'skipped']
+
+class CoreProductFilePage(TypedDict):
+    count: int
+    results: List["CoreProductFile"]
+
+class CoreProductFilePatch(TypedDict, total=False):
+    #: Код типа из product_file_kinds; пустая строка снимает тип
+    kind: str
+    name: str
+    #: true делает изображение основным фото
+    is_primary: bool
+
+class _CoreProductFileUploadRequestRequired(TypedDict):
+    #: Имя файла с расширением
+    name: str
+    #: Точный размер файла в байтах
+    size_bytes: int
+
+class CoreProductFileUploadRequest(_CoreProductFileUploadRequestRequired, total=False):
+    """Заявка на сессию загрузки файла или фото товара."""
+
+    #: Тип содержимого; изображения — image/*
+    mime_type: str
+    #: Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками
+    sha256: str
+    #: Код типа файла из справочника product_file_kinds; изображению без кода достаётся photo
+    kind: str
+
 class CoreProductIdentifier(TypedDict):
     id: "UUID"
     product_id: "UUID"
@@ -5433,21 +5560,24 @@ class CoreProductImportSheet(TypedDict):
 
 CoreProductImportStatus = Literal['awaiting_upload', 'uploading', 'uploaded', 'mapped', 'previewed', 'failed', 'applied']
 
-class CoreProductImportUploadSession(TypedDict):
-    file_id: "UUID"
-    #: Относительный защищённый API URL
-    upload_url: str
-    method: Literal['PUT']
-    headers: Dict[str, str]
-    max_bytes: Literal[26214400]
-    expires_at: str
-    requires_authorization: Literal['Bearer token or API key']
-
-class CoreProductImportUploadSessionRequest(TypedDict):
+class _CoreProductImportUploadSessionRequestRequired(TypedDict):
     kind: "CoreProductTransferKind"
     mode: "CoreProductImportMode"
-    #: Имя с расширением xlsx, xls, ods, csv или tsv
+
+class CoreProductImportUploadSessionRequest(_CoreProductImportUploadSessionRequestRequired, total=False):
+    """Заявка на сессию загрузки файла импорта. filename и size — прежние имена name и size_bytes."""
+
+    #: Имя файла с расширением xlsx, xls, ods, csv или tsv
+    name: str
+    #: Тип содержимого; по умолчанию — по расширению файла
+    mime_type: str
+    #: Точный размер файла в байтах
+    size_bytes: int
+    #: Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками
+    sha256: str
+    #: Прежнее имя поля name
     filename: str
+    #: Прежнее имя поля size_bytes
     size: int
 
 CoreProductKind = Literal['goods', 'service', 'material', 'semi_product']
@@ -5717,6 +5847,15 @@ class CoreTrialBalanceTotals(TypedDict):
     closing_credit: str
     balanced: bool
 
+class _CoreUploadFinishResultRequired(TypedDict):
+    session: "TransferSession"
+
+class CoreUploadFinishResult(_CoreUploadFinishResultRequired, total=False):
+    """Итог завершения сессии core: заведённый файл товара или запуск импорта."""
+
+    product_file: "CoreProductFile"
+    product_import: "CoreProductImportRun"
+
 class CredentialRequestGap(TypedDict):
     """Окно, в котором обращения были, а записей о них нет: очередь писателя переполнилась либо база кабинета не приняла пачку. Признание в НАШЕЙ аварии, и печатается оно обеим сторонам — страница без него читалась бы как полная история. Кабинета в окне нет ни у одной из дверей."""
 
@@ -5860,6 +5999,63 @@ class CycleUpdate(TypedDict, total=False):
     status: "CycleStatus"
     order: int
     is_archived: bool
+
+class DashboardMetricDefinition(TypedDict):
+    id: str
+    module: str
+    template: Literal['amount', 'trend', 'rows', 'tiles', 'bars', 'table']
+    title: str
+    description: str
+    deeplink: str
+
+class DashboardMetricSnapshot(TypedDict):
+    id: str
+    template: Literal['amount', 'trend', 'rows', 'tiles', 'bars', 'table']
+    title: str
+    value: str
+    currency: str
+    caption: str
+    as_of: str
+    deeplink: str
+    points: List["DashboardMetricSnapshotPointsItem"]
+    rows: List["DashboardMetricSnapshotRowsItem"]
+    tiles: List["DashboardMetricSnapshotTilesItem"]
+    bars: List["DashboardMetricSnapshotBarsItem"]
+    columns: List["DashboardMetricSnapshotColumnsItem"]
+    table: List["DashboardMetricSnapshotTableItem"]
+
+class DashboardMetricSnapshotPointsItem(TypedDict):
+    label: str
+    value: str
+
+class DashboardMetricSnapshotRowsItem(TypedDict):
+    title: str
+    value: str
+    detail: str
+
+class DashboardMetricSnapshotTilesItem(TypedDict):
+    label: str
+    value: str
+    note: str
+    tone: Literal['', 'positive', 'negative']
+
+class DashboardMetricSnapshotBarsItem(TypedDict):
+    title: str
+    value: str
+    note: str
+    fill: float
+    tone: Literal['', 'positive', 'negative']
+
+class DashboardMetricSnapshotColumnsItem(TypedDict):
+    title: str
+
+class DashboardMetricSnapshotTableItem(TypedDict):
+    title: str
+    cells: List["DashboardMetricSnapshotTableItemCellsItem"]
+
+class DashboardMetricSnapshotTableItemCellsItem(TypedDict):
+    value: str
+    tone: Literal['', 'positive', 'negative']
 
 class _DeveloperAPICallRequired(TypedDict):
     installation_id: "UUID"
@@ -7031,9 +7227,7 @@ class DocflowFlowEDOState(_DocflowFlowEDOStateRequired, total=False):
     #: Состояние словами оператора: показывается как есть, человек сверяет его с кабинетом оператора
     state_name: str
 
-class DocflowFlowFile(TypedDict):
-    """Приложенный файл. Всё это описание делает владелец при загрузке, и командой правки оно не принимается."""
-
+class _DocflowFlowFileRequired(TypedDict):
     id: "UUID"
     name: str
     #: Байт; не больше 26214400
@@ -7042,6 +7236,12 @@ class DocflowFlowFile(TypedDict):
     content_type: str
     uploaded_by: int
     uploaded_at: str
+
+class DocflowFlowFile(_DocflowFlowFileRequired, total=False):
+    """Приложенный файл. Всё это описание делает владелец при загрузке, и командой правки оно не принимается."""
+
+    #: Вердикт антивируса у файла, пришедшего сессией загрузки; у файла формы поля нет
+    scan_status: Literal['clean', 'skipped']
 
 DocflowFlowKind = Literal['contract', 'specification', 'amendment', 'invoice', 'act', 'upd', 'goods_waybill', 'transport_waybill', 'consignment_note', 'transport_order', 'tax_invoice', 'correction', 'return', 'discrepancy_act', 'reconciliation_act', 'power_of_attorney', 'other']
 
@@ -7126,6 +7326,28 @@ class DocflowFlowScheduleStage(_DocflowFlowScheduleStageRequired, total=False):
     after_stage_id: "UUID"
     #: Дней после события срока
     delay_days: int
+
+class _DocflowFlowUploadRequestRequired(TypedDict):
+    #: Ожидаемая версия документа
+    expected_version: int
+    #: Имя файла с расширением, без пути
+    name: str
+    #: Точный размер файла в байтах
+    size_bytes: int
+
+class DocflowFlowUploadRequest(_DocflowFlowUploadRequestRequired, total=False):
+    """Заявка на сессию загрузки файла в документ."""
+
+    replace_id: "UUID"
+    mime_type: str
+    #: Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками
+    sha256: str
+
+class DocflowFlowUploadResult(TypedDict):
+    """Документ после приложения файла и номер этого файла."""
+
+    document: "DocflowFlowDocument"
+    file_id: "UUID"
 
 class _DocflowMessageRequired(TypedDict):
     id: "UUID"
@@ -9417,6 +9639,8 @@ class _KnowledgeAssetRequired(TypedDict):
     content_sha256: str
     #: Разбор файла для индекса: pending, processing, ready, failed или unsupported
     processing_status: str
+    #: Вердикт антивируса. В поисковый разбор идёт только clean; skipped — файл антивирус не проверял
+    scan_status: Literal['pending', 'clean', 'infected', 'skipped']
     uploaded_by: int
     created_at: str
     updated_at: str
@@ -9426,6 +9650,25 @@ class KnowledgeAsset(_KnowledgeAssetRequired, total=False):
     parser_version: str
     processing_error: str
     processed_at: str
+
+class _KnowledgeAssetLinkRequired(TypedDict):
+    #: Подписанный адрес хранилища при direct=true; иначе относительный адрес этого API с авторизацией
+    url: str
+    #: true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией
+    direct: bool
+    method: Literal['GET']
+    name: str
+    mime_type: str
+    size_bytes: int
+    sha256: str
+    #: skipped — файл антивирус не проверял
+    scan_status: Literal['clean', 'skipped']
+
+class KnowledgeAssetLink(_KnowledgeAssetLinkRequired, total=False):
+    """Временный адрес файла страницы базы знаний."""
+
+    #: Срок подписанного адреса; у адреса API его нет
+    expires_at: str
 
 class _KnowledgeCitationRequired(TypedDict):
     chunk_id: "UUID"
@@ -12361,6 +12604,17 @@ class StockPurchaseOrderLineInput(_StockPurchaseOrderLineInputRequired, total=Fa
     #: Проведённая заявка на закупку того же юрлица и склада; указывается только вместе с basis_line_id
     request_id: Optional["UUID"]
 
+class _StockReceiptClaimBalanceRequired(TypedDict):
+    document_id: "UUID"
+    #: Незакрытый остаток претензии в расчётах.
+    open_amount: str
+
+class StockReceiptClaimBalance(_StockReceiptClaimBalanceRequired, total=False):
+    #: Валюта претензии; пусто — валюта учёта.
+    currency: str
+    #: Претензия с налогом — движение расчётов самой приёмки; есть только у проведённой.
+    claimed_amount: str
+
 class _StockReceiptCorrectionCreateRequired(TypedDict):
     basis_id: "UUID"
     supplier_document: "StockReceiptCorrectionCreateSupplierDocument"
@@ -13188,6 +13442,27 @@ class _TemplateRunResultRequired(TypedDict):
 class TemplateRunResult(_TemplateRunResultRequired, total=False):
     reason: str
 
+class _TransferDownloadLinkRequired(TypedDict):
+    url: str
+    method: Literal['GET']
+    #: true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией
+    direct: bool
+    #: true — адрес требует токен API, агенту по MCP он недоступен
+    requires_authorization: bool
+    name: str
+    mime_type: str
+    size_bytes: int
+
+class TransferDownloadLink(_TransferDownloadLinkRequired, total=False):
+    """Временный адрес файла: подписанный адрес хранилища или адрес этого API."""
+
+    #: Срок подписанного адреса; у адреса API его нет
+    expires_at: str
+    #: Вердикт антивируса; skipped — файл антивирус не проверял
+    scan_status: Literal['clean', 'skipped']
+    #: Что стало с просьбой о факсимиле у печатной формы
+    facsimile: Literal['applied', 'not_allowed']
+
 class _TransferInstructionsRequired(TypedDict):
     #: post — один multipart POST; parts — PUT каждой части; api — PUT через этот API с авторизацией
     mode: Literal['post', 'parts', 'api']
@@ -13270,6 +13545,25 @@ class AppDocflowRecordSalesOrderPaymentRequest(_AppDocflowRecordSalesOrderPaymen
     currency: str
     paid_at: str
 
+class AssistantListDigestsResponse(TypedDict):
+    items: List["AssistantDigest"]
+
+class _AssistantReplaceDigestRequestRequired(TypedDict):
+    name: str
+    metric_ids: List[str]
+    period: Literal['this_month', 'previous_month', 'last_30_days']
+    schedule_hour: int
+    schedule_minute: int
+    timezone: str
+    weekdays_only: bool
+    locale: Literal['ru-RU', 'en-US']
+    enabled: bool
+    version: int
+
+class AssistantReplaceDigestRequest(_AssistantReplaceDigestRequestRequired, total=False):
+    company: "UUID"
+    project: "UUID"
+
 class AutomationRulesResponse(TypedDict):
     rules: List["AutomationRuleDocument"]
 
@@ -13293,6 +13587,10 @@ class CoreSetBusinessActiveRequest(TypedDict):
 
 class CoreListBusinessOwnershipResponse(TypedDict):
     results: List["CoreOwnershipVersion"]
+
+class DashboardListMetricsResponse(TypedDict):
+    count: int
+    results: List["DashboardMetricDefinition"]
 
 class DocflowFlowContactStatsResponse(TypedDict):
     items: List["DocflowFlowContactStatsResponseItemsItem"]
