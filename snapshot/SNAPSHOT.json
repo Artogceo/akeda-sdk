@@ -3,14 +3,14 @@
     "license": "LicenseRef-Akeda-Proprietary",
     "operations": {
       "by_audience": {
-        "external": 737
+        "external": 738
       },
       "by_module": {
         "assistant": 3,
         "automation": 3,
         "calendar": 25,
         "chat": 25,
-        "core": 141,
+        "core": 142,
         "crm": 83,
         "dashboard": 2,
         "developer": 22,
@@ -26,12 +26,12 @@
         "tasks": 100
       },
       "by_stage": {
-        "preview": 713,
+        "preview": 714,
         "public": 24
       },
       "installation_by_module": {
         "calendar": 25,
-        "core": 126,
+        "core": 127,
         "docflow": 13,
         "finance": 81,
         "marketplace": 25,
@@ -39,10 +39,10 @@
         "stock": 75,
         "tasks": 100
       },
-      "installation_reachable": 449,
-      "total": 737
+      "installation_reachable": 450,
+      "total": 738
     },
-    "schemas": 1058,
+    "schemas": 1059,
     "servers": [
       "https://erp.akeda.ru"
     ],
@@ -61,14 +61,14 @@
       "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 3135199,
+      "bytes": 3138896,
       "path": "openapi/akeda-v1.json",
-      "sha256": "fb032b7d52acfab1ce017148adce78d56cabf1095e32a8e651927932009d9140"
+      "sha256": "e87c3b22fd9ba6c15c4c901cecb2fdf39dcc05d82d3ae31a52fca8b7afba1f7d"
     },
     {
-      "bytes": 2357951,
+      "bytes": 2360794,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "29ec16789e68dc7325d6d0cff4ca22213c38ac3e60ad09bd0d5168b99baddae1"
+      "sha256": "ba254272830911ec3020fe8f629cd7e2dc0d59f8ec989c2f3c35ca4a86d39a72"
     },
     {
       "bytes": 18414,
@@ -81,6 +81,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "81c32edb635d4da495c7c903f7034631bae441e4d84c1128a87fd1bd15541699",
+  "snapshot_digest": "7826ecdcc02a42757128f5a2c603de89a13b95ccdb2cbd78910c120faf089b6f",
   "snapshot_version": 1
 }

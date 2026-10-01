@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 fb032b7d52acfab1ce017148adce78d56cabf1095e32a8e651927932009d9140).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e87c3b22fd9ba6c15c4c901cecb2fdf39dcc05d82d3ae31a52fca8b7afba1f7d).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2448,6 +2448,14 @@ export interface CoreAccountingDimensionVersion {
   "valid_to"?: string;
   "enabled": boolean;
   "required": boolean;
+}
+
+export interface CoreAccountingDimensionVersionInput {
+  "valid_from": string;
+  "enabled": boolean;
+  "required": boolean;
+  /** Поправить действующую запись истории вместо новой */
+  "edit_open"?: boolean;
 }
 
 export interface CoreAccountingPolicy {

@@ -16988,6 +16988,89 @@
         }
       }
     },
+    "/api/v1/core/accounting-dimensions/{key}/versions": {
+      "post": {
+        "tags": [
+          "Core accounting"
+        ],
+        "operationId": "coreSaveAccountingDimensionVersion",
+        "summary": "Записать решение по разрезу с даты «действует с» или поправить действующую запись истории",
+        "description": "С edit_open=true правится действующая запись истории, в том числе её начало переносится раньше — например, на начало года при переносе учёта из прежней системы. Без него новая запись начинается с valid_from и должна быть позже действующей. Обязательность отказывает, пока после valid_from есть проведённые документы без разреза. Заказ с датой раньше начала разреза получает отказ core.order.dimension_disabled.",
+        "x-akeda-module": "core",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "core:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "company",
+                "project",
+                "department",
+                "cfo"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoreAccountingDimensionVersionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Разрез на сегодня с историей решений",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreAccountingDimension"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
     "/api/v1/core/accounting-policy/companies/{id}/tax-regime": {
       "post": {
         "tags": [
@@ -70157,6 +70240,31 @@
           },
           "required": {
             "type": "boolean"
+          }
+        }
+      },
+      "CoreAccountingDimensionVersionInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "valid_from",
+          "enabled",
+          "required"
+        ],
+        "properties": {
+          "valid_from": {
+            "type": "string",
+            "format": "date"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "edit_open": {
+            "type": "boolean",
+            "description": "Поправить действующую запись истории вместо новой"
           }
         }
       },

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 fb032b7d52acfab1ce017148adce78d56cabf1095e32a8e651927932009d9140).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e87c3b22fd9ba6c15c4c901cecb2fdf39dcc05d82d3ae31a52fca8b7afba1f7d).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -2443,6 +2443,14 @@ type CoreAccountingDimensionVersion struct {
 	ValidTo  *string `json:"valid_to,omitempty"`
 	Enabled  bool    `json:"enabled"`
 	Required bool    `json:"required"`
+}
+
+type CoreAccountingDimensionVersionInput struct {
+	ValidFrom string `json:"valid_from"`
+	Enabled   bool   `json:"enabled"`
+	Required  bool   `json:"required"`
+	// EditOpen — Поправить действующую запись истории вместо новой
+	EditOpen *bool `json:"edit_open,omitempty"`
 }
 
 type CoreAccountingPolicy struct {
