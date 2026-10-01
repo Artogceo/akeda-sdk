@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 cfcc87d61785af21a591698c9ea6895c51ae5adf667f5193a9a245e0dfc98b97).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 853c28b2f342f4446e4145e3eac14a01b5af32f1b7a8bc3e59f39236ce547bd8).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -616,8 +616,18 @@ __all__ = [
     "FinanceAccountPatch",
     "FinanceAccountableBalance",
     "FinanceAccountableBalances",
+    "FinanceAcquirer",
+    "FinanceAcquirerInput",
+    "FinanceAcquirerList",
     "FinanceAcquiringCaptureInput",
     "FinanceAcquiringCaptureResult",
+    "FinanceAcquiringInTransit",
+    "FinanceAcquiringOverview",
+    "FinanceAcquiringPayout",
+    "FinanceAcquiringRegistry",
+    "FinanceAcquiringRegistryImport",
+    "FinanceAcquiringRegistryInput",
+    "FinanceAcquiringRegistryRow",
     "FinanceBalanceItem",
     "FinanceBalanceReport",
     "FinanceBalanceSection",
@@ -676,6 +686,7 @@ __all__ = [
     "FinanceOperationVersion",
     "FinanceOrderActInput",
     "FinancePaymentCalendar",
+    "FinancePaymentCalendarRnpMetrics",
     "FinancePaymentCalendarUndated",
     "FinancePaymentCalendarCell",
     "FinancePaymentCalendarCompany",
@@ -1921,7 +1932,7 @@ class CRMCreateTaskLinkInput(_CRMCreateTaskLinkInputRequired, total=False):
 
 class _CRMCustomerRequired(TypedDict):
     id: "UUID"
-    kind: Literal['person', 'company']
+    kind: Literal['person', 'company', 'sole_prop']
     name: str
     legal_name: str
     #: ИНН без пробелов; пустая строка - не указан
@@ -1951,7 +1962,7 @@ class CRMCustomer(_CRMCustomerRequired, total=False):
 
 class _CRMCustomerDuplicateRequired(TypedDict):
     id: "UUID"
-    kind: Literal['person', 'company']
+    kind: Literal['person', 'company', 'sole_prop']
     name: str
     legal_name: str
     #: ИНН без пробелов; пустая строка - не указан
@@ -1984,7 +1995,7 @@ class _CRMCustomerInputRequired(TypedDict):
     name: str
 
 class CRMCustomerInput(_CRMCustomerInputRequired, total=False):
-    kind: Literal['person', 'company']
+    kind: Literal['person', 'company', 'sole_prop']
     legal_name: str
     #: ИНН: 10 цифр у организации, 12 у предпринимателя, с верной контрольной цифрой
     inn: str
@@ -2001,7 +2012,7 @@ class CRMCustomerInput(_CRMCustomerInputRequired, total=False):
     custom: Optional[Dict[str, Any]]
 
 class CRMCustomerPatch(TypedDict, total=False):
-    kind: Literal['person', 'company']
+    kind: Literal['person', 'company', 'sole_prop']
     name: str
     legal_name: str
     #: Пустая строка стирает ИНН
@@ -2038,7 +2049,6 @@ class _CRMDealRequired(TypedDict):
 class CRMDeal(_CRMDealRequired, total=False):
     expected_close_at: str
     owner_id: int
-    customer_id: "UUID"
     crm_customer_id: "UUID"
     next_action_at: str
     archived_at: str
@@ -2087,7 +2097,6 @@ class _CRMDealCardRequired(TypedDict):
 class CRMDealCard(_CRMDealCardRequired, total=False):
     expected_close_at: str
     owner_id: int
-    customer_id: "UUID"
     crm_customer_id: "UUID"
     next_action_at: str
     archived_at: str
@@ -2117,6 +2126,7 @@ class CRMDealInput(_CRMDealInputRequired, total=False):
     probability: int
     expected_close_at: Optional[str]
     owner_id: Optional[int]
+    #: Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.
     customer_id: Optional[str]
     crm_customer_id: Optional[str]
     next_action: str
@@ -2150,6 +2160,7 @@ class CRMDealPatch(TypedDict, total=False):
     probability: int
     expected_close_at: Optional[str]
     owner_id: Optional[int]
+    #: Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.
     customer_id: Optional[str]
     crm_customer_id: Optional[str]
     next_action: str
@@ -2395,7 +2406,6 @@ class _CRMLeadRequired(TypedDict):
 class CRMLead(_CRMLeadRequired, total=False):
     reference_id: "UUID"
     owner_id: int
-    customer_id: "UUID"
     crm_customer_id: "UUID"
     next_action_at: str
     archived_at: str
@@ -2428,7 +2438,6 @@ class CRMLeadCard(_CRMLeadCardRequired, total=False):
 
     reference_id: "UUID"
     owner_id: int
-    customer_id: "UUID"
     crm_customer_id: "UUID"
     next_action_at: str
     archived_at: str
@@ -2477,7 +2486,6 @@ class CRMLeadDuplicate(_CRMLeadDuplicateRequired, total=False):
 
     reference_id: "UUID"
     owner_id: int
-    customer_id: "UUID"
     crm_customer_id: "UUID"
     next_action_at: str
     archived_at: str
@@ -2504,6 +2512,7 @@ class CRMLeadInput(_CRMLeadInputRequired, total=False):
     contact_handle: str
     reference_id: Optional[str]
     owner_id: Optional[int]
+    #: Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.
     customer_id: Optional[str]
     crm_customer_id: Optional[str]
     next_action: str
@@ -2521,6 +2530,7 @@ class CRMLeadPatch(TypedDict, total=False):
     contact_handle: str
     reference_id: Optional[str]
     owner_id: Optional[int]
+    #: Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.
     customer_id: Optional[str]
     crm_customer_id: Optional[str]
     next_action: str
@@ -3424,11 +3434,15 @@ class ChatReceiptState(TypedDict):
 class _ChatSendMessageRequired(TypedDict):
     #: Ключ идемпотентности отправки. Уникален в пределах беседы и отправителя: повтор с тем же ключом не заводит второе сообщение, а возвращает уже отправленное. Заголовок Idempotency-Key эта операция не читает
     client_message_id: Dict[str, Any]
-    #: Предел считается в кодовых точках, а не в байтах: сервер режет по 10 000 кодовых точек
-    body: str
 
 class ChatSendMessage(_ChatSendMessageRequired, total=False):
+    #: Текст сообщения; без attachment_ids обязателен, с ними — подпись к вложениям и может быть пустым. Предел считается в кодовых точках, а не в байтах: сервер режет по 10 000 кодовых точек
+    body: str
+    #: Сообщение этой беседы, на которое отвечает новое
+    reply_to_message_id: Dict[str, Any]
     mention_user_ids: List[int]
+    #: Готовые вложения этой беседы — id из завершения сессии загрузки или из списка вложений. Не сочетаются с mention_user_ids в одном сообщении
+    attachment_ids: List["UUID"]
 
 class ChatSendMessageResult(TypedDict):
     message: "ChatMessage"
@@ -7861,7 +7875,43 @@ class FinanceAccountableBalances(TypedDict):
     on: str
     rows: List["FinanceAccountableBalance"]
 
-class FinanceAcquiringCaptureInput(TypedDict):
+class _FinanceAcquirerRequired(TypedDict):
+    #: Настройка эквайринга
+    id: "UUID"
+    #: Юрлицо-продавец
+    company_id: "UUID"
+    #: Ключ провайдера, как в подтверждении оплаты картой (yookassa)
+    provider: str
+    #: Контрагент-эквайер
+    contact_id: "UUID"
+    #: Ставка НДС, которую эквайер начисляет на комиссию, в процентах; null — без НДС
+    fee_vat_rate: Optional[str]
+    #: Когда признаётся расход по комиссии: payment — по данным платежа; closing_document — по закрывающему документу эквайера (УПД или акт за период)
+    fee_recognition: Literal['payment', 'closing_document']
+
+class FinanceAcquirer(_FinanceAcquirerRequired, total=False):
+    #: Название контрагента-эквайера
+    contact_name: str
+
+class _FinanceAcquirerInputRequired(TypedDict):
+    #: Юрлицо-продавец
+    company_id: "UUID"
+    #: Ключ провайдера, как в подтверждении оплаты картой (yookassa)
+    provider: str
+    #: Действующий контрагент кабинета — эквайер
+    contact_id: "UUID"
+
+class FinanceAcquirerInput(_FinanceAcquirerInputRequired, total=False):
+    #: Ставка НДС эквайера на комиссию в процентах, от 0 до 100; пусто или null — без НДС
+    fee_vat_rate: Optional[str]
+    #: Когда признаётся расход по комиссии: payment — по данным платежа; closing_document — по закрывающему документу эквайера
+    fee_recognition: Literal['payment', 'closing_document']
+
+class FinanceAcquirerList(TypedDict):
+    #: Эквайеры доступных юрлиц
+    acquirers: List["FinanceAcquirer"]
+
+class _FinanceAcquiringCaptureInputRequired(TypedDict):
     #: Продажа, заведённая этой установкой приложения
     order_id: "UUID"
     #: Ключ проверенного провайдера платежа
@@ -7875,6 +7925,12 @@ class FinanceAcquiringCaptureInput(TypedDict):
     #: Дата подтверждённого списания у провайдера
     paid_at: str
 
+class FinanceAcquiringCaptureInput(_FinanceAcquiringCaptureInputRequired, total=False):
+    #: Сколько провайдер удержал из этого платежа, всего с налогом, десятичная строка; меньше суммы списания. Не передаётся, если провайдер удержание по платежу не называет. Создаёт документ «Комиссия эквайринга» (Дт 44 / Кт 57.03); в отпечаток повтора не входит, поэтому может прийти позже повтором того же платежа
+    fee: str
+    #: В том числе налог с комиссии, десятичная строка, если провайдер его называет; передаётся только вместе с fee. Не передан — финансы считают налог по ставке эквайера из настройки «Эквайринг». К вычету (Дт 19) идёт, если юрлицо на дату выделяет входной налог; иначе остаётся в расходе
+    fee_vat: str
+
 class FinanceAcquiringCaptureResult(TypedDict):
     #: Финансовый документ оплаты картой
     document_id: "UUID"
@@ -7884,6 +7940,141 @@ class FinanceAcquiringCaptureResult(TypedDict):
     order_id: "UUID"
     #: true при повторе уже записанного списания
     replayed: bool
+
+class _FinanceAcquiringInTransitRequired(TypedDict):
+    #: Документ «Оплата картой»
+    receipt_document_id: "UUID"
+    #: Номер документа оплаты
+    number: str
+    #: Дата оплаты
+    date: str
+    #: Юрлицо
+    company_id: "UUID"
+    #: Ключ провайдера
+    provider: str
+    #: Идентификатор платежа у провайдера
+    external_id: str
+    #: Сумма оплаты в валюте учёта
+    amount: str
+    #: Удержание провайдера в валюте учёта; 0 — ещё неизвестно
+    fee: str
+    #: Ожидаемая сумма к зачислению
+    net_amount: str
+    #: Удержание уже заведено «Комиссией эквайринга»
+    fee_known: bool
+
+class FinanceAcquiringInTransit(_FinanceAcquiringInTransitRequired, total=False):
+    #: Заказ покупателя
+    order_id: "UUID"
+    #: Покупатель
+    contact_id: "UUID"
+    #: Название покупателя
+    contact_name: str
+
+class FinanceAcquiringOverview(TypedDict):
+    #: Оплаты, которые эквайер ещё не перечислил
+    in_transit: List["FinanceAcquiringInTransit"]
+    #: Ожидаемая сумма к зачислению по ним
+    in_transit_total: str
+    #: Выплаты эквайера, новые сверху
+    payouts: List["FinanceAcquiringPayout"]
+    #: Последние реестры провайдера
+    registries: List["FinanceAcquiringRegistry"]
+    #: Эквайеры юрлиц
+    acquirers: List["FinanceAcquirer"]
+
+class _FinanceAcquiringPayoutRequired(TypedDict):
+    #: Банковская операция выплаты
+    document_id: "UUID"
+    #: Номер банковской операции
+    number: str
+    #: Дата зачисления
+    date: str
+    #: Юрлицо
+    company_id: "UUID"
+    #: Сумма зачисления
+    amount: str
+    #: Сколько оплат сверено с выплатой
+    cleared_count: int
+    #: Сумма к зачислению сверенных оплат
+    cleared_net: str
+    #: Сверенные оплаты дают ровно сумму выплаты
+    reconciled: bool
+
+class FinanceAcquiringPayout(_FinanceAcquiringPayoutRequired, total=False):
+    #: Плательщик выплаты
+    contact_name: str
+    #: auto — по сумме к зачислению; registry — по реестру провайдера
+    clearing_source: str
+
+class _FinanceAcquiringRegistryRequired(TypedDict):
+    #: Реестр
+    id: "UUID"
+    #: Юрлицо
+    company_id: "UUID"
+    #: Ключ провайдера
+    provider: str
+    #: Имя загруженного файла
+    file_name: str
+    #: Валюта платежей, ISO 4217
+    currency: str
+    #: Число платежей в реестре
+    rows_count: int
+    #: Сумма платежей
+    amount: str
+    #: Сумма к зачислению — ею реестр находит выплату
+    net_amount: str
+    #: Удержано всего
+    fee_amount: str
+    #: awaiting_payout — выплаты на сумму реестра ещё нет; matched — сверен; discrepancy — сверен, но есть строки для человека
+    status: Literal['matched', 'awaiting_payout', 'discrepancy']
+    #: Когда загружен
+    uploaded_at: str
+
+class FinanceAcquiringRegistry(_FinanceAcquiringRegistryRequired, total=False):
+    #: Выплата эквайера, с которой реестр сверен
+    payout_document_id: "UUID"
+    #: Строки реестра
+    rows: List["FinanceAcquiringRegistryRow"]
+
+class FinanceAcquiringRegistryImport(TypedDict):
+    registry: "FinanceAcquiringRegistry"
+    #: true — этот файл уже был загружен
+    replayed: bool
+
+class _FinanceAcquiringRegistryInputRequired(TypedDict):
+    #: Юрлицо, чьи платежи в реестре
+    company_id: "UUID"
+    #: Ключ провайдера (yookassa)
+    provider: str
+    #: Содержимое CSV реестра текстом в UTF-8, до 4 МБ
+    content: str
+
+class FinanceAcquiringRegistryInput(_FinanceAcquiringRegistryInputRequired, total=False):
+    #: Имя файла для истории загрузок
+    file_name: str
+
+class _FinanceAcquiringRegistryRowRequired(TypedDict):
+    #: Номер строки в файле
+    line: int
+    #: Идентификатор платежа у провайдера
+    external_id: str
+    #: Сумма платежа, десятичная строка
+    amount: str
+    #: Сумма к зачислению, десятичная строка
+    net_amount: str
+    #: Удержано провайдером, всего с налогом
+    fee: str
+    #: matched — оплата найдена и удержание сходится; unknown_payment — оплаты с таким номером в учёте нет; fee_mismatch — в учёте другое удержание
+    status: Literal['matched', 'unknown_payment', 'fee_mismatch']
+
+class FinanceAcquiringRegistryRow(_FinanceAcquiringRegistryRowRequired, total=False):
+    #: В том числе налог с комиссии
+    fee_vat: str
+    #: Время платежа из реестра
+    paid_at: str
+    #: Найденная оплата картой
+    receipt_document_id: "UUID"
 
 class FinanceBalanceItem(TypedDict):
     code: str
@@ -7964,7 +8155,7 @@ class FinanceCashflowItem(TypedDict):
     net: str
     level: str
 
-FinanceCashflowReport = TypedDict("FinanceCashflowReport", {"from": str, "to": str, "inflow": str, "outflow": str, "uncategorized_net": str, "net_cash_flow": str, "transfer_in": str, "transfer_out": str, "sections": List["FinanceCashflowSection"], "columns": List["FinanceReportColumn"]}, total=False)
+FinanceCashflowReport = TypedDict("FinanceCashflowReport", {"currency": str, "from": str, "to": str, "inflow": str, "outflow": str, "uncategorized_net": str, "net_cash_flow": str, "transfer_in": str, "transfer_out": str, "sections": List["FinanceCashflowSection"], "columns": List["FinanceReportColumn"]}, total=False)
 
 class FinanceCashflowSection(TypedDict):
     key: Literal['operating', 'investing', 'financing']
@@ -8487,7 +8678,12 @@ class FinanceOrderActInput(_FinanceOrderActInputRequired, total=False):
     vat_amount: str
     prices_include_vat: bool
 
-FinancePaymentCalendar = TypedDict("FinancePaymentCalendar", {"valuation_date": str, "project": str, "balance_available": bool, "from": str, "to": str, "currency": str, "derived_available": bool, "derived_note": str, "opening": str, "inflow": str, "outflow": str, "closing": str, "overdue_in": str, "overdue_out": str, "done_in": str, "done_out": str, "committed_in": str, "expected_in": str, "undated": "FinancePaymentCalendarUndated", "companies": List["FinancePaymentCalendarCompany"], "step": Literal['day', 'month', 'quarter'], "periods": List["FinancePaymentCalendarPeriod"], "totals": List["FinancePaymentCalendarCell"], "days": List["FinancePaymentCalendarDay"], "rows": List["FinancePaymentCalendarRow"], "overdue": List["FinancePaymentCalendarRow"]}, total=False)
+FinancePaymentCalendar = TypedDict("FinancePaymentCalendar", {"rnp_metrics": "FinancePaymentCalendarRnpMetrics", "valuation_date": str, "project": str, "balance_available": bool, "from": str, "to": str, "currency": str, "derived_available": bool, "derived_note": str, "opening": str, "inflow": str, "outflow": str, "closing": str, "overdue_in": str, "overdue_out": str, "done_in": str, "done_out": str, "committed_in": str, "expected_in": str, "undated": "FinancePaymentCalendarUndated", "companies": List["FinancePaymentCalendarCompany"], "step": Literal['day', 'month', 'quarter'], "periods": List["FinancePaymentCalendarPeriod"], "totals": List["FinancePaymentCalendarCell"], "days": List["FinancePaymentCalendarDay"], "rows": List["FinancePaymentCalendarRow"], "overdue": List["FinancePaymentCalendarRow"]}, total=False)
+
+class FinancePaymentCalendarRnpMetrics(TypedDict, total=False):
+    minimum_balance: str
+    minimum_on: str
+    first_gap_on: str
 
 class FinancePaymentCalendarUndated(TypedDict):
     count_in: int
@@ -8660,7 +8856,7 @@ class FinancePnlLine(TypedDict):
     sign: int
     amount: str
 
-FinancePnlReport = TypedDict("FinancePnlReport", {"from": str, "to": str, "revenue": str, "expense": str, "profit": str, "unclassified_in": str, "unclassified_out": str, "lines": List["FinancePnlLine"], "layout_rows": List["FinancePnlReportRow"], "layout": "FinancePnlReportLayout", "columns": List["FinanceReportColumn"], "companies": List["FinanceReportCompany"], "accounting_basis": "AccountingBasis"}, total=False)
+FinancePnlReport = TypedDict("FinancePnlReport", {"rnp_metrics": Dict[str, str], "currency": str, "from": str, "to": str, "revenue": str, "expense": str, "profit": str, "unclassified_in": str, "unclassified_out": str, "lines": List["FinancePnlLine"], "layout_rows": List["FinancePnlReportRow"], "layout": "FinancePnlReportLayout", "columns": List["FinanceReportColumn"], "companies": List["FinanceReportCompany"], "accounting_basis": "AccountingBasis"}, total=False)
 
 class FinancePnlReportLayout(TypedDict):
     id: "UUID"

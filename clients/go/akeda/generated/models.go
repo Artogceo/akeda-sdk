@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 cfcc87d61785af21a591698c9ea6895c51ae5adf667f5193a9a245e0dfc98b97).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 853c28b2f342f4446e4145e3eac14a01b5af32f1b7a8bc3e59f39236ce547bd8).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -874,7 +874,6 @@ type CRMDeal struct {
 	Probability     int64   `json:"probability"`
 	ExpectedCloseAt *string `json:"expected_close_at,omitempty"`
 	OwnerID         *int64  `json:"owner_id,omitempty"`
-	CustomerID      *UUID   `json:"customer_id,omitempty"`
 	CRMCustomerID   *UUID   `json:"crm_customer_id,omitempty"`
 	NextAction      string  `json:"next_action"`
 	NextActionAt    *string `json:"next_action_at,omitempty"`
@@ -920,7 +919,6 @@ type CRMDealCard struct {
 	Probability     int64   `json:"probability"`
 	ExpectedCloseAt *string `json:"expected_close_at,omitempty"`
 	OwnerID         *int64  `json:"owner_id,omitempty"`
-	CustomerID      *UUID   `json:"customer_id,omitempty"`
 	CRMCustomerID   *UUID   `json:"crm_customer_id,omitempty"`
 	NextAction      string  `json:"next_action"`
 	NextActionAt    *string `json:"next_action_at,omitempty"`
@@ -953,10 +951,11 @@ type CRMDealInput struct {
 	Probability     *int64  `json:"probability,omitempty"`
 	ExpectedCloseAt *string `json:"expected_close_at,omitempty"`
 	OwnerID         *int64  `json:"owner_id,omitempty"`
-	CustomerID      *string `json:"customer_id,omitempty"`
-	CRMCustomerID   *string `json:"crm_customer_id,omitempty"`
-	NextAction      *string `json:"next_action,omitempty"`
-	NextActionAt    *string `json:"next_action_at,omitempty"`
+	// CustomerID — Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.
+	CustomerID    *string `json:"customer_id,omitempty"`
+	CRMCustomerID *string `json:"crm_customer_id,omitempty"`
+	NextAction    *string `json:"next_action,omitempty"`
+	NextActionAt  *string `json:"next_action_at,omitempty"`
 }
 
 type CRMDealItem struct {
@@ -986,11 +985,12 @@ type CRMDealPatch struct {
 	Probability     *int64  `json:"probability,omitempty"`
 	ExpectedCloseAt *string `json:"expected_close_at,omitempty"`
 	OwnerID         *int64  `json:"owner_id,omitempty"`
-	CustomerID      *string `json:"customer_id,omitempty"`
-	CRMCustomerID   *string `json:"crm_customer_id,omitempty"`
-	NextAction      *string `json:"next_action,omitempty"`
-	NextActionAt    *string `json:"next_action_at,omitempty"`
-	Archived        *bool   `json:"archived,omitempty"`
+	// CustomerID — Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.
+	CustomerID    *string `json:"customer_id,omitempty"`
+	CRMCustomerID *string `json:"crm_customer_id,omitempty"`
+	NextAction    *string `json:"next_action,omitempty"`
+	NextActionAt  *string `json:"next_action_at,omitempty"`
+	Archived      *bool   `json:"archived,omitempty"`
 }
 
 type CRMDealStageHistory struct {
@@ -1224,7 +1224,6 @@ type CRMLead struct {
 	ContactHandle       string        `json:"contact_handle"`
 	ReferenceID         *UUID         `json:"reference_id,omitempty"`
 	OwnerID             *int64        `json:"owner_id,omitempty"`
-	CustomerID          *UUID         `json:"customer_id,omitempty"`
 	CRMCustomerID       *UUID         `json:"crm_customer_id,omitempty"`
 	NextAction          string        `json:"next_action"`
 	NextActionAt        *string       `json:"next_action_at,omitempty"`
@@ -1255,7 +1254,6 @@ type CRMLeadCard struct {
 	ContactHandle       string        `json:"contact_handle"`
 	ReferenceID         *UUID         `json:"reference_id,omitempty"`
 	OwnerID             *int64        `json:"owner_id,omitempty"`
-	CustomerID          *UUID         `json:"customer_id,omitempty"`
 	CRMCustomerID       *UUID         `json:"crm_customer_id,omitempty"`
 	NextAction          string        `json:"next_action"`
 	NextActionAt        *string       `json:"next_action_at,omitempty"`
@@ -1301,7 +1299,6 @@ type CRMLeadDuplicate struct {
 	ContactHandle       string        `json:"contact_handle"`
 	ReferenceID         *UUID         `json:"reference_id,omitempty"`
 	OwnerID             *int64        `json:"owner_id,omitempty"`
-	CustomerID          *UUID         `json:"customer_id,omitempty"`
 	CRMCustomerID       *UUID         `json:"crm_customer_id,omitempty"`
 	NextAction          string        `json:"next_action"`
 	NextActionAt        *string       `json:"next_action_at,omitempty"`
@@ -1331,6 +1328,7 @@ type CRMLeadInput struct {
 	ContactHandle *string `json:"contact_handle,omitempty"`
 	ReferenceID   *string `json:"reference_id,omitempty"`
 	OwnerID       *int64  `json:"owner_id,omitempty"`
+	// CustomerID — Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.
 	CustomerID    *string `json:"customer_id,omitempty"`
 	CRMCustomerID *string `json:"crm_customer_id,omitempty"`
 	NextAction    *string `json:"next_action,omitempty"`
@@ -1349,6 +1347,7 @@ type CRMLeadPatch struct {
 	ContactHandle *string `json:"contact_handle,omitempty"`
 	ReferenceID   *string `json:"reference_id,omitempty"`
 	OwnerID       *int64  `json:"owner_id,omitempty"`
+	// CustomerID — Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.
 	CustomerID    *string `json:"customer_id,omitempty"`
 	CRMCustomerID *string `json:"crm_customer_id,omitempty"`
 	NextAction    *string `json:"next_action,omitempty"`
@@ -2284,9 +2283,13 @@ type ChatReceiptState struct {
 type ChatSendMessage struct {
 	// ClientMessageID — Ключ идемпотентности отправки. Уникален в пределах беседы и отправителя: повтор с тем же ключом не заводит второе сообщение, а возвращает уже отправленное. Заголовок Idempotency-Key эта операция не читает
 	ClientMessageID map[string]json.RawMessage `json:"client_message_id"`
-	// Body — Предел считается в кодовых точках, а не в байтах: сервер режет по 10 000 кодовых точек
-	Body           string  `json:"body"`
-	MentionUserIds []int64 `json:"mention_user_ids,omitempty"`
+	// Body — Текст сообщения; без attachment_ids обязателен, с ними — подпись к вложениям и может быть пустым. Предел считается в кодовых точках, а не в байтах: сервер режет по 10 000 кодовых точек
+	Body *string `json:"body,omitempty"`
+	// ReplyToMessageID — Сообщение этой беседы, на которое отвечает новое
+	ReplyToMessageID map[string]json.RawMessage `json:"reply_to_message_id,omitempty"`
+	MentionUserIds   []int64                    `json:"mention_user_ids,omitempty"`
+	// AttachmentIds — Готовые вложения этой беседы — id из завершения сессии загрузки или из списка вложений. Не сочетаются с mention_user_ids в одном сообщении
+	AttachmentIds []UUID `json:"attachment_ids,omitempty"`
 }
 
 type ChatSendMessageResult struct {
@@ -6669,6 +6672,41 @@ type FinanceAccountableBalances struct {
 	Rows []FinanceAccountableBalance `json:"rows"`
 }
 
+type FinanceAcquirer struct {
+	// ID — Настройка эквайринга
+	ID UUID `json:"id"`
+	// CompanyID — Юрлицо-продавец
+	CompanyID UUID `json:"company_id"`
+	// Provider — Ключ провайдера, как в подтверждении оплаты картой (yookassa)
+	Provider string `json:"provider"`
+	// ContactID — Контрагент-эквайер
+	ContactID UUID `json:"contact_id"`
+	// ContactName — Название контрагента-эквайера
+	ContactName *string `json:"contact_name,omitempty"`
+	// FeeVATRate — Ставка НДС, которую эквайер начисляет на комиссию, в процентах; null — без НДС
+	FeeVATRate *string `json:"fee_vat_rate"`
+	// FeeRecognition — Когда признаётся расход по комиссии: payment — по данным платежа; closing_document — по закрывающему документу эквайера (УПД или акт за период)
+	FeeRecognition string `json:"fee_recognition"`
+}
+
+type FinanceAcquirerInput struct {
+	// CompanyID — Юрлицо-продавец
+	CompanyID UUID `json:"company_id"`
+	// Provider — Ключ провайдера, как в подтверждении оплаты картой (yookassa)
+	Provider string `json:"provider"`
+	// ContactID — Действующий контрагент кабинета — эквайер
+	ContactID UUID `json:"contact_id"`
+	// FeeVATRate — Ставка НДС эквайера на комиссию в процентах, от 0 до 100; пусто или null — без НДС
+	FeeVATRate *string `json:"fee_vat_rate,omitempty"`
+	// FeeRecognition — Когда признаётся расход по комиссии: payment — по данным платежа; closing_document — по закрывающему документу эквайера
+	FeeRecognition *string `json:"fee_recognition,omitempty"`
+}
+
+type FinanceAcquirerList struct {
+	// Acquirers — Эквайеры доступных юрлиц
+	Acquirers []FinanceAcquirer `json:"acquirers"`
+}
+
 type FinanceAcquiringCaptureInput struct {
 	// OrderID — Продажа, заведённая этой установкой приложения
 	OrderID UUID `json:"order_id"`
@@ -6682,6 +6720,10 @@ type FinanceAcquiringCaptureInput struct {
 	Currency string `json:"currency"`
 	// PaidAt — Дата подтверждённого списания у провайдера
 	PaidAt string `json:"paid_at"`
+	// Fee — Сколько провайдер удержал из этого платежа, всего с налогом, десятичная строка; меньше суммы списания. Не передаётся, если провайдер удержание по платежу не называет. Создаёт документ «Комиссия эквайринга» (Дт 44 / Кт 57.03); в отпечаток повтора не входит, поэтому может прийти позже повтором того же платежа
+	Fee *string `json:"fee,omitempty"`
+	// FeeVAT — В том числе налог с комиссии, десятичная строка, если провайдер его называет; передаётся только вместе с fee. Не передан — финансы считают налог по ставке эквайера из настройки «Эквайринг». К вычету (Дт 19) идёт, если юрлицо на дату выделяет входной налог; иначе остаётся в расходе
+	FeeVAT *string `json:"fee_vat,omitempty"`
 }
 
 type FinanceAcquiringCaptureResult struct {
@@ -6693,6 +6735,138 @@ type FinanceAcquiringCaptureResult struct {
 	OrderID UUID `json:"order_id"`
 	// Replayed — true при повторе уже записанного списания
 	Replayed bool `json:"replayed"`
+}
+
+type FinanceAcquiringInTransit struct {
+	// ReceiptDocumentID — Документ «Оплата картой»
+	ReceiptDocumentID UUID `json:"receipt_document_id"`
+	// Number — Номер документа оплаты
+	Number string `json:"number"`
+	// Date — Дата оплаты
+	Date string `json:"date"`
+	// CompanyID — Юрлицо
+	CompanyID UUID `json:"company_id"`
+	// Provider — Ключ провайдера
+	Provider string `json:"provider"`
+	// ExternalID — Идентификатор платежа у провайдера
+	ExternalID string `json:"external_id"`
+	// OrderID — Заказ покупателя
+	OrderID *UUID `json:"order_id,omitempty"`
+	// ContactID — Покупатель
+	ContactID *UUID `json:"contact_id,omitempty"`
+	// ContactName — Название покупателя
+	ContactName *string `json:"contact_name,omitempty"`
+	// Amount — Сумма оплаты в валюте учёта
+	Amount string `json:"amount"`
+	// Fee — Удержание провайдера в валюте учёта; 0 — ещё неизвестно
+	Fee string `json:"fee"`
+	// NetAmount — Ожидаемая сумма к зачислению
+	NetAmount string `json:"net_amount"`
+	// FeeKnown — Удержание уже заведено «Комиссией эквайринга»
+	FeeKnown bool `json:"fee_known"`
+}
+
+type FinanceAcquiringOverview struct {
+	// InTransit — Оплаты, которые эквайер ещё не перечислил
+	InTransit []FinanceAcquiringInTransit `json:"in_transit"`
+	// InTransitTotal — Ожидаемая сумма к зачислению по ним
+	InTransitTotal string `json:"in_transit_total"`
+	// Payouts — Выплаты эквайера, новые сверху
+	Payouts []FinanceAcquiringPayout `json:"payouts"`
+	// Registries — Последние реестры провайдера
+	Registries []FinanceAcquiringRegistry `json:"registries"`
+	// Acquirers — Эквайеры юрлиц
+	Acquirers []FinanceAcquirer `json:"acquirers"`
+}
+
+type FinanceAcquiringPayout struct {
+	// DocumentID — Банковская операция выплаты
+	DocumentID UUID `json:"document_id"`
+	// Number — Номер банковской операции
+	Number string `json:"number"`
+	// Date — Дата зачисления
+	Date string `json:"date"`
+	// CompanyID — Юрлицо
+	CompanyID UUID `json:"company_id"`
+	// Amount — Сумма зачисления
+	Amount string `json:"amount"`
+	// ClearedCount — Сколько оплат сверено с выплатой
+	ClearedCount int64 `json:"cleared_count"`
+	// ClearedNet — Сумма к зачислению сверенных оплат
+	ClearedNet string `json:"cleared_net"`
+	// Reconciled — Сверенные оплаты дают ровно сумму выплаты
+	Reconciled bool `json:"reconciled"`
+	// ContactName — Плательщик выплаты
+	ContactName *string `json:"contact_name,omitempty"`
+	// ClearingSource — auto — по сумме к зачислению; registry — по реестру провайдера
+	ClearingSource *string `json:"clearing_source,omitempty"`
+}
+
+type FinanceAcquiringRegistry struct {
+	// ID — Реестр
+	ID UUID `json:"id"`
+	// CompanyID — Юрлицо
+	CompanyID UUID `json:"company_id"`
+	// Provider — Ключ провайдера
+	Provider string `json:"provider"`
+	// FileName — Имя загруженного файла
+	FileName string `json:"file_name"`
+	// Currency — Валюта платежей, ISO 4217
+	Currency string `json:"currency"`
+	// RowsCount — Число платежей в реестре
+	RowsCount int64 `json:"rows_count"`
+	// Amount — Сумма платежей
+	Amount string `json:"amount"`
+	// NetAmount — Сумма к зачислению — ею реестр находит выплату
+	NetAmount string `json:"net_amount"`
+	// FeeAmount — Удержано всего
+	FeeAmount string `json:"fee_amount"`
+	// PayoutDocumentID — Выплата эквайера, с которой реестр сверен
+	PayoutDocumentID *UUID `json:"payout_document_id,omitempty"`
+	// Status — awaiting_payout — выплаты на сумму реестра ещё нет; matched — сверен; discrepancy — сверен, но есть строки для человека
+	Status string `json:"status"`
+	// UploadedAt — Когда загружен
+	UploadedAt string `json:"uploaded_at"`
+	// Rows — Строки реестра
+	Rows []FinanceAcquiringRegistryRow `json:"rows,omitempty"`
+}
+
+type FinanceAcquiringRegistryImport struct {
+	Registry FinanceAcquiringRegistry `json:"registry"`
+	// Replayed — true — этот файл уже был загружен
+	Replayed bool `json:"replayed"`
+}
+
+type FinanceAcquiringRegistryInput struct {
+	// CompanyID — Юрлицо, чьи платежи в реестре
+	CompanyID UUID `json:"company_id"`
+	// Provider — Ключ провайдера (yookassa)
+	Provider string `json:"provider"`
+	// FileName — Имя файла для истории загрузок
+	FileName *string `json:"file_name,omitempty"`
+	// Content — Содержимое CSV реестра текстом в UTF-8, до 4 МБ
+	Content string `json:"content"`
+}
+
+type FinanceAcquiringRegistryRow struct {
+	// Line — Номер строки в файле
+	Line int64 `json:"line"`
+	// ExternalID — Идентификатор платежа у провайдера
+	ExternalID string `json:"external_id"`
+	// Amount — Сумма платежа, десятичная строка
+	Amount string `json:"amount"`
+	// NetAmount — Сумма к зачислению, десятичная строка
+	NetAmount string `json:"net_amount"`
+	// Fee — Удержано провайдером, всего с налогом
+	Fee string `json:"fee"`
+	// FeeVAT — В том числе налог с комиссии
+	FeeVAT *string `json:"fee_vat,omitempty"`
+	// PaidAt — Время платежа из реестра
+	PaidAt *string `json:"paid_at,omitempty"`
+	// ReceiptDocumentID — Найденная оплата картой
+	ReceiptDocumentID *UUID `json:"receipt_document_id,omitempty"`
+	// Status — matched — оплата найдена и удержание сходится; unknown_payment — оплаты с таким номером в учёте нет; fee_mismatch — в учёте другое удержание
+	Status string `json:"status"`
 }
 
 type FinanceBalanceItem struct {
@@ -6779,6 +6953,7 @@ type FinanceCashflowItem struct {
 }
 
 type FinanceCashflowReport struct {
+	Currency         *string                  `json:"currency,omitempty"`
 	From             string                   `json:"from"`
 	To               string                   `json:"to"`
 	Inflow           string                   `json:"inflow"`
@@ -7309,6 +7484,7 @@ type FinanceOrderActInput struct {
 }
 
 type FinancePaymentCalendar struct {
+	RnpMetrics *FinancePaymentCalendarRnpMetrics `json:"rnp_metrics,omitempty"`
 	// ValuationDate — Дата доступных курсов для пересчёта прогноза без переоценки в главной книге
 	ValuationDate *string `json:"valuation_date,omitempty"`
 	Project       *string `json:"project,omitempty"`
@@ -7339,6 +7515,12 @@ type FinancePaymentCalendar struct {
 	Days       []FinancePaymentCalendarDay     `json:"days"`
 	Rows       []FinancePaymentCalendarRow     `json:"rows"`
 	Overdue    []FinancePaymentCalendarRow     `json:"overdue"`
+}
+
+type FinancePaymentCalendarRnpMetrics struct {
+	MinimumBalance *string `json:"minimum_balance,omitempty"`
+	MinimumOn      *string `json:"minimum_on,omitempty"`
+	FirstGapOn     *string `json:"first_gap_on,omitempty"`
 }
 
 type FinancePaymentCalendarUndated struct {
@@ -7519,6 +7701,8 @@ type FinancePnlLine struct {
 }
 
 type FinancePnlReport struct {
+	RnpMetrics      map[string]string       `json:"rnp_metrics,omitempty"`
+	Currency        *string                 `json:"currency,omitempty"`
 	From            string                  `json:"from"`
 	To              string                  `json:"to"`
 	Revenue         string                  `json:"revenue"`

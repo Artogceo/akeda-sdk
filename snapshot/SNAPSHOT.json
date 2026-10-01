@@ -3,7 +3,7 @@
     "license": "LicenseRef-Akeda-Proprietary",
     "operations": {
       "by_audience": {
-        "external": 697
+        "external": 703
       },
       "by_module": {
         "automation": 3,
@@ -14,7 +14,7 @@
         "developer": 22,
         "docflow": 42,
         "files": 16,
-        "finance": 85,
+        "finance": 91,
         "knowledge": 22,
         "mail": 38,
         "marketplace": 25,
@@ -24,23 +24,23 @@
         "tasks": 100
       },
       "by_stage": {
-        "preview": 673,
+        "preview": 679,
         "public": 24
       },
       "installation_by_module": {
         "calendar": 25,
         "core": 118,
         "docflow": 13,
-        "finance": 75,
+        "finance": 81,
         "marketplace": 25,
         "platform": 4,
         "stock": 74,
         "tasks": 100
       },
-      "installation_reachable": 434,
-      "total": 697
+      "installation_reachable": 440,
+      "total": 703
     },
-    "schemas": 1034,
+    "schemas": 1044,
     "servers": [
       "https://erp.akeda.ru"
     ],
@@ -59,14 +59,14 @@
       "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 2989172,
+      "bytes": 3022469,
       "path": "openapi/akeda-v1.json",
-      "sha256": "cfcc87d61785af21a591698c9ea6895c51ae5adf667f5193a9a245e0dfc98b97"
+      "sha256": "853c28b2f342f4446e4145e3eac14a01b5af32f1b7a8bc3e59f39236ce547bd8"
     },
     {
-      "bytes": 2244533,
+      "bytes": 2270800,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "41a5a89a3e3d03cd711e91743885c61636ab8973561fe8e3a1aae09ccc78eb4d"
+      "sha256": "6276ab82f1405c1b1d1d9c982400d394d500012a7110b06a70bed1e6c8389fed"
     },
     {
       "bytes": 18414,
@@ -79,6 +79,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "1f5547daa36d1b982364cf9f95338171c62e9c1edb26e1825771054af65a9555",
+  "snapshot_digest": "1122a147afe2566b86f520f2ac3c6c74aac9e1abcdb5209a8aa8bfa82a37cf02",
   "snapshot_version": 1
 }

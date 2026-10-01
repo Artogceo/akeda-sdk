@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 cfcc87d61785af21a591698c9ea6895c51ae5adf667f5193a9a245e0dfc98b97).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 853c28b2f342f4446e4145e3eac14a01b5af32f1b7a8bc3e59f39236ce547bd8).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -409,9 +409,12 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeCreateSettlementDocument': OperationSpec('POST', '/api/v1/finance/settlements/documents', 'finance', 'preview', 'finance.settlements:write', True, True, (), 'none', None, None),
     'financeCreateStatement': OperationSpec('POST', '/api/v1/finance/statements', 'finance', 'preview', 'finance.statements:write', False, True, (), 'none', None, None),
     'financeCreateTransaction': OperationSpec('POST', '/api/v1/finance/transactions', 'finance', 'preview', 'finance.transactions:write', False, True, (), 'none', None, None),
+    'financeDeleteAcquirer': OperationSpec('DELETE', '/api/v1/finance/acquirers/{id}', 'finance', 'preview', 'finance.settlements:write', False, True, ('id',), 'none', None, None),
     'financeDeleteSettlementDocument': OperationSpec('DELETE', '/api/v1/finance/settlements/documents/{id}', 'finance', 'preview', 'finance.settlements:write', False, True, ('id',), 'none', None, None),
     'financeExpenseReports': OperationSpec('GET', '/api/v1/finance/accountable/reports', 'finance', 'preview', 'finance.accountable:read', False, True, (), 'limit', 500, 200),
     'financeGetAccount': OperationSpec('GET', '/api/v1/finance/accounts/{id}', 'finance', 'preview', 'finance.accounts:read', False, True, ('id',), 'none', None, None),
+    'financeGetAcquiringOverview': OperationSpec('GET', '/api/v1/finance/acquiring/overview', 'finance', 'preview', 'finance.settlements:read', False, True, (), 'none', None, None),
+    'financeGetAcquiringRegistry': OperationSpec('GET', '/api/v1/finance/acquiring/registries/{id}', 'finance', 'preview', 'finance.settlements:read', False, True, ('id',), 'none', None, None),
     'financeGetBalanceReport': OperationSpec('GET', '/api/v1/finance/reports/balance', 'finance', 'preview', 'finance.reports.balance:read', False, True, (), 'none', None, None),
     'financeGetCashflowReport': OperationSpec('GET', '/api/v1/finance/reports/cashflow', 'finance', 'preview', 'finance.reports.cashflow:read', False, True, (), 'none', None, None),
     'financeGetConnector': OperationSpec('GET', '/api/v1/finance/connectors/{id}', 'finance', 'preview', 'finance.connectors:read', False, True, ('id',), 'none', None, None),
@@ -427,8 +430,10 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeGetSettlementDocument': OperationSpec('GET', '/api/v1/finance/settlements/documents/{id}', 'finance', 'preview', 'finance.settlements:read', False, True, ('id',), 'none', None, None),
     'financeGetSettlementPosition': OperationSpec('GET', '/api/v1/finance/settlements/position', 'finance', 'preview', 'finance.settlements:read', False, True, (), 'none', None, None),
     'financeGetTransaction': OperationSpec('GET', '/api/v1/finance/transactions/{id}', 'finance', 'preview', 'finance.transactions:read', False, True, ('id',), 'none', None, None),
+    'financeImportAcquiringRegistry': OperationSpec('POST', '/api/v1/finance/acquiring/registries', 'finance', 'preview', 'finance.settlements:write', False, True, (), 'none', None, None),
     'financeLinkStatementTransactions': OperationSpec('POST', '/api/v1/finance/statements/{id}/transactions', 'finance', 'preview', 'finance.statements:write', False, True, ('id',), 'none', None, None),
     'financeListAccounts': OperationSpec('GET', '/api/v1/finance/accounts', 'finance', 'preview', 'finance.accounts:read', False, True, (), 'none', None, None),
+    'financeListAcquirers': OperationSpec('GET', '/api/v1/finance/acquirers', 'finance', 'preview', 'finance.settlements:read', False, True, (), 'none', None, None),
     'financeListConnectorAccounts': OperationSpec('GET', '/api/v1/finance/connectors/{id}/accounts', 'finance', 'preview', 'finance.connectors:read', False, True, ('id',), 'none', None, None),
     'financeListConnectorProviders': OperationSpec('GET', '/api/v1/finance/connectors/providers', 'finance', 'preview', 'finance.connectors:read', False, True, (), 'none', None, None),
     'financeListConnectorRuns': OperationSpec('GET', '/api/v1/finance/connectors/{id}/runs', 'finance', 'preview', 'finance.connectors:read', False, True, ('id',), 'limit', 100, 20),
@@ -457,6 +462,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeRepairRegisters': OperationSpec('POST', '/api/v1/finance/registers/repair', 'finance', 'preview', 'finance.registers:write', False, True, (), 'none', None, None),
     'financeResyncRegisters': OperationSpec('POST', '/api/v1/finance/registers/resync', 'finance', 'preview', 'finance.registers:write', False, True, (), 'none', None, None),
     'financeRunDividendAutomation': OperationSpec('POST', '/api/v1/finance/dividends/automation/run', 'finance', 'preview', 'finance.dividends:auto', False, False, (), 'none', None, None),
+    'financeSaveAcquirer': OperationSpec('PUT', '/api/v1/finance/acquirers', 'finance', 'preview', 'finance.settlements:write', False, True, (), 'none', None, None),
     'financeSaveProjectBudget': OperationSpec('POST', '/api/v1/finance/project-budgets', 'finance', 'preview', 'finance.project_budgets:write', False, True, (), 'none', None, None),
     'financeSyncConnector': OperationSpec('POST', '/api/v1/finance/connectors/{id}/sync', 'finance', 'preview', 'finance.connectors:write', False, True, ('id',), 'none', None, None),
     'financeUpdateAccount': OperationSpec('PATCH', '/api/v1/finance/accounts/{id}', 'finance', 'preview', 'finance.accounts:write', False, True, ('id',), 'none', None, None),

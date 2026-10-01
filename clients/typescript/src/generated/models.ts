@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 cfcc87d61785af21a591698c9ea6895c51ae5adf667f5193a9a245e0dfc98b97).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 853c28b2f342f4446e4145e3eac14a01b5af32f1b7a8bc3e59f39236ce547bd8).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -766,7 +766,7 @@ export interface CRMCreateTaskLinkInput {
 
 export interface CRMCustomer {
   "id": UUID;
-  "kind": "person" | "company";
+  "kind": "person" | "company" | "sole_prop";
   "name": string;
   "legal_name": string;
   /** ИНН без пробелов; пустая строка - не указан */
@@ -795,7 +795,7 @@ export interface CRMCustomer {
 
 export interface CRMCustomerDuplicate {
   "id": UUID;
-  "kind": "person" | "company";
+  "kind": "person" | "company" | "sole_prop";
   "name": string;
   "legal_name": string;
   /** ИНН без пробелов; пустая строка - не указан */
@@ -824,7 +824,7 @@ export interface CRMCustomerDuplicate {
 }
 
 export interface CRMCustomerInput {
-  "kind"?: "person" | "company";
+  "kind"?: "person" | "company" | "sole_prop";
   "name": string;
   "legal_name"?: string;
   /** ИНН: 10 цифр у организации, 12 у предпринимателя, с верной контрольной цифрой */
@@ -843,7 +843,7 @@ export interface CRMCustomerInput {
 }
 
 export interface CRMCustomerPatch {
-  "kind"?: "person" | "company";
+  "kind"?: "person" | "company" | "sole_prop";
   "name"?: string;
   "legal_name"?: string;
   /** Пустая строка стирает ИНН */
@@ -876,7 +876,6 @@ export interface CRMDeal {
   "probability": number;
   "expected_close_at"?: string;
   "owner_id"?: number;
-  "customer_id"?: UUID;
   "crm_customer_id"?: UUID;
   "next_action": string;
   "next_action_at"?: string;
@@ -922,7 +921,6 @@ export interface CRMDealCard {
   "probability": number;
   "expected_close_at"?: string;
   "owner_id"?: number;
-  "customer_id"?: UUID;
   "crm_customer_id"?: UUID;
   "next_action": string;
   "next_action_at"?: string;
@@ -955,6 +953,7 @@ export interface CRMDealInput {
   "probability"?: number;
   "expected_close_at"?: string | null;
   "owner_id"?: number | null;
+  /** Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет. */
   "customer_id"?: string | null;
   "crm_customer_id"?: string | null;
   "next_action"?: string;
@@ -988,6 +987,7 @@ export interface CRMDealPatch {
   "probability"?: number;
   "expected_close_at"?: string | null;
   "owner_id"?: number | null;
+  /** Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет. */
   "customer_id"?: string | null;
   "crm_customer_id"?: string | null;
   "next_action"?: string;
@@ -1226,7 +1226,6 @@ export interface CRMLead {
   "contact_handle": string;
   "reference_id"?: UUID;
   "owner_id"?: number;
-  "customer_id"?: UUID;
   "crm_customer_id"?: UUID;
   "next_action": string;
   "next_action_at"?: string;
@@ -1257,7 +1256,6 @@ export interface CRMLeadCard {
   "contact_handle": string;
   "reference_id"?: UUID;
   "owner_id"?: number;
-  "customer_id"?: UUID;
   "crm_customer_id"?: UUID;
   "next_action": string;
   "next_action_at"?: string;
@@ -1303,7 +1301,6 @@ export interface CRMLeadDuplicate {
   "contact_handle": string;
   "reference_id"?: UUID;
   "owner_id"?: number;
-  "customer_id"?: UUID;
   "crm_customer_id"?: UUID;
   "next_action": string;
   "next_action_at"?: string;
@@ -1333,6 +1330,7 @@ export interface CRMLeadInput {
   "contact_handle"?: string;
   "reference_id"?: string | null;
   "owner_id"?: number | null;
+  /** Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет. */
   "customer_id"?: string | null;
   "crm_customer_id"?: string | null;
   "next_action"?: string;
@@ -1351,6 +1349,7 @@ export interface CRMLeadPatch {
   "contact_handle"?: string;
   "reference_id"?: string | null;
   "owner_id"?: number | null;
+  /** Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет. */
   "customer_id"?: string | null;
   "crm_customer_id"?: string | null;
   "next_action"?: string;
@@ -2286,9 +2285,13 @@ export interface ChatReceiptState {
 export interface ChatSendMessage {
   /** Ключ идемпотентности отправки. Уникален в пределах беседы и отправителя: повтор с тем же ключом не заводит второе сообщение, а возвращает уже отправленное. Заголовок Idempotency-Key эта операция не читает */
   "client_message_id": { [key: string]: unknown };
-  /** Предел считается в кодовых точках, а не в байтах: сервер режет по 10 000 кодовых точек */
-  "body": string;
+  /** Текст сообщения; без attachment_ids обязателен, с ними — подпись к вложениям и может быть пустым. Предел считается в кодовых точках, а не в байтах: сервер режет по 10 000 кодовых точек */
+  "body"?: string;
+  /** Сообщение этой беседы, на которое отвечает новое */
+  "reply_to_message_id"?: { [key: string]: unknown };
   "mention_user_ids"?: Array<number>;
+  /** Готовые вложения этой беседы — id из завершения сессии загрузки или из списка вложений. Не сочетаются с mention_user_ids в одном сообщении */
+  "attachment_ids"?: Array<UUID>;
 }
 
 export interface ChatSendMessageResult {
@@ -6686,6 +6689,41 @@ export interface FinanceAccountableBalances {
   "rows": Array<FinanceAccountableBalance>;
 }
 
+export interface FinanceAcquirer {
+  /** Настройка эквайринга */
+  "id": UUID;
+  /** Юрлицо-продавец */
+  "company_id": UUID;
+  /** Ключ провайдера, как в подтверждении оплаты картой (yookassa) */
+  "provider": string;
+  /** Контрагент-эквайер */
+  "contact_id": UUID;
+  /** Название контрагента-эквайера */
+  "contact_name"?: string;
+  /** Ставка НДС, которую эквайер начисляет на комиссию, в процентах; null — без НДС */
+  "fee_vat_rate": string | null;
+  /** Когда признаётся расход по комиссии: payment — по данным платежа; closing_document — по закрывающему документу эквайера (УПД или акт за период) */
+  "fee_recognition": "payment" | "closing_document";
+}
+
+export interface FinanceAcquirerInput {
+  /** Юрлицо-продавец */
+  "company_id": UUID;
+  /** Ключ провайдера, как в подтверждении оплаты картой (yookassa) */
+  "provider": string;
+  /** Действующий контрагент кабинета — эквайер */
+  "contact_id": UUID;
+  /** Ставка НДС эквайера на комиссию в процентах, от 0 до 100; пусто или null — без НДС */
+  "fee_vat_rate"?: string | null;
+  /** Когда признаётся расход по комиссии: payment — по данным платежа; closing_document — по закрывающему документу эквайера */
+  "fee_recognition"?: "payment" | "closing_document";
+}
+
+export interface FinanceAcquirerList {
+  /** Эквайеры доступных юрлиц */
+  "acquirers": Array<FinanceAcquirer>;
+}
+
 export interface FinanceAcquiringCaptureInput {
   /** Продажа, заведённая этой установкой приложения */
   "order_id": UUID;
@@ -6699,6 +6737,10 @@ export interface FinanceAcquiringCaptureInput {
   "currency": string;
   /** Дата подтверждённого списания у провайдера */
   "paid_at": string;
+  /** Сколько провайдер удержал из этого платежа, всего с налогом, десятичная строка; меньше суммы списания. Не передаётся, если провайдер удержание по платежу не называет. Создаёт документ «Комиссия эквайринга» (Дт 44 / Кт 57.03); в отпечаток повтора не входит, поэтому может прийти позже повтором того же платежа */
+  "fee"?: string;
+  /** В том числе налог с комиссии, десятичная строка, если провайдер его называет; передаётся только вместе с fee. Не передан — финансы считают налог по ставке эквайера из настройки «Эквайринг». К вычету (Дт 19) идёт, если юрлицо на дату выделяет входной налог; иначе остаётся в расходе */
+  "fee_vat"?: string;
 }
 
 export interface FinanceAcquiringCaptureResult {
@@ -6710,6 +6752,138 @@ export interface FinanceAcquiringCaptureResult {
   "order_id": UUID;
   /** true при повторе уже записанного списания */
   "replayed": boolean;
+}
+
+export interface FinanceAcquiringInTransit {
+  /** Документ «Оплата картой» */
+  "receipt_document_id": UUID;
+  /** Номер документа оплаты */
+  "number": string;
+  /** Дата оплаты */
+  "date": string;
+  /** Юрлицо */
+  "company_id": UUID;
+  /** Ключ провайдера */
+  "provider": string;
+  /** Идентификатор платежа у провайдера */
+  "external_id": string;
+  /** Заказ покупателя */
+  "order_id"?: UUID;
+  /** Покупатель */
+  "contact_id"?: UUID;
+  /** Название покупателя */
+  "contact_name"?: string;
+  /** Сумма оплаты в валюте учёта */
+  "amount": string;
+  /** Удержание провайдера в валюте учёта; 0 — ещё неизвестно */
+  "fee": string;
+  /** Ожидаемая сумма к зачислению */
+  "net_amount": string;
+  /** Удержание уже заведено «Комиссией эквайринга» */
+  "fee_known": boolean;
+}
+
+export interface FinanceAcquiringOverview {
+  /** Оплаты, которые эквайер ещё не перечислил */
+  "in_transit": Array<FinanceAcquiringInTransit>;
+  /** Ожидаемая сумма к зачислению по ним */
+  "in_transit_total": string;
+  /** Выплаты эквайера, новые сверху */
+  "payouts": Array<FinanceAcquiringPayout>;
+  /** Последние реестры провайдера */
+  "registries": Array<FinanceAcquiringRegistry>;
+  /** Эквайеры юрлиц */
+  "acquirers": Array<FinanceAcquirer>;
+}
+
+export interface FinanceAcquiringPayout {
+  /** Банковская операция выплаты */
+  "document_id": UUID;
+  /** Номер банковской операции */
+  "number": string;
+  /** Дата зачисления */
+  "date": string;
+  /** Юрлицо */
+  "company_id": UUID;
+  /** Сумма зачисления */
+  "amount": string;
+  /** Сколько оплат сверено с выплатой */
+  "cleared_count": number;
+  /** Сумма к зачислению сверенных оплат */
+  "cleared_net": string;
+  /** Сверенные оплаты дают ровно сумму выплаты */
+  "reconciled": boolean;
+  /** Плательщик выплаты */
+  "contact_name"?: string;
+  /** auto — по сумме к зачислению; registry — по реестру провайдера */
+  "clearing_source"?: string;
+}
+
+export interface FinanceAcquiringRegistry {
+  /** Реестр */
+  "id": UUID;
+  /** Юрлицо */
+  "company_id": UUID;
+  /** Ключ провайдера */
+  "provider": string;
+  /** Имя загруженного файла */
+  "file_name": string;
+  /** Валюта платежей, ISO 4217 */
+  "currency": string;
+  /** Число платежей в реестре */
+  "rows_count": number;
+  /** Сумма платежей */
+  "amount": string;
+  /** Сумма к зачислению — ею реестр находит выплату */
+  "net_amount": string;
+  /** Удержано всего */
+  "fee_amount": string;
+  /** Выплата эквайера, с которой реестр сверен */
+  "payout_document_id"?: UUID;
+  /** awaiting_payout — выплаты на сумму реестра ещё нет; matched — сверен; discrepancy — сверен, но есть строки для человека */
+  "status": "matched" | "awaiting_payout" | "discrepancy";
+  /** Когда загружен */
+  "uploaded_at": string;
+  /** Строки реестра */
+  "rows"?: Array<FinanceAcquiringRegistryRow>;
+}
+
+export interface FinanceAcquiringRegistryImport {
+  "registry": FinanceAcquiringRegistry;
+  /** true — этот файл уже был загружен */
+  "replayed": boolean;
+}
+
+export interface FinanceAcquiringRegistryInput {
+  /** Юрлицо, чьи платежи в реестре */
+  "company_id": UUID;
+  /** Ключ провайдера (yookassa) */
+  "provider": string;
+  /** Имя файла для истории загрузок */
+  "file_name"?: string;
+  /** Содержимое CSV реестра текстом в UTF-8, до 4 МБ */
+  "content": string;
+}
+
+export interface FinanceAcquiringRegistryRow {
+  /** Номер строки в файле */
+  "line": number;
+  /** Идентификатор платежа у провайдера */
+  "external_id": string;
+  /** Сумма платежа, десятичная строка */
+  "amount": string;
+  /** Сумма к зачислению, десятичная строка */
+  "net_amount": string;
+  /** Удержано провайдером, всего с налогом */
+  "fee": string;
+  /** В том числе налог с комиссии */
+  "fee_vat"?: string;
+  /** Время платежа из реестра */
+  "paid_at"?: string;
+  /** Найденная оплата картой */
+  "receipt_document_id"?: UUID;
+  /** matched — оплата найдена и удержание сходится; unknown_payment — оплаты с таким номером в учёте нет; fee_mismatch — в учёте другое удержание */
+  "status": "matched" | "unknown_payment" | "fee_mismatch";
 }
 
 export interface FinanceBalanceItem {
@@ -6796,6 +6970,7 @@ export interface FinanceCashflowItem {
 }
 
 export interface FinanceCashflowReport {
+  "currency"?: string;
   "from": string;
   "to": string;
   "inflow": string;
@@ -7326,6 +7501,7 @@ export interface FinanceOrderActInput {
 }
 
 export interface FinancePaymentCalendar {
+  "rnp_metrics"?: FinancePaymentCalendarRnpMetrics;
   /** Дата доступных курсов для пересчёта прогноза без переоценки в главной книге */
   "valuation_date"?: string;
   "project"?: string;
@@ -7356,6 +7532,12 @@ export interface FinancePaymentCalendar {
   "days": Array<FinancePaymentCalendarDay>;
   "rows": Array<FinancePaymentCalendarRow>;
   "overdue": Array<FinancePaymentCalendarRow>;
+}
+
+export interface FinancePaymentCalendarRnpMetrics {
+  "minimum_balance"?: string;
+  "minimum_on"?: string;
+  "first_gap_on"?: string;
 }
 
 export interface FinancePaymentCalendarUndated {
@@ -7536,6 +7718,8 @@ export interface FinancePnlLine {
 }
 
 export interface FinancePnlReport {
+  "rnp_metrics"?: { [key: string]: string };
+  "currency"?: string;
   "from": string;
   "to": string;
   "revenue": string;

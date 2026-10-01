@@ -187,6 +187,8 @@ tags:
     description: Модуль mail (почта сотрудника) — письма и переписки, отметки прочтения, важности и спама, перенос между папками, вложения, очередь отправки и составление письма. Письмо без признака save_as_draft уходит получателю, и отозвать его нельзя
   - name: Mail rules
     description: 'Модуль mail (почта сотрудника) — правила разбора входящей почты и их применение к уже накопившимся письмам. Набор полей и операторов закрытый: правило исполняется на сервере над чужой перепиской'
+  - name: Finance acquiring
+    description: Модуль finance (счета и выписки) — сверка эквайринга — деньги в пути по оплатам картой, выплаты эквайера, реестры провайдера и эквайеры юрлиц
 paths:
   /api/v1/tasks/tasks:
     get:
@@ -11530,6 +11532,241 @@ paths:
                 $ref: '#/components/schemas/FinanceCounterpartyTerms'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/acquiring/overview:
+    get:
+      tags:
+        - Finance acquiring
+      operationId: financeGetAcquiringOverview
+      summary: Получить сверку эквайринга
+      description: Оплаты картой, которые эквайер ещё не перечислил (деньги в пути на 57.03 по платежам, с удержанием и суммой к зачислению), выплаты эквайера со сверкой, последние реестры провайдера и эквайеры юрлиц. Без company_id — только тому, кому видны все юрлица.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.settlements:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: company_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Деньги в пути, выплаты, реестры и эквайеры
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceAcquiringOverview'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/acquiring/registries:
+    post:
+      tags:
+        - Finance acquiring
+      operationId: financeImportAcquiringRegistry
+      summary: Загрузить реестр платежей провайдера
+      description: 'CSV реестра платежей текстом (ЮKassa: стандартный или настраиваемый; колонки ищутся по заголовку). Находит оплаты по номерам платежей, заводит «Комиссию эквайринга» там, где удержание при оплате не было названо, отмечает неизвестные платежи и расхождения удержания и сверяет оплаты с выплатой на сумму реестра — сразу или когда выплата придёт. Тот же файл второй раз возвращает прежний реестр (200, replayed=true).'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.settlements:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceAcquiringRegistryInput'
+      responses:
+        '200':
+          description: Тот же файл уже загружен — прежний реестр
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceAcquiringRegistryImport'
+        '201':
+          description: Загруженный реестр и его сверка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceAcquiringRegistryImport'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/acquiring/registries/{id}:
+    get:
+      tags:
+        - Finance acquiring
+      operationId: financeGetAcquiringRegistry
+      summary: Получить реестр провайдера со строками
+      description: Строки реестра со статусом каждой — оплата найдена, неизвестный платёж или другое удержание в учёте — и выплата, с которой реестр сверен.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.settlements:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Реестр со строками
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceAcquiringRegistry'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/acquirers:
+    get:
+      tags:
+        - Finance acquiring
+      operationId: financeListAcquirers
+      summary: Список эквайеров юрлиц
+      description: 'Настройка «Эквайринг»: какой контрагент — эквайер юрлица по провайдеру. Нужна НДС с комиссии — эквайер становится поставщиком во входном налоге.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.settlements:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Эквайеры доступных юрлиц
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceAcquirerList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    put:
+      tags:
+        - Finance acquiring
+      operationId: financeSaveAcquirer
+      summary: Выбрать эквайера юрлица
+      description: Одна строка на юрлицо и провайдера — повторный выбор меняет эквайера. Контрагента выбирает человек. Выбор проводит черновики «Комиссии эквайринга» этого юрлица и провайдера, ждавшие эквайера для НДС с комиссии.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.settlements:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceAcquirerInput'
+      responses:
+        '200':
+          description: Сохранённая настройка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceAcquirer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/acquirers/{id}:
+    delete:
+      tags:
+        - Finance acquiring
+      operationId: financeDeleteAcquirer
+      summary: Снять выбор эквайера
+      description: Проведённые комиссии остаются как были; настройка влияет только на следующие.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.settlements:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Выбор эквайера снят
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -25797,7 +26034,7 @@ paths:
         - App runtime
       operationId: appFinanceRecordAcquiringCapture
       summary: Записать подтверждённое списание карты по продаже приложения
-      description: 'Приложение предварительно проверяет сообщение провайдера. По своему заказу оно создаёт финансовый документ: долг эквайера на 57.03 и оплату, доступную к разнесению. Повтор provider + external_id возвращает исходный документ; зачисление денег и комиссия оформляются позже отдельно.'
+      description: 'Приложение предварительно проверяет сообщение провайдера. По своему заказу оно создаёт финансовый документ: долг эквайера на 57.03 и оплату, доступную к разнесению. Повтор provider + external_id возвращает исходный документ. Удержание провайдера (fee, fee_vat) заводит отдельный документ «Комиссия эквайринга», уменьшающий долг эквайера; зачисление денег — строка выписки со статьёй «Выплата эквайера».'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -38040,7 +38277,6 @@ components:
       additionalProperties: false
       required:
         - client_message_id
-        - body
       properties:
         client_message_id:
           allOf:
@@ -38048,9 +38284,12 @@ components:
           description: 'Ключ идемпотентности отправки. Уникален в пределах беседы и отправителя: повтор с тем же ключом не заводит второе сообщение, а возвращает уже отправленное. Заголовок Idempotency-Key эта операция не читает'
         body:
           type: string
-          minLength: 1
           maxLength: 10000
-          description: 'Предел считается в кодовых точках, а не в байтах: сервер режет по 10 000 кодовых точек'
+          description: 'Текст сообщения; без attachment_ids обязателен, с ними — подпись к вложениям и может быть пустым. Предел считается в кодовых точках, а не в байтах: сервер режет по 10 000 кодовых точек'
+        reply_to_message_id:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Сообщение этой беседы, на которое отвечает новое
         mention_user_ids:
           type: array
           maxItems: 100
@@ -38058,6 +38297,12 @@ components:
             type: integer
             format: int64
             minimum: 1
+        attachment_ids:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/UUID'
+          description: Готовые вложения этой беседы — id из завершения сессии загрузки или из списка вложений. Не сочетаются с mention_user_ids в одном сообщении
     ChatSendMessageResult:
       type: object
       additionalProperties: false
@@ -44164,6 +44409,364 @@ components:
           type: string
           format: date
           description: Дата подтверждённого списания у провайдера
+        fee:
+          type: string
+          description: Сколько провайдер удержал из этого платежа, всего с налогом, десятичная строка; меньше суммы списания. Не передаётся, если провайдер удержание по платежу не называет. Создаёт документ «Комиссия эквайринга» (Дт 44 / Кт 57.03); в отпечаток повтора не входит, поэтому может прийти позже повтором того же платежа
+        fee_vat:
+          type: string
+          description: В том числе налог с комиссии, десятичная строка, если провайдер его называет; передаётся только вместе с fee. Не передан — финансы считают налог по ставке эквайера из настройки «Эквайринг». К вычету (Дт 19) идёт, если юрлицо на дату выделяет входной налог; иначе остаётся в расходе
+    FinanceAcquirer:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - company_id
+        - provider
+        - contact_id
+        - fee_vat_rate
+        - fee_recognition
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+          description: Настройка эквайринга
+        company_id:
+          $ref: '#/components/schemas/UUID'
+          description: Юрлицо-продавец
+        provider:
+          type: string
+          description: Ключ провайдера, как в подтверждении оплаты картой (yookassa)
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+          description: Контрагент-эквайер
+        contact_name:
+          type: string
+          description: Название контрагента-эквайера
+        fee_vat_rate:
+          type:
+            - string
+            - 'null'
+          description: Ставка НДС, которую эквайер начисляет на комиссию, в процентах; null — без НДС
+        fee_recognition:
+          type: string
+          enum:
+            - payment
+            - closing_document
+          description: 'Когда признаётся расход по комиссии: payment — по данным платежа; closing_document — по закрывающему документу эквайера (УПД или акт за период)'
+    FinanceAcquirerInput:
+      type: object
+      additionalProperties: false
+      required:
+        - company_id
+        - provider
+        - contact_id
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+          description: Юрлицо-продавец
+        provider:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Ключ провайдера, как в подтверждении оплаты картой (yookassa)
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+          description: Действующий контрагент кабинета — эквайер
+        fee_vat_rate:
+          type:
+            - string
+            - 'null'
+          description: Ставка НДС эквайера на комиссию в процентах, от 0 до 100; пусто или null — без НДС
+        fee_recognition:
+          type: string
+          enum:
+            - payment
+            - closing_document
+          default: payment
+          description: 'Когда признаётся расход по комиссии: payment — по данным платежа; closing_document — по закрывающему документу эквайера'
+    FinanceAcquirerList:
+      type: object
+      additionalProperties: false
+      required:
+        - acquirers
+      properties:
+        acquirers:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceAcquirer'
+          description: Эквайеры доступных юрлиц
+    FinanceAcquiringRegistryInput:
+      type: object
+      additionalProperties: false
+      required:
+        - company_id
+        - provider
+        - content
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+          description: Юрлицо, чьи платежи в реестре
+        provider:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Ключ провайдера (yookassa)
+        file_name:
+          type: string
+          maxLength: 255
+          description: Имя файла для истории загрузок
+        content:
+          type: string
+          minLength: 1
+          description: Содержимое CSV реестра текстом в UTF-8, до 4 МБ
+    FinanceAcquiringRegistryRow:
+      type: object
+      additionalProperties: false
+      required:
+        - line
+        - external_id
+        - amount
+        - net_amount
+        - fee
+        - status
+      properties:
+        line:
+          type: integer
+          description: Номер строки в файле
+        external_id:
+          type: string
+          description: Идентификатор платежа у провайдера
+        amount:
+          type: string
+          description: Сумма платежа, десятичная строка
+        net_amount:
+          type: string
+          description: Сумма к зачислению, десятичная строка
+        fee:
+          type: string
+          description: Удержано провайдером, всего с налогом
+        fee_vat:
+          type: string
+          description: В том числе налог с комиссии
+        paid_at:
+          type: string
+          format: date-time
+          description: Время платежа из реестра
+        receipt_document_id:
+          $ref: '#/components/schemas/UUID'
+          description: Найденная оплата картой
+        status:
+          type: string
+          enum:
+            - matched
+            - unknown_payment
+            - fee_mismatch
+          description: matched — оплата найдена и удержание сходится; unknown_payment — оплаты с таким номером в учёте нет; fee_mismatch — в учёте другое удержание
+    FinanceAcquiringRegistry:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - company_id
+        - provider
+        - file_name
+        - currency
+        - rows_count
+        - amount
+        - net_amount
+        - fee_amount
+        - status
+        - uploaded_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+          description: Реестр
+        company_id:
+          $ref: '#/components/schemas/UUID'
+          description: Юрлицо
+        provider:
+          type: string
+          description: Ключ провайдера
+        file_name:
+          type: string
+          description: Имя загруженного файла
+        currency:
+          type: string
+          description: Валюта платежей, ISO 4217
+        rows_count:
+          type: integer
+          description: Число платежей в реестре
+        amount:
+          type: string
+          description: Сумма платежей
+        net_amount:
+          type: string
+          description: Сумма к зачислению — ею реестр находит выплату
+        fee_amount:
+          type: string
+          description: Удержано всего
+        payout_document_id:
+          $ref: '#/components/schemas/UUID'
+          description: Выплата эквайера, с которой реестр сверен
+        status:
+          type: string
+          enum:
+            - matched
+            - awaiting_payout
+            - discrepancy
+          description: awaiting_payout — выплаты на сумму реестра ещё нет; matched — сверен; discrepancy — сверен, но есть строки для человека
+        uploaded_at:
+          type: string
+          format: date-time
+          description: Когда загружен
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceAcquiringRegistryRow'
+          description: Строки реестра
+    FinanceAcquiringRegistryImport:
+      type: object
+      additionalProperties: false
+      required:
+        - registry
+        - replayed
+      properties:
+        registry:
+          $ref: '#/components/schemas/FinanceAcquiringRegistry'
+        replayed:
+          type: boolean
+          description: true — этот файл уже был загружен
+    FinanceAcquiringInTransit:
+      type: object
+      additionalProperties: false
+      required:
+        - receipt_document_id
+        - number
+        - date
+        - company_id
+        - provider
+        - external_id
+        - amount
+        - fee
+        - net_amount
+        - fee_known
+      properties:
+        receipt_document_id:
+          $ref: '#/components/schemas/UUID'
+          description: Документ «Оплата картой»
+        number:
+          type: string
+          description: Номер документа оплаты
+        date:
+          type: string
+          format: date
+          description: Дата оплаты
+        company_id:
+          $ref: '#/components/schemas/UUID'
+          description: Юрлицо
+        provider:
+          type: string
+          description: Ключ провайдера
+        external_id:
+          type: string
+          description: Идентификатор платежа у провайдера
+        order_id:
+          $ref: '#/components/schemas/UUID'
+          description: Заказ покупателя
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+          description: Покупатель
+        contact_name:
+          type: string
+          description: Название покупателя
+        amount:
+          type: string
+          description: Сумма оплаты в валюте учёта
+        fee:
+          type: string
+          description: Удержание провайдера в валюте учёта; 0 — ещё неизвестно
+        net_amount:
+          type: string
+          description: Ожидаемая сумма к зачислению
+        fee_known:
+          type: boolean
+          description: Удержание уже заведено «Комиссией эквайринга»
+    FinanceAcquiringPayout:
+      type: object
+      additionalProperties: false
+      required:
+        - document_id
+        - number
+        - date
+        - company_id
+        - amount
+        - cleared_count
+        - cleared_net
+        - reconciled
+      properties:
+        document_id:
+          $ref: '#/components/schemas/UUID'
+          description: Банковская операция выплаты
+        number:
+          type: string
+          description: Номер банковской операции
+        date:
+          type: string
+          format: date
+          description: Дата зачисления
+        company_id:
+          $ref: '#/components/schemas/UUID'
+          description: Юрлицо
+        amount:
+          type: string
+          description: Сумма зачисления
+        cleared_count:
+          type: integer
+          description: Сколько оплат сверено с выплатой
+        cleared_net:
+          type: string
+          description: Сумма к зачислению сверенных оплат
+        reconciled:
+          type: boolean
+          description: Сверенные оплаты дают ровно сумму выплаты
+        contact_name:
+          type: string
+          description: Плательщик выплаты
+        clearing_source:
+          type: string
+          description: auto — по сумме к зачислению; registry — по реестру провайдера
+    FinanceAcquiringOverview:
+      type: object
+      additionalProperties: false
+      required:
+        - in_transit
+        - in_transit_total
+        - payouts
+        - registries
+        - acquirers
+      properties:
+        in_transit:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceAcquiringInTransit'
+          description: Оплаты, которые эквайер ещё не перечислил
+        in_transit_total:
+          type: string
+          description: Ожидаемая сумма к зачислению по ним
+        payouts:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceAcquiringPayout'
+          description: Выплаты эквайера, новые сверху
+        registries:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceAcquiringRegistry'
+          description: Последние реестры провайдера
+        acquirers:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceAcquirer'
+          description: Эквайеры юрлиц
     FinanceAcquiringCaptureResult:
       type: object
       additionalProperties: false
@@ -47114,6 +47717,16 @@ components:
         - rows
         - overdue
       properties:
+        rnp_metrics:
+          type: object
+          additionalProperties: false
+          properties:
+            minimum_balance:
+              type: string
+            minimum_on:
+              type: string
+            first_gap_on:
+              type: string
         valuation_date:
           type: string
           format: date
@@ -47509,6 +48122,8 @@ components:
         - sections
         - columns
       properties:
+        currency:
+          type: string
         from:
           type: string
           format: date
@@ -47656,6 +48271,12 @@ components:
         - lines
         - columns
       properties:
+        rnp_metrics:
+          type: object
+          additionalProperties:
+            type: string
+        currency:
+          type: string
         from:
           type: string
           format: date
@@ -48079,8 +48700,6 @@ components:
         owner_id:
           type: integer
           format: int64
-        customer_id:
-          $ref: '#/components/schemas/UUID'
         crm_customer_id:
           $ref: '#/components/schemas/UUID'
         next_action:
@@ -48154,6 +48773,8 @@ components:
             - string
             - 'null'
           format: uuid
+          deprecated: true
+          description: 'Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.'
         crm_customer_id:
           type:
             - string
@@ -48200,6 +48821,8 @@ components:
             - string
             - 'null'
           format: uuid
+          deprecated: true
+          description: 'Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.'
         crm_customer_id:
           type:
             - string
@@ -48475,8 +49098,6 @@ components:
         owner_id:
           type: integer
           format: int64
-        customer_id:
-          $ref: '#/components/schemas/UUID'
         crm_customer_id:
           $ref: '#/components/schemas/UUID'
         next_action:
@@ -48547,8 +49168,6 @@ components:
         owner_id:
           type: integer
           format: int64
-        customer_id:
-          $ref: '#/components/schemas/UUID'
         crm_customer_id:
           $ref: '#/components/schemas/UUID'
         next_action:
@@ -48663,6 +49282,8 @@ components:
             - string
             - 'null'
           format: uuid
+          deprecated: true
+          description: 'Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.'
         crm_customer_id:
           type:
             - string
@@ -48711,6 +49332,8 @@ components:
             - string
             - 'null'
           format: uuid
+          deprecated: true
+          description: 'Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.'
         crm_customer_id:
           type:
             - string
@@ -48841,6 +49464,7 @@ components:
           enum:
             - person
             - company
+            - sole_prop
         name:
           type: string
         legal_name:
@@ -48913,6 +49537,7 @@ components:
           enum:
             - person
             - company
+            - sole_prop
           default: person
         name:
           type: string
@@ -48965,6 +49590,7 @@ components:
           enum:
             - person
             - company
+            - sole_prop
         name:
           type: string
           minLength: 1
