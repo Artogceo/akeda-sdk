@@ -88785,6 +88785,10 @@
           "status": {
             "$ref": "#/components/schemas/PlatformAppStatus"
           },
+          "internal": {
+            "type": "boolean",
+            "description": "Наше приложение: его установка получает долгий потолок срока жизни токена. Ставится персоналом платформы, из манифеста не выводится"
+          },
           "created_by": {
             "type": "integer",
             "format": "int64",
