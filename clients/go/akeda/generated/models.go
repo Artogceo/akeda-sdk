@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3d8fe8e5d99e9e219b8884b04b395a9a841c44363a0026e7994bf47f11d7da3).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5e319aa672e15fb99dfef09b4d187f87e0a9f9ef474eaebfafc66fcb05834ec6).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -235,18 +235,6 @@ type Attachment struct {
 	UploadedBy  *int64 `json:"uploaded_by"`
 	Uploader    string `json:"uploader"`
 	CreatedAt   string `json:"created_at"`
-}
-
-type AttachmentDownloadSession struct {
-	Attachment Attachment        `json:"attachment"`
-	URL        string            `json:"url"`
-	Method     string            `json:"method"`
-	Headers    map[string]string `json:"headers,omitempty"`
-	ExpiresAt  string            `json:"expires_at"`
-}
-
-type AttachmentMove struct {
-	FolderID *string `json:"folder_id"`
 }
 
 type AttachmentOwnerType = string
@@ -636,489 +624,6 @@ type AutomationRuleTestResultActionsItemInputsItem struct {
 	Missing  []string `json:"missing,omitempty"`
 }
 
-// BillingCabinetInvoice — Счёт вместе с реквизитами для оплаты. Реквизиты идут в том же ответе, а не отдельным маршрутом: экран оплаты показывает их на одной вкладке со счётом, и второй запрос означал бы мгновение, в котором сумма уже есть, а платить по ней некуда
-type BillingCabinetInvoice struct {
-	Invoice    BillingInvoice    `json:"invoice"`
-	Requisites BillingRequisites `json:"requisites"`
-}
-
-// BillingCabinetNotice — Что оболочка кабинета говорит человеку про его подписку. Пустой kind — самый частый ответ: у работающего кабинета баннера нет
-type BillingCabinetNotice struct {
-	// Kind — '' — говорить не о чем. restriction_soon — счёт просрочен, доступ ограничат restrict_at. read_only — кабинет уже оставлен на просмотр и выгрузку данных
-	Kind string `json:"kind"`
-	// Status — Состояние подписки, объясняющее предупреждение; пусто у кабинета без подписки
-	Status string `json:"status"`
-	// RestrictAt — С какого дня ограничат доступ; заполнено у restriction_soon
-	RestrictAt *string `json:"restrict_at"`
-	// DaysLeft — Дней до ограничения
-	DaysLeft *int64 `json:"days_left"`
-	// Since — С какого дня кабинет перестал работать; заполнено у read_only
-	Since *string `json:"since"`
-	// Invoice — Неоплаченный счёт, если он есть. null законен: у расторгнутой подписки счёта может не быть, и человеку предлагают возобновить её, а не оплатить несуществующий документ
-	Invoice *BillingCabinetNoticeInvoice `json:"invoice"`
-}
-
-// BillingCabinetNoticeInvoice — Счёт, на который ведёт баннер кабинета
-type BillingCabinetNoticeInvoice struct {
-	ID       string       `json:"id"`
-	Number   string       `json:"number"`
-	Amount   BillingMoney `json:"amount"`
-	Currency string       `json:"currency"`
-}
-
-type BillingCabinetSeats struct {
-	Used int64 `json:"used"`
-	// Limit — null — без ограничения
-	Limit *int64 `json:"limit"`
-}
-
-type BillingCabinetStorage struct {
-	// UsedBytes — Занятое место по последнему суточному снимку потребления. null — снимка ещё нет; ноль означал бы «клиент ничего не загрузил»
-	UsedBytes  *int64 `json:"used_bytes"`
-	LimitBytes *int64 `json:"limit_bytes"`
-}
-
-// BillingCabinetSubscription — Экран «Настройки → Подписка» глазами клиента: что у него есть, сколько он израсходовал и что он может выбрать
-type BillingCabinetSubscription struct {
-	// State — none означает, что подписки НЕТ вовсе — законное состояние живых кабинетов, работавших до биллинга, а не «не загрузилось». internal — внутренний кабинет Akeda: разрешено всё, счета не выставляются. pilot — внедрение: кабинет клиента, который мы ведём до передачи, права те же. Различать их обязательно: первое означает «мы про кабинет ничего не решали», остальные два — записанные решения оператора, и только второе из них означает наш собственный кабинет
-	State         string               `json:"state"`
-	Subscription  *BillingSubscription `json:"subscription"`
-	Plan          *BillingPlan         `json:"plan"`
-	Addons        []BillingPlan        `json:"addons"`
-	BillingPeriod string               `json:"billing_period"`
-	Trial         *BillingTrialState   `json:"trial"`
-	// Pilot — Идущее внедрение: кабинет ведём мы, счетов нет, открыт весь продукт. null во всех остальных состояниях
-	Pilot *BillingPilotState `json:"pilot"`
-	// PaidUntil — До какого числа оплачено; пусто у пробы и у кабинета без подписки
-	PaidUntil *string              `json:"paid_until"`
-	PastDue   *BillingPastDueState `json:"past_due"`
-	// Opening — Первый неоплаченный период платной подписки. null у пробы, внутреннего кабинета, внедрения, бесплатного состава и у подписки с открытым периодом
-	Opening       *BillingOpeningState  `json:"opening,omitempty"`
-	Seats         BillingCabinetSeats   `json:"seats"`
-	Storage       BillingCabinetStorage `json:"storage"`
-	Catalog       BillingCatalog        `json:"catalog"`
-	PaymentMethod *BillingPaymentMethod `json:"payment_method"`
-	Entitlements  BillingEntitlements   `json:"entitlements"`
-}
-
-// BillingCatalog — Витрина кабинета: публичные и неархивные тарифы плюс все неархивные модули с действующей ценой для конструктора. У модуля is_public управляет только самостоятельной карточкой. Полный список заведённого у оператора — GET /platform/billing/plans
-type BillingCatalog struct {
-	Plans []BillingPlan `json:"plans"`
-	// Modules — Неархивные модули с действующей ценой. Клиентская витрина показывает отдельными карточками только is_public=true, но конструктор использует весь список
-	Modules []BillingPlan `json:"modules"`
-	// Constructor — Основание тарифа-конструктора «Соберите свой». Модулей в нём нет: клиент набирает их из modules теми же дополнениями. null означает, что конструктора нет или он снят с витрины
-	Constructor *BillingPlan `json:"constructor,omitempty"`
-	TrialDays   int64        `json:"trial_days"`
-}
-
-// BillingChangeInput — Заявка кабинета на изменение подписки. Непереданное поле означает «оставить как есть»: клиент, подключающий модуль, не обязан заново называть свой тариф, а клиент, меняющий тариф, не должен молча лишиться оплаченного модуля. Пустой addon_keys означает «снять все»
-type BillingChangeInput struct {
-	PlanKey       *string  `json:"plan_key,omitempty"`
-	AddonKeys     []string `json:"addon_keys,omitempty"`
-	BillingPeriod *string  `json:"billing_period,omitempty"`
-	// SeatsLimit — ЖЕЛАЕМЫЙ ОБЩИЙ потолок мест, а не «сколько докупить». Экран показывает «участники 17 из 20» и спрашивает новое «из скольких»; заявка «плюс три места», пришедшая дважды из-за повторной отправки формы, купила бы шесть. Непереданное поле означает «оставить как есть»: смена тарифа не отменяет доплаченные места. Сверх пакета тарифа берётся price_per_seat версии ЗА МЕСЯЦ — у доплат нет отдельной годовой цены, и годовой скидки на них тоже нет. Потолок НИЖЕ пакета отвергается: это не доплата, а попытка урезать оплаченное. Подписке без тарифа доплаты недоступны вовсе — «сверх пакета» без пакета не существует
-	SeatsLimit *int64 `json:"seats_limit,omitempty"`
-	// StorageLimitGb — То же про хранилище: общий потолок в ГБ, доплата по price_per_gb за месяц
-	StorageLimitGb *int64 `json:"storage_limit_gb,omitempty"`
-}
-
-// BillingChangePreview — Что произойдёт, если клиент нажмёт кнопку. Считается тем же кодом, что и применение: разойдись расчёты — клиент увидел бы одну сумму, а заплатил другую
-type BillingChangePreview struct {
-	Now            BillingSnap `json:"now"`
-	Becomes        BillingSnap `json:"becomes"`
-	AddedModules   []string    `json:"added_modules"`
-	RemovedModules []string    `json:"removed_modules"`
-	// ProrationAmount — Доплата за остаток текущего периода. Ноль означает, что платить сейчас не нужно вовсе: так выглядит и понижение, и изменение на пробе, у которой оплаченного периода ещё нет. Когда заполнено period_start, это цена ПОЛНОГО первого периода
-	ProrationAmount map[string]json.RawMessage `json:"proration_amount"`
-	// ProrationLines — Из чего доплата сложилась: тариф с модулями, места сверх пакета, гигабайты сверх пакета. Ровно эти строки печатает счёт, и их сумма равна proration_amount — счёт печатается строками, и сумма счёта это сумма его строк. Строка может быть отрицательной: клиент, перешедший на тариф дороже и одновременно снявший доплаченные места, платит разницу, и снятые места обязаны быть в счёте видны. Пусто, когда доплаты нет
-	ProrationLines []BillingInvoiceLine `json:"proration_lines"`
-	Currency       string               `json:"currency"`
-	// NextAmount — Сумма следующего списания уже по новым условиям, за расчётный период
-	NextAmount map[string]json.RawMessage `json:"next_amount"`
-	// NextChargeAt — У пробы это дата её окончания: с неё клиент начинает платить
-	NextChargeAt *string `json:"next_charge_at"`
-	// Effective — now — применяется сразу и оплачивается прорацией; period_end — откладывается до конца оплаченного периода. Правило одно: изменение, за которое клиент платит больше, применяется сейчас, всё остальное — с конца периода. Смена ритма оплаты всегда ждёт конца периода
-	Effective string `json:"effective"`
-	// PeriodStart — Начало первого оплачиваемого периода. Заполнено у платной подписки без оплаченного периода (назначена оператором, переведена вручную, проба закончилась без тарифа): изменение выставляет счёт за полный период [period_start, next_charge_at), и его оплата открывает этот период. null у пробы и у подписки с открытым периодом
-	PeriodStart *string `json:"period_start,omitempty"`
-}
-
-// BillingChangeResult — Новое состояние экрана подписки и счёт, если доплачивать было за что
-type BillingChangeResult struct {
-	Subscription BillingCabinetSubscription `json:"subscription"`
-	Invoice      *BillingInvoice            `json:"invoice"`
-	// ModulesSync — Что стало с составом модулей кабинета. Приходит только когда состав реально изменился или часть его до кабинета не доехала; null или отсутствие поля означают «состав уже совпадал с правами» — так выглядит отложенное понижение, при котором сегодня не изменилось ничего
-	ModulesSync *BillingModuleSyncReport `json:"modules_sync,omitempty"`
-}
-
-// BillingEntitlements — Что подписка РАЗРЕШАЕТ кабинету. Состав модулей кабинета ВЫВОДИТСЯ отсюда: после каждого изменения подписки он приводится к этим правам, и руками продуктовые модули больше не включают. Клиентские ext-модули и кабинеты без подписки — исключения: первых не бывает ни в тарифе, ни в пробе, вторые работали до биллинга и не ограничиваются. Места и гигабайты по-прежнему только считаются и показываются, кроме потолка хранилища — его сравнивает с занятым рамка загрузки файла
-type BillingEntitlements struct {
-	// Unlimited — Кабинет без подписки ЛИБО кабинет, которому весь продукт открыт решением оператора: внутренний кабинет Akeda (internal) и клиент на внедрении (pilot). Ограничений нет
-	Unlimited bool `json:"unlimited"`
-	// Modules — Разрешённые ключи модулей; null при unlimited — пустая карта читалась бы как «ни одного модуля»
-	Modules map[string]bool `json:"modules"`
-	// SeatsLimit — null означает «без лимита»
-	SeatsLimit        *int64 `json:"seats_limit"`
-	StorageLimitBytes *int64 `json:"storage_limit_bytes"`
-	// ReadOnly — Кабинету оставлено только чтение: подписка приостановлена за неплатёж или расторгнута. Модули при этом НЕ отбираются — данные остаются видимыми и выгружаемыми, — а любая изменяющая операция отвечает 402 billing.read_only
-	ReadOnly bool `json:"read_only"`
-}
-
-// BillingInvoice — Счёт Akeda кабинету. Живёт в control plane, а не в базе клиента: иначе администратор кабинета правил бы собственный счёт, а история платежей не пережила бы пересоздание его базы
-type BillingInvoice struct {
-	ID string `json:"id"`
-	// Number — Внутренний номер начисления control plane; юридический номер счёта — document_number
-	Number string `json:"number"`
-	// OrderExternalID — Устойчивый внешний номер заказа в кабинете продавца
-	OrderExternalID *string `json:"order_external_id,omitempty"`
-	// DocumentID — Счёт в документообороте продавца
-	DocumentID *string `json:"document_id,omitempty"`
-	// DocumentNumber — Номер родного счёта продавца для назначения платежа
-	DocumentNumber *string `json:"document_number,omitempty"`
-	// ActDocumentID — Закрывающий акт по подтверждённой оплате картой или СБП
-	ActDocumentID  *string          `json:"act_document_id,omitempty"`
-	Tenant         BillingTenantRef `json:"tenant"`
-	SubscriptionID *string          `json:"subscription_id"`
-	// Status — issued — выставлен, срок не вышел; overdue — срок вышел, доступ ещё полный; paid — оплачен; cancelled — отозван. Удаления нет вовсе
-	Status string `json:"status"`
-	// Purpose — Назначение платежа: его клиент прочитает в банке через месяц
-	Purpose     string       `json:"purpose"`
-	Amount      BillingMoney `json:"amount"`
-	Currency    string       `json:"currency"`
-	IssuedAt    string       `json:"issued_at"`
-	DueAt       string       `json:"due_at"`
-	PaidAt      *string      `json:"paid_at"`
-	CancelledAt *string      `json:"cancelled_at"`
-	// Lines — Строки счёта как они напечатаны. У счёта на доплату их столько, сколько слагаемых изменилось: тариф с модулями, места сверх пакета, гигабайты сверх пакета. Сумма строк равна amount
-	Lines []BillingInvoiceLine `json:"lines"`
-	// PaymentProvider — Ключ эквайринга, которым заказан платёж («tochka»). Пусто, когда эквайринг не подключён либо ссылку получить не удалось: счёт тогда оплачивают по реквизитам, и это постоянный путь, а не запасной
-	PaymentProvider string `json:"payment_provider"`
-	// PaymentURL — Куда отправить плательщика. Пусто, пока платёжная ссылка не заказана
-	PaymentURL string `json:"payment_url"`
-	// ProviderPaymentID — Личность платежа у банка. По ней уведомление об оплате находит свой счёт: номер заказа провайдер возвращать не обязан, а искать счёт по сумме значило бы засчитать чужие деньги
-	ProviderPaymentID string `json:"provider_payment_id"`
-}
-
-// BillingInvoiceLine — Строка счёта как она напечатана: за что и сколько
-type BillingInvoiceLine struct {
-	Description string       `json:"description"`
-	Amount      BillingMoney `json:"amount"`
-}
-
-type BillingInvoicePage struct {
-	Invoices []BillingInvoice `json:"invoices"`
-}
-
-type BillingInvoiceResult struct {
-	Invoice BillingInvoice `json:"invoice"`
-}
-
-// BillingModuleSyncFailure — Модуль, который привести к составу подписки не удалось
-type BillingModuleSyncFailure struct {
-	Module string `json:"module"`
-	// Reason — Почему не удалось — человеческим текстом
-	Reason string `json:"reason"`
-}
-
-// BillingModuleSyncReport — Что стало с составом модулей кабинета после изменения подписки. Приходит ТОЛЬКО когда состав реально изменился или часть его до кабинета не доехала; отсутствие поля означает «состав уже совпадал с правами». Непустой failed означает, что подписка изменена и, возможно, оплачена, а модуль до кабинета не доехал: включение модуля накатывает его миграции в базу кабинета и может не удаться по причине, к подписке отношения не имеющей. Подписку это не откатывает — отменять оплаченное решение из-за чужой поломки значило бы потерять оплату
-type BillingModuleSyncReport struct {
-	Enabled  []string                   `json:"enabled"`
-	Disabled []string                   `json:"disabled"`
-	Failed   []BillingModuleSyncFailure `json:"failed,omitempty"`
-}
-
-type BillingMoney = string
-
-// BillingOpeningState — Тариф подключён, а первый оплаченный период не открыт. Экран предлагает оплату: открывает уже выставленный счёт или выставляет его на нынешний состав через POST /settings/subscription/change
-type BillingOpeningState struct {
-	Amount   BillingMoney `json:"amount"`
-	Currency string       `json:"currency"`
-	// InvoiceID — Выставленный и не оплаченный счёт первого периода; null — счёта ещё нет
-	InvoiceID     *string `json:"invoice_id"`
-	InvoiceNumber *string `json:"invoice_number,omitempty"`
-}
-
-// BillingPastDueState — Неоплаченный счёт и дата ограничения доступа. Считается по САМОМУ СТАРОМУ просроченному счёту: его срок наступит первым. Само ограничение в этой фазе не включается — число показывается, решение принимает владелец
-type BillingPastDueState struct {
-	InvoiceID     string       `json:"invoice_id"`
-	InvoiceNumber string       `json:"invoice_number"`
-	Amount        BillingMoney `json:"amount"`
-	Currency      string       `json:"currency"`
-	RestrictAt    string       `json:"restrict_at"`
-	DaysLeft      int64        `json:"days_left"`
-}
-
-// BillingPaymentMethod — СОХРАНЁННАЯ карта для автоплатежа. Сегодня всегда null: рекуррентное списание подключается отдельной работой. Разовую оплату счёта картой это не трогает — ссылка на неё живёт в самом счёте (payment_url)
-type BillingPaymentMethod struct {
-	Kind  string `json:"kind"`
-	Last4 string `json:"last4"`
-}
-
-// BillingPendingChange — Заявка клиента, применяемая суточным обходом с конца оплаченного периода
-type BillingPendingChange struct {
-	PlanKey       string   `json:"plan_key"`
-	AddonKeys     []string `json:"addon_keys"`
-	BillingPeriod string   `json:"billing_period"`
-	EffectiveAt   string   `json:"effective_at"`
-}
-
-// BillingPilotState — Идущее внедрение глазами клиента
-type BillingPilotState struct {
-	// HandoverAt — Плановая дата передачи кабинета. null — срок ещё не назначен; выдуманная дата хуже отсутствующей, клиент запомнит именно её
-	HandoverAt *string `json:"handover_at"`
-}
-
-// BillingPlan — Тариф как предложение. Цена и состав лежат не здесь, а в версии
-type BillingPlan struct {
-	ID string `json:"id"`
-	// Key — Ключ-slug: им тариф назначают и по нему ищут
-	Key string `json:"key"`
-	// Kind — plan — готовый тариф: пакет модулей, мест и гигабайтов. module — отдельное дополнение, которое подключают к любому тарифу: РОВНО ОДИН модуль и его цена, без мест, гигабайтов и доплат. constructor — тариф-конструктор «Соберите свой»: основание с ценой, пакетом и доплатами и БЕЗ единого модуля внутри, их клиент набирает сам теми же дополнениями. Конструктор на платформе один
-	Kind string `json:"kind"`
-	Name string `json:"name"`
-	// Tagline — «Для кого этот тариф» одной строкой под именем в карточке
-	Tagline     string `json:"tagline"`
-	Description string `json:"description"`
-	// IsPublic — Показывать ли тариф в витрине; индивидуальный тариф клиента существует, но в витрине его нет
-	IsPublic bool `json:"is_public"`
-	// IsArchived — Новым не предлагают; действующие подписки на нём остаются
-	IsArchived bool `json:"is_archived"`
-	// IsRecommended — Витрина выделяет его обводкой и чипом «Рекомендуем»
-	IsRecommended bool   `json:"is_recommended"`
-	SortOrder     int64  `json:"sort_order"`
-	CreatedAt     string `json:"created_at"`
-	UpdatedAt     string `json:"updated_at"`
-	// Current — Действующая версия условий; в карточке подписки — та версия, на которую ссылается подписка
-	Current *BillingPlanVersion `json:"current"`
-}
-
-// BillingPlanVersion — Условия тарифа на дату. Строка НЕИЗМЕНЯЕМА: подписка ссылается именно на неё, и правка означала бы переписанный задним числом договор. Срока пробного периода здесь нет: проба даётся кабинету ДО того, как он выбрал тариф, и её срок — правило платформы (BillingTrialSettings)
-type BillingPlanVersion struct {
-	ID     string `json:"id"`
-	PlanID string `json:"plan_id"`
-	// Version — Номер версии, назначает сервер
-	Version int64 `json:"version"`
-	// Currency — Код валюты ISO 4217
-	Currency string `json:"currency"`
-	// PriceMonth — Цена за месяц при ПОМЕСЯЧНОЙ оплате
-	PriceMonth map[string]json.RawMessage `json:"price_month"`
-	// PriceYear — Цена ЗА МЕСЯЦ при оплате за год — та самая, которую карточка пишет как «12 000 ₽/мес при оплате за год». За расчётный период с кабинета берут её двенадцатикратно. НОЛЬ означает, что годовой оплаты у тарифа нет вовсе, а не «бесплатно за год»
-	PriceYear map[string]json.RawMessage `json:"price_year"`
-	// Modules — Ключи ПРОДУКТОВЫХ модулей платформы, которые разрешает тариф. core и settings сюда не пишут: без справочников и настроек кабинета нет вовсе, они включены всегда. Клиентских ext-модулей здесь тоже не бывает: они написаны под один кабинет и общим предложением не продаются
-	Modules []string `json:"modules"`
-	// SeatsIncluded — Мест в пакете; НОЛЬ означает «без лимита», а не «ноль мест»
-	SeatsIncluded int64 `json:"seats_included"`
-	// StorageIncludedGb — Гигабайтов в пакете; ноль означает «без лимита»
-	StorageIncludedGb int64        `json:"storage_included_gb"`
-	PricePerSeat      BillingMoney `json:"price_per_seat"`
-	PricePerGb        BillingMoney `json:"price_per_gb"`
-	EffectiveFrom     string       `json:"effective_from"`
-	CreatedAt         string       `json:"created_at"`
-}
-
-// BillingPublicCatalog — Публичная витрина: только продаваемые сегодня предложения. Пустые списки приходят как [], а не null — клиент, получивший null, показал бы «не загрузилось» вместо честной пустой страницы
-type BillingPublicCatalog struct {
-	// Currency — Валюта всех цен витрины. Одна на ответ: две цены в разных валютах рядом человек не сложит
-	Currency string `json:"currency"`
-	// TrialDays — Сколько дней бесплатной работы получает новый кабинет. Приходит из правил платформы, а не из вёрстки: правка срока оператором обязана доехать до посетителя тем же днём
-	TrialDays int64               `json:"trial_days"`
-	Plans     []BillingPublicPlan `json:"plans"`
-	// Modules — Отдельные карточки модулей, которые оператор оставил видимыми
-	Modules []BillingPublicPlan `json:"modules"`
-	// ConstructorModules — Все неархивные модули с действующей ценой, которые можно выбрать в конструкторе. Включает модули со скрытой самостоятельной карточкой: глаз управляет одним предложением, а не составом другого
-	ConstructorModules []BillingPublicPlan `json:"constructor_modules"`
-	// Constructor — Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из constructor_modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой
-	Constructor *BillingPublicPlan `json:"constructor,omitempty"`
-}
-
-// BillingPublicPlan — Тариф или отдельный модуль глазами страницы тарифов
-type BillingPublicPlan struct {
-	// Key — Ключ-slug: им предложение выбирают при смене тарифа
-	Key string `json:"key"`
-	// Kind — plan — готовый тариф (пакет модулей, мест и гигабайтов), module — отдельное дополнение к любому тарифу, constructor — основание тарифа «Соберите свой» без единого модуля внутри
-	Kind string `json:"kind"`
-	Name string `json:"name"`
-	// Tagline — «Для кого это» одной строкой под именем в карточке
-	Tagline string `json:"tagline"`
-	// IsRecommended — Витрина выделяет предложение обводкой и чипом «Рекомендуем»
-	IsRecommended bool                     `json:"is_recommended"`
-	SortOrder     int64                    `json:"sort_order"`
-	Current       BillingPublicPlanVersion `json:"current"`
-}
-
-// BillingPublicPlanVersion — Условия публичного предложения на сегодня. Номера версии и дат здесь нет: страницу тарифов читает посторонний, и внутреннее устройство каталога его не касается
-type BillingPublicPlanVersion struct {
-	// PriceMonth — Цена за месяц при ПОМЕСЯЧНОЙ оплате
-	PriceMonth map[string]json.RawMessage `json:"price_month"`
-	// PriceYear — Цена ЗА МЕСЯЦ при оплате за год — та самая, которую карточка пишет как «12 000 ₽/мес при оплате за год». Ноль означает, что годовой оплаты у предложения нет вовсе, а не «бесплатно за год»
-	PriceYear map[string]json.RawMessage `json:"price_year"`
-	// Modules — Ключи продуктовых модулей, которые даёт предложение; у отдельного модуля их ровно один
-	Modules []string `json:"modules"`
-	// SeatsIncluded — Мест в пакете; НОЛЬ означает «без лимита», а не «ноль мест»
-	SeatsIncluded int64 `json:"seats_included"`
-	// StorageIncludedGb — Гигабайтов в пакете; ноль означает «без лимита»
-	StorageIncludedGb int64 `json:"storage_included_gb"`
-	// PricePerSeat — Цена места сверх пакета, ЗА МЕСЯЦ. Годовой скидки у доплат нет: отдельной годовой цены в условиях не существует
-	PricePerSeat map[string]json.RawMessage `json:"price_per_seat"`
-	// PricePerGb — Цена гигабайта сверх пакета, за месяц
-	PricePerGb map[string]json.RawMessage `json:"price_per_gb"`
-}
-
-type BillingReferralCabinetRow struct {
-	TenantName string  `json:"tenant_name"`
-	JoinedAt   string  `json:"joined_at"`
-	PaidAt     *string `json:"paid_at,omitempty"`
-	RewardType *string `json:"reward_type,omitempty"`
-	Reward     *string `json:"reward,omitempty"`
-	RewardCode *string `json:"reward_code,omitempty"`
-	EarnedAt   *string `json:"earned_at,omitempty"`
-	AppliedAt  *string `json:"applied_at,omitempty"`
-	Status     string  `json:"status"`
-}
-
-type BillingReferralCabinetSummary struct {
-	Code           string                      `json:"code"`
-	Status         string                      `json:"status"`
-	Offer          *BillingReferralOffer       `json:"offer,omitempty"`
-	Clicks         int64                       `json:"clicks"`
-	Registrations  int64                       `json:"registrations"`
-	PaidClients    int64                       `json:"paid_clients"`
-	PendingRewards int64                       `json:"pending_rewards"`
-	Currency       string                      `json:"currency"`
-	Referrals      []BillingReferralCabinetRow `json:"referrals"`
-}
-
-type BillingReferralOffer struct {
-	ProgramID         string       `json:"program_id"`
-	Name              string       `json:"name"`
-	RewardType        string       `json:"reward_type"`
-	RewardCalculation string       `json:"reward_calculation"`
-	RewardAmount      BillingMoney `json:"reward_amount"`
-	RewardPercent     BillingMoney `json:"reward_percent"`
-	RewardCap         BillingMoney `json:"reward_cap"`
-	RewardDays        int64        `json:"reward_days"`
-	MinimumPayment    BillingMoney `json:"minimum_payment"`
-	HoldDays          int64        `json:"hold_days"`
-	Currency          string       `json:"currency"`
-}
-
-// BillingRequisites — Реквизиты получателя для счёта «по реквизитам». Пустые значения законны, пока владелец их не задал: вкладку «По реквизитам» кабинету тогда просто не показывают
-type BillingRequisites struct {
-	Recipient string `json:"recipient"`
-	INN       string `json:"inn"`
-	KPP       string `json:"kpp"`
-	Account   string `json:"account"`
-	Bank      string `json:"bank"`
-	Bik       string `json:"bik"`
-}
-
-// BillingSnap — Срез состояния подписки для экрана «Сейчас | Станет»
-type BillingSnap struct {
-	PlanKey  string `json:"plan_key"`
-	PlanName string `json:"plan_name"`
-	// Addons — Ключи подключённых дополнений
-	Addons []string `json:"addons"`
-	// SeatsLimit — ОБЩИЙ потолок мест: пакет тарифа либо доплаченный сверх него. null — без ограничения
-	SeatsLimit *int64 `json:"seats_limit"`
-	// StorageLimitGb — Общий потолок хранилища в ГБ; null — без ограничения
-	StorageLimitGb *int64 `json:"storage_limit_gb"`
-	// AmountPerPeriod — Сумма за ОДИН расчётный период: при помесячной оплате это месячная цена, при годовой — она же, умноженная на двенадцать. Цена «за месяц при оплате за год» живёт в версии тарифа (price_year), а здесь именно то, что спишут одним платежом
-	AmountPerPeriod map[string]json.RawMessage `json:"amount_per_period"`
-	BillingPeriod   string                     `json:"billing_period"`
-}
-
-// BillingSubscription — Подписка кабинета; строка на кабинет ровно одна
-type BillingSubscription struct {
-	ID       string `json:"id"`
-	TenantID string `json:"tenant_id"`
-	// PlanVersionID — Версия тарифа, на условиях которой живёт кабинет. null у ПРОБНОЙ подписки: тариф выбирают, посмотрев продукт, а не до того
-	PlanVersionID *string `json:"plan_version_id"`
-	// Status — internal — ВНУТРЕННИЙ кабинет Akeda: разрешено всё, счета не выставляются, просрочки не бывает, в MRR и в воронку он не входит. Отдельное состояние, а не отсутствие подписки: кабинет без строки тоже ни в чём не ограничен, но это ответ «мы про него ничего не решали», а internal — записанное решение оператора с причиной и автором в журнале. pilot — ВНЕДРЕНИЕ: кабинет КЛИЕНТА, который мы ведём до передачи. Права те же, что у internal, а смысл другой, и путать их нельзя: внедрение кончается платящим клиентом, а собственный кабинет вендора — нет. В MRR не входит, но считается отдельным счётчиком pilot_count
-	Status string `json:"status"`
-	// BillingPeriod — Ритм оплаты, выбранный кабинетом. Лежит в подписке, а не в версии тарифа: тариф предлагает обе цены, а выбирает между ними клиент
-	BillingPeriod string `json:"billing_period"`
-	// TrialEndsAt — Дата окончания пробного периода
-	TrialEndsAt *string `json:"trial_ends_at"`
-	// CurrentPeriodStart — Границы оплаченного периода. В фазе 1 поле хранится, но не заполняется: его поставит биллинговый цикл
-	CurrentPeriodStart *string `json:"current_period_start"`
-	CurrentPeriodEnd   *string `json:"current_period_end"`
-	// SeatsOverride — Договорённость поверх пакета тарифа; null означает «как в тарифе», а не ноль
-	SeatsOverride     *int64 `json:"seats_override"`
-	StorageOverrideGb *int64 `json:"storage_override_gb"`
-	// CancelAt — Момент расторжения; снимается при возобновлении
-	CancelAt *string `json:"cancel_at"`
-	// PilotHandoverAt — Плановая дата передачи кабинета клиенту. Заполнена только во время внедрения (status = pilot) и НЕОБЯЗАТЕЛЬНА даже там: внедрение начинают и без назначенного срока, а выдуманная дата хуже отсутствующей. Снимается при выходе из внедрения — дата передачи, пережившая передачу, напоминала бы о том, что уже случилось
-	PilotHandoverAt *string `json:"pilot_handover_at"`
-	// AccessLostAt — День, когда кабинет ПЕРЕСТАЛ РАБОТАТЬ: был приостановлен за неплатёж или расторгнут. С него идёт срок хранения данных. null у работающего кабинета; возврат в работу дату снимает
-	AccessLostAt *string `json:"access_lost_at"`
-	// TenantPurgedAt — Когда данные кабинета были удалены безвозвратно. Заполнено у подписки, пережившей свой кабинет: сам договор и счета по нему мы храним дальше — это бухгалтерский учёт Akeda, а не данные клиента
-	TenantPurgedAt *string `json:"tenant_purged_at"`
-	// PendingChange — Понижение, отложенное до конца оплаченного периода. null — ничего не отложено. Заявка у подписки ровно одна: следующее решение клиента заменяет предыдущее целиком
-	PendingChange *BillingPendingChange `json:"pending_change"`
-	// Addons — Подключённые сейчас дополнения; снятые сюда не попадают — их история в журнале
-	Addons    []BillingSubscriptionAddonsItem `json:"addons"`
-	CreatedAt string                          `json:"created_at"`
-	UpdatedAt string                          `json:"updated_at"`
-}
-
-type BillingSubscriptionAddonsItem struct {
-	PlanKey       string `json:"plan_key"`
-	PlanVersionID string `json:"plan_version_id"`
-	AddedAt       string `json:"added_at"`
-}
-
-// BillingTenantRef — Кабинет — единица подписки; кабинет не является юрлицом
-type BillingTenantRef struct {
-	ID       string `json:"id"`
-	Slug     string `json:"slug"`
-	Name     string `json:"name"`
-	IsActive bool   `json:"is_active"`
-}
-
-// BillingTrialState — Сколько бесплатных дней осталось из выданных
-type BillingTrialState struct {
-	EndsAt    string `json:"ends_at"`
-	DaysLeft  int64  `json:"days_left"`
-	DaysTotal int64  `json:"days_total"`
-}
-
-// BillingUsageCollectError — Источник, который посчитать не удалось. Живёт В СНИМКЕ, а не только в логе: снимок с семью цифрами из восьми внешне неотличим от полного, и разницу обязан называть он сам.
-type BillingUsageCollectError struct {
-	// Module — Ключ раздела; database — размер базы кабинета, members — счёт участников
-	Module string `json:"module"`
-	// Message — Технический текст отказа для оператора платформы
-	Message string `json:"message"`
-}
-
-// BillingUsageModuleBytes — Строка разбивки для интерфейса. Подпись ставит сервер по реестру разделов платформы
-type BillingUsageModuleBytes struct {
-	Key   string `json:"key"`
-	Label string `json:"label"`
-	Bytes int64  `json:"bytes"`
-}
-
-// BillingUsageSnapshot — Одно измерение потребления кабинета. storage_bytes_total — сумма bytes_by_module; db_size_bytes в неё НЕ входит, это другой ресурс (место в PostgreSQL против места в объектном хранилище), и сложение их в одно число врало бы про оба.
-type BillingUsageSnapshot struct {
-	ID       string `json:"id"`
-	TenantID string `json:"tenant_id"`
-	// TakenAt — Момент, о котором снимок говорит
-	TakenAt string `json:"taken_at"`
-	// ActiveMembers — Активные членства кабинета
-	ActiveMembers int64 `json:"active_members"`
-	// StorageBytesTotal — Сумма разбивки по разделам
-	StorageBytesTotal int64 `json:"storage_bytes_total"`
-	// BytesByModule — Карта «ключ раздела → байты». Раздел, выключенный у кабинета, в карту не попадает вовсе
-	BytesByModule map[string]int64 `json:"bytes_by_module"`
-	// DBSizeBytes — pg_database_size базы кабинета
-	DBSizeBytes int64 `json:"db_size_bytes"`
-	// Source — scheduled — суточный обход, manual — ручной пересчёт оператором
-	Source string `json:"source"`
-	// DurationMs — Сколько занял сбор
-	DurationMs int64 `json:"duration_ms"`
-	// Errors — Источники, которые посчитать не удалось. Пустой массив означает полный сбор
-	Errors []BillingUsageCollectError `json:"errors"`
-}
-
 // CRMActivity — Лента только дописывается
 type CRMActivity struct {
 	ID         UUID   `json:"id"`
@@ -1248,13 +753,6 @@ type CRMCreateEventLinkInput struct {
 	Timezone *string `json:"timezone,omitempty"`
 }
 
-type CRMCreateHubMeetingInput struct {
-	ProjectID       string  `json:"project_id"`
-	CalendarEventID UUID    `json:"calendar_event_id"`
-	Title           *string `json:"title,omitempty"`
-	StartsAt        *string `json:"starts_at,omitempty"`
-}
-
 type CRMCreateTaskLinkInput struct {
 	SectionID   UUID    `json:"section_id"`
 	Title       string  `json:"title"`
@@ -1342,11 +840,6 @@ type CRMCustomerInput struct {
 	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
-type CRMCustomerLinkInput struct {
-	// Position — Должность человека в компании
-	Position *string `json:"position,omitempty"`
-}
-
 type CRMCustomerPatch struct {
 	Kind      *string `json:"kind,omitempty"`
 	Name      *string `json:"name,omitempty"`
@@ -1365,13 +858,6 @@ type CRMCustomerPatch struct {
 	Archived   *bool             `json:"archived,omitempty"`
 	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
 	Custom map[string]json.RawMessage `json:"custom,omitempty"`
-}
-
-type CRMCustomerRelations struct {
-	// Companies — Компании, в которых работает человек
-	Companies []CRMRelatedCustomer `json:"companies"`
-	// Contacts — Контакты компании
-	Contacts []CRMRelatedCustomer `json:"contacts"`
 }
 
 type CRMDeal struct {
@@ -1455,11 +941,6 @@ type CRMDealContact struct {
 	CreatedAt string `json:"created_at"`
 }
 
-type CRMDealContactInput struct {
-	ContactID UUID  `json:"contact_id"`
-	IsPrimary *bool `json:"is_primary,omitempty"`
-}
-
 type CRMDealInput struct {
 	PipelineID UUID   `json:"pipeline_id"`
 	StageID    UUID   `json:"stage_id"`
@@ -1494,16 +975,6 @@ type CRMDealItem struct {
 	Total     int64  `json:"total"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
-}
-
-type CRMDealItemInput struct {
-	Name      string  `json:"name"`
-	ProductID *string `json:"product_id,omitempty"`
-	Quantity  float64 `json:"quantity"`
-	Unit      *string `json:"unit,omitempty"`
-	// Price — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
-	Price           *string  `json:"price,omitempty"`
-	DiscountPercent *float64 `json:"discount_percent,omitempty"`
 }
 
 type CRMDealPatch struct {
@@ -1576,248 +1047,6 @@ type CRMExternalLink struct {
 	CreatedAt  string `json:"created_at"`
 }
 
-type CRMImportApplyInput struct {
-	Token string `json:"token"`
-}
-
-type CRMImportCandidate struct {
-	ID        UUID     `json:"id"`
-	Kind      string   `json:"kind"`
-	Name      string   `json:"name"`
-	Phone     string   `json:"phone"`
-	Email     string   `json:"email"`
-	INN       string   `json:"inn"`
-	MatchedBy []string `json:"matched_by"`
-}
-
-type CRMImportConnectInput struct {
-	// Account — amoCRM: поддомен или адрес аккаунта (name, name.amocrm.ru, name.kommo.com). Битрикс24: не нужен, портал берётся из адреса вебхука
-	Account *string `json:"account,omitempty"`
-	// Token — amoCRM: долгосрочный токен администратора. Битрикс24: адрес входящего вебхука https://портал.bitrix24.ru/rest/<номер>/<ключ>/
-	Token string `json:"token"`
-	// IncludeUnsorted — amoCRM: перенести неразобранное лидами
-	IncludeUnsorted *bool `json:"include_unsorted,omitempty"`
-	// UpdatedSince — Дозагрузка: только записи, изменённые после этого момента
-	UpdatedSince *string `json:"updated_since,omitempty"`
-}
-
-type CRMImportDecision struct {
-	Action     *string              `json:"action,omitempty"`
-	EntityID   *UUID                `json:"entity_id,omitempty"`
-	Origin     *string              `json:"origin,omitempty"`
-	Candidates []CRMImportCandidate `json:"candidates,omitempty"`
-}
-
-type CRMImportDecisionInput struct {
-	Action   *string `json:"action,omitempty"`
-	EntityID *UUID   `json:"entity_id,omitempty"`
-}
-
-type CRMImportExtractInput struct {
-	Sheets []CRMImportSheetMapping `json:"sheets"`
-}
-
-type CRMImportExtractResult struct {
-	Run     CRMImportRun        `json:"run"`
-	Added   int64               `json:"added"`
-	Records int64               `json:"records"`
-	Issues  []CRMImportRowIssue `json:"issues"`
-}
-
-type CRMImportField struct {
-	Key      string `json:"key"`
-	Required bool   `json:"required"`
-}
-
-type CRMImportFields struct {
-	// Entities — Вид листа -> поля: companies, contacts, leads, deals, tasks, notes
-	Entities map[string][]CRMImportField `json:"entities"`
-}
-
-type CRMImportFileInfo struct {
-	Filename string               `json:"filename"`
-	Format   string               `json:"format"`
-	Sheets   []CRMImportSheetInfo `json:"sheets"`
-	// Warnings — Сколько ячеек с формулами прочитано по сохранённому значению
-	Warnings int64 `json:"warnings"`
-}
-
-type CRMImportInspectInput struct {
-	Sheet     string  `json:"sheet"`
-	HeaderRow *int64  `json:"header_row,omitempty"`
-	Entity    *string `json:"entity,omitempty"`
-}
-
-type CRMImportMapping struct {
-	Owners            map[string]int64  `json:"owners,omitempty"`
-	Pipelines         map[string]UUID   `json:"pipelines,omitempty"`
-	Stages            map[string]UUID   `json:"stages,omitempty"`
-	LossReasons       map[string]UUID   `json:"loss_reasons,omitempty"`
-	Sources           map[string]string `json:"sources,omitempty"`
-	DefaultPipeline   *UUID             `json:"default_pipeline,omitempty"`
-	DefaultStage      *UUID             `json:"default_stage,omitempty"`
-	DefaultLossReason *UUID             `json:"default_loss_reason,omitempty"`
-	DefaultCurrency   *string           `json:"default_currency,omitempty"`
-}
-
-type CRMImportMappingInput struct {
-	Revision int64            `json:"revision"`
-	Mapping  CRMImportMapping `json:"mapping"`
-}
-
-type CRMImportOptions struct {
-	// Values — owners, stages, sources, currencies, loss_reasons
-	Values      map[string][]CRMImportValue `json:"values"`
-	Members     []CRMUserRef                `json:"members"`
-	Pipelines   []CRMPipeline               `json:"pipelines"`
-	LeadSources []CRMLeadSource             `json:"lead_sources"`
-	LossReasons []CRMLossReason             `json:"loss_reasons"`
-	// SourcePipelines — Воронки источника-коннектора; у файла пусто
-	SourcePipelines []CRMImportSourcePipeline `json:"source_pipelines"`
-	Suggested       CRMImportMapping          `json:"suggested"`
-}
-
-type CRMImportPreview struct {
-	Token     string           `json:"token"`
-	Revision  int64            `json:"revision"`
-	Total     int64            `json:"total"`
-	Create    int64            `json:"create"`
-	Link      int64            `json:"link"`
-	Existing  int64            `json:"existing"`
-	Skip      int64            `json:"skip"`
-	Conflicts int64            `json:"conflicts"`
-	ByKind    map[string]int64 `json:"by_kind"`
-}
-
-type CRMImportRecord struct {
-	ID              UUID                       `json:"id"`
-	RunID           UUID                       `json:"run_id"`
-	Seq             int64                      `json:"seq"`
-	Kind            string                     `json:"kind"`
-	ExternalID      string                     `json:"external_id"`
-	SourceCreatedAt *string                    `json:"source_created_at,omitempty"`
-	SourceUpdatedAt *string                    `json:"source_updated_at,omitempty"`
-	IsDeleted       bool                       `json:"is_deleted"`
-	MergedInto      string                     `json:"merged_into"`
-	Payload         map[string]json.RawMessage `json:"payload"`
-	Status          string                     `json:"status"`
-	Decision        CRMImportDecision          `json:"decision"`
-	Error           string                     `json:"error"`
-	EntityType      string                     `json:"entity_type"`
-	EntityID        *UUID                      `json:"entity_id,omitempty"`
-	CreatedEntity   bool                       `json:"created_entity"`
-	AppliedAt       *string                    `json:"applied_at,omitempty"`
-}
-
-type CRMImportRevisionInput struct {
-	Revision int64 `json:"revision"`
-}
-
-type CRMImportRollback struct {
-	Deleted  int64                   `json:"deleted"`
-	Archived int64                   `json:"archived"`
-	Touched  []UUID                  `json:"touched"`
-	Kept     []CRMImportRollbackKept `json:"kept"`
-}
-
-type CRMImportRollbackKept struct {
-	EntityID UUID   `json:"entity_id"`
-	Kind     string `json:"kind"`
-	Archived bool   `json:"archived"`
-	Reason   string `json:"reason"`
-}
-
-type CRMImportRowIssue struct {
-	Sheet   string `json:"sheet"`
-	Row     int64  `json:"row"`
-	Message string `json:"message"`
-}
-
-type CRMImportRun struct {
-	ID              UUID                       `json:"id"`
-	SourceKind      string                     `json:"source_kind"`
-	SourceSystem    string                     `json:"source_system"`
-	SourceAccount   string                     `json:"source_account"`
-	Status          string                     `json:"status"`
-	Scope           map[string]json.RawMessage `json:"scope"`
-	Mapping         map[string]json.RawMessage `json:"mapping"`
-	Revision        int64                      `json:"revision"`
-	PreviewToken    *string                    `json:"preview_token,omitempty"`
-	BatchSize       int64                      `json:"batch_size"`
-	TotalRecords    int64                      `json:"total_records"`
-	AppliedRecords  int64                      `json:"applied_records"`
-	SkippedRecords  int64                      `json:"skipped_records"`
-	ConflictRecords int64                      `json:"conflict_records"`
-	FailedRecords   int64                      `json:"failed_records"`
-	// HasCredentials — Токен источника сохранён; сам токен API не отдаёт
-	HasCredentials    bool    `json:"has_credentials"`
-	Error             string  `json:"error"`
-	CancelRequestedAt *string `json:"cancel_requested_at,omitempty"`
-	StartedAt         *string `json:"started_at,omitempty"`
-	FinishedAt        *string `json:"finished_at,omitempty"`
-	RolledBackAt      *string `json:"rolled_back_at,omitempty"`
-	CreatedBy         int64   `json:"created_by"`
-	CreatedAt         string  `json:"created_at"`
-	UpdatedAt         string  `json:"updated_at"`
-}
-
-type CRMImportRunInput struct {
-	SourceKind string `json:"source_kind"`
-	// SourceSystem — Система-источник: excel, amocrm, bitrix24
-	SourceSystem string `json:"source_system"`
-	// SourceAccount — Аккаунт в системе: поддомен amoCRM, портал Битрикс24
-	SourceAccount *string                    `json:"source_account,omitempty"`
-	Scope         map[string]json.RawMessage `json:"scope,omitempty"`
-	BatchSize     *int64                     `json:"batch_size,omitempty"`
-}
-
-type CRMImportSheetInfo struct {
-	Name      string     `json:"name"`
-	Rows      int64      `json:"rows"`
-	HeaderRow int64      `json:"header_row"`
-	Headers   []string   `json:"headers"`
-	Sample    [][]string `json:"sample"`
-	// Suggested — Заголовок -> предложенное поле
-	Suggested map[string]string `json:"suggested,omitempty"`
-}
-
-type CRMImportSheetMapping struct {
-	Sheet     string `json:"sheet"`
-	HeaderRow int64  `json:"header_row"`
-	Entity    string `json:"entity"`
-	// Columns — Заголовок колонки -> поле
-	Columns map[string]string `json:"columns"`
-}
-
-type CRMImportSourcePipeline struct {
-	ID       string                 `json:"id"`
-	Name     string                 `json:"name"`
-	Sort     int64                  `json:"sort"`
-	Main     bool                   `json:"main"`
-	Archived bool                   `json:"archived"`
-	Stages   []CRMImportSourceStage `json:"stages"`
-}
-
-type CRMImportSourceStage struct {
-	// Ref — Внешний ID этапа, который несут сделки пакета
-	Ref      string `json:"ref"`
-	Name     string `json:"name"`
-	Sort     int64  `json:"sort"`
-	Category string `json:"category"`
-	Color    string `json:"color"`
-	// Unsorted — Служебное «неразобранное»: в воронку кабинета не попадает
-	Unsorted *bool `json:"unsorted,omitempty"`
-}
-
-type CRMImportValue struct {
-	Value string `json:"value"`
-	Count int64  `json:"count"`
-	// Label — Название значения в источнике-коннекторе (сотрудник, этап, причина)
-	Label *string `json:"label,omitempty"`
-	// Email — Почта сотрудника источника
-	Email *string `json:"email,omitempty"`
-}
-
 type CRMInboxAssignInput struct {
 	// AssignedTo — null снимает назначение
 	AssignedTo *int64 `json:"assigned_to,omitempty"`
@@ -1846,30 +1075,6 @@ type CRMInboxConnection struct {
 	LastErrorCode         *string `json:"last_error_code,omitempty"`
 	CreatedAt             string  `json:"created_at"`
 	UpdatedAt             string  `json:"updated_at"`
-}
-
-type CRMInboxConnectionCheck struct {
-	OK        bool    `json:"ok"`
-	Status    string  `json:"status"`
-	ErrorCode *string `json:"error_code,omitempty"`
-}
-
-type CRMInboxConnectionInput struct {
-	Name     string `json:"name"`
-	Provider string `json:"provider"`
-	// Credentials — Поля из каталога провайдера; хранятся зашифрованными
-	Credentials map[string]string          `json:"credentials,omitempty"`
-	Settings    map[string]json.RawMessage `json:"settings,omitempty"`
-	// BotToken — Историческое поле Telegram; равнозначно credentials.bot_token
-	BotToken      *string `json:"bot_token,omitempty"`
-	WebhookSecret *string `json:"webhook_secret,omitempty"`
-}
-
-type CRMInboxConnectionPatch struct {
-	Name *string `json:"name,omitempty"`
-	// Credentials — Пустое значение сохраняет уже записанный секрет
-	Credentials map[string]string          `json:"credentials,omitempty"`
-	Settings    map[string]json.RawMessage `json:"settings,omitempty"`
 }
 
 type CRMInboxConversation struct {
@@ -1953,15 +1158,6 @@ type CRMInboxMessage struct {
 	CreatedAt         string  `json:"created_at"`
 	// AttachmentCount — Сколько файлов у сообщения; список — GET /api/v1/crm/inbox/messages/{id}/attachments
 	AttachmentCount *int64 `json:"attachment_count,omitempty"`
-}
-
-type CRMInboxOutboundUpload struct {
-	ID             UUID   `json:"id"`
-	ConversationID UUID   `json:"conversation_id"`
-	Filename       string `json:"filename"`
-	ContentType    string `json:"content_type"`
-	SizeBytes      int64  `json:"size_bytes"`
-	ExpiresAt      string `json:"expires_at"`
 }
 
 type CRMInboxProvider struct {
@@ -2160,34 +1356,6 @@ type CRMLeadPatch struct {
 	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
-type CRMLeadSource struct {
-	ID UUID `json:"id"`
-	// Key — Код записи справочника. То, что ложится в lead.source; за штатным кодом стоит код продукта
-	Key string `json:"key"`
-	// Name — Имя - право кабинета; сеятель его не возвращает
-	Name string `json:"name"`
-	// Channel — Канал для цвета и значка; неизвестный приводится к other
-	Channel   string `json:"channel"`
-	SortOrder int64  `json:"sort_order"`
-	// IsActive — Ненужную строку выключают, а не удаляют: на её код ссылаются заведённые лиды
-	IsActive  bool   `json:"is_active"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-}
-
-type CRMLeadSourceInput struct {
-	Name      string  `json:"name"`
-	Channel   *string `json:"channel,omitempty"`
-	SortOrder *int64  `json:"sort_order,omitempty"`
-}
-
-type CRMLeadSourcePatch struct {
-	Name      *string `json:"name,omitempty"`
-	Channel   *string `json:"channel,omitempty"`
-	SortOrder *int64  `json:"sort_order,omitempty"`
-	IsActive  *bool   `json:"is_active,omitempty"`
-}
-
 type CRMLeadStatus = string
 
 type CRMLossReason struct {
@@ -2288,18 +1456,6 @@ type CRMQualifyLeadInput struct {
 	Reason string `json:"reason"`
 	// ReasonID — Причина из справочника вида lead - по ней строится аналитика отказов
 	ReasonID *string `json:"reason_id,omitempty"`
-}
-
-type CRMRelatedCustomer struct {
-	ID        UUID   `json:"id"`
-	Kind      string `json:"kind"`
-	Name      string `json:"name"`
-	LegalName string `json:"legal_name"`
-	INN       string `json:"inn"`
-	Phone     string `json:"phone"`
-	Email     string `json:"email"`
-	// Position — Должность человека в компании
-	Position string `json:"position"`
 }
 
 type CRMReopenDealInput struct {
@@ -2824,18 +1980,6 @@ type CalendarMemberDirectory struct {
 	Items       []CalendarMember       `json:"items"`
 }
 
-type CalendarOAuthCompleteInput struct {
-	Code  string `json:"code"`
-	State string `json:"state"`
-}
-
-type CalendarOAuthStart struct {
-	Provider    string  `json:"provider"`
-	AuthURL     string  `json:"auth_url"`
-	Configured  bool    `json:"configured"`
-	RedirectURI *string `json:"redirect_uri,omitempty"`
-}
-
 type CalendarParticipant struct {
 	ID             UUID   `json:"id"`
 	User           *int64 `json:"user"`
@@ -2852,33 +1996,6 @@ type CalendarParticipantInput struct {
 	ExternalEmail  *string `json:"external_email,omitempty"`
 	Role           *string `json:"role,omitempty"`
 	ResponseStatus *string `json:"response_status,omitempty"`
-}
-
-type CalendarPublicBookInput struct {
-	// StartsAt — ISO instant либо local datetime в timezone ссылки
-	StartsAt   string  `json:"starts_at"`
-	GuestName  *string `json:"guest_name,omitempty"`
-	GuestEmail *string `json:"guest_email,omitempty"`
-	GuestNote  *string `json:"guest_note,omitempty"`
-}
-
-type CalendarPublicBookResult struct {
-	OK       bool   `json:"ok"`
-	StartsAt string `json:"starts_at"`
-	EndsAt   string `json:"ends_at"`
-	Title    string `json:"title"`
-}
-
-type CalendarPublicBookingLink struct {
-	Slug             string                       `json:"slug"`
-	Title            string                       `json:"title"`
-	Description      string                       `json:"description"`
-	DurationMin      int64                        `json:"duration_min"`
-	Timezone         string                       `json:"timezone"`
-	OwnerName        string                       `json:"owner_name"`
-	Participants     []CalendarBookingParticipant `json:"participants"`
-	ParticipantCount int64                        `json:"participant_count"`
-	Company          string                       `json:"company"`
 }
 
 type CalendarSettingsEnvelope struct {
@@ -2904,38 +2021,6 @@ type CalendarSyncResult struct {
 	Message   string            `json:"message"`
 }
 
-type CalendarWebPushConfig struct {
-	PublicKey  string `json:"public_key"`
-	Configured bool   `json:"configured"`
-}
-
-type CalendarWebPushSubscription struct {
-	Endpoint string  `json:"endpoint"`
-	P256dh   string  `json:"p256dh"`
-	Auth     string  `json:"auth"`
-	Device   *string `json:"device,omitempty"`
-}
-
-type CalendarWebPushTestResult struct {
-	// Delivered — Служба доставки браузера приняла пробное уведомление
-	Delivered bool `json:"delivered"`
-	// Revoked — Endpoint протух и снят с учёта; браузеру нужно переподписаться
-	Revoked bool `json:"revoked"`
-	// Retryable — Временный отказ службы доставки; повтор осмыслен
-	Retryable bool `json:"retryable"`
-	// Code — Машинный код исхода: http_429, network_error, device_disabled и подобные
-	Code string `json:"code"`
-}
-
-type CalendarWebPushUnsubscribe struct {
-	Endpoint string `json:"endpoint"`
-}
-
-type ChatAddMember struct {
-	// UserID — Человек кабинета, которого добавляют в группу
-	UserID int64 `json:"user_id"`
-}
-
 type ChatAttachment struct {
 	ID           UUID   `json:"id"`
 	OriginalName string `json:"original_name"`
@@ -2945,25 +2030,6 @@ type ChatAttachment struct {
 	MediaKind    string `json:"media_kind"`
 	DurationMs   int64  `json:"duration_ms"`
 	ContentURL   string `json:"content_url"`
-}
-
-type ChatAttachmentPage struct {
-	Items []ChatForwardedAttachment `json:"items"`
-	// HasMore — Следующая страница доказана прочитанной строкой за границей текущей, а не тем, что страница оказалась полной.
-	HasMore bool `json:"has_more"`
-	// NextCursor — Курсор следующей страницы; присутствует только вместе с has_more=true.
-	NextCursor *string `json:"next_cursor,omitempty"`
-}
-
-// ChatAttachmentUpload — Один файл на запрос. Ссылка на уже загруженный объект не принимается.
-type ChatAttachmentUpload struct {
-	// File — Непустой файл до 100 MiB. Содержимое, распознанное как голос, дополнительно ограничено 20 MiB.
-	File string `json:"file"`
-}
-
-type ChatChangePinResult struct {
-	Pin     *ChatMessagePin `json:"pin,omitempty"`
-	Changed bool            `json:"changed"`
 }
 
 type ChatConversation struct {
@@ -2992,12 +2058,6 @@ type ChatConversation struct {
 	AvatarURL        *string                       `json:"avatar_url,omitempty"`
 	PeerUserID       *int64                        `json:"peer_user_id,omitempty"`
 	PeerAvatarURL    *string                       `json:"peer_avatar_url,omitempty"`
-}
-
-// ChatConversationAvatarUpload — Одно изображение на запрос. Ссылка на уже загруженный объект не принимается.
-type ChatConversationAvatarUpload struct {
-	// File — Непустое изображение до 5 MiB. Распознаются jpeg, png, webp и gif; прочие форматы отвергаются.
-	File string `json:"file"`
 }
 
 type ChatConversationCapabilities struct {
@@ -3029,11 +2089,6 @@ type ChatCreateGroupResult struct {
 	Created      json.RawMessage  `json:"created"`
 }
 
-type ChatEditMessage struct {
-	// Body — Лимит считается по кодовым точкам Unicode после нормализации переводов строк и обрезки пробелов по краям.
-	Body string `json:"body"`
-}
-
 type ChatEnsureDirect struct {
 	PeerUserID int64 `json:"peer_user_id"`
 }
@@ -3049,99 +2104,6 @@ type ChatEntityConversation struct {
 	DeepLink       string `json:"deep_link"`
 }
 
-type ChatFolder struct {
-	ID       UUID   `json:"id"`
-	Name     string `json:"name"`
-	Position int64  `json:"position"`
-	// Space — Верхний уровень списка; папка не может одновременно принадлежать обычным чатам и чатам задач.
-	Space string `json:"space"`
-	// Scopes — Разделы всегда возвращаются в порядке direct, group, task независимо от порядка в запросе.
-	Scopes                 []string `json:"scopes"`
-	IncludeConversationIds []UUID   `json:"include_conversation_ids"`
-	ExcludeConversationIds []UUID   `json:"exclude_conversation_ids"`
-	CreatedAt              string   `json:"created_at"`
-	UpdatedAt              string   `json:"updated_at"`
-}
-
-type ChatFolderPage struct {
-	Items []ChatFolder `json:"items"`
-}
-
-type ChatForwardMessage struct {
-	TargetConversationID UUID `json:"target_conversation_id"`
-	ClientMessageID      UUID `json:"client_message_id"`
-}
-
-type ChatForwardMessageResult struct {
-	Message ChatForwardedMessage `json:"message"`
-	Created bool                 `json:"created"`
-}
-
-type ChatForwardedAttachment struct {
-	ID             UUID    `json:"id"`
-	ConversationID UUID    `json:"conversation_id"`
-	MessageID      *string `json:"message_id"`
-	OriginalName   string  `json:"original_name"`
-	ContentType    string  `json:"content_type"`
-	SizeBytes      int64   `json:"size_bytes"`
-	Sha256Hex      string  `json:"sha256_hex"`
-	MediaKind      string  `json:"media_kind"`
-	DurationMs     *int64  `json:"duration_ms"`
-	Waveform       []int64 `json:"waveform"`
-	Status         string  `json:"status"`
-	ScanStatus     string  `json:"scan_status"`
-	ScanErrorCode  *string `json:"scan_error_code,omitempty"`
-	CreatedAt      string  `json:"created_at"`
-	ContentURL     string  `json:"content_url"`
-}
-
-type ChatForwardedMessage struct {
-	ID                     UUID                      `json:"id"`
-	ConversationID         UUID                      `json:"conversation_id"`
-	Seq                    int64                     `json:"seq"`
-	SenderUserID           *int64                    `json:"sender_user_id"`
-	Kind                   string                    `json:"kind"`
-	Body                   string                    `json:"body"`
-	ReplyToMessageID       *string                   `json:"reply_to_message_id"`
-	ForwardedFromMessageID *string                   `json:"forwarded_from_message_id"`
-	Mentions               []ChatMessageMention      `json:"mentions"`
-	Reactions              []ChatMessageReaction     `json:"reactions"`
-	ClientMessageID        *string                   `json:"client_message_id"`
-	CreatedAt              string                    `json:"created_at"`
-	EditedAt               *string                   `json:"edited_at"`
-	DeletedAt              *string                   `json:"deleted_at"`
-	Attachments            []ChatForwardedAttachment `json:"attachments"`
-}
-
-type ChatLinkPreview struct {
-	// URL — Итоговый адрес после переходов
-	URL         string `json:"url"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	SiteName    string `json:"site_name"`
-}
-
-type ChatMarkAllRead struct {
-	// Scope — Раздел списка бесед: user — переписка людей без чатов задач.
-	Scope string `json:"scope"`
-}
-
-type ChatMarkAllReadResult struct {
-	Scope             string `json:"scope"`
-	ConversationsRead int64  `json:"conversations_read"`
-	MentionsRead      int64  `json:"mentions_read"`
-	NotificationsRead int64  `json:"notifications_read"`
-}
-
-type ChatMediaUpload struct {
-	ClientMessageID UUID   `json:"client_message_id"`
-	MediaKind       string `json:"media_kind"`
-	// DurationMs — Для video_circle дополнительно действует runtime-лимит 60000 ms.
-	DurationMs int64 `json:"duration_ms"`
-	// File — audio/mp4, audio/webm или audio/ogg до 12 MiB либо video/mp4/video/quicktime до 40 MiB
-	File string `json:"file"`
-}
-
 type ChatMember struct {
 	UserID      int64  `json:"user_id"`
 	DisplayName string `json:"display_name"`
@@ -3149,12 +2111,6 @@ type ChatMember struct {
 	Role        string `json:"role"`
 	// IsFormer — Человека больше нет в справочнике кабинета: членство или учётная запись выключены. Он остаётся в составе беседы, потому что его сообщения в ней остались и подпись под ними обязана кем-то называться. Пустое display_name означает, что о нём не осталось даже имени — подписывать такую строку клиент решает сам.
 	IsFormer bool `json:"is_former"`
-}
-
-type ChatMemberChangeResult struct {
-	ConversationID UUID   `json:"conversation_id"`
-	UserID         int64  `json:"user_id"`
-	UpdatedAt      string `json:"updated_at"`
 }
 
 type ChatMemberPage struct {
@@ -3199,66 +2155,6 @@ type ChatMessagePage struct {
 	LastSeq  *int64        `json:"last_seq,omitempty"`
 }
 
-type ChatMessagePin struct {
-	Message  ChatForwardedMessage `json:"message"`
-	PinnedBy int64                `json:"pinned_by"`
-	PinnedAt string               `json:"pinned_at"`
-}
-
-type ChatMessagePinPage struct {
-	Items []ChatMessagePin `json:"items"`
-}
-
-type ChatMessageReaction struct {
-	Emoji string `json:"emoji"`
-	Count int64  `json:"count"`
-	IsOwn bool   `json:"is_own"`
-}
-
-type ChatMessageReader struct {
-	UserID      int64  `json:"user_id"`
-	DisplayName string `json:"display_name"`
-	AvatarURL   string `json:"avatar_url"`
-	// ReadAt — Когда человек увидел это сообщение
-	ReadAt string `json:"read_at"`
-	// IsFormer — Человека больше нет в справочнике кабинета. Он остаётся в списке прочитавших: сообщение он видел, и запись об этом — часть переписки.
-	IsFormer bool `json:"is_former"`
-}
-
-type ChatMessageReaderPage struct {
-	Items []ChatMessageReader `json:"items"`
-}
-
-type ChatMobileDeviceRegistration struct {
-	DeviceID string `json:"device_id"`
-	// Platform — Платформа APNs-клиента. Если поле не передано, используется ios для обратной совместимости.
-	Platform      *string `json:"platform,omitempty"`
-	PushToken     string  `json:"push_token"`
-	BundleID      string  `json:"bundle_id"`
-	Environment   string  `json:"environment"`
-	Locale        *string `json:"locale,omitempty"`
-	Timezone      *string `json:"timezone,omitempty"`
-	DeviceName    *string `json:"device_name,omitempty"`
-	AppVersion    *string `json:"app_version,omitempty"`
-	SystemVersion *string `json:"system_version,omitempty"`
-	// Preview — Показывать содержание сообщения в уведомлении. Выключено — уведомление не несёт ни текста, ни отправителя: ни имени, ни фотографии, ни названия группы, поэтому баннер с человеком на iPhone не рисуется. Счётчик непрочитанных и переход в чат остаются. Поле отсутствует — уведомление полное.
-	Preview *bool `json:"preview,omitempty"`
-	// Sound — Звук уведомления. Поле отсутствует — со звуком.
-	Sound *bool `json:"sound,omitempty"`
-	// PushPreview — Совместимый псевдоним preview. Если любое из двух полей false, содержание скрыто.
-	PushPreview *bool `json:"push_preview,omitempty"`
-	// PushSound — Совместимый псевдоним sound. Если любое из двух полей false, звук выключен.
-	PushSound *bool `json:"push_sound,omitempty"`
-}
-
-type ChatMobileDeviceRegistrationState struct {
-	Enabled bool `json:"enabled"`
-}
-
-type ChatMobilePushTestResult struct {
-	Delivered int64 `json:"delivered"`
-}
-
 type ChatNotificationModeInput struct {
 	Mode string `json:"mode"`
 }
@@ -3282,10 +2178,6 @@ type ChatPerson struct {
 	IsSelf      bool   `json:"is_self"`
 }
 
-type ChatPresenceInput struct {
-	Typing *bool `json:"typing,omitempty"`
-}
-
 type ChatPresencePage struct {
 	Items []ChatPresencePageItemsItem `json:"items"`
 }
@@ -3293,13 +2185,6 @@ type ChatPresencePage struct {
 type ChatPresencePageItemsItem struct {
 	UserID int64 `json:"user_id"`
 	Typing bool  `json:"typing"`
-}
-
-type ChatReactionResult struct {
-	MessageID UUID `json:"message_id"`
-	// Reactions — Сводка по сообщению целиком, по одной строке на эмодзи.
-	Reactions []ChatMessageReaction `json:"reactions"`
-	Changed   bool                  `json:"changed"`
 }
 
 type ChatReceiptInput struct {
@@ -3311,28 +2196,6 @@ type ChatReceiptState struct {
 	LastReadSeq      int64  `json:"last_read_seq"`
 	ManualUnreadSeq  *int64 `json:"manual_unread_seq"`
 	Changed          bool   `json:"changed"`
-}
-
-type ChatRenameGroup struct {
-	// Title — Название группы. Пробелы по краям снимаются; пустое после этого название отклоняется.
-	Title string `json:"title"`
-}
-
-type ChatRenameGroupResult struct {
-	ConversationID UUID   `json:"conversation_id"`
-	Title          string `json:"title"`
-	UpdatedAt      string `json:"updated_at"`
-}
-
-// ChatSaveFolder — Нужен непустой name и хотя бы один scope или один include_conversation_ids, иначе 400.
-type ChatSaveFolder struct {
-	Name     string `json:"name"`
-	Position *int64 `json:"position,omitempty"`
-	Space    string `json:"space"`
-	// Scopes — Повтор раздела отвергается.
-	Scopes                 []string `json:"scopes,omitempty"`
-	IncludeConversationIds []UUID   `json:"include_conversation_ids,omitempty"`
-	ExcludeConversationIds []UUID   `json:"exclude_conversation_ids,omitempty"`
 }
 
 type ChatSendMessage struct {
@@ -3348,11 +2211,6 @@ type ChatSendMessageResult struct {
 	Created bool        `json:"created"`
 }
 
-type ChatSetReaction struct {
-	// Emoji — Закрытый список допустимых реакций.
-	Emoji string `json:"emoji"`
-}
-
 type ChatUnreadMention struct {
 	MessageID UUID  `json:"message_id"`
 	Seq       int64 `json:"seq"`
@@ -3360,18 +2218,6 @@ type ChatUnreadMention struct {
 
 type ChatUnreadMentionPage struct {
 	Items []ChatUnreadMention `json:"items"`
-}
-
-type ChatUnreadSpace struct {
-	// Conversations — Сколько бесед содержат непрочитанное
-	Conversations int64 `json:"conversations"`
-	// Messages — Сколько непрочитанных сообщений всего
-	Messages int64 `json:"messages"`
-}
-
-type ChatUnreadSummary struct {
-	Chats ChatUnreadSpace `json:"chats"`
-	Tasks ChatUnreadSpace `json:"tasks"`
 }
 
 type Comment struct {
@@ -3437,46 +2283,6 @@ type CoreAccountingDimensionVersion struct {
 	Required bool    `json:"required"`
 }
 
-type CoreAccountingDimensionVersionInput struct {
-	ValidFrom string `json:"valid_from"`
-	Enabled   bool   `json:"enabled"`
-	Required  bool   `json:"required"`
-	// EditOpen — Поправить действующую запись истории вместо новой
-	EditOpen *bool `json:"edit_open,omitempty"`
-}
-
-type CoreAccountingPeriodClose struct {
-	ClosedThrough string   `json:"closed_through"`
-	Reason        *string  `json:"reason,omitempty"`
-	Forced        *bool    `json:"forced,omitempty"`
-	Warnings      []string `json:"warnings,omitempty"`
-}
-
-type CoreAccountingPeriodEvent struct {
-	ID     UUID   `json:"id"`
-	Action string `json:"action"`
-	// ClosedThrough — Empty means fully reopened
-	ClosedThrough string   `json:"closed_through"`
-	ActorUserID   int64    `json:"actor_user_id"`
-	ActorName     string   `json:"actor_name"`
-	HappenedAt    string   `json:"happened_at"`
-	Reason        string   `json:"reason"`
-	Forced        bool     `json:"forced"`
-	Warnings      []string `json:"warnings"`
-}
-
-type CoreAccountingPeriodReopen struct {
-	// ClosedThrough — Earlier date or empty to reopen fully
-	ClosedThrough string `json:"closed_through"`
-	Reason        string `json:"reason"`
-}
-
-type CoreAccountingPeriodState struct {
-	// ClosedThrough — Empty means accounting is open
-	ClosedThrough string                      `json:"closed_through"`
-	History       []CoreAccountingPeriodEvent `json:"history"`
-}
-
 type CoreAccountingPolicy struct {
 	Businesses []CoreBusinessPolicy `json:"businesses"`
 	Companies  []CoreCompanyPolicy  `json:"companies"`
@@ -3502,19 +2308,6 @@ type CoreBalanceShortage struct {
 	Balance      string                     `json:"balance"`
 	Shortage     string                     `json:"shortage"`
 	Conflicts    []CoreConflictingRegistrar `json:"conflicts"`
-}
-
-type CoreBulkResult struct {
-	Updated int64 `json:"updated"`
-	// Skipped — Контрагенты, которым групповое изменение не применилось по правилу ИНН (ERP-1147): роль поставщика физлицу без ИНН и т. п. Остальные изменены.
-	Skipped []CoreBulkResultSkippedItem `json:"skipped,omitempty"`
-}
-
-type CoreBulkResultSkippedItem struct {
-	ID     UUID   `json:"id"`
-	Name   string `json:"name"`
-	Code   string `json:"code"`
-	Detail string `json:"detail"`
 }
 
 type CoreBusiness struct {
@@ -3573,13 +2366,6 @@ type CoreBusinessPolicy struct {
 	AccountableDays []CorePolicyAccountableDaysVersion `json:"accountable_days,omitempty"`
 	// RevenueItems — Статьи выручки исполнений заказа по виду строки (этап 4 ERP-1427)
 	RevenueItems []CoreOrderRevenueItemRule `json:"revenue_items,omitempty"`
-}
-
-type CoreCabinetPreferences struct {
-	Locale       string `json:"locale"`
-	Timezone     string `json:"timezone"`
-	DateFormat   string `json:"date_format"`
-	NumberFormat string `json:"number_format"`
 }
 
 type CoreChange struct {
@@ -3684,13 +2470,6 @@ type CoreContactAddress struct {
 	Info string `json:"info"`
 }
 
-type CoreContactBulkPatch struct {
-	Ids        []UUID `json:"ids"`
-	FolderID   *UUID  `json:"folder_id,omitempty"`
-	IsCustomer *bool  `json:"is_customer,omitempty"`
-	IsSupplier *bool  `json:"is_supplier,omitempty"`
-}
-
 type CoreContactCreate struct {
 	Name         string                     `json:"name"`
 	Kind         *CoreContactKind           `json:"kind,omitempty"`
@@ -3755,38 +2534,6 @@ type CoreContactPatch struct {
 	FolderID     *UUID                      `json:"folder_id,omitempty"`
 }
 
-type CoreContractList struct {
-	Results []CoreContractTerms `json:"results"`
-}
-
-type CoreContractSettlementDetailInput struct {
-	SettlementDetail string `json:"settlement_detail"`
-}
-
-type CoreContractTerms struct {
-	ID         UUID    `json:"id"`
-	BusinessID UUID    `json:"business_id"`
-	CompanyID  *string `json:"company_id,omitempty"`
-	ContactID  UUID    `json:"contact_id"`
-	Side       string  `json:"side"`
-	Number     string  `json:"number"`
-	Date       *string `json:"date,omitempty"`
-	Currency   *string `json:"currency,omitempty"`
-	// SettlementDetail — По заказу (умолчание), по договору — аванс договора закрывает его заказы по ФИФО, по документу исполнения — только явный зачёт
-	SettlementDetail string `json:"settlement_detail"`
-	// DetailLockedAt — Первая операция по договору: после неё детализация не меняется
-	DetailLockedAt *string `json:"detail_locked_at,omitempty"`
-	FifoAllowed    bool    `json:"fifo_allowed"`
-	Version        int64   `json:"version"`
-	FunnelID       *UUID   `json:"funnel_id,omitempty"`
-	// ValidUntil — Последний день действия договора (копия карточки документооборота); нет — бессрочный
-	ValidUntil *string `json:"valid_until,omitempty"`
-	// Archived — Карточка договора в архиве: новые заказы договор не выбирают
-	Archived *bool `json:"archived,omitempty"`
-	// Retired — Карточки договора больше нет, но заказы или расчёты на реквизит ссылаются
-	Retired *bool `json:"retired,omitempty"`
-}
-
 type CoreCurrencyRate struct {
 	ID           UUID                      `json:"id"`
 	CurrencyCode string                    `json:"currency_code"`
@@ -3798,17 +2545,6 @@ type CoreCurrencyRate struct {
 	Source       CoreCurrencyRateSourceKey `json:"source"`
 	Reason       string                    `json:"reason"`
 	CreatedAt    string                    `json:"created_at"`
-}
-
-type CoreCurrencyRateInput struct {
-	CurrencyCode string `json:"currency_code"`
-	BaseCode     string `json:"base_code"`
-	// Rate — Positive decimal string; comma or dot accepted
-	Rate      string                     `json:"rate"`
-	Nominal   *int64                     `json:"nominal,omitempty"`
-	ValidFrom string                     `json:"valid_from"`
-	Source    *CoreCurrencyRateSourceKey `json:"source,omitempty"`
-	Reason    *string                    `json:"reason,omitempty"`
 }
 
 type CoreCurrencyRatePage struct {
@@ -3908,13 +2644,6 @@ type CoreDictionaryPage struct {
 	// Offset — Применённое смещение
 	Offset  int64            `json:"offset"`
 	Results []CoreDictionary `json:"results"`
-}
-
-type CoreDictionaryUpdate struct {
-	Name        string  `json:"name"`
-	Description *string `json:"description,omitempty"`
-	AllowTree   *bool   `json:"allow_tree,omitempty"`
-	FolderID    *UUID   `json:"folder_id,omitempty"`
 }
 
 type CoreDirectory struct {
@@ -4050,11 +2779,6 @@ type CoreDocumentCreate struct {
 	Comment    *string                    `json:"comment,omitempty"`
 }
 
-type CoreDocumentCustom struct {
-	// Custom — Графа → значение. Заменяет значения целиком; проверяется по типу графы
-	Custom map[string]json.RawMessage `json:"custom"`
-}
-
 type CoreDocumentLinkNode struct {
 	Direction       string             `json:"direction"`
 	Depth           int64              `json:"depth"`
@@ -4090,50 +2814,6 @@ type CoreDocumentMovementSummary struct {
 	Sign         int64                      `json:"sign"`
 	Values       map[string]json.RawMessage `json:"values"`
 	EntryCount   int64                      `json:"entry_count"`
-}
-
-type CoreDocumentNumbering struct {
-	TypeID         UUID                          `json:"type_id"`
-	Key            string                        `json:"key"`
-	Name           string                        `json:"name"`
-	Module         string                        `json:"module"`
-	IsSystem       bool                          `json:"is_system"`
-	NumberSource   CoreNumberSource              `json:"number_source"`
-	NumberTemplate string                        `json:"number_template"`
-	NumberReset    CoreNumberReset               `json:"number_reset"`
-	Parts          CoreDocumentNumberingParts    `json:"parts"`
-	NextNumber     string                        `json:"next_number"`
-	NextValue      CoreDocumentNumberingCounters `json:"next_value"`
-	// Customized — Нумерацию выбрал кабинет — посев её не перепишет
-	Customized bool `json:"customized"`
-}
-
-type CoreDocumentNumberingCounters struct {
-	// Year — Следующее значение счётчика текущего года
-	Year int64 `json:"year"`
-	// Never — Следующее значение сквозного счётчика
-	Never int64 `json:"never"`
-}
-
-type CoreDocumentNumberingInput struct {
-	// Prefix — Серия номера; дефисы и пробелы по краям снимаются, разделитель «-» ставит сервер.
-	Prefix string          `json:"prefix"`
-	Year   CoreNumberYear  `json:"year"`
-	Width  int64           `json:"width"`
-	Reset  CoreNumberReset `json:"reset"`
-}
-
-type CoreDocumentNumberingList struct {
-	Today   string                  `json:"today"`
-	Results []CoreDocumentNumbering `json:"results"`
-}
-
-type CoreDocumentNumberingParts struct {
-	Prefix string         `json:"prefix"`
-	Year   CoreNumberYear `json:"year"`
-	Width  int64          `json:"width"`
-	// Structured — false — шаблон сложнее «префикс, год, счётчик»; правка заменит его простым правилом.
-	Structured bool `json:"structured"`
 }
 
 type CoreDocumentPage struct {
@@ -4179,13 +2859,6 @@ type CoreDocumentTypeCreate struct {
 type CoreDocumentTypePage struct {
 	Count   int64              `json:"count"`
 	Results []CoreDocumentType `json:"results"`
-}
-
-type CoreDocumentTypePatch struct {
-	Name           *string                    `json:"name,omitempty"`
-	NumberTemplate *string                    `json:"number_template,omitempty"`
-	NumberReset    *CoreNumberReset           `json:"number_reset,omitempty"`
-	Settings       map[string]json.RawMessage `json:"settings,omitempty"`
 }
 
 type CoreEmployee struct {
@@ -4244,61 +2917,6 @@ type CoreEmployeeCreateVariant4 struct {
 
 type CoreEmployeeCreate = json.RawMessage
 
-type CoreEmployeeEquipment struct {
-	ID           UUID   `json:"id"`
-	EmployeeID   UUID   `json:"employee_id"`
-	EmployeeName string `json:"employee_name"`
-	Name         string `json:"name"`
-	InventoryNo  string `json:"inventory_no"`
-	Status       string `json:"status"`
-	// AssignedAt — Date or empty string
-	AssignedAt string `json:"assigned_at"`
-	// ReturnedAt — Date or empty string
-	ReturnedAt string `json:"returned_at"`
-	Notes      string `json:"notes"`
-	CreatedAt  string `json:"created_at"`
-	UpdatedAt  string `json:"updated_at"`
-}
-
-type CoreEmployeeEquipmentInput struct {
-	EmployeeID  UUID    `json:"employee_id"`
-	Name        string  `json:"name"`
-	InventoryNo *string `json:"inventory_no,omitempty"`
-	Status      string  `json:"status"`
-	AssignedAt  *string `json:"assigned_at,omitempty"`
-	ReturnedAt  *string `json:"returned_at,omitempty"`
-	Notes       *string `json:"notes,omitempty"`
-}
-
-type CoreEmployeeEquipmentPage struct {
-	Count   int64                   `json:"count"`
-	Results []CoreEmployeeEquipment `json:"results"`
-}
-
-type CoreEmployeeLifecycleKind = string
-
-type CoreEmployeeLifecycleTemplate struct {
-	ID        UUID                      `json:"id"`
-	Kind      CoreEmployeeLifecycleKind `json:"kind"`
-	Name      string                    `json:"name"`
-	Checklist []string                  `json:"checklist"`
-	IsActive  bool                      `json:"is_active"`
-	CreatedAt string                    `json:"created_at"`
-	UpdatedAt string                    `json:"updated_at"`
-}
-
-type CoreEmployeeLifecycleTemplateInput struct {
-	Kind      CoreEmployeeLifecycleKind `json:"kind"`
-	Name      string                    `json:"name"`
-	Checklist []string                  `json:"checklist"`
-	IsActive  *bool                     `json:"is_active,omitempty"`
-}
-
-type CoreEmployeeLifecycleTemplatePage struct {
-	Count   int64                           `json:"count"`
-	Results []CoreEmployeeLifecycleTemplate `json:"results"`
-}
-
 type CoreEmployeePage struct {
 	Count int64 `json:"count"`
 	// Limit — Применённый размер страницы — после зажима до потолка
@@ -4307,158 +2925,6 @@ type CoreEmployeePage struct {
 	Offset  int64          `json:"offset"`
 	Results []CoreEmployee `json:"results"`
 }
-
-type CoreEmployeePatch struct {
-	FullName          *string `json:"full_name,omitempty"`
-	FirstName         *string `json:"first_name,omitempty"`
-	LastName          *string `json:"last_name,omitempty"`
-	MiddleName        *string `json:"middle_name,omitempty"`
-	Position          *string `json:"position,omitempty"`
-	PositionID        *string `json:"position_id,omitempty"`
-	CompanyID         *string `json:"company_id,omitempty"`
-	Department        *string `json:"department,omitempty"`
-	Location          *string `json:"location,omitempty"`
-	Phone             *string `json:"phone,omitempty"`
-	Email             *string `json:"email,omitempty"`
-	UserID            *int64  `json:"user_id,omitempty"`
-	ManagerEmployeeID *string `json:"manager_employee_id,omitempty"`
-	EmployedAt        *string `json:"employed_at,omitempty"`
-	IsActive          *bool   `json:"is_active,omitempty"`
-	Notes             *string `json:"notes,omitempty"`
-	// INN — Применяется только с правом core.employee_requisites:write
-	INN *string `json:"inn,omitempty"`
-	// BankBIC — Применяется только с правом core.employee_requisites:write
-	BankBIC *string `json:"bank_bic,omitempty"`
-	// BankAccount — Применяется только с правом core.employee_requisites:write
-	BankAccount *string `json:"bank_account,omitempty"`
-}
-
-type CoreExternalContactCandidate struct {
-	ExternalID   string `json:"external_id"`
-	ExternalName string `json:"external_name"`
-	INN          string `json:"inn"`
-	KPP          string `json:"kpp"`
-}
-
-type CoreExternalContactMatchOption struct {
-	ID   UUID   `json:"id"`
-	Name string `json:"name"`
-	KPP  string `json:"kpp"`
-}
-
-type CoreExternalContactMatchOutcome = string
-
-type CoreExternalContactMatchReport struct {
-	Summary CoreExternalContactMatchSummary  `json:"summary"`
-	Results []CoreExternalContactMatchResult `json:"results"`
-}
-
-type CoreExternalContactMatchRequest struct {
-	SourceSystem string                         `json:"source_system"`
-	SourceRef    *string                        `json:"source_ref,omitempty"`
-	ExternalKind string                         `json:"external_kind"`
-	Candidates   []CoreExternalContactCandidate `json:"candidates"`
-}
-
-type CoreExternalContactMatchResult struct {
-	Candidate CoreExternalContactCandidate     `json:"candidate"`
-	Outcome   CoreExternalContactMatchOutcome  `json:"outcome"`
-	ContactID *string                          `json:"contact_id"`
-	Notes     []string                         `json:"notes"`
-	Options   []CoreExternalContactMatchOption `json:"options"`
-}
-
-type CoreExternalContactMatchSummary struct {
-	Total         int64 `json:"total"`
-	Matched       int64 `json:"matched"`
-	Ambiguous     int64 `json:"ambiguous"`
-	NotFound      int64 `json:"not_found"`
-	NoINN         int64 `json:"no_inn"`
-	InvalidINN    int64 `json:"invalid_inn"`
-	Rejected      int64 `json:"rejected"`
-	AlreadyLinked int64 `json:"already_linked"`
-	NoExternalID  int64 `json:"no_external_id"`
-}
-
-type CoreExternalRef struct {
-	ID           UUID                       `json:"id"`
-	SourceSystem string                     `json:"source_system"`
-	SourceRef    string                     `json:"source_ref"`
-	ExternalKind string                     `json:"external_kind"`
-	ExternalID   string                     `json:"external_id"`
-	ExternalName string                     `json:"external_name"`
-	EntityType   CoreExternalRefEntityType  `json:"entity_type"`
-	EntityID     *string                    `json:"entity_id"`
-	MatchSource  CoreExternalRefMatchSource `json:"match_source"`
-	DecidedAt    *string                    `json:"decided_at,omitempty"`
-	CreatedAt    string                     `json:"created_at"`
-	UpdatedAt    string                     `json:"updated_at"`
-}
-
-type CoreExternalRefEntityType = string
-
-type CoreExternalRefInput struct {
-	// SourceSystem — Known value onec or another stable integration key
-	SourceSystem string `json:"source_system"`
-	// SourceRef — Concrete connection or export namespace
-	SourceRef    *string                     `json:"source_ref,omitempty"`
-	ExternalKind string                      `json:"external_kind"`
-	ExternalID   string                      `json:"external_id"`
-	ExternalName *string                     `json:"external_name,omitempty"`
-	EntityType   CoreExternalRefEntityType   `json:"entity_type"`
-	EntityID     *string                     `json:"entity_id,omitempty"`
-	MatchSource  *CoreExternalRefMatchSource `json:"match_source,omitempty"`
-}
-
-type CoreExternalRefLinkRequest struct {
-	EntityID UUID `json:"entity_id"`
-}
-
-type CoreExternalRefMatchSource = string
-
-type CoreExternalRefPage struct {
-	Count   int64             `json:"count"`
-	Results []CoreExternalRef `json:"results"`
-}
-
-type CoreExternalRefRememberRequest = json.RawMessage
-
-type CoreExternalRefResolveRequest struct {
-	SourceSystem string   `json:"source_system"`
-	SourceRef    *string  `json:"source_ref,omitempty"`
-	ExternalKind string   `json:"external_kind"`
-	ExternalIds  []string `json:"external_ids"`
-}
-
-type CoreExternalRefResolveResult struct {
-	Count   int64             `json:"count"`
-	Matches map[string]string `json:"matches"`
-}
-
-type CoreFolder struct {
-	ID        UUID                       `json:"id"`
-	Scope     CoreFolderScope            `json:"scope"`
-	ParentID  *UUID                      `json:"parent_id"`
-	Name      string                     `json:"name"`
-	Defaults  map[string]json.RawMessage `json:"defaults"`
-	SortOrder int64                      `json:"sort_order"`
-	ItemCount int64                      `json:"item_count"`
-}
-
-type CoreFolderInput struct {
-	Scope     CoreFolderScope            `json:"scope"`
-	ParentID  *UUID                      `json:"parent_id,omitempty"`
-	Name      string                     `json:"name"`
-	Defaults  map[string]json.RawMessage `json:"defaults,omitempty"`
-	SortOrder *int64                     `json:"sort_order,omitempty"`
-}
-
-type CoreFolderPage struct {
-	Count   int64        `json:"count"`
-	Results []CoreFolder `json:"results"`
-}
-
-type CoreFolderScope = string
 
 type CoreGLAccount struct {
 	ID              UUID              `json:"id"`
@@ -4490,13 +2956,6 @@ type CoreGLAccountPage struct {
 	Results []CoreGLAccount `json:"results"`
 }
 
-type CoreGLAccountPatch struct {
-	Name            *string `json:"name,omitempty"`
-	ParentID        *UUID   `json:"parent_id,omitempty"`
-	IsActive        *bool   `json:"is_active,omitempty"`
-	AffectsCashflow *bool   `json:"affects_cashflow,omitempty"`
-}
-
 type CoreGLAccountType = string
 
 type CoreGLMapping struct {
@@ -4524,70 +2983,6 @@ type CoreGLMappingCreate struct {
 type CoreGLMappingPage struct {
 	Count   int64           `json:"count"`
 	Results []CoreGLMapping `json:"results"`
-}
-
-type CoreGLOpeningImport struct {
-	ID          UUID                      `json:"id"`
-	Status      CoreGLOpeningImportStatus `json:"status"`
-	Format      CoreProductTransferFormat `json:"format"`
-	SourceName  string                    `json:"source_name"`
-	SourceSize  int64                     `json:"source_size"`
-	ReportTitle string                    `json:"report_title"`
-	HasOpening  bool                      `json:"has_opening"`
-	HasClosing  bool                      `json:"has_closing"`
-	DocumentID  *string                   `json:"document_id"`
-	CreatedAt   string                    `json:"created_at"`
-	AppliedAt   *string                   `json:"applied_at,omitempty"`
-	Rows        []CoreGLOpeningImportRow  `json:"rows"`
-	Warnings    []CoreGLOpeningWarning    `json:"warnings"`
-}
-
-type CoreGLOpeningImportAppliedRequest struct {
-	DocumentID UUID `json:"document_id"`
-}
-
-type CoreGLOpeningImportPage struct {
-	Count   int64                 `json:"count"`
-	Results []CoreGLOpeningImport `json:"results"`
-}
-
-type CoreGLOpeningImportRow struct {
-	Line     int64   `json:"line"`
-	Code     string  `json:"code"`
-	Name     string  `json:"name"`
-	Subconto *string `json:"subconto,omitempty"`
-	// OpeningDebit — Decimal string without float conversion
-	OpeningDebit string `json:"opening_debit"`
-	// OpeningCredit — Decimal string without float conversion
-	OpeningCredit string `json:"opening_credit"`
-	// ClosingDebit — Decimal string without float conversion
-	ClosingDebit string `json:"closing_debit"`
-	// ClosingCredit — Decimal string without float conversion
-	ClosingCredit string              `json:"closing_credit"`
-	AccountID     *string             `json:"account_id"`
-	AccountCode   string              `json:"account_code"`
-	AccountName   string              `json:"account_name"`
-	OpeningInput  string              `json:"opening_input"`
-	Match         CoreGLOpeningMatch  `json:"match"`
-	Notes         []CoreGLOpeningNote `json:"notes"`
-	ContactID     *string             `json:"contact_id,omitempty"`
-	ContactName   *string             `json:"contact_name,omitempty"`
-	EmployeeID    *string             `json:"employee_id,omitempty"`
-	EmployeeName  *string             `json:"employee_name,omitempty"`
-}
-
-type CoreGLOpeningImportStatus = string
-
-type CoreGLOpeningMatch = string
-
-type CoreGLOpeningNote = string
-
-type CoreGLOpeningWarning = string
-
-type CoreGeneratedBarcode struct {
-	// Value — EAN-13 с префиксом 200 и контрольной цифрой
-	Value string `json:"value"`
-	Type  string `json:"type"`
 }
 
 type CoreImportResult struct {
@@ -4649,21 +3044,6 @@ type CoreNumberReset = string
 
 type CoreNumberSource = string
 
-type CoreNumberYear = string
-
-type CoreObjectUsage struct {
-	Blocked bool                 `json:"blocked"`
-	Rows    []CoreObjectUsageRow `json:"rows"`
-	Message string               `json:"message"`
-}
-
-type CoreObjectUsageRow struct {
-	Source string `json:"source"`
-	Key    string `json:"key"`
-	Name   string `json:"name"`
-	Count  int64  `json:"count"`
-}
-
 // CoreOrder — Заказ — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе.
 type CoreOrder struct {
 	ID             UUID               `json:"id"`
@@ -4692,7 +3072,7 @@ type CoreOrder struct {
 	CfoID map[string]json.RawMessage `json:"cfo_id,omitempty"`
 	// PNLItemID — Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья
 	PNLItemID map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
-	// ExecutionCutover — Бизнес заказа прошёл отсечку этапа 4: исполнения пишут «Заказы» и выручку, «Сделать акт» на экране одна
+	// ExecutionCutover — Бизнес заказа прошёл отсечку этапа 4: исполнение закрывает вклад регистра «Заказы» и признаёт выручку; «Сделать акт» в документообороте выпускает бумагу и проводит исполнение одной командой
 	ExecutionCutover *bool  `json:"execution_cutover,omitempty"`
 	WarehouseID      *UUID  `json:"warehouse_id,omitempty"`
 	BasisID          *UUID  `json:"basis_id,omitempty"`
@@ -4762,13 +3142,6 @@ type CoreOrderCloseInput struct {
 	Reason *string `json:"reason,omitempty"`
 }
 
-type CoreOrderContractInput struct {
-	// ContractID — Договор заказа; null или пусто — снять договор
-	ContractID *UUID `json:"contract_id,omitempty"`
-	// ExpectedVersion — Версия заказа, которую видел человек; 0 — не сверять
-	ExpectedVersion *int64 `json:"expected_version,omitempty"`
-}
-
 // CoreOrderCounterparty — Покупатель загрузки без id: юрлицо узнаётся по ИНН и КПП, физлицо — по телефону или заводится.
 type CoreOrderCounterparty struct {
 	Name  *string `json:"name,omitempty"`
@@ -4816,7 +3189,7 @@ type CoreOrderFunnelChoice struct {
 type CoreOrderFunnelInput struct {
 	Side string `json:"side"`
 	Name string `json:"name"`
-	// Source — Заказы этого источника идут в воронку; пусто — по источнику не выбирается
+	// Source — Источник заказа: общий вид или точное приложение app.издатель.ключ; точное приложение имеет приоритет. Пусто — по источнику не выбирать
 	Source *string `json:"source,omitempty"`
 	// IsDefault — Воронка стороны по умолчанию — одна на сторону
 	IsDefault  *bool                  `json:"is_default,omitempty"`
@@ -4892,18 +3265,20 @@ type CoreOrderHistory struct {
 
 // CoreOrderHistoryDocument — Документ модуля, выросший из заказа: акт, отгрузка, счёт.
 type CoreOrderHistoryDocument struct {
-	Source     string  `json:"source"`
-	Module     string  `json:"module"`
-	Section    string  `json:"section"`
-	ID         UUID    `json:"id"`
-	Kind       string  `json:"kind"`
-	KindName   *string `json:"kind_name,omitempty"`
-	Number     string  `json:"number"`
-	Date       string  `json:"date"`
-	DueDate    *string `json:"due_date,omitempty"`
-	Amount     *string `json:"amount,omitempty"`
-	Currency   *string `json:"currency,omitempty"`
-	Direction  *string `json:"direction,omitempty"`
+	Source    string  `json:"source"`
+	Module    string  `json:"module"`
+	Section   string  `json:"section"`
+	ID        UUID    `json:"id"`
+	Kind      string  `json:"kind"`
+	KindName  *string `json:"kind_name,omitempty"`
+	Number    string  `json:"number"`
+	Date      string  `json:"date"`
+	DueDate   *string `json:"due_date,omitempty"`
+	Amount    *string `json:"amount,omitempty"`
+	Currency  *string `json:"currency,omitempty"`
+	Direction *string `json:"direction,omitempty"`
+	// Provider — Эквайер подтверждённой оплаты картой; только у документа оплаты. Внешний номер платежа не раскрывается.
+	Provider   *string `json:"provider,omitempty"`
 	Status     string  `json:"status"`
 	StatusName *string `json:"status_name,omitempty"`
 	Title      *string `json:"title,omitempty"`
@@ -4962,6 +3337,8 @@ type CoreOrderImportInput struct {
 	ExternalID string `json:"external_id"`
 	// SourceSystem — Имя источника для журнала загрузок: сайт, CRM
 	SourceSystem *string `json:"source_system,omitempty"`
+	// FunnelID — Необязательная действующая воронка этой стороны в данном кабинете. Выбирается атомарно с созданием заказа; повтор с другим funnel_id возвращает 409, неверная или архивная воронка — 422. Без поля действует воронка договора, источника или умолчание.
+	FunnelID *UUID `json:"funnel_id,omitempty"`
 }
 
 type CoreOrderImportList struct {
@@ -5200,15 +3577,6 @@ type CoreOrderRevenueItemRule struct {
 	ValidFrom *string `json:"valid_from,omitempty"`
 }
 
-type CoreOrderRevenueItemsInput struct {
-	// GoodsItemID — Статья выручки товарных строк; пусто — правило снимается
-	GoodsItemID map[string]json.RawMessage `json:"goods_item_id,omitempty"`
-	// ServiceItemID — Статья выручки работ и услуг; пусто — правило снимается
-	ServiceItemID map[string]json.RawMessage `json:"service_item_id,omitempty"`
-	// ValidFrom — С какой даты; пусто — сегодня
-	ValidFrom *string `json:"valid_from,omitempty"`
-}
-
 type CoreOrderRevision struct {
 	Side CoreOrderSide `json:"side"`
 	// Number — Свой номер; пусто — номер выдаёт счётчик вида
@@ -5284,26 +3652,8 @@ type CoreOrderStatus struct {
 	FunnelID *UUID          `json:"funnel_id,omitempty"`
 }
 
-type CoreOrderStatusInput struct {
-	Name     string         `json:"name"`
-	Category CoreOrderState `json:"category"`
-	Side     *string        `json:"side,omitempty"`
-	Position *int64         `json:"position,omitempty"`
-	// Color — Цвет: #RRGGBB или имя токена
-	Color *string `json:"color,omitempty"`
-}
-
 type CoreOrderStatusList struct {
 	Items []CoreOrderStatus `json:"items"`
-}
-
-type CoreOrderStatusPatch struct {
-	Name     *string         `json:"name,omitempty"`
-	Category *CoreOrderState `json:"category,omitempty"`
-	Side     *string         `json:"side,omitempty"`
-	Position *int64          `json:"position,omitempty"`
-	Color    *string         `json:"color,omitempty"`
-	IsActive *bool           `json:"is_active,omitempty"`
 }
 
 type CoreOrderStepDueInput struct {
@@ -5431,15 +3781,6 @@ type CoreOwnershipVersionInput struct {
 	Owners    []CoreBusinessOwnerInput `json:"owners"`
 }
 
-type CorePhotoResult struct {
-	PhotoURL string `json:"photo_url"`
-}
-
-type CorePolicyAccountableDaysInput struct {
-	ValidFrom string `json:"valid_from"`
-	Days      int64  `json:"days"`
-}
-
 type CorePolicyAccountableDaysVersion struct {
 	ID UUID `json:"id"`
 	// ValidFrom — Начало версии; 0001-01-01 означает «с начала учёта»
@@ -5455,14 +3796,6 @@ type CorePolicyPeriod struct {
 	ValidFrom string `json:"valid_from"`
 	// ValidTo — Последний день версии; отсутствует у открытой версии
 	ValidTo *string `json:"valid_to,omitempty"`
-}
-
-type CorePolicyTaxModeInput struct {
-	// ValidFrom — 0001-01-01 — с начала учёта, если по юрлицу ещё нет проведённых документов
-	ValidFrom string `json:"valid_from"`
-	Mode      string `json:"mode"`
-	// TaxCurrency — Налоговая валюта юрлица; не передана — RUB. Меняется вместе с версией режима: с даты, по которой есть проведённые документы, — отказ 409.
-	TaxCurrency *string `json:"tax_currency,omitempty"`
 }
 
 type CorePolicyTaxModeVersion struct {
@@ -5499,11 +3832,6 @@ type CorePolicyTaxRegimeVersion struct {
 	Patent bool `json:"patent"`
 }
 
-type CorePolicyVATPendingInput struct {
-	ValidFrom string `json:"valid_from"`
-	Months    int64  `json:"months"`
-}
-
 type CorePolicyVATPendingVersion struct {
 	ID UUID `json:"id"`
 	// ValidFrom — Начало версии; 0001-01-01 означает «с начала учёта»
@@ -5513,11 +3841,6 @@ type CorePolicyVATPendingVersion struct {
 	Months  int64   `json:"months"`
 }
 
-type CorePolicyVATPresentationInput struct {
-	ValidFrom    string `json:"valid_from"`
-	Presentation string `json:"presentation"`
-}
-
 type CorePolicyVATPresentationVersion struct {
 	ID UUID `json:"id"`
 	// ValidFrom — Начало версии; 0001-01-01 означает «с начала учёта»
@@ -5525,14 +3848,6 @@ type CorePolicyVATPresentationVersion struct {
 	// ValidTo — Последний день версии; отсутствует у открытой версии
 	ValidTo      *string `json:"valid_to,omitempty"`
 	Presentation string  `json:"presentation"`
-}
-
-type CorePolicyVATRatesInput struct {
-	ValidFrom string `json:"valid_from"`
-	// General — Процент общей ставки, больше 0 и меньше 100; пусто — не заведена
-	General *string `json:"general,omitempty"`
-	// Reduced — Процент льготной ставки, больше 0 и меньше 100; пусто — не заведена
-	Reduced *string `json:"reduced,omitempty"`
 }
 
 type CorePolicyVATRatesVersion struct {
@@ -5612,16 +3927,6 @@ type CoreProductAxisValue struct {
 	Code string `json:"code"`
 	// Label — Подпись значения; пусто — код
 	Label string `json:"label"`
-}
-
-type CoreProductBulkPatch struct {
-	Ids        []UUID `json:"ids"`
-	FolderID   *UUID  `json:"folder_id,omitempty"`
-	IsSellable *bool  `json:"is_sellable,omitempty"`
-	// IsStockable — Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547)
-	IsStockable   *bool `json:"is_stockable,omitempty"`
-	IsPurchasable *bool `json:"is_purchasable,omitempty"`
-	IsProducible  *bool `json:"is_producible,omitempty"`
 }
 
 type CoreProductCreate struct {
@@ -5714,41 +4019,6 @@ type CoreProductFieldSchema struct {
 	Fields []CoreProductFieldDefinition `json:"fields"`
 }
 
-type CoreProductFile struct {
-	ID         UUID  `json:"id"`
-	ProductID  UUID  `json:"product_id"`
-	KindItemID *UUID `json:"kind_item_id"`
-	// KindCode — Код элемента справочника product_file_kinds; пусто без типа
-	KindCode  string `json:"kind_code"`
-	KindLabel string `json:"kind_label"`
-	Name      string `json:"name"`
-	MimeType  string `json:"mime_type"`
-	SizeBytes int64  `json:"size_bytes"`
-	IsImage   bool   `json:"is_image"`
-	// IsPrimary — Основное фото товара; бывает только у изображения
-	IsPrimary      bool   `json:"is_primary"`
-	SortOrder      int64  `json:"sort_order"`
-	UploadedByName string `json:"uploaded_by_name"`
-	CreatedAt      string `json:"created_at"`
-}
-
-type CoreProductFilePage struct {
-	Count   int64             `json:"count"`
-	Results []CoreProductFile `json:"results"`
-}
-
-type CoreProductFilePatch struct {
-	// Kind — Код типа из product_file_kinds; пустая строка снимает тип
-	Kind *string `json:"kind,omitempty"`
-	Name *string `json:"name,omitempty"`
-	// IsPrimary — true делает изображение основным фото
-	IsPrimary *bool `json:"is_primary,omitempty"`
-}
-
-type CoreProductFileReorder struct {
-	Ids []UUID `json:"ids"`
-}
-
 type CoreProductIdentifier struct {
 	ID              UUID                       `json:"id"`
 	ProductID       UUID                       `json:"product_id"`
@@ -5774,13 +4044,6 @@ type CoreProductIdentifierInput struct {
 }
 
 type CoreProductIdentifierKind = string
-
-type CoreProductIdentifierMatch struct {
-	ProductID   UUID                  `json:"product_id"`
-	ProductName string                `json:"product_name"`
-	ProductSKU  string                `json:"product_sku"`
-	Identifier  CoreProductIdentifier `json:"identifier"`
-}
 
 type CoreProductIdentifierPage struct {
 	Count   int64                   `json:"count"`
@@ -5962,23 +4225,6 @@ type CoreProductTransferFormat = string
 
 type CoreProductTransferKind = string
 
-type CoreProductVariantGenerate struct {
-	// Axes — Какие оси и коды участвуют; пусто — все оси семейства целиком. Пустой список кодов у оси — все её значения
-	Axes []CoreProductVariantGenerateAxesItem `json:"axes,omitempty"`
-}
-
-type CoreProductVariantGenerateAxesItem struct {
-	Key   string   `json:"key"`
-	Codes []string `json:"codes,omitempty"`
-}
-
-type CoreProductVariantGenerateResult struct {
-	Created int64 `json:"created"`
-	// Skipped — Сочетания, у которых вариант уже был
-	Skipped int64         `json:"skipped"`
-	Results []CoreProduct `json:"results"`
-}
-
 type CoreReferenceItem struct {
 	ID UUID `json:"id"`
 	// Code — Стабильная ссылка на значение: код переживает перенос данных, идентификатор — нет
@@ -6106,12 +4352,6 @@ type CoreRegisterPage struct {
 	Results []CoreRegister `json:"results"`
 }
 
-type CoreRegisterPatch struct {
-	Name       *string                 `json:"name,omitempty"`
-	Dimensions []CoreRegisterDimension `json:"dimensions,omitempty"`
-	Resources  []CoreRegisterResource  `json:"resources,omitempty"`
-}
-
 type CoreRegisterResource struct {
 	Key  string  `json:"key"`
 	Type string  `json:"type"`
@@ -6143,6 +4383,33 @@ type CoreRegisterTurnoverRow struct {
 	Outgoing   map[string]json.RawMessage `json:"outgoing"`
 	Net        map[string]json.RawMessage `json:"net"`
 	EntryCount int64                      `json:"entry_count"`
+}
+
+type CoreSellerBank struct {
+	// Account — Расчётный счёт получателя
+	Account string `json:"account"`
+	// Bank — Наименование банка
+	Bank string `json:"bank"`
+	// Bik — БИК банка
+	Bik string `json:"bik"`
+	// CorrAccount — Корреспондентский счёт банка
+	CorrAccount string `json:"corr_account"`
+}
+
+type CoreSellerCompany struct {
+	ID UUID `json:"id"`
+	// Name — Имя юрлица в кабинете
+	Name string `json:"name"`
+	// LegalName — Полное наименование для счёта
+	LegalName string `json:"legal_name"`
+	// INN — ИНН продавца
+	INN string `json:"inn"`
+	// KPP — КПП продавца, если есть
+	KPP string `json:"kpp"`
+}
+
+type CoreSellerCompanyList struct {
+	Companies []CoreSellerCompany `json:"companies"`
 }
 
 type CoreTrialBalance struct {
@@ -6178,10 +4445,6 @@ type CoreTrialBalanceTotals struct {
 	ClosingDebit   string `json:"closing_debit"`
 	ClosingCredit  string `json:"closing_credit"`
 	Balanced       bool   `json:"balanced"`
-}
-
-type CoreUIState struct {
-	Screens map[string]json.RawMessage `json:"screens"`
 }
 
 // CredentialRequestGap — Окно, в котором обращения были, а записей о них нет: очередь писателя переполнилась либо база кабинета не приняла пачку. Признание в НАШЕЙ аварии, и печатается оно обеим сторонам — страница без него читалась бы как полная история. Кабинета в окне нет ни у одной из дверей.
@@ -6251,30 +4514,9 @@ type CustomerNeedPage struct {
 	Results []CustomerNeed `json:"results"`
 }
 
-type CustomerNeedUpdate struct {
-	Customer   *string `json:"customer,omitempty"`
-	Section    *string `json:"section,omitempty"`
-	Task       *string `json:"task,omitempty"`
-	Body       *string `json:"body,omitempty"`
-	Priority   *int64  `json:"priority,omitempty"`
-	IsArchived *bool   `json:"is_archived,omitempty"`
-}
-
 type CustomerPage struct {
 	Count   int64      `json:"count"`
 	Results []Customer `json:"results"`
-}
-
-type CustomerUpdate struct {
-	Name        *string  `json:"name,omitempty"`
-	Owner       *string  `json:"owner,omitempty"`
-	Status      *string  `json:"status,omitempty"`
-	Tier        *string  `json:"tier,omitempty"`
-	Revenue     *string  `json:"revenue,omitempty"`
-	Size        *int64   `json:"size,omitempty"`
-	Domains     []string `json:"domains,omitempty"`
-	ExternalIds []string `json:"external_ids,omitempty"`
-	IsArchived  *bool    `json:"is_archived,omitempty"`
 }
 
 type Cycle struct {
@@ -6724,67 +4966,7 @@ type DiscussionCommentPage struct {
 	Results []DiscussionComment `json:"results"`
 }
 
-type DiscussionCommentUpdate struct {
-	Body       *string `json:"body,omitempty"`
-	IsArchived *bool   `json:"is_archived,omitempty"`
-}
-
 type DiscussionOwnerType = string
-
-// DocflowAcceptedDocument — Учётный документ кабинета, заведённый приёмкой.
-type DocflowAcceptedDocument struct {
-	ID UUID `json:"id"`
-	// Number — Наш номер из нумератора кабинета. Номер продавца лежит в содержимом документа: занять им наш сквозной счётчик значит однажды получить два своих документа с одним номером от двух разных поставщиков
-	Number string `json:"number"`
-	// Date — Дата документа ГГГГ-ММ-ДД. По умолчанию это дата документа поставщика: операция произошла тогда, когда её совершил он, и датировать её днём приёмки значит поставить факт не в тот период
-	Date string `json:"date"`
-	// TypeKey — Ключ вида документа; у приёмки docflow_incoming
-	TypeKey string `json:"type_key"`
-	// TypeName — Имя вида в кабинете. Право клиента: вид можно переименовать, и код держит его за ключ, а не за название
-	TypeName string `json:"type_name"`
-	// Status — Состояние учётного документа. Приёмка заводит ЧЕРНОВИК: проведение принадлежит модулям — владельцам регистров
-	Status string `json:"status"`
-	// MarkedDeleted — Документ помечен на удаление. Такой пакет принимается заново: пометка и есть способ сказать «этот документ ошибочный»
-	MarkedDeleted bool `json:"marked_deleted"`
-	// AcceptedAt — Момент приёмки; пусто, если он не записан
-	AcceptedAt string `json:"accepted_at"`
-}
-
-// DocflowActionResult — Чем оператор ответил на выполненное действие.
-type DocflowActionResult struct {
-	// ID — Идентификатор действия у оператора
-	ID string `json:"id"`
-	// State — Новое состояние кодом оператора
-	State string `json:"state"`
-	// StateName — Новое состояние словами оператора
-	StateName string `json:"state_name"`
-}
-
-// DocflowAddressRequisites — АдрРФ: структурный российский адрес. Только российский: адрес по ГАР требует идентификатора адресного объекта из государственного реестра, которого в карточках Akeda нет, а иностранный адрес у продавца-резидента не встречается. Карточки юрлица и контрагента хранят такой адрес частями; объект отправления позволяет задать исключение.
-type DocflowAddressRequisites struct {
-	// PostalCode — Индекс
-	PostalCode *string `json:"postal_code,omitempty"`
-	// RegionCode — КодРегион
-	RegionCode *string `json:"region_code,omitempty"`
-	// RegionName — НаимРегион
-	RegionName *string `json:"region_name,omitempty"`
-	// District — Район
-	District *string `json:"district,omitempty"`
-	// City — Город
-	City *string `json:"city,omitempty"`
-	// Settlement — НаселПункт
-	Settlement *string `json:"settlement,omitempty"`
-	// Street — Улица
-	Street *string `json:"street,omitempty"`
-	// Building — Дом
-	Building *string `json:"building,omitempty"`
-	// Block — Корпус
-	Block *string `json:"block,omitempty"`
-	// Flat — Кварт
-	Flat *string `json:"flat,omitempty"`
-	// Info — ИныеСвед
-	Info *string `json:"info,omitempty"`
-}
 
 // DocflowAppSalesOrderCounterparty — Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в заказе как реквизиты плательщика
 type DocflowAppSalesOrderCounterparty struct {
@@ -6800,6 +4982,8 @@ type DocflowAppSalesOrderInput struct {
 	ContactID          *UUID                             `json:"contact_id,omitempty"`
 	ContractDocumentID *UUID                             `json:"contract_document_id,omitempty"`
 	Counterparty       *DocflowAppSalesOrderCounterparty `json:"counterparty,omitempty"`
+	// FunnelID — Необязательная действующая воронка продаж этого кабинета; повтор с другой воронкой отвечает 409
+	FunnelID *UUID `json:"funnel_id,omitempty"`
 	// ExternalID — Номер заказа у магазина — ключ идемпотентности загрузки
 	ExternalID string `json:"external_id"`
 	// Number — Пусто — кабинет выдаст следующий номер
@@ -6971,11 +5155,6 @@ type DocflowApprovalDecisionInput struct {
 	Comment    *string `json:"comment,omitempty"`
 }
 
-type DocflowApprovalDelegateInput struct {
-	// UserID — Кому поручается решение по этому проходу
-	UserID int64 `json:"user_id"`
-}
-
 // DocflowApprovalDepartment — Подразделение справочника ядра глазами согласования.
 type DocflowApprovalDepartment struct {
 	ID    UUID   `json:"id"`
@@ -7116,10 +5295,6 @@ type DocflowApprovalRoute struct {
 	UpdatedAt string                      `json:"updated_at"`
 }
 
-type DocflowApprovalRouteActiveInput struct {
-	Active bool `json:"active"`
-}
-
 type DocflowApprovalRouteList struct {
 	Items []DocflowApprovalRoute `json:"items"`
 }
@@ -7207,25 +5382,6 @@ type DocflowApprovalSubjectState struct {
 	Preview *DocflowApprovalChainPreview `json:"preview,omitempty"`
 }
 
-// DocflowApprovalSubstitution — Замещение согласующего на период. Бессрочное замещение законно — ends_on можно не называть.
-type DocflowApprovalSubstitution struct {
-	ID UUID `json:"id"`
-	// PrincipalID — Кого замещают
-	PrincipalID   int64   `json:"principal_id"`
-	PrincipalName *string `json:"principal_name,omitempty"`
-	// SubstituteID — Кто замещает
-	SubstituteID   int64   `json:"substitute_id"`
-	SubstituteName *string `json:"substitute_name,omitempty"`
-	StartsOn       string  `json:"starts_on"`
-	// EndsOn — Пусто — замещение бессрочно
-	EndsOn  *string `json:"ends_on,omitempty"`
-	Comment *string `json:"comment,omitempty"`
-}
-
-type DocflowApprovalSubstitutionList struct {
-	Items []DocflowApprovalSubstitution `json:"items"`
-}
-
 // DocflowAttachment — Файл внутри пакета. Внутреннего пути в хранилище здесь нет: снаружи файл получают отдельной операцией, а путь не часть контракта и не подсказка для перебора.
 type DocflowAttachment struct {
 	ID      UUID `json:"id"`
@@ -7243,54 +5399,6 @@ type DocflowAttachment struct {
 	Stored       bool    `json:"stored"`
 	DownloadedAt *string `json:"downloaded_at,omitempty"`
 	CreatedAt    string  `json:"created_at"`
-}
-
-// DocflowAttorneySubmission — Машиночитаемая доверенность при подписи. Прикладывается ИДЕНТИФИКАТОРОМ в реестре ФНС, а не файлом: поля для тела доверенности у оператора нет вовсе. Поля content и content_signature приняты потому, что их присылает браузерный контур, и оператору они не передаются.
-type DocflowAttorneySubmission struct {
-	// RegistryNumber — Единый регистрационный номер доверенности в реестре ФНС
-	RegistryNumber string  `json:"registry_number"`
-	PrincipalINN   *string `json:"principal_inn,omitempty"`
-	IssuedAt       *string `json:"issued_at,omitempty"`
-	ExpiresAt      *string `json:"expires_at,omitempty"`
-	// Content — Тело доверенности Base64. Оператору не передаётся
-	Content *string `json:"content,omitempty"`
-	// ContentSignature — Подпись под телом доверенности Base64. Оператору не передаётся
-	ContentSignature *string `json:"content_signature,omitempty"`
-}
-
-// DocflowBankRequisites — БанкРекв: банковские реквизиты участника. У юрлица кабинета их нет вовсе.
-type DocflowBankRequisites struct {
-	// Account — НомерСчета
-	Account *string `json:"account,omitempty"`
-	// Name — НаимБанк
-	Name *string `json:"name,omitempty"`
-	// BIC — БИК
-	BIC *string `json:"bic,omitempty"`
-	// CorrAccount — КорСчет
-	CorrAccount *string `json:"corr_account,omitempty"`
-}
-
-// DocflowBuyerTitleInput — Ответный титул покупателя на входящий пакет. Сам пакет назван в адресе, реквизиты продавца сервер читает из его файла в пакете.
-type DocflowBuyerTitleInput struct {
-	// Result — КодИтога: 1 — принято без разногласий, 2 — с разногласиями, 3 — не принято
-	Result *string `json:"result,omitempty"`
-	// AcceptedAt — ДатаПрин в форме ГГГГ-ММ-ДД
-	AcceptedAt *string `json:"accepted_at,omitempty"`
-	// Operation — СодОпер. Формат ЗАПРЕЩАЕТ его при итоге «не принято»: «не приняли» — это отсутствие операции приёмки, а не операция с описанием
-	Operation *string `json:"operation,omitempty"`
-	// DocumentKindName — НаимДокОпрПр: наименование документа, определённое сторонами сделки. В титуле покупателя обязательно ВСЕГДА, в отличие от титула продавца, где оно зависит от функции
-	DocumentKindName *string `json:"document_kind_name,omitempty"`
-	// Function — Функция документа продавца, на который отвечаем. Пустое значение сервер берёт из его файла
-	Function *string `json:"function,omitempty"`
-	// Number — Номер документа продавца
-	Number *string `json:"number,omitempty"`
-	// Date — Дата документа продавца
-	Date         *string                       `json:"date,omitempty"`
-	Disagreement *DocflowDocumentRefRequisites `json:"disagreement,omitempty"`
-	Employee     *DocflowEmployeeRequisites    `json:"employee,omitempty"`
-	Signers      []DocflowSignerRequisites     `json:"signers,omitempty"`
-	File         *DocflowFileRequisites        `json:"file,omitempty"`
-	Extra        []DocflowTextInfoRequisites   `json:"extra,omitempty"`
 }
 
 // DocflowCancellation — Соглашение сторон об аннулировании документа. Запускает его любая сторона, а решает вторая: согласие даёт состояние 22 «Документ аннулирован», отказ — состояние 40 «Аннулирование отклонено», при котором состояние самого документа НЕ меняется. Шаг цепочки выводится из ленты СОБЫТИЙ пакета, а не из кода состояния: состояние 27 «Ожидает аннулирования» оператор отдаёт только отдельным методом выборки по событиям.
@@ -7313,12 +5421,6 @@ type DocflowCancellation struct {
 	CanApprove bool `json:"can_approve"`
 	// CanReject — Соглашение прислали нам и в нём можно отказать
 	CanReject bool `json:"can_reject"`
-}
-
-// DocflowCancellationInput — Шаг соглашения об аннулировании. Одного поля довольно: сторону, документ и чей сейчас ход, сервер знает сам.
-type DocflowCancellationInput struct {
-	// Comment — Причина словами человека. Обязательна при предложении аннулирования и при отказе в нём: вторая сторона решает по причине, а не по факту обращения
-	Comment *string `json:"comment,omitempty"`
 }
 
 // DocflowCertificate — Сертификат, которым подпись доказывают спустя годы: имя подписанта меняется, отпечаток нет.
@@ -7372,51 +5474,9 @@ type DocflowConnection struct {
 	UpdatedAt  string `json:"updated_at"`
 }
 
-// DocflowConnectionInput — Заведение подключения. Секреты приходят открытым текстом ровно один раз и шифруются до того, как что-либо попадёт в базу.
-type DocflowConnectionInput struct {
-	// Provider — Пусто означает saby — единственный оператор с адаптером
-	Provider    *string `json:"provider,omitempty"`
-	DisplayName *string `json:"display_name,omitempty"`
-	Company     UUID    `json:"company"`
-	// AppClientID — Часть тройки ключей оператора; обратно не возвращается
-	AppClientID string `json:"app_client_id"`
-	// AppSecret — Часть тройки ключей оператора; обратно не возвращается
-	AppSecret string `json:"app_secret"`
-	// ServiceKey — Часть тройки ключей оператора; обратно не возвращается
-	ServiceKey string `json:"service_key"`
-}
-
 type DocflowConnectionList struct {
 	Count   int64               `json:"count"`
 	Results []DocflowConnection `json:"results"`
-}
-
-// DocflowConnectionModeInput — Явный выбор режима. mode: read_only — только чтение; drafts — «Черновики в ЭДО» (ERP-1551): оператору уходят только черновики, подпись, отправка и ответы закрыты; write — все действия. Прежняя форма read_only (true — read_only, false — write) принимается, если mode не задан. Без обоих полей — 400 docflow.mode_required.
-type DocflowConnectionModeInput struct {
-	Mode *string `json:"mode,omitempty"`
-	// ReadOnly — Прежняя форма; используется, только когда mode не задан
-	ReadOnly *bool `json:"read_only,omitempty"`
-}
-
-// DocflowConnectionPatch — Частичное изменение. Учётные данные обновляются только всеми тремя значениями сразу: у оператора это одно неделимое сочетание.
-type DocflowConnectionPatch struct {
-	DisplayName *string `json:"display_name,omitempty"`
-	Status      *string `json:"status,omitempty"`
-	// ReplyAfterApproval — Включает ответ у оператора после нашего согласования. Режим «только чтение» этим не снимается: ответ оператору проходит его сторож
-	ReplyAfterApproval *bool   `json:"reply_after_approval,omitempty"`
-	AppClientID        *string `json:"app_client_id,omitempty"`
-	AppSecret          *string `json:"app_secret,omitempty"`
-	ServiceKey         *string `json:"service_key,omitempty"`
-}
-
-// DocflowContactRequisites — Контакт: телефоны, почта и прочие сведения для связи.
-type DocflowContactRequisites struct {
-	// Phones — Тлф
-	Phones []string `json:"phones,omitempty"`
-	// Emails — ЭлПочта
-	Emails []string `json:"emails,omitempty"`
-	// Info — ИнКонт
-	Info *string `json:"info,omitempty"`
 }
 
 // DocflowCounterparty — Вторая сторона обмена. Реквизиты хранятся текстом всегда, даже когда сопоставление с нашим контрагентом состоялось: карточку могут удалить или переименовать, а пакет обязан остаться читаемым спустя годы.
@@ -7431,53 +5491,6 @@ type DocflowCounterparty struct {
 	ContactName string `json:"contact_name"`
 }
 
-// DocflowCurrencyRequisites — ДенИзм: денежное измерение документа.
-type DocflowCurrencyRequisites struct {
-	// Code — КодОКВ. Пустое значение означает рубль
-	Code *string `json:"code,omitempty"`
-	// Name — НаимОКВ
-	Name *string `json:"name,omitempty"`
-	// Rate — КурсВал
-	Rate *string `json:"rate,omitempty"`
-}
-
-// DocflowDocumentRefRequisites — Реквизиты стороннего документа.
-type DocflowDocumentRefRequisites struct {
-	// Name — РеквНаимДок
-	Name *string `json:"name,omitempty"`
-	// Number — РеквНомерДок
-	Number *string `json:"number,omitempty"`
-	// Date — РеквДатаДок в форме ГГГГ-ММ-ДД
-	Date *string `json:"date,omitempty"`
-	// FileID — РеквИдФайлДок
-	FileID *string `json:"file_id,omitempty"`
-	// DocID — РеквИдДок
-	DocID *string `json:"doc_id,omitempty"`
-	// Info — РеквДопСведДок
-	Info *string `json:"info,omitempty"`
-}
-
-// DocflowElectronicPoARequisites — СвДоверЭл: машиночитаемая доверенность. Формат требует её ровно при способе подтверждения полномочий 3 и запрещает при остальных.
-type DocflowElectronicPoARequisites struct {
-	// Number — НомДовер, 36 символов
-	Number         *string `json:"number,omitempty"`
-	IssuedAt       *string `json:"issued_at,omitempty"`
-	InternalNumber *string `json:"internal_number,omitempty"`
-	InternalDate   *string `json:"internal_date,omitempty"`
-	// Storage — ИдСистХран
-	Storage *string `json:"storage,omitempty"`
-	URL     *string `json:"url,omitempty"`
-}
-
-// DocflowEmployeeRequisites — Работник организации: должность и ФИО.
-type DocflowEmployeeRequisites struct {
-	Position   *string `json:"position,omitempty"`
-	Surname    *string `json:"surname,omitempty"`
-	Name       *string `json:"name,omitempty"`
-	Patronymic *string `json:"patronymic,omitempty"`
-	Info       *string `json:"info,omitempty"`
-}
-
 // DocflowEvent — Событие ленты пакета. Лента — то, по чему человек восстанавливает ход спора с контрагентом, поэтому название и комментарий хранятся словами оператора и не переводятся.
 type DocflowEvent struct {
 	ID         UUID    `json:"id"`
@@ -7487,61 +5500,6 @@ type DocflowEvent struct {
 	Comment    string  `json:"comment"`
 	OccurredAt *string `json:"occurred_at,omitempty"`
 	CreatedAt  string  `json:"created_at"`
-}
-
-// DocflowFileRequisites — То, из чего складывается имя файла обмена. Идентификаторы участников спрашиваются, потому что взять их неоткуда: свой оператор отдаёт пустым, а идентификатор контрагента появляется только с первым его документом в ленте. Что сервер видел в зеркале, он подставляет сам; всё остальное — за человеком.
-type DocflowFileRequisites struct {
-	// SenderID — Идентификатор отправителя у оператора
-	SenderID *string `json:"sender_id,omitempty"`
-	// ReceiverID — Идентификатор получателя у оператора
-	ReceiverID *string `json:"receiver_id,omitempty"`
-	// UUID — Собственный идентификатор файла обмена
-	UUID *string `json:"uuid,omitempty"`
-	// Extra — Дополнительная часть имени файла
-	Extra *string `json:"extra,omitempty"`
-	// Traceability — Документ о прослеживаемых товарах
-	Traceability *bool `json:"traceability,omitempty"`
-	// Alcohol — Документ об алкогольной продукции
-	Alcohol *bool `json:"alcohol,omitempty"`
-	// Tobacco — Документ о табачной продукции
-	Tobacco *bool `json:"tobacco,omitempty"`
-	// Oil — Документ о нефтепродуктах
-	Oil *bool `json:"oil,omitempty"`
-}
-
-// DocflowFlowAccountingBacklink — Бумага, стоящая за учётным документом. Открывать нужно version — ту закреплённую редакцию, которая была основанием, а не current_version.
-type DocflowFlowAccountingBacklink struct {
-	ID UUID `json:"id"`
-	// Version — Закреплённая редакция-основание
-	Version int64 `json:"version"`
-	// CurrentVersion — Текущая редакция бумаги
-	CurrentVersion int64           `json:"current_version"`
-	Title          string          `json:"title"`
-	Number         string          `json:"number"`
-	Date           string          `json:"date"`
-	Kind           DocflowFlowKind `json:"kind"`
-	Status         string          `json:"status"`
-}
-
-type DocflowFlowAccountingBacklinkPage struct {
-	Items   []DocflowFlowAccountingBacklink `json:"items"`
-	HasMore bool                            `json:"has_more"`
-}
-
-// DocflowFlowAccountingDocument — Карточка учётного документа чужого модуля, прочитанная у его владельца.
-type DocflowFlowAccountingDocument struct {
-	ID              UUID   `json:"id"`
-	Owner           string `json:"owner"`
-	TypeKey         string `json:"type_key"`
-	TypeName        string `json:"type_name"`
-	Number          string `json:"number"`
-	Date            string `json:"date"`
-	Status          string `json:"status"`
-	IsMarkedDeleted bool   `json:"is_marked_deleted"`
-	// ContractNumber — Номер договора, по которому собран этот план. Заполнен только у кандидатов, поднятых наверх связью основания акта: человек обязан видеть, почему план стоит первым
-	ContractNumber *string `json:"contract_number,omitempty"`
-	// ContractDate — Дата того же договора в форме ГГГГ-ММ-ДД
-	ContractDate *string `json:"contract_date,omitempty"`
 }
 
 // DocflowFlowAccountingLink — Ссылка на учётный документ чужого модуля по личности. Состояние, остаток и содержимое чужого документа сюда не копируются: правда о нём живёт у его владельца.
@@ -7555,52 +5513,6 @@ type DocflowFlowAccountingLink struct {
 	SourceVersion *int64 `json:"source_version,omitempty"`
 	// TargetVersion — Редакция учётного документа, из которой сделана бумага
 	TargetVersion *int64 `json:"target_version,omitempty"`
-}
-
-type DocflowFlowAccountingLinkInput struct {
-	ExpectedVersion int64  `json:"expected_version"`
-	Owner           string `json:"owner"`
-	DocumentID      UUID   `json:"document_id"`
-}
-
-// DocflowFlowAccountingOriginalInput — Только то, что выбирают в документообороте. Юрлицо, контрагент и направление берутся из названной редакции учётного документа и телом запроса не подделываются.
-type DocflowFlowAccountingOriginalInput struct {
-	// TargetVersion — Точная редакция учётного документа
-	TargetVersion int64              `json:"target_version"`
-	Kind          DocflowFlowKind    `json:"kind"`
-	Content       DocflowFlowContent `json:"content"`
-}
-
-type DocflowFlowAccountingPage struct {
-	Items []DocflowFlowAccountingDocument `json:"items"`
-	// NextOffset — Продолжение листания; null означает, что дальше ничего нет
-	NextOffset *int64 `json:"next_offset"`
-}
-
-type DocflowFlowAccountingUnlinkInput struct {
-	ExpectedVersion int64 `json:"expected_version"`
-	LinkID          UUID  `json:"link_id"`
-}
-
-type DocflowFlowAccrualPlan struct {
-	DocumentID  UUID `json:"document_id"`
-	OperationID UUID `json:"operation_id"`
-	// Version — Версия операции владельца; её подставляют в expected_operation_version
-	Version  int64                     `json:"version"`
-	Kind     string                    `json:"kind"`
-	Currency string                    `json:"currency"`
-	Amount   string                    `json:"amount"`
-	Stages   []DocflowFlowAccrualStage `json:"stages"`
-}
-
-type DocflowFlowAccrualStage struct {
-	ID    UUID    `json:"id"`
-	Label string  `json:"label"`
-	Date  *string `json:"date,omitempty"`
-	// Amount — Запланировано по этапу
-	Amount string `json:"amount"`
-	// ActualAmount — Уже принято актами
-	ActualAmount string `json:"actual_amount"`
 }
 
 // DocflowFlowChangeInput — Одна команда правки. Поля, не относящиеся к названному действию, отвергаются, а не игнорируются: запрос, просящий две разные вещи сразу, сам не знает, чего хочет.
@@ -7778,22 +5690,6 @@ type DocflowFlowEDOState struct {
 	OccurredAt string `json:"occurred_at"`
 }
 
-// DocflowFlowFNSInput — Проверка, сборка и отправка выпуска карточки в формате ФНС. Реквизиты — тот же объект, что у отправки продажи: подписант, содержание операции, адреса сторон, идентификаторы участников обмена. Подписанта «по умолчанию» нет: это подпись за человека.
-type DocflowFlowFNSInput struct {
-	Connection *UUID              `json:"connection,omitempty"`
-	Requisites *DocflowRequisites `json:"requisites,omitempty"`
-	// Comment — Примечание документа у оператора
-	Comment *string `json:"comment,omitempty"`
-	// Files — Приложения после формализованного файла. Счёт на оплату кладёт сюда PDF-бланк той же редакции
-	Files []DocflowOutgoingFile `json:"files,omitempty"`
-}
-
-// DocflowFlowFNSSent — Итог отправки выпуска — строка выпуска и связь карточки с конвертом оператора.
-type DocflowFlowFNSSent struct {
-	Title DocflowTitle       `json:"title"`
-	Link  DocflowFlowEDOLink `json:"link"`
-}
-
 // DocflowFlowFile — Приложенный файл. Всё это описание делает владелец при загрузке, и командой правки оно не принимается.
 type DocflowFlowFile struct {
 	ID   UUID   `json:"id"`
@@ -7804,35 +5700,6 @@ type DocflowFlowFile struct {
 	ContentType string `json:"content_type"`
 	UploadedBy  int64  `json:"uploaded_by"`
 	UploadedAt  string `json:"uploaded_at"`
-}
-
-type DocflowFlowFinanceAccrualAllocation struct {
-	// AccrualID — Этап работ плана
-	AccrualID UUID `json:"accrual_id"`
-	// Amount — Сколько этого этапа закрывает акт; не больше остатка
-	Amount string `json:"amount"`
-}
-
-// DocflowFlowFinanceAccrualInput — Распределение суммы акта по этапам работ. Поле accrual_id остаётся совместимым с прежней однoэтапной формой запроса.
-type DocflowFlowFinanceAccrualInput struct {
-	ExpectedVersion int64 `json:"expected_version"`
-	// PlanDocumentID — Плановая операция модуля финансов
-	PlanDocumentID UUID `json:"plan_document_id"`
-	// ExpectedOperationVersion — Версия операции владельца
-	ExpectedOperationVersion int64 `json:"expected_operation_version"`
-	// AccrualID — Единственный этап; равнозначно одной строке allocations
-	AccrualID   *UUID                                 `json:"accrual_id,omitempty"`
-	Allocations []DocflowFlowFinanceAccrualAllocation `json:"allocations,omitempty"`
-	// ActualDate — Фактическая дата выполнения; может отличаться от плановой даты этапа
-	ActualDate string `json:"actual_date"`
-}
-
-// DocflowFlowFinancePlanInput — Экономическая роль называется явно: входящий договор всё ещё может быть продажей, и выводить роль из направления документа нельзя.
-type DocflowFlowFinancePlanInput struct {
-	ExpectedVersion int64  `json:"expected_version"`
-	Kind            string `json:"kind"`
-	// PNLItemID — Статья отчёта о прибылях и убытках
-	PNLItemID UUID `json:"pnl_item_id"`
 }
 
 type DocflowFlowKind = string
@@ -7893,19 +5760,6 @@ type DocflowFlowRecognized struct {
 	ValidUntil *string `json:"valid_until,omitempty"`
 }
 
-type DocflowFlowReference struct {
-	ID   UUID   `json:"id"`
-	Name string `json:"name"`
-	// Unit — Единица измерения; приходит только у номенклатуры
-	Unit *string `json:"unit,omitempty"`
-}
-
-type DocflowFlowReferencePage struct {
-	Items []DocflowFlowReference `json:"items"`
-	// HasMore — Есть продолжение: спрашивают следующим offset
-	HasMore bool `json:"has_more"`
-}
-
 // DocflowFlowRelation — Связь между бумагами кабинета — основание, приложение, изменение или замена. Учётной инструкцией она не является.
 type DocflowFlowRelation struct {
 	ID       UUID   `json:"id"`
@@ -7933,361 +5787,6 @@ type DocflowFlowScheduleStage struct {
 	AfterStageID *UUID   `json:"after_stage_id,omitempty"`
 	// DelayDays — Дней после события срока
 	DelayDays *int64 `json:"delay_days,omitempty"`
-}
-
-// DocflowFormatIssues — Документ не отвечает формату ФНС. Список непройденных проверок уходит ЦЕЛИКОМ: человек обязан увидеть всё сразу, а не по одной причине за попытку.
-type DocflowFormatIssues struct {
-	// Detail — Одна фраза на языке запроса
-	Detail string         `json:"detail"`
-	Code   string         `json:"code"`
-	Issues []DocflowIssue `json:"issues"`
-}
-
-type DocflowGovConnectionState struct {
-	Connection  UUID    `json:"connection"`
-	Company     *string `json:"company"`
-	CompanyName string  `json:"company_name"`
-	// Access — Пусто — ленту отчётности ещё не читали
-	Access    string  `json:"access"`
-	CheckedAt *string `json:"checked_at"`
-	// Note — Слова оператора при отказе
-	Note string `json:"note"`
-}
-
-// DocflowGovDocument — Документ госоргана в зеркале оператора. doc_type, doc_subtype, state_code и state_name — слова оператора; kind, claim_kind и authority — наш вид по одному правилу сервера. Сроки — календарные даты ГГГГ-ММ-ДД; пустая строка — срока нет (не требование или дата отправки неизвестна).
-type DocflowGovDocument struct {
-	ID          UUID    `json:"id"`
-	Connection  UUID    `json:"connection"`
-	Company     *string `json:"company"`
-	CompanyName string  `json:"company_name"`
-	Kind        string  `json:"kind"`
-	ClaimKind   string  `json:"claim_kind"`
-	// Authority — fns, sfr, rosstat, fsrar, rpn или пусто
-	Authority        string `json:"authority"`
-	AuthorityName    string `json:"authority_name"`
-	AuthorityCode    string `json:"authority_code"`
-	ExternalID       string `json:"external_id"`
-	DocType          string `json:"doc_type"`
-	DocSubtype       string `json:"doc_subtype"`
-	Number           string `json:"number"`
-	Date             string `json:"date"`
-	Note             string `json:"note"`
-	KitID            string `json:"kit_id"`
-	StateCode        string `json:"state_code"`
-	StateName        string `json:"state_name"`
-	StateDescription string `json:"state_description"`
-	SentOn           string `json:"sent_on"`
-	ReceiptDue       string `json:"receipt_due"`
-	AnswerDue        string `json:"answer_due"`
-	// BlockAfter — С этого дня без квитанции инспекция вправе приостановить операции по счетам
-	BlockAfter    string  `json:"block_after"`
-	ReceiptSentAt *string `json:"receipt_sent_at"`
-	AnsweredAt    *string `json:"answered_at"`
-	// AnsweredBy — Сотрудник, отметивший ответ вручную; null — ответ виден в ленте или его нет
-	AnsweredBy     *int64  `json:"answered_by"`
-	AnsweredByName string  `json:"answered_by_name"`
-	AnswerMessage  *string `json:"answer_message"`
-	ReceiptPending bool    `json:"receipt_pending"`
-	AnswerPending  bool    `json:"answer_pending"`
-	// ReceiptLate — Срок квитанции прошёл или до блокировки счёта не больше двух рабочих дней, а квитанции нет
-	ReceiptLate bool `json:"receipt_late"`
-	// AnswerLate — Срок ответа прошёл, а ответа нет
-	AnswerLate   bool                `json:"answer_late"`
-	Open         bool                `json:"open"`
-	Urgency      string              `json:"urgency"`
-	OperatorLink string              `json:"operator_link"`
-	ReceivedAt   *string             `json:"received_at"`
-	UpdatedAt    string              `json:"updated_at"`
-	Attachments  []DocflowAttachment `json:"attachments,omitempty"`
-	Events       []DocflowEvent      `json:"events,omitempty"`
-}
-
-type DocflowGovList struct {
-	Count   int64                `json:"count"`
-	Results []DocflowGovDocument `json:"results"`
-}
-
-type DocflowGovSummary struct {
-	Claims       int64                       `json:"claims"`
-	ClaimsOpen   int64                       `json:"claims_open"`
-	ClaimsUrgent int64                       `json:"claims_urgent"`
-	Letters      int64                       `json:"letters"`
-	Reports      int64                       `json:"reports"`
-	Connections  []DocflowGovConnectionState `json:"connections"`
-}
-
-// DocflowIntakeCounterparty — Вторая сторона и то, с кем мы её свели. Порядок узнавания жёсткий, и каждая ступень сильнее следующей: решение человека этим же запросом, сопоставление зеркала пакета, ЗАПИСАННОЕ решение по этому участнику обмена и, наконец, поиск в справочнике по ИНН и КПП. Последняя ступень — догадка, и она называет себя догадкой (match: guess), а не выдаёт себя за чьё-то решение. Разбор у неё общий с автоматчем выгрузок: второй механизм узнавания рядом с существующим разошёлся бы с ним на первой же правке — молча и в пользу дубля. Неоднозначность не разрешается никогда: ИНН, совпавший у двух юрлиц, которых не развёл КПП, уходит человеку списком options.
-type DocflowIntakeCounterparty struct {
-	// Contact — Карточка контрагента кабинета; null — свести не с кем, и приёмка отвечает проверкой docflow.edo.contact_required
-	Contact *UUID `json:"contact"`
-	// ContactName — Имя этой карточки в кабинете
-	ContactName string `json:"contact_name"`
-	// Name — Имя стороны словами оператора либо файла продавца
-	Name string `json:"name"`
-	INN  string `json:"inn"`
-	KPP  string `json:"kpp"`
-	// Match — Откуда взялся контрагент: manual — решение человека, auto — записанное сопоставление, guess — наша догадка по реквизитам прямо сейчас, нигде не записанная, none — не свели ни с кем
-	Match string `json:"match"`
-	// Options — Наши контрагенты с тем же ИНН, когда выбрать между ними обязан человек. Непустой список означает «такие у нас уже есть, выбери» — и потому же означает, что заводить нового НЕ НАДО: там, где контрагент с такими реквизитами уже заведён, место кнопке «связать с существующим», а не «завести».
-	Options []DocflowIntakeCounterpartyOption `json:"options,omitempty"`
-}
-
-// DocflowIntakeCounterpartyOption — Один наш контрагент на выбор человеку. КПП здесь не для полноты: он единственное, чем два юрлица с одним ИНН различаются.
-type DocflowIntakeCounterpartyOption struct {
-	ID   UUID   `json:"id"`
-	Name string `json:"name"`
-	KPP  string `json:"kpp"`
-}
-
-// DocflowIntakeInput — Решение человека, которым подтверждается приёмка. Сам пакет назван в адресе. Решения по строкам приезжают СПИСКОМ, а не картой «номер → товар»: пропуск строки — это тоже решение, и картой его пришлось бы выражать отсутствием ключа, то есть неотличимо от «человек про эту строку не сказал ничего», а разница между ними принципиальная.
-type DocflowIntakeInput struct {
-	// Date — Дата учётного документа ГГГГ-ММ-ДД. Пусто — берётся дата документа поставщика: она и есть дата операции
-	Date *string `json:"date,omitempty"`
-	// Contact — Контрагент. Пусто — берётся тот, с кем свело зеркало
-	Contact *UUID `json:"contact,omitempty"`
-	// Lines — Решения по строкам. Собственной догадкой подтверждение не пользуется: строка без записанного соответствия и без решения человека в документ не едет, а отвечает проверкой docflow.edo.product_required
-	Lines []DocflowIntakeLineInput `json:"lines,omitempty"`
-	// Comment — Примечание учётного документа
-	Comment *string `json:"comment,omitempty"`
-}
-
-// DocflowIntakeLine — Строка товарной таблицы чужого документа вместе с тем, что мы про неё предлагаем. Числа остаются СТРОКАМИ ровно так, как их написал поставщик: сумма в чужом документе такая, какую он подписал, и наша задача её донести, а не поправить. Расхождения покажет сверка, а не молчаливое округление.
-type DocflowIntakeLine struct {
-	// Number — Номер строки в файле поставщика. По нему человек соотносит экран с бумагой, и по нему же приходит его решение
-	Number int64 `json:"number"`
-	// Name — Наименование товара словами поставщика
-	Name string `json:"name"`
-	// Article — Артикул поставщика
-	Article string `json:"article"`
-	// Code — Код товара у поставщика
-	Code string `json:"code"`
-	// UnitCode — Код ОКЕИ единицы измерения
-	UnitCode string `json:"unit_code"`
-	UnitName string `json:"unit_name"`
-	Quantity string `json:"quantity"`
-	// Price — Цена единицы словами поставщика
-	Price            string `json:"price"`
-	AmountWithoutVAT string `json:"amount_without_vat"`
-	// VATRate — Ставка налога словами файла
-	VATRate string `json:"vat_rate"`
-	// VATAmount — Сумма налога. Пуста при отметке «без НДС»: нуля там нет, и подставить его значит превратить необлагаемую поставку в облагаемую с нулевым налогом
-	VATAmount string `json:"vat_amount"`
-	// VATWithout — Отметка «без НДС» у строки
-	VATWithout    bool   `json:"vat_without"`
-	AmountWithVAT string `json:"amount_with_vat"`
-	// Key — Ключ соответствия: то, по чему эта строка узнаётся в СЛЕДУЮЩЕМ документе того же поставщика. Собирается с приставкой вида `арт:`, `код:` или `наим:` — артикул «100» и наименование «100» разные вещи, и без приставки они стали бы одной строкой соответствий. Показывается затем, чтобы человек понимал, что именно он сопоставляет: не эту накладную, а артикул поставщика на все будущие поставки.
-	Key string `json:"key"`
-	// Product — Номенклатура кабинета; null — не выбрана
-	Product *UUID `json:"product"`
-	// ProductName — Имя выбранной карточки. Подсказка, а не реквизит: карточку могли заархивировать
-	ProductName string `json:"product_name"`
-	// Match — Откуда взялась номенклатура строки. `manual` — сопоставил человек, `auto` — сопоставила машина и решение записано, `rejected` — человек уже посмотрел и сказал «не это» (догадку по такой строке мы больше не показываем), `guess` — наша догадка ПРЯМО СЕЙЧАС, нигде не записанная, `none` — сопоставить не с чем. Записанное соответствие приносит свой способ из справочника внешних ссылок, поэтому здесь встречаются и его значения (`pending`, `import`). Различать обязательно: на экране «это решил человек» и «это мы угадали» выглядят одинаково — одна строка с названием товара, — а значат противоположное.
-	Match string `json:"match"`
-	// Options — С чем ещё эта строка могла совпасть. Непусто только у неоднозначной догадки: выбрать за человека из двух одинаково подходящих товаров значит угадать монеткой и записать это как факт
-	Options []DocflowIntakeProductOption `json:"options,omitempty"`
-}
-
-// DocflowIntakeLineInput — Решение человека по одной строке документа поставщика.
-type DocflowIntakeLineInput struct {
-	// Number — Номер строки в файле поставщика. Два решения по одному номеру отклоняются: какое из них считать выбором человека, знать неоткуда, а взять последнее значит тихо отбросить первое
-	Number int64 `json:"number"`
-	// Product — Выбранная номенклатура кабинета
-	Product *UUID `json:"product,omitempty"`
-	// Skip — Строку в учётный документ не берём. Нужно затем, что в УПД встречаются строки, которых у нас нет и не будет: доставка отдельной строкой, тара, услуга сборки. Заводить ради них карточку товара значит засорять справочник, а молча терять их — врать про сумму. Пропущенная строка остаётся видимой и в приёмке, и в самом документе.
-	Skip *bool `json:"skip,omitempty"`
-}
-
-// DocflowIntakeParty — Сторона сделки, прочитанная из чужого файла. Показывается ТЕКСТОМ, даже когда контрагент сопоставлен: карточку могут переименовать, а документ обязан остаться читаемым таким, каким его прислали.
-type DocflowIntakeParty struct {
-	// Kind — Вид участника словами файла: юридическое лицо, предприниматель, иностранное лицо, физическое лицо
-	Kind string `json:"kind"`
-	Name string `json:"name"`
-	INN  string `json:"inn"`
-	KPP  string `json:"kpp"`
-	// Address — Адрес одной строкой, собранный из частей формата
-	Address string `json:"address"`
-}
-
-// DocflowIntakePreview — Что мы предлагаем принять к учёту. Ничего не меняет и никуда не ходит: предложение обязано быть безопасным, иначе «посмотреть, что там» становится действием с последствиями, и человек побоится его открыть раньше, чем решит принимать.
-type DocflowIntakePreview struct {
-	Message UUID `json:"message"`
-	// Formalized — Нашёлся ли во вложениях титул продавца. Ложь означает, что принимать нечего: пакет либо неформализованный, либо файлы ещё не скачаны — чинится это синхронизацией, а не заполнением формы
-	Formalized bool `json:"formalized"`
-	// Ready — Принимается ли пакет прямо сейчас, без правок
-	Ready bool `json:"ready"`
-	// FlowCardKind — Вид карточки документооборота, которую заведёт приёмка; пусто — карточки по этому пакету не будет. Читается вместе с formalized: непустой вид при formalized = false означает «учётного документа не будет, карточка будет», и приёмка по такому пакету осмысленна. Договор формализованным титулом не бывает по определению — его присылают подписанным PDF, — поэтому кнопку приёмки на нём гасить нельзя, её следует назвать «Завести карточку».
-	FlowCardKind string `json:"flow_card_kind"`
-	// Accepted — Учётный документ, если пакет уже принят; иначе null. Показывается вместо повторной приёмки: второй документ по тому же пакету — это задвоенный приход и задвоенный долг перед поставщиком.
-	Accepted     *DocflowAcceptedDocument  `json:"accepted"`
-	Source       DocflowIntakeSource       `json:"source"`
-	Counterparty DocflowIntakeCounterparty `json:"counterparty"`
-	// Lines — Товарная таблица чужого документа вместе с тем, что мы про неё предлагаем. Всегда массив, даже пустой
-	Lines  []DocflowIntakeLine `json:"lines"`
-	Totals DocflowIntakeTotals `json:"totals"`
-	// Issues — Что мешает принять. Тот же тип и тот же порядок, что у предполётной проверки исходящего документа: интерфейс переводит их одним словарём
-	Issues []DocflowIssue `json:"issues"`
-}
-
-// DocflowIntakeProductOption — Вариант номенклатуры, предложенный неоднозначной строке.
-type DocflowIntakeProductOption struct {
-	ID   UUID   `json:"id"`
-	Name string `json:"name"`
-	SKU  string `json:"sku"`
-}
-
-// DocflowIntakeResult — Что вышло из приёмки. Вместе с документом возвращается ПЕРЕСОБРАННОЕ предложение: экран после приёмки показывает то же, что показывал до неё, но уже с проставленными решениями — иначе ему пришлось бы спрашивать состояние вторым запросом и показывать между ними полупустую форму.
-type DocflowIntakeResult struct {
-	// Document — Учётный документ. ОТСУТСТВУЕТ, когда пакет его не порождает: у договора, дополнительного соглашения и спецификации в PDF результат приёмки — одна карточка документооборота, и экран ведёт человека в неё, а не в журнал учёта.
-	Document *DocflowAcceptedDocument `json:"document,omitempty"`
-	Preview  DocflowIntakePreview     `json:"preview"`
-	// FlowDocument — Карточка документооборота, если этот пакет её заводит: договор, дополнительное соглашение, спецификация, акт. Отсутствует у первички — счёт и УПД идут в учёт и привязываются к договору. У неформализованного договора приходит ОДНА карточка без учётного документа: принимать к учёту там нечего, а согласовывать есть что.
-	FlowDocument *DocflowFlowDocument `json:"flow_document,omitempty"`
-}
-
-// DocflowIntakeSource — Реквизиты чужого файла обмена, из которого всё прочитано. Разбор частичный и ничего не проверяет: файл уже подписан и юридически значим, и отказать в его чтении из-за реквизита, который нам не нужен, значит потерять поставку из-за чужой ошибки в необязательном поле.
-type DocflowIntakeSource struct {
-	Attachment UUID `json:"attachment"`
-	// AttachmentName — Как это вложение назвал ОПЕРАТОР. Стоит рядом с file_name намеренно: имя оператора («Счёт-фактура № 12») человек видит в списке вложений, а file_name — имя файла обмена, и это разные строки
-	AttachmentName string `json:"attachment_name"`
-	// FileName — ИдФайл: имя файла обмена без расширения, как его записал продавец
-	FileName string `json:"file_name"`
-	// FormatVersion — ВерсФорм: редакция формата словами самого файла
-	FormatVersion string `json:"format_version"`
-	// Knd — Код документа по классификатору; у титула продавца 1115131
-	Knd string `json:"knd"`
-	// Function — Функция документа словами продавца: СЧФ, ДОП, СЧФДОП
-	Function string `json:"function"`
-	// DocumentKindName — Наименование документа, данное ему составителем
-	DocumentKindName string `json:"document_kind_name"`
-	// Number — Номер документа продавца
-	Number string `json:"number"`
-	// Date — Дата документа в форме ГГГГ-ММ-ДД. Пусто — дата не разобралась
-	Date string `json:"date"`
-	// DateRaw — Она же в форме поставщика ДД.ММ.ГГГГ. Показывается, когда разбор не удался: чужую опечатку человек поймёт быстрее, чем пустое поле
-	DateRaw string `json:"date_raw"`
-	// Currency — Валюта документа наименованием и кодом, словами файла
-	Currency string `json:"currency"`
-	// Operation — Содержание операции словами продавца
-	Operation string             `json:"operation"`
-	Seller    DocflowIntakeParty `json:"seller"`
-	Buyer     DocflowIntakeParty `json:"buyer"`
-}
-
-// DocflowIntakeTotals — Итоги таблицы словами поставщика. Мы их не пересчитываем: итог в чужом документе такой, какой он подписал.
-type DocflowIntakeTotals struct {
-	WithoutVAT string `json:"without_vat"`
-	// VATAmount — Пусто при отметке «без НДС» у документа
-	VATAmount string `json:"vat_amount"`
-	WithVAT   string `json:"with_vat"`
-	// VATWithout — Отметка «без НДС» у документа целиком
-	VATWithout bool `json:"vat_without"`
-}
-
-// DocflowInvitation — Последнее известное состояние заявки на обмен у оператора.
-type DocflowInvitation struct {
-	// ID — Идентификатор приглашения у оператора
-	ID             string `json:"id"`
-	Connection     UUID   `json:"connection"`
-	ConnectionName string `json:"connection_name"`
-	Company        *UUID  `json:"company,omitempty"`
-	CompanyName    string `json:"company_name"`
-	// Name — Название контрагента, если оператор его назвал; иначе экран использует ИНН
-	Name string `json:"name"`
-	INN  string `json:"inn"`
-	KPP  string `json:"kpp"`
-	// ExternalID — Идентификатор абонентского ящика контрагента
-	ExternalID string `json:"external_id"`
-	// State — Известные состояния Saby: 2 — отправлено, 7 — обмен возможен, 9 — маршрут разорван
-	State int64 `json:"state"`
-	// StateName — Слова оператора о состоянии
-	StateName string `json:"state_name"`
-	// Incoming — true — входящее приглашение из роуминга, которое Saby принимает автоматически
-	Incoming  bool    `json:"incoming"`
-	CreatedAt *string `json:"created_at,omitempty"`
-	ChangedAt *string `json:"changed_at,omitempty"`
-}
-
-// DocflowInvitationInput — Приглашение контрагента к обмену. Нужен ИНН либо идентификатор его ящика у оператора. Название обязательно, когда карточки контрагента у оператора ещё нет: приглашение её заводит.
-type DocflowInvitationInput struct {
-	// ExternalID — Идентификатор абонентского ящика контрагента. Ключом НЕ является: оператор предупреждает, что он может меняться
-	ExternalID *string `json:"external_id,omitempty"`
-	INN        *string `json:"inn,omitempty"`
-	KPP        *string `json:"kpp,omitempty"`
-	Name       *string `json:"name,omitempty"`
-	// Message — Приписка человека. Оператору она НЕ уходит: поля сообщения у метода нет вовсе
-	Message *string `json:"message,omitempty"`
-}
-
-type DocflowInvitationPage struct {
-	Count   int64               `json:"count"`
-	Results []DocflowInvitation `json:"results"`
-	// Senders — Безопасный список подключений без учётных данных для формы приглашения
-	Senders []DocflowInvitationSender `json:"senders"`
-}
-
-type DocflowInvitationSender struct {
-	ID   UUID   `json:"id"`
-	Name string `json:"name"`
-	// Company — Юрлицо подключения: бумагу отправляют только через подключение её юрлица
-	Company     *string `json:"company,omitempty"`
-	CompanyName string  `json:"company_name"`
-	CompanyINN  string  `json:"company_inn"`
-	CompanyKPP  string  `json:"company_kpp"`
-	Provider    string  `json:"provider"`
-	// ProviderName — Имя оператора словами
-	ProviderName *string `json:"provider_name,omitempty"`
-	Status       string  `json:"status"`
-	ReadOnly     bool    `json:"read_only"`
-	// DraftWrite — Режим «Черновики в ЭДО»: черновик у оператора записывается и при read_only=true
-	DraftWrite *bool `json:"draft_write,omitempty"`
-	// ExternalOrgID — Идентификатор собственного абонентского ящика; пусто — нужно повторно проверить связь
-	ExternalOrgID string `json:"external_org_id"`
-}
-
-// DocflowIssue — Одна невыполненная проверка. Форма одна на сборку файла формата ФНС и на приёмку входящего документа к учёту: интерфейс переводит их одним словарём, и вторая форма списка означала бы второй словарь. Ни одной надписи для человека здесь нет: код, путь реквизита и подробности значениями — фразу собирает интерфейс, и собирает её на языке читателя.
-type DocflowIssue struct {
-	// Code — Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои пять: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке документа не сопоставлена номенклатура) и docflow.edo.sign_first (документ ещё не подписан: в учёт его принимают после подписи)
-	Code string `json:"code"`
-	// Path — Путь до реквизита ИМЕНАМИ ФНС — именами приказа, а не нашими: этими же словами человек будет искать требование в письме налоговой. Например `Документ/СвСчФакт/СвПрод/Адрес`.
-	Path string `json:"path"`
-	// Line — Номер товарной строки с единицы. Отсутствует, когда реквизит не про строку
-	Line *int64 `json:"line,omitempty"`
-	// Params — Подробности значениями: предел длины, перечень допустимых значений, пришедшее значение. Отсутствует, когда проверке нечего добавить.
-	Params map[string]string `json:"params,omitempty"`
-}
-
-// DocflowLineRequisites — Дополнение к строке учётного документа. Строка адресуется line_id — тем же идентификатором, которым её знает сам документ. Не порядковым номером: порядок строк меняют, и привязка по номеру перевесила бы ставку НДС на другой товар молча.
-type DocflowLineRequisites struct {
-	LineID UUID `json:"line_id"`
-	// VATRate — Не принимается: ставку строки задают вид ставки товара и учётная политика юрлица. Непустое значение — 400
-	VATRate *string `json:"vat_rate,omitempty"`
-	// UnitCode — ОКЕИ_Тов. Пустое значение берёт код из карточки единицы измерения
-	UnitCode *string `json:"unit_code,omitempty"`
-	// UnitName — НаимЕдИзм
-	UnitName *string `json:"unit_name,omitempty"`
-	// Kind — ПрТовРаб
-	Kind *string `json:"kind,omitempty"`
-	// Gtin — ГТИН
-	Gtin *string `json:"gtin,omitempty"`
-	// CountryCode — КодПроисх
-	CountryCode *string `json:"country_code,omitempty"`
-	// CountryName — КрНаимСтрПр
-	CountryName *string `json:"country_name,omitempty"`
-	// CustomsNumber — НомерДТ
-	CustomsNumber *string `json:"customs_number,omitempty"`
-	// Marks — НомСредИдентТов: средства идентификации маркированного товара
-	Marks []DocflowMarkRequisites `json:"marks,omitempty"`
-	// Extra — ИнфПолФХЖ2
-	Extra []DocflowTextInfoRequisites `json:"extra,omitempty"`
-}
-
-// DocflowMarkRequisites — НомСредИдентТов: средства идентификации маркированного товара. Проходят насквозь: своего источника кодов маркировки в Akeda нет, а без них УПД на маркированный товар недействителен.
-type DocflowMarkRequisites struct {
-	TransportPackage *string  `json:"transport_package,omitempty"`
-	Count            *string  `json:"count,omitempty"`
-	Batch            *string  `json:"batch,omitempty"`
-	Codes            []string `json:"codes,omitempty"`
-	Packages         []string `json:"packages,omitempty"`
 }
 
 // DocflowMessage — Пакет документов у оператора — конверт, а не учётный документ Акеды.
@@ -8366,18 +5865,6 @@ type DocflowMessage struct {
 	PrintForm *DocflowMessagePrintForm `json:"print_form"`
 }
 
-// DocflowMessageActionInput — Действие над пакетом словами ОПЕРАТОРА. Что именно можно сделать сейчас, говорит сам пакет: stages[].actions[]. Подписания среди этих действий нет — подпись идёт контуром /api/v1/docflow/edo/signing/tasks.
-type DocflowMessageActionInput struct {
-	// Action — КОД действия у оператора из stage.actions[].code, а НЕ надпись с кнопки: строка действия своя у каждого вида документа и каждого регламента, и зашитый набор строк ломается на первом нестандартном
-	Action string `json:"action"`
-	// Stage — Идентификатор этапа у оператора. Не нужен в обычном сценарии: этап выбирает сервер по тому, что сказал оператор
-	Stage *string `json:"stage,omitempty"`
-	// StageName — Название этапа словами оператора. Адресует скрытые этапы — те, которых в составе пакета не видно, но которые оператор принимает по имени
-	StageName *string `json:"stage_name,omitempty"`
-	// Comment — Комментарий человека. Уходит второй стороне и остаётся в ленте событий; при отклонении документа обязателен
-	Comment *string `json:"comment,omitempty"`
-}
-
 // DocflowMessageFlowLink — Карточка документооборота в пакете — обратная сторона связи edo_links карточки. Пакет доказывает отправку и подпись, а содержание живёт в карточке; здесь видно, чьё содержание он вёз и чем карточка ему приходится.
 type DocflowMessageFlowLink struct {
 	ID       UUID `json:"id"`
@@ -8433,6 +5920,13 @@ type DocflowOrderActInput struct {
 	Amount *string `json:"amount,omitempty"`
 }
 
+type DocflowOrderDocumentSet struct {
+	Members []DocflowOrderSetMember `json:"members"`
+	Missing []string                `json:"missing"`
+	Order   *DocflowOrderSetOrder   `json:"order,omitempty"`
+	Basis   string                  `json:"basis"`
+}
+
 type DocflowOrderImport struct {
 	ID         UUID    `json:"id"`
 	ExternalID *string `json:"external_id,omitempty"`
@@ -8471,6 +5965,35 @@ type DocflowOrderInvoiceInput struct {
 	Draft *bool `json:"draft,omitempty"`
 }
 
+type DocflowOrderSetMember struct {
+	ID         UUID    `json:"id"`
+	Kind       string  `json:"kind"`
+	Title      string  `json:"title"`
+	Number     *string `json:"number,omitempty"`
+	Date       *string `json:"date,omitempty"`
+	Status     string  `json:"status"`
+	Direction  string  `json:"direction"`
+	Settlement *string `json:"settlement,omitempty"`
+	Amount     *string `json:"amount,omitempty"`
+	Currency   *string `json:"currency,omitempty"`
+	DueDate    *string `json:"due_date,omitempty"`
+	// PaymentPurpose — Назначение платежа, записанное на выданном счёте; только для invoice
+	PaymentPurpose *string `json:"payment_purpose,omitempty"`
+	Self           *bool   `json:"self,omitempty"`
+}
+
+type DocflowOrderSetOrder struct {
+	ID       UUID    `json:"id"`
+	Number   *string `json:"number,omitempty"`
+	Title    string  `json:"title"`
+	Date     *string `json:"date,omitempty"`
+	Status   string  `json:"status"`
+	Amount   *string `json:"amount,omitempty"`
+	Currency *string `json:"currency,omitempty"`
+	Side     *string `json:"side,omitempty"`
+	Self     *bool   `json:"self,omitempty"`
+}
+
 type DocflowOrderUPDInput struct {
 	// Date — Дата УПД; пусто — дата заказа
 	Date *string `json:"date,omitempty"`
@@ -8481,360 +6004,13 @@ type DocflowOrderUPDInput struct {
 	Function *string `json:"function,omitempty"`
 }
 
-// DocflowOutgoingFile — Произвольный файл на отправку рядом с формализованным.
-type DocflowOutgoingFile struct {
-	// Name — Имя файла. Без него файл отклоняется: у оператора файл без имени не показывается никому
-	Name string `json:"name"`
-	// ContentBase64 — Содержимое файла в base64
-	ContentBase64 string `json:"content_base64"`
-}
-
-type DocflowOutgoingFlowInput struct {
-	Connection UUID    `json:"connection"`
-	File       UUID    `json:"file"`
-	Role       *string `json:"role,omitempty"`
-	Comment    *string `json:"comment,omitempty"`
-	// Unsigned — Явное решение отправить документ без подписи
-	Unsigned *bool `json:"unsigned,omitempty"`
-}
-
-// DocflowOutgoingInput — Что проверяем и что отправляем. Реквизиты приезжают ОДНИМ объектом, а не россыпью полей: это дополнение к учётному документу, оно хранится целиком и целиком же участвует в пересборке.
-type DocflowOutgoingInput struct {
-	Connection UUID               `json:"connection"`
-	Document   UUID               `json:"document"`
-	Requisites *DocflowRequisites `json:"requisites,omitempty"`
-	// Comment — Примечание документа у оператора
-	Comment *string `json:"comment,omitempty"`
-	// Files — Произвольные файлы рядом с формализованным: договор, спецификация, скан доверенности. Оператор их не разбирает и печатную форму по ним не строит. Уходят по одному после титула: у оператора предел на файл и на запрос, а договор со сканами берёт его легко. На предполётной проверке не участвуют
-	Files []DocflowOutgoingFile `json:"files,omitempty"`
-}
-
-// DocflowPaperPoARequisites — СвДоверБум: бумажная доверенность. Обязательна ровно при способе подтверждения полномочий 5.
-type DocflowPaperPoARequisites struct {
-	Number     *string `json:"number,omitempty"`
-	IssuedAt   *string `json:"issued_at,omitempty"`
-	Info       *string `json:"info,omitempty"`
-	Surname    *string `json:"surname,omitempty"`
-	Name       *string `json:"name,omitempty"`
-	Patronymic *string `json:"patronymic,omitempty"`
-}
-
-// DocflowPartyRequisites — Дополнение к карточке участника сделки.
-type DocflowPartyRequisites struct {
-	// ShortName — СокрНаим
-	ShortName *string `json:"short_name,omitempty"`
-	// Okpo — ОКПО. В карточке юрлица его нет вовсе
-	Okpo *string `json:"okpo,omitempty"`
-	// Division — СтруктПодр
-	Division *string `json:"division,omitempty"`
-	// Info — ИнфДляУчаст
-	Info   *string                  `json:"info,omitempty"`
-	Person *DocflowPersonRequisites `json:"person,omitempty"`
-	// Ogrnip — ОГРНИП предпринимателя, 15 цифр. В карточке лежит ОГРН, а это разные номера, и подставлять один вместо другого нельзя
-	Ogrnip  *string                   `json:"ogrnip,omitempty"`
-	Address *DocflowAddressRequisites `json:"address,omitempty"`
-	Bank    *DocflowBankRequisites    `json:"bank,omitempty"`
-	Contact *DocflowContactRequisites `json:"contact,omitempty"`
-}
-
-// DocflowPaymentDetails — Платёжные реквизиты входящего счёта. Назначение платежа здесь НЕ собрано: строка «оплата по счёту такому-то за то-то» — текст на языке человека, и складывает её интерфейс из частей, которые приезжают ниже отдельно (номер, дата, основание, предмет, налог).
-type DocflowPaymentDetails struct {
-	Message UUID `json:"message"`
-	// Source — Чем прочитан счёт: title — формализованный титул ФНС, text — текст вложения, none — читать было нечего.
-	Source string `json:"source"`
-	// Parsed — Вышло ли из документа хоть одно поле. Ложь означает, что форма открывается тем же, чем открывалась раньше
-	Parsed bool `json:"parsed"`
-	// Document — Имя вложения, из которого всё прочитано, словами оператора: по нему человек откроет ту же бумагу и сверит
-	Document string              `json:"document"`
-	Payee    DocflowPaymentParty `json:"payee"`
-	Payer    DocflowPaymentParty `json:"payer"`
-	// Company — Юрлицо кабинета, найденное по ИНН плательщика из счёта; null — такого юрлица в кабинете нет, и выбирает человек
-	Company     *UUID               `json:"company"`
-	CompanyName DocflowPaymentField `json:"company_name"`
-	// Contact — Наш контрагент, с которым сведён участник обмена, — той же лестницей, что и в приёмке: сопоставление зеркала пакета → ЗАПИСАННОЕ решение по этому участнику (ИНН+КПП у этого оператора) → поиск в справочнике по ИНН и КПП. Зеркало одного конверта здесь не источник истины: пакет, загруженный раньше решения человека, стоит в нём без сопоставления, а решение по партнёру уже записано. null — свести не с кем, либо два юрлица с одним ИНН, между которыми выбирает человек.
-	Contact *UUID `json:"contact"`
-	// ContactName — Имя этой карточки в кабинете. origin=auto — записанное решение (человека или синхронизации), проверять его незачем; origin=guess — найдено по реквизитам прямо сейчас и нигде не записано, форма ставит рядом «проверьте».
-	ContactName DocflowPaymentDetailsContactName `json:"contact_name"`
-	Amount      DocflowPaymentField              `json:"amount"`
-	Currency    DocflowPaymentField              `json:"currency"`
-	// DueDate — Срок оплаты в форме ГГГГ-ММ-ДД из первого доступного источника: «оплатить до» из самого счёта; иначе дата счёта плюс отсрочка по условиям оплаты контрагента у модуля finance (finance_counterparty_terms на дату счёта); иначе дата счёта плюс отсрочка, которую finance применяет без заведённых условий. Всегда origin=guess — за срок отвечает человек. Пусто только без даты счёта: прибавлять отсрочку не к чему.
-	DueDate DocflowPaymentDetailsDueDate `json:"due_date"`
-	Number  DocflowPaymentField          `json:"number"`
-	Date    DocflowPaymentField          `json:"date"`
-	Basis   DocflowPaymentField          `json:"basis"`
-	// Contract — НАША карточка договора, к которой привязан конверт. Рядом с basis, а не вместо него: basis — строка из чужой бумаги («по договору №17»), contract — карточка в кабинете, по которой договор открывается. Строку в карточку сервер не превращает: угадывать договор по номеру из PDF значит однажды повесить платёж на чужую бумагу. Заполнено только там, где связь «конверт ↔ карточка» уже записана человеком и договор ровно один; два договора дают null — выбирать за человека нельзя.
-	Contract *UUID               `json:"contract,omitempty"`
-	Subject  DocflowPaymentField `json:"subject"`
-	// Purpose — Назначение платежа словами поставщика — строка у подписи «Назначение платежа» в счёте; пусто — не названо, форма собирает своё
-	Purpose   DocflowPaymentField `json:"purpose"`
-	VATAmount DocflowPaymentField `json:"vat_amount"`
-	// VATWithout — В счёте стояла отметка «без налога (НДС)». Пустая сумма при снятой отметке означает «про налог не сказано», а не «налога нет»
-	VATWithout bool `json:"vat_without"`
-}
-
-// DocflowPaymentDetailsContactName — Имя этой карточки в кабинете. origin=auto — записанное решение (человека или синхронизации), проверять его незачем; origin=guess — найдено по реквизитам прямо сейчас и нигде не записано, форма ставит рядом «проверьте».
-type DocflowPaymentDetailsContactName struct {
-	// Value — Прочитанное значение; пустая строка означает «не нашлось»
-	Value string `json:"value"`
-	// Origin — auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое.
-	Origin string `json:"origin"`
-}
-
-// DocflowPaymentDetailsDueDate — Срок оплаты в форме ГГГГ-ММ-ДД из первого доступного источника: «оплатить до» из самого счёта; иначе дата счёта плюс отсрочка по условиям оплаты контрагента у модуля finance (finance_counterparty_terms на дату счёта); иначе дата счёта плюс отсрочка, которую finance применяет без заведённых условий. Всегда origin=guess — за срок отвечает человек. Пусто только без даты счёта: прибавлять отсрочку не к чему.
-type DocflowPaymentDetailsDueDate struct {
-	// Value — Прочитанное значение; пустая строка означает «не нашлось»
-	Value string `json:"value"`
-	// Origin — auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое.
-	Origin string `json:"origin"`
-}
-
-// DocflowPaymentDocumentRequisites — СвПРД: платёжно-расчётный документ.
-type DocflowPaymentDocumentRequisites struct {
-	Number *string `json:"number,omitempty"`
-	Date   *string `json:"date,omitempty"`
-	Amount *string `json:"amount,omitempty"`
-}
-
-// DocflowPaymentField — Значение вместе с тем, откуда оно взялось. Пара, а не голая строка: без происхождения форма не может поставить пометку «проверьте» там, где она нужна, и вынуждена либо не показывать её вовсе, либо ставить у всех полей — в обоих случаях пометка перестаёт работать.
-type DocflowPaymentField struct {
-	// Value — Прочитанное значение; пустая строка означает «не нашлось»
-	Value string `json:"value"`
-	// Origin — auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое.
-	Origin string `json:"origin"`
-}
-
-// DocflowPaymentParty — Реквизиты одной стороны платежа.
-type DocflowPaymentParty struct {
-	Name        DocflowPaymentField `json:"name"`
-	INN         DocflowPaymentField `json:"inn"`
-	KPP         DocflowPaymentField `json:"kpp"`
-	Account     DocflowPaymentField `json:"account"`
-	BIC         DocflowPaymentField `json:"bic"`
-	BankName    DocflowPaymentField `json:"bank_name"`
-	CorrAccount DocflowPaymentField `json:"corr_account"`
-}
-
-type DocflowPaymentRequest struct {
-	ID     UUID                        `json:"id"`
-	Number string                      `json:"number"`
-	Status DocflowPaymentRequestStatus `json:"status"`
-	// Progress — Ход заявки глазами автора: состояние документа, после согласования — состояние оплаты
-	Progress    string                     `json:"progress"`
-	CompanyID   UUID                       `json:"company_id"`
-	CompanyName string                     `json:"company_name"`
-	ContactID   *UUID                      `json:"contact_id,omitempty"`
-	ContactName string                     `json:"contact_name"`
-	ItemID      *UUID                      `json:"item_id,omitempty"`
-	ItemName    string                     `json:"item_name"`
-	Payee       DocflowPaymentRequestPayee `json:"payee"`
-	Amount      string                     `json:"amount"`
-	Currency    string                     `json:"currency"`
-	DueDate     string                     `json:"due_date"`
-	Purpose     string                     `json:"purpose"`
-	// Justification — Обоснование автора для согласующего
-	Justification string `json:"justification"`
-	// Priority — Приоритет оплаты
-	Priority string `json:"priority"`
-	// PaymentMethod — Форма оплаты
-	PaymentMethod string                     `json:"payment_method"`
-	Basis         DocflowPaymentRequestBasis `json:"basis"`
-	// Destination — Куда ушла согласованная заявка: снимок флага маршрута
-	Destination string `json:"destination"`
-	// Reason — Причина отказа, возврата на доработку или отклонения казначеем
-	Reason  *string                       `json:"reason,omitempty"`
-	Payment *DocflowPaymentRequestPayment `json:"payment,omitempty"`
-	// FinanceRequestID — Строка очереди оплат модуля finance, куда ушла согласованная заявка
-	FinanceRequestID *UUID `json:"finance_request_id,omitempty"`
-	// ApprovalAuto — Согласована автоматически: маршрута для заявки нет и согласование не обязательно, прохода согласования не было
-	ApprovalAuto bool `json:"approval_auto"`
-	// RejectedByFinance — Согласованную заявку отклонил казначей в модуле finance; причина — в reason
-	RejectedByFinance bool   `json:"rejected_by_finance"`
-	CreatedBy         *int64 `json:"created_by,omitempty"`
-	CreatedByName     string `json:"created_by_name"`
-	CreatedAt         string `json:"created_at"`
-	UpdatedAt         string `json:"updated_at"`
-	Version           int64  `json:"version"`
-	CanEdit           bool   `json:"can_edit"`
-	CanSubmit         bool   `json:"can_submit"`
-	CanCancel         bool   `json:"can_cancel"`
-}
-
-type DocflowPaymentRequestBasis struct {
-	// Module — Модуль основания
-	Module *string `json:"module,omitempty"`
-	// Kind — Вид основания: входящий документ ЭДО, карточка документооборота или основание словами
-	Kind       *string `json:"kind,omitempty"`
-	ID         *UUID   `json:"id,omitempty"`
-	Title      *string `json:"title,omitempty"`
-	ContractID *UUID   `json:"contract_id,omitempty"`
-}
-
-type DocflowPaymentRequestInput struct {
-	CompanyID UUID                       `json:"company_id"`
-	ContactID *UUID                      `json:"contact_id,omitempty"`
-	ItemID    *UUID                      `json:"item_id,omitempty"`
-	Payee     DocflowPaymentRequestPayee `json:"payee"`
-	// Amount — Сумма; не больше двух знаков копеек, лишние нули отбрасываются
-	Amount   string  `json:"amount"`
-	Currency *string `json:"currency,omitempty"`
-	DueDate  string  `json:"due_date"`
-	Purpose  string  `json:"purpose"`
-	// Priority — Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP
-	Priority *string `json:"priority,omitempty"`
-	// PaymentMethod — Форма оплаты: безналичная или наличные (без банковских реквизитов, платит касса)
-	PaymentMethod *string `json:"payment_method,omitempty"`
-	// Justification — Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
-	Justification *string                     `json:"justification,omitempty"`
-	Basis         *DocflowPaymentRequestBasis `json:"basis,omitempty"`
-}
-
-type DocflowPaymentRequestList struct {
-	Results []DocflowPaymentRequest `json:"results"`
-}
-
-// DocflowPaymentRequestOrder — Платёжное поручение, которым заявка оплачена, — реквизиты проведённого документа денежной операции
-type DocflowPaymentRequestOrder struct {
-	DocumentID UUID   `json:"document_id"`
-	Number     string `json:"number"`
-	Date       string `json:"date"`
-	Amount     string `json:"amount"`
-	Currency   string `json:"currency"`
-}
-
-type DocflowPaymentRequestPayee struct {
-	Name        string  `json:"name"`
-	INN         *string `json:"inn,omitempty"`
-	KPP         *string `json:"kpp,omitempty"`
-	Account     *string `json:"account,omitempty"`
-	BIC         *string `json:"bic,omitempty"`
-	BankName    *string `json:"bank_name,omitempty"`
-	CorrAccount *string `json:"corr_account,omitempty"`
-}
-
-// DocflowPaymentRequestPayment — Что стало с оплатой у модуля finance (строка очереди оплат)
-type DocflowPaymentRequestPayment struct {
-	RequestID UUID `json:"request_id"`
-	// Status — Состояние строки очереди: planned, sent, awaiting_signature, executed, rejected, cancelled, returned
-	Status string `json:"status"`
-	// PlannedOn — Дата оплаты; пусто, пока заявка ждёт даты у казначея
-	PlannedOn        *string                     `json:"planned_on,omitempty"`
-	AwaitingSchedule bool                        `json:"awaiting_schedule"`
-	SentAt           *string                     `json:"sent_at,omitempty"`
-	ExecutedOn       *string                     `json:"executed_on,omitempty"`
-	PaymentOrder     *DocflowPaymentRequestOrder `json:"payment_order,omitempty"`
-}
-
-type DocflowPaymentRequestStatus = string
-
-type DocflowPaymentRequestUpdate struct {
-	CompanyID UUID                       `json:"company_id"`
-	ContactID *UUID                      `json:"contact_id,omitempty"`
-	ItemID    *UUID                      `json:"item_id,omitempty"`
-	Payee     DocflowPaymentRequestPayee `json:"payee"`
-	// Amount — Сумма; не больше двух знаков копеек, лишние нули отбрасываются
-	Amount   string  `json:"amount"`
-	Currency *string `json:"currency,omitempty"`
-	DueDate  string  `json:"due_date"`
-	Purpose  string  `json:"purpose"`
-	// Priority — Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP
-	Priority *string `json:"priority,omitempty"`
-	// PaymentMethod — Форма оплаты: безналичная или наличные (без банковских реквизитов, платит касса)
-	PaymentMethod *string `json:"payment_method,omitempty"`
-	// Justification — Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
-	Justification *string                     `json:"justification,omitempty"`
-	Basis         *DocflowPaymentRequestBasis `json:"basis,omitempty"`
-	Version       int64                       `json:"version"`
-}
-
-type DocflowPaymentRequestVersion struct {
-	Version int64 `json:"version"`
-}
-
-// DocflowPersonRequisites — ФИО предпринимателя или физического лица. Спрашивается, потому что в карточке контрагента имя лежит ОДНОЙ строкой («ИП Иванов Иван Иванович»), а формат требует фамилию, имя и отчество порознь. Разобрать строку догадкой нельзя: «Ли Ван Чуань» и «Иванов Иван» ломают любое правило, а ошибка в ФИО подписанта — это недействительный счёт-фактура.
-type DocflowPersonRequisites struct {
-	Surname    *string `json:"surname,omitempty"`
-	Name       *string `json:"name,omitempty"`
-	Patronymic *string `json:"patronymic,omitempty"`
-}
-
-// DocflowPreflight — Ответ на вопрос «соберётся ли документ и что уйдёт». Не булево «годится», а список непройденных проверок плюс разложенная товарная таблица: отказ приёмки приходит от контрагента через сутки и звучит невнятно, а эта проверка обязана назвать всё сразу.
-type DocflowPreflight struct {
-	// Format — Формат выпуска карточки: upd — УПД 5.03, chetop — счёт на оплату 5.01. Отсутствует у проверки продажи: там формат всегда УПД
-	Format *string `json:"format,omitempty"`
-	// Schema — Файл схемы ФНС без расширения, которой отвечает выпуск. Версия схемы — не версия формата: у счёта 5.01 схема выбирается по дате документа (_03 до 2026 года, _04 с 01.01.2026)
-	Schema *string `json:"schema,omitempty"`
-	// FormatVersion — Редакция формата ФНС
-	FormatVersion string `json:"format_version"`
-	// Function — Функция документа: СЧФ — счёт-фактура, ДОП — документ о передаче, СЧФДОП — оба сразу. Пусто у ответного титула покупателя: функции у него нет вовсе
-	Function string `json:"function"`
-	// Ready — Соберётся ли документ прямо сейчас. Это НЕ «всё в порядке»: суммы всё равно смотрят глазами, потому что налог считаем мы
-	Ready bool `json:"ready"`
-	// Issues — Всегда массив, даже пустой: null означал бы «не проверяли», а проверяли всегда
-	Issues []DocflowIssue `json:"issues"`
-	// FileName — Имя файла обмена, если он собирается. Пустое, пока не собирается: имя — часть формата, и показывать выдуманное нельзя
-	FileName string                   `json:"file_name"`
-	Totals   DocflowPreflightTotals   `json:"totals"`
-	Document DocflowPreflightDocument `json:"document"`
-	Seller   DocflowPreflightParty    `json:"seller"`
-	Buyer    DocflowPreflightParty    `json:"buyer"`
-	// Lines — Товарная таблица с посчитанным налогом. У ответного титула покупателя пуста: он отвечает на документ продавца, а не повторяет его
-	Lines []DocflowPreflightLine `json:"lines"`
-}
-
-// DocflowPreflightDocument — Учётный документ кабинета, который формализуем.
-type DocflowPreflightDocument struct {
-	ID     UUID   `json:"id"`
-	Number string `json:"number"`
-	// Date — Календарная дата документа ГГГГ-ММ-ДД
-	Date string `json:"date"`
-	// TypeKey — Ключ вида документа в кабинете
-	TypeKey  string `json:"type_key"`
-	TypeName string `json:"type_name"`
-	// Status — Состояние учётного документа в кабинете
-	Status string `json:"status"`
-}
-
-// DocflowPreflightLine — Строка товарной таблицы с посчитанным налогом. Показывается человеку целиком и ДО отправки, потому что налог считаем мы: карточка юрлица хранит только общее умолчание, а сумма НДС — наш вывод из фактической ставки строки и признака «цены с налогом». Вывод, который человек не увидел, он не проверил.
-type DocflowPreflightLine struct {
-	// Number — Порядковый номер строки в файле с единицы
-	Number int64  `json:"number"`
-	LineID UUID   `json:"line_id"`
-	Name   string `json:"name"`
-	// UnitCode — Код ОКЕИ из карточки единицы измерения либо явное исключение этого отправления
-	UnitCode string `json:"unit_code"`
-	UnitName string `json:"unit_name"`
-	Quantity string `json:"quantity"`
-	// Price — Цена единицы без налога
-	Price string `json:"price"`
-	// VATRate — Ставка словами приказа: «20%», «без НДС», «НДС исчисляется налоговым агентом» и прочие значения перечня
-	VATRate string `json:"vat_rate"`
-	// VATAmount — Сумма налога. Пуста при ставке «без НДС»: формат требует там не нулевую сумму, а отметку об отсутствии налога, и ноль вместо неё — другое утверждение
-	VATAmount        string `json:"vat_amount"`
-	AmountWithoutVAT string `json:"amount_without_vat"`
-	AmountWithVAT    string `json:"amount_with_vat"`
-}
-
-// DocflowPreflightParty — Сторона сделки в том виде, в каком она уедет в файл.
-type DocflowPreflightParty struct {
-	Name string `json:"name"`
-	INN  string `json:"inn"`
-	KPP  string `json:"kpp"`
-	// EntityType — Вид участника из карточки: legal, sole_prop, individual. От него зависит, какую ветвь формата заполнять: у предпринимателя вместо наименования организации ФИО
-	EntityType string `json:"entity_type"`
-	// AddressHint — Прежний адрес одной строкой для карточек, заведённых до структурированного адреса. Сервер не разбирает его на части догадкой: «улица Мира, 1» и «Мира, 1» неотличимы от «город Мира» ни одним правилом. Новая карточка подставляет готовые части прямо в реквизиты формата.
-	AddressHint string `json:"address_hint"`
-	// Head — Только у продавца — руководитель своего юрлица из его карточки (у ИП — сам предприниматель без должности); форма предлагает его подписантом по нажатию
-	Head *SettingsCompanyHead `json:"head,omitempty"`
-}
-
-// DocflowPreflightTotals — Итоги товарной таблицы. Складываются из уже напечатанных строк, а не пересчитываются от исходных величин: итог обязан сойтись со строками до копейки.
-type DocflowPreflightTotals struct {
-	// WithoutVAT — Стоимость без налога
-	WithoutVAT string `json:"without_vat"`
-	// VAT — Сумма налога
-	VAT string `json:"vat"`
-	// WithVAT — Стоимость с налогом
-	WithVAT string `json:"with_vat"`
+type DocflowPaymentRequestRoutePreview struct {
+	Approval    bool    `json:"approval"`
+	Required    bool    `json:"required"`
+	Direct      bool    `json:"direct"`
+	RouteID     *UUID   `json:"route_id,omitempty"`
+	RouteName   *string `json:"route_name,omitempty"`
+	Destination string  `json:"destination"`
 }
 
 // DocflowRecognized — Сумма и реквизиты, прочитанные ИЗ ФАЙЛА пакета, а не присланные оператором. Оператор присылает сумму отдельным реквизитом только у формализованных документов — УПД и счёта-фактуры; у счёта на оплату и договора она живёт внутри PDF. Поле стоит РЯДОМ с amount, а не вместо него: amount — слова оператора, по ним сверяют переписку спустя годы, и подменять их нашим чтением чужой бумаги нельзя. Разбор локальный и детерминированный: текстовый слой PDF, у скана — распознавание изображения; ни одной нейросети и ни одного обращения к платному справочнику. Строк товарной таблицы здесь нет: со скана они не восстанавливаются и фактом не выдаются.
@@ -8854,31 +6030,6 @@ type DocflowRecognized struct {
 	Date string `json:"date"`
 }
 
-// DocflowRequisites — Исключения одного отправления поверх повторяющихся реквизитов карточек юрлица, контрагента и единицы измерения. Здесь остаются ставка отдельной строки, выбранный расчётный счёт, подписант, содержание операции и идентификаторы участников обмена. У одного и того же товара в разных накладных ставка бывает разной. Каждое поле отвечает ровно одному реквизиту приказа, и имя ФНС названо в его описании. Все поля необязательны: чего не прислали, то и покажет предполётная проверка. Явное значение отправления сильнее карточки; валютой по умолчанию остаётся рубль.
-type DocflowRequisites struct {
-	// Function — Функция: перечень закрыт, потому что это перечень приказа
-	Function *string `json:"function,omitempty"`
-	// DocumentKindName — НаимДокОпр: наименование документа, определённое сторонами сделки
-	DocumentKindName *string `json:"document_kind_name,omitempty"`
-	// ProgramVersion — ВерсПрог. Пустое значение подставляет сервер: версию приложения знает он, а не человек в форме
-	ProgramVersion *string                    `json:"program_version,omitempty"`
-	Currency       *DocflowCurrencyRequisites `json:"currency,omitempty"`
-	File           *DocflowFileRequisites     `json:"file,omitempty"`
-	Seller         *DocflowPartyRequisites    `json:"seller,omitempty"`
-	Buyer          *DocflowPartyRequisites    `json:"buyer,omitempty"`
-	// ShipperSameAsSeller — Грузоотправитель — сам продавец
-	ShipperSameAsSeller *bool                      `json:"shipper_same_as_seller,omitempty"`
-	Transfer            *DocflowTransferRequisites `json:"transfer,omitempty"`
-	// ShipmentDocuments — Транспортные и сопроводительные документы
-	ShipmentDocuments []DocflowDocumentRefRequisites `json:"shipment_documents,omitempty"`
-	// PaymentDocuments — СвПРД: платёжно-расчётные документы
-	PaymentDocuments []DocflowPaymentDocumentRequisites `json:"payment_documents,omitempty"`
-	Signers          []DocflowSignerRequisites          `json:"signers,omitempty"`
-	// Extra — ИнфПолФХЖ1: дополнительные сведения факта хозяйственной жизни
-	Extra []DocflowTextInfoRequisites `json:"extra,omitempty"`
-	Lines []DocflowLineRequisites     `json:"lines,omitempty"`
-}
-
 type DocflowSalesOrder struct {
 	ID                 UUID    `json:"id"`
 	CompanyID          UUID    `json:"company_id"`
@@ -8890,6 +6041,7 @@ type DocflowSalesOrder struct {
 	StatusID           *UUID   `json:"status_id,omitempty"`
 	// StatusName — Имя статуса, которое придумал кабинет
 	StatusName *string                 `json:"status_name,omitempty"`
+	FunnelID   *UUID                   `json:"funnel_id,omitempty"`
 	Scenario   string                  `json:"scenario"`
 	Steps      []string                `json:"steps"`
 	Currency   string                  `json:"currency"`
@@ -8966,114 +6118,6 @@ type DocflowSignature struct {
 	CreatedAt string `json:"created_at"`
 }
 
-// DocflowSignatureShape — Какой подписи ждёт оператор. Форма подписи — свойство ЗАДАНИЯ, а не константа кода: смена решения оператора меняет значения здесь, и больше ничего.
-type DocflowSignatureShape struct {
-	Profile string `json:"profile"`
-	// Detached — Открепленная подпись отдельным файлом
-	Detached bool `json:"detached"`
-	// TimestampURL — Служба штампов времени. null означает, что штамп не нужен
-	TimestampURL *string `json:"timestamp_url"`
-}
-
-// DocflowSignatureSubmission — Результат подписания, вычисленный КриптоПро на машине человека.
-type DocflowSignatureSubmission struct {
-	// Signature — Контейнер CMS/PKCS#7 в Base64, без префикса data:
-	Signature string `json:"signature"`
-	// CertificateThumbprint — Отпечаток сертификата. Обязателен: оператор не помнит его между подготовкой и выполнением действия и иначе выберет сертификат сам
-	CertificateThumbprint string `json:"certificate_thumbprint"`
-	// Certificate — Открытая часть сертификата Base64. Удобство, а не обязанность: найти сертификат оператор умеет и по отпечатку
-	Certificate *string `json:"certificate,omitempty"`
-	// CertificateHolder — ФИО владельца сертификата. Оператор требует его и при выполнении действия
-	CertificateHolder *string `json:"certificate_holder,omitempty"`
-	// CertificateINN — ИНН из сертификата, как в задании
-	CertificateINN *string `json:"certificate_inn,omitempty"`
-	// CertificatePosition — Должность владельца сертификата
-	CertificatePosition *string `json:"certificate_position,omitempty"`
-	// Comment — Комментарий к действию; уходит второй стороне
-	Comment *string `json:"comment,omitempty"`
-	// SignedAt — Время по часам браузера; хранится справкой
-	SignedAt *string                    `json:"signed_at,omitempty"`
-	Attorney *DocflowAttorneySubmission `json:"attorney,omitempty"`
-}
-
-// DocflowSignerRequisites — Подписант: кто и на каком основании подписывает документ.
-type DocflowSignerRequisites struct {
-	// Position — Должн
-	Position *string `json:"position,omitempty"`
-	// Kind — ТипПодпис
-	Kind *string `json:"kind,omitempty"`
-	// Authority — Способ подтверждения полномочий. От него зависит, какая доверенность обязательна
-	Authority *string `json:"authority,omitempty"`
-	// SignedAt — ДатаПодДок
-	SignedAt *string `json:"signed_at,omitempty"`
-	// Info — ДопСведПодп
-	Info          *string                         `json:"info,omitempty"`
-	Surname       *string                         `json:"surname,omitempty"`
-	Name          *string                         `json:"name,omitempty"`
-	Patronymic    *string                         `json:"patronymic,omitempty"`
-	ElectronicPoa *DocflowElectronicPoARequisites `json:"electronic_poa,omitempty"`
-	PaperPoa      *DocflowPaperPoARequisites      `json:"paper_poa,omitempty"`
-}
-
-// DocflowSigningPayload — То, что подлежит подписи. Data всегда Base64, без префикса data:.
-type DocflowSigningPayload struct {
-	// Form — content — подписывается содержимое файла, хеш считает КриптоПро на машине человека; digest — готовый хеш оператора
-	Form string `json:"form"`
-	// Data — Base64 в обеих формах
-	Data string `json:"data"`
-	// DigestAlgorithm — Чем посчитан хеш. Обязателен при form=digest и отсутствует иначе
-	DigestAlgorithm *string `json:"digest_algorithm,omitempty"`
-}
-
-// DocflowSigningResult — Чем кончилась приёмка подписи.
-type DocflowSigningResult struct {
-	Task      DocflowSigningTask  `json:"task"`
-	Action    DocflowActionResult `json:"action"`
-	Signature *UUID               `json:"signature,omitempty"`
-}
-
-// DocflowSigningTask — Задание на подпись. Ни ключа, ни контейнера, ни пина здесь нет и быть не может: подпись вычисляет КриптоПро на машине человека, сервер о ней узнаёт только результатом.
-type DocflowSigningTask struct {
-	ID           UUID                  `json:"id"`
-	MessageID    UUID                  `json:"message_id"`
-	AttachmentID *UUID                 `json:"attachment_id,omitempty"`
-	FileName     string                `json:"file_name"`
-	Payload      DocflowSigningPayload `json:"payload"`
-	Signature    DocflowSignatureShape `json:"signature"`
-	// Attorney — Требование машиночитаемой доверенности. Флага «требуется доверенность» у оператора нет: значение выводится из того, что он сказал о сертификатах
-	Attorney  string `json:"attorney"`
-	Status    string `json:"status"`
-	ExpiresAt string `json:"expires_at"`
-	// SignedAt — Отметка ПРИЁМКИ подписи сервером; часы браузера доказательством не служат
-	SignedAt  *string `json:"signed_at,omitempty"`
-	CreatedAt string  `json:"created_at"`
-}
-
-// DocflowSigningTaskInput — Просьба выдать задание на подпись. Сертификат человек выбирает ДО задания: оператор готовит действие под конкретного подписанта и без ФИО и ИНН владельца сертификата может отказать уже в подготовке.
-type DocflowSigningTaskInput struct {
-	MessageID    UUID  `json:"message_id"`
-	AttachmentID *UUID `json:"attachment_id,omitempty"`
-	// Stage — Идентификатор этапа у оператора. Карточка называет его вместе с action; без них этап выбирает сервер
-	Stage *string `json:"stage,omitempty"`
-	// Action — Код команды оператора из stage.actions[].code («Утвердить», «Отклонить»). Без него сервер берёт согласие этапа, закрываемое подписью, и никогда — отказ
-	Action *string `json:"action,omitempty"`
-	// Comment — Комментарий к действию словами человека; при отказе обязателен
-	Comment *string `json:"comment,omitempty"`
-	// CertificateThumbprint — Отпечаток выбранного сертификата. Подпись другим сертификатом под этим заданием не принимается
-	CertificateThumbprint *string `json:"certificate_thumbprint,omitempty"`
-	// CertificateHolder — ФИО владельца сертификата из поля «Субъект»
-	CertificateHolder *string `json:"certificate_holder,omitempty"`
-	// CertificateINN — ИНН из сертификата: организации, если он в сертификате есть, иначе владельца
-	CertificateINN *string `json:"certificate_inn,omitempty"`
-	// CertificatePosition — Должность владельца сертификата
-	CertificatePosition *string `json:"certificate_position,omitempty"`
-}
-
-type DocflowSigningTaskList struct {
-	Count   int64                `json:"count"`
-	Results []DocflowSigningTask `json:"results"`
-}
-
 // DocflowStage — Этап документооборота: что с пакетом можно сделать сейчас. Список действий приходит от ОПЕРАТОРА и не выводится из нашего состояния.
 type DocflowStage struct {
 	ID      UUID `json:"id"`
@@ -9102,102 +6146,7 @@ type DocflowStageAction struct {
 	RequiresSignature *bool `json:"requires_signature,omitempty"`
 }
 
-// DocflowStageRef — Ссылка на строку очереди этапов. Пустое тело означает единственный незакрытый этап пакета: у обычного документа он один, и требовать его имя не с чего.
-type DocflowStageRef struct {
-	// Stage — Идентификатор этапа у оператора
-	Stage *string `json:"stage,omitempty"`
-	// StageName — Название этапа словами оператора
-	StageName *string `json:"stage_name,omitempty"`
-	// Action — Название действия этапа: очередь у оператора адресуется этапом ВМЕСТЕ с действием, а не одним этапом
-	Action *string `json:"action,omitempty"`
-}
-
 type DocflowStateCategory = string
-
-// DocflowSyncOutcome — Итог одного прохода синхронизации ленты оператора.
-type DocflowSyncOutcome struct {
-	// RunStatus — Итог самого прохода. skipped означает, что прохода не было: подключение работает в режиме только чтения
-	RunStatus string `json:"run_status"`
-	// Status — Состояние подключения после прохода
-	Status string `json:"status"`
-	// Retry — Неудача чинится временем: повторится сама, человек не нужен
-	Retry bool `json:"retry"`
-	// ErrorCode — Машинный код неудачи (docflow.edo.*); пусто при удаче
-	ErrorCode string `json:"error_code"`
-	// ProviderMessage — Слова оператора и только они; пусто при удаче
-	ProviderMessage string `json:"provider_message"`
-}
-
-// DocflowTextInfoRequisites — Пара «идентификатор — значение» дополнительных сведений.
-type DocflowTextInfoRequisites struct {
-	ID    *string `json:"id,omitempty"`
-	Value *string `json:"value,omitempty"`
-}
-
-// DocflowTitle — Строка исходящего титула. Одна форма на оба вида: титул продавца (КНД 1115131) и титул покупателя (КНД 1115132) — разные файлы разных схем, но судьба у них одна: собрать XML, положить в хранилище, записать оператору, запомнить, чем он ответил. Самого XML здесь нет: он лежит в объектном хранилище кабинета и выдаётся отдельным маршрутом, а ключ к нему наружу не уходит.
-type DocflowTitle struct {
-	ID         UUID `json:"id"`
-	Connection UUID `json:"connection"`
-	// Kind — seller — титул продавца по учётному документу кабинета; buyer — ответный титул покупателя на входящий пакет
-	Kind string `json:"kind"`
-	// Document — Учётный документ кабинета у титула продавца. Ссылка мягкая: документа нет — титул показывается как титул по удалённому документу
-	Document *string `json:"document"`
-	// FlowDocument — Карточка документооборота, из которой выпущен XML (УПД, акт, накладная, счёт). У титула продавца цель одна из двух: учётный документ либо редакция карточки
-	FlowDocument *UUID `json:"flow_document,omitempty"`
-	// FlowVersion — Редакция карточки, из которой выпущен XML. Новая редакция — новый выпуск: отправленный файл прежней остаётся нетронутым
-	FlowVersion *int64 `json:"flow_version,omitempty"`
-	// Format — Формат выпуска: upd — УПД 5.03 (ЕД-7-26/970@), chetop — счёт на оплату 5.01 (ЕД-7-26/29@)
-	Format string `json:"format"`
-	// Message — Пакет зеркала. У титула покупателя — входящий, на который отвечаем; у титула продавца — НАШ конверт, найденный синхронизацией после записи оператору
-	Message *string `json:"message"`
-	// FormatVersion — Редакция формата ФНС
-	FormatVersion string `json:"format_version"`
-	// Function — Функция документа: у УПД — СЧФ, ДОП, СЧФДОП (пусто у титула покупателя); у счёта на оплату — 0 (счёт) или 1 (счёт-оферта)
-	Function   string            `json:"function"`
-	Requisites DocflowRequisites `json:"requisites"`
-	// FileName — Имя файла обмена ФНС. Повторяется внутри файла в ИдФайл: пересобранный титул обязан быть тем же самым
-	FileName string `json:"file_name"`
-	// ContentSha256 — Хеш отправленных байтов. Остаётся затем же, зачем он есть у вложения зеркала: доказать спустя годы, что отправляли именно эти байты
-	ContentSha256    string `json:"content_sha256"`
-	ContentSizeBytes int64  `json:"content_size_bytes"`
-	// ExternalDocID — Идентификатор документа у оператора. НАШ и заданный нами: без него каждый повтор отправки создавал бы у оператора новый документ
-	ExternalDocID string `json:"external_doc_id"`
-	// ExternalAttachmentID — Идентификатор вложения с титулом у оператора
-	ExternalAttachmentID string `json:"external_attachment_id"`
-	// Status — «Собран» отделён от «записан» намеренно: между ними стоит оператор, и его отказ не отменяет сборки — файл уже лежит в хранилище
-	Status string `json:"status"`
-	// LastErrorCode — Наш машинный код последней неудачи (docflow.edo.*); его переводит интерфейс
-	LastErrorCode string `json:"last_error_code"`
-	// LastError — СЛОВА ОПЕРАТОРА и только они; показываются как есть
-	LastError       string `json:"last_error"`
-	CreatedByUserID *int64 `json:"created_by_user_id"`
-	CreatedAt       string `json:"created_at"`
-	UpdatedAt       string `json:"updated_at"`
-}
-
-type DocflowTitleList struct {
-	Count   int64          `json:"count"`
-	Results []DocflowTitle `json:"results"`
-}
-
-// DocflowTransferRequisites — СвПродПер: сведения о передаче товара, работы или услуги.
-type DocflowTransferRequisites struct {
-	// Operation — СодОпер
-	Operation *string `json:"operation,omitempty"`
-	// Kind — ВидОпер
-	Kind *string `json:"kind,omitempty"`
-	// Date — ДатаПер в форме ГГГГ-ММ-ДД. Пустая означает дату самого документа: отгрузка датой накладной — обычный случай
-	Date *string `json:"date,omitempty"`
-	// PeriodStart — ДатаНачПер
-	PeriodStart *string `json:"period_start,omitempty"`
-	// PeriodEnd — ДатаОконПер
-	PeriodEnd *string `json:"period_end,omitempty"`
-	// Basis — ОснПер: документы-основания передачи
-	Basis []DocflowDocumentRefRequisites `json:"basis,omitempty"`
-	// WithoutBasis — БезДокОснПер. Формат требует ВЫБОРА: либо перечень оснований, либо прямая отметка «основания нет». Умолчания у выбора нет
-	WithoutBasis *bool                      `json:"without_basis,omitempty"`
-	Employee     *DocflowEmployeeRequisites `json:"employee,omitempty"`
-}
 
 // DocumentCreate — Владелец задаётся одной ссылкой `task`, `section`, `project`, `milestone` либо парой `owner_type`/`owner_id`.
 type DocumentCreate struct {
@@ -9221,20 +6170,6 @@ type DocumentPage struct {
 	Results []TaskDocument `json:"results"`
 }
 
-type DocumentUpdate struct {
-	OwnerType  *DocumentOwnerType `json:"owner_type,omitempty"`
-	OwnerID    *string            `json:"owner_id,omitempty"`
-	Task       *string            `json:"task,omitempty"`
-	Section    *string            `json:"section,omitempty"`
-	Project    *string            `json:"project,omitempty"`
-	Milestone  *string            `json:"milestone,omitempty"`
-	Title      *string            `json:"title,omitempty"`
-	Content    *string            `json:"content,omitempty"`
-	Icon       *string            `json:"icon,omitempty"`
-	Color      *string            `json:"color,omitempty"`
-	IsArchived *bool              `json:"is_archived,omitempty"`
-}
-
 type DurationMetric struct {
 	Samples             int64 `json:"samples"`
 	MedianSeconds       int64 `json:"median_seconds"`
@@ -9254,12 +6189,6 @@ type Error struct {
 
 type FileUpload struct {
 	File string `json:"file"`
-}
-
-type FilesAccessInput struct {
-	Restricted       *bool        `json:"restricted,omitempty"`
-	BreakInheritance *bool        `json:"break_inheritance,omitempty"`
-	Grants           []FilesGrant `json:"grants"`
 }
 
 type FilesAccessPolicy struct {
@@ -9558,6 +6487,32 @@ type FinanceAccountableBalances struct {
 	Rows []FinanceAccountableBalance `json:"rows"`
 }
 
+type FinanceAcquiringCaptureInput struct {
+	// OrderID — Продажа, заведённая этой установкой приложения
+	OrderID UUID `json:"order_id"`
+	// Provider — Ключ проверенного провайдера платежа
+	Provider string `json:"provider"`
+	// ExternalID — Уникальный номер списания у провайдера; повтор использует тот же номер
+	ExternalID string `json:"external_id"`
+	// Amount — Положительная сумма списания в валюте продажи, десятичная строка
+	Amount string `json:"amount"`
+	// Currency — Валюта продажи, ISO 4217
+	Currency string `json:"currency"`
+	// PaidAt — Дата подтверждённого списания у провайдера
+	PaidAt string `json:"paid_at"`
+}
+
+type FinanceAcquiringCaptureResult struct {
+	// DocumentID — Финансовый документ оплаты картой
+	DocumentID UUID `json:"document_id"`
+	// Status — Оплата проведена в учёте
+	Status string `json:"status"`
+	// OrderID — Продажа, на которую указано списание
+	OrderID UUID `json:"order_id"`
+	// Replayed — true при повторе уже записанного списания
+	Replayed bool `json:"replayed"`
+}
+
 type FinanceBalanceItem struct {
 	Code   string `json:"code"`
 	Name   string `json:"name"`
@@ -9590,79 +6545,6 @@ type FinanceBankLookup struct {
 type FinanceBankSuggestions struct {
 	DirectoryConfigured bool                    `json:"directory_configured"`
 	Banks               []FinanceRequisitesBank `json:"banks"`
-}
-
-type FinanceCashOperation struct {
-	ID UUID `json:"id"`
-	// Number — Номер документа; его выдаёт нумератор кабинета
-	Number string `json:"number"`
-	Date   string `json:"date"`
-	// Status — Состояние документа; записанная операция сразу `posted`
-	Status    string           `json:"status"`
-	Direction FinanceDirection `json:"direction"`
-	// Amount — Положительная сумма без знака; знак движения задаёт direction
-	Amount string `json:"amount"`
-	// Currency — Валюта учёта: своей валюты у кассовой операции нет
-	Currency   string `json:"currency"`
-	Wallet     UUID   `json:"wallet"`
-	WalletName string `json:"wallet_name"`
-	// Company — Юрлицо, взятое У КАССЫ. null законен и означает неофициальный контур — свободные деньги, а не пробел в данных.
-	Company *string `json:"company"`
-	// Business — Управленческий бизнес кассы
-	Business *string `json:"business"`
-	// Item — Статья ДДС; null — строка «Без статьи ДДС»
-	Item     *string `json:"item"`
-	ItemName string  `json:"item_name"`
-	// Allocated — Разнесена ли операция: есть ли у неё статья ДДС
-	Allocated   bool    `json:"allocated"`
-	Contact     *string `json:"contact"`
-	ContactName string  `json:"contact_name"`
-	// Counterparty — Имя плательщика или получателя текстом; не заменяет contact
-	Counterparty string  `json:"counterparty"`
-	Employee     *string `json:"employee"`
-	EmployeeName string  `json:"employee_name"`
-	Owner        *string `json:"owner"`
-	Project      *string `json:"project"`
-	// Order — Заказ, который оплатили наличные
-	Order *string `json:"order,omitempty"`
-	// OrderNumber — Номер заказа; пусто — заказа нет
-	OrderNumber *string `json:"order_number,omitempty"`
-	Note        string  `json:"note"`
-	CreatedAt   string  `json:"created_at"`
-}
-
-type FinanceCashOperationCreate struct {
-	Wallet UUID `json:"wallet"`
-	// Direction — Обязательно; умолчания нет, иначе непонятная операция молча стала бы тратой
-	Direction map[string]json.RawMessage `json:"direction"`
-	// Amount — Положительная сумма; знак берётся из направления
-	Amount string `json:"amount"`
-	// Date — Пусто означает сегодня КАБИНЕТА, а не сегодня базы
-	Date *string `json:"date,omitempty"`
-	// Item — Статья ДДС; без неё операция законна и видна строкой «Без статьи ДДС»
-	Item *string `json:"item,omitempty"`
-	// Contact — Обязателен у статьи, ведущей именной долг
-	Contact *string `json:"contact,omitempty"`
-	// Employee — Ответственный; обязателен у статьи оплаты труда
-	Employee *string `json:"employee,omitempty"`
-	// Owner — Собственник; обязателен у статьи расчётов с собственником
-	Owner *string `json:"owner,omitempty"`
-	// Project — Разрез «проект», если он включён в кабинете
-	Project *string `json:"project,omitempty"`
-	// Order — Заказ, который оплачивают наличные: приход — заказ покупателя, расход — заказ поставщику того же контрагента; отменённый заказ не принимается. Входит в «оплачено» заказа
-	Order *string `json:"order,omitempty"`
-	// Counterparty — Имя плательщика или получателя текстом, когда карточки контрагента нет
-	Counterparty *string `json:"counterparty,omitempty"`
-	// Note — Назначение операции словами человека
-	Note *string `json:"note,omitempty"`
-	// Remember — Запомнить выбранную статью правилом для этого контрагента
-	Remember *bool `json:"remember,omitempty"`
-}
-
-type FinanceCashOperationPage struct {
-	// Count — Сколько операций подходит отбору ВСЕГО, а не сколько их на этой странице: расхождение с длиной `results` означает, что дальше есть ещё.
-	Count   int64                  `json:"count"`
-	Results []FinanceCashOperation `json:"results"`
 }
 
 type FinanceCashflowEntry struct {
@@ -9734,55 +6616,9 @@ type FinanceCashflowSection struct {
 	Items []FinanceCashflowItem `json:"items"`
 }
 
-// FinanceClassificationSuggestion — Мнение внешнего расширения о том, какой статьёй разнести операцию. Классификацией не является: пока человек не принял её штатной командой, в отчётах операции нет.
-type FinanceClassificationSuggestion struct {
-	ID          UUID `json:"id"`
-	Transaction UUID `json:"transaction"`
-	// Installation — Установка-автор. Человек обязан видеть, чьё это мнение — иначе совет выглядит выводом самой Akeda
-	Installation map[string]json.RawMessage `json:"installation"`
-	// App — Пространство имён приложения: app.<издатель>.<ключ>
-	App              string  `json:"app"`
-	AppVersion       string  `json:"app_version"`
-	CashflowItem     UUID    `json:"cashflow_item"`
-	CashflowItemName *string `json:"cashflow_item_name"`
-	Contact          *string `json:"contact"`
-	ContactName      *string `json:"contact_name"`
-	// Confidence — Уверенность долей единицы, decimal string; проценты не принимаются
-	Confidence    string `json:"confidence"`
-	ExplanationRu string `json:"explanation_ru"`
-	// ExplanationEn — Объяснение локализует сам разработчик расширения; обе половины обязательны
-	ExplanationEn string  `json:"explanation_en"`
-	Status        string  `json:"status"`
-	DecidedAt     *string `json:"decided_at"`
-	CreatedAt     string  `json:"created_at"`
-	UpdatedAt     string  `json:"updated_at"`
-}
-
 type FinanceCommercialPosition struct {
 	Terms    FinanceCounterpartyTerms  `json:"terms"`
 	Exposure FinanceSettlementExposure `json:"exposure"`
-}
-
-type FinanceCompanyMatch struct {
-	Status     string                    `json:"status"`
-	INN        string                    `json:"inn"`
-	Company    *FinanceDirectoryCompany  `json:"company"`
-	OwnerName  string                    `json:"owner_name"`
-	Suggestion *FinanceCompanySuggestion `json:"suggestion"`
-	Message    string                    `json:"message"`
-}
-
-type FinanceCompanyMatchError struct {
-	Detail       string              `json:"detail"`
-	CompanyMatch FinanceCompanyMatch `json:"company_match"`
-}
-
-type FinanceCompanySuggestion struct {
-	Name      string `json:"name"`
-	LegalName string `json:"legal_name"`
-	INN       string `json:"inn"`
-	KPP       string `json:"kpp"`
-	Address   string `json:"address"`
 }
 
 type FinanceConnector struct {
@@ -9853,40 +6689,6 @@ type FinanceConnectorAccountPatch struct {
 
 type FinanceConnectorAuthKind = string
 
-type FinanceConnectorConsent struct {
-	AuthURL string `json:"auth_url"`
-}
-
-type FinanceConnectorCreate struct {
-	Provider    FinanceConnectorProviderKey `json:"provider"`
-	DisplayName *string                     `json:"display_name,omitempty"`
-	CompanyName *string                     `json:"company_name,omitempty"`
-	Company     *string                     `json:"company,omitempty"`
-	// Credential — Банковский токен либо JSON с client_id/client_secret; никогда не передаётся через MCP
-	Credential      *string `json:"credential,omitempty"`
-	ImportDepthDays *int64  `json:"import_depth_days,omitempty"`
-	OverlapDays     *int64  `json:"overlap_days,omitempty"`
-}
-
-type FinanceConnectorCredentialTestInput struct {
-	Provider   FinanceConnectorProviderKey `json:"provider"`
-	Credential string                      `json:"credential"`
-}
-
-type FinanceConnectorCredentialTestResult struct {
-	OK           bool                 `json:"ok"`
-	Message      string               `json:"message"`
-	Accounts     int64                `json:"accounts"`
-	CompanyMatch *FinanceCompanyMatch `json:"company_match,omitempty"`
-}
-
-type FinanceConnectorMTLSInput struct {
-	// Certificate — PEM-сертификат клиента
-	Certificate string `json:"certificate"`
-	// PrivateKey — PEM-закрытый ключ; в ответах и журналах отсутствует
-	PrivateKey string `json:"private_key"`
-}
-
 type FinanceConnectorMTLSStatus struct {
 	Configured bool    `json:"configured"`
 	ExpiresAt  *string `json:"expires_at,omitempty"`
@@ -9896,17 +6698,6 @@ type FinanceConnectorMTLSStatus struct {
 type FinanceConnectorPage struct {
 	Count   int64              `json:"count"`
 	Results []FinanceConnector `json:"results"`
-}
-
-type FinanceConnectorPatch struct {
-	DisplayName *string `json:"display_name,omitempty"`
-	CompanyName *string `json:"company_name,omitempty"`
-	Company     *string `json:"company,omitempty"`
-	// Credential — Непустой новый секрет; пустая строка сохраняет прежний
-	Credential      *string `json:"credential,omitempty"`
-	ImportDepthDays *int64  `json:"import_depth_days,omitempty"`
-	OverlapDays     *int64  `json:"overlap_days,omitempty"`
-	Status          *string `json:"status,omitempty"`
 }
 
 type FinanceConnectorProvider struct {
@@ -9933,18 +6724,7 @@ type FinanceConnectorProviderPage struct {
 	Results []FinanceConnectorProvider `json:"results"`
 }
 
-type FinanceConnectorStatementCheck struct {
-	OK           json.RawMessage `json:"ok"`
-	Transactions int64           `json:"transactions"`
-	Message      string          `json:"message"`
-}
-
 type FinanceConnectorStatus = string
-
-type FinanceConnectorSyncIntervalOption struct {
-	Minutes int64  `json:"minutes"`
-	Label   string `json:"label"`
-}
 
 type FinanceConnectorSyncResult struct {
 	Connector FinanceConnector `json:"connector"`
@@ -9970,17 +6750,6 @@ type FinanceConnectorSyncRun struct {
 type FinanceConnectorSyncRunPage struct {
 	Count   int64                     `json:"count"`
 	Results []FinanceConnectorSyncRun `json:"results"`
-}
-
-type FinanceConnectorSyncSettings struct {
-	ScheduleIntervalMinutes int64                                `json:"schedule_interval_minutes"`
-	Mode                    string                               `json:"mode"`
-	ModulbankWebhookURL     string                               `json:"modulbank_webhook_url"`
-	IntervalOptions         []FinanceConnectorSyncIntervalOption `json:"interval_options"`
-}
-
-type FinanceConnectorSyncSettingsInput struct {
-	ScheduleIntervalMinutes int64 `json:"schedule_interval_minutes"`
 }
 
 type FinanceCounterpartyTerms struct {
@@ -10015,15 +6784,6 @@ type FinanceCounterpartyTermsCreate struct {
 }
 
 type FinanceDirection = string
-
-type FinanceDirectoryCompany struct {
-	ID        UUID   `json:"id"`
-	Name      string `json:"name"`
-	LegalName string `json:"legal_name"`
-	INN       string `json:"inn"`
-	KPP       string `json:"kpp"`
-	IsActive  bool   `json:"is_active"`
-}
 
 type FinanceDividendDecisionInput struct {
 	PolicyID   *UUID `json:"policy_id,omitempty"`
@@ -10154,119 +6914,6 @@ type FinanceExpenseReportRow struct {
 	Comment       *string `json:"comment,omitempty"`
 	// Closes — «Закрывает» — долг поставщику (закупка, счёт), который гасит строка по статье расчётов с поставщиками (ERP-1249); пусто — долг подберёт правило
 	Closes *UUID `json:"closes,omitempty"`
-}
-
-type FinanceImportApply struct {
-	ConfirmWarnings *bool `json:"confirm_warnings,omitempty"`
-}
-
-type FinanceImportDiff struct {
-	Row     int64             `json:"row"`
-	Label   string            `json:"label"`
-	Values  map[string]string `json:"values"`
-	Skipped *bool             `json:"skipped,omitempty"`
-}
-
-type FinanceImportField struct {
-	Key      string `json:"key"`
-	Label    string `json:"label"`
-	Required bool   `json:"required"`
-}
-
-type FinanceImportInspect struct {
-	SheetName *string `json:"sheet_name,omitempty"`
-	HeaderRow *int64  `json:"header_row,omitempty"`
-}
-
-type FinanceImportIssue struct {
-	Row      int64   `json:"row"`
-	Column   *string `json:"column,omitempty"`
-	Severity string  `json:"severity"`
-	Message  string  `json:"message"`
-}
-
-type FinanceImportItemMappingRequest struct {
-	// Items — Карта целиком: «название статьи в файле» → идентификатор статьи справочника ДДС. Заменяет прежнюю карту, поэтому присылать надо всё накопленное, а не одну новую пару. Пустое значение означает «оставить без статьи» и не сохраняется; непустое, но не UUID, отклоняется.
-	Items map[string]string `json:"items"`
-}
-
-type FinanceImportKind = string
-
-type FinanceImportMapping struct {
-	SheetName *string `json:"sheet_name,omitempty"`
-	HeaderRow *int64  `json:"header_row,omitempty"`
-	// Columns — Сопоставление «целевое поле Akeda → имя колонки файла».
-	Columns map[string]string `json:"columns"`
-	// OpeningBalance — Decimal string из заголовка или введённое вручную значение
-	OpeningBalance *string `json:"opening_balance,omitempty"`
-	// ClosingBalance — Decimal string из заголовка или введённое вручную значение
-	ClosingBalance *string `json:"closing_balance,omitempty"`
-}
-
-type FinanceImportRun struct {
-	ID           UUID                `json:"id"`
-	Kind         FinanceImportKind   `json:"kind"`
-	Format       string              `json:"format"`
-	Status       FinanceImportStatus `json:"status"`
-	AccountID    *UUID               `json:"account_id,omitempty"`
-	WalletID     *UUID               `json:"wallet_id,omitempty"`
-	SourceName   string              `json:"source_name"`
-	SourceSha256 string              `json:"source_sha256"`
-	SourceSize   int64               `json:"source_size"`
-	SheetName    string              `json:"sheet_name"`
-	HeaderRow    int64               `json:"header_row"`
-	Mapping      map[string]string   `json:"mapping"`
-	// ItemMapping — Соответствие «название статьи в файле» и идентификатора статьи справочника. Уточняется отдельным маршрутом, потому что набор статей известен только после предпросмотра
-	ItemMapping map[string]string `json:"item_mapping,omitempty"`
-	// UnknownItems — Названия статей из файла, которых нет ни в справочнике, ни в карте соответствий
-	UnknownItems           []string             `json:"unknown_items,omitempty"`
-	Diff                   []FinanceImportDiff  `json:"diff,omitempty"`
-	Issues                 []FinanceImportIssue `json:"issues,omitempty"`
-	OpeningBalance         string               `json:"opening_balance"`
-	ClosingBalance         string               `json:"closing_balance"`
-	ComputedClosingBalance string               `json:"computed_closing_balance"`
-	CreatedCount           int64                `json:"created_count"`
-	WarningCount           int64                `json:"warning_count"`
-	ErrorCount             int64                `json:"error_count"`
-	CreatedBy              *int64               `json:"created_by,omitempty"`
-	CreatedAt              string               `json:"created_at"`
-	PreviewedAt            *string              `json:"previewed_at,omitempty"`
-	AppliedAt              *string              `json:"applied_at,omitempty"`
-	SourceColumns          []string             `json:"source_columns,omitempty"`
-	SourceSheets           []FinanceImportSheet `json:"source_sheets,omitempty"`
-	TargetFields           []FinanceImportField `json:"target_fields,omitempty"`
-}
-
-type FinanceImportSheet struct {
-	Name string `json:"name"`
-}
-
-type FinanceImportStatus = string
-
-type FinanceImportUpload struct {
-	File      string            `json:"file"`
-	Kind      FinanceImportKind `json:"kind"`
-	AccountID *UUID             `json:"account_id,omitempty"`
-	WalletID  *UUID             `json:"wallet_id,omitempty"`
-}
-
-type FinanceOpenAdvance struct {
-	ID     UUID   `json:"id"`
-	Number string `json:"number"`
-	Date   string `json:"date"`
-	// Amount — Decimal string
-	Amount   string `json:"amount"`
-	Currency string `json:"currency"`
-	// Outstanding — Незачтённая decimal string
-	Outstanding string `json:"outstanding"`
-}
-
-type FinanceOpeningBalanceRequest struct {
-	// Amount — Decimal string
-	Amount string `json:"amount"`
-	Date   string `json:"date"`
-	// Comment — Обязателен при исправлении сторно-документом
-	Comment *string `json:"comment,omitempty"`
 }
 
 type FinanceOpeningDebtRequest struct {
@@ -10651,12 +7298,6 @@ type FinancePaymentPlan struct {
 	UpdatedAt          string                   `json:"updated_at"`
 }
 
-type FinancePaymentPlanExecute struct {
-	// ExecutedOn — Пустое значение означает дату фактической операции
-	ExecutedOn *string `json:"executed_on,omitempty"`
-	DocumentID UUID    `json:"document_id"`
-}
-
 type FinancePaymentPlanInput struct {
 	ProjectID *UUID            `json:"project_id,omitempty"`
 	CompanyID UUID             `json:"company_id"`
@@ -10676,288 +7317,6 @@ type FinancePaymentPlanInput struct {
 
 type FinancePaymentSourceKind = string
 
-type FinancePayoutRegister struct {
-	ID UUID `json:"id"`
-	// Number — Номер документа реестра
-	Number string `json:"number"`
-	Date   string `json:"date"`
-	// Amount — Decimal string; итог официальных и неофициальных частей строк
-	Amount string `json:"amount"`
-	// People — Сколько человек в реестре
-	People int64 `json:"people"`
-	// PaidBy — Ключ банковской операции, закрывшей реестр; пусто — реестр ждёт оплаты
-	PaidBy string                      `json:"paid_by"`
-	Status FinancePayoutRegisterStatus `json:"status"`
-}
-
-type FinancePayoutRegisterPage struct {
-	Count   int64                   `json:"count"`
-	Results []FinancePayoutRegister `json:"results"`
-}
-
-type FinancePayoutRegisterStatus = string
-
-type FinancePayoutSheetRequest struct {
-	Account UUID `json:"account"`
-	// Company — Юрлицо реестра; пусто — берётся из карточки счёта, и без него реестр не завести
-	Company *string `json:"company,omitempty"`
-	// Date — Дата файла и реестра; неразобранная означает сегодня
-	Date *string `json:"date,omitempty"`
-	// Purpose — Назначение платежа; пусто — «Заработная плата»
-	Purpose *string                 `json:"purpose,omitempty"`
-	Rows    []FinancePayoutSheetRow `json:"rows"`
-}
-
-type FinancePayoutSheetRow struct {
-	Employee UUID `json:"employee"`
-	// Amount — Decimal string; положительная сумма к выплате
-	Amount string `json:"amount"`
-}
-
-// FinancePayrollAccrualPayload — Содержимое документа начисления. Начисленный итог и неофициальная часть не хранятся: они выводятся из оклада, премий и официальной части, а второе место с той же истиной разошлось бы с первым.
-type FinancePayrollAccrualPayload struct {
-	// Period — Месяц начисления в формате YYYY-MM; дата документа отвечает, когда начисление отражено в учёте
-	Period *string                    `json:"period,omitempty"`
-	Rows   []FinancePayrollAccrualRow `json:"rows"`
-}
-
-// FinancePayrollAccrualRow — Одна строка начисления — человек за месяц
-type FinancePayrollAccrualRow struct {
-	Employee UUID `json:"employee"`
-	// Salary — Decimal string; оклад, постоянная часть
-	Salary *string `json:"salary,omitempty"`
-	// Bonus1 — Decimal string; первая премия
-	Bonus1 *string `json:"bonus1,omitempty"`
-	// Bonus2 — Decimal string; вторая премия
-	Bonus2 *string `json:"bonus2,omitempty"`
-	// Bonuses — Премии строки
-	Bonuses []FinancePayrollAccrualRowBonusesItem `json:"bonuses,omitempty"`
-	// Withheld — Decimal string; прочие удержания, уменьшают постоянную зарплату
-	Withheld *string `json:"withheld,omitempty"`
-	// SalaryBasis — Строка справочника «Оклад указан»: до удержаний или на руки
-	SalaryBasis *string `json:"salary_basis,omitempty"`
-	// Official — Decimal string; официальная часть начисления, не больше суммы оклада и премий
-	Official *string `json:"official,omitempty"`
-	// Tax — Decimal string; НДФЛ, удержанный из официальной части
-	Tax *string `json:"tax,omitempty"`
-	// Insurance — Decimal string; страховые взносы сверх начисления, а не удержание из него
-	Insurance *string `json:"insurance,omitempty"`
-	// Project — Разрез проекта; пустой в регистр не идёт
-	Project *string `json:"project,omitempty"`
-	// Department — Разрез подразделения; пустой в регистр не идёт
-	Department *string `json:"department,omitempty"`
-	// Cfo — Разрез центра финансовой ответственности; пустой в регистр не идёт
-	Cfo *string `json:"cfo,omitempty"`
-}
-
-type FinancePayrollAccrualRowBonusesItem struct {
-	// Item — Статья ручной премии; пусто — «Заработная плата». У премии с variable не читается
-	Item *string `json:"item,omitempty"`
-	// Amount — Decimal string; сумма премии
-	Amount string `json:"amount"`
-	// Variable — Премия начислена правилом от выручки — в ОПиУ «Переменная заработная плата», НДФЛ и взносы делятся в той же доле
-	Variable *bool `json:"variable,omitempty"`
-}
-
-type FinancePayrollDocumentCreate struct {
-	Type    FinancePayrollDocumentTypeKey `json:"type"`
-	Date    *string                       `json:"date,omitempty"`
-	Comment *string                       `json:"comment,omitempty"`
-	Refs    FinancePayrollDocumentRefs    `json:"refs"`
-	// Payload — Строки начисления или реестра; разбор нестрогий — незнакомое поле не отклоняется
-	Payload json.RawMessage `json:"payload,omitempty"`
-	// Post — Провести сразу; для реестра выплаты флаг игнорируется
-	Post *bool `json:"post,omitempty"`
-}
-
-// FinancePayrollDocumentRefs — Ссылки зарплатного документа. Юрлицо обязательно уже при заведении: главная книга отвечает на вопрос, чьи это деньги. Статьи оклада, НДФЛ и взносов начисление не передаёт: проведение берёт системные статьи постоянной и переменной зарплаты (ERP-988).
-type FinancePayrollDocumentRefs struct {
-	Company UUID `json:"company"`
-	// Item — Статья оплаты труда для выдачи наличными по реестру; проведение начисления её не читает
-	Item *string `json:"item,omitempty"`
-	// TaxItem — Не читается с ERP-988: НДФЛ идёт системными статьями
-	TaxItem *string `json:"tax_item,omitempty"`
-	// InsuranceItem — Не читается с ERP-988: взносы идут системными статьями
-	InsuranceItem *string `json:"insurance_item,omitempty"`
-	// Account — Счёт списания реестра; его проставляет выгрузка списка на оплату
-	Account *string `json:"account,omitempty"`
-	// Wallet — Касса выдачи; заполненная означает расходный кассовый ордер по реестру
-	Wallet *string `json:"wallet,omitempty"`
-	// Extra — поля сверх схемы; заполняется вызывающим кодом при необходимости.
-	Extra map[string]string `json:"-"`
-}
-
-type FinancePayrollDocumentTypeKey = string
-
-type FinancePayrollImportInspection struct {
-	Sheets []FinancePayrollImportSheet `json:"sheets"`
-	// Fields — Целевые поля разбора; обязателен только сотрудник
-	Fields []FinanceImportField `json:"fields"`
-}
-
-type FinancePayrollImportPreview struct {
-	Rows []FinancePayrollImportRow `json:"rows"`
-	// Ready — Строк, годных к начислению
-	Ready int64 `json:"ready"`
-	// Broken — Строк с проблемой
-	Broken int64 `json:"broken"`
-	// Accrued — Decimal string; итог начисленного по годным строкам
-	Accrued string `json:"accrued"`
-}
-
-type FinancePayrollImportRow struct {
-	// Line — Номер строки в файле, а не в ответе: человек правит исходник
-	Line int64 `json:"line"`
-	// Source — Как человек назван в файле
-	Source string `json:"source"`
-	// Employee — Найденный сотрудник справочника; пусто — строка не сопоставлена
-	Employee string `json:"employee"`
-	// Name — ФИО найденного сотрудника
-	Name string `json:"name"`
-	// Salary — Decimal string; оклад
-	Salary string `json:"salary"`
-	// Bonus1 — Decimal string; первая премия
-	Bonus1 string `json:"bonus1"`
-	// Bonus2 — Decimal string; вторая премия
-	Bonus2 string `json:"bonus2"`
-	// Official — Decimal string; официальная часть, равная начисленному при отсутствии своей колонки
-	Official string `json:"official"`
-	// Tax — Decimal string; НДФЛ
-	Tax string `json:"tax"`
-	// Insurance — Decimal string; страховые взносы
-	Insurance string `json:"insurance"`
-	// Accrued — Decimal string; оклад плюс обе премии
-	Accrued string `json:"accrued"`
-	// Unofficial — Decimal string; начисленное за вычетом официальной части
-	Unofficial string `json:"unofficial"`
-	// Problem — Почему строку нельзя начислить; пусто — можно
-	Problem string `json:"problem"`
-}
-
-type FinancePayrollImportSheet struct {
-	Name string `json:"name"`
-	// Header — Заголовки строки, выбранной как шапка
-	Header []string `json:"header"`
-	// Sample — Первые пять строк данных
-	Sample [][]string `json:"sample"`
-	// Rows — Строк данных на листе, без шапки
-	Rows int64 `json:"rows"`
-	// Guessed — Предложенное соответствие «целевое поле → заголовок колонки»
-	Guessed map[string]string `json:"guessed"`
-}
-
-type FinancePayrollJournal struct {
-	From   string                      `json:"from"`
-	To     string                      `json:"to"`
-	Rows   []FinancePayrollJournalRow  `json:"rows"`
-	Totals FinancePayrollJournalTotals `json:"totals"`
-}
-
-// FinancePayrollJournalRow — Строка журнала — человек за месяц. Все суммы строками: отчёт о деньгах, округлённый по дороге, перестаёт сходиться с книгой ровно там, где на него смотрят.
-type FinancePayrollJournalRow struct {
-	// Employee — Идентификатор сотрудника
-	Employee     string `json:"employee"`
-	EmployeeName string `json:"employee_name"`
-	JobTitle     string `json:"job_title"`
-	Department   string `json:"department"`
-	// Period — Месяц строки в формате YYYY-MM
-	Period string `json:"period"`
-	// Salary — Decimal string
-	Salary string `json:"salary"`
-	// Bonus1 — Decimal string
-	Bonus1 string `json:"bonus1"`
-	// Bonus2 — Decimal string
-	Bonus2 string `json:"bonus2"`
-	// Accrued — Decimal string — начислено всего
-	Accrued string `json:"accrued"`
-	// Official — Decimal string — официальная часть начисления
-	Official string `json:"official"`
-	// Unofficial — Decimal string — неофициальная часть начисления
-	Unofficial string `json:"unofficial"`
-	// Tax — Decimal string — НДФЛ
-	Tax string `json:"tax"`
-	// Insurance — Decimal string — взносы
-	Insurance string `json:"insurance"`
-	// NetOfficial — Decimal string — на руки официально: официальная часть за вычетом НДФЛ
-	NetOfficial string `json:"net_official"`
-	// NetUnofficial — Decimal string — на руки неофициально: неофициальная часть целиком, с неё не удерживают
-	NetUnofficial string `json:"net_unofficial"`
-	// PaidOfficial — Decimal string
-	PaidOfficial string `json:"paid_official"`
-	// PaidUnofficial — Decimal string
-	PaidUnofficial string `json:"paid_unofficial"`
-	// Debt — Decimal string — сколько человеку должны на конец месяца строки. Долг один: сальдо счетов 70.01 и 70.02 вместе, а не вычитание колонок.
-	Debt string `json:"debt"`
-}
-
-type FinancePayrollJournalTotals struct {
-	// Accrued — Decimal string
-	Accrued string `json:"accrued"`
-	// Official — Decimal string
-	Official string `json:"official"`
-	// Unofficial — Decimal string
-	Unofficial string `json:"unofficial"`
-	// Tax — Decimal string
-	Tax string `json:"tax"`
-	// Insurance — Decimal string
-	Insurance string `json:"insurance"`
-	// PaidOfficial — Decimal string
-	PaidOfficial string `json:"paid_official"`
-	// PaidUnofficial — Decimal string
-	PaidUnofficial string `json:"paid_unofficial"`
-	// Debt — Decimal string — берётся только с последней строки каждого сотрудника: сальдо накопительное
-	Debt string `json:"debt"`
-}
-
-type FinancePayrollPayment struct {
-	Date       string `json:"date"`
-	DocumentID UUID   `json:"document_id"`
-	Number     string `json:"number"`
-	// Source — Банковская операция или касса
-	Source string `json:"source"`
-	// Amount — Decimal string; сумма выплаты сотруднику по документу
-	Amount string `json:"amount"`
-	// Register — Номер реестра; пусто — выплата не по реестру
-	Register string `json:"register"`
-	// Recipient — Кому ушли деньги, если не самому сотруднику; пусто — ему самому или получатель не указан
-	Recipient string `json:"recipient"`
-}
-
-// FinancePayrollPaymentPayload — Содержимое реестра выплаты. Строка без человека и строка с двумя нулями не годятся, и узнаётся это при заведении, а не в момент оплаты.
-type FinancePayrollPaymentPayload struct {
-	// Period — Месяц выплаты в формате YYYY-MM
-	Period *string                    `json:"period,omitempty"`
-	Rows   []FinancePayrollPaymentRow `json:"rows"`
-	// Purpose — Назначение платежа; так его записывает выгрузка списка на оплату
-	Purpose *string `json:"purpose,omitempty"`
-}
-
-// FinancePayrollPaymentRow — Одна строка реестра выплаты
-type FinancePayrollPaymentRow struct {
-	Employee UUID `json:"employee"`
-	// Official — Decimal string; официальная часть выплаты
-	Official *string `json:"official,omitempty"`
-	// Unofficial — Decimal string; неофициальная часть выплаты
-	Unofficial *string `json:"unofficial,omitempty"`
-}
-
-type FinancePayrollPayments struct {
-	From string                  `json:"from"`
-	To   string                  `json:"to"`
-	Rows []FinancePayrollPayment `json:"rows"`
-}
-
-type FinancePeriodCheck struct {
-	Key    string `json:"key"`
-	Title  string `json:"title"`
-	Detail string `json:"detail"`
-	Passed bool   `json:"passed"`
-}
-
-type FinancePeriodCheckPage struct {
-	Checks []FinancePeriodCheck `json:"checks"`
-}
-
 type FinancePnlCoverage struct {
 	Missing    []FinancePnlCoverageItem `json:"missing"`
 	Duplicated []FinancePnlCoverageItem `json:"duplicated"`
@@ -10968,88 +7327,6 @@ type FinancePnlCoverageItem struct {
 	Name  string `json:"name"`
 	Path  string `json:"path"`
 	Times *int64 `json:"times,omitempty"`
-}
-
-type FinancePnlEntry struct {
-	ID   UUID   `json:"id"`
-	Date string `json:"date"`
-	// Amount — Decimal string со знаком ОТЧЁТА, а не со знаком книги: расшифровка обязана складываться в ту строку, которую раскрывают
-	Amount         string `json:"amount"`
-	DocumentID     *UUID  `json:"document_id,omitempty"`
-	DocumentNumber string `json:"document_number"`
-	// DocumentType — Вид документа словами: продажа, закупка, банковская операция
-	DocumentType string `json:"document_type"`
-	// DocumentTypeKey — Вид документа машинным ключом — по нему документ открывается ТАМ, где он живёт: модульные документы общий журнал не отдаёт
-	DocumentTypeKey string `json:"document_type_key"`
-	Counterparty    string `json:"counterparty"`
-	// AccountCode — Счёт результата: одна статья может лечь на разные счета, если правило проводки менялось
-	AccountCode string `json:"account_code"`
-	AccountName string `json:"account_name"`
-	Comment     string `json:"comment"`
-}
-
-type FinancePnlEntryPage struct {
-	// Count — Длина `results`, а не число проводок ячейки: список уже обрезан потолком 200
-	Count   int64             `json:"count"`
-	Results []FinancePnlEntry `json:"results"`
-}
-
-type FinancePnlFormulaToken struct {
-	Kind  string  `json:"kind"`
-	RowID *UUID   `json:"row_id,omitempty"`
-	Op    *string `json:"op,omitempty"`
-	Value *string `json:"value,omitempty"`
-}
-
-type FinancePnlItem struct {
-	ID   UUID   `json:"id"`
-	Name string `json:"name"`
-	// ParentID — Пустая строка у корневой статьи
-	ParentID string `json:"parent_id"`
-}
-
-type FinancePnlItemPage struct {
-	Count   int64            `json:"count"`
-	Results []FinancePnlItem `json:"results"`
-}
-
-type FinancePnlLayout struct {
-	ID   UUID   `json:"id"`
-	Name string `json:"name"`
-	// Report — Вид отчёта макета: прибыли и убытки или движение денег.
-	Report    *string               `json:"report,omitempty"`
-	IsDefault bool                  `json:"is_default"`
-	Rows      []FinancePnlLayoutRow `json:"rows"`
-}
-
-type FinancePnlLayoutCreate struct {
-	Name string `json:"name"`
-	// Report — Вид отчёта макета. Задаётся при заведении и дальше не меняется.
-	Report    *string `json:"report,omitempty"`
-	IsDefault *bool   `json:"is_default,omitempty"`
-}
-
-type FinancePnlLayoutPage struct {
-	Count   int64              `json:"count"`
-	Results []FinancePnlLayout `json:"results"`
-}
-
-type FinancePnlLayoutRow struct {
-	ID        UUID                     `json:"id"`
-	Kind      string                   `json:"kind"`
-	ParentID  *UUID                    `json:"parent_id,omitempty"`
-	Title     string                   `json:"title"`
-	ItemID    *UUID                    `json:"item_id,omitempty"`
-	Formula   []FinancePnlFormulaToken `json:"formula"`
-	Format    string                   `json:"format"`
-	Collapsed bool                     `json:"collapsed"`
-	SystemRow *string                  `json:"system_row,omitempty"`
-}
-
-type FinancePnlLayoutSave struct {
-	Name      string                `json:"name"`
-	IsDefault bool                  `json:"is_default"`
-	Rows      []FinancePnlLayoutRow `json:"rows"`
 }
 
 type FinancePnlLine struct {
@@ -11158,50 +7435,6 @@ type FinanceProjectReport struct {
 type FinanceReconciliation struct {
 	Summary FinanceReconciliationSummary `json:"summary"`
 	Results []FinanceTransaction         `json:"results"`
-}
-
-type FinanceReconciliationAccount struct {
-	AccountID UUID   `json:"account_id"`
-	Account   string `json:"account"`
-	Currency  string `json:"currency"`
-	// On — Дата, на которую сделан расчёт
-	On string `json:"on"`
-	// Ours — Decimal string — наш расчёт: входящий остаток плюс движения по дату
-	Ours string `json:"ours"`
-	// OpeningBalance — Decimal string — слагаемое расчёта
-	OpeningBalance string `json:"opening_balance"`
-	// TurnoverIn — Decimal string — приход за период
-	TurnoverIn string `json:"turnover_in"`
-	// TurnoverOut — Decimal string — расход за период
-	TurnoverOut string `json:"turnover_out"`
-	// Theirs — Decimal string — слово банка на дату `as_of`. Отсутствует, когда сверять не с чем; это не «сошлось».
-	Theirs *string `json:"theirs,omitempty"`
-	// AsOf — Дата, на которую банк назвал остаток
-	AsOf   *string                      `json:"as_of,omitempty"`
-	Source *FinanceReconciliationSource `json:"source,omitempty"`
-	// Difference — Decimal string — наш расчёт минус банк. Отсутствует вместе с `theirs`: разница с тем, чего не сказали, не равна нулю.
-	Difference    *string                             `json:"difference,omitempty"`
-	Days          []FinanceReconciliationDay          `json:"days"`
-	StatementGaps []FinanceReconciliationStatementGap `json:"statement_gaps"`
-}
-
-type FinanceReconciliationDay struct {
-	Date   string                         `json:"date"`
-	Reason FinanceReconciliationDayReason `json:"reason"`
-	// Count — Сколько операций этого дня попало под причину
-	Count int64 `json:"count"`
-	// Amount — Decimal string — сумма операций дня по этой причине, со знаком движения
-	Amount string `json:"amount"`
-}
-
-type FinanceReconciliationDayReason = string
-
-type FinanceReconciliationSource = string
-
-// FinanceReconciliationStatementGap — Промежуток, не покрытый ни одной выпиской: за эти дни банк ничего не подтверждал, и всё, что там есть, держится только на нашем вводе.
-type FinanceReconciliationStatementGap struct {
-	From string `json:"from"`
-	To   string `json:"to"`
 }
 
 type FinanceReconciliationSummary struct {
@@ -11313,87 +7546,19 @@ type FinanceReportCompany struct {
 	Name string `json:"name"`
 }
 
-type FinanceRequisitesAddress struct {
-	PostalCode string `json:"postal_code"`
-	RegionCode string `json:"region_code"`
-	RegionName string `json:"region_name"`
-	District   string `json:"district"`
-	City       string `json:"city"`
-	Settlement string `json:"settlement"`
-	Street     string `json:"street"`
-	Building   string `json:"building"`
-	Block      string `json:"block"`
-	Flat       string `json:"flat"`
-}
-
 type FinanceRequisitesBank struct {
 	Name                 string `json:"name"`
 	BIC                  string `json:"bic"`
 	CorrespondentAccount string `json:"correspondent_account"`
 	City                 string `json:"city"`
 	// INN — ИНН банка; пусто — справочник не назвал
-	INN *string `json:"inn,omitempty"`
+	INN string `json:"inn"`
 	// KPP — КПП банка; пусто — справочник не назвал
-	KPP *string `json:"kpp,omitempty"`
-}
-
-type FinanceRequisitesLookup struct {
-	Organization        *FinanceRequisitesParty `json:"organization"`
-	Bank                *FinanceRequisitesBank  `json:"bank"`
-	NumberValid         *bool                   `json:"number_valid"`
-	Warnings            []string                `json:"warnings"`
-	DirectoryConfigured bool                    `json:"directory_configured"`
-}
-
-type FinanceRequisitesParty struct {
-	Name         string                   `json:"name"`
-	FullName     string                   `json:"full_name"`
-	EntityType   string                   `json:"entity_type"`
-	INN          string                   `json:"inn"`
-	KPP          string                   `json:"kpp"`
-	Ogrn         string                   `json:"ogrn"`
-	Okpo         string                   `json:"okpo"`
-	Address      string                   `json:"address"`
-	AddressParts FinanceRequisitesAddress `json:"address_parts"`
-	Entrepreneur FinanceRequisitesPerson  `json:"entrepreneur"`
-	Status       string                   `json:"status"`
-}
-
-type FinanceRequisitesPerson struct {
-	Surname    string `json:"surname"`
-	Name       string `json:"name"`
-	Patronymic string `json:"patronymic"`
-}
-
-type FinanceRequisitesSuggestions struct {
-	Suggestions         []FinanceRequisitesParty `json:"suggestions"`
-	DirectoryConfigured bool                     `json:"directory_configured"`
+	KPP string `json:"kpp"`
 }
 
 type FinanceResponsiblePatch struct {
 	Responsible *string `json:"responsible"`
-}
-
-type FinanceSaleLine struct {
-	LineID    UUID    `json:"line_id"`
-	ProductID *string `json:"product_id,omitempty"`
-	UnitID    *string `json:"unit_id,omitempty"`
-	Unit      *string `json:"unit,omitempty"`
-	Name      *string `json:"name,omitempty"`
-	// Kind — ПрТовРаб: 1 товар, 3 услуга
-	Kind     string  `json:"kind"`
-	Quantity string  `json:"quantity"`
-	Price    string  `json:"price"`
-	Discount *string `json:"discount,omitempty"`
-	// Amount — Сумма строки к оплате, с налогом
-	Amount string `json:"amount"`
-	// VATRate — Ставка строки в записи ФНС; пусто — налог у продажи на дату не выделяется
-	VATRate *string `json:"vat_rate,omitempty"`
-	// VATRateFrom — Откуда взят вид ставки
-	VATRateFrom      *string `json:"vat_rate_from,omitempty"`
-	AmountWithoutVAT *string `json:"amount_without_vat,omitempty"`
-	// VATAmount — Пусто у «без НДС»: налога нет вовсе, это не ноль
-	VATAmount *string `json:"vat_amount,omitempty"`
 }
 
 type FinanceSaleLineInput struct {
@@ -11413,55 +7578,6 @@ type FinanceSaleLineInput struct {
 	Discount *string `json:"discount,omitempty"`
 	// Kind — ПрТовРаб формата ФНС: 1 товар, 3 услуга; пусто — товар, если назван товар, иначе услуга
 	Kind *string `json:"kind,omitempty"`
-}
-
-type FinanceSaleLinesPreview struct {
-	Lines  []FinanceSaleLine      `json:"lines"`
-	Totals FinanceSaleLinesTotals `json:"totals"`
-	// VATApplies — Налог у продажи на дату выделяется
-	VATApplies bool `json:"vat_applies"`
-}
-
-type FinanceSaleLinesPreviewRequest struct {
-	// Date — Дата продажи — на неё берутся режим и ставки юрлица
-	Date string `json:"date"`
-	// CompanyID — Юрлицо продажи; без него налог не выделяется
-	CompanyID  *string `json:"company_id,omitempty"`
-	BusinessID *string `json:"business_id,omitempty"`
-	// ItemID — Статья ОПиУ: её вид ставки берут строки без товара
-	ItemID           *string                `json:"item_id,omitempty"`
-	Currency         string                 `json:"currency"`
-	PricesIncludeVAT *bool                  `json:"prices_include_vat,omitempty"`
-	Lines            []FinanceSaleLineInput `json:"lines"`
-}
-
-type FinanceSaleLinesTotals struct {
-	// Amount — Сумма строк к оплате
-	Amount           string  `json:"amount"`
-	AmountWithoutVAT *string `json:"amount_without_vat,omitempty"`
-	VATAmount        *string `json:"vat_amount,omitempty"`
-	// VATRate — Общая ставка строк либо «по строкам», когда ставки разные; пусто — налог не выделяется
-	VATRate     *string `json:"vat_rate,omitempty"`
-	VATRateFrom *string `json:"vat_rate_from,omitempty"`
-}
-
-type FinanceSaleVATTerms struct {
-	// Applies — На дату бизнес очищает суммы от налога и у сделки есть юрлицо
-	Applies bool `json:"applies"`
-	// Charged — Юрлицо начисляет налог с продажи
-	Charged bool `json:"charged"`
-	// Mode — Режим налога юрлица на дату
-	Mode string `json:"mode"`
-	// Rate — Ставка в записи ФНС («22%», «0%», «без НДС»); пусто — ставку не дать
-	Rate string `json:"rate"`
-	// Kind — Вид ставки
-	Kind string `json:"kind"`
-	// From — Откуда вид — статья или общая по умолчанию
-	From string `json:"from"`
-	// Problem — Почему сохранение откажет без правки; пусто — не откажет
-	Problem string `json:"problem"`
-	// Detail — Объяснение отказа словами — с видом ставки и датой
-	Detail *string `json:"detail,omitempty"`
 }
 
 type FinanceSettlementBalance struct {
@@ -11617,100 +7733,6 @@ type FinanceStatementPage struct {
 	Results []FinanceStatement `json:"results"`
 }
 
-type FinanceTradeAdvance struct {
-	// Amount — Общая свободная decimal string
-	Amount   string               `json:"amount"`
-	Advances []FinanceOpenAdvance `json:"advances"`
-}
-
-type FinanceTradeJournalDocument struct {
-	ID       UUID   `json:"id"`
-	TypeKey  string `json:"type_key"`
-	TypeName string `json:"type_name"`
-	Number   string `json:"number"`
-	Date     string `json:"date"`
-	Status   string `json:"status"`
-	// Amount — Доля документа в колонке, decimal string
-	Amount   string `json:"amount"`
-	Currency string `json:"currency"`
-}
-
-type FinanceTradeJournalPage struct {
-	Count        int64                    `json:"count"`
-	Results      []FinanceTradeJournalRow `json:"results"`
-	Limit        *int64                   `json:"limit,omitempty"`
-	Offset       *int64                   `json:"offset,omitempty"`
-	HasMore      *bool                    `json:"has_more,omitempty"`
-	LimitReached *bool                    `json:"limit_reached,omitempty"`
-	Group        *string                  `json:"group,omitempty"`
-	// ComputedColumns — Колонки, вычисленные до отсечки расчётов по заказам (этап 3); нет, когда все строки ответа — из регистра
-	ComputedColumns []string `json:"computed_columns,omitempty"`
-}
-
-type FinanceTradeJournalRow struct {
-	ID          UUID    `json:"id"`
-	Number      string  `json:"number"`
-	Date        string  `json:"date"`
-	Status      string  `json:"status"`
-	ContactID   *string `json:"contact_id"`
-	ContactName string  `json:"contact_name"`
-	CompanyID   *string `json:"company_id"`
-	CompanyName string  `json:"company_name"`
-	ProjectID   *string `json:"project_id"`
-	ProjectName string  `json:"project_name"`
-	ItemName    string  `json:"item_name"`
-	// Amount — Decimal string
-	Amount   string `json:"amount"`
-	Currency string `json:"currency"`
-	DueDate  string `json:"due_date"`
-	// Outstanding — Decimal string из регистра расчётов
-	Outstanding       string  `json:"outstanding"`
-	OperationID       *string `json:"operation_id,omitempty"`
-	ParentOperationID *string `json:"parent_operation_id,omitempty"`
-	ParentDocumentID  *string `json:"parent_document_id,omitempty"`
-	RecognitionMode   *string `json:"recognition_mode,omitempty"`
-	TypeKey           *string `json:"type_key,omitempty"`
-	TypeName          *string `json:"type_name,omitempty"`
-	OverdueAmount     *string `json:"overdue_amount,omitempty"`
-	Accrued           *string `json:"accrued,omitempty"`
-	Paid              *string `json:"paid,omitempty"`
-	CashPaid          *string `json:"cash_paid,omitempty"`
-	Advance           *string `json:"advance,omitempty"`
-	ChangeKind        *string `json:"change_kind,omitempty"`
-	SourceSystem      *string `json:"source_system,omitempty"`
-	SourceRef         *string `json:"source_ref,omitempty"`
-	ExternalID        *string `json:"external_id,omitempty"`
-	Version           *int64  `json:"version,omitempty"`
-	CashDocuments     *int64  `json:"cash_documents,omitempty"`
-	AccrualStages     *int64  `json:"accrual_stages,omitempty"`
-	PaymentStages     *int64  `json:"payment_stages,omitempty"`
-	AccruedStages     *int64  `json:"accrued_stages,omitempty"`
-	PaidStages        *int64  `json:"paid_stages,omitempty"`
-	Group             *string `json:"group,omitempty"`
-	// State — Состояние заказа по канону
-	State             *string `json:"state,omitempty"`
-	Title             *string `json:"title,omitempty"`
-	ContractID        *string `json:"contract_id,omitempty"`
-	CabinetStatusName *string `json:"cabinet_status_name,omitempty"`
-	// Ordered — Итог заказа, decimal string
-	Ordered *string `json:"ordered,omitempty"`
-	// Executed — Долг, рождённый исполнениями заказа, decimal string
-	Executed *string `json:"executed,omitempty"`
-	// Debt — Вычисленный max(0, исполнено − оплачено), decimal string
-	Debt           *string `json:"debt,omitempty"`
-	ExecutionCount *int64  `json:"execution_count,omitempty"`
-	// MoneyFromRegister — Аванс, долг и оплачено — остатками регистра расчётов по заказу: бизнес прошёл отсечку расчётов по заказам (этап 3 ERP-1427)
-	MoneyFromRegister *bool `json:"money_from_register,omitempty"`
-	// ExecutionCutover — Бизнес заказа прошёл отсечку исполнения (этап 4 ERP-1427): при включённом документообороте акт по заказу выпускают «Документы» заказа — бумага и исполнение одной командой; прямой акт финансов отвечает 409 finance.order.act_needs_paper
-	ExecutionCutover *bool `json:"execution_cutover,omitempty"`
-	// OrderID — Заказ документа исполнения по цепочке оснований (группы without_order и executions)
-	OrderID *string `json:"order_id,omitempty"`
-	// OrderNumber — Номер заказа документа исполнения
-	OrderNumber *string                       `json:"order_number,omitempty"`
-	Executions  []FinanceTradeJournalDocument `json:"executions,omitempty"`
-	Payments    []FinanceTradeJournalDocument `json:"payments,omitempty"`
-}
-
 type FinanceTransaction struct {
 	ID        UUID             `json:"id"`
 	Date      string           `json:"date"`
@@ -11806,273 +7828,6 @@ type FinanceTransactionTotals struct {
 	Currency string  `json:"currency"`
 	// UnconvertedCount — Сколько операций осталось без пересчёта в валюту учёта: неполный пересчёт не должен выглядеть верным итогом
 	UnconvertedCount int64 `json:"unconverted_count"`
-}
-
-type FinanceUnallocatedMoney struct {
-	// Count — Сколько операций ждут имени
-	Count int64 `json:"count"`
-	// Amount — Их сумма в валюте учёта. null — часть операций к ней не сведена, и называть неполную сумму нельзя
-	Amount *string `json:"amount"`
-	// Currency — Валюта учёта кабинета
-	Currency string `json:"currency"`
-	// UnconvertedCount — Сколько операций не сведено к валюте учёта
-	UnconvertedCount int64 `json:"unconverted_count"`
-}
-
-type FinanceUnallocatedScope struct {
-	// Count — Сколько операций ждут имени
-	Count int64 `json:"count"`
-	// Amount — Их сумма в валюте учёта. null — часть операций к ней не сведена, и называть неполную сумму нельзя
-	Amount *string `json:"amount"`
-	// Currency — Валюта учёта кабинета
-	Currency string `json:"currency"`
-	// UnconvertedCount — Сколько операций не сведено к валюте учёта
-	UnconvertedCount int64 `json:"unconverted_count"`
-	// Kind — account — банковский счёт, wallet — касса
-	Kind string `json:"kind"`
-	ID   UUID   `json:"id"`
-	// Name — Как место хранения названо в справочнике
-	Name string `json:"name"`
-}
-
-type FinanceUnallocatedSummary struct {
-	Total  FinanceUnallocatedMoney   `json:"total"`
-	Scopes []FinanceUnallocatedScope `json:"scopes"`
-}
-
-type FinanceVATBookImport struct {
-	ID           string  `json:"id"`
-	CompanyID    string  `json:"company_id"`
-	Year         int64   `json:"year"`
-	Quarter      int64   `json:"quarter"`
-	Kind         string  `json:"kind"`
-	Status       string  `json:"status"`
-	SourceName   string  `json:"source_name"`
-	SourceSha256 string  `json:"source_sha256"`
-	SourceSize   int64   `json:"source_size"`
-	FileID       string  `json:"file_id"`
-	DeclaredINN  string  `json:"declared_inn"`
-	DeclaredKPP  string  `json:"declared_kpp"`
-	FormVersion  string  `json:"form_version"`
-	Correction   int64   `json:"correction"`
-	TotalVAT     string  `json:"total_vat"`
-	RowsVAT      string  `json:"rows_vat"`
-	RowCount     int64   `json:"row_count"`
-	CreatedBy    *int64  `json:"created_by,omitempty"`
-	CreatedAt    string  `json:"created_at"`
-	ReplacedAt   *string `json:"replaced_at,omitempty"`
-}
-
-type FinanceVATBookMatch struct {
-	Status           string                 `json:"status"`
-	INN              string                 `json:"inn"`
-	Number           string                 `json:"number"`
-	Date             string                 `json:"date"`
-	BookVAT          string                 `json:"book_vat"`
-	OurVAT           string                 `json:"our_vat"`
-	Difference       string                 `json:"difference"`
-	BookRows         []FinanceVATBookRow    `json:"book_rows"`
-	OurRows          []FinanceVATBookOurRow `json:"our_rows"`
-	Group            *bool                  `json:"group,omitempty"`
-	KPPDiffers       *bool                  `json:"kpp_differs,omitempty"`
-	Counterparty     *string                `json:"counterparty,omitempty"`
-	CounterpartyName *string                `json:"counterparty_name,omitempty"`
-}
-
-type FinanceVATBookOurRow struct {
-	Source       string  `json:"source"`
-	SourceNumber string  `json:"source_number"`
-	SourceDate   string  `json:"source_date"`
-	Contact      *string `json:"contact,omitempty"`
-	ContactName  *string `json:"contact_name,omitempty"`
-	INN          *string `json:"inn,omitempty"`
-	KPP          *string `json:"kpp,omitempty"`
-	Number       string  `json:"number"`
-	Date         string  `json:"date"`
-	VAT          string  `json:"vat"`
-	// Base — Сумма без налога в налоговой валюте: у покупок — остаток источника, у продаж — база регистра выходного налога
-	Base *string `json:"base,omitempty"`
-	// Rate — Ставка продажи («22%»); у покупок пусто — налог поставщика одной суммой документа
-	Rate        *string `json:"rate,omitempty"`
-	Action      *string `json:"action,omitempty"`
-	Restoration *bool   `json:"restoration,omitempty"`
-}
-
-type FinanceVATBookRateTotal struct {
-	Rate string `json:"rate"`
-	Base string `json:"base"`
-	VAT  string `json:"vat"`
-}
-
-type FinanceVATBookReconciliation struct {
-	// Currency — Налоговая валюта юрлица — валюта книг 1С и нашего налога.
-	Currency        string  `json:"currency"`
-	QuarterDocument *string `json:"quarter_document,omitempty"`
-	QuarterNumber   *string `json:"quarter_number,omitempty"`
-	// QuarterStatus — Откуда строки покупок: проведённый документ квартала или черновик; нет поля — документа нет, строки предварительные
-	QuarterStatus *string            `json:"quarter_status,omitempty"`
-	Purchase      FinanceVATBookSide `json:"purchase"`
-	Sales         FinanceVATBookSide `json:"sales"`
-}
-
-type FinanceVATBookRow struct {
-	Line       int64    `json:"line"`
-	Codes      []string `json:"codes"`
-	Number     string   `json:"number"`
-	Date       string   `json:"date"`
-	INN        *string  `json:"inn,omitempty"`
-	KPP        *string  `json:"kpp,omitempty"`
-	Amount     string   `json:"amount"`
-	VAT        string   `json:"vat"`
-	Correction *bool    `json:"correction,omitempty"`
-}
-
-type FinanceVATBookSide struct {
-	Kind      string                 `json:"kind"`
-	Active    *FinanceVATBookImport  `json:"active"`
-	History   []FinanceVATBookImport `json:"history"`
-	Matches   []FinanceVATBookMatch  `json:"matches"`
-	Counts    map[string]int64       `json:"counts"`
-	Attention int64                  `json:"attention"`
-	// OurVAT — Итог книги Акеды: у покупок — принятое к вычету, у продаж — начисленное без восстановления
-	OurVAT string `json:"our_vat"`
-	// Rows — Книга Акеды этой стороны — строки нашего учёта; отдаётся и без загруженной книги 1С
-	Rows []FinanceVATBookOurRow `json:"rows"`
-	// OurBase — Сумма без налога тех же строк, что our_vat
-	OurBase string `json:"our_base"`
-	// Rates — Итоги по ставкам (у продаж); у покупок пусто
-	Rates []FinanceVATBookRateTotal `json:"rates"`
-	// Restored — Налог, восстановленный в квартале (у продаж)
-	Restored string `json:"restored"`
-}
-
-type FinanceVATBookUploadPage struct {
-	Items []FinanceVATBookUploadPageItemsItem `json:"items"`
-}
-
-type FinanceVATBookUploadPageItemsItem struct {
-	Kind      string               `json:"kind"`
-	Import    FinanceVATBookImport `json:"import"`
-	Duplicate bool                 `json:"duplicate"`
-}
-
-type FinanceVATQuarter struct {
-	ID        UUID                     `json:"id"`
-	Number    string                   `json:"number"`
-	Date      string                   `json:"date"`
-	Status    string                   `json:"status"`
-	CompanyID string                   `json:"company_id"`
-	Comment   string                   `json:"comment"`
-	UpdatedAt string                   `json:"updated_at"`
-	Payload   FinanceVATQuarterPayload `json:"payload"`
-}
-
-type FinanceVATQuarterFigureSource struct {
-	ImportID string `json:"import_id"`
-	LoadedAt string `json:"loaded_at"`
-}
-
-type FinanceVATQuarterInput struct {
-	CompanyID *UUID  `json:"company_id,omitempty"`
-	Year      *int64 `json:"year,omitempty"`
-	Quarter   *int64 `json:"quarter,omitempty"`
-	// AccountingOutput — Начислено НДС по бухгалтерии за квартал.
-	AccountingOutput *string `json:"accounting_output,omitempty"`
-	// AccountingDeduction — К вычету по бухгалтерии за квартал.
-	AccountingDeduction       *string                       `json:"accounting_deduction,omitempty"`
-	DiscrepancyItemID         *UUID                         `json:"discrepancy_item_id,omitempty"`
-	AccountingOutputBookID    *UUID                         `json:"accounting_output_book_id,omitempty"`
-	AccountingDeductionBookID *UUID                         `json:"accounting_deduction_book_id,omitempty"`
-	Lines                     []FinanceVATQuarterLineChoice `json:"lines,omitempty"`
-	Comment                   *string                       `json:"comment,omitempty"`
-}
-
-type FinanceVATQuarterLine struct {
-	Kind             string            `json:"kind"`
-	Source           UUID              `json:"source"`
-	SourceType       *string           `json:"source_type,omitempty"`
-	SourceNumber     *string           `json:"source_number,omitempty"`
-	SourceDate       *string           `json:"source_date,omitempty"`
-	Contact          string            `json:"contact"`
-	ContactName      *string           `json:"contact_name,omitempty"`
-	SupplierDocument *SupplierDocument `json:"supplier_document,omitempty"`
-	// Amount — Налог строки в налоговой валюте юрлица.
-	Amount string  `json:"amount"`
-	Base   *string `json:"base,omitempty"`
-	// AccountingAmount — Налог строки в валюте учёта — сумма книги.
-	AccountingAmount *string                 `json:"accounting_amount,omitempty"`
-	AgeMonths        int64                   `json:"age_months"`
-	OverThreshold    bool                    `json:"over_threshold"`
-	Action           string                  `json:"action"`
-	Item             *string                 `json:"item,omitempty"`
-	Parts            []FinanceVATQuarterPart `json:"parts"`
-	// Causes — У восстановления — возвраты поставщику после вычета, объясняющие минус.
-	Causes []FinanceVATQuarterLineCausesItem `json:"causes,omitempty"`
-}
-
-type FinanceVATQuarterLineCausesItem struct {
-	Document string `json:"document"`
-	TypeKey  string `json:"type_key"`
-	Number   string `json:"number"`
-	Date     string `json:"date"`
-}
-
-type FinanceVATQuarterLineChoice struct {
-	Source UUID   `json:"source"`
-	Action string `json:"action"`
-	ItemID *UUID  `json:"item_id,omitempty"`
-}
-
-type FinanceVATQuarterPage struct {
-	Items []FinanceVATQuarter `json:"items"`
-}
-
-type FinanceVATQuarterPart struct {
-	Item *string `json:"item,omitempty"`
-	// Amount — Налог в налоговой валюте юрлица.
-	Amount string `json:"amount"`
-	// Base — Сумма без налога в налоговой валюте юрлица.
-	Base *string `json:"base,omitempty"`
-	// AccountingAmount — Тот же налог в валюте учёта кабинета.
-	AccountingAmount *string `json:"accounting_amount,omitempty"`
-	// AccountingBase — Та же сумма без налога в валюте учёта кабинета.
-	AccountingBase *string `json:"accounting_base,omitempty"`
-}
-
-type FinanceVATQuarterPayload struct {
-	Year    int64 `json:"year"`
-	Quarter int64 `json:"quarter"`
-	// Currency — Валюта учёта кабинета — валюта книги.
-	Currency string `json:"currency"`
-	// TaxCurrency — Налоговая валюта юрлица — валюта сумм документа.
-	TaxCurrency               string                         `json:"tax_currency"`
-	PendingMonths             int64                          `json:"pending_months"`
-	AccountingOutput          string                         `json:"accounting_output"`
-	AccountingDeduction       string                         `json:"accounting_deduction"`
-	AccountingOutputSource    *FinanceVATQuarterFigureSource `json:"accounting_output_source,omitempty"`
-	AccountingDeductionSource *FinanceVATQuarterFigureSource `json:"accounting_deduction_source,omitempty"`
-	OutputTotal               string                         `json:"output_total"`
-	DiscrepancyItem           *string                        `json:"discrepancy_item,omitempty"`
-	Lines                     []FinanceVATQuarterLine        `json:"lines"`
-	Totals                    FinanceVATQuarterTotals        `json:"totals"`
-}
-
-type FinanceVATQuarterTotals struct {
-	Deducted            *string `json:"deducted,omitempty"`
-	Restored            *string `json:"restored,omitempty"`
-	Carried             *string `json:"carried,omitempty"`
-	WrittenOff          *string `json:"written_off,omitempty"`
-	Deduction           *string `json:"deduction,omitempty"`
-	OutputDifference    *string `json:"output_difference,omitempty"`
-	DeductionDifference *string `json:"deduction_difference,omitempty"`
-	Discrepancy         *string `json:"discrepancy,omitempty"`
-	// DiscrepancyAccounting — Расхождение в валюте учёта — сумма книги и ОПиУ.
-	DiscrepancyAccounting *string `json:"discrepancy_accounting,omitempty"`
-	// DiscrepancyRate — Курс налоговой валюты к валюте учёта на последний день квартала; пусто в одной валюте.
-	DiscrepancyRate     *string `json:"discrepancy_rate,omitempty"`
-	DiscrepancyRateDate *string `json:"discrepancy_rate_date,omitempty"`
-	// Payable — К уплате за квартал в налоговой валюте: начислено по продажам − (вычет − восстановление) + расхождение
-	Payable *string `json:"payable,omitempty"`
 }
 
 type HubCounters struct {
@@ -12171,15 +7926,6 @@ type KnowledgeAnswer struct {
 	RetrievalMode string `json:"retrieval_mode"`
 }
 
-type KnowledgeAnswerFeedbackInput struct {
-	// Helpful — Ответ помог; при true причина и комментарий очищаются
-	Helpful bool `json:"helpful"`
-	// Issue — Что было не так с ответом; обязательно при helpful=false
-	Issue *string `json:"issue,omitempty"`
-	// Comment — Пояснение к отрицательной оценке; при helpful=true отбрасывается
-	Comment *string `json:"comment,omitempty"`
-}
-
 type KnowledgeAnswerInput struct {
 	Question string `json:"question"`
 	// Limit — Сколько фрагментов-опор искать; по умолчанию 6
@@ -12190,26 +7936,6 @@ type KnowledgeAnswerInput struct {
 	Scope *string `json:"scope,omitempty"`
 	// CitationsOnly — Не сочинять ответ моделью, вернуть только найденные фрагменты и извлечённую сводку. Для того, кто говорит своим голосом и сам собирает ответ из цитат: без генерации ответ приходит за время поиска
 	CitationsOnly *bool `json:"citations_only,omitempty"`
-}
-
-type KnowledgeAnswerQuality struct {
-	// PeriodDays — Длина периода в днях; по умолчанию 30
-	PeriodDays int64 `json:"period_days"`
-	// Total — Прогонов ответа за период
-	Total int64 `json:"total"`
-	// Abstained — Ответов без опоры в материалах
-	Abstained int64 `json:"abstained"`
-	// Generated — Ответов собранных генеративной моделью
-	Generated int64 `json:"generated"`
-	// Helpful — Положительных оценок
-	Helpful int64 `json:"helpful"`
-	// Unhelpful — Отрицательных оценок
-	Unhelpful int64 `json:"unhelpful"`
-	// AverageLatencyMs — Средняя длительность ответа в миллисекундах
-	AverageLatencyMs float64 `json:"average_latency_ms"`
-	// ContentGaps — Частые вопросы без ответа или с отрицательной оценкой; сюда смотрят когда решают что дописать
-	ContentGaps []KnowledgeContentGap `json:"content_gaps"`
-	Index       KnowledgeIndexHealth  `json:"index"`
 }
 
 type KnowledgeAnswerTurn struct {
@@ -12254,14 +7980,6 @@ type KnowledgeCitation struct {
 	IsStale bool                       `json:"is_stale"`
 }
 
-type KnowledgeContentGap struct {
-	// Question — Вопрос без ответа или с отрицательной оценкой
-	Question string `json:"question"`
-	// Count — Сколько раз вопрос задали за период; вопросы группируются без учёта регистра
-	Count       int64  `json:"count"`
-	LastAskedAt string `json:"last_asked_at"`
-}
-
 // KnowledgeDocument — Канонический блочный документ страницы; редактор читает только эту схему.
 type KnowledgeDocument struct {
 	Schema string `json:"schema"`
@@ -12270,29 +7988,6 @@ type KnowledgeDocument struct {
 	Type          string `json:"type"`
 	// Content — Блоки страницы
 	Content []map[string]json.RawMessage `json:"content"`
-}
-
-type KnowledgeIndexHealth struct {
-	// ActiveGenerations — Поколений индекса в работе
-	ActiveGenerations int64 `json:"active_generations"`
-	// BuildingGenerations — Поколений индекса в сборке
-	BuildingGenerations int64 `json:"building_generations"`
-	// FailedGenerations — Поколений индекса со сбоем
-	FailedGenerations int64 `json:"failed_generations"`
-	// Chunks — Фрагментов в индексе; страницы и файлы вместе
-	Chunks int64 `json:"chunks"`
-	// PendingAssets — Файлов в очереди разбора
-	PendingAssets int64 `json:"pending_assets"`
-	// ProcessingAssets — Файлов в разборе
-	ProcessingAssets int64 `json:"processing_assets"`
-	// ReadyAssets — Файлов в индексе
-	ReadyAssets int64 `json:"ready_assets"`
-	// FailedAssets — Файлов со сбоем разбора
-	FailedAssets int64 `json:"failed_assets"`
-	// UnsupportedAssets — Файлов с неподдерживаемым форматом
-	UnsupportedAssets int64 `json:"unsupported_assets"`
-	// LastActivatedAt — Когда индекс переключался на новое поколение
-	LastActivatedAt *string `json:"last_activated_at,omitempty"`
 }
 
 type KnowledgeMoveInput struct {
@@ -12388,12 +8083,6 @@ type KnowledgeRevisionInput struct {
 	PlainText       *string           `json:"plain_text,omitempty"`
 }
 
-type KnowledgeRevisionRestoreInput struct {
-	// ExpectedVersion — Версия страницы из её карточки
-	ExpectedVersion int64 `json:"expected_version"`
-	RevisionID      UUID  `json:"revision_id"`
-}
-
 type KnowledgeSearchResult struct {
 	NodeID    UUID    `json:"node_id"`
 	SpaceID   UUID    `json:"space_id"`
@@ -12453,18 +8142,6 @@ type KnowledgeTag struct {
 	CreatedAt string `json:"created_at"`
 }
 
-type KnowledgeTagInput struct {
-	// Name — Имя метки уникально в кабинете без учёта регистра
-	Name string `json:"name"`
-	// Color — Ключ цвета метки; по умолчанию neutral
-	Color *string `json:"color,omitempty"`
-}
-
-type KnowledgeTagSetInput struct {
-	// TagIds — Полный набор меток страницы; пустой массив снимает все метки
-	TagIds []UUID `json:"tag_ids"`
-}
-
 type KnowledgeVersionInput struct {
 	ExpectedVersion int64 `json:"expected_version"`
 }
@@ -12522,38 +8199,6 @@ type MailAccount struct {
 	UpdatedAt     string `json:"updated_at"`
 }
 
-// MailAccountInput — Подключение и изменение ящика. Одна форма на обе операции: при подключении обязательны email, imap_host, smtp_host и пароль, при изменении непереданное поле сохраняет прежнее значение, а пустой пароль оставляет сохранённый секрет нетронутым.
-type MailAccountInput struct {
-	Email *string `json:"email,omitempty"`
-	// DisplayName — Без значения берётся адрес
-	DisplayName *string `json:"display_name,omitempty"`
-	// NotificationMode — Режим уведомлений владельца ящика; если не передан, прежний режим сохраняется
-	NotificationMode *string `json:"notification_mode,omitempty"`
-	// Shared — Сделать ящик общим ящиком отдела
-	Shared *bool `json:"shared,omitempty"`
-	// ImapHost — Схема, завершающая точка и порт внутри значения снимаются
-	ImapHost *string `json:"imap_host,omitempty"`
-	// ImapPort — Без значения — 993 для tls и 143 для starttls
-	ImapPort       *int64          `json:"imap_port,omitempty"`
-	ImapEncryption *MailEncryption `json:"imap_encryption,omitempty"`
-	SmtpHost       *string         `json:"smtp_host,omitempty"`
-	// SmtpPort — Без значения — 465 для tls и 587 для starttls
-	SmtpPort       *int64          `json:"smtp_port,omitempty"`
-	SmtpEncryption *MailEncryption `json:"smtp_encryption,omitempty"`
-	// Username — Без значения берётся адрес почты
-	Username *string `json:"username,omitempty"`
-	// Password — Пароль приложения. Принимается, но не возвращается никогда; о его наличии говорит has_credentials
-	Password *string `json:"password,omitempty"`
-	// AppPassword — Синоним password: у Яндекса, VK и Mail.ru это поле называется «пароль приложения». Принимается, но не возвращается никогда
-	AppPassword *string `json:"app_password,omitempty"`
-	// SyncSinceDays — Глубина первичного импорта в днях; ноль означает весь ящик
-	SyncSinceDays *int64 `json:"sync_since_days,omitempty"`
-	// Signature — Подпись исходящих писем
-	Signature *string `json:"signature,omitempty"`
-	// Status — Ящик можно только включить или выключить; состояние error ставит синхронизация
-	Status *string `json:"status,omitempty"`
-}
-
 type MailAccountStatus = string
 
 // MailAttachment — Вложение письма. Ключ объектного хранилища наружу не отдаётся: знание ключа — половина пути к чужому файлу.
@@ -12569,6 +8214,19 @@ type MailAttachment struct {
 	IsInline   bool           `json:"is_inline"`
 	ScanStatus MailScanStatus `json:"scan_status"`
 	CreatedAt  string         `json:"created_at"`
+}
+
+// MailAttachmentLink — Временный адрес вложения письма.
+type MailAttachmentLink struct {
+	URL string `json:"url"`
+	// Direct — true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией
+	Direct bool `json:"direct"`
+	// ExpiresAt — Срок подписанного адреса; у адреса API его нет
+	ExpiresAt  *string        `json:"expires_at,omitempty"`
+	Name       string         `json:"name"`
+	MimeType   string         `json:"mime_type"`
+	SizeBytes  int64          `json:"size_bytes"`
+	ScanStatus MailScanStatus `json:"scan_status"`
 }
 
 // MailComposeInput — Отправка письма или сохранение черновика. Поле in_reply_to_id указывает на письмо в нашей базе, а не на Message-ID: заголовки ответа собираем мы.
@@ -12588,28 +8246,6 @@ type MailComposeInput struct {
 	UploadIds []UUID `json:"upload_ids,omitempty"`
 	// SaveAsDraft — Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо уходит получателю и отозвать его нельзя
 	SaveAsDraft *bool `json:"save_as_draft,omitempty"`
-}
-
-// MailDiscoveredSettings — Предложение настроек для адреса. Поле source называет происхождение: catalog — справочник провайдеров, autoconfig и autodiscover — настройки самого домена, srv и mx — записи DNS, probe — угаданный и проверенный соединением сервер.
-type MailDiscoveredSettings struct {
-	Email          *string `json:"email,omitempty"`
-	Domain         *string `json:"domain,omitempty"`
-	Source         *string `json:"source,omitempty"`
-	ProviderKey    *string `json:"provider_key,omitempty"`
-	ProviderLabel  *string `json:"provider_label,omitempty"`
-	ImapHost       *string `json:"imap_host,omitempty"`
-	ImapPort       *int64  `json:"imap_port,omitempty"`
-	ImapEncryption *string `json:"imap_encryption,omitempty"`
-	SmtpHost       *string `json:"smtp_host,omitempty"`
-	SmtpPort       *int64  `json:"smtp_port,omitempty"`
-	SmtpEncryption *string `json:"smtp_encryption,omitempty"`
-	Username       *string `json:"username,omitempty"`
-	AuthMethod     *string `json:"auth_method,omitempty"`
-	OauthProvider  *string `json:"oauth_provider,omitempty"`
-	PasswordHint   *string `json:"password_hint,omitempty"`
-	HelpURL        *string `json:"help_url,omitempty"`
-	// Verified — Координаты проверены соединением, а не только прочитаны
-	Verified *bool `json:"verified,omitempty"`
 }
 
 type MailEncryption = string
@@ -12875,107 +8511,6 @@ type ManagedChecklistPatch struct {
 	Items []ManagedChecklistItem `json:"items"`
 }
 
-type MarketplaceAdsAbsence struct {
-	// Through — По какой день включительно ответ действует
-	Through string `json:"through"`
-	// Stores — Сколько магазинов получили ответ
-	Stores int64 `json:"stores"`
-}
-
-type MarketplaceAdsAbsenceRequest struct {
-	// Stores — Магазины отчёта; пусто — все активные магазины площадки
-	Stores []string `json:"stores,omitempty"`
-}
-
-type MarketplaceCatalogCandidate struct {
-	ProductID UUID   `json:"product_id"`
-	SKU       string `json:"sku"`
-	Name      string `json:"name"`
-	// RecordKind — Вид записи номенклатуры — самостоятельный товар или вариант
-	RecordKind        string `json:"record_kind"`
-	ParentProductName string `json:"parent_product_name"`
-	Brand             string `json:"brand"`
-	Size              string `json:"size"`
-	Color             string `json:"color"`
-	Barcode           string `json:"barcode"`
-	// PhotoFileID — Основное фото товара; миниатюра читается ручкой coreGetProductFileContent
-	PhotoFileID *UUID `json:"photo_file_id"`
-	// Platforms — Площадки, с которыми товар уже связан; пустой список означает «ничей»
-	Platforms []string `json:"platforms"`
-	// LinkedHere — Товар уже связан с ЭТИМ магазином — вторая карточка к нему почти всегда ошибка
-	LinkedHere bool `json:"linked_here"`
-}
-
-type MarketplaceCatalogCandidatePage struct {
-	// Count — Всего строк под отбором, а не на странице
-	Count   int64                         `json:"count"`
-	Results []MarketplaceCatalogCandidate `json:"results"`
-	// Brands — Бренды под текущим отбором, для фильтра без отдельного запроса
-	Brands []string `json:"brands"`
-}
-
-type MarketplaceCatalogImportResult struct {
-	// SnapshotID — Снимок каталога, по которому считался разбор
-	SnapshotID *string `json:"snapshot_id,omitempty"`
-	// Preview — true у marketplacePreviewCatalogImport — ничего не записано
-	Preview   bool  `json:"preview"`
-	Created   int64 `json:"created"`
-	Linked    int64 `json:"linked"`
-	Unchanged int64 `json:"unchanged"`
-	// Pending — Сколько карточек осталось спорными
-	Pending int64                         `json:"pending"`
-	Rows    []MarketplaceCatalogImportRow `json:"rows"`
-}
-
-type MarketplaceCatalogImportRow struct {
-	// ExternalID — Идентификатор карточки на площадке
-	ExternalID string            `json:"external_id"`
-	SKU        string            `json:"sku"`
-	Name       string            `json:"name"`
-	Attributes map[string]string `json:"attributes"`
-	ProductID  *UUID             `json:"product_id,omitempty"`
-	// Action — pending — карточка осталась спорной и ждёт решения человека
-	Action string `json:"action"`
-	// Reason — Почему строка не решилась сама
-	Reason *string `json:"reason,omitempty"`
-	// ExternalRefUpdatedAt — Версия связи карточки; её же ждёт marketplaceLinkCatalogProduct
-	ExternalRefUpdatedAt *string `json:"external_ref_updated_at,omitempty"`
-}
-
-type MarketplaceCatalogJob struct {
-	ID       UUID   `json:"id"`
-	Platform string `json:"platform"`
-	StoreID  UUID   `json:"store_id"`
-	Status   string `json:"status"`
-	Attempts int64  `json:"attempts"`
-	// Stats — Счётчики последнего разбора; состав зависит от фазы
-	Stats map[string]json.RawMessage `json:"stats"`
-	// Phase — initial — первоначальная загрузка, sync — последующая сверка
-	Phase            string  `json:"phase"`
-	LastSnapshotID   *string `json:"last_snapshot_id,omitempty"`
-	TargetSnapshotID *string `json:"target_snapshot_id,omitempty"`
-}
-
-type MarketplaceCatalogLinkDecision struct {
-	ExternalID string `json:"external_id"`
-	ProductID  UUID   `json:"product_id"`
-	// MatchSource — Решение человека приходит как manual
-	MatchSource          string  `json:"match_source"`
-	SnapshotID           *string `json:"snapshot_id,omitempty"`
-	ExternalRefUpdatedAt string  `json:"external_ref_updated_at"`
-}
-
-type MarketplaceCatalogLinkRequest struct {
-	ProductID UUID `json:"product_id"`
-	// ExternalID — Карточка площадки из окна разбора; вместе с ней обязательны snapshot_id и expected_external_ref_updated_at
-	ExternalID *string `json:"external_id,omitempty"`
-	// OfferID — Артикул продавца с экрана товаров; вторая форма решения, снимок при ней не нужен
-	OfferID    *string `json:"offer_id,omitempty"`
-	SnapshotID *string `json:"snapshot_id,omitempty"`
-	// ExpectedExternalRefUpdatedAt — Версия связи из разбора; расхождение отклоняется 409, чтобы не переписать чужое решение
-	ExpectedExternalRefUpdatedAt *string `json:"expected_external_ref_updated_at,omitempty"`
-}
-
 // MarketplaceComponentDataThrough — Последняя дата операций площадки, уже включённых в каждый компонент отчёта; отсутствующее или null-значение означает, что дата покрытия пока неизвестна.
 type MarketplaceComponentDataThrough struct {
 	// Finance — Финансовые операции площадки
@@ -13002,187 +8537,6 @@ type MarketplaceComponentFreshness struct {
 	AdsOrders *string `json:"ads_orders,omitempty"`
 	// Products — Карточки товаров
 	Products *string `json:"products,omitempty"`
-}
-
-type MarketplaceCostImportRequest struct {
-	Store UUID `json:"store"`
-	// File — XLSX, XLS, ODS, CSV или TSV; первая строка — заголовок с колонками артикула и себестоимости
-	File string `json:"file"`
-}
-
-type MarketplaceCostImportResult struct {
-	// Applied — Сколько строк завели новую ставку
-	Applied int64 `json:"applied"`
-	// Unchanged — Строки с той же ценой, что уже действует: новая ставка не заводилась
-	Unchanged *int64 `json:"unchanged,omitempty"`
-	// Skipped — Строки с пустой себестоимостью: пустая ячейка — «не заведена», а не ноль
-	Skipped *int64                          `json:"skipped,omitempty"`
-	Failed  int64                           `json:"failed"`
-	Errors  []MarketplaceCostImportRowError `json:"errors"`
-}
-
-type MarketplaceCostImportRowError struct {
-	// Row — Номер строки в таблице, считая заголовок первой
-	Row   int64  `json:"row"`
-	Offer string `json:"offer"`
-	// Reason — Причина отказа теми же словами, что и у одиночной простановки себестоимости
-	Reason string `json:"reason"`
-}
-
-// MarketplaceEconBaseRow — Сырьё строки прайса в том виде в каком его отдаёт витрина ценообразования
-type MarketplaceEconBaseRow struct {
-	// Price — Установочная цена, до скидки площадки
-	Price *float64 `json:"price,omitempty"`
-	// Spp — Доля скидки площадки, 0..1
-	Spp  *float64 `json:"spp,omitempty"`
-	Cost *float64 `json:"cost,omitempty"`
-	// Comm — Комиссия в процентах
-	Comm *float64 `json:"comm,omitempty"`
-	// Tax — Налог в процентах
-	Tax *float64 `json:"tax,omitempty"`
-	// Acquiring — Эквайринг в процентах
-	Acquiring *float64 `json:"acquiring,omitempty"`
-	// Log — Логистика итого; запасное значение для доставки
-	Log       *float64 `json:"log,omitempty"`
-	LogDirect *float64 `json:"logDirect,omitempty"`
-	LogReturn *float64 `json:"logReturn,omitempty"`
-	// StorageUnit — Хранение на единицу
-	StorageUnit *float64 `json:"storageUnit,omitempty"`
-	// AcceptUnit — Приёмка на единицу
-	AcceptUnit *float64 `json:"acceptUnit,omitempty"`
-	// PenaltyUnit — Штрафы на единицу
-	PenaltyUnit *float64 `json:"penaltyUnit,omitempty"`
-}
-
-// MarketplaceEconOverrides — Ручные правки; отсутствие поля означает значение площадки
-type MarketplaceEconOverrides struct {
-	Price *float64 `json:"price,omitempty"`
-	// Hold — Репрайсер держит эту цену клиента
-	Hold *float64 `json:"hold,omitempty"`
-	// Spp — Скидка площадки в процентах, а не долей
-	Spp      *float64 `json:"spp,omitempty"`
-	CostBuy  *float64 `json:"costBuy,omitempty"`
-	Cost     *float64 `json:"cost,omitempty"`
-	Pack     *float64 `json:"pack,omitempty"`
-	LogToWh  *float64 `json:"logToWh,omitempty"`
-	Comm     *float64 `json:"comm,omitempty"`
-	Handling *float64 `json:"handling,omitempty"`
-	Storage  *float64 `json:"storage,omitempty"`
-	Accept   *float64 `json:"accept,omitempty"`
-	LogDir   *float64 `json:"logDir,omitempty"`
-	LogRet   *float64 `json:"logRet,omitempty"`
-	Acq      *float64 `json:"acq,omitempty"`
-	AdIn     *float64 `json:"adIn,omitempty"`
-	AdEx     *float64 `json:"adEx,omitempty"`
-	Tax      *float64 `json:"tax,omitempty"`
-}
-
-// MarketplaceEconOzonInput — Разрешённый вход расчёта Ozon после правок и сценария акции
-type MarketplaceEconOzonInput struct {
-	Price    float64 `json:"price"`
-	Spp      float64 `json:"spp"`
-	CostBuy  float64 `json:"costBuy"`
-	Pack     float64 `json:"pack"`
-	LogToWh  float64 `json:"logToWh"`
-	Comm     float64 `json:"comm"`
-	Handling float64 `json:"handling"`
-	Storage  float64 `json:"storage"`
-	LogDir   float64 `json:"logDir"`
-	LogRet   float64 `json:"logRet"`
-	Acq      float64 `json:"acq"`
-	AdIn     float64 `json:"adIn"`
-	AdEx     float64 `json:"adEx"`
-	// AdExR — Внешняя реклама задана рублями за единицу
-	AdExR bool    `json:"adExR"`
-	Tax   float64 `json:"tax"`
-}
-
-type MarketplaceEconQuoteItem struct {
-	Base *MarketplaceEconBaseRow   `json:"base,omitempty"`
-	Ov   *MarketplaceEconOverrides `json:"ov,omitempty"`
-	// Drr — Доля рекламных расходов по умолчанию
-	Drr *float64 `json:"drr,omitempty"`
-	// AdExAll — Внешняя реклама по умолчанию
-	AdExAll *float64 `json:"adExAll,omitempty"`
-	// AdExUnit — Значение rub трактует внешнюю рекламу как рубли за единицу
-	AdExUnit *string `json:"adExUnit,omitempty"`
-	// Promo — Скидка акции в процентах; задана — считается сценарий акции
-	Promo *float64 `json:"promo,omitempty"`
-}
-
-type MarketplaceEconQuoteRequest struct {
-	// Platform — Иное значение даёт 400 даже при пустом батче
-	Platform string                     `json:"platform"`
-	Items    []MarketplaceEconQuoteItem `json:"items,omitempty"`
-}
-
-type MarketplaceEconQuoteResponse struct {
-	Rows []MarketplaceEconQuoteRow `json:"rows"`
-}
-
-type MarketplaceEconQuoteRow struct {
-	Ozon *MarketplaceEconOzonInput `json:"ozon,omitempty"`
-	Wb   *MarketplaceEconWbInput   `json:"wb,omitempty"`
-	Out  MarketplaceEconResult     `json:"out"`
-}
-
-// MarketplaceEconResult — Неприменимые к площадке поля остаются нулями, а не пропадают
-type MarketplaceEconResult struct {
-	// Buyer — Ozon: цена клиента
-	Buyer float64 `json:"buyer"`
-	// Client — Wildberries: цена клиента
-	Client float64 `json:"client"`
-	// Rev — Ozon: выручка продавца
-	Rev float64 `json:"rev"`
-	// Ppvz — Wildberries: выплата продавцу
-	Ppvz float64 `json:"ppvz"`
-	// Comm — Комиссия на единицу
-	Comm float64 `json:"comm"`
-	Acq  float64 `json:"acq"`
-	AdIn float64 `json:"adIn"`
-	AdEx float64 `json:"adEx"`
-	Tax  float64 `json:"tax"`
-	// CostBefore — Себестоимость до продажи на единицу
-	CostBefore float64 `json:"costBefore"`
-	// During — Сумма затрат во время продажи
-	During float64 `json:"during"`
-	// Margin — Маржа на единицу
-	Margin float64 `json:"margin"`
-	// Mpct — Маржинальность долей; null при нулевой базе
-	Mpct *float64 `json:"mpct"`
-	Roi  *float64 `json:"roi"`
-}
-
-// MarketplaceEconWbInput — Разрешённый вход расчёта Wildberries после правок и сценария акции
-type MarketplaceEconWbInput struct {
-	Price   float64 `json:"price"`
-	Spp     float64 `json:"spp"`
-	Cost    float64 `json:"cost"`
-	Comm    float64 `json:"comm"`
-	LogDir  float64 `json:"logDir"`
-	Storage float64 `json:"storage"`
-	Accept  float64 `json:"accept"`
-	Penalty float64 `json:"penalty"`
-	Acq     float64 `json:"acq"`
-	AdIn    float64 `json:"adIn"`
-	AdEx    float64 `json:"adEx"`
-	Tax     float64 `json:"tax"`
-}
-
-type MarketplaceFunnelDailyReference struct {
-	BuyoutFrom string   `json:"buyoutFrom"`
-	BuyoutTo   string   `json:"buyoutTo"`
-	Bought     float64  `json:"bought"`
-	Cancelled  float64  `json:"cancelled"`
-	Pending    float64  `json:"pending"`
-	From       string   `json:"from"`
-	To         string   `json:"to"`
-	Units      float64  `json:"units"`
-	Commission *float64 `json:"commission"`
-	Logistics  *float64 `json:"logistics"`
-	Other      *float64 `json:"other"`
-	Buyout     *float64 `json:"buyout"`
-	Missing    []string `json:"missing"`
 }
 
 type MarketplaceOzonCost struct {
@@ -13287,11 +8641,6 @@ type MarketplaceOzonDecompositionOtherItem struct {
 	Amount int64 `json:"amount"`
 }
 
-type MarketplaceOzonDecompositionOtherPage struct {
-	Items []MarketplaceOzonDecompositionOtherItem `json:"items"`
-	Total int64                                   `json:"total"`
-}
-
 type MarketplaceOzonDecompositionPeriod struct {
 	// ID — month для накопительной колонки, иначе s и номер спринта
 	ID   string `json:"id"`
@@ -13306,282 +8655,6 @@ type MarketplaceOzonDecompositionPeriod struct {
 	// RunRateFactor — Коэффициент проекции незакрытого периода
 	RunRateFactor float64                          `json:"run_rate_factor"`
 	Totals        MarketplaceOzonDecompositionCell `json:"totals"`
-}
-
-type MarketplaceOzonFbs struct {
-	Platform string                    `json:"platform"`
-	Source   *string                   `json:"source,omitempty"`
-	From     *string                   `json:"from,omitempty"`
-	To       *string                   `json:"to,omitempty"`
-	Totals   *MarketplaceOzonFbsTotals `json:"totals,omitempty"`
-	// Funnel — Семь этапов в фиксированном порядке
-	Funnel     []MarketplaceOzonFbsFunnelStage `json:"funnel,omitempty"`
-	Tiles      *MarketplaceOzonFbsTiles        `json:"tiles,omitempty"`
-	Histogram  []MarketplaceOzonFbsSpeedBucket `json:"histogram,omitempty"`
-	Warehouses []MarketplaceOzonFbsWarehouse   `json:"warehouses,omitempty"`
-	Rows       []MarketplaceOzonFbsPosting     `json:"rows"`
-	// Note — Оговорка о границах окна или причина пустого ответа
-	Note *string `json:"note,omitempty"`
-	// Analytics — Присутствует и равно false, когда аналитика не подключена
-	Analytics *bool `json:"analytics,omitempty"`
-}
-
-type MarketplaceOzonFbsFunnelStage struct {
-	Key   string `json:"key"`
-	Label string `json:"label"`
-	Count int64  `json:"count"`
-	Sum   int64  `json:"sum"`
-}
-
-type MarketplaceOzonFbsPosting struct {
-	// Posting — Номер отправления
-	Posting string `json:"posting"`
-	OrderNo string `json:"order_no"`
-	// Name — Название первой позиции отправления
-	Name string `json:"name"`
-	// Offer — Артикул первой позиции
-	Offer     string `json:"offer"`
-	SKU       int64  `json:"sku"`
-	Warehouse string `json:"warehouse"`
-	// Status — Этап воронки
-	Status string `json:"status"`
-	// StatusRaw — Исходный статус площадки
-	StatusRaw string  `json:"status_raw"`
-	Qty       int64   `json:"qty"`
-	Amount    int64   `json:"amount"`
-	CreatedAt *string `json:"created_at"`
-	// ProcessHrs — Часы в обработке; null пока не отгружено
-	ProcessHrs *float64 `json:"process_hrs"`
-	DeadlineAt *string  `json:"deadline_at"`
-	// Tariff — Надбавка положительна, льгота отрицательна
-	Tariff int64 `json:"tariff"`
-}
-
-type MarketplaceOzonFbsSpeedBucket struct {
-	Index int64    `json:"index"`
-	Label string   `json:"label"`
-	Count int64    `json:"count"`
-	Pct   *float64 `json:"pct"`
-	// WbCommDeltaPp — Сетка Wildberries переиспользована как единая шкала скорости; к комиссии Ozon не применяется
-	WbCommDeltaPp float64 `json:"wb_comm_delta_pp"`
-	PerHour       bool    `json:"per_hour"`
-}
-
-type MarketplaceOzonFbsTiles struct {
-	OnTimePct *float64 `json:"on_time_pct"`
-	// TariffNet — Штрафы минус льготы в рублях; льгота отрицательна
-	TariffNet int64    `json:"tariff_net"`
-	AvgPrice  *int64   `json:"avg_price"`
-	BuyoutPct *float64 `json:"buyout_pct"`
-	// AvgProcessHrs — Часы от заказа до передачи в доставку
-	AvgProcessHrs *float64 `json:"avg_process_hrs"`
-}
-
-type MarketplaceOzonFbsTotals struct {
-	Count int64 `json:"count"`
-	Sum   int64 `json:"sum"`
-}
-
-type MarketplaceOzonFbsWarehouse struct {
-	Warehouse  string   `json:"warehouse"`
-	Count      int64    `json:"count"`
-	ProcessHrs *float64 `json:"process_hrs"`
-	OnTimePct  *float64 `json:"on_time_pct"`
-	Tariff     int64    `json:"tariff"`
-}
-
-type MarketplaceOzonFunnel struct {
-	Platform string                       `json:"platform"`
-	Source   *string                      `json:"source,omitempty"`
-	From     *string                      `json:"from,omitempty"`
-	To       *string                      `json:"to,omitempty"`
-	Totals   *MarketplaceOzonFunnelTotals `json:"totals,omitempty"`
-	Rows     []MarketplaceOzonFunnelRow   `json:"rows"`
-	// Note — Почему воронка пуста или неполна
-	Note *string `json:"note,omitempty"`
-	// Analytics — Присутствует и равно false, когда аналитика не подключена
-	Analytics *bool `json:"analytics,omitempty"`
-}
-
-type MarketplaceOzonFunnelDaily struct {
-	// Slice — Срез ответа, когда запрошен slice
-	Slice      *string `json:"slice,omitempty"`
-	SliceValue *string `json:"sliceValue,omitempty"`
-	SliceLabel *string `json:"sliceLabel,omitempty"`
-	// Slices — Варианты срезов с числом артикулов
-	Slices map[string][]map[string]json.RawMessage `json:"slices,omitempty"`
-	// Breakdown — Итоги каждого артикула среза за окно
-	Breakdown         []map[string]json.RawMessage `json:"breakdown,omitempty"`
-	ArticlesTruncated *bool                        `json:"articlesTruncated,omitempty"`
-	// Summary — Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null
-	Summary map[string]map[string]*float64 `json:"summary,omitempty"`
-	// GroupBy — Чем разложен срез, когда запрошен groupBy
-	GroupBy *string `json:"groupBy,omitempty"`
-	// Groups — Группы среза по дням: value (пусто — артикулы без значения группы), label, count артикулов, series и totals только по groupMetrics. Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно; сверх 200 групп хвост сложен в одну строку с rest: true.
-	Groups        []map[string]json.RawMessage `json:"groups,omitempty"`
-	Platform      string                       `json:"platform"`
-	Source        *string                      `json:"source,omitempty"`
-	EstimateModel *string                      `json:"estimateModel,omitempty"`
-	// SKU — Артикул за который построена матрица
-	SKU  *string `json:"sku,omitempty"`
-	From *string `json:"from,omitempty"`
-	To   *string `json:"to,omitempty"`
-	// Days — Четырнадцать дней от старого к новому
-	Days        []string                                   `json:"days"`
-	Series      MarketplaceOzonFunnelDailySeries           `json:"series"`
-	Totals      *MarketplaceOzonFunnelDailyTotals          `json:"totals,omitempty"`
-	Card        *MarketplaceOzonFunnelDailyCard            `json:"card,omitempty"`
-	Articles    []MarketplaceOzonFunnelDailyArticle        `json:"articles,omitempty"`
-	References  map[string]MarketplaceFunnelDailyReference `json:"references,omitempty"`
-	DataThrough map[string]*string                         `json:"dataThrough,omitempty"`
-	// Note — Пустая строка, когда сказать нечего
-	Note *string `json:"note,omitempty"`
-	// Analytics — Присутствует и равно false, когда аналитика не подключена
-	Analytics *bool `json:"analytics,omitempty"`
-}
-
-type MarketplaceOzonFunnelDailyArticle struct {
-	SKU   string `json:"sku"`
-	Name  string `json:"name"`
-	Photo string `json:"photo"`
-	// Store — Название магазина артикула — различает один артикул в нескольких магазинах
-	Store *string `json:"store,omitempty"`
-	// StoreID — Магазин кабинета артикула: по нему экран закрепляет артикул за магазином
-	StoreID *string `json:"store_id,omitempty"`
-	// Brand — Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
-	Brand *string `json:"brand,omitempty"`
-}
-
-type MarketplaceOzonFunnelDailyCard struct {
-	// Subject — Предмет товара — по нему берётся эталон воронки
-	Subject *string `json:"subject,omitempty"`
-	// SKU — Артикул продавца
-	SKU   string  `json:"sku"`
-	Name  string  `json:"name"`
-	Photo string  `json:"photo"`
-	Store *string `json:"store,omitempty"`
-	// Stock — Общий остаток, только когда известны оба источника
-	Stock            *float64 `json:"stock,omitempty"`
-	StockMarketplace *float64 `json:"stockMarketplace,omitempty"`
-	StockFbs         *float64 `json:"stockFbs,omitempty"`
-	OrdersToday      *float64 `json:"ordersToday,omitempty"`
-	Rating           *float64 `json:"rating,omitempty"`
-	Reviews          *float64 `json:"reviews,omitempty"`
-	Cost             *float64 `json:"cost,omitempty"`
-	// Commission — Взвешенная ставка предыдущей полной недели
-	Commission    *float64 `json:"commission,omitempty"`
-	Acquiring     *float64 `json:"acquiring,omitempty"`
-	Tax           *float64 `json:"tax,omitempty"`
-	LogisticsUnit *float64 `json:"logisticsUnit,omitempty"`
-	OtherUnit     *float64 `json:"otherUnit,omitempty"`
-	BuyoutAll     *float64 `json:"buyoutAll,omitempty"`
-	BuyoutRolling *float64 `json:"buyoutRolling,omitempty"`
-	// PriceBase — Цена до СПП последнего дня окна, где цена известна
-	PriceBase *float64 `json:"priceBase,omitempty"`
-	// PriceBuyer — Цена покупателя того же дня
-	PriceBuyer *float64 `json:"priceBuyer,omitempty"`
-	// Spp — СПП того же дня, %
-	Spp *float64 `json:"spp,omitempty"`
-}
-
-// MarketplaceOzonFunnelDailySeries — Каждый ряд — значение на каждый день окна в том же порядке что days. Ряды без источника заполнены null целиком.
-type MarketplaceOzonFunnelDailySeries struct {
-	Traffic    []*float64 `json:"traffic"`
-	Views      []*float64 `json:"views"`
-	Cv2        []*float64 `json:"cv2"`
-	Cart       []*float64 `json:"cart"`
-	Cv3        []*float64 `json:"cv3"`
-	Orders     []*float64 `json:"orders"`
-	AdShare    []*float64 `json:"adShare"`
-	OrdersSum  []*float64 `json:"ordersSum"`
-	Buyouts    []*float64 `json:"buyouts"`
-	BuyoutsSum []*float64 `json:"buyoutsSum"`
-	// AvgBuyer — Средняя цена продавца в заказах без отмен; имя ключа сохранено для совместимости
-	AvgBuyer        []*float64 `json:"avgBuyer"`
-	Spp             []*float64 `json:"spp"`
-	Position        []*float64 `json:"position"`
-	AdSpend         []*float64 `json:"adSpend"`
-	DrrOrders       []*float64 `json:"drrOrders"`
-	DrrSales        []*float64 `json:"drrSales"`
-	Margin          []*float64 `json:"margin"`
-	MarginSheet     []*float64 `json:"marginSheet"`
-	BuyoutRate      []*float64 `json:"buyoutRate,omitempty"`
-	ExpectedUnits   []*float64 `json:"expectedUnits,omitempty"`
-	ExpectedRevenue []*float64 `json:"expectedRevenue,omitempty"`
-	CostUnit        []*float64 `json:"costUnit,omitempty"`
-	AcquiringRate   []*float64 `json:"acquiringRate,omitempty"`
-	CommissionRate  []*float64 `json:"commissionRate,omitempty"`
-	LogisticsUnit   []*float64 `json:"logisticsUnit,omitempty"`
-	OtherUnit       []*float64 `json:"otherUnit,omitempty"`
-	TaxRate         []*float64 `json:"taxRate,omitempty"`
-	Umd             []*float64 `json:"umd"`
-	Roi             []*float64 `json:"roi"`
-	RoiOrders       []*float64 `json:"roiOrders,omitempty"`
-	MarginTot       []*float64 `json:"marginTot"`
-	MarginSheetTot  []*float64 `json:"marginSheetTot"`
-	Sales           []*float64 `json:"sales,omitempty"`
-	SalesSum        []*float64 `json:"salesSum,omitempty"`
-	CostSales       []*float64 `json:"costSales,omitempty"`
-	Romi            []*float64 `json:"romi,omitempty"`
-	FeesSum         []*float64 `json:"feesSum,omitempty"`
-	CommissionSum   []*float64 `json:"commissionSum,omitempty"`
-	AcquiringSum    []*float64 `json:"acquiringSum,omitempty"`
-	LogisticsSum    []*float64 `json:"logisticsSum,omitempty"`
-	OtherSum        []*float64 `json:"otherSum,omitempty"`
-	TaxSum          []*float64 `json:"taxSum,omitempty"`
-	// Payout — К перечислению за день по отчёту площадки — формула ОПиУ; день без отчёта — null
-	Payout []*float64 `json:"payout,omitempty"`
-}
-
-// MarketplaceOzonFunnelDailyTotals — Каждый итог — массив из одного значения, чтобы колонка ИТОГО рисовалась тем же кодом что и дни
-type MarketplaceOzonFunnelDailyTotals struct {
-	Traffic        []*float64 `json:"traffic"`
-	Views          []*float64 `json:"views"`
-	Cart           []*float64 `json:"cart"`
-	Orders         []*float64 `json:"orders"`
-	OrdersSum      []*float64 `json:"ordersSum"`
-	Buyouts        []*float64 `json:"buyouts"`
-	MarginTot      []*float64 `json:"marginTot"`
-	MarginSheetTot []*float64 `json:"marginSheetTot"`
-	AdSpend        []*float64 `json:"adSpend"`
-	Cv2            []*float64 `json:"cv2"`
-	Cv3            []*float64 `json:"cv3"`
-	// AvgBuyer — Средняя цена продавца в заказах без отмен
-	AvgBuyer []*float64 `json:"avgBuyer,omitempty"`
-	// Extra — поля сверх схемы; заполняется вызывающим кодом при необходимости.
-	Extra map[string][]*float64 `json:"-"`
-}
-
-type MarketplaceOzonFunnelRow struct {
-	// NmID — Артикул продавца строкой: имя поля досталось от Wildberries
-	NmID       string          `json:"nm_id"`
-	Vendor     string          `json:"vendor"`
-	Name       string          `json:"name"`
-	Photo      string          `json:"photo"`
-	Open       int64           `json:"open"`
-	Cart       int64           `json:"cart"`
-	Orders     int64           `json:"orders"`
-	Buyouts    json.RawMessage `json:"buyouts"`
-	OrdersSum  int64           `json:"orders_sum"`
-	BuyoutsSum json.RawMessage `json:"buyouts_sum"`
-	CvCart     *float64        `json:"cv_cart"`
-	CvOrder    *float64        `json:"cv_order"`
-	BuyoutPct  json.RawMessage `json:"buyout_pct"`
-}
-
-type MarketplaceOzonFunnelTotals struct {
-	// Open — Показы; 0 без подписки Premium Plus
-	Open   int64 `json:"open"`
-	Cart   int64 `json:"cart"`
-	Orders int64 `json:"orders"`
-	// Buyouts — Всегда null: выкупов у Ozon нет
-	Buyouts    json.RawMessage `json:"buyouts"`
-	OrdersSum  int64           `json:"orders_sum"`
-	BuyoutsSum json.RawMessage `json:"buyouts_sum"`
-	// CvCart — Конверсия в корзину в процентах
-	CvCart    *float64        `json:"cv_cart"`
-	CvOrder   *float64        `json:"cv_order"`
-	BuyoutPct json.RawMessage `json:"buyout_pct"`
 }
 
 type MarketplaceOzonOrdersDailyRow struct {
@@ -13691,55 +8764,6 @@ type MarketplaceOzonPnlRow struct {
 	Values []*float64 `json:"values"`
 }
 
-type MarketplaceOzonPricing struct {
-	Platform string `json:"platform"`
-	// From — Начало окна в 30 дней
-	From *string `json:"from,omitempty"`
-	// To — Последняя дата финотчёта
-	To *string `json:"to,omitempty"`
-	// Total — Строк до отсечки по n
-	Total *int64                      `json:"total,omitempty"`
-	Shown *int64                      `json:"shown,omitempty"`
-	Rows  []MarketplaceOzonPricingRow `json:"rows"`
-	// Analytics — Присутствует и равно false, когда аналитика не подключена
-	Analytics *bool `json:"analytics,omitempty"`
-}
-
-type MarketplaceOzonPricingRow struct {
-	// SKU — Артикул продавца, а не числовой SKU площадки
-	SKU string `json:"sku"`
-	// StoreID — Внешний числовой идентификатор магазина в аналитике
-	StoreID int64  `json:"store_id"`
-	Name    string `json:"name"`
-	Photo   string `json:"photo"`
-	// Store — Название магазина
-	Store string `json:"store"`
-	// Price — Установочная цена карточки, до скидки площадки
-	Price float64 `json:"price"`
-	// SetPrice — То же значение что price
-	SetPrice float64 `json:"setPrice"`
-	// FactBuyer — Фактическая цена покупателя за единицу
-	FactBuyer float64 `json:"factBuyer"`
-	OldPrice  float64 `json:"oldPrice"`
-	MinPrice  float64 `json:"minPrice"`
-	// Cost — Себестоимость из базы кабинета; 0 — не заведена
-	Cost float64 `json:"cost"`
-	// Comm — Последняя фактическая ставка комиссии по артикулу, проценты
-	Comm float64 `json:"comm"`
-	// Log — Логистика доставки и возврата суммарно на единицу
-	Log       float64 `json:"log"`
-	LogDirect float64 `json:"logDirect"`
-	LogReturn float64 `json:"logReturn"`
-	// Acquiring — Эквайринг в процентах от выручки
-	Acquiring float64 `json:"acquiring"`
-	// Tax — Ставка налога магазина в процентах
-	Tax float64 `json:"tax"`
-	// Spp — Доля скидки площадки, 0..1
-	Spp float64 `json:"spp"`
-	// Units — Доставленных единиц за окно
-	Units int64 `json:"units"`
-}
-
 type MarketplaceOzonProduct struct {
 	// ID — Синтетический ключ магазин и артикул через двоеточие
 	ID          string `json:"id"`
@@ -13781,13 +8805,6 @@ type MarketplaceOzonProduct struct {
 	LinkedProductName string `json:"linked_product_name"`
 }
 
-type MarketplaceOzonProductFacets struct {
-	// Subjects — Категории карточек Ozon
-	Subjects []string `json:"subjects"`
-	// Brands — Всегда пустой: бренда у Ozon в аналитике нет
-	Brands []string `json:"brands"`
-}
-
 type MarketplaceOzonProductPage struct {
 	Count int64 `json:"count"`
 	// Next — Всегда null; постранично ходят page и page_size
@@ -13797,27 +8814,6 @@ type MarketplaceOzonProductPage struct {
 	Results  []MarketplaceOzonProduct `json:"results"`
 	// Demo — Аналитика не подключена — цифры синтетические
 	Demo *bool `json:"demo,omitempty"`
-}
-
-type MarketplaceOzonPromotion struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-	// Type — Тип акции площадки
-	Type  string `json:"type"`
-	Start string `json:"start"`
-	End   string `json:"end"`
-	// DaysLeft — Дней до конца; null когда дата не разобралась
-	DaysLeft *int64 `json:"days_left"`
-	// Disc — Скидка акции в процентах; 0 когда задаётся продавцом
-	Disc float64 `json:"disc"`
-	// Desc — Пояснение по типу акции
-	Desc string `json:"desc"`
-}
-
-type MarketplaceOzonPromotions struct {
-	Promos []MarketplaceOzonPromotion `json:"promos"`
-	// Note — Почему список пуст
-	Note *string `json:"note,omitempty"`
 }
 
 type MarketplaceOzonStockProduct struct {
@@ -13876,60 +8872,6 @@ type MarketplaceOzonSyncJobList struct {
 	Results []MarketplaceOzonSyncJob `json:"results"`
 }
 
-// MarketplaceProductGroup — Срез (группа) товаров маркетплейса внутри кабинета и одной площадки. Один товар может входить в несколько срезов.
-type MarketplaceProductGroup struct {
-	ID       UUID                            `json:"id"`
-	Platform MarketplaceProductGroupPlatform `json:"platform"`
-	Name     string                          `json:"name"`
-	// Color — HEX-цвет метки среза, например #6366f1
-	Color string `json:"color"`
-	// ItemCount — Число товаров в срезе. При создании среза всегда приходит нулевым
-	ItemCount int64  `json:"item_count"`
-	CreatedAt string `json:"created_at"`
-}
-
-type MarketplaceProductGroupInput struct {
-	// Name — Обрезается по краям. Пустое название даёт 400
-	Name string `json:"name"`
-	// Color — HEX-цвет метки. Пустое значение даёт цвет по умолчанию #6366f1
-	Color *string `json:"color,omitempty"`
-}
-
-// MarketplaceProductGroupItem — Товар маркетплейса в составе среза. Пара store_id и offer_id и есть его адрес — собственного идентификатора у строки состава нет.
-type MarketplaceProductGroupItem struct {
-	StoreID UUID `json:"store_id"`
-	// OfferID — Артикул продавца на площадке
-	OfferID string `json:"offer_id"`
-}
-
-type MarketplaceProductGroupItemPage struct {
-	Count   int64                         `json:"count"`
-	Results []MarketplaceProductGroupItem `json:"results"`
-}
-
-type MarketplaceProductGroupItemsAdded struct {
-	// Added — Сколько строк реально легло в срез. Повторы и товары чужих магазинов сюда не попадают
-	Added int64 `json:"added"`
-}
-
-type MarketplaceProductGroupItemsInput struct {
-	// Items — Строки без store_id или offer_id отбрасываются молча
-	Items []MarketplaceProductGroupItem `json:"items"`
-}
-
-type MarketplaceProductGroupPage struct {
-	Count   int64                     `json:"count"`
-	Results []MarketplaceProductGroup `json:"results"`
-}
-
-// MarketplaceProductGroupPatch — Отсутствующее или пустое поле сохраняет текущее значение.
-type MarketplaceProductGroupPatch struct {
-	Name  *string `json:"name,omitempty"`
-	Color *string `json:"color,omitempty"`
-}
-
-type MarketplaceProductGroupPlatform = string
-
 // MarketplaceStore — Магазин маркетплейса в кабинете. Форма одна для Ozon, Wildberries и Яндекс Маркета — их различает только поле platform. Ключи, токены и proxy в ответ не попадают; вместо них возвращаются безопасные признаки настройки.
 type MarketplaceStore struct {
 	ID UUID `json:"id"`
@@ -13970,64 +8912,6 @@ type MarketplaceStore struct {
 	ArticleSizeSeparator *string `json:"article_size_separator,omitempty"`
 }
 
-type MarketplaceStoreAccounting struct {
-	StoreID                UUID   `json:"store_id"`
-	CompanyID              *UUID  `json:"company_id"`
-	CompanyName            string `json:"company_name"`
-	BusinessID             *UUID  `json:"business_id"`
-	MarketplaceContactID   *UUID  `json:"marketplace_contact_id"`
-	MarketplaceContactName string `json:"marketplace_contact_name"`
-	// StockCostingMethod — Метод оценки складского учёта юрлица; пусто — складской учёт не настроен
-	StockCostingMethod string `json:"stock_costing_method"`
-	// Policies — История версий настройки по возрастанию даты действия
-	Policies []MarketplaceStoreAccountingPolicy `json:"policies"`
-	// SetupReady — Подключение закрыто целиком; считается по blocking_reasons, а не по успешной проверке учётных данных
-	SetupReady      bool                                   `json:"setup_ready"`
-	PNLReady        bool                                   `json:"pnl_ready"`
-	CostRates       MarketplaceStoreAccountingCostCoverage `json:"cost_rates"`
-	BlockingReasons []string                               `json:"blocking_reasons"`
-}
-
-type MarketplaceStoreAccountingCostCoverage struct {
-	// State — Показывать себестоимость числом можно только при complete
-	State  string  `json:"state"`
-	Reason *string `json:"reason,omitempty"`
-	// Articles — Артикулы магазина, сопоставленные с товарами кабинета
-	Articles int64 `json:"articles"`
-	// ArticlesWithRate — Из них те, у кого есть действующая ставка больше нуля
-	ArticlesWithRate int64 `json:"articles_with_rate"`
-	// UncoveredArticles — Кого не хватает, поимённо; список короткий и не перечисляет весь каталог
-	UncoveredArticles []string `json:"uncovered_articles"`
-}
-
-type MarketplaceStoreAccountingInput struct {
-	CompanyID            UUID   `json:"company_id"`
-	MarketplaceContactID *UUID  `json:"marketplace_contact_id,omitempty"`
-	CostSource           string `json:"cost_source"`
-	// ValidFrom — Дата действия версии; первая может закрыть исторический период, следующая обязана быть в будущем
-	ValidFrom  string                        `json:"valid_from"`
-	NewCompany *MarketplaceStoreCompanyInput `json:"new_company,omitempty"`
-}
-
-type MarketplaceStoreAccountingPolicy struct {
-	ID        UUID `json:"id"`
-	CompanyID UUID `json:"company_id"`
-	// CostSource — Откуда берётся себестоимость на этот период
-	CostSource string `json:"cost_source"`
-	ValidFrom  string `json:"valid_from"`
-	// ValidTo — Пусто у действующей версии
-	ValidTo *string `json:"valid_to,omitempty"`
-}
-
-type MarketplaceStoreCompanyInput struct {
-	Name string `json:"name"`
-	// INN — Проверяется контрольной цифрой
-	INN               string  `json:"inn"`
-	KPP               *string `json:"kpp,omitempty"`
-	BusinessID        UUID    `json:"business_id"`
-	VATAccountingMode *string `json:"vat_accounting_mode,omitempty"`
-}
-
 // MarketplaceStoreInput — Тело создания управляемого подключения. Платформу задаёт маршрут, а external_id назначает MPTrack. Для Ozon нужны ozon_client_id и ozon_api_key, для Wildberries — wb_token, для Яндекс Маркета — ym_business_id и ym_api_key.
 type MarketplaceStoreInput struct {
 	Name string `json:"name"`
@@ -14055,32 +8939,6 @@ type MarketplaceStoreInput struct {
 type MarketplaceStorePage struct {
 	Count   int64              `json:"count"`
 	Results []MarketplaceStore `json:"results"`
-}
-
-// MarketplaceStorePatch — Меняет пользовательские настройки подключения. external_id изменить нельзя. Отсутствующее или пустое поле реквизита сохраняет прежний секрет.
-type MarketplaceStorePatch struct {
-	Name *string `json:"name,omitempty"`
-	// TaxPercent — Пустая строка оставляет сохранённую ставку
-	TaxPercent *string `json:"tax_percent,omitempty"`
-	// TaxEffectiveFrom — С какого дня действует новая ставка налога (ГГГГ-ММ-ДД). Пусто — с сегодняшнего дня по Москве. Не позже сегодня и не раньше начала действующей ставки: прошлые периоды считаются по ставке своего времени
-	TaxEffectiveFrom *string `json:"tax_effective_from,omitempty"`
-	IsActive         *bool   `json:"is_active,omitempty"`
-	HasFbs           *bool   `json:"has_fbs,omitempty"`
-	// HasJam — Используется для Wildberries
-	HasJam *bool `json:"has_jam,omitempty"`
-	// ArticleSizeSeparator — Правило именования артикула Ozon: «БАЗА<разделитель>РАЗМЕР». Список закрыт; пустая строка означает «правила нет». Официальные поля размера площадки всегда старше этого правила. Отсутствие поля оставляет сохранённое правило, пустая строка его снимает
-	ArticleSizeSeparator *string `json:"article_size_separator,omitempty"`
-	OzonClientID         *string `json:"ozon_client_id,omitempty"`
-	OzonAPIKey           *string `json:"ozon_api_key,omitempty"`
-	OzonPfClientID       *string `json:"ozon_pf_client_id,omitempty"`
-	OzonPfClientSecret   *string `json:"ozon_pf_client_secret,omitempty"`
-	// WbToken — Пустая строка сохраняет прежний токен
-	WbToken *string `json:"wb_token,omitempty"`
-	// YmBusinessID — Business ID вводится строкой; ERP проверяет числовой идентификатор и преобразует его для MPTrack. Пустая строка сохраняет прежнее значение
-	YmBusinessID *string `json:"ym_business_id,omitempty"`
-	YmAPIKey     *string `json:"ym_api_key,omitempty"`
-	// Proxy — Пустая строка сохраняет прежнее значение
-	Proxy *string `json:"proxy,omitempty"`
 }
 
 type MarketplaceWbCardAdDay struct {
@@ -14203,12 +9061,6 @@ type MarketplaceWbCostRequest struct {
 	Note *string `json:"note,omitempty"`
 }
 
-type MarketplaceWbDecompOther struct {
-	// Items — Отсортированы по сумме по возрастанию
-	Items []MarketplaceWbDecompOtherItem `json:"items"`
-	Total int64                          `json:"total"`
-}
-
 type MarketplaceWbDecompOtherItem struct {
 	// Name — Наименование операции финансового отчёта
 	Name   string `json:"name"`
@@ -14288,143 +9140,6 @@ type MarketplaceWbDecompositionPeriod struct {
 	// RunRateFactor — Множитель прогноза на полный период
 	RunRateFactor float64                 `json:"run_rate_factor"`
 	Totals        MarketplaceWbMetricCell `json:"totals"`
-}
-
-type MarketplaceWbFacets struct {
-	Subjects []string `json:"subjects"`
-	Brands   []string `json:"brands"`
-}
-
-type MarketplaceWbFunnel struct {
-	Platform string `json:"platform"`
-	// Store — Название магазина
-	Store *string `json:"store,omitempty"`
-	// Source — jam — данные подписки, v3 — живой отчёт WB, v3_pending — площадка не ответила
-	Source *string                    `json:"source,omitempty"`
-	From   *string                    `json:"from,omitempty"`
-	To     *string                    `json:"to,omitempty"`
-	Totals *MarketplaceWbFunnelTotals `json:"totals,omitempty"`
-	// Rows — Отсортированы по числу заказов по убыванию
-	Rows []MarketplaceWbFunnelRow `json:"rows"`
-	Note *string                  `json:"note,omitempty"`
-	// Analytics — Присутствует и равно false, когда аналитическая база не подключена
-	Analytics *bool `json:"analytics,omitempty"`
-}
-
-type MarketplaceWbFunnelDaily struct {
-	// Slice — Срез ответа, когда запрошен slice
-	Slice      *string `json:"slice,omitempty"`
-	SliceValue *string `json:"sliceValue,omitempty"`
-	SliceLabel *string `json:"sliceLabel,omitempty"`
-	// Slices — Варианты срезов с числом артикулов
-	Slices map[string][]map[string]json.RawMessage `json:"slices,omitempty"`
-	// Breakdown — Итоги каждого артикула среза за окно
-	Breakdown         []map[string]json.RawMessage `json:"breakdown,omitempty"`
-	ArticlesTruncated *bool                        `json:"articlesTruncated,omitempty"`
-	// Summary — Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null
-	Summary map[string]map[string]*float64 `json:"summary,omitempty"`
-	// GroupBy — Чем разложен срез, когда запрошен groupBy
-	GroupBy *string `json:"groupBy,omitempty"`
-	// Groups — Группы среза по дням: value (пусто — артикулы без значения группы), label, count артикулов, series и totals только по groupMetrics. Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно; сверх 200 групп хвост сложен в одну строку с rest: true.
-	Groups        []map[string]json.RawMessage `json:"groups,omitempty"`
-	Platform      string                       `json:"platform"`
-	Source        *string                      `json:"source,omitempty"`
-	EstimateModel *string                      `json:"estimateModel,omitempty"`
-	// SKU — Артикул поставщика выбранной строки
-	SKU  *string `json:"sku,omitempty"`
-	From *string `json:"from,omitempty"`
-	To   *string `json:"to,omitempty"`
-	// Days — Окно 14 дней по опорный включительно
-	Days []string `json:"days"`
-	// Series — Ряды по дням окна той же длины, что days. Ключи traffic, views, cv2, cart, cv3, orders, adShare, ordersSum, buyouts, buyoutsSum, avgBuyer, spp, position, adSpend, drrOrders, drrSales, buyoutRate, expectedUnits, expectedRevenue, costUnit, acquiringRate, commissionRate, logisticsUnit, otherUnit, taxRate, margin, marginSheet, umd, roi, roiOrders, marginTot, marginSheetTot, sales, salesSum, costSales, romi и удержания в рублях: feesSum, commissionSum, acquiringSum, logisticsSum, otherSum, taxSum; payout — к перечислению за день по отчёту площадки (формула ОПиУ), день без отчёта — null. Отсутствующий источник даёт null, а не ложный ноль.
-	Series map[string][]*float64 `json:"series"`
-	// Totals — Итог по каждому ряду одним элементом массива
-	Totals map[string][]*float64         `json:"totals,omitempty"`
-	Card   *MarketplaceWbFunnelDailyCard `json:"card,omitempty"`
-	// Articles — До 300 артикулов по выручке за окно
-	Articles    []MarketplaceWbFunnelDailyArticle          `json:"articles,omitempty"`
-	References  map[string]MarketplaceFunnelDailyReference `json:"references,omitempty"`
-	DataThrough map[string]*string                         `json:"dataThrough,omitempty"`
-	Note        *string                                    `json:"note,omitempty"`
-	// Analytics — Присутствует и равно false, когда аналитическая база не подключена
-	Analytics *bool `json:"analytics,omitempty"`
-}
-
-type MarketplaceWbFunnelDailyArticle struct {
-	// SKU — Артикул поставщика
-	SKU  string `json:"sku"`
-	Name string `json:"name"`
-	// Photo — В этом списке не заполняется и приходит пустой строкой
-	Photo string `json:"photo"`
-	// Store — Название магазина артикула — различает один артикул в нескольких магазинах
-	Store *string `json:"store,omitempty"`
-	// StoreID — Магазин кабинета артикула: по нему экран закрепляет артикул за магазином
-	StoreID *string `json:"store_id,omitempty"`
-	// Brand — Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
-	Brand *string `json:"brand,omitempty"`
-}
-
-type MarketplaceWbFunnelDailyCard struct {
-	// Subject — Предмет товара — по нему берётся эталон воронки
-	Subject *string `json:"subject,omitempty"`
-	// SKU — Артикул поставщика
-	SKU              string   `json:"sku"`
-	Name             string   `json:"name"`
-	Photo            string   `json:"photo"`
-	Store            *string  `json:"store,omitempty"`
-	Stock            *float64 `json:"stock,omitempty"`
-	StockMarketplace *float64 `json:"stockMarketplace,omitempty"`
-	StockFbs         *float64 `json:"stockFbs,omitempty"`
-	OrdersToday      *float64 `json:"ordersToday,omitempty"`
-	Rating           *float64 `json:"rating,omitempty"`
-	Reviews          *float64 `json:"reviews,omitempty"`
-	// Cost — Себестоимость из кабинета
-	Cost          *float64 `json:"cost,omitempty"`
-	Commission    *float64 `json:"commission,omitempty"`
-	Acquiring     *float64 `json:"acquiring,omitempty"`
-	Tax           *float64 `json:"tax,omitempty"`
-	LogisticsUnit *float64 `json:"logisticsUnit,omitempty"`
-	OtherUnit     *float64 `json:"otherUnit,omitempty"`
-	BuyoutAll     *float64 `json:"buyoutAll,omitempty"`
-	BuyoutRolling *float64 `json:"buyoutRolling,omitempty"`
-	// PriceBase — Цена до СПП последнего дня окна, где цена известна
-	PriceBase *float64 `json:"priceBase,omitempty"`
-	// PriceBuyer — Цена покупателя того же дня
-	PriceBuyer *float64 `json:"priceBuyer,omitempty"`
-	// Spp — СПП того же дня, %
-	Spp *float64 `json:"spp,omitempty"`
-}
-
-type MarketplaceWbFunnelRow struct {
-	NmID int64 `json:"nm_id"`
-	// Vendor — Артикул поставщика
-	Vendor string `json:"vendor"`
-	Name   string `json:"name"`
-	Photo  string `json:"photo"`
-	// Open — Открытия карточки
-	Open       int64 `json:"open"`
-	Cart       int64 `json:"cart"`
-	Orders     int64 `json:"orders"`
-	Buyouts    int64 `json:"buyouts"`
-	OrdersSum  int64 `json:"orders_sum"`
-	BuyoutsSum int64 `json:"buyouts_sum"`
-	// CvCart — Конверсия из открытия в корзину в процентах
-	CvCart *float64 `json:"cv_cart"`
-	// CvOrder — Конверсия из корзины в заказ в процентах
-	CvOrder   *float64 `json:"cv_order"`
-	BuyoutPct *float64 `json:"buyout_pct"`
-}
-
-type MarketplaceWbFunnelTotals struct {
-	Open       int64    `json:"open"`
-	Cart       int64    `json:"cart"`
-	Orders     int64    `json:"orders"`
-	Buyouts    int64    `json:"buyouts"`
-	OrdersSum  int64    `json:"orders_sum"`
-	BuyoutsSum int64    `json:"buyouts_sum"`
-	CvCart     *float64 `json:"cv_cart"`
-	CvOrder    *float64 `json:"cv_order"`
-	BuyoutPct  *float64 `json:"buyout_pct"`
 }
 
 // MarketplaceWbMetricCell — Ячейка декомпозиции. Расходы приходят отрицательными числами.
@@ -14568,56 +9283,6 @@ type MarketplaceWbPnlRow struct {
 	Values []*float64 `json:"values"`
 }
 
-type MarketplaceWbPricing struct {
-	Platform string                    `json:"platform"`
-	From     *string                   `json:"from,omitempty"`
-	To       *string                   `json:"to,omitempty"`
-	Total    *int64                    `json:"total,omitempty"`
-	Shown    *int64                    `json:"shown,omitempty"`
-	Rows     []MarketplaceWbPricingRow `json:"rows"`
-	// Analytics — Присутствует и равно false, когда аналитическая база не подключена
-	Analytics *bool `json:"analytics,omitempty"`
-}
-
-type MarketplaceWbPricingRow struct {
-	// SKU — Артикул поставщика
-	SKU string `json:"sku"`
-	// StoreID — Внешний идентификатор магазина в аналитике
-	StoreID int64  `json:"store_id"`
-	NmID    int64  `json:"nm_id"`
-	Name    string `json:"name"`
-	Photo   string `json:"photo"`
-	// Store — Название магазина
-	Store string `json:"store"`
-	// Price — Установочная цена до СПП
-	Price int64 `json:"price"`
-	// SetPrice — Установочная цена до СПП
-	SetPrice int64 `json:"setPrice"`
-	// FactClient — Фактическая цена клиента
-	FactClient int64 `json:"factClient"`
-	Cost       int64 `json:"cost"`
-	// Comm — Комиссия в процентах от установочной цены
-	Comm float64 `json:"comm"`
-	// ForPay — Выплата продавцу на единицу
-	ForPay int64 `json:"forPay"`
-	// LogDirect — Логистика на единицу
-	LogDirect int64 `json:"logDirect"`
-	// StorageUnit — Хранение на единицу
-	StorageUnit int64 `json:"storageUnit"`
-	// AcceptUnit — Платная приёмка на единицу
-	AcceptUnit int64 `json:"acceptUnit"`
-	// PenaltyUnit — Штрафы на единицу
-	PenaltyUnit int64 `json:"penaltyUnit"`
-	// Acquiring — Эквайринг в процентах от установочной цены
-	Acquiring float64 `json:"acquiring"`
-	// Tax — Ставка налога магазина в процентах
-	Tax float64 `json:"tax"`
-	// Spp — Скидка постоянного покупателя долей единицы
-	Spp float64 `json:"spp"`
-	// Units — Продано единиц за окно
-	Units int64 `json:"units"`
-}
-
 type MarketplaceWbProduct struct {
 	// ID — Составной ключ строки: идентификатор магазина и артикул поставщика через двоеточие
 	ID        string `json:"id"`
@@ -14667,29 +9332,6 @@ type MarketplaceWbProductPage struct {
 	Demo *bool `json:"demo,omitempty"`
 }
 
-type MarketplaceWbPromotion struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-	// Type — Тип акции WB, например auto или regular
-	Type string `json:"type"`
-	// Start — Начало акции по стандарту RFC 3339
-	Start string `json:"start"`
-	// End — Конец акции по стандарту RFC 3339
-	End      string `json:"end"`
-	DaysLeft *int64 `json:"days_left"`
-	// Disc — Всегда ноль: скидку по товару задаёт оператор
-	Disc float64 `json:"disc"`
-	// Desc — Пояснение к типу акции
-	Desc string `json:"desc"`
-}
-
-type MarketplaceWbPromotions struct {
-	// Promos — Отсортированы по дате окончания по возрастанию
-	Promos []MarketplaceWbPromotion `json:"promos"`
-	// Note — Причина пустого списка: нет токена WB либо площадка недоступна
-	Note *string `json:"note,omitempty"`
-}
-
 type MarketplaceWbStockPage struct {
 	// Count — Число товаров, а не строк «товар × склад»
 	Count int64 `json:"count"`
@@ -14722,49 +9364,6 @@ type MarketplaceWbStockWarehouse struct {
 	// Cluster — Кластер склада; у Wildberries не заполняется и в ответ не попадает
 	Cluster *string `json:"cluster,omitempty"`
 	Qty     int64   `json:"qty"`
-}
-
-type MarketplaceWeeklyFinanceOutcome struct {
-	DocumentIds []UUID                                  `json:"document_ids"`
-	Results     []MarketplaceWeeklyFinancePostingResult `json:"results,omitempty"`
-}
-
-type MarketplaceWeeklyFinancePostingResult struct {
-	SourceEventID                       string `json:"source_event_id"`
-	RevenueSettlementDocumentID         UUID   `json:"revenue_settlement_document_id"`
-	CogsDocumentID                      UUID   `json:"cogs_document_id"`
-	CostVersionID                       *UUID  `json:"cost_version_id,omitempty"`
-	CogsAmount                          string `json:"cogs_amount"`
-	CogsLedgerStatus                    string `json:"cogs_ledger_status"`
-	ManagementPNLAmount                 string `json:"management_pnl_amount"`
-	ManagementPNLIncludesCogs           bool   `json:"management_pnl_includes_cogs"`
-	GeneralLedgerIncludesManagementCogs bool   `json:"general_ledger_includes_management_cogs"`
-}
-
-type MarketplaceWeeklyFinanceRun struct {
-	RunID           string  `json:"run_id"`
-	WeekStart       string  `json:"week_start"`
-	WeekEnd         string  `json:"week_end"`
-	SourceRef       string  `json:"source_ref"`
-	SourceHash      string  `json:"source_hash"`
-	ReportComplete  bool    `json:"report_complete"`
-	ReportReady     bool    `json:"report_ready"`
-	BlockingCode    *string `json:"blocking_code,omitempty"`
-	CapturedAt      *string `json:"captured_at,omitempty"`
-	RowCount        int64   `json:"row_count"`
-	ExpenseRowCount int64   `json:"expense_row_count"`
-	// ZeroCost — Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж.
-	ZeroCost []MarketplaceWeeklyFinanceRunZeroCostItem `json:"zero_cost,omitempty"`
-}
-
-type MarketplaceWeeklyFinanceRunZeroCostItem struct {
-	OfferID string `json:"offer_id"`
-	// Units — Штуки — точная десятичная строка
-	Units string `json:"units"`
-}
-
-type MarketplaceWeeklyFinanceRuns struct {
-	Results []MarketplaceWeeklyFinanceRun `json:"results"`
 }
 
 type MarketplaceYandexCost struct {
@@ -15043,40 +9642,6 @@ type MeetingParticipantInput struct {
 
 type MeetingStatus = string
 
-// MeetingUpdate — URL-путь задаёт `id`; переданные непустые поля обновляются частично.
-type MeetingUpdate struct {
-	Project         *string                   `json:"project,omitempty"`
-	Title           *string                   `json:"title,omitempty"`
-	Kind            *MeetingKind              `json:"kind,omitempty"`
-	Status          *MeetingStatus            `json:"status,omitempty"`
-	StartsAt        *string                   `json:"starts_at,omitempty"`
-	DurationMinutes *int64                    `json:"duration_minutes,omitempty"`
-	Location        *string                   `json:"location,omitempty"`
-	MeetingURL      *string                   `json:"meeting_url,omitempty"`
-	RecordingURL    *string                   `json:"recording_url,omitempty"`
-	Summary         *string                   `json:"summary,omitempty"`
-	Transcript      *string                   `json:"transcript,omitempty"`
-	CalendarEvent   *string                   `json:"calendar_event,omitempty"`
-	Visibility      *HubVisibility            `json:"visibility,omitempty"`
-	CreatedBy       *int64                    `json:"created_by,omitempty"`
-	Participants    []MeetingParticipantInput `json:"participants,omitempty"`
-	Items           []MeetingItemInput        `json:"items,omitempty"`
-	ReplaceContent  *bool                     `json:"replace_content,omitempty"`
-}
-
-type Member struct {
-	ID       int64  `json:"id"`
-	Username string `json:"username"`
-	Name     string `json:"name"`
-}
-
-// MemberAssignment — Требуется `user_id`; `user` поддерживается только для совместимости старых клиентов.
-type MemberAssignment struct {
-	UserID *int64       `json:"user_id,omitempty"`
-	User   *int64       `json:"user,omitempty"`
-	Role   *SectionRole `json:"role,omitempty"`
-}
-
 type Milestone struct {
 	ID          UUID    `json:"id"`
 	Section     UUID    `json:"section"`
@@ -15136,321 +9701,7 @@ type PlatformApp struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
-type PlatformAppConfigDeclaration struct {
-	Fields []PlatformAppConfigField `json:"fields"`
-}
-
-type PlatformAppConfigField struct {
-	// Key — Имя настройки; поля configSchema и ключи secrets[] живут в одном пространстве имён
-	Key string `json:"key"`
-	// Type — Тип значения; объекта и массива у настройки не бывает — её заполняет человек в форме
-	Type string `json:"type"`
-	// Required — Без этого поля приложение не работает
-	Required bool `json:"required"`
-	// Secret — Значение не возвращается владельцу никогда; объявляется только списком secrets[] манифеста
-	Secret bool `json:"secret"`
-	// Provider — Откуда берётся значение секрета; у обычной настройки отсутствует
-	Provider *string                `json:"provider,omitempty"`
-	Title    *PlatformAppConfigText `json:"title,omitempty"`
-	Help     *PlatformAppConfigText `json:"help,omitempty"`
-	// Enum — Замкнутый список допустимых значений строкового поля
-	Enum []string `json:"enum,omitempty"`
-	// Default — Значение, предложенное приложением. Платформа его не хранит: умолчание принадлежит приложению и меняется вместе с версией
-	Default   json.RawMessage `json:"default,omitempty"`
-	MinLength *int64          `json:"min_length,omitempty"`
-	MaxLength *int64          `json:"max_length,omitempty"`
-	// Pattern — Шаблон строки из манифеста; некомпилируемый шаблон не применяется, а не отклоняет ввод
-	Pattern *string  `json:"pattern,omitempty"`
-	Minimum *float64 `json:"minimum,omitempty"`
-	Maximum *float64 `json:"maximum,omitempty"`
-	// RotationDays — Как часто издатель рекомендует менять секрет; платформа его не меняет сама
-	RotationDays *int64 `json:"rotation_days,omitempty"`
-}
-
-type PlatformAppConfigSummary struct {
-	Declaration PlatformAppConfigDeclaration `json:"declaration"`
-	Values      []PlatformAppConfigValue     `json:"values"`
-	// Missing — Обязательные поля без значения. Приложение с непустым списком не сломано — оно не настроено
-	Missing []string `json:"missing"`
-}
-
-// PlatformAppConfigText — Подпись поля на двух языках, как её написал разработчик приложения. Текст чужой: Akeda его не переводит, но показывает на своём экране, поэтому манифест требует обе половины.
-type PlatformAppConfigText struct {
-	Ru *string `json:"ru,omitempty"`
-	En *string `json:"en,omitempty"`
-}
-
-type PlatformAppConfigValue struct {
-	Key string `json:"key"`
-	// Secret — Как значение ХРАНИТСЯ. Истина означает, что value пуст и пустым останется
-	Secret bool `json:"secret"`
-	// Declared — Просит ли эту настройку версия, которая стоит сейчас; ложь означает осиротевшее значение
-	Declared bool `json:"declared"`
-	// DeclaredSecret — Считает ли сегодняшнее объявление это имя секретом; расхождение с secret означает, что приложение передумало
-	DeclaredSecret bool `json:"declared_secret"`
-	// Set — Значение задано
-	Set bool `json:"set"`
-	// Value — Значение ОБЫЧНОЙ настройки. У секрета отсутствует всегда
-	Value     *string `json:"value,omitempty"`
-	UpdatedBy *int64  `json:"updated_by,omitempty"`
-	UpdatedAt *string `json:"updated_at,omitempty"`
-}
-
-type PlatformAppConfigValueInput struct {
-	// Value — Значение как есть. По краям не обрезается: пробел на конце пароля — часть пароля
-	Value string `json:"value"`
-}
-
-type PlatformAppConfigValueResult struct {
-	Value PlatformAppConfigValue `json:"value"`
-}
-
-type PlatformAppConsentDiff struct {
-	// Requested — Что просит целевая версия
-	Requested []string `json:"requested"`
-	// Granted — Что кабинет одобрил сейчас
-	Granted []string `json:"granted"`
-	// New — Чего не просила установленная версия; это разница манифеста, а не разница доступа
-	New []string `json:"new"`
-	// Missing — Просит, но кабинет не одобрял
-	Missing []string `json:"missing"`
-	// MissingRequired — Обязательная часть missing — только она останавливает обновление
-	MissingRequired []string `json:"missing_required"`
-	MissingOptional []string `json:"missing_optional"`
-	// Dropped — Одобрено, но целевая версия не просит
-	Dropped []string `json:"dropped"`
-	// Kept — Набор установки, если нового согласия не дают
-	Kept []string `json:"kept"`
-}
-
-type PlatformAppConsentRequired struct {
-	Detail string `json:"detail"`
-	// Code — platform.app_consent_required, когда обновление остановлено новым обязательным правом либо новым внешним адресом
-	Code *string `json:"code,omitempty"`
-	// Version — Версия, которая просит
-	Version *string `json:"version,omitempty"`
-	// Scopes — Права, которых кабинет не одобрял; только они, чтобы решающее не утонуло в списке
-	Scopes []string `json:"scopes,omitempty"`
-	// Destinations — Внешние адреса, которых не было у установленной версии. Останавливают наравне с обязательным правом: право открывает доступ к данным, адрес называет того, кому приложение передаст их дальше. Перечислены отдельно от прав, потому что чинятся по-разному: право включают галочкой, адрес снимают из манифеста
-	Destinations []string `json:"destinations,omitempty"`
-}
-
-type PlatformAppDataPolicy struct {
-	// Declared — false означает, что версия ничего не обещала о данных при удалении
-	Declared      bool     `json:"declared"`
-	Categories    []string `json:"categories,omitempty"`
-	Regions       []string `json:"regions,omitempty"`
-	RetentionDays int64    `json:"retention_days"`
-	Uninstall     *string  `json:"uninstall,omitempty"`
-}
-
-type PlatformAppDelivery struct {
-	ID             UUID `json:"id"`
-	EventID        UUID `json:"event_id"`
-	InstallationID UUID `json:"installation_id"`
-	// Type — Имя факта в формате модуль.сущность.факт
-	Type string `json:"type"`
-	// SchemaVersion — Версия формы события
-	SchemaVersion int64 `json:"schema_version"`
-	// Topic — Тема так, как её объявляет манифест приложения: имя факта и версия схемы одной строкой
-	Topic string `json:"topic"`
-	// AggregateType — Вид объекта, о котором событие
-	AggregateType string `json:"aggregate_type"`
-	// AggregateID — Идентификатор объекта; содержимого объекта в журнале нет
-	AggregateID string `json:"aggregate_id"`
-	// OccurredAt — Когда произошёл факт, а не когда его отправили
-	OccurredAt string `json:"occurred_at"`
-	// TraceID — Сквозная трассировка Akeda: по ней инцидент расширения сводится с операцией
-	TraceID string `json:"trace_id"`
-	Status  string `json:"status"`
-	// Attempts — Сколько попыток сделано
-	Attempts int64 `json:"attempts"`
-	// NextAttemptAt — Когда наряд созреет; у завершённого осталось от последней попытки и решением уже не является
-	NextAttemptAt string `json:"next_attempt_at"`
-	// ClaimedUntil — Аренда воркера: значение в будущем означает, что попытка идёт прямо сейчас
-	ClaimedUntil *string `json:"claimed_until,omitempty"`
-	DeliveredAt  *string `json:"delivered_at,omitempty"`
-	// DeadAt — Момент мёртвого письма; DLQ — состояние наряда, а не отдельное хранилище
-	DeadAt *string `json:"dead_at,omitempty"`
-	// LastStatusCode — Код ответа приёмника; отсутствие означает, что HTTP-ответа не было вовсе — сеть, дедлайн или отказ до отправки
-	LastStatusCode *int64 `json:"last_status_code,omitempty"`
-	// LastError — Последняя причина: либо отказ Akeda, либо обрезанный ответ приёмника. Заполненный last_status_code означает, что хвост причины — слова приёмника. Текст приёмника недоверен, машинно не разбирается, и фильтра по нему у операции нет
-	LastError string `json:"last_error"`
-	// EndpointURL — Куда уехала попытка. Снимок на её момент: установка сменит адрес, а журнал остаётся доказательством
-	EndpointURL string `json:"endpoint_url"`
-	// SignatureKeyID — Чем было подписано. Идентификатор ключа, а не его значение: значение подписи не сохраняется вовсе
-	SignatureKeyID string `json:"signature_key_id"`
-	ReplayOfID     *UUID  `json:"replay_of_id,omitempty"`
-	// ReplayActor — Кто потребовал повтор
-	ReplayActor *string `json:"replay_actor,omitempty"`
-	// ReplayReason — Зачем потребовали повтор
-	ReplayReason *string `json:"replay_reason,omitempty"`
-	CreatedAt    string  `json:"created_at"`
-	UpdatedAt    string  `json:"updated_at"`
-}
-
-// PlatformAppDeliveryHealth — Сводка доставки событий установке. Только числа, которые считает Akeda: ни тела события, ни ответа приёмника здесь нет и быть не может — текст приёмника недоверен, а сводку читает кабинетный экран.
-type PlatformAppDeliveryHealth struct {
-	InstallationID UUID `json:"installation_id"`
-	// LastAttemptAt — Когда установке в последний раз пытались дозвониться. Отсутствует, если ей ещё ничего не отправляли
-	LastAttemptAt *string `json:"last_attempt_at,omitempty"`
-	// LastDeliveredAt — Последняя удачная доставка. Отсутствие при заполненном last_attempt_at означает «отправляли, и ни разу не доехало» — это не то же самое, что «ещё не отправляли»
-	LastDeliveredAt *string `json:"last_delivered_at,omitempty"`
-	// ConsecutiveDead — Мёртвые письма подряд. Любая удачная доставка обнуляет счётчик; по нему принимается решение о парковке
-	ConsecutiveDead int64 `json:"consecutive_dead"`
-	// DeadLetters — Сколько мёртвых писем накопилось всего. Ровно столько фактов не доехало и ждёт повтора; число монотонно — повтор заводит новый наряд, а не оживляет мёртвый
-	DeadLetters int64 `json:"dead_letters"`
-	// WindowStartedAt — Начало окна доли отказов. Окно фиксированное; отдаётся вместе со счётчиками, чтобы «0 из 0» читалось как «за окно не отправляли», а не как «отказов нет»
-	WindowStartedAt string `json:"window_started_at"`
-	// WindowAttempts — Попыток за окно. Ноль означает, что доли нет вовсе
-	WindowAttempts int64 `json:"window_attempts"`
-	// WindowFailures — Из них неудачных (отложенных и мёртвых). Доля считается читателем: процент без знаменателя врёт на обоих концах
-	WindowFailures int64 `json:"window_failures"`
-	// PausedAt — Проекция парковки в базе кабинета: очередь проходит мимо этой установки. Правда о парковке — parked_at самой установки
-	PausedAt *string `json:"paused_at,omitempty"`
-}
-
-type PlatformAppDeliveryPage struct {
-	Deliveries []PlatformAppDelivery `json:"deliveries"`
-	// Limit — Применённая глубина выборки, а не запрошенная
-	Limit int64 `json:"limit"`
-	// Offset — С какого места отдана страница
-	Offset int64 `json:"offset"`
-	// HasMore — За страницей есть ещё записи. Признак, а не общее число: счёт по журналу — полный проход по истории кабинета
-	HasMore bool                       `json:"has_more"`
-	Health  *PlatformAppDeliveryHealth `json:"health,omitempty"`
-}
-
-// PlatformAppDeliveryReplayInput — Отбор внутри установки. Хотя бы один из delivery_ids, event_id или пары aggregate_type и aggregate_id обязателен; названные отборы складываются по И
-type PlatformAppDeliveryReplayInput struct {
-	// DeliveryIds — Конкретные наряды журнала — самый частый повтор
-	DeliveryIds []UUID `json:"delivery_ids,omitempty"`
-	EventID     *UUID  `json:"event_id,omitempty"`
-	// AggregateType — Вид объекта; без aggregate_id отбором не является
-	AggregateType *string `json:"aggregate_type,omitempty"`
-	// AggregateID — Идентификатор объекта; без aggregate_type отбором не является
-	AggregateID *string `json:"aggregate_id,omitempty"`
-	// Statuses — Какие наряды переигрывать. Пусто — только мёртвые письма. Живой наряд не переигрывается: он уедет сам
-	Statuses []string `json:"statuses,omitempty"`
-	// Limit — Потолок одного вызова — столько нарядов человек в состоянии посмотреть после того, как повтор отработал. Ноль и отсутствие означают умолчание, значение сверх потолка зажимается до него
-	Limit *int64 `json:"limit,omitempty"`
-	// Reason — Зачем переигрываем. Уезжает в журнал доставки рядом с актором
-	Reason *string `json:"reason,omitempty"`
-}
-
-type PlatformAppDeliveryReplayResult struct {
-	Deliveries []PlatformAppReplayedDelivery `json:"deliveries"`
-	// Replayed — Сколько нарядов заведено. Ноль законен: переигрывать было нечего либо всё найденное уже живо
-	Replayed int64 `json:"replayed"`
-}
-
-// PlatformAppEgressDiff — Разница ВНЕШНИХ АДРЕСОВ между установленной и целевой версией. Отдельно от разницы прав: у адресов нет отдельного одобренного кабинетом списка — их одобряют вместе с версией, и что одобрено, записано в манифесте установленной
-type PlatformAppEgressDiff struct {
-	// Requested — Адреса целевой версии
-	Requested []string `json:"requested"`
-	// New — Адреса, которых у установленной версии не было; ровно они требуют нового согласия — кабинет их не видел
-	New []string `json:"new"`
-	// Dropped — Адреса, которые отпадают; сужение согласия не требует
-	Dropped []string `json:"dropped"`
-	// Kept — Адреса, которые остаются как были
-	Kept []string `json:"kept"`
-}
-
-type PlatformAppHealthCheck struct {
-	// Status — skipped — спрашивать некого: у декларативного расширения нет своего приёмника
-	Status string `json:"status"`
-	// URL — Адрес, который спрашивали; живёт в манифесте версии, а версию потом снимут с публикации
-	URL *string `json:"url,omitempty"`
-	// HTTPStatus — Ноль означает «не ответил вовсе», и это не то же самое, что «ответил пятисоткой»
-	HTTPStatus *int64 `json:"http_status,omitempty"`
-	LatencyMs  *int64 `json:"latency_ms,omitempty"`
-	// Reason — Класс отказа для разбора; человеку показывают не его
-	Reason    *string `json:"reason,omitempty"`
-	CheckedAt string  `json:"checked_at"`
-}
-
-type PlatformAppInstallResult struct {
-	Installation PlatformAppInstallation `json:"installation"`
-	App          PlatformApp             `json:"app"`
-	Version      PlatformAppVersion      `json:"version"`
-	Diff         PlatformAppConsentDiff  `json:"diff"`
-	DataPolicy   PlatformAppDataPolicy   `json:"data_policy"`
-	Health       PlatformAppHealthCheck  `json:"health"`
-}
-
-type PlatformAppInstallation struct {
-	ID        UUID `json:"id"`
-	TenantID  UUID `json:"tenant_id"`
-	AppID     UUID `json:"app_id"`
-	VersionID UUID `json:"version_id"`
-	// GrantedScopes — На что согласился кабинет; итоговый доступ ещё уже — он пересекается с политикой публикации, включённостью модуля, RBAC и RLS
-	GrantedScopes []string                      `json:"granted_scopes"`
-	Status        PlatformAppInstallationStatus `json:"status"`
-	// InstalledBy — След администратора для аудита; прав поставившего установка не наследует
-	InstalledBy   *int64  `json:"installed_by,omitempty"`
-	ConsentAt     *string `json:"consent_at,omitempty"`
-	SuspendedAt   *string `json:"suspended_at,omitempty"`
-	RevokedAt     *string `json:"revoked_at,omitempty"`
-	DisableReason string  `json:"disable_reason"`
-	// DeliveryEndpointURL — Куда уезжают подписанные события этой установки. Снят с манифеста версии при установке; переход версии его не меняет. Пусто у декларативного расширения
-	DeliveryEndpointURL string `json:"delivery_endpoint_url"`
-	// DeliveryEndpointChangedAt — Момент последней смены адреса — ограда повтора: доставки, заведённые до него, переигрывает только персонал платформы. Отсутствует, пока адрес не менялся
-	DeliveryEndpointChangedAt *string `json:"delivery_endpoint_changed_at,omitempty"`
-	// ParkedAt — Приёмник признан мёртвым, и доставка приостановлена: наряды копятся, ничего не теряется. Не отзыв — статус установки, её токены и секрет подписи не меняются. Отсутствует, пока установка не запаркована
-	ParkedAt *string `json:"parked_at,omitempty"`
-	// ParkReason — Машинный код причины. Список закрыт: слова недоверенного приёмника в это поле не попадают ни при каких условиях
-	ParkReason *string `json:"park_reason,omitempty"`
-	// ParkedDeadLetters — Сколько мёртвых писем подряд насчиталось на момент парковки. Порог мог с тех пор поменяться, и без числа причина непроверяема
-	ParkedDeadLetters *int64 `json:"parked_dead_letters,omitempty"`
-	CreatedAt         string `json:"created_at"`
-	UpdatedAt         string `json:"updated_at"`
-}
-
-type PlatformAppInstallationEvent struct {
-	ID UUID `json:"id"`
-	// Sequence — Номер записи в журнале установки
-	Sequence       int64    `json:"sequence"`
-	InstallationID UUID     `json:"installation_id"`
-	TenantID       UUID     `json:"tenant_id"`
-	TokenID        *UUID    `json:"token_id,omitempty"`
-	Kind           string   `json:"kind"`
-	ActorUserID    *int64   `json:"actor_user_id,omitempty"`
-	Scopes         []string `json:"scopes"`
-	Reason         string   `json:"reason"`
-	// Details — Прежнее и новое значение перехода; форма зависит от вида записи
-	Details   map[string]json.RawMessage `json:"details,omitempty"`
-	CreatedAt string                     `json:"created_at"`
-}
-
-type PlatformAppInstallationEventPage struct {
-	Events []PlatformAppInstallationEvent `json:"events"`
-	// Limit — Применённая глубина выборки, а не запрошенная
-	Limit int64 `json:"limit"`
-}
-
 type PlatformAppInstallationStatus = string
-
-type PlatformAppManifestBlock struct {
-	// ManifestFingerprint — sha256 компактной формы документа — тот же отпечаток, которым ворота публикации связывают результат внешнего линтера с проверенным манифестом
-	ManifestFingerprint string `json:"manifest_fingerprint"`
-	// Publisher — Где документ впервые увидели. Улика, а не предмет запрета: тот же отпечаток у другого издателя закрыт этим же запретом
-	Publisher  string `json:"publisher"`
-	AppKey     string `json:"app_key"`
-	ReasonCode string `json:"reason_code"`
-	// Summary — Объяснение словами; уезжает кабинету в карточку уведомления, поэтому это наш текст, а не эхо приёмника
-	Summary string `json:"summary"`
-	// Advisory — Внешний https-адрес разбора: CVE, бюллетень, тикет
-	Advisory  *string `json:"advisory,omitempty"`
-	BlockedBy *int64  `json:"blocked_by,omitempty"`
-	BlockedAt string  `json:"blocked_at"`
-}
-
-type PlatformAppManifestPermissions struct {
-	// Required — Без этих прав приложение не работает; их появление останавливает обновление до согласия
-	Required []string `json:"required"`
-	// Optional — Появление такого права обновление не останавливает — оно просто не активируется
-	Optional []string `json:"optional"`
-}
 
 type PlatformAppPublisher struct {
 	ID UUID `json:"id"`
@@ -15484,75 +9735,7 @@ type PlatformAppPublisher struct {
 
 type PlatformAppPublisherStatus = string
 
-type PlatformAppReasonInput struct {
-	// Reason — Причина перехода; уезжает в журнал установки и в причину отзыва токенов
-	Reason *string `json:"reason,omitempty"`
-}
-
-type PlatformAppReplayedDelivery struct {
-	ID             UUID `json:"id"`
-	ReplayOfID     UUID `json:"replay_of_id"`
-	EventID        UUID `json:"event_id"`
-	InstallationID UUID `json:"installation_id"`
-}
-
-type PlatformAppRollbackResult struct {
-	Installation PlatformAppInstallation `json:"installation"`
-	From         PlatformAppVersion      `json:"from"`
-	To           PlatformAppVersion      `json:"to"`
-	Diff         PlatformAppConsentDiff  `json:"diff"`
-}
-
 type PlatformAppStatus = string
-
-type PlatformAppSwitchResult struct {
-	Installation PlatformAppInstallation `json:"installation"`
-	// RevokedTokens — Сколько живых токенов погасила операция; ноль означает, что доступ и так не был выдан
-	RevokedTokens int64 `json:"revoked_tokens"`
-	// RevokedSigningKeys — Сколько секретов подписи погасило удаление: токен закрывает вызовы приложения к нам, секрет подписи — наши доставки к нему
-	RevokedSigningKeys *int64 `json:"revoked_signing_keys,omitempty"`
-	// PurgedConfigValues — Сколько сохранённых настроек и секретов уничтожено; по самой таблице этого уже не увидеть
-	PurgedConfigValues *int64                      `json:"purged_config_values,omitempty"`
-	DataPolicy         *PlatformAppDataPolicy      `json:"data_policy,omitempty"`
-	Notice             *PlatformAppUninstallNotice `json:"notice,omitempty"`
-}
-
-type PlatformAppUninstallNotice struct {
-	// Status — unavailable — не смогла отправить сама платформа: чинить это ей, а не издателю
-	Status string  `json:"status"`
-	URL    *string `json:"url,omitempty"`
-	// KeyID — Идентификатор ключа подписи; секретом не является и нужен приёмнику, чтобы доказать, чем проверял
-	KeyID      *string `json:"key_id,omitempty"`
-	HTTPStatus *int64  `json:"http_status,omitempty"`
-	Reason     *string `json:"reason,omitempty"`
-	SentAt     string  `json:"sent_at"`
-}
-
-type PlatformAppUnparkResult struct {
-	Installation PlatformAppInstallation `json:"installation"`
-	Health       PlatformAppHealthCheck  `json:"health"`
-	// ParkedForSeconds — Сколько установка простояла запаркованной. Числом, а не строкой: собранная сервером фраза не переводится на второй язык
-	ParkedForSeconds int64 `json:"parked_for_seconds"`
-}
-
-type PlatformAppUpdateInput struct {
-	// Version — Пусто означает «остаться на текущей»: тогда обновляется только согласие
-	Version *string `json:"version,omitempty"`
-	// Approved — Отсутствие поля означает «согласия не давали»; пустой список — «ни на что», и это разные ответы
-	Approved []string `json:"approved,omitempty"`
-	Reason   *string  `json:"reason,omitempty"`
-}
-
-type PlatformAppUpdateResult struct {
-	Installation PlatformAppInstallation `json:"installation"`
-	From         PlatformAppVersion      `json:"from"`
-	To           PlatformAppVersion      `json:"to"`
-	Diff         PlatformAppConsentDiff  `json:"diff"`
-	Egress       PlatformAppEgressDiff   `json:"egress"`
-	// Consented — Обновление прошло по новому согласию, а не по прежнему
-	Consented bool                    `json:"consented"`
-	Health    *PlatformAppHealthCheck `json:"health,omitempty"`
-}
 
 type PlatformAppVersion struct {
 	ID      UUID   `json:"id"`
@@ -15593,46 +9776,9 @@ type ProjectCreate struct {
 	Color       *string `json:"color,omitempty"`
 }
 
-type ProjectFileFolder struct {
-	ID        UUID    `json:"id"`
-	ProjectID UUID    `json:"project_id"`
-	ParentID  *string `json:"parent_id"`
-	Name      string  `json:"name"`
-	SortOrder int64   `json:"sort_order"`
-	CreatedBy *int64  `json:"created_by"`
-	CreatedAt string  `json:"created_at"`
-	UpdatedAt string  `json:"updated_at"`
-}
-
-type ProjectFileFolderCreate struct {
-	Name     string `json:"name"`
-	ParentID *UUID  `json:"parent_id,omitempty"`
-}
-
-type ProjectFileFolderPage struct {
-	Count   int64               `json:"count"`
-	Results []ProjectFileFolder `json:"results"`
-}
-
-type ProjectFileFolderRename struct {
-	Name string `json:"name"`
-}
-
-type ProjectFileUpload struct {
-	File   string `json:"file"`
-	Folder *UUID  `json:"folder,omitempty"`
-}
-
 type ProjectPage struct {
 	Count   int64     `json:"count"`
 	Results []Project `json:"results"`
-}
-
-type ProjectUpdate struct {
-	Name        *string `json:"name,omitempty"`
-	Key         *string `json:"key,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Color       *string `json:"color,omitempty"`
 }
 
 type PullRequest struct {
@@ -15677,18 +9823,6 @@ type PullRequestPage struct {
 	Results []PullRequest `json:"results"`
 }
 
-type PullRequestUpdate struct {
-	Provider   *string `json:"provider,omitempty"`
-	Repository *string `json:"repository,omitempty"`
-	Number     *string `json:"number,omitempty"`
-	Title      *string `json:"title,omitempty"`
-	URL        *string `json:"url,omitempty"`
-	Status     *string `json:"status,omitempty"`
-	Branch     *string `json:"branch,omitempty"`
-	CommitSha  *string `json:"commit_sha,omitempty"`
-	IsArchived *bool   `json:"is_archived,omitempty"`
-}
-
 type Relation struct {
 	ID                        UUID              `json:"id"`
 	Source                    UUID              `json:"source"`
@@ -15715,52 +9849,6 @@ type RelationKind = string
 
 type RelationList = []Relation
 
-type ScrumSection struct {
-	Section   UUID   `json:"section"`
-	Name      string `json:"name"`
-	Key       string `json:"key"`
-	IsEnabled bool   `json:"is_enabled"`
-	Tasks     int64  `json:"tasks"`
-}
-
-type ScrumSettings struct {
-	Project           UUID              `json:"project"`
-	ProjectKey        string            `json:"project_key"`
-	ProjectName       string            `json:"project_name"`
-	IsEnabled         bool              `json:"is_enabled"`
-	SprintLengthWeeks int64             `json:"sprint_length_weeks"`
-	CloseWeekday      int64             `json:"close_weekday"`
-	CloseTime         string            `json:"close_time"`
-	DailyWeekdays     []int64           `json:"daily_weekdays"`
-	Timezone          string            `json:"timezone"`
-	UpdatedAt         string            `json:"updated_at"`
-	Sections          []ScrumSection    `json:"sections"`
-	Team              []ScrumTeamMember `json:"team"`
-}
-
-type ScrumSettingsPage struct {
-	Count   int64           `json:"count"`
-	Results []ScrumSettings `json:"results"`
-}
-
-type ScrumSettingsUpdate struct {
-	IsEnabled         *bool   `json:"is_enabled,omitempty"`
-	SprintLengthWeeks *int64  `json:"sprint_length_weeks,omitempty"`
-	CloseWeekday      *int64  `json:"close_weekday,omitempty"`
-	CloseTime         *string `json:"close_time,omitempty"`
-	DailyWeekdays     []int64 `json:"daily_weekdays,omitempty"`
-	Timezone          *string `json:"timezone,omitempty"`
-	ExcludedSections  []UUID  `json:"excluded_sections,omitempty"`
-	TeamUserIds       []int64 `json:"team_user_ids,omitempty"`
-}
-
-type ScrumTeamMember struct {
-	User     int64  `json:"user"`
-	Name     string `json:"name"`
-	InTeam   bool   `json:"in_team"`
-	Sections int64  `json:"sections"`
-}
-
 type Section struct {
 	ID           UUID                   `json:"id"`
 	Project      *UUID                  `json:"project"`
@@ -15781,18 +9869,6 @@ type Section struct {
 	TasksOverdue int64                  `json:"tasks_overdue"`
 	MembersCount int64                  `json:"members_count"`
 	Members      []SectionMemberPreview `json:"members"`
-}
-
-type SectionCreate struct {
-	Project     UUID    `json:"project"`
-	Key         *string `json:"key,omitempty"`
-	Name        string  `json:"name"`
-	Description *string `json:"description,omitempty"`
-	Color       *string `json:"color,omitempty"`
-	Icon        *string `json:"icon,omitempty"`
-	Status      *string `json:"status,omitempty"`
-	Lead        *int64  `json:"lead,omitempty"`
-	TargetDate  *string `json:"target_date,omitempty"`
 }
 
 type SectionMember struct {
@@ -15835,444 +9911,6 @@ type SectionUpdate struct {
 	Status      *string `json:"status,omitempty"`
 	Lead        *int64  `json:"lead,omitempty"`
 	TargetDate  *string `json:"target_date,omitempty"`
-}
-
-type SettingsApiKey struct {
-	ID   UUID   `json:"id"`
-	Name string `json:"name"`
-	// Prefix — Первые 12 знаков значения; открытая часть ключа
-	Prefix   string   `json:"prefix"`
-	Scopes   []string `json:"scopes"`
-	IsActive bool     `json:"is_active"`
-	// ExpiresAt — Отметка времени в текстовом виде из базы
-	ExpiresAt       *string `json:"expires_at"`
-	RateLimitPerMin int64   `json:"rate_limit_per_min"`
-	// LastUsedAt — Отметка времени в текстовом виде из базы
-	LastUsedAt *string `json:"last_used_at"`
-	// CreatedAt — Отметка времени в текстовом виде из базы
-	CreatedAt string `json:"created_at"`
-	// Hint — Маска значения вида ••••abcd; пусто у ключей, выпущенных до хранилища
-	Hint string `json:"hint"`
-	// CanReveal — Значение ключа сохранено в кабинете; false означает «сохранён только хеш», а не отсутствие прав
-	CanReveal bool `json:"can_reveal"`
-	// RevokedAt — Отметка времени в текстовом виде из базы
-	RevokedAt *string `json:"revoked_at"`
-	// LastRevealedAt — Отметка времени в текстовом виде из базы
-	LastRevealedAt *string `json:"last_revealed_at"`
-	// Personal — Ключ выдан человеку, а не кабинету, и работает в каждом кабинете владельца с правами этого кабинета
-	Personal bool `json:"personal"`
-}
-
-type SettingsApiKeyAccessEntry struct {
-	ID       UUID   `json:"id"`
-	APIKeyID UUID   `json:"api_key_id"`
-	UserID   *int64 `json:"user_id"`
-	// UserName — Полное имя автора события или его логин
-	UserName string `json:"user_name"`
-	Action   string `json:"action"`
-	// CreatedAt — Отметка времени в текстовом виде из базы
-	CreatedAt string `json:"created_at"`
-}
-
-type SettingsApiKeyAccessPage struct {
-	// Count — Число строк в results, а не общее число событий
-	Count   int64                       `json:"count"`
-	Results []SettingsApiKeyAccessEntry `json:"results"`
-}
-
-type SettingsApiKeyActivationResult struct {
-	ID UUID `json:"id"`
-	// IsActive — false после отзыва, true после возврата в работу
-	IsActive bool `json:"is_active"`
-}
-
-type SettingsApiKeyCreated struct {
-	ID   UUID   `json:"id"`
-	Name string `json:"name"`
-	// Prefix — Первые 12 знаков значения
-	Prefix   string   `json:"prefix"`
-	Scopes   []string `json:"scopes"`
-	IsActive bool     `json:"is_active"`
-	// ExpiresAt — Отметка времени в текстовом виде из базы
-	ExpiresAt       *string `json:"expires_at"`
-	RateLimitPerMin int64   `json:"rate_limit_per_min"`
-	// LastUsedAt — Отметка времени в текстовом виде из базы
-	LastUsedAt *string `json:"last_used_at"`
-	// CreatedAt — Отметка времени в текстовом виде из базы
-	CreatedAt string `json:"created_at"`
-	// Key — Полное значение ключа. Показывается единственный раз — в этом ответе; список ключей его не возвращает
-	Key      string `json:"key"`
-	Personal bool   `json:"personal"`
-}
-
-type SettingsApiKeyInput struct {
-	// Name — Пустое имя заменяется на «Ключ»
-	Name *string `json:"name,omitempty"`
-	// Scopes — Пустой список заменяется на ["tasks:read"]; каждое право обязано быть у создателя
-	Scopes []string `json:"scopes,omitempty"`
-	// RateLimitPerMin — Ноль и отрицательное значение заменяются на 600
-	RateLimitPerMin *int64 `json:"rate_limit_per_min,omitempty"`
-	// Personal — true выдаёт ключ человеку, а не кабинету
-	Personal *bool `json:"personal,omitempty"`
-}
-
-type SettingsApiKeyPage struct {
-	// Count — Число строк в results, а не общее число ключей кабинета
-	Count   int64            `json:"count"`
-	Results []SettingsApiKey `json:"results"`
-}
-
-type SettingsAppCatalog struct {
-	Apps []SettingsAppCatalogEntry `json:"apps"`
-}
-
-type SettingsAppCatalogEntry struct {
-	App       PlatformApp              `json:"app"`
-	Publisher SettingsAppPublisherCard `json:"publisher"`
-	// Versions — Версии, открытые кабинету, свежие первыми; пусто у стоящего приложения, если ставить и обновлять больше не на что
-	Versions         []SettingsAppVersion     `json:"versions"`
-	Installation     *PlatformAppInstallation `json:"installation,omitempty"`
-	InstalledVersion *SettingsAppVersion      `json:"installed_version,omitempty"`
-}
-
-// SettingsAppConsentEgress — Один внешний получатель данных кабинета: куда, зачем и что именно туда уходит. Ответ «приложение ходит наружу» не является ни одним из трёх
-type SettingsAppConsentEgress struct {
-	// Host — Имя хоста целиком и точно; совпадение точное, поддомены не входят
-	Host   string `json:"host"`
-	Scheme string `json:"scheme"`
-	// Insecure — Канал открытый: данные читает всякий по дороге, и одобренный адрес перестаёт быть единственным получателем
-	Insecure       bool                      `json:"insecure"`
-	InsecureReason *SettingsAppLocalizedText `json:"insecure_reason,omitempty"`
-	Purpose        SettingsAppLocalizedText  `json:"purpose"`
-	// Sends — Категории политики данных, которые уезжают по этому адресу; пусто означает «только запрашиваю»
-	Sends []string `json:"sends"`
-}
-
-// SettingsAppConsentField — Одна графа, которую приложение добавит карточке кабинета. Ключа и типа здесь нет, как нет области у права: кабинет решает, пускать ли приложение к своим карточкам, а не читает манифест
-type SettingsAppConsentField struct {
-	// Entity — Ключ сущности. Не текст для экрана: он группирует строки, а показывается entity_name
-	Entity     string                   `json:"entity"`
-	EntityName SettingsAppLocalizedText `json:"entity_name"`
-	Label      SettingsAppLocalizedText `json:"label"`
-	// Obsolete — Версия объявила графу устаревшей: на карточках она не появится
-	Obsolete *bool `json:"obsolete,omitempty"`
-}
-
-// SettingsAppConsentFunction — Одна проверка приложения внутри операции кабинета, выполняемая КОДОМ в песочнице. Summary написан платформой: о том, чем приложение может помешать, кабинету рассказываем мы
-type SettingsAppConsentFunction struct {
-	// Point — Ключ точки, на которой стоит функция
-	Point string `json:"point"`
-	// Key — Имя функции внутри приложения
-	Key string `json:"key"`
-	// DocumentTypes — Виды документов, которые функция смотрит; пустой список означает ВСЕ, и лист говорит это словами
-	DocumentTypes []string                 `json:"document_types"`
-	Summary       SettingsAppLocalizedText `json:"summary"`
-}
-
-type SettingsAppConsentPermission struct {
-	Scope string `json:"scope"`
-	// Required — Без этого права приложение не работает; необъяснённое манифестом право считается обязательным
-	Required bool `json:"required"`
-	// RiskClass — Пусто, если манифест право не объяснил: класс не выдумывается
-	RiskClass   string                   `json:"risk_class"`
-	Explanation SettingsAppLocalizedText `json:"explanation"`
-	// Explained — Манифест объяснил право; false означает, что администратор одобряет вслепую
-	Explained bool `json:"explained"`
-	// Declared — Платформа объявляла такую область. False означает, что сказать о праве нечего, кроме имени, — и экран обязан сказать именно это
-	Declared bool `json:"declared"`
-	// Tier — Ярус чувствительности из таксономии платформы. Пусто у необъявленной области: ярус не выдумывается, а «обычная» по умолчанию означала бы, что неизвестное безобиднее известного
-	Tier string `json:"tier"`
-	// Deprecated — Область устарела и снимется не раньше чем через полгода после пометки; она открывает заметно больше нужного и осталась работающей ради уже поставленных приложений
-	Deprecated bool                     `json:"deprecated"`
-	Grants     SettingsAppLocalizedText `json:"grants"`
-	Purpose    SettingsAppLocalizedText `json:"purpose"`
-	// RetentionDays — Сколько приложение держит у себя полученное этим правом; ноль — «не храню»
-	RetentionDays int64 `json:"retention_days"`
-	// RetentionDeclared — Срок назван. Отличает «не храню» (ноль) от «срок не назван» (поля в манифесте нет)
-	RetentionDeclared bool `json:"retention_declared"`
-}
-
-type SettingsAppConsentPreview struct {
-	App         PlatformApp                    `json:"app"`
-	Version     SettingsAppVersion             `json:"version"`
-	Permissions PlatformAppManifestPermissions `json:"permissions"`
-	// Installed — true означает, что это предпросмотр обновления
-	Installed      bool                     `json:"installed"`
-	Installation   *PlatformAppInstallation `json:"installation,omitempty"`
-	CurrentVersion *SettingsAppVersion      `json:"current_version,omitempty"`
-	Diff           PlatformAppConsentDiff   `json:"diff"`
-	Egress         PlatformAppEgressDiff    `json:"egress"`
-	DataPolicy     PlatformAppDataPolicy    `json:"data_policy"`
-	Publisher      SettingsAppPublisherCard `json:"publisher"`
-	Sheet          SettingsAppConsentSheet  `json:"sheet"`
-}
-
-type SettingsAppConsentResult struct {
-	Preview SettingsAppConsentPreview `json:"preview"`
-	// RequiresConsent — Без нового согласия установка или обновление дальше не пойдут
-	RequiresConsent bool `json:"requires_consent"`
-}
-
-// SettingsAppConsentRule — Та же проверка внутри операции кабинета, но выраженная УСЛОВИЕМ, а не кодом. Отдельно от функций, потому что у правила лист знает заранее две вещи, которых у функции не знает: исход и точный текст, который человек прочтёт. Самого выражения здесь нет: кабинет решает, пускать ли приложение к своим документам, а не проверяет чужой код глазами
-type SettingsAppConsentRule struct {
-	// Point — Ключ точки, на которой стоит правило
-	Point string `json:"point"`
-	// Key — Имя правила внутри приложения
-	Key string `json:"key"`
-	// Outcome — refuse останавливает проведение, warn показывает человеку сообщение и пропускает документ
-	Outcome string `json:"outcome"`
-	// DocumentTypes — Виды документов, которые правило смотрит; пустой список означает ВСЕ
-	DocumentTypes []string                 `json:"document_types"`
-	Summary       SettingsAppLocalizedText `json:"summary"`
-	Message       SettingsAppLocalizedText `json:"message"`
-}
-
-// SettingsAppConsentSection — Раздел, который приложение добавит в меню кабинета. Только название: значок, порядок и адрес страницы — оформление пункта, а решение принимается по тому, что за раздел появится в меню
-type SettingsAppConsentSection struct {
-	Title SettingsAppLocalizedText `json:"title"`
-}
-
-// SettingsAppConsentSheet — Лист согласия, снятый с манифеста сервером: единственное утверждение платформы о приложении, на которое кабинет соглашается
-type SettingsAppConsentSheet struct {
-	Name          SettingsAppLocalizedText         `json:"name"`
-	Description   SettingsAppLocalizedText         `json:"description"`
-	Homepage      string                           `json:"homepage"`
-	Runtime       string                           `json:"runtime"`
-	Channel       string                           `json:"channel"`
-	Permissions   []SettingsAppConsentPermission   `json:"permissions"`
-	Subscriptions []SettingsAppConsentSubscription `json:"subscriptions"`
-	Slots         []SettingsAppConsentSlot         `json:"slots"`
-	// Sections — Разделы, которые приложение добавит в МЕНЮ кабинета. Отдельной строкой рядом со слотами: слот — место внутри чужого экрана, а раздел меняет само меню, и увидит его каждый, кто войдёт в кабинет
-	Sections []SettingsAppConsentSection `json:"sections"`
-	// Fields — Графы, которые приложение добавит карточкам кабинета. Рядом с правами, а не среди них: право говорит, что приложение УВИДИТ и ИЗМЕНИТ, а графа — что оно ДОБАВИТ на глаза каждому, кто откроет карточку
-	Fields []SettingsAppConsentField `json:"fields"`
-	// Functions — Проверки КОДОМ внутри операций кабинета, с правом их остановить. Особняком от прав намеренно: ни одно право не отвечает на вопрос «может ли приложение мне запретить»
-	Functions []SettingsAppConsentFunction `json:"functions"`
-	// Rules — Те же проверки, выраженные условием, а не кодом
-	Rules []SettingsAppConsentRule `json:"rules"`
-	// RunsOnAkeda — У версии нет ни одного пути наружу: ни приёмника событий, ни слота на чужом источнике, ни объявленного исходящего, — и всё, что она делает, делается внутри продукта. ВЫЧИСЛЯЕТСЯ, а не ставится руками: отметка, поставленная человеком, означает «мы посмотрели и решили», а вычисляемое правило — «по построению не может быть иначе»
-	RunsOnAkeda bool `json:"runs_on_akeda"`
-	// PersonFacts — Что приложение узнает о человеке, открывшем панель: пересечение запрошенного слотами с закрытым словарём платформы; больше ничего оно узнать не может. actor_employee_id — единственный факт, называющий человека настоящей карточкой сотрудника кабинета, а не псевдонимом: с ним приложение отличает сотрудников друг от друга, а имя и должность читает только отдельным правом на сотрудников. Экран согласия обязан сказать про него другими словами, чем про остальные три
-	PersonFacts []string                  `json:"person_facts"`
-	DataPolicy  PlatformAppDataPolicy     `json:"data_policy"`
-	Support     SettingsAppConsentSupport `json:"support"`
-	// Egress — Внешние получатели данных кабинета поимённо
-	Egress []SettingsAppConsentEgress `json:"egress"`
-	// EgressDeclared — Издатель ответил на вопрос вообще. Пустой список — это ОТВЕТ («никуда»), молчание — нет, и подавать молчание как «никуда» значило бы придумать обещание за издателя
-	EgressDeclared bool `json:"egress_declared"`
-	// EgressEnforced — Список исполняет платформа, а не только обещает издатель. У режима managed рантайм держит контейнер без маршрута наружу и пускает ровно перечисленное; у hosted приложение живёт на чужой инфраструктуре, и проверить обещание платформа не может ничем
-	EgressEnforced bool `json:"egress_enforced"`
-}
-
-type SettingsAppConsentSlot struct {
-	Slot  string                   `json:"slot"`
-	Type  string                   `json:"type"`
-	Title SettingsAppLocalizedText `json:"title"`
-	// Context — Поля контекста запуска, которые слот просит, по алфавиту
-	Context []string `json:"context"`
-}
-
-type SettingsAppConsentSubscription struct {
-	Topic string `json:"topic"`
-	// Filtered — Приложение сузило поток отбором
-	Filtered bool `json:"filtered"`
-}
-
-type SettingsAppConsentSupport struct {
-	Email         string `json:"email"`
-	URL           string `json:"url"`
-	IncidentEmail string `json:"incident_email"`
-	ResponseHours int64  `json:"response_hours"`
-}
-
-type SettingsAppDeclaredSlot struct {
-	// Slot — Ключ слота из контракта платформы; объявление вне контракта в ответ не попадает
-	Slot string `json:"slot"`
-	Type string `json:"type"`
-	// URL — Адрес рамки. Только у слота, показывающегося отдельным источником
-	URL *string `json:"url,omitempty"`
-	// Origin — Источник адреса — схема, хост и порт. Считает сервер: сравнение источников обязано быть одним и тем же на выдаче запуска и в оболочке
-	Origin    *string `json:"origin,omitempty"`
-	MinWidth  *int64  `json:"min_width,omitempty"`
-	MinHeight *int64  `json:"min_height,omitempty"`
-	// Context — Поля контекста запуска, которые слот просит. Человека словарь называет псевдонимом
-	Context    []string                 `json:"context"`
-	Title      SettingsAppLocalizedText `json:"title"`
-	ThemeAware bool                     `json:"theme_aware"`
-	// Icon — Значок пункта меню из закрытого списка платформы. Только у слота раздела приложения; имя вне списка приведено к запасному ещё на сервере — незнакомое рисуется пустым квадратом молча
-	Icon *string `json:"icon,omitempty"`
-	// Order — Порядок пункта в меню кабинета. Только у слота раздела приложения; не названный приложением порядок ставит раздел в хвост, а не в голову меню
-	Order *int64 `json:"order,omitempty"`
-	// BridgeSends — Что расширение вправе прислать оболочке; уже пересечено с закрытым списком платформы
-	BridgeSends []string `json:"bridge_sends"`
-	// BridgeReceives — Что оболочка вправе прислать расширению
-	BridgeReceives []string `json:"bridge_receives"`
-}
-
-type SettingsAppExposureCall struct {
-	// Entity — Сущность, вычисленная из шаблона маршрута: core.contacts, app.config.lease
-	Entity string `json:"entity"`
-	// Shape — Назвал ли предъявитель конкретную запись в адресе (record) или обратился к выборке (collection). Это НЕ «одна строка против многих»: сколько строк унесли, говорит rows. Выборка с фильтром, вернувшая одну строку, остаётся выборкой.
-	Shape string `json:"shape"`
-	// Calls — Сколько обращений к этому предмету
-	Calls int64 `json:"calls"`
-	// Rows — Сколько строк унесли всего там, где число называлось. Пусто означает «ни одно обращение числа не назвало», а не ноль
-	Rows *int64 `json:"rows,omitempty"`
-	// Bytes — Объём ответов. Единственный измеритель там, где строк не назвали
-	Bytes  int64  `json:"bytes"`
-	LastAt string `json:"last_at"`
-}
-
-type SettingsAppExposureReport struct {
-	InstallationID string  `json:"installation_id"`
-	App            *string `json:"app,omitempty"`
-	Version        *string `json:"version,omitempty"`
-	// Scopes — Верхняя граница ущерба: на что кабинет соглашался и чем расширение имело право пользоваться
-	Scopes []string `json:"scopes"`
-	// SecretLeases — Сколько раз расширение забирало секреты кабинета. Это НЕ граница, а факт: каждая выдача записана до того, как значение ушло
-	SecretLeases    int64    `json:"secret_leases"`
-	SecretLeaseKeys []string `json:"secret_lease_keys"`
-	LastSecretLease *string  `json:"last_secret_lease,omitempty"`
-	// SlotLaunches — Сколько раз человек кабинета открывал панель расширения
-	SlotLaunches int64 `json:"slot_launches"`
-	TokenIssues  int64 `json:"token_issues"`
-	// LastTokenUse — МОМЕНТ последнего предъявления токена. Что именно расширение читало, у нас не записано нигде — см. unknown
-	LastTokenUse *string `json:"last_token_use,omitempty"`
-	// LastDeliveredAt — Последняя удачная доставка. Число из СВОДКИ здоровья, а не из журнала: журнал наружу не открыт, потому что в его причине отказа живёт эхо недоверенного приёмника
-	LastDeliveredAt *string `json:"last_delivered_at,omitempty"`
-	// DeadLetters — Сколько фактов кабинета не доехало и ждёт повтора
-	DeadLetters             int64   `json:"dead_letters"`
-	DeliveryWindowStartedAt *string `json:"delivery_window_started_at,omitempty"`
-	// DeliveryWindowAttempts — Окно отдаётся целиком, а не готовым процентом: «0 из 0» читается как «за окно не отправляли», а не как «отказов нет»
-	DeliveryWindowAttempts *int64 `json:"delivery_window_attempts,omitempty"`
-	DeliveryWindowFailures *int64 `json:"delivery_window_failures,omitempty"`
-	// DeliveryEndpointURL — Куда уезжали события. Адрес называет издатель, данных кабинета в нём нет по определению
-	DeliveryEndpointURL *string `json:"delivery_endpoint_url,omitempty"`
-	// APICalls — ЧТО расширение читало и писало своим токеном, свёрнутое по предмету. Собирается из журнала обращений по учётным данным. Предмет — сущность и форма, а не перечень прочитанных строк. Идентификаторы строк не хранятся нигде: журнал стал бы теневой копией базы, читаемой по оси платформы, мимо видимости записей. Радиус поражения отчёт поэтому даёт ВЕРХНЕЙ ГРАНИЦЕЙ: «сущность core.contacts, 12 выборок, 4200 строк» означает «считайте скомпрометированными всех контрагентов в пределах одобренных областей». Для решения «что перевыпустить и кого предупредить» нужна именно она. Пустой список означает «оно ничего не звало» — настоящий ответ, а не молчание; «мы не знаем» говорится позицией api_calls в unknown.
-	APICalls []SettingsAppExposureCall `json:"api_calls"`
-	// Unknown — Чего отчёт назвать не может. event_bodies — что лежало в телах уехавших событий: тела в журнале доставки нет намеренно, и эта позиция стоит в списке ВСЕГДА, потому что закрыта устройством системы, а не обстоятельствами. api_calls — журнал обращений не ответил: его нет в этой сборке, его база не отозвалась либо в его истории есть окно потери; рядом с непустым api_calls эта позиция означает «свод неполон». delivery_summary — сводку доставки не спросили или она не ответила; это пропуск, а не нули, потому что «мёртвых писем ноль» читается как «всё доезжало». Непроговорённый пропуск читается как хорошая новость, поэтому список печатается всегда и пустым не бывает.
-	Unknown []string `json:"unknown"`
-}
-
-type SettingsAppIncident struct {
-	Installation PlatformAppInstallation   `json:"installation"`
-	App          PlatformApp               `json:"app"`
-	Block        PlatformAppManifestBlock  `json:"block"`
-	Exposure     SettingsAppExposureReport `json:"exposure"`
-}
-
-type SettingsAppIncidentList struct {
-	Incidents []SettingsAppIncident `json:"incidents"`
-}
-
-type SettingsAppInstallInput struct {
-	// Version — Конкретная версия; последняя открытая не подразумевается
-	Version string `json:"version"`
-	// Approved — Согласие целиком: одобрить можно только запрошенное версией, и все её обязательные права обязаны войти сюда
-	Approved []string `json:"approved"`
-	// Reason — Уезжает в журнал установки
-	Reason *string `json:"reason,omitempty"`
-}
-
-type SettingsAppInstallation struct {
-	Installation PlatformAppInstallation  `json:"installation"`
-	App          PlatformApp              `json:"app"`
-	Publisher    SettingsAppPublisherCard `json:"publisher"`
-	Version      SettingsAppVersion       `json:"version"`
-	// Live — Издатель, приложение и версия не выключены платформой
-	Live bool `json:"live"`
-	// Updates — Версии, на которые кабинет вправе перейти сам, свежие первыми
-	Updates []SettingsAppVersion `json:"updates"`
-	// Slots — Места на экране, которые занимает текущая версия установки: адрес рамки, источник, размер и мост сообщений. Оболочка строит рамку до запроса токена запуска, поэтому объявление приезжает вместе со списком установок
-	Slots  []SettingsAppDeclaredSlot      `json:"slots,omitempty"`
-	Health PlatformAppDeliveryHealth      `json:"health"`
-	Update *SettingsAppInstallationUpdate `json:"update,omitempty"`
-}
-
-// SettingsAppInstallationActivity — Права и активность установки: что кабинет одобрил и чем из этого расширение пользовалось за окно. Уровня отдельных записей здесь нет и не будет — только верхняя граница по областям.
-type SettingsAppInstallationActivity struct {
-	InstallationID UUID `json:"installation_id"`
-	// WindowDays — ПРИМЕНЁННОЕ окно в сутках, а не запрошенное
-	WindowDays int64 `json:"window_days"`
-	// Since — Начало окна. Отдаётся вместе с window_days: «0 обращений» без окна читается как «оно ничего не делало», а не как «за неделю ничего не делало»
-	Since string `json:"since"`
-	// Scopes — Одобренные области и области собственного контура, которыми пользовались; самые «горячие» первыми
-	Scopes []SettingsAppScopeActivity `json:"scopes"`
-	// UnusedScopes — Одобрено, но за окно не пригодилось ни разу. Отдельным списком, а не отбором на экране: это единственное, ради чего отчёт открывают дважды
-	UnusedScopes []string `json:"unused_scopes"`
-	// TotalCalls — Все обращения окна, включая неклассифицированные
-	TotalCalls int64 `json:"total_calls"`
-	// FirstCallAt — Первое обращение в окне; отсутствует, если обращений не было
-	FirstCallAt *string `json:"first_call_at,omitempty"`
-	// LastCallAt — Последнее обращение в окне; отсутствует, если обращений не было
-	LastCallAt *string `json:"last_call_at,omitempty"`
-	// UnclassifiedCalls — Обращения, которым правило достижимости не назвало области. Печатается всегда, даже нулём: молчаливо приписать их соседней области значило бы соврать в отчёте о правах
-	UnclassifiedCalls int64 `json:"unclassified_calls"`
-	// HasGap — В окне есть признанная потеря записи: журнал пишется мимо горячего пути, и на аварии строки теряются. Свод с дырой выглядит полным, поэтому дыра называется отдельно
-	HasGap bool `json:"has_gap"`
-}
-
-type SettingsAppInstallationPage struct {
-	Installations []SettingsAppInstallation `json:"installations"`
-}
-
-// SettingsAppInstallationUpdate — Обновление, ждущее кабинет: самая свежая версия из updates и цена перехода на неё. Отдельным полем, а не выводом из updates: там перечислено всё, на что кабинет вправе перейти, включая версии СТАРШЕ установленной — откат тоже переход. Отсутствует, когда переходить не на что: свежих версий нет, издатель выключен, установка удалена.
-type SettingsAppInstallationUpdate struct {
-	VersionID UUID   `json:"version_id"`
-	Version   string `json:"version"`
-	// RequiresConsent — Перейти без нового согласия нельзя. Считается тем же правилом, что применит сама операция обновления: новое обязательное право либо расширившийся список внешних получателей данных. Иначе список обещал бы «жми обновить», а обновление отвечало бы 409
-	RequiresConsent bool `json:"requires_consent"`
-	// Reasons — Почему нужно согласие, машинными кодами закрытого списка. Пусто, когда согласие не нужно. Кодами, а не фразой: фразу, собранную сервером, не перевести на второй язык, а перечень прав и адресов человек читает на экране согласия, где решает
-	Reasons []string `json:"reasons"`
-}
-
-// SettingsAppLocalizedText — Текст на двух языках, как он объявлен в манифесте; пустая половина означает, что издатель её не заполнил
-type SettingsAppLocalizedText struct {
-	Ru string `json:"ru"`
-	En string `json:"en"`
-}
-
-// SettingsAppPublisherCard — Издатель глазами кабинета: без основания проверки, адреса на аварию и причин выключения
-type SettingsAppPublisherCard struct {
-	Slug         string `json:"slug"`
-	LegalName    string `json:"legal_name"`
-	Country      string `json:"country"`
-	Homepage     string `json:"homepage"`
-	ContactEmail string `json:"contact_email"`
-	// Verified — Платформа подтвердила, что имя принадлежит названному юрлицу
-	Verified bool `json:"verified"`
-	// Live — Издатель не выключен платформой
-	Live bool `json:"live"`
-}
-
-// SettingsAppScopeActivity — Одна область в отчёте «права и активность»
-type SettingsAppScopeActivity struct {
-	Scope string `json:"scope"`
-	// Sensitive — Ярус чувствительности из таксономии платформы. У необъявленной области ложь — вместе с declared=false это означает «о ней не известно ничего, кроме имени», а не «она безобидна»
-	Sensitive bool `json:"sensitive"`
-	// Declared — Платформа объявляла такую область
-	Declared bool `json:"declared"`
-	// Granted — Область одобрена кабинетом. Ложь у собственных дверей установки (app:self, app:secrets, app:launch, finance:suggest): они есть у каждой установки и согласия не требуют, но обращения по ним — факт
-	Granted bool `json:"granted"`
-	// Calls — Сколько обращений пришлось на область за окно
-	Calls int64 `json:"calls"`
-	// LastUsedAt — Когда областью пользовались в последний раз В ОКНЕ. Отсутствие означает «за окно ни разу», а не «никогда»: журнал живёт 90 суток, а окно бывает короче
-	LastUsedAt *string `json:"last_used_at,omitempty"`
-	// Used — Обращения были. Отдельным полем, а не выводом из calls: читатель не должен выводить признак из числа и ошибаться в пользу разрешения
-	Used bool `json:"used"`
-}
-
-// SettingsAppVersion — Версия глазами кабинета: без манифеста целиком; лист согласия по версии отдаёт экран согласия
-type SettingsAppVersion struct {
-	ID      UUID                     `json:"id"`
-	Version string                   `json:"version"`
-	Status  PlatformAppVersionStatus `json:"status"`
-	// Channel — Канал, объявленный манифестом; пусто, если манифест канал не назвал
-	Channel     string                         `json:"channel"`
-	ReleasedAt  *string                        `json:"released_at,omitempty"`
-	Name        SettingsAppLocalizedText       `json:"name"`
-	Description SettingsAppLocalizedText       `json:"description"`
-	Permissions PlatformAppManifestPermissions `json:"permissions"`
 }
 
 type SettingsCompany struct {
@@ -16330,30 +9968,6 @@ type SettingsCompanyHead struct {
 	Position   *string `json:"position,omitempty"`
 }
 
-type SettingsCompanyInput struct {
-	BusinessID UUID `json:"business_id"`
-	// Name — Пробельное название отклоняется
-	Name      string  `json:"name"`
-	LegalName *string `json:"legal_name,omitempty"`
-	// EntityType — Если не передан, определяется по длине нормализованного ИНН
-	EntityType *string `json:"entity_type,omitempty"`
-	// INN — Проверяется контрольной цифрой; пустой ИНН отклоняется
-	INN        string  `json:"inn"`
-	KPP        *string `json:"kpp,omitempty"`
-	Ogrn       *string `json:"ogrn,omitempty"`
-	Okpo       *string `json:"okpo,omitempty"`
-	BranchCode *string `json:"branch_code,omitempty"`
-	// VATAccountingMode — Режим налога нового юрлица — становится первой версией «с начала учёта». У существующего юрлица режим меняется в учётной политике с датой; пусто — не менять, другое значение, чем действующее сегодня, отклоняется 409
-	VATAccountingMode *string                 `json:"vat_accounting_mode,omitempty"`
-	LegalAddress      *SettingsCompanyAddress `json:"legal_address,omitempty"`
-	Entrepreneur      *SettingsCompanyPerson  `json:"entrepreneur,omitempty"`
-	Head              *SettingsCompanyHead    `json:"head,omitempty"`
-	// Custom — Значения своих полей: не передано — не менять. Значение проверяется по типу графы; неподходящее — 422 с названиями граф
-	Custom map[string]json.RawMessage `json:"custom,omitempty"`
-	// ClosingControl — Включить или выключить контроль закрывающих документов по выданным авансам. Не передано — не менять
-	ClosingControl *bool `json:"closing_control,omitempty"`
-}
-
 type SettingsCompanyPage struct {
 	// Count — Число отданных строк, страниц у справочника нет
 	Count   int64             `json:"count"`
@@ -16364,68 +9978,6 @@ type SettingsCompanyPerson struct {
 	Surname    string `json:"surname"`
 	Name       string `json:"name"`
 	Patronymic string `json:"patronymic"`
-}
-
-type SettingsFieldDefinition struct {
-	ID         UUID   `json:"id"`
-	EntityType string `json:"entity_type"`
-	Key        string `json:"key"`
-	Label      string `json:"label"`
-	Type       string `json:"type"`
-	Required   bool   `json:"required"`
-	Dictionary *UUID  `json:"dictionary"`
-	Order      int64  `json:"order"`
-	IsActive   bool   `json:"is_active"`
-	Help       string `json:"help"`
-	// Group — Панель карточки, в которой показывается поле; пусто — общая панель дополнительных реквизитов
-	Group string `json:"group"`
-	// Pinned — Закреплённая характеристика: под названием в шапке карточки и столбцом каталога
-	Pinned bool `json:"pinned"`
-	// Filterable — Поле участвует в отборе каталога
-	Filterable bool `json:"filterable"`
-	// CategoryIds — Категории (элементы справочника product_categories), у товаров которых и их потомков поле показывается; пусто — у всех
-	CategoryIds []UUID `json:"category_ids"`
-	// UnitSuffix — Суффикс единицы после значения: кг, мм, мл
-	UnitSuffix string `json:"unit_suffix"`
-	// CreatedAt — Отметка времени как её печатает Postgres, а не RFC 3339
-	CreatedAt string `json:"created_at"`
-	// UpdatedAt — Отметка времени как её печатает Postgres, а не RFC 3339
-	UpdatedAt string `json:"updated_at"`
-}
-
-type SettingsFieldDefinitionInput struct {
-	EntityType string `json:"entity_type"`
-	Key        string `json:"key"`
-	Label      string `json:"label"`
-	// Type — Пустое значение подставляется как text
-	Type     *string `json:"type,omitempty"`
-	Required *bool   `json:"required,omitempty"`
-	// Dictionary — Справочник значений для типа select
-	Dictionary *UUID  `json:"dictionary,omitempty"`
-	Order      *int64 `json:"order,omitempty"`
-	// IsActive — Читается только при изменении; на заведении определение всегда действующее
-	IsActive *bool   `json:"is_active,omitempty"`
-	Help     *string `json:"help,omitempty"`
-	// Group — Панель карточки; пусто — общая панель дополнительных реквизитов
-	Group *string `json:"group,omitempty"`
-	// Pinned — Закрепить как характеристику: под названием в шапке карточки и столбцом каталога
-	Pinned *bool `json:"pinned,omitempty"`
-	// Filterable — Показывать в отборе каталога
-	Filterable *bool `json:"filterable,omitempty"`
-	// CategoryIds — Категории, у товаров которых и их потомков поле показывается; пусто — у всех
-	CategoryIds []UUID `json:"category_ids,omitempty"`
-	// UnitSuffix — Суффикс единицы после значения: кг, мм, мл
-	UnitSuffix *string `json:"unit_suffix,omitempty"`
-}
-
-type SettingsFieldDefinitionPage struct {
-	// Count — Число отданных строк, а не всего в базе; выборка обрезана 200 строками
-	Count   int64                     `json:"count"`
-	Results []SettingsFieldDefinition `json:"results"`
-}
-
-type SettingsFieldSchema struct {
-	Fields []SettingsFieldDefinition `json:"fields"`
 }
 
 type SettingsMember struct {
@@ -16445,40 +9997,10 @@ type SettingsMember struct {
 	IsActive  bool   `json:"is_active"`
 }
 
-type SettingsMemberCreateInput struct {
-	Username string `json:"username"`
-	// Password — Уходит во внешний сервис входа и в ответе не повторяется
-	Password string `json:"password"`
-	// FirstName — Полное имя человека; в ответе это поле называется full_name
-	FirstName *string `json:"first_name,omitempty"`
-	// BirthDate — Строго ГГГГ-ММ-ДД; пустая строка означает «не указана»
-	BirthDate *string `json:"birth_date,omitempty"`
-	AvatarURL *string `json:"avatar_url,omitempty"`
-	Role      *UUID   `json:"role,omitempty"`
-	// CompanyScope — Умолчание — all
-	CompanyScope *string `json:"company_scope,omitempty"`
-	Companies    []UUID  `json:"companies,omitempty"`
-}
-
 type SettingsMemberPage struct {
 	// Count — Число строк в results, а не общее число участников кабинета
 	Count   int64            `json:"count"`
 	Results []SettingsMember `json:"results"`
-}
-
-type SettingsMemberPatch struct {
-	// Username — Меняется и во внешнем сервисе входа
-	Username *string `json:"username,omitempty"`
-	FullName *string `json:"full_name,omitempty"`
-	// BirthDate — Строго ГГГГ-ММ-ДД; пустая строка снимает дату
-	BirthDate *string `json:"birth_date,omitempty"`
-	AvatarURL *string `json:"avatar_url,omitempty"`
-	// Role — null или пустая строка снимают роль
-	Role *UUID `json:"role,omitempty"`
-	// CompanyScope — Пустая строка игнорируется
-	CompanyScope *string `json:"company_scope,omitempty"`
-	Companies    []UUID  `json:"companies,omitempty"`
-	IsActive     *bool   `json:"is_active,omitempty"`
 }
 
 type SettingsRole struct {
@@ -16493,142 +10015,15 @@ type SettingsRole struct {
 	RecordRules map[string]string `json:"record_rules"`
 }
 
-type SettingsRoleActivationInput struct {
-	// IsActive — true включает роль, false отключает; это переключатель, а не одностороннее включение
-	IsActive bool `json:"is_active"`
-}
-
-type SettingsRoleActivationResult struct {
-	ID       UUID `json:"id"`
-	IsActive bool `json:"is_active"`
-}
-
-type SettingsRoleInput struct {
-	// Name — Пробелы по краям срезаются; пустое имя отклоняется
-	Name string `json:"name"`
-	// IsAdmin — Через этот маршрут остаётся false: административную роль создать или назначить нельзя
-	IsAdmin *bool `json:"is_admin,omitempty"`
-	// Permissions — Отсутствие поля равно пустому списку прав
-	Permissions []string `json:"permissions,omitempty"`
-	// RecordRules — Отсутствие поля равно пустой карте
-	RecordRules map[string]string `json:"record_rules,omitempty"`
-}
-
 type SettingsRolePage struct {
 	// Count — Число строк в results, а не общее число ролей кабинета
 	Count   int64          `json:"count"`
 	Results []SettingsRole `json:"results"`
 }
 
-type SettingsRoleTransferInput struct {
-	// TargetRoleID — Действующая роль-получатель; обязательна, нулевой UUID отклоняется
-	TargetRoleID UUID `json:"target_role_id"`
-}
-
-type SettingsRoleTransferResult struct {
-	// Count — Сколько участников переставлено на целевую роль
-	Count        int64 `json:"count"`
-	TargetRoleID UUID  `json:"target_role_id"`
-}
-
-type SettingsUsage struct {
-	Snapshot *BillingUsageSnapshot `json:"snapshot"`
-	// Modules — Разбивка по убыванию занятого; пустая, пока снимка нет
-	Modules []BillingUsageModuleBytes `json:"modules"`
-}
-
 type SettingsVatRates struct {
 	// Rates — Фиксированный профиль 22, 20, 10 и 0 процентов
 	Rates []int64 `json:"rates"`
-}
-
-type SignupAccepted struct {
-	// Status — Единственное значение: исход не различается снаружи ни телом, ни кодом
-	Status string `json:"status"`
-	// Detail — Условная формулировка «если на этот адрес можно завести кабинет — мы отправили письмо»: она правдива при любом исходе
-	Detail string `json:"detail"`
-}
-
-type SignupAttributionAccepted struct {
-	Status string `json:"status"`
-}
-
-type SignupAttributionTouchInput struct {
-	// EventID — Клиентский ключ идемпотентности одного касания
-	EventID UUID `json:"event_id"`
-	// VisitorID — Непрозрачный first-party идентификатор посетителя без ПДн
-	VisitorID UUID `json:"visitor_id"`
-	// SessionID — Непрозрачный идентификатор браузерной сессии
-	SessionID UUID `json:"session_id"`
-	// LandingPath — Только локальный путь без query и fragment
-	LandingPath string `json:"landing_path"`
-	// Referrer — Сервер оставляет только hostname и только при согласии на аналитику
-	Referrer     *string `json:"referrer,omitempty"`
-	UtmSource    *string `json:"utm_source,omitempty"`
-	UtmMedium    *string `json:"utm_medium,omitempty"`
-	UtmCampaign  *string `json:"utm_campaign,omitempty"`
-	UtmContent   *string `json:"utm_content,omitempty"`
-	UtmTerm      *string `json:"utm_term,omitempty"`
-	ReferralCode *string `json:"referral_code,omitempty"`
-	// Analytics — Есть действующее согласие текущей редакции cookie-политики
-	Analytics bool `json:"analytics"`
-	// ConsentVersion — Редакция cookie-политики; обязательна, когда analytics=true
-	ConsentVersion *string `json:"consent_version,omitempty"`
-}
-
-type SignupRequestInfo struct {
-	Email       string `json:"email"`
-	CompanyName string `json:"company_name"`
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
-	// SuggestedSlug — Свободный адрес будущего кабинета на момент чтения
-	SuggestedSlug string `json:"suggested_slug"`
-	Status        string `json:"status"`
-	IsExpired     bool   `json:"is_expired"`
-	// TenantSlug — Адрес уже заведённого кабинета; пусто, пока его нет
-	TenantSlug string `json:"tenant_slug"`
-	// ProvisioningPending — Кабинет заведён, а его база не поднялась: на экране нужна кнопка повтора, а не форма
-	ProvisioningPending bool `json:"provisioning_pending"`
-	// AccountExists — У адреса уже есть учётная запись. Владельцу ссылки это известно и так; наружу без ссылки не уходит
-	AccountExists bool `json:"account_exists"`
-	// SessionState — Состояние активной browser-сессии относительно адреса ссылки
-	SessionState string `json:"session_state"`
-	SessionEmail string `json:"session_email"`
-}
-
-type SignupRequestInput struct {
-	// Email — Рабочая почта будущего владельца кабинета
-	Email string `json:"email"`
-	// CompanyName — Название будущего кабинета
-	CompanyName string `json:"company_name"`
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
-	// Phone — Номер с +7, 7, 8 или 9; сервер приводит к +7XXXXXXXXXX
-	Phone string `json:"phone"`
-	// Slug — Исторический необязательный параметр API; публичная форма его не показывает
-	Slug *string `json:"slug,omitempty"`
-	// AttributionVisitorID — Необязательный opaque visitor ID: по нему сервер фиксирует атрибуцию заявки; неверное значение не блокирует регистрацию
-	AttributionVisitorID *UUID `json:"attribution_visitor_id,omitempty"`
-	// Website — Ловушка для роботов: поле скрыто на форме, человек его не заполняет. Заполненное принимается как успех, но письма не отправляет
-	Website *string `json:"website,omitempty"`
-}
-
-type SignupSession struct {
-	// Token — ERP-сессия владельца: тот же go_-токен, что выдаёт мост Kratos-сессии
-	Token string            `json:"token"`
-	User  SignupSessionUser `json:"user"`
-	// Memberships — Кабинеты человека; у нового владельца ровно один
-	Memberships []map[string]json.RawMessage `json:"memberships"`
-	Source      *string                      `json:"source,omitempty"`
-}
-
-type SignupSessionUser struct {
-	Username        *string  `json:"username,omitempty"`
-	Name            *string  `json:"name,omitempty"`
-	AvatarURL       *string  `json:"avatar_url,omitempty"`
-	PlatformRole    *string  `json:"platform_role,omitempty"`
-	PlatformScopes  []string `json:"platform_scopes,omitempty"`
-	IsPlatformAdmin *bool    `json:"is_platform_admin,omitempty"`
 }
 
 type SprintAgingTask struct {
@@ -16771,16 +10166,6 @@ type StatusUpdatePage struct {
 	Results []StatusUpdate `json:"results"`
 }
 
-type StatusUpdatePatch struct {
-	OwnerType  *CycleOwnerType `json:"owner_type,omitempty"`
-	OwnerID    *string         `json:"owner_id,omitempty"`
-	Section    *string         `json:"section,omitempty"`
-	Project    *string         `json:"project,omitempty"`
-	Health     *StatusHealth   `json:"health,omitempty"`
-	Body       *string         `json:"body,omitempty"`
-	IsArchived *bool           `json:"is_archived,omitempty"`
-}
-
 // StockAccountTransferCreate — Тело черновика переноса остатка; строки подбирает сервер.
 type StockAccountTransferCreate struct {
 	// Date — Пусто или отсутствует означает рабочую дату кабинета
@@ -16887,21 +10272,6 @@ type StockAssemblySpecStatus struct {
 	Status string `json:"status"`
 }
 
-type StockAvailability struct {
-	ProductID UUID `json:"product_id"`
-	// OnHand — Физический остаток на складе
-	OnHand string `json:"on_hand"`
-	// Reserved — Держат резервы
-	Reserved string `json:"reserved"`
-	// Available — Свободно: остаток минус резерв, не меньше нуля
-	Available string                 `json:"available"`
-	Holds     []StockReservationHold `json:"holds"`
-}
-
-type StockAvailabilityList struct {
-	Results []StockAvailability `json:"results"`
-}
-
 type StockBatch struct {
 	ID UUID `json:"id"`
 	// BusinessID — Бизнес партии — учётная единица, которой принадлежит товар
@@ -16932,16 +10302,6 @@ type StockBatchPage struct {
 	Limit   int64        `json:"limit"`
 	Offset  int64        `json:"offset"`
 	Results []StockBatch `json:"results"`
-}
-
-type StockBusinessRef struct {
-	ID   UUID   `json:"id"`
-	Name string `json:"name"`
-}
-
-type StockBusinessRefPage struct {
-	Count   int64              `json:"count"`
-	Results []StockBusinessRef `json:"results"`
 }
 
 // StockClaimWriteoffCreate — Тело черновика списания претензии поставщику по недостаче приёмки.
@@ -16978,18 +10338,6 @@ type StockCompanyPolicyPatch struct {
 	DefaultWarehouseID *UUID `json:"default_warehouse_id,omitempty"`
 	// ClosedThrough — Строка YYYY-MM-DD; null снимает закрытие периода
 	ClosedThrough *string `json:"closed_through,omitempty"`
-}
-
-type StockCompanyRef struct {
-	ID         UUID   `json:"id"`
-	Name       string `json:"name"`
-	BusinessID UUID   `json:"business_id"`
-	IsActive   bool   `json:"is_active"`
-}
-
-type StockCompanyRefPage struct {
-	Count   int64             `json:"count"`
-	Results []StockCompanyRef `json:"results"`
 }
 
 type StockDocumentCreate struct {
@@ -17571,22 +10919,6 @@ type StockReceiptCorrectionCreateSupplierDocument struct {
 	Date string `json:"date"`
 }
 
-type StockReceiptVATTerms struct {
-	// Applies — Обязательно ли на дату «в т.ч. НДС»: бизнес очищает суммы и юрлицо принимает налог к вычету
-	Applies bool `json:"applies"`
-	// Mode — Режим налога юрлица на дату; пусто — не выбран
-	Mode string `json:"mode"`
-	// Currency — Валюта учёта на дату документа
-	Currency string `json:"currency"`
-}
-
-type StockReceiptVATTermsInput struct {
-	CompanyID  *UUID `json:"company_id,omitempty"`
-	BusinessID *UUID `json:"business_id,omitempty"`
-	// Date — Дата документа: от неё зависит, обязательно ли «в т.ч. НДС»
-	Date string `json:"date"`
-}
-
 type StockReorderRule struct {
 	ID           UUID   `json:"id"`
 	BusinessID   UUID   `json:"business_id"`
@@ -17657,48 +10989,6 @@ type StockReorderRulePatch struct {
 	IsActive            *bool   `json:"is_active,omitempty"`
 }
 
-type StockReportDrilldown struct {
-	ProductID UUID `json:"product_id"`
-	// Count — Число движений регистра, а не строк отчёта
-	Count   int64                       `json:"count"`
-	Limit   int64                       `json:"limit"`
-	Offset  int64                       `json:"offset"`
-	Rows    []StockReportRow            `json:"rows"`
-	Entries []StockReportDrilldownEntry `json:"entries"`
-}
-
-type StockReportDrilldownEntry struct {
-	ID UUID `json:"id"`
-	// RegisterKey — Какой регистр двинул документ: остаток, резерв покупателя или ожидаемый приход
-	RegisterKey string `json:"register_key"`
-	// RegisterCount — Сколько записей ЭТОГО регистра отвечает отбору. Окно выдачи своё у каждого регистра, поэтому limit режет каждый по отдельности, а это число говорит, сколько осталось за краем.
-	RegisterCount int64 `json:"register_count"`
-	// WarehouseID — Склад или зона движения
-	WarehouseID   *UUID  `json:"warehouse_id"`
-	WarehouseName string `json:"warehouse_name"`
-	// WarehouseParentName — Склад зоны; пусто, если движение на самом складе
-	WarehouseParentName string `json:"warehouse_parent_name"`
-	// CompanyID — Юрлицо движения; пусто у неофициального контура (ERP-704)
-	CompanyID   *UUID  `json:"company_id"`
-	CompanyName string `json:"company_name"`
-	// BusinessName — Учётная единица движения: у неофициального остатка юрлица нет, и разрез называется бизнесом (ERP-704)
-	BusinessName      string                     `json:"business_name"`
-	RegistrarID       UUID                       `json:"registrar_id"`
-	RegistrarNumber   string                     `json:"registrar_number"`
-	RegistrarTypeKey  string                     `json:"registrar_type_key"`
-	RegistrarTypeName string                     `json:"registrar_type_name"`
-	RegistrarStatus   string                     `json:"registrar_status"`
-	Date              string                     `json:"date"`
-	Sign              int64                      `json:"sign"`
-	Dims              map[string]json.RawMessage `json:"dims"`
-	Values            map[string]json.RawMessage `json:"values"`
-	Unit              string                     `json:"unit"`
-	// ContactID — Контрагент документа-регистратора: поставщик приёмки, покупатель отгрузки
-	ContactID *UUID `json:"contact_id"`
-	// ContactName — Название контрагента; пусто без контрагента
-	ContactName string `json:"contact_name"`
-}
-
 // StockReportExportRequest — Отбор экрана остатков и его видимые колонки. Имена полей повторяют параметры GET /api/v1/stock/report/stocks: файл обязан содержать то же, что видел человек, и одно имя на два входа защищает от расхождения. Отличается только перенос: список складов идёт массивом, а не строкой через запятую, и дополнительные поля — объектом вместо параметров cf.*. Колонки берутся из перечня; неизвестная колонка — 400, а не молча пропущенная. Опознавательные колонки (бизнес, юрлицо, склад и зона с кодами, товар, SKU, единица) пишутся всегда, и порядок колонок в файле повторяет экран. Выборка обходится постранично целиком; слишком широкая отклоняется как 400 — книга собирается в памяти, и потолок общий с загрузкой.
 type StockReportExportRequest struct {
 	Mode           *string           `json:"mode,omitempty"`
@@ -17737,31 +11027,6 @@ type StockReportOverdueReservation struct {
 	// RemainingQty — Decimal string
 	RemainingQty string `json:"remaining_qty"`
 	ProductCount int64  `json:"product_count"`
-}
-
-type StockReportOverdueSupplierOrder struct {
-	DocumentID UUID   `json:"document_id"`
-	Number     string `json:"number"`
-	Date       string `json:"date"`
-	DeliveryAt string `json:"delivery_at"`
-	// BusinessID — Бизнес заказа — учётная единица строки, он есть всегда
-	BusinessID   map[string]json.RawMessage `json:"business_id"`
-	BusinessName string                     `json:"business_name"`
-	// CompanyID — Юрлицо заказа — разрез официального контура. У неофициального заказа его нет, и тогда поле пустое (ERP-704).
-	CompanyID     *UUID  `json:"company_id"`
-	CompanyName   string `json:"company_name"`
-	WarehouseID   UUID   `json:"warehouse_id"`
-	WarehouseName string `json:"warehouse_name"`
-	SupplierID    UUID   `json:"supplier_id"`
-	SupplierName  string `json:"supplier_name"`
-	// RemainingQty — Decimal string. Недовезённый хвост заказа по регистру ожидания.
-	RemainingQty string `json:"remaining_qty"`
-	ProductCount int64  `json:"product_count"`
-}
-
-type StockReportOverdueSupplierOrderPage struct {
-	Count   int64                             `json:"count"`
-	Results []StockReportOverdueSupplierOrder `json:"results"`
 }
 
 type StockReportPage struct {
@@ -17950,15 +11215,6 @@ type StockReportWarehouseTotal struct {
 	Amount string `json:"amount"`
 }
 
-// StockReservationHold — Документ, который держит часть остатка — резерв под заказ или производственный резерв.
-type StockReservationHold struct {
-	DocumentID UUID    `json:"document_id"`
-	Number     string  `json:"number"`
-	TypeKey    string  `json:"type_key"`
-	Qty        string  `json:"qty"`
-	ExpiresAt  *string `json:"expires_at,omitempty"`
-}
-
 type StockScanResult struct {
 	IdentifierID   UUID   `json:"identifier_id"`
 	Barcode        string `json:"barcode"`
@@ -18076,19 +11332,6 @@ type StockWarehouse struct {
 	UpdatedAt  string `json:"updated_at"`
 }
 
-type StockWarehouseBlocker struct {
-	Register  string `json:"register"`
-	CompanyID UUID   `json:"company_id"`
-	ProductID UUID   `json:"product_id"`
-	// Quantity — Ненулевой остаток decimal
-	Quantity string `json:"quantity"`
-}
-
-type StockWarehouseBlockerCheck struct {
-	Allowed  bool                    `json:"allowed"`
-	Blockers []StockWarehouseBlocker `json:"blockers"`
-}
-
 type StockWarehouseInput struct {
 	// Code — Приводится к верхнему регистру
 	Code                  string                     `json:"code"`
@@ -18180,27 +11423,6 @@ type Subtask struct {
 type SupplierDocument struct {
 	Number *string `json:"number,omitempty"`
 	Date   *string `json:"date,omitempty"`
-}
-
-type Tag struct {
-	ID          UUID   `json:"id"`
-	Project     *UUID  `json:"project"`
-	Name        string `json:"name"`
-	Color       string `json:"color"`
-	Description string `json:"description"`
-	IsArchived  bool   `json:"is_archived"`
-}
-
-// TagAttach — Передайте `tag_id` существующей метки либо `name` для создания новой.
-type TagAttach struct {
-	TagID *UUID   `json:"tag_id,omitempty"`
-	Name  *string `json:"name,omitempty"`
-	Color *string `json:"color,omitempty"`
-}
-
-type TagPage struct {
-	Count   int64 `json:"count"`
-	Results []Tag `json:"results"`
 }
 
 type Task struct {
@@ -18396,26 +11618,6 @@ type TaskTemplatePage struct {
 	Results []TaskTemplate `json:"results"`
 }
 
-type TaskTemplateUpdate struct {
-	Section            *UUID                      `json:"section,omitempty"`
-	Status             *UUID                      `json:"status,omitempty"`
-	Name               *string                    `json:"name,omitempty"`
-	Title              *string                    `json:"title,omitempty"`
-	Description        *string                    `json:"description,omitempty"`
-	Priority           *TaskPriority              `json:"priority,omitempty"`
-	Executor           *int64                     `json:"executor,omitempty"`
-	Assignee           *int64                     `json:"assignee,omitempty"`
-	Estimate           *float64                   `json:"estimate,omitempty"`
-	StartOffsetDays    *int64                     `json:"start_offset_days,omitempty"`
-	DueOffsetDays      *int64                     `json:"due_offset_days,omitempty"`
-	Recurrence         *TemplateRecurrence        `json:"recurrence,omitempty"`
-	RecurrenceInterval *int64                     `json:"recurrence_interval,omitempty"`
-	RecurrenceUntil    *string                    `json:"recurrence_until,omitempty"`
-	NextRunAt          *string                    `json:"next_run_at,omitempty"`
-	IsActive           *bool                      `json:"is_active,omitempty"`
-	Custom             map[string]json.RawMessage `json:"custom,omitempty"`
-}
-
 type TaskUpdate struct {
 	Title              *string       `json:"title,omitempty"`
 	Description        *string       `json:"description,omitempty"`
@@ -18470,21 +11672,6 @@ type TaskWatcher struct {
 	ID       int64   `json:"id"`
 	User     int64   `json:"user"`
 	UserName *string `json:"user_name"`
-}
-
-type TasksSnapshot struct {
-	FetchedAt    string               `json:"fetched_at"`
-	Revision     string               `json:"revision"`
-	Projects     []Project            `json:"projects"`
-	Sections     []Section            `json:"sections"`
-	Statuses     []Status             `json:"statuses"`
-	Tags         []TaskTagCatalogItem `json:"tags"`
-	Members      []Member             `json:"members"`
-	Views        []TaskView           `json:"views"`
-	Cycles       []Cycle              `json:"cycles"`
-	Tasks        []Task               `json:"tasks"`
-	TasksLimit   *int64               `json:"tasks_limit,omitempty"`
-	TasksHasMore bool                 `json:"tasks_has_more"`
 }
 
 type TeamFlowTotals struct {
@@ -18563,36 +11750,60 @@ type TemplateRunResult struct {
 	Reason   *string      `json:"reason,omitempty"`
 }
 
-// TenantCredentialRequest — Одно обращение по машинному ключу глазами кабинета. Тела запроса, тела ответа, значения секрета, фактического пути и идентификаторов прочитанных строк здесь нет — и не потому, что кабинету не доверяют, а потому, что этих данных нет в самом журнале.
-type TenantCredentialRequest struct {
-	ID UUID `json:"id"`
-	// Principal — Установка расширения или ключ кабинета. Человеческих сессий в этом журнале нет вовсе: у человека своё имя, своя роль и свой аудит
-	Principal      string `json:"principal"`
-	InstallationID *UUID  `json:"installation_id,omitempty"`
-	TokenID        *UUID  `json:"token_id,omitempty"`
-	APIKeyID       *UUID  `json:"api_key_id,omitempty"`
-	Method         string `json:"method"`
-	// Route — ШАБЛОН маршрута, а не путь: путь несёт идентификаторы прочитанных строк, а строка запроса — значения фильтров
-	Route string `json:"route"`
-	// Entity — Сущность, вычисленная из шаблона
-	Entity string `json:"entity"`
-	Shape  string `json:"shape"`
-	// Rows — Сколько строк унёс ответ. Пусто означает «неизвестно», а не «ноль»
-	Rows   *int64 `json:"rows,omitempty"`
-	Bytes  int64  `json:"bytes"`
-	Status int64  `json:"status"`
-	// Outcome — Машинный код исхода из закрытого списка: класс ответа либо названная причина отказа внешнего контура. Свободного текста в журнале нет ни одного поля
-	Outcome    string `json:"outcome"`
-	DurationMs int64  `json:"duration_ms"`
-	OccurredAt string `json:"occurred_at"`
+// TransferInstructions — Как передать байты. Выдаётся один раз, при открытии сессии.
+type TransferInstructions struct {
+	// Mode — post — один multipart POST; parts — PUT каждой части; api — PUT через этот API с авторизацией
+	Mode   string  `json:"mode"`
+	URL    *string `json:"url,omitempty"`
+	Method *string `json:"method,omitempty"`
+	// Fields — Поля формы для POST; файл идёт после них последним полем
+	Fields map[string]string `json:"fields,omitempty"`
+	// FileField — Имя поля формы для файла
+	FileField *string           `json:"file_field,omitempty"`
+	Headers   map[string]string `json:"headers,omitempty"`
+	PartBytes *int64            `json:"part_bytes,omitempty"`
+	PartCount *int64            `json:"part_count,omitempty"`
+	// DirectUrls — Подписанный адрес каждой части по её номеру, начиная с 1
+	DirectUrls map[string]string `json:"direct_urls,omitempty"`
+	// RequiresAuthorization — true — адрес требует токен API, агенту по MCP этот путь недоступен
+	RequiresAuthorization bool   `json:"requires_authorization"`
+	MaxBytes              int64  `json:"max_bytes"`
+	ExpiresAt             string `json:"expires_at"`
 }
 
-type TenantCredentialRequestPage struct {
-	Requests []TenantCredentialRequest `json:"requests"`
-	Gaps     []CredentialRequestGap    `json:"gaps"`
-	Limit    int64                     `json:"limit"`
-	Offset   int64                     `json:"offset"`
-	HasMore  bool                      `json:"has_more"`
+// TransferSession — Сессия загрузки файла по подписанному адресу хранилища. Ключи хранилища наружу не отдаются.
+type TransferSession struct {
+	ID            UUID              `json:"id"`
+	OwnerType     string            `json:"owner_type"`
+	OwnerID       *string           `json:"owner_id,omitempty"`
+	Name          string            `json:"name"`
+	MimeType      string            `json:"mime_type"`
+	SizeBytes     int64             `json:"size_bytes"`
+	Sha256        *string           `json:"sha256,omitempty"`
+	Attributes    map[string]string `json:"attributes,omitempty"`
+	Status        string            `json:"status"`
+	Failure       *string           `json:"failure,omitempty"`
+	FailureDetail *string           `json:"failure_detail,omitempty"`
+	ScanStatus    *string           `json:"scan_status,omitempty"`
+	ScanVerdict   *string           `json:"scan_verdict,omitempty"`
+	// PublishedRef — Номер строки, заведённой по файлу; у почты — id загрузки для upload_ids
+	PublishedRef *string               `json:"published_ref,omitempty"`
+	ExpiresAt    string                `json:"expires_at"`
+	CreatedAt    string                `json:"created_at"`
+	CompletedAt  *string               `json:"completed_at,omitempty"`
+	Upload       *TransferInstructions `json:"upload,omitempty"`
+}
+
+// TransferUploadRequest — Заявка на сессию загрузки файла по подписанному адресу.
+type TransferUploadRequest struct {
+	// Name — Имя файла с расширением
+	Name string `json:"name"`
+	// MimeType — Тип содержимого; по умолчанию application/octet-stream
+	MimeType *string `json:"mime_type,omitempty"`
+	// SizeBytes — Точный размер файла в байтах
+	SizeBytes int64 `json:"size_bytes"`
+	// Sha256 — Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками
+	Sha256 *string `json:"sha256,omitempty"`
 }
 
 type UUID = string
@@ -18629,13 +11840,6 @@ type AutomationRuleTestResponse struct {
 	Problem *AutomationRuleProblem   `json:"problem,omitempty"`
 }
 
-type CoreGetAccountingStartResponse struct {
-	// StartedAt — День первой проводки, ГГГГ-ММ-ДД. Пусто — учёт ещё не начинался.
-	StartedAt string `json:"started_at"`
-	// OpeningDate — День накануне начала учёта, ГГГГ-ММ-ДД. Пусто, когда учёта ещё не было.
-	OpeningDate string `json:"opening_date"`
-}
-
 type CoreListBusinessesResponse struct {
 	Results []CoreBusiness `json:"results"`
 }
@@ -18646,14 +11850,6 @@ type CoreSetBusinessActiveRequest struct {
 
 type CoreListBusinessOwnershipResponse struct {
 	Results []CoreOwnershipVersion `json:"results"`
-}
-
-type DocflowLookupParticipantRequest struct {
-	ContactID UUID `json:"contact_id"`
-}
-
-type DocflowLookupParticipantResponse struct {
-	ParticipantID string `json:"participant_id"`
 }
 
 type DocflowFlowContactStatsResponse struct {
@@ -18681,53 +11877,6 @@ type DocflowFlowDocumentRevisionsResponseItemsItem struct {
 	HasApproval bool    `json:"has_approval"`
 }
 
-type DocflowPreviewMessageActionResponse struct {
-	Next []DocflowPreviewMessageActionResponseNextItem `json:"next"`
-}
-
-type DocflowPreviewMessageActionResponseNextItem struct {
-	Name      string   `json:"name"`
-	Executors []string `json:"executors"`
-}
-
-type DocflowLinkIntakeCounterpartyRequest struct {
-	// Contact — Контрагент справочника, с которым сводится участник обмена
-	Contact map[string]json.RawMessage `json:"contact"`
-}
-
-type DocflowRefreshMessageResponse struct {
-	Refreshed bool `json:"refreshed"`
-}
-
-type FilesAccessCheckRequest struct {
-	FileIds []UUID `json:"file_ids"`
-}
-
-type FilesAccessCheckResponse struct {
-	Items []FilesAccessCheckResponseItemsItem `json:"items"`
-}
-
-type FilesAccessCheckResponseItemsItem struct {
-	ID      UUID `json:"id"`
-	Allowed bool `json:"allowed"`
-	// Reason — Причина отказа. «Нет прав» может смениться, «нет файла» — окончательно.
-	Reason     *string `json:"reason,omitempty"`
-	VersionID  *UUID   `json:"version_id,omitempty"`
-	Name       *string `json:"name,omitempty"`
-	SizeBytes  *int64  `json:"size_bytes,omitempty"`
-	ScanStatus *string `json:"scan_status,omitempty"`
-}
-
-type FilesContentLinkResponse struct {
-	URL string `json:"url"`
-	// Direct — true — адрес ведёт прямо в хранилище; false — на этот API, с заголовком авторизации
-	Direct    bool    `json:"direct"`
-	ExpiresAt *string `json:"expires_at,omitempty"`
-	Name      string  `json:"name"`
-	MimeType  string  `json:"mime_type"`
-	SizeBytes *int64  `json:"size_bytes,omitempty"`
-}
-
 type FilesListRootsResponse struct {
 	Roots []FilesFolder `json:"roots"`
 }
@@ -18736,18 +11885,10 @@ type FilesSearchResponse struct {
 	Results []FilesSearchHit `json:"results"`
 }
 
-type FilesListSharesResponse struct {
-	Shares []FilesShare `json:"shares"`
-}
-
 type FilesCreateShortcutRequest struct {
 	FolderID UUID   `json:"folder_id"`
 	Name     string `json:"name"`
 	URL      string `json:"url"`
-}
-
-type FilesPurgeTrashResponse struct {
-	Purged int64 `json:"purged"`
 }
 
 type FinanceListDividendAccessUsersResponse struct {
@@ -18851,16 +11992,6 @@ type MailFlagMessageRequest struct {
 
 type MailMoveMessageRequest struct {
 	FolderID UUID `json:"folder_id"`
-}
-
-type MailCompleteGoogleOAuthRequest struct {
-	State string `json:"state"`
-	Code  string `json:"code"`
-}
-
-type MailStartGoogleOAuthResponse struct {
-	AuthURL  *string `json:"auth_url,omitempty"`
-	Provider *string `json:"provider,omitempty"`
 }
 
 type MailListPeopleResponse struct {

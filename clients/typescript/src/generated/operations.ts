@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3d8fe8e5d99e9e219b8884b04b395a9a841c44363a0026e7994bf47f11d7da3).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5e319aa672e15fb99dfef09b4d187f87e0a9f9ef474eaebfafc66fcb05834ec6).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -31,6 +31,13 @@ export interface OperationTypes {
   appDocflowCancelSalesOrder: {
     params: { "id": models.UUID };
     query: Record<string, never>;
+    body: never;
+    response: models.DocflowSalesOrder;
+  };
+  /** GET /api/v1/app/docflow/orders/lookup — Найти свой заказ по внешнему номеру */
+  appDocflowFindSalesOrderByExternalID: {
+    params: Record<string, never>;
+    query: { "external_id": string };
     body: never;
     response: models.DocflowSalesOrder;
   };
@@ -76,7 +83,21 @@ export interface OperationTypes {
     body: never;
     response: models.DocflowOrderImportPage;
   };
-  /** POST /api/v1/app/docflow/orders/{id}/payments — Подтвердить эквайринг по своему заказу приложения */
+  /** GET /api/v1/app/docflow/orders/{orderId}/invoices/{documentId}/print — Получить печатную форму своего счёта по заказу */
+  appDocflowPrintOrderInvoice: {
+    params: { "documentId": models.UUID; "orderId": models.UUID };
+    query: { "facsimile"?: boolean; "format"?: "html" | "pdf" };
+    body: never;
+    response: void;
+  };
+  /** GET /api/v1/app/docflow/orders/{orderId}/upds/{documentId}/print — Получить визуальную печатную форму УПД своего заказа */
+  appDocflowPrintOrderUPD: {
+    params: { "documentId": models.UUID; "orderId": models.UUID };
+    query: { "format"?: "html" | "pdf" };
+    body: never;
+    response: void;
+  };
+  /** POST /api/v1/app/docflow/orders/{id}/payments — Подтвердить эквайринг по заказу приложения (устаревший путь) */
   appDocflowRecordSalesOrderPayment: {
     params: { "id": models.UUID };
     query: Record<string, never>;
@@ -117,6 +138,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.FinanceOperation;
+  };
+  /** POST /api/v1/app/finance/acquiring/captures — Записать подтверждённое списание карты по продаже приложения */
+  appFinanceRecordAcquiringCapture: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FinanceAcquiringCaptureInput;
+    response: models.FinanceAcquiringCaptureResult;
   };
   /** POST /api/v1/app/finance/transactions/{id}/classification-suggestions — Предложить классификацию финансовой операции */
   appFinanceSuggestTransactionClassification: {
@@ -202,33 +230,12 @@ export interface OperationTypes {
     body: never;
     response: models.AutomationRulesResponse;
   };
-  /** GET /api/v1/billing/public/catalog — Получить публичную витрину тарифов */
-  billingPublicCatalog: {
-    params: Record<string, never>;
+  /** POST /api/v1/bank/transactions/{id}/mark-deleted — Пометить банковскую операцию на удаление (исторический адрес) */
+  bankMarkTransactionDeleted: {
+    params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
-    response: models.BillingPublicCatalog;
-  };
-  /** POST /api/v1/calendar/public/{slug}/book — Забронировать свободный слот */
-  calendarBookPublicSlot: {
-    params: { "slug": string };
-    query: Record<string, never>;
-    body: models.CalendarPublicBookInput;
-    response: models.CalendarPublicBookResult;
-  };
-  /** POST /api/v1/calendar/connectors/google/oauth/complete — Завершить подключение Google Calendar */
-  calendarCompleteGoogleOAuth: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CalendarOAuthCompleteInput;
-    response: models.CalendarConnector;
-  };
-  /** POST /api/v1/calendar/connectors/office365/oauth/complete — Завершить подключение Microsoft 365 Calendar */
-  calendarCompleteOffice365OAuth: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CalendarOAuthCompleteInput;
-    response: models.CalendarConnector;
+    response: models.CoreDocument;
   };
   /** POST /api/v1/calendar/availability — Создать правило рабочего времени */
   calendarCreateAvailability: {
@@ -307,27 +314,6 @@ export interface OperationTypes {
     body: never;
     response: models.CalendarEventEnvelope;
   };
-  /** GET /api/v1/calendar/public/{slug} — Получить безопасную карточку публичной ссылки */
-  calendarGetPublicBookingLink: {
-    params: { "slug": string };
-    query: Record<string, never>;
-    body: never;
-    response: models.CalendarPublicBookingLink;
-  };
-  /** GET /api/v1/calendar/public/{slug}/slots — Получить свободные слоты публичной ссылки */
-  calendarGetPublicBookingSlots: {
-    params: { "slug": string };
-    query: Record<string, never>;
-    body: never;
-    response: models.CalendarSlotPage;
-  };
-  /** GET /api/v1/calendar/push/config — Получить публичный ключ Web Push */
-  calendarGetPushConfig: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CalendarWebPushConfig;
-  };
   /** GET /api/v1/calendar/settings — Получить личные настройки календаря */
   calendarGetSettings: {
     params: Record<string, never>;
@@ -391,47 +377,12 @@ export interface OperationTypes {
     body: models.CalendarEventResponseInput;
     response: models.CalendarEventEnvelope;
   };
-  /** GET /api/v1/calendar/connectors/google/oauth/start — Начать подключение Google Calendar */
-  calendarStartGoogleOAuth: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CalendarOAuthStart;
-  };
-  /** GET /api/v1/calendar/connectors/office365/oauth/start — Начать подключение Microsoft 365 Calendar */
-  calendarStartOffice365OAuth: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CalendarOAuthStart;
-  };
-  /** POST /api/v1/calendar/push/subscriptions — Зарегистрировать Web Push-подписку устройства */
-  calendarSubscribePush: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CalendarWebPushSubscription;
-    response: models.OK;
-  };
   /** POST /api/v1/calendar/connectors/{id}/sync — Запустить ручную синхронизацию коннектора */
   calendarSyncConnector: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.CalendarConnectorSyncInput;
     response: models.CalendarSyncResult;
-  };
-  /** POST /api/v1/calendar/push/test — Отправить пробное уведомление в указанное устройство */
-  calendarTestPush: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CalendarWebPushUnsubscribe;
-    response: models.CalendarWebPushTestResult;
-  };
-  /** DELETE /api/v1/calendar/push/subscriptions — Отозвать Web Push-подписку устройства */
-  calendarUnsubscribePush: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CalendarWebPushUnsubscribe;
-    response: models.OK;
   };
   /** PATCH /api/v1/calendar/availability/{id} — Частично изменить правило рабочего времени */
   calendarUpdateAvailability: {
@@ -461,13 +412,6 @@ export interface OperationTypes {
     body: models.CalendarEventPatch;
     response: models.CalendarEventEnvelope;
   };
-  /** POST /api/v1/chat/conversations/{id}/members — Добавить человека в группу */
-  chatAddGroupMember: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.ChatAddMember;
-    response: models.ChatMemberChangeResult;
-  };
   /** PATCH /api/v1/chat/conversations/{id}/notification-mode — Изменить режим уведомлений чата */
   chatChangeNotificationMode: {
     params: { "id": models.UUID };
@@ -482,61 +426,12 @@ export interface OperationTypes {
     body: never;
     response: models.ChatReceiptState;
   };
-  /** POST /api/v1/chat/folders — Создать личную папку списка бесед */
-  chatCreateFolder: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.ChatSaveFolder;
-    response: models.ChatFolder;
-  };
   /** POST /api/v1/chat/conversations — Создать групповой чат */
   chatCreateGroup: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.ChatCreateGroup;
     response: models.ChatCreateGroupResult;
-  };
-  /** DELETE /api/v1/chat/folders/{id} — Удалить личную папку списка бесед */
-  chatDeleteFolder: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/chat/conversations/{id}/messages/{messageId} — Удалить своё сообщение */
-  chatDeleteMessage: {
-    params: { "id": models.UUID; "messageId": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatForwardedMessage;
-  };
-  /** DELETE /api/v1/chat/mobile/devices/{deviceId} — Отключить текущее устройство от чатовых push-уведомлений */
-  chatDisableMobileDevice: {
-    params: { "deviceId": string };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/chat/conversations/{id}/attachments/{attachmentId}/content — Скачать содержимое вложения */
-  chatDownloadAttachment: {
-    params: { "attachmentId": models.UUID; "id": models.UUID };
-    query: { "w"?: number };
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/chat/conversations/{id}/avatar/content — Скачать фотографию чата */
-  chatDownloadConversationAvatar: {
-    params: { "id": models.UUID };
-    query: { "w"?: number };
-    body: never;
-    response: void;
-  };
-  /** PATCH /api/v1/chat/conversations/{id}/messages/{messageId} — Изменить своё текстовое сообщение */
-  chatEditMessage: {
-    params: { "id": models.UUID; "messageId": models.UUID };
-    query: Record<string, never>;
-    body: models.ChatEditMessage;
-    response: models.ChatForwardedMessage;
   };
   /** POST /api/v1/chat/conversations/direct — Найти или создать личный диалог */
   chatEnsureDirect: {
@@ -559,40 +454,12 @@ export interface OperationTypes {
     body: never;
     response: models.ChatEntityConversation;
   };
-  /** POST /api/v1/chat/conversations/{id}/messages/{messageId}/forward — Идемпотентно переслать сообщение в доступный чат */
-  chatForwardMessage: {
-    params: { "id": models.UUID; "messageId": models.UUID };
-    query: Record<string, never>;
-    body: models.ChatForwardMessage;
-    response: models.ChatForwardMessageResult;
-  };
-  /** GET /api/v1/chat/conversations/{id}/attachments/{attachmentId} — Получить карточку вложения */
-  chatGetAttachment: {
-    params: { "attachmentId": models.UUID; "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatForwardedAttachment;
-  };
   /** GET /api/v1/chat/conversations/{id} — Получить доступный чат */
   chatGetConversation: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.ChatConversation;
-  };
-  /** GET /api/v1/chat/link-preview — Развернуть ссылку из переписки */
-  chatLinkPreview: {
-    params: Record<string, never>;
-    query: { "url": string };
-    body: never;
-    response: models.ChatLinkPreview;
-  };
-  /** GET /api/v1/chat/conversations/{id}/attachments — Получить вложения доступного чата */
-  chatListAttachments: {
-    params: { "id": models.UUID };
-    query: { "cursor"?: string; "limit"?: number; "media_kind"?: string; "q"?: string };
-    body: never;
-    response: models.ChatAttachmentPage;
   };
   /** GET /api/v1/chat/conversations/{id}/members — Получить безопасный состав доступного чата */
   chatListConversationMembers: {
@@ -608,26 +475,12 @@ export interface OperationTypes {
     body: never;
     response: models.ChatConversationPage;
   };
-  /** GET /api/v1/chat/folders — Получить личные папки списка бесед */
-  chatListFolders: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatFolderPage;
-  };
   /** GET /api/v1/chat/conversations/{id}/mentions/candidates — Получить точных адресатов упоминания в чате */
   chatListMentionCandidates: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.ChatMentionCandidatePage;
-  };
-  /** GET /api/v1/chat/conversations/{id}/messages/{messageId}/readers — Узнать, кто прочитал сообщение */
-  chatListMessageReaders: {
-    params: { "id": models.UUID; "messageId": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatMessageReaderPage;
   };
   /** GET /api/v1/chat/conversations/{id}/messages — Получить окно сообщений */
   chatListMessages: {
@@ -643,13 +496,6 @@ export interface OperationTypes {
     body: never;
     response: models.ChatPeoplePage;
   };
-  /** GET /api/v1/chat/conversations/{id}/pins — Получить закреплённые сообщения чата */
-  chatListPins: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatMessagePinPage;
-  };
   /** GET /api/v1/chat/conversations/{id}/presence — Получить присутствие других участников доступного чата */
   chatListPresence: {
     params: { "id": models.UUID };
@@ -663,20 +509,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.ChatUnreadMentionPage;
-  };
-  /** POST /api/v1/chat/conversations/read-all — Прочитать раздел списка бесед целиком */
-  chatMarkAllConversationsRead: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.ChatMarkAllRead;
-    response: models.ChatMarkAllReadResult;
-  };
-  /** POST /api/v1/chat/conversations/{id}/delivered — Продвинуть server-owned delivery watermark */
-  chatMarkDelivered: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.ChatReceiptInput;
-    response: models.ChatReceiptState;
   };
   /** POST /api/v1/chat/conversations/{id}/manual-unread — Пометить чат непрочитанным от последнего подтверждённого read */
   chatMarkManualUnread: {
@@ -699,69 +531,6 @@ export interface OperationTypes {
     body: models.ChatReceiptInput;
     response: models.ChatReceiptState;
   };
-  /** GET /api/v1/chat/attachments/{attachmentId}/content — Открыть содержимое доступного медиавложения */
-  chatOpenMedia: {
-    params: { "attachmentId": models.UUID };
-    query: { "playback"?: "m4a"; "w"?: number };
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/chat/attachments/{attachmentId}/thumbnail — Получить первый кадр доступного видео */
-  chatOpenVideoThumbnail: {
-    params: { "attachmentId": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** PUT /api/v1/chat/conversations/{id}/messages/{messageId}/pin — Закрепить сообщение в чате */
-  chatPinMessage: {
-    params: { "id": models.UUID; "messageId": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatChangePinResult;
-  };
-  /** POST /api/v1/chat/conversations/{id}/typing — Обновить присутствие и состояние набора текста */
-  chatPulsePresence: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.ChatPresenceInput;
-    response: void;
-  };
-  /** POST /api/v1/chat/mobile/devices — Подключить iPhone к чатовым push-уведомлениям */
-  chatRegisterMobileDevice: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.ChatMobileDeviceRegistration;
-    response: models.ChatMobileDeviceRegistrationState;
-  };
-  /** DELETE /api/v1/chat/conversations/{id}/members/{userId} — Исключить человека из группы */
-  chatRemoveGroupMember: {
-    params: { "id": models.UUID; "userId": number };
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatMemberChangeResult;
-  };
-  /** DELETE /api/v1/chat/conversations/{id}/messages/{messageId}/reaction — Снять свою реакцию с сообщения */
-  chatRemoveReaction: {
-    params: { "id": models.UUID; "messageId": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatReactionResult;
-  };
-  /** PATCH /api/v1/chat/conversations/{id} — Переименовать группу */
-  chatRenameGroup: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.ChatRenameGroup;
-    response: models.ChatRenameGroupResult;
-  };
-  /** POST /api/v1/chat/conversations/{id}/media — Идемпотентно отправить голосовое или видеосообщение */
-  chatSendMedia: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatSendMessageResult;
-  };
   /** POST /api/v1/chat/conversations/{id}/messages — Идемпотентно отправить текстовое сообщение */
   chatSendMessage: {
     params: { "id": models.UUID };
@@ -769,102 +538,11 @@ export interface OperationTypes {
     body: models.ChatSendMessage;
     response: models.ChatSendMessageResult;
   };
-  /** POST /api/v1/chat/mobile/devices/test — Отправить тестовое чатовое push-уведомление */
-  chatSendMobilePushTest: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatMobilePushTestResult;
-  };
-  /** PUT /api/v1/chat/conversations/{id}/messages/{messageId}/reaction — Поставить свою реакцию на сообщение */
-  chatSetReaction: {
-    params: { "id": models.UUID; "messageId": models.UUID };
-    query: Record<string, never>;
-    body: models.ChatSetReaction;
-    response: models.ChatReactionResult;
-  };
-  /** GET /api/v1/chat/realtime/stream — Подписаться на actor-private поток изменений чатов */
-  chatStreamRealtime: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/chat/conversations/{id}/messages/{messageId}/pin — Снять закрепление сообщения */
-  chatUnpinMessage: {
-    params: { "id": models.UUID; "messageId": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatChangePinResult;
-  };
-  /** GET /api/v1/chat/conversations/unread — Получить числа непрочитанного для значков */
-  chatUnreadSummary: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatUnreadSummary;
-  };
-  /** PATCH /api/v1/chat/folders/{id} — Переписать личную папку списка бесед */
-  chatUpdateFolder: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.ChatSaveFolder;
-    response: models.ChatFolder;
-  };
-  /** POST /api/v1/chat/conversations/{id}/attachments — Загрузить вложение в доступный чат */
-  chatUploadAttachment: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatForwardedAttachment;
-  };
-  /** POST /api/v1/chat/conversations/{id}/avatar — Загрузить фотографию чата */
-  chatUploadConversationAvatar: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.ChatConversation;
-  };
-  /** POST /api/v1/core/accounting-policy/businesses/{id}/accountable-days — Срок авансового отчёта у бизнеса с даты */
-  coreAddPolicyAccountableDays: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CorePolicyAccountableDaysInput;
-    response: models.CoreAccountingPolicy;
-  };
-  /** POST /api/v1/core/accounting-policy/companies/{id}/tax-mode — Режим налога юрлица с даты */
-  coreAddPolicyTaxMode: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CorePolicyTaxModeInput;
-    response: models.CoreAccountingPolicy;
-  };
   /** POST /api/v1/core/accounting-policy/companies/{id}/tax-regime — Система налогообложения юрлица с даты */
   coreAddPolicyTaxRegime: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.CorePolicyTaxRegimeInput;
-    response: models.CoreAccountingPolicy;
-  };
-  /** POST /api/v1/core/accounting-policy/businesses/{id}/vat-pending — Порог ожидания вычета у бизнеса с даты */
-  coreAddPolicyVATPending: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CorePolicyVATPendingInput;
-    response: models.CoreAccountingPolicy;
-  };
-  /** POST /api/v1/core/accounting-policy/businesses/{id}/vat-presentation — Очистка сумм бизнеса от НДС с даты */
-  coreAddPolicyVATPresentation: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CorePolicyVATPresentationInput;
-    response: models.CoreAccountingPolicy;
-  };
-  /** POST /api/v1/core/accounting-policy/companies/{id}/vat-rates — Ставки НДС юрлица с даты */
-  coreAddPolicyVATRates: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CorePolicyVATRatesInput;
     response: models.CoreAccountingPolicy;
   };
   /** POST /api/v1/core/product-imports/{id}/apply — Атомарно применить подтверждённый preview */
@@ -881,33 +559,12 @@ export interface OperationTypes {
     body: never;
     response: models.CoreContact;
   };
-  /** DELETE /api/v1/core/employees/{id} — Архивировать карточку сотрудника */
-  coreArchiveEmployee: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
   /** POST /api/v1/core/products/{id}/archive — Архивировать позицию без удаления истории */
   coreArchiveProduct: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.CoreProduct;
-  };
-  /** POST /api/v1/core/contacts/bulk — Группой изменить папку и роли контрагентов */
-  coreBulkUpdateContacts: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CoreContactBulkPatch;
-    response: models.CoreBulkResult;
-  };
-  /** POST /api/v1/core/products/bulk — Группой изменить папку и профили использования номенклатуры */
-  coreBulkUpdateProducts: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CoreProductBulkPatch;
-    response: models.CoreBulkResult;
   };
   /** POST /api/v1/core/documents/{id}/cancel — Отменить проведение без удаления документа */
   coreCancelDocument: {
@@ -922,13 +579,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.CoreOrder;
-  };
-  /** POST /api/v1/core/accounting-periods/close — Закрыть учёт по дату включительно */
-  coreCloseAccountingPeriod: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CoreAccountingPeriodClose;
-    response: models.CoreAccountingPeriodEvent;
   };
   /** POST /api/v1/core/orders/{id}/close — Закрыть заказ с остатком */
   coreCloseOrder: {
@@ -972,13 +622,6 @@ export interface OperationTypes {
     body: models.CoreContactCreate;
     response: models.CoreContact;
   };
-  /** POST /api/v1/core/currency-rates — Установить курс с указанной даты */
-  coreCreateCurrencyRate: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CoreCurrencyRateInput;
-    response: models.CoreCurrencyRate;
-  };
   /** POST /api/v1/core/dictionaries — Создать пользовательский справочник */
   coreCreateDictionary: {
     params: Record<string, never>;
@@ -1014,27 +657,6 @@ export interface OperationTypes {
     body: models.CoreEmployeeCreate;
     response: models.CoreEmployee;
   };
-  /** POST /api/v1/core/employee-equipment — Зафиксировать выдачу имущества сотруднику */
-  coreCreateEmployeeEquipment: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CoreEmployeeEquipmentInput;
-    response: models.CoreEmployeeEquipment;
-  };
-  /** POST /api/v1/core/employee-lifecycle-templates — Создать шаблон приёма или увольнения */
-  coreCreateEmployeeLifecycleTemplate: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CoreEmployeeLifecycleTemplateInput;
-    response: models.CoreEmployeeLifecycleTemplate;
-  };
-  /** POST /api/v1/core/folders — Создать папку справочника */
-  coreCreateFolder: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CoreFolderInput;
-    response: models.CoreFolder;
-  };
   /** POST /api/v1/core/gl-accounts — Создать клиентский счёт поверх системного плана */
   coreCreateGLAccount: {
     params: Record<string, never>;
@@ -1048,13 +670,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CoreGLMappingCreate;
     response: models.CoreGLMapping;
-  };
-  /** POST /api/v1/core/gl-opening-imports — Загрузить и разобрать ОСВ 1С */
-  coreCreateGLOpeningImport: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreGLOpeningImport;
   };
   /** POST /api/v1/core/items — Создать статью ДДС/ОПиУ */
   coreCreateItem: {
@@ -1076,13 +691,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CoreOrderFunnelInput;
     response: models.CoreOrderFunnel;
-  };
-  /** POST /api/v1/core/order-statuses — Завести свой статус заказа */
-  coreCreateOrderStatus: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CoreOrderStatusInput;
-    response: models.CoreOrderStatus;
   };
   /** POST /api/v1/core/order-templates — Создать шаблон заказа */
   coreCreateOrderTemplate: {
@@ -1140,123 +748,11 @@ export interface OperationTypes {
     body: never;
     response: models.CoreProductIdentifier;
   };
-  /** DELETE /api/v1/core/dictionaries/{id} — Удалить пользовательский справочник */
-  coreDeleteDictionary: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/core/dictionaries/{id}/items/{itemId} — Удалить неиспользуемую запись справочника */
-  coreDeleteDictionaryItem: {
-    params: { "id": models.UUID; "itemId": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/core/document-types/{id} — Удалить неиспользуемый пользовательский тип */
-  coreDeleteDocumentType: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/core/employees/{id}/photo — Удалить корпоративное фото сотрудника */
-  coreDeleteEmployeePhoto: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/core/folders/{id} — Удалить папку и вернуть её содержимое в корень */
-  coreDeleteFolder: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/core/gl-accounts/{id} — Удалить пустой клиентский счёт */
-  coreDeleteGLAccount: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/core/gl-mappings/{id} — Закрыть правило проводки на выбранную дату */
-  coreDeleteGLMapping: {
-    params: { "id": models.UUID };
-    query: { "on"?: string };
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/core/items/{id} — Удалить неиспользуемую статью */
-  coreDeleteItem: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/core/products/{id}/files/{fileId} — Удалить файл товара */
-  coreDeleteProductFile: {
-    params: { "fileId": models.UUID; "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/core/registers/{key} — Удалить пустой пользовательский регистр */
-  coreDeleteRegister: {
-    params: { "key": string };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/core/self/photo — Удалить корпоративное фото текущего сотрудника */
-  coreDeleteSelfEmployeePhoto: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** PUT /api/v1/core/accounting-policy/businesses/{id}/accountable-days/open — Поправить открытую версию — срок авансового отчёта у бизнеса с даты */
-  coreEditPolicyAccountableDays: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CorePolicyAccountableDaysInput;
-    response: models.CoreAccountingPolicy;
-  };
-  /** PUT /api/v1/core/accounting-policy/companies/{id}/tax-mode/open — Поправить открытую версию — режим налога юрлица с даты */
-  coreEditPolicyTaxMode: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CorePolicyTaxModeInput;
-    response: models.CoreAccountingPolicy;
-  };
   /** PUT /api/v1/core/accounting-policy/companies/{id}/tax-regime/open — Поправить открытую версию — система налогообложения юрлица */
   coreEditPolicyTaxRegime: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.CorePolicyTaxRegimeInput;
-    response: models.CoreAccountingPolicy;
-  };
-  /** PUT /api/v1/core/accounting-policy/businesses/{id}/vat-pending/open — Поправить открытую версию — порог ожидания вычета у бизнеса с даты */
-  coreEditPolicyVATPending: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CorePolicyVATPendingInput;
-    response: models.CoreAccountingPolicy;
-  };
-  /** PUT /api/v1/core/accounting-policy/businesses/{id}/vat-presentation/open — Поправить открытую версию — очистка сумм бизнеса от НДС с даты */
-  coreEditPolicyVATPresentation: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CorePolicyVATPresentationInput;
-    response: models.CoreAccountingPolicy;
-  };
-  /** PUT /api/v1/core/accounting-policy/companies/{id}/vat-rates/open — Поправить открытую версию — ставки НДС юрлица с даты */
-  coreEditPolicyVATRates: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CorePolicyVATRatesInput;
     response: models.CoreAccountingPolicy;
   };
   /** POST /api/v1/core/orders/execute-now — Продать сразу — заказ и акт одной командой */
@@ -1266,47 +762,12 @@ export interface OperationTypes {
     body: models.CoreOrderNowInput;
     response: models.CoreOrderNowResult;
   };
-  /** POST /api/v1/core/product-identifiers/generate — Сгенерировать внутренний штрихкод */
-  coreGenerateProductBarcode: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreGeneratedBarcode;
-  };
-  /** POST /api/v1/core/products/{id}/variants/generate — Создать варианты семейства по сочетаниям осей */
-  coreGenerateProductVariants: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreProductVariantGenerate;
-    response: models.CoreProductVariantGenerateResult;
-  };
-  /** GET /api/v1/core/accounting-periods — Получить закрытую дату и последние 50 решений */
-  coreGetAccountingPeriodState: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreAccountingPeriodState;
-  };
-  /** GET /api/v1/core/accounting-policy — Получить учётную политику бизнесов и юрлиц */
-  coreGetAccountingPolicy: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreAccountingPolicy;
-  };
   /** GET /api/v1/core/accounting-settings — Получить валюту учёта и состояние замка */
   coreGetAccountingSettings: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: never;
     response: models.CoreAccountingSettings;
-  };
-  /** GET /api/v1/core/accounting-start — Узнать день первой проводки и день для начальных остатков */
-  coreGetAccountingStart: {
-    params: Record<string, never>;
-    query: { "business"?: string };
-    body: never;
-    response: models.CoreGetAccountingStartResponse;
   };
   /** GET /api/v1/core/businesses/{id} — Получить управленческий бизнес */
   coreGetBusiness: {
@@ -1315,47 +776,12 @@ export interface OperationTypes {
     body: never;
     response: models.CoreBusiness;
   };
-  /** GET /api/v1/core/cabinet-preferences — Получить общие язык, часовой пояс и форматы кабинета */
-  coreGetCabinetPreferences: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreCabinetPreferences;
-  };
   /** GET /api/v1/core/contacts/{id} — Получить карточку контрагента */
   coreGetContact: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.CoreContact;
-  };
-  /** GET /api/v1/core/contacts/{id}/usage — Проверить, где используется контрагент */
-  coreGetContactUsage: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreObjectUsage;
-  };
-  /** GET /api/v1/core/contracts/{id} — Получить учётный реквизит договора */
-  coreGetContractTerms: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreContractTerms;
-  };
-  /** GET /api/v1/core/dictionaries/{id} — Получить один справочник */
-  coreGetDictionary: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreDictionary;
-  };
-  /** GET /api/v1/core/dictionaries/{id}/items/{itemId}/usage — Проверить, где используется запись справочника */
-  coreGetDictionaryItemUsage: {
-    params: { "id": models.UUID; "itemId": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreObjectUsage;
   };
   /** GET /api/v1/core/documents/{id} — Получить документ конструктора */
   coreGetDocument: {
@@ -1378,54 +804,12 @@ export interface OperationTypes {
     body: never;
     response: models.CoreDocumentLinks;
   };
-  /** GET /api/v1/core/document-types/{id} — Получить тип документа конструктора */
-  coreGetDocumentType: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreDocumentType;
-  };
   /** GET /api/v1/core/employees/{id} — Получить карточку сотрудника */
   coreGetEmployee: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.CoreEmployee;
-  };
-  /** GET /api/v1/core/employees/{id}/photo/content — Скачать корпоративное фото сотрудника */
-  coreGetEmployeePhotoContent: {
-    params: { "id": models.UUID };
-    query: { "w"?: number };
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/core/employees/{id}/usage — Проверить, где используется сотрудник */
-  coreGetEmployeeUsage: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreObjectUsage;
-  };
-  /** GET /api/v1/core/external-refs/{id} — Получить одно внешнее соответствие */
-  coreGetExternalRef: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreExternalRef;
-  };
-  /** GET /api/v1/core/gl-opening-imports/{id} — Получить сохранённый снимок разбора ОСВ */
-  coreGetGLOpeningImport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreGLOpeningImport;
-  };
-  /** GET /api/v1/core/gl-opening-imports/{id}/source — Скачать исходный файл ОСВ */
-  coreGetGLOpeningImportSource: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
   };
   /** GET /api/v1/core/orders/{id} — Получить карточку заказа */
   coreGetOrder: {
@@ -1490,13 +874,6 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
-  /** GET /api/v1/core/products/{id}/files/{fileId}/content — Скачать файл товара или миниатюру фото */
-  coreGetProductFileContent: {
-    params: { "fileId": models.UUID; "id": models.UUID };
-    query: { "download"?: boolean; "w"?: number };
-    body: never;
-    response: void;
-  };
   /** GET /api/v1/core/product-imports/{id} — Получить запуск импорта и доступные поля сопоставления */
   coreGetProductImport: {
     params: { "id": models.UUID };
@@ -1525,13 +902,6 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
-  /** GET /api/v1/core/products/{id}/usage — Проверить, где используется номенклатура */
-  coreGetProductUsage: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreObjectUsage;
-  };
   /** GET /api/v1/core/registers/{key} — Получить определение регистра */
   coreGetRegister: {
     params: { "key": string };
@@ -1553,20 +923,6 @@ export interface OperationTypes {
     body: never;
     response: models.CoreRegisterTurnoverPage;
   };
-  /** GET /api/v1/core/self/photo — Скачать корпоративное фото текущего сотрудника */
-  coreGetSelfEmployeePhoto: {
-    params: Record<string, never>;
-    query: { "w"?: number };
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/core/self/preferences — Получить настройки кабинета как default для вошедшего пользователя */
-  coreGetSelfPreferences: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreCabinetPreferences;
-  };
   /** GET /api/v1/core/ledger/trial-balance — Получить оборотно-сальдовую ведомость и проверку баланса */
   coreGetTrialBalance: {
     params: Record<string, never>;
@@ -1574,26 +930,12 @@ export interface OperationTypes {
     body: never;
     response: models.CoreTrialBalance;
   };
-  /** GET /api/v1/core/ui-state — Получить сохранённые настройки экранов текущего пользователя */
-  coreGetUIState: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreUIState;
-  };
   /** POST /api/v1/core/dictionaries/{id}/items/import — Дополнить справочник пачкой до 1000 записей */
   coreImportDictionaryItems: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.CoreDictionaryItemImport;
     response: models.CoreImportResult;
-  };
-  /** POST /api/v1/core/external-refs/contacts/import — Импортировать выгрузку контрагентов из 1С и выполнить автоматч */
-  coreImportExternalContacts: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreExternalContactMatchReport;
   };
   /** POST /api/v1/core/orders/import — Загрузить заказ из внешней системы */
   coreImportOrder: {
@@ -1608,13 +950,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CoreProductImportInspectRequest;
     response: models.CoreProductImportRun;
-  };
-  /** POST /api/v1/core/external-refs/{id}/link — Вручную связать внешний объект с карточкой Akeda */
-  coreLinkExternalRef: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreExternalRefLinkRequest;
-    response: models.CoreExternalRef;
   };
   /** GET /api/v1/core/accounting-dimensions — Получить включённые аналитические разрезы и готовность истории */
   coreListAccountingDimensions: {
@@ -1693,13 +1028,6 @@ export interface OperationTypes {
     body: never;
     response: models.CoreRegisterEntryPage;
   };
-  /** GET /api/v1/core/document-numbering — Получить нумерацию документов кабинета */
-  coreListDocumentNumbering: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreDocumentNumberingList;
-  };
   /** GET /api/v1/core/document-types — Получить типы документов конструктора */
   coreListDocumentTypes: {
     params: Record<string, never>;
@@ -1714,40 +1042,12 @@ export interface OperationTypes {
     body: never;
     response: models.CoreDocumentPage;
   };
-  /** GET /api/v1/core/employee-equipment — Получить историю выданного сотрудникам имущества */
-  coreListEmployeeEquipment: {
-    params: Record<string, never>;
-    query: { "employee_id"?: models.UUID };
-    body: never;
-    response: models.CoreEmployeeEquipmentPage;
-  };
-  /** GET /api/v1/core/employee-lifecycle-templates — Получить шаблоны приёма и увольнения */
-  coreListEmployeeLifecycleTemplates: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreEmployeeLifecycleTemplatePage;
-  };
   /** GET /api/v1/core/employees — Получить сотрудников кабинета */
   coreListEmployees: {
     params: Record<string, never>;
     query: { "limit"?: number; "offset"?: number; "q"?: string };
     body: never;
     response: models.CoreEmployeePage;
-  };
-  /** GET /api/v1/core/external-refs — Получить очередь внешних соответствий */
-  coreListExternalRefs: {
-    params: Record<string, never>;
-    query: { "entity_id"?: models.UUID; "entity_type"?: models.CoreExternalRefEntityType; "external_kind"?: string; "limit"?: number; "offset"?: number; "pending"?: boolean; "q"?: string; "source_ref"?: string; "source_system"?: string };
-    body: never;
-    response: models.CoreExternalRefPage;
-  };
-  /** GET /api/v1/core/folders — Получить папки раздела справочников */
-  coreListFolders: {
-    params: Record<string, never>;
-    query: { "scope"?: models.CoreFolderScope };
-    body: never;
-    response: models.CoreFolderPage;
   };
   /** GET /api/v1/core/gl-accounts — Получить план счетов главной книги */
   coreListGLAccounts: {
@@ -1763,26 +1063,12 @@ export interface OperationTypes {
     body: never;
     response: models.CoreGLMappingPage;
   };
-  /** GET /api/v1/core/gl-opening-imports — Получить историю загрузок ОСВ кабинета */
-  coreListGLOpeningImports: {
-    params: Record<string, never>;
-    query: { "limit"?: number };
-    body: never;
-    response: models.CoreGLOpeningImportPage;
-  };
   /** GET /api/v1/core/items — Получить единый справочник статей */
   coreListItems: {
     params: Record<string, never>;
     query: { "apply"?: "cashflow" | "pnl" };
     body: never;
     response: models.CoreItemPage;
-  };
-  /** GET /api/v1/core/contracts — Получить договоры, на которые можно поставить заказ */
-  coreListOrderContracts: {
-    params: Record<string, never>;
-    query: { "company_id"?: models.UUID; "contact_id": models.UUID; "date"?: string; "include"?: models.UUID; "side": "sale" | "purchase" };
-    body: never;
-    response: models.CoreContractList;
   };
   /** GET /api/v1/core/order-funnels/templates — Получить шаблоны воронок заказов */
   coreListOrderFunnelTemplates: {
@@ -1847,13 +1133,6 @@ export interface OperationTypes {
     body: never;
     response: models.CoreItemPage;
   };
-  /** GET /api/v1/core/products/{id}/files — Получить файлы и фото товара */
-  coreListProductFiles: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreProductFilePage;
-  };
   /** GET /api/v1/core/products/{id}/identifiers — Получить внешние артикулы и штрихкоды */
   coreListProductIdentifiers: {
     params: { "id": models.UUID };
@@ -1889,6 +1168,13 @@ export interface OperationTypes {
     body: never;
     response: models.CoreRegisterPage;
   };
+  /** GET /api/v1/core/seller-companies — Получить доступные юрлица продавца */
+  coreListSellerCompanies: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.CoreSellerCompanyList;
+  };
   /** GET /api/v1/core/lookup/bank — Найти банк по БИК */
   coreLookupBank: {
     params: Record<string, never>;
@@ -1896,33 +1182,12 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceBankLookup;
   };
-  /** GET /api/v1/core/product-identifiers/lookup — Чей это штрихкод или артикул */
-  coreLookupProductIdentifier: {
-    params: Record<string, never>;
-    query: { "kind": models.CoreProductIdentifierKind; "source_ref"?: string; "value": string };
-    body: never;
-    response: models.CoreProductIdentifierMatch;
-  };
   /** POST /api/v1/core/documents/{id}/mark-deleted — Поставить или снять пометку удаления */
   coreMarkDocumentDeleted: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.CoreDocumentMarkDeleted;
     response: models.CoreDocument;
-  };
-  /** POST /api/v1/core/gl-opening-imports/{id}/applied — Связать загрузку с проведённым документом начальных остатков */
-  coreMarkGLOpeningImportApplied: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreGLOpeningImportAppliedRequest;
-    response: models.CoreGLOpeningImport;
-  };
-  /** POST /api/v1/core/external-refs/contacts/match — Сопоставить контрагентов выгрузки по ИНН и КПП */
-  coreMatchExternalContacts: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CoreExternalContactMatchRequest;
-    response: models.CoreExternalContactMatchReport;
   };
   /** POST /api/v1/core/items/{id}/move — Переместить статью внутри дерева одного отчёта */
   coreMoveItem: {
@@ -1980,40 +1245,12 @@ export interface OperationTypes {
     body: never;
     response: models.CoreCurrencyRateRefreshResult;
   };
-  /** POST /api/v1/core/external-refs — Запомнить один внешний объект или пачку */
-  coreRememberExternalRefs: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CoreExternalRefRememberRequest;
-    response: models.CoreExternalRefPage;
-  };
-  /** POST /api/v1/core/accounting-periods/reopen — Сдвинуть закрытую дату назад с обязательной причиной */
-  coreReopenAccountingPeriod: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CoreAccountingPeriodReopen;
-    response: models.CoreAccountingPeriodEvent;
-  };
   /** POST /api/v1/core/orders/{id}/reopen — Вернуть заказ в работу */
   coreReopenOrder: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.CoreOrder;
-  };
-  /** POST /api/v1/core/products/{id}/files/reorder — Переставить файлы товара */
-  coreReorderProductFiles: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreProductFileReorder;
-    response: void;
-  };
-  /** POST /api/v1/core/external-refs/resolve — Разрешить внешние идентификаторы в UUID Akeda */
-  coreResolveExternalRefs: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CoreExternalRefResolveRequest;
-    response: models.CoreExternalRefResolveResult;
   };
   /** POST /api/v1/core/contacts/{id}/restore — Восстановить контрагента из архива */
   coreRestoreContact: {
@@ -2036,26 +1273,12 @@ export interface OperationTypes {
     body: models.CoreOrderRevision;
     response: models.CoreOrder;
   };
-  /** POST /api/v1/core/accounting-dimensions/{key}/versions — Записать решение по разрезу с даты «действует с» или поправить действующую запись истории */
-  coreSaveAccountingDimensionVersion: {
-    params: { "key": "company" | "project" | "department" | "cfo" };
-    query: Record<string, never>;
-    body: models.CoreAccountingDimensionVersionInput;
-    response: models.CoreAccountingDimension;
-  };
-  /** PUT /api/v1/core/accounting-policy/businesses/{id}/revenue-items — Статьи выручки исполнений заказа по виду строки у бизнеса с даты */
-  coreSaveOrderRevenueItems: {
+  /** GET /api/v1/core/companies/{id}/seller-bank — Получить банковский счёт бланка юрлица */
+  coreSellerBank: {
     params: { "id": models.UUID };
     query: Record<string, never>;
-    body: models.CoreOrderRevenueItemsInput;
-    response: models.CoreAccountingPolicy;
-  };
-  /** PUT /api/v1/core/ui-state/{screen} — Заменить сохранённое состояние одного экрана */
-  coreSaveUIState: {
-    params: { "screen": string };
-    query: Record<string, never>;
-    body: unknown;
-    response: void;
+    body: never;
+    response: models.CoreSellerBank;
   };
   /** POST /api/v1/core/businesses/{id}/accounting-method — Переключить метод учёта бизнеса */
   coreSetBusinessAccountingMethod: {
@@ -2071,32 +1294,11 @@ export interface OperationTypes {
     body: models.CoreSetBusinessActiveRequest;
     response: models.CoreBusiness;
   };
-  /** PUT /api/v1/core/contracts/{id}/settlement-detail — Изменить детализацию расчётов договора */
-  coreSetContractSettlementDetail: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreContractSettlementDetailInput;
-    response: models.CoreContractTerms;
-  };
-  /** PUT /api/v1/core/documents/{id}/custom — Заменить значения своих полей черновика */
-  coreSetDocumentCustom: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreDocumentCustom;
-    response: models.CoreDocument;
-  };
   /** PUT /api/v1/core/orders/{id}/cabinet-status — Поставить статус кабинета */
   coreSetOrderCabinetStatus: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.CoreOrderCabinetStatusInput;
-    response: models.CoreOrder;
-  };
-  /** PUT /api/v1/core/orders/{id}/contract — Поставить заказ на договор, сменить или снять договор */
-  coreSetOrderContract: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreOrderContractInput;
     response: models.CoreOrder;
   };
   /** PUT /api/v1/core/orders/{id}/funnel — Сменить воронку заказа */
@@ -2134,20 +1336,6 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceBankSuggestions;
   };
-  /** GET /api/v1/core/lookup/parties — Найти организации по части ИНН, ОГРН или названия */
-  coreSuggestRequisitesParties: {
-    params: Record<string, never>;
-    query: { "q": string };
-    body: never;
-    response: models.FinanceRequisitesSuggestions;
-  };
-  /** POST /api/v1/core/external-refs/{id}/unlink — Отклонить связь и вернуть объект в ручной разбор */
-  coreUnlinkExternalRef: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreExternalRef;
-  };
   /** PATCH /api/v1/core/accounting-dimensions/{key} — Включить разрез или изменить его обязательность */
   coreUpdateAccountingDimension: {
     params: { "key": "company" | "project" | "department" | "cfo" };
@@ -2169,13 +1357,6 @@ export interface OperationTypes {
     body: models.CoreBusinessInput;
     response: models.CoreBusiness;
   };
-  /** PATCH /api/v1/core/cabinet-preferences — Изменить общие язык, часовой пояс и форматы кабинета */
-  coreUpdateCabinetPreferences: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CoreCabinetPreferences;
-    response: models.CoreCabinetPreferences;
-  };
   /** PATCH /api/v1/core/contacts/{id} — Частично изменить контрагента */
   coreUpdateContact: {
     params: { "id": models.UUID };
@@ -2183,75 +1364,12 @@ export interface OperationTypes {
     body: models.CoreContactPatch;
     response: models.CoreContact;
   };
-  /** PATCH /api/v1/core/dictionaries/{id} — Изменить название, описание и режим дерева */
-  coreUpdateDictionary: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreDictionaryUpdate;
-    response: models.CoreDictionary;
-  };
-  /** PATCH /api/v1/core/dictionaries/{id}/items/{itemId} — Изменить запись справочника */
-  coreUpdateDictionaryItem: {
-    params: { "id": models.UUID; "itemId": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreDictionaryItemUpdate;
-    response: models.CoreDictionaryItem;
-  };
   /** PATCH /api/v1/core/documents/{id} — Частично изменить черновик документа */
   coreUpdateDocument: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.CoreDocumentPatch;
     response: models.CoreDocument;
-  };
-  /** PUT /api/v1/core/document-numbering/{id} — Изменить нумерацию вида документа */
-  coreUpdateDocumentNumbering: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreDocumentNumberingInput;
-    response: models.CoreDocumentNumbering;
-  };
-  /** PATCH /api/v1/core/document-types/{id} — Частично изменить тип документа */
-  coreUpdateDocumentType: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreDocumentTypePatch;
-    response: models.CoreDocumentType;
-  };
-  /** PATCH /api/v1/core/employees/{id} — Частично изменить карточку сотрудника */
-  coreUpdateEmployee: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreEmployeePatch;
-    response: models.CoreEmployee;
-  };
-  /** PATCH /api/v1/core/employee-equipment/{id} — Изменить состояние выданного имущества */
-  coreUpdateEmployeeEquipment: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreEmployeeEquipmentInput;
-    response: models.CoreEmployeeEquipment;
-  };
-  /** PATCH /api/v1/core/employee-lifecycle-templates/{id} — Изменить шаблон приёма или увольнения */
-  coreUpdateEmployeeLifecycleTemplate: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreEmployeeLifecycleTemplateInput;
-    response: models.CoreEmployeeLifecycleTemplate;
-  };
-  /** PATCH /api/v1/core/folders/{id} — Изменить папку, её родителя и признаки по умолчанию */
-  coreUpdateFolder: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreFolderInput;
-    response: models.CoreFolder;
-  };
-  /** PATCH /api/v1/core/gl-accounts/{id} — Изменить название, родителя, активность или участие в ДДС */
-  coreUpdateGLAccount: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreGLAccountPatch;
-    response: models.CoreGLAccount;
   };
   /** PATCH /api/v1/core/items/{id} — Изменить статью и её применения */
   coreUpdateItem: {
@@ -2266,13 +1384,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CoreOrderFunnelInput;
     response: models.CoreOrderFunnel;
-  };
-  /** PATCH /api/v1/core/order-statuses/{id} — Изменить статус заказа кабинета */
-  coreUpdateOrderStatus: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreOrderStatusPatch;
-    response: models.CoreOrderStatus;
   };
   /** PUT /api/v1/core/order-templates/{id} — Изменить шаблон заказа */
   coreUpdateOrderTemplate: {
@@ -2295,13 +1406,6 @@ export interface OperationTypes {
     body: models.CoreProductCustomInput;
     response: models.CoreProduct;
   };
-  /** PATCH /api/v1/core/products/{id}/files/{fileId} — Изменить тип, имя или основное фото */
-  coreUpdateProductFile: {
-    params: { "fileId": models.UUID; "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CoreProductFilePatch;
-    response: models.CoreProductFile;
-  };
   /** PATCH /api/v1/core/products/{id}/identifiers/{identifierId} — Частично изменить внешний идентификатор */
   coreUpdateProductIdentifier: {
     params: { "id": models.UUID; "identifierId": models.UUID };
@@ -2316,61 +1420,12 @@ export interface OperationTypes {
     body: models.CoreProductImportMapping;
     response: models.CoreProductImportRun;
   };
-  /** PATCH /api/v1/core/registers/{key} — Дополнить определение регистра */
-  coreUpdateRegister: {
-    params: { "key": string };
-    query: Record<string, never>;
-    body: models.CoreRegisterPatch;
-    response: models.CoreRegister;
-  };
-  /** POST /api/v1/core/employees/{id}/photo — Загрузить корпоративное фото сотрудника */
-  coreUploadEmployeePhoto: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CorePhotoResult;
-  };
-  /** POST /api/v1/core/products/{id}/files — Загрузить файл или фото товара */
-  coreUploadProductFile: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreProductFile;
-  };
-  /** PUT /api/v1/core/product-import-upload-sessions/{id}/content — Загрузить бинарное содержимое сессии импорта */
-  coreUploadProductImportContent: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreProductImportRun;
-  };
-  /** POST /api/v1/core/self/photo — Загрузить корпоративное фото текущего сотрудника */
-  coreUploadSelfEmployeePhoto: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CorePhotoResult;
-  };
   /** POST /api/v1/crm/{entity}/{id}/notes — Добавить заметку в ленту записи */
   crmAddNote: {
     params: { "entity": "lead" | "deal"; "id": models.UUID };
     query: Record<string, never>;
     body: models.CRMNoteInput;
     response: models.CRMActivity;
-  };
-  /** POST /api/v1/crm/contacts/{id}/adopt — Взять контрагента справочника ERP в базу клиентов CRM */
-  crmAdoptDirectoryContact: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMCustomer;
-  };
-  /** POST /api/v1/crm/imports/{id}/apply — Запустить перенос импорта */
-  crmApplyImport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CRMImportApplyInput;
-    response: models.CRMImportRun;
   };
   /** POST /api/v1/crm/pipelines/{id}/archive — Архивировать воронку */
   crmArchivePipeline: {
@@ -2385,27 +1440,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CRMInboxAssignInput;
     response: models.CRMInboxConversation;
-  };
-  /** POST /api/v1/crm/imports/{id}/cancel — Отменить запуск импорта */
-  crmCancelImport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMImportRun;
-  };
-  /** POST /api/v1/crm/inbox/connections/{id}/check — Проверить подключение канала */
-  crmCheckInboxConnection: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMInboxConnectionCheck;
-  };
-  /** POST /api/v1/crm/imports/{id}/connect — Подключить запуск к аккаунту amoCRM или порталу Битрикс24 */
-  crmConnectImport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CRMImportConnectInput;
-    response: models.CRMImportRun;
   };
   /** POST /api/v1/crm/leads/{id}/convert — Перевести лид в сделку */
   crmConvertLead: {
@@ -2456,34 +1490,6 @@ export interface OperationTypes {
     body: models.CRMCreateEventLinkInput;
     response: models.CRMExternalLink;
   };
-  /** POST /api/v1/crm/{entity}/{id}/hub-meetings — Связать запись CRM со встречей хаба проекта */
-  crmCreateHubMeetingLink: {
-    params: { "entity": "lead" | "deal"; "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CRMCreateHubMeetingInput;
-    response: models.CRMExternalLink;
-  };
-  /** POST /api/v1/crm/imports — Создать запуск импорта */
-  crmCreateImport: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CRMImportRunInput;
-    response: models.CRMImportRun;
-  };
-  /** POST /api/v1/crm/imports/{id}/pipelines — Создать воронки как в источнике */
-  crmCreateImportPipelines: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMImportOptions;
-  };
-  /** POST /api/v1/crm/inbox/connections — Подключить канал */
-  crmCreateInboxConnection: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CRMInboxConnectionInput;
-    response: models.CRMInboxConnection;
-  };
   /** POST /api/v1/crm/leads — Создать лид */
   crmCreateLead: {
     params: Record<string, never>;
@@ -2497,13 +1503,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.CRMInboxConversationLink;
-  };
-  /** POST /api/v1/crm/lead-sources — Добавить источник обращения */
-  crmCreateLeadSource: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.CRMLeadSourceInput;
-    response: models.CRMLeadSource;
   };
   /** POST /api/v1/crm/loss-reasons — Добавить причину отказа */
   crmCreateLossReason: {
@@ -2532,34 +1531,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CRMCreateTaskLinkInput;
     response: models.CRMExternalLink;
-  };
-  /** PUT /api/v1/crm/imports/{id}/records/{recordId}/decision — Решить, что делать с записью импорта */
-  crmDecideImportRecord: {
-    params: { "id": models.UUID; "recordId": models.UUID };
-    query: Record<string, never>;
-    body: models.CRMImportDecisionInput;
-    response: models.CRMImportRecord;
-  };
-  /** POST /api/v1/crm/inbox/connections/{id}/disable — Выключить канал */
-  crmDisableInboxConnection: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMInboxConnection;
-  };
-  /** POST /api/v1/crm/inbox/connections/{id}/enable — Включить канал */
-  crmEnableInboxConnection: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMInboxConnection;
-  };
-  /** POST /api/v1/crm/imports/{id}/extract — Собрать пакет из листов файла */
-  crmExtractImport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CRMImportExtractInput;
-    response: models.CRMImportExtractResult;
   };
   /** GET /api/v1/crm/customers/duplicates — Найти похожие карточки клиента */
   crmFindCustomerDuplicates: {
@@ -2596,13 +1567,6 @@ export interface OperationTypes {
     body: never;
     response: models.CRMCustomer;
   };
-  /** GET /api/v1/crm/customers/{id}/relations — Получить компании человека и контакты компании */
-  crmGetCustomerRelations: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMCustomerRelations;
-  };
   /** GET /api/v1/crm/deals/{id} — Получить карточку сделки */
   crmGetDeal: {
     params: { "id": models.UUID };
@@ -2630,20 +1594,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.CRMContactRef;
-  };
-  /** GET /api/v1/crm/imports/{id} — Получить запуск импорта */
-  crmGetImport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMImportRun;
-  };
-  /** GET /api/v1/crm/inbox/attachments/{id}/content — Скачать вложение диалога */
-  crmGetInboxAttachmentContent: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
   };
   /** GET /api/v1/crm/inbox/conversations/{id} — Получить диалог */
   crmGetInboxConversation: {
@@ -2687,47 +1637,12 @@ export interface OperationTypes {
     body: never;
     response: Array<models.CRMTimelineEntry>;
   };
-  /** GET /api/v1/crm/import-fields — Поля листов универсального файла импорта */
-  crmImportFields: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMImportFields;
-  };
-  /** GET /api/v1/crm/imports/{id}/options — Справочники для сопоставления импорта */
-  crmImportOptions: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMImportOptions;
-  };
-  /** GET /api/v1/crm/imports/{id}/report — Отчёт импорта в XLSX */
-  crmImportReport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** POST /api/v1/crm/imports/{id}/inspect — Показать колонки листа */
-  crmInspectImportSheet: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CRMImportInspectInput;
-    response: models.CRMImportSheetInfo;
-  };
   /** GET /api/v1/crm/leads/{id}/duplicates — Похожие обращения */
   crmLeadDuplicates: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: Array<models.CRMLeadDuplicate>;
-  };
-  /** PUT /api/v1/crm/customers/{id}/companies/{companyId} — Связать человека с компанией */
-  crmLinkCustomerCompany: {
-    params: { "companyId": models.UUID; "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CRMCustomerLinkInput;
-    response: models.CRMCustomerRelations;
   };
   /** POST /api/v1/crm/inbox/entities/{entity}/{id}/conversations — Привязать диалог к записи CRM */
   crmLinkEntityConversation: {
@@ -2778,13 +1693,6 @@ export interface OperationTypes {
     body: never;
     response: Array<models.CRMDealItem>;
   };
-  /** GET /api/v1/crm/deals — Получить карточки сделок кабинета */
-  crmListDeals: {
-    params: Record<string, never>;
-    query: { "archived"?: boolean; "customer"?: models.UUID; "limit"?: number; "offset"?: number; "owner"?: number; "pipeline"?: models.UUID; "q"?: string; "sort"?: string; "stage"?: models.UUID };
-    body: never;
-    response: Array<models.CRMDealCard>;
-  };
   /** GET /api/v1/crm/contacts — Найти контрагента в справочнике ERP */
   crmListDirectoryContacts: {
     params: Record<string, never>;
@@ -2819,20 +1727,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: Array<models.CRMExternalLink>;
-  };
-  /** GET /api/v1/crm/imports/{id}/records — Записи пакета импорта */
-  crmListImportRecords: {
-    params: { "id": models.UUID };
-    query: { "limit"?: number; "offset"?: number; "status"?: "pending" | "skipped" | "conflict" | "applied" | "failed" };
-    body: never;
-    response: Array<models.CRMImportRecord>;
-  };
-  /** GET /api/v1/crm/imports — Список запусков импорта */
-  crmListImports: {
-    params: Record<string, never>;
-    query: { "limit"?: number };
-    body: never;
-    response: Array<models.CRMImportRun>;
   };
   /** GET /api/v1/crm/inbox/connections — Получить подключённые каналы */
   crmListInboxConnections: {
@@ -2890,13 +1784,6 @@ export interface OperationTypes {
     body: never;
     response: Array<models.CRMActivity>;
   };
-  /** GET /api/v1/crm/lead-sources — Получить справочник источников обращения */
-  crmListLeadSources: {
-    params: Record<string, never>;
-    query: { "active"?: boolean };
-    body: never;
-    response: Array<models.CRMLeadSource>;
-  };
   /** GET /api/v1/crm/leads — Получить лиды */
   crmListLeads: {
     params: Record<string, never>;
@@ -2953,13 +1840,6 @@ export interface OperationTypes {
     body: models.CRMMoveDealInput;
     response: models.CRMDeal;
   };
-  /** POST /api/v1/crm/imports/{id}/preview — Проверить импорт перед переносом */
-  crmPreviewImport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CRMImportRevisionInput;
-    response: models.CRMImportPreview;
-  };
   /** POST /api/v1/crm/customers/{id}/promote — Завести клиента в справочнике контрагентов ERP */
   crmPromoteCustomer: {
     params: { "id": models.UUID };
@@ -2995,20 +1875,6 @@ export interface OperationTypes {
     body: models.CRMReorderInput;
     response: void;
   };
-  /** PUT /api/v1/crm/deals/{id}/contacts — Заменить состав контрагентов сделки */
-  crmReplaceDealContacts: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: Array<models.CRMDealContactInput>;
-    response: Array<models.CRMDealContact>;
-  };
-  /** PUT /api/v1/crm/deals/{id}/items — Заменить смету сделки */
-  crmReplaceDealItems: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: Array<models.CRMDealItemInput>;
-    response: Array<models.CRMDealItem>;
-  };
   /** POST /api/v1/crm/automation/runs/{id}/retry — Повторить неуспешный запуск */
   crmRetryAutomationRun: {
     params: { "id": models.UUID };
@@ -3016,26 +1882,12 @@ export interface OperationTypes {
     body: never;
     response: models.CRMAutomationRun;
   };
-  /** POST /api/v1/crm/imports/{id}/rollback — Отменить загрузку импорта */
-  crmRollbackImport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMImportRollback;
-  };
   /** GET /api/v1/crm/sales-plans — Планы продаж на месяц */
   crmSalesPlans: {
     params: Record<string, never>;
     query: { "period"?: string };
     body: never;
     response: Array<models.CRMSalesPlan>;
-  };
-  /** PUT /api/v1/crm/imports/{id}/mapping — Сохранить сопоставление импорта */
-  crmSaveImportMapping: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CRMImportMappingInput;
-    response: models.CRMImportRun;
   };
   /** POST /api/v1/crm/inbox/templates — Сохранить шаблон быстрого ответа */
   crmSaveInboxTemplate: {
@@ -3057,13 +1909,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CRMInboxSendInput;
     response: models.CRMInboxMessage;
-  };
-  /** DELETE /api/v1/crm/customers/{id}/companies/{companyId} — Снять связь человека с компанией */
-  crmUnlinkCustomerCompany: {
-    params: { "companyId": models.UUID; "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMCustomerRelations;
   };
   /** PUT /api/v1/crm/automation/rules/{id} — Заменить правило автоматизации */
   crmUpdateAutomationRule: {
@@ -3093,26 +1938,12 @@ export interface OperationTypes {
     body: models.CRMEngagementPatch;
     response: models.CRMEngagement;
   };
-  /** PATCH /api/v1/crm/inbox/connections/{id} — Изменить подключение канала */
-  crmUpdateInboxConnection: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CRMInboxConnectionPatch;
-    response: models.CRMInboxConnection;
-  };
   /** PATCH /api/v1/crm/leads/{id} — Изменить лид */
   crmUpdateLead: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.CRMLeadPatch;
     response: models.CRMLead;
-  };
-  /** PATCH /api/v1/crm/lead-sources/{id} — Изменить источник обращения */
-  crmUpdateLeadSource: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CRMLeadSourcePatch;
-    response: models.CRMLeadSource;
   };
   /** PATCH /api/v1/crm/pipelines/{id} — Изменить воронку */
   crmUpdatePipeline: {
@@ -3127,27 +1958,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CRMStagePatch;
     response: models.CRMStage;
-  };
-  /** POST /api/v1/crm/imports/{id}/file — Загрузить файл импорта */
-  crmUploadImportFile: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMImportFileInfo;
-  };
-  /** POST /api/v1/crm/inbox/messages/{id}/attachments — Добавить вложение к сообщению */
-  crmUploadInboxMessageAttachment: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMInboxAttachment;
-  };
-  /** POST /api/v1/crm/inbox/conversations/{id}/uploads — Загрузить файл для исходящего сообщения */
-  crmUploadInboxOutboundFile: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CRMInboxOutboundUpload;
   };
   /** GET /api/v1/developer/apps/{key}/installations/{id}/api-calls — Прочитать, что делал мой ключ */
   developerAppAPICalls: {
@@ -3303,13 +2113,6 @@ export interface OperationTypes {
     body: never;
     response: models.DeveloperFunctionUploadResult;
   };
-  /** POST /api/v1/docflow/messages/{id}/intake — Принять входящий документ к учёту */
-  docflowAcceptIntake: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowIntakeInput;
-    response: models.DocflowIntakeResult;
-  };
   /** POST /api/v1/docflow/approvals/{id}/acknowledge — Отметить «ознакомлен» */
   docflowAcknowledgeApproval: {
     params: { "id": models.UUID };
@@ -3323,13 +2126,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.DocflowApproval;
-  };
-  /** GET /api/v1/docflow/approval-routes/{id} — Получить маршрут согласования */
-  docflowApprovalRoute: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowApprovalRoute;
   };
   /** GET /api/v1/docflow/approval-routes — Получить маршруты согласования */
   docflowApprovalRoutes: {
@@ -3359,33 +2155,12 @@ export interface OperationTypes {
     body: never;
     response: models.DocflowApprovalSubjectState;
   };
-  /** GET /api/v1/docflow/approval-substitutions — Получить замещения согласующих */
-  docflowApprovalSubstitutions: {
-    params: Record<string, never>;
-    query: { "principal"?: number; "substitute"?: number };
-    body: never;
-    response: models.DocflowApprovalSubstitutionList;
-  };
   /** GET /api/v1/docflow/approvals — Получить очередь согласований */
   docflowApprovals: {
     params: Record<string, never>;
     query: { "limit"?: number; "mine"?: "true" | "false"; "module"?: "docflow" | "finance"; "offset"?: number; "overdue"?: "true" | "false"; "search"?: string; "state"?: "pending" | "approved" | "rejected" | "returned" | "cancelled" };
     body: never;
     response: models.DocflowApprovalInboxPage;
-  };
-  /** POST /api/v1/docflow/messages/{id}/cancellation/approve — Согласиться на аннулирование */
-  docflowApproveCancellation: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowCancellationInput;
-    response: models.DocflowActionResult;
-  };
-  /** POST /api/v1/docflow/messages/{id}/actions/approve — Подтвердить документ */
-  docflowApproveMessage: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowMessageActionInput;
-    response: models.DocflowActionResult;
   };
   /** POST /api/v1/docflow/approvals/{id}/cancel — Отозвать предмет с согласования */
   docflowCancelApproval: {
@@ -3394,13 +2169,6 @@ export interface OperationTypes {
     body: models.DocflowApprovalCancelInput;
     response: models.DocflowApproval;
   };
-  /** POST /api/v1/docflow/payment-requests/{id}/cancel — Отозвать заявку на оплату */
-  docflowCancelPaymentRequest: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowPaymentRequestVersion;
-    response: models.DocflowPaymentRequest;
-  };
   /** GET /api/v1/docflow/approval-routes/check — Проверить, по какому маршруту пойдёт предмет */
   docflowCheckApprovalRoute: {
     params: Record<string, never>;
@@ -3408,124 +2176,12 @@ export interface OperationTypes {
     body: never;
     response: models.DocflowApprovalChainPreview;
   };
-  /** POST /api/v1/docflow/connections/{id}/check — Проверить связь с оператором */
-  docflowCheckConnection: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowConnection;
-  };
-  /** POST /api/v1/docflow/approval-routes — Завести маршрут согласования */
-  docflowCreateApprovalRoute: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.DocflowApprovalRoute;
-    response: models.DocflowApprovalRoute;
-  };
-  /** POST /api/v1/docflow/connections — Завести подключение к оператору ЭДО */
-  docflowCreateConnection: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.DocflowConnectionInput;
-    response: models.DocflowConnection;
-  };
-  /** POST /api/v1/docflow/payment-requests — Завести заявку на оплату */
-  docflowCreatePaymentRequest: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.DocflowPaymentRequestInput;
-    response: models.DocflowPaymentRequest;
-  };
   /** POST /api/v1/docflow/approvals/{id}/decisions — Принять решение согласующего */
   docflowDecideApproval: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.DocflowApprovalDecisionInput;
     response: models.DocflowApproval;
-  };
-  /** POST /api/v1/docflow/approvals/{id}/delegate — Поручить своё решение другому человеку */
-  docflowDelegateApproval: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowApprovalDelegateInput;
-    response: models.DocflowApproval;
-  };
-  /** DELETE /api/v1/docflow/approval-substitutions/{id} — Удалить замещение согласующего */
-  docflowDeleteApprovalSubstitution: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/docflow/connections/{id} — Удалить подключение */
-  docflowDeleteConnection: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/docflow/flow/documents/{id}/edo/{link} — Удалить неотправленный черновик карточки у оператора */
-  docflowDeleteFlowEDODraft: {
-    params: { "id": models.UUID; "link": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/docflow/messages/{id}/draft — Удалить неотправленный черновик у оператора */
-  docflowDeleteMessageDraft: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** POST /api/v1/docflow/messages/{id}/stages/drop — Убрать этап из очереди */
-  docflowDropStage: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowStageRef;
-    response: void;
-  };
-  /** POST /api/v1/docflow/flow/documents/{id}/finance-act — Подтвердить выполнение актом */
-  docflowFlowAcceptFinanceAct: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowFlowFinanceAccrualInput;
-    response: models.DocflowFlowDocument;
-  };
-  /** GET /api/v1/docflow/flow/documents/{id}/accounting-candidates — Получить учётные документы, которые можно связать с бумагой */
-  docflowFlowAccountingCandidates: {
-    params: { "id": models.UUID };
-    query: { "offset"?: number; "owner": "finance" | "stock"; "search"?: string };
-    body: never;
-    response: models.DocflowFlowAccountingPage;
-  };
-  /** GET /api/v1/docflow/flow/documents/{id}/accounting-links/{link} — Прочитать учётный документ связи */
-  docflowFlowAccountingLink: {
-    params: { "id": models.UUID; "link": models.UUID };
-    query: { "version"?: number };
-    body: never;
-    response: models.DocflowFlowAccountingDocument;
-  };
-  /** GET /api/v1/docflow/flow/accounting-documents/{owner}/{document}/originals — Получить бумаги, стоящие за учётным документом */
-  docflowFlowAccountingOriginals: {
-    params: { "document": models.UUID; "owner": "finance" | "stock" };
-    query: { "offset"?: number };
-    body: never;
-    response: models.DocflowFlowAccountingBacklinkPage;
-  };
-  /** GET /api/v1/docflow/flow/documents/{id}/accrual-candidates — Получить планы, к которым можно принять акт */
-  docflowFlowAccrualCandidates: {
-    params: { "id": models.UUID };
-    query: { "offset"?: number; "search"?: string };
-    body: never;
-    response: models.DocflowFlowAccountingPage;
-  };
-  /** GET /api/v1/docflow/flow/documents/{id}/accrual-plan — Получить этапы работ выбранного плана */
-  docflowFlowAccrualPlan: {
-    params: { "id": models.UUID };
-    query: { "document": models.UUID };
-    body: never;
-    response: models.DocflowFlowAccrualPlan;
   };
   /** POST /api/v1/docflow/flow/documents/{id}/commands — Выполнить команду правки документа */
   docflowFlowChangeDocument: {
@@ -3541,25 +2197,11 @@ export interface OperationTypes {
     body: never;
     response: models.DocflowFlowContactStatsResponse;
   };
-  /** POST /api/v1/docflow/flow/accounting-documents/{owner}/{document}/originals — Завести бумагу по учётному документу */
-  docflowFlowCreateAccountingOriginal: {
-    params: { "document": models.UUID; "owner": "finance" | "stock" };
-    query: Record<string, never>;
-    body: models.DocflowFlowAccountingOriginalInput;
-    response: models.DocflowFlowDocument;
-  };
   /** POST /api/v1/docflow/flow/documents — Завести документ внутреннего контура */
   docflowFlowCreateDocument: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.DocflowFlowCreateInput;
-    response: models.DocflowFlowDocument;
-  };
-  /** POST /api/v1/docflow/flow/documents/{id}/finance-plan — Создать продажу или закупку по бумаге */
-  docflowFlowCreateFinancePlan: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowFlowFinancePlanInput;
     response: models.DocflowFlowDocument;
   };
   /** GET /api/v1/docflow/flow/documents/{id} — Получить карточку документа */
@@ -3590,47 +2232,12 @@ export interface OperationTypes {
     body: never;
     response: models.DocflowFlowPage;
   };
-  /** POST /api/v1/docflow/flow/documents/{id}/fns/file — Собрать XML бумаги в формате ФНС для скачивания */
-  docflowFlowFNSFile: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowFlowFNSInput;
-    response: void;
-  };
-  /** GET /api/v1/docflow/flow/documents/{id}/fns — Скачать отправленный XML бумаги в формате ФНС */
-  docflowFlowFNSIssue: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
   /** GET /api/v1/docflow/flow/documents/{id}/files/{fileId}/content — Скачать файл документа */
   docflowFlowFileContent: {
     params: { "fileId": models.UUID; "id": models.UUID };
     query: { "preview"?: "1" };
     body: never;
     response: void;
-  };
-  /** POST /api/v1/docflow/flow/documents/{id}/accounting-links — Связать бумагу с учётным документом */
-  docflowFlowLinkAccountingDocument: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowFlowAccountingLinkInput;
-    response: models.DocflowFlowDocument;
-  };
-  /** POST /api/v1/docflow/flow/schedule-preview — Раскрыть правило графика оплат в строки */
-  docflowFlowPreviewPaymentSchedule: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.DocflowFlowCommercial;
-    response: models.DocflowFlowCommercial;
-  };
-  /** GET /api/v1/docflow/flow/references — Получить справочники внутреннего контура */
-  docflowFlowReferences: {
-    params: Record<string, never>;
-    query: { "kind": "company" | "contact" | "product" | "sale_item" | "purchase_item" | "contact_folder"; "offset"?: number; "search"?: string };
-    body: never;
-    response: models.DocflowFlowReferencePage;
   };
   /** GET /api/v1/docflow/flow/documents/{id}/revisions/{version}/files/{fileId}/content — Скачать файл исторической редакции */
   docflowFlowRevisionFileContent: {
@@ -3639,33 +2246,12 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
-  /** POST /api/v1/docflow/flow/documents/{id}/accounting-links/remove — Снять связь бумаги с учётным документом */
-  docflowFlowUnlinkAccountingDocument: {
+  /** GET /api/v1/docflow/flow/documents/{id}/signatures/sheet — Скачать лист электронной подписи документа */
+  docflowFlowSignatureSheet: {
     params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowFlowAccountingUnlinkInput;
-    response: models.DocflowFlowDocument;
-  };
-  /** POST /api/v1/docflow/flow/documents/{id}/files — Приложить файл к документу */
-  docflowFlowUploadFile: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowFlowDocument;
-  };
-  /** GET /api/v1/docflow/attachments/{id}/content — Скачать файл вложения */
-  docflowGetAttachmentContent: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
+    query: { "signature"?: models.UUID };
     body: never;
     response: void;
-  };
-  /** GET /api/v1/docflow/connections/{id} — Получить карточку подключения */
-  docflowGetConnection: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowConnection;
   };
   /** GET /api/v1/docflow/messages/{id} — Получить пакет документов */
   docflowGetMessage: {
@@ -3673,62 +2259,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.DocflowMessage;
-  };
-  /** GET /api/v1/docflow/messages/{id}/archive — Скачать архив пакета ЭДО с подписями */
-  docflowGetMessageArchive: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/docflow/signatures/{id}/content — Скачать файл подписи */
-  docflowGetSignatureContent: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/docflow/outgoing/{id}/content — Скачать собранный XML титула */
-  docflowGetTitleContent: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/docflow/gov/documents/{id} — Карточка документа госоргана */
-  docflowGovDocument: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowGovDocument;
-  };
-  /** GET /api/v1/docflow/gov/documents — Документы госорганов */
-  docflowGovDocuments: {
-    params: Record<string, never>;
-    query: { "company"?: models.UUID; "limit"?: number; "offset"?: number; "open"?: "1"; "part"?: "claims" | "letters" | "reports" };
-    body: never;
-    response: models.DocflowGovList;
-  };
-  /** GET /api/v1/docflow/gov/summary — Сводка раздела «Налоговая» */
-  docflowGovSummary: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowGovSummary;
-  };
-  /** GET /api/v1/docflow/messages/{id}/intake — Посмотреть, что предлагается принять к учёту */
-  docflowIntakePreview: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowIntakePreview;
-  };
-  /** POST /api/v1/docflow/connections/{id}/invitations — Пригласить контрагента к обмену */
-  docflowInviteCounterparty: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowInvitationInput;
-    response: void;
   };
   /** POST /api/v1/docflow/orders/{id}/act — Сделать акт по заказу */
   docflowIssueOrderAct: {
@@ -3751,33 +2281,12 @@ export interface OperationTypes {
     body: models.DocflowOrderUPDInput;
     response: models.DocflowFlowDocument;
   };
-  /** POST /api/v1/docflow/edo/signing/tasks — Получить задание на подпись */
-  docflowIssueSigningTask: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.DocflowSigningTaskInput;
-    response: models.DocflowSigningTask;
-  };
-  /** PUT /api/v1/docflow/messages/{id}/intake/counterparty — Запомнить, с каким контрагентом справочника сведён пакет */
-  docflowLinkIntakeCounterparty: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowLinkIntakeCounterpartyRequest;
-    response: models.DocflowIntakePreview;
-  };
   /** GET /api/v1/docflow/connections — Получить подключения к операторам ЭДО */
   docflowListConnections: {
     params: Record<string, never>;
     query: { "all"?: "1"; "company"?: models.UUID; "provider"?: "saby" | "diadoc" };
     body: never;
     response: models.DocflowConnectionList;
-  };
-  /** GET /api/v1/docflow/invitations — Получить состояния заявок на обмен */
-  docflowListInvitations: {
-    params: Record<string, never>;
-    query: { "connection"?: models.UUID; "limit"?: number; "offset"?: number };
-    body: never;
-    response: models.DocflowInvitationPage;
   };
   /** GET /api/v1/docflow/messages — Получить пакеты документов оператора */
   docflowListMessages: {
@@ -3786,145 +2295,12 @@ export interface OperationTypes {
     body: never;
     response: models.DocflowMessageList;
   };
-  /** GET /api/v1/docflow/edo/signing/tasks — Получить задания, ждущие подписи */
-  docflowListSigningTasks: {
+  /** GET /api/v1/docflow/payment-requests/route-preview — Предварительно определить путь заявки на оплату */
+  docflowPaymentRequestRoutePreview: {
     params: Record<string, never>;
-    query: { "limit"?: number; "message_id"?: models.UUID; "offset"?: number; "status"?: "pending" | "signed" | "expired" };
+    query: { "amount"?: string; "company_id"?: models.UUID; "contact_id"?: models.UUID; "currency"?: string; "item_id"?: models.UUID };
     body: never;
-    response: models.DocflowSigningTaskList;
-  };
-  /** GET /api/v1/docflow/outgoing — Получить собранные титулы */
-  docflowListTitles: {
-    params: Record<string, never>;
-    query: { "document"?: models.UUID; "kind"?: "seller" | "buyer"; "message"?: models.UUID };
-    body: never;
-    response: models.DocflowTitleList;
-  };
-  /** POST /api/v1/docflow/connections/{id}/participants/lookup — Найти ящик контрагента у оператора */
-  docflowLookupParticipant: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowLookupParticipantRequest;
-    response: models.DocflowLookupParticipantResponse;
-  };
-  /** POST /api/v1/docflow/gov/documents/{id}/answered — Отметить «ответ дан» */
-  docflowMarkGovAnswered: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowGovDocument;
-  };
-  /** POST /api/v1/docflow/messages/{id}/viewed — Отметить, что сотрудник открыл пакет */
-  docflowMarkMessageViewed: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/docflow/messages/{id}/print — Печатный вид пакета */
-  docflowMessagePrintForm: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/docflow/messages/{id}/payment-details — Прочитать платёжные реквизиты входящего счёта */
-  docflowPaymentDetails: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowPaymentDetails;
-  };
-  /** GET /api/v1/docflow/payment-requests/{id} — Получить заявку на оплату */
-  docflowPaymentRequest: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowPaymentRequest;
-  };
-  /** GET /api/v1/docflow/payment-requests — Получить заявки на оплату */
-  docflowPaymentRequests: {
-    params: Record<string, never>;
-    query: { "scope"?: "mine" | "all"; "status"?: models.DocflowPaymentRequestStatus };
-    body: never;
-    response: models.DocflowPaymentRequestList;
-  };
-  /** POST /api/v1/docflow/messages/{id}/stages/postpone — Отложить этап */
-  docflowPostponeStage: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowStageRef;
-    response: void;
-  };
-  /** POST /api/v1/docflow/messages/{id}/buyer-title/preflight — Проверить ответный титул покупателя */
-  docflowPreflightBuyerTitle: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowBuyerTitleInput;
-    response: models.DocflowPreflight;
-  };
-  /** POST /api/v1/docflow/flow/documents/{id}/fns/preflight — Проверить XML бумаги в формате ФНС до отправки */
-  docflowPreflightFlowFNS: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowFlowFNSInput;
-    response: models.DocflowPreflight;
-  };
-  /** POST /api/v1/docflow/outgoing/preflight — Проверить учётный документ до отправки */
-  docflowPreflightOutgoing: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.DocflowOutgoingInput;
-    response: models.DocflowPreflight;
-  };
-  /** POST /api/v1/docflow/messages/{id}/actions/preview — Последствие действия этапа */
-  docflowPreviewMessageAction: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowMessageActionInput;
-    response: models.DocflowPreviewMessageActionResponse;
-  };
-  /** POST /api/v1/docflow/messages/{id}/refresh — Перечитать карточку пакета у оператора */
-  docflowRefreshMessage: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowRefreshMessageResponse;
-  };
-  /** POST /api/v1/docflow/messages/{id}/cancellation/reject — Отказать в аннулировании */
-  docflowRejectCancellation: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowCancellationInput;
-    response: models.DocflowActionResult;
-  };
-  /** POST /api/v1/docflow/messages/{id}/actions/reject — Отклонить документ */
-  docflowRejectMessage: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowMessageActionInput;
-    response: models.DocflowActionResult;
-  };
-  /** POST /api/v1/docflow/messages/{id}/stages/repeat — Повторить этап */
-  docflowRepeatStage: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowStageRef;
-    response: void;
-  };
-  /** POST /api/v1/docflow/messages/{id}/cancellation — Предложить аннулирование */
-  docflowRequestCancellation: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowCancellationInput;
-    response: models.DocflowActionResult;
-  };
-  /** POST /api/v1/docflow/messages/{id}/restore — Вернуть пакет из корзины */
-  docflowRestoreMessage: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
+    response: models.DocflowPaymentRequestRoutePreview;
   };
   /** POST /api/v1/docflow/approvals/{id}/resubmit — Отправить предмет повторно после доработки */
   docflowResubmitApproval: {
@@ -3933,68 +2309,12 @@ export interface OperationTypes {
     body: models.DocflowApprovalResubmitInput;
     response: models.DocflowApproval;
   };
-  /** PUT /api/v1/docflow/approval-policies — Объявить согласование обязательным для вида предмета */
-  docflowSaveApprovalPolicy: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.DocflowApprovalPolicy;
-    response: void;
-  };
-  /** PUT /api/v1/docflow/approval-routes/{id} — Сохранить маршрут согласования */
-  docflowSaveApprovalRoute: {
+  /** GET /api/v1/docflow/orders/{id}/set — Получить комплект документов заказа */
+  docflowSalesOrderDocumentSet: {
     params: { "id": models.UUID };
     query: Record<string, never>;
-    body: models.DocflowApprovalRoute;
-    response: models.DocflowApprovalRoute;
-  };
-  /** POST /api/v1/docflow/approval-substitutions — Завести или изменить замещение согласующего */
-  docflowSaveApprovalSubstitution: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.DocflowApprovalSubstitution;
-    response: models.DocflowApprovalSubstitution;
-  };
-  /** POST /api/v1/docflow/messages/{id}/buyer-title — Собрать ответный титул покупателя и приложить его к пакету */
-  docflowSendBuyerTitle: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowBuyerTitleInput;
-    response: models.DocflowTitle;
-  };
-  /** POST /api/v1/docflow/flow/documents/{id}/edo — Отправить файл карточки через ЭДО */
-  docflowSendFlowDocumentByEDO: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowOutgoingFlowInput;
-    response: models.DocflowFlowEDOLink;
-  };
-  /** POST /api/v1/docflow/flow/documents/{id}/fns/send — Отправить бумагу по ЭДО в формате ФНС */
-  docflowSendFlowFNS: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowFlowFNSInput;
-    response: models.DocflowFlowFNSSent;
-  };
-  /** POST /api/v1/docflow/outgoing — Собрать титул продавца и записать его оператору */
-  docflowSendOutgoing: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.DocflowOutgoingInput;
-    response: models.DocflowTitle;
-  };
-  /** POST /api/v1/docflow/approval-routes/{id}/active — Включить или выключить маршрут согласования */
-  docflowSetApprovalRouteActive: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowApprovalRouteActiveInput;
-    response: void;
-  };
-  /** PUT /api/v1/docflow/connections/{id}/mode — Выбрать режим подключения — только чтение, черновики в ЭДО или запись */
-  docflowSetConnectionMode: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowConnectionModeInput;
-    response: models.DocflowConnection;
+    body: never;
+    response: models.DocflowOrderDocumentSet;
   };
   /** POST /api/v1/docflow/approvals — Отправить предмет на согласование */
   docflowSubmitApproval: {
@@ -4003,68 +2323,12 @@ export interface OperationTypes {
     body: models.DocflowApprovalSubject;
     response: models.DocflowApproval;
   };
-  /** POST /api/v1/docflow/payment-requests/{id}/submit — Отправить заявку на оплату на согласование */
-  docflowSubmitPaymentRequest: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowPaymentRequestVersion;
-    response: models.DocflowPaymentRequest;
-  };
-  /** POST /api/v1/docflow/edo/signing/tasks/{task_id}/signature — Отправить вычисленную подпись */
-  docflowSubmitSignature: {
-    params: { "task_id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowSignatureSubmission;
-    response: models.DocflowSigningResult;
-  };
-  /** POST /api/v1/docflow/connections/{id}/sync — Перечитать ленту оператора по требованию */
-  docflowSyncConnection: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowSyncOutcome;
-  };
-  /** POST /api/v1/docflow/messages/{id}/trash — Убрать пакет в корзину */
-  docflowTrashMessage: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/docflow/gov/documents/{id}/answered — Снять отметку «ответ дан» */
-  docflowUnmarkGovAnswered: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DocflowGovDocument;
-  };
-  /** PATCH /api/v1/docflow/connections/{id} — Изменить подключение */
-  docflowUpdateConnection: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowConnectionPatch;
-    response: models.DocflowConnection;
-  };
-  /** PUT /api/v1/docflow/payment-requests/{id} — Изменить заявку на оплату */
-  docflowUpdatePaymentRequest: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocflowPaymentRequestUpdate;
-    response: models.DocflowPaymentRequest;
-  };
   /** DELETE /api/v1/files/uploads/{id} — Отменить загрузку */
   filesAbortUpload: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: void;
-  };
-  /** POST /api/v1/files/items/access-check — Проверить доступ к пачке файлов */
-  filesAccessCheck: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.FilesAccessCheckRequest;
-    response: models.FilesAccessCheckResponse;
   };
   /** POST /api/v1/files/uploads/{id}/complete — Завершить загрузку */
   filesCompleteUpload: {
@@ -4073,22 +2337,8 @@ export interface OperationTypes {
     body: never;
     response: models.FilesFile;
   };
-  /** GET /api/v1/files/items/{id}/content-url — Временный адрес содержимого */
-  filesContentLink: {
-    params: { "id": models.UUID };
-    query: { "kind"?: "content" | "preview" | "thumbnail" };
-    body: never;
-    response: models.FilesContentLinkResponse;
-  };
   /** POST /api/v1/files/folders — Создать папку */
   filesCreateFolder: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.FilesFolderInput;
-    response: models.FilesFolder;
-  };
-  /** POST /api/v1/files/roots — Создать хранилище */
-  filesCreateRoot: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.FilesFolderInput;
@@ -4107,20 +2357,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.FilesCreateShortcutRequest;
     response: models.FilesFile;
-  };
-  /** GET /api/v1/files/items/{id}/content — Скачать файл */
-  filesDownloadFile: {
-    params: { "id": models.UUID };
-    query: { "inline"?: boolean };
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/files/folders/{id}/archive — Скачать папку архивом */
-  filesDownloadFolderArchive: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
   };
   /** GET /api/v1/files/folders/{id}/access — Получить состав участников папки */
   filesFolderAccess: {
@@ -4149,27 +2385,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.FilesListRootsResponse;
-  };
-  /** GET /api/v1/files/shares — Получить внешние ссылки цели */
-  filesListShares: {
-    params: Record<string, never>;
-    query: { "file_id"?: models.UUID; "folder_id"?: models.UUID };
-    body: never;
-    response: models.FilesListSharesResponse;
-  };
-  /** DELETE /api/v1/files/trash — Очистить корзину */
-  filesPurgeTrash: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.FilesPurgeTrashResponse;
-  };
-  /** PUT /api/v1/files/folders/{id}/access — Переписать состав участников папки */
-  filesReplaceFolderAccess: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.FilesAccessInput;
-    response: models.FilesAccessPolicy;
   };
   /** DELETE /api/v1/files/shares/{id} — Отозвать внешнюю ссылку */
   filesRevokeShare: {
@@ -4206,33 +2421,12 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceAccountableBalances;
   };
-  /** POST /api/v1/finance/connectors/accounts/{accountId}/adopt — Создать счёт Akeda из внешнего банковского счёта */
-  financeAdoptConnectorAccount: {
-    params: { "accountId": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinanceConnectorAccount;
-  };
-  /** POST /api/v1/finance/cashflow-layouts/template — Собрать макет отчёта о движении денег по шаблону */
-  financeApplyCashflowTemplate: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.FinancePnlLayout;
-  };
   /** POST /api/v1/finance/exchange/items/{id}/apply — Связать элемент обмена с каноническим документом Akeda */
   financeApplyExchangeItem: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.FinanceExchangeApply;
     response: models.FinanceExchangeItem;
-  };
-  /** POST /api/v1/finance/imports/{id}/apply — Применить проверенный импорт */
-  financeApplyImport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.FinanceImportApply;
-    response: models.FinanceImportRun;
   };
   /** POST /api/v1/finance/dividends/decisions/{id}/approve — Утвердить черновик начисления */
   financeApproveDividendDecision: {
@@ -4248,13 +2442,6 @@ export interface OperationTypes {
     body: never;
     response: { [key: string]: unknown };
   };
-  /** POST /api/v1/finance/accountable/reports/{id}/cancel — Отменить проведение авансового отчёта */
-  financeCancelExpenseReport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreDocument;
-  };
   /** POST /api/v1/finance/operations/{id}/cancel — Отменить текущий документ операции */
   financeCancelOperation: {
     params: { "id": models.UUID };
@@ -4262,33 +2449,12 @@ export interface OperationTypes {
     body: models.FinanceOperationAction;
     response: models.FinanceOperation;
   };
-  /** POST /api/v1/finance/payment-calendar/plans/{id}/cancel — Отменить ручную плановую строку */
-  financeCancelPaymentPlan: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinancePaymentPlan;
-  };
-  /** POST /api/v1/finance/payroll/documents/{id}/cancel — Отменить проведение зарплатного документа */
-  financeCancelPayrollDocument: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreDocument;
-  };
   /** POST /api/v1/finance/settlements/documents/{id}/cancel — Отменить проведение документа взаиморасчётов */
   financeCancelSettlementDocument: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.CoreDocument;
-  };
-  /** POST /api/v1/finance/vat-quarters/{id}/cancel — Отменить проведение «НДС за квартал» */
-  financeCancelVATQuarter: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinanceVATQuarter;
   };
   /** GET /api/v1/finance/reports/cashflow/entries — Получить расшифровку ячейки отчёта о движении денег */
   financeCashflowEntries: {
@@ -4311,47 +2477,12 @@ export interface OperationTypes {
     body: models.FinanceTransactionCategorize;
     response: models.FinanceTransaction;
   };
-  /** POST /api/v1/finance/connectors/{id}/accounts/{accountId}/check-statement — Проверить доступность выписки без записи в ERP */
-  financeCheckConnectorStatement: {
-    params: { "accountId": models.UUID; "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinanceConnectorStatementCheck;
-  };
-  /** GET /api/v1/finance/classification-suggestions — Прочитать рекомендации расширений */
-  financeClassificationSuggestions: {
-    params: Record<string, never>;
-    query: { "limit"?: number; "offset"?: number; "status"?: "pending" | "accepted" | "rejected"; "transaction"?: models.UUID };
-    body: never;
-    response: Array<models.FinanceClassificationSuggestion>;
-  };
-  /** PUT /api/v1/finance/connectors/{id}/mtls — Сохранить клиентский сертификат для банковского OAuth */
-  financeConfigureConnectorMTLS: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.FinanceConnectorMTLSInput;
-    response: models.FinanceConnector;
-  };
   /** POST /api/v1/finance/accounts — Создать банковский счёт */
   financeCreateAccount: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.FinanceAccountCreate;
     response: models.FinanceAccount;
-  };
-  /** POST /api/v1/finance/cash-operations — Записать трату или приход в кассе */
-  financeCreateCashOperation: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.FinanceCashOperationCreate;
-    response: models.FinanceCashOperation;
-  };
-  /** POST /api/v1/finance/connectors — Создать подключение к банку */
-  financeCreateConnector: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.FinanceConnectorCreate;
-    response: models.FinanceConnector;
   };
   /** POST /api/v1/finance/counterparties/{contactId}/terms — Создать новую версию коммерческих условий */
   financeCreateCounterpartyTerms: {
@@ -4416,20 +2547,6 @@ export interface OperationTypes {
     body: models.FinancePaymentPlanInput;
     response: models.FinancePaymentPlan;
   };
-  /** POST /api/v1/finance/payroll/documents — Создать зарплатный документ */
-  financeCreatePayrollDocument: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.FinancePayrollDocumentCreate;
-    response: models.CoreDocument;
-  };
-  /** POST /api/v1/finance/pnl-layouts — Создать пустой макет ОПиУ */
-  financeCreatePnlLayout: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.FinancePnlLayoutCreate;
-    response: models.FinancePnlLayout;
-  };
   /** POST /api/v1/finance/settlements/documents — Создать типизированный документ взаиморасчётов */
   financeCreateSettlementDocument: {
     params: Record<string, never>;
@@ -4451,47 +2568,12 @@ export interface OperationTypes {
     body: models.FinanceTransactionCreate;
     response: models.FinanceTransaction;
   };
-  /** POST /api/v1/finance/vat-quarters — Сохранить черновик «НДС за квартал» */
-  financeCreateVATQuarter: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.FinanceVATQuarterInput;
-    response: models.FinanceVATQuarter;
-  };
-  /** DELETE /api/v1/finance/accounts/{id}/statements/{statementId} — Удалить последнюю загруженную выписку счёта */
-  financeDeleteAccountStatement: {
-    params: { "id": models.UUID; "statementId": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/finance/connectors/{id} — Удалить брошенную попытку подключения */
-  financeDeleteConnector: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/finance/pnl-layouts/{id} — Удалить макет ОПиУ */
-  financeDeletePnlLayout: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
   /** DELETE /api/v1/finance/settlements/documents/{id} — Удалить черновик документа взаиморасчётов */
   financeDeleteSettlementDocument: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.CoreDocument;
-  };
-  /** POST /api/v1/finance/payment-calendar/plans/{id}/execute — Связать план с фактической денежной операцией */
-  financeExecutePaymentPlan: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.FinancePaymentPlanExecute;
-    response: models.FinancePaymentPlan;
   };
   /** GET /api/v1/finance/accountable/reports — Получить авансовые отчёты */
   financeExpenseReports: {
@@ -4506,13 +2588,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.FinanceAccount;
-  };
-  /** GET /api/v1/finance/accounts/{id}/reconciliation — Разобрать расхождение остатка счёта с банком */
-  financeGetAccountReconciliation: {
-    params: { "id": models.UUID };
-    query: { "to"?: string };
-    body: never;
-    response: models.FinanceReconciliationAccount;
   };
   /** GET /api/v1/finance/reports/balance — Построить управленческий баланс на дату */
   financeGetBalanceReport: {
@@ -4535,13 +2610,6 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceConnector;
   };
-  /** GET /api/v1/finance/connectors/sync-settings — Получить расписание синхронизации банков */
-  financeGetConnectorSyncSettings: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.FinanceConnectorSyncSettings;
-  };
   /** GET /api/v1/finance/counterparties/{contactId}/terms — Получить коммерческие условия на указанную дату */
   financeGetCounterpartyTerms: {
     params: { "contactId": models.UUID };
@@ -4555,13 +2623,6 @@ export interface OperationTypes {
     query: { "as_of"?: string; "business_id"?: models.UUID; "company_id"?: models.UUID; "date_from"?: string; "date_to"?: string };
     body: never;
     response: { [key: string]: unknown };
-  };
-  /** GET /api/v1/finance/imports/{id} — Получить состояние запуска импорта */
-  financeGetImport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinanceImportRun;
   };
   /** GET /api/v1/finance/operations/{id} — Получить состояние продажи или закупки */
   financeGetOperation: {
@@ -4583,34 +2644,6 @@ export interface OperationTypes {
     query: { "business"?: models.UUID; "company"?: string; "currency"?: string; "from"?: string; "project"?: string; "step"?: "day" | "month" | "quarter"; "to"?: string };
     body: never;
     response: models.FinancePaymentCalendar;
-  };
-  /** GET /api/v1/finance/reports/payroll — Построить журнал заработной платы за период */
-  financeGetPayrollJournal: {
-    params: Record<string, never>;
-    query: { "cfo"?: models.UUID; "company"?: models.UUID; "department"?: models.UUID; "employee"?: models.UUID; "from"?: string; "project"?: models.UUID; "to"?: string };
-    body: never;
-    response: models.FinancePayrollJournal;
-  };
-  /** GET /api/v1/finance/reports/payroll/payments — Расшифровать выплаты сотруднику за период */
-  financeGetPayrollPayments: {
-    params: Record<string, never>;
-    query: { "company"?: models.UUID; "employee": models.UUID; "from"?: string; "to"?: string };
-    body: never;
-    response: models.FinancePayrollPayments;
-  };
-  /** GET /api/v1/finance/period-checks — Получить проверки перед закрытием периода */
-  financeGetPeriodCloseChecks: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.FinancePeriodCheckPage;
-  };
-  /** GET /api/v1/finance/pnl-layouts/{id} — Получить один макет ОПиУ */
-  financeGetPnlLayout: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinancePnlLayout;
   };
   /** GET /api/v1/finance/reports/pnl — Построить отчёт о прибылях и убытках */
   financeGetPnlReport: {
@@ -4654,54 +2687,12 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceCommercialPosition;
   };
-  /** GET /api/v1/finance/trade-journal/advance — Получить свободные авансы контрагента */
-  financeGetTradeAdvance: {
-    params: Record<string, never>;
-    query: { "business"?: models.UUID; "company_id"?: models.UUID; "contact_id": models.UUID; "currency": string; "direction": "sales" | "purchases" };
-    body: never;
-    response: models.FinanceTradeAdvance;
-  };
-  /** GET /api/v1/finance/trade-journal — Получить журнал продаж или закупок */
-  financeGetTradeJournal: {
-    params: Record<string, never>;
-    query: { "business"?: models.UUID; "company_id"?: string; "currency"?: string; "date_from"?: string; "date_to"?: string; "direction": "sales" | "purchases"; "expand"?: boolean; "group"?: "orders" | "without_order" | "executions"; "limit"?: number; "mine"?: boolean; "offset"?: number; "q"?: string; "record_id"?: string; "responsible_id"?: string; "settlement_state"?: "all" | "unaccrued" | "open" | "overdue" | "advance"; "status"?: "draft" | "posted" | "cancelled"; "view"?: "all" | "control" | "due" };
-    body: never;
-    response: models.FinanceTradeJournalPage;
-  };
   /** GET /api/v1/finance/transactions/{id} — Получить банковскую операцию с подсказками сверки */
   financeGetTransaction: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.FinanceTransaction;
-  };
-  /** GET /api/v1/finance/transactions/unallocated — Получить счётчик неразнесённых денег */
-  financeGetUnallocatedMoney: {
-    params: Record<string, never>;
-    query: { "business"?: models.UUID };
-    body: never;
-    response: models.FinanceUnallocatedSummary;
-  };
-  /** GET /api/v1/finance/vat-quarters/books/{id}/source — Скачать исходный файл загруженной книги 1С */
-  financeGetVATBookSource: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/finance/vat-quarters/{id} — Получить документ «НДС за квартал» */
-  financeGetVATQuarter: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinanceVATQuarter;
-  };
-  /** POST /api/v1/finance/imports/{id}/inspect — Прочитать лист и колонки файла импорта */
-  financeInspectImport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.FinanceImportInspect;
-    response: models.FinanceImportRun;
   };
   /** POST /api/v1/finance/statements/{id}/transactions — Привязать существующие операции к выписке */
   financeLinkStatementTransactions: {
@@ -4710,26 +2701,12 @@ export interface OperationTypes {
     body: models.FinanceStatementLinkInput;
     response: models.FinanceStatementLinkResult;
   };
-  /** GET /api/v1/finance/accounts/{id}/statements — Получить историю выписок одного счёта */
-  financeListAccountStatements: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinanceStatementPage;
-  };
   /** GET /api/v1/finance/accounts — Получить доступные банковские счета */
   financeListAccounts: {
     params: Record<string, never>;
     query: { "business"?: models.UUID; "q"?: string };
     body: never;
     response: models.FinanceAccountPage;
-  };
-  /** GET /api/v1/finance/cash-operations — Прочитать журнал кассы */
-  financeListCashOperations: {
-    params: Record<string, never>;
-    query: { "allocated"?: boolean; "allocation"?: "unallocated"; "business"?: models.UUID; "contact"?: models.UUID; "direction"?: models.FinanceDirection; "employee"?: models.UUID; "from"?: string; "item"?: models.UUID; "limit"?: number; "offset"?: number; "q"?: string; "to"?: string; "wallet"?: models.UUID };
-    body: never;
-    response: models.FinanceCashOperationPage;
   };
   /** GET /api/v1/finance/connectors/{id}/accounts — Получить банковские счета подключения и их привязки */
   financeListConnectorAccounts: {
@@ -4808,20 +2785,6 @@ export interface OperationTypes {
     body: never;
     response: models.FinancePaymentFactPage;
   };
-  /** GET /api/v1/finance/pnl-layouts/items — Получить дерево статей ОПиУ для конструктора макета */
-  financeListPnlLayoutItems: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.FinancePnlItemPage;
-  };
-  /** GET /api/v1/finance/pnl-layouts — Получить макеты ОПиУ кабинета */
-  financeListPnlLayouts: {
-    params: Record<string, never>;
-    query: { "report"?: "pnl" | "cashflow" };
-    body: never;
-    response: models.FinancePnlLayoutPage;
-  };
   /** GET /api/v1/finance/settlements/balances — Получить остатки обязательств, доступных пользователю */
   financeListSettlementBalances: {
     params: Record<string, never>;
@@ -4864,89 +2827,12 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceTransactionPage;
   };
-  /** GET /api/v1/finance/vat-quarters — Получить документы «НДС за квартал» */
-  financeListVATQuarters: {
-    params: Record<string, never>;
-    query: { "company_id"?: models.UUID; "limit"?: number; "offset"?: number };
-    body: never;
-    response: models.FinanceVATQuarterPage;
-  };
-  /** GET /api/v1/finance/lookup/company — Сопоставить владельца счёта с юрлицом по ИНН */
-  financeLookupCompany: {
-    params: Record<string, never>;
-    query: { "inn": string };
-    body: never;
-    response: models.FinanceCompanyMatch;
-  };
-  /** GET /api/v1/finance/lookup/requisites — Проверить ИНН, БИК и номер счёта */
-  financeLookupRequisites: {
-    params: Record<string, never>;
-    query: { "bic"?: string; "inn"?: string; "number"?: string };
-    body: never;
-    response: models.FinanceRequisitesLookup;
-  };
-  /** PATCH /api/v1/finance/imports/{id}/mapping — Сохранить сопоставление колонок файла с полями Akeda */
-  financeMapImport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.FinanceImportMapping;
-    response: models.FinanceImportRun;
-  };
-  /** PATCH /api/v1/finance/imports/{id}/item-mapping — Сохранить соответствие статей файла статьям справочника */
-  financeMapImportItems: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.FinanceImportItemMappingRequest;
-    response: models.FinanceImportRun;
-  };
   /** POST /api/v1/finance/transactions/{id}/mark-deleted — Пометить банковскую операцию на удаление */
   financeMarkTransactionDeleted: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.FinanceMarkTransactionDeletedRequest;
     response: models.CoreDocument;
-  };
-  /** GET /api/v1/finance/payroll/registers — Получить журнал реестров на выплату */
-  financePayoutRegisters: {
-    params: Record<string, never>;
-    query: { "company"?: models.UUID; "limit"?: number };
-    body: never;
-    response: models.FinancePayoutRegisterPage;
-  };
-  /** GET /api/v1/finance/payroll/documents — Получить журнал зарплатных документов */
-  financePayrollDocuments: {
-    params: Record<string, never>;
-    query: { "limit"?: number };
-    body: never;
-    response: models.CoreDocumentPage;
-  };
-  /** POST /api/v1/finance/payroll/import/inspect — Разобрать файл реестра начислений */
-  financePayrollImportInspect: {
-    params: Record<string, never>;
-    query: { "header"?: number };
-    body: never;
-    response: models.FinancePayrollImportInspection;
-  };
-  /** POST /api/v1/finance/payroll/import/preview — Получить предпросмотр начисления по соответствию колонок */
-  financePayrollImportPreview: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.FinancePayrollImportPreview;
-  };
-  /** POST /api/v1/finance/payroll/payout-sheet — Выгрузить список на оплату и завести реестр выплаты */
-  financePayrollPayoutSheet: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.FinancePayoutSheetRequest;
-    response: void;
-  };
-  /** GET /api/v1/finance/reports/pnl/entries — Получить расшифровку ячейки отчёта о прибылях и убытках */
-  financePnlEntries: {
-    params: Record<string, never>;
-    query: { "company"?: models.UUID; "from"?: string; "item"?: models.UUID; "project"?: models.UUID; "to"?: string };
-    body: never;
-    response: models.FinancePnlEntryPage;
   };
   /** POST /api/v1/finance/dividends/decisions/{id}/post — Провести утверждённое начисление в счета 84 и 75 */
   financePostDividendDecision: {
@@ -4962,13 +2848,6 @@ export interface OperationTypes {
     body: never;
     response: models.CoreDocument;
   };
-  /** POST /api/v1/finance/payroll/documents/{id}/post — Провести зарплатный документ */
-  financePostPayrollDocument: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreDocument;
-  };
   /** POST /api/v1/finance/settlements/documents/{id}/post — Провести документ взаиморасчётов */
   financePostSettlementDocument: {
     params: { "id": models.UUID };
@@ -4976,40 +2855,12 @@ export interface OperationTypes {
     body: never;
     response: models.CoreDocument;
   };
-  /** POST /api/v1/finance/vat-quarters/{id}/post — Провести «НДС за квартал» */
-  financePostVATQuarter: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinanceVATQuarter;
-  };
   /** GET /api/v1/finance/dividends/decisions/preview — Рассчитать доступную прибыль и заполнить распределение собственникам */
   financePreviewDividendDecision: {
     params: Record<string, never>;
     query: { "business_id"?: models.UUID; "company_id"?: models.UUID; "period_from": string; "period_to": string; "policy_id"?: models.UUID };
     body: never;
     response: { [key: string]: unknown };
-  };
-  /** POST /api/v1/finance/imports/{id}/preview — Проверить импорт и показать изменения без записи */
-  financePreviewImport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinanceImportRun;
-  };
-  /** POST /api/v1/finance/sale-lines/preview — Посчитать строки продажи до сохранения */
-  financePreviewSaleLines: {
-    params: Record<string, never>;
-    query: { "business"?: models.UUID };
-    body: models.FinanceSaleLinesPreviewRequest;
-    response: models.FinanceSaleLinesPreview;
-  };
-  /** POST /api/v1/finance/vat-quarters/preview — Посчитать «НДС за квартал» без сохранения */
-  financePreviewVATQuarter: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.FinanceVATQuarterInput;
-    response: models.FinanceVATQuarterPayload;
   };
   /** POST /api/v1/finance/exchange/items/{id}/quarantine — Поместить элемент обмена в карантин */
   financeQuarantineExchangeItem: {
@@ -5025,13 +2876,6 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceRegisterReconciliation;
   };
-  /** GET /api/v1/finance/vat-quarters/books — Сверить квартал с загруженными книгами покупок и продаж 1С */
-  financeReconcileVATBooks: {
-    params: Record<string, never>;
-    query: { "company_id": models.UUID; "quarter": number; "year": number };
-    body: never;
-    response: models.FinanceVATBookReconciliation;
-  };
   /** POST /api/v1/finance/exchange/items — Зарегистрировать внешний объект в журнале обмена */
   financeRecordExchangeItem: {
     params: Record<string, never>;
@@ -5039,33 +2883,12 @@ export interface OperationTypes {
     body: models.FinanceExchangeCreate;
     response: models.FinanceExchangeItem;
   };
-  /** POST /api/v1/finance/connectors/{id}/accounts/refresh — Перечитать счета из банка */
-  financeRefreshConnectorAccounts: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinanceConnectorAccountPage;
-  };
-  /** POST /api/v1/finance/classification-suggestions/{id}/reject — Отклонить рекомендацию расширения */
-  financeRejectClassificationSuggestion: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
   /** POST /api/v1/finance/registers/repair — Атомарно восстановить проводки указанных операций */
   financeRepairRegisters: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.FinanceRegisterRepairRequest;
     response: models.FinanceRegisterRepairResult;
-  };
-  /** POST /api/v1/finance/payment-calendar/plans/{id}/restore — Вернуть отменённую плановую строку */
-  financeRestorePaymentPlan: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinancePaymentPlan;
   };
   /** POST /api/v1/finance/registers/resync — Пересинхронизировать финансовые документы и регистры */
   financeResyncRegisters: {
@@ -5081,20 +2904,6 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
-  /** GET /api/v1/finance/sale-vat-terms — Получить налоговые условия продажи до сохранения */
-  financeSaleVATTerms: {
-    params: Record<string, never>;
-    query: { "company_id": models.UUID; "date": string; "item_id"?: models.UUID };
-    body: never;
-    response: models.FinanceSaleVATTerms;
-  };
-  /** PUT /api/v1/finance/pnl-layouts/{id} — Заменить макет ОПиУ целиком */
-  financeSavePnlLayout: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.FinancePnlLayoutSave;
-    response: models.FinancePnlLayout;
-  };
   /** POST /api/v1/finance/project-budgets — Сохранить новую версию бюджета без создания учётных фактов */
   financeSaveProjectBudget: {
     params: Record<string, never>;
@@ -5102,54 +2911,12 @@ export interface OperationTypes {
     body: models.FinanceProjectBudgetInput;
     response: models.FinanceProjectBudget;
   };
-  /** POST /api/v1/finance/accounts/{id}/opening-balance — Завести входящий остаток счёта документом */
-  financeSetAccountOpeningBalance: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.FinanceOpeningBalanceRequest;
-    response: models.FinanceAccount;
-  };
-  /** PUT /api/v1/finance/connectors/sync-settings — Изменить расписание синхронизации банков */
-  financeSetConnectorSyncSettings: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.FinanceConnectorSyncSettingsInput;
-    response: models.FinanceConnectorSyncSettings;
-  };
-  /** POST /api/v1/finance/wallets/{id}/opening-balance — Завести входящий остаток кассы документом */
-  financeSetWalletOpeningBalance: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.FinanceOpeningBalanceRequest;
-    response: void;
-  };
-  /** POST /api/v1/finance/connectors/{id}/consent — Начать подтверждение доступа в интернет-банке */
-  financeStartConnectorConsent: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinanceConnectorConsent;
-  };
   /** POST /api/v1/finance/connectors/{id}/sync — Запустить синхронизацию подключения вручную */
   financeSyncConnector: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.FinanceConnectorSyncResult;
-  };
-  /** POST /api/v1/finance/connectors/test — Проверить связь с банком до сохранения */
-  financeTestConnectorCredentials: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.FinanceConnectorCredentialTestInput;
-    response: models.FinanceConnectorCredentialTestResult;
-  };
-  /** GET /api/v1/finance/transactions/{id}/payout-registers — Подобрать реестры на выплату под банковскую операцию */
-  financeTransactionPayoutRegisters: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.FinancePayoutRegisterPage;
   };
   /** PATCH /api/v1/finance/accounts/{id} — Частично изменить банковский счёт */
   financeUpdateAccount: {
@@ -5165,13 +2932,6 @@ export interface OperationTypes {
     body: models.FinanceResponsiblePatch;
     response: void;
   };
-  /** PATCH /api/v1/finance/connectors/{id} — Изменить подключение или его состояние */
-  financeUpdateConnector: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.FinanceConnectorPatch;
-    response: models.FinanceConnector;
-  };
   /** PATCH /api/v1/finance/connectors/accounts/{accountId} — Привязать внешний счёт к счёту Akeda или изменить импорт */
   financeUpdateConnectorAccount: {
     params: { "accountId": models.UUID };
@@ -5179,47 +2939,12 @@ export interface OperationTypes {
     body: models.FinanceConnectorAccountPatch;
     response: models.FinanceConnectorAccount;
   };
-  /** PUT /api/v1/finance/accountable/reports/{id} — Изменить авансовый отчёт */
-  financeUpdateExpenseReport: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.FinanceExpenseReportCreate;
-    response: models.CoreDocument;
-  };
-  /** PATCH /api/v1/finance/payment-calendar/plans/{id} — Заменить данные ручной плановой строки */
-  financeUpdatePaymentPlan: {
-    params: { "id": models.UUID };
-    query: { "business"?: models.UUID };
-    body: models.FinancePaymentPlanInput;
-    response: models.FinancePaymentPlan;
-  };
   /** PATCH /api/v1/finance/transactions/{id}/responsible — Изменить инициатора операции без перепроведения */
   financeUpdateTransactionResponsible: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.FinanceResponsiblePatch;
     response: models.FinanceTransaction;
-  };
-  /** PUT /api/v1/finance/vat-quarters/{id} — Пересохранить черновик «НДС за квартал» */
-  financeUpdateVATQuarter: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.FinanceVATQuarterInput;
-    response: models.FinanceVATQuarter;
-  };
-  /** POST /api/v1/finance/imports — Загрузить файл банковских или кассовых операций */
-  financeUploadImport: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.FinanceImportRun;
-  };
-  /** POST /api/v1/finance/vat-quarters/books — Загрузить книгу покупок или продаж 1С */
-  financeUploadVATBooks: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.FinanceVATBookUploadPage;
   };
   /** POST /api/v1/knowledge/answer — Ответить по материалам базы знаний */
   knowledgeAnswer: {
@@ -5242,41 +2967,6 @@ export interface OperationTypes {
     body: models.KnowledgeSpaceInput;
     response: models.KnowledgeSpace;
   };
-  /** POST /api/v1/knowledge/tags — Создать метку базы знаний */
-  knowledgeCreateTag: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.KnowledgeTagInput;
-    response: models.KnowledgeTag;
-  };
-  /** DELETE /api/v1/knowledge/assets/{id} — Удалить файл базы знаний */
-  knowledgeDeleteAsset: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/knowledge/spaces/{id} — Удалить пространство базы знаний */
-  knowledgeDeleteSpace: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/knowledge/spaces/{id}/cover — Удалить обложку пространства */
-  knowledgeDeleteSpaceCover: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/knowledge/quality — Получить сводку качества ответов базы знаний */
-  knowledgeGetAnswerQuality: {
-    params: Record<string, never>;
-    query: { "days"?: number };
-    body: never;
-    response: models.KnowledgeAnswerQuality;
-  };
   /** GET /api/v1/knowledge/assets/{id}/content — Скачать содержимое файла базы знаний */
   knowledgeGetAssetContent: {
     params: { "id": models.UUID };
@@ -5298,26 +2988,12 @@ export interface OperationTypes {
     body: never;
     response: models.KnowledgeNodeAccessPolicy;
   };
-  /** GET /api/v1/knowledge/nodes/{id}/history — Получить историю редакций страницы */
-  knowledgeGetPageHistory: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: Array<models.KnowledgeRevision>;
-  };
   /** GET /api/v1/knowledge/spaces/{id}/access — Получить состав участников пространства */
   knowledgeGetSpaceAccess: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.KnowledgeSpaceAccessPolicy;
-  };
-  /** GET /api/v1/knowledge/spaces/{id}/cover — Скачать обложку пространства */
-  knowledgeGetSpaceCover: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
   };
   /** GET /api/v1/knowledge/spaces/{id}/tree — Получить дерево страниц пространства */
   knowledgeGetSpaceTree: {
@@ -5347,13 +3023,6 @@ export interface OperationTypes {
     body: never;
     response: Array<models.KnowledgeSpace>;
   };
-  /** GET /api/v1/knowledge/tags — Получить метки базы знаний */
-  knowledgeListTags: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: Array<models.KnowledgeTag>;
-  };
   /** GET /api/v1/knowledge/archive — Получить страницы в корзине */
   knowledgeListTrashedPages: {
     params: Record<string, never>;
@@ -5375,33 +3044,12 @@ export interface OperationTypes {
     body: models.KnowledgeVersionInput;
     response: models.KnowledgeNode;
   };
-  /** POST /api/v1/knowledge/assets/{id}/reindex — Повторить разбор файла базы знаний */
-  knowledgeReindexAsset: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** POST /api/v1/knowledge/nodes/{id}/reject — Отклонить редакцию на согласовании */
-  knowledgeRejectPage: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.KnowledgeReviewInput;
-    response: models.KnowledgeNode;
-  };
   /** PUT /api/v1/knowledge/nodes/{id}/access — Заменить состав участников страницы */
   knowledgeReplacePageAccess: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.KnowledgeNodeAccessInput;
     response: models.KnowledgeNodeAccessPolicy;
-  };
-  /** PUT /api/v1/knowledge/nodes/{id}/tags — Заменить набор меток страницы */
-  knowledgeReplacePageTags: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.KnowledgeTagSetInput;
-    response: Array<models.KnowledgeTag>;
   };
   /** PUT /api/v1/knowledge/spaces/{id}/access — Заменить состав участников пространства */
   knowledgeReplaceSpaceAccess: {
@@ -5416,20 +3064,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.KnowledgeVersionInput;
     response: models.KnowledgeNode;
-  };
-  /** POST /api/v1/knowledge/nodes/{id}/history/restore — Восстановить редакцию страницы из истории */
-  knowledgeRestorePageRevision: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.KnowledgeRevisionRestoreInput;
-    response: models.KnowledgeNode;
-  };
-  /** POST /api/v1/knowledge/answers/{id}/feedback — Оценить ответ базы знаний */
-  knowledgeSaveAnswerFeedback: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.KnowledgeAnswerFeedbackInput;
-    response: void;
   };
   /** POST /api/v1/knowledge/nodes/{id}/revisions — Сохранить черновую редакцию страницы */
   knowledgeSavePageRevision: {
@@ -5459,13 +3093,6 @@ export interface OperationTypes {
     body: models.KnowledgeVersionInput;
     response: models.KnowledgeNode;
   };
-  /** PUT /api/v1/knowledge/spaces/{id} — Изменить пространство базы знаний */
-  knowledgeUpdateSpace: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.KnowledgeSpaceInput;
-    response: models.KnowledgeSpace;
-  };
   /** POST /api/v1/knowledge/nodes/{id}/assets — Прикрепить файл к странице базы знаний */
   knowledgeUploadPageAsset: {
     params: { "id": models.UUID };
@@ -5473,19 +3100,12 @@ export interface OperationTypes {
     body: never;
     response: models.KnowledgeAsset;
   };
-  /** POST /api/v1/knowledge/spaces/{id}/cover — Загрузить обложку пространства */
-  knowledgeUploadSpaceCover: {
+  /** DELETE /api/v1/mail/upload-sessions/{id} — Отменить сессию загрузки */
+  mailAbortUploadSession: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: void;
-  };
-  /** POST /api/v1/knowledge/nodes/{id}/verify — Подтвердить актуальность страницы */
-  knowledgeVerifyPage: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.KnowledgeVersionInput;
-    response: models.KnowledgeNode;
   };
   /** POST /api/v1/mail/accounts/{id}/rules/apply — Применить правила к уже лежащим письмам */
   mailApplyRules: {
@@ -5501,19 +3121,12 @@ export interface OperationTypes {
     body: models.MailAttachStoredFileRequest;
     response: models.MailOutboundUpload;
   };
-  /** POST /api/v1/mail/accounts/{id}/check — Проверить подключение ящика */
-  mailCheckAccount: {
+  /** GET /api/v1/mail/attachments/{id}/download-session — Временный адрес вложения письма */
+  mailAttachmentDownloadSession: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
-    response: models.MailAccount;
-  };
-  /** POST /api/v1/mail/oauth/google/complete — Завершить подключение Gmail */
-  mailCompleteGoogleOAuth: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.MailCompleteGoogleOAuthRequest;
-    response: models.MailAccount;
+    response: models.MailAttachmentLink;
   };
   /** POST /api/v1/mail/accounts/{id}/messages — Отправить письмо или сохранить черновик */
   mailComposeMessage: {
@@ -5529,13 +3142,6 @@ export interface OperationTypes {
     body: never;
     response: models.MailCountVIPUnreadResponse;
   };
-  /** POST /api/v1/mail/accounts — Подключить почтовый ящик */
-  mailCreateAccount: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.MailAccountInput;
-    response: models.MailAccount;
-  };
   /** POST /api/v1/mail/accounts/{id}/folders — Создать папку ящика */
   mailCreateFolder: {
     params: { "id": models.UUID };
@@ -5550,12 +3156,12 @@ export interface OperationTypes {
     body: models.MailRuleInput;
     response: models.MailRule;
   };
-  /** DELETE /api/v1/mail/accounts/{id} — Отключить почтовый ящик */
-  mailDeleteAccount: {
+  /** POST /api/v1/mail/accounts/{id}/upload-sessions — Открыть сессию загрузки файла для письма */
+  mailCreateUploadSession: {
     params: { "id": models.UUID };
     query: Record<string, never>;
-    body: never;
-    response: void;
+    body: models.TransferUploadRequest;
+    response: models.TransferSession;
   };
   /** DELETE /api/v1/mail/folders/{id} — Удалить пользовательскую папку */
   mailDeleteFolder: {
@@ -5578,12 +3184,12 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
-  /** GET /api/v1/mail/discover — Определить настройки сервера по адресу почты */
-  mailDiscoverSettings: {
-    params: Record<string, never>;
-    query: { "email": string };
+  /** POST /api/v1/mail/upload-sessions/{id}/finish — Завершить загрузку файла для письма */
+  mailFinishUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
     body: never;
-    response: models.MailDiscoveredSettings;
+    response: models.MailOutboundUpload;
   };
   /** POST /api/v1/mail/messages/{id}/flag — Поставить или снять отметку важности */
   mailFlagMessage: {
@@ -5613,19 +3219,19 @@ export interface OperationTypes {
     body: never;
     response: models.MailMessage;
   };
-  /** GET /api/v1/mail/sender-icon — Получить значок домена отправителя */
-  mailGetSenderIcon: {
-    params: Record<string, never>;
-    query: { "domain": string };
-    body: never;
-    response: void;
-  };
   /** GET /api/v1/mail/threads/{id} — Получить переписку целиком */
   mailGetThread: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.MailThread;
+  };
+  /** GET /api/v1/mail/upload-sessions/{id} — Состояние сессии загрузки */
+  mailGetUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.TransferSession;
   };
   /** GET /api/v1/mail/accounts — Получить почтовые ящики сотрудника */
   mailListAccounts: {
@@ -5746,26 +3352,12 @@ export interface OperationTypes {
     body: models.MailSetVIPSenderRequest;
     response: void;
   };
-  /** GET /api/v1/mail/oauth/google/start — Начать подключение Gmail через вход в Google */
-  mailStartGoogleOAuth: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.MailStartGoogleOAuthResponse;
-  };
   /** POST /api/v1/mail/accounts/{id}/sync — Синхронизировать ящик по требованию */
   mailSyncAccount: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.MailSyncReport;
-  };
-  /** PATCH /api/v1/mail/accounts/{id} — Изменить настройки почтового ящика */
-  mailUpdateAccount: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.MailAccountInput;
-    response: models.MailAccount;
   };
   /** PATCH /api/v1/mail/rules/{id} — Изменить правило разбора почты */
   mailUpdateRule: {
@@ -5774,54 +3366,12 @@ export interface OperationTypes {
     body: models.MailRuleInput;
     response: models.MailRule;
   };
-  /** POST /api/v1/mail/accounts/{id}/uploads — Загрузить файл для письма */
-  mailUploadOutboundFile: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.MailOutboundUpload;
-  };
-  /** POST /api/v1/marketplace/ozon/product-groups/{id}/items — Добавить товары в срез Ozon */
-  marketplaceAddOzonProductGroupItems: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.MarketplaceProductGroupItemsInput;
-    response: models.MarketplaceProductGroupItemsAdded;
-  };
-  /** POST /api/v1/marketplace/wb/product-groups/{id}/items — Добавить товары в срез Wildberries */
-  marketplaceAddWbProductGroupItems: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.MarketplaceProductGroupItemsInput;
-    response: models.MarketplaceProductGroupItemsAdded;
-  };
-  /** POST /api/v1/marketplace/{platform}/stores/{id}/finance/weeks/{weekStart}/apply — Передать завершённую неделю в учёт */
-  marketplaceApplyWeeklyFinanceRun: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries"; "weekStart": string };
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceWeeklyFinanceOutcome;
-  };
-  /** POST /api/v1/marketplace/ozon/product-groups — Создать срез товаров Ozon */
-  marketplaceCreateOzonProductGroup: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.MarketplaceProductGroupInput;
-    response: models.MarketplaceProductGroup;
-  };
   /** POST /api/v1/marketplace/ozon/stores — Завести магазин Ozon */
   marketplaceCreateOzonStore: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.MarketplaceStoreInput;
     response: models.MarketplaceStore;
-  };
-  /** POST /api/v1/marketplace/wb/product-groups — Создать срез товаров Wildberries */
-  marketplaceCreateWbProductGroup: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.MarketplaceProductGroupInput;
-    response: models.MarketplaceProductGroup;
   };
   /** POST /api/v1/marketplace/wb/stores — Завести магазин Wildberries */
   marketplaceCreateWbStore: {
@@ -5837,152 +3387,12 @@ export interface OperationTypes {
     body: models.MarketplaceStoreInput;
     response: models.MarketplaceStore;
   };
-  /** DELETE /api/v1/marketplace/ozon/product-groups/{id} — Удалить срез товаров Ozon */
-  marketplaceDeleteOzonProductGroup: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.OK;
-  };
-  /** DELETE /api/v1/marketplace/ozon/stores/{id} — Удалить магазин Ozon */
-  marketplaceDeleteOzonStore: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/marketplace/wb/product-groups/{id} — Удалить срез товаров Wildberries */
-  marketplaceDeleteWbProductGroup: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.OK;
-  };
-  /** DELETE /api/v1/marketplace/wb/stores/{id} — Удалить магазин Wildberries */
-  marketplaceDeleteWbStore: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/marketplace/yandex/stores/{id} — Удалить магазин Яндекс Маркета */
-  marketplaceDeleteYandexStore: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** POST /api/v1/marketplace/econ/quote — Рассчитать юнит-экономику по строкам прайса */
-  marketplaceEconQuote: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.MarketplaceEconQuoteRequest;
-    response: models.MarketplaceEconQuoteResponse;
-  };
-  /** GET /api/v1/marketplace/{platform}/stores/{id}/catalog/status — Получить состояние первоначальной загрузки каталога */
-  marketplaceGetCatalogImportStatus: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" };
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceCatalogJob;
-  };
-  /** GET /api/v1/marketplace/{platform}/stores/{id}/accounting — Получить настройки учёта магазина */
-  marketplaceGetStoreAccounting: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" | "yandex" };
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceStoreAccounting;
-  };
-  /** POST /api/v1/marketplace/{platform}/stores/{id}/catalog/import — Завести каталог магазина в номенклатуру кабинета */
-  marketplaceImportCatalog: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" };
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceCatalogImportResult;
-  };
-  /** POST /api/v1/marketplace/ozon/cost/import — Загрузить себестоимость Ozon таблицей */
-  marketplaceImportOzonCost: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceCostImportResult;
-  };
-  /** POST /api/v1/marketplace/wb/cost/import — Загрузить себестоимость Wildberries таблицей */
-  marketplaceImportWbCost: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceCostImportResult;
-  };
-  /** POST /api/v1/marketplace/yandex/cost/import — Загрузить себестоимость Яндекс Маркета таблицей */
-  marketplaceImportYandexCost: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceCostImportResult;
-  };
-  /** POST /api/v1/marketplace/{platform}/stores/{id}/catalog/links — Привязать карточку площадки к товару кабинета */
-  marketplaceLinkCatalogProduct: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" };
-    query: Record<string, never>;
-    body: models.MarketplaceCatalogLinkRequest;
-    response: models.MarketplaceCatalogLinkDecision;
-  };
-  /** GET /api/v1/marketplace/{platform}/stores/{id}/catalog/candidates — Получить товары кабинета для привязки спорной карточки */
-  marketplaceListCatalogCandidates: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" };
-    query: { "brand"?: string; "limit"?: number; "link"?: "any" | "linked" | "unlinked"; "linked_platform"?: "ozon" | "wildberries"; "offset"?: number; "q"?: string };
-    body: never;
-    response: models.MarketplaceCatalogCandidatePage;
-  };
-  /** GET /api/v1/marketplace/{platform}/stores/{id}/finance/weeks — Получить готовность недельных финансовых отчётов */
-  marketplaceListWeeklyFinanceRuns: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" };
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceWeeklyFinanceRuns;
-  };
-  /** POST /api/v1/marketplace/ozon/ads-absence — Подтвердить, что рекламы не было */
-  marketplaceOzonConfirmAdsAbsence: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.MarketplaceAdsAbsenceRequest;
-    response: models.MarketplaceAdsAbsence;
-  };
   /** GET /api/v1/marketplace/ozon/decomposition — Получить декомпозицию юнит-экономики Ozon */
   marketplaceOzonDecomposition: {
     params: Record<string, never>;
     query: { "group"?: string; "month"?: string; "store"?: string };
     body: never;
     response: models.MarketplaceOzonDecomposition;
-  };
-  /** GET /api/v1/marketplace/ozon/decomposition-other — Расшифровать прочие расходы Ozon */
-  marketplaceOzonDecompositionOther: {
-    params: Record<string, never>;
-    query: { "from": string; "group"?: string; "store"?: string; "to": string };
-    body: never;
-    response: models.MarketplaceOzonDecompositionOtherPage;
-  };
-  /** GET /api/v1/marketplace/ozon/fbs — Получить отгрузку FBS Ozon */
-  marketplaceOzonFbs: {
-    params: Record<string, never>;
-    query: { "group"?: string; "store"?: string };
-    body: never;
-    response: models.MarketplaceOzonFbs;
-  };
-  /** GET /api/v1/marketplace/ozon/funnel — Получить воронку продаж Ozon */
-  marketplaceOzonFunnel: {
-    params: Record<string, never>;
-    query: { "group"?: string; "store"?: string };
-    body: never;
-    response: models.MarketplaceOzonFunnel;
-  };
-  /** GET /api/v1/marketplace/ozon/funnel-daily — Получить дневную воронку одного артикула Ozon */
-  marketplaceOzonFunnelDaily: {
-    params: Record<string, never>;
-    query: { "days"?: number; "from"?: string; "group"?: string; "groupBy"?: "subject" | "model" | "brand" | "article"; "groupMetrics"?: string; "scope"?: string; "sku"?: string; "slice"?: "article" | "store" | "list" | "model" | "brand" | "subject"; "sliceValue"?: string; "store"?: string; "summary"?: "1"; "to"?: string };
-    body: never;
-    response: models.MarketplaceOzonFunnelDaily;
   };
   /** GET /api/v1/marketplace/ozon/orders/overview — Получить сводку заказов Ozon */
   marketplaceOzonOrdersOverview: {
@@ -5998,47 +3408,12 @@ export interface OperationTypes {
     body: never;
     response: models.MarketplaceOzonPnl;
   };
-  /** GET /api/v1/marketplace/ozon/pricing — Получить прайс-лист Ozon с юнит-экономикой */
-  marketplaceOzonPricing: {
-    params: Record<string, never>;
-    query: { "group"?: string; "n"?: number; "store"?: string };
-    body: never;
-    response: models.MarketplaceOzonPricing;
-  };
-  /** GET /api/v1/marketplace/ozon/product-facets — Получить значения фильтров товаров Ozon */
-  marketplaceOzonProductFacets: {
-    params: Record<string, never>;
-    query: { "group"?: string; "store"?: string };
-    body: never;
-    response: models.MarketplaceOzonProductFacets;
-  };
-  /** GET /api/v1/marketplace/ozon/product-groups/{id}/items — Получить состав среза товаров Ozon */
-  marketplaceOzonProductGroupItems: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceProductGroupItemPage;
-  };
-  /** GET /api/v1/marketplace/ozon/product-groups — Получить срезы товаров Ozon */
-  marketplaceOzonProductGroups: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceProductGroupPage;
-  };
   /** GET /api/v1/marketplace/ozon/products — Получить товары Ozon */
   marketplaceOzonProducts: {
     params: Record<string, never>;
     query: { "group"?: string; "page"?: number; "page_size"?: number; "q"?: string; "search"?: string; "status"?: string; "store"?: string; "subject"?: string };
     body: never;
     response: models.MarketplaceOzonProductPage;
-  };
-  /** GET /api/v1/marketplace/ozon/promotions — Получить акции Ozon */
-  marketplaceOzonPromotions: {
-    params: Record<string, never>;
-    query: { "group"?: string; "store"?: string };
-    body: never;
-    response: models.MarketplaceOzonPromotions;
   };
   /** POST /api/v1/marketplace/ozon/cost — Задать себестоимость товара Ozon */
   marketplaceOzonSetCost: {
@@ -6068,82 +3443,12 @@ export interface OperationTypes {
     body: never;
     response: models.MarketplaceOzonSyncJobList;
   };
-  /** POST /api/v1/marketplace/{platform}/stores/{id}/catalog/preview — Показать разбор каталога магазина без записи */
-  marketplacePreviewCatalogImport: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" };
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceCatalogImportResult;
-  };
-  /** DELETE /api/v1/marketplace/ozon/product-groups/{id}/items — Убрать товар из среза Ozon */
-  marketplaceRemoveOzonProductGroupItem: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.MarketplaceProductGroupItem;
-    response: models.OK;
-  };
-  /** DELETE /api/v1/marketplace/wb/product-groups/{id}/items — Убрать товар из среза Wildberries */
-  marketplaceRemoveWbProductGroupItem: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.MarketplaceProductGroupItem;
-    response: models.OK;
-  };
-  /** POST /api/v1/marketplace/{platform}/stores/{id}/catalog/retry — Повторить первоначальную загрузку каталога */
-  marketplaceRetryCatalogImport: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" };
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceCatalogJob;
-  };
-  /** PUT /api/v1/marketplace/{platform}/stores/{id}/accounting — Сохранить настройки учёта магазина */
-  marketplaceSaveStoreAccounting: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" | "yandex" };
-    query: Record<string, never>;
-    body: models.MarketplaceStoreAccountingInput;
-    response: models.MarketplaceStoreAccounting;
-  };
   /** POST /api/v1/marketplace/yandex/cost — Задать себестоимость товара Яндекс Маркета */
   marketplaceSetYandexCost: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.MarketplaceYandexCostInput;
     response: models.MarketplaceYandexCost;
-  };
-  /** PATCH /api/v1/marketplace/ozon/product-groups/{id} — Переименовать или перекрасить срез товаров Ozon */
-  marketplaceUpdateOzonProductGroup: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.MarketplaceProductGroupPatch;
-    response: models.MarketplaceProductGroup;
-  };
-  /** PATCH /api/v1/marketplace/ozon/stores/{id} — Изменить магазин Ozon */
-  marketplaceUpdateOzonStore: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.MarketplaceStorePatch;
-    response: models.MarketplaceStore;
-  };
-  /** PATCH /api/v1/marketplace/wb/product-groups/{id} — Переименовать или перекрасить срез товаров Wildberries */
-  marketplaceUpdateWbProductGroup: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.MarketplaceProductGroupPatch;
-    response: models.MarketplaceProductGroup;
-  };
-  /** PATCH /api/v1/marketplace/wb/stores/{id} — Изменить магазин Wildberries */
-  marketplaceUpdateWbStore: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.MarketplaceStorePatch;
-    response: models.MarketplaceStore;
-  };
-  /** PATCH /api/v1/marketplace/yandex/stores/{id} — Изменить магазин Яндекс Маркета */
-  marketplaceUpdateYandexStore: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.MarketplaceStorePatch;
-    response: models.MarketplaceStore;
   };
   /** GET /api/v1/marketplace/wb/card/board — Получить борд одной карточки Wildberries */
   marketplaceWbCardBoard: {
@@ -6159,40 +3464,12 @@ export interface OperationTypes {
     body: never;
     response: models.MarketplaceWbCardOptions;
   };
-  /** POST /api/v1/marketplace/wb/ads-absence — Подтвердить, что рекламы не было */
-  marketplaceWbConfirmAdsAbsence: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.MarketplaceAdsAbsenceRequest;
-    response: models.MarketplaceAdsAbsence;
-  };
   /** GET /api/v1/marketplace/wb/decomposition — Получить декомпозицию прибыли Wildberries */
   marketplaceWbDecomposition: {
     params: Record<string, never>;
     query: { "month"?: string; "store"?: string };
     body: never;
     response: models.MarketplaceWbDecomposition;
-  };
-  /** GET /api/v1/marketplace/wb/decomposition-other — Расшифровать строку «Прочее» Wildberries */
-  marketplaceWbDecompositionOther: {
-    params: Record<string, never>;
-    query: { "from": string; "store"?: string; "to": string };
-    body: never;
-    response: models.MarketplaceWbDecompOther;
-  };
-  /** GET /api/v1/marketplace/wb/funnel — Получить воронку продаж Wildberries */
-  marketplaceWbFunnel: {
-    params: Record<string, never>;
-    query: { "ext"?: number; "store"?: models.UUID };
-    body: never;
-    response: models.MarketplaceWbFunnel;
-  };
-  /** GET /api/v1/marketplace/wb/funnel-daily — Получить дневную экономику артикула Wildberries */
-  marketplaceWbFunnelDaily: {
-    params: Record<string, never>;
-    query: { "days"?: number; "from"?: string; "groupBy"?: "subject" | "model" | "brand" | "article"; "groupMetrics"?: string; "sku"?: string; "slice"?: "article" | "store" | "list" | "model" | "brand" | "subject"; "sliceValue"?: string; "store"?: string; "summary"?: "1"; "to"?: string };
-    body: never;
-    response: models.MarketplaceWbFunnelDaily;
   };
   /** GET /api/v1/marketplace/wb/orders/overview — Получить сводку заказов и продаж Wildberries */
   marketplaceWbOrdersOverview: {
@@ -6208,47 +3485,12 @@ export interface OperationTypes {
     body: never;
     response: models.MarketplaceWbPnl;
   };
-  /** GET /api/v1/marketplace/wb/pricing — Получить ценообразование Wildberries */
-  marketplaceWbPricing: {
-    params: Record<string, never>;
-    query: { "store"?: string };
-    body: never;
-    response: models.MarketplaceWbPricing;
-  };
-  /** GET /api/v1/marketplace/wb/product-facets — Получить значения фильтров товаров Wildberries */
-  marketplaceWbProductFacets: {
-    params: Record<string, never>;
-    query: { "store"?: string };
-    body: never;
-    response: models.MarketplaceWbFacets;
-  };
-  /** GET /api/v1/marketplace/wb/product-groups/{id}/items — Получить состав среза товаров Wildberries */
-  marketplaceWbProductGroupItems: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceProductGroupItemPage;
-  };
-  /** GET /api/v1/marketplace/wb/product-groups — Получить срезы товаров Wildberries */
-  marketplaceWbProductGroups: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.MarketplaceProductGroupPage;
-  };
   /** GET /api/v1/marketplace/wb/products — Получить товары Wildberries */
   marketplaceWbProducts: {
     params: Record<string, never>;
     query: { "brand"?: string; "group"?: string; "page"?: number; "page_size"?: number; "q"?: string; "search"?: string; "store"?: string; "subject"?: string };
     body: never;
     response: models.MarketplaceWbProductPage;
-  };
-  /** GET /api/v1/marketplace/wb/promotions — Получить акции Wildberries */
-  marketplaceWbPromotions: {
-    params: Record<string, never>;
-    query: { "store"?: string };
-    body: never;
-    response: models.MarketplaceWbPromotions;
   };
   /** POST /api/v1/marketplace/wb/cost — Задать себестоимость артикула Wildberries */
   marketplaceWbSetCost: {
@@ -6299,244 +3541,6 @@ export interface OperationTypes {
     body: never;
     response: models.MarketplaceStorePage;
   };
-  /** POST /api/v1/settings/companies/{id}/activate — Вернуть юрлицо в работу */
-  settingsActivateCompany: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/settings/app-installations/{id}/deliveries — Получить журнал доставки событий своей установке */
-  settingsAppDeliveries: {
-    params: { "id": models.UUID };
-    query: { "limit"?: number; "offset"?: number; "status"?: "pending" | "delivered" | "failed" | "dead" };
-    body: never;
-    response: models.PlatformAppDeliveryPage;
-  };
-  /** GET /api/v1/settings/app-incidents — Узнать, что заблокировали у себя и что оно видело */
-  settingsAppIncidents: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.SettingsAppIncidentList;
-  };
-  /** GET /api/v1/settings/app-installations/{id}/activity — Получить права и активность своей установки */
-  settingsAppInstallationActivity: {
-    params: { "id": models.UUID };
-    query: { "days"?: number };
-    body: never;
-    response: models.SettingsAppInstallationActivity;
-  };
-  /** GET /api/v1/settings/app-installations/{id}/config — Получить настройку своей установки */
-  settingsAppInstallationConfig: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.PlatformAppConfigSummary;
-  };
-  /** GET /api/v1/settings/app-installations/{id}/events — Получить журнал своей установки */
-  settingsAppInstallationEvents: {
-    params: { "id": models.UUID };
-    query: { "limit"?: number };
-    body: never;
-    response: models.PlatformAppInstallationEventPage;
-  };
-  /** POST /api/v1/settings/subscription/change — Изменить подписку кабинета */
-  settingsChangeSubscription: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.BillingChangeInput;
-    response: models.BillingChangeResult;
-  };
-  /** POST /api/v1/settings/api-keys — Выпустить API-ключ */
-  settingsCreateApiKey: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.SettingsApiKeyInput;
-    response: models.SettingsApiKeyCreated;
-  };
-  /** POST /api/v1/settings/companies — Завести юрлицо */
-  settingsCreateCompany: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.SettingsCompanyInput;
-    response: models.SettingsCompany;
-  };
-  /** POST /api/v1/settings/field-definitions — Завести определение дополнительного поля */
-  settingsCreateFieldDefinition: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.SettingsFieldDefinitionInput;
-    response: models.SettingsFieldDefinition;
-  };
-  /** POST /api/v1/settings/members — Завести участника кабинета */
-  settingsCreateMember: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.SettingsMemberCreateInput;
-    response: models.SettingsMember;
-  };
-  /** POST /api/v1/settings/roles — Создать роль кабинета */
-  settingsCreateRole: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.SettingsRoleInput;
-    response: models.SettingsRole;
-  };
-  /** GET /api/v1/settings/credential-requests — Прочитать, что читали у меня машинными ключами */
-  settingsCredentialRequests: {
-    params: Record<string, never>;
-    query: { "api_key_id"?: models.UUID; "installation_id"?: models.UUID; "limit"?: number; "offset"?: number; "since"?: string };
-    body: never;
-    response: models.TenantCredentialRequestPage;
-  };
-  /** DELETE /api/v1/settings/api-keys/{id} — Удалить свой API-ключ */
-  settingsDeleteApiKey: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/settings/app-installations/{id}/config/{key} — Убрать значение настройки своей установки */
-  settingsDeleteAppInstallationConfigValue: {
-    params: { "id": models.UUID; "key": string };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/settings/companies/{id} — Вывести юрлицо из работы */
-  settingsDeleteCompany: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/settings/field-definitions/{id} — Удалить определение дополнительного поля */
-  settingsDeleteFieldDefinition: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** POST /api/v1/settings/app-installations/{id}/disable — Выключить приложение в своём кабинете */
-  settingsDisableAppInstallation: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.PlatformAppReasonInput;
-    response: models.PlatformAppSwitchResult;
-  };
-  /** POST /api/v1/settings/app-installations/{id}/enable — Включить приложение в своём кабинете */
-  settingsEnableAppInstallation: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.PlatformAppReasonInput;
-    response: models.PlatformAppSwitchResult;
-  };
-  /** POST /api/v1/settings/billing/invoices/{id}/order — Создать заказ продавца для оплаты начисления */
-  settingsEnsureCheckoutOrder: {
-    params: { "id": string };
-    query: Record<string, never>;
-    body: never;
-    response: models.BillingInvoiceResult;
-  };
-  /** GET /api/v1/settings/billing/invoices/{id}/document — Просмотреть или скачать родной счёт продавца */
-  settingsGetBankInvoiceDocument: {
-    params: { "id": string };
-    query: { "format"?: "html" | "pdf" };
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/settings/billing/invoices/{id}/upd — Скачать или распечатать УПД после оплаты */
-  settingsGetBillingUPD: {
-    params: { "id": string };
-    query: { "format"?: "html" | "pdf" };
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/settings/field-schema — Получить действующую схему дополнительных полей */
-  settingsGetFieldSchema: {
-    params: Record<string, never>;
-    query: { "entity_type"?: string };
-    body: never;
-    response: models.SettingsFieldSchema;
-  };
-  /** GET /api/v1/settings/billing/invoices/{id} — Получить свой счёт */
-  settingsGetInvoice: {
-    params: { "id": string };
-    query: Record<string, never>;
-    body: never;
-    response: models.BillingCabinetInvoice;
-  };
-  /** GET /api/v1/settings/referrals — Получить реферальную программу кабинета */
-  settingsGetReferrals: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.BillingReferralCabinetSummary;
-  };
-  /** GET /api/v1/settings/subscription — Получить подписку кабинета */
-  settingsGetSubscription: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.BillingCabinetSubscription;
-  };
-  /** GET /api/v1/settings/subscription/notice — Получить предупреждение о подписке */
-  settingsGetSubscriptionNotice: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.BillingCabinetNotice;
-  };
-  /** GET /api/v1/settings/usage — Получить потребление своего кабинета */
-  settingsGetUsage: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.SettingsUsage;
-  };
-  /** POST /api/v1/settings/apps/{publisher}/{key}/installation — Установить приложение в свой кабинет */
-  settingsInstallApp: {
-    params: { "key": string; "publisher": string };
-    query: Record<string, never>;
-    body: models.SettingsAppInstallInput;
-    response: models.PlatformAppInstallResult;
-  };
-  /** POST /api/v1/settings/billing/invoices/{id}/document — Сформировать счёт по реквизитам в документообороте продавца */
-  settingsIssueBankInvoiceDocument: {
-    params: { "id": string };
-    query: Record<string, never>;
-    body: never;
-    response: models.BillingInvoiceResult;
-  };
-  /** GET /api/v1/settings/api-keys/{id}/access — Получить журнал доступа к API-ключу */
-  settingsListApiKeyAccess: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.SettingsApiKeyAccessPage;
-  };
-  /** GET /api/v1/settings/api-keys — Получить свои API-ключи */
-  settingsListApiKeys: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.SettingsApiKeyPage;
-  };
-  /** GET /api/v1/settings/app-installations — Получить установки кабинета */
-  settingsListAppInstallations: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.SettingsAppInstallationPage;
-  };
-  /** GET /api/v1/settings/apps — Получить приложения, открытые кабинету */
-  settingsListApps: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.SettingsAppCatalog;
-  };
   /** GET /api/v1/settings/companies — Получить юрлица кабинета */
   settingsListCompanies: {
     params: Record<string, never>;
@@ -6544,31 +3548,10 @@ export interface OperationTypes {
     body: never;
     response: models.SettingsCompanyPage;
   };
-  /** GET /api/v1/settings/field-definitions — Получить определения дополнительных полей */
-  settingsListFieldDefinitions: {
-    params: Record<string, never>;
-    query: { "entity_type"?: string };
-    body: never;
-    response: models.SettingsFieldDefinitionPage;
-  };
-  /** GET /api/v1/settings/billing/invoices — Получить свои счета */
-  settingsListInvoices: {
-    params: Record<string, never>;
-    query: { "limit"?: number; "offset"?: number };
-    body: never;
-    response: models.BillingInvoicePage;
-  };
   /** GET /api/v1/settings/members — Получить участников кабинета */
   settingsListMembers: {
     params: Record<string, never>;
     query: { "status"?: "active" | "disabled" | "all" };
-    body: never;
-    response: models.SettingsMemberPage;
-  };
-  /** GET /api/v1/settings/roles/{id}/members — Получить носителей роли */
-  settingsListRoleMembers: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
     body: never;
     response: models.SettingsMemberPage;
   };
@@ -6593,166 +3576,12 @@ export interface OperationTypes {
     body: never;
     response: models.SettingsVatRates;
   };
-  /** GET /api/v1/settings/apps/{publisher}/{key}/consent — Открыть экран согласия по версии */
-  settingsPreviewAppConsent: {
-    params: { "key": string; "publisher": string };
-    query: { "version": string };
-    body: never;
-    response: models.SettingsAppConsentResult;
-  };
-  /** POST /api/v1/settings/subscription/change-preview — Посчитать изменение подписки */
-  settingsPreviewSubscriptionChange: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.BillingChangeInput;
-    response: models.BillingChangePreview;
-  };
-  /** POST /api/v1/settings/app-installations/{id}/deliveries/replay — Переиграть доставки своей установки */
-  settingsReplayAppDeliveries: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.PlatformAppDeliveryReplayInput;
-    response: models.PlatformAppDeliveryReplayResult;
-  };
-  /** POST /api/v1/settings/api-keys/{id}/restore — Вернуть отозванный API-ключ в работу */
-  settingsRestoreApiKey: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.SettingsApiKeyActivationResult;
-  };
-  /** POST /api/v1/settings/api-keys/{id}/revoke — Отозвать свой API-ключ */
-  settingsRevokeApiKey: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.SettingsApiKeyActivationResult;
-  };
-  /** POST /api/v1/settings/app-installations/{id}/rollback — Вернуть свою установку на прежнюю версию */
-  settingsRollbackAppInstallation: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.PlatformAppReasonInput;
-    response: models.PlatformAppRollbackResult;
-  };
-  /** PUT /api/v1/settings/app-installations/{id}/config/{key} — Ввести или заменить значение настройки своей установки */
-  settingsSetAppInstallationConfigValue: {
-    params: { "id": models.UUID; "key": string };
-    query: Record<string, never>;
-    body: models.PlatformAppConfigValueInput;
-    response: models.PlatformAppConfigValueResult;
-  };
-  /** POST /api/v1/settings/roles/{id}/activation — Включить или отключить роль */
-  settingsSetRoleActive: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.SettingsRoleActivationInput;
-    response: models.SettingsRoleActivationResult;
-  };
-  /** POST /api/v1/settings/roles/{id}/transfer — Перенести носителей роли на другую роль */
-  settingsTransferRoleMembers: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.SettingsRoleTransferInput;
-    response: models.SettingsRoleTransferResult;
-  };
-  /** POST /api/v1/settings/app-installations/{id}/uninstall — Удалить приложение из своего кабинета */
-  settingsUninstallAppInstallation: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.PlatformAppReasonInput;
-    response: models.PlatformAppSwitchResult;
-  };
-  /** POST /api/v1/settings/app-installations/{id}/unpark — Вернуть доставку событий своей установке */
-  settingsUnparkAppInstallation: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.PlatformAppReasonInput;
-    response: models.PlatformAppUnparkResult;
-  };
-  /** POST /api/v1/settings/app-installations/{id}/update — Перевести свою установку на другую версию */
-  settingsUpdateAppInstallation: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.PlatformAppUpdateInput;
-    response: models.PlatformAppUpdateResult;
-  };
-  /** PATCH /api/v1/settings/companies/{id} — Изменить реквизиты юрлица */
-  settingsUpdateCompany: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.SettingsCompanyInput;
-    response: models.SettingsCompany;
-  };
-  /** PATCH /api/v1/settings/field-definitions/{id} — Изменить определение дополнительного поля */
-  settingsUpdateFieldDefinition: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.SettingsFieldDefinitionInput;
-    response: models.SettingsFieldDefinition;
-  };
-  /** PATCH /api/v1/settings/members/{id} — Изменить участника кабинета */
-  settingsUpdateMember: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.SettingsMemberPatch;
-    response: models.SettingsMember;
-  };
-  /** PATCH /api/v1/settings/roles/{id} — Изменить роль кабинета */
-  settingsUpdateRole: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.SettingsRoleInput;
-    response: models.SettingsRole;
-  };
-  /** POST /api/v1/signup/requests/{token}/complete — Завести кабинет по одноразовой ссылке */
-  signupCompleteRequest: {
-    params: { "token": string };
-    query: Record<string, never>;
-    body: never;
-    response: models.SignupSession;
-  };
-  /** GET /api/v1/signup/requests/{token} — Прочитать заявку по одноразовой ссылке */
-  signupInspectRequest: {
-    params: { "token": string };
-    query: Record<string, never>;
-    body: never;
-    response: models.SignupRequestInfo;
-  };
-  /** POST /api/v1/signup/attribution/touches — Зафиксировать обезличенное маркетинговое касание */
-  signupRecordAttributionTouch: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.SignupAttributionTouchInput;
-    response: models.SignupAttributionAccepted;
-  };
-  /** POST /api/v1/signup/requests — Оставить заявку на кабинет */
-  signupRequest: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.SignupRequestInput;
-    response: models.SignupAccepted;
-  };
-  /** POST /api/v1/signup/requests/{token}/retry-provisioning — Повторить провижининг кабинета по заявке */
-  signupRetryProvisioning: {
-    params: { "token": string };
-    query: Record<string, never>;
-    body: never;
-    response: models.SignupSession;
-  };
   /** GET /api/v1/stock/account-transfers/proposal — Показать остаток запасов, который надо перенести на счёт по новому правилу */
   stockAccountTransferProposal: {
     params: Record<string, never>;
     query: { "business_id"?: models.UUID; "date": string };
     body: never;
     response: models.StockAccountTransferProposal;
-  };
-  /** POST /api/v1/stock/warehouses/{id}/activate — Вернуть склад в работу */
-  stockActivateWarehouse: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.StockWarehouse;
   };
   /** POST /api/v1/stock/imports/{id}/apply — Атомарно применить подтверждённый preview */
   stockApplyImport: {
@@ -6770,13 +3599,6 @@ export interface OperationTypes {
   };
   /** POST /api/v1/stock/documents/{id}/cancel — Отменить проведение складского документа */
   stockCancelDocument: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CoreDocument;
-  };
-  /** POST /api/v1/stock/documents/{id}/close — Закрыть недовезённый заказ поставщику */
-  stockCloseSupplierOrder: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
@@ -6816,13 +3638,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.StockExportRequest;
     response: models.StockExport;
-  };
-  /** POST /api/v1/stock/imports — Загрузить файл складского импорта */
-  stockCreateImport: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.StockImportRun;
   };
   /** POST /api/v1/stock/opening-balances — Создать черновик ввода начальных остатков товара */
   stockCreateOpeningBalance: {
@@ -6866,13 +3681,6 @@ export interface OperationTypes {
     body: never;
     response: models.StockWarehouse;
   };
-  /** DELETE /api/v1/stock/assembly-specs/{id} — Удалить черновик версии */
-  stockDeleteAssemblySpec: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
   /** POST /api/v1/stock/documents/{id}/derive — Создать акты списания и оприходования по инвентаризации */
   stockDeriveInventoryActs: {
     params: { "id": models.UUID };
@@ -6915,27 +3723,6 @@ export interface OperationTypes {
     body: never;
     response: models.StockAssemblySpec;
   };
-  /** GET /api/v1/stock/availability — Узнать свободный остаток товаров на складе */
-  stockGetAvailability: {
-    params: Record<string, never>;
-    query: { "business_id": models.UUID; "company_id"?: models.UUID; "product_ids": string; "warehouse_id": models.UUID };
-    body: never;
-    response: models.StockAvailabilityList;
-  };
-  /** GET /api/v1/stock/batches/{id} — Получить партию */
-  stockGetBatch: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.StockBatch;
-  };
-  /** GET /api/v1/stock/company-policies/{companyId} — Получить складскую политику юрлица */
-  stockGetCompanyPolicy: {
-    params: { "companyId": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.StockCompanyPolicy;
-  };
   /** GET /api/v1/stock/documents/{id} — Получить складской документ */
   stockGetDocument: {
     params: { "id": models.UUID };
@@ -6971,13 +3758,6 @@ export interface OperationTypes {
     body: never;
     response: models.StockExport;
   };
-  /** GET /api/v1/stock/exports/{id}/content — Скачать файл своего складского экспорта */
-  stockGetExportContent: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
   /** GET /api/v1/stock/handling-units/{id} — Получить карточку физической складской единицы */
   stockGetHandlingUnit: {
     params: { "id": models.UUID };
@@ -6998,20 +3778,6 @@ export interface OperationTypes {
     query: { "format"?: "json" | "xlsx" };
     body: never;
     response: models.CoreProductImportIssuePage;
-  };
-  /** GET /api/v1/stock/imports/{id}/source — Скачать исходный файл своего прогона импорта */
-  stockGetImportSource: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** GET /api/v1/stock/import-templates/{kind} — Скачать шаблон складского импорта */
-  stockGetImportTemplate: {
-    params: { "kind": models.StockImportKind };
-    query: Record<string, never>;
-    body: never;
-    response: void;
   };
   /** GET /api/v1/stock/documents/{id}/count-sheet — Получить бланк пересчёта инвентаризации */
   stockGetInventoryCountSheet: {
@@ -7041,26 +3807,12 @@ export interface OperationTypes {
     body: never;
     response: models.StockReportOverduePage;
   };
-  /** GET /api/v1/stock/report/supplier-orders/overdue — Получить просроченные заказы поставщику */
-  stockGetOverdueSupplierOrders: {
-    params: Record<string, never>;
-    query: { "as_of"?: string; "company_id"?: models.UUID; "limit"?: number; "warehouse_id"?: models.UUID };
-    body: never;
-    response: models.StockReportOverdueSupplierOrderPage;
-  };
   /** GET /api/v1/stock/report/purchasing — Получить отчёт потребности в закупке */
   stockGetPurchasingReport: {
     params: Record<string, never>;
     query: { "business_id"?: models.UUID; "company_id"?: models.UUID; "demand_from"?: string; "demand_to"?: string; "expected_from"?: string; "expected_to"?: string; "include_empty"?: boolean; "limit"?: number; "min_from"?: string; "min_to"?: string; "offset"?: number; "on_hand_from"?: string; "on_hand_to"?: string; "projected_from"?: string; "projected_to"?: string; "q"?: string; "reserved_from"?: string; "reserved_to"?: string; "suggested_from"?: string; "suggested_to"?: string; "warehouse_id"?: models.UUID };
     body: never;
     response: models.StockReportPurchasingPage;
-  };
-  /** GET /api/v1/stock/reorder-rules/{id} — Получить правило пополнения */
-  stockGetReorderRule: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.StockReorderRule;
   };
   /** GET /api/v1/stock/report/reservations — Получить сводку по резервам */
   stockGetReservationSummaries: {
@@ -7075,13 +3827,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.StockSettings;
-  };
-  /** GET /api/v1/stock/report/stocks/{productId} — Раскрыть остаток номенклатуры до движений регистра */
-  stockGetStockDrilldown: {
-    params: { "productId": models.UUID };
-    query: { "as_of"?: string; "below_minimum"?: boolean; "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "limit"?: number; "mode"?: "products" | "warehouses" | "companies" | "matrix"; "offset"?: number; "rollup_zones"?: boolean; "sort"?: "name" | "on_hand" | "reserved" | "available" | "expected" | "forecast" | "minimum" | "suggested" | "unit_cost" | "amount"; "warehouse_id"?: models.UUID; "warehouse_ids"?: string; "with_reserve"?: boolean; "without_company"?: boolean };
-    body: never;
-    response: models.StockReportDrilldown;
   };
   /** GET /api/v1/stock/report/stocks — Получить отчёт по остаткам */
   stockGetStocksReport: {
@@ -7103,13 +3848,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.StockWarehouse;
-  };
-  /** GET /api/v1/stock/warehouses/{id}/blockers — Проверить, можно ли вывести склад из работы */
-  stockGetWarehouseBlockers: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.StockWarehouseBlockerCheck;
   };
   /** GET /api/v1/stock/warehouses/{id}/zones/allocation — Получить матрицу разнесения остатка по зонам */
   stockGetWarehouseZoneAllocation: {
@@ -7138,20 +3876,6 @@ export interface OperationTypes {
     query: { "amount_from"?: string; "amount_to"?: string; "batch"?: string; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "expiry"?: "expired" | "soon" | "all"; "limit"?: number; "offset"?: number; "produced_from"?: string; "produced_to"?: string; "product"?: string; "product_id"?: models.UUID; "q"?: string; "quantity_from"?: string; "quantity_to"?: string; "received_from"?: string; "received_to"?: string; "sort"?: "received_at" | "expires_at" | "product" | "company" | "quantity" | "amount" };
     body: never;
     response: models.StockBatchPage;
-  };
-  /** GET /api/v1/stock/businesses — Получить учётные единицы кабинета */
-  stockListBusinesses: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.StockBusinessRefPage;
-  };
-  /** GET /api/v1/stock/companies — Получить юрлица кабинета, доступные сотруднику */
-  stockListCompanies: {
-    params: Record<string, never>;
-    query: { "include_archived"?: boolean };
-    body: never;
-    response: models.StockCompanyRefPage;
   };
   /** GET /api/v1/stock/company-policies — Получить складские политики юрлиц */
   stockListCompanyPolicies: {
@@ -7250,13 +3974,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.StockValuationRebuildRequest;
     response: models.StockValuationRun;
-  };
-  /** POST /api/v1/stock/receipt-vat-terms — Получить налоговые условия приёмки до сохранения */
-  stockReceiptVATTerms: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.StockReceiptVATTermsInput;
-    response: models.StockReceiptVATTerms;
   };
   /** POST /api/v1/stock/documents/{id}/inventory-refresh — Пересобрать снимок остатков инвентаризации */
   stockRefreshInventorySnapshot: {
@@ -7377,13 +4094,6 @@ export interface OperationTypes {
     body: models.StockWarehousePatch;
     response: models.StockWarehouse;
   };
-  /** POST /api/v1/tasks/projects/{id}/members — Добавить участника в группу проектов задач */
-  tasksAddProjectMember: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.MemberAssignment;
-    response: models.SectionMember;
-  };
   /** POST /api/v1/tasks/sections/{id}/members — Добавить участника в проект задач */
   tasksAddSectionMember: {
     params: { "id": models.UUID };
@@ -7418,27 +4128,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: void;
-  };
-  /** POST /api/v1/tasks/tasks/{id}/tags — Прикрепить к задаче существующую или новую метку */
-  tasksAttachTaskTag: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.TagAttach;
-    response: models.Tag;
-  };
-  /** POST /api/v1/tasks/tasks/{id}/agent-journal — Записать результат работы агента */
-  tasksCreateAgentJournalEntry: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CommentCreate;
-    response: models.Comment;
-  };
-  /** GET /api/v1/tasks/attachments/{id}/download-session — Получить короткоживущую ссылку скачивания */
-  tasksCreateAttachmentDownloadSession: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.AttachmentDownloadSession;
   };
   /** POST /api/v1/tasks/attachments/{id}/replace-sessions — Создать прямую upload-сессию для замены файла */
   tasksCreateAttachmentReplacementSession: {
@@ -7524,13 +4213,6 @@ export interface OperationTypes {
     body: models.ProjectCreate;
     response: models.Project;
   };
-  /** POST /api/v1/tasks/projects/{id}/file-folders — Создать папку файлов проекта */
-  tasksCreateProjectFileFolder: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.ProjectFileFolderCreate;
-    response: models.ProjectFileFolder;
-  };
   /** POST /api/v1/tasks/pull-requests — Привязать или обновить pull request */
   tasksCreatePullRequest: {
     params: Record<string, never>;
@@ -7544,13 +4226,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.RelationCreate;
     response: models.Relation;
-  };
-  /** POST /api/v1/tasks/sections — Создать проект задач */
-  tasksCreateSection: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: models.SectionCreate;
-    response: models.Section;
   };
   /** POST /api/v1/tasks/statuses — Создать workflow-статус */
   tasksCreateStatus: {
@@ -7664,20 +4339,6 @@ export interface OperationTypes {
     body: never;
     response: models.OK;
   };
-  /** DELETE /api/v1/tasks/projects/{id}/file-folders/{folderID} — Удалить пустую папку файлов проекта */
-  tasksDeleteProjectFileFolder: {
-    params: { "folderID": models.UUID; "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
-  /** DELETE /api/v1/tasks/projects/{id}/members/{userID} — Удалить участника из группы проектов задач */
-  tasksDeleteProjectMember: {
-    params: { "id": models.UUID; "userID": number };
-    query: Record<string, never>;
-    body: never;
-    response: void;
-  };
   /** DELETE /api/v1/tasks/pull-requests/{id} — Архивировать связь с pull request */
   tasksDeletePullRequest: {
     params: { "id": models.UUID };
@@ -7762,13 +4423,6 @@ export interface OperationTypes {
     body: never;
     response: models.Cycle;
   };
-  /** GET /api/v1/tasks/discussion-comments/{id} — Получить комментарий обсуждения */
-  tasksGetDiscussionComment: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.DiscussionComment;
-  };
   /** GET /api/v1/tasks/documents/{id} — Получить документ задачи или проекта */
   tasksGetDocument: {
     params: { "id": models.UUID };
@@ -7811,20 +4465,6 @@ export interface OperationTypes {
     body: never;
     response: models.PullRequest;
   };
-  /** GET /api/v1/tasks/scrum/settings/{project} — Получить Scrum-настройки группы проектов задач */
-  tasksGetScrumSettings: {
-    params: { "project": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.ScrumSettings;
-  };
-  /** GET /api/v1/tasks/snapshot — Получить стартовый снимок задачника */
-  tasksGetSnapshot: {
-    params: Record<string, never>;
-    query: { "limit"?: number; "project"?: string; "q"?: string; "section"?: string; "status"?: string };
-    body: never;
-    response: models.TasksSnapshot;
-  };
   /** GET /api/v1/tasks/scrum/metrics/{cycle} — Получить командные метрики спринта */
   tasksGetSprintMetrics: {
     params: { "cycle": models.UUID };
@@ -7859,20 +4499,6 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.ActivityList;
-  };
-  /** GET /api/v1/tasks/tasks/{id}/agent-journal — Получить журнал работы агентов по задаче */
-  tasksListAgentJournal: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.CommentList;
-  };
-  /** GET /api/v1/tasks/comments/{id}/attachments — Получить вложения комментария */
-  tasksListCommentAttachments: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.AttachmentPage;
   };
   /** GET /api/v1/tasks/tasks/{id}/comments — Получить обсуждение задачи */
   tasksListComments: {
@@ -7909,13 +4535,6 @@ export interface OperationTypes {
     body: never;
     response: models.DiscussionCommentPage;
   };
-  /** GET /api/v1/tasks/documents/{id}/attachments — Получить файлы документа */
-  tasksListDocumentAttachments: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.AttachmentPage;
-  };
   /** GET /api/v1/tasks/documents — Получить документы задач и проектов */
   tasksListDocuments: {
     params: Record<string, never>;
@@ -7937,13 +4556,6 @@ export interface OperationTypes {
     body: never;
     response: models.LinkList;
   };
-  /** GET /api/v1/tasks/hub/meetings/{id}/attachments — Получить файлы встречи */
-  tasksListMeetingAttachments: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.AttachmentPage;
-  };
   /** GET /api/v1/tasks/hub/meetings — Получить встречи Project Hub */
   tasksListMeetings: {
     params: Record<string, never>;
@@ -7951,40 +4563,12 @@ export interface OperationTypes {
     body: never;
     response: models.MeetingPage;
   };
-  /** GET /api/v1/tasks/members — Получить активных участников кабинета */
-  tasksListMembers: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: Array<models.Member>;
-  };
   /** GET /api/v1/tasks/milestones — Получить вехи проектов задач */
   tasksListMilestones: {
     params: Record<string, never>;
     query: { "include_archived"?: boolean; "project"?: string; "section"?: string };
     body: never;
     response: models.MilestonePage;
-  };
-  /** GET /api/v1/tasks/projects/{id}/attachments — Получить файлы группы проектов задач */
-  tasksListProjectAttachments: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.AttachmentPage;
-  };
-  /** GET /api/v1/tasks/projects/{id}/file-folders — Получить дерево папок файлов проекта */
-  tasksListProjectFileFolders: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.ProjectFileFolderPage;
-  };
-  /** GET /api/v1/tasks/projects/{id}/members — Получить участников группы проектов задач */
-  tasksListProjectMembers: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: Array<models.SectionMember>;
   };
   /** GET /api/v1/tasks/projects — Получить доступные группы проектов задач */
   tasksListProjects: {
@@ -8006,20 +4590,6 @@ export interface OperationTypes {
     query: { "direction"?: models.RelationDirection };
     body: never;
     response: models.RelationList;
-  };
-  /** GET /api/v1/tasks/scrum/settings — Получить настройки Scrum всех групп проектов задач */
-  tasksListScrumSettings: {
-    params: Record<string, never>;
-    query: Record<string, never>;
-    body: never;
-    response: models.ScrumSettingsPage;
-  };
-  /** GET /api/v1/tasks/sections/{id}/attachments — Получить вложения проекта задач */
-  tasksListSectionAttachments: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.AttachmentPage;
   };
   /** GET /api/v1/tasks/sections/{id}/members — Получить участников проекта задач */
   tasksListSectionMembers: {
@@ -8063,13 +4633,6 @@ export interface OperationTypes {
     body: never;
     response: models.AttachmentPage;
   };
-  /** GET /api/v1/tasks/tasks/{id}/tags — Получить метки задачи */
-  tasksListTaskTags: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.TagPage;
-  };
   /** GET /api/v1/tasks/tasks — Получить видимые пользователю задачи */
   tasksListTasks: {
     params: Record<string, never>;
@@ -8091,13 +4654,6 @@ export interface OperationTypes {
     body: never;
     response: models.TaskViewPage;
   };
-  /** PATCH /api/v1/tasks/projects/{id}/attachments/{attachmentID} — Переместить файл в папку проекта или в корень */
-  tasksMoveProjectAttachment: {
-    params: { "attachmentID": models.UUID; "id": models.UUID };
-    query: Record<string, never>;
-    body: models.AttachmentMove;
-    response: void;
-  };
   /** POST /api/v1/tasks/tasks/{id}/move — Переместить задачу в другой workflow-статус */
   tasksMoveTask: {
     params: { "id": models.UUID };
@@ -8105,26 +4661,12 @@ export interface OperationTypes {
     body: models.TaskMove;
     response: models.Task;
   };
-  /** PATCH /api/v1/tasks/projects/{id}/file-folders/{folderID} — Переименовать папку файлов проекта */
-  tasksRenameProjectFileFolder: {
-    params: { "folderID": models.UUID; "id": models.UUID };
-    query: Record<string, never>;
-    body: models.ProjectFileFolderRename;
-    response: models.ProjectFileFolder;
-  };
   /** PATCH /api/v1/tasks/statuses/reorder — Изменить порядок workflow-статусов */
   tasksReorderStatuses: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.StatusReorder;
     response: models.OK;
-  };
-  /** POST /api/v1/tasks/attachments/{id}/replace — Заменить файл через сервер до 25 МБ */
-  tasksReplaceAttachment: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.Attachment;
   };
   /** POST /api/v1/tasks/templates/run-due — Запустить все шаблоны, срок которых наступил */
   tasksRunDueTemplates: {
@@ -8140,40 +4682,12 @@ export interface OperationTypes {
     body: never;
     response: models.TemplateRunResult;
   };
-  /** PATCH /api/v1/tasks/customers/{id} — Изменить заказчика проектов */
-  tasksUpdateCustomer: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CustomerUpdate;
-    response: models.Customer;
-  };
-  /** PATCH /api/v1/tasks/customer-needs/{id} — Изменить потребность заказчика */
-  tasksUpdateCustomerNeed: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.CustomerNeedUpdate;
-    response: models.CustomerNeed;
-  };
   /** PATCH /api/v1/tasks/cycles/{id} — Изменить цикл или спринт */
   tasksUpdateCycle: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.CycleUpdate;
     response: models.Cycle;
-  };
-  /** PATCH /api/v1/tasks/discussion-comments/{id} — Изменить комментарий обсуждения */
-  tasksUpdateDiscussionComment: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DiscussionCommentUpdate;
-    response: models.DiscussionComment;
-  };
-  /** PATCH /api/v1/tasks/documents/{id} — Изменить документ задачи или проекта */
-  tasksUpdateDocument: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.DocumentUpdate;
-    response: models.TaskDocument;
   };
   /** PATCH /api/v1/tasks/hub/sections/{id} — Настроить раздел Project Hub */
   tasksUpdateHubSection: {
@@ -8182,40 +4696,12 @@ export interface OperationTypes {
     body: models.HubSectionUpdate;
     response: models.HubSection;
   };
-  /** PATCH /api/v1/tasks/hub/meetings/{id} — Изменить встречу и её разбор */
-  tasksUpdateMeeting: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.MeetingUpdate;
-    response: models.Meeting;
-  };
   /** PATCH /api/v1/tasks/milestones/{id} — Изменить веху */
   tasksUpdateMilestone: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.MilestoneUpdate;
     response: models.Milestone;
-  };
-  /** PATCH /api/v1/tasks/projects/{id} — Изменить группу проектов задач */
-  tasksUpdateProject: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.ProjectUpdate;
-    response: models.Project;
-  };
-  /** PATCH /api/v1/tasks/pull-requests/{id} — Изменить связь с pull request */
-  tasksUpdatePullRequest: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.PullRequestUpdate;
-    response: models.PullRequest;
-  };
-  /** PATCH /api/v1/tasks/scrum/settings/{project} — Изменить Scrum-ритм, разделы и команду */
-  tasksUpdateScrumSettings: {
-    params: { "project": models.UUID };
-    query: Record<string, never>;
-    body: models.ScrumSettingsUpdate;
-    response: models.ScrumSettings;
   };
   /** PATCH /api/v1/tasks/sections/{id} — Изменить проект задач */
   tasksUpdateSection: {
@@ -8231,13 +4717,6 @@ export interface OperationTypes {
     body: models.WorkflowStatusUpdate;
     response: models.Status;
   };
-  /** PATCH /api/v1/tasks/status-updates/{id} — Изменить отчёт о состоянии проекта */
-  tasksUpdateStatusUpdate: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.StatusUpdatePatch;
-    response: models.StatusUpdate;
-  };
   /** PATCH /api/v1/tasks/tags/{id} — Изменить метку задач */
   tasksUpdateTag: {
     params: { "id": models.UUID };
@@ -8252,48 +4731,6 @@ export interface OperationTypes {
     body: models.TaskUpdate;
     response: models.Task;
   };
-  /** PATCH /api/v1/tasks/templates/{id} — Изменить шаблон регулярной задачи */
-  tasksUpdateTemplate: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: models.TaskTemplateUpdate;
-    response: models.TaskTemplate;
-  };
-  /** POST /api/v1/tasks/comments/{id}/attachments — Загрузить вложение комментария до 25 МБ */
-  tasksUploadCommentAttachment: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.Attachment;
-  };
-  /** POST /api/v1/tasks/documents/{id}/attachments — Загрузить файл документа до 25 МБ */
-  tasksUploadDocumentAttachment: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.Attachment;
-  };
-  /** POST /api/v1/tasks/hub/meetings/{id}/attachments — Загрузить файл встречи до 25 МБ */
-  tasksUploadMeetingAttachment: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.Attachment;
-  };
-  /** POST /api/v1/tasks/projects/{id}/attachments — Загрузить файл группы проектов до 25 МБ */
-  tasksUploadProjectAttachment: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.Attachment;
-  };
-  /** POST /api/v1/tasks/sections/{id}/attachments — Загрузить вложение проекта задач до 25 МБ */
-  tasksUploadSectionAttachment: {
-    params: { "id": models.UUID };
-    query: Record<string, never>;
-    body: never;
-    response: models.Attachment;
-  };
   /** POST /api/v1/tasks/tasks/{id}/attachments — Загрузить вложение задачи до 25 МБ */
   tasksUploadTaskAttachment: {
     params: { "id": models.UUID };
@@ -8307,18 +4744,22 @@ export type OperationId = keyof OperationTypes;
 
 export const operationSpecs: Record<OperationId, OperationSpec> = {
   appDocflowCancelSalesOrder: { method: "POST", path: "/api/v1/app/docflow/orders/{id}/cancel", module: "docflow", stage: "preview", permission: "docflow.orders:import", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  appDocflowFindSalesOrderByExternalID: { method: "GET", path: "/api/v1/app/docflow/orders/lookup", module: "docflow", stage: "preview", permission: "docflow.orders:import", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appDocflowGetSalesOrder: { method: "GET", path: "/api/v1/app/docflow/orders/{id}", module: "docflow", stage: "preview", permission: "docflow.orders:import", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appDocflowImportSalesOrder: { method: "POST", path: "/api/v1/app/docflow/orders/import", module: "docflow", stage: "preview", permission: "docflow.orders:import", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appDocflowIssueSalesOrderAct: { method: "POST", path: "/api/v1/app/docflow/orders/{id}/act", module: "docflow", stage: "preview", permission: "docflow.orders:issue", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appDocflowIssueSalesOrderInvoice: { method: "POST", path: "/api/v1/app/docflow/orders/{id}/invoice", module: "docflow", stage: "preview", permission: "docflow.orders:issue", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appDocflowIssueSalesOrderUPD: { method: "POST", path: "/api/v1/app/docflow/orders/{id}/upd", module: "docflow", stage: "preview", permission: "docflow.orders:issue", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appDocflowListSalesOrderImports: { method: "GET", path: "/api/v1/app/docflow/order-imports", module: "docflow", stage: "preview", permission: "docflow.orders:import", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 50 },
+  appDocflowPrintOrderInvoice: { method: "GET", path: "/api/v1/app/docflow/orders/{orderId}/invoices/{documentId}/print", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  appDocflowPrintOrderUPD: { method: "GET", path: "/api/v1/app/docflow/orders/{orderId}/upds/{documentId}/print", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appDocflowRecordSalesOrderPayment: { method: "POST", path: "/api/v1/app/docflow/orders/{id}/payments", module: "docflow", stage: "preview", permission: "docflow.orders:payments", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appDocflowSetSalesOrderStatus: { method: "POST", path: "/api/v1/app/docflow/orders/{id}/status", module: "docflow", stage: "preview", permission: "docflow.orders:import", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appFinanceCancelOperation: { method: "POST", path: "/api/v1/app/finance/operations/{id}/cancel", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appFinanceCreateOperation: { method: "POST", path: "/api/v1/app/finance/operations", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appFinanceCreateOperationAccrual: { method: "POST", path: "/api/v1/app/finance/operations/{id}/accruals", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appFinanceGetOperation: { method: "GET", path: "/api/v1/app/finance/operations/{id}", module: "finance", stage: "preview", permission: "finance.operations:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  appFinanceRecordAcquiringCapture: { method: "POST", path: "/api/v1/app/finance/acquiring/captures", module: "finance", stage: "preview", permission: "finance.acquiring:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appFinanceSuggestTransactionClassification: { method: "POST", path: "/api/v1/app/finance/transactions/{id}/classification-suggestions", module: "finance", stage: "preview", permission: "finance:suggest", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appReferenceDeactivateItem: { method: "DELETE", path: "/api/v1/app/reference/{key}/items/{code}", module: "core", stage: "preview", permission: "app:reference", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   appReferenceItems: { method: "GET", path: "/api/v1/app/reference/{key}/items", module: "core", stage: "preview", permission: "app:reference", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: null },
@@ -8331,10 +4772,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   automationRuleSimulate: { method: "POST", path: "/api/v1/automation/rules/simulate", module: "automation", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   automationRuleTest: { method: "POST", path: "/api/v1/automation/rules/test", module: "automation", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   automationRules: { method: "GET", path: "/api/v1/automation/rules", module: "automation", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  billingPublicCatalog: { method: "GET", path: "/api/v1/billing/public/catalog", module: "billing", stage: "preview", permission: "billing:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarBookPublicSlot: { method: "POST", path: "/api/v1/calendar/public/{slug}/book", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarCompleteGoogleOAuth: { method: "POST", path: "/api/v1/calendar/connectors/google/oauth/complete", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarCompleteOffice365OAuth: { method: "POST", path: "/api/v1/calendar/connectors/office365/oauth/complete", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  bankMarkTransactionDeleted: { method: "POST", path: "/api/v1/bank/transactions/{id}/mark-deleted", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarCreateAvailability: { method: "POST", path: "/api/v1/calendar/availability", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarCreateBookingLink: { method: "POST", path: "/api/v1/calendar/booking-links", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarCreateConnector: { method: "POST", path: "/api/v1/calendar/connectors", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8346,9 +4784,6 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   calendarGetBookingLinkSlots: { method: "GET", path: "/api/v1/calendar/booking-links/{id}/slots", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarGetBusy: { method: "GET", path: "/api/v1/calendar/busy", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarGetEvent: { method: "GET", path: "/api/v1/calendar/events/{id}", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarGetPublicBookingLink: { method: "GET", path: "/api/v1/calendar/public/{slug}", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarGetPublicBookingSlots: { method: "GET", path: "/api/v1/calendar/public/{slug}/slots", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarGetPushConfig: { method: "GET", path: "/api/v1/calendar/push/config", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarGetSettings: { method: "GET", path: "/api/v1/calendar/settings", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarListAvailability: { method: "GET", path: "/api/v1/calendar/availability", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarListBookingLinks: { method: "GET", path: "/api/v1/calendar/booking-links", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8358,105 +4793,51 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   calendarListMembers: { method: "GET", path: "/api/v1/calendar/members", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
   calendarPutSettings: { method: "PUT", path: "/api/v1/calendar/settings", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarRespondToEvent: { method: "POST", path: "/api/v1/calendar/events/{id}/response", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarStartGoogleOAuth: { method: "GET", path: "/api/v1/calendar/connectors/google/oauth/start", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarStartOffice365OAuth: { method: "GET", path: "/api/v1/calendar/connectors/office365/oauth/start", module: "calendar", stage: "preview", permission: "calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarSubscribePush: { method: "POST", path: "/api/v1/calendar/push/subscriptions", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarSyncConnector: { method: "POST", path: "/api/v1/calendar/connectors/{id}/sync", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarTestPush: { method: "POST", path: "/api/v1/calendar/push/test", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  calendarUnsubscribePush: { method: "DELETE", path: "/api/v1/calendar/push/subscriptions", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarUpdateAvailability: { method: "PATCH", path: "/api/v1/calendar/availability/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarUpdateBookingLink: { method: "PATCH", path: "/api/v1/calendar/booking-links/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarUpdateConnector: { method: "PATCH", path: "/api/v1/calendar/connectors/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarUpdateEvent: { method: "PATCH", path: "/api/v1/calendar/events/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatAddGroupMember: { method: "POST", path: "/api/v1/chat/conversations/{id}/members", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatChangeNotificationMode: { method: "PATCH", path: "/api/v1/chat/conversations/{id}/notification-mode", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatClearManualUnread: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/manual-unread", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatCreateFolder: { method: "POST", path: "/api/v1/chat/folders", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatChangeNotificationMode: { method: "PATCH", path: "/api/v1/chat/conversations/{id}/notification-mode", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatClearManualUnread: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/manual-unread", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatCreateGroup: { method: "POST", path: "/api/v1/chat/conversations", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatDeleteFolder: { method: "DELETE", path: "/api/v1/chat/folders/{id}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatDeleteMessage: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/messages/{messageId}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatDisableMobileDevice: { method: "DELETE", path: "/api/v1/chat/mobile/devices/{deviceId}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatDownloadAttachment: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments/{attachmentId}/content", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatDownloadConversationAvatar: { method: "GET", path: "/api/v1/chat/conversations/{id}/avatar/content", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatEditMessage: { method: "PATCH", path: "/api/v1/chat/conversations/{id}/messages/{messageId}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatEnsureDirect: { method: "POST", path: "/api/v1/chat/conversations/direct", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatEnsureEntityConversation: { method: "POST", path: "/api/v1/chat/entities/{module}/{entity}/{entityId}/conversation", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatFindEntityConversation: { method: "GET", path: "/api/v1/chat/entities/{module}/{entity}/{entityId}/conversation", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatForwardMessage: { method: "POST", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/forward", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatGetAttachment: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments/{attachmentId}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatGetConversation: { method: "GET", path: "/api/v1/chat/conversations/{id}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatLinkPreview: { method: "GET", path: "/api/v1/chat/link-preview", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatListAttachments: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "cursor", pageSizeMax: 100, pageSizeDefault: 50 },
   chatListConversationMembers: { method: "GET", path: "/api/v1/chat/conversations/{id}/members", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatListConversations: { method: "GET", path: "/api/v1/chat/conversations", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "cursor", pageSizeMax: 100, pageSizeDefault: 50 },
-  chatListFolders: { method: "GET", path: "/api/v1/chat/folders", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatListMentionCandidates: { method: "GET", path: "/api/v1/chat/conversations/{id}/mentions/candidates", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatListMessageReaders: { method: "GET", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/readers", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatListMessages: { method: "GET", path: "/api/v1/chat/conversations/{id}/messages", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
   chatListPeople: { method: "GET", path: "/api/v1/chat/people", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatListPins: { method: "GET", path: "/api/v1/chat/conversations/{id}/pins", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatListPresence: { method: "GET", path: "/api/v1/chat/conversations/{id}/presence", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatListUnreadMentions: { method: "GET", path: "/api/v1/chat/conversations/{id}/mentions/unread", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatMarkAllConversationsRead: { method: "POST", path: "/api/v1/chat/conversations/read-all", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatMarkDelivered: { method: "POST", path: "/api/v1/chat/conversations/{id}/delivered", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatMarkManualUnread: { method: "POST", path: "/api/v1/chat/conversations/{id}/manual-unread", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatMarkMentionRead: { method: "POST", path: "/api/v1/chat/conversations/{id}/mentions/{messageId}/read", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatMarkRead: { method: "POST", path: "/api/v1/chat/conversations/{id}/read", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatOpenMedia: { method: "GET", path: "/api/v1/chat/attachments/{attachmentId}/content", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatOpenVideoThumbnail: { method: "GET", path: "/api/v1/chat/attachments/{attachmentId}/thumbnail", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatPinMessage: { method: "PUT", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/pin", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatPulsePresence: { method: "POST", path: "/api/v1/chat/conversations/{id}/typing", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatRegisterMobileDevice: { method: "POST", path: "/api/v1/chat/mobile/devices", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatRemoveGroupMember: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/members/{userId}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatRemoveReaction: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/reaction", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatRenameGroup: { method: "PATCH", path: "/api/v1/chat/conversations/{id}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatSendMedia: { method: "POST", path: "/api/v1/chat/conversations/{id}/media", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatMarkManualUnread: { method: "POST", path: "/api/v1/chat/conversations/{id}/manual-unread", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatMarkMentionRead: { method: "POST", path: "/api/v1/chat/conversations/{id}/mentions/{messageId}/read", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatMarkRead: { method: "POST", path: "/api/v1/chat/conversations/{id}/read", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatSendMessage: { method: "POST", path: "/api/v1/chat/conversations/{id}/messages", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatSendMobilePushTest: { method: "POST", path: "/api/v1/chat/mobile/devices/test", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatSetReaction: { method: "PUT", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/reaction", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatStreamRealtime: { method: "GET", path: "/api/v1/chat/realtime/stream", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatUnpinMessage: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/messages/{messageId}/pin", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatUnreadSummary: { method: "GET", path: "/api/v1/chat/conversations/unread", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatUpdateFolder: { method: "PATCH", path: "/api/v1/chat/folders/{id}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatUploadAttachment: { method: "POST", path: "/api/v1/chat/conversations/{id}/attachments", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  chatUploadConversationAvatar: { method: "POST", path: "/api/v1/chat/conversations/{id}/avatar", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreAddPolicyAccountableDays: { method: "POST", path: "/api/v1/core/accounting-policy/businesses/{id}/accountable-days", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreAddPolicyTaxMode: { method: "POST", path: "/api/v1/core/accounting-policy/companies/{id}/tax-mode", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreAddPolicyTaxRegime: { method: "POST", path: "/api/v1/core/accounting-policy/companies/{id}/tax-regime", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreAddPolicyVATPending: { method: "POST", path: "/api/v1/core/accounting-policy/businesses/{id}/vat-pending", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreAddPolicyVATPresentation: { method: "POST", path: "/api/v1/core/accounting-policy/businesses/{id}/vat-presentation", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreAddPolicyVATRates: { method: "POST", path: "/api/v1/core/accounting-policy/companies/{id}/vat-rates", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreApplyProductImport: { method: "POST", path: "/api/v1/core/product-imports/{id}/apply", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreArchiveContact: { method: "POST", path: "/api/v1/core/contacts/{id}/archive", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreArchiveEmployee: { method: "DELETE", path: "/api/v1/core/employees/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreArchiveProduct: { method: "POST", path: "/api/v1/core/products/{id}/archive", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreBulkUpdateContacts: { method: "POST", path: "/api/v1/core/contacts/bulk", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreBulkUpdateProducts: { method: "POST", path: "/api/v1/core/products/bulk", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCancelDocument: { method: "POST", path: "/api/v1/core/documents/{id}/cancel", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCancelOrder: { method: "POST", path: "/api/v1/core/orders/{id}/cancel", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCloseAccountingPeriod: { method: "POST", path: "/api/v1/core/accounting-periods/close", module: "core", stage: "preview", permission: "core:period_close", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCloseOrder: { method: "POST", path: "/api/v1/core/orders/{id}/close", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCompleteOrderStep: { method: "POST", path: "/api/v1/core/orders/{id}/steps/{key}/done", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreConfirmOrder: { method: "POST", path: "/api/v1/core/orders/{id}/confirm", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateBusiness: { method: "POST", path: "/api/v1/core/businesses", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateBusinessOwnership: { method: "POST", path: "/api/v1/core/businesses/{id}/ownership", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateContact: { method: "POST", path: "/api/v1/core/contacts", module: "core", stage: "preview", permission: "core:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateCurrencyRate: { method: "POST", path: "/api/v1/core/currency-rates", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateDictionary: { method: "POST", path: "/api/v1/core/dictionaries", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateDictionaryItem: { method: "POST", path: "/api/v1/core/dictionaries/{id}/items", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateDocument: { method: "POST", path: "/api/v1/core/documents", module: "core", stage: "preview", permission: "core:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateDocumentType: { method: "POST", path: "/api/v1/core/document-types", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateEmployee: { method: "POST", path: "/api/v1/core/employees", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateEmployeeEquipment: { method: "POST", path: "/api/v1/core/employee-equipment", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateEmployeeLifecycleTemplate: { method: "POST", path: "/api/v1/core/employee-lifecycle-templates", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateFolder: { method: "POST", path: "/api/v1/core/folders", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateGLAccount: { method: "POST", path: "/api/v1/core/gl-accounts", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateGLMapping: { method: "POST", path: "/api/v1/core/gl-mappings", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateGLOpeningImport: { method: "POST", path: "/api/v1/core/gl-opening-imports", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateItem: { method: "POST", path: "/api/v1/core/items", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateOrder: { method: "POST", path: "/api/v1/core/orders", module: "core", stage: "preview", permission: "core.orders:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateOrderFunnel: { method: "POST", path: "/api/v1/core/order-funnels", module: "core", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreCreateOrderStatus: { method: "POST", path: "/api/v1/core/order-statuses", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateOrderTemplate: { method: "POST", path: "/api/v1/core/order-templates", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateProduct: { method: "POST", path: "/api/v1/core/products", module: "core", stage: "preview", permission: "core:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateProductExport: { method: "POST", path: "/api/v1/core/product-exports", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8465,47 +4846,15 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreCreateProductImportUploadSession: { method: "POST", path: "/api/v1/core/product-import-upload-sessions", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreCreateRegister: { method: "POST", path: "/api/v1/core/registers", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreDeactivateProductIdentifier: { method: "POST", path: "/api/v1/core/products/{id}/identifiers/{identifierId}/deactivate", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteDictionary: { method: "DELETE", path: "/api/v1/core/dictionaries/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteDictionaryItem: { method: "DELETE", path: "/api/v1/core/dictionaries/{id}/items/{itemId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteDocumentType: { method: "DELETE", path: "/api/v1/core/document-types/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteEmployeePhoto: { method: "DELETE", path: "/api/v1/core/employees/{id}/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteFolder: { method: "DELETE", path: "/api/v1/core/folders/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteGLAccount: { method: "DELETE", path: "/api/v1/core/gl-accounts/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteGLMapping: { method: "DELETE", path: "/api/v1/core/gl-mappings/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteItem: { method: "DELETE", path: "/api/v1/core/items/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteProductFile: { method: "DELETE", path: "/api/v1/core/products/{id}/files/{fileId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteRegister: { method: "DELETE", path: "/api/v1/core/registers/{key}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreDeleteSelfEmployeePhoto: { method: "DELETE", path: "/api/v1/core/self/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreEditPolicyAccountableDays: { method: "PUT", path: "/api/v1/core/accounting-policy/businesses/{id}/accountable-days/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreEditPolicyTaxMode: { method: "PUT", path: "/api/v1/core/accounting-policy/companies/{id}/tax-mode/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreEditPolicyTaxRegime: { method: "PUT", path: "/api/v1/core/accounting-policy/companies/{id}/tax-regime/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreEditPolicyVATPending: { method: "PUT", path: "/api/v1/core/accounting-policy/businesses/{id}/vat-pending/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreEditPolicyVATPresentation: { method: "PUT", path: "/api/v1/core/accounting-policy/businesses/{id}/vat-presentation/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreEditPolicyVATRates: { method: "PUT", path: "/api/v1/core/accounting-policy/companies/{id}/vat-rates/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreExecuteOrderNow: { method: "POST", path: "/api/v1/core/orders/execute-now", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGenerateProductBarcode: { method: "POST", path: "/api/v1/core/product-identifiers/generate", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGenerateProductVariants: { method: "POST", path: "/api/v1/core/products/{id}/variants/generate", module: "core", stage: "preview", permission: "core:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetAccountingPeriodState: { method: "GET", path: "/api/v1/core/accounting-periods", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetAccountingPolicy: { method: "GET", path: "/api/v1/core/accounting-policy", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetAccountingSettings: { method: "GET", path: "/api/v1/core/accounting-settings", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetAccountingStart: { method: "GET", path: "/api/v1/core/accounting-start", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetBusiness: { method: "GET", path: "/api/v1/core/businesses/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetCabinetPreferences: { method: "GET", path: "/api/v1/core/cabinet-preferences", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetContact: { method: "GET", path: "/api/v1/core/contacts/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetContactUsage: { method: "GET", path: "/api/v1/core/contacts/{id}/usage", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetContractTerms: { method: "GET", path: "/api/v1/core/contracts/{id}", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetDictionary: { method: "GET", path: "/api/v1/core/dictionaries/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetDictionaryItemUsage: { method: "GET", path: "/api/v1/core/dictionaries/{id}/items/{itemId}/usage", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetDocument: { method: "GET", path: "/api/v1/core/documents/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetDocumentBlockers: { method: "GET", path: "/api/v1/core/documents/{id}/blockers", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetDocumentLinks: { method: "GET", path: "/api/v1/core/documents/{id}/links", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetDocumentType: { method: "GET", path: "/api/v1/core/document-types/{id}", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetEmployee: { method: "GET", path: "/api/v1/core/employees/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetEmployeePhotoContent: { method: "GET", path: "/api/v1/core/employees/{id}/photo/content", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetEmployeeUsage: { method: "GET", path: "/api/v1/core/employees/{id}/usage", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetExternalRef: { method: "GET", path: "/api/v1/core/external-refs/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetGLOpeningImport: { method: "GET", path: "/api/v1/core/gl-opening-imports/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetGLOpeningImportSource: { method: "GET", path: "/api/v1/core/gl-opening-imports/{id}/source", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetOrder: { method: "GET", path: "/api/v1/core/orders/{id}", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetOrderBlockers: { method: "GET", path: "/api/v1/core/orders/{id}/blockers", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetOrderFunnel: { method: "GET", path: "/api/v1/core/orders/{id}/funnel", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8515,24 +4864,17 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreGetProductCustomFieldSchema: { method: "GET", path: "/api/v1/core/products/custom-fields/schema", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetProductExport: { method: "GET", path: "/api/v1/core/product-exports/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetProductExportContent: { method: "GET", path: "/api/v1/core/product-exports/{id}/content", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetProductFileContent: { method: "GET", path: "/api/v1/core/products/{id}/files/{fileId}/content", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetProductImport: { method: "GET", path: "/api/v1/core/product-imports/{id}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetProductImportErrors: { method: "GET", path: "/api/v1/core/product-imports/{id}/errors", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetProductImportSource: { method: "GET", path: "/api/v1/core/product-imports/{id}/source", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetProductImportTemplate: { method: "GET", path: "/api/v1/core/product-import-templates/{kind}", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetProductUsage: { method: "GET", path: "/api/v1/core/products/{id}/usage", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetRegister: { method: "GET", path: "/api/v1/core/registers/{key}", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreGetRegisterBalance: { method: "GET", path: "/api/v1/core/registers/{key}/balance", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
   coreGetRegisterTurnovers: { method: "GET", path: "/api/v1/core/registers/{key}/turnovers", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
-  coreGetSelfEmployeePhoto: { method: "GET", path: "/api/v1/core/self/photo", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetSelfPreferences: { method: "GET", path: "/api/v1/core/self/preferences", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetTrialBalance: { method: "GET", path: "/api/v1/core/ledger/trial-balance", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreGetUIState: { method: "GET", path: "/api/v1/core/ui-state", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreGetTrialBalance: { method: "GET", path: "/api/v1/core/ledger/trial-balance", module: "core", stage: "preview", permission: "core.trial_balance:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreImportDictionaryItems: { method: "POST", path: "/api/v1/core/dictionaries/{id}/items/import", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreImportExternalContacts: { method: "POST", path: "/api/v1/core/external-refs/contacts/import", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreImportOrder: { method: "POST", path: "/api/v1/core/orders/import", module: "core", stage: "preview", permission: "core.orders:import", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreInspectProductImport: { method: "POST", path: "/api/v1/core/product-imports/{id}/inspect", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreLinkExternalRef: { method: "POST", path: "/api/v1/core/external-refs/{id}/link", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListAccountingDimensions: { method: "GET", path: "/api/v1/core/accounting-dimensions", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListBusinessOwnership: { method: "GET", path: "/api/v1/core/businesses/{id}/ownership", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListBusinesses: { method: "GET", path: "/api/v1/core/businesses", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8544,19 +4886,12 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreListDictionaryItems: { method: "GET", path: "/api/v1/core/dictionaries/{id}/items", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 500 },
   coreListDirectories: { method: "GET", path: "/api/v1/core/directories", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListDocumentEntries: { method: "GET", path: "/api/v1/core/documents/{id}/entries", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
-  coreListDocumentNumbering: { method: "GET", path: "/api/v1/core/document-numbering", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListDocumentTypes: { method: "GET", path: "/api/v1/core/document-types", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListDocuments: { method: "GET", path: "/api/v1/core/documents", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
-  coreListEmployeeEquipment: { method: "GET", path: "/api/v1/core/employee-equipment", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListEmployeeLifecycleTemplates: { method: "GET", path: "/api/v1/core/employee-lifecycle-templates", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListEmployees: { method: "GET", path: "/api/v1/core/employees", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 200 },
-  coreListExternalRefs: { method: "GET", path: "/api/v1/core/external-refs", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 50 },
-  coreListFolders: { method: "GET", path: "/api/v1/core/folders", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListGLAccounts: { method: "GET", path: "/api/v1/core/gl-accounts", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListGLMappings: { method: "GET", path: "/api/v1/core/gl-mappings", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListGLOpeningImports: { method: "GET", path: "/api/v1/core/gl-opening-imports", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 20 },
   coreListItems: { method: "GET", path: "/api/v1/core/items", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListOrderContracts: { method: "GET", path: "/api/v1/core/contracts", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListOrderFunnelTemplates: { method: "GET", path: "/api/v1/core/order-funnels/templates", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListOrderFunnelVersions: { method: "GET", path: "/api/v1/core/order-funnels/{id}/versions", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListOrderFunnels: { method: "GET", path: "/api/v1/core/order-funnels", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8566,17 +4901,14 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreListOrderTemplates: { method: "GET", path: "/api/v1/core/order-templates", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: null },
   coreListOrders: { method: "GET", path: "/api/v1/core/orders", module: "core", stage: "preview", permission: "core.orders:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 25 },
   coreListPnlItems: { method: "GET", path: "/api/v1/core/pnl-items", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreListProductFiles: { method: "GET", path: "/api/v1/core/products/{id}/files", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListProductIdentifiers: { method: "GET", path: "/api/v1/core/products/{id}/identifiers", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListProductVariants: { method: "GET", path: "/api/v1/core/products/{id}/variants", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreListProducts: { method: "GET", path: "/api/v1/core/products", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
   coreListRegisterEntries: { method: "GET", path: "/api/v1/core/registers/{key}/entries", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
   coreListRegisters: { method: "GET", path: "/api/v1/core/registers", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 200 },
+  coreListSellerCompanies: { method: "GET", path: "/api/v1/core/seller-companies", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreLookupBank: { method: "GET", path: "/api/v1/core/lookup/bank", module: "finance", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreLookupProductIdentifier: { method: "GET", path: "/api/v1/core/product-identifiers/lookup", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreMarkDocumentDeleted: { method: "POST", path: "/api/v1/core/documents/{id}/mark-deleted", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreMarkGLOpeningImportApplied: { method: "POST", path: "/api/v1/core/gl-opening-imports/{id}/applied", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreMatchExternalContacts: { method: "POST", path: "/api/v1/core/external-refs/contacts/match", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreMoveItem: { method: "POST", path: "/api/v1/core/items/{id}/move", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   corePostDocument: { method: "POST", path: "/api/v1/core/documents/{id}/post", module: "core", stage: "preview", permission: "core:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   corePreviewProductImport: { method: "POST", path: "/api/v1/core/product-imports/{id}/preview", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8585,67 +4917,34 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreReferenceItems: { method: "GET", path: "/api/v1/reference/{key}/items", module: "core", stage: "public", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreReferenceResolve: { method: "POST", path: "/api/v1/reference/resolve", module: "core", stage: "public", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreRefreshCurrencyRates: { method: "POST", path: "/api/v1/core/currency-rates/refresh", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreRememberExternalRefs: { method: "POST", path: "/api/v1/core/external-refs", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreReopenAccountingPeriod: { method: "POST", path: "/api/v1/core/accounting-periods/reopen", module: "core", stage: "preview", permission: "core:period_reopen", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreReopenOrder: { method: "POST", path: "/api/v1/core/orders/{id}/reopen", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreReorderProductFiles: { method: "POST", path: "/api/v1/core/products/{id}/files/reorder", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreResolveExternalRefs: { method: "POST", path: "/api/v1/core/external-refs/resolve", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreRestoreContact: { method: "POST", path: "/api/v1/core/contacts/{id}/restore", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreRestoreProduct: { method: "POST", path: "/api/v1/core/products/{id}/restore", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreReviseOrder: { method: "PUT", path: "/api/v1/core/orders/{id}", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreSaveAccountingDimensionVersion: { method: "POST", path: "/api/v1/core/accounting-dimensions/{key}/versions", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreSaveOrderRevenueItems: { method: "PUT", path: "/api/v1/core/accounting-policy/businesses/{id}/revenue-items", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreSaveUIState: { method: "PUT", path: "/api/v1/core/ui-state/{screen}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreSellerBank: { method: "GET", path: "/api/v1/core/companies/{id}/seller-bank", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetBusinessAccountingMethod: { method: "POST", path: "/api/v1/core/businesses/{id}/accounting-method", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetBusinessActive: { method: "POST", path: "/api/v1/core/businesses/{id}/activation", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreSetContractSettlementDetail: { method: "PUT", path: "/api/v1/core/contracts/{id}/settlement-detail", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreSetDocumentCustom: { method: "PUT", path: "/api/v1/core/documents/{id}/custom", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetOrderCabinetStatus: { method: "PUT", path: "/api/v1/core/orders/{id}/cabinet-status", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreSetOrderContract: { method: "PUT", path: "/api/v1/core/orders/{id}/contract", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetOrderFunnel: { method: "PUT", path: "/api/v1/core/orders/{id}/funnel", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetOrderResponsibles: { method: "PUT", path: "/api/v1/core/orders/{id}/responsibles", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetOrderStepDue: { method: "PUT", path: "/api/v1/core/orders/{id}/steps/{key}/due", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSetOrderTemplateState: { method: "POST", path: "/api/v1/core/order-templates/{id}/state", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreSuggestBanks: { method: "GET", path: "/api/v1/core/lookup/banks", module: "finance", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreSuggestRequisitesParties: { method: "GET", path: "/api/v1/core/lookup/parties", module: "finance", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUnlinkExternalRef: { method: "POST", path: "/api/v1/core/external-refs/{id}/unlink", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateAccountingDimension: { method: "PATCH", path: "/api/v1/core/accounting-dimensions/{key}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateAccountingSettings: { method: "PATCH", path: "/api/v1/core/accounting-settings", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateBusiness: { method: "PATCH", path: "/api/v1/core/businesses/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateCabinetPreferences: { method: "PATCH", path: "/api/v1/core/cabinet-preferences", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateContact: { method: "PATCH", path: "/api/v1/core/contacts/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateDictionary: { method: "PATCH", path: "/api/v1/core/dictionaries/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateDictionaryItem: { method: "PATCH", path: "/api/v1/core/dictionaries/{id}/items/{itemId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateDocument: { method: "PATCH", path: "/api/v1/core/documents/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateDocumentNumbering: { method: "PUT", path: "/api/v1/core/document-numbering/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateDocumentType: { method: "PATCH", path: "/api/v1/core/document-types/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateEmployee: { method: "PATCH", path: "/api/v1/core/employees/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateEmployeeEquipment: { method: "PATCH", path: "/api/v1/core/employee-equipment/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateEmployeeLifecycleTemplate: { method: "PATCH", path: "/api/v1/core/employee-lifecycle-templates/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateFolder: { method: "PATCH", path: "/api/v1/core/folders/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateGLAccount: { method: "PATCH", path: "/api/v1/core/gl-accounts/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateItem: { method: "PATCH", path: "/api/v1/core/items/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateOrderFunnel: { method: "PUT", path: "/api/v1/core/order-funnels/{id}", module: "core", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateOrderStatus: { method: "PATCH", path: "/api/v1/core/order-statuses/{id}", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateOrderTemplate: { method: "PUT", path: "/api/v1/core/order-templates/{id}", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateProduct: { method: "PATCH", path: "/api/v1/core/products/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateProductCustom: { method: "PATCH", path: "/api/v1/core/products/{id}/custom", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateProductFile: { method: "PATCH", path: "/api/v1/core/products/{id}/files/{fileId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateProductIdentifier: { method: "PATCH", path: "/api/v1/core/products/{id}/identifiers/{identifierId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateProductImportMapping: { method: "PATCH", path: "/api/v1/core/product-imports/{id}/mapping", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUpdateRegister: { method: "PATCH", path: "/api/v1/core/registers/{key}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUploadEmployeePhoto: { method: "POST", path: "/api/v1/core/employees/{id}/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUploadProductFile: { method: "POST", path: "/api/v1/core/products/{id}/files", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUploadProductImportContent: { method: "PUT", path: "/api/v1/core/product-import-upload-sessions/{id}/content", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  coreUploadSelfEmployeePhoto: { method: "POST", path: "/api/v1/core/self/photo", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmAddNote: { method: "POST", path: "/api/v1/crm/{entity}/{id}/notes", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmAdoptDirectoryContact: { method: "POST", path: "/api/v1/crm/contacts/{id}/adopt", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmApplyImport: { method: "POST", path: "/api/v1/crm/imports/{id}/apply", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmArchivePipeline: { method: "POST", path: "/api/v1/crm/pipelines/{id}/archive", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmAssignInboxConversation: { method: "PATCH", path: "/api/v1/crm/inbox/conversations/{id}/assign", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCancelImport: { method: "POST", path: "/api/v1/crm/imports/{id}/cancel", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCheckInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/check", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmConnectImport: { method: "POST", path: "/api/v1/crm/imports/{id}/connect", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmConvertLead: { method: "POST", path: "/api/v1/crm/leads/{id}/convert", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateAutomationRule: { method: "POST", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateCustomer: { method: "POST", path: "/api/v1/crm/customers", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8653,45 +4952,28 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmCreateDealFromConversation: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/deals", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateEngagement: { method: "POST", path: "/api/v1/crm/{entity}/{id}/engagements", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateEventLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/events", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateHubMeetingLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/hub-meetings", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateImport: { method: "POST", path: "/api/v1/crm/imports", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateImportPipelines: { method: "POST", path: "/api/v1/crm/imports/{id}/pipelines", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateLead: { method: "POST", path: "/api/v1/crm/leads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateLeadFromConversation: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/leads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateLeadSource: { method: "POST", path: "/api/v1/crm/lead-sources", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateLossReason: { method: "POST", path: "/api/v1/crm/loss-reasons", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreatePipeline: { method: "POST", path: "/api/v1/crm/pipelines", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateStage: { method: "POST", path: "/api/v1/crm/pipelines/{id}/stages", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateTaskLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/tasks", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmDecideImportRecord: { method: "PUT", path: "/api/v1/crm/imports/{id}/records/{recordId}/decision", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmDisableInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/disable", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmEnableInboxConnection: { method: "POST", path: "/api/v1/crm/inbox/connections/{id}/enable", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmExtractImport: { method: "POST", path: "/api/v1/crm/imports/{id}/extract", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmFindCustomerDuplicates: { method: "GET", path: "/api/v1/crm/customers/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetAnalytics: { method: "GET", path: "/api/v1/crm/analytics", module: "crm", stage: "preview", permission: "crm:team_read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetAutomationRule: { method: "GET", path: "/api/v1/crm/automation/rules/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetAutomationRunActions: { method: "GET", path: "/api/v1/crm/automation/runs/{id}/actions", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetCustomer: { method: "GET", path: "/api/v1/crm/customers/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetCustomerRelations: { method: "GET", path: "/api/v1/crm/customers/{id}/relations", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetDeal: { method: "GET", path: "/api/v1/crm/deals/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetDealBoard: { method: "GET", path: "/api/v1/crm/deals/board", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
   crmGetDealStageHistory: { method: "GET", path: "/api/v1/crm/deals/{id}/stage-history", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetDirectoryContact: { method: "GET", path: "/api/v1/crm/contacts/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetImport: { method: "GET", path: "/api/v1/crm/imports/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetInboxAttachmentContent: { method: "GET", path: "/api/v1/crm/inbox/attachments/{id}/content", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetInboxConversation: { method: "GET", path: "/api/v1/crm/inbox/conversations/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetLead: { method: "GET", path: "/api/v1/crm/leads/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetLeadHistory: { method: "GET", path: "/api/v1/crm/leads/{id}/history", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetOverview: { method: "GET", path: "/api/v1/crm/overview", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetPipeline: { method: "GET", path: "/api/v1/crm/pipelines/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetTimeline: { method: "GET", path: "/api/v1/crm/{entity}/{id}/timeline", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmImportFields: { method: "GET", path: "/api/v1/crm/import-fields", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmImportOptions: { method: "GET", path: "/api/v1/crm/imports/{id}/options", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmImportReport: { method: "GET", path: "/api/v1/crm/imports/{id}/report", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmInspectImportSheet: { method: "POST", path: "/api/v1/crm/imports/{id}/inspect", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmLeadDuplicates: { method: "GET", path: "/api/v1/crm/leads/{id}/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmLinkCustomerCompany: { method: "PUT", path: "/api/v1/crm/customers/{id}/companies/{companyId}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmLinkEntityConversation: { method: "POST", path: "/api/v1/crm/inbox/entities/{entity}/{id}/conversations", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListAutomationRules: { method: "GET", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListAutomationRuns: { method: "GET", path: "/api/v1/crm/automation/runs", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8699,14 +4981,11 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmListDealActivities: { method: "GET", path: "/api/v1/crm/deals/{id}/activities", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListDealContacts: { method: "GET", path: "/api/v1/crm/deals/{id}/contacts", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListDealItems: { method: "GET", path: "/api/v1/crm/deals/{id}/items", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListDeals: { method: "GET", path: "/api/v1/crm/deals", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   crmListDirectoryContacts: { method: "GET", path: "/api/v1/crm/contacts", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListEngagements: { method: "GET", path: "/api/v1/crm/{entity}/{id}/engagements", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListEntityConversations: { method: "GET", path: "/api/v1/crm/inbox/entities/{entity}/{id}/conversations", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListEntityMessages: { method: "GET", path: "/api/v1/crm/inbox/entities/{entity}/{id}/messages", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 100 },
   crmListExternalLinks: { method: "GET", path: "/api/v1/crm/{entity}/{id}/links", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListImportRecords: { method: "GET", path: "/api/v1/crm/imports/{id}/records", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
-  crmListImports: { method: "GET", path: "/api/v1/crm/imports", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 20 },
   crmListInboxConnections: { method: "GET", path: "/api/v1/crm/inbox/connections", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListInboxConversationLinks: { method: "GET", path: "/api/v1/crm/inbox/conversations/{id}/links", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListInboxConversations: { method: "GET", path: "/api/v1/crm/inbox/conversations", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
@@ -8715,7 +4994,6 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmListInboxProviders: { method: "GET", path: "/api/v1/crm/inbox/providers", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListInboxTemplates: { method: "GET", path: "/api/v1/crm/inbox/templates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListLeadActivities: { method: "GET", path: "/api/v1/crm/leads/{id}/activities", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmListLeadSources: { method: "GET", path: "/api/v1/crm/lead-sources", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListLeads: { method: "GET", path: "/api/v1/crm/leads", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   crmListLossReasons: { method: "GET", path: "/api/v1/crm/loss-reasons", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListMembers: { method: "GET", path: "/api/v1/crm/members", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8724,34 +5002,23 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmMarkInboxConversationRead: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/read", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmMergeLeads: { method: "POST", path: "/api/v1/crm/leads/{id}/merge", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmMoveDeal: { method: "POST", path: "/api/v1/crm/deals/{id}/move", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmPreviewImport: { method: "POST", path: "/api/v1/crm/imports/{id}/preview", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmPromoteCustomer: { method: "POST", path: "/api/v1/crm/customers/{id}/promote", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmQualifyLead: { method: "POST", path: "/api/v1/crm/leads/{id}/qualify", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmReopenDeal: { method: "POST", path: "/api/v1/crm/deals/{id}/reopen", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmReorderPipelines: { method: "PATCH", path: "/api/v1/crm/pipelines/reorder", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmReorderStages: { method: "PATCH", path: "/api/v1/crm/pipelines/{id}/stages/reorder", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmReplaceDealContacts: { method: "PUT", path: "/api/v1/crm/deals/{id}/contacts", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmReplaceDealItems: { method: "PUT", path: "/api/v1/crm/deals/{id}/items", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmRetryAutomationRun: { method: "POST", path: "/api/v1/crm/automation/runs/{id}/retry", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmRollbackImport: { method: "POST", path: "/api/v1/crm/imports/{id}/rollback", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSalesPlans: { method: "GET", path: "/api/v1/crm/sales-plans", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmSaveImportMapping: { method: "PUT", path: "/api/v1/crm/imports/{id}/mapping", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSaveInboxTemplate: { method: "POST", path: "/api/v1/crm/inbox/templates", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSaveSalesPlans: { method: "PUT", path: "/api/v1/crm/sales-plans", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSendInboxMessage: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/messages", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUnlinkCustomerCompany: { method: "DELETE", path: "/api/v1/crm/customers/{id}/companies/{companyId}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateAutomationRule: { method: "PUT", path: "/api/v1/crm/automation/rules/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateCustomer: { method: "PATCH", path: "/api/v1/crm/customers/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateDeal: { method: "PATCH", path: "/api/v1/crm/deals/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateEngagement: { method: "PATCH", path: "/api/v1/crm/engagements/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUpdateInboxConnection: { method: "PATCH", path: "/api/v1/crm/inbox/connections/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateLead: { method: "PATCH", path: "/api/v1/crm/leads/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUpdateLeadSource: { method: "PATCH", path: "/api/v1/crm/lead-sources/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdatePipeline: { method: "PATCH", path: "/api/v1/crm/pipelines/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateStage: { method: "PATCH", path: "/api/v1/crm/stages/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUploadImportFile: { method: "POST", path: "/api/v1/crm/imports/{id}/file", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUploadInboxMessageAttachment: { method: "POST", path: "/api/v1/crm/inbox/messages/{id}/attachments", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmUploadInboxOutboundFile: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/uploads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   developerAppAPICalls: { method: "GET", path: "/api/v1/developer/apps/{key}/installations/{id}/api-calls", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
   developerAppBlocks: { method: "GET", path: "/api/v1/developer/app-blocks", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: null },
   developerAppDeliveries: { method: "GET", path: "/api/v1/developer/apps/{key}/installations/{id}/deliveries", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
@@ -8774,156 +5041,59 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   developerSaveAppVersion: { method: "POST", path: "/api/v1/developer/apps/{key}/versions", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   developerSubmitPublisherApplication: { method: "POST", path: "/api/v1/developer/publisher-application", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   developerUploadAppFunctionArtifact: { method: "POST", path: "/api/v1/developer/apps/{key}/versions/{version}/function-artifact", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowAcceptIntake: { method: "POST", path: "/api/v1/docflow/messages/{id}/intake", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowAcknowledgeApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/acknowledge", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApproval: { method: "GET", path: "/api/v1/docflow/approvals/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowApprovalRoute: { method: "GET", path: "/api/v1/docflow/approval-routes/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:configure_payments", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApprovalRoutes: { method: "GET", path: "/api/v1/docflow/approval-routes", module: "docflow", stage: "preview", permission: "docflow.flow:configure_payments", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApprovalSettings: { method: "GET", path: "/api/v1/docflow/approval-settings", module: "docflow", stage: "preview", permission: "docflow.flow:configure_payments", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApprovalSheetDocument: { method: "GET", path: "/api/v1/docflow/approvals/{id}/sheet", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApprovalState: { method: "GET", path: "/api/v1/docflow/approvals/state", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowApprovalSubstitutions: { method: "GET", path: "/api/v1/docflow/approval-substitutions", module: "docflow", stage: "preview", permission: "docflow.flow:configure", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApprovals: { method: "GET", path: "/api/v1/docflow/approvals", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
-  docflowApproveCancellation: { method: "POST", path: "/api/v1/docflow/messages/{id}/cancellation/approve", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowApproveMessage: { method: "POST", path: "/api/v1/docflow/messages/{id}/actions/approve", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowCancelApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/cancel", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowCancelPaymentRequest: { method: "POST", path: "/api/v1/docflow/payment-requests/{id}/cancel", module: "docflow", stage: "preview", permission: "docflow.flow:request", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowCheckApprovalRoute: { method: "GET", path: "/api/v1/docflow/approval-routes/check", module: "docflow", stage: "preview", permission: "docflow.flow:configure_payments", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowCheckConnection: { method: "POST", path: "/api/v1/docflow/connections/{id}/check", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowCreateApprovalRoute: { method: "POST", path: "/api/v1/docflow/approval-routes", module: "docflow", stage: "preview", permission: "docflow.flow:configure_payments", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowCreateConnection: { method: "POST", path: "/api/v1/docflow/connections", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowCreatePaymentRequest: { method: "POST", path: "/api/v1/docflow/payment-requests", module: "docflow", stage: "preview", permission: "docflow.flow:request", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowDecideApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/decisions", module: "docflow", stage: "preview", permission: "docflow.flow:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowDelegateApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/delegate", module: "docflow", stage: "preview", permission: "docflow.flow:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowDeleteApprovalSubstitution: { method: "DELETE", path: "/api/v1/docflow/approval-substitutions/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:configure", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowDeleteConnection: { method: "DELETE", path: "/api/v1/docflow/connections/{id}", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowDeleteFlowEDODraft: { method: "DELETE", path: "/api/v1/docflow/flow/documents/{id}/edo/{link}", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowDeleteMessageDraft: { method: "DELETE", path: "/api/v1/docflow/messages/{id}/draft", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowDropStage: { method: "POST", path: "/api/v1/docflow/messages/{id}/stages/drop", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowAcceptFinanceAct: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/finance-act", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowAccountingCandidates: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/accounting-candidates", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowAccountingLink: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/accounting-links/{link}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowAccountingOriginals: { method: "GET", path: "/api/v1/docflow/flow/accounting-documents/{owner}/{document}/originals", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowAccrualCandidates: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/accrual-candidates", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowAccrualPlan: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/accrual-plan", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowChangeDocument: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/commands", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowContactStats: { method: "GET", path: "/api/v1/docflow/flow/contacts", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowCreateAccountingOriginal: { method: "POST", path: "/api/v1/docflow/flow/accounting-documents/{owner}/{document}/originals", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowCreateDocument: { method: "POST", path: "/api/v1/docflow/flow/documents", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowCreateFinancePlan: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/finance-plan", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocument: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocumentRevision: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/revisions/{version}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocumentRevisions: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/revisions", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocuments: { method: "GET", path: "/api/v1/docflow/flow/documents", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
-  docflowFlowFNSFile: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/fns/file", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowFNSIssue: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/fns", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowFileContent: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/files/{fileId}/content", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowLinkAccountingDocument: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/accounting-links", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowPreviewPaymentSchedule: { method: "POST", path: "/api/v1/docflow/flow/schedule-preview", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowReferences: { method: "GET", path: "/api/v1/docflow/flow/references", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowRevisionFileContent: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/revisions/{version}/files/{fileId}/content", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowUnlinkAccountingDocument: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/accounting-links/remove", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowFlowUploadFile: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/files", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowGetAttachmentContent: { method: "GET", path: "/api/v1/docflow/attachments/{id}/content", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowGetConnection: { method: "GET", path: "/api/v1/docflow/connections/{id}", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowFlowSignatureSheet: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/signatures/sheet", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowGetMessage: { method: "GET", path: "/api/v1/docflow/messages/{id}", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowGetMessageArchive: { method: "GET", path: "/api/v1/docflow/messages/{id}/archive", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowGetSignatureContent: { method: "GET", path: "/api/v1/docflow/signatures/{id}/content", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowGetTitleContent: { method: "GET", path: "/api/v1/docflow/outgoing/{id}/content", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowGovDocument: { method: "GET", path: "/api/v1/docflow/gov/documents/{id}", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowGovDocuments: { method: "GET", path: "/api/v1/docflow/gov/documents", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: null },
-  docflowGovSummary: { method: "GET", path: "/api/v1/docflow/gov/summary", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowIntakePreview: { method: "GET", path: "/api/v1/docflow/messages/{id}/intake", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowInviteCounterparty: { method: "POST", path: "/api/v1/docflow/connections/{id}/invitations", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowIssueOrderAct: { method: "POST", path: "/api/v1/docflow/orders/{id}/act", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowIssueOrderInvoice: { method: "POST", path: "/api/v1/docflow/orders/{id}/invoice", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowIssueOrderUPD: { method: "POST", path: "/api/v1/docflow/orders/{id}/upd", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowIssueSigningTask: { method: "POST", path: "/api/v1/docflow/edo/signing/tasks", module: "docflow", stage: "preview", permission: "docflow.edo:sign", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowLinkIntakeCounterparty: { method: "PUT", path: "/api/v1/docflow/messages/{id}/intake/counterparty", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowListConnections: { method: "GET", path: "/api/v1/docflow/connections", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowListInvitations: { method: "GET", path: "/api/v1/docflow/invitations", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 200 },
   docflowListMessages: { method: "GET", path: "/api/v1/docflow/messages", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
-  docflowListSigningTasks: { method: "GET", path: "/api/v1/docflow/edo/signing/tasks", module: "docflow", stage: "preview", permission: "docflow.edo:sign", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 50, pageSizeDefault: 20 },
-  docflowListTitles: { method: "GET", path: "/api/v1/docflow/outgoing", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowLookupParticipant: { method: "POST", path: "/api/v1/docflow/connections/{id}/participants/lookup", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowMarkGovAnswered: { method: "POST", path: "/api/v1/docflow/gov/documents/{id}/answered", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowMarkMessageViewed: { method: "POST", path: "/api/v1/docflow/messages/{id}/viewed", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowMessagePrintForm: { method: "GET", path: "/api/v1/docflow/messages/{id}/print", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowPaymentDetails: { method: "GET", path: "/api/v1/docflow/messages/{id}/payment-details", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowPaymentRequest: { method: "GET", path: "/api/v1/docflow/payment-requests/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:request", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowPaymentRequests: { method: "GET", path: "/api/v1/docflow/payment-requests", module: "docflow", stage: "preview", permission: "docflow.flow:request", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowPostponeStage: { method: "POST", path: "/api/v1/docflow/messages/{id}/stages/postpone", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowPreflightBuyerTitle: { method: "POST", path: "/api/v1/docflow/messages/{id}/buyer-title/preflight", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowPreflightFlowFNS: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/fns/preflight", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowPreflightOutgoing: { method: "POST", path: "/api/v1/docflow/outgoing/preflight", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowPreviewMessageAction: { method: "POST", path: "/api/v1/docflow/messages/{id}/actions/preview", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowRefreshMessage: { method: "POST", path: "/api/v1/docflow/messages/{id}/refresh", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowRejectCancellation: { method: "POST", path: "/api/v1/docflow/messages/{id}/cancellation/reject", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowRejectMessage: { method: "POST", path: "/api/v1/docflow/messages/{id}/actions/reject", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowRepeatStage: { method: "POST", path: "/api/v1/docflow/messages/{id}/stages/repeat", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowRequestCancellation: { method: "POST", path: "/api/v1/docflow/messages/{id}/cancellation", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowRestoreMessage: { method: "POST", path: "/api/v1/docflow/messages/{id}/restore", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowPaymentRequestRoutePreview: { method: "GET", path: "/api/v1/docflow/payment-requests/route-preview", module: "docflow", stage: "preview", permission: "docflow.flow:request", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowResubmitApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/resubmit", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowSaveApprovalPolicy: { method: "PUT", path: "/api/v1/docflow/approval-policies", module: "docflow", stage: "preview", permission: "docflow.flow:configure_payments", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowSaveApprovalRoute: { method: "PUT", path: "/api/v1/docflow/approval-routes/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:configure_payments", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowSaveApprovalSubstitution: { method: "POST", path: "/api/v1/docflow/approval-substitutions", module: "docflow", stage: "preview", permission: "docflow.flow:configure", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowSendBuyerTitle: { method: "POST", path: "/api/v1/docflow/messages/{id}/buyer-title", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowSendFlowDocumentByEDO: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/edo", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowSendFlowFNS: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/fns/send", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowSendOutgoing: { method: "POST", path: "/api/v1/docflow/outgoing", module: "docflow", stage: "preview", permission: "docflow.edo:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowSetApprovalRouteActive: { method: "POST", path: "/api/v1/docflow/approval-routes/{id}/active", module: "docflow", stage: "preview", permission: "docflow.flow:configure_payments", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowSetConnectionMode: { method: "PUT", path: "/api/v1/docflow/connections/{id}/mode", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowSalesOrderDocumentSet: { method: "GET", path: "/api/v1/docflow/orders/{id}/set", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSubmitApproval: { method: "POST", path: "/api/v1/docflow/approvals", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowSubmitPaymentRequest: { method: "POST", path: "/api/v1/docflow/payment-requests/{id}/submit", module: "docflow", stage: "preview", permission: "docflow.flow:request", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowSubmitSignature: { method: "POST", path: "/api/v1/docflow/edo/signing/tasks/{task_id}/signature", module: "docflow", stage: "preview", permission: "docflow.edo:sign", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowSyncConnection: { method: "POST", path: "/api/v1/docflow/connections/{id}/sync", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowTrashMessage: { method: "POST", path: "/api/v1/docflow/messages/{id}/trash", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowUnmarkGovAnswered: { method: "DELETE", path: "/api/v1/docflow/gov/documents/{id}/answered", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowUpdateConnection: { method: "PATCH", path: "/api/v1/docflow/connections/{id}", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  docflowUpdatePaymentRequest: { method: "PUT", path: "/api/v1/docflow/payment-requests/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:request", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesAbortUpload: { method: "DELETE", path: "/api/v1/files/uploads/{id}", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  filesAccessCheck: { method: "POST", path: "/api/v1/files/items/access-check", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesCompleteUpload: { method: "POST", path: "/api/v1/files/uploads/{id}/complete", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  filesContentLink: { method: "GET", path: "/api/v1/files/items/{id}/content-url", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesCreateFolder: { method: "POST", path: "/api/v1/files/folders", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  filesCreateRoot: { method: "POST", path: "/api/v1/files/roots", module: "files", stage: "preview", permission: "files:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesCreateShare: { method: "POST", path: "/api/v1/files/shares", module: "files", stage: "preview", permission: "files:share", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesCreateShortcut: { method: "POST", path: "/api/v1/files/shortcuts", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  filesDownloadFile: { method: "GET", path: "/api/v1/files/items/{id}/content", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  filesDownloadFolderArchive: { method: "GET", path: "/api/v1/files/folders/{id}/archive", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesFolderAccess: { method: "GET", path: "/api/v1/files/folders/{id}/access", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesGetFile: { method: "GET", path: "/api/v1/files/items/{id}", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesListEntries: { method: "GET", path: "/api/v1/files/folders/{id}/entries", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
   filesListRoots: { method: "GET", path: "/api/v1/files/roots", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  filesListShares: { method: "GET", path: "/api/v1/files/shares", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  filesPurgeTrash: { method: "DELETE", path: "/api/v1/files/trash", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  filesReplaceFolderAccess: { method: "PUT", path: "/api/v1/files/folders/{id}/access", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  filesRevokeShare: { method: "DELETE", path: "/api/v1/files/shares/{id}", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesRevokeShare: { method: "DELETE", path: "/api/v1/files/shares/{id}", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesSearch: { method: "GET", path: "/api/v1/files/search", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 25 },
   filesStartUpload: { method: "POST", path: "/api/v1/files/uploads", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  filesUploadStatus: { method: "GET", path: "/api/v1/files/uploads/{id}", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesUploadStatus: { method: "GET", path: "/api/v1/files/uploads/{id}", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeAccountableBalances: { method: "GET", path: "/api/v1/finance/accountable/balances", module: "finance", stage: "preview", permission: "finance.accountable:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeAdoptConnectorAccount: { method: "POST", path: "/api/v1/finance/connectors/accounts/{accountId}/adopt", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeApplyCashflowTemplate: { method: "POST", path: "/api/v1/finance/cashflow-layouts/template", module: "finance", stage: "preview", permission: "finance.pnl_layouts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeApplyExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items/{id}/apply", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeApplyImport: { method: "POST", path: "/api/v1/finance/imports/{id}/apply", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeApproveDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions/{id}/approve", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeApproveDividendPolicy: { method: "POST", path: "/api/v1/finance/dividends/policies/{id}/approve", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCancelExpenseReport: { method: "POST", path: "/api/v1/finance/accountable/reports/{id}/cancel", module: "finance", stage: "preview", permission: "finance.accountable:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCancelOperation: { method: "POST", path: "/api/v1/finance/operations/{id}/cancel", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCancelPaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans/{id}/cancel", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCancelPayrollDocument: { method: "POST", path: "/api/v1/finance/payroll/documents/{id}/cancel", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCancelSettlementDocument: { method: "POST", path: "/api/v1/finance/settlements/documents/{id}/cancel", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCancelVATQuarter: { method: "POST", path: "/api/v1/finance/vat-quarters/{id}/cancel", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCashflowEntries: { method: "GET", path: "/api/v1/finance/reports/cashflow/entries", module: "finance", stage: "preview", permission: "finance.reports.cashflow:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCategorizeCashOperation: { method: "POST", path: "/api/v1/finance/cash-operations/{id}/categorize", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCategorizeTransaction: { method: "POST", path: "/api/v1/finance/transactions/{id}/categorize", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCheckConnectorStatement: { method: "POST", path: "/api/v1/finance/connectors/{id}/accounts/{accountId}/check-statement", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeClassificationSuggestions: { method: "GET", path: "/api/v1/finance/classification-suggestions", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
-  financeConfigureConnectorMTLS: { method: "PUT", path: "/api/v1/finance/connectors/{id}/mtls", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateAccount: { method: "POST", path: "/api/v1/finance/accounts", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreateCashOperation: { method: "POST", path: "/api/v1/finance/cash-operations", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreateConnector: { method: "POST", path: "/api/v1/finance/connectors", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateCounterpartyTerms: { method: "POST", path: "/api/v1/finance/counterparties/{contactId}/terms", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateDividendPolicy: { method: "POST", path: "/api/v1/finance/dividends/policies", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -8933,51 +5103,29 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeCreateOperationAccrual: { method: "POST", path: "/api/v1/finance/operations/{id}/accruals", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOrderAct: { method: "POST", path: "/api/v1/finance/orders/{id}/acts", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreatePaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreatePayrollDocument: { method: "POST", path: "/api/v1/finance/payroll/documents", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreatePnlLayout: { method: "POST", path: "/api/v1/finance/pnl-layouts", module: "finance", stage: "preview", permission: "finance.pnl_layouts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateSettlementDocument: { method: "POST", path: "/api/v1/finance/settlements/documents", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateStatement: { method: "POST", path: "/api/v1/finance/statements", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateTransaction: { method: "POST", path: "/api/v1/finance/transactions", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreateVATQuarter: { method: "POST", path: "/api/v1/finance/vat-quarters", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeDeleteAccountStatement: { method: "DELETE", path: "/api/v1/finance/accounts/{id}/statements/{statementId}", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeDeleteConnector: { method: "DELETE", path: "/api/v1/finance/connectors/{id}", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeDeletePnlLayout: { method: "DELETE", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance.pnl_layouts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteSettlementDocument: { method: "DELETE", path: "/api/v1/finance/settlements/documents/{id}", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeExecutePaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans/{id}/execute", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeExpenseReports: { method: "GET", path: "/api/v1/finance/accountable/reports", module: "finance", stage: "preview", permission: "finance.accountable:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
   financeGetAccount: { method: "GET", path: "/api/v1/finance/accounts/{id}", module: "finance", stage: "preview", permission: "finance.accounts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetAccountReconciliation: { method: "GET", path: "/api/v1/finance/accounts/{id}/reconciliation", module: "finance", stage: "preview", permission: "finance.accounts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetBalanceReport: { method: "GET", path: "/api/v1/finance/reports/balance", module: "finance", stage: "preview", permission: "finance.reports.balance:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetCashflowReport: { method: "GET", path: "/api/v1/finance/reports/cashflow", module: "finance", stage: "preview", permission: "finance.reports.cashflow:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetConnector: { method: "GET", path: "/api/v1/finance/connectors/{id}", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetConnectorSyncSettings: { method: "GET", path: "/api/v1/finance/connectors/sync-settings", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetCounterpartyTerms: { method: "GET", path: "/api/v1/finance/counterparties/{contactId}/terms", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetDividendSummary: { method: "GET", path: "/api/v1/finance/dividends/summary", module: "finance", stage: "preview", permission: "finance.dividends:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetImport: { method: "GET", path: "/api/v1/finance/imports/{id}", module: "finance", stage: "preview", permission: "finance.imports:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetOperation: { method: "GET", path: "/api/v1/finance/operations/{id}", module: "finance", stage: "preview", permission: "finance.operations:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetOperationDocumentLinks: { method: "GET", path: "/api/v1/finance/operations/{id}/documents/{documentId}/links", module: "finance", stage: "preview", permission: "finance.operations:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetPaymentCalendar: { method: "GET", path: "/api/v1/finance/payment-calendar", module: "finance", stage: "preview", permission: "finance.payment_calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetPayrollJournal: { method: "GET", path: "/api/v1/finance/reports/payroll", module: "finance", stage: "preview", permission: "finance.reports.payroll:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetPayrollPayments: { method: "GET", path: "/api/v1/finance/reports/payroll/payments", module: "finance", stage: "preview", permission: "finance.reports.payroll:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetPeriodCloseChecks: { method: "GET", path: "/api/v1/finance/period-checks", module: "finance", stage: "preview", permission: "finance.period:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetPnlLayout: { method: "GET", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance.pnl_layouts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetPnlReport: { method: "GET", path: "/api/v1/finance/reports/pnl", module: "finance", stage: "preview", permission: "finance.reports.pnl:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetProjectBudgetHistory: { method: "GET", path: "/api/v1/finance/project-budgets", module: "finance", stage: "preview", permission: "finance.project_budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetProjectEconomics: { method: "GET", path: "/api/v1/finance/reports/projects", module: "finance", stage: "preview", permission: "finance.reports.projects:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetReconciliation: { method: "GET", path: "/api/v1/finance/transactions/reconciliation", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetSettlementDocument: { method: "GET", path: "/api/v1/finance/settlements/documents/{id}", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetSettlementPosition: { method: "GET", path: "/api/v1/finance/settlements/position", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetTradeAdvance: { method: "GET", path: "/api/v1/finance/trade-journal/advance", module: "finance", stage: "preview", permission: "finance.reports.trade:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetTradeJournal: { method: "GET", path: "/api/v1/finance/trade-journal", module: "finance", stage: "preview", permission: "finance.reports.trade:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 500 },
   financeGetTransaction: { method: "GET", path: "/api/v1/finance/transactions/{id}", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetUnallocatedMoney: { method: "GET", path: "/api/v1/finance/transactions/unallocated", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetVATBookSource: { method: "GET", path: "/api/v1/finance/vat-quarters/books/{id}/source", module: "finance", stage: "preview", permission: "finance.period:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeGetVATQuarter: { method: "GET", path: "/api/v1/finance/vat-quarters/{id}", module: "finance", stage: "preview", permission: "finance.period:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeInspectImport: { method: "POST", path: "/api/v1/finance/imports/{id}/inspect", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeLinkStatementTransactions: { method: "POST", path: "/api/v1/finance/statements/{id}/transactions", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListAccountStatements: { method: "GET", path: "/api/v1/finance/accounts/{id}/statements", module: "finance", stage: "preview", permission: "finance.statements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListAccounts: { method: "GET", path: "/api/v1/finance/accounts", module: "finance", stage: "preview", permission: "finance.accounts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListCashOperations: { method: "GET", path: "/api/v1/finance/cash-operations", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   financeListConnectorAccounts: { method: "GET", path: "/api/v1/finance/connectors/{id}/accounts", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListConnectorProviders: { method: "GET", path: "/api/v1/finance/connectors/providers", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListConnectorRuns: { method: "GET", path: "/api/v1/finance/connectors/{id}/runs", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 20 },
@@ -8989,123 +5137,70 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeListDividendPolicies: { method: "GET", path: "/api/v1/finance/dividends/policies", module: "finance", stage: "preview", permission: "finance.dividends:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListExchangeJournal: { method: "GET", path: "/api/v1/finance/exchange/journal", module: "finance", stage: "preview", permission: "finance.exchange:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
   financeListPaymentFacts: { method: "GET", path: "/api/v1/finance/payment-calendar/operations", module: "finance", stage: "preview", permission: "finance.payment_calendar:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 200 },
-  financeListPnlLayoutItems: { method: "GET", path: "/api/v1/finance/pnl-layouts/items", module: "finance", stage: "preview", permission: "finance.pnl_layouts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeListPnlLayouts: { method: "GET", path: "/api/v1/finance/pnl-layouts", module: "finance", stage: "preview", permission: "finance.pnl_layouts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListSettlementBalances: { method: "GET", path: "/api/v1/finance/settlements/balances", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListSettlementDocuments: { method: "GET", path: "/api/v1/finance/settlements/documents", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
   financeListSettlementPayments: { method: "GET", path: "/api/v1/finance/settlements/payments", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListSettlementSources: { method: "GET", path: "/api/v1/finance/settlements/sources", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListStatements: { method: "GET", path: "/api/v1/finance/statements", module: "finance", stage: "preview", permission: "finance.statements:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 100 },
   financeListTransactions: { method: "GET", path: "/api/v1/finance/transactions", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 500 },
-  financeListVATQuarters: { method: "GET", path: "/api/v1/finance/vat-quarters", module: "finance", stage: "preview", permission: "finance.period:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: null },
-  financeLookupCompany: { method: "GET", path: "/api/v1/finance/lookup/company", module: "finance", stage: "preview", permission: "finance.lookup:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeLookupRequisites: { method: "GET", path: "/api/v1/finance/lookup/requisites", module: "finance", stage: "preview", permission: "finance.lookup:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeMapImport: { method: "PATCH", path: "/api/v1/finance/imports/{id}/mapping", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeMapImportItems: { method: "PATCH", path: "/api/v1/finance/imports/{id}/item-mapping", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeMarkTransactionDeleted: { method: "POST", path: "/api/v1/finance/transactions/{id}/mark-deleted", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePayoutRegisters: { method: "GET", path: "/api/v1/finance/payroll/registers", module: "finance", stage: "preview", permission: "finance.payroll:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 100 },
-  financePayrollDocuments: { method: "GET", path: "/api/v1/finance/payroll/documents", module: "finance", stage: "preview", permission: "finance.payroll:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
-  financePayrollImportInspect: { method: "POST", path: "/api/v1/finance/payroll/import/inspect", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePayrollImportPreview: { method: "POST", path: "/api/v1/finance/payroll/import/preview", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePayrollPayoutSheet: { method: "POST", path: "/api/v1/finance/payroll/payout-sheet", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePnlEntries: { method: "GET", path: "/api/v1/finance/reports/pnl/entries", module: "finance", stage: "preview", permission: "finance.reports.pnl:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePostDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions/{id}/post", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePostExpenseReport: { method: "POST", path: "/api/v1/finance/accountable/reports/{id}/post", module: "finance", stage: "preview", permission: "finance.accountable:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePostPayrollDocument: { method: "POST", path: "/api/v1/finance/payroll/documents/{id}/post", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePostSettlementDocument: { method: "POST", path: "/api/v1/finance/settlements/documents/{id}/post", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePostVATQuarter: { method: "POST", path: "/api/v1/finance/vat-quarters/{id}/post", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePreviewDividendDecision: { method: "GET", path: "/api/v1/finance/dividends/decisions/preview", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePreviewImport: { method: "POST", path: "/api/v1/finance/imports/{id}/preview", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePreviewSaleLines: { method: "POST", path: "/api/v1/finance/sale-lines/preview", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financePreviewVATQuarter: { method: "POST", path: "/api/v1/finance/vat-quarters/preview", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeQuarantineExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items/{id}/quarantine", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeReconcileRegisters: { method: "GET", path: "/api/v1/finance/registers/reconcile", module: "finance", stage: "preview", permission: "finance.registers:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeReconcileVATBooks: { method: "GET", path: "/api/v1/finance/vat-quarters/books", module: "finance", stage: "preview", permission: "finance.period:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeRecordExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeRefreshConnectorAccounts: { method: "POST", path: "/api/v1/finance/connectors/{id}/accounts/refresh", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeRejectClassificationSuggestion: { method: "POST", path: "/api/v1/finance/classification-suggestions/{id}/reject", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeRepairRegisters: { method: "POST", path: "/api/v1/finance/registers/repair", module: "finance", stage: "preview", permission: "finance.registers:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeRestorePaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans/{id}/restore", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeResyncRegisters: { method: "POST", path: "/api/v1/finance/registers/resync", module: "finance", stage: "preview", permission: "finance.registers:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeRunDividendAutomation: { method: "POST", path: "/api/v1/finance/dividends/automation/run", module: "finance", stage: "preview", permission: "finance.dividends:auto", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeSaleVATTerms: { method: "GET", path: "/api/v1/finance/sale-vat-terms", module: "finance", stage: "preview", permission: "finance.operations:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeSavePnlLayout: { method: "PUT", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance.pnl_layouts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSaveProjectBudget: { method: "POST", path: "/api/v1/finance/project-budgets", module: "finance", stage: "preview", permission: "finance.project_budgets:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeSetAccountOpeningBalance: { method: "POST", path: "/api/v1/finance/accounts/{id}/opening-balance", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeSetConnectorSyncSettings: { method: "PUT", path: "/api/v1/finance/connectors/sync-settings", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeSetWalletOpeningBalance: { method: "POST", path: "/api/v1/finance/wallets/{id}/opening-balance", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeStartConnectorConsent: { method: "POST", path: "/api/v1/finance/connectors/{id}/consent", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSyncConnector: { method: "POST", path: "/api/v1/finance/connectors/{id}/sync", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeTestConnectorCredentials: { method: "POST", path: "/api/v1/finance/connectors/test", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeTransactionPayoutRegisters: { method: "GET", path: "/api/v1/finance/transactions/{id}/payout-registers", module: "finance", stage: "preview", permission: "finance.payroll:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeUpdateAccount: { method: "PATCH", path: "/api/v1/finance/accounts/{id}", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeUpdateCashOperationResponsible: { method: "PATCH", path: "/api/v1/finance/cash-operations/{id}/responsible", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeUpdateConnector: { method: "PATCH", path: "/api/v1/finance/connectors/{id}", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeUpdateConnectorAccount: { method: "PATCH", path: "/api/v1/finance/connectors/accounts/{accountId}", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeUpdateExpenseReport: { method: "PUT", path: "/api/v1/finance/accountable/reports/{id}", module: "finance", stage: "preview", permission: "finance.accountable:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeUpdatePaymentPlan: { method: "PATCH", path: "/api/v1/finance/payment-calendar/plans/{id}", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeUpdateTransactionResponsible: { method: "PATCH", path: "/api/v1/finance/transactions/{id}/responsible", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeUpdateVATQuarter: { method: "PUT", path: "/api/v1/finance/vat-quarters/{id}", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeUploadImport: { method: "POST", path: "/api/v1/finance/imports", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeUploadVATBooks: { method: "POST", path: "/api/v1/finance/vat-quarters/books", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeAnswer: { method: "POST", path: "/api/v1/knowledge/answer", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeCreatePage: { method: "POST", path: "/api/v1/knowledge/nodes", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeCreateSpace: { method: "POST", path: "/api/v1/knowledge/spaces", module: "knowledge", stage: "preview", permission: "knowledge:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeCreateTag: { method: "POST", path: "/api/v1/knowledge/tags", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeDeleteAsset: { method: "DELETE", path: "/api/v1/knowledge/assets/{id}", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeDeleteSpace: { method: "DELETE", path: "/api/v1/knowledge/spaces/{id}", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeDeleteSpaceCover: { method: "DELETE", path: "/api/v1/knowledge/spaces/{id}/cover", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeGetAnswerQuality: { method: "GET", path: "/api/v1/knowledge/quality", module: "knowledge", stage: "preview", permission: "knowledge:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeGetAssetContent: { method: "GET", path: "/api/v1/knowledge/assets/{id}/content", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeGetPage: { method: "GET", path: "/api/v1/knowledge/nodes/{id}", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeGetPageAccess: { method: "GET", path: "/api/v1/knowledge/nodes/{id}/access", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeGetPageHistory: { method: "GET", path: "/api/v1/knowledge/nodes/{id}/history", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeGetSpaceAccess: { method: "GET", path: "/api/v1/knowledge/spaces/{id}/access", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeGetSpaceCover: { method: "GET", path: "/api/v1/knowledge/spaces/{id}/cover", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeGetSpaceTree: { method: "GET", path: "/api/v1/knowledge/spaces/{id}/tree", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeListAccessOptions: { method: "GET", path: "/api/v1/knowledge/access-options", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeListPageAssets: { method: "GET", path: "/api/v1/knowledge/nodes/{id}/assets", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeListSpaces: { method: "GET", path: "/api/v1/knowledge/spaces", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeListTags: { method: "GET", path: "/api/v1/knowledge/tags", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeListTrashedPages: { method: "GET", path: "/api/v1/knowledge/archive", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeMovePage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/move", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgePublishPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/publish", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeReindexAsset: { method: "POST", path: "/api/v1/knowledge/assets/{id}/reindex", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeRejectPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/reject", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeReplacePageAccess: { method: "PUT", path: "/api/v1/knowledge/nodes/{id}/access", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeReplacePageTags: { method: "PUT", path: "/api/v1/knowledge/nodes/{id}/tags", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeReplaceSpaceAccess: { method: "PUT", path: "/api/v1/knowledge/spaces/{id}/access", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeRestorePage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/restore", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeRestorePageRevision: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/history/restore", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeSaveAnswerFeedback: { method: "POST", path: "/api/v1/knowledge/answers/{id}/feedback", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeSavePageRevision: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/revisions", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeSearch: { method: "GET", path: "/api/v1/knowledge/search", module: "knowledge", stage: "preview", permission: "knowledge:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 20 },
   knowledgeSubmitPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/submit", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeTrashPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/archive", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeUpdateSpace: { method: "PUT", path: "/api/v1/knowledge/spaces/{id}", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   knowledgeUploadPageAsset: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/assets", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeUploadSpaceCover: { method: "POST", path: "/api/v1/knowledge/spaces/{id}/cover", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  knowledgeVerifyPage: { method: "POST", path: "/api/v1/knowledge/nodes/{id}/verify", module: "knowledge", stage: "preview", permission: "knowledge:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailAbortUploadSession: { method: "DELETE", path: "/api/v1/mail/upload-sessions/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailApplyRules: { method: "POST", path: "/api/v1/mail/accounts/{id}/rules/apply", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailAttachStoredFile: { method: "POST", path: "/api/v1/mail/accounts/{id}/uploads/from-file", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  mailCheckAccount: { method: "POST", path: "/api/v1/mail/accounts/{id}/check", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  mailCompleteGoogleOAuth: { method: "POST", path: "/api/v1/mail/oauth/google/complete", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailAttachmentDownloadSession: { method: "GET", path: "/api/v1/mail/attachments/{id}/download-session", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailComposeMessage: { method: "POST", path: "/api/v1/mail/accounts/{id}/messages", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailCountVIPUnread: { method: "GET", path: "/api/v1/mail/vip-senders/unread", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  mailCreateAccount: { method: "POST", path: "/api/v1/mail/accounts", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailCreateFolder: { method: "POST", path: "/api/v1/mail/accounts/{id}/folders", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailCreateRule: { method: "POST", path: "/api/v1/mail/accounts/{id}/rules", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  mailDeleteAccount: { method: "DELETE", path: "/api/v1/mail/accounts/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailCreateUploadSession: { method: "POST", path: "/api/v1/mail/accounts/{id}/upload-sessions", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailDeleteFolder: { method: "DELETE", path: "/api/v1/mail/folders/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailDeleteMessage: { method: "DELETE", path: "/api/v1/mail/messages/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailDeleteRule: { method: "DELETE", path: "/api/v1/mail/rules/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  mailDiscoverSettings: { method: "GET", path: "/api/v1/mail/discover", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailFinishUploadSession: { method: "POST", path: "/api/v1/mail/upload-sessions/{id}/finish", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailFlagMessage: { method: "POST", path: "/api/v1/mail/messages/{id}/flag", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailGetAccount: { method: "GET", path: "/api/v1/mail/accounts/{id}", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailGetAttachmentContent: { method: "GET", path: "/api/v1/mail/attachments/{id}/content", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailGetMessage: { method: "GET", path: "/api/v1/mail/messages/{id}", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  mailGetSenderIcon: { method: "GET", path: "/api/v1/mail/sender-icon", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailGetThread: { method: "GET", path: "/api/v1/mail/threads/{id}", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailGetUploadSession: { method: "GET", path: "/api/v1/mail/upload-sessions/{id}", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailListAccounts: { method: "GET", path: "/api/v1/mail/accounts", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailListFolders: { method: "GET", path: "/api/v1/mail/accounts/{id}/folders", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailListMessageAttachments: { method: "GET", path: "/api/v1/mail/messages/{id}/attachments", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -9123,78 +5218,26 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   mailReadBatch: { method: "POST", path: "/api/v1/mail/messages/read", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailRenameFolder: { method: "PATCH", path: "/api/v1/mail/folders/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailSetVIPSender: { method: "POST", path: "/api/v1/mail/vip-senders", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  mailStartGoogleOAuth: { method: "GET", path: "/api/v1/mail/oauth/google/start", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailSyncAccount: { method: "POST", path: "/api/v1/mail/accounts/{id}/sync", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  mailUpdateAccount: { method: "PATCH", path: "/api/v1/mail/accounts/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailUpdateRule: { method: "PATCH", path: "/api/v1/mail/rules/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  mailUploadOutboundFile: { method: "POST", path: "/api/v1/mail/accounts/{id}/uploads", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceAddOzonProductGroupItems: { method: "POST", path: "/api/v1/marketplace/ozon/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceAddWbProductGroupItems: { method: "POST", path: "/api/v1/marketplace/wb/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceApplyWeeklyFinanceRun: { method: "POST", path: "/api/v1/marketplace/{platform}/stores/{id}/finance/weeks/{weekStart}/apply", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceCreateOzonProductGroup: { method: "POST", path: "/api/v1/marketplace/ozon/product-groups", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceCreateOzonStore: { method: "POST", path: "/api/v1/marketplace/ozon/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceCreateWbProductGroup: { method: "POST", path: "/api/v1/marketplace/wb/product-groups", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceCreateWbStore: { method: "POST", path: "/api/v1/marketplace/wb/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceCreateYandexStore: { method: "POST", path: "/api/v1/marketplace/yandex/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceDeleteOzonProductGroup: { method: "DELETE", path: "/api/v1/marketplace/ozon/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceDeleteOzonStore: { method: "DELETE", path: "/api/v1/marketplace/ozon/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceDeleteWbProductGroup: { method: "DELETE", path: "/api/v1/marketplace/wb/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceDeleteWbStore: { method: "DELETE", path: "/api/v1/marketplace/wb/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceDeleteYandexStore: { method: "DELETE", path: "/api/v1/marketplace/yandex/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceEconQuote: { method: "POST", path: "/api/v1/marketplace/econ/quote", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceGetCatalogImportStatus: { method: "GET", path: "/api/v1/marketplace/{platform}/stores/{id}/catalog/status", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceGetStoreAccounting: { method: "GET", path: "/api/v1/marketplace/{platform}/stores/{id}/accounting", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceImportCatalog: { method: "POST", path: "/api/v1/marketplace/{platform}/stores/{id}/catalog/import", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceImportOzonCost: { method: "POST", path: "/api/v1/marketplace/ozon/cost/import", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceImportWbCost: { method: "POST", path: "/api/v1/marketplace/wb/cost/import", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceImportYandexCost: { method: "POST", path: "/api/v1/marketplace/yandex/cost/import", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceLinkCatalogProduct: { method: "POST", path: "/api/v1/marketplace/{platform}/stores/{id}/catalog/links", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceListCatalogCandidates: { method: "GET", path: "/api/v1/marketplace/{platform}/stores/{id}/catalog/candidates", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
-  marketplaceListWeeklyFinanceRuns: { method: "GET", path: "/api/v1/marketplace/{platform}/stores/{id}/finance/weeks", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonConfirmAdsAbsence: { method: "POST", path: "/api/v1/marketplace/ozon/ads-absence", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonDecomposition: { method: "GET", path: "/api/v1/marketplace/ozon/decomposition", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonDecompositionOther: { method: "GET", path: "/api/v1/marketplace/ozon/decomposition-other", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonFbs: { method: "GET", path: "/api/v1/marketplace/ozon/fbs", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonFunnel: { method: "GET", path: "/api/v1/marketplace/ozon/funnel", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonFunnelDaily: { method: "GET", path: "/api/v1/marketplace/ozon/funnel-daily", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonOrdersOverview: { method: "GET", path: "/api/v1/marketplace/ozon/orders/overview", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonPnl: { method: "GET", path: "/api/v1/marketplace/ozon/pnl", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonPricing: { method: "GET", path: "/api/v1/marketplace/ozon/pricing", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonProductFacets: { method: "GET", path: "/api/v1/marketplace/ozon/product-facets", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonProductGroupItems: { method: "GET", path: "/api/v1/marketplace/ozon/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceOzonProductGroups: { method: "GET", path: "/api/v1/marketplace/ozon/product-groups", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonProducts: { method: "GET", path: "/api/v1/marketplace/ozon/products", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "page", pageSizeMax: 10000, pageSizeDefault: 50 },
-  marketplaceOzonPromotions: { method: "GET", path: "/api/v1/marketplace/ozon/promotions", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonSetCost: { method: "POST", path: "/api/v1/marketplace/ozon/cost", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonStocks: { method: "GET", path: "/api/v1/marketplace/ozon/stocks", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonStores: { method: "GET", path: "/api/v1/marketplace/ozon/stores", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonSyncJobs: { method: "GET", path: "/api/v1/marketplace/ozon/sync-jobs", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplacePreviewCatalogImport: { method: "POST", path: "/api/v1/marketplace/{platform}/stores/{id}/catalog/preview", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceRemoveOzonProductGroupItem: { method: "DELETE", path: "/api/v1/marketplace/ozon/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceRemoveWbProductGroupItem: { method: "DELETE", path: "/api/v1/marketplace/wb/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceRetryCatalogImport: { method: "POST", path: "/api/v1/marketplace/{platform}/stores/{id}/catalog/retry", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceSaveStoreAccounting: { method: "PUT", path: "/api/v1/marketplace/{platform}/stores/{id}/accounting", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceSetYandexCost: { method: "POST", path: "/api/v1/marketplace/yandex/cost", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceUpdateOzonProductGroup: { method: "PATCH", path: "/api/v1/marketplace/ozon/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceUpdateOzonStore: { method: "PATCH", path: "/api/v1/marketplace/ozon/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceUpdateWbProductGroup: { method: "PATCH", path: "/api/v1/marketplace/wb/product-groups/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceUpdateWbStore: { method: "PATCH", path: "/api/v1/marketplace/wb/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceUpdateYandexStore: { method: "PATCH", path: "/api/v1/marketplace/yandex/stores/{id}", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbCardBoard: { method: "GET", path: "/api/v1/marketplace/wb/card/board", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbCardOptions: { method: "GET", path: "/api/v1/marketplace/wb/card/options", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbConfirmAdsAbsence: { method: "POST", path: "/api/v1/marketplace/wb/ads-absence", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbDecomposition: { method: "GET", path: "/api/v1/marketplace/wb/decomposition", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbDecompositionOther: { method: "GET", path: "/api/v1/marketplace/wb/decomposition-other", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbFunnel: { method: "GET", path: "/api/v1/marketplace/wb/funnel", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbFunnelDaily: { method: "GET", path: "/api/v1/marketplace/wb/funnel-daily", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbOrdersOverview: { method: "GET", path: "/api/v1/marketplace/wb/orders/overview", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbPnl: { method: "GET", path: "/api/v1/marketplace/wb/pnl", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbPricing: { method: "GET", path: "/api/v1/marketplace/wb/pricing", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbProductFacets: { method: "GET", path: "/api/v1/marketplace/wb/product-facets", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbProductGroupItems: { method: "GET", path: "/api/v1/marketplace/wb/product-groups/{id}/items", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  marketplaceWbProductGroups: { method: "GET", path: "/api/v1/marketplace/wb/product-groups", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbProducts: { method: "GET", path: "/api/v1/marketplace/wb/products", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "page", pageSizeMax: 10000, pageSizeDefault: 50 },
-  marketplaceWbPromotions: { method: "GET", path: "/api/v1/marketplace/wb/promotions", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbSetCost: { method: "POST", path: "/api/v1/marketplace/wb/cost", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbStocks: { method: "GET", path: "/api/v1/marketplace/wb/stocks", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbStores: { method: "GET", path: "/api/v1/marketplace/wb/stores", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -9202,128 +5245,54 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   marketplaceYandexPnl: { method: "GET", path: "/api/v1/marketplace/yandex/pnl", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceYandexProducts: { method: "GET", path: "/api/v1/marketplace/yandex/products", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "page", pageSizeMax: 10000, pageSizeDefault: 50 },
   marketplaceYandexStores: { method: "GET", path: "/api/v1/marketplace/yandex/stores", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsActivateCompany: { method: "POST", path: "/api/v1/settings/companies/{id}/activate", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsAppDeliveries: { method: "GET", path: "/api/v1/settings/app-installations/{id}/deliveries", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
-  settingsAppIncidents: { method: "GET", path: "/api/v1/settings/app-incidents", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsAppInstallationActivity: { method: "GET", path: "/api/v1/settings/app-installations/{id}/activity", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsAppInstallationConfig: { method: "GET", path: "/api/v1/settings/app-installations/{id}/config", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsAppInstallationEvents: { method: "GET", path: "/api/v1/settings/app-installations/{id}/events", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 100 },
-  settingsChangeSubscription: { method: "POST", path: "/api/v1/settings/subscription/change", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsCreateApiKey: { method: "POST", path: "/api/v1/settings/api-keys", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsCreateCompany: { method: "POST", path: "/api/v1/settings/companies", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsCreateFieldDefinition: { method: "POST", path: "/api/v1/settings/field-definitions", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsCreateMember: { method: "POST", path: "/api/v1/settings/members", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsCreateRole: { method: "POST", path: "/api/v1/settings/roles", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsCredentialRequests: { method: "GET", path: "/api/v1/settings/credential-requests", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
-  settingsDeleteApiKey: { method: "DELETE", path: "/api/v1/settings/api-keys/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsDeleteAppInstallationConfigValue: { method: "DELETE", path: "/api/v1/settings/app-installations/{id}/config/{key}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsDeleteCompany: { method: "DELETE", path: "/api/v1/settings/companies/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsDeleteFieldDefinition: { method: "DELETE", path: "/api/v1/settings/field-definitions/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsDisableAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/disable", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsEnableAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/enable", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsEnsureCheckoutOrder: { method: "POST", path: "/api/v1/settings/billing/invoices/{id}/order", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsGetBankInvoiceDocument: { method: "GET", path: "/api/v1/settings/billing/invoices/{id}/document", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsGetBillingUPD: { method: "GET", path: "/api/v1/settings/billing/invoices/{id}/upd", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsGetFieldSchema: { method: "GET", path: "/api/v1/settings/field-schema", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsGetInvoice: { method: "GET", path: "/api/v1/settings/billing/invoices/{id}", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsGetReferrals: { method: "GET", path: "/api/v1/settings/referrals", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsGetSubscription: { method: "GET", path: "/api/v1/settings/subscription", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsGetSubscriptionNotice: { method: "GET", path: "/api/v1/settings/subscription/notice", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsGetUsage: { method: "GET", path: "/api/v1/settings/usage", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsInstallApp: { method: "POST", path: "/api/v1/settings/apps/{publisher}/{key}/installation", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsIssueBankInvoiceDocument: { method: "POST", path: "/api/v1/settings/billing/invoices/{id}/document", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListApiKeyAccess: { method: "GET", path: "/api/v1/settings/api-keys/{id}/access", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListApiKeys: { method: "GET", path: "/api/v1/settings/api-keys", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListAppInstallations: { method: "GET", path: "/api/v1/settings/app-installations", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListApps: { method: "GET", path: "/api/v1/settings/apps", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListCompanies: { method: "GET", path: "/api/v1/settings/companies", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListFieldDefinitions: { method: "GET", path: "/api/v1/settings/field-definitions", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListInvoices: { method: "GET", path: "/api/v1/settings/billing/invoices", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   settingsListMembers: { method: "GET", path: "/api/v1/settings/members", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsListRoleMembers: { method: "GET", path: "/api/v1/settings/roles/{id}/members", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListRoles: { method: "GET", path: "/api/v1/settings/roles", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListSelectableCompanies: { method: "GET", path: "/api/v1/settings/companies/selectable", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListVatRates: { method: "GET", path: "/api/v1/settings/vat-rates", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsPreviewAppConsent: { method: "GET", path: "/api/v1/settings/apps/{publisher}/{key}/consent", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsPreviewSubscriptionChange: { method: "POST", path: "/api/v1/settings/subscription/change-preview", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsReplayAppDeliveries: { method: "POST", path: "/api/v1/settings/app-installations/{id}/deliveries/replay", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsRestoreApiKey: { method: "POST", path: "/api/v1/settings/api-keys/{id}/restore", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsRevokeApiKey: { method: "POST", path: "/api/v1/settings/api-keys/{id}/revoke", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsRollbackAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/rollback", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsSetAppInstallationConfigValue: { method: "PUT", path: "/api/v1/settings/app-installations/{id}/config/{key}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsSetRoleActive: { method: "POST", path: "/api/v1/settings/roles/{id}/activation", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsTransferRoleMembers: { method: "POST", path: "/api/v1/settings/roles/{id}/transfer", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUninstallAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/uninstall", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUnparkAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/unpark", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUpdateAppInstallation: { method: "POST", path: "/api/v1/settings/app-installations/{id}/update", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUpdateCompany: { method: "PATCH", path: "/api/v1/settings/companies/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUpdateFieldDefinition: { method: "PATCH", path: "/api/v1/settings/field-definitions/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUpdateMember: { method: "PATCH", path: "/api/v1/settings/members/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  settingsUpdateRole: { method: "PATCH", path: "/api/v1/settings/roles/{id}", module: "settings", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  signupCompleteRequest: { method: "POST", path: "/api/v1/signup/requests/{token}/complete", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  signupInspectRequest: { method: "GET", path: "/api/v1/signup/requests/{token}", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  signupRecordAttributionTouch: { method: "POST", path: "/api/v1/signup/attribution/touches", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  signupRequest: { method: "POST", path: "/api/v1/signup/requests", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  signupRetryProvisioning: { method: "POST", path: "/api/v1/signup/requests/{token}/retry-provisioning", module: "signup", stage: "preview", permission: "signup:anonymous", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockAccountTransferProposal: { method: "GET", path: "/api/v1/stock/account-transfers/proposal", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockActivateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses/{id}/activate", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockApplyImport: { method: "POST", path: "/api/v1/stock/imports/{id}/apply", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockApplyWarehouseZoneAllocation: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones/allocation", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCancelDocument: { method: "POST", path: "/api/v1/stock/documents/{id}/cancel", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockCloseSupplierOrder: { method: "POST", path: "/api/v1/stock/documents/{id}/close", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateAccountTransfer: { method: "POST", path: "/api/v1/stock/account-transfers", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateAssemblySpec: { method: "POST", path: "/api/v1/stock/assembly-specs", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateClaimWriteoff: { method: "POST", path: "/api/v1/stock/claim-writeoffs", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateDocument: { method: "POST", path: "/api/v1/stock/documents", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateExport: { method: "POST", path: "/api/v1/stock/exports", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockCreateImport: { method: "POST", path: "/api/v1/stock/imports", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateOpeningBalance: { method: "POST", path: "/api/v1/stock/opening-balances", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreatePurchaseOrder: { method: "POST", path: "/api/v1/stock/purchasing/orders", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateReceiptCorrection: { method: "POST", path: "/api/v1/stock/receipt-corrections", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateWarehouseZone: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockDeactivateWarehouse: { method: "POST", path: "/api/v1/stock/warehouses/{id}/deactivate", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockDeleteAssemblySpec: { method: "DELETE", path: "/api/v1/stock/assembly-specs/{id}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockDeriveInventoryActs: { method: "POST", path: "/api/v1/stock/documents/{id}/derive", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockDisableWarehouseZones: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones/disable", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockDropWarehouseZoneAllocationDraft: { method: "DELETE", path: "/api/v1/stock/warehouses/{id}/zones/allocation/draft", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockEnableWarehouseZones: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones/enable", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockFinishInventoryCount: { method: "POST", path: "/api/v1/stock/documents/{id}/inventory-finish", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetAssemblySpec: { method: "GET", path: "/api/v1/stock/assembly-specs/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetAvailability: { method: "GET", path: "/api/v1/stock/availability", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetBatch: { method: "GET", path: "/api/v1/stock/batches/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetCompanyPolicy: { method: "GET", path: "/api/v1/stock/company-policies/{companyId}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetDocument: { method: "GET", path: "/api/v1/stock/documents/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetDocumentBlockers: { method: "GET", path: "/api/v1/stock/documents/{id}/blockers", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetDocumentFulfillment: { method: "GET", path: "/api/v1/stock/documents/{id}/fulfillment", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetDocumentLinks: { method: "GET", path: "/api/v1/stock/documents/{id}/links", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetExport: { method: "GET", path: "/api/v1/stock/exports/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetExportContent: { method: "GET", path: "/api/v1/stock/exports/{id}/content", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetHandlingUnit: { method: "GET", path: "/api/v1/stock/handling-units/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 200 },
   stockGetImport: { method: "GET", path: "/api/v1/stock/imports/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetImportErrors: { method: "GET", path: "/api/v1/stock/imports/{id}/errors", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetImportSource: { method: "GET", path: "/api/v1/stock/imports/{id}/source", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetImportTemplate: { method: "GET", path: "/api/v1/stock/import-templates/{kind}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetInventoryCountSheet: { method: "GET", path: "/api/v1/stock/documents/{id}/count-sheet", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetOrderShipping: { method: "GET", path: "/api/v1/stock/orders/{id}/shipping", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetOrdersToShip: { method: "GET", path: "/api/v1/stock/orders/to-ship", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetOverdueReservations: { method: "GET", path: "/api/v1/stock/report/reservations/overdue", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 200 },
-  stockGetOverdueSupplierOrders: { method: "GET", path: "/api/v1/stock/report/supplier-orders/overdue", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 200 },
   stockGetPurchasingReport: { method: "GET", path: "/api/v1/stock/report/purchasing", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
-  stockGetReorderRule: { method: "GET", path: "/api/v1/stock/reorder-rules/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetReservationSummaries: { method: "GET", path: "/api/v1/stock/report/reservations", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 500 },
   stockGetSettings: { method: "GET", path: "/api/v1/stock/settings", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetStockDrilldown: { method: "GET", path: "/api/v1/stock/report/stocks/{productId}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
   stockGetStocksReport: { method: "GET", path: "/api/v1/stock/report/stocks", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
   stockGetValuationRun: { method: "GET", path: "/api/v1/stock/valuation/rebuild/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetWarehouse: { method: "GET", path: "/api/v1/stock/warehouses/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockGetWarehouseBlockers: { method: "GET", path: "/api/v1/stock/warehouses/{id}/blockers", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetWarehouseZoneAllocation: { method: "GET", path: "/api/v1/stock/warehouses/{id}/zones/allocation", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockInspectImport: { method: "POST", path: "/api/v1/stock/imports/{id}/inspect", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockListAssemblySpecs: { method: "GET", path: "/api/v1/stock/assembly-specs", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   stockListBatches: { method: "GET", path: "/api/v1/stock/batches", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
-  stockListBusinesses: { method: "GET", path: "/api/v1/stock/businesses", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockListCompanies: { method: "GET", path: "/api/v1/stock/companies", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockListCompanyPolicies: { method: "GET", path: "/api/v1/stock/company-policies", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockListDocumentAuthors: { method: "GET", path: "/api/v1/stock/documents/authors", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockListDocumentFulfillments: { method: "GET", path: "/api/v1/stock/documents/fulfillments", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -9338,7 +5307,6 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockPreviewImport: { method: "POST", path: "/api/v1/stock/imports/{id}/preview", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockPreviewValuation: { method: "POST", path: "/api/v1/stock/valuation/preview", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockRebuildValuation: { method: "POST", path: "/api/v1/stock/valuation/rebuild", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  stockReceiptVATTerms: { method: "POST", path: "/api/v1/stock/receipt-vat-terms", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockRefreshInventorySnapshot: { method: "POST", path: "/api/v1/stock/documents/{id}/inventory-refresh", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockReleaseReservation: { method: "POST", path: "/api/v1/stock/documents/{id}/release", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockSaveInventoryCounts: { method: "PATCH", path: "/api/v1/stock/documents/{id}/inventory-counts", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -9356,15 +5324,11 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockUpdateReorderRule: { method: "PATCH", path: "/api/v1/stock/reorder-rules/{id}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockUpdateSettings: { method: "PATCH", path: "/api/v1/stock/settings", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockUpdateWarehouse: { method: "PATCH", path: "/api/v1/stock/warehouses/{id}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksAddProjectMember: { method: "POST", path: "/api/v1/tasks/projects/{id}/members", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksAddSectionMember: { method: "POST", path: "/api/v1/tasks/sections/{id}/members", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksArchiveProject: { method: "DELETE", path: "/api/v1/tasks/projects/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksArchiveSection: { method: "DELETE", path: "/api/v1/tasks/sections/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksArchiveTask: { method: "DELETE", path: "/api/v1/tasks/tasks/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksArchiveTemplate: { method: "DELETE", path: "/api/v1/tasks/templates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksAttachTaskTag: { method: "POST", path: "/api/v1/tasks/tasks/{id}/tags", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateAgentJournalEntry: { method: "POST", path: "/api/v1/tasks/tasks/{id}/agent-journal", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateAttachmentDownloadSession: { method: "GET", path: "/api/v1/tasks/attachments/{id}/download-session", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateAttachmentReplacementSession: { method: "POST", path: "/api/v1/tasks/attachments/{id}/replace-sessions", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateAttachmentUploadSession: { method: "POST", path: "/api/v1/tasks/attachments/upload-sessions", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateComment: { method: "POST", path: "/api/v1/tasks/tasks/{id}/comments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -9377,10 +5341,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   tasksCreateMeeting: { method: "POST", path: "/api/v1/tasks/hub/meetings", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateMilestone: { method: "POST", path: "/api/v1/tasks/milestones", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateProject: { method: "POST", path: "/api/v1/tasks/projects", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateProjectFileFolder: { method: "POST", path: "/api/v1/tasks/projects/{id}/file-folders", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreatePullRequest: { method: "POST", path: "/api/v1/tasks/pull-requests", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateRelation: { method: "POST", path: "/api/v1/tasks/tasks/{id}/relations", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksCreateSection: { method: "POST", path: "/api/v1/tasks/sections", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateStatus: { method: "POST", path: "/api/v1/tasks/statuses", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateStatusUpdate: { method: "POST", path: "/api/v1/tasks/status-updates", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateTag: { method: "POST", path: "/api/v1/tasks/tags", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -9397,8 +5359,6 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   tasksDeleteLink: { method: "DELETE", path: "/api/v1/tasks/links/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksDeleteMeeting: { method: "DELETE", path: "/api/v1/tasks/hub/meetings/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksDeleteMilestone: { method: "DELETE", path: "/api/v1/tasks/milestones/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteProjectFileFolder: { method: "DELETE", path: "/api/v1/tasks/projects/{id}/file-folders/{folderID}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksDeleteProjectMember: { method: "DELETE", path: "/api/v1/tasks/projects/{id}/members/{userID}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksDeletePullRequest: { method: "DELETE", path: "/api/v1/tasks/pull-requests/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksDeleteRelation: { method: "DELETE", path: "/api/v1/tasks/relations/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksDeleteSectionMember: { method: "DELETE", path: "/api/v1/tasks/section-members/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -9411,81 +5371,49 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   tasksGetCustomer: { method: "GET", path: "/api/v1/tasks/customers/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetCustomerNeed: { method: "GET", path: "/api/v1/tasks/customer-needs/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetCycle: { method: "GET", path: "/api/v1/tasks/cycles/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetDiscussionComment: { method: "GET", path: "/api/v1/tasks/discussion-comments/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetDocument: { method: "GET", path: "/api/v1/tasks/documents/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetHubOverview: { method: "GET", path: "/api/v1/tasks/hub/overview", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetMeeting: { method: "GET", path: "/api/v1/tasks/hub/meetings/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetMilestone: { method: "GET", path: "/api/v1/tasks/milestones/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetProjectTeamMetrics: { method: "GET", path: "/api/v1/tasks/projects/{id}/team-metrics", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetPullRequest: { method: "GET", path: "/api/v1/tasks/pull-requests/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetScrumSettings: { method: "GET", path: "/api/v1/tasks/scrum/settings/{project}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksGetSnapshot: { method: "GET", path: "/api/v1/tasks/snapshot", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 200 },
   tasksGetSprintMetrics: { method: "GET", path: "/api/v1/tasks/scrum/metrics/{cycle}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetStatusMetrics: { method: "GET", path: "/api/v1/tasks/tasks/{id}/status-metrics", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetStatusUpdate: { method: "GET", path: "/api/v1/tasks/status-updates/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetTask: { method: "GET", path: "/api/v1/tasks/tasks/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListActivity: { method: "GET", path: "/api/v1/tasks/tasks/{id}/activity", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListAgentJournal: { method: "GET", path: "/api/v1/tasks/tasks/{id}/agent-journal", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListCommentAttachments: { method: "GET", path: "/api/v1/tasks/comments/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListComments: { method: "GET", path: "/api/v1/tasks/tasks/{id}/comments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListCustomerNeeds: { method: "GET", path: "/api/v1/tasks/customer-needs", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListCustomers: { method: "GET", path: "/api/v1/tasks/customers", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListCycles: { method: "GET", path: "/api/v1/tasks/cycles", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListDiscussionComments: { method: "GET", path: "/api/v1/tasks/discussion-comments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListDocumentAttachments: { method: "GET", path: "/api/v1/tasks/documents/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListDocuments: { method: "GET", path: "/api/v1/tasks/documents", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListHubSections: { method: "GET", path: "/api/v1/tasks/hub/sections", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListLinks: { method: "GET", path: "/api/v1/tasks/tasks/{id}/links", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListMeetingAttachments: { method: "GET", path: "/api/v1/tasks/hub/meetings/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListMeetings: { method: "GET", path: "/api/v1/tasks/hub/meetings", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListMembers: { method: "GET", path: "/api/v1/tasks/members", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListMilestones: { method: "GET", path: "/api/v1/tasks/milestones", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListProjectAttachments: { method: "GET", path: "/api/v1/tasks/projects/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListProjectFileFolders: { method: "GET", path: "/api/v1/tasks/projects/{id}/file-folders", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListProjectMembers: { method: "GET", path: "/api/v1/tasks/projects/{id}/members", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListProjects: { method: "GET", path: "/api/v1/tasks/projects", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListPullRequests: { method: "GET", path: "/api/v1/tasks/pull-requests", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListRelations: { method: "GET", path: "/api/v1/tasks/tasks/{id}/relations", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListScrumSettings: { method: "GET", path: "/api/v1/tasks/scrum/settings", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListSectionAttachments: { method: "GET", path: "/api/v1/tasks/sections/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListSectionMembers: { method: "GET", path: "/api/v1/tasks/sections/{id}/members", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListSections: { method: "GET", path: "/api/v1/tasks/sections", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListStatusUpdates: { method: "GET", path: "/api/v1/tasks/status-updates", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListStatuses: { method: "GET", path: "/api/v1/tasks/statuses", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListTagCatalog: { method: "GET", path: "/api/v1/tasks/tags", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListTaskAttachments: { method: "GET", path: "/api/v1/tasks/tasks/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksListTaskTags: { method: "GET", path: "/api/v1/tasks/tasks/{id}/tags", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListTasks: { method: "GET", path: "/api/v1/tasks/tasks", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: null },
   tasksListTemplates: { method: "GET", path: "/api/v1/tasks/templates", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListViews: { method: "GET", path: "/api/v1/tasks/views", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksMoveProjectAttachment: { method: "PATCH", path: "/api/v1/tasks/projects/{id}/attachments/{attachmentID}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksMoveTask: { method: "POST", path: "/api/v1/tasks/tasks/{id}/move", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksRenameProjectFileFolder: { method: "PATCH", path: "/api/v1/tasks/projects/{id}/file-folders/{folderID}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksReorderStatuses: { method: "PATCH", path: "/api/v1/tasks/statuses/reorder", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksReplaceAttachment: { method: "POST", path: "/api/v1/tasks/attachments/{id}/replace", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksRunDueTemplates: { method: "POST", path: "/api/v1/tasks/templates/run-due", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksRunTemplate: { method: "POST", path: "/api/v1/tasks/templates/{id}/run", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateCustomer: { method: "PATCH", path: "/api/v1/tasks/customers/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateCustomerNeed: { method: "PATCH", path: "/api/v1/tasks/customer-needs/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateCycle: { method: "PATCH", path: "/api/v1/tasks/cycles/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateDiscussionComment: { method: "PATCH", path: "/api/v1/tasks/discussion-comments/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateDocument: { method: "PATCH", path: "/api/v1/tasks/documents/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateHubSection: { method: "PATCH", path: "/api/v1/tasks/hub/sections/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateMeeting: { method: "PATCH", path: "/api/v1/tasks/hub/meetings/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateMilestone: { method: "PATCH", path: "/api/v1/tasks/milestones/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateProject: { method: "PATCH", path: "/api/v1/tasks/projects/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdatePullRequest: { method: "PATCH", path: "/api/v1/tasks/pull-requests/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateScrumSettings: { method: "PATCH", path: "/api/v1/tasks/scrum/settings/{project}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateSection: { method: "PATCH", path: "/api/v1/tasks/sections/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateStatus: { method: "PATCH", path: "/api/v1/tasks/statuses/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateStatusUpdate: { method: "PATCH", path: "/api/v1/tasks/status-updates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateTag: { method: "PATCH", path: "/api/v1/tasks/tags/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateTask: { method: "PATCH", path: "/api/v1/tasks/tasks/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUpdateTemplate: { method: "PATCH", path: "/api/v1/tasks/templates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUploadCommentAttachment: { method: "POST", path: "/api/v1/tasks/comments/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUploadDocumentAttachment: { method: "POST", path: "/api/v1/tasks/documents/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUploadMeetingAttachment: { method: "POST", path: "/api/v1/tasks/hub/meetings/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUploadProjectAttachment: { method: "POST", path: "/api/v1/tasks/projects/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  tasksUploadSectionAttachment: { method: "POST", path: "/api/v1/tasks/sections/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUploadTaskAttachment: { method: "POST", path: "/api/v1/tasks/tasks/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
 };

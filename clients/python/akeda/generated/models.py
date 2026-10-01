@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3d8fe8e5d99e9e219b8884b04b395a9a841c44363a0026e7994bf47f11d7da3).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5e319aa672e15fb99dfef09b4d187f87e0a9f9ef474eaebfafc66fcb05834ec6).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -33,8 +33,6 @@ __all__ = [
     "AppRuntimeTenant",
     "ArchiveTransfer",
     "Attachment",
-    "AttachmentDownloadSession",
-    "AttachmentMove",
     "AttachmentOwnerType",
     "AttachmentPage",
     "AttachmentReplacementSessionCreate",
@@ -73,46 +71,6 @@ __all__ = [
     "AutomationRuleTestResultConditionClausesItem",
     "AutomationRuleTestResultActionsItem",
     "AutomationRuleTestResultActionsItemInputsItem",
-    "BillingCabinetInvoice",
-    "BillingCabinetNotice",
-    "BillingCabinetNoticeInvoice",
-    "BillingCabinetSeats",
-    "BillingCabinetStorage",
-    "BillingCabinetSubscription",
-    "BillingCatalog",
-    "BillingChangeInput",
-    "BillingChangePreview",
-    "BillingChangeResult",
-    "BillingEntitlements",
-    "BillingInvoice",
-    "BillingInvoiceLine",
-    "BillingInvoicePage",
-    "BillingInvoiceResult",
-    "BillingModuleSyncFailure",
-    "BillingModuleSyncReport",
-    "BillingMoney",
-    "BillingOpeningState",
-    "BillingPastDueState",
-    "BillingPaymentMethod",
-    "BillingPendingChange",
-    "BillingPilotState",
-    "BillingPlan",
-    "BillingPlanVersion",
-    "BillingPublicCatalog",
-    "BillingPublicPlan",
-    "BillingPublicPlanVersion",
-    "BillingReferralCabinetRow",
-    "BillingReferralCabinetSummary",
-    "BillingReferralOffer",
-    "BillingRequisites",
-    "BillingSnap",
-    "BillingSubscription",
-    "BillingSubscriptionAddonsItem",
-    "BillingTenantRef",
-    "BillingTrialState",
-    "BillingUsageCollectError",
-    "BillingUsageModuleBytes",
-    "BillingUsageSnapshot",
     "CRMActivity",
     "CRMAnalytics",
     "CRMAutomationAction",
@@ -125,23 +83,18 @@ __all__ = [
     "CRMConversionMetric",
     "CRMConvertLeadInput",
     "CRMCreateEventLinkInput",
-    "CRMCreateHubMeetingInput",
     "CRMCreateTaskLinkInput",
     "CRMCustomer",
     "CRMCustomerDuplicate",
     "CRMCustomerInput",
-    "CRMCustomerLinkInput",
     "CRMCustomerPatch",
-    "CRMCustomerRelations",
     "CRMDeal",
     "CRMDealBoard",
     "CRMDealBoardStage",
     "CRMDealCard",
     "CRMDealContact",
-    "CRMDealContactInput",
     "CRMDealInput",
     "CRMDealItem",
-    "CRMDealItemInput",
     "CRMDealPatch",
     "CRMDealStageHistory",
     "CRMEngagement",
@@ -149,39 +102,9 @@ __all__ = [
     "CRMEngagementKind",
     "CRMEngagementPatch",
     "CRMExternalLink",
-    "CRMImportApplyInput",
-    "CRMImportCandidate",
-    "CRMImportConnectInput",
-    "CRMImportDecision",
-    "CRMImportDecisionInput",
-    "CRMImportExtractInput",
-    "CRMImportExtractResult",
-    "CRMImportField",
-    "CRMImportFields",
-    "CRMImportFileInfo",
-    "CRMImportInspectInput",
-    "CRMImportMapping",
-    "CRMImportMappingInput",
-    "CRMImportOptions",
-    "CRMImportPreview",
-    "CRMImportRecord",
-    "CRMImportRevisionInput",
-    "CRMImportRollback",
-    "CRMImportRollbackKept",
-    "CRMImportRowIssue",
-    "CRMImportRun",
-    "CRMImportRunInput",
-    "CRMImportSheetInfo",
-    "CRMImportSheetMapping",
-    "CRMImportSourcePipeline",
-    "CRMImportSourceStage",
-    "CRMImportValue",
     "CRMInboxAssignInput",
     "CRMInboxAttachment",
     "CRMInboxConnection",
-    "CRMInboxConnectionCheck",
-    "CRMInboxConnectionInput",
-    "CRMInboxConnectionPatch",
     "CRMInboxConversation",
     "CRMInboxConversationLink",
     "CRMInboxConversationStatus",
@@ -190,7 +113,6 @@ __all__ = [
     "CRMInboxLinkConversationInput",
     "CRMInboxLinkedConversation",
     "CRMInboxMessage",
-    "CRMInboxOutboundUpload",
     "CRMInboxProvider",
     "CRMInboxProviderCapabilities",
     "CRMInboxProviderField",
@@ -203,9 +125,6 @@ __all__ = [
     "CRMLeadDuplicate",
     "CRMLeadInput",
     "CRMLeadPatch",
-    "CRMLeadSource",
-    "CRMLeadSourceInput",
-    "CRMLeadSourcePatch",
     "CRMLeadStatus",
     "CRMLossReason",
     "CRMLossReasonInput",
@@ -220,7 +139,6 @@ __all__ = [
     "CRMPipelineOverview",
     "CRMPipelinePatch",
     "CRMQualifyLeadInput",
-    "CRMRelatedCustomer",
     "CRMReopenDealInput",
     "CRMReorderInput",
     "CRMRequiredField",
@@ -270,48 +188,22 @@ __all__ = [
     "CalendarMember",
     "CalendarMemberBundle",
     "CalendarMemberDirectory",
-    "CalendarOAuthCompleteInput",
-    "CalendarOAuthStart",
     "CalendarParticipant",
     "CalendarParticipantInput",
-    "CalendarPublicBookInput",
-    "CalendarPublicBookResult",
-    "CalendarPublicBookingLink",
     "CalendarSettingsEnvelope",
     "CalendarSlot",
     "CalendarSlotPage",
     "CalendarSyncResult",
-    "CalendarWebPushConfig",
-    "CalendarWebPushSubscription",
-    "CalendarWebPushTestResult",
-    "CalendarWebPushUnsubscribe",
-    "ChatAddMember",
     "ChatAttachment",
-    "ChatAttachmentPage",
-    "ChatAttachmentUpload",
-    "ChatChangePinResult",
     "ChatConversation",
-    "ChatConversationAvatarUpload",
     "ChatConversationCapabilities",
     "ChatConversationPage",
     "ChatCreateGroup",
     "ChatCreateGroupResult",
-    "ChatEditMessage",
     "ChatEnsureDirect",
     "ChatEnsureDirectResult",
     "ChatEntityConversation",
-    "ChatFolder",
-    "ChatFolderPage",
-    "ChatForwardMessage",
-    "ChatForwardMessageResult",
-    "ChatForwardedAttachment",
-    "ChatForwardedMessage",
-    "ChatLinkPreview",
-    "ChatMarkAllRead",
-    "ChatMarkAllReadResult",
-    "ChatMediaUpload",
     "ChatMember",
-    "ChatMemberChangeResult",
     "ChatMemberPage",
     "ChatMentionCandidate",
     "ChatMentionCandidatePage",
@@ -319,34 +211,18 @@ __all__ = [
     "ChatMessage",
     "ChatMessageMention",
     "ChatMessagePage",
-    "ChatMessagePin",
-    "ChatMessagePinPage",
-    "ChatMessageReaction",
-    "ChatMessageReader",
-    "ChatMessageReaderPage",
-    "ChatMobileDeviceRegistration",
-    "ChatMobileDeviceRegistrationState",
-    "ChatMobilePushTestResult",
     "ChatNotificationModeInput",
     "ChatNotificationModeResult",
     "ChatPeoplePage",
     "ChatPerson",
-    "ChatPresenceInput",
     "ChatPresencePage",
     "ChatPresencePageItemsItem",
-    "ChatReactionResult",
     "ChatReceiptInput",
     "ChatReceiptState",
-    "ChatRenameGroup",
-    "ChatRenameGroupResult",
-    "ChatSaveFolder",
     "ChatSendMessage",
     "ChatSendMessageResult",
-    "ChatSetReaction",
     "ChatUnreadMention",
     "ChatUnreadMentionPage",
-    "ChatUnreadSpace",
-    "ChatUnreadSummary",
     "Comment",
     "CommentCreate",
     "CommentList",
@@ -356,24 +232,16 @@ __all__ = [
     "CoreAccountingDimensionPageReadiness",
     "CoreAccountingDimensionPatch",
     "CoreAccountingDimensionVersion",
-    "CoreAccountingDimensionVersionInput",
-    "CoreAccountingPeriodClose",
-    "CoreAccountingPeriodEvent",
-    "CoreAccountingPeriodReopen",
-    "CoreAccountingPeriodState",
     "CoreAccountingPolicy",
     "CoreAccountingSettings",
     "CoreAccountingSettingsInput",
     "CoreBalanceShortage",
-    "CoreBulkResult",
-    "CoreBulkResultSkippedItem",
     "CoreBusiness",
     "CoreBusinessAccountingMethodInput",
     "CoreBusinessInput",
     "CoreBusinessOwner",
     "CoreBusinessOwnerInput",
     "CoreBusinessPolicy",
-    "CoreCabinetPreferences",
     "CoreChange",
     "CoreChangeFeedPage",
     "CoreChangeOp",
@@ -381,17 +249,12 @@ __all__ = [
     "CoreConflictingRegistrar",
     "CoreContact",
     "CoreContactAddress",
-    "CoreContactBulkPatch",
     "CoreContactCreate",
     "CoreContactEntityType",
     "CoreContactKind",
     "CoreContactPage",
     "CoreContactPatch",
-    "CoreContractList",
-    "CoreContractSettlementDetailInput",
-    "CoreContractTerms",
     "CoreCurrencyRate",
-    "CoreCurrencyRateInput",
     "CoreCurrencyRatePage",
     "CoreCurrencyRateRefreshResult",
     "CoreCurrencyRateSource",
@@ -405,7 +268,6 @@ __all__ = [
     "CoreDictionaryItemPage",
     "CoreDictionaryItemUpdate",
     "CoreDictionaryPage",
-    "CoreDictionaryUpdate",
     "CoreDirectory",
     "CoreDirectoryContract",
     "CoreDirectoryMount",
@@ -415,75 +277,30 @@ __all__ = [
     "CoreDocumentBlockReason",
     "CoreDocumentBlockers",
     "CoreDocumentCreate",
-    "CoreDocumentCustom",
     "CoreDocumentLinkNode",
     "CoreDocumentLinks",
     "CoreDocumentMarkDeleted",
     "CoreDocumentMovementSummary",
-    "CoreDocumentNumbering",
-    "CoreDocumentNumberingCounters",
-    "CoreDocumentNumberingInput",
-    "CoreDocumentNumberingList",
-    "CoreDocumentNumberingParts",
     "CoreDocumentPage",
     "CoreDocumentPatch",
     "CoreDocumentStatus",
     "CoreDocumentType",
     "CoreDocumentTypeCreate",
     "CoreDocumentTypePage",
-    "CoreDocumentTypePatch",
     "CoreEmployee",
     "CoreEmployeeCreateVariant1",
     "CoreEmployeeCreateVariant2",
     "CoreEmployeeCreateVariant3",
     "CoreEmployeeCreateVariant4",
     "CoreEmployeeCreate",
-    "CoreEmployeeEquipment",
-    "CoreEmployeeEquipmentInput",
-    "CoreEmployeeEquipmentPage",
-    "CoreEmployeeLifecycleKind",
-    "CoreEmployeeLifecycleTemplate",
-    "CoreEmployeeLifecycleTemplateInput",
-    "CoreEmployeeLifecycleTemplatePage",
     "CoreEmployeePage",
-    "CoreEmployeePatch",
-    "CoreExternalContactCandidate",
-    "CoreExternalContactMatchOption",
-    "CoreExternalContactMatchOutcome",
-    "CoreExternalContactMatchReport",
-    "CoreExternalContactMatchRequest",
-    "CoreExternalContactMatchResult",
-    "CoreExternalContactMatchSummary",
-    "CoreExternalRef",
-    "CoreExternalRefEntityType",
-    "CoreExternalRefInput",
-    "CoreExternalRefLinkRequest",
-    "CoreExternalRefMatchSource",
-    "CoreExternalRefPage",
-    "CoreExternalRefRememberRequest",
-    "CoreExternalRefResolveRequest",
-    "CoreExternalRefResolveResult",
-    "CoreFolder",
-    "CoreFolderInput",
-    "CoreFolderPage",
-    "CoreFolderScope",
     "CoreGLAccount",
     "CoreGLAccountCreate",
     "CoreGLAccountPage",
-    "CoreGLAccountPatch",
     "CoreGLAccountType",
     "CoreGLMapping",
     "CoreGLMappingCreate",
     "CoreGLMappingPage",
-    "CoreGLOpeningImport",
-    "CoreGLOpeningImportAppliedRequest",
-    "CoreGLOpeningImportPage",
-    "CoreGLOpeningImportRow",
-    "CoreGLOpeningImportStatus",
-    "CoreGLOpeningMatch",
-    "CoreGLOpeningNote",
-    "CoreGLOpeningWarning",
-    "CoreGeneratedBarcode",
     "CoreImportResult",
     "CoreItem",
     "CoreItemInput",
@@ -491,15 +308,11 @@ __all__ = [
     "CoreItemPage",
     "CoreNumberReset",
     "CoreNumberSource",
-    "CoreNumberYear",
-    "CoreObjectUsage",
-    "CoreObjectUsageRow",
     "CoreOrder",
     "CoreOrderAllowedAction",
     "CoreOrderBuyer",
     "CoreOrderCabinetStatusInput",
     "CoreOrderCloseInput",
-    "CoreOrderContractInput",
     "CoreOrderCounterparty",
     "CoreOrderEvent",
     "CoreOrderFunnel",
@@ -534,16 +347,13 @@ __all__ = [
     "CoreOrderResponsible",
     "CoreOrderResponsiblesInput",
     "CoreOrderRevenueItemRule",
-    "CoreOrderRevenueItemsInput",
     "CoreOrderRevision",
     "CoreOrderSide",
     "CoreOrderSourceKind",
     "CoreOrderStage",
     "CoreOrderState",
     "CoreOrderStatus",
-    "CoreOrderStatusInput",
     "CoreOrderStatusList",
-    "CoreOrderStatusPatch",
     "CoreOrderStepDueInput",
     "CoreOrderStepState",
     "CoreOrderTemplate",
@@ -557,38 +367,26 @@ __all__ = [
     "CoreOrderVATWarning",
     "CoreOwnershipVersion",
     "CoreOwnershipVersionInput",
-    "CorePhotoResult",
-    "CorePolicyAccountableDaysInput",
     "CorePolicyAccountableDaysVersion",
     "CorePolicyPeriod",
-    "CorePolicyTaxModeInput",
     "CorePolicyTaxModeVersion",
     "CorePolicyTaxRegimeInput",
     "CorePolicyTaxRegimeVersion",
-    "CorePolicyVATPendingInput",
     "CorePolicyVATPendingVersion",
-    "CorePolicyVATPresentationInput",
     "CorePolicyVATPresentationVersion",
-    "CorePolicyVATRatesInput",
     "CorePolicyVATRatesVersion",
     "CoreProduct",
     "CoreProductAxis",
     "CoreProductAxisValue",
-    "CoreProductBulkPatch",
     "CoreProductCreate",
     "CoreProductCustomInput",
     "CoreProductExport",
     "CoreProductExportRequest",
     "CoreProductFieldDefinition",
     "CoreProductFieldSchema",
-    "CoreProductFile",
-    "CoreProductFilePage",
-    "CoreProductFilePatch",
-    "CoreProductFileReorder",
     "CoreProductIdentifier",
     "CoreProductIdentifierInput",
     "CoreProductIdentifierKind",
-    "CoreProductIdentifierMatch",
     "CoreProductIdentifierPage",
     "CoreProductIdentifierPatch",
     "CoreProductImportApplyRequest",
@@ -612,9 +410,6 @@ __all__ = [
     "CoreProductRecordKind",
     "CoreProductTransferFormat",
     "CoreProductTransferKind",
-    "CoreProductVariantGenerate",
-    "CoreProductVariantGenerateAxesItem",
-    "CoreProductVariantGenerateResult",
     "CoreReferenceItem",
     "CoreReferenceItemPage",
     "CoreReferenceRef",
@@ -630,23 +425,22 @@ __all__ = [
     "CoreRegisterEntryPage",
     "CoreRegisterKind",
     "CoreRegisterPage",
-    "CoreRegisterPatch",
     "CoreRegisterResource",
     "CoreRegisterTurnoverPage",
     "CoreRegisterTurnoverRow",
+    "CoreSellerBank",
+    "CoreSellerCompany",
+    "CoreSellerCompanyList",
     "CoreTrialBalance",
     "CoreTrialBalanceRow",
     "CoreTrialBalanceTotals",
-    "CoreUIState",
     "CredentialRequestGap",
     "Customer",
     "CustomerCreate",
     "CustomerNeed",
     "CustomerNeedCreate",
     "CustomerNeedPage",
-    "CustomerNeedUpdate",
     "CustomerPage",
-    "CustomerUpdate",
     "Cycle",
     "CycleCreate",
     "CycleOwnerType",
@@ -696,11 +490,7 @@ __all__ = [
     "DiscussionComment",
     "DiscussionCommentCreate",
     "DiscussionCommentPage",
-    "DiscussionCommentUpdate",
     "DiscussionOwnerType",
-    "DocflowAcceptedDocument",
-    "DocflowActionResult",
-    "DocflowAddressRequisites",
     "DocflowAppSalesOrderCounterparty",
     "DocflowAppSalesOrderInput",
     "DocflowAppSalesOrderItem",
@@ -713,7 +503,6 @@ __all__ = [
     "DocflowApprovalChainPreview",
     "DocflowApprovalChainStage",
     "DocflowApprovalDecisionInput",
-    "DocflowApprovalDelegateInput",
     "DocflowApprovalDepartment",
     "DocflowApprovalDirectories",
     "DocflowApprovalEvent",
@@ -725,45 +514,20 @@ __all__ = [
     "DocflowApprovalReview",
     "DocflowApprovalRoleRef",
     "DocflowApprovalRoute",
-    "DocflowApprovalRouteActiveInput",
     "DocflowApprovalRouteList",
     "DocflowApprovalRouteStage",
     "DocflowApprovalStage",
     "DocflowApprovalSubject",
     "DocflowApprovalSubjectFacts",
     "DocflowApprovalSubjectState",
-    "DocflowApprovalSubstitution",
-    "DocflowApprovalSubstitutionList",
     "DocflowAttachment",
-    "DocflowAttorneySubmission",
-    "DocflowBankRequisites",
-    "DocflowBuyerTitleInput",
     "DocflowCancellation",
-    "DocflowCancellationInput",
     "DocflowCertificate",
     "DocflowConnection",
-    "DocflowConnectionInput",
     "DocflowConnectionList",
-    "DocflowConnectionModeInput",
-    "DocflowConnectionPatch",
-    "DocflowContactRequisites",
     "DocflowCounterparty",
-    "DocflowCurrencyRequisites",
-    "DocflowDocumentRefRequisites",
-    "DocflowElectronicPoARequisites",
-    "DocflowEmployeeRequisites",
     "DocflowEvent",
-    "DocflowFileRequisites",
-    "DocflowFlowAccountingBacklink",
-    "DocflowFlowAccountingBacklinkPage",
-    "DocflowFlowAccountingDocument",
     "DocflowFlowAccountingLink",
-    "DocflowFlowAccountingLinkInput",
-    "DocflowFlowAccountingOriginalInput",
-    "DocflowFlowAccountingPage",
-    "DocflowFlowAccountingUnlinkInput",
-    "DocflowFlowAccrualPlan",
-    "DocflowFlowAccrualStage",
     "DocflowFlowChangeInput",
     "DocflowFlowCommercial",
     "DocflowFlowCommercialLine",
@@ -775,117 +539,46 @@ __all__ = [
     "DocflowFlowEDOAttachment",
     "DocflowFlowEDOLink",
     "DocflowFlowEDOState",
-    "DocflowFlowFNSInput",
-    "DocflowFlowFNSSent",
     "DocflowFlowFile",
-    "DocflowFlowFinanceAccrualAllocation",
-    "DocflowFlowFinanceAccrualInput",
-    "DocflowFlowFinancePlanInput",
     "DocflowFlowKind",
     "DocflowFlowPage",
     "DocflowFlowPageStateCounts",
     "DocflowFlowPaymentRule",
     "DocflowFlowPaymentRuleOrders",
     "DocflowFlowRecognized",
-    "DocflowFlowReference",
-    "DocflowFlowReferencePage",
     "DocflowFlowRelation",
     "DocflowFlowRelationInput",
     "DocflowFlowScheduleStage",
-    "DocflowFormatIssues",
-    "DocflowGovConnectionState",
-    "DocflowGovDocument",
-    "DocflowGovList",
-    "DocflowGovSummary",
-    "DocflowIntakeCounterparty",
-    "DocflowIntakeCounterpartyOption",
-    "DocflowIntakeInput",
-    "DocflowIntakeLine",
-    "DocflowIntakeLineInput",
-    "DocflowIntakeParty",
-    "DocflowIntakePreview",
-    "DocflowIntakeProductOption",
-    "DocflowIntakeResult",
-    "DocflowIntakeSource",
-    "DocflowIntakeTotals",
-    "DocflowInvitation",
-    "DocflowInvitationInput",
-    "DocflowInvitationPage",
-    "DocflowInvitationSender",
-    "DocflowIssue",
-    "DocflowLineRequisites",
-    "DocflowMarkRequisites",
     "DocflowMessage",
-    "DocflowMessageActionInput",
     "DocflowMessageFlowLink",
     "DocflowMessageList",
     "DocflowMessagePayment",
     "DocflowMessagePrintForm",
     "DocflowOrderActInput",
+    "DocflowOrderDocumentSet",
     "DocflowOrderImport",
     "DocflowOrderImportPage",
     "DocflowOrderInvoiceInput",
+    "DocflowOrderSetMember",
+    "DocflowOrderSetOrder",
     "DocflowOrderUPDInput",
-    "DocflowOutgoingFile",
-    "DocflowOutgoingFlowInput",
-    "DocflowOutgoingInput",
-    "DocflowPaperPoARequisites",
-    "DocflowPartyRequisites",
-    "DocflowPaymentDetails",
-    "DocflowPaymentDetailsContactName",
-    "DocflowPaymentDetailsDueDate",
-    "DocflowPaymentDocumentRequisites",
-    "DocflowPaymentField",
-    "DocflowPaymentParty",
-    "DocflowPaymentRequest",
-    "DocflowPaymentRequestBasis",
-    "DocflowPaymentRequestInput",
-    "DocflowPaymentRequestList",
-    "DocflowPaymentRequestOrder",
-    "DocflowPaymentRequestPayee",
-    "DocflowPaymentRequestPayment",
-    "DocflowPaymentRequestStatus",
-    "DocflowPaymentRequestUpdate",
-    "DocflowPaymentRequestVersion",
-    "DocflowPersonRequisites",
-    "DocflowPreflight",
-    "DocflowPreflightDocument",
-    "DocflowPreflightLine",
-    "DocflowPreflightParty",
-    "DocflowPreflightTotals",
+    "DocflowPaymentRequestRoutePreview",
     "DocflowRecognized",
-    "DocflowRequisites",
     "DocflowSalesOrder",
     "DocflowSalesOrderBuyer",
     "DocflowSalesOrderItem",
     "DocflowSalesOrderStatusInput",
     "DocflowSignature",
-    "DocflowSignatureShape",
-    "DocflowSignatureSubmission",
-    "DocflowSignerRequisites",
-    "DocflowSigningPayload",
-    "DocflowSigningResult",
-    "DocflowSigningTask",
-    "DocflowSigningTaskInput",
-    "DocflowSigningTaskList",
     "DocflowStage",
     "DocflowStageAction",
-    "DocflowStageRef",
     "DocflowStateCategory",
-    "DocflowSyncOutcome",
-    "DocflowTextInfoRequisites",
-    "DocflowTitle",
-    "DocflowTitleList",
-    "DocflowTransferRequisites",
     "DocumentCreate",
     "DocumentOwnerType",
     "DocumentPage",
-    "DocumentUpdate",
     "DurationMetric",
     "EmptyObject",
     "Error",
     "FileUpload",
-    "FilesAccessInput",
     "FilesAccessPolicy",
     "FilesBreadcrumb",
     "FilesEntry",
@@ -906,14 +599,13 @@ __all__ = [
     "FinanceAccountPatch",
     "FinanceAccountableBalance",
     "FinanceAccountableBalances",
+    "FinanceAcquiringCaptureInput",
+    "FinanceAcquiringCaptureResult",
     "FinanceBalanceItem",
     "FinanceBalanceReport",
     "FinanceBalanceSection",
     "FinanceBankLookup",
     "FinanceBankSuggestions",
-    "FinanceCashOperation",
-    "FinanceCashOperationCreate",
-    "FinanceCashOperationPage",
     "FinanceCashflowEntry",
     "FinanceCashflowEntryCategorize",
     "FinanceCashflowEntryKind",
@@ -921,39 +613,24 @@ __all__ = [
     "FinanceCashflowItem",
     "FinanceCashflowReport",
     "FinanceCashflowSection",
-    "FinanceClassificationSuggestion",
     "FinanceCommercialPosition",
-    "FinanceCompanyMatch",
-    "FinanceCompanyMatchError",
-    "FinanceCompanySuggestion",
     "FinanceConnector",
     "FinanceConnectorAccount",
     "FinanceConnectorAccountPage",
     "FinanceConnectorAccountPatch",
     "FinanceConnectorAuthKind",
-    "FinanceConnectorConsent",
-    "FinanceConnectorCreate",
-    "FinanceConnectorCredentialTestInput",
-    "FinanceConnectorCredentialTestResult",
-    "FinanceConnectorMTLSInput",
     "FinanceConnectorMTLSStatus",
     "FinanceConnectorPage",
-    "FinanceConnectorPatch",
     "FinanceConnectorProvider",
     "FinanceConnectorProviderKey",
     "FinanceConnectorProviderPage",
-    "FinanceConnectorStatementCheck",
     "FinanceConnectorStatus",
-    "FinanceConnectorSyncIntervalOption",
     "FinanceConnectorSyncResult",
     "FinanceConnectorSyncRun",
     "FinanceConnectorSyncRunPage",
-    "FinanceConnectorSyncSettings",
-    "FinanceConnectorSyncSettingsInput",
     "FinanceCounterpartyTerms",
     "FinanceCounterpartyTermsCreate",
     "FinanceDirection",
-    "FinanceDirectoryCompany",
     "FinanceDividendDecisionInput",
     "FinanceDividendDecisionInputRowsItem",
     "FinanceDividendPolicyInput",
@@ -967,20 +644,6 @@ __all__ = [
     "FinanceExpenseReportCreate",
     "FinanceExpenseReportCreatePayload",
     "FinanceExpenseReportRow",
-    "FinanceImportApply",
-    "FinanceImportDiff",
-    "FinanceImportField",
-    "FinanceImportInspect",
-    "FinanceImportIssue",
-    "FinanceImportItemMappingRequest",
-    "FinanceImportKind",
-    "FinanceImportMapping",
-    "FinanceImportRun",
-    "FinanceImportSheet",
-    "FinanceImportStatus",
-    "FinanceImportUpload",
-    "FinanceOpenAdvance",
-    "FinanceOpeningBalanceRequest",
     "FinanceOpeningDebtRequest",
     "FinanceOperation",
     "FinanceOperationAccrualAllocation",
@@ -1006,45 +669,10 @@ __all__ = [
     "FinancePaymentFact",
     "FinancePaymentFactPage",
     "FinancePaymentPlan",
-    "FinancePaymentPlanExecute",
     "FinancePaymentPlanInput",
     "FinancePaymentSourceKind",
-    "FinancePayoutRegister",
-    "FinancePayoutRegisterPage",
-    "FinancePayoutRegisterStatus",
-    "FinancePayoutSheetRequest",
-    "FinancePayoutSheetRow",
-    "FinancePayrollAccrualPayload",
-    "FinancePayrollAccrualRow",
-    "FinancePayrollAccrualRowBonusesItem",
-    "FinancePayrollDocumentCreate",
-    "FinancePayrollDocumentRefs",
-    "FinancePayrollDocumentTypeKey",
-    "FinancePayrollImportInspection",
-    "FinancePayrollImportPreview",
-    "FinancePayrollImportRow",
-    "FinancePayrollImportSheet",
-    "FinancePayrollJournal",
-    "FinancePayrollJournalRow",
-    "FinancePayrollJournalTotals",
-    "FinancePayrollPayment",
-    "FinancePayrollPaymentPayload",
-    "FinancePayrollPaymentRow",
-    "FinancePayrollPayments",
-    "FinancePeriodCheck",
-    "FinancePeriodCheckPage",
     "FinancePnlCoverage",
     "FinancePnlCoverageItem",
-    "FinancePnlEntry",
-    "FinancePnlEntryPage",
-    "FinancePnlFormulaToken",
-    "FinancePnlItem",
-    "FinancePnlItemPage",
-    "FinancePnlLayout",
-    "FinancePnlLayoutCreate",
-    "FinancePnlLayoutPage",
-    "FinancePnlLayoutRow",
-    "FinancePnlLayoutSave",
     "FinancePnlLine",
     "FinancePnlReport",
     "FinancePnlReportLayout",
@@ -1056,11 +684,6 @@ __all__ = [
     "FinanceProjectLine",
     "FinanceProjectReport",
     "FinanceReconciliation",
-    "FinanceReconciliationAccount",
-    "FinanceReconciliationDay",
-    "FinanceReconciliationDayReason",
-    "FinanceReconciliationSource",
-    "FinanceReconciliationStatementGap",
     "FinanceReconciliationSummary",
     "FinanceRegisterAccountCheck",
     "FinanceRegisterReconciliation",
@@ -1073,19 +696,9 @@ __all__ = [
     "FinanceRegistersResyncResult",
     "FinanceReportColumn",
     "FinanceReportCompany",
-    "FinanceRequisitesAddress",
     "FinanceRequisitesBank",
-    "FinanceRequisitesLookup",
-    "FinanceRequisitesParty",
-    "FinanceRequisitesPerson",
-    "FinanceRequisitesSuggestions",
     "FinanceResponsiblePatch",
-    "FinanceSaleLine",
     "FinanceSaleLineInput",
-    "FinanceSaleLinesPreview",
-    "FinanceSaleLinesPreviewRequest",
-    "FinanceSaleLinesTotals",
-    "FinanceSaleVATTerms",
     "FinanceSettlementBalance",
     "FinanceSettlementBalancePage",
     "FinanceSettlementDocumentCreate",
@@ -1102,37 +715,11 @@ __all__ = [
     "FinanceStatementLinkInputTransactionsItem",
     "FinanceStatementLinkResult",
     "FinanceStatementPage",
-    "FinanceTradeAdvance",
-    "FinanceTradeJournalDocument",
-    "FinanceTradeJournalPage",
-    "FinanceTradeJournalRow",
     "FinanceTransaction",
     "FinanceTransactionCategorize",
     "FinanceTransactionCreate",
     "FinanceTransactionPage",
     "FinanceTransactionTotals",
-    "FinanceUnallocatedMoney",
-    "FinanceUnallocatedScope",
-    "FinanceUnallocatedSummary",
-    "FinanceVATBookImport",
-    "FinanceVATBookMatch",
-    "FinanceVATBookOurRow",
-    "FinanceVATBookRateTotal",
-    "FinanceVATBookReconciliation",
-    "FinanceVATBookRow",
-    "FinanceVATBookSide",
-    "FinanceVATBookUploadPage",
-    "FinanceVATBookUploadPageItemsItem",
-    "FinanceVATQuarter",
-    "FinanceVATQuarterFigureSource",
-    "FinanceVATQuarterInput",
-    "FinanceVATQuarterLine",
-    "FinanceVATQuarterLineCausesItem",
-    "FinanceVATQuarterLineChoice",
-    "FinanceVATQuarterPage",
-    "FinanceVATQuarterPart",
-    "FinanceVATQuarterPayload",
-    "FinanceVATQuarterTotals",
     "HubCounters",
     "HubOverview",
     "HubProject",
@@ -1144,15 +731,11 @@ __all__ = [
     "KnowledgeAccessOption",
     "KnowledgeAccessOptions",
     "KnowledgeAnswer",
-    "KnowledgeAnswerFeedbackInput",
     "KnowledgeAnswerInput",
-    "KnowledgeAnswerQuality",
     "KnowledgeAnswerTurn",
     "KnowledgeAsset",
     "KnowledgeCitation",
-    "KnowledgeContentGap",
     "KnowledgeDocument",
-    "KnowledgeIndexHealth",
     "KnowledgeMoveInput",
     "KnowledgeNode",
     "KnowledgeNodeAccessInput",
@@ -1161,25 +744,21 @@ __all__ = [
     "KnowledgeReviewInput",
     "KnowledgeRevision",
     "KnowledgeRevisionInput",
-    "KnowledgeRevisionRestoreInput",
     "KnowledgeSearchResult",
     "KnowledgeSpace",
     "KnowledgeSpaceAccessInput",
     "KnowledgeSpaceAccessPolicy",
     "KnowledgeSpaceInput",
     "KnowledgeTag",
-    "KnowledgeTagInput",
-    "KnowledgeTagSetInput",
     "KnowledgeVersionInput",
     "Link",
     "LinkCreate",
     "LinkList",
     "MailAccount",
-    "MailAccountInput",
     "MailAccountStatus",
     "MailAttachment",
+    "MailAttachmentLink",
     "MailComposeInput",
-    "MailDiscoveredSettings",
     "MailEncryption",
     "MailFolder",
     "MailFolderInput",
@@ -1204,30 +783,8 @@ __all__ = [
     "MailThread",
     "ManagedChecklistItem",
     "ManagedChecklistPatch",
-    "MarketplaceAdsAbsence",
-    "MarketplaceAdsAbsenceRequest",
-    "MarketplaceCatalogCandidate",
-    "MarketplaceCatalogCandidatePage",
-    "MarketplaceCatalogImportResult",
-    "MarketplaceCatalogImportRow",
-    "MarketplaceCatalogJob",
-    "MarketplaceCatalogLinkDecision",
-    "MarketplaceCatalogLinkRequest",
     "MarketplaceComponentDataThrough",
     "MarketplaceComponentFreshness",
-    "MarketplaceCostImportRequest",
-    "MarketplaceCostImportResult",
-    "MarketplaceCostImportRowError",
-    "MarketplaceEconBaseRow",
-    "MarketplaceEconOverrides",
-    "MarketplaceEconOzonInput",
-    "MarketplaceEconQuoteItem",
-    "MarketplaceEconQuoteRequest",
-    "MarketplaceEconQuoteResponse",
-    "MarketplaceEconQuoteRow",
-    "MarketplaceEconResult",
-    "MarketplaceEconWbInput",
-    "MarketplaceFunnelDailyReference",
     "MarketplaceOzonCost",
     "MarketplaceOzonCostRequest",
     "MarketplaceOzonDecomposition",
@@ -1236,23 +793,7 @@ __all__ = [
     "MarketplaceOzonDecompositionMonth",
     "MarketplaceOzonDecompositionOtherBlock",
     "MarketplaceOzonDecompositionOtherItem",
-    "MarketplaceOzonDecompositionOtherPage",
     "MarketplaceOzonDecompositionPeriod",
-    "MarketplaceOzonFbs",
-    "MarketplaceOzonFbsFunnelStage",
-    "MarketplaceOzonFbsPosting",
-    "MarketplaceOzonFbsSpeedBucket",
-    "MarketplaceOzonFbsTiles",
-    "MarketplaceOzonFbsTotals",
-    "MarketplaceOzonFbsWarehouse",
-    "MarketplaceOzonFunnel",
-    "MarketplaceOzonFunnelDaily",
-    "MarketplaceOzonFunnelDailyArticle",
-    "MarketplaceOzonFunnelDailyCard",
-    "MarketplaceOzonFunnelDailySeries",
-    "MarketplaceOzonFunnelDailyTotals",
-    "MarketplaceOzonFunnelRow",
-    "MarketplaceOzonFunnelTotals",
     "MarketplaceOzonOrdersDailyRow",
     "MarketplaceOzonOrdersKpi",
     "MarketplaceOzonOrdersOverview",
@@ -1261,36 +802,16 @@ __all__ = [
     "MarketplaceOzonPnlPeriod",
     "MarketplaceOzonPnlRange",
     "MarketplaceOzonPnlRow",
-    "MarketplaceOzonPricing",
-    "MarketplaceOzonPricingRow",
     "MarketplaceOzonProduct",
-    "MarketplaceOzonProductFacets",
     "MarketplaceOzonProductPage",
-    "MarketplaceOzonPromotion",
-    "MarketplaceOzonPromotions",
     "MarketplaceOzonStockProduct",
     "MarketplaceOzonStockWarehouse",
     "MarketplaceOzonStocksPage",
     "MarketplaceOzonSyncJob",
     "MarketplaceOzonSyncJobList",
-    "MarketplaceProductGroup",
-    "MarketplaceProductGroupInput",
-    "MarketplaceProductGroupItem",
-    "MarketplaceProductGroupItemPage",
-    "MarketplaceProductGroupItemsAdded",
-    "MarketplaceProductGroupItemsInput",
-    "MarketplaceProductGroupPage",
-    "MarketplaceProductGroupPatch",
-    "MarketplaceProductGroupPlatform",
     "MarketplaceStore",
-    "MarketplaceStoreAccounting",
-    "MarketplaceStoreAccountingCostCoverage",
-    "MarketplaceStoreAccountingInput",
-    "MarketplaceStoreAccountingPolicy",
-    "MarketplaceStoreCompanyInput",
     "MarketplaceStoreInput",
     "MarketplaceStorePage",
-    "MarketplaceStorePatch",
     "MarketplaceWbCardAdDay",
     "MarketplaceWbCardBoard",
     "MarketplaceWbCardFunnelDay",
@@ -1299,20 +820,12 @@ __all__ = [
     "MarketplaceWbCardOptions",
     "MarketplaceWbCost",
     "MarketplaceWbCostRequest",
-    "MarketplaceWbDecompOther",
     "MarketplaceWbDecompOtherItem",
     "MarketplaceWbDecomposition",
     "MarketplaceWbDecompositionArticle",
     "MarketplaceWbDecompositionMonth",
     "MarketplaceWbDecompositionOther",
     "MarketplaceWbDecompositionPeriod",
-    "MarketplaceWbFacets",
-    "MarketplaceWbFunnel",
-    "MarketplaceWbFunnelDaily",
-    "MarketplaceWbFunnelDailyArticle",
-    "MarketplaceWbFunnelDailyCard",
-    "MarketplaceWbFunnelRow",
-    "MarketplaceWbFunnelTotals",
     "MarketplaceWbMetricCell",
     "MarketplaceWbOrdersDay",
     "MarketplaceWbOrdersKpi",
@@ -1322,20 +835,11 @@ __all__ = [
     "MarketplaceWbPnl",
     "MarketplaceWbPnlPeriod",
     "MarketplaceWbPnlRow",
-    "MarketplaceWbPricing",
-    "MarketplaceWbPricingRow",
     "MarketplaceWbProduct",
     "MarketplaceWbProductPage",
-    "MarketplaceWbPromotion",
-    "MarketplaceWbPromotions",
     "MarketplaceWbStockPage",
     "MarketplaceWbStockProduct",
     "MarketplaceWbStockWarehouse",
-    "MarketplaceWeeklyFinanceOutcome",
-    "MarketplaceWeeklyFinancePostingResult",
-    "MarketplaceWeeklyFinanceRun",
-    "MarketplaceWeeklyFinanceRunZeroCostItem",
-    "MarketplaceWeeklyFinanceRuns",
     "MarketplaceYandexCost",
     "MarketplaceYandexCostInput",
     "MarketplaceYandexOrdersDay",
@@ -1359,149 +863,47 @@ __all__ = [
     "MeetingParticipant",
     "MeetingParticipantInput",
     "MeetingStatus",
-    "MeetingUpdate",
-    "Member",
-    "MemberAssignment",
     "Milestone",
     "MilestoneCreate",
     "MilestonePage",
     "MilestoneUpdate",
     "OK",
     "PlatformApp",
-    "PlatformAppConfigDeclaration",
-    "PlatformAppConfigField",
-    "PlatformAppConfigSummary",
-    "PlatformAppConfigText",
-    "PlatformAppConfigValue",
-    "PlatformAppConfigValueInput",
-    "PlatformAppConfigValueResult",
-    "PlatformAppConsentDiff",
-    "PlatformAppConsentRequired",
-    "PlatformAppDataPolicy",
-    "PlatformAppDelivery",
-    "PlatformAppDeliveryHealth",
-    "PlatformAppDeliveryPage",
-    "PlatformAppDeliveryReplayInput",
-    "PlatformAppDeliveryReplayResult",
-    "PlatformAppEgressDiff",
-    "PlatformAppHealthCheck",
-    "PlatformAppInstallResult",
-    "PlatformAppInstallation",
-    "PlatformAppInstallationEvent",
-    "PlatformAppInstallationEventPage",
     "PlatformAppInstallationStatus",
-    "PlatformAppManifestBlock",
-    "PlatformAppManifestPermissions",
     "PlatformAppPublisher",
     "PlatformAppPublisherStatus",
-    "PlatformAppReasonInput",
-    "PlatformAppReplayedDelivery",
-    "PlatformAppRollbackResult",
     "PlatformAppStatus",
-    "PlatformAppSwitchResult",
-    "PlatformAppUninstallNotice",
-    "PlatformAppUnparkResult",
-    "PlatformAppUpdateInput",
-    "PlatformAppUpdateResult",
     "PlatformAppVersion",
     "PlatformAppVersionStatus",
     "Project",
     "ProjectCreate",
-    "ProjectFileFolder",
-    "ProjectFileFolderCreate",
-    "ProjectFileFolderPage",
-    "ProjectFileFolderRename",
-    "ProjectFileUpload",
     "ProjectPage",
-    "ProjectUpdate",
     "PullRequest",
     "PullRequestCreate",
     "PullRequestOwnerType",
     "PullRequestPage",
-    "PullRequestUpdate",
     "Relation",
     "RelationCreate",
     "RelationDirection",
     "RelationKind",
     "RelationList",
-    "ScrumSection",
-    "ScrumSettings",
-    "ScrumSettingsPage",
-    "ScrumSettingsUpdate",
-    "ScrumTeamMember",
     "Section",
-    "SectionCreate",
     "SectionMember",
     "SectionMemberAssignment",
     "SectionMemberPreview",
     "SectionPage",
     "SectionRole",
     "SectionUpdate",
-    "SettingsApiKey",
-    "SettingsApiKeyAccessEntry",
-    "SettingsApiKeyAccessPage",
-    "SettingsApiKeyActivationResult",
-    "SettingsApiKeyCreated",
-    "SettingsApiKeyInput",
-    "SettingsApiKeyPage",
-    "SettingsAppCatalog",
-    "SettingsAppCatalogEntry",
-    "SettingsAppConsentEgress",
-    "SettingsAppConsentField",
-    "SettingsAppConsentFunction",
-    "SettingsAppConsentPermission",
-    "SettingsAppConsentPreview",
-    "SettingsAppConsentResult",
-    "SettingsAppConsentRule",
-    "SettingsAppConsentSection",
-    "SettingsAppConsentSheet",
-    "SettingsAppConsentSlot",
-    "SettingsAppConsentSubscription",
-    "SettingsAppConsentSupport",
-    "SettingsAppDeclaredSlot",
-    "SettingsAppExposureCall",
-    "SettingsAppExposureReport",
-    "SettingsAppIncident",
-    "SettingsAppIncidentList",
-    "SettingsAppInstallInput",
-    "SettingsAppInstallation",
-    "SettingsAppInstallationActivity",
-    "SettingsAppInstallationPage",
-    "SettingsAppInstallationUpdate",
-    "SettingsAppLocalizedText",
-    "SettingsAppPublisherCard",
-    "SettingsAppScopeActivity",
-    "SettingsAppVersion",
     "SettingsCompany",
     "SettingsCompanyAddress",
     "SettingsCompanyHead",
-    "SettingsCompanyInput",
     "SettingsCompanyPage",
     "SettingsCompanyPerson",
-    "SettingsFieldDefinition",
-    "SettingsFieldDefinitionInput",
-    "SettingsFieldDefinitionPage",
-    "SettingsFieldSchema",
     "SettingsMember",
-    "SettingsMemberCreateInput",
     "SettingsMemberPage",
-    "SettingsMemberPatch",
     "SettingsRole",
-    "SettingsRoleActivationInput",
-    "SettingsRoleActivationResult",
-    "SettingsRoleInput",
     "SettingsRolePage",
-    "SettingsRoleTransferInput",
-    "SettingsRoleTransferResult",
-    "SettingsUsage",
     "SettingsVatRates",
-    "SignupAccepted",
-    "SignupAttributionAccepted",
-    "SignupAttributionTouchInput",
-    "SignupRequestInfo",
-    "SignupRequestInput",
-    "SignupSession",
-    "SignupSessionUser",
     "SprintAgingTask",
     "SprintMetrics",
     "SprintOutcomeMetrics",
@@ -1521,7 +923,6 @@ __all__ = [
     "StatusUpdate",
     "StatusUpdateCreate",
     "StatusUpdatePage",
-    "StatusUpdatePatch",
     "StockAccountTransferCreate",
     "StockAccountTransferLine",
     "StockAccountTransferProposal",
@@ -1532,18 +933,12 @@ __all__ = [
     "StockAssemblySpecPage",
     "StockAssemblySpecRef",
     "StockAssemblySpecStatus",
-    "StockAvailability",
-    "StockAvailabilityList",
     "StockBatch",
     "StockBatchPage",
-    "StockBusinessRef",
-    "StockBusinessRefPage",
     "StockClaimWriteoffCreate",
     "StockCompanyPolicy",
     "StockCompanyPolicyPage",
     "StockCompanyPolicyPatch",
-    "StockCompanyRef",
-    "StockCompanyRefPage",
     "StockDocumentCreate",
     "StockDocumentCreateTypeKey",
     "StockDocumentFulfillment",
@@ -1605,19 +1000,13 @@ __all__ = [
     "StockPurchaseOrderLineInput",
     "StockReceiptCorrectionCreate",
     "StockReceiptCorrectionCreateSupplierDocument",
-    "StockReceiptVATTerms",
-    "StockReceiptVATTermsInput",
     "StockReorderRule",
     "StockReorderRuleInput",
     "StockReorderRulePage",
     "StockReorderRulePatch",
-    "StockReportDrilldown",
-    "StockReportDrilldownEntry",
     "StockReportExportRequest",
     "StockReportOverduePage",
     "StockReportOverdueReservation",
-    "StockReportOverdueSupplierOrder",
-    "StockReportOverdueSupplierOrderPage",
     "StockReportPage",
     "StockReportPurchasingPage",
     "StockReportPurchasingRow",
@@ -1628,7 +1017,6 @@ __all__ = [
     "StockReportRow",
     "StockReportTotals",
     "StockReportWarehouseTotal",
-    "StockReservationHold",
     "StockScanResult",
     "StockSettings",
     "StockSettingsPatch",
@@ -1640,8 +1028,6 @@ __all__ = [
     "StockValuationRun",
     "StockValuationStep",
     "StockWarehouse",
-    "StockWarehouseBlocker",
-    "StockWarehouseBlockerCheck",
     "StockWarehouseInput",
     "StockWarehousePage",
     "StockWarehousePatch",
@@ -1653,9 +1039,6 @@ __all__ = [
     "StockZoneStockRow",
     "Subtask",
     "SupplierDocument",
-    "Tag",
-    "TagAttach",
-    "TagPage",
     "Task",
     "TaskCreate",
     "TaskDocument",
@@ -1670,13 +1053,11 @@ __all__ = [
     "TaskTemplate",
     "TaskTemplateCreate",
     "TaskTemplatePage",
-    "TaskTemplateUpdate",
     "TaskUpdate",
     "TaskView",
     "TaskViewCreate",
     "TaskViewPage",
     "TaskWatcher",
-    "TasksSnapshot",
     "TeamFlowTotals",
     "TeamMemberMetrics",
     "TeamMetrics",
@@ -1685,37 +1066,25 @@ __all__ = [
     "TemplateRecurrence",
     "TemplateRunPage",
     "TemplateRunResult",
-    "TenantCredentialRequest",
-    "TenantCredentialRequestPage",
+    "TransferInstructions",
+    "TransferSession",
+    "TransferUploadRequest",
     "UUID",
     "WorkflowStatusUpdate",
     "AppDocflowRecordSalesOrderPaymentRequest",
     "AutomationRulesResponse",
     "AutomationRuleSimulateResponse",
     "AutomationRuleTestResponse",
-    "CoreGetAccountingStartResponse",
     "CoreListBusinessesResponse",
     "CoreSetBusinessActiveRequest",
     "CoreListBusinessOwnershipResponse",
-    "DocflowLookupParticipantRequest",
-    "DocflowLookupParticipantResponse",
     "DocflowFlowContactStatsResponse",
     "DocflowFlowContactStatsResponseItemsItem",
     "DocflowFlowDocumentRevisionsResponse",
     "DocflowFlowDocumentRevisionsResponseItemsItem",
-    "DocflowPreviewMessageActionResponse",
-    "DocflowPreviewMessageActionResponseNextItem",
-    "DocflowLinkIntakeCounterpartyRequest",
-    "DocflowRefreshMessageResponse",
-    "FilesAccessCheckRequest",
-    "FilesAccessCheckResponse",
-    "FilesAccessCheckResponseItemsItem",
-    "FilesContentLinkResponse",
     "FilesListRootsResponse",
     "FilesSearchResponse",
-    "FilesListSharesResponse",
     "FilesCreateShortcutRequest",
-    "FilesPurgeTrashResponse",
     "FinanceListDividendAccessUsersResponse",
     "FinanceListDividendAccessUsersResponseResultsItem",
     "FinanceListDividendAutomationRunsResponse",
@@ -1737,8 +1106,6 @@ __all__ = [
     "MailListMessageAttachmentsResponse",
     "MailFlagMessageRequest",
     "MailMoveMessageRequest",
-    "MailCompleteGoogleOAuthRequest",
-    "MailStartGoogleOAuthResponse",
     "MailListPeopleResponse",
     "MailListProvidersResponse",
     "MailListVIPSendersResponse",
@@ -1973,18 +1340,6 @@ class Attachment(TypedDict):
     uploaded_by: Optional[int]
     uploader: str
     created_at: str
-
-class _AttachmentDownloadSessionRequired(TypedDict):
-    attachment: "Attachment"
-    url: str
-    method: str
-    expires_at: str
-
-class AttachmentDownloadSession(_AttachmentDownloadSessionRequired, total=False):
-    headers: Dict[str, str]
-
-class AttachmentMove(TypedDict):
-    folder_id: Optional[str]
 
 AttachmentOwnerType = Literal['task', 'section', 'project', 'comment', 'meeting', 'document']
 
@@ -2393,501 +1748,6 @@ class _AutomationRuleTestResultActionsItemInputsItemRequired(TypedDict):
 class AutomationRuleTestResultActionsItemInputsItem(_AutomationRuleTestResultActionsItemInputsItemRequired, total=False):
     missing: List[str]
 
-class BillingCabinetInvoice(TypedDict):
-    """Счёт вместе с реквизитами для оплаты. Реквизиты идут в том же ответе, а не отдельным маршрутом: экран оплаты показывает их на одной вкладке со счётом, и второй запрос означал бы мгновение, в котором сумма уже есть, а платить по ней некуда"""
-
-    invoice: "BillingInvoice"
-    requisites: "BillingRequisites"
-
-class BillingCabinetNotice(TypedDict):
-    """Что оболочка кабинета говорит человеку про его подписку. Пустой kind — самый частый ответ: у работающего кабинета баннера нет"""
-
-    #: '' — говорить не о чем. restriction_soon — счёт просрочен, доступ ограничат restrict_at. read_only — кабинет уже оставлен на просмотр и выгрузку данных
-    kind: Literal['', 'restriction_soon', 'read_only']
-    #: Состояние подписки, объясняющее предупреждение; пусто у кабинета без подписки
-    status: str
-    #: С какого дня ограничат доступ; заполнено у restriction_soon
-    restrict_at: Optional[str]
-    #: Дней до ограничения
-    days_left: Optional[int]
-    #: С какого дня кабинет перестал работать; заполнено у read_only
-    since: Optional[str]
-    #: Неоплаченный счёт, если он есть. null законен: у расторгнутой подписки счёта может не быть, и человеку предлагают возобновить её, а не оплатить несуществующий документ
-    invoice: Optional["BillingCabinetNoticeInvoice"]
-
-class BillingCabinetNoticeInvoice(TypedDict):
-    """Счёт, на который ведёт баннер кабинета"""
-
-    id: str
-    number: str
-    amount: "BillingMoney"
-    currency: str
-
-class BillingCabinetSeats(TypedDict):
-    used: int
-    #: null — без ограничения
-    limit: Optional[int]
-
-class BillingCabinetStorage(TypedDict):
-    #: Занятое место по последнему суточному снимку потребления. null — снимка ещё нет; ноль означал бы «клиент ничего не загрузил»
-    used_bytes: Optional[int]
-    limit_bytes: Optional[int]
-
-class _BillingCabinetSubscriptionRequired(TypedDict):
-    #: none означает, что подписки НЕТ вовсе — законное состояние живых кабинетов, работавших до биллинга, а не «не загрузилось». internal — внутренний кабинет Akeda: разрешено всё, счета не выставляются. pilot — внедрение: кабинет клиента, который мы ведём до передачи, права те же. Различать их обязательно: первое означает «мы про кабинет ничего не решали», остальные два — записанные решения оператора, и только второе из них означает наш собственный кабинет
-    state: Literal['trial', 'active', 'past_due', 'suspended', 'cancelled', 'internal', 'pilot', 'none']
-    subscription: Optional["BillingSubscription"]
-    plan: Optional["BillingPlan"]
-    addons: List["BillingPlan"]
-    billing_period: Literal['month', 'year']
-    trial: Optional["BillingTrialState"]
-    #: Идущее внедрение: кабинет ведём мы, счетов нет, открыт весь продукт. null во всех остальных состояниях
-    pilot: Optional["BillingPilotState"]
-    #: До какого числа оплачено; пусто у пробы и у кабинета без подписки
-    paid_until: Optional[str]
-    past_due: Optional["BillingPastDueState"]
-    seats: "BillingCabinetSeats"
-    storage: "BillingCabinetStorage"
-    catalog: "BillingCatalog"
-    payment_method: Optional["BillingPaymentMethod"]
-    entitlements: "BillingEntitlements"
-
-class BillingCabinetSubscription(_BillingCabinetSubscriptionRequired, total=False):
-    """Экран «Настройки → Подписка» глазами клиента: что у него есть, сколько он израсходовал и что он может выбрать"""
-
-    #: Первый неоплаченный период платной подписки. null у пробы, внутреннего кабинета, внедрения, бесплатного состава и у подписки с открытым периодом
-    opening: Optional["BillingOpeningState"]
-
-class _BillingCatalogRequired(TypedDict):
-    plans: List["BillingPlan"]
-    #: Неархивные модули с действующей ценой. Клиентская витрина показывает отдельными карточками только is_public=true, но конструктор использует весь список
-    modules: List["BillingPlan"]
-    trial_days: int
-
-class BillingCatalog(_BillingCatalogRequired, total=False):
-    """Витрина кабинета: публичные и неархивные тарифы плюс все неархивные модули с действующей ценой для конструктора. У модуля is_public управляет только самостоятельной карточкой. Полный список заведённого у оператора — GET /platform/billing/plans"""
-
-    #: Основание тарифа-конструктора «Соберите свой». Модулей в нём нет: клиент набирает их из modules теми же дополнениями. null означает, что конструктора нет или он снят с витрины
-    constructor: Optional["BillingPlan"]
-
-class BillingChangeInput(TypedDict, total=False):
-    """Заявка кабинета на изменение подписки. Непереданное поле означает «оставить как есть»: клиент, подключающий модуль, не обязан заново называть свой тариф, а клиент, меняющий тариф, не должен молча лишиться оплаченного модуля. Пустой addon_keys означает «снять все»"""
-
-    plan_key: str
-    addon_keys: Optional[List[str]]
-    billing_period: Literal['month', 'year']
-    #: ЖЕЛАЕМЫЙ ОБЩИЙ потолок мест, а не «сколько докупить». Экран показывает «участники 17 из 20» и спрашивает новое «из скольких»; заявка «плюс три места», пришедшая дважды из-за повторной отправки формы, купила бы шесть. Непереданное поле означает «оставить как есть»: смена тарифа не отменяет доплаченные места. Сверх пакета тарифа берётся price_per_seat версии ЗА МЕСЯЦ — у доплат нет отдельной годовой цены, и годовой скидки на них тоже нет. Потолок НИЖЕ пакета отвергается: это не доплата, а попытка урезать оплаченное. Подписке без тарифа доплаты недоступны вовсе — «сверх пакета» без пакета не существует
-    seats_limit: Optional[int]
-    #: То же про хранилище: общий потолок в ГБ, доплата по price_per_gb за месяц
-    storage_limit_gb: Optional[int]
-
-class _BillingChangePreviewRequired(TypedDict):
-    now: "BillingSnap"
-    becomes: "BillingSnap"
-    added_modules: List[str]
-    removed_modules: List[str]
-    #: Доплата за остаток текущего периода. Ноль означает, что платить сейчас не нужно вовсе: так выглядит и понижение, и изменение на пробе, у которой оплаченного периода ещё нет. Когда заполнено period_start, это цена ПОЛНОГО первого периода
-    proration_amount: Dict[str, Any]
-    #: Из чего доплата сложилась: тариф с модулями, места сверх пакета, гигабайты сверх пакета. Ровно эти строки печатает счёт, и их сумма равна proration_amount — счёт печатается строками, и сумма счёта это сумма его строк. Строка может быть отрицательной: клиент, перешедший на тариф дороже и одновременно снявший доплаченные места, платит разницу, и снятые места обязаны быть в счёте видны. Пусто, когда доплаты нет
-    proration_lines: List["BillingInvoiceLine"]
-    currency: str
-    #: Сумма следующего списания уже по новым условиям, за расчётный период
-    next_amount: Dict[str, Any]
-    #: У пробы это дата её окончания: с неё клиент начинает платить
-    next_charge_at: Optional[str]
-    #: now — применяется сразу и оплачивается прорацией; period_end — откладывается до конца оплаченного периода. Правило одно: изменение, за которое клиент платит больше, применяется сейчас, всё остальное — с конца периода. Смена ритма оплаты всегда ждёт конца периода
-    effective: Literal['now', 'period_end']
-
-class BillingChangePreview(_BillingChangePreviewRequired, total=False):
-    """Что произойдёт, если клиент нажмёт кнопку. Считается тем же кодом, что и применение: разойдись расчёты — клиент увидел бы одну сумму, а заплатил другую"""
-
-    #: Начало первого оплачиваемого периода. Заполнено у платной подписки без оплаченного периода (назначена оператором, переведена вручную, проба закончилась без тарифа): изменение выставляет счёт за полный период [period_start, next_charge_at), и его оплата открывает этот период. null у пробы и у подписки с открытым периодом
-    period_start: Optional[str]
-
-class _BillingChangeResultRequired(TypedDict):
-    subscription: "BillingCabinetSubscription"
-    invoice: Optional["BillingInvoice"]
-
-class BillingChangeResult(_BillingChangeResultRequired, total=False):
-    """Новое состояние экрана подписки и счёт, если доплачивать было за что"""
-
-    #: Что стало с составом модулей кабинета. Приходит только когда состав реально изменился или часть его до кабинета не доехала; null или отсутствие поля означают «состав уже совпадал с правами» — так выглядит отложенное понижение, при котором сегодня не изменилось ничего
-    modules_sync: Optional["BillingModuleSyncReport"]
-
-class BillingEntitlements(TypedDict):
-    """Что подписка РАЗРЕШАЕТ кабинету. Состав модулей кабинета ВЫВОДИТСЯ отсюда: после каждого изменения подписки он приводится к этим правам, и руками продуктовые модули больше не включают. Клиентские ext-модули и кабинеты без подписки — исключения: первых не бывает ни в тарифе, ни в пробе, вторые работали до биллинга и не ограничиваются. Места и гигабайты по-прежнему только считаются и показываются, кроме потолка хранилища — его сравнивает с занятым рамка загрузки файла"""
-
-    #: Кабинет без подписки ЛИБО кабинет, которому весь продукт открыт решением оператора: внутренний кабинет Akeda (internal) и клиент на внедрении (pilot). Ограничений нет
-    unlimited: bool
-    #: Разрешённые ключи модулей; null при unlimited — пустая карта читалась бы как «ни одного модуля»
-    modules: Optional[Dict[str, bool]]
-    #: null означает «без лимита»
-    seats_limit: Optional[int]
-    storage_limit_bytes: Optional[int]
-    #: Кабинету оставлено только чтение: подписка приостановлена за неплатёж или расторгнута. Модули при этом НЕ отбираются — данные остаются видимыми и выгружаемыми, — а любая изменяющая операция отвечает 402 billing.read_only
-    read_only: bool
-
-class _BillingInvoiceRequired(TypedDict):
-    id: str
-    #: Внутренний номер начисления control plane; юридический номер счёта — document_number
-    number: str
-    tenant: "BillingTenantRef"
-    subscription_id: Optional[str]
-    #: issued — выставлен, срок не вышел; overdue — срок вышел, доступ ещё полный; paid — оплачен; cancelled — отозван. Удаления нет вовсе
-    status: Literal['issued', 'paid', 'overdue', 'cancelled']
-    #: Назначение платежа: его клиент прочитает в банке через месяц
-    purpose: str
-    amount: "BillingMoney"
-    currency: str
-    issued_at: str
-    due_at: str
-    paid_at: Optional[str]
-    cancelled_at: Optional[str]
-    #: Строки счёта как они напечатаны. У счёта на доплату их столько, сколько слагаемых изменилось: тариф с модулями, места сверх пакета, гигабайты сверх пакета. Сумма строк равна amount
-    lines: List["BillingInvoiceLine"]
-    #: Ключ эквайринга, которым заказан платёж («tochka»). Пусто, когда эквайринг не подключён либо ссылку получить не удалось: счёт тогда оплачивают по реквизитам, и это постоянный путь, а не запасной
-    payment_provider: str
-    #: Куда отправить плательщика. Пусто, пока платёжная ссылка не заказана
-    payment_url: str
-    #: Личность платежа у банка. По ней уведомление об оплате находит свой счёт: номер заказа провайдер возвращать не обязан, а искать счёт по сумме значило бы засчитать чужие деньги
-    provider_payment_id: str
-
-class BillingInvoice(_BillingInvoiceRequired, total=False):
-    """Счёт Akeda кабинету. Живёт в control plane, а не в базе клиента: иначе администратор кабинета правил бы собственный счёт, а история платежей не пережила бы пересоздание его базы"""
-
-    #: Устойчивый внешний номер заказа в кабинете продавца
-    order_external_id: str
-    #: Счёт в документообороте продавца
-    document_id: Optional[str]
-    #: Номер родного счёта продавца для назначения платежа
-    document_number: str
-    #: Закрывающий акт по подтверждённой оплате картой или СБП
-    act_document_id: Optional[str]
-
-class BillingInvoiceLine(TypedDict):
-    """Строка счёта как она напечатана: за что и сколько"""
-
-    description: str
-    amount: "BillingMoney"
-
-class BillingInvoicePage(TypedDict):
-    invoices: List["BillingInvoice"]
-
-class BillingInvoiceResult(TypedDict):
-    invoice: "BillingInvoice"
-
-class BillingModuleSyncFailure(TypedDict):
-    """Модуль, который привести к составу подписки не удалось"""
-
-    module: str
-    #: Почему не удалось — человеческим текстом
-    reason: str
-
-class _BillingModuleSyncReportRequired(TypedDict):
-    enabled: List[str]
-    disabled: List[str]
-
-class BillingModuleSyncReport(_BillingModuleSyncReportRequired, total=False):
-    """Что стало с составом модулей кабинета после изменения подписки. Приходит ТОЛЬКО когда состав реально изменился или часть его до кабинета не доехала; отсутствие поля означает «состав уже совпадал с правами». Непустой failed означает, что подписка изменена и, возможно, оплачена, а модуль до кабинета не доехал: включение модуля накатывает его миграции в базу кабинета и может не удаться по причине, к подписке отношения не имеющей. Подписку это не откатывает — отменять оплаченное решение из-за чужой поломки значило бы потерять оплату"""
-
-    failed: List["BillingModuleSyncFailure"]
-
-BillingMoney = str
-
-class _BillingOpeningStateRequired(TypedDict):
-    amount: "BillingMoney"
-    currency: str
-    #: Выставленный и не оплаченный счёт первого периода; null — счёта ещё нет
-    invoice_id: Optional[str]
-
-class BillingOpeningState(_BillingOpeningStateRequired, total=False):
-    """Тариф подключён, а первый оплаченный период не открыт. Экран предлагает оплату: открывает уже выставленный счёт или выставляет его на нынешний состав через POST /settings/subscription/change"""
-
-    invoice_number: str
-
-class BillingPastDueState(TypedDict):
-    """Неоплаченный счёт и дата ограничения доступа. Считается по САМОМУ СТАРОМУ просроченному счёту: его срок наступит первым. Само ограничение в этой фазе не включается — число показывается, решение принимает владелец"""
-
-    invoice_id: str
-    invoice_number: str
-    amount: "BillingMoney"
-    currency: str
-    restrict_at: str
-    days_left: int
-
-class BillingPaymentMethod(TypedDict):
-    """СОХРАНЁННАЯ карта для автоплатежа. Сегодня всегда null: рекуррентное списание подключается отдельной работой. Разовую оплату счёта картой это не трогает — ссылка на неё живёт в самом счёте (payment_url)"""
-
-    kind: str
-    last4: str
-
-class BillingPendingChange(TypedDict):
-    """Заявка клиента, применяемая суточным обходом с конца оплаченного периода"""
-
-    plan_key: str
-    addon_keys: List[str]
-    billing_period: Literal['month', 'year']
-    effective_at: str
-
-class BillingPilotState(TypedDict):
-    """Идущее внедрение глазами клиента"""
-
-    #: Плановая дата передачи кабинета. null — срок ещё не назначен; выдуманная дата хуже отсутствующей, клиент запомнит именно её
-    handover_at: Optional[str]
-
-class BillingPlan(TypedDict):
-    """Тариф как предложение. Цена и состав лежат не здесь, а в версии"""
-
-    id: str
-    #: Ключ-slug: им тариф назначают и по нему ищут
-    key: str
-    #: plan — готовый тариф: пакет модулей, мест и гигабайтов. module — отдельное дополнение, которое подключают к любому тарифу: РОВНО ОДИН модуль и его цена, без мест, гигабайтов и доплат. constructor — тариф-конструктор «Соберите свой»: основание с ценой, пакетом и доплатами и БЕЗ единого модуля внутри, их клиент набирает сам теми же дополнениями. Конструктор на платформе один
-    kind: Literal['plan', 'module', 'constructor']
-    name: str
-    #: «Для кого этот тариф» одной строкой под именем в карточке
-    tagline: str
-    description: str
-    #: Показывать ли тариф в витрине; индивидуальный тариф клиента существует, но в витрине его нет
-    is_public: bool
-    #: Новым не предлагают; действующие подписки на нём остаются
-    is_archived: bool
-    #: Витрина выделяет его обводкой и чипом «Рекомендуем»
-    is_recommended: bool
-    sort_order: int
-    created_at: str
-    updated_at: str
-    #: Действующая версия условий; в карточке подписки — та версия, на которую ссылается подписка
-    current: Optional["BillingPlanVersion"]
-
-class BillingPlanVersion(TypedDict):
-    """Условия тарифа на дату. Строка НЕИЗМЕНЯЕМА: подписка ссылается именно на неё, и правка означала бы переписанный задним числом договор. Срока пробного периода здесь нет: проба даётся кабинету ДО того, как он выбрал тариф, и её срок — правило платформы (BillingTrialSettings)"""
-
-    id: str
-    plan_id: str
-    #: Номер версии, назначает сервер
-    version: int
-    #: Код валюты ISO 4217
-    currency: str
-    #: Цена за месяц при ПОМЕСЯЧНОЙ оплате
-    price_month: Dict[str, Any]
-    #: Цена ЗА МЕСЯЦ при оплате за год — та самая, которую карточка пишет как «12 000 ₽/мес при оплате за год». За расчётный период с кабинета берут её двенадцатикратно. НОЛЬ означает, что годовой оплаты у тарифа нет вовсе, а не «бесплатно за год»
-    price_year: Dict[str, Any]
-    #: Ключи ПРОДУКТОВЫХ модулей платформы, которые разрешает тариф. core и settings сюда не пишут: без справочников и настроек кабинета нет вовсе, они включены всегда. Клиентских ext-модулей здесь тоже не бывает: они написаны под один кабинет и общим предложением не продаются
-    modules: List[str]
-    #: Мест в пакете; НОЛЬ означает «без лимита», а не «ноль мест»
-    seats_included: int
-    #: Гигабайтов в пакете; ноль означает «без лимита»
-    storage_included_gb: int
-    price_per_seat: "BillingMoney"
-    price_per_gb: "BillingMoney"
-    effective_from: str
-    created_at: str
-
-class _BillingPublicCatalogRequired(TypedDict):
-    #: Валюта всех цен витрины. Одна на ответ: две цены в разных валютах рядом человек не сложит
-    currency: str
-    #: Сколько дней бесплатной работы получает новый кабинет. Приходит из правил платформы, а не из вёрстки: правка срока оператором обязана доехать до посетителя тем же днём
-    trial_days: int
-    plans: List["BillingPublicPlan"]
-    #: Отдельные карточки модулей, которые оператор оставил видимыми
-    modules: List["BillingPublicPlan"]
-    #: Все неархивные модули с действующей ценой, которые можно выбрать в конструкторе. Включает модули со скрытой самостоятельной карточкой: глаз управляет одним предложением, а не составом другого
-    constructor_modules: List["BillingPublicPlan"]
-
-class BillingPublicCatalog(_BillingPublicCatalogRequired, total=False):
-    """Публичная витрина: только продаваемые сегодня предложения. Пустые списки приходят как [], а не null — клиент, получивший null, показал бы «не загрузилось» вместо честной пустой страницы"""
-
-    #: Основание тарифа-конструктора «Соберите свой»: базовая цена, пакет мест и гигабайтов и цена следующего места и гигабайта. Состав модулей у него ПУСТ — клиент набирает их из constructor_modules, и стоят они там столько же: цена модуля живёт в одном месте, иначе «Склад» в конструкторе и «Склад» дополнением к готовому тарифу однажды разошлись бы в цене. Отдельным полем, а не строкой в plans: карточка конструктора устроена иначе, и в общем списке витрина нарисовала бы его тарифом с пустым составом, то есть предложением без содержимого. null означает, что конструктора нет или он снят с витрины, — законное состояние, а не сбой
-    constructor: Optional["BillingPublicPlan"]
-
-class BillingPublicPlan(TypedDict):
-    """Тариф или отдельный модуль глазами страницы тарифов"""
-
-    #: Ключ-slug: им предложение выбирают при смене тарифа
-    key: str
-    #: plan — готовый тариф (пакет модулей, мест и гигабайтов), module — отдельное дополнение к любому тарифу, constructor — основание тарифа «Соберите свой» без единого модуля внутри
-    kind: Literal['plan', 'module', 'constructor']
-    name: str
-    #: «Для кого это» одной строкой под именем в карточке
-    tagline: str
-    #: Витрина выделяет предложение обводкой и чипом «Рекомендуем»
-    is_recommended: bool
-    sort_order: int
-    current: "BillingPublicPlanVersion"
-
-class BillingPublicPlanVersion(TypedDict):
-    """Условия публичного предложения на сегодня. Номера версии и дат здесь нет: страницу тарифов читает посторонний, и внутреннее устройство каталога его не касается"""
-
-    #: Цена за месяц при ПОМЕСЯЧНОЙ оплате
-    price_month: Dict[str, Any]
-    #: Цена ЗА МЕСЯЦ при оплате за год — та самая, которую карточка пишет как «12 000 ₽/мес при оплате за год». Ноль означает, что годовой оплаты у предложения нет вовсе, а не «бесплатно за год»
-    price_year: Dict[str, Any]
-    #: Ключи продуктовых модулей, которые даёт предложение; у отдельного модуля их ровно один
-    modules: List[str]
-    #: Мест в пакете; НОЛЬ означает «без лимита», а не «ноль мест»
-    seats_included: int
-    #: Гигабайтов в пакете; ноль означает «без лимита»
-    storage_included_gb: int
-    #: Цена места сверх пакета, ЗА МЕСЯЦ. Годовой скидки у доплат нет: отдельной годовой цены в условиях не существует
-    price_per_seat: Dict[str, Any]
-    #: Цена гигабайта сверх пакета, за месяц
-    price_per_gb: Dict[str, Any]
-
-class _BillingReferralCabinetRowRequired(TypedDict):
-    tenant_name: str
-    joined_at: str
-    status: str
-
-class BillingReferralCabinetRow(_BillingReferralCabinetRowRequired, total=False):
-    paid_at: Optional[str]
-    reward_type: str
-    reward: str
-    reward_code: str
-    earned_at: Optional[str]
-    applied_at: Optional[str]
-
-class _BillingReferralCabinetSummaryRequired(TypedDict):
-    code: str
-    status: str
-    clicks: int
-    registrations: int
-    paid_clients: int
-    pending_rewards: int
-    currency: str
-    referrals: List["BillingReferralCabinetRow"]
-
-class BillingReferralCabinetSummary(_BillingReferralCabinetSummaryRequired, total=False):
-    offer: Optional["BillingReferralOffer"]
-
-class BillingReferralOffer(TypedDict):
-    program_id: str
-    name: str
-    reward_type: Literal['coupon', 'free_days']
-    reward_calculation: Literal['fixed', 'percent_of_first_payment', 'match_first_payment']
-    reward_amount: "BillingMoney"
-    reward_percent: "BillingMoney"
-    reward_cap: "BillingMoney"
-    reward_days: int
-    minimum_payment: "BillingMoney"
-    hold_days: int
-    currency: str
-
-class BillingRequisites(TypedDict):
-    """Реквизиты получателя для счёта «по реквизитам». Пустые значения законны, пока владелец их не задал: вкладку «По реквизитам» кабинету тогда просто не показывают"""
-
-    recipient: str
-    inn: str
-    kpp: str
-    account: str
-    bank: str
-    bik: str
-
-class BillingSnap(TypedDict):
-    """Срез состояния подписки для экрана «Сейчас | Станет»"""
-
-    plan_key: str
-    plan_name: str
-    #: Ключи подключённых дополнений
-    addons: List[str]
-    #: ОБЩИЙ потолок мест: пакет тарифа либо доплаченный сверх него. null — без ограничения
-    seats_limit: Optional[int]
-    #: Общий потолок хранилища в ГБ; null — без ограничения
-    storage_limit_gb: Optional[int]
-    #: Сумма за ОДИН расчётный период: при помесячной оплате это месячная цена, при годовой — она же, умноженная на двенадцать. Цена «за месяц при оплате за год» живёт в версии тарифа (price_year), а здесь именно то, что спишут одним платежом
-    amount_per_period: Dict[str, Any]
-    billing_period: Literal['month', 'year']
-
-class BillingSubscription(TypedDict):
-    """Подписка кабинета; строка на кабинет ровно одна"""
-
-    id: str
-    tenant_id: str
-    #: Версия тарифа, на условиях которой живёт кабинет. null у ПРОБНОЙ подписки: тариф выбирают, посмотрев продукт, а не до того
-    plan_version_id: Optional[str]
-    #: internal — ВНУТРЕННИЙ кабинет Akeda: разрешено всё, счета не выставляются, просрочки не бывает, в MRR и в воронку он не входит. Отдельное состояние, а не отсутствие подписки: кабинет без строки тоже ни в чём не ограничен, но это ответ «мы про него ничего не решали», а internal — записанное решение оператора с причиной и автором в журнале. pilot — ВНЕДРЕНИЕ: кабинет КЛИЕНТА, который мы ведём до передачи. Права те же, что у internal, а смысл другой, и путать их нельзя: внедрение кончается платящим клиентом, а собственный кабинет вендора — нет. В MRR не входит, но считается отдельным счётчиком pilot_count
-    status: Literal['trial', 'active', 'past_due', 'suspended', 'cancelled', 'internal', 'pilot']
-    #: Ритм оплаты, выбранный кабинетом. Лежит в подписке, а не в версии тарифа: тариф предлагает обе цены, а выбирает между ними клиент
-    billing_period: Literal['month', 'year']
-    #: Дата окончания пробного периода
-    trial_ends_at: Optional[str]
-    #: Границы оплаченного периода. В фазе 1 поле хранится, но не заполняется: его поставит биллинговый цикл
-    current_period_start: Optional[str]
-    current_period_end: Optional[str]
-    #: Договорённость поверх пакета тарифа; null означает «как в тарифе», а не ноль
-    seats_override: Optional[int]
-    storage_override_gb: Optional[int]
-    #: Момент расторжения; снимается при возобновлении
-    cancel_at: Optional[str]
-    #: Плановая дата передачи кабинета клиенту. Заполнена только во время внедрения (status = pilot) и НЕОБЯЗАТЕЛЬНА даже там: внедрение начинают и без назначенного срока, а выдуманная дата хуже отсутствующей. Снимается при выходе из внедрения — дата передачи, пережившая передачу, напоминала бы о том, что уже случилось
-    pilot_handover_at: Optional[str]
-    #: День, когда кабинет ПЕРЕСТАЛ РАБОТАТЬ: был приостановлен за неплатёж или расторгнут. С него идёт срок хранения данных. null у работающего кабинета; возврат в работу дату снимает
-    access_lost_at: Optional[str]
-    #: Когда данные кабинета были удалены безвозвратно. Заполнено у подписки, пережившей свой кабинет: сам договор и счета по нему мы храним дальше — это бухгалтерский учёт Akeda, а не данные клиента
-    tenant_purged_at: Optional[str]
-    #: Понижение, отложенное до конца оплаченного периода. null — ничего не отложено. Заявка у подписки ровно одна: следующее решение клиента заменяет предыдущее целиком
-    pending_change: Optional["BillingPendingChange"]
-    #: Подключённые сейчас дополнения; снятые сюда не попадают — их история в журнале
-    addons: List["BillingSubscriptionAddonsItem"]
-    created_at: str
-    updated_at: str
-
-class BillingSubscriptionAddonsItem(TypedDict):
-    plan_key: str
-    plan_version_id: str
-    added_at: str
-
-class BillingTenantRef(TypedDict):
-    """Кабинет — единица подписки; кабинет не является юрлицом"""
-
-    id: str
-    slug: str
-    name: str
-    is_active: bool
-
-class BillingTrialState(TypedDict):
-    """Сколько бесплатных дней осталось из выданных"""
-
-    ends_at: str
-    days_left: int
-    days_total: int
-
-class BillingUsageCollectError(TypedDict):
-    """Источник, который посчитать не удалось. Живёт В СНИМКЕ, а не только в логе: снимок с семью цифрами из восьми внешне неотличим от полного, и разницу обязан называть он сам."""
-
-    #: Ключ раздела; database — размер базы кабинета, members — счёт участников
-    module: str
-    #: Технический текст отказа для оператора платформы
-    message: str
-
-class BillingUsageModuleBytes(TypedDict):
-    """Строка разбивки для интерфейса. Подпись ставит сервер по реестру разделов платформы"""
-
-    key: str
-    label: str
-    bytes: int
-
-class BillingUsageSnapshot(TypedDict):
-    """Одно измерение потребления кабинета. storage_bytes_total — сумма bytes_by_module; db_size_bytes в неё НЕ входит, это другой ресурс (место в PostgreSQL против места в объектном хранилище), и сложение их в одно число врало бы про оба."""
-
-    id: str
-    tenant_id: str
-    #: Момент, о котором снимок говорит
-    taken_at: str
-    #: Активные членства кабинета
-    active_members: int
-    #: Сумма разбивки по разделам
-    storage_bytes_total: int
-    #: Карта «ключ раздела → байты». Раздел, выключенный у кабинета, в карту не попадает вовсе
-    bytes_by_module: Dict[str, int]
-    #: pg_database_size базы кабинета
-    db_size_bytes: int
-    #: scheduled — суточный обход, manual — ручной пересчёт оператором
-    source: Literal['scheduled', 'manual']
-    #: Сколько занял сбор
-    duration_ms: int
-    #: Источники, которые посчитать не удалось. Пустой массив означает полный сбор
-    errors: List["BillingUsageCollectError"]
-
 class _CRMActivityRequired(TypedDict):
     id: "UUID"
     entity_type: Literal['lead', 'deal']
@@ -3025,14 +1885,6 @@ class CRMCreateEventLinkInput(_CRMCreateEventLinkInputRequired, total=False):
     #: IANA-зона события
     timezone: str
 
-class _CRMCreateHubMeetingInputRequired(TypedDict):
-    project_id: str
-    calendar_event_id: "UUID"
-
-class CRMCreateHubMeetingInput(_CRMCreateHubMeetingInputRequired, total=False):
-    title: str
-    starts_at: str
-
 class _CRMCreateTaskLinkInputRequired(TypedDict):
     section_id: "UUID"
     title: str
@@ -3124,10 +1976,6 @@ class CRMCustomerInput(_CRMCustomerInputRequired, total=False):
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
 
-class CRMCustomerLinkInput(TypedDict, total=False):
-    #: Должность человека в компании
-    position: str
-
 class CRMCustomerPatch(TypedDict, total=False):
     kind: Literal['person', 'company']
     name: str
@@ -3146,12 +1994,6 @@ class CRMCustomerPatch(TypedDict, total=False):
     archived: bool
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
-
-class CRMCustomerRelations(TypedDict):
-    #: Компании, в которых работает человек
-    companies: List["CRMRelatedCustomer"]
-    #: Контакты компании
-    contacts: List["CRMRelatedCustomer"]
 
 class _CRMDealRequired(TypedDict):
     id: "UUID"
@@ -3237,12 +2079,6 @@ class CRMDealContact(TypedDict):
     is_primary: bool
     created_at: str
 
-class _CRMDealContactInputRequired(TypedDict):
-    contact_id: "UUID"
-
-class CRMDealContactInput(_CRMDealContactInputRequired, total=False):
-    is_primary: bool
-
 class _CRMDealInputRequired(TypedDict):
     pipeline_id: "UUID"
     stage_id: "UUID"
@@ -3280,17 +2116,6 @@ class _CRMDealItemRequired(TypedDict):
 class CRMDealItem(_CRMDealItemRequired, total=False):
     #: Ссылка на номенклатуру необязательна - на этапе расчёта половина строк ещё не заведена в каталоге
     product_id: "UUID"
-
-class _CRMDealItemInputRequired(TypedDict):
-    name: str
-    quantity: float
-
-class CRMDealItemInput(_CRMDealItemInputRequired, total=False):
-    product_id: Optional[str]
-    unit: str
-    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
-    price: str
-    discount_percent: float
 
 class CRMDealPatch(TypedDict, total=False):
     title: str
@@ -3363,237 +2188,6 @@ class CRMExternalLink(TypedDict):
     external_id: "UUID"
     created_at: str
 
-class CRMImportApplyInput(TypedDict):
-    token: str
-
-class CRMImportCandidate(TypedDict):
-    id: "UUID"
-    kind: str
-    name: str
-    phone: str
-    email: str
-    inn: str
-    matched_by: List[Literal['inn', 'email', 'phone', 'name']]
-
-class _CRMImportConnectInputRequired(TypedDict):
-    #: amoCRM: долгосрочный токен администратора. Битрикс24: адрес входящего вебхука https://портал.bitrix24.ru/rest/<номер>/<ключ>/
-    token: str
-
-class CRMImportConnectInput(_CRMImportConnectInputRequired, total=False):
-    #: amoCRM: поддомен или адрес аккаунта (name, name.amocrm.ru, name.kommo.com). Битрикс24: не нужен, портал берётся из адреса вебхука
-    account: str
-    #: amoCRM: перенести неразобранное лидами
-    include_unsorted: bool
-    #: Дозагрузка: только записи, изменённые после этого момента
-    updated_since: str
-
-class CRMImportDecision(TypedDict, total=False):
-    action: Literal['', 'create', 'link', 'skip']
-    entity_id: "UUID"
-    origin: str
-    candidates: List["CRMImportCandidate"]
-
-class CRMImportDecisionInput(TypedDict, total=False):
-    action: Literal['', 'create', 'link', 'skip']
-    entity_id: "UUID"
-
-class CRMImportExtractInput(TypedDict):
-    sheets: List["CRMImportSheetMapping"]
-
-class CRMImportExtractResult(TypedDict):
-    run: "CRMImportRun"
-    added: int
-    records: int
-    issues: List["CRMImportRowIssue"]
-
-class CRMImportField(TypedDict):
-    key: str
-    required: bool
-
-class CRMImportFields(TypedDict):
-    #: Вид листа -> поля: companies, contacts, leads, deals, tasks, notes
-    entities: Dict[str, List["CRMImportField"]]
-
-class CRMImportFileInfo(TypedDict):
-    filename: str
-    format: str
-    sheets: List["CRMImportSheetInfo"]
-    #: Сколько ячеек с формулами прочитано по сохранённому значению
-    warnings: int
-
-class _CRMImportInspectInputRequired(TypedDict):
-    sheet: str
-
-class CRMImportInspectInput(_CRMImportInspectInputRequired, total=False):
-    header_row: int
-    entity: Literal['companies', 'contacts', 'leads', 'deals', 'tasks', 'notes']
-
-class CRMImportMapping(TypedDict, total=False):
-    owners: Dict[str, int]
-    pipelines: Dict[str, "UUID"]
-    stages: Dict[str, "UUID"]
-    loss_reasons: Dict[str, "UUID"]
-    sources: Dict[str, str]
-    default_pipeline: "UUID"
-    default_stage: "UUID"
-    default_loss_reason: "UUID"
-    default_currency: str
-
-class CRMImportMappingInput(TypedDict):
-    revision: int
-    mapping: "CRMImportMapping"
-
-class CRMImportOptions(TypedDict):
-    #: owners, stages, sources, currencies, loss_reasons
-    values: Dict[str, List["CRMImportValue"]]
-    members: List["CRMUserRef"]
-    pipelines: List["CRMPipeline"]
-    lead_sources: List["CRMLeadSource"]
-    loss_reasons: List["CRMLossReason"]
-    #: Воронки источника-коннектора; у файла пусто
-    source_pipelines: List["CRMImportSourcePipeline"]
-    suggested: "CRMImportMapping"
-
-class CRMImportPreview(TypedDict):
-    token: str
-    revision: int
-    total: int
-    create: int
-    link: int
-    existing: int
-    skip: int
-    conflicts: int
-    by_kind: Dict[str, int]
-
-class _CRMImportRecordRequired(TypedDict):
-    id: "UUID"
-    run_id: "UUID"
-    seq: int
-    kind: Literal['customer', 'lead', 'deal', 'customer_company', 'engagement', 'note']
-    external_id: str
-    is_deleted: bool
-    merged_into: str
-    payload: Dict[str, Any]
-    status: Literal['pending', 'skipped', 'conflict', 'applied', 'failed']
-    decision: "CRMImportDecision"
-    error: str
-    entity_type: str
-    created_entity: bool
-
-class CRMImportRecord(_CRMImportRecordRequired, total=False):
-    source_created_at: str
-    source_updated_at: str
-    entity_id: "UUID"
-    applied_at: str
-
-class CRMImportRevisionInput(TypedDict):
-    revision: int
-
-class CRMImportRollback(TypedDict):
-    deleted: int
-    archived: int
-    touched: List["UUID"]
-    kept: List["CRMImportRollbackKept"]
-
-class CRMImportRollbackKept(TypedDict):
-    entity_id: "UUID"
-    kind: str
-    archived: bool
-    reason: str
-
-class CRMImportRowIssue(TypedDict):
-    sheet: str
-    row: int
-    message: str
-
-class _CRMImportRunRequired(TypedDict):
-    id: "UUID"
-    source_kind: Literal['file', 'api']
-    source_system: str
-    source_account: str
-    status: Literal['draft', 'extracting', 'extracted', 'mapped', 'previewed', 'applying', 'applied', 'failed', 'cancelled']
-    scope: Dict[str, Any]
-    mapping: Dict[str, Any]
-    revision: int
-    batch_size: int
-    total_records: int
-    applied_records: int
-    skipped_records: int
-    conflict_records: int
-    failed_records: int
-    #: Токен источника сохранён; сам токен API не отдаёт
-    has_credentials: bool
-    error: str
-    created_by: int
-    created_at: str
-    updated_at: str
-
-class CRMImportRun(_CRMImportRunRequired, total=False):
-    preview_token: str
-    cancel_requested_at: str
-    started_at: str
-    finished_at: str
-    rolled_back_at: str
-
-class _CRMImportRunInputRequired(TypedDict):
-    source_kind: Literal['file', 'api']
-    #: Система-источник: excel, amocrm, bitrix24
-    source_system: str
-
-class CRMImportRunInput(_CRMImportRunInputRequired, total=False):
-    #: Аккаунт в системе: поддомен amoCRM, портал Битрикс24
-    source_account: str
-    scope: Dict[str, Any]
-    batch_size: int
-
-class _CRMImportSheetInfoRequired(TypedDict):
-    name: str
-    rows: int
-    header_row: int
-    headers: List[str]
-    sample: List[List[str]]
-
-class CRMImportSheetInfo(_CRMImportSheetInfoRequired, total=False):
-    #: Заголовок -> предложенное поле
-    suggested: Dict[str, str]
-
-class CRMImportSheetMapping(TypedDict):
-    sheet: str
-    header_row: int
-    entity: Literal['companies', 'contacts', 'leads', 'deals', 'tasks', 'notes']
-    #: Заголовок колонки -> поле
-    columns: Dict[str, str]
-
-class CRMImportSourcePipeline(TypedDict):
-    id: str
-    name: str
-    sort: int
-    main: bool
-    archived: bool
-    stages: List["CRMImportSourceStage"]
-
-class _CRMImportSourceStageRequired(TypedDict):
-    #: Внешний ID этапа, который несут сделки пакета
-    ref: str
-    name: str
-    sort: int
-    category: Literal['open', 'won', 'lost']
-    color: str
-
-class CRMImportSourceStage(_CRMImportSourceStageRequired, total=False):
-    #: Служебное «неразобранное»: в воронку кабинета не попадает
-    unsorted: bool
-
-class _CRMImportValueRequired(TypedDict):
-    value: str
-    count: int
-
-class CRMImportValue(_CRMImportValueRequired, total=False):
-    #: Название значения в источнике-коннекторе (сотрудник, этап, причина)
-    label: str
-    #: Почта сотрудника источника
-    email: str
-
 class CRMInboxAssignInput(TypedDict, total=False):
     #: null снимает назначение
     assigned_to: Optional[int]
@@ -3622,31 +2216,6 @@ class _CRMInboxConnectionRequired(TypedDict):
 class CRMInboxConnection(_CRMInboxConnectionRequired, total=False):
     checked_at: str
     last_error_code: str
-
-class _CRMInboxConnectionCheckRequired(TypedDict):
-    ok: bool
-    status: Literal['active', 'disabled', 'error']
-
-class CRMInboxConnectionCheck(_CRMInboxConnectionCheckRequired, total=False):
-    error_code: str
-
-class _CRMInboxConnectionInputRequired(TypedDict):
-    name: str
-    provider: Literal['telegram', 'vk', 'max', 'avito', 'email', 'telephony']
-
-class CRMInboxConnectionInput(_CRMInboxConnectionInputRequired, total=False):
-    #: Поля из каталога провайдера; хранятся зашифрованными
-    credentials: Optional[Dict[str, str]]
-    settings: Optional[Dict[str, Any]]
-    #: Историческое поле Telegram; равнозначно credentials.bot_token
-    bot_token: str
-    webhook_secret: str
-
-class CRMInboxConnectionPatch(TypedDict, total=False):
-    name: str
-    #: Пустое значение сохраняет уже записанный секрет
-    credentials: Optional[Dict[str, str]]
-    settings: Optional[Dict[str, Any]]
 
 class _CRMInboxConversationRequired(TypedDict):
     id: "UUID"
@@ -3733,14 +2302,6 @@ class CRMInboxMessage(_CRMInboxMessageRequired, total=False):
     sent_by: int
     #: Сколько файлов у сообщения; список — GET /api/v1/crm/inbox/messages/{id}/attachments
     attachment_count: int
-
-class CRMInboxOutboundUpload(TypedDict):
-    id: "UUID"
-    conversation_id: "UUID"
-    filename: str
-    content_type: str
-    size_bytes: int
-    expires_at: str
 
 class _CRMInboxProviderRequired(TypedDict):
     key: Literal['telegram', 'vk', 'max', 'avito', 'email', 'telephony']
@@ -3942,33 +2503,6 @@ class CRMLeadPatch(TypedDict, total=False):
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
 
-class CRMLeadSource(TypedDict):
-    id: "UUID"
-    #: Код записи справочника. То, что ложится в lead.source; за штатным кодом стоит код продукта
-    key: str
-    #: Имя - право кабинета; сеятель его не возвращает
-    name: str
-    #: Канал для цвета и значка; неизвестный приводится к other
-    channel: str
-    sort_order: int
-    #: Ненужную строку выключают, а не удаляют: на её код ссылаются заведённые лиды
-    is_active: bool
-    created_at: str
-    updated_at: str
-
-class _CRMLeadSourceInputRequired(TypedDict):
-    name: str
-
-class CRMLeadSourceInput(_CRMLeadSourceInputRequired, total=False):
-    channel: str
-    sort_order: int
-
-class CRMLeadSourcePatch(TypedDict, total=False):
-    name: str
-    channel: str
-    sort_order: int
-    is_active: bool
-
 CRMLeadStatus = Literal['new', 'qualified', 'disqualified', 'converted']
 
 class CRMLossReason(TypedDict):
@@ -4075,17 +2609,6 @@ class _CRMQualifyLeadInputRequired(TypedDict):
 class CRMQualifyLeadInput(_CRMQualifyLeadInputRequired, total=False):
     #: Причина из справочника вида lead - по ней строится аналитика отказов
     reason_id: Optional[str]
-
-class CRMRelatedCustomer(TypedDict):
-    id: "UUID"
-    kind: Literal['person', 'company']
-    name: str
-    legal_name: str
-    inn: str
-    phone: str
-    email: str
-    #: Должность человека в компании
-    position: str
 
 class CRMReopenDealInput(TypedDict):
     stage_id: "UUID"
@@ -4594,18 +3117,6 @@ class CalendarMemberDirectory(TypedDict):
     departments: List["CalendarMemberBundle"]
     items: List["CalendarMember"]
 
-class CalendarOAuthCompleteInput(TypedDict):
-    code: str
-    state: str
-
-class _CalendarOAuthStartRequired(TypedDict):
-    provider: Literal['google', 'office365']
-    auth_url: str
-    configured: bool
-
-class CalendarOAuthStart(_CalendarOAuthStartRequired, total=False):
-    redirect_uri: str
-
 class CalendarParticipant(TypedDict):
     id: "UUID"
     user: Optional[int]
@@ -4621,32 +3132,6 @@ class CalendarParticipantInput(TypedDict, total=False):
     external_email: str
     role: Literal['required', 'optional', 'organizer']
     response_status: Literal['needs_action', 'accepted', 'declined', 'tentative']
-
-class _CalendarPublicBookInputRequired(TypedDict):
-    #: ISO instant либо local datetime в timezone ссылки
-    starts_at: str
-
-class CalendarPublicBookInput(_CalendarPublicBookInputRequired, total=False):
-    guest_name: str
-    guest_email: str
-    guest_note: str
-
-class CalendarPublicBookResult(TypedDict):
-    ok: bool
-    starts_at: str
-    ends_at: str
-    title: str
-
-class CalendarPublicBookingLink(TypedDict):
-    slug: str
-    title: str
-    description: str
-    duration_min: int
-    timezone: str
-    owner_name: str
-    participants: List["CalendarBookingParticipant"]
-    participant_count: int
-    company: str
 
 class _CalendarSettingsEnvelopeRequired(TypedDict):
     settings: Dict[str, Any]
@@ -4669,35 +3154,6 @@ class CalendarSyncResult(TypedDict):
     skipped: int
     message: str
 
-class CalendarWebPushConfig(TypedDict):
-    public_key: str
-    configured: bool
-
-class _CalendarWebPushSubscriptionRequired(TypedDict):
-    endpoint: str
-    p256dh: str
-    auth: str
-
-class CalendarWebPushSubscription(_CalendarWebPushSubscriptionRequired, total=False):
-    device: Literal['desktop', 'mobile']
-
-class CalendarWebPushTestResult(TypedDict):
-    #: Служба доставки браузера приняла пробное уведомление
-    delivered: bool
-    #: Endpoint протух и снят с учёта; браузеру нужно переподписаться
-    revoked: bool
-    #: Временный отказ службы доставки; повтор осмыслен
-    retryable: bool
-    #: Машинный код исхода: http_429, network_error, device_disabled и подобные
-    code: str
-
-class CalendarWebPushUnsubscribe(TypedDict):
-    endpoint: str
-
-class ChatAddMember(TypedDict):
-    #: Человек кабинета, которого добавляют в группу
-    user_id: int
-
 class ChatAttachment(TypedDict):
     id: "UUID"
     original_name: str
@@ -4707,27 +3163,6 @@ class ChatAttachment(TypedDict):
     media_kind: Literal['voice', 'video_circle']
     duration_ms: int
     content_url: str
-
-class _ChatAttachmentPageRequired(TypedDict):
-    items: List["ChatForwardedAttachment"]
-    #: Следующая страница доказана прочитанной строкой за границей текущей, а не тем, что страница оказалась полной.
-    has_more: bool
-
-class ChatAttachmentPage(_ChatAttachmentPageRequired, total=False):
-    #: Курсор следующей страницы; присутствует только вместе с has_more=true.
-    next_cursor: str
-
-class ChatAttachmentUpload(TypedDict):
-    """Один файл на запрос. Ссылка на уже загруженный объект не принимается."""
-
-    #: Непустой файл до 100 MiB. Содержимое, распознанное как голос, дополнительно ограничено 20 MiB.
-    file: str
-
-class _ChatChangePinResultRequired(TypedDict):
-    changed: bool
-
-class ChatChangePinResult(_ChatChangePinResultRequired, total=False):
-    pin: "ChatMessagePin"
 
 class _ChatConversationRequired(TypedDict):
     id: "UUID"
@@ -4758,12 +3193,6 @@ class ChatConversation(_ChatConversationRequired, total=False):
     peer_user_id: Optional[int]
     peer_avatar_url: str
 
-class ChatConversationAvatarUpload(TypedDict):
-    """Одно изображение на запрос. Ссылка на уже загруженный объект не принимается."""
-
-    #: Непустое изображение до 5 MiB. Распознаются jpeg, png, webp и gif; прочие форматы отвергаются.
-    file: str
-
 class ChatConversationCapabilities(TypedDict):
     canRead: bool
     canWrite: bool
@@ -4793,10 +3222,6 @@ class ChatCreateGroupResult(TypedDict):
     conversation: "ChatConversation"
     created: Literal[True]
 
-class ChatEditMessage(TypedDict):
-    #: Лимит считается по кодовым точкам Unicode после нормализации переводов строк и обрезки пробелов по краям.
-    body: str
-
 class ChatEnsureDirect(TypedDict):
     peer_user_id: int
 
@@ -4809,91 +3234,6 @@ class ChatEntityConversation(TypedDict):
     title: str
     deep_link: str
 
-class ChatFolder(TypedDict):
-    id: "UUID"
-    name: str
-    position: int
-    #: Верхний уровень списка; папка не может одновременно принадлежать обычным чатам и чатам задач.
-    space: Literal['chats', 'tasks']
-    #: Разделы всегда возвращаются в порядке direct, group, task независимо от порядка в запросе.
-    scopes: List[Literal['direct', 'group', 'task']]
-    include_conversation_ids: List["UUID"]
-    exclude_conversation_ids: List["UUID"]
-    created_at: str
-    updated_at: str
-
-class ChatFolderPage(TypedDict):
-    items: List["ChatFolder"]
-
-class ChatForwardMessage(TypedDict):
-    target_conversation_id: "UUID"
-    client_message_id: "UUID"
-
-class ChatForwardMessageResult(TypedDict):
-    message: "ChatForwardedMessage"
-    created: bool
-
-class _ChatForwardedAttachmentRequired(TypedDict):
-    id: "UUID"
-    conversation_id: "UUID"
-    message_id: Optional[str]
-    original_name: str
-    content_type: str
-    size_bytes: int
-    sha256_hex: str
-    media_kind: Literal['voice', 'video_circle', 'image', 'video', 'file']
-    duration_ms: Optional[int]
-    waveform: List[int]
-    status: Literal['quarantined', 'ready', 'failed', 'deleted']
-    scan_status: Literal['pending', 'clean', 'infected', 'unavailable']
-    created_at: str
-    content_url: str
-
-class ChatForwardedAttachment(_ChatForwardedAttachmentRequired, total=False):
-    scan_error_code: str
-
-class ChatForwardedMessage(TypedDict):
-    id: "UUID"
-    conversation_id: "UUID"
-    seq: int
-    sender_user_id: Optional[int]
-    kind: Literal['text', 'system', 'application', 'file']
-    body: str
-    reply_to_message_id: Optional[str]
-    forwarded_from_message_id: Optional[str]
-    mentions: List["ChatMessageMention"]
-    reactions: List["ChatMessageReaction"]
-    client_message_id: Optional[str]
-    created_at: str
-    edited_at: Optional[str]
-    deleted_at: Optional[str]
-    attachments: List["ChatForwardedAttachment"]
-
-class ChatLinkPreview(TypedDict):
-    #: Итоговый адрес после переходов
-    url: str
-    title: str
-    description: str
-    site_name: str
-
-class ChatMarkAllRead(TypedDict):
-    #: Раздел списка бесед: user — переписка людей без чатов задач.
-    scope: Literal['all', 'direct', 'group', 'task', 'user']
-
-class ChatMarkAllReadResult(TypedDict):
-    scope: Literal['all', 'direct', 'group', 'task', 'user']
-    conversations_read: int
-    mentions_read: int
-    notifications_read: int
-
-class ChatMediaUpload(TypedDict):
-    client_message_id: "UUID"
-    media_kind: Literal['voice', 'video_circle']
-    #: Для video_circle дополнительно действует runtime-лимит 60000 ms.
-    duration_ms: int
-    #: audio/mp4, audio/webm или audio/ogg до 12 MiB либо video/mp4/video/quicktime до 40 MiB
-    file: str
-
 class ChatMember(TypedDict):
     user_id: int
     display_name: str
@@ -4901,11 +3241,6 @@ class ChatMember(TypedDict):
     role: Literal['owner', 'moderator', 'member', 'readonly']
     #: Человека больше нет в справочнике кабинета: членство или учётная запись выключены. Он остаётся в составе беседы, потому что его сообщения в ней остались и подпись под ними обязана кем-то называться. Пустое display_name означает, что о нём не осталось даже имени — подписывать такую строку клиент решает сам.
     is_former: bool
-
-class ChatMemberChangeResult(TypedDict):
-    conversation_id: "UUID"
-    user_id: int
-    updated_at: str
 
 class ChatMemberPage(TypedDict):
     items: List["ChatMember"]
@@ -4944,60 +3279,6 @@ class ChatMessagePage(_ChatMessagePageRequired, total=False):
     first_seq: int
     last_seq: int
 
-class ChatMessagePin(TypedDict):
-    message: "ChatForwardedMessage"
-    pinned_by: int
-    pinned_at: str
-
-class ChatMessagePinPage(TypedDict):
-    items: List["ChatMessagePin"]
-
-class ChatMessageReaction(TypedDict):
-    emoji: str
-    count: int
-    is_own: bool
-
-class ChatMessageReader(TypedDict):
-    user_id: int
-    display_name: str
-    avatar_url: str
-    #: Когда человек увидел это сообщение
-    read_at: str
-    #: Человека больше нет в справочнике кабинета. Он остаётся в списке прочитавших: сообщение он видел, и запись об этом — часть переписки.
-    is_former: bool
-
-class ChatMessageReaderPage(TypedDict):
-    items: List["ChatMessageReader"]
-
-class _ChatMobileDeviceRegistrationRequired(TypedDict):
-    device_id: str
-    push_token: str
-    bundle_id: str
-    environment: Literal['sandbox', 'production']
-
-class ChatMobileDeviceRegistration(_ChatMobileDeviceRegistrationRequired, total=False):
-    #: Платформа APNs-клиента. Если поле не передано, используется ios для обратной совместимости.
-    platform: Literal['ios', 'macos']
-    locale: str
-    timezone: str
-    device_name: str
-    app_version: str
-    system_version: str
-    #: Показывать содержание сообщения в уведомлении. Выключено — уведомление не несёт ни текста, ни отправителя: ни имени, ни фотографии, ни названия группы, поэтому баннер с человеком на iPhone не рисуется. Счётчик непрочитанных и переход в чат остаются. Поле отсутствует — уведомление полное.
-    preview: bool
-    #: Звук уведомления. Поле отсутствует — со звуком.
-    sound: bool
-    #: Совместимый псевдоним preview. Если любое из двух полей false, содержание скрыто.
-    push_preview: bool
-    #: Совместимый псевдоним sound. Если любое из двух полей false, звук выключен.
-    push_sound: bool
-
-class ChatMobileDeviceRegistrationState(TypedDict):
-    enabled: bool
-
-class ChatMobilePushTestResult(TypedDict):
-    delivered: int
-
 class ChatNotificationModeInput(TypedDict):
     mode: Literal['all', 'mentions', 'muted']
 
@@ -5019,21 +3300,12 @@ class ChatPerson(TypedDict):
     avatar_url: str
     is_self: bool
 
-class ChatPresenceInput(TypedDict, total=False):
-    typing: bool
-
 class ChatPresencePage(TypedDict):
     items: List["ChatPresencePageItemsItem"]
 
 class ChatPresencePageItemsItem(TypedDict):
     user_id: int
     typing: bool
-
-class ChatReactionResult(TypedDict):
-    message_id: "UUID"
-    #: Сводка по сообщению целиком, по одной строке на эмодзи.
-    reactions: List["ChatMessageReaction"]
-    changed: bool
 
 class ChatReceiptInput(TypedDict):
     seq: int
@@ -5043,28 +3315,6 @@ class ChatReceiptState(TypedDict):
     last_read_seq: int
     manual_unread_seq: Optional[int]
     changed: bool
-
-class ChatRenameGroup(TypedDict):
-    #: Название группы. Пробелы по краям снимаются; пустое после этого название отклоняется.
-    title: str
-
-class ChatRenameGroupResult(TypedDict):
-    conversation_id: "UUID"
-    title: str
-    updated_at: str
-
-class _ChatSaveFolderRequired(TypedDict):
-    name: str
-    space: Literal['chats', 'tasks']
-
-class ChatSaveFolder(_ChatSaveFolderRequired, total=False):
-    """Нужен непустой name и хотя бы один scope или один include_conversation_ids, иначе 400."""
-
-    position: int
-    #: Повтор раздела отвергается.
-    scopes: List[Literal['direct', 'group', 'task']]
-    include_conversation_ids: List["UUID"]
-    exclude_conversation_ids: List["UUID"]
 
 class _ChatSendMessageRequired(TypedDict):
     #: Ключ идемпотентности отправки. Уникален в пределах беседы и отправителя: повтор с тем же ключом не заводит второе сообщение, а возвращает уже отправленное. Заголовок Idempotency-Key эта операция не читает
@@ -5079,26 +3329,12 @@ class ChatSendMessageResult(TypedDict):
     message: "ChatMessage"
     created: bool
 
-class ChatSetReaction(TypedDict):
-    #: Закрытый список допустимых реакций.
-    emoji: Literal['👍', '👎', '❤️', '🔥', '🎉', '😄', '😢', '😡', '✍️']
-
 class ChatUnreadMention(TypedDict):
     message_id: "UUID"
     seq: int
 
 class ChatUnreadMentionPage(TypedDict):
     items: List["ChatUnreadMention"]
-
-class ChatUnreadSpace(TypedDict):
-    #: Сколько бесед содержат непрочитанное
-    conversations: int
-    #: Сколько непрочитанных сообщений всего
-    messages: int
-
-class ChatUnreadSummary(TypedDict):
-    chats: "ChatUnreadSpace"
-    tasks: "ChatUnreadSpace"
 
 class Comment(TypedDict):
     id: "UUID"
@@ -5161,45 +3397,6 @@ class CoreAccountingDimensionVersion(_CoreAccountingDimensionVersionRequired, to
     #: Пусто — запись действует
     valid_to: str
 
-class _CoreAccountingDimensionVersionInputRequired(TypedDict):
-    valid_from: str
-    enabled: bool
-    required: bool
-
-class CoreAccountingDimensionVersionInput(_CoreAccountingDimensionVersionInputRequired, total=False):
-    #: Поправить действующую запись истории вместо новой
-    edit_open: bool
-
-class _CoreAccountingPeriodCloseRequired(TypedDict):
-    closed_through: str
-
-class CoreAccountingPeriodClose(_CoreAccountingPeriodCloseRequired, total=False):
-    reason: str
-    forced: bool
-    warnings: List[str]
-
-class CoreAccountingPeriodEvent(TypedDict):
-    id: "UUID"
-    action: Literal['close', 'reopen']
-    #: Empty means fully reopened
-    closed_through: str
-    actor_user_id: int
-    actor_name: str
-    happened_at: str
-    reason: str
-    forced: bool
-    warnings: List[str]
-
-class CoreAccountingPeriodReopen(TypedDict):
-    #: Earlier date or empty to reopen fully
-    closed_through: str
-    reason: str
-
-class CoreAccountingPeriodState(TypedDict):
-    #: Empty means accounting is open
-    closed_through: str
-    history: List["CoreAccountingPeriodEvent"]
-
 class CoreAccountingPolicy(TypedDict):
     businesses: List["CoreBusinessPolicy"]
     companies: List["CoreCompanyPolicy"]
@@ -5226,19 +3423,6 @@ class CoreBalanceShortage(TypedDict):
     balance: str
     shortage: str
     conflicts: List["CoreConflictingRegistrar"]
-
-class _CoreBulkResultRequired(TypedDict):
-    updated: int
-
-class CoreBulkResult(_CoreBulkResultRequired, total=False):
-    #: Контрагенты, которым групповое изменение не применилось по правилу ИНН (ERP-1147): роль поставщика физлицу без ИНН и т. п. Остальные изменены.
-    skipped: List["CoreBulkResultSkippedItem"]
-
-class CoreBulkResultSkippedItem(TypedDict):
-    id: "UUID"
-    name: str
-    code: str
-    detail: str
 
 class _CoreBusinessRequired(TypedDict):
     id: "UUID"
@@ -5301,12 +3485,6 @@ class CoreBusinessPolicy(_CoreBusinessPolicyRequired, total=False):
     accountable_days: List["CorePolicyAccountableDaysVersion"]
     #: Статьи выручки исполнений заказа по виду строки (этап 4 ERP-1427)
     revenue_items: List["CoreOrderRevenueItemRule"]
-
-class CoreCabinetPreferences(TypedDict):
-    locale: Literal['ru-RU', 'en-US']
-    timezone: str
-    date_format: str
-    number_format: str
 
 class CoreChange(TypedDict):
     #: Имя сущности из реестра ленты (core.contact)
@@ -5408,14 +3586,6 @@ class CoreContactAddress(TypedDict):
     flat: str
     info: str
 
-class _CoreContactBulkPatchRequired(TypedDict):
-    ids: List["UUID"]
-
-class CoreContactBulkPatch(_CoreContactBulkPatchRequired, total=False):
-    folder_id: Optional["UUID"]
-    is_customer: bool
-    is_supplier: bool
-
 class _CoreContactCreateRequired(TypedDict):
     name: str
 
@@ -5479,37 +3649,6 @@ class CoreContactPatch(TypedDict, total=False):
     is_supplier: bool
     folder_id: Optional["UUID"]
 
-class CoreContractList(TypedDict):
-    results: List["CoreContractTerms"]
-
-class CoreContractSettlementDetailInput(TypedDict):
-    settlement_detail: Literal['order', 'contract', 'execution']
-
-class _CoreContractTermsRequired(TypedDict):
-    id: "UUID"
-    business_id: "UUID"
-    contact_id: "UUID"
-    side: Literal['sale', 'purchase']
-    number: str
-    #: По заказу (умолчание), по договору — аванс договора закрывает его заказы по ФИФО, по документу исполнения — только явный зачёт
-    settlement_detail: Literal['order', 'contract', 'execution']
-    fifo_allowed: bool
-    version: int
-
-class CoreContractTerms(_CoreContractTermsRequired, total=False):
-    company_id: str
-    date: str
-    currency: str
-    #: Первая операция по договору: после неё детализация не меняется
-    detail_locked_at: str
-    funnel_id: "UUID"
-    #: Последний день действия договора (копия карточки документооборота); нет — бессрочный
-    valid_until: str
-    #: Карточка договора в архиве: новые заказы договор не выбирают
-    archived: bool
-    #: Карточки договора больше нет, но заказы или расчёты на реквизит ссылаются
-    retired: bool
-
 class _CoreCurrencyRateRequired(TypedDict):
     id: "UUID"
     currency_code: str
@@ -5523,18 +3662,6 @@ class _CoreCurrencyRateRequired(TypedDict):
 
 class CoreCurrencyRate(_CoreCurrencyRateRequired, total=False):
     valid_to: str
-
-class _CoreCurrencyRateInputRequired(TypedDict):
-    currency_code: str
-    base_code: str
-    #: Positive decimal string; comma or dot accepted
-    rate: str
-    valid_from: str
-
-class CoreCurrencyRateInput(_CoreCurrencyRateInputRequired, total=False):
-    nominal: int
-    source: "CoreCurrencyRateSourceKey"
-    reason: str
 
 class CoreCurrencyRatePage(TypedDict):
     count: int
@@ -5630,14 +3757,6 @@ class CoreDictionaryPage(TypedDict):
     #: Применённое смещение
     offset: int
     results: List["CoreDictionary"]
-
-class _CoreDictionaryUpdateRequired(TypedDict):
-    name: str
-
-class CoreDictionaryUpdate(_CoreDictionaryUpdateRequired, total=False):
-    description: str
-    allow_tree: bool
-    folder_id: Optional["UUID"]
 
 class _CoreDirectoryRequired(TypedDict):
     #: Ключ кабинета: одинаков во всех кабинетах, без пространства имён. У справочника приложения совпадает с полным именем
@@ -5772,10 +3891,6 @@ class CoreDocumentCreate(_CoreDocumentCreateRequired, total=False):
     payload: Dict[str, Any]
     comment: str
 
-class CoreDocumentCustom(TypedDict):
-    #: Графа → значение. Заменяет значения целиком; проверяется по типу графы
-    custom: Dict[str, Any]
-
 class CoreDocumentLinkNode(TypedDict):
     direction: Literal['self', 'basis', 'dependent']
     depth: int
@@ -5808,45 +3923,6 @@ class CoreDocumentMovementSummary(TypedDict):
     sign: int
     values: Dict[str, Any]
     entry_count: int
-
-class CoreDocumentNumbering(TypedDict):
-    type_id: "UUID"
-    key: str
-    name: str
-    module: str
-    is_system: bool
-    number_source: "CoreNumberSource"
-    number_template: str
-    number_reset: "CoreNumberReset"
-    parts: "CoreDocumentNumberingParts"
-    next_number: str
-    next_value: "CoreDocumentNumberingCounters"
-    #: Нумерацию выбрал кабинет — посев её не перепишет
-    customized: bool
-
-class CoreDocumentNumberingCounters(TypedDict):
-    #: Следующее значение счётчика текущего года
-    year: int
-    #: Следующее значение сквозного счётчика
-    never: int
-
-class CoreDocumentNumberingInput(TypedDict):
-    #: Серия номера; дефисы и пробелы по краям снимаются, разделитель «-» ставит сервер.
-    prefix: str
-    year: "CoreNumberYear"
-    width: int
-    reset: "CoreNumberReset"
-
-class CoreDocumentNumberingList(TypedDict):
-    today: str
-    results: List["CoreDocumentNumbering"]
-
-class CoreDocumentNumberingParts(TypedDict):
-    prefix: str
-    year: "CoreNumberYear"
-    width: int
-    #: false — шаблон сложнее «префикс, год, счётчик»; правка заменит его простым правилом.
-    structured: bool
 
 class CoreDocumentPage(TypedDict):
     count: int
@@ -5889,12 +3965,6 @@ class CoreDocumentTypeCreate(_CoreDocumentTypeCreateRequired, total=False):
 class CoreDocumentTypePage(TypedDict):
     count: int
     results: List["CoreDocumentType"]
-
-class CoreDocumentTypePatch(TypedDict, total=False):
-    name: str
-    number_template: str
-    number_reset: "CoreNumberReset"
-    settings: Dict[str, Any]
 
 class _CoreEmployeeRequired(TypedDict):
     id: "UUID"
@@ -5949,59 +4019,6 @@ class CoreEmployeeCreateVariant4(TypedDict):
 
 CoreEmployeeCreate = Union["CoreEmployeeCreateVariant1", "CoreEmployeeCreateVariant2", "CoreEmployeeCreateVariant3", "CoreEmployeeCreateVariant4"]
 
-class CoreEmployeeEquipment(TypedDict):
-    id: "UUID"
-    employee_id: "UUID"
-    employee_name: str
-    name: str
-    inventory_no: str
-    status: Literal['assigned', 'returned']
-    #: Date or empty string
-    assigned_at: str
-    #: Date or empty string
-    returned_at: str
-    notes: str
-    created_at: str
-    updated_at: str
-
-class _CoreEmployeeEquipmentInputRequired(TypedDict):
-    employee_id: "UUID"
-    name: str
-    status: Literal['assigned', 'returned']
-
-class CoreEmployeeEquipmentInput(_CoreEmployeeEquipmentInputRequired, total=False):
-    inventory_no: str
-    assigned_at: str
-    returned_at: str
-    notes: str
-
-class CoreEmployeeEquipmentPage(TypedDict):
-    count: int
-    results: List["CoreEmployeeEquipment"]
-
-CoreEmployeeLifecycleKind = Literal['onboarding', 'offboarding']
-
-class CoreEmployeeLifecycleTemplate(TypedDict):
-    id: "UUID"
-    kind: "CoreEmployeeLifecycleKind"
-    name: str
-    checklist: List[str]
-    is_active: bool
-    created_at: str
-    updated_at: str
-
-class _CoreEmployeeLifecycleTemplateInputRequired(TypedDict):
-    kind: "CoreEmployeeLifecycleKind"
-    name: str
-    checklist: List[str]
-
-class CoreEmployeeLifecycleTemplateInput(_CoreEmployeeLifecycleTemplateInputRequired, total=False):
-    is_active: bool
-
-class CoreEmployeeLifecycleTemplatePage(TypedDict):
-    count: int
-    results: List["CoreEmployeeLifecycleTemplate"]
-
 class CoreEmployeePage(TypedDict):
     count: int
     #: Применённый размер страницы — после зажима до потолка
@@ -6009,152 +4026,6 @@ class CoreEmployeePage(TypedDict):
     #: Применённое смещение
     offset: int
     results: List["CoreEmployee"]
-
-class CoreEmployeePatch(TypedDict, total=False):
-    full_name: str
-    first_name: str
-    last_name: str
-    middle_name: str
-    position: Optional[str]
-    position_id: Optional[str]
-    company_id: Optional[str]
-    department: str
-    location: str
-    phone: str
-    email: str
-    user_id: Optional[int]
-    manager_employee_id: Optional[str]
-    employed_at: Optional[str]
-    is_active: bool
-    notes: str
-    #: Применяется только с правом core.employee_requisites:write
-    inn: str
-    #: Применяется только с правом core.employee_requisites:write
-    bank_bic: str
-    #: Применяется только с правом core.employee_requisites:write
-    bank_account: str
-
-class CoreExternalContactCandidate(TypedDict):
-    external_id: str
-    external_name: str
-    inn: str
-    kpp: str
-
-class CoreExternalContactMatchOption(TypedDict):
-    id: "UUID"
-    name: str
-    kpp: str
-
-CoreExternalContactMatchOutcome = Literal['matched', 'ambiguous', 'not_found', 'no_inn', 'invalid_inn', 'rejected', 'already_linked', 'no_external_id']
-
-class CoreExternalContactMatchReport(TypedDict):
-    summary: "CoreExternalContactMatchSummary"
-    results: List["CoreExternalContactMatchResult"]
-
-class _CoreExternalContactMatchRequestRequired(TypedDict):
-    source_system: str
-    external_kind: str
-    candidates: List["CoreExternalContactCandidate"]
-
-class CoreExternalContactMatchRequest(_CoreExternalContactMatchRequestRequired, total=False):
-    source_ref: str
-
-class CoreExternalContactMatchResult(TypedDict):
-    candidate: "CoreExternalContactCandidate"
-    outcome: "CoreExternalContactMatchOutcome"
-    contact_id: Optional[str]
-    notes: List[Literal['kpp_resolved', 'name_differs']]
-    options: List["CoreExternalContactMatchOption"]
-
-class CoreExternalContactMatchSummary(TypedDict):
-    total: int
-    matched: int
-    ambiguous: int
-    not_found: int
-    no_inn: int
-    invalid_inn: int
-    rejected: int
-    already_linked: int
-    no_external_id: int
-
-class _CoreExternalRefRequired(TypedDict):
-    id: "UUID"
-    source_system: str
-    source_ref: str
-    external_kind: str
-    external_id: str
-    external_name: str
-    entity_type: "CoreExternalRefEntityType"
-    entity_id: Optional[str]
-    match_source: "CoreExternalRefMatchSource"
-    created_at: str
-    updated_at: str
-
-class CoreExternalRef(_CoreExternalRefRequired, total=False):
-    decided_at: str
-
-CoreExternalRefEntityType = Literal['contact', 'product', 'item', 'gl_account', 'employee']
-
-class _CoreExternalRefInputRequired(TypedDict):
-    #: Known value onec or another stable integration key
-    source_system: str
-    external_kind: str
-    external_id: str
-    entity_type: "CoreExternalRefEntityType"
-
-class CoreExternalRefInput(_CoreExternalRefInputRequired, total=False):
-    #: Concrete connection or export namespace
-    source_ref: str
-    external_name: str
-    entity_id: str
-    match_source: "CoreExternalRefMatchSource"
-
-class CoreExternalRefLinkRequest(TypedDict):
-    entity_id: "UUID"
-
-CoreExternalRefMatchSource = Literal['pending', 'rejected', 'auto', 'manual', 'import']
-
-class CoreExternalRefPage(TypedDict):
-    count: int
-    results: List["CoreExternalRef"]
-
-CoreExternalRefRememberRequest = Union[Any, Any]
-
-class _CoreExternalRefResolveRequestRequired(TypedDict):
-    source_system: str
-    external_kind: str
-    external_ids: List[str]
-
-class CoreExternalRefResolveRequest(_CoreExternalRefResolveRequestRequired, total=False):
-    source_ref: str
-
-class CoreExternalRefResolveResult(TypedDict):
-    count: int
-    matches: Dict[str, str]
-
-class CoreFolder(TypedDict):
-    id: "UUID"
-    scope: "CoreFolderScope"
-    parent_id: Optional["UUID"]
-    name: str
-    defaults: Dict[str, Any]
-    sort_order: int
-    item_count: int
-
-class _CoreFolderInputRequired(TypedDict):
-    scope: "CoreFolderScope"
-    name: str
-
-class CoreFolderInput(_CoreFolderInputRequired, total=False):
-    parent_id: Optional["UUID"]
-    defaults: Dict[str, Any]
-    sort_order: int
-
-class CoreFolderPage(TypedDict):
-    count: int
-    results: List["CoreFolder"]
-
-CoreFolderScope = Literal['dictionary', 'product', 'contact']
 
 class _CoreGLAccountRequired(TypedDict):
     id: "UUID"
@@ -6187,12 +4058,6 @@ class CoreGLAccountPage(TypedDict):
     count: int
     results: List["CoreGLAccount"]
 
-class CoreGLAccountPatch(TypedDict, total=False):
-    name: str
-    parent_id: "UUID"
-    is_active: bool
-    affects_cashflow: bool
-
 CoreGLAccountType = Literal['asset', 'liability', 'equity', 'income', 'expense']
 
 class _CoreGLMappingRequired(TypedDict):
@@ -6222,69 +4087,6 @@ class CoreGLMappingCreate(_CoreGLMappingCreateRequired, total=False):
 class CoreGLMappingPage(TypedDict):
     count: int
     results: List["CoreGLMapping"]
-
-class _CoreGLOpeningImportRequired(TypedDict):
-    id: "UUID"
-    status: "CoreGLOpeningImportStatus"
-    format: "CoreProductTransferFormat"
-    source_name: str
-    source_size: int
-    report_title: str
-    has_opening: bool
-    has_closing: bool
-    document_id: Optional[str]
-    created_at: str
-    rows: Optional[List["CoreGLOpeningImportRow"]]
-    warnings: List["CoreGLOpeningWarning"]
-
-class CoreGLOpeningImport(_CoreGLOpeningImportRequired, total=False):
-    applied_at: str
-
-class CoreGLOpeningImportAppliedRequest(TypedDict):
-    document_id: "UUID"
-
-class CoreGLOpeningImportPage(TypedDict):
-    count: int
-    results: List["CoreGLOpeningImport"]
-
-class _CoreGLOpeningImportRowRequired(TypedDict):
-    line: int
-    code: str
-    name: str
-    #: Decimal string without float conversion
-    opening_debit: str
-    #: Decimal string without float conversion
-    opening_credit: str
-    #: Decimal string without float conversion
-    closing_debit: str
-    #: Decimal string without float conversion
-    closing_credit: str
-    account_id: Optional[str]
-    account_code: str
-    account_name: str
-    opening_input: Literal['', 'free', 'contact', 'employee', 'stock', 'money']
-    match: "CoreGLOpeningMatch"
-    notes: List["CoreGLOpeningNote"]
-
-class CoreGLOpeningImportRow(_CoreGLOpeningImportRowRequired, total=False):
-    subconto: str
-    contact_id: str
-    contact_name: str
-    employee_id: str
-    employee_name: str
-
-CoreGLOpeningImportStatus = Literal['draft', 'applied']
-
-CoreGLOpeningMatch = Literal['exact', 'rollup', 'side', 'none', 'skipped']
-
-CoreGLOpeningNote = Literal['rollup', 'side_guess', 'no_account', 'has_detail', 'needs_party', 'needs_staff', 'party_found', 'staff_found', 'owned_stock', 'owned_money', 'no_balance']
-
-CoreGLOpeningWarning = Literal['no_columns', 'no_rows', 'unbalanced', 'no_opening', 'no_closing']
-
-class CoreGeneratedBarcode(TypedDict):
-    #: EAN-13 с префиксом 200 и контрольной цифрой
-    value: str
-    type: Literal['ean13']
 
 class CoreImportResult(TypedDict):
     created: int
@@ -6346,19 +4148,6 @@ CoreNumberReset = Literal['year', 'never']
 
 CoreNumberSource = Literal['sequence', 'sequence_or_given', 'external']
 
-CoreNumberYear = Literal['none', 'yy', 'yyyy']
-
-class CoreObjectUsage(TypedDict):
-    blocked: bool
-    rows: List["CoreObjectUsageRow"]
-    message: str
-
-class CoreObjectUsageRow(TypedDict):
-    source: Literal['register', 'document']
-    key: str
-    name: str
-    count: int
-
 class _CoreOrderRequired(TypedDict):
     id: "UUID"
     side: "CoreOrderSide"
@@ -6403,7 +4192,7 @@ class CoreOrder(_CoreOrderRequired, total=False):
     cfo_id: Dict[str, Any]
     #: Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья
     pnl_item_id: Dict[str, Any]
-    #: Бизнес заказа прошёл отсечку этапа 4: исполнения пишут «Заказы» и выручку, «Сделать акт» на экране одна
+    #: Бизнес заказа прошёл отсечку этапа 4: исполнение закрывает вклад регистра «Заказы» и признаёт выручку; «Сделать акт» в документообороте выпускает бумагу и проводит исполнение одной командой
     execution_cutover: bool
     warehouse_id: "UUID"
     basis_id: "UUID"
@@ -6458,12 +4247,6 @@ class CoreOrderCloseInput(TypedDict, total=False):
     #: Почему остаток больше не нужен
     reason: str
 
-class CoreOrderContractInput(TypedDict, total=False):
-    #: Договор заказа; null или пусто — снять договор
-    contract_id: Optional["UUID"]
-    #: Версия заказа, которую видел человек; 0 — не сверять
-    expected_version: int
-
 class CoreOrderCounterparty(TypedDict, total=False):
     """Покупатель загрузки без id: юрлицо узнаётся по ИНН и КПП, физлицо — по телефону или заводится."""
 
@@ -6512,8 +4295,8 @@ class _CoreOrderFunnelInputRequired(TypedDict):
     name: str
 
 class CoreOrderFunnelInput(_CoreOrderFunnelInputRequired, total=False):
-    #: Заказы этого источника идут в воронку; пусто — по источнику не выбирается
-    source: Literal['', 'manual', 'app', 'import', 'marketplace', 'crm']
+    #: Источник заказа: общий вид или точное приложение app.издатель.ключ; точное приложение имеет приоритет. Пусто — по источнику не выбирать
+    source: str
     #: Воронка стороны по умолчанию — одна на сторону
     is_default: bool
     is_archived: bool
@@ -6602,6 +4385,8 @@ class CoreOrderHistoryDocument(_CoreOrderHistoryDocumentRequired, total=False):
     amount: str
     currency: str
     direction: str
+    #: Эквайер подтверждённой оплаты картой; только у документа оплаты. Внешний номер платежа не раскрывается.
+    provider: str
     status_name: str
     title: str
 
@@ -6660,6 +4445,8 @@ class CoreOrderImportInput(_CoreOrderImportInputRequired, total=False):
     confirm: bool
     #: Имя источника для журнала загрузок: сайт, CRM
     source_system: str
+    #: Необязательная действующая воронка этой стороны в данном кабинете. Выбирается атомарно с созданием заказа; повтор с другим funnel_id возвращает 409, неверная или архивная воронка — 422. Без поля действует воронка договора, источника или умолчание.
+    funnel_id: "UUID"
 
 class CoreOrderImportList(TypedDict):
     items: List["CoreOrderImportEntry"]
@@ -6904,14 +4691,6 @@ class CoreOrderRevenueItemRule(TypedDict, total=False):
     item_name: str
     valid_from: str
 
-class CoreOrderRevenueItemsInput(TypedDict, total=False):
-    #: Статья выручки товарных строк; пусто — правило снимается
-    goods_item_id: Dict[str, Any]
-    #: Статья выручки работ и услуг; пусто — правило снимается
-    service_item_id: Dict[str, Any]
-    #: С какой даты; пусто — сегодня
-    valid_from: str
-
 class _CoreOrderRevisionRequired(TypedDict):
     side: "CoreOrderSide"
     date: str
@@ -6989,26 +4768,8 @@ class CoreOrderStatus(_CoreOrderStatusRequired, total=False):
     color: str
     funnel_id: "UUID"
 
-class _CoreOrderStatusInputRequired(TypedDict):
-    name: str
-    category: "CoreOrderState"
-
-class CoreOrderStatusInput(_CoreOrderStatusInputRequired, total=False):
-    side: Literal['', 'sale', 'purchase']
-    position: int
-    #: Цвет: #RRGGBB или имя токена
-    color: str
-
 class CoreOrderStatusList(TypedDict):
     items: List["CoreOrderStatus"]
-
-class CoreOrderStatusPatch(TypedDict, total=False):
-    name: str
-    category: "CoreOrderState"
-    side: Literal['', 'sale', 'purchase']
-    position: int
-    color: str
-    is_active: bool
 
 class _CoreOrderStepDueInputRequired(TypedDict):
     due_date: str
@@ -7130,13 +4891,6 @@ class CoreOwnershipVersionInput(TypedDict):
     valid_from: str
     owners: List["CoreBusinessOwnerInput"]
 
-class CorePhotoResult(TypedDict):
-    photo_url: str
-
-class CorePolicyAccountableDaysInput(TypedDict):
-    valid_from: str
-    days: int
-
 class _CorePolicyAccountableDaysVersionRequired(TypedDict):
     id: "UUID"
     #: Начало версии; 0001-01-01 означает «с начала учёта»
@@ -7155,15 +4909,6 @@ class _CorePolicyPeriodRequired(TypedDict):
 class CorePolicyPeriod(_CorePolicyPeriodRequired, total=False):
     #: Последний день версии; отсутствует у открытой версии
     valid_to: str
-
-class _CorePolicyTaxModeInputRequired(TypedDict):
-    #: 0001-01-01 — с начала учёта, если по юрлицу ещё нет проведённых документов
-    valid_from: str
-    mode: Literal['deductible', 'non_deductible', 'none']
-
-class CorePolicyTaxModeInput(_CorePolicyTaxModeInputRequired, total=False):
-    #: Налоговая валюта юрлица; не передана — RUB. Меняется вместе с версией режима: с даты, по которой есть проведённые документы, — отказ 409.
-    tax_currency: str
 
 class _CorePolicyTaxModeVersionRequired(TypedDict):
     id: "UUID"
@@ -7202,10 +4947,6 @@ class CorePolicyTaxRegimeVersion(_CorePolicyTaxRegimeVersionRequired, total=Fals
     #: Ставка основного режима в процентах с двумя знаками; нет — не задана (у ПСН и НПД необязательна)
     rate: str
 
-class CorePolicyVATPendingInput(TypedDict):
-    valid_from: str
-    months: int
-
 class _CorePolicyVATPendingVersionRequired(TypedDict):
     id: "UUID"
     #: Начало версии; 0001-01-01 означает «с начала учёта»
@@ -7216,10 +4957,6 @@ class CorePolicyVATPendingVersion(_CorePolicyVATPendingVersionRequired, total=Fa
     #: Последний день версии; отсутствует у открытой версии
     valid_to: str
 
-class CorePolicyVATPresentationInput(TypedDict):
-    valid_from: str
-    presentation: Literal['gross', 'net']
-
 class _CorePolicyVATPresentationVersionRequired(TypedDict):
     id: "UUID"
     #: Начало версии; 0001-01-01 означает «с начала учёта»
@@ -7229,15 +4966,6 @@ class _CorePolicyVATPresentationVersionRequired(TypedDict):
 class CorePolicyVATPresentationVersion(_CorePolicyVATPresentationVersionRequired, total=False):
     #: Последний день версии; отсутствует у открытой версии
     valid_to: str
-
-class _CorePolicyVATRatesInputRequired(TypedDict):
-    valid_from: str
-
-class CorePolicyVATRatesInput(_CorePolicyVATRatesInputRequired, total=False):
-    #: Процент общей ставки, больше 0 и меньше 100; пусто — не заведена
-    general: str
-    #: Процент льготной ставки, больше 0 и меньше 100; пусто — не заведена
-    reduced: str
 
 class _CorePolicyVATRatesVersionRequired(TypedDict):
     id: "UUID"
@@ -7317,17 +5045,6 @@ class CoreProductAxisValue(TypedDict):
     code: str
     #: Подпись значения; пусто — код
     label: str
-
-class _CoreProductBulkPatchRequired(TypedDict):
-    ids: List["UUID"]
-
-class CoreProductBulkPatch(_CoreProductBulkPatchRequired, total=False):
-    folder_id: Optional["UUID"]
-    is_sellable: bool
-    #: Хранится на складе. У услуги (kind=service) всегда false: сочетание service + true отклоняется 400. Позицию со складскими движениями нельзя перевести в услугу или снять с неё признак — 409 (ERP-1547)
-    is_stockable: bool
-    is_purchasable: bool
-    is_producible: bool
 
 class _CoreProductCreateRequired(TypedDict):
     name: str
@@ -7419,37 +5136,6 @@ class CoreProductFieldDefinition(TypedDict):
 class CoreProductFieldSchema(TypedDict):
     fields: List["CoreProductFieldDefinition"]
 
-class CoreProductFile(TypedDict):
-    id: "UUID"
-    product_id: "UUID"
-    kind_item_id: Optional["UUID"]
-    #: Код элемента справочника product_file_kinds; пусто без типа
-    kind_code: str
-    kind_label: str
-    name: str
-    mime_type: str
-    size_bytes: int
-    is_image: bool
-    #: Основное фото товара; бывает только у изображения
-    is_primary: bool
-    sort_order: int
-    uploaded_by_name: str
-    created_at: str
-
-class CoreProductFilePage(TypedDict):
-    count: int
-    results: List["CoreProductFile"]
-
-class CoreProductFilePatch(TypedDict, total=False):
-    #: Код типа из product_file_kinds; пустая строка снимает тип
-    kind: str
-    name: str
-    #: true делает изображение основным фото
-    is_primary: bool
-
-class CoreProductFileReorder(TypedDict):
-    ids: List["UUID"]
-
 class CoreProductIdentifier(TypedDict):
     id: "UUID"
     product_id: "UUID"
@@ -7475,12 +5161,6 @@ class CoreProductIdentifierInput(_CoreProductIdentifierInputRequired, total=Fals
     attrs: Dict[str, Any]
 
 CoreProductIdentifierKind = Literal['manufacturer_article', 'supplier_article', 'channel_article', 'barcode']
-
-class CoreProductIdentifierMatch(TypedDict):
-    product_id: "UUID"
-    product_name: str
-    product_sku: str
-    identifier: "CoreProductIdentifier"
 
 class CoreProductIdentifierPage(TypedDict):
     count: int
@@ -7656,22 +5336,6 @@ CoreProductTransferFormat = Literal['xlsx', 'xls', 'ods', 'csv', 'tsv']
 
 CoreProductTransferKind = Literal['product_families', 'products', 'product_identifiers']
 
-class CoreProductVariantGenerate(TypedDict, total=False):
-    #: Какие оси и коды участвуют; пусто — все оси семейства целиком. Пустой список кодов у оси — все её значения
-    axes: List["CoreProductVariantGenerateAxesItem"]
-
-class _CoreProductVariantGenerateAxesItemRequired(TypedDict):
-    key: str
-
-class CoreProductVariantGenerateAxesItem(_CoreProductVariantGenerateAxesItemRequired, total=False):
-    codes: List[str]
-
-class CoreProductVariantGenerateResult(TypedDict):
-    created: int
-    #: Сочетания, у которых вариант уже был
-    skipped: int
-    results: List["CoreProduct"]
-
 class CoreReferenceItem(TypedDict):
     id: "UUID"
     #: Стабильная ссылка на значение: код переживает перенос данных, идентификатор — нет
@@ -7795,11 +5459,6 @@ class CoreRegisterPage(TypedDict):
     offset: int
     results: List["CoreRegister"]
 
-class CoreRegisterPatch(TypedDict, total=False):
-    name: str
-    dimensions: List["CoreRegisterDimension"]
-    resources: List["CoreRegisterResource"]
-
 class _CoreRegisterResourceRequired(TypedDict):
     key: str
     type: Literal['numeric', 'money']
@@ -7833,6 +5492,30 @@ class _CoreRegisterTurnoverRowRequired(TypedDict):
 
 class CoreRegisterTurnoverRow(_CoreRegisterTurnoverRowRequired, total=False):
     period: str
+
+class CoreSellerBank(TypedDict):
+    #: Расчётный счёт получателя
+    account: str
+    #: Наименование банка
+    bank: str
+    #: БИК банка
+    bik: str
+    #: Корреспондентский счёт банка
+    corr_account: str
+
+class CoreSellerCompany(TypedDict):
+    id: "UUID"
+    #: Имя юрлица в кабинете
+    name: str
+    #: Полное наименование для счёта
+    legal_name: str
+    #: ИНН продавца
+    inn: str
+    #: КПП продавца, если есть
+    kpp: str
+
+class CoreSellerCompanyList(TypedDict):
+    companies: List["CoreSellerCompany"]
 
 class _CoreTrialBalanceRequired(TypedDict):
     date_from: str
@@ -7869,9 +5552,6 @@ class CoreTrialBalanceTotals(TypedDict):
     closing_debit: str
     closing_credit: str
     balanced: bool
-
-class CoreUIState(TypedDict):
-    screens: Dict[str, Any]
 
 class CredentialRequestGap(TypedDict):
     """Окно, в котором обращения были, а записей о них нет: очередь писателя переполнилась либо база кабинета не приняла пачку. Признание в НАШЕЙ аварии, и печатается оно обеим сторонам — страница без него читалась бы как полная история. Кабинета в окне нет ни у одной из дверей."""
@@ -7939,28 +5619,9 @@ class CustomerNeedPage(TypedDict):
     count: int
     results: List["CustomerNeed"]
 
-class CustomerNeedUpdate(TypedDict, total=False):
-    customer: str
-    section: str
-    task: str
-    body: str
-    priority: int
-    is_archived: bool
-
 class CustomerPage(TypedDict):
     count: int
     results: List["Customer"]
-
-class CustomerUpdate(TypedDict, total=False):
-    name: str
-    owner: str
-    status: str
-    tier: str
-    revenue: str
-    size: int
-    domains: List[str]
-    external_ids: List[str]
-    is_archived: bool
 
 class Cycle(TypedDict):
     id: "UUID"
@@ -8402,66 +6063,7 @@ class DiscussionCommentPage(TypedDict):
     count: int
     results: List["DiscussionComment"]
 
-class DiscussionCommentUpdate(TypedDict, total=False):
-    body: str
-    is_archived: bool
-
 DiscussionOwnerType = Literal['task', 'section', 'project', 'document', 'milestone', 'customer_need', 'pull_request']
-
-class DocflowAcceptedDocument(TypedDict):
-    """Учётный документ кабинета, заведённый приёмкой."""
-
-    id: "UUID"
-    #: Наш номер из нумератора кабинета. Номер продавца лежит в содержимом документа: занять им наш сквозной счётчик значит однажды получить два своих документа с одним номером от двух разных поставщиков
-    number: str
-    #: Дата документа ГГГГ-ММ-ДД. По умолчанию это дата документа поставщика: операция произошла тогда, когда её совершил он, и датировать её днём приёмки значит поставить факт не в тот период
-    date: str
-    #: Ключ вида документа; у приёмки docflow_incoming
-    type_key: str
-    #: Имя вида в кабинете. Право клиента: вид можно переименовать, и код держит его за ключ, а не за название
-    type_name: str
-    #: Состояние учётного документа. Приёмка заводит ЧЕРНОВИК: проведение принадлежит модулям — владельцам регистров
-    status: str
-    #: Документ помечен на удаление. Такой пакет принимается заново: пометка и есть способ сказать «этот документ ошибочный»
-    marked_deleted: bool
-    #: Момент приёмки; пусто, если он не записан
-    accepted_at: str
-
-class DocflowActionResult(TypedDict):
-    """Чем оператор ответил на выполненное действие."""
-
-    #: Идентификатор действия у оператора
-    id: str
-    #: Новое состояние кодом оператора
-    state: str
-    #: Новое состояние словами оператора
-    state_name: str
-
-class DocflowAddressRequisites(TypedDict, total=False):
-    """АдрРФ: структурный российский адрес. Только российский: адрес по ГАР требует идентификатора адресного объекта из государственного реестра, которого в карточках Akeda нет, а иностранный адрес у продавца-резидента не встречается. Карточки юрлица и контрагента хранят такой адрес частями; объект отправления позволяет задать исключение."""
-
-    #: Индекс
-    postal_code: str
-    #: КодРегион
-    region_code: str
-    #: НаимРегион
-    region_name: str
-    #: Район
-    district: str
-    #: Город
-    city: str
-    #: НаселПункт
-    settlement: str
-    #: Улица
-    street: str
-    #: Дом
-    building: str
-    #: Корпус
-    block: str
-    #: Кварт
-    flat: str
-    #: ИныеСвед
-    info: str
 
 class DocflowAppSalesOrderCounterparty(TypedDict, total=False):
     """Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в заказе как реквизиты плательщика"""
@@ -8485,6 +6087,8 @@ class DocflowAppSalesOrderInput(_DocflowAppSalesOrderInputRequired, total=False)
     contact_id: "UUID"
     contract_document_id: "UUID"
     counterparty: "DocflowAppSalesOrderCounterparty"
+    #: Необязательная действующая воронка продаж этого кабинета; повтор с другой воронкой отвечает 409
+    funnel_id: "UUID"
     #: Пусто — кабинет выдаст следующий номер
     number: str
     title: str
@@ -8663,10 +6267,6 @@ class DocflowApprovalDecisionInput(_DocflowApprovalDecisionInputRequired, total=
     reviewer_id: int
     comment: str
 
-class DocflowApprovalDelegateInput(TypedDict):
-    #: Кому поручается решение по этому проходу
-    user_id: int
-
 class DocflowApprovalDepartment(TypedDict):
     """Подразделение справочника ядра глазами согласования."""
 
@@ -8814,9 +6414,6 @@ class DocflowApprovalRoute(_DocflowApprovalRouteRequired, total=False):
     #: Код стандартного маршрута кабинета. Его заводит система выключенным; включённый, он подбирается последним — когда ни один другой маршрут не подошёл. Пусто — маршрут заведён кабинетом
     system_key: Literal['payment_request', 'invoice', 'contract']
 
-class DocflowApprovalRouteActiveInput(TypedDict):
-    active: bool
-
 class DocflowApprovalRouteList(TypedDict):
     items: List["DocflowApprovalRoute"]
 
@@ -8911,26 +6508,6 @@ class DocflowApprovalSubjectState(_DocflowApprovalSubjectStateRequired, total=Fa
     #: Кто согласует, если отправить сейчас; есть, только когда открытого или согласованного прохода нет
     preview: "DocflowApprovalChainPreview"
 
-class _DocflowApprovalSubstitutionRequired(TypedDict):
-    id: "UUID"
-    #: Кого замещают
-    principal_id: int
-    #: Кто замещает
-    substitute_id: int
-    starts_on: str
-
-class DocflowApprovalSubstitution(_DocflowApprovalSubstitutionRequired, total=False):
-    """Замещение согласующего на период. Бессрочное замещение законно — ends_on можно не называть."""
-
-    principal_name: str
-    substitute_name: str
-    #: Пусто — замещение бессрочно
-    ends_on: str
-    comment: str
-
-class DocflowApprovalSubstitutionList(TypedDict):
-    items: List["DocflowApprovalSubstitution"]
-
 class _DocflowAttachmentRequired(TypedDict):
     id: "UUID"
     message: "UUID"
@@ -8951,56 +6528,6 @@ class DocflowAttachment(_DocflowAttachmentRequired, total=False):
     """Файл внутри пакета. Внутреннего пути в хранилище здесь нет: снаружи файл получают отдельной операцией, а путь не часть контракта и не подсказка для перебора."""
 
     downloaded_at: str
-
-class _DocflowAttorneySubmissionRequired(TypedDict):
-    #: Единый регистрационный номер доверенности в реестре ФНС
-    registry_number: str
-
-class DocflowAttorneySubmission(_DocflowAttorneySubmissionRequired, total=False):
-    """Машиночитаемая доверенность при подписи. Прикладывается ИДЕНТИФИКАТОРОМ в реестре ФНС, а не файлом: поля для тела доверенности у оператора нет вовсе. Поля content и content_signature приняты потому, что их присылает браузерный контур, и оператору они не передаются."""
-
-    principal_inn: str
-    issued_at: str
-    expires_at: str
-    #: Тело доверенности Base64. Оператору не передаётся
-    content: str
-    #: Подпись под телом доверенности Base64. Оператору не передаётся
-    content_signature: str
-
-class DocflowBankRequisites(TypedDict, total=False):
-    """БанкРекв: банковские реквизиты участника. У юрлица кабинета их нет вовсе."""
-
-    #: НомерСчета
-    account: str
-    #: НаимБанк
-    name: str
-    #: БИК
-    bic: str
-    #: КорСчет
-    corr_account: str
-
-class DocflowBuyerTitleInput(TypedDict, total=False):
-    """Ответный титул покупателя на входящий пакет. Сам пакет назван в адресе, реквизиты продавца сервер читает из его файла в пакете."""
-
-    #: КодИтога: 1 — принято без разногласий, 2 — с разногласиями, 3 — не принято
-    result: str
-    #: ДатаПрин в форме ГГГГ-ММ-ДД
-    accepted_at: str
-    #: СодОпер. Формат ЗАПРЕЩАЕТ его при итоге «не принято»: «не приняли» — это отсутствие операции приёмки, а не операция с описанием
-    operation: str
-    #: НаимДокОпрПр: наименование документа, определённое сторонами сделки. В титуле покупателя обязательно ВСЕГДА, в отличие от титула продавца, где оно зависит от функции
-    document_kind_name: str
-    #: Функция документа продавца, на который отвечаем. Пустое значение сервер берёт из его файла
-    function: str
-    #: Номер документа продавца
-    number: str
-    #: Дата документа продавца
-    date: str
-    disagreement: "DocflowDocumentRefRequisites"
-    employee: "DocflowEmployeeRequisites"
-    signers: List["DocflowSignerRequisites"]
-    file: "DocflowFileRequisites"
-    extra: List["DocflowTextInfoRequisites"]
 
 class DocflowCancellation(TypedDict):
     """Соглашение сторон об аннулировании документа. Запускает его любая сторона, а решает вторая: согласие даёт состояние 22 «Документ аннулирован», отказ — состояние 40 «Аннулирование отклонено», при котором состояние самого документа НЕ меняется. Шаг цепочки выводится из ленты СОБЫТИЙ пакета, а не из кода состояния: состояние 27 «Ожидает аннулирования» оператор отдаёт только отдельным методом выборки по событиям."""
@@ -9023,12 +6550,6 @@ class DocflowCancellation(TypedDict):
     can_approve: bool
     #: Соглашение прислали нам и в нём можно отказать
     can_reject: bool
-
-class DocflowCancellationInput(TypedDict, total=False):
-    """Шаг соглашения об аннулировании. Одного поля довольно: сторону, документ и чей сейчас ход, сервер знает сам."""
-
-    #: Причина словами человека. Обязательна при предложении аннулирования и при отказе в нём: вторая сторона решает по причине, а не по факту обращения
-    comment: str
 
 class _DocflowCertificateRequired(TypedDict):
     thumbprint: str
@@ -9085,53 +6606,9 @@ class DocflowConnection(_DocflowConnectionRequired, total=False):
     granted_at: str
     last_sync_at: str
 
-class _DocflowConnectionInputRequired(TypedDict):
-    company: "UUID"
-    #: Часть тройки ключей оператора; обратно не возвращается
-    app_client_id: str
-    #: Часть тройки ключей оператора; обратно не возвращается
-    app_secret: str
-    #: Часть тройки ключей оператора; обратно не возвращается
-    service_key: str
-
-class DocflowConnectionInput(_DocflowConnectionInputRequired, total=False):
-    """Заведение подключения. Секреты приходят открытым текстом ровно один раз и шифруются до того, как что-либо попадёт в базу."""
-
-    #: Пусто означает saby — единственный оператор с адаптером
-    provider: Literal['saby']
-    display_name: str
-
 class DocflowConnectionList(TypedDict):
     count: int
     results: List["DocflowConnection"]
-
-class DocflowConnectionModeInput(TypedDict, total=False):
-    """Явный выбор режима. mode: read_only — только чтение; drafts — «Черновики в ЭДО» (ERP-1551): оператору уходят только черновики, подпись, отправка и ответы закрыты; write — все действия. Прежняя форма read_only (true — read_only, false — write) принимается, если mode не задан. Без обоих полей — 400 docflow.mode_required."""
-
-    mode: Literal['read_only', 'drafts', 'write']
-    #: Прежняя форма; используется, только когда mode не задан
-    read_only: bool
-
-class DocflowConnectionPatch(TypedDict, total=False):
-    """Частичное изменение. Учётные данные обновляются только всеми тремя значениями сразу: у оператора это одно неделимое сочетание."""
-
-    display_name: str
-    status: Literal['connected', 'paused', 'error', 'reauth_required', 'disconnected']
-    #: Включает ответ у оператора после нашего согласования. Режим «только чтение» этим не снимается: ответ оператору проходит его сторож
-    reply_after_approval: bool
-    app_client_id: str
-    app_secret: str
-    service_key: str
-
-class DocflowContactRequisites(TypedDict, total=False):
-    """Контакт: телефоны, почта и прочие сведения для связи."""
-
-    #: Тлф
-    phones: List[str]
-    #: ЭлПочта
-    emails: List[str]
-    #: ИнКонт
-    info: str
 
 class _DocflowCounterpartyRequired(TypedDict):
     name: str
@@ -9147,53 +6624,6 @@ class DocflowCounterparty(_DocflowCounterpartyRequired, total=False):
 
     contact: "UUID"
 
-class DocflowCurrencyRequisites(TypedDict, total=False):
-    """ДенИзм: денежное измерение документа."""
-
-    #: КодОКВ. Пустое значение означает рубль
-    code: str
-    #: НаимОКВ
-    name: str
-    #: КурсВал
-    rate: str
-
-class DocflowDocumentRefRequisites(TypedDict, total=False):
-    """Реквизиты стороннего документа."""
-
-    #: РеквНаимДок
-    name: str
-    #: РеквНомерДок
-    number: str
-    #: РеквДатаДок в форме ГГГГ-ММ-ДД
-    date: str
-    #: РеквИдФайлДок
-    file_id: str
-    #: РеквИдДок
-    doc_id: str
-    #: РеквДопСведДок
-    info: str
-
-class DocflowElectronicPoARequisites(TypedDict, total=False):
-    """СвДоверЭл: машиночитаемая доверенность. Формат требует её ровно при способе подтверждения полномочий 3 и запрещает при остальных."""
-
-    #: НомДовер, 36 символов
-    number: str
-    issued_at: str
-    internal_number: str
-    internal_date: str
-    #: ИдСистХран
-    storage: str
-    url: str
-
-class DocflowEmployeeRequisites(TypedDict, total=False):
-    """Работник организации: должность и ФИО."""
-
-    position: str
-    surname: str
-    name: str
-    patronymic: str
-    info: str
-
 class _DocflowEventRequired(TypedDict):
     id: "UUID"
     message: "UUID"
@@ -9206,62 +6636,6 @@ class DocflowEvent(_DocflowEventRequired, total=False):
     """Событие ленты пакета. Лента — то, по чему человек восстанавливает ход спора с контрагентом, поэтому название и комментарий хранятся словами оператора и не переводятся."""
 
     occurred_at: str
-
-class DocflowFileRequisites(TypedDict, total=False):
-    """То, из чего складывается имя файла обмена. Идентификаторы участников спрашиваются, потому что взять их неоткуда: свой оператор отдаёт пустым, а идентификатор контрагента появляется только с первым его документом в ленте. Что сервер видел в зеркале, он подставляет сам; всё остальное — за человеком."""
-
-    #: Идентификатор отправителя у оператора
-    sender_id: str
-    #: Идентификатор получателя у оператора
-    receiver_id: str
-    #: Собственный идентификатор файла обмена
-    uuid: str
-    #: Дополнительная часть имени файла
-    extra: str
-    #: Документ о прослеживаемых товарах
-    traceability: bool
-    #: Документ об алкогольной продукции
-    alcohol: bool
-    #: Документ о табачной продукции
-    tobacco: bool
-    #: Документ о нефтепродуктах
-    oil: bool
-
-class DocflowFlowAccountingBacklink(TypedDict):
-    """Бумага, стоящая за учётным документом. Открывать нужно version — ту закреплённую редакцию, которая была основанием, а не current_version."""
-
-    id: "UUID"
-    #: Закреплённая редакция-основание
-    version: int
-    #: Текущая редакция бумаги
-    current_version: int
-    title: str
-    number: str
-    date: str
-    kind: "DocflowFlowKind"
-    status: Literal['draft', 'registered', 'archived']
-
-class DocflowFlowAccountingBacklinkPage(TypedDict):
-    items: List["DocflowFlowAccountingBacklink"]
-    has_more: bool
-
-class _DocflowFlowAccountingDocumentRequired(TypedDict):
-    id: "UUID"
-    owner: Literal['finance', 'stock']
-    type_key: str
-    type_name: str
-    number: str
-    date: str
-    status: str
-    is_marked_deleted: bool
-
-class DocflowFlowAccountingDocument(_DocflowFlowAccountingDocumentRequired, total=False):
-    """Карточка учётного документа чужого модуля, прочитанная у его владельца."""
-
-    #: Номер договора, по которому собран этот план. Заполнен только у кандидатов, поднятых наверх связью основания акта: человек обязан видеть, почему план стоит первым
-    contract_number: str
-    #: Дата того же договора в форме ГГГГ-ММ-ДД
-    contract_date: str
 
 class _DocflowFlowAccountingLinkRequired(TypedDict):
     id: "UUID"
@@ -9277,49 +6651,6 @@ class DocflowFlowAccountingLink(_DocflowFlowAccountingLinkRequired, total=False)
     source_version: int
     #: Редакция учётного документа, из которой сделана бумага
     target_version: int
-
-class DocflowFlowAccountingLinkInput(TypedDict):
-    expected_version: int
-    owner: Literal['finance', 'stock']
-    document_id: "UUID"
-
-class DocflowFlowAccountingOriginalInput(TypedDict):
-    """Только то, что выбирают в документообороте. Юрлицо, контрагент и направление берутся из названной редакции учётного документа и телом запроса не подделываются."""
-
-    #: Точная редакция учётного документа
-    target_version: int
-    kind: "DocflowFlowKind"
-    content: "DocflowFlowContent"
-
-class DocflowFlowAccountingPage(TypedDict):
-    items: List["DocflowFlowAccountingDocument"]
-    #: Продолжение листания; null означает, что дальше ничего нет
-    next_offset: Optional[int]
-
-class DocflowFlowAccountingUnlinkInput(TypedDict):
-    expected_version: int
-    link_id: "UUID"
-
-class DocflowFlowAccrualPlan(TypedDict):
-    document_id: "UUID"
-    operation_id: "UUID"
-    #: Версия операции владельца; её подставляют в expected_operation_version
-    version: int
-    kind: Literal['sale', 'purchase']
-    currency: str
-    amount: str
-    stages: List["DocflowFlowAccrualStage"]
-
-class _DocflowFlowAccrualStageRequired(TypedDict):
-    id: "UUID"
-    label: str
-    #: Запланировано по этапу
-    amount: str
-    #: Уже принято актами
-    actual_amount: str
-
-class DocflowFlowAccrualStage(_DocflowFlowAccrualStageRequired, total=False):
-    date: str
 
 class _DocflowFlowChangeInputRequired(TypedDict):
     #: Версия, которую видел клиент. Разошлась — 409 docflow.flow.version_conflict
@@ -9513,22 +6844,6 @@ class DocflowFlowEDOState(_DocflowFlowEDOStateRequired, total=False):
     #: Состояние словами оператора: показывается как есть, человек сверяет его с кабинетом оператора
     state_name: str
 
-class DocflowFlowFNSInput(TypedDict, total=False):
-    """Проверка, сборка и отправка выпуска карточки в формате ФНС. Реквизиты — тот же объект, что у отправки продажи: подписант, содержание операции, адреса сторон, идентификаторы участников обмена. Подписанта «по умолчанию» нет: это подпись за человека."""
-
-    connection: "UUID"
-    requisites: "DocflowRequisites"
-    #: Примечание документа у оператора
-    comment: str
-    #: Приложения после формализованного файла. Счёт на оплату кладёт сюда PDF-бланк той же редакции
-    files: List["DocflowOutgoingFile"]
-
-class DocflowFlowFNSSent(TypedDict):
-    """Итог отправки выпуска — строка выпуска и связь карточки с конвертом оператора."""
-
-    title: "DocflowTitle"
-    link: "DocflowFlowEDOLink"
-
 class DocflowFlowFile(TypedDict):
     """Приложенный файл. Всё это описание делает владелец при загрузке, и командой правки оно не принимается."""
 
@@ -9540,36 +6855,6 @@ class DocflowFlowFile(TypedDict):
     content_type: str
     uploaded_by: int
     uploaded_at: str
-
-class DocflowFlowFinanceAccrualAllocation(TypedDict):
-    #: Этап работ плана
-    accrual_id: "UUID"
-    #: Сколько этого этапа закрывает акт; не больше остатка
-    amount: str
-
-class _DocflowFlowFinanceAccrualInputRequired(TypedDict):
-    expected_version: int
-    #: Плановая операция модуля финансов
-    plan_document_id: "UUID"
-    #: Версия операции владельца
-    expected_operation_version: int
-    #: Фактическая дата выполнения; может отличаться от плановой даты этапа
-    actual_date: str
-
-class DocflowFlowFinanceAccrualInput(_DocflowFlowFinanceAccrualInputRequired, total=False):
-    """Распределение суммы акта по этапам работ. Поле accrual_id остаётся совместимым с прежней однoэтапной формой запроса."""
-
-    #: Единственный этап; равнозначно одной строке allocations
-    accrual_id: "UUID"
-    allocations: List["DocflowFlowFinanceAccrualAllocation"]
-
-class DocflowFlowFinancePlanInput(TypedDict):
-    """Экономическая роль называется явно: входящий договор всё ещё может быть продажей, и выводить роль из направления документа нельзя."""
-
-    expected_version: int
-    kind: Literal['sale', 'purchase']
-    #: Статья отчёта о прибылях и убытках
-    pnl_item_id: "UUID"
 
 DocflowFlowKind = Literal['contract', 'specification', 'amendment', 'invoice', 'act', 'upd', 'goods_waybill', 'transport_waybill', 'consignment_note', 'transport_order', 'tax_invoice', 'correction', 'return', 'discrepancy_act', 'reconciliation_act', 'power_of_attorney', 'other']
 
@@ -9625,19 +6910,6 @@ class DocflowFlowRecognized(TypedDict, total=False):
     valid_from: str
     valid_until: str
 
-class _DocflowFlowReferenceRequired(TypedDict):
-    id: "UUID"
-    name: str
-
-class DocflowFlowReference(_DocflowFlowReferenceRequired, total=False):
-    #: Единица измерения; приходит только у номенклатуры
-    unit: str
-
-class DocflowFlowReferencePage(TypedDict):
-    items: List["DocflowFlowReference"]
-    #: Есть продолжение: спрашивают следующим offset
-    has_more: bool
-
 class DocflowFlowRelation(TypedDict):
     """Связь между бумагами кабинета — основание, приложение, изменение или замена. Учётной инструкцией она не является."""
 
@@ -9667,374 +6939,6 @@ class DocflowFlowScheduleStage(_DocflowFlowScheduleStageRequired, total=False):
     after_stage_id: "UUID"
     #: Дней после события срока
     delay_days: int
-
-class DocflowFormatIssues(TypedDict):
-    """Документ не отвечает формату ФНС. Список непройденных проверок уходит ЦЕЛИКОМ: человек обязан увидеть всё сразу, а не по одной причине за попытку."""
-
-    #: Одна фраза на языке запроса
-    detail: str
-    code: Literal['docflow.formats.invalid']
-    issues: List["DocflowIssue"]
-
-class DocflowGovConnectionState(TypedDict):
-    connection: "UUID"
-    company: Optional[str]
-    company_name: str
-    #: Пусто — ленту отчётности ещё не читали
-    access: Literal['', 'ok', 'denied', 'failed']
-    checked_at: Optional[str]
-    #: Слова оператора при отказе
-    note: str
-
-class _DocflowGovDocumentRequired(TypedDict):
-    id: "UUID"
-    connection: "UUID"
-    company: Optional[str]
-    company_name: str
-    kind: Literal['claim', 'letter', 'outgoing', 'answer', 'receipt', 'report']
-    claim_kind: Literal['', 'explanations', 'documents', 'general']
-    #: fns, sfr, rosstat, fsrar, rpn или пусто
-    authority: str
-    authority_name: str
-    authority_code: str
-    external_id: str
-    doc_type: str
-    doc_subtype: str
-    number: str
-    date: str
-    note: str
-    kit_id: str
-    state_code: str
-    state_name: str
-    state_description: str
-    sent_on: str
-    receipt_due: str
-    answer_due: str
-    #: С этого дня без квитанции инспекция вправе приостановить операции по счетам
-    block_after: str
-    receipt_sent_at: Optional[str]
-    answered_at: Optional[str]
-    #: Сотрудник, отметивший ответ вручную; null — ответ виден в ленте или его нет
-    answered_by: Optional[int]
-    answered_by_name: str
-    answer_message: Optional[str]
-    receipt_pending: bool
-    answer_pending: bool
-    #: Срок квитанции прошёл или до блокировки счёта не больше двух рабочих дней, а квитанции нет
-    receipt_late: bool
-    #: Срок ответа прошёл, а ответа нет
-    answer_late: bool
-    open: bool
-    urgency: Literal['', 'soon', 'overdue', 'blocking']
-    operator_link: str
-    received_at: Optional[str]
-    updated_at: str
-
-class DocflowGovDocument(_DocflowGovDocumentRequired, total=False):
-    """Документ госоргана в зеркале оператора. doc_type, doc_subtype, state_code и state_name — слова оператора; kind, claim_kind и authority — наш вид по одному правилу сервера. Сроки — календарные даты ГГГГ-ММ-ДД; пустая строка — срока нет (не требование или дата отправки неизвестна)."""
-
-    attachments: List["DocflowAttachment"]
-    events: List["DocflowEvent"]
-
-class DocflowGovList(TypedDict):
-    count: int
-    results: List["DocflowGovDocument"]
-
-class DocflowGovSummary(TypedDict):
-    claims: int
-    claims_open: int
-    claims_urgent: int
-    letters: int
-    reports: int
-    connections: List["DocflowGovConnectionState"]
-
-class _DocflowIntakeCounterpartyRequired(TypedDict):
-    #: Карточка контрагента кабинета; null — свести не с кем, и приёмка отвечает проверкой docflow.edo.contact_required
-    contact: Optional["UUID"]
-    #: Имя этой карточки в кабинете
-    contact_name: str
-    #: Имя стороны словами оператора либо файла продавца
-    name: str
-    inn: str
-    kpp: str
-    #: Откуда взялся контрагент: manual — решение человека, auto — записанное сопоставление, guess — наша догадка по реквизитам прямо сейчас, нигде не записанная, none — не свели ни с кем
-    match: Literal['manual', 'auto', 'guess', 'none']
-
-class DocflowIntakeCounterparty(_DocflowIntakeCounterpartyRequired, total=False):
-    """Вторая сторона и то, с кем мы её свели. Порядок узнавания жёсткий, и каждая ступень сильнее следующей: решение человека этим же запросом, сопоставление зеркала пакета, ЗАПИСАННОЕ решение по этому участнику обмена и, наконец, поиск в справочнике по ИНН и КПП. Последняя ступень — догадка, и она называет себя догадкой (match: guess), а не выдаёт себя за чьё-то решение. Разбор у неё общий с автоматчем выгрузок: второй механизм узнавания рядом с существующим разошёлся бы с ним на первой же правке — молча и в пользу дубля. Неоднозначность не разрешается никогда: ИНН, совпавший у двух юрлиц, которых не развёл КПП, уходит человеку списком options."""
-
-    #: Наши контрагенты с тем же ИНН, когда выбрать между ними обязан человек. Непустой список означает «такие у нас уже есть, выбери» — и потому же означает, что заводить нового НЕ НАДО: там, где контрагент с такими реквизитами уже заведён, место кнопке «связать с существующим», а не «завести».
-    options: List["DocflowIntakeCounterpartyOption"]
-
-class DocflowIntakeCounterpartyOption(TypedDict):
-    """Один наш контрагент на выбор человеку. КПП здесь не для полноты: он единственное, чем два юрлица с одним ИНН различаются."""
-
-    id: "UUID"
-    name: str
-    kpp: str
-
-class DocflowIntakeInput(TypedDict, total=False):
-    """Решение человека, которым подтверждается приёмка. Сам пакет назван в адресе. Решения по строкам приезжают СПИСКОМ, а не картой «номер → товар»: пропуск строки — это тоже решение, и картой его пришлось бы выражать отсутствием ключа, то есть неотличимо от «человек про эту строку не сказал ничего», а разница между ними принципиальная."""
-
-    #: Дата учётного документа ГГГГ-ММ-ДД. Пусто — берётся дата документа поставщика: она и есть дата операции
-    date: str
-    #: Контрагент. Пусто — берётся тот, с кем свело зеркало
-    contact: Optional["UUID"]
-    #: Решения по строкам. Собственной догадкой подтверждение не пользуется: строка без записанного соответствия и без решения человека в документ не едет, а отвечает проверкой docflow.edo.product_required
-    lines: List["DocflowIntakeLineInput"]
-    #: Примечание учётного документа
-    comment: str
-
-class _DocflowIntakeLineRequired(TypedDict):
-    #: Номер строки в файле поставщика. По нему человек соотносит экран с бумагой, и по нему же приходит его решение
-    number: int
-    #: Наименование товара словами поставщика
-    name: str
-    #: Артикул поставщика
-    article: str
-    #: Код товара у поставщика
-    code: str
-    #: Код ОКЕИ единицы измерения
-    unit_code: str
-    unit_name: str
-    quantity: str
-    #: Цена единицы словами поставщика
-    price: str
-    amount_without_vat: str
-    #: Ставка налога словами файла
-    vat_rate: str
-    #: Сумма налога. Пуста при отметке «без НДС»: нуля там нет, и подставить его значит превратить необлагаемую поставку в облагаемую с нулевым налогом
-    vat_amount: str
-    #: Отметка «без НДС» у строки
-    vat_without: bool
-    amount_with_vat: str
-    #: Ключ соответствия: то, по чему эта строка узнаётся в СЛЕДУЮЩЕМ документе того же поставщика. Собирается с приставкой вида `арт:`, `код:` или `наим:` — артикул «100» и наименование «100» разные вещи, и без приставки они стали бы одной строкой соответствий. Показывается затем, чтобы человек понимал, что именно он сопоставляет: не эту накладную, а артикул поставщика на все будущие поставки.
-    key: str
-    #: Номенклатура кабинета; null — не выбрана
-    product: Optional["UUID"]
-    #: Имя выбранной карточки. Подсказка, а не реквизит: карточку могли заархивировать
-    product_name: str
-    #: Откуда взялась номенклатура строки. `manual` — сопоставил человек, `auto` — сопоставила машина и решение записано, `rejected` — человек уже посмотрел и сказал «не это» (догадку по такой строке мы больше не показываем), `guess` — наша догадка ПРЯМО СЕЙЧАС, нигде не записанная, `none` — сопоставить не с чем. Записанное соответствие приносит свой способ из справочника внешних ссылок, поэтому здесь встречаются и его значения (`pending`, `import`). Различать обязательно: на экране «это решил человек» и «это мы угадали» выглядят одинаково — одна строка с названием товара, — а значат противоположное.
-    match: str
-
-class DocflowIntakeLine(_DocflowIntakeLineRequired, total=False):
-    """Строка товарной таблицы чужого документа вместе с тем, что мы про неё предлагаем. Числа остаются СТРОКАМИ ровно так, как их написал поставщик: сумма в чужом документе такая, какую он подписал, и наша задача её донести, а не поправить. Расхождения покажет сверка, а не молчаливое округление."""
-
-    #: С чем ещё эта строка могла совпасть. Непусто только у неоднозначной догадки: выбрать за человека из двух одинаково подходящих товаров значит угадать монеткой и записать это как факт
-    options: List["DocflowIntakeProductOption"]
-
-class _DocflowIntakeLineInputRequired(TypedDict):
-    #: Номер строки в файле поставщика. Два решения по одному номеру отклоняются: какое из них считать выбором человека, знать неоткуда, а взять последнее значит тихо отбросить первое
-    number: int
-
-class DocflowIntakeLineInput(_DocflowIntakeLineInputRequired, total=False):
-    """Решение человека по одной строке документа поставщика."""
-
-    #: Выбранная номенклатура кабинета
-    product: Optional["UUID"]
-    #: Строку в учётный документ не берём. Нужно затем, что в УПД встречаются строки, которых у нас нет и не будет: доставка отдельной строкой, тара, услуга сборки. Заводить ради них карточку товара значит засорять справочник, а молча терять их — врать про сумму. Пропущенная строка остаётся видимой и в приёмке, и в самом документе.
-    skip: bool
-
-class DocflowIntakeParty(TypedDict):
-    """Сторона сделки, прочитанная из чужого файла. Показывается ТЕКСТОМ, даже когда контрагент сопоставлен: карточку могут переименовать, а документ обязан остаться читаемым таким, каким его прислали."""
-
-    #: Вид участника словами файла: юридическое лицо, предприниматель, иностранное лицо, физическое лицо
-    kind: str
-    name: str
-    inn: str
-    kpp: str
-    #: Адрес одной строкой, собранный из частей формата
-    address: str
-
-class DocflowIntakePreview(TypedDict):
-    """Что мы предлагаем принять к учёту. Ничего не меняет и никуда не ходит: предложение обязано быть безопасным, иначе «посмотреть, что там» становится действием с последствиями, и человек побоится его открыть раньше, чем решит принимать."""
-
-    message: "UUID"
-    #: Нашёлся ли во вложениях титул продавца. Ложь означает, что принимать нечего: пакет либо неформализованный, либо файлы ещё не скачаны — чинится это синхронизацией, а не заполнением формы
-    formalized: bool
-    #: Принимается ли пакет прямо сейчас, без правок
-    ready: bool
-    #: Вид карточки документооборота, которую заведёт приёмка; пусто — карточки по этому пакету не будет. Читается вместе с formalized: непустой вид при formalized = false означает «учётного документа не будет, карточка будет», и приёмка по такому пакету осмысленна. Договор формализованным титулом не бывает по определению — его присылают подписанным PDF, — поэтому кнопку приёмки на нём гасить нельзя, её следует назвать «Завести карточку».
-    flow_card_kind: Literal['', 'contract', 'amendment', 'specification', 'act']
-    #: Учётный документ, если пакет уже принят; иначе null. Показывается вместо повторной приёмки: второй документ по тому же пакету — это задвоенный приход и задвоенный долг перед поставщиком.
-    accepted: Optional["DocflowAcceptedDocument"]
-    source: "DocflowIntakeSource"
-    counterparty: "DocflowIntakeCounterparty"
-    #: Товарная таблица чужого документа вместе с тем, что мы про неё предлагаем. Всегда массив, даже пустой
-    lines: List["DocflowIntakeLine"]
-    totals: "DocflowIntakeTotals"
-    #: Что мешает принять. Тот же тип и тот же порядок, что у предполётной проверки исходящего документа: интерфейс переводит их одним словарём
-    issues: List["DocflowIssue"]
-
-class DocflowIntakeProductOption(TypedDict):
-    """Вариант номенклатуры, предложенный неоднозначной строке."""
-
-    id: "UUID"
-    name: str
-    sku: str
-
-class _DocflowIntakeResultRequired(TypedDict):
-    preview: "DocflowIntakePreview"
-
-class DocflowIntakeResult(_DocflowIntakeResultRequired, total=False):
-    """Что вышло из приёмки. Вместе с документом возвращается ПЕРЕСОБРАННОЕ предложение: экран после приёмки показывает то же, что показывал до неё, но уже с проставленными решениями — иначе ему пришлось бы спрашивать состояние вторым запросом и показывать между ними полупустую форму."""
-
-    #: Учётный документ. ОТСУТСТВУЕТ, когда пакет его не порождает: у договора, дополнительного соглашения и спецификации в PDF результат приёмки — одна карточка документооборота, и экран ведёт человека в неё, а не в журнал учёта.
-    document: "DocflowAcceptedDocument"
-    #: Карточка документооборота, если этот пакет её заводит: договор, дополнительное соглашение, спецификация, акт. Отсутствует у первички — счёт и УПД идут в учёт и привязываются к договору. У неформализованного договора приходит ОДНА карточка без учётного документа: принимать к учёту там нечего, а согласовывать есть что.
-    flow_document: "DocflowFlowDocument"
-
-class DocflowIntakeSource(TypedDict):
-    """Реквизиты чужого файла обмена, из которого всё прочитано. Разбор частичный и ничего не проверяет: файл уже подписан и юридически значим, и отказать в его чтении из-за реквизита, который нам не нужен, значит потерять поставку из-за чужой ошибки в необязательном поле."""
-
-    attachment: "UUID"
-    #: Как это вложение назвал ОПЕРАТОР. Стоит рядом с file_name намеренно: имя оператора («Счёт-фактура № 12») человек видит в списке вложений, а file_name — имя файла обмена, и это разные строки
-    attachment_name: str
-    #: ИдФайл: имя файла обмена без расширения, как его записал продавец
-    file_name: str
-    #: ВерсФорм: редакция формата словами самого файла
-    format_version: str
-    #: Код документа по классификатору; у титула продавца 1115131
-    knd: str
-    #: Функция документа словами продавца: СЧФ, ДОП, СЧФДОП
-    function: str
-    #: Наименование документа, данное ему составителем
-    document_kind_name: str
-    #: Номер документа продавца
-    number: str
-    #: Дата документа в форме ГГГГ-ММ-ДД. Пусто — дата не разобралась
-    date: str
-    #: Она же в форме поставщика ДД.ММ.ГГГГ. Показывается, когда разбор не удался: чужую опечатку человек поймёт быстрее, чем пустое поле
-    date_raw: str
-    #: Валюта документа наименованием и кодом, словами файла
-    currency: str
-    #: Содержание операции словами продавца
-    operation: str
-    seller: "DocflowIntakeParty"
-    buyer: "DocflowIntakeParty"
-
-class DocflowIntakeTotals(TypedDict):
-    """Итоги таблицы словами поставщика. Мы их не пересчитываем: итог в чужом документе такой, какой он подписал."""
-
-    without_vat: str
-    #: Пусто при отметке «без НДС» у документа
-    vat_amount: str
-    with_vat: str
-    #: Отметка «без НДС» у документа целиком
-    vat_without: bool
-
-class _DocflowInvitationRequired(TypedDict):
-    #: Идентификатор приглашения у оператора
-    id: str
-    connection: "UUID"
-    connection_name: str
-    company_name: str
-    #: Название контрагента, если оператор его назвал; иначе экран использует ИНН
-    name: str
-    inn: str
-    kpp: str
-    #: Идентификатор абонентского ящика контрагента
-    external_id: str
-    #: Известные состояния Saby: 2 — отправлено, 7 — обмен возможен, 9 — маршрут разорван
-    state: int
-    #: Слова оператора о состоянии
-    state_name: str
-    #: true — входящее приглашение из роуминга, которое Saby принимает автоматически
-    incoming: bool
-
-class DocflowInvitation(_DocflowInvitationRequired, total=False):
-    """Последнее известное состояние заявки на обмен у оператора."""
-
-    company: Optional["UUID"]
-    created_at: Optional[str]
-    changed_at: Optional[str]
-
-class DocflowInvitationInput(TypedDict, total=False):
-    """Приглашение контрагента к обмену. Нужен ИНН либо идентификатор его ящика у оператора. Название обязательно, когда карточки контрагента у оператора ещё нет: приглашение её заводит."""
-
-    #: Идентификатор абонентского ящика контрагента. Ключом НЕ является: оператор предупреждает, что он может меняться
-    external_id: str
-    inn: str
-    kpp: str
-    name: str
-    #: Приписка человека. Оператору она НЕ уходит: поля сообщения у метода нет вовсе
-    message: str
-
-class DocflowInvitationPage(TypedDict):
-    count: int
-    results: List["DocflowInvitation"]
-    #: Безопасный список подключений без учётных данных для формы приглашения
-    senders: List["DocflowInvitationSender"]
-
-class _DocflowInvitationSenderRequired(TypedDict):
-    id: "UUID"
-    name: str
-    company_name: str
-    company_inn: str
-    company_kpp: str
-    provider: str
-    status: Literal['connected', 'paused', 'error', 'reauth_required', 'disconnected']
-    read_only: bool
-    #: Идентификатор собственного абонентского ящика; пусто — нужно повторно проверить связь
-    external_org_id: str
-
-class DocflowInvitationSender(_DocflowInvitationSenderRequired, total=False):
-    #: Юрлицо подключения: бумагу отправляют только через подключение её юрлица
-    company: Optional[str]
-    #: Имя оператора словами
-    provider_name: str
-    #: Режим «Черновики в ЭДО»: черновик у оператора записывается и при read_only=true
-    draft_write: bool
-
-class _DocflowIssueRequired(TypedDict):
-    #: Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои пять: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке документа не сопоставлена номенклатура) и docflow.edo.sign_first (документ ещё не подписан: в учёт его принимают после подписи)
-    code: str
-    #: Путь до реквизита ИМЕНАМИ ФНС — именами приказа, а не нашими: этими же словами человек будет искать требование в письме налоговой. Например `Документ/СвСчФакт/СвПрод/Адрес`.
-    path: str
-
-class DocflowIssue(_DocflowIssueRequired, total=False):
-    """Одна невыполненная проверка. Форма одна на сборку файла формата ФНС и на приёмку входящего документа к учёту: интерфейс переводит их одним словарём, и вторая форма списка означала бы второй словарь. Ни одной надписи для человека здесь нет: код, путь реквизита и подробности значениями — фразу собирает интерфейс, и собирает её на языке читателя."""
-
-    #: Номер товарной строки с единицы. Отсутствует, когда реквизит не про строку
-    line: int
-    #: Подробности значениями: предел длины, перечень допустимых значений, пришедшее значение. Отсутствует, когда проверке нечего добавить.
-    params: Dict[str, str]
-
-class _DocflowLineRequisitesRequired(TypedDict):
-    line_id: "UUID"
-
-class DocflowLineRequisites(_DocflowLineRequisitesRequired, total=False):
-    """Дополнение к строке учётного документа. Строка адресуется line_id — тем же идентификатором, которым её знает сам документ. Не порядковым номером: порядок строк меняют, и привязка по номеру перевесила бы ставку НДС на другой товар молча."""
-
-    #: Не принимается: ставку строки задают вид ставки товара и учётная политика юрлица. Непустое значение — 400
-    vat_rate: str
-    #: ОКЕИ_Тов. Пустое значение берёт код из карточки единицы измерения
-    unit_code: str
-    #: НаимЕдИзм
-    unit_name: str
-    #: ПрТовРаб
-    kind: str
-    #: ГТИН
-    gtin: str
-    #: КодПроисх
-    country_code: str
-    #: КрНаимСтрПр
-    country_name: str
-    #: НомерДТ
-    customs_number: str
-    #: НомСредИдентТов: средства идентификации маркированного товара
-    marks: List["DocflowMarkRequisites"]
-    #: ИнфПолФХЖ2
-    extra: List["DocflowTextInfoRequisites"]
-
-class DocflowMarkRequisites(TypedDict, total=False):
-    """НомСредИдентТов: средства идентификации маркированного товара. Проходят насквозь: своего источника кодов маркировки в Akeda нет, а без них УПД на маркированный товар недействителен."""
-
-    transport_package: str
-    count: str
-    batch: str
-    codes: List[str]
-    packages: List[str]
 
 class _DocflowMessageRequired(TypedDict):
     id: "UUID"
@@ -10114,20 +7018,6 @@ class DocflowMessage(_DocflowMessageRequired, total=False):
     #: Что стало с оплатой этого счёта. Приходит И В СПИСКЕ, в отличие от состава пакета: состояние оплаты — ровно то, что человек читает глазами в каждой строке. Считает его модуль finance (счета, выписки и расчёты) одним запросом на всю страницу. null означает «этот счёт никто не оплачивает»: ни заведённой заявки, ни платежа, — именно там и остаётся кнопка «Отправить в оплату».
     payment: Optional["DocflowMessagePayment"]
 
-class _DocflowMessageActionInputRequired(TypedDict):
-    #: КОД действия у оператора из stage.actions[].code, а НЕ надпись с кнопки: строка действия своя у каждого вида документа и каждого регламента, и зашитый набор строк ломается на первом нестандартном
-    action: str
-
-class DocflowMessageActionInput(_DocflowMessageActionInputRequired, total=False):
-    """Действие над пакетом словами ОПЕРАТОРА. Что именно можно сделать сейчас, говорит сам пакет: stages[].actions[]. Подписания среди этих действий нет — подпись идёт контуром /api/v1/docflow/edo/signing/tasks."""
-
-    #: Идентификатор этапа у оператора. Не нужен в обычном сценарии: этап выбирает сервер по тому, что сказал оператор
-    stage: str
-    #: Название этапа словами оператора. Адресует скрытые этапы — те, которых в составе пакета не видно, но которые оператор принимает по имени
-    stage_name: str
-    #: Комментарий человека. Уходит второй стороне и остаётся в ленте событий; при отклонении документа обязателен
-    comment: str
-
 class DocflowMessageFlowLink(TypedDict):
     """Карточка документооборота в пакете — обратная сторона связи edo_links карточки. Пакет доказывает отправку и подпись, а содержание живёт в карточке; здесь видно, чьё содержание он вёз и чем карточка ему приходится."""
 
@@ -10183,6 +7073,14 @@ class DocflowOrderActInput(TypedDict, total=False):
     #: Пусто — все услуги заказа; меньше — частичный акт суммой
     amount: str
 
+class _DocflowOrderDocumentSetRequired(TypedDict):
+    members: List["DocflowOrderSetMember"]
+    missing: List[str]
+    basis: str
+
+class DocflowOrderDocumentSet(_DocflowOrderDocumentSetRequired, total=False):
+    order: "DocflowOrderSetOrder"
+
 class _DocflowOrderImportRequired(TypedDict):
     id: "UUID"
     outcome: Literal['accepted', 'updated', 'rejected']
@@ -10222,6 +7120,37 @@ class DocflowOrderInvoiceInput(_DocflowOrderInvoiceInputRequired, total=False):
     #: Сохранить черновиком вместо «Выставить»
     draft: bool
 
+class _DocflowOrderSetMemberRequired(TypedDict):
+    id: "UUID"
+    kind: str
+    title: str
+    status: str
+    direction: str
+
+class DocflowOrderSetMember(_DocflowOrderSetMemberRequired, total=False):
+    number: str
+    date: str
+    settlement: str
+    amount: str
+    currency: str
+    due_date: str
+    #: Назначение платежа, записанное на выданном счёте; только для invoice
+    payment_purpose: str
+    self: bool
+
+class _DocflowOrderSetOrderRequired(TypedDict):
+    id: "UUID"
+    title: str
+    status: str
+
+class DocflowOrderSetOrder(_DocflowOrderSetOrderRequired, total=False):
+    number: str
+    date: str
+    amount: str
+    currency: str
+    side: str
+    self: bool
+
 class DocflowOrderUPDInput(TypedDict, total=False):
     #: Дата УПД; пусто — дата заказа
     date: str
@@ -10231,373 +7160,15 @@ class DocflowOrderUPDInput(TypedDict, total=False):
     #: Пусто — СЧФДОП
     function: Literal['СЧФДОП', 'ДОП']
 
-class DocflowOutgoingFile(TypedDict):
-    """Произвольный файл на отправку рядом с формализованным."""
+class _DocflowPaymentRequestRoutePreviewRequired(TypedDict):
+    approval: bool
+    required: bool
+    direct: bool
+    destination: Literal['calendar', 'treasury']
 
-    #: Имя файла. Без него файл отклоняется: у оператора файл без имени не показывается никому
-    name: str
-    #: Содержимое файла в base64
-    content_base64: str
-
-class _DocflowOutgoingFlowInputRequired(TypedDict):
-    connection: "UUID"
-    file: "UUID"
-
-class DocflowOutgoingFlowInput(_DocflowOutgoingFlowInputRequired, total=False):
-    role: Literal['primary', 'attachment', 'basis']
-    comment: str
-    #: Явное решение отправить документ без подписи
-    unsigned: bool
-
-class _DocflowOutgoingInputRequired(TypedDict):
-    connection: "UUID"
-    document: "UUID"
-
-class DocflowOutgoingInput(_DocflowOutgoingInputRequired, total=False):
-    """Что проверяем и что отправляем. Реквизиты приезжают ОДНИМ объектом, а не россыпью полей: это дополнение к учётному документу, оно хранится целиком и целиком же участвует в пересборке."""
-
-    requisites: "DocflowRequisites"
-    #: Примечание документа у оператора
-    comment: str
-    #: Произвольные файлы рядом с формализованным: договор, спецификация, скан доверенности. Оператор их не разбирает и печатную форму по ним не строит. Уходят по одному после титула: у оператора предел на файл и на запрос, а договор со сканами берёт его легко. На предполётной проверке не участвуют
-    files: List["DocflowOutgoingFile"]
-
-class DocflowPaperPoARequisites(TypedDict, total=False):
-    """СвДоверБум: бумажная доверенность. Обязательна ровно при способе подтверждения полномочий 5."""
-
-    number: str
-    issued_at: str
-    info: str
-    surname: str
-    name: str
-    patronymic: str
-
-class DocflowPartyRequisites(TypedDict, total=False):
-    """Дополнение к карточке участника сделки."""
-
-    #: СокрНаим
-    short_name: str
-    #: ОКПО. В карточке юрлица его нет вовсе
-    okpo: str
-    #: СтруктПодр
-    division: str
-    #: ИнфДляУчаст
-    info: str
-    person: "DocflowPersonRequisites"
-    #: ОГРНИП предпринимателя, 15 цифр. В карточке лежит ОГРН, а это разные номера, и подставлять один вместо другого нельзя
-    ogrnip: str
-    address: "DocflowAddressRequisites"
-    bank: "DocflowBankRequisites"
-    contact: "DocflowContactRequisites"
-
-class _DocflowPaymentDetailsRequired(TypedDict):
-    message: "UUID"
-    #: Чем прочитан счёт: title — формализованный титул ФНС, text — текст вложения, none — читать было нечего.
-    source: Literal['title', 'text', 'none']
-    #: Вышло ли из документа хоть одно поле. Ложь означает, что форма открывается тем же, чем открывалась раньше
-    parsed: bool
-    #: Имя вложения, из которого всё прочитано, словами оператора: по нему человек откроет ту же бумагу и сверит
-    document: str
-    payee: "DocflowPaymentParty"
-    payer: "DocflowPaymentParty"
-    #: Юрлицо кабинета, найденное по ИНН плательщика из счёта; null — такого юрлица в кабинете нет, и выбирает человек
-    company: Optional["UUID"]
-    company_name: "DocflowPaymentField"
-    #: Наш контрагент, с которым сведён участник обмена, — той же лестницей, что и в приёмке: сопоставление зеркала пакета → ЗАПИСАННОЕ решение по этому участнику (ИНН+КПП у этого оператора) → поиск в справочнике по ИНН и КПП. Зеркало одного конверта здесь не источник истины: пакет, загруженный раньше решения человека, стоит в нём без сопоставления, а решение по партнёру уже записано. null — свести не с кем, либо два юрлица с одним ИНН, между которыми выбирает человек.
-    contact: Optional["UUID"]
-    #: Имя этой карточки в кабинете. origin=auto — записанное решение (человека или синхронизации), проверять его незачем; origin=guess — найдено по реквизитам прямо сейчас и нигде не записано, форма ставит рядом «проверьте».
-    contact_name: "DocflowPaymentDetailsContactName"
-    amount: "DocflowPaymentField"
-    currency: "DocflowPaymentField"
-    #: Срок оплаты в форме ГГГГ-ММ-ДД из первого доступного источника: «оплатить до» из самого счёта; иначе дата счёта плюс отсрочка по условиям оплаты контрагента у модуля finance (finance_counterparty_terms на дату счёта); иначе дата счёта плюс отсрочка, которую finance применяет без заведённых условий. Всегда origin=guess — за срок отвечает человек. Пусто только без даты счёта: прибавлять отсрочку не к чему.
-    due_date: "DocflowPaymentDetailsDueDate"
-    number: "DocflowPaymentField"
-    date: "DocflowPaymentField"
-    basis: "DocflowPaymentField"
-    subject: "DocflowPaymentField"
-    #: Назначение платежа словами поставщика — строка у подписи «Назначение платежа» в счёте; пусто — не названо, форма собирает своё
-    purpose: "DocflowPaymentField"
-    vat_amount: "DocflowPaymentField"
-    #: В счёте стояла отметка «без налога (НДС)». Пустая сумма при снятой отметке означает «про налог не сказано», а не «налога нет»
-    vat_without: bool
-
-class DocflowPaymentDetails(_DocflowPaymentDetailsRequired, total=False):
-    """Платёжные реквизиты входящего счёта. Назначение платежа здесь НЕ собрано: строка «оплата по счёту такому-то за то-то» — текст на языке человека, и складывает её интерфейс из частей, которые приезжают ниже отдельно (номер, дата, основание, предмет, налог)."""
-
-    #: НАША карточка договора, к которой привязан конверт. Рядом с basis, а не вместо него: basis — строка из чужой бумаги («по договору №17»), contract — карточка в кабинете, по которой договор открывается. Строку в карточку сервер не превращает: угадывать договор по номеру из PDF значит однажды повесить платёж на чужую бумагу. Заполнено только там, где связь «конверт ↔ карточка» уже записана человеком и договор ровно один; два договора дают null — выбирать за человека нельзя.
-    contract: Optional["UUID"]
-
-class DocflowPaymentDetailsContactName(TypedDict):
-    """Имя этой карточки в кабинете. origin=auto — записанное решение (человека или синхронизации), проверять его незачем; origin=guess — найдено по реквизитам прямо сейчас и нигде не записано, форма ставит рядом «проверьте»."""
-
-    #: Прочитанное значение; пустая строка означает «не нашлось»
-    value: str
-    #: auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое.
-    origin: Literal['auto', 'guess', 'none']
-
-class DocflowPaymentDetailsDueDate(TypedDict):
-    """Срок оплаты в форме ГГГГ-ММ-ДД из первого доступного источника: «оплатить до» из самого счёта; иначе дата счёта плюс отсрочка по условиям оплаты контрагента у модуля finance (finance_counterparty_terms на дату счёта); иначе дата счёта плюс отсрочка, которую finance применяет без заведённых условий. Всегда origin=guess — за срок отвечает человек. Пусто только без даты счёта: прибавлять отсрочку не к чему."""
-
-    #: Прочитанное значение; пустая строка означает «не нашлось»
-    value: str
-    #: auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое.
-    origin: Literal['auto', 'guess', 'none']
-
-class DocflowPaymentDocumentRequisites(TypedDict, total=False):
-    """СвПРД: платёжно-расчётный документ."""
-
-    number: str
-    date: str
-    amount: str
-
-class DocflowPaymentField(TypedDict):
-    """Значение вместе с тем, откуда оно взялось. Пара, а не голая строка: без происхождения форма не может поставить пометку «проверьте» там, где она нужна, и вынуждена либо не показывать её вовсе, либо ставить у всех полей — в обоих случаях пометка перестаёт работать."""
-
-    #: Прочитанное значение; пустая строка означает «не нашлось»
-    value: str
-    #: auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое.
-    origin: Literal['auto', 'guess', 'none']
-
-class DocflowPaymentParty(TypedDict):
-    """Реквизиты одной стороны платежа."""
-
-    name: "DocflowPaymentField"
-    inn: "DocflowPaymentField"
-    kpp: "DocflowPaymentField"
-    account: "DocflowPaymentField"
-    bic: "DocflowPaymentField"
-    bank_name: "DocflowPaymentField"
-    corr_account: "DocflowPaymentField"
-
-class _DocflowPaymentRequestRequired(TypedDict):
-    id: "UUID"
-    number: str
-    status: "DocflowPaymentRequestStatus"
-    #: Ход заявки глазами автора: состояние документа, после согласования — состояние оплаты
-    progress: Literal['draft', 'on_approval', 'rework', 'approved', 'rejected', 'cancelled', 'scheduled', 'sent', 'paid', 'payment_cancelled']
-    company_id: "UUID"
-    company_name: str
-    contact_name: str
-    item_name: str
-    payee: "DocflowPaymentRequestPayee"
-    amount: str
-    currency: str
-    due_date: str
-    purpose: str
-    #: Обоснование автора для согласующего
-    justification: str
-    #: Приоритет оплаты
-    priority: Literal['high', 'normal', 'low']
-    #: Форма оплаты
-    payment_method: Literal['bank', 'cash']
-    basis: "DocflowPaymentRequestBasis"
-    #: Куда ушла согласованная заявка: снимок флага маршрута
-    destination: Literal['', 'calendar', 'treasury']
-    #: Согласована автоматически: маршрута для заявки нет и согласование не обязательно, прохода согласования не было
-    approval_auto: bool
-    #: Согласованную заявку отклонил казначей в модуле finance; причина — в reason
-    rejected_by_finance: bool
-    created_by_name: str
-    created_at: str
-    updated_at: str
-    version: int
-    can_edit: bool
-    can_submit: bool
-    can_cancel: bool
-
-class DocflowPaymentRequest(_DocflowPaymentRequestRequired, total=False):
-    contact_id: "UUID"
-    item_id: "UUID"
-    #: Причина отказа, возврата на доработку или отклонения казначеем
-    reason: str
-    payment: "DocflowPaymentRequestPayment"
-    #: Строка очереди оплат модуля finance, куда ушла согласованная заявка
-    finance_request_id: "UUID"
-    created_by: int
-
-class DocflowPaymentRequestBasis(TypedDict, total=False):
-    #: Модуль основания
-    module: Literal['docflow']
-    #: Вид основания: входящий документ ЭДО, карточка документооборота или основание словами
-    kind: Literal['edo_message', 'flow_document', 'manual']
-    id: Optional["UUID"]
-    title: str
-    contract_id: Optional["UUID"]
-
-class _DocflowPaymentRequestInputRequired(TypedDict):
-    company_id: "UUID"
-    payee: "DocflowPaymentRequestPayee"
-    #: Сумма; не больше двух знаков копеек, лишние нули отбрасываются
-    amount: str
-    due_date: str
-    purpose: str
-
-class DocflowPaymentRequestInput(_DocflowPaymentRequestInputRequired, total=False):
-    contact_id: Optional["UUID"]
-    item_id: Optional["UUID"]
-    currency: str
-    #: Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP
-    priority: Literal['high', 'normal', 'low']
-    #: Форма оплаты: безналичная или наличные (без банковских реквизитов, платит касса)
-    payment_method: Literal['bank', 'cash']
-    #: Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
-    justification: str
-    basis: "DocflowPaymentRequestBasis"
-
-class DocflowPaymentRequestList(TypedDict):
-    results: List["DocflowPaymentRequest"]
-
-class DocflowPaymentRequestOrder(TypedDict):
-    """Платёжное поручение, которым заявка оплачена, — реквизиты проведённого документа денежной операции"""
-
-    document_id: "UUID"
-    number: str
-    date: str
-    amount: str
-    currency: str
-
-class _DocflowPaymentRequestPayeeRequired(TypedDict):
-    name: str
-
-class DocflowPaymentRequestPayee(_DocflowPaymentRequestPayeeRequired, total=False):
-    inn: str
-    kpp: str
-    account: str
-    bic: str
-    bank_name: str
-    corr_account: str
-
-class _DocflowPaymentRequestPaymentRequired(TypedDict):
-    request_id: "UUID"
-    #: Состояние строки очереди: planned, sent, awaiting_signature, executed, rejected, cancelled, returned
-    status: str
-    awaiting_schedule: bool
-
-class DocflowPaymentRequestPayment(_DocflowPaymentRequestPaymentRequired, total=False):
-    """Что стало с оплатой у модуля finance (строка очереди оплат)"""
-
-    #: Дата оплаты; пусто, пока заявка ждёт даты у казначея
-    planned_on: str
-    sent_at: str
-    executed_on: str
-    payment_order: "DocflowPaymentRequestOrder"
-
-DocflowPaymentRequestStatus = Literal['draft', 'on_approval', 'rework', 'approved', 'rejected', 'cancelled']
-
-class _DocflowPaymentRequestUpdateRequired(TypedDict):
-    company_id: "UUID"
-    payee: "DocflowPaymentRequestPayee"
-    #: Сумма; не больше двух знаков копеек, лишние нули отбрасываются
-    amount: str
-    due_date: str
-    purpose: str
-    version: int
-
-class DocflowPaymentRequestUpdate(_DocflowPaymentRequestUpdateRequired, total=False):
-    contact_id: Optional["UUID"]
-    item_id: Optional["UUID"]
-    currency: str
-    #: Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP
-    priority: Literal['high', 'normal', 'low']
-    #: Форма оплаты: безналичная или наличные (без банковских реквизитов, платит касса)
-    payment_method: Literal['bank', 'cash']
-    #: Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
-    justification: str
-    basis: "DocflowPaymentRequestBasis"
-
-class DocflowPaymentRequestVersion(TypedDict):
-    version: int
-
-class DocflowPersonRequisites(TypedDict, total=False):
-    """ФИО предпринимателя или физического лица. Спрашивается, потому что в карточке контрагента имя лежит ОДНОЙ строкой («ИП Иванов Иван Иванович»), а формат требует фамилию, имя и отчество порознь. Разобрать строку догадкой нельзя: «Ли Ван Чуань» и «Иванов Иван» ломают любое правило, а ошибка в ФИО подписанта — это недействительный счёт-фактура."""
-
-    surname: str
-    name: str
-    patronymic: str
-
-class _DocflowPreflightRequired(TypedDict):
-    #: Редакция формата ФНС
-    format_version: str
-    #: Функция документа: СЧФ — счёт-фактура, ДОП — документ о передаче, СЧФДОП — оба сразу. Пусто у ответного титула покупателя: функции у него нет вовсе
-    function: str
-    #: Соберётся ли документ прямо сейчас. Это НЕ «всё в порядке»: суммы всё равно смотрят глазами, потому что налог считаем мы
-    ready: bool
-    #: Всегда массив, даже пустой: null означал бы «не проверяли», а проверяли всегда
-    issues: List["DocflowIssue"]
-    #: Имя файла обмена, если он собирается. Пустое, пока не собирается: имя — часть формата, и показывать выдуманное нельзя
-    file_name: str
-    totals: "DocflowPreflightTotals"
-    document: "DocflowPreflightDocument"
-    seller: "DocflowPreflightParty"
-    buyer: "DocflowPreflightParty"
-    #: Товарная таблица с посчитанным налогом. У ответного титула покупателя пуста: он отвечает на документ продавца, а не повторяет его
-    lines: List["DocflowPreflightLine"]
-
-class DocflowPreflight(_DocflowPreflightRequired, total=False):
-    """Ответ на вопрос «соберётся ли документ и что уйдёт». Не булево «годится», а список непройденных проверок плюс разложенная товарная таблица: отказ приёмки приходит от контрагента через сутки и звучит невнятно, а эта проверка обязана назвать всё сразу."""
-
-    #: Формат выпуска карточки: upd — УПД 5.03, chetop — счёт на оплату 5.01. Отсутствует у проверки продажи: там формат всегда УПД
-    format: Literal['upd', 'chetop']
-    #: Файл схемы ФНС без расширения, которой отвечает выпуск. Версия схемы — не версия формата: у счёта 5.01 схема выбирается по дате документа (_03 до 2026 года, _04 с 01.01.2026)
-    schema: str
-
-class DocflowPreflightDocument(TypedDict):
-    """Учётный документ кабинета, который формализуем."""
-
-    id: "UUID"
-    number: str
-    #: Календарная дата документа ГГГГ-ММ-ДД
-    date: str
-    #: Ключ вида документа в кабинете
-    type_key: str
-    type_name: str
-    #: Состояние учётного документа в кабинете
-    status: str
-
-class DocflowPreflightLine(TypedDict):
-    """Строка товарной таблицы с посчитанным налогом. Показывается человеку целиком и ДО отправки, потому что налог считаем мы: карточка юрлица хранит только общее умолчание, а сумма НДС — наш вывод из фактической ставки строки и признака «цены с налогом». Вывод, который человек не увидел, он не проверил."""
-
-    #: Порядковый номер строки в файле с единицы
-    number: int
-    line_id: "UUID"
-    name: str
-    #: Код ОКЕИ из карточки единицы измерения либо явное исключение этого отправления
-    unit_code: str
-    unit_name: str
-    quantity: str
-    #: Цена единицы без налога
-    price: str
-    #: Ставка словами приказа: «20%», «без НДС», «НДС исчисляется налоговым агентом» и прочие значения перечня
-    vat_rate: str
-    #: Сумма налога. Пуста при ставке «без НДС»: формат требует там не нулевую сумму, а отметку об отсутствии налога, и ноль вместо неё — другое утверждение
-    vat_amount: str
-    amount_without_vat: str
-    amount_with_vat: str
-
-class _DocflowPreflightPartyRequired(TypedDict):
-    name: str
-    inn: str
-    kpp: str
-    #: Вид участника из карточки: legal, sole_prop, individual. От него зависит, какую ветвь формата заполнять: у предпринимателя вместо наименования организации ФИО
-    entity_type: str
-    #: Прежний адрес одной строкой для карточек, заведённых до структурированного адреса. Сервер не разбирает его на части догадкой: «улица Мира, 1» и «Мира, 1» неотличимы от «город Мира» ни одним правилом. Новая карточка подставляет готовые части прямо в реквизиты формата.
-    address_hint: str
-
-class DocflowPreflightParty(_DocflowPreflightPartyRequired, total=False):
-    """Сторона сделки в том виде, в каком она уедет в файл."""
-
-    #: Только у продавца — руководитель своего юрлица из его карточки (у ИП — сам предприниматель без должности); форма предлагает его подписантом по нажатию
-    head: "SettingsCompanyHead"
-
-class DocflowPreflightTotals(TypedDict):
-    """Итоги товарной таблицы. Складываются из уже напечатанных строк, а не пересчитываются от исходных величин: итог обязан сойтись со строками до копейки."""
-
-    #: Стоимость без налога
-    without_vat: str
-    #: Сумма налога
-    vat: str
-    #: Стоимость с налогом
-    with_vat: str
+class DocflowPaymentRequestRoutePreview(_DocflowPaymentRequestRoutePreviewRequired, total=False):
+    route_id: "UUID"
+    route_name: str
 
 class _DocflowRecognizedRequired(TypedDict):
     #: Чем прочитано, и заодно насколько верить. title — подписанный файл обмена ФНС, проверять нечего; text — вытащено якорными правилами из чужой раскладки, и рядом со значением интерфейс ставит «проверьте»; none — читали и брать было нечего; пустая строка — разбора не было
@@ -10617,31 +7188,6 @@ class DocflowRecognized(_DocflowRecognizedRequired, total=False):
 
     #: Когда разбирали. Пусто — попытки ещё не было; это не то же самое, что source=none («читали и брать оказалось нечего»)
     at: Optional[str]
-
-class DocflowRequisites(TypedDict, total=False):
-    """Исключения одного отправления поверх повторяющихся реквизитов карточек юрлица, контрагента и единицы измерения. Здесь остаются ставка отдельной строки, выбранный расчётный счёт, подписант, содержание операции и идентификаторы участников обмена. У одного и того же товара в разных накладных ставка бывает разной. Каждое поле отвечает ровно одному реквизиту приказа, и имя ФНС названо в его описании. Все поля необязательны: чего не прислали, то и покажет предполётная проверка. Явное значение отправления сильнее карточки; валютой по умолчанию остаётся рубль."""
-
-    #: Функция: перечень закрыт, потому что это перечень приказа
-    function: Literal['СЧФ', 'ДОП', 'СЧФДОП']
-    #: НаимДокОпр: наименование документа, определённое сторонами сделки
-    document_kind_name: str
-    #: ВерсПрог. Пустое значение подставляет сервер: версию приложения знает он, а не человек в форме
-    program_version: str
-    currency: "DocflowCurrencyRequisites"
-    file: "DocflowFileRequisites"
-    seller: "DocflowPartyRequisites"
-    buyer: "DocflowPartyRequisites"
-    #: Грузоотправитель — сам продавец
-    shipper_same_as_seller: bool
-    transfer: "DocflowTransferRequisites"
-    #: Транспортные и сопроводительные документы
-    shipment_documents: List["DocflowDocumentRefRequisites"]
-    #: СвПРД: платёжно-расчётные документы
-    payment_documents: List["DocflowPaymentDocumentRequisites"]
-    signers: List["DocflowSignerRequisites"]
-    #: ИнфПолФХЖ1: дополнительные сведения факта хозяйственной жизни
-    extra: List["DocflowTextInfoRequisites"]
-    lines: List["DocflowLineRequisites"]
 
 class _DocflowSalesOrderRequired(TypedDict):
     id: "UUID"
@@ -10673,6 +7219,7 @@ class DocflowSalesOrder(_DocflowSalesOrderRequired, total=False):
     status_id: "UUID"
     #: Имя статуса, которое придумал кабинет
     status_name: str
+    funnel_id: "UUID"
     manager: str
     comment: str
     external_id: str
@@ -10733,123 +7280,6 @@ class DocflowSignature(_DocflowSignatureRequired, total=False):
     attachment: "UUID"
     signed_at: str
 
-class DocflowSignatureShape(TypedDict):
-    """Какой подписи ждёт оператор. Форма подписи — свойство ЗАДАНИЯ, а не константа кода: смена решения оператора меняет значения здесь, и больше ничего."""
-
-    profile: Literal['cades-bes', 'cades-t', 'cades-x-long-type-1', 'pkcs7']
-    #: Открепленная подпись отдельным файлом
-    detached: bool
-    #: Служба штампов времени. null означает, что штамп не нужен
-    timestamp_url: Optional[str]
-
-class _DocflowSignatureSubmissionRequired(TypedDict):
-    #: Контейнер CMS/PKCS#7 в Base64, без префикса data:
-    signature: str
-    #: Отпечаток сертификата. Обязателен: оператор не помнит его между подготовкой и выполнением действия и иначе выберет сертификат сам
-    certificate_thumbprint: str
-
-class DocflowSignatureSubmission(_DocflowSignatureSubmissionRequired, total=False):
-    """Результат подписания, вычисленный КриптоПро на машине человека."""
-
-    #: Открытая часть сертификата Base64. Удобство, а не обязанность: найти сертификат оператор умеет и по отпечатку
-    certificate: str
-    #: ФИО владельца сертификата. Оператор требует его и при выполнении действия
-    certificate_holder: str
-    #: ИНН из сертификата, как в задании
-    certificate_inn: str
-    #: Должность владельца сертификата
-    certificate_position: str
-    #: Комментарий к действию; уходит второй стороне
-    comment: str
-    #: Время по часам браузера; хранится справкой
-    signed_at: str
-    attorney: "DocflowAttorneySubmission"
-
-class DocflowSignerRequisites(TypedDict, total=False):
-    """Подписант: кто и на каком основании подписывает документ."""
-
-    #: Должн
-    position: str
-    #: ТипПодпис
-    kind: str
-    #: Способ подтверждения полномочий. От него зависит, какая доверенность обязательна
-    authority: str
-    #: ДатаПодДок
-    signed_at: str
-    #: ДопСведПодп
-    info: str
-    surname: str
-    name: str
-    patronymic: str
-    electronic_poa: "DocflowElectronicPoARequisites"
-    paper_poa: "DocflowPaperPoARequisites"
-
-class _DocflowSigningPayloadRequired(TypedDict):
-    #: content — подписывается содержимое файла, хеш считает КриптоПро на машине человека; digest — готовый хеш оператора
-    form: Literal['content', 'digest']
-    #: Base64 в обеих формах
-    data: str
-
-class DocflowSigningPayload(_DocflowSigningPayloadRequired, total=False):
-    """То, что подлежит подписи. Data всегда Base64, без префикса data:."""
-
-    #: Чем посчитан хеш. Обязателен при form=digest и отсутствует иначе
-    digest_algorithm: Literal['gost3411-2012-256', 'gost3411-2012-512', 'gost3411-94']
-
-class _DocflowSigningResultRequired(TypedDict):
-    task: "DocflowSigningTask"
-    action: "DocflowActionResult"
-
-class DocflowSigningResult(_DocflowSigningResultRequired, total=False):
-    """Чем кончилась приёмка подписи."""
-
-    signature: "UUID"
-
-class _DocflowSigningTaskRequired(TypedDict):
-    id: "UUID"
-    message_id: "UUID"
-    file_name: str
-    payload: "DocflowSigningPayload"
-    signature: "DocflowSignatureShape"
-    #: Требование машиночитаемой доверенности. Флага «требуется доверенность» у оператора нет: значение выводится из того, что он сказал о сертификатах
-    attorney: Literal['none', 'optional', 'required']
-    status: Literal['pending', 'signed', 'expired']
-    expires_at: str
-    created_at: str
-
-class DocflowSigningTask(_DocflowSigningTaskRequired, total=False):
-    """Задание на подпись. Ни ключа, ни контейнера, ни пина здесь нет и быть не может: подпись вычисляет КриптоПро на машине человека, сервер о ней узнаёт только результатом."""
-
-    attachment_id: "UUID"
-    #: Отметка ПРИЁМКИ подписи сервером; часы браузера доказательством не служат
-    signed_at: Optional[str]
-
-class _DocflowSigningTaskInputRequired(TypedDict):
-    message_id: "UUID"
-
-class DocflowSigningTaskInput(_DocflowSigningTaskInputRequired, total=False):
-    """Просьба выдать задание на подпись. Сертификат человек выбирает ДО задания: оператор готовит действие под конкретного подписанта и без ФИО и ИНН владельца сертификата может отказать уже в подготовке."""
-
-    attachment_id: "UUID"
-    #: Идентификатор этапа у оператора. Карточка называет его вместе с action; без них этап выбирает сервер
-    stage: str
-    #: Код команды оператора из stage.actions[].code («Утвердить», «Отклонить»). Без него сервер берёт согласие этапа, закрываемое подписью, и никогда — отказ
-    action: str
-    #: Комментарий к действию словами человека; при отказе обязателен
-    comment: str
-    #: Отпечаток выбранного сертификата. Подпись другим сертификатом под этим заданием не принимается
-    certificate_thumbprint: str
-    #: ФИО владельца сертификата из поля «Субъект»
-    certificate_holder: str
-    #: ИНН из сертификата: организации, если он в сертификате есть, иначе владельца
-    certificate_inn: str
-    #: Должность владельца сертификата
-    certificate_position: str
-
-class DocflowSigningTaskList(TypedDict):
-    count: int
-    results: List["DocflowSigningTask"]
-
 class DocflowStage(TypedDict):
     """Этап документооборота: что с пакетом можно сделать сейчас. Список действий приходит от ОПЕРАТОРА и не выводится из нашего состояния."""
 
@@ -10880,103 +7310,7 @@ class DocflowStageAction(_DocflowStageActionRequired, total=False):
     #: Действие закрывается подписью («ТребуетПодписания» оператора). Точнее признака этапа: на этапе «Утверждение» подписи требует «Утвердить», а «Переназначить» — нет. У этапов, записанных до появления признака, false у всех действий — тогда судят по requires_signature этапа
     requires_signature: bool
 
-class DocflowStageRef(TypedDict, total=False):
-    """Ссылка на строку очереди этапов. Пустое тело означает единственный незакрытый этап пакета: у обычного документа он один, и требовать его имя не с чего."""
-
-    #: Идентификатор этапа у оператора
-    stage: str
-    #: Название этапа словами оператора
-    stage_name: str
-    #: Название действия этапа: очередь у оператора адресуется этапом ВМЕСТЕ с действием, а не одним этапом
-    action: str
-
 DocflowStateCategory = Literal['in_work', 'awaiting_signature', 'cancellation_requested', 'cancellation_refused', 'draft', 'error', 'signer_invalid', 'approved', 'rejected', 'cancelled', 'interrupted']
-
-class DocflowSyncOutcome(TypedDict):
-    """Итог одного прохода синхронизации ленты оператора."""
-
-    #: Итог самого прохода. skipped означает, что прохода не было: подключение работает в режиме только чтения
-    run_status: Literal['ok', 'failed', 'skipped']
-    #: Состояние подключения после прохода
-    status: Literal['connected', 'paused', 'error', 'reauth_required', 'disconnected']
-    #: Неудача чинится временем: повторится сама, человек не нужен
-    retry: bool
-    #: Машинный код неудачи (docflow.edo.*); пусто при удаче
-    error_code: str
-    #: Слова оператора и только они; пусто при удаче
-    provider_message: str
-
-class DocflowTextInfoRequisites(TypedDict, total=False):
-    """Пара «идентификатор — значение» дополнительных сведений."""
-
-    id: str
-    value: str
-
-class _DocflowTitleRequired(TypedDict):
-    id: "UUID"
-    connection: "UUID"
-    #: seller — титул продавца по учётному документу кабинета; buyer — ответный титул покупателя на входящий пакет
-    kind: Literal['seller', 'buyer']
-    #: Учётный документ кабинета у титула продавца. Ссылка мягкая: документа нет — титул показывается как титул по удалённому документу
-    document: Optional[str]
-    #: Формат выпуска: upd — УПД 5.03 (ЕД-7-26/970@), chetop — счёт на оплату 5.01 (ЕД-7-26/29@)
-    format: Literal['upd', 'chetop']
-    #: Пакет зеркала. У титула покупателя — входящий, на который отвечаем; у титула продавца — НАШ конверт, найденный синхронизацией после записи оператору
-    message: Optional[str]
-    #: Редакция формата ФНС
-    format_version: str
-    #: Функция документа: у УПД — СЧФ, ДОП, СЧФДОП (пусто у титула покупателя); у счёта на оплату — 0 (счёт) или 1 (счёт-оферта)
-    function: str
-    requisites: "DocflowRequisites"
-    #: Имя файла обмена ФНС. Повторяется внутри файла в ИдФайл: пересобранный титул обязан быть тем же самым
-    file_name: str
-    #: Хеш отправленных байтов. Остаётся затем же, зачем он есть у вложения зеркала: доказать спустя годы, что отправляли именно эти байты
-    content_sha256: str
-    content_size_bytes: int
-    #: Идентификатор документа у оператора. НАШ и заданный нами: без него каждый повтор отправки создавал бы у оператора новый документ
-    external_doc_id: str
-    #: Идентификатор вложения с титулом у оператора
-    external_attachment_id: str
-    #: «Собран» отделён от «записан» намеренно: между ними стоит оператор, и его отказ не отменяет сборки — файл уже лежит в хранилище
-    status: Literal['draft', 'built', 'written', 'failed']
-    #: Наш машинный код последней неудачи (docflow.edo.*); его переводит интерфейс
-    last_error_code: str
-    #: СЛОВА ОПЕРАТОРА и только они; показываются как есть
-    last_error: str
-    created_by_user_id: Optional[int]
-    created_at: str
-    updated_at: str
-
-class DocflowTitle(_DocflowTitleRequired, total=False):
-    """Строка исходящего титула. Одна форма на оба вида: титул продавца (КНД 1115131) и титул покупателя (КНД 1115132) — разные файлы разных схем, но судьба у них одна: собрать XML, положить в хранилище, записать оператору, запомнить, чем он ответил. Самого XML здесь нет: он лежит в объектном хранилище кабинета и выдаётся отдельным маршрутом, а ключ к нему наружу не уходит."""
-
-    #: Карточка документооборота, из которой выпущен XML (УПД, акт, накладная, счёт). У титула продавца цель одна из двух: учётный документ либо редакция карточки
-    flow_document: "UUID"
-    #: Редакция карточки, из которой выпущен XML. Новая редакция — новый выпуск: отправленный файл прежней остаётся нетронутым
-    flow_version: int
-
-class DocflowTitleList(TypedDict):
-    count: int
-    results: List["DocflowTitle"]
-
-class DocflowTransferRequisites(TypedDict, total=False):
-    """СвПродПер: сведения о передаче товара, работы или услуги."""
-
-    #: СодОпер
-    operation: str
-    #: ВидОпер
-    kind: str
-    #: ДатаПер в форме ГГГГ-ММ-ДД. Пустая означает дату самого документа: отгрузка датой накладной — обычный случай
-    date: str
-    #: ДатаНачПер
-    period_start: str
-    #: ДатаОконПер
-    period_end: str
-    #: ОснПер: документы-основания передачи
-    basis: List["DocflowDocumentRefRequisites"]
-    #: БезДокОснПер. Формат требует ВЫБОРА: либо перечень оснований, либо прямая отметка «основания нет». Умолчания у выбора нет
-    without_basis: bool
-    employee: "DocflowEmployeeRequisites"
 
 class _DocumentCreateRequired(TypedDict):
     title: str
@@ -11001,19 +7335,6 @@ class DocumentPage(TypedDict):
     count: int
     results: List["TaskDocument"]
 
-class DocumentUpdate(TypedDict, total=False):
-    owner_type: "DocumentOwnerType"
-    owner_id: str
-    task: str
-    section: str
-    project: str
-    milestone: str
-    title: str
-    content: str
-    icon: str
-    color: str
-    is_archived: bool
-
 class DurationMetric(TypedDict):
     samples: int
     median_seconds: int
@@ -11033,13 +7354,6 @@ class Error(_ErrorRequired, total=False):
 
 class FileUpload(TypedDict):
     file: str
-
-class _FilesAccessInputRequired(TypedDict):
-    grants: List["FilesGrant"]
-
-class FilesAccessInput(_FilesAccessInputRequired, total=False):
-    restricted: bool
-    break_inheritance: bool
 
 class FilesAccessPolicy(TypedDict):
     folder_id: "UUID"
@@ -11343,6 +7657,30 @@ class FinanceAccountableBalances(TypedDict):
     on: str
     rows: List["FinanceAccountableBalance"]
 
+class FinanceAcquiringCaptureInput(TypedDict):
+    #: Продажа, заведённая этой установкой приложения
+    order_id: "UUID"
+    #: Ключ проверенного провайдера платежа
+    provider: str
+    #: Уникальный номер списания у провайдера; повтор использует тот же номер
+    external_id: str
+    #: Положительная сумма списания в валюте продажи, десятичная строка
+    amount: str
+    #: Валюта продажи, ISO 4217
+    currency: str
+    #: Дата подтверждённого списания у провайдера
+    paid_at: str
+
+class FinanceAcquiringCaptureResult(TypedDict):
+    #: Финансовый документ оплаты картой
+    document_id: "UUID"
+    #: Оплата проведена в учёте
+    status: Literal['posted']
+    #: Продажа, на которую указано списание
+    order_id: "UUID"
+    #: true при повторе уже записанного списания
+    replayed: bool
+
 class FinanceBalanceItem(TypedDict):
     code: str
     name: str
@@ -11373,80 +7711,6 @@ class FinanceBankLookup(TypedDict):
 class FinanceBankSuggestions(TypedDict):
     directory_configured: bool
     banks: List["FinanceRequisitesBank"]
-
-class _FinanceCashOperationRequired(TypedDict):
-    id: "UUID"
-    #: Номер документа; его выдаёт нумератор кабинета
-    number: str
-    date: str
-    #: Состояние документа; записанная операция сразу `posted`
-    status: str
-    direction: "FinanceDirection"
-    #: Положительная сумма без знака; знак движения задаёт direction
-    amount: str
-    #: Валюта учёта: своей валюты у кассовой операции нет
-    currency: str
-    wallet: "UUID"
-    wallet_name: str
-    #: Юрлицо, взятое У КАССЫ. null законен и означает неофициальный контур — свободные деньги, а не пробел в данных.
-    company: Optional[str]
-    #: Управленческий бизнес кассы
-    business: Optional[str]
-    #: Статья ДДС; null — строка «Без статьи ДДС»
-    item: Optional[str]
-    item_name: str
-    #: Разнесена ли операция: есть ли у неё статья ДДС
-    allocated: bool
-    contact: Optional[str]
-    contact_name: str
-    #: Имя плательщика или получателя текстом; не заменяет contact
-    counterparty: str
-    employee: Optional[str]
-    employee_name: str
-    owner: Optional[str]
-    project: Optional[str]
-    note: str
-    created_at: str
-
-class FinanceCashOperation(_FinanceCashOperationRequired, total=False):
-    #: Заказ, который оплатили наличные
-    order: Optional[str]
-    #: Номер заказа; пусто — заказа нет
-    order_number: str
-
-class _FinanceCashOperationCreateRequired(TypedDict):
-    wallet: "UUID"
-    #: Обязательно; умолчания нет, иначе непонятная операция молча стала бы тратой
-    direction: Dict[str, Any]
-    #: Положительная сумма; знак берётся из направления
-    amount: str
-
-class FinanceCashOperationCreate(_FinanceCashOperationCreateRequired, total=False):
-    #: Пусто означает сегодня КАБИНЕТА, а не сегодня базы
-    date: str
-    #: Статья ДДС; без неё операция законна и видна строкой «Без статьи ДДС»
-    item: Optional[str]
-    #: Обязателен у статьи, ведущей именной долг
-    contact: Optional[str]
-    #: Ответственный; обязателен у статьи оплаты труда
-    employee: Optional[str]
-    #: Собственник; обязателен у статьи расчётов с собственником
-    owner: Optional[str]
-    #: Разрез «проект», если он включён в кабинете
-    project: Optional[str]
-    #: Заказ, который оплачивают наличные: приход — заказ покупателя, расход — заказ поставщику того же контрагента; отменённый заказ не принимается. Входит в «оплачено» заказа
-    order: Optional[str]
-    #: Имя плательщика или получателя текстом, когда карточки контрагента нет
-    counterparty: str
-    #: Назначение операции словами человека
-    note: str
-    #: Запомнить выбранную статью правилом для этого контрагента
-    remember: bool
-
-class FinanceCashOperationPage(TypedDict):
-    #: Сколько операций подходит отбору ВСЕГО, а не сколько их на этой странице: расхождение с длиной `results` означает, что дальше есть ещё.
-    count: int
-    results: List["FinanceCashOperation"]
 
 class _FinanceCashflowEntryRequired(TypedDict):
     id: "UUID"
@@ -11504,52 +7768,9 @@ class FinanceCashflowSection(TypedDict):
     net: str
     items: List["FinanceCashflowItem"]
 
-class FinanceClassificationSuggestion(TypedDict):
-    """Мнение внешнего расширения о том, какой статьёй разнести операцию. Классификацией не является: пока человек не принял её штатной командой, в отчётах операции нет."""
-
-    id: "UUID"
-    transaction: "UUID"
-    #: Установка-автор. Человек обязан видеть, чьё это мнение — иначе совет выглядит выводом самой Akeda
-    installation: Dict[str, Any]
-    #: Пространство имён приложения: app.<издатель>.<ключ>
-    app: str
-    app_version: str
-    cashflow_item: "UUID"
-    cashflow_item_name: Optional[str]
-    contact: Optional[str]
-    contact_name: Optional[str]
-    #: Уверенность долей единицы, decimal string; проценты не принимаются
-    confidence: str
-    explanation_ru: str
-    #: Объяснение локализует сам разработчик расширения; обе половины обязательны
-    explanation_en: str
-    status: Literal['pending', 'accepted', 'rejected']
-    decided_at: Optional[str]
-    created_at: str
-    updated_at: str
-
 class FinanceCommercialPosition(TypedDict):
     terms: "FinanceCounterpartyTerms"
     exposure: "FinanceSettlementExposure"
-
-class FinanceCompanyMatch(TypedDict):
-    status: Literal['linked', 'not_found', 'no_inn']
-    inn: str
-    company: Optional["FinanceDirectoryCompany"]
-    owner_name: str
-    suggestion: Optional["FinanceCompanySuggestion"]
-    message: str
-
-class FinanceCompanyMatchError(TypedDict):
-    detail: str
-    company_match: "FinanceCompanyMatch"
-
-class FinanceCompanySuggestion(TypedDict):
-    name: str
-    legal_name: str
-    inn: str
-    kpp: str
-    address: str
 
 class FinanceConnector(TypedDict):
     id: "UUID"
@@ -11615,39 +7836,6 @@ class FinanceConnectorAccountPatch(TypedDict, total=False):
 
 FinanceConnectorAuthKind = Literal['token', 'client_credentials', 'oauth', 'oauth_mtls']
 
-class FinanceConnectorConsent(TypedDict):
-    auth_url: str
-
-class _FinanceConnectorCreateRequired(TypedDict):
-    provider: "FinanceConnectorProviderKey"
-
-class FinanceConnectorCreate(_FinanceConnectorCreateRequired, total=False):
-    display_name: str
-    company_name: str
-    company: str
-    #: Банковский токен либо JSON с client_id/client_secret; никогда не передаётся через MCP
-    credential: str
-    import_depth_days: int
-    overlap_days: int
-
-class FinanceConnectorCredentialTestInput(TypedDict):
-    provider: "FinanceConnectorProviderKey"
-    credential: str
-
-class _FinanceConnectorCredentialTestResultRequired(TypedDict):
-    ok: bool
-    message: str
-    accounts: int
-
-class FinanceConnectorCredentialTestResult(_FinanceConnectorCredentialTestResultRequired, total=False):
-    company_match: "FinanceCompanyMatch"
-
-class FinanceConnectorMTLSInput(TypedDict):
-    #: PEM-сертификат клиента
-    certificate: str
-    #: PEM-закрытый ключ; в ответах и журналах отсутствует
-    private_key: str
-
 class _FinanceConnectorMTLSStatusRequired(TypedDict):
     configured: bool
 
@@ -11658,16 +7846,6 @@ class FinanceConnectorMTLSStatus(_FinanceConnectorMTLSStatusRequired, total=Fals
 class FinanceConnectorPage(TypedDict):
     count: int
     results: List["FinanceConnector"]
-
-class FinanceConnectorPatch(TypedDict, total=False):
-    display_name: str
-    company_name: str
-    company: Optional[str]
-    #: Непустой новый секрет; пустая строка сохраняет прежний
-    credential: str
-    import_depth_days: int
-    overlap_days: int
-    status: Literal['connected', 'paused', 'disconnected']
 
 class _FinanceConnectorProviderRequired(TypedDict):
     key: "FinanceConnectorProviderKey"
@@ -11693,16 +7871,7 @@ class FinanceConnectorProviderPage(TypedDict):
     count: int
     results: List["FinanceConnectorProvider"]
 
-class FinanceConnectorStatementCheck(TypedDict):
-    ok: Literal[True]
-    transactions: int
-    message: str
-
 FinanceConnectorStatus = Literal['connected', 'paused', 'error', 'reauth_required', 'awaiting_consent', 'disconnected']
-
-class FinanceConnectorSyncIntervalOption(TypedDict):
-    minutes: int
-    label: str
 
 class FinanceConnectorSyncResult(TypedDict):
     connector: "FinanceConnector"
@@ -11726,15 +7895,6 @@ class FinanceConnectorSyncRun(TypedDict):
 class FinanceConnectorSyncRunPage(TypedDict):
     count: int
     results: List["FinanceConnectorSyncRun"]
-
-class FinanceConnectorSyncSettings(TypedDict):
-    schedule_interval_minutes: int
-    mode: str
-    modulbank_webhook_url: str
-    interval_options: List["FinanceConnectorSyncIntervalOption"]
-
-class FinanceConnectorSyncSettingsInput(TypedDict):
-    schedule_interval_minutes: int
 
 class _FinanceCounterpartyTermsRequired(TypedDict):
     id: "UUID"
@@ -11770,14 +7930,6 @@ class FinanceCounterpartyTermsCreate(_FinanceCounterpartyTermsCreateRequired, to
     reason: str
 
 FinanceDirection = Literal['in', 'out']
-
-class FinanceDirectoryCompany(TypedDict):
-    id: "UUID"
-    name: str
-    legal_name: str
-    inn: str
-    kpp: str
-    is_active: bool
 
 class _FinanceDividendDecisionInputRequired(TypedDict):
     period_from: str
@@ -11913,119 +8065,6 @@ class FinanceExpenseReportRow(_FinanceExpenseReportRowRequired, total=False):
     comment: str
     #: «Закрывает» — долг поставщику (закупка, счёт), который гасит строка по статье расчётов с поставщиками (ERP-1249); пусто — долг подберёт правило
     closes: "UUID"
-
-class FinanceImportApply(TypedDict, total=False):
-    confirm_warnings: bool
-
-class _FinanceImportDiffRequired(TypedDict):
-    row: int
-    label: str
-    values: Dict[str, str]
-
-class FinanceImportDiff(_FinanceImportDiffRequired, total=False):
-    skipped: bool
-
-class FinanceImportField(TypedDict):
-    key: str
-    label: str
-    required: bool
-
-class FinanceImportInspect(TypedDict, total=False):
-    sheet_name: str
-    header_row: int
-
-class _FinanceImportIssueRequired(TypedDict):
-    row: int
-    severity: Literal['warning', 'error']
-    message: str
-
-class FinanceImportIssue(_FinanceImportIssueRequired, total=False):
-    column: str
-
-class FinanceImportItemMappingRequest(TypedDict):
-    #: Карта целиком: «название статьи в файле» → идентификатор статьи справочника ДДС. Заменяет прежнюю карту, поэтому присылать надо всё накопленное, а не одну новую пару. Пустое значение означает «оставить без статьи» и не сохраняется; непустое, но не UUID, отклоняется.
-    items: Dict[str, str]
-
-FinanceImportKind = Literal['bank_transactions', 'cash_operations']
-
-class _FinanceImportMappingRequired(TypedDict):
-    #: Сопоставление «целевое поле Akeda → имя колонки файла».
-    columns: Dict[str, str]
-
-class FinanceImportMapping(_FinanceImportMappingRequired, total=False):
-    sheet_name: str
-    header_row: int
-    #: Decimal string из заголовка или введённое вручную значение
-    opening_balance: str
-    #: Decimal string из заголовка или введённое вручную значение
-    closing_balance: str
-
-class _FinanceImportRunRequired(TypedDict):
-    id: "UUID"
-    kind: "FinanceImportKind"
-    format: str
-    status: "FinanceImportStatus"
-    source_name: str
-    source_sha256: str
-    source_size: int
-    sheet_name: str
-    header_row: int
-    mapping: Dict[str, str]
-    opening_balance: str
-    closing_balance: str
-    computed_closing_balance: str
-    created_count: int
-    warning_count: int
-    error_count: int
-    created_at: str
-
-class FinanceImportRun(_FinanceImportRunRequired, total=False):
-    account_id: "UUID"
-    wallet_id: "UUID"
-    #: Соответствие «название статьи в файле» и идентификатора статьи справочника. Уточняется отдельным маршрутом, потому что набор статей известен только после предпросмотра
-    item_mapping: Dict[str, str]
-    #: Названия статей из файла, которых нет ни в справочнике, ни в карте соответствий
-    unknown_items: List[str]
-    diff: List["FinanceImportDiff"]
-    issues: List["FinanceImportIssue"]
-    created_by: int
-    previewed_at: str
-    applied_at: str
-    source_columns: List[str]
-    source_sheets: List["FinanceImportSheet"]
-    target_fields: List["FinanceImportField"]
-
-class FinanceImportSheet(TypedDict):
-    name: str
-
-FinanceImportStatus = Literal['uploaded', 'mapped', 'previewed', 'applied']
-
-class _FinanceImportUploadRequired(TypedDict):
-    file: str
-    kind: "FinanceImportKind"
-
-class FinanceImportUpload(_FinanceImportUploadRequired, total=False):
-    account_id: "UUID"
-    wallet_id: "UUID"
-
-class FinanceOpenAdvance(TypedDict):
-    id: "UUID"
-    number: str
-    date: str
-    #: Decimal string
-    amount: str
-    currency: str
-    #: Незачтённая decimal string
-    outstanding: str
-
-class _FinanceOpeningBalanceRequestRequired(TypedDict):
-    #: Decimal string
-    amount: str
-    date: str
-
-class FinanceOpeningBalanceRequest(_FinanceOpeningBalanceRequestRequired, total=False):
-    #: Обязателен при исправлении сторно-документом
-    comment: str
 
 class _FinanceOpeningDebtRequestRequired(TypedDict):
     #: Дата остатков — дата старта учёта
@@ -12379,13 +8418,6 @@ class FinancePaymentPlan(_FinancePaymentPlanRequired, total=False):
     executed_on: str
     executed_document_id: "UUID"
 
-class _FinancePaymentPlanExecuteRequired(TypedDict):
-    document_id: "UUID"
-
-class FinancePaymentPlanExecute(_FinancePaymentPlanExecuteRequired, total=False):
-    #: Пустое значение означает дату фактической операции
-    executed_on: str
-
 class _FinancePaymentPlanInputRequired(TypedDict):
     company_id: "UUID"
     direction: "FinanceDirection"
@@ -12406,279 +8438,6 @@ class FinancePaymentPlanInput(_FinancePaymentPlanInputRequired, total=False):
 
 FinancePaymentSourceKind = Literal['bank', 'cash', 'unset']
 
-class FinancePayoutRegister(TypedDict):
-    id: "UUID"
-    #: Номер документа реестра
-    number: str
-    date: str
-    #: Decimal string; итог официальных и неофициальных частей строк
-    amount: str
-    #: Сколько человек в реестре
-    people: int
-    #: Ключ банковской операции, закрывшей реестр; пусто — реестр ждёт оплаты
-    paid_by: str
-    status: "FinancePayoutRegisterStatus"
-
-class FinancePayoutRegisterPage(TypedDict):
-    count: int
-    results: List["FinancePayoutRegister"]
-
-FinancePayoutRegisterStatus = Literal['waiting', 'paid']
-
-class _FinancePayoutSheetRequestRequired(TypedDict):
-    account: "UUID"
-    rows: List["FinancePayoutSheetRow"]
-
-class FinancePayoutSheetRequest(_FinancePayoutSheetRequestRequired, total=False):
-    #: Юрлицо реестра; пусто — берётся из карточки счёта, и без него реестр не завести
-    company: str
-    #: Дата файла и реестра; неразобранная означает сегодня
-    date: str
-    #: Назначение платежа; пусто — «Заработная плата»
-    purpose: str
-
-class FinancePayoutSheetRow(TypedDict):
-    employee: "UUID"
-    #: Decimal string; положительная сумма к выплате
-    amount: str
-
-class _FinancePayrollAccrualPayloadRequired(TypedDict):
-    rows: List["FinancePayrollAccrualRow"]
-
-class FinancePayrollAccrualPayload(_FinancePayrollAccrualPayloadRequired, total=False):
-    """Содержимое документа начисления. Начисленный итог и неофициальная часть не хранятся: они выводятся из оклада, премий и официальной части, а второе место с той же истиной разошлось бы с первым."""
-
-    #: Месяц начисления в формате YYYY-MM; дата документа отвечает, когда начисление отражено в учёте
-    period: str
-
-class _FinancePayrollAccrualRowRequired(TypedDict):
-    employee: "UUID"
-
-class FinancePayrollAccrualRow(_FinancePayrollAccrualRowRequired, total=False):
-    """Одна строка начисления — человек за месяц"""
-
-    #: Decimal string; оклад, постоянная часть
-    salary: str
-    #: Decimal string; первая премия
-    bonus1: str
-    #: Decimal string; вторая премия
-    bonus2: str
-    #: Премии строки
-    bonuses: List["FinancePayrollAccrualRowBonusesItem"]
-    #: Decimal string; прочие удержания, уменьшают постоянную зарплату
-    withheld: str
-    #: Строка справочника «Оклад указан»: до удержаний или на руки
-    salary_basis: str
-    #: Decimal string; официальная часть начисления, не больше суммы оклада и премий
-    official: str
-    #: Decimal string; НДФЛ, удержанный из официальной части
-    tax: str
-    #: Decimal string; страховые взносы сверх начисления, а не удержание из него
-    insurance: str
-    #: Разрез проекта; пустой в регистр не идёт
-    project: str
-    #: Разрез подразделения; пустой в регистр не идёт
-    department: str
-    #: Разрез центра финансовой ответственности; пустой в регистр не идёт
-    cfo: str
-
-class _FinancePayrollAccrualRowBonusesItemRequired(TypedDict):
-    #: Decimal string; сумма премии
-    amount: str
-
-class FinancePayrollAccrualRowBonusesItem(_FinancePayrollAccrualRowBonusesItemRequired, total=False):
-    #: Статья ручной премии; пусто — «Заработная плата». У премии с variable не читается
-    item: str
-    #: Премия начислена правилом от выручки — в ОПиУ «Переменная заработная плата», НДФЛ и взносы делятся в той же доле
-    variable: bool
-
-class _FinancePayrollDocumentCreateRequired(TypedDict):
-    type: "FinancePayrollDocumentTypeKey"
-    refs: "FinancePayrollDocumentRefs"
-
-class FinancePayrollDocumentCreate(_FinancePayrollDocumentCreateRequired, total=False):
-    date: str
-    comment: str
-    #: Строки начисления или реестра; разбор нестрогий — незнакомое поле не отклоняется
-    payload: Union["FinancePayrollAccrualPayload", "FinancePayrollPaymentPayload"]
-    #: Провести сразу; для реестра выплаты флаг игнорируется
-    post: bool
-
-class _FinancePayrollDocumentRefsRequired(TypedDict):
-    company: "UUID"
-
-class FinancePayrollDocumentRefs(_FinancePayrollDocumentRefsRequired, total=False):
-    """Ссылки зарплатного документа. Юрлицо обязательно уже при заведении: главная книга отвечает на вопрос, чьи это деньги. Статьи оклада, НДФЛ и взносов начисление не передаёт: проведение берёт системные статьи постоянной и переменной зарплаты (ERP-988)."""
-
-    #: Статья оплаты труда для выдачи наличными по реестру; проведение начисления её не читает
-    item: str
-    #: Не читается с ERP-988: НДФЛ идёт системными статьями
-    tax_item: str
-    #: Не читается с ERP-988: взносы идут системными статьями
-    insurance_item: str
-    #: Счёт списания реестра; его проставляет выгрузка списка на оплату
-    account: str
-    #: Касса выдачи; заполненная означает расходный кассовый ордер по реестру
-    wallet: str
-
-FinancePayrollDocumentTypeKey = Literal['finance_payroll_accrual', 'finance_payroll_payment']
-
-class FinancePayrollImportInspection(TypedDict):
-    sheets: List["FinancePayrollImportSheet"]
-    #: Целевые поля разбора; обязателен только сотрудник
-    fields: List["FinanceImportField"]
-
-class FinancePayrollImportPreview(TypedDict):
-    rows: List["FinancePayrollImportRow"]
-    #: Строк, годных к начислению
-    ready: int
-    #: Строк с проблемой
-    broken: int
-    #: Decimal string; итог начисленного по годным строкам
-    accrued: str
-
-class FinancePayrollImportRow(TypedDict):
-    #: Номер строки в файле, а не в ответе: человек правит исходник
-    line: int
-    #: Как человек назван в файле
-    source: str
-    #: Найденный сотрудник справочника; пусто — строка не сопоставлена
-    employee: str
-    #: ФИО найденного сотрудника
-    name: str
-    #: Decimal string; оклад
-    salary: str
-    #: Decimal string; первая премия
-    bonus1: str
-    #: Decimal string; вторая премия
-    bonus2: str
-    #: Decimal string; официальная часть, равная начисленному при отсутствии своей колонки
-    official: str
-    #: Decimal string; НДФЛ
-    tax: str
-    #: Decimal string; страховые взносы
-    insurance: str
-    #: Decimal string; оклад плюс обе премии
-    accrued: str
-    #: Decimal string; начисленное за вычетом официальной части
-    unofficial: str
-    #: Почему строку нельзя начислить; пусто — можно
-    problem: str
-
-class FinancePayrollImportSheet(TypedDict):
-    name: str
-    #: Заголовки строки, выбранной как шапка
-    header: Optional[List[str]]
-    #: Первые пять строк данных
-    sample: Optional[List[List[str]]]
-    #: Строк данных на листе, без шапки
-    rows: int
-    #: Предложенное соответствие «целевое поле → заголовок колонки»
-    guessed: Dict[str, str]
-
-FinancePayrollJournal = TypedDict("FinancePayrollJournal", {"from": str, "to": str, "rows": List["FinancePayrollJournalRow"], "totals": "FinancePayrollJournalTotals"}, total=False)
-
-class FinancePayrollJournalRow(TypedDict):
-    """Строка журнала — человек за месяц. Все суммы строками: отчёт о деньгах, округлённый по дороге, перестаёт сходиться с книгой ровно там, где на него смотрят."""
-
-    #: Идентификатор сотрудника
-    employee: str
-    employee_name: str
-    job_title: str
-    department: str
-    #: Месяц строки в формате YYYY-MM
-    period: str
-    #: Decimal string
-    salary: str
-    #: Decimal string
-    bonus1: str
-    #: Decimal string
-    bonus2: str
-    #: Decimal string — начислено всего
-    accrued: str
-    #: Decimal string — официальная часть начисления
-    official: str
-    #: Decimal string — неофициальная часть начисления
-    unofficial: str
-    #: Decimal string — НДФЛ
-    tax: str
-    #: Decimal string — взносы
-    insurance: str
-    #: Decimal string — на руки официально: официальная часть за вычетом НДФЛ
-    net_official: str
-    #: Decimal string — на руки неофициально: неофициальная часть целиком, с неё не удерживают
-    net_unofficial: str
-    #: Decimal string
-    paid_official: str
-    #: Decimal string
-    paid_unofficial: str
-    #: Decimal string — сколько человеку должны на конец месяца строки. Долг один: сальдо счетов 70.01 и 70.02 вместе, а не вычитание колонок.
-    debt: str
-
-class FinancePayrollJournalTotals(TypedDict):
-    #: Decimal string
-    accrued: str
-    #: Decimal string
-    official: str
-    #: Decimal string
-    unofficial: str
-    #: Decimal string
-    tax: str
-    #: Decimal string
-    insurance: str
-    #: Decimal string
-    paid_official: str
-    #: Decimal string
-    paid_unofficial: str
-    #: Decimal string — берётся только с последней строки каждого сотрудника: сальдо накопительное
-    debt: str
-
-class FinancePayrollPayment(TypedDict):
-    date: str
-    document_id: "UUID"
-    number: str
-    #: Банковская операция или касса
-    source: Literal['bank', 'cash']
-    #: Decimal string; сумма выплаты сотруднику по документу
-    amount: str
-    #: Номер реестра; пусто — выплата не по реестру
-    register: str
-    #: Кому ушли деньги, если не самому сотруднику; пусто — ему самому или получатель не указан
-    recipient: str
-
-class _FinancePayrollPaymentPayloadRequired(TypedDict):
-    rows: List["FinancePayrollPaymentRow"]
-
-class FinancePayrollPaymentPayload(_FinancePayrollPaymentPayloadRequired, total=False):
-    """Содержимое реестра выплаты. Строка без человека и строка с двумя нулями не годятся, и узнаётся это при заведении, а не в момент оплаты."""
-
-    #: Месяц выплаты в формате YYYY-MM
-    period: str
-    #: Назначение платежа; так его записывает выгрузка списка на оплату
-    purpose: str
-
-class _FinancePayrollPaymentRowRequired(TypedDict):
-    employee: "UUID"
-
-class FinancePayrollPaymentRow(_FinancePayrollPaymentRowRequired, total=False):
-    """Одна строка реестра выплаты"""
-
-    #: Decimal string; официальная часть выплаты
-    official: str
-    #: Decimal string; неофициальная часть выплаты
-    unofficial: str
-
-FinancePayrollPayments = TypedDict("FinancePayrollPayments", {"from": str, "to": str, "rows": List["FinancePayrollPayment"]}, total=False)
-
-class FinancePeriodCheck(TypedDict):
-    key: str
-    title: str
-    detail: str
-    passed: bool
-
-class FinancePeriodCheckPage(TypedDict):
-    checks: List["FinancePeriodCheck"]
-
 class FinancePnlCoverage(TypedDict):
     missing: List["FinancePnlCoverageItem"]
     duplicated: List["FinancePnlCoverageItem"]
@@ -12690,88 +8449,6 @@ class _FinancePnlCoverageItemRequired(TypedDict):
 
 class FinancePnlCoverageItem(_FinancePnlCoverageItemRequired, total=False):
     times: int
-
-class _FinancePnlEntryRequired(TypedDict):
-    id: "UUID"
-    date: str
-    #: Decimal string со знаком ОТЧЁТА, а не со знаком книги: расшифровка обязана складываться в ту строку, которую раскрывают
-    amount: str
-    document_number: str
-    #: Вид документа словами: продажа, закупка, банковская операция
-    document_type: str
-    #: Вид документа машинным ключом — по нему документ открывается ТАМ, где он живёт: модульные документы общий журнал не отдаёт
-    document_type_key: str
-    counterparty: str
-    #: Счёт результата: одна статья может лечь на разные счета, если правило проводки менялось
-    account_code: str
-    account_name: str
-    comment: str
-
-class FinancePnlEntry(_FinancePnlEntryRequired, total=False):
-    document_id: "UUID"
-
-class FinancePnlEntryPage(TypedDict):
-    #: Длина `results`, а не число проводок ячейки: список уже обрезан потолком 200
-    count: int
-    results: List["FinancePnlEntry"]
-
-class _FinancePnlFormulaTokenRequired(TypedDict):
-    kind: Literal['row', 'number', 'op', 'open', 'close']
-
-class FinancePnlFormulaToken(_FinancePnlFormulaTokenRequired, total=False):
-    row_id: "UUID"
-    op: Literal['+', '-', '*', '/']
-    value: str
-
-class FinancePnlItem(TypedDict):
-    id: "UUID"
-    name: str
-    #: Пустая строка у корневой статьи
-    parent_id: str
-
-class FinancePnlItemPage(TypedDict):
-    count: int
-    results: List["FinancePnlItem"]
-
-class _FinancePnlLayoutRequired(TypedDict):
-    id: "UUID"
-    name: str
-    is_default: bool
-    rows: List["FinancePnlLayoutRow"]
-
-class FinancePnlLayout(_FinancePnlLayoutRequired, total=False):
-    #: Вид отчёта макета: прибыли и убытки или движение денег.
-    report: Literal['pnl', 'cashflow']
-
-class _FinancePnlLayoutCreateRequired(TypedDict):
-    name: str
-
-class FinancePnlLayoutCreate(_FinancePnlLayoutCreateRequired, total=False):
-    #: Вид отчёта макета. Задаётся при заведении и дальше не меняется.
-    report: Literal['pnl', 'cashflow']
-    is_default: bool
-
-class FinancePnlLayoutPage(TypedDict):
-    count: int
-    results: List["FinancePnlLayout"]
-
-class _FinancePnlLayoutRowRequired(TypedDict):
-    id: "UUID"
-    kind: Literal['item', 'section', 'formula', 'header', 'source']
-    title: str
-    formula: List["FinancePnlFormulaToken"]
-    format: Literal['amount', 'percent']
-    collapsed: bool
-
-class FinancePnlLayoutRow(_FinancePnlLayoutRowRequired, total=False):
-    parent_id: "UUID"
-    item_id: "UUID"
-    system_row: str
-
-class FinancePnlLayoutSave(TypedDict):
-    name: str
-    is_default: bool
-    rows: List["FinancePnlLayoutRow"]
 
 class FinancePnlLine(TypedDict):
     id: str
@@ -12859,46 +8536,6 @@ class FinanceProjectReport(TypedDict):
 class FinanceReconciliation(TypedDict):
     summary: "FinanceReconciliationSummary"
     results: List["FinanceTransaction"]
-
-class _FinanceReconciliationAccountRequired(TypedDict):
-    account_id: "UUID"
-    account: str
-    currency: str
-    #: Дата, на которую сделан расчёт
-    on: str
-    #: Decimal string — наш расчёт: входящий остаток плюс движения по дату
-    ours: str
-    #: Decimal string — слагаемое расчёта
-    opening_balance: str
-    #: Decimal string — приход за период
-    turnover_in: str
-    #: Decimal string — расход за период
-    turnover_out: str
-    days: List["FinanceReconciliationDay"]
-    statement_gaps: List["FinanceReconciliationStatementGap"]
-
-class FinanceReconciliationAccount(_FinanceReconciliationAccountRequired, total=False):
-    #: Decimal string — слово банка на дату `as_of`. Отсутствует, когда сверять не с чем; это не «сошлось».
-    theirs: str
-    #: Дата, на которую банк назвал остаток
-    as_of: str
-    source: "FinanceReconciliationSource"
-    #: Decimal string — наш расчёт минус банк. Отсутствует вместе с `theirs`: разница с тем, чего не сказали, не равна нулю.
-    difference: str
-
-class FinanceReconciliationDay(TypedDict):
-    date: str
-    reason: "FinanceReconciliationDayReason"
-    #: Сколько операций этого дня попало под причину
-    count: int
-    #: Decimal string — сумма операций дня по этой причине, со знаком движения
-    amount: str
-
-FinanceReconciliationDayReason = Literal['unposted', 'duplicate', 'outside_statement']
-
-FinanceReconciliationSource = Literal['statement', 'bank']
-
-FinanceReconciliationStatementGap = TypedDict("FinanceReconciliationStatementGap", {"from": str, "to": str}, total=False)
 
 class FinanceReconciliationSummary(TypedDict):
     total_count: int
@@ -12993,84 +8630,18 @@ class FinanceReportCompany(TypedDict):
     id: str
     name: str
 
-class FinanceRequisitesAddress(TypedDict):
-    postal_code: str
-    region_code: str
-    region_name: str
-    district: str
-    city: str
-    settlement: str
-    street: str
-    building: str
-    block: str
-    flat: str
-
-class _FinanceRequisitesBankRequired(TypedDict):
+class FinanceRequisitesBank(TypedDict):
     name: str
     bic: str
     correspondent_account: str
     city: str
-
-class FinanceRequisitesBank(_FinanceRequisitesBankRequired, total=False):
     #: ИНН банка; пусто — справочник не назвал
     inn: str
     #: КПП банка; пусто — справочник не назвал
     kpp: str
 
-class FinanceRequisitesLookup(TypedDict):
-    organization: Optional["FinanceRequisitesParty"]
-    bank: Optional["FinanceRequisitesBank"]
-    number_valid: Optional[bool]
-    warnings: Optional[List[str]]
-    directory_configured: bool
-
-class FinanceRequisitesParty(TypedDict):
-    name: str
-    full_name: str
-    entity_type: Literal['LEGAL', 'INDIVIDUAL', '']
-    inn: str
-    kpp: str
-    ogrn: str
-    okpo: str
-    address: str
-    address_parts: "FinanceRequisitesAddress"
-    entrepreneur: "FinanceRequisitesPerson"
-    status: str
-
-class FinanceRequisitesPerson(TypedDict):
-    surname: str
-    name: str
-    patronymic: str
-
-class FinanceRequisitesSuggestions(TypedDict):
-    suggestions: List["FinanceRequisitesParty"]
-    directory_configured: bool
-
 class FinanceResponsiblePatch(TypedDict):
     responsible: Optional[str]
-
-class _FinanceSaleLineRequired(TypedDict):
-    line_id: "UUID"
-    #: ПрТовРаб: 1 товар, 3 услуга
-    kind: Literal['1', '3']
-    quantity: str
-    price: str
-    #: Сумма строки к оплате, с налогом
-    amount: str
-
-class FinanceSaleLine(_FinanceSaleLineRequired, total=False):
-    product_id: str
-    unit_id: str
-    unit: str
-    name: str
-    discount: str
-    #: Ставка строки в записи ФНС; пусто — налог у продажи на дату не выделяется
-    vat_rate: str
-    #: Откуда взят вид ставки
-    vat_rate_from: Literal['', 'product', 'item', 'default']
-    amount_without_vat: str
-    #: Пусто у «без НДС»: налога нет вовсе, это не ноль
-    vat_amount: str
 
 class _FinanceSaleLineInputRequired(TypedDict):
     #: Положительная decimal string
@@ -13091,39 +8662,6 @@ class FinanceSaleLineInput(_FinanceSaleLineInputRequired, total=False):
     discount: str
     #: ПрТовРаб формата ФНС: 1 товар, 3 услуга; пусто — товар, если назван товар, иначе услуга
     kind: Literal['1', '3']
-
-class FinanceSaleLinesPreview(TypedDict):
-    lines: List["FinanceSaleLine"]
-    totals: "FinanceSaleLinesTotals"
-    #: Налог у продажи на дату выделяется
-    vat_applies: bool
-
-class _FinanceSaleLinesPreviewRequestRequired(TypedDict):
-    #: Дата продажи — на неё берутся режим и ставки юрлица
-    date: str
-    currency: str
-    lines: List["FinanceSaleLineInput"]
-
-class FinanceSaleLinesPreviewRequest(_FinanceSaleLinesPreviewRequestRequired, total=False):
-    #: Юрлицо продажи; без него налог не выделяется
-    company_id: str
-    business_id: str
-    #: Статья ОПиУ: её вид ставки берут строки без товара
-    item_id: str
-    prices_include_vat: bool
-
-class _FinanceSaleLinesTotalsRequired(TypedDict):
-    #: Сумма строк к оплате
-    amount: str
-
-class FinanceSaleLinesTotals(_FinanceSaleLinesTotalsRequired, total=False):
-    amount_without_vat: str
-    vat_amount: str
-    #: Общая ставка строк либо «по строкам», когда ставки разные; пусто — налог не выделяется
-    vat_rate: str
-    vat_rate_from: str
-
-FinanceSaleVATTerms = TypedDict("FinanceSaleVATTerms", {"applies": bool, "charged": bool, "mode": Literal['', 'deductible', 'non_deductible', 'none'], "rate": str, "kind": Literal['', 'general', 'reduced', 'zero', 'exempt'], "from": Literal['', 'item', 'default'], "problem": Literal['', 'mode_unset', 'rate_missing'], "detail": str}, total=False)
 
 class FinanceSettlementBalance(TypedDict):
     obligation_id: "UUID"
@@ -13267,100 +8805,6 @@ class FinanceStatementPage(TypedDict):
     offset: int
     results: List["FinanceStatement"]
 
-class FinanceTradeAdvance(TypedDict):
-    #: Общая свободная decimal string
-    amount: str
-    advances: List["FinanceOpenAdvance"]
-
-class FinanceTradeJournalDocument(TypedDict):
-    id: "UUID"
-    type_key: str
-    type_name: str
-    number: str
-    date: str
-    status: str
-    #: Доля документа в колонке, decimal string
-    amount: str
-    currency: str
-
-class _FinanceTradeJournalPageRequired(TypedDict):
-    count: int
-    results: List["FinanceTradeJournalRow"]
-
-class FinanceTradeJournalPage(_FinanceTradeJournalPageRequired, total=False):
-    limit: int
-    offset: int
-    has_more: bool
-    limit_reached: bool
-    group: Literal['orders', 'without_order', 'executions']
-    #: Колонки, вычисленные до отсечки расчётов по заказам (этап 3); нет, когда все строки ответа — из регистра
-    computed_columns: List[Literal['advance', 'debt']]
-
-class _FinanceTradeJournalRowRequired(TypedDict):
-    id: "UUID"
-    number: str
-    date: str
-    status: str
-    contact_id: Optional[str]
-    contact_name: str
-    company_id: Optional[str]
-    company_name: str
-    project_id: Optional[str]
-    project_name: str
-    item_name: str
-    #: Decimal string
-    amount: str
-    currency: str
-    due_date: str
-    #: Decimal string из регистра расчётов
-    outstanding: str
-
-class FinanceTradeJournalRow(_FinanceTradeJournalRowRequired, total=False):
-    operation_id: str
-    parent_operation_id: str
-    parent_document_id: str
-    recognition_mode: str
-    type_key: str
-    type_name: str
-    overdue_amount: str
-    accrued: str
-    paid: str
-    cash_paid: str
-    advance: str
-    change_kind: str
-    source_system: str
-    source_ref: str
-    external_id: str
-    version: int
-    cash_documents: int
-    accrual_stages: int
-    payment_stages: int
-    accrued_stages: int
-    paid_stages: int
-    group: Literal['orders', 'without_order', 'executions']
-    #: Состояние заказа по канону
-    state: Literal['draft', 'confirmed', 'executing', 'executed', 'closed', 'cancelled']
-    title: str
-    contract_id: Optional[str]
-    cabinet_status_name: str
-    #: Итог заказа, decimal string
-    ordered: str
-    #: Долг, рождённый исполнениями заказа, decimal string
-    executed: str
-    #: Вычисленный max(0, исполнено − оплачено), decimal string
-    debt: str
-    execution_count: int
-    #: Аванс, долг и оплачено — остатками регистра расчётов по заказу: бизнес прошёл отсечку расчётов по заказам (этап 3 ERP-1427)
-    money_from_register: bool
-    #: Бизнес заказа прошёл отсечку исполнения (этап 4 ERP-1427): при включённом документообороте акт по заказу выпускают «Документы» заказа — бумага и исполнение одной командой; прямой акт финансов отвечает 409 finance.order.act_needs_paper
-    execution_cutover: bool
-    #: Заказ документа исполнения по цепочке оснований (группы without_order и executions)
-    order_id: str
-    #: Номер заказа документа исполнения
-    order_number: str
-    executions: List["FinanceTradeJournalDocument"]
-    payments: List["FinanceTradeJournalDocument"]
-
 class _FinanceTransactionRequired(TypedDict):
     id: "UUID"
     date: str
@@ -13458,266 +8902,6 @@ class FinanceTransactionTotals(TypedDict):
     #: Сколько операций осталось без пересчёта в валюту учёта: неполный пересчёт не должен выглядеть верным итогом
     unconverted_count: int
 
-class FinanceUnallocatedMoney(TypedDict):
-    #: Сколько операций ждут имени
-    count: int
-    #: Их сумма в валюте учёта. null — часть операций к ней не сведена, и называть неполную сумму нельзя
-    amount: Optional[str]
-    #: Валюта учёта кабинета
-    currency: str
-    #: Сколько операций не сведено к валюте учёта
-    unconverted_count: int
-
-class FinanceUnallocatedScope(TypedDict):
-    #: Сколько операций ждут имени
-    count: int
-    #: Их сумма в валюте учёта. null — часть операций к ней не сведена, и называть неполную сумму нельзя
-    amount: Optional[str]
-    #: Валюта учёта кабинета
-    currency: str
-    #: Сколько операций не сведено к валюте учёта
-    unconverted_count: int
-    #: account — банковский счёт, wallet — касса
-    kind: Literal['account', 'wallet']
-    id: "UUID"
-    #: Как место хранения названо в справочнике
-    name: str
-
-class FinanceUnallocatedSummary(TypedDict):
-    total: "FinanceUnallocatedMoney"
-    scopes: List["FinanceUnallocatedScope"]
-
-class _FinanceVATBookImportRequired(TypedDict):
-    id: str
-    company_id: str
-    year: int
-    quarter: int
-    kind: Literal['purchase', 'sales']
-    status: Literal['active', 'replaced']
-    source_name: str
-    source_sha256: str
-    source_size: int
-    file_id: str
-    declared_inn: str
-    declared_kpp: str
-    form_version: str
-    correction: int
-    total_vat: str
-    rows_vat: str
-    row_count: int
-    created_at: str
-
-class FinanceVATBookImport(_FinanceVATBookImportRequired, total=False):
-    created_by: int
-    replaced_at: str
-
-class _FinanceVATBookMatchRequired(TypedDict):
-    status: Literal['matched', 'amount_differs', 'only_book', 'only_ours', 'not_deducted']
-    inn: str
-    number: str
-    date: str
-    book_vat: str
-    our_vat: str
-    difference: str
-    book_rows: List["FinanceVATBookRow"]
-    our_rows: List["FinanceVATBookOurRow"]
-
-class FinanceVATBookMatch(_FinanceVATBookMatchRequired, total=False):
-    group: bool
-    kpp_differs: bool
-    counterparty: str
-    counterparty_name: str
-
-class _FinanceVATBookOurRowRequired(TypedDict):
-    source: str
-    source_number: str
-    source_date: str
-    number: str
-    date: str
-    vat: str
-
-class FinanceVATBookOurRow(_FinanceVATBookOurRowRequired, total=False):
-    contact: str
-    contact_name: str
-    inn: str
-    kpp: str
-    #: Сумма без налога в налоговой валюте: у покупок — остаток источника, у продаж — база регистра выходного налога
-    base: str
-    #: Ставка продажи («22%»); у покупок пусто — налог поставщика одной суммой документа
-    rate: str
-    action: str
-    restoration: bool
-
-class FinanceVATBookRateTotal(TypedDict):
-    rate: str
-    base: str
-    vat: str
-
-class _FinanceVATBookReconciliationRequired(TypedDict):
-    #: Налоговая валюта юрлица — валюта книг 1С и нашего налога.
-    currency: str
-    purchase: "FinanceVATBookSide"
-    sales: "FinanceVATBookSide"
-
-class FinanceVATBookReconciliation(_FinanceVATBookReconciliationRequired, total=False):
-    quarter_document: str
-    quarter_number: str
-    #: Откуда строки покупок: проведённый документ квартала или черновик; нет поля — документа нет, строки предварительные
-    quarter_status: Literal['draft', 'posted']
-
-class _FinanceVATBookRowRequired(TypedDict):
-    line: int
-    codes: List[str]
-    number: str
-    date: str
-    amount: str
-    vat: str
-
-class FinanceVATBookRow(_FinanceVATBookRowRequired, total=False):
-    inn: str
-    kpp: str
-    correction: bool
-
-class FinanceVATBookSide(TypedDict):
-    kind: Literal['purchase', 'sales']
-    active: Optional["FinanceVATBookImport"]
-    history: List["FinanceVATBookImport"]
-    matches: List["FinanceVATBookMatch"]
-    counts: Dict[str, int]
-    attention: int
-    #: Итог книги Акеды: у покупок — принятое к вычету, у продаж — начисленное без восстановления
-    our_vat: str
-    #: Книга Акеды этой стороны — строки нашего учёта; отдаётся и без загруженной книги 1С
-    rows: List["FinanceVATBookOurRow"]
-    #: Сумма без налога тех же строк, что our_vat
-    our_base: str
-    #: Итоги по ставкам (у продаж); у покупок пусто
-    rates: List["FinanceVATBookRateTotal"]
-    #: Налог, восстановленный в квартале (у продаж)
-    restored: str
-
-class FinanceVATBookUploadPage(TypedDict):
-    items: List["FinanceVATBookUploadPageItemsItem"]
-
-FinanceVATBookUploadPageItemsItem = TypedDict("FinanceVATBookUploadPageItemsItem", {"kind": Literal['purchase', 'sales'], "import": "FinanceVATBookImport", "duplicate": bool}, total=False)
-
-class FinanceVATQuarter(TypedDict):
-    id: "UUID"
-    number: str
-    date: str
-    status: Literal['draft', 'posted', 'cancelled']
-    company_id: str
-    comment: str
-    updated_at: str
-    payload: "FinanceVATQuarterPayload"
-
-class FinanceVATQuarterFigureSource(TypedDict):
-    import_id: str
-    loaded_at: str
-
-class FinanceVATQuarterInput(TypedDict, total=False):
-    company_id: "UUID"
-    year: int
-    quarter: int
-    #: Начислено НДС по бухгалтерии за квартал.
-    accounting_output: str
-    #: К вычету по бухгалтерии за квартал.
-    accounting_deduction: str
-    discrepancy_item_id: "UUID"
-    accounting_output_book_id: "UUID"
-    accounting_deduction_book_id: "UUID"
-    lines: List["FinanceVATQuarterLineChoice"]
-    comment: str
-
-class _FinanceVATQuarterLineRequired(TypedDict):
-    kind: Literal['deduction', 'restoration']
-    source: "UUID"
-    contact: str
-    #: Налог строки в налоговой валюте юрлица.
-    amount: str
-    age_months: int
-    over_threshold: bool
-    action: Literal['deduct', 'carry', 'write_off', 'restore']
-    parts: List["FinanceVATQuarterPart"]
-
-class FinanceVATQuarterLine(_FinanceVATQuarterLineRequired, total=False):
-    source_type: str
-    source_number: str
-    source_date: str
-    contact_name: str
-    supplier_document: "SupplierDocument"
-    base: str
-    #: Налог строки в валюте учёта — сумма книги.
-    accounting_amount: str
-    item: str
-    #: У восстановления — возвраты поставщику после вычета, объясняющие минус.
-    causes: List["FinanceVATQuarterLineCausesItem"]
-
-class FinanceVATQuarterLineCausesItem(TypedDict):
-    document: str
-    type_key: str
-    number: str
-    date: str
-
-class _FinanceVATQuarterLineChoiceRequired(TypedDict):
-    source: "UUID"
-    action: Literal['deduct', 'carry', 'write_off']
-
-class FinanceVATQuarterLineChoice(_FinanceVATQuarterLineChoiceRequired, total=False):
-    item_id: "UUID"
-
-class FinanceVATQuarterPage(TypedDict):
-    items: List["FinanceVATQuarter"]
-
-class _FinanceVATQuarterPartRequired(TypedDict):
-    #: Налог в налоговой валюте юрлица.
-    amount: str
-
-class FinanceVATQuarterPart(_FinanceVATQuarterPartRequired, total=False):
-    item: str
-    #: Сумма без налога в налоговой валюте юрлица.
-    base: str
-    #: Тот же налог в валюте учёта кабинета.
-    accounting_amount: str
-    #: Та же сумма без налога в валюте учёта кабинета.
-    accounting_base: str
-
-class _FinanceVATQuarterPayloadRequired(TypedDict):
-    year: int
-    quarter: int
-    #: Валюта учёта кабинета — валюта книги.
-    currency: str
-    #: Налоговая валюта юрлица — валюта сумм документа.
-    tax_currency: str
-    pending_months: int
-    accounting_output: str
-    accounting_deduction: str
-    output_total: str
-    lines: List["FinanceVATQuarterLine"]
-    totals: "FinanceVATQuarterTotals"
-
-class FinanceVATQuarterPayload(_FinanceVATQuarterPayloadRequired, total=False):
-    accounting_output_source: "FinanceVATQuarterFigureSource"
-    accounting_deduction_source: "FinanceVATQuarterFigureSource"
-    discrepancy_item: str
-
-class FinanceVATQuarterTotals(TypedDict, total=False):
-    deducted: str
-    restored: str
-    carried: str
-    written_off: str
-    deduction: str
-    output_difference: str
-    deduction_difference: str
-    discrepancy: str
-    #: Расхождение в валюте учёта — сумма книги и ОПиУ.
-    discrepancy_accounting: str
-    #: Курс налоговой валюты к валюте учёта на последний день квартала; пусто в одной валюте.
-    discrepancy_rate: str
-    discrepancy_rate_date: str
-    #: К уплате за квартал в налоговой валюте: начислено по продажам − (вычет − восстановление) + расхождение
-    payable: str
-
 class HubCounters(TypedDict):
     files: int
     meetings: int
@@ -13806,16 +8990,6 @@ class KnowledgeAnswer(TypedDict):
     generated: bool
     retrieval_mode: str
 
-class _KnowledgeAnswerFeedbackInputRequired(TypedDict):
-    #: Ответ помог; при true причина и комментарий очищаются
-    helpful: bool
-
-class KnowledgeAnswerFeedbackInput(_KnowledgeAnswerFeedbackInputRequired, total=False):
-    #: Что было не так с ответом; обязательно при helpful=false
-    issue: Literal['missing', 'incorrect', 'outdated', 'unclear', 'other']
-    #: Пояснение к отрицательной оценке; при helpful=true отбрасывается
-    comment: str
-
 class _KnowledgeAnswerInputRequired(TypedDict):
     question: str
 
@@ -13828,25 +9002,6 @@ class KnowledgeAnswerInput(_KnowledgeAnswerInputRequired, total=False):
     scope: Literal['all', 'company', 'guides']
     #: Не сочинять ответ моделью, вернуть только найденные фрагменты и извлечённую сводку. Для того, кто говорит своим голосом и сам собирает ответ из цитат: без генерации ответ приходит за время поиска
     citations_only: bool
-
-class KnowledgeAnswerQuality(TypedDict):
-    #: Длина периода в днях; по умолчанию 30
-    period_days: int
-    #: Прогонов ответа за период
-    total: int
-    #: Ответов без опоры в материалах
-    abstained: int
-    #: Ответов собранных генеративной моделью
-    generated: int
-    #: Положительных оценок
-    helpful: int
-    #: Отрицательных оценок
-    unhelpful: int
-    #: Средняя длительность ответа в миллисекундах
-    average_latency_ms: float
-    #: Частые вопросы без ответа или с отрицательной оценкой; сюда смотрят когда решают что дописать
-    content_gaps: List["KnowledgeContentGap"]
-    index: "KnowledgeIndexHealth"
 
 class KnowledgeAnswerTurn(TypedDict):
     question: str
@@ -13891,13 +9046,6 @@ class KnowledgeCitation(_KnowledgeCitationRequired, total=False):
     asset_id: "UUID"
     section_heading: str
 
-class KnowledgeContentGap(TypedDict):
-    #: Вопрос без ответа или с отрицательной оценкой
-    question: str
-    #: Сколько раз вопрос задали за период; вопросы группируются без учёта регистра
-    count: int
-    last_asked_at: str
-
 class KnowledgeDocument(TypedDict):
     """Канонический блочный документ страницы; редактор читает только эту схему."""
 
@@ -13907,30 +9055,6 @@ class KnowledgeDocument(TypedDict):
     type: Literal['doc']
     #: Блоки страницы
     content: List[Dict[str, Any]]
-
-class _KnowledgeIndexHealthRequired(TypedDict):
-    #: Поколений индекса в работе
-    active_generations: int
-    #: Поколений индекса в сборке
-    building_generations: int
-    #: Поколений индекса со сбоем
-    failed_generations: int
-    #: Фрагментов в индексе; страницы и файлы вместе
-    chunks: int
-    #: Файлов в очереди разбора
-    pending_assets: int
-    #: Файлов в разборе
-    processing_assets: int
-    #: Файлов в индексе
-    ready_assets: int
-    #: Файлов со сбоем разбора
-    failed_assets: int
-    #: Файлов с неподдерживаемым форматом
-    unsupported_assets: int
-
-class KnowledgeIndexHealth(_KnowledgeIndexHealthRequired, total=False):
-    #: Когда индекс переключался на новое поколение
-    last_activated_at: str
 
 class _KnowledgeMoveInputRequired(TypedDict):
     expected_version: int
@@ -14029,11 +9153,6 @@ class _KnowledgeRevisionInputRequired(TypedDict):
 class KnowledgeRevisionInput(_KnowledgeRevisionInputRequired, total=False):
     plain_text: str
 
-class KnowledgeRevisionRestoreInput(TypedDict):
-    #: Версия страницы из её карточки
-    expected_version: int
-    revision_id: "UUID"
-
 class KnowledgeSearchResult(TypedDict):
     node_id: "UUID"
     space_id: "UUID"
@@ -14088,18 +9207,6 @@ class KnowledgeTag(TypedDict):
     color: str
     created_by: int
     created_at: str
-
-class _KnowledgeTagInputRequired(TypedDict):
-    #: Имя метки уникально в кабинете без учёта регистра
-    name: str
-
-class KnowledgeTagInput(_KnowledgeTagInputRequired, total=False):
-    #: Ключ цвета метки; по умолчанию neutral
-    color: str
-
-class KnowledgeTagSetInput(TypedDict):
-    #: Полный набор меток страницы; пустой массив снимает все метки
-    tag_ids: List["UUID"]
 
 class KnowledgeVersionInput(TypedDict):
     expected_version: int
@@ -14157,38 +9264,6 @@ class MailAccount(TypedDict):
     created_at: str
     updated_at: str
 
-class MailAccountInput(TypedDict, total=False):
-    """Подключение и изменение ящика. Одна форма на обе операции: при подключении обязательны email, imap_host, smtp_host и пароль, при изменении непереданное поле сохраняет прежнее значение, а пустой пароль оставляет сохранённый секрет нетронутым."""
-
-    email: str
-    #: Без значения берётся адрес
-    display_name: str
-    #: Режим уведомлений владельца ящика; если не передан, прежний режим сохраняется
-    notification_mode: Literal['all', 'important', 'off']
-    #: Сделать ящик общим ящиком отдела
-    shared: Optional[bool]
-    #: Схема, завершающая точка и порт внутри значения снимаются
-    imap_host: str
-    #: Без значения — 993 для tls и 143 для starttls
-    imap_port: int
-    imap_encryption: "MailEncryption"
-    smtp_host: str
-    #: Без значения — 465 для tls и 587 для starttls
-    smtp_port: int
-    smtp_encryption: "MailEncryption"
-    #: Без значения берётся адрес почты
-    username: str
-    #: Пароль приложения. Принимается, но не возвращается никогда; о его наличии говорит has_credentials
-    password: str
-    #: Синоним password: у Яндекса, VK и Mail.ru это поле называется «пароль приложения». Принимается, но не возвращается никогда
-    app_password: str
-    #: Глубина первичного импорта в днях; ноль означает весь ящик
-    sync_since_days: Optional[int]
-    #: Подпись исходящих писем
-    signature: Optional[str]
-    #: Ящик можно только включить или выключить; состояние error ставит синхронизация
-    status: Literal['active', 'disabled']
-
 MailAccountStatus = Literal['active', 'disabled', 'error']
 
 class _MailAttachmentRequired(TypedDict):
@@ -14208,6 +9283,21 @@ class MailAttachment(_MailAttachmentRequired, total=False):
     #: Заполняется у картинок, вставленных в тело письма через cid:
     content_id: str
 
+class _MailAttachmentLinkRequired(TypedDict):
+    url: str
+    #: true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией
+    direct: bool
+    name: str
+    mime_type: str
+    size_bytes: int
+    scan_status: "MailScanStatus"
+
+class MailAttachmentLink(_MailAttachmentLinkRequired, total=False):
+    """Временный адрес вложения письма."""
+
+    #: Срок подписанного адреса; у адреса API его нет
+    expires_at: str
+
 class MailComposeInput(TypedDict, total=False):
     """Отправка письма или сохранение черновика. Поле in_reply_to_id указывает на письмо в нашей базе, а не на Message-ID: заголовки ответа собираем мы."""
 
@@ -14226,28 +9316,6 @@ class MailComposeInput(TypedDict, total=False):
     upload_ids: List["UUID"]
     #: Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо уходит получателю и отозвать его нельзя
     save_as_draft: bool
-
-class MailDiscoveredSettings(TypedDict, total=False):
-    """Предложение настроек для адреса. Поле source называет происхождение: catalog — справочник провайдеров, autoconfig и autodiscover — настройки самого домена, srv и mx — записи DNS, probe — угаданный и проверенный соединением сервер."""
-
-    email: str
-    domain: str
-    source: Literal['catalog', 'autoconfig', 'autodiscover', 'srv', 'mx', 'probe']
-    provider_key: str
-    provider_label: str
-    imap_host: str
-    imap_port: int
-    imap_encryption: Literal['tls', 'starttls']
-    smtp_host: str
-    smtp_port: int
-    smtp_encryption: Literal['tls', 'starttls']
-    username: str
-    auth_method: Literal['password', 'oauth']
-    oauth_provider: str
-    password_hint: str
-    help_url: str
-    #: Координаты проверены соединением, а не только прочитаны
-    verified: bool
 
 MailEncryption = Literal['tls', 'starttls']
 
@@ -14525,108 +9593,6 @@ class ManagedChecklistPatch(TypedDict):
     #: Пустой массив удаляет только группу с переданным id.
     items: List["ManagedChecklistItem"]
 
-class MarketplaceAdsAbsence(TypedDict):
-    #: По какой день включительно ответ действует
-    through: str
-    #: Сколько магазинов получили ответ
-    stores: int
-
-class MarketplaceAdsAbsenceRequest(TypedDict, total=False):
-    #: Магазины отчёта; пусто — все активные магазины площадки
-    stores: List[str]
-
-class MarketplaceCatalogCandidate(TypedDict):
-    product_id: "UUID"
-    sku: str
-    name: str
-    #: Вид записи номенклатуры — самостоятельный товар или вариант
-    record_kind: str
-    parent_product_name: str
-    brand: str
-    size: str
-    color: str
-    barcode: str
-    #: Основное фото товара; миниатюра читается ручкой coreGetProductFileContent
-    photo_file_id: Optional["UUID"]
-    #: Площадки, с которыми товар уже связан; пустой список означает «ничей»
-    platforms: List[str]
-    #: Товар уже связан с ЭТИМ магазином — вторая карточка к нему почти всегда ошибка
-    linked_here: bool
-
-class MarketplaceCatalogCandidatePage(TypedDict):
-    #: Всего строк под отбором, а не на странице
-    count: int
-    results: List["MarketplaceCatalogCandidate"]
-    #: Бренды под текущим отбором, для фильтра без отдельного запроса
-    brands: List[str]
-
-class _MarketplaceCatalogImportResultRequired(TypedDict):
-    #: true у marketplacePreviewCatalogImport — ничего не записано
-    preview: bool
-    created: int
-    linked: int
-    unchanged: int
-    #: Сколько карточек осталось спорными
-    pending: int
-    rows: List["MarketplaceCatalogImportRow"]
-
-class MarketplaceCatalogImportResult(_MarketplaceCatalogImportResultRequired, total=False):
-    #: Снимок каталога, по которому считался разбор
-    snapshot_id: str
-
-class _MarketplaceCatalogImportRowRequired(TypedDict):
-    #: Идентификатор карточки на площадке
-    external_id: str
-    sku: str
-    name: str
-    attributes: Dict[str, str]
-    #: pending — карточка осталась спорной и ждёт решения человека
-    action: Literal['created', 'linked', 'unchanged', 'pending']
-
-class MarketplaceCatalogImportRow(_MarketplaceCatalogImportRowRequired, total=False):
-    product_id: "UUID"
-    #: Почему строка не решилась сама
-    reason: Literal['rejected', 'identifier_conflict', 'parent_pending', 'parent_conflict', 'required_fields', 'internal_sku_conflict']
-    #: Версия связи карточки; её же ждёт marketplaceLinkCatalogProduct
-    external_ref_updated_at: str
-
-class _MarketplaceCatalogJobRequired(TypedDict):
-    id: "UUID"
-    platform: Literal['ozon', 'wildberries']
-    store_id: "UUID"
-    status: Literal['queued', 'running', 'waiting_company', 'waiting_catalog', 'needs_review', 'succeeded', 'failed']
-    attempts: int
-    #: Счётчики последнего разбора; состав зависит от фазы
-    stats: Dict[str, Any]
-    #: initial — первоначальная загрузка, sync — последующая сверка
-    phase: Literal['initial', 'sync']
-
-class MarketplaceCatalogJob(_MarketplaceCatalogJobRequired, total=False):
-    last_snapshot_id: str
-    target_snapshot_id: str
-
-class _MarketplaceCatalogLinkDecisionRequired(TypedDict):
-    external_id: str
-    product_id: "UUID"
-    #: Решение человека приходит как manual
-    match_source: Literal['pending', 'rejected', 'auto', 'manual', 'import']
-    external_ref_updated_at: str
-
-class MarketplaceCatalogLinkDecision(_MarketplaceCatalogLinkDecisionRequired, total=False):
-    snapshot_id: str
-
-class _MarketplaceCatalogLinkRequestRequired(TypedDict):
-    product_id: "UUID"
-
-class MarketplaceCatalogLinkRequest(_MarketplaceCatalogLinkRequestRequired, total=False):
-    #: Карточка площадки из окна разбора; вместе с ней обязательны snapshot_id и expected_external_ref_updated_at
-    external_id: str
-    #: Артикул продавца с экрана товаров; вторая форма решения, снимок при ней не нужен
-    offer_id: str
-    snapshot_id: str
-    #: Версия связи из разбора; расхождение отклоняется 409, чтобы не переписать чужое решение
-    expected_external_ref_updated_at: str
-
 class MarketplaceComponentDataThrough(TypedDict, total=False):
     """Последняя дата операций площадки, уже включённых в каждый компонент отчёта; отсутствующее или null-значение означает, что дата покрытия пока неизвестна."""
 
@@ -14654,172 +9620,6 @@ class MarketplaceComponentFreshness(TypedDict, total=False):
     ads_orders: Optional[str]
     #: Карточки товаров
     products: Optional[str]
-
-class MarketplaceCostImportRequest(TypedDict):
-    store: "UUID"
-    #: XLSX, XLS, ODS, CSV или TSV; первая строка — заголовок с колонками артикула и себестоимости
-    file: str
-
-class _MarketplaceCostImportResultRequired(TypedDict):
-    #: Сколько строк завели новую ставку
-    applied: int
-    failed: int
-    errors: List["MarketplaceCostImportRowError"]
-
-class MarketplaceCostImportResult(_MarketplaceCostImportResultRequired, total=False):
-    #: Строки с той же ценой, что уже действует: новая ставка не заводилась
-    unchanged: int
-    #: Строки с пустой себестоимостью: пустая ячейка — «не заведена», а не ноль
-    skipped: int
-
-class MarketplaceCostImportRowError(TypedDict):
-    #: Номер строки в таблице, считая заголовок первой
-    row: int
-    offer: str
-    #: Причина отказа теми же словами, что и у одиночной простановки себестоимости
-    reason: str
-
-class MarketplaceEconBaseRow(TypedDict, total=False):
-    """Сырьё строки прайса в том виде в каком его отдаёт витрина ценообразования"""
-
-    #: Установочная цена, до скидки площадки
-    price: float
-    #: Доля скидки площадки, 0..1
-    spp: float
-    cost: float
-    #: Комиссия в процентах
-    comm: float
-    #: Налог в процентах
-    tax: float
-    #: Эквайринг в процентах
-    acquiring: Optional[float]
-    #: Логистика итого; запасное значение для доставки
-    log: Optional[float]
-    logDirect: Optional[float]
-    logReturn: Optional[float]
-    #: Хранение на единицу
-    storageUnit: Optional[float]
-    #: Приёмка на единицу
-    acceptUnit: Optional[float]
-    #: Штрафы на единицу
-    penaltyUnit: Optional[float]
-
-class MarketplaceEconOverrides(TypedDict, total=False):
-    """Ручные правки; отсутствие поля означает значение площадки"""
-
-    price: Optional[float]
-    #: Репрайсер держит эту цену клиента
-    hold: Optional[float]
-    #: Скидка площадки в процентах, а не долей
-    spp: Optional[float]
-    costBuy: Optional[float]
-    cost: Optional[float]
-    pack: Optional[float]
-    logToWh: Optional[float]
-    comm: Optional[float]
-    handling: Optional[float]
-    storage: Optional[float]
-    accept: Optional[float]
-    logDir: Optional[float]
-    logRet: Optional[float]
-    acq: Optional[float]
-    adIn: Optional[float]
-    adEx: Optional[float]
-    tax: Optional[float]
-
-class MarketplaceEconOzonInput(TypedDict):
-    """Разрешённый вход расчёта Ozon после правок и сценария акции"""
-
-    price: float
-    spp: float
-    costBuy: float
-    pack: float
-    logToWh: float
-    comm: float
-    handling: float
-    storage: float
-    logDir: float
-    logRet: float
-    acq: float
-    adIn: float
-    adEx: float
-    #: Внешняя реклама задана рублями за единицу
-    adExR: bool
-    tax: float
-
-class MarketplaceEconQuoteItem(TypedDict, total=False):
-    base: "MarketplaceEconBaseRow"
-    ov: "MarketplaceEconOverrides"
-    #: Доля рекламных расходов по умолчанию
-    drr: float
-    #: Внешняя реклама по умолчанию
-    adExAll: float
-    #: Значение rub трактует внешнюю рекламу как рубли за единицу
-    adExUnit: Literal['pct', 'rub']
-    #: Скидка акции в процентах; задана — считается сценарий акции
-    promo: Optional[float]
-
-class _MarketplaceEconQuoteRequestRequired(TypedDict):
-    #: Иное значение даёт 400 даже при пустом батче
-    platform: Literal['ozon', 'wb', 'wildberries']
-
-class MarketplaceEconQuoteRequest(_MarketplaceEconQuoteRequestRequired, total=False):
-    items: List["MarketplaceEconQuoteItem"]
-
-class MarketplaceEconQuoteResponse(TypedDict):
-    rows: List["MarketplaceEconQuoteRow"]
-
-class _MarketplaceEconQuoteRowRequired(TypedDict):
-    out: "MarketplaceEconResult"
-
-class MarketplaceEconQuoteRow(_MarketplaceEconQuoteRowRequired, total=False):
-    ozon: "MarketplaceEconOzonInput"
-    wb: "MarketplaceEconWbInput"
-
-class MarketplaceEconResult(TypedDict):
-    """Неприменимые к площадке поля остаются нулями, а не пропадают"""
-
-    #: Ozon: цена клиента
-    buyer: float
-    #: Wildberries: цена клиента
-    client: float
-    #: Ozon: выручка продавца
-    rev: float
-    #: Wildberries: выплата продавцу
-    ppvz: float
-    #: Комиссия на единицу
-    comm: float
-    acq: float
-    adIn: float
-    adEx: float
-    tax: float
-    #: Себестоимость до продажи на единицу
-    costBefore: float
-    #: Сумма затрат во время продажи
-    during: float
-    #: Маржа на единицу
-    margin: float
-    #: Маржинальность долей; null при нулевой базе
-    mpct: Optional[float]
-    roi: Optional[float]
-
-class MarketplaceEconWbInput(TypedDict):
-    """Разрешённый вход расчёта Wildberries после правок и сценария акции"""
-
-    price: float
-    spp: float
-    cost: float
-    comm: float
-    logDir: float
-    storage: float
-    accept: float
-    penalty: float
-    acq: float
-    adIn: float
-    adEx: float
-    tax: float
-
-MarketplaceFunnelDailyReference = TypedDict("MarketplaceFunnelDailyReference", {"buyoutFrom": str, "buyoutTo": str, "bought": float, "cancelled": float, "pending": float, "from": str, "to": str, "units": float, "commission": Optional[float], "logistics": Optional[float], "other": Optional[float], "buyout": Optional[float], "missing": List[str]}, total=False)
 
 class MarketplaceOzonCost(TypedDict):
     store: "UUID"
@@ -14923,10 +9723,6 @@ class MarketplaceOzonDecompositionOtherItem(TypedDict):
     #: Сумма в рублях; расход отрицателен
     amount: int
 
-class MarketplaceOzonDecompositionOtherPage(TypedDict):
-    items: List["MarketplaceOzonDecompositionOtherItem"]
-    total: int
-
 class MarketplaceOzonDecompositionPeriod(TypedDict):
     #: month для накопительной колонки, иначе s и номер спринта
     id: str
@@ -14941,216 +9737,6 @@ class MarketplaceOzonDecompositionPeriod(TypedDict):
     #: Коэффициент проекции незакрытого периода
     run_rate_factor: float
     totals: "MarketplaceOzonDecompositionCell"
-
-MarketplaceOzonFbs = TypedDict("MarketplaceOzonFbs", {"platform": Literal['ozon'], "source": Literal['oz_orders_fbs'], "from": str, "to": str, "totals": "MarketplaceOzonFbsTotals", "funnel": List["MarketplaceOzonFbsFunnelStage"], "tiles": "MarketplaceOzonFbsTiles", "histogram": List["MarketplaceOzonFbsSpeedBucket"], "warehouses": List["MarketplaceOzonFbsWarehouse"], "rows": List["MarketplaceOzonFbsPosting"], "note": str, "analytics": bool}, total=False)
-
-class MarketplaceOzonFbsFunnelStage(TypedDict):
-    key: Literal['new', 'work', 'way', 'pvz', 'delivered', 'cancelled', 'problem']
-    label: str
-    count: int
-    sum: int
-
-class MarketplaceOzonFbsPosting(TypedDict):
-    #: Номер отправления
-    posting: str
-    order_no: str
-    #: Название первой позиции отправления
-    name: str
-    #: Артикул первой позиции
-    offer: str
-    sku: int
-    warehouse: str
-    #: Этап воронки
-    status: str
-    #: Исходный статус площадки
-    status_raw: str
-    qty: int
-    amount: int
-    created_at: Optional[str]
-    #: Часы в обработке; null пока не отгружено
-    process_hrs: Optional[float]
-    deadline_at: Optional[str]
-    #: Надбавка положительна, льгота отрицательна
-    tariff: int
-
-class MarketplaceOzonFbsSpeedBucket(TypedDict):
-    index: int
-    label: str
-    count: int
-    pct: Optional[float]
-    #: Сетка Wildberries переиспользована как единая шкала скорости; к комиссии Ozon не применяется
-    wb_comm_delta_pp: float
-    per_hour: bool
-
-class MarketplaceOzonFbsTiles(TypedDict):
-    on_time_pct: Optional[float]
-    #: Штрафы минус льготы в рублях; льгота отрицательна
-    tariff_net: int
-    avg_price: Optional[int]
-    buyout_pct: Optional[float]
-    #: Часы от заказа до передачи в доставку
-    avg_process_hrs: Optional[float]
-
-class MarketplaceOzonFbsTotals(TypedDict):
-    count: int
-    sum: int
-
-class MarketplaceOzonFbsWarehouse(TypedDict):
-    warehouse: str
-    count: int
-    process_hrs: Optional[float]
-    on_time_pct: Optional[float]
-    tariff: int
-
-MarketplaceOzonFunnel = TypedDict("MarketplaceOzonFunnel", {"platform": Literal['ozon'], "source": Literal['ozon_analytics'], "from": str, "to": str, "totals": "MarketplaceOzonFunnelTotals", "rows": List["MarketplaceOzonFunnelRow"], "note": str, "analytics": bool}, total=False)
-
-MarketplaceOzonFunnelDaily = TypedDict("MarketplaceOzonFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "summary": Dict[str, Dict[str, Optional[float]]], "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['ozon'], "source": Literal['ozon_orders_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": "MarketplaceOzonFunnelDailySeries", "totals": "MarketplaceOzonFunnelDailyTotals", "card": "MarketplaceOzonFunnelDailyCard", "articles": List["MarketplaceOzonFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
-
-class _MarketplaceOzonFunnelDailyArticleRequired(TypedDict):
-    sku: str
-    name: str
-    photo: str
-
-class MarketplaceOzonFunnelDailyArticle(_MarketplaceOzonFunnelDailyArticleRequired, total=False):
-    #: Название магазина артикула — различает один артикул в нескольких магазинах
-    store: str
-    #: Магазин кабинета артикула: по нему экран закрепляет артикул за магазином
-    store_id: str
-    #: Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
-    brand: str
-
-class _MarketplaceOzonFunnelDailyCardRequired(TypedDict):
-    #: Артикул продавца
-    sku: str
-    name: str
-    photo: str
-
-class MarketplaceOzonFunnelDailyCard(_MarketplaceOzonFunnelDailyCardRequired, total=False):
-    #: Предмет товара — по нему берётся эталон воронки
-    subject: str
-    store: str
-    #: Общий остаток, только когда известны оба источника
-    stock: Optional[float]
-    stockMarketplace: Optional[float]
-    stockFbs: Optional[float]
-    ordersToday: Optional[float]
-    rating: Optional[float]
-    reviews: Optional[float]
-    cost: float
-    #: Взвешенная ставка предыдущей полной недели
-    commission: Optional[float]
-    acquiring: Optional[float]
-    tax: Optional[float]
-    logisticsUnit: Optional[float]
-    otherUnit: Optional[float]
-    buyoutAll: Optional[float]
-    buyoutRolling: Optional[float]
-    #: Цена до СПП последнего дня окна, где цена известна
-    priceBase: Optional[float]
-    #: Цена покупателя того же дня
-    priceBuyer: Optional[float]
-    #: СПП того же дня, %
-    spp: Optional[float]
-
-class _MarketplaceOzonFunnelDailySeriesRequired(TypedDict):
-    traffic: List[Optional[float]]
-    views: List[Optional[float]]
-    cv2: List[Optional[float]]
-    cart: List[Optional[float]]
-    cv3: List[Optional[float]]
-    orders: List[Optional[float]]
-    adShare: List[Optional[float]]
-    ordersSum: List[Optional[float]]
-    buyouts: List[Optional[float]]
-    buyoutsSum: List[Optional[float]]
-    #: Средняя цена продавца в заказах без отмен; имя ключа сохранено для совместимости
-    avgBuyer: List[Optional[float]]
-    spp: List[Optional[float]]
-    position: List[Optional[float]]
-    adSpend: List[Optional[float]]
-    drrOrders: List[Optional[float]]
-    drrSales: List[Optional[float]]
-    margin: List[Optional[float]]
-    marginSheet: List[Optional[float]]
-    umd: List[Optional[float]]
-    roi: List[Optional[float]]
-    marginTot: List[Optional[float]]
-    marginSheetTot: List[Optional[float]]
-
-class MarketplaceOzonFunnelDailySeries(_MarketplaceOzonFunnelDailySeriesRequired, total=False):
-    """Каждый ряд — значение на каждый день окна в том же порядке что days. Ряды без источника заполнены null целиком."""
-
-    buyoutRate: List[Optional[float]]
-    expectedUnits: List[Optional[float]]
-    expectedRevenue: List[Optional[float]]
-    costUnit: List[Optional[float]]
-    acquiringRate: List[Optional[float]]
-    commissionRate: List[Optional[float]]
-    logisticsUnit: List[Optional[float]]
-    otherUnit: List[Optional[float]]
-    taxRate: List[Optional[float]]
-    roiOrders: List[Optional[float]]
-    sales: List[Optional[float]]
-    salesSum: List[Optional[float]]
-    costSales: List[Optional[float]]
-    romi: List[Optional[float]]
-    feesSum: List[Optional[float]]
-    commissionSum: List[Optional[float]]
-    acquiringSum: List[Optional[float]]
-    logisticsSum: List[Optional[float]]
-    otherSum: List[Optional[float]]
-    taxSum: List[Optional[float]]
-    #: К перечислению за день по отчёту площадки — формула ОПиУ; день без отчёта — null
-    payout: List[Optional[float]]
-
-class _MarketplaceOzonFunnelDailyTotalsRequired(TypedDict):
-    traffic: List[Optional[float]]
-    views: List[Optional[float]]
-    cart: List[Optional[float]]
-    orders: List[Optional[float]]
-    ordersSum: List[Optional[float]]
-    buyouts: List[Optional[float]]
-    marginTot: List[Optional[float]]
-    marginSheetTot: List[Optional[float]]
-    adSpend: List[Optional[float]]
-    cv2: List[Optional[float]]
-    cv3: List[Optional[float]]
-
-class MarketplaceOzonFunnelDailyTotals(_MarketplaceOzonFunnelDailyTotalsRequired, total=False):
-    """Каждый итог — массив из одного значения, чтобы колонка ИТОГО рисовалась тем же кодом что и дни"""
-
-    #: Средняя цена продавца в заказах без отмен
-    avgBuyer: List[Optional[float]]
-
-class MarketplaceOzonFunnelRow(TypedDict):
-    #: Артикул продавца строкой: имя поля досталось от Wildberries
-    nm_id: str
-    vendor: str
-    name: str
-    photo: str
-    open: int
-    cart: int
-    orders: int
-    buyouts: None
-    orders_sum: int
-    buyouts_sum: None
-    cv_cart: Optional[float]
-    cv_order: Optional[float]
-    buyout_pct: None
-
-class MarketplaceOzonFunnelTotals(TypedDict):
-    #: Показы; 0 без подписки Premium Plus
-    open: int
-    cart: int
-    orders: int
-    #: Всегда null: выкупов у Ozon нет
-    buyouts: None
-    orders_sum: int
-    buyouts_sum: None
-    #: Конверсия в корзину в процентах
-    cv_cart: Optional[float]
-    cv_order: Optional[float]
-    buyout_pct: None
 
 class MarketplaceOzonOrdersDailyRow(TypedDict):
     date: str
@@ -15236,42 +9822,6 @@ class MarketplaceOzonPnlRow(TypedDict):
     #: По одному значению на период в том же порядке
     values: List[Optional[float]]
 
-MarketplaceOzonPricing = TypedDict("MarketplaceOzonPricing", {"platform": Literal['ozon'], "from": str, "to": str, "total": int, "shown": int, "rows": List["MarketplaceOzonPricingRow"], "analytics": bool}, total=False)
-
-class MarketplaceOzonPricingRow(TypedDict):
-    #: Артикул продавца, а не числовой SKU площадки
-    sku: str
-    #: Внешний числовой идентификатор магазина в аналитике
-    store_id: int
-    name: str
-    photo: str
-    #: Название магазина
-    store: str
-    #: Установочная цена карточки, до скидки площадки
-    price: float
-    #: То же значение что price
-    setPrice: float
-    #: Фактическая цена покупателя за единицу
-    factBuyer: float
-    oldPrice: float
-    minPrice: float
-    #: Себестоимость из базы кабинета; 0 — не заведена
-    cost: float
-    #: Последняя фактическая ставка комиссии по артикулу, проценты
-    comm: float
-    #: Логистика доставки и возврата суммарно на единицу
-    log: float
-    logDirect: float
-    logReturn: float
-    #: Эквайринг в процентах от выручки
-    acquiring: float
-    #: Ставка налога магазина в процентах
-    tax: float
-    #: Доля скидки площадки, 0..1
-    spp: float
-    #: Доставленных единиц за окно
-    units: int
-
 class MarketplaceOzonProduct(TypedDict):
     #: Синтетический ключ магазин и артикул через двоеточие
     id: str
@@ -15312,12 +9862,6 @@ class MarketplaceOzonProduct(TypedDict):
     #: Название привязанной номенклатуры; пусто без связи
     linked_product_name: str
 
-class MarketplaceOzonProductFacets(TypedDict):
-    #: Категории карточек Ozon
-    subjects: List[str]
-    #: Всегда пустой: бренда у Ozon в аналитике нет
-    brands: List[str]
-
 class _MarketplaceOzonProductPageRequired(TypedDict):
     count: int
     #: Всегда null; постранично ходят page и page_size
@@ -15329,27 +9873,6 @@ class _MarketplaceOzonProductPageRequired(TypedDict):
 class MarketplaceOzonProductPage(_MarketplaceOzonProductPageRequired, total=False):
     #: Аналитика не подключена — цифры синтетические
     demo: bool
-
-class MarketplaceOzonPromotion(TypedDict):
-    id: int
-    name: str
-    #: Тип акции площадки
-    type: str
-    start: str
-    end: str
-    #: Дней до конца; null когда дата не разобралась
-    days_left: Optional[int]
-    #: Скидка акции в процентах; 0 когда задаётся продавцом
-    disc: float
-    #: Пояснение по типу акции
-    desc: str
-
-class _MarketplaceOzonPromotionsRequired(TypedDict):
-    promos: List["MarketplaceOzonPromotion"]
-
-class MarketplaceOzonPromotions(_MarketplaceOzonPromotionsRequired, total=False):
-    #: Почему список пуст
-    note: str
 
 class _MarketplaceOzonStockProductRequired(TypedDict):
     store: "UUID"
@@ -15408,57 +9931,6 @@ class MarketplaceOzonSyncJobList(TypedDict):
     count: int
     results: List["MarketplaceOzonSyncJob"]
 
-class MarketplaceProductGroup(TypedDict):
-    """Срез (группа) товаров маркетплейса внутри кабинета и одной площадки. Один товар может входить в несколько срезов."""
-
-    id: "UUID"
-    platform: "MarketplaceProductGroupPlatform"
-    name: str
-    #: HEX-цвет метки среза, например #6366f1
-    color: str
-    #: Число товаров в срезе. При создании среза всегда приходит нулевым
-    item_count: int
-    created_at: str
-
-class _MarketplaceProductGroupInputRequired(TypedDict):
-    #: Обрезается по краям. Пустое название даёт 400
-    name: str
-
-class MarketplaceProductGroupInput(_MarketplaceProductGroupInputRequired, total=False):
-    #: HEX-цвет метки. Пустое значение даёт цвет по умолчанию #6366f1
-    color: str
-
-class MarketplaceProductGroupItem(TypedDict):
-    """Товар маркетплейса в составе среза. Пара store_id и offer_id и есть его адрес — собственного идентификатора у строки состава нет."""
-
-    store_id: "UUID"
-    #: Артикул продавца на площадке
-    offer_id: str
-
-class MarketplaceProductGroupItemPage(TypedDict):
-    count: int
-    results: List["MarketplaceProductGroupItem"]
-
-class MarketplaceProductGroupItemsAdded(TypedDict):
-    #: Сколько строк реально легло в срез. Повторы и товары чужих магазинов сюда не попадают
-    added: int
-
-class MarketplaceProductGroupItemsInput(TypedDict):
-    #: Строки без store_id или offer_id отбрасываются молча
-    items: List["MarketplaceProductGroupItem"]
-
-class MarketplaceProductGroupPage(TypedDict):
-    count: int
-    results: List["MarketplaceProductGroup"]
-
-class MarketplaceProductGroupPatch(TypedDict, total=False):
-    """Отсутствующее или пустое поле сохраняет текущее значение."""
-
-    name: str
-    color: str
-
-MarketplaceProductGroupPlatform = Literal['ozon', 'wildberries']
-
 class _MarketplaceStoreRequired(TypedDict):
     id: "UUID"
     #: Платформа задаётся маршрутом, а не телом запроса
@@ -15501,67 +9973,6 @@ class MarketplaceStore(_MarketplaceStoreRequired, total=False):
     #: Разделитель базы и размера в артикуле продавца, объявленный владельцем магазина. Пустая строка — правило не объявлено, и размер берётся только из полей площадки. Применяется на Ozon, где каждый размер продаётся своим артикулом
     article_size_separator: Literal['', '-', '/', '_']
 
-class MarketplaceStoreAccounting(TypedDict):
-    store_id: "UUID"
-    company_id: Optional["UUID"]
-    company_name: str
-    business_id: Optional["UUID"]
-    marketplace_contact_id: Optional["UUID"]
-    marketplace_contact_name: str
-    #: Метод оценки складского учёта юрлица; пусто — складской учёт не настроен
-    stock_costing_method: str
-    #: История версий настройки по возрастанию даты действия
-    policies: List["MarketplaceStoreAccountingPolicy"]
-    #: Подключение закрыто целиком; считается по blocking_reasons, а не по успешной проверке учётных данных
-    setup_ready: bool
-    pnl_ready: bool
-    cost_rates: "MarketplaceStoreAccountingCostCoverage"
-    blocking_reasons: List[Literal['company_required', 'cost_source_required', 'marketplace_contact_required', 'stock_policy_required', 'cost_rates_incomplete']]
-
-class _MarketplaceStoreAccountingCostCoverageRequired(TypedDict):
-    #: Показывать себестоимость числом можно только при complete
-    state: Literal['complete', 'partial', 'none', 'unknown']
-    #: Артикулы магазина, сопоставленные с товарами кабинета
-    articles: int
-    #: Из них те, у кого есть действующая ставка больше нуля
-    articles_with_rate: int
-    #: Кого не хватает, поимённо; список короткий и не перечисляет весь каталог
-    uncovered_articles: List[str]
-
-class MarketplaceStoreAccountingCostCoverage(_MarketplaceStoreAccountingCostCoverageRequired, total=False):
-    reason: Literal['cost_source_required', 'catalog_not_matched', 'cost_rates_missing', 'cost_rates_partial', 'cost_from_stock']
-
-class _MarketplaceStoreAccountingInputRequired(TypedDict):
-    company_id: "UUID"
-    cost_source: Literal['manual', 'stock']
-    #: Дата действия версии; первая может закрыть исторический период, следующая обязана быть в будущем
-    valid_from: str
-
-class MarketplaceStoreAccountingInput(_MarketplaceStoreAccountingInputRequired, total=False):
-    marketplace_contact_id: "UUID"
-    new_company: "MarketplaceStoreCompanyInput"
-
-class _MarketplaceStoreAccountingPolicyRequired(TypedDict):
-    id: "UUID"
-    company_id: "UUID"
-    #: Откуда берётся себестоимость на этот период
-    cost_source: Literal['manual', 'stock']
-    valid_from: str
-
-class MarketplaceStoreAccountingPolicy(_MarketplaceStoreAccountingPolicyRequired, total=False):
-    #: Пусто у действующей версии
-    valid_to: str
-
-class _MarketplaceStoreCompanyInputRequired(TypedDict):
-    name: str
-    #: Проверяется контрольной цифрой
-    inn: str
-    business_id: "UUID"
-
-class MarketplaceStoreCompanyInput(_MarketplaceStoreCompanyInputRequired, total=False):
-    kpp: str
-    vat_accounting_mode: str
-
 class _MarketplaceStoreInputRequired(TypedDict):
     name: str
 
@@ -15591,32 +10002,6 @@ class MarketplaceStoreInput(_MarketplaceStoreInputRequired, total=False):
 class MarketplaceStorePage(TypedDict):
     count: int
     results: List["MarketplaceStore"]
-
-class MarketplaceStorePatch(TypedDict, total=False):
-    """Меняет пользовательские настройки подключения. external_id изменить нельзя. Отсутствующее или пустое поле реквизита сохраняет прежний секрет."""
-
-    name: str
-    #: Пустая строка оставляет сохранённую ставку
-    tax_percent: str
-    #: С какого дня действует новая ставка налога (ГГГГ-ММ-ДД). Пусто — с сегодняшнего дня по Москве. Не позже сегодня и не раньше начала действующей ставки: прошлые периоды считаются по ставке своего времени
-    tax_effective_from: str
-    is_active: bool
-    has_fbs: bool
-    #: Используется для Wildberries
-    has_jam: bool
-    #: Правило именования артикула Ozon: «БАЗА<разделитель>РАЗМЕР». Список закрыт; пустая строка означает «правила нет». Официальные поля размера площадки всегда старше этого правила. Отсутствие поля оставляет сохранённое правило, пустая строка его снимает
-    article_size_separator: Literal['', '-', '/', '_']
-    ozon_client_id: str
-    ozon_api_key: str
-    ozon_pf_client_id: str
-    ozon_pf_client_secret: str
-    #: Пустая строка сохраняет прежний токен
-    wb_token: str
-    #: Business ID вводится строкой; ERP проверяет числовой идентификатор и преобразует его для MPTrack. Пустая строка сохраняет прежнее значение
-    ym_business_id: str
-    ym_api_key: str
-    #: Пустая строка сохраняет прежнее значение
-    proxy: str
 
 class MarketplaceWbCardAdDay(TypedDict):
     date: str
@@ -15739,11 +10124,6 @@ class MarketplaceWbCostRequest(_MarketplaceWbCostRequestRequired, total=False):
     cost: str
     note: str
 
-class MarketplaceWbDecompOther(TypedDict):
-    #: Отсортированы по сумме по возрастанию
-    items: List["MarketplaceWbDecompOtherItem"]
-    total: int
-
 class MarketplaceWbDecompOtherItem(TypedDict):
     #: Наименование операции финансового отчёта
     name: str
@@ -15822,91 +10202,6 @@ class MarketplaceWbDecompositionPeriod(TypedDict):
     #: Множитель прогноза на полный период
     run_rate_factor: float
     totals: "MarketplaceWbMetricCell"
-
-class MarketplaceWbFacets(TypedDict):
-    subjects: List[str]
-    brands: List[str]
-
-MarketplaceWbFunnel = TypedDict("MarketplaceWbFunnel", {"platform": Literal['wildberries'], "store": str, "source": Literal['jam', 'v3', 'v3_pending'], "from": str, "to": str, "totals": "MarketplaceWbFunnelTotals", "rows": List["MarketplaceWbFunnelRow"], "note": str, "analytics": bool}, total=False)
-
-MarketplaceWbFunnelDaily = TypedDict("MarketplaceWbFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "summary": Dict[str, Dict[str, Optional[float]]], "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['wb'], "source": Literal['wb_orders_sales_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": Dict[str, List[Optional[float]]], "totals": Dict[str, List[Optional[float]]], "card": "MarketplaceWbFunnelDailyCard", "articles": List["MarketplaceWbFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
-
-class _MarketplaceWbFunnelDailyArticleRequired(TypedDict):
-    #: Артикул поставщика
-    sku: str
-    name: str
-    #: В этом списке не заполняется и приходит пустой строкой
-    photo: str
-
-class MarketplaceWbFunnelDailyArticle(_MarketplaceWbFunnelDailyArticleRequired, total=False):
-    #: Название магазина артикула — различает один артикул в нескольких магазинах
-    store: str
-    #: Магазин кабинета артикула: по нему экран закрепляет артикул за магазином
-    store_id: str
-    #: Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
-    brand: str
-
-class _MarketplaceWbFunnelDailyCardRequired(TypedDict):
-    #: Артикул поставщика
-    sku: str
-    name: str
-    photo: str
-
-class MarketplaceWbFunnelDailyCard(_MarketplaceWbFunnelDailyCardRequired, total=False):
-    #: Предмет товара — по нему берётся эталон воронки
-    subject: str
-    store: str
-    stock: Optional[float]
-    stockMarketplace: Optional[float]
-    stockFbs: Optional[float]
-    ordersToday: Optional[float]
-    rating: Optional[float]
-    reviews: Optional[float]
-    #: Себестоимость из кабинета
-    cost: float
-    commission: Optional[float]
-    acquiring: Optional[float]
-    tax: Optional[float]
-    logisticsUnit: Optional[float]
-    otherUnit: Optional[float]
-    buyoutAll: Optional[float]
-    buyoutRolling: Optional[float]
-    #: Цена до СПП последнего дня окна, где цена известна
-    priceBase: Optional[float]
-    #: Цена покупателя того же дня
-    priceBuyer: Optional[float]
-    #: СПП того же дня, %
-    spp: Optional[float]
-
-class MarketplaceWbFunnelRow(TypedDict):
-    nm_id: int
-    #: Артикул поставщика
-    vendor: str
-    name: str
-    photo: str
-    #: Открытия карточки
-    open: int
-    cart: int
-    orders: int
-    buyouts: int
-    orders_sum: int
-    buyouts_sum: int
-    #: Конверсия из открытия в корзину в процентах
-    cv_cart: Optional[float]
-    #: Конверсия из корзины в заказ в процентах
-    cv_order: Optional[float]
-    buyout_pct: Optional[float]
-
-class MarketplaceWbFunnelTotals(TypedDict):
-    open: int
-    cart: int
-    orders: int
-    buyouts: int
-    orders_sum: int
-    buyouts_sum: int
-    cv_cart: Optional[float]
-    cv_order: Optional[float]
-    buyout_pct: Optional[float]
 
 class _MarketplaceWbMetricCellRequired(TypedDict):
     revenue: int
@@ -16029,46 +10324,6 @@ class MarketplaceWbPnlRow(TypedDict):
     #: Значения по периодам в порядке periods
     values: List[Optional[float]]
 
-MarketplaceWbPricing = TypedDict("MarketplaceWbPricing", {"platform": Literal['wb'], "from": str, "to": str, "total": int, "shown": int, "rows": List["MarketplaceWbPricingRow"], "analytics": bool}, total=False)
-
-class MarketplaceWbPricingRow(TypedDict):
-    #: Артикул поставщика
-    sku: str
-    #: Внешний идентификатор магазина в аналитике
-    store_id: int
-    nm_id: int
-    name: str
-    photo: str
-    #: Название магазина
-    store: str
-    #: Установочная цена до СПП
-    price: int
-    #: Установочная цена до СПП
-    setPrice: int
-    #: Фактическая цена клиента
-    factClient: int
-    cost: int
-    #: Комиссия в процентах от установочной цены
-    comm: float
-    #: Выплата продавцу на единицу
-    forPay: int
-    #: Логистика на единицу
-    logDirect: int
-    #: Хранение на единицу
-    storageUnit: int
-    #: Платная приёмка на единицу
-    acceptUnit: int
-    #: Штрафы на единицу
-    penaltyUnit: int
-    #: Эквайринг в процентах от установочной цены
-    acquiring: float
-    #: Ставка налога магазина в процентах
-    tax: float
-    #: Скидка постоянного покупателя долей единицы
-    spp: float
-    #: Продано единиц за окно
-    units: int
-
 class MarketplaceWbProduct(TypedDict):
     #: Составной ключ строки: идентификатор магазина и артикул поставщика через двоеточие
     id: str
@@ -16118,29 +10373,6 @@ class MarketplaceWbProductPage(_MarketplaceWbProductPageRequired, total=False):
     #: Аналитическая база не подключена и цифры синтетические
     demo: bool
 
-class MarketplaceWbPromotion(TypedDict):
-    id: int
-    name: str
-    #: Тип акции WB, например auto или regular
-    type: str
-    #: Начало акции по стандарту RFC 3339
-    start: str
-    #: Конец акции по стандарту RFC 3339
-    end: str
-    days_left: Optional[int]
-    #: Всегда ноль: скидку по товару задаёт оператор
-    disc: float
-    #: Пояснение к типу акции
-    desc: str
-
-class _MarketplaceWbPromotionsRequired(TypedDict):
-    #: Отсортированы по дате окончания по возрастанию
-    promos: List["MarketplaceWbPromotion"]
-
-class MarketplaceWbPromotions(_MarketplaceWbPromotionsRequired, total=False):
-    #: Причина пустого списка: нет токена WB либо площадка недоступна
-    note: str
-
 class _MarketplaceWbStockPageRequired(TypedDict):
     #: Число товаров, а не строк «товар × склад»
     count: int
@@ -16177,50 +10409,6 @@ class _MarketplaceWbStockWarehouseRequired(TypedDict):
 class MarketplaceWbStockWarehouse(_MarketplaceWbStockWarehouseRequired, total=False):
     #: Кластер склада; у Wildberries не заполняется и в ответ не попадает
     cluster: str
-
-class _MarketplaceWeeklyFinanceOutcomeRequired(TypedDict):
-    document_ids: List["UUID"]
-
-class MarketplaceWeeklyFinanceOutcome(_MarketplaceWeeklyFinanceOutcomeRequired, total=False):
-    results: List["MarketplaceWeeklyFinancePostingResult"]
-
-class _MarketplaceWeeklyFinancePostingResultRequired(TypedDict):
-    source_event_id: str
-    revenue_settlement_document_id: "UUID"
-    cogs_document_id: "UUID"
-    cogs_amount: str
-    cogs_ledger_status: Literal['included_in_general_ledger', 'management_only_excluded_from_general_ledger']
-    management_pnl_amount: str
-    management_pnl_includes_cogs: bool
-    general_ledger_includes_management_cogs: bool
-
-class MarketplaceWeeklyFinancePostingResult(_MarketplaceWeeklyFinancePostingResultRequired, total=False):
-    cost_version_id: "UUID"
-
-class _MarketplaceWeeklyFinanceRunRequired(TypedDict):
-    run_id: str
-    week_start: str
-    week_end: str
-    source_ref: str
-    source_hash: str
-    report_complete: bool
-    report_ready: bool
-    row_count: int
-    expense_row_count: int
-
-class MarketplaceWeeklyFinanceRun(_MarketplaceWeeklyFinanceRunRequired, total=False):
-    blocking_code: Literal['source_unavailable', 'report_incomplete', 'report_empty', 'week_open', 'source_semantics_unverified', 'accounting_setup_incomplete', 'cost_evidence_missing']
-    captured_at: str
-    #: Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж.
-    zero_cost: List["MarketplaceWeeklyFinanceRunZeroCostItem"]
-
-class MarketplaceWeeklyFinanceRunZeroCostItem(TypedDict):
-    offer_id: str
-    #: Штуки — точная десятичная строка
-    units: str
-
-class MarketplaceWeeklyFinanceRuns(TypedDict):
-    results: List["MarketplaceWeeklyFinanceRun"]
 
 class MarketplaceYandexCost(TypedDict):
     store: "UUID"
@@ -16470,39 +10658,6 @@ class MeetingParticipantInput(TypedDict, total=False):
 
 MeetingStatus = Literal['planned', 'held', 'cancelled']
 
-class MeetingUpdate(TypedDict, total=False):
-    """URL-путь задаёт `id`; переданные непустые поля обновляются частично."""
-
-    project: str
-    title: str
-    kind: "MeetingKind"
-    status: "MeetingStatus"
-    starts_at: str
-    duration_minutes: int
-    location: str
-    meeting_url: str
-    recording_url: str
-    summary: str
-    transcript: str
-    calendar_event: str
-    visibility: "HubVisibility"
-    created_by: int
-    participants: List["MeetingParticipantInput"]
-    items: List["MeetingItemInput"]
-    replace_content: bool
-
-class Member(TypedDict):
-    id: int
-    username: str
-    name: str
-
-class MemberAssignment(TypedDict, total=False):
-    """Требуется `user_id`; `user` поддерживается только для совместимости старых клиентов."""
-
-    user_id: int
-    user: int
-    role: "SectionRole"
-
 class Milestone(TypedDict):
     id: "UUID"
     section: "UUID"
@@ -16560,324 +10715,7 @@ class PlatformApp(_PlatformAppRequired, total=False):
     #: Сотрудник платформы, заведший приложение
     created_by: int
 
-class PlatformAppConfigDeclaration(TypedDict):
-    fields: List["PlatformAppConfigField"]
-
-class _PlatformAppConfigFieldRequired(TypedDict):
-    #: Имя настройки; поля configSchema и ключи secrets[] живут в одном пространстве имён
-    key: str
-    #: Тип значения; объекта и массива у настройки не бывает — её заполняет человек в форме
-    type: Literal['string', 'integer', 'number', 'boolean']
-    #: Без этого поля приложение не работает
-    required: bool
-    #: Значение не возвращается владельцу никогда; объявляется только списком secrets[] манифеста
-    secret: bool
-
-class PlatformAppConfigField(_PlatformAppConfigFieldRequired, total=False):
-    #: Откуда берётся значение секрета; у обычной настройки отсутствует
-    provider: Literal['user_input', 'oauth', 'certificate']
-    title: "PlatformAppConfigText"
-    help: "PlatformAppConfigText"
-    #: Замкнутый список допустимых значений строкового поля
-    enum: List[str]
-    #: Значение, предложенное приложением. Платформа его не хранит: умолчание принадлежит приложению и меняется вместе с версией
-    default: Any
-    min_length: int
-    max_length: int
-    #: Шаблон строки из манифеста; некомпилируемый шаблон не применяется, а не отклоняет ввод
-    pattern: str
-    minimum: float
-    maximum: float
-    #: Как часто издатель рекомендует менять секрет; платформа его не меняет сама
-    rotation_days: int
-
-class PlatformAppConfigSummary(TypedDict):
-    declaration: "PlatformAppConfigDeclaration"
-    values: List["PlatformAppConfigValue"]
-    #: Обязательные поля без значения. Приложение с непустым списком не сломано — оно не настроено
-    missing: List[str]
-
-class PlatformAppConfigText(TypedDict, total=False):
-    """Подпись поля на двух языках, как её написал разработчик приложения. Текст чужой: Akeda его не переводит, но показывает на своём экране, поэтому манифест требует обе половины."""
-
-    ru: str
-    en: str
-
-class _PlatformAppConfigValueRequired(TypedDict):
-    key: str
-    #: Как значение ХРАНИТСЯ. Истина означает, что value пуст и пустым останется
-    secret: bool
-    #: Просит ли эту настройку версия, которая стоит сейчас; ложь означает осиротевшее значение
-    declared: bool
-    #: Считает ли сегодняшнее объявление это имя секретом; расхождение с secret означает, что приложение передумало
-    declared_secret: bool
-    #: Значение задано
-    set: bool
-
-class PlatformAppConfigValue(_PlatformAppConfigValueRequired, total=False):
-    #: Значение ОБЫЧНОЙ настройки. У секрета отсутствует всегда
-    value: str
-    updated_by: int
-    updated_at: str
-
-class PlatformAppConfigValueInput(TypedDict):
-    #: Значение как есть. По краям не обрезается: пробел на конце пароля — часть пароля
-    value: str
-
-class PlatformAppConfigValueResult(TypedDict):
-    value: "PlatformAppConfigValue"
-
-class PlatformAppConsentDiff(TypedDict):
-    #: Что просит целевая версия
-    requested: List[str]
-    #: Что кабинет одобрил сейчас
-    granted: List[str]
-    #: Чего не просила установленная версия; это разница манифеста, а не разница доступа
-    new: List[str]
-    #: Просит, но кабинет не одобрял
-    missing: List[str]
-    #: Обязательная часть missing — только она останавливает обновление
-    missing_required: List[str]
-    missing_optional: List[str]
-    #: Одобрено, но целевая версия не просит
-    dropped: List[str]
-    #: Набор установки, если нового согласия не дают
-    kept: List[str]
-
-class _PlatformAppConsentRequiredRequired(TypedDict):
-    detail: str
-
-class PlatformAppConsentRequired(_PlatformAppConsentRequiredRequired, total=False):
-    #: platform.app_consent_required, когда обновление остановлено новым обязательным правом либо новым внешним адресом
-    code: str
-    #: Версия, которая просит
-    version: str
-    #: Права, которых кабинет не одобрял; только они, чтобы решающее не утонуло в списке
-    scopes: List[str]
-    #: Внешние адреса, которых не было у установленной версии. Останавливают наравне с обязательным правом: право открывает доступ к данным, адрес называет того, кому приложение передаст их дальше. Перечислены отдельно от прав, потому что чинятся по-разному: право включают галочкой, адрес снимают из манифеста
-    destinations: List[str]
-
-class _PlatformAppDataPolicyRequired(TypedDict):
-    #: false означает, что версия ничего не обещала о данных при удалении
-    declared: bool
-    retention_days: int
-
-class PlatformAppDataPolicy(_PlatformAppDataPolicyRequired, total=False):
-    categories: List[str]
-    regions: List[str]
-    uninstall: Literal['purge', 'export_then_purge', 'archive']
-
-class _PlatformAppDeliveryRequired(TypedDict):
-    id: "UUID"
-    event_id: "UUID"
-    installation_id: "UUID"
-    #: Имя факта в формате модуль.сущность.факт
-    type: str
-    #: Версия формы события
-    schema_version: int
-    #: Тема так, как её объявляет манифест приложения: имя факта и версия схемы одной строкой
-    topic: str
-    #: Вид объекта, о котором событие
-    aggregate_type: str
-    #: Идентификатор объекта; содержимого объекта в журнале нет
-    aggregate_id: str
-    #: Когда произошёл факт, а не когда его отправили
-    occurred_at: str
-    #: Сквозная трассировка Akeda: по ней инцидент расширения сводится с операцией
-    trace_id: str
-    status: Literal['pending', 'delivered', 'failed', 'dead']
-    #: Сколько попыток сделано
-    attempts: int
-    #: Когда наряд созреет; у завершённого осталось от последней попытки и решением уже не является
-    next_attempt_at: str
-    #: Последняя причина: либо отказ Akeda, либо обрезанный ответ приёмника. Заполненный last_status_code означает, что хвост причины — слова приёмника. Текст приёмника недоверен, машинно не разбирается, и фильтра по нему у операции нет
-    last_error: str
-    #: Куда уехала попытка. Снимок на её момент: установка сменит адрес, а журнал остаётся доказательством
-    endpoint_url: str
-    #: Чем было подписано. Идентификатор ключа, а не его значение: значение подписи не сохраняется вовсе
-    signature_key_id: str
-    created_at: str
-    updated_at: str
-
-class PlatformAppDelivery(_PlatformAppDeliveryRequired, total=False):
-    #: Аренда воркера: значение в будущем означает, что попытка идёт прямо сейчас
-    claimed_until: str
-    delivered_at: str
-    #: Момент мёртвого письма; DLQ — состояние наряда, а не отдельное хранилище
-    dead_at: str
-    #: Код ответа приёмника; отсутствие означает, что HTTP-ответа не было вовсе — сеть, дедлайн или отказ до отправки
-    last_status_code: int
-    replay_of_id: "UUID"
-    #: Кто потребовал повтор
-    replay_actor: str
-    #: Зачем потребовали повтор
-    replay_reason: str
-
-class _PlatformAppDeliveryHealthRequired(TypedDict):
-    installation_id: "UUID"
-    #: Мёртвые письма подряд. Любая удачная доставка обнуляет счётчик; по нему принимается решение о парковке
-    consecutive_dead: int
-    #: Сколько мёртвых писем накопилось всего. Ровно столько фактов не доехало и ждёт повтора; число монотонно — повтор заводит новый наряд, а не оживляет мёртвый
-    dead_letters: int
-    #: Начало окна доли отказов. Окно фиксированное; отдаётся вместе со счётчиками, чтобы «0 из 0» читалось как «за окно не отправляли», а не как «отказов нет»
-    window_started_at: str
-    #: Попыток за окно. Ноль означает, что доли нет вовсе
-    window_attempts: int
-    #: Из них неудачных (отложенных и мёртвых). Доля считается читателем: процент без знаменателя врёт на обоих концах
-    window_failures: int
-
-class PlatformAppDeliveryHealth(_PlatformAppDeliveryHealthRequired, total=False):
-    """Сводка доставки событий установке. Только числа, которые считает Akeda: ни тела события, ни ответа приёмника здесь нет и быть не может — текст приёмника недоверен, а сводку читает кабинетный экран."""
-
-    #: Когда установке в последний раз пытались дозвониться. Отсутствует, если ей ещё ничего не отправляли
-    last_attempt_at: str
-    #: Последняя удачная доставка. Отсутствие при заполненном last_attempt_at означает «отправляли, и ни разу не доехало» — это не то же самое, что «ещё не отправляли»
-    last_delivered_at: str
-    #: Проекция парковки в базе кабинета: очередь проходит мимо этой установки. Правда о парковке — parked_at самой установки
-    paused_at: str
-
-class _PlatformAppDeliveryPageRequired(TypedDict):
-    deliveries: List["PlatformAppDelivery"]
-    #: Применённая глубина выборки, а не запрошенная
-    limit: int
-    #: С какого места отдана страница
-    offset: int
-    #: За страницей есть ещё записи. Признак, а не общее число: счёт по журналу — полный проход по истории кабинета
-    has_more: bool
-
-class PlatformAppDeliveryPage(_PlatformAppDeliveryPageRequired, total=False):
-    health: "PlatformAppDeliveryHealth"
-
-class PlatformAppDeliveryReplayInput(TypedDict, total=False):
-    """Отбор внутри установки. Хотя бы один из delivery_ids, event_id или пары aggregate_type и aggregate_id обязателен; названные отборы складываются по И"""
-
-    #: Конкретные наряды журнала — самый частый повтор
-    delivery_ids: List["UUID"]
-    event_id: "UUID"
-    #: Вид объекта; без aggregate_id отбором не является
-    aggregate_type: str
-    #: Идентификатор объекта; без aggregate_type отбором не является
-    aggregate_id: str
-    #: Какие наряды переигрывать. Пусто — только мёртвые письма. Живой наряд не переигрывается: он уедет сам
-    statuses: List[Literal['delivered', 'dead']]
-    #: Потолок одного вызова — столько нарядов человек в состоянии посмотреть после того, как повтор отработал. Ноль и отсутствие означают умолчание, значение сверх потолка зажимается до него
-    limit: int
-    #: Зачем переигрываем. Уезжает в журнал доставки рядом с актором
-    reason: str
-
-class PlatformAppDeliveryReplayResult(TypedDict):
-    deliveries: List["PlatformAppReplayedDelivery"]
-    #: Сколько нарядов заведено. Ноль законен: переигрывать было нечего либо всё найденное уже живо
-    replayed: int
-
-class PlatformAppEgressDiff(TypedDict):
-    """Разница ВНЕШНИХ АДРЕСОВ между установленной и целевой версией. Отдельно от разницы прав: у адресов нет отдельного одобренного кабинетом списка — их одобряют вместе с версией, и что одобрено, записано в манифесте установленной"""
-
-    #: Адреса целевой версии
-    requested: List[str]
-    #: Адреса, которых у установленной версии не было; ровно они требуют нового согласия — кабинет их не видел
-    new: List[str]
-    #: Адреса, которые отпадают; сужение согласия не требует
-    dropped: List[str]
-    #: Адреса, которые остаются как были
-    kept: List[str]
-
-class _PlatformAppHealthCheckRequired(TypedDict):
-    #: skipped — спрашивать некого: у декларативного расширения нет своего приёмника
-    status: Literal['ok', 'skipped', 'failed']
-    checked_at: str
-
-class PlatformAppHealthCheck(_PlatformAppHealthCheckRequired, total=False):
-    #: Адрес, который спрашивали; живёт в манифесте версии, а версию потом снимут с публикации
-    url: str
-    #: Ноль означает «не ответил вовсе», и это не то же самое, что «ответил пятисоткой»
-    http_status: int
-    latency_ms: int
-    #: Класс отказа для разбора; человеку показывают не его
-    reason: str
-
-class PlatformAppInstallResult(TypedDict):
-    installation: "PlatformAppInstallation"
-    app: "PlatformApp"
-    version: "PlatformAppVersion"
-    diff: "PlatformAppConsentDiff"
-    data_policy: "PlatformAppDataPolicy"
-    health: "PlatformAppHealthCheck"
-
-class _PlatformAppInstallationRequired(TypedDict):
-    id: "UUID"
-    tenant_id: "UUID"
-    app_id: "UUID"
-    version_id: "UUID"
-    #: На что согласился кабинет; итоговый доступ ещё уже — он пересекается с политикой публикации, включённостью модуля, RBAC и RLS
-    granted_scopes: List[str]
-    status: "PlatformAppInstallationStatus"
-    disable_reason: str
-    #: Куда уезжают подписанные события этой установки. Снят с манифеста версии при установке; переход версии его не меняет. Пусто у декларативного расширения
-    delivery_endpoint_url: str
-    created_at: str
-    updated_at: str
-
-class PlatformAppInstallation(_PlatformAppInstallationRequired, total=False):
-    #: След администратора для аудита; прав поставившего установка не наследует
-    installed_by: int
-    consent_at: str
-    suspended_at: str
-    revoked_at: str
-    #: Момент последней смены адреса — ограда повтора: доставки, заведённые до него, переигрывает только персонал платформы. Отсутствует, пока адрес не менялся
-    delivery_endpoint_changed_at: str
-    #: Приёмник признан мёртвым, и доставка приостановлена: наряды копятся, ничего не теряется. Не отзыв — статус установки, её токены и секрет подписи не меняются. Отсутствует, пока установка не запаркована
-    parked_at: str
-    #: Машинный код причины. Список закрыт: слова недоверенного приёмника в это поле не попадают ни при каких условиях
-    park_reason: Literal['', 'consecutive_dead_letters']
-    #: Сколько мёртвых писем подряд насчиталось на момент парковки. Порог мог с тех пор поменяться, и без числа причина непроверяема
-    parked_dead_letters: int
-
-class _PlatformAppInstallationEventRequired(TypedDict):
-    id: "UUID"
-    #: Номер записи в журнале установки
-    sequence: int
-    installation_id: "UUID"
-    tenant_id: "UUID"
-    kind: Literal['install', 'consent_update', 'version_update', 'token_issue', 'token_rotate', 'token_revoke', 'suspend', 'resume', 'uninstall']
-    scopes: List[str]
-    reason: str
-    created_at: str
-
-class PlatformAppInstallationEvent(_PlatformAppInstallationEventRequired, total=False):
-    token_id: "UUID"
-    actor_user_id: int
-    #: Прежнее и новое значение перехода; форма зависит от вида записи
-    details: Dict[str, Any]
-
-class PlatformAppInstallationEventPage(TypedDict):
-    events: List["PlatformAppInstallationEvent"]
-    #: Применённая глубина выборки, а не запрошенная
-    limit: int
-
 PlatformAppInstallationStatus = Literal['pending', 'active', 'suspended', 'revoked']
-
-class _PlatformAppManifestBlockRequired(TypedDict):
-    #: sha256 компактной формы документа — тот же отпечаток, которым ворота публикации связывают результат внешнего линтера с проверенным манифестом
-    manifest_fingerprint: str
-    #: Где документ впервые увидели. Улика, а не предмет запрета: тот же отпечаток у другого издателя закрыт этим же запретом
-    publisher: str
-    app_key: str
-    reason_code: Literal['malicious', 'vulnerable', 'data_exfiltration', 'supply_chain', 'publisher_request']
-    #: Объяснение словами; уезжает кабинету в карточку уведомления, поэтому это наш текст, а не эхо приёмника
-    summary: str
-    blocked_at: str
-
-class PlatformAppManifestBlock(_PlatformAppManifestBlockRequired, total=False):
-    #: Внешний https-адрес разбора: CVE, бюллетень, тикет
-    advisory: str
-    blocked_by: int
-
-class PlatformAppManifestPermissions(TypedDict):
-    #: Без этих прав приложение не работает; их появление останавливает обновление до согласия
-    required: List[str]
-    #: Появление такого права обновление не останавливает — оно просто не активируется
-    optional: List[str]
 
 class _PlatformAppPublisherRequired(TypedDict):
     id: "UUID"
@@ -16912,59 +10750,7 @@ class PlatformAppPublisher(_PlatformAppPublisherRequired, total=False):
 
 PlatformAppPublisherStatus = Literal['unverified', 'verified', 'suspended']
 
-class PlatformAppReasonInput(TypedDict, total=False):
-    #: Причина перехода; уезжает в журнал установки и в причину отзыва токенов
-    reason: str
-
-class PlatformAppReplayedDelivery(TypedDict):
-    id: "UUID"
-    replay_of_id: "UUID"
-    event_id: "UUID"
-    installation_id: "UUID"
-
-PlatformAppRollbackResult = TypedDict("PlatformAppRollbackResult", {"installation": "PlatformAppInstallation", "from": "PlatformAppVersion", "to": "PlatformAppVersion", "diff": "PlatformAppConsentDiff"}, total=False)
-
 PlatformAppStatus = Literal['draft', 'published', 'suspended', 'retired']
-
-class _PlatformAppSwitchResultRequired(TypedDict):
-    installation: "PlatformAppInstallation"
-    #: Сколько живых токенов погасила операция; ноль означает, что доступ и так не был выдан
-    revoked_tokens: int
-
-class PlatformAppSwitchResult(_PlatformAppSwitchResultRequired, total=False):
-    #: Сколько секретов подписи погасило удаление: токен закрывает вызовы приложения к нам, секрет подписи — наши доставки к нему
-    revoked_signing_keys: int
-    #: Сколько сохранённых настроек и секретов уничтожено; по самой таблице этого уже не увидеть
-    purged_config_values: int
-    data_policy: "PlatformAppDataPolicy"
-    notice: "PlatformAppUninstallNotice"
-
-class _PlatformAppUninstallNoticeRequired(TypedDict):
-    #: unavailable — не смогла отправить сама платформа: чинить это ей, а не издателю
-    status: Literal['delivered', 'failed', 'skipped', 'unavailable']
-    sent_at: str
-
-class PlatformAppUninstallNotice(_PlatformAppUninstallNoticeRequired, total=False):
-    url: str
-    #: Идентификатор ключа подписи; секретом не является и нужен приёмнику, чтобы доказать, чем проверял
-    key_id: str
-    http_status: int
-    reason: str
-
-class PlatformAppUnparkResult(TypedDict):
-    installation: "PlatformAppInstallation"
-    health: "PlatformAppHealthCheck"
-    #: Сколько установка простояла запаркованной. Числом, а не строкой: собранная сервером фраза не переводится на второй язык
-    parked_for_seconds: int
-
-class PlatformAppUpdateInput(TypedDict, total=False):
-    #: Пусто означает «остаться на текущей»: тогда обновляется только согласие
-    version: str
-    #: Отсутствие поля означает «согласия не давали»; пустой список — «ни на что», и это разные ответы
-    approved: List[str]
-    reason: str
-
-PlatformAppUpdateResult = TypedDict("PlatformAppUpdateResult", {"installation": "PlatformAppInstallation", "from": "PlatformAppVersion", "to": "PlatformAppVersion", "diff": "PlatformAppConsentDiff", "egress": "PlatformAppEgressDiff", "consented": bool, "health": "PlatformAppHealthCheck"}, total=False)
 
 class _PlatformAppVersionRequired(TypedDict):
     id: "UUID"
@@ -17006,44 +10792,9 @@ class ProjectCreate(_ProjectCreateRequired, total=False):
     description: str
     color: str
 
-class ProjectFileFolder(TypedDict):
-    id: "UUID"
-    project_id: "UUID"
-    parent_id: Optional[str]
-    name: str
-    sort_order: int
-    created_by: Optional[int]
-    created_at: str
-    updated_at: str
-
-class _ProjectFileFolderCreateRequired(TypedDict):
-    name: str
-
-class ProjectFileFolderCreate(_ProjectFileFolderCreateRequired, total=False):
-    parent_id: "UUID"
-
-class ProjectFileFolderPage(TypedDict):
-    count: int
-    results: List["ProjectFileFolder"]
-
-class ProjectFileFolderRename(TypedDict):
-    name: str
-
-class _ProjectFileUploadRequired(TypedDict):
-    file: str
-
-class ProjectFileUpload(_ProjectFileUploadRequired, total=False):
-    folder: "UUID"
-
 class ProjectPage(TypedDict):
     count: int
     results: List["Project"]
-
-class ProjectUpdate(TypedDict, total=False):
-    name: str
-    key: str
-    description: str
-    color: str
 
 class PullRequest(TypedDict):
     id: "UUID"
@@ -17087,17 +10838,6 @@ class PullRequestPage(TypedDict):
     count: int
     results: List["PullRequest"]
 
-class PullRequestUpdate(TypedDict, total=False):
-    provider: str
-    repository: str
-    number: str
-    title: str
-    url: str
-    status: str
-    branch: str
-    commit_sha: str
-    is_archived: bool
-
 class Relation(TypedDict):
     id: "UUID"
     source: "UUID"
@@ -17124,47 +10864,6 @@ RelationKind = Literal['relates', 'blocks', 'blocked_by', 'duplicate']
 
 RelationList = List["Relation"]
 
-class ScrumSection(TypedDict):
-    section: "UUID"
-    name: str
-    key: str
-    is_enabled: bool
-    tasks: int
-
-class ScrumSettings(TypedDict):
-    project: "UUID"
-    project_key: str
-    project_name: str
-    is_enabled: bool
-    sprint_length_weeks: int
-    close_weekday: int
-    close_time: str
-    daily_weekdays: List[int]
-    timezone: str
-    updated_at: str
-    sections: List["ScrumSection"]
-    team: List["ScrumTeamMember"]
-
-class ScrumSettingsPage(TypedDict):
-    count: int
-    results: List["ScrumSettings"]
-
-class ScrumSettingsUpdate(TypedDict, total=False):
-    is_enabled: bool
-    sprint_length_weeks: int
-    close_weekday: int
-    close_time: str
-    daily_weekdays: List[int]
-    timezone: str
-    excluded_sections: List["UUID"]
-    team_user_ids: List[int]
-
-class ScrumTeamMember(TypedDict):
-    user: int
-    name: str
-    in_team: bool
-    sections: int
-
 class Section(TypedDict):
     id: "UUID"
     project: Optional["UUID"]
@@ -17185,19 +10884,6 @@ class Section(TypedDict):
     tasks_overdue: int
     members_count: int
     members: List["SectionMemberPreview"]
-
-class _SectionCreateRequired(TypedDict):
-    project: "UUID"
-    name: str
-
-class SectionCreate(_SectionCreateRequired, total=False):
-    key: str
-    description: str
-    color: str
-    icon: str
-    status: str
-    lead: int
-    target_date: str
 
 class SectionMember(TypedDict):
     id: "UUID"
@@ -17236,445 +10922,6 @@ class SectionUpdate(TypedDict, total=False):
     status: str
     lead: int
     target_date: str
-
-class SettingsApiKey(TypedDict):
-    id: "UUID"
-    name: str
-    #: Первые 12 знаков значения; открытая часть ключа
-    prefix: str
-    scopes: List[str]
-    is_active: bool
-    #: Отметка времени в текстовом виде из базы
-    expires_at: Optional[str]
-    rate_limit_per_min: int
-    #: Отметка времени в текстовом виде из базы
-    last_used_at: Optional[str]
-    #: Отметка времени в текстовом виде из базы
-    created_at: str
-    #: Маска значения вида ••••abcd; пусто у ключей, выпущенных до хранилища
-    hint: str
-    #: Значение ключа сохранено в кабинете; false означает «сохранён только хеш», а не отсутствие прав
-    can_reveal: bool
-    #: Отметка времени в текстовом виде из базы
-    revoked_at: Optional[str]
-    #: Отметка времени в текстовом виде из базы
-    last_revealed_at: Optional[str]
-    #: Ключ выдан человеку, а не кабинету, и работает в каждом кабинете владельца с правами этого кабинета
-    personal: bool
-
-class SettingsApiKeyAccessEntry(TypedDict):
-    id: "UUID"
-    api_key_id: "UUID"
-    user_id: Optional[int]
-    #: Полное имя автора события или его логин
-    user_name: str
-    action: Literal['create', 'reveal', 'revoke', 'restore', 'delete']
-    #: Отметка времени в текстовом виде из базы
-    created_at: str
-
-class SettingsApiKeyAccessPage(TypedDict):
-    #: Число строк в results, а не общее число событий
-    count: int
-    results: List["SettingsApiKeyAccessEntry"]
-
-class SettingsApiKeyActivationResult(TypedDict):
-    id: "UUID"
-    #: false после отзыва, true после возврата в работу
-    is_active: bool
-
-class SettingsApiKeyCreated(TypedDict):
-    id: "UUID"
-    name: str
-    #: Первые 12 знаков значения
-    prefix: str
-    scopes: List[str]
-    is_active: bool
-    #: Отметка времени в текстовом виде из базы
-    expires_at: Optional[str]
-    rate_limit_per_min: int
-    #: Отметка времени в текстовом виде из базы
-    last_used_at: Optional[str]
-    #: Отметка времени в текстовом виде из базы
-    created_at: str
-    #: Полное значение ключа. Показывается единственный раз — в этом ответе; список ключей его не возвращает
-    key: str
-    personal: bool
-
-class SettingsApiKeyInput(TypedDict, total=False):
-    #: Пустое имя заменяется на «Ключ»
-    name: str
-    #: Пустой список заменяется на ["tasks:read"]; каждое право обязано быть у создателя
-    scopes: List[str]
-    #: Ноль и отрицательное значение заменяются на 600
-    rate_limit_per_min: int
-    #: true выдаёт ключ человеку, а не кабинету
-    personal: bool
-
-class SettingsApiKeyPage(TypedDict):
-    #: Число строк в results, а не общее число ключей кабинета
-    count: int
-    results: List["SettingsApiKey"]
-
-class SettingsAppCatalog(TypedDict):
-    apps: List["SettingsAppCatalogEntry"]
-
-class _SettingsAppCatalogEntryRequired(TypedDict):
-    app: "PlatformApp"
-    publisher: "SettingsAppPublisherCard"
-    #: Версии, открытые кабинету, свежие первыми; пусто у стоящего приложения, если ставить и обновлять больше не на что
-    versions: List["SettingsAppVersion"]
-
-class SettingsAppCatalogEntry(_SettingsAppCatalogEntryRequired, total=False):
-    installation: "PlatformAppInstallation"
-    installed_version: "SettingsAppVersion"
-
-class _SettingsAppConsentEgressRequired(TypedDict):
-    #: Имя хоста целиком и точно; совпадение точное, поддомены не входят
-    host: str
-    scheme: Literal['https', 'http']
-    #: Канал открытый: данные читает всякий по дороге, и одобренный адрес перестаёт быть единственным получателем
-    insecure: bool
-    purpose: "SettingsAppLocalizedText"
-    #: Категории политики данных, которые уезжают по этому адресу; пусто означает «только запрашиваю»
-    sends: List[str]
-
-class SettingsAppConsentEgress(_SettingsAppConsentEgressRequired, total=False):
-    """Один внешний получатель данных кабинета: куда, зачем и что именно туда уходит. Ответ «приложение ходит наружу» не является ни одним из трёх"""
-
-    insecure_reason: "SettingsAppLocalizedText"
-
-class _SettingsAppConsentFieldRequired(TypedDict):
-    #: Ключ сущности. Не текст для экрана: он группирует строки, а показывается entity_name
-    entity: str
-    entity_name: "SettingsAppLocalizedText"
-    label: "SettingsAppLocalizedText"
-
-class SettingsAppConsentField(_SettingsAppConsentFieldRequired, total=False):
-    """Одна графа, которую приложение добавит карточке кабинета. Ключа и типа здесь нет, как нет области у права: кабинет решает, пускать ли приложение к своим карточкам, а не читает манифест"""
-
-    #: Версия объявила графу устаревшей: на карточках она не появится
-    obsolete: bool
-
-class SettingsAppConsentFunction(TypedDict):
-    """Одна проверка приложения внутри операции кабинета, выполняемая КОДОМ в песочнице. Summary написан платформой: о том, чем приложение может помешать, кабинету рассказываем мы"""
-
-    #: Ключ точки, на которой стоит функция
-    point: str
-    #: Имя функции внутри приложения
-    key: str
-    #: Виды документов, которые функция смотрит; пустой список означает ВСЕ, и лист говорит это словами
-    document_types: List[str]
-    summary: "SettingsAppLocalizedText"
-
-class SettingsAppConsentPermission(TypedDict):
-    scope: str
-    #: Без этого права приложение не работает; необъяснённое манифестом право считается обязательным
-    required: bool
-    #: Пусто, если манифест право не объяснил: класс не выдумывается
-    risk_class: Literal['low', 'medium', 'high', 'restricted', '']
-    explanation: "SettingsAppLocalizedText"
-    #: Манифест объяснил право; false означает, что администратор одобряет вслепую
-    explained: bool
-    #: Платформа объявляла такую область. False означает, что сказать о праве нечего, кроме имени, — и экран обязан сказать именно это
-    declared: bool
-    #: Ярус чувствительности из таксономии платформы. Пусто у необъявленной области: ярус не выдумывается, а «обычная» по умолчанию означала бы, что неизвестное безобиднее известного
-    tier: Literal['ordinary', 'sensitive', '']
-    #: Область устарела и снимется не раньше чем через полгода после пометки; она открывает заметно больше нужного и осталась работающей ради уже поставленных приложений
-    deprecated: bool
-    grants: "SettingsAppLocalizedText"
-    purpose: "SettingsAppLocalizedText"
-    #: Сколько приложение держит у себя полученное этим правом; ноль — «не храню»
-    retention_days: int
-    #: Срок назван. Отличает «не храню» (ноль) от «срок не назван» (поля в манифесте нет)
-    retention_declared: bool
-
-class _SettingsAppConsentPreviewRequired(TypedDict):
-    app: "PlatformApp"
-    version: "SettingsAppVersion"
-    permissions: "PlatformAppManifestPermissions"
-    #: true означает, что это предпросмотр обновления
-    installed: bool
-    diff: "PlatformAppConsentDiff"
-    egress: "PlatformAppEgressDiff"
-    data_policy: "PlatformAppDataPolicy"
-    publisher: "SettingsAppPublisherCard"
-    sheet: "SettingsAppConsentSheet"
-
-class SettingsAppConsentPreview(_SettingsAppConsentPreviewRequired, total=False):
-    installation: "PlatformAppInstallation"
-    current_version: "SettingsAppVersion"
-
-class SettingsAppConsentResult(TypedDict):
-    preview: "SettingsAppConsentPreview"
-    #: Без нового согласия установка или обновление дальше не пойдут
-    requires_consent: bool
-
-class SettingsAppConsentRule(TypedDict):
-    """Та же проверка внутри операции кабинета, но выраженная УСЛОВИЕМ, а не кодом. Отдельно от функций, потому что у правила лист знает заранее две вещи, которых у функции не знает: исход и точный текст, который человек прочтёт. Самого выражения здесь нет: кабинет решает, пускать ли приложение к своим документам, а не проверяет чужой код глазами"""
-
-    #: Ключ точки, на которой стоит правило
-    point: str
-    #: Имя правила внутри приложения
-    key: str
-    #: refuse останавливает проведение, warn показывает человеку сообщение и пропускает документ
-    outcome: Literal['refuse', 'warn']
-    #: Виды документов, которые правило смотрит; пустой список означает ВСЕ
-    document_types: List[str]
-    summary: "SettingsAppLocalizedText"
-    message: "SettingsAppLocalizedText"
-
-class SettingsAppConsentSection(TypedDict):
-    """Раздел, который приложение добавит в меню кабинета. Только название: значок, порядок и адрес страницы — оформление пункта, а решение принимается по тому, что за раздел появится в меню"""
-
-    title: "SettingsAppLocalizedText"
-
-class SettingsAppConsentSheet(TypedDict):
-    """Лист согласия, снятый с манифеста сервером: единственное утверждение платформы о приложении, на которое кабинет соглашается"""
-
-    name: "SettingsAppLocalizedText"
-    description: "SettingsAppLocalizedText"
-    homepage: str
-    runtime: Literal['hosted', 'managed', 'declarative', '']
-    channel: Literal['sandbox', 'private', 'public', '']
-    permissions: List["SettingsAppConsentPermission"]
-    subscriptions: List["SettingsAppConsentSubscription"]
-    slots: List["SettingsAppConsentSlot"]
-    #: Разделы, которые приложение добавит в МЕНЮ кабинета. Отдельной строкой рядом со слотами: слот — место внутри чужого экрана, а раздел меняет само меню, и увидит его каждый, кто войдёт в кабинет
-    sections: List["SettingsAppConsentSection"]
-    #: Графы, которые приложение добавит карточкам кабинета. Рядом с правами, а не среди них: право говорит, что приложение УВИДИТ и ИЗМЕНИТ, а графа — что оно ДОБАВИТ на глаза каждому, кто откроет карточку
-    fields: List["SettingsAppConsentField"]
-    #: Проверки КОДОМ внутри операций кабинета, с правом их остановить. Особняком от прав намеренно: ни одно право не отвечает на вопрос «может ли приложение мне запретить»
-    functions: List["SettingsAppConsentFunction"]
-    #: Те же проверки, выраженные условием, а не кодом
-    rules: List["SettingsAppConsentRule"]
-    #: У версии нет ни одного пути наружу: ни приёмника событий, ни слота на чужом источнике, ни объявленного исходящего, — и всё, что она делает, делается внутри продукта. ВЫЧИСЛЯЕТСЯ, а не ставится руками: отметка, поставленная человеком, означает «мы посмотрели и решили», а вычисляемое правило — «по построению не может быть иначе»
-    runs_on_akeda: bool
-    #: Что приложение узнает о человеке, открывшем панель: пересечение запрошенного слотами с закрытым словарём платформы; больше ничего оно узнать не может. actor_employee_id — единственный факт, называющий человека настоящей карточкой сотрудника кабинета, а не псевдонимом: с ним приложение отличает сотрудников друг от друга, а имя и должность читает только отдельным правом на сотрудников. Экран согласия обязан сказать про него другими словами, чем про остальные три
-    person_facts: List[Literal['actor_subject', 'actor_employee_id', 'locale', 'theme']]
-    data_policy: "PlatformAppDataPolicy"
-    support: "SettingsAppConsentSupport"
-    #: Внешние получатели данных кабинета поимённо
-    egress: List["SettingsAppConsentEgress"]
-    #: Издатель ответил на вопрос вообще. Пустой список — это ОТВЕТ («никуда»), молчание — нет, и подавать молчание как «никуда» значило бы придумать обещание за издателя
-    egress_declared: bool
-    #: Список исполняет платформа, а не только обещает издатель. У режима managed рантайм держит контейнер без маршрута наружу и пускает ровно перечисленное; у hosted приложение живёт на чужой инфраструктуре, и проверить обещание платформа не может ничем
-    egress_enforced: bool
-
-class SettingsAppConsentSlot(TypedDict):
-    slot: str
-    type: str
-    title: "SettingsAppLocalizedText"
-    #: Поля контекста запуска, которые слот просит, по алфавиту
-    context: List[str]
-
-class SettingsAppConsentSubscription(TypedDict):
-    topic: str
-    #: Приложение сузило поток отбором
-    filtered: bool
-
-class SettingsAppConsentSupport(TypedDict):
-    email: str
-    url: str
-    incident_email: str
-    response_hours: int
-
-class _SettingsAppDeclaredSlotRequired(TypedDict):
-    #: Ключ слота из контракта платформы; объявление вне контракта в ответ не попадает
-    slot: str
-    type: Literal['action', 'iframe', 'panel', 'settings', 'declarative']
-    #: Поля контекста запуска, которые слот просит. Человека словарь называет псевдонимом
-    context: List[str]
-    title: "SettingsAppLocalizedText"
-    theme_aware: bool
-    #: Что расширение вправе прислать оболочке; уже пересечено с закрытым списком платформы
-    bridge_sends: List[str]
-    #: Что оболочка вправе прислать расширению
-    bridge_receives: List[str]
-
-class SettingsAppDeclaredSlot(_SettingsAppDeclaredSlotRequired, total=False):
-    #: Адрес рамки. Только у слота, показывающегося отдельным источником
-    url: str
-    #: Источник адреса — схема, хост и порт. Считает сервер: сравнение источников обязано быть одним и тем же на выдаче запуска и в оболочке
-    origin: str
-    min_width: int
-    min_height: int
-    #: Значок пункта меню из закрытого списка платформы. Только у слота раздела приложения; имя вне списка приведено к запасному ещё на сервере — незнакомое рисуется пустым квадратом молча
-    icon: str
-    #: Порядок пункта в меню кабинета. Только у слота раздела приложения; не названный приложением порядок ставит раздел в хвост, а не в голову меню
-    order: int
-
-class _SettingsAppExposureCallRequired(TypedDict):
-    #: Сущность, вычисленная из шаблона маршрута: core.contacts, app.config.lease
-    entity: str
-    #: Назвал ли предъявитель конкретную запись в адресе (record) или обратился к выборке (collection). Это НЕ «одна строка против многих»: сколько строк унесли, говорит rows. Выборка с фильтром, вернувшая одну строку, остаётся выборкой.
-    shape: Literal['collection', 'record']
-    #: Сколько обращений к этому предмету
-    calls: int
-    #: Объём ответов. Единственный измеритель там, где строк не назвали
-    bytes: int
-    last_at: str
-
-class SettingsAppExposureCall(_SettingsAppExposureCallRequired, total=False):
-    #: Сколько строк унесли всего там, где число называлось. Пусто означает «ни одно обращение числа не назвало», а не ноль
-    rows: int
-
-class _SettingsAppExposureReportRequired(TypedDict):
-    installation_id: str
-    #: Верхняя граница ущерба: на что кабинет соглашался и чем расширение имело право пользоваться
-    scopes: List[str]
-    #: Сколько раз расширение забирало секреты кабинета. Это НЕ граница, а факт: каждая выдача записана до того, как значение ушло
-    secret_leases: int
-    secret_lease_keys: List[str]
-    #: Сколько раз человек кабинета открывал панель расширения
-    slot_launches: int
-    token_issues: int
-    #: Сколько фактов кабинета не доехало и ждёт повтора
-    dead_letters: int
-    #: ЧТО расширение читало и писало своим токеном, свёрнутое по предмету. Собирается из журнала обращений по учётным данным. Предмет — сущность и форма, а не перечень прочитанных строк. Идентификаторы строк не хранятся нигде: журнал стал бы теневой копией базы, читаемой по оси платформы, мимо видимости записей. Радиус поражения отчёт поэтому даёт ВЕРХНЕЙ ГРАНИЦЕЙ: «сущность core.contacts, 12 выборок, 4200 строк» означает «считайте скомпрометированными всех контрагентов в пределах одобренных областей». Для решения «что перевыпустить и кого предупредить» нужна именно она. Пустой список означает «оно ничего не звало» — настоящий ответ, а не молчание; «мы не знаем» говорится позицией api_calls в unknown.
-    api_calls: List["SettingsAppExposureCall"]
-    #: Чего отчёт назвать не может. event_bodies — что лежало в телах уехавших событий: тела в журнале доставки нет намеренно, и эта позиция стоит в списке ВСЕГДА, потому что закрыта устройством системы, а не обстоятельствами. api_calls — журнал обращений не ответил: его нет в этой сборке, его база не отозвалась либо в его истории есть окно потери; рядом с непустым api_calls эта позиция означает «свод неполон». delivery_summary — сводку доставки не спросили или она не ответила; это пропуск, а не нули, потому что «мёртвых писем ноль» читается как «всё доезжало». Непроговорённый пропуск читается как хорошая новость, поэтому список печатается всегда и пустым не бывает.
-    unknown: List[Literal['api_calls', 'event_bodies', 'delivery_summary']]
-
-class SettingsAppExposureReport(_SettingsAppExposureReportRequired, total=False):
-    app: str
-    version: str
-    last_secret_lease: str
-    #: МОМЕНТ последнего предъявления токена. Что именно расширение читало, у нас не записано нигде — см. unknown
-    last_token_use: str
-    #: Последняя удачная доставка. Число из СВОДКИ здоровья, а не из журнала: журнал наружу не открыт, потому что в его причине отказа живёт эхо недоверенного приёмника
-    last_delivered_at: str
-    delivery_window_started_at: str
-    #: Окно отдаётся целиком, а не готовым процентом: «0 из 0» читается как «за окно не отправляли», а не как «отказов нет»
-    delivery_window_attempts: int
-    delivery_window_failures: int
-    #: Куда уезжали события. Адрес называет издатель, данных кабинета в нём нет по определению
-    delivery_endpoint_url: str
-
-class SettingsAppIncident(TypedDict):
-    installation: "PlatformAppInstallation"
-    app: "PlatformApp"
-    block: "PlatformAppManifestBlock"
-    exposure: "SettingsAppExposureReport"
-
-class SettingsAppIncidentList(TypedDict):
-    incidents: List["SettingsAppIncident"]
-
-class _SettingsAppInstallInputRequired(TypedDict):
-    #: Конкретная версия; последняя открытая не подразумевается
-    version: str
-    #: Согласие целиком: одобрить можно только запрошенное версией, и все её обязательные права обязаны войти сюда
-    approved: List[str]
-
-class SettingsAppInstallInput(_SettingsAppInstallInputRequired, total=False):
-    #: Уезжает в журнал установки
-    reason: str
-
-class _SettingsAppInstallationRequired(TypedDict):
-    installation: "PlatformAppInstallation"
-    app: "PlatformApp"
-    publisher: "SettingsAppPublisherCard"
-    version: "SettingsAppVersion"
-    #: Издатель, приложение и версия не выключены платформой
-    live: bool
-    #: Версии, на которые кабинет вправе перейти сам, свежие первыми
-    updates: List["SettingsAppVersion"]
-    health: "PlatformAppDeliveryHealth"
-
-class SettingsAppInstallation(_SettingsAppInstallationRequired, total=False):
-    #: Места на экране, которые занимает текущая версия установки: адрес рамки, источник, размер и мост сообщений. Оболочка строит рамку до запроса токена запуска, поэтому объявление приезжает вместе со списком установок
-    slots: List["SettingsAppDeclaredSlot"]
-    update: "SettingsAppInstallationUpdate"
-
-class _SettingsAppInstallationActivityRequired(TypedDict):
-    installation_id: "UUID"
-    #: ПРИМЕНЁННОЕ окно в сутках, а не запрошенное
-    window_days: int
-    #: Начало окна. Отдаётся вместе с window_days: «0 обращений» без окна читается как «оно ничего не делало», а не как «за неделю ничего не делало»
-    since: str
-    #: Одобренные области и области собственного контура, которыми пользовались; самые «горячие» первыми
-    scopes: List["SettingsAppScopeActivity"]
-    #: Одобрено, но за окно не пригодилось ни разу. Отдельным списком, а не отбором на экране: это единственное, ради чего отчёт открывают дважды
-    unused_scopes: List[str]
-    #: Все обращения окна, включая неклассифицированные
-    total_calls: int
-    #: Обращения, которым правило достижимости не назвало области. Печатается всегда, даже нулём: молчаливо приписать их соседней области значило бы соврать в отчёте о правах
-    unclassified_calls: int
-    #: В окне есть признанная потеря записи: журнал пишется мимо горячего пути, и на аварии строки теряются. Свод с дырой выглядит полным, поэтому дыра называется отдельно
-    has_gap: bool
-
-class SettingsAppInstallationActivity(_SettingsAppInstallationActivityRequired, total=False):
-    """Права и активность установки: что кабинет одобрил и чем из этого расширение пользовалось за окно. Уровня отдельных записей здесь нет и не будет — только верхняя граница по областям."""
-
-    #: Первое обращение в окне; отсутствует, если обращений не было
-    first_call_at: str
-    #: Последнее обращение в окне; отсутствует, если обращений не было
-    last_call_at: str
-
-class SettingsAppInstallationPage(TypedDict):
-    installations: List["SettingsAppInstallation"]
-
-class SettingsAppInstallationUpdate(TypedDict):
-    """Обновление, ждущее кабинет: самая свежая версия из updates и цена перехода на неё. Отдельным полем, а не выводом из updates: там перечислено всё, на что кабинет вправе перейти, включая версии СТАРШЕ установленной — откат тоже переход. Отсутствует, когда переходить не на что: свежих версий нет, издатель выключен, установка удалена."""
-
-    version_id: "UUID"
-    version: str
-    #: Перейти без нового согласия нельзя. Считается тем же правилом, что применит сама операция обновления: новое обязательное право либо расширившийся список внешних получателей данных. Иначе список обещал бы «жми обновить», а обновление отвечало бы 409
-    requires_consent: bool
-    #: Почему нужно согласие, машинными кодами закрытого списка. Пусто, когда согласие не нужно. Кодами, а не фразой: фразу, собранную сервером, не перевести на второй язык, а перечень прав и адресов человек читает на экране согласия, где решает
-    reasons: List[Literal['scopes_required', 'egress_expanded']]
-
-class SettingsAppLocalizedText(TypedDict):
-    """Текст на двух языках, как он объявлен в манифесте; пустая половина означает, что издатель её не заполнил"""
-
-    ru: str
-    en: str
-
-class SettingsAppPublisherCard(TypedDict):
-    """Издатель глазами кабинета: без основания проверки, адреса на аварию и причин выключения"""
-
-    slug: str
-    legal_name: str
-    country: str
-    homepage: str
-    contact_email: str
-    #: Платформа подтвердила, что имя принадлежит названному юрлицу
-    verified: bool
-    #: Издатель не выключен платформой
-    live: bool
-
-class _SettingsAppScopeActivityRequired(TypedDict):
-    scope: str
-    #: Ярус чувствительности из таксономии платформы. У необъявленной области ложь — вместе с declared=false это означает «о ней не известно ничего, кроме имени», а не «она безобидна»
-    sensitive: bool
-    #: Платформа объявляла такую область
-    declared: bool
-    #: Область одобрена кабинетом. Ложь у собственных дверей установки (app:self, app:secrets, app:launch, finance:suggest): они есть у каждой установки и согласия не требуют, но обращения по ним — факт
-    granted: bool
-    #: Сколько обращений пришлось на область за окно
-    calls: int
-    #: Обращения были. Отдельным полем, а не выводом из calls: читатель не должен выводить признак из числа и ошибаться в пользу разрешения
-    used: bool
-
-class SettingsAppScopeActivity(_SettingsAppScopeActivityRequired, total=False):
-    """Одна область в отчёте «права и активность»"""
-
-    #: Когда областью пользовались в последний раз В ОКНЕ. Отсутствие означает «за окно ни разу», а не «никогда»: журнал живёт 90 суток, а окно бывает короче
-    last_used_at: str
-
-class _SettingsAppVersionRequired(TypedDict):
-    id: "UUID"
-    version: str
-    status: "PlatformAppVersionStatus"
-    #: Канал, объявленный манифестом; пусто, если манифест канал не назвал
-    channel: Literal['sandbox', 'private', 'public', '']
-    name: "SettingsAppLocalizedText"
-    description: "SettingsAppLocalizedText"
-    permissions: "PlatformAppManifestPermissions"
-
-class SettingsAppVersion(_SettingsAppVersionRequired, total=False):
-    """Версия глазами кабинета: без манифеста целиком; лист согласия по версии отдаёт экран согласия"""
-
-    released_at: str
 
 class _SettingsCompanyRequired(TypedDict):
     id: "UUID"
@@ -17731,31 +10978,6 @@ class SettingsCompanyHead(TypedDict, total=False):
     patronymic: str
     position: str
 
-class _SettingsCompanyInputRequired(TypedDict):
-    business_id: "UUID"
-    #: Пробельное название отклоняется
-    name: str
-    #: Проверяется контрольной цифрой; пустой ИНН отклоняется
-    inn: str
-
-class SettingsCompanyInput(_SettingsCompanyInputRequired, total=False):
-    legal_name: str
-    #: Если не передан, определяется по длине нормализованного ИНН
-    entity_type: Literal['legal', 'sole_prop']
-    kpp: str
-    ogrn: str
-    okpo: str
-    branch_code: str
-    #: Режим налога нового юрлица — становится первой версией «с начала учёта». У существующего юрлица режим меняется в учётной политике с датой; пусто — не менять, другое значение, чем действующее сегодня, отклоняется 409
-    vat_accounting_mode: Literal['', 'deductible', 'non_deductible', 'none']
-    legal_address: "SettingsCompanyAddress"
-    entrepreneur: "SettingsCompanyPerson"
-    head: "SettingsCompanyHead"
-    #: Значения своих полей: не передано — не менять. Значение проверяется по типу графы; неподходящее — 422 с названиями граф
-    custom: Dict[str, Any]
-    #: Включить или выключить контроль закрывающих документов по выданным авансам. Не передано — не менять
-    closing_control: bool
-
 class SettingsCompanyPage(TypedDict):
     #: Число отданных строк, страниц у справочника нет
     count: int
@@ -17765,66 +10987,6 @@ class SettingsCompanyPerson(TypedDict):
     surname: str
     name: str
     patronymic: str
-
-class SettingsFieldDefinition(TypedDict):
-    id: "UUID"
-    entity_type: str
-    key: str
-    label: str
-    type: str
-    required: bool
-    dictionary: Optional["UUID"]
-    order: int
-    is_active: bool
-    help: str
-    #: Панель карточки, в которой показывается поле; пусто — общая панель дополнительных реквизитов
-    group: str
-    #: Закреплённая характеристика: под названием в шапке карточки и столбцом каталога
-    pinned: bool
-    #: Поле участвует в отборе каталога
-    filterable: bool
-    #: Категории (элементы справочника product_categories), у товаров которых и их потомков поле показывается; пусто — у всех
-    category_ids: List["UUID"]
-    #: Суффикс единицы после значения: кг, мм, мл
-    unit_suffix: str
-    #: Отметка времени как её печатает Postgres, а не RFC 3339
-    created_at: str
-    #: Отметка времени как её печатает Postgres, а не RFC 3339
-    updated_at: str
-
-class _SettingsFieldDefinitionInputRequired(TypedDict):
-    entity_type: str
-    key: str
-    label: str
-
-class SettingsFieldDefinitionInput(_SettingsFieldDefinitionInputRequired, total=False):
-    #: Пустое значение подставляется как text
-    type: Literal['text', 'number', 'date', 'bool', 'select', 'money']
-    required: bool
-    #: Справочник значений для типа select
-    dictionary: Optional["UUID"]
-    order: int
-    #: Читается только при изменении; на заведении определение всегда действующее
-    is_active: bool
-    help: str
-    #: Панель карточки; пусто — общая панель дополнительных реквизитов
-    group: str
-    #: Закрепить как характеристику: под названием в шапке карточки и столбцом каталога
-    pinned: bool
-    #: Показывать в отборе каталога
-    filterable: bool
-    #: Категории, у товаров которых и их потомков поле показывается; пусто — у всех
-    category_ids: List["UUID"]
-    #: Суффикс единицы после значения: кг, мм, мл
-    unit_suffix: str
-
-class SettingsFieldDefinitionPage(TypedDict):
-    #: Число отданных строк, а не всего в базе; выборка обрезана 200 строками
-    count: int
-    results: List["SettingsFieldDefinition"]
-
-class SettingsFieldSchema(TypedDict):
-    fields: List["SettingsFieldDefinition"]
 
 class SettingsMember(TypedDict):
     #: Идентификатор членства в кабинете, а не человека
@@ -17842,40 +11004,10 @@ class SettingsMember(TypedDict):
     companies: List["UUID"]
     is_active: bool
 
-class _SettingsMemberCreateInputRequired(TypedDict):
-    username: str
-    #: Уходит во внешний сервис входа и в ответе не повторяется
-    password: str
-
-class SettingsMemberCreateInput(_SettingsMemberCreateInputRequired, total=False):
-    #: Полное имя человека; в ответе это поле называется full_name
-    first_name: str
-    #: Строго ГГГГ-ММ-ДД; пустая строка означает «не указана»
-    birth_date: str
-    avatar_url: str
-    role: Optional["UUID"]
-    #: Умолчание — all
-    company_scope: Literal['all', 'selected']
-    companies: List["UUID"]
-
 class SettingsMemberPage(TypedDict):
     #: Число строк в results, а не общее число участников кабинета
     count: int
     results: List["SettingsMember"]
-
-class SettingsMemberPatch(TypedDict, total=False):
-    #: Меняется и во внешнем сервисе входа
-    username: str
-    full_name: str
-    #: Строго ГГГГ-ММ-ДД; пустая строка снимает дату
-    birth_date: str
-    avatar_url: str
-    #: null или пустая строка снимают роль
-    role: Optional["UUID"]
-    #: Пустая строка игнорируется
-    company_scope: Literal['all', 'selected']
-    companies: List["UUID"]
-    is_active: bool
 
 class SettingsRole(TypedDict):
     id: "UUID"
@@ -17888,136 +11020,14 @@ class SettingsRole(TypedDict):
     #: Ключ — ресурс модуля; пустая карта означает видимость только своих записей
     record_rules: Dict[str, Literal['own', 'all']]
 
-class SettingsRoleActivationInput(TypedDict):
-    #: true включает роль, false отключает; это переключатель, а не одностороннее включение
-    is_active: bool
-
-class SettingsRoleActivationResult(TypedDict):
-    id: "UUID"
-    is_active: bool
-
-class _SettingsRoleInputRequired(TypedDict):
-    #: Пробелы по краям срезаются; пустое имя отклоняется
-    name: str
-
-class SettingsRoleInput(_SettingsRoleInputRequired, total=False):
-    #: Через этот маршрут остаётся false: административную роль создать или назначить нельзя
-    is_admin: bool
-    #: Отсутствие поля равно пустому списку прав
-    permissions: List[str]
-    #: Отсутствие поля равно пустой карте
-    record_rules: Dict[str, Literal['own', 'all']]
-
 class SettingsRolePage(TypedDict):
     #: Число строк в results, а не общее число ролей кабинета
     count: int
     results: List["SettingsRole"]
 
-class SettingsRoleTransferInput(TypedDict):
-    #: Действующая роль-получатель; обязательна, нулевой UUID отклоняется
-    target_role_id: "UUID"
-
-class SettingsRoleTransferResult(TypedDict):
-    #: Сколько участников переставлено на целевую роль
-    count: int
-    target_role_id: "UUID"
-
-class SettingsUsage(TypedDict):
-    snapshot: Optional["BillingUsageSnapshot"]
-    #: Разбивка по убыванию занятого; пустая, пока снимка нет
-    modules: List["BillingUsageModuleBytes"]
-
 class SettingsVatRates(TypedDict):
     #: Фиксированный профиль 22, 20, 10 и 0 процентов
     rates: List[int]
-
-class SignupAccepted(TypedDict):
-    #: Единственное значение: исход не различается снаружи ни телом, ни кодом
-    status: Literal['accepted']
-    #: Условная формулировка «если на этот адрес можно завести кабинет — мы отправили письмо»: она правдива при любом исходе
-    detail: str
-
-class SignupAttributionAccepted(TypedDict):
-    status: Literal['accepted']
-
-class _SignupAttributionTouchInputRequired(TypedDict):
-    #: Клиентский ключ идемпотентности одного касания
-    event_id: "UUID"
-    #: Непрозрачный first-party идентификатор посетителя без ПДн
-    visitor_id: "UUID"
-    #: Непрозрачный идентификатор браузерной сессии
-    session_id: "UUID"
-    #: Только локальный путь без query и fragment
-    landing_path: str
-    #: Есть действующее согласие текущей редакции cookie-политики
-    analytics: bool
-
-class SignupAttributionTouchInput(_SignupAttributionTouchInputRequired, total=False):
-    #: Сервер оставляет только hostname и только при согласии на аналитику
-    referrer: str
-    utm_source: str
-    utm_medium: str
-    utm_campaign: str
-    utm_content: str
-    utm_term: str
-    referral_code: str
-    #: Редакция cookie-политики; обязательна, когда analytics=true
-    consent_version: str
-
-class SignupRequestInfo(TypedDict):
-    email: str
-    company_name: str
-    first_name: str
-    last_name: str
-    #: Свободный адрес будущего кабинета на момент чтения
-    suggested_slug: str
-    status: Literal['pending', 'confirmed', 'completed', 'expired', 'revoked']
-    is_expired: bool
-    #: Адрес уже заведённого кабинета; пусто, пока его нет
-    tenant_slug: str
-    #: Кабинет заведён, а его база не поднялась: на экране нужна кнопка повтора, а не форма
-    provisioning_pending: bool
-    #: У адреса уже есть учётная запись. Владельцу ссылки это известно и так; наружу без ссылки не уходит
-    account_exists: bool
-    #: Состояние активной browser-сессии относительно адреса ссылки
-    session_state: Literal['none', 'matching', 'mismatch']
-    session_email: str
-
-class _SignupRequestInputRequired(TypedDict):
-    #: Рабочая почта будущего владельца кабинета
-    email: str
-    #: Название будущего кабинета
-    company_name: str
-    first_name: str
-    last_name: str
-    #: Номер с +7, 7, 8 или 9; сервер приводит к +7XXXXXXXXXX
-    phone: str
-
-class SignupRequestInput(_SignupRequestInputRequired, total=False):
-    #: Исторический необязательный параметр API; публичная форма его не показывает
-    slug: str
-    #: Необязательный opaque visitor ID: по нему сервер фиксирует атрибуцию заявки; неверное значение не блокирует регистрацию
-    attribution_visitor_id: "UUID"
-    #: Ловушка для роботов: поле скрыто на форме, человек его не заполняет. Заполненное принимается как успех, но письма не отправляет
-    website: str
-
-class _SignupSessionRequired(TypedDict):
-    #: ERP-сессия владельца: тот же go_-токен, что выдаёт мост Kratos-сессии
-    token: str
-    user: "SignupSessionUser"
-    #: Кабинеты человека; у нового владельца ровно один
-    memberships: List[Dict[str, Any]]
-
-class SignupSession(_SignupSessionRequired, total=False):
-    source: str
-
-class SignupSessionUser(TypedDict, total=False):
-    username: str
-    name: str
-    avatar_url: str
-    platform_role: str
-    platform_scopes: List[str]
-    is_platform_admin: bool
 
 class SprintAgingTask(TypedDict):
     id: "UUID"
@@ -18147,15 +11157,6 @@ class StatusUpdatePage(TypedDict):
     count: int
     results: List["StatusUpdate"]
 
-class StatusUpdatePatch(TypedDict, total=False):
-    owner_type: "CycleOwnerType"
-    owner_id: str
-    section: str
-    project: str
-    health: "StatusHealth"
-    body: str
-    is_archived: bool
-
 class _StockAccountTransferCreateRequired(TypedDict):
     business_id: "UUID"
 
@@ -18269,19 +11270,6 @@ class StockAssemblySpecRef(_StockAssemblySpecRefRequired, total=False):
 class StockAssemblySpecStatus(TypedDict):
     status: Literal['active', 'archived']
 
-class StockAvailability(TypedDict):
-    product_id: "UUID"
-    #: Физический остаток на складе
-    on_hand: str
-    #: Держат резервы
-    reserved: str
-    #: Свободно: остаток минус резерв, не меньше нуля
-    available: str
-    holds: List["StockReservationHold"]
-
-class StockAvailabilityList(TypedDict):
-    results: List["StockAvailability"]
-
 class StockBatch(TypedDict):
     id: "UUID"
     #: Бизнес партии — учётная единица, которой принадлежит товар
@@ -18311,14 +11299,6 @@ class StockBatchPage(TypedDict):
     limit: int
     offset: int
     results: List["StockBatch"]
-
-class StockBusinessRef(TypedDict):
-    id: "UUID"
-    name: str
-
-class StockBusinessRefPage(TypedDict):
-    count: int
-    results: List["StockBusinessRef"]
 
 class _StockClaimWriteoffCreateRequired(TypedDict):
     basis_id: "UUID"
@@ -18354,16 +11334,6 @@ class StockCompanyPolicyPatch(TypedDict, total=False):
     default_warehouse_id: Optional["UUID"]
     #: Строка YYYY-MM-DD; null снимает закрытие периода
     closed_through: Optional[str]
-
-class StockCompanyRef(TypedDict):
-    id: "UUID"
-    name: str
-    business_id: "UUID"
-    is_active: bool
-
-class StockCompanyRefPage(TypedDict):
-    count: int
-    results: List["StockCompanyRef"]
 
 class _StockDocumentCreateRequired(TypedDict):
     type_key: "StockDocumentCreateTypeKey"
@@ -18956,22 +11926,6 @@ class StockReceiptCorrectionCreateSupplierDocument(TypedDict):
     #: Дата УКД поставщика
     date: str
 
-class StockReceiptVATTerms(TypedDict):
-    #: Обязательно ли на дату «в т.ч. НДС»: бизнес очищает суммы и юрлицо принимает налог к вычету
-    applies: bool
-    #: Режим налога юрлица на дату; пусто — не выбран
-    mode: Literal['', 'deductible', 'non_deductible', 'none']
-    #: Валюта учёта на дату документа
-    currency: str
-
-class _StockReceiptVATTermsInputRequired(TypedDict):
-    #: Дата документа: от неё зависит, обязательно ли «в т.ч. НДС»
-    date: str
-
-class StockReceiptVATTermsInput(_StockReceiptVATTermsInputRequired, total=False):
-    company_id: "UUID"
-    business_id: "UUID"
-
 class StockReorderRule(TypedDict):
     id: "UUID"
     business_id: "UUID"
@@ -19040,46 +11994,6 @@ class StockReorderRulePatch(TypedDict, total=False):
     preferred_supplier_id: Optional["UUID"]
     is_active: bool
 
-class StockReportDrilldown(TypedDict):
-    product_id: "UUID"
-    #: Число движений регистра, а не строк отчёта
-    count: int
-    limit: int
-    offset: int
-    rows: List["StockReportRow"]
-    entries: List["StockReportDrilldownEntry"]
-
-class StockReportDrilldownEntry(TypedDict):
-    id: "UUID"
-    #: Какой регистр двинул документ: остаток, резерв покупателя или ожидаемый приход
-    register_key: Literal['stock', 'stock_reserved', 'stock_expected']
-    #: Сколько записей ЭТОГО регистра отвечает отбору. Окно выдачи своё у каждого регистра, поэтому limit режет каждый по отдельности, а это число говорит, сколько осталось за краем.
-    register_count: int
-    #: Склад или зона движения
-    warehouse_id: Optional["UUID"]
-    warehouse_name: str
-    #: Склад зоны; пусто, если движение на самом складе
-    warehouse_parent_name: str
-    #: Юрлицо движения; пусто у неофициального контура (ERP-704)
-    company_id: Optional["UUID"]
-    company_name: str
-    #: Учётная единица движения: у неофициального остатка юрлица нет, и разрез называется бизнесом (ERP-704)
-    business_name: str
-    registrar_id: "UUID"
-    registrar_number: str
-    registrar_type_key: str
-    registrar_type_name: str
-    registrar_status: str
-    date: str
-    sign: int
-    dims: Dict[str, Any]
-    values: Dict[str, Any]
-    unit: str
-    #: Контрагент документа-регистратора: поставщик приёмки, покупатель отгрузки
-    contact_id: Optional["UUID"]
-    #: Название контрагента; пусто без контрагента
-    contact_name: str
-
 class StockReportExportRequest(TypedDict, total=False):
     """Отбор экрана остатков и его видимые колонки. Имена полей повторяют параметры GET /api/v1/stock/report/stocks: файл обязан содержать то же, что видел человек, и одно имя на два входа защищает от расхождения. Отличается только перенос: список складов идёт массивом, а не строкой через запятую, и дополнительные поля — объектом вместо параметров cf.*. Колонки берутся из перечня; неизвестная колонка — 400, а не молча пропущенная. Опознавательные колонки (бизнес, юрлицо, склад и зона с кодами, товар, SKU, единица) пишутся всегда, и порядок колонок в файле повторяет экран. Выборка обходится постранично целиком; слишком широкая отклоняется как 400 — книга собирается в памяти, и потолок общий с загрузкой."""
 
@@ -19117,29 +12031,6 @@ class StockReportOverdueReservation(TypedDict):
     #: Decimal string
     remaining_qty: str
     product_count: int
-
-class StockReportOverdueSupplierOrder(TypedDict):
-    document_id: "UUID"
-    number: str
-    date: str
-    delivery_at: str
-    #: Бизнес заказа — учётная единица строки, он есть всегда
-    business_id: Dict[str, Any]
-    business_name: str
-    #: Юрлицо заказа — разрез официального контура. У неофициального заказа его нет, и тогда поле пустое (ERP-704).
-    company_id: Optional["UUID"]
-    company_name: str
-    warehouse_id: "UUID"
-    warehouse_name: str
-    supplier_id: "UUID"
-    supplier_name: str
-    #: Decimal string. Недовезённый хвост заказа по регистру ожидания.
-    remaining_qty: str
-    product_count: int
-
-class StockReportOverdueSupplierOrderPage(TypedDict):
-    count: int
-    results: List["StockReportOverdueSupplierOrder"]
 
 class StockReportPage(TypedDict):
     count: int
@@ -19319,17 +12210,6 @@ class StockReportWarehouseTotal(TypedDict):
     #: Decimal string
     amount: str
 
-class _StockReservationHoldRequired(TypedDict):
-    document_id: "UUID"
-    number: str
-    type_key: str
-    qty: str
-
-class StockReservationHold(_StockReservationHoldRequired, total=False):
-    """Документ, который держит часть остатка — резерв под заказ или производственный резерв."""
-
-    expires_at: str
-
 class StockScanResult(TypedDict):
     identifier_id: "UUID"
     barcode: str
@@ -19440,17 +12320,6 @@ class StockWarehouse(TypedDict):
     created_at: str
     updated_at: str
 
-class StockWarehouseBlocker(TypedDict):
-    register: Literal['stock', 'stock_reserved', 'stock_expected']
-    company_id: "UUID"
-    product_id: "UUID"
-    #: Ненулевой остаток decimal
-    quantity: str
-
-class StockWarehouseBlockerCheck(TypedDict):
-    allowed: bool
-    blockers: List["StockWarehouseBlocker"]
-
 class _StockWarehouseInputRequired(TypedDict):
     #: Приводится к верхнему регистру
     code: str
@@ -19544,25 +12413,6 @@ class SupplierDocument(TypedDict, total=False):
 
     number: str
     date: str
-
-class Tag(TypedDict):
-    id: "UUID"
-    project: Optional["UUID"]
-    name: str
-    color: str
-    description: str
-    is_archived: bool
-
-class TagAttach(TypedDict, total=False):
-    """Передайте `tag_id` существующей метки либо `name` для создания новой."""
-
-    tag_id: "UUID"
-    name: str
-    color: str
-
-class TagPage(TypedDict):
-    count: int
-    results: List["Tag"]
 
 class _TaskRequired(TypedDict):
     id: "UUID"
@@ -19758,25 +12608,6 @@ class TaskTemplatePage(TypedDict):
     count: int
     results: List["TaskTemplate"]
 
-class TaskTemplateUpdate(TypedDict, total=False):
-    section: "UUID"
-    status: "UUID"
-    name: str
-    title: str
-    description: str
-    priority: "TaskPriority"
-    executor: int
-    assignee: int
-    estimate: float
-    start_offset_days: int
-    due_offset_days: int
-    recurrence: "TemplateRecurrence"
-    recurrence_interval: int
-    recurrence_until: str
-    next_run_at: str
-    is_active: bool
-    custom: Dict[str, Any]
-
 class TaskUpdate(TypedDict, total=False):
     title: str
     description: str
@@ -19829,22 +12660,6 @@ class TaskWatcher(TypedDict):
     id: int
     user: int
     user_name: Optional[str]
-
-class _TasksSnapshotRequired(TypedDict):
-    fetched_at: str
-    revision: str
-    projects: List["Project"]
-    sections: List["Section"]
-    statuses: List["Status"]
-    tags: List["TaskTagCatalogItem"]
-    members: List["Member"]
-    views: List["TaskView"]
-    cycles: List["Cycle"]
-    tasks: List["Task"]
-    tasks_has_more: bool
-
-class TasksSnapshot(_TasksSnapshotRequired, total=False):
-    tasks_limit: int
 
 class TeamFlowTotals(TypedDict):
     taken: int
@@ -19917,38 +12732,67 @@ class _TemplateRunResultRequired(TypedDict):
 class TemplateRunResult(_TemplateRunResultRequired, total=False):
     reason: str
 
-class _TenantCredentialRequestRequired(TypedDict):
-    id: "UUID"
-    #: Установка расширения или ключ кабинета. Человеческих сессий в этом журнале нет вовсе: у человека своё имя, своя роль и свой аудит
-    principal: Literal['installation', 'api_key']
+class _TransferInstructionsRequired(TypedDict):
+    #: post — один multipart POST; parts — PUT каждой части; api — PUT через этот API с авторизацией
+    mode: Literal['post', 'parts', 'api']
+    #: true — адрес требует токен API, агенту по MCP этот путь недоступен
+    requires_authorization: bool
+    max_bytes: int
+    expires_at: str
+
+class TransferInstructions(_TransferInstructionsRequired, total=False):
+    """Как передать байты. Выдаётся один раз, при открытии сессии."""
+
+    url: str
     method: str
-    #: ШАБЛОН маршрута, а не путь: путь несёт идентификаторы прочитанных строк, а строка запроса — значения фильтров
-    route: str
-    #: Сущность, вычисленная из шаблона
-    entity: str
-    shape: Literal['collection', 'record']
-    bytes: int
-    status: int
-    #: Машинный код исхода из закрытого списка: класс ответа либо названная причина отказа внешнего контура. Свободного текста в журнале нет ни одного поля
-    outcome: str
-    duration_ms: int
-    occurred_at: str
+    #: Поля формы для POST; файл идёт после них последним полем
+    fields: Dict[str, str]
+    #: Имя поля формы для файла
+    file_field: str
+    headers: Dict[str, str]
+    part_bytes: int
+    part_count: int
+    #: Подписанный адрес каждой части по её номеру, начиная с 1
+    direct_urls: Dict[str, str]
 
-class TenantCredentialRequest(_TenantCredentialRequestRequired, total=False):
-    """Одно обращение по машинному ключу глазами кабинета. Тела запроса, тела ответа, значения секрета, фактического пути и идентификаторов прочитанных строк здесь нет — и не потому, что кабинету не доверяют, а потому, что этих данных нет в самом журнале."""
+class _TransferSessionRequired(TypedDict):
+    id: "UUID"
+    owner_type: str
+    name: str
+    mime_type: str
+    size_bytes: int
+    status: Literal['pending', 'processing', 'attached', 'failed', 'expired']
+    expires_at: str
+    created_at: str
 
-    installation_id: "UUID"
-    token_id: "UUID"
-    api_key_id: "UUID"
-    #: Сколько строк унёс ответ. Пусто означает «неизвестно», а не «ноль»
-    rows: int
+class TransferSession(_TransferSessionRequired, total=False):
+    """Сессия загрузки файла по подписанному адресу хранилища. Ключи хранилища наружу не отдаются."""
 
-class TenantCredentialRequestPage(TypedDict):
-    requests: List["TenantCredentialRequest"]
-    gaps: List["CredentialRequestGap"]
-    limit: int
-    offset: int
-    has_more: bool
+    owner_id: str
+    sha256: str
+    attributes: Dict[str, str]
+    failure: Literal['infected', 'size', 'checksum', 'storage', 'owner', 'aborted', 'expired']
+    failure_detail: str
+    scan_status: Literal['pending', 'clean', 'infected', 'skipped']
+    scan_verdict: str
+    #: Номер строки, заведённой по файлу; у почты — id загрузки для upload_ids
+    published_ref: str
+    completed_at: str
+    upload: "TransferInstructions"
+
+class _TransferUploadRequestRequired(TypedDict):
+    #: Имя файла с расширением
+    name: str
+    #: Точный размер файла в байтах
+    size_bytes: int
+
+class TransferUploadRequest(_TransferUploadRequestRequired, total=False):
+    """Заявка на сессию загрузки файла по подписанному адресу."""
+
+    #: Тип содержимого; по умолчанию application/octet-stream
+    mime_type: str
+    #: Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками
+    sha256: str
 
 UUID = str
 
@@ -19985,12 +12829,6 @@ class _AutomationRuleTestResponseRequired(TypedDict):
 class AutomationRuleTestResponse(_AutomationRuleTestResponseRequired, total=False):
     problem: "AutomationRuleProblem"
 
-class CoreGetAccountingStartResponse(TypedDict):
-    #: День первой проводки, ГГГГ-ММ-ДД. Пусто — учёт ещё не начинался.
-    started_at: str
-    #: День накануне начала учёта, ГГГГ-ММ-ДД. Пусто, когда учёта ещё не было.
-    opening_date: str
-
 class CoreListBusinessesResponse(TypedDict):
     results: List["CoreBusiness"]
 
@@ -19999,12 +12837,6 @@ class CoreSetBusinessActiveRequest(TypedDict):
 
 class CoreListBusinessOwnershipResponse(TypedDict):
     results: List["CoreOwnershipVersion"]
-
-class DocflowLookupParticipantRequest(TypedDict):
-    contact_id: "UUID"
-
-class DocflowLookupParticipantResponse(TypedDict):
-    participant_id: str
 
 class DocflowFlowContactStatsResponse(TypedDict):
     items: List["DocflowFlowContactStatsResponseItemsItem"]
@@ -20029,65 +12861,16 @@ class _DocflowFlowDocumentRevisionsResponseItemsItemRequired(TypedDict):
 class DocflowFlowDocumentRevisionsResponseItemsItem(_DocflowFlowDocumentRevisionsResponseItemsItemRequired, total=False):
     author_name: str
 
-class DocflowPreviewMessageActionResponse(TypedDict):
-    next: List["DocflowPreviewMessageActionResponseNextItem"]
-
-class DocflowPreviewMessageActionResponseNextItem(TypedDict):
-    name: str
-    executors: List[str]
-
-class DocflowLinkIntakeCounterpartyRequest(TypedDict):
-    #: Контрагент справочника, с которым сводится участник обмена
-    contact: Dict[str, Any]
-
-class DocflowRefreshMessageResponse(TypedDict):
-    refreshed: bool
-
-class FilesAccessCheckRequest(TypedDict):
-    file_ids: List["UUID"]
-
-class FilesAccessCheckResponse(TypedDict):
-    items: List["FilesAccessCheckResponseItemsItem"]
-
-class _FilesAccessCheckResponseItemsItemRequired(TypedDict):
-    id: "UUID"
-    allowed: bool
-
-class FilesAccessCheckResponseItemsItem(_FilesAccessCheckResponseItemsItemRequired, total=False):
-    #: Причина отказа. «Нет прав» может смениться, «нет файла» — окончательно.
-    reason: Literal['forbidden', 'not_found']
-    version_id: "UUID"
-    name: str
-    size_bytes: int
-    scan_status: str
-
-class _FilesContentLinkResponseRequired(TypedDict):
-    url: str
-    #: true — адрес ведёт прямо в хранилище; false — на этот API, с заголовком авторизации
-    direct: bool
-    name: str
-    mime_type: str
-
-class FilesContentLinkResponse(_FilesContentLinkResponseRequired, total=False):
-    expires_at: str
-    size_bytes: int
-
 class FilesListRootsResponse(TypedDict):
     roots: List["FilesFolder"]
 
 class FilesSearchResponse(TypedDict):
     results: List["FilesSearchHit"]
 
-class FilesListSharesResponse(TypedDict):
-    shares: List["FilesShare"]
-
 class FilesCreateShortcutRequest(TypedDict):
     folder_id: "UUID"
     name: str
     url: str
-
-class FilesPurgeTrashResponse(TypedDict):
-    purged: int
 
 class FinanceListDividendAccessUsersResponse(TypedDict, total=False):
     results: List["FinanceListDividendAccessUsersResponseResultsItem"]
@@ -20170,14 +12953,6 @@ class MailFlagMessageRequest(TypedDict, total=False):
 
 class MailMoveMessageRequest(TypedDict):
     folder_id: "UUID"
-
-class MailCompleteGoogleOAuthRequest(TypedDict):
-    state: str
-    code: str
-
-class MailStartGoogleOAuthResponse(TypedDict, total=False):
-    auth_url: str
-    provider: str
 
 class MailListPeopleResponse(TypedDict):
     items: List["MailPerson"]
