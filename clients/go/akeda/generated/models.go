@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 13bfd61a183df5b9db594b25da4226a5af09c645276a215e90ab4394065a5a64).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3d8fe8e5d99e9e219b8884b04b395a9a841c44363a0026e7994bf47f11d7da3).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -690,8 +690,10 @@ type BillingCabinetSubscription struct {
 	// Pilot — Идущее внедрение: кабинет ведём мы, счетов нет, открыт весь продукт. null во всех остальных состояниях
 	Pilot *BillingPilotState `json:"pilot"`
 	// PaidUntil — До какого числа оплачено; пусто у пробы и у кабинета без подписки
-	PaidUntil     *string               `json:"paid_until"`
-	PastDue       *BillingPastDueState  `json:"past_due"`
+	PaidUntil *string              `json:"paid_until"`
+	PastDue   *BillingPastDueState `json:"past_due"`
+	// Opening — Первый неоплаченный период платной подписки. null у пробы, внутреннего кабинета, внедрения, бесплатного состава и у подписки с открытым периодом
+	Opening       *BillingOpeningState  `json:"opening,omitempty"`
 	Seats         BillingCabinetSeats   `json:"seats"`
 	Storage       BillingCabinetStorage `json:"storage"`
 	Catalog       BillingCatalog        `json:"catalog"`
@@ -726,7 +728,7 @@ type BillingChangePreview struct {
 	Becomes        BillingSnap `json:"becomes"`
 	AddedModules   []string    `json:"added_modules"`
 	RemovedModules []string    `json:"removed_modules"`
-	// ProrationAmount — Доплата за остаток текущего периода. Ноль означает, что платить сейчас не нужно вовсе: так выглядит и понижение, и изменение на пробе, у которой оплаченного периода ещё нет
+	// ProrationAmount — Доплата за остаток текущего периода. Ноль означает, что платить сейчас не нужно вовсе: так выглядит и понижение, и изменение на пробе, у которой оплаченного периода ещё нет. Когда заполнено period_start, это цена ПОЛНОГО первого периода
 	ProrationAmount map[string]json.RawMessage `json:"proration_amount"`
 	// ProrationLines — Из чего доплата сложилась: тариф с модулями, места сверх пакета, гигабайты сверх пакета. Ровно эти строки печатает счёт, и их сумма равна proration_amount — счёт печатается строками, и сумма счёта это сумма его строк. Строка может быть отрицательной: клиент, перешедший на тариф дороже и одновременно снявший доплаченные места, платит разницу, и снятые места обязаны быть в счёте видны. Пусто, когда доплаты нет
 	ProrationLines []BillingInvoiceLine `json:"proration_lines"`
@@ -737,6 +739,8 @@ type BillingChangePreview struct {
 	NextChargeAt *string `json:"next_charge_at"`
 	// Effective — now — применяется сразу и оплачивается прорацией; period_end — откладывается до конца оплаченного периода. Правило одно: изменение, за которое клиент платит больше, применяется сейчас, всё остальное — с конца периода. Смена ритма оплаты всегда ждёт конца периода
 	Effective string `json:"effective"`
+	// PeriodStart — Начало первого оплачиваемого периода. Заполнено у платной подписки без оплаченного периода (назначена оператором, переведена вручную, проба закончилась без тарифа): изменение выставляет счёт за полный период [period_start, next_charge_at), и его оплата открывает этот период. null у пробы и у подписки с открытым периодом
+	PeriodStart *string `json:"period_start,omitempty"`
 }
 
 // BillingChangeResult — Новое состояние экрана подписки и счёт, если доплачивать было за что
@@ -824,6 +828,15 @@ type BillingModuleSyncReport struct {
 }
 
 type BillingMoney = string
+
+// BillingOpeningState — Тариф подключён, а первый оплаченный период не открыт. Экран предлагает оплату: открывает уже выставленный счёт или выставляет его на нынешний состав через POST /settings/subscription/change
+type BillingOpeningState struct {
+	Amount   BillingMoney `json:"amount"`
+	Currency string       `json:"currency"`
+	// InvoiceID — Выставленный и не оплаченный счёт первого периода; null — счёта ещё нет
+	InvoiceID     *string `json:"invoice_id"`
+	InvoiceNumber *string `json:"invoice_number,omitempty"`
+}
 
 // BillingPastDueState — Неоплаченный счёт и дата ограничения доступа. Считается по САМОМУ СТАРОМУ просроченному счёту: его срок наступит первым. Само ограничение в этой фазе не включается — число показывается, решение принимает владелец
 type BillingPastDueState struct {
@@ -18474,6 +18487,68 @@ type TasksSnapshot struct {
 	TasksHasMore bool                 `json:"tasks_has_more"`
 }
 
+type TeamFlowTotals struct {
+	Taken  int64 `json:"taken"`
+	Handed int64 `json:"handed"`
+	Closed int64 `json:"closed"`
+}
+
+type TeamMemberMetrics struct {
+	User                int64               `json:"user"`
+	Name                string              `json:"name"`
+	Taken               int64               `json:"taken"`
+	Handed              int64               `json:"handed"`
+	Closed              int64               `json:"closed"`
+	DoneOfTaken         int64               `json:"done_of_taken"`
+	HandedWithDue       int64               `json:"handed_with_due"`
+	HandedOnTime        int64               `json:"handed_on_time"`
+	Efficiency          *int64              `json:"efficiency"`
+	InWork              int64               `json:"in_work"`
+	Review              int64               `json:"review"`
+	ReviewOldestSeconds int64               `json:"review_oldest_seconds"`
+	Overdue             int64               `json:"overdue"`
+	OverdueInReview     int64               `json:"overdue_in_review"`
+	Backlog             int64               `json:"backlog"`
+	CycleMedianSeconds  int64               `json:"cycle_median_seconds"`
+	ReworkPercent       float64             `json:"rework_percent"`
+	Buckets             []TeamMetricsBucket `json:"buckets"`
+}
+
+type TeamMetrics struct {
+	Project             UUID                  `json:"project"`
+	Period              string                `json:"period"`
+	WindowFrom          string                `json:"window_from"`
+	WindowTo            string                `json:"window_to"`
+	BucketDays          int64                 `json:"bucket_days"`
+	Taken               int64                 `json:"taken"`
+	Handed              int64                 `json:"handed"`
+	Closed              int64                 `json:"closed"`
+	Previous            *TeamFlowTotals       `json:"previous"`
+	Review              int64                 `json:"review"`
+	ReviewMedianSeconds int64                 `json:"review_median_seconds"`
+	ReviewStale         int64                 `json:"review_stale"`
+	Overdue             int64                 `json:"overdue"`
+	Backlog             int64                 `json:"backlog"`
+	InWork              int64                 `json:"in_work"`
+	CycleMedianSeconds  int64                 `json:"cycle_median_seconds"`
+	Buckets             []TeamMetricsBucket   `json:"buckets"`
+	Members             []TeamMemberMetrics   `json:"members"`
+	Unassigned          TeamMetricsUnassigned `json:"unassigned"`
+}
+
+type TeamMetricsUnassigned struct {
+	Open    int64 `json:"open"`
+	Overdue int64 `json:"overdue"`
+}
+
+type TeamMetricsBucket struct {
+	Start      string `json:"start"`
+	Taken      int64  `json:"taken"`
+	Handed     int64  `json:"handed"`
+	HandedLate int64  `json:"handed_late"`
+	Closed     int64  `json:"closed"`
+}
+
 type TemplateRecurrence = string
 
 type TemplateRunPage struct {
@@ -18812,4 +18887,14 @@ type MailSetVIPSenderRequest struct {
 
 type MailCountVIPUnreadResponse struct {
 	Unread int64 `json:"unread"`
+}
+
+type StockListDocumentAuthorsResponse struct {
+	Count   int64                                         `json:"count"`
+	Results []StockListDocumentAuthorsResponseResultsItem `json:"results"`
+}
+
+type StockListDocumentAuthorsResponseResultsItem struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
 }

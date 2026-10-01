@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 13bfd61a183df5b9db594b25da4226a5af09c645276a215e90ab4394065a5a64).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3d8fe8e5d99e9e219b8884b04b395a9a841c44363a0026e7994bf47f11d7da3).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -7051,7 +7051,7 @@ export interface OperationTypes {
   /** GET /api/v1/stock/report/purchasing — Получить отчёт потребности в закупке */
   stockGetPurchasingReport: {
     params: Record<string, never>;
-    query: { "business_id"?: models.UUID; "company_id"?: models.UUID; "include_empty"?: boolean; "limit"?: number; "offset"?: number; "q"?: string; "warehouse_id"?: models.UUID };
+    query: { "business_id"?: models.UUID; "company_id"?: models.UUID; "demand_from"?: string; "demand_to"?: string; "expected_from"?: string; "expected_to"?: string; "include_empty"?: boolean; "limit"?: number; "min_from"?: string; "min_to"?: string; "offset"?: number; "on_hand_from"?: string; "on_hand_to"?: string; "projected_from"?: string; "projected_to"?: string; "q"?: string; "reserved_from"?: string; "reserved_to"?: string; "suggested_from"?: string; "suggested_to"?: string; "warehouse_id"?: models.UUID };
     body: never;
     response: models.StockReportPurchasingPage;
   };
@@ -7086,7 +7086,7 @@ export interface OperationTypes {
   /** GET /api/v1/stock/report/stocks — Получить отчёт по остаткам */
   stockGetStocksReport: {
     params: Record<string, never>;
-    query: { "as_of"?: string; "below_minimum"?: boolean; "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "include_empty"?: boolean; "limit"?: number; "mode"?: "products" | "warehouses" | "companies" | "matrix"; "offset"?: number; "product_id"?: models.UUID; "product_ids"?: string; "q"?: string; "rollup_zones"?: boolean; "sort"?: "name" | "on_hand" | "reserved" | "available" | "expected" | "forecast" | "minimum" | "suggested" | "unit_cost" | "amount"; "warehouse_id"?: models.UUID; "warehouse_ids"?: string; "with_reserve"?: boolean; "without_company"?: boolean };
+    query: { "amount_from"?: string; "amount_to"?: string; "as_of"?: string; "available_from"?: string; "available_to"?: string; "below_minimum"?: boolean; "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "expected_from"?: string; "expected_to"?: string; "forecast_from"?: string; "forecast_to"?: string; "include_empty"?: boolean; "limit"?: number; "minimum_from"?: string; "minimum_to"?: string; "mode"?: "products" | "warehouses" | "companies" | "matrix"; "offset"?: number; "on_hand_from"?: string; "on_hand_to"?: string; "product_id"?: models.UUID; "product_ids"?: string; "q"?: string; "reserved_from"?: string; "reserved_to"?: string; "rollup_zones"?: boolean; "sort"?: "name" | "on_hand" | "reserved" | "available" | "expected" | "forecast" | "minimum" | "suggested" | "unit_cost" | "amount"; "suggested_from"?: string; "suggested_to"?: string; "unit_cost_from"?: string; "unit_cost_to"?: string; "warehouse_id"?: models.UUID; "warehouse_ids"?: string; "with_reserve"?: boolean; "without_company"?: boolean };
     body: never;
     response: models.StockReportPage;
   };
@@ -7135,7 +7135,7 @@ export interface OperationTypes {
   /** GET /api/v1/stock/batches — Получить список партий */
   stockListBatches: {
     params: Record<string, never>;
-    query: { "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "expiry"?: "expired" | "soon" | "all"; "limit"?: number; "offset"?: number; "product_id"?: models.UUID; "q"?: string; "sort"?: "received_at" | "expires_at" | "product" | "company" | "quantity" | "amount" };
+    query: { "amount_from"?: string; "amount_to"?: string; "batch"?: string; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "expiry"?: "expired" | "soon" | "all"; "limit"?: number; "offset"?: number; "produced_from"?: string; "produced_to"?: string; "product"?: string; "product_id"?: models.UUID; "q"?: string; "quantity_from"?: string; "quantity_to"?: string; "received_from"?: string; "received_to"?: string; "sort"?: "received_at" | "expires_at" | "product" | "company" | "quantity" | "amount" };
     body: never;
     response: models.StockBatchPage;
   };
@@ -7160,6 +7160,13 @@ export interface OperationTypes {
     body: never;
     response: models.StockCompanyPolicyPage;
   };
+  /** GET /api/v1/stock/documents/authors — Получить авторов складских документов */
+  stockListDocumentAuthors: {
+    params: Record<string, never>;
+    query: { "type"?: models.StockDocumentTypeKey; "types"?: string };
+    body: never;
+    response: models.StockListDocumentAuthorsResponse;
+  };
   /** GET /api/v1/stock/documents/fulfillments — Получить остатки исполнения по пакету заявок и заказов */
   stockListDocumentFulfillments: {
     params: Record<string, never>;
@@ -7170,14 +7177,14 @@ export interface OperationTypes {
   /** GET /api/v1/stock/documents — Получить журнал складских документов */
   stockListDocuments: {
     params: Record<string, never>;
-    query: { "company_id"?: models.UUID; "contact_id"?: models.UUID; "date_from"?: string; "date_to"?: string; "direction"?: "asc" | "desc"; "limit"?: number; "offset"?: number; "q"?: string; "sort"?: "date" | "number" | "status" | "company" | "warehouse" | "contact" | "updated_at"; "status"?: models.CoreDocumentStatus; "type"?: models.StockDocumentTypeKey; "warehouse_id"?: models.UUID };
+    query: { "comment"?: string; "company_id"?: models.UUID; "contact_id"?: models.UUID; "created_by"?: string; "date_from"?: string; "date_to"?: string; "direction"?: "asc" | "desc"; "limit"?: number; "lines_from"?: number; "lines_to"?: number; "number"?: string; "offset"?: number; "q"?: string; "qty_from"?: string; "qty_to"?: string; "sale"?: string; "sort"?: "date" | "number" | "status" | "company" | "warehouse" | "contact" | "updated_at"; "status"?: models.CoreDocumentStatus; "type"?: models.StockDocumentTypeKey; "updated_from"?: string; "updated_to"?: string; "warehouse_id"?: models.UUID; "warehouse_ids"?: string };
     body: never;
     response: models.StockDocumentPage;
   };
   /** GET /api/v1/stock/handling-units — Получить список физических складских единиц */
   stockListHandlingUnits: {
     params: Record<string, never>;
-    query: { "batch_id"?: models.UUID; "company_id"?: models.UUID; "limit"?: number; "offset"?: number; "product_id"?: models.UUID; "q"?: string; "status"?: models.StockHandlingUnitState; "warehouse_id"?: models.UUID };
+    query: { "balance_from"?: string; "balance_to"?: string; "batch_id"?: models.UUID; "code"?: string; "company_id"?: models.UUID; "cost_from"?: string; "cost_to"?: string; "exclude_status"?: Array<models.StockHandlingUnitState>; "initial_from"?: string; "initial_to"?: string; "limit"?: number; "offset"?: number; "product"?: string; "product_id"?: models.UUID; "q"?: string; "status"?: Array<models.StockHandlingUnitState>; "warehouse_id"?: models.UUID };
     body: never;
     response: models.StockHandlingUnitPage;
   };
@@ -7198,7 +7205,7 @@ export interface OperationTypes {
   /** GET /api/v1/stock/reorder-rules — Получить правила пополнения запаса */
   stockListReorderRules: {
     params: Record<string, never>;
-    query: { "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "limit"?: number; "offset"?: number; "product_id"?: models.UUID; "q"?: string; "sort"?: "business" | "company" | "product" | "warehouse" | "min_qty" | "updated_at"; "status"?: "active" | "inactive"; "warehouse_id"?: models.UUID };
+    query: { "business_id"?: models.UUID; "company_id"?: models.UUID; "direction"?: "asc" | "desc"; "lead_from"?: string; "lead_to"?: string; "limit"?: number; "max_from"?: string; "max_to"?: string; "min_from"?: string; "min_to"?: string; "multiple_from"?: string; "multiple_to"?: string; "offset"?: number; "product_id"?: models.UUID; "q"?: string; "sort"?: "business" | "company" | "product" | "warehouse" | "min_qty" | "updated_at"; "status"?: "active" | "inactive"; "supplier_id"?: models.UUID; "warehouse_id"?: models.UUID };
     body: never;
     response: models.StockReorderRulePage;
   };
@@ -7789,6 +7796,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.Milestone;
+  };
+  /** GET /api/v1/tasks/projects/{id}/team-metrics — Получить командный отчёт проекта задач */
+  tasksGetProjectTeamMetrics: {
+    params: { "id": models.UUID };
+    query: { "period"?: "week" | "month" | "quarter" | "all"; "tz"?: string };
+    body: never;
+    response: models.TeamMetrics;
   };
   /** GET /api/v1/tasks/pull-requests/{id} — Получить связь с pull request */
   tasksGetPullRequest: {
@@ -9311,6 +9325,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockListBusinesses: { method: "GET", path: "/api/v1/stock/businesses", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockListCompanies: { method: "GET", path: "/api/v1/stock/companies", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockListCompanyPolicies: { method: "GET", path: "/api/v1/stock/company-policies", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockListDocumentAuthors: { method: "GET", path: "/api/v1/stock/documents/authors", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockListDocumentFulfillments: { method: "GET", path: "/api/v1/stock/documents/fulfillments", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockListDocuments: { method: "GET", path: "/api/v1/stock/documents", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
   stockListHandlingUnits: { method: "GET", path: "/api/v1/stock/handling-units", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
@@ -9401,6 +9416,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   tasksGetHubOverview: { method: "GET", path: "/api/v1/tasks/hub/overview", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetMeeting: { method: "GET", path: "/api/v1/tasks/hub/meetings/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetMilestone: { method: "GET", path: "/api/v1/tasks/milestones/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetProjectTeamMetrics: { method: "GET", path: "/api/v1/tasks/projects/{id}/team-metrics", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetPullRequest: { method: "GET", path: "/api/v1/tasks/pull-requests/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetScrumSettings: { method: "GET", path: "/api/v1/tasks/scrum/settings/{project}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetSnapshot: { method: "GET", path: "/api/v1/tasks/snapshot", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 200 },

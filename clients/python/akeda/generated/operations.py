@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 13bfd61a183df5b9db594b25da4226a5af09c645276a215e90ab4394065a5a64).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3d8fe8e5d99e9e219b8884b04b395a9a841c44363a0026e7994bf47f11d7da3).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1049,6 +1049,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'stockListBusinesses': OperationSpec('GET', '/api/v1/stock/businesses', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
     'stockListCompanies': OperationSpec('GET', '/api/v1/stock/companies', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
     'stockListCompanyPolicies': OperationSpec('GET', '/api/v1/stock/company-policies', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
+    'stockListDocumentAuthors': OperationSpec('GET', '/api/v1/stock/documents/authors', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
     'stockListDocumentFulfillments': OperationSpec('GET', '/api/v1/stock/documents/fulfillments', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
     'stockListDocuments': OperationSpec('GET', '/api/v1/stock/documents', 'stock', 'preview', 'stock:read', False, True, (), 'limit_offset', 500, 200),
     'stockListHandlingUnits': OperationSpec('GET', '/api/v1/stock/handling-units', 'stock', 'preview', 'stock:read', False, True, (), 'limit_offset', 1000, 200),
@@ -1139,6 +1140,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'tasksGetHubOverview': OperationSpec('GET', '/api/v1/tasks/hub/overview', 'tasks', 'preview', 'tasks:read', False, True, (), 'none', None, None),
     'tasksGetMeeting': OperationSpec('GET', '/api/v1/tasks/hub/meetings/{id}', 'tasks', 'preview', 'tasks:read', False, True, ('id',), 'none', None, None),
     'tasksGetMilestone': OperationSpec('GET', '/api/v1/tasks/milestones/{id}', 'tasks', 'preview', 'tasks:read', False, True, ('id',), 'none', None, None),
+    'tasksGetProjectTeamMetrics': OperationSpec('GET', '/api/v1/tasks/projects/{id}/team-metrics', 'tasks', 'preview', 'tasks:read', False, True, ('id',), 'none', None, None),
     'tasksGetPullRequest': OperationSpec('GET', '/api/v1/tasks/pull-requests/{id}', 'tasks', 'preview', 'tasks:read', False, True, ('id',), 'none', None, None),
     'tasksGetScrumSettings': OperationSpec('GET', '/api/v1/tasks/scrum/settings/{project}', 'tasks', 'preview', 'tasks:read', False, True, ('project',), 'none', None, None),
     'tasksGetSnapshot': OperationSpec('GET', '/api/v1/tasks/snapshot', 'tasks', 'preview', 'tasks:read', False, True, (), 'limit', 200, 200),

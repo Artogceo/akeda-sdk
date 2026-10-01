@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 13bfd61a183df5b9db594b25da4226a5af09c645276a215e90ab4394065a5a64).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3d8fe8e5d99e9e219b8884b04b395a9a841c44363a0026e7994bf47f11d7da3).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -91,6 +91,7 @@ __all__ = [
     "BillingModuleSyncFailure",
     "BillingModuleSyncReport",
     "BillingMoney",
+    "BillingOpeningState",
     "BillingPastDueState",
     "BillingPaymentMethod",
     "BillingPendingChange",
@@ -1676,6 +1677,11 @@ __all__ = [
     "TaskViewPage",
     "TaskWatcher",
     "TasksSnapshot",
+    "TeamFlowTotals",
+    "TeamMemberMetrics",
+    "TeamMetrics",
+    "TeamMetricsUnassigned",
+    "TeamMetricsBucket",
     "TemplateRecurrence",
     "TemplateRunPage",
     "TemplateRunResult",
@@ -1739,6 +1745,8 @@ __all__ = [
     "MailListVIPSendersResponseItemsItem",
     "MailSetVIPSenderRequest",
     "MailCountVIPUnreadResponse",
+    "StockListDocumentAuthorsResponse",
+    "StockListDocumentAuthorsResponseResultsItem",
 ]
 
 AccountingBasis = Literal['cash', 'accrual', 'mixed']
@@ -2425,9 +2433,7 @@ class BillingCabinetStorage(TypedDict):
     used_bytes: Optional[int]
     limit_bytes: Optional[int]
 
-class BillingCabinetSubscription(TypedDict):
-    """Экран «Настройки → Подписка» глазами клиента: что у него есть, сколько он израсходовал и что он может выбрать"""
-
+class _BillingCabinetSubscriptionRequired(TypedDict):
     #: none означает, что подписки НЕТ вовсе — законное состояние живых кабинетов, работавших до биллинга, а не «не загрузилось». internal — внутренний кабинет Akeda: разрешено всё, счета не выставляются. pilot — внедрение: кабинет клиента, который мы ведём до передачи, права те же. Различать их обязательно: первое означает «мы про кабинет ничего не решали», остальные два — записанные решения оператора, и только второе из них означает наш собственный кабинет
     state: Literal['trial', 'active', 'past_due', 'suspended', 'cancelled', 'internal', 'pilot', 'none']
     subscription: Optional["BillingSubscription"]
@@ -2445,6 +2451,12 @@ class BillingCabinetSubscription(TypedDict):
     catalog: "BillingCatalog"
     payment_method: Optional["BillingPaymentMethod"]
     entitlements: "BillingEntitlements"
+
+class BillingCabinetSubscription(_BillingCabinetSubscriptionRequired, total=False):
+    """Экран «Настройки → Подписка» глазами клиента: что у него есть, сколько он израсходовал и что он может выбрать"""
+
+    #: Первый неоплаченный период платной подписки. null у пробы, внутреннего кабинета, внедрения, бесплатного состава и у подписки с открытым периодом
+    opening: Optional["BillingOpeningState"]
 
 class _BillingCatalogRequired(TypedDict):
     plans: List["BillingPlan"]
@@ -2469,14 +2481,12 @@ class BillingChangeInput(TypedDict, total=False):
     #: То же про хранилище: общий потолок в ГБ, доплата по price_per_gb за месяц
     storage_limit_gb: Optional[int]
 
-class BillingChangePreview(TypedDict):
-    """Что произойдёт, если клиент нажмёт кнопку. Считается тем же кодом, что и применение: разойдись расчёты — клиент увидел бы одну сумму, а заплатил другую"""
-
+class _BillingChangePreviewRequired(TypedDict):
     now: "BillingSnap"
     becomes: "BillingSnap"
     added_modules: List[str]
     removed_modules: List[str]
-    #: Доплата за остаток текущего периода. Ноль означает, что платить сейчас не нужно вовсе: так выглядит и понижение, и изменение на пробе, у которой оплаченного периода ещё нет
+    #: Доплата за остаток текущего периода. Ноль означает, что платить сейчас не нужно вовсе: так выглядит и понижение, и изменение на пробе, у которой оплаченного периода ещё нет. Когда заполнено period_start, это цена ПОЛНОГО первого периода
     proration_amount: Dict[str, Any]
     #: Из чего доплата сложилась: тариф с модулями, места сверх пакета, гигабайты сверх пакета. Ровно эти строки печатает счёт, и их сумма равна proration_amount — счёт печатается строками, и сумма счёта это сумма его строк. Строка может быть отрицательной: клиент, перешедший на тариф дороже и одновременно снявший доплаченные места, платит разницу, и снятые места обязаны быть в счёте видны. Пусто, когда доплаты нет
     proration_lines: List["BillingInvoiceLine"]
@@ -2487,6 +2497,12 @@ class BillingChangePreview(TypedDict):
     next_charge_at: Optional[str]
     #: now — применяется сразу и оплачивается прорацией; period_end — откладывается до конца оплаченного периода. Правило одно: изменение, за которое клиент платит больше, применяется сейчас, всё остальное — с конца периода. Смена ритма оплаты всегда ждёт конца периода
     effective: Literal['now', 'period_end']
+
+class BillingChangePreview(_BillingChangePreviewRequired, total=False):
+    """Что произойдёт, если клиент нажмёт кнопку. Считается тем же кодом, что и применение: разойдись расчёты — клиент увидел бы одну сумму, а заплатил другую"""
+
+    #: Начало первого оплачиваемого периода. Заполнено у платной подписки без оплаченного периода (назначена оператором, переведена вручную, проба закончилась без тарифа): изменение выставляет счёт за полный период [period_start, next_charge_at), и его оплата открывает этот период. null у пробы и у подписки с открытым периодом
+    period_start: Optional[str]
 
 class _BillingChangeResultRequired(TypedDict):
     subscription: "BillingCabinetSubscription"
@@ -2577,6 +2593,17 @@ class BillingModuleSyncReport(_BillingModuleSyncReportRequired, total=False):
     failed: List["BillingModuleSyncFailure"]
 
 BillingMoney = str
+
+class _BillingOpeningStateRequired(TypedDict):
+    amount: "BillingMoney"
+    currency: str
+    #: Выставленный и не оплаченный счёт первого периода; null — счёта ещё нет
+    invoice_id: Optional[str]
+
+class BillingOpeningState(_BillingOpeningStateRequired, total=False):
+    """Тариф подключён, а первый оплаченный период не открыт. Экран предлагает оплату: открывает уже выставленный счёт или выставляет его на нынешний состав через POST /settings/subscription/change"""
+
+    invoice_number: str
 
 class BillingPastDueState(TypedDict):
     """Неоплаченный счёт и дата ограничения доступа. Считается по САМОМУ СТАРОМУ просроченному счёту: его срок наступит первым. Само ограничение в этой фазе не включается — число показывается, решение принимает владелец"""
@@ -19819,6 +19846,63 @@ class _TasksSnapshotRequired(TypedDict):
 class TasksSnapshot(_TasksSnapshotRequired, total=False):
     tasks_limit: int
 
+class TeamFlowTotals(TypedDict):
+    taken: int
+    handed: int
+    closed: int
+
+class TeamMemberMetrics(TypedDict):
+    user: int
+    name: str
+    taken: int
+    handed: int
+    closed: int
+    done_of_taken: int
+    handed_with_due: int
+    handed_on_time: int
+    efficiency: Optional[int]
+    in_work: int
+    review: int
+    review_oldest_seconds: int
+    overdue: int
+    overdue_in_review: int
+    backlog: int
+    cycle_median_seconds: int
+    rework_percent: float
+    buckets: List["TeamMetricsBucket"]
+
+class TeamMetrics(TypedDict):
+    project: "UUID"
+    period: Literal['week', 'month', 'quarter', 'all']
+    window_from: str
+    window_to: str
+    bucket_days: int
+    taken: int
+    handed: int
+    closed: int
+    previous: Optional["TeamFlowTotals"]
+    review: int
+    review_median_seconds: int
+    review_stale: int
+    overdue: int
+    backlog: int
+    in_work: int
+    cycle_median_seconds: int
+    buckets: List["TeamMetricsBucket"]
+    members: List["TeamMemberMetrics"]
+    unassigned: "TeamMetricsUnassigned"
+
+class TeamMetricsUnassigned(TypedDict):
+    open: int
+    overdue: int
+
+class TeamMetricsBucket(TypedDict):
+    start: str
+    taken: int
+    handed: int
+    handed_late: int
+    closed: int
+
 TemplateRecurrence = Literal['daily', 'weekly', 'monthly', 'yearly']
 
 class TemplateRunPage(TypedDict):
@@ -20118,3 +20202,11 @@ class MailSetVIPSenderRequest(_MailSetVIPSenderRequestRequired, total=False):
 
 class MailCountVIPUnreadResponse(TypedDict):
     unread: int
+
+class StockListDocumentAuthorsResponse(TypedDict):
+    count: int
+    results: List["StockListDocumentAuthorsResponseResultsItem"]
+
+class StockListDocumentAuthorsResponseResultsItem(TypedDict):
+    id: int
+    name: str

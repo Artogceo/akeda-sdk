@@ -1782,6 +1782,60 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/tasks/projects/{id}/team-metrics:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    get:
+      tags:
+        - Tasks
+      operationId: tasksGetProjectTeamMetrics
+      summary: Получить командный отчёт проекта задач
+      description: Поток «взято → сдано → закрыто» по дням или неделям окна и карточки исполнителей. Задача учитывается с точки обязательства — первого перехода из бэклога; «сдано» — первый вход в ревью или готово; срок сверяется с моментом сдачи. Источник — журнал этапов, видимость как у списка задач. Мест и рейтинга нет.
+      x-akeda-module: tasks
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: tasks:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - name: period
+          in: query
+          description: 'Окно: последние 7 или 30 дней (по дням), 13 недель или всё время (по неделям)'
+          schema:
+            type: string
+            enum:
+              - week
+              - month
+              - quarter
+              - all
+            default: week
+        - name: tz
+          in: query
+          description: Часовой пояс читателя (IANA), по нему режутся дни окна; по умолчанию UTC
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Поток окна, снимок команды и карточки исполнителей
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamMetrics'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/tasks/projects/{id}/members/{userID}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -28812,10 +28866,71 @@ paths:
           description: Совпадает со складом, складом-отправителем или складом-получателем
           schema:
             $ref: '#/components/schemas/UUID'
+        - name: warehouse_ids
+          in: query
+          description: 'Набор складов через запятую: отбор столбца «Склад». Сравнение точное — по складу, отправителю и получателю; зоны клиент передаёт сам'
+          schema:
+            type: string
         - name: contact_id
           in: query
           schema:
             $ref: '#/components/schemas/UUID'
+        - name: created_by
+          in: query
+          description: 'Авторы документов через запятую (id пользователей): отбор столбца «Автор». Значения — из /documents/authors'
+          schema:
+            type: string
+        - name: number
+          in: query
+          description: 'Отбор столбца «Номер»: подстрока номера без учёта регистра'
+          schema:
+            type: string
+        - name: comment
+          in: query
+          description: 'Отбор столбца «Комментарий»: подстрока комментария без учёта регистра'
+          schema:
+            type: string
+        - name: updated_from
+          in: query
+          description: Отбор столбца «Изменён» с дня включительно, YYYY-MM-DD
+          schema:
+            type: string
+            format: date
+        - name: updated_to
+          in: query
+          description: Отбор столбца «Изменён» по день включительно, YYYY-MM-DD
+          schema:
+            type: string
+            format: date
+        - name: lines_from
+          in: query
+          description: 'Отбор столбца «Строк»: число строк табличной части от, включительно'
+          schema:
+            type: integer
+            minimum: 0
+        - name: lines_to
+          in: query
+          description: 'Отбор столбца «Строк»: число строк табличной части до, включительно; 0 — документы без строк'
+          schema:
+            type: integer
+            minimum: 0
+        - name: qty_from
+          in: query
+          description: 'Отбор столбца «Кол-во»: сумма количества строк от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: qty_to
+          in: query
+          description: 'Отбор столбца «Кол-во»: сумма количества строк до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: sale
+          in: query
+          description: 'Отбор столбца «Продажа»: подстрока номера продажи, к которой отнесён документ'
+          schema:
+            type: string
         - name: q
           in: query
           description: Номер или комментарий
@@ -29266,6 +29381,70 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/stock/documents/authors:
+    get:
+      tags:
+        - Stock documents
+      operationId: stockListDocumentAuthors
+      summary: Получить авторов складских документов
+      description: |
+        Значения отбора столбца «Автор» журнала: кто заводил документы этого
+        вида (или набора видов). Список собирается по всему журналу, а не по
+        странице, и только в пределах юрлиц, доступных пользователю.
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: type
+          in: query
+          description: Ключ вида складского документа
+          schema:
+            $ref: '#/components/schemas/StockDocumentTypeKey'
+        - name: types
+          in: query
+          description: Набор видов через запятую; пусто — все складские виды
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Авторы документов журнала
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - count
+                  - results
+                properties:
+                  count:
+                    type: integer
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - name
+                      properties:
+                        id:
+                          type: integer
+                          format: int64
+                        name:
+                          type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/stock/documents/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -30544,14 +30723,73 @@ paths:
             $ref: '#/components/schemas/UUID'
         - name: status
           in: query
-          description: Отбор идёт по вычисленному состоянию state, а не по полю status
+          description: 'Показать только эти вычисленные состояния state (не поле status), через запятую: opened,sealed'
+          style: form
+          explode: false
           schema:
-            $ref: '#/components/schemas/StockHandlingUnitState'
+            type: array
+            items:
+              $ref: '#/components/schemas/StockHandlingUnitState'
+        - name: exclude_status
+          in: query
+          description: 'Скрыть эти вычисленные состояния, через запятую. Экран списка по умолчанию шлёт retired: черновик прихода выводит прежние единицы при каждой правке'
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/StockHandlingUnitState'
         - name: q
           in: query
           description: Код единицы, название или SKU товара
           schema:
             type: string
+        - name: code
+          in: query
+          description: 'Отбор столбца «Код»: подстрока кода без учёта регистра'
+          schema:
+            type: string
+        - name: product
+          in: query
+          description: 'Отбор столбца «Товар»: подстрока названия или SKU'
+          schema:
+            type: string
+        - name: initial_from
+          in: query
+          description: 'Отбор столбца «Принято»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: initial_to
+          in: query
+          description: 'Отбор столбца «Принято»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: balance_from
+          in: query
+          description: 'Отбор столбца «Остаток»: от, включительно (свёртка движений)'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: balance_to
+          in: query
+          description: 'Отбор столбца «Остаток»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: cost_from
+          in: query
+          description: 'Отбор столбца «Стоимость»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: cost_to
+          in: query
+          description: 'Отбор столбца «Стоимость»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
         - name: limit
           in: query
           schema:
@@ -30775,6 +31013,64 @@ paths:
               - expired
               - soon
               - all
+        - name: product
+          in: query
+          description: 'Отбор столбца «Товар»: подстрока названия или SKU'
+          schema:
+            type: string
+        - name: batch
+          in: query
+          description: 'Отбор столбца «Код партии»: подстрока кода партии поставщика; у партии без кода — начало её идентификатора, как его показывает столбец'
+          schema:
+            type: string
+        - name: received_from
+          in: query
+          description: 'Отбор столбца «Принята»: с дня включительно'
+          schema:
+            type: string
+            format: date
+        - name: received_to
+          in: query
+          description: 'Отбор столбца «Принята»: по день включительно'
+          schema:
+            type: string
+            format: date
+        - name: produced_from
+          in: query
+          description: 'Отбор столбца «Произведена»: с дня; партия без даты не подходит'
+          schema:
+            type: string
+            format: date
+        - name: produced_to
+          in: query
+          description: 'Отбор столбца «Произведена»: по день; партия без даты не подходит'
+          schema:
+            type: string
+            format: date
+        - name: quantity_from
+          in: query
+          description: 'Отбор столбца «Остаток»: от, включительно (свёртка движений)'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: quantity_to
+          in: query
+          description: 'Отбор столбца «Остаток»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: amount_from
+          in: query
+          description: 'Отбор столбца «Сумма»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: amount_to
+          in: query
+          description: 'Отбор столбца «Сумма»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
         - name: sort
           in: query
           schema:
@@ -31955,6 +32251,114 @@ paths:
         - installationToken: []
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
+        - name: on_hand_from
+          in: query
+          description: 'Отбор столбца «Остаток»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: on_hand_to
+          in: query
+          description: 'Отбор столбца «Остаток»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: reserved_from
+          in: query
+          description: 'Отбор столбца «Резерв»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: reserved_to
+          in: query
+          description: 'Отбор столбца «Резерв»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: available_from
+          in: query
+          description: 'Отбор столбца «Доступно»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: available_to
+          in: query
+          description: 'Отбор столбца «Доступно»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: expected_from
+          in: query
+          description: 'Отбор столбца «Ожидается»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: expected_to
+          in: query
+          description: 'Отбор столбца «Ожидается»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: forecast_from
+          in: query
+          description: 'Отбор столбца «Прогноз»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: forecast_to
+          in: query
+          description: 'Отбор столбца «Прогноз»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: minimum_from
+          in: query
+          description: 'Отбор столбца «Минимум»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: minimum_to
+          in: query
+          description: 'Отбор столбца «Минимум»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: suggested_from
+          in: query
+          description: 'Отбор столбца «Заказать»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: suggested_to
+          in: query
+          description: 'Отбор столбца «Заказать»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: unit_cost_from
+          in: query
+          description: 'Отбор столбца «Себестоимость единицы»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: unit_cost_to
+          in: query
+          description: 'Отбор столбца «Себестоимость единицы»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: amount_from
+          in: query
+          description: 'Отбор столбца «Сумма»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: amount_to
+          in: query
+          description: 'Отбор столбца «Сумма»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
         - name: company_id
           in: query
           schema:
@@ -32233,6 +32637,90 @@ paths:
         - installationToken: []
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
+        - name: on_hand_from
+          in: query
+          description: 'Отбор столбца «На руках»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: on_hand_to
+          in: query
+          description: 'Отбор столбца «На руках»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: reserved_from
+          in: query
+          description: 'Отбор столбца «Резерв»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: reserved_to
+          in: query
+          description: 'Отбор столбца «Резерв»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: expected_from
+          in: query
+          description: 'Отбор столбца «Ожидается»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: expected_to
+          in: query
+          description: 'Отбор столбца «Ожидается»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: demand_from
+          in: query
+          description: 'Отбор столбца «Потребность»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: demand_to
+          in: query
+          description: 'Отбор столбца «Потребность»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: projected_from
+          in: query
+          description: 'Отбор столбца «Прогноз»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: projected_to
+          in: query
+          description: 'Отбор столбца «Прогноз»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: min_from
+          in: query
+          description: 'Отбор столбца «Мин. / цель»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: min_to
+          in: query
+          description: 'Отбор столбца «Мин. / цель»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: suggested_from
+          in: query
+          description: 'Отбор столбца «Рекомендация»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: suggested_to
+          in: query
+          description: 'Отбор столбца «Рекомендация»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
         - name: business_id
           in: query
           description: Бизнес — учётная единица строки; потребность без юрлица отбирается только им
@@ -32726,6 +33214,11 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/UUID'
+        - name: supplier_id
+          in: query
+          description: 'Предпочтительный поставщик правила: отбор столбца «Поставщик»'
+          schema:
+            $ref: '#/components/schemas/UUID'
         - name: q
           in: query
           description: Поиск по товару, бизнесу, юрлицу и складу
@@ -32738,6 +33231,54 @@ paths:
             enum:
               - active
               - inactive
+        - name: min_from
+          in: query
+          description: 'Отбор столбца «Минимум»: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: min_to
+          in: query
+          description: 'Отбор столбца «Минимум»: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: max_from
+          in: query
+          description: 'Отбор столбца «Максимум»: от; правило без максимума не подходит'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: max_to
+          in: query
+          description: 'Отбор столбца «Максимум»: до; правило без максимума не подходит'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: multiple_from
+          in: query
+          description: 'Отбор столбца «Кратность»: от; правило без кратности не подходит'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: multiple_to
+          in: query
+          description: 'Отбор столбца «Кратность»: до; правило без кратности не подходит'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: lead_from
+          in: query
+          description: 'Отбор столбца «Срок поставки», дней: от, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
+        - name: lead_to
+          in: query
+          description: 'Отбор столбца «Срок поставки», дней: до, включительно'
+          schema:
+            type: string
+            pattern: ^-?[0-9]+([.,][0-9]+)?$
         - name: sort
           in: query
           schema:
@@ -55881,6 +56422,229 @@ components:
           $ref: '#/components/schemas/SprintSizing'
         outcomes:
           $ref: '#/components/schemas/SprintOutcomeMetrics'
+    TeamMetricsBucket:
+      type: object
+      additionalProperties: false
+      required:
+        - start
+        - taken
+        - handed
+        - handed_late
+        - closed
+      properties:
+        start:
+          type: string
+          format: date
+        taken:
+          type: integer
+          minimum: 0
+        handed:
+          type: integer
+          minimum: 0
+        handed_late:
+          type: integer
+          minimum: 0
+        closed:
+          type: integer
+          minimum: 0
+    TeamFlowTotals:
+      type: object
+      additionalProperties: false
+      required:
+        - taken
+        - handed
+        - closed
+      properties:
+        taken:
+          type: integer
+          minimum: 0
+        handed:
+          type: integer
+          minimum: 0
+        closed:
+          type: integer
+          minimum: 0
+    TeamMemberMetrics:
+      type: object
+      additionalProperties: false
+      required:
+        - user
+        - name
+        - taken
+        - handed
+        - closed
+        - done_of_taken
+        - handed_with_due
+        - handed_on_time
+        - efficiency
+        - in_work
+        - review
+        - review_oldest_seconds
+        - overdue
+        - overdue_in_review
+        - backlog
+        - cycle_median_seconds
+        - rework_percent
+        - buckets
+      properties:
+        user:
+          type: integer
+          format: int64
+        name:
+          type: string
+        taken:
+          type: integer
+          minimum: 0
+        handed:
+          type: integer
+          minimum: 0
+        closed:
+          type: integer
+          minimum: 0
+        done_of_taken:
+          type: integer
+          minimum: 0
+        handed_with_due:
+          type: integer
+          minimum: 0
+        handed_on_time:
+          type: integer
+          minimum: 0
+        efficiency:
+          type:
+            - integer
+            - 'null'
+          minimum: 0
+          maximum: 100
+        in_work:
+          type: integer
+          minimum: 0
+        review:
+          type: integer
+          minimum: 0
+        review_oldest_seconds:
+          type: integer
+          format: int64
+          minimum: 0
+        overdue:
+          type: integer
+          minimum: 0
+        overdue_in_review:
+          type: integer
+          minimum: 0
+        backlog:
+          type: integer
+          minimum: 0
+        cycle_median_seconds:
+          type: integer
+          format: int64
+          minimum: 0
+        rework_percent:
+          type: number
+          minimum: 0
+        buckets:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMetricsBucket'
+    TeamMetrics:
+      type: object
+      additionalProperties: false
+      required:
+        - project
+        - period
+        - window_from
+        - window_to
+        - bucket_days
+        - taken
+        - handed
+        - closed
+        - previous
+        - review
+        - review_median_seconds
+        - review_stale
+        - overdue
+        - backlog
+        - in_work
+        - cycle_median_seconds
+        - buckets
+        - members
+        - unassigned
+      properties:
+        project:
+          $ref: '#/components/schemas/UUID'
+        period:
+          type: string
+          enum:
+            - week
+            - month
+            - quarter
+            - all
+        window_from:
+          type: string
+        window_to:
+          type: string
+        bucket_days:
+          type: integer
+          enum:
+            - 1
+            - 7
+        taken:
+          type: integer
+          minimum: 0
+        handed:
+          type: integer
+          minimum: 0
+        closed:
+          type: integer
+          minimum: 0
+        previous:
+          oneOf:
+            - $ref: '#/components/schemas/TeamFlowTotals'
+            - type: 'null'
+        review:
+          type: integer
+          minimum: 0
+        review_median_seconds:
+          type: integer
+          format: int64
+          minimum: 0
+        review_stale:
+          type: integer
+          minimum: 0
+        overdue:
+          type: integer
+          minimum: 0
+        backlog:
+          type: integer
+          minimum: 0
+        in_work:
+          type: integer
+          minimum: 0
+        cycle_median_seconds:
+          type: integer
+          format: int64
+          minimum: 0
+        buckets:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMetricsBucket'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMemberMetrics'
+        unassigned:
+          type: object
+          additionalProperties: false
+          required:
+            - open
+            - overdue
+          properties:
+            open:
+              type: integer
+              minimum: 0
+            overdue:
+              type: integer
+              minimum: 0
     Customer:
       type: object
       additionalProperties: false
@@ -100128,7 +100892,7 @@ components:
         proration_amount:
           allOf:
             - $ref: '#/components/schemas/BillingMoney'
-          description: 'Доплата за остаток текущего периода. Ноль означает, что платить сейчас не нужно вовсе: так выглядит и понижение, и изменение на пробе, у которой оплаченного периода ещё нет'
+          description: 'Доплата за остаток текущего периода. Ноль означает, что платить сейчас не нужно вовсе: так выглядит и понижение, и изменение на пробе, у которой оплаченного периода ещё нет. Когда заполнено period_start, это цена ПОЛНОГО первого периода'
         proration_lines:
           type: array
           items:
@@ -100153,6 +100917,12 @@ components:
             - now
             - period_end
           description: 'now — применяется сразу и оплачивается прорацией; period_end — откладывается до конца оплаченного периода. Правило одно: изменение, за которое клиент платит больше, применяется сейчас, всё остальное — с конца периода. Смена ритма оплаты всегда ждёт конца периода'
+        period_start:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: 'Начало первого оплачиваемого периода. Заполнено у платной подписки без оплаченного периода (назначена оператором, переведена вручную, проба закончилась без тарифа): изменение выставляет счёт за полный период [period_start, next_charge_at), и его оплата открывает этот период. null у пробы и у подписки с открытым периодом'
     BillingChangeResult:
       type: object
       description: Новое состояние экрана подписки и счёт, если доплачивать было за что
@@ -100457,6 +101227,26 @@ components:
             - 'null'
           format: date-time
           description: Плановая дата передачи кабинета. null — срок ещё не назначен; выдуманная дата хуже отсутствующей, клиент запомнит именно её
+    BillingOpeningState:
+      type: object
+      description: 'Тариф подключён, а первый оплаченный период не открыт. Экран предлагает оплату: открывает уже выставленный счёт или выставляет его на нынешний состав через POST /settings/subscription/change'
+      required:
+        - amount
+        - currency
+        - invoice_id
+      properties:
+        amount:
+          $ref: '#/components/schemas/BillingMoney'
+        currency:
+          type: string
+        invoice_id:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Выставленный и не оплаченный счёт первого периода; null — счёта ещё нет
+        invoice_number:
+          type: string
     BillingPastDueState:
       type: object
       description: 'Неоплаченный счёт и дата ограничения доступа. Считается по САМОМУ СТАРОМУ просроченному счёту: его срок наступит первым. Само ограничение в этой фазе не включается — число показывается, решение принимает владелец'
@@ -100591,6 +101381,11 @@ components:
         past_due:
           oneOf:
             - $ref: '#/components/schemas/BillingPastDueState'
+            - type: 'null'
+        opening:
+          description: Первый неоплаченный период платной подписки. null у пробы, внутреннего кабинета, внедрения, бесплатного состава и у подписки с открытым периодом
+          oneOf:
+            - $ref: '#/components/schemas/BillingOpeningState'
             - type: 'null'
         seats:
           $ref: '#/components/schemas/BillingCabinetSeats'

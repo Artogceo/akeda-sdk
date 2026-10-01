@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 13bfd61a183df5b9db594b25da4226a5af09c645276a215e90ab4394065a5a64).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 d3d8fe8e5d99e9e219b8884b04b395a9a841c44363a0026e7994bf47f11d7da3).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -694,6 +694,8 @@ export interface BillingCabinetSubscription {
   /** До какого числа оплачено; пусто у пробы и у кабинета без подписки */
   "paid_until": string | null;
   "past_due": BillingPastDueState | null;
+  /** Первый неоплаченный период платной подписки. null у пробы, внутреннего кабинета, внедрения, бесплатного состава и у подписки с открытым периодом */
+  "opening"?: BillingOpeningState | null;
   "seats": BillingCabinetSeats;
   "storage": BillingCabinetStorage;
   "catalog": BillingCatalog;
@@ -732,7 +734,7 @@ export interface BillingChangePreview {
   "becomes": BillingSnap;
   "added_modules": Array<string>;
   "removed_modules": Array<string>;
-  /** Доплата за остаток текущего периода. Ноль означает, что платить сейчас не нужно вовсе: так выглядит и понижение, и изменение на пробе, у которой оплаченного периода ещё нет */
+  /** Доплата за остаток текущего периода. Ноль означает, что платить сейчас не нужно вовсе: так выглядит и понижение, и изменение на пробе, у которой оплаченного периода ещё нет. Когда заполнено period_start, это цена ПОЛНОГО первого периода */
   "proration_amount": { [key: string]: unknown };
   /** Из чего доплата сложилась: тариф с модулями, места сверх пакета, гигабайты сверх пакета. Ровно эти строки печатает счёт, и их сумма равна proration_amount — счёт печатается строками, и сумма счёта это сумма его строк. Строка может быть отрицательной: клиент, перешедший на тариф дороже и одновременно снявший доплаченные места, платит разницу, и снятые места обязаны быть в счёте видны. Пусто, когда доплаты нет */
   "proration_lines": Array<BillingInvoiceLine>;
@@ -743,6 +745,8 @@ export interface BillingChangePreview {
   "next_charge_at": string | null;
   /** now — применяется сразу и оплачивается прорацией; period_end — откладывается до конца оплаченного периода. Правило одно: изменение, за которое клиент платит больше, применяется сейчас, всё остальное — с конца периода. Смена ритма оплаты всегда ждёт конца периода */
   "effective": "now" | "period_end";
+  /** Начало первого оплачиваемого периода. Заполнено у платной подписки без оплаченного периода (назначена оператором, переведена вручную, проба закончилась без тарифа): изменение выставляет счёт за полный период [period_start, next_charge_at), и его оплата открывает этот период. null у пробы и у подписки с открытым периодом */
+  "period_start"?: string | null;
 }
 
 /** Новое состояние экрана подписки и счёт, если доплачивать было за что */
@@ -830,6 +834,15 @@ export interface BillingModuleSyncReport {
 }
 
 export type BillingMoney = string;
+
+/** Тариф подключён, а первый оплаченный период не открыт. Экран предлагает оплату: открывает уже выставленный счёт или выставляет его на нынешний состав через POST /settings/subscription/change */
+export interface BillingOpeningState {
+  "amount": BillingMoney;
+  "currency": string;
+  /** Выставленный и не оплаченный счёт первого периода; null — счёта ещё нет */
+  "invoice_id": string | null;
+  "invoice_number"?: string;
+}
 
 /** Неоплаченный счёт и дата ограничения доступа. Считается по САМОМУ СТАРОМУ просроченному счёту: его срок наступит первым. Само ограничение в этой фазе не включается — число показывается, решение принимает владелец */
 export interface BillingPastDueState {
@@ -18567,6 +18580,68 @@ export interface TasksSnapshot {
   "tasks_has_more": boolean;
 }
 
+export interface TeamFlowTotals {
+  "taken": number;
+  "handed": number;
+  "closed": number;
+}
+
+export interface TeamMemberMetrics {
+  "user": number;
+  "name": string;
+  "taken": number;
+  "handed": number;
+  "closed": number;
+  "done_of_taken": number;
+  "handed_with_due": number;
+  "handed_on_time": number;
+  "efficiency": number | null;
+  "in_work": number;
+  "review": number;
+  "review_oldest_seconds": number;
+  "overdue": number;
+  "overdue_in_review": number;
+  "backlog": number;
+  "cycle_median_seconds": number;
+  "rework_percent": number;
+  "buckets": Array<TeamMetricsBucket>;
+}
+
+export interface TeamMetrics {
+  "project": UUID;
+  "period": "week" | "month" | "quarter" | "all";
+  "window_from": string;
+  "window_to": string;
+  "bucket_days": number;
+  "taken": number;
+  "handed": number;
+  "closed": number;
+  "previous": TeamFlowTotals | null;
+  "review": number;
+  "review_median_seconds": number;
+  "review_stale": number;
+  "overdue": number;
+  "backlog": number;
+  "in_work": number;
+  "cycle_median_seconds": number;
+  "buckets": Array<TeamMetricsBucket>;
+  "members": Array<TeamMemberMetrics>;
+  "unassigned": TeamMetricsUnassigned;
+}
+
+export interface TeamMetricsUnassigned {
+  "open": number;
+  "overdue": number;
+}
+
+export interface TeamMetricsBucket {
+  "start": string;
+  "taken": number;
+  "handed": number;
+  "handed_late": number;
+  "closed": number;
+}
+
 export type TemplateRecurrence = "daily" | "weekly" | "monthly" | "yearly";
 
 export interface TemplateRunPage {
@@ -18905,4 +18980,14 @@ export interface MailSetVIPSenderRequest {
 
 export interface MailCountVIPUnreadResponse {
   "unread": number;
+}
+
+export interface StockListDocumentAuthorsResponse {
+  "count": number;
+  "results": Array<StockListDocumentAuthorsResponseResultsItem>;
+}
+
+export interface StockListDocumentAuthorsResponseResultsItem {
+  "id": number;
+  "name": string;
 }
