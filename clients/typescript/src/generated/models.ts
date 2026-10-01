@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1147ce8fd91cace2a98f2c32beca78b399266da65eb8db4376e3661a37e786b1).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c7a9c5545ffa050fc7dc6cdbbdefb2320c9df8b4ce2c9539c93565f5f8963304).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1341,6 +1341,8 @@ export interface CRMLeadInput {
   "custom"?: { [key: string]: unknown } | null;
 }
 
+export type CRMLeadLockMode = "owner_only" | "after_qualification";
+
 export interface CRMLeadPatch {
   "title"?: string;
   "source"?: string;
@@ -1356,6 +1358,26 @@ export interface CRMLeadPatch {
   "archived"?: boolean;
   /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
   "custom"?: { [key: string]: unknown } | null;
+}
+
+export interface CRMLeadStage {
+  "id": UUID;
+  /** Имя этапа задаёт кабинет; код на конкретные имена не ссылается */
+  "name": string;
+  "sort_order": number;
+  /** Ненужный этап выключают, а не удаляют */
+  "is_active": boolean;
+  "created_at": string;
+  "updated_at": string;
+}
+
+export interface CRMLeadStageInput {
+  "name": string;
+}
+
+export interface CRMLeadStagePatch {
+  "name"?: string;
+  "is_active"?: boolean;
 }
 
 export type CRMLeadStatus = "new" | "qualified" | "disqualified" | "converted";
@@ -1505,6 +1527,16 @@ export interface CRMSalesPlansInputItemsItem {
   /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
   "amount": string;
   "currency"?: string;
+}
+
+export interface CRMSettings {
+  "lead_lock_mode": CRMLeadLockMode;
+  /** Нет, пока кабинет не менял настройки */
+  "updated_at"?: string;
+}
+
+export interface CRMSettingsPatch {
+  "lead_lock_mode"?: CRMLeadLockMode;
 }
 
 /** Откуда приходят лиды и какой источник доходит до сделки */
@@ -4612,9 +4644,30 @@ export interface CustomerNeedPage {
   "results": Array<CustomerNeed>;
 }
 
+export interface CustomerNeedUpdate {
+  "customer"?: string;
+  "section"?: string;
+  "task"?: string;
+  "body"?: string;
+  "priority"?: number;
+  "is_archived"?: boolean;
+}
+
 export interface CustomerPage {
   "count": number;
   "results": Array<Customer>;
+}
+
+export interface CustomerUpdate {
+  "name"?: string;
+  "owner"?: string;
+  "status"?: string;
+  "tier"?: string;
+  "revenue"?: string;
+  "size"?: number;
+  "domains"?: Array<string>;
+  "external_ids"?: Array<string>;
+  "is_archived"?: boolean;
 }
 
 export interface Cycle {
@@ -5066,6 +5119,11 @@ export interface DiscussionCommentCreate {
 export interface DiscussionCommentPage {
   "count": number;
   "results": Array<DiscussionComment>;
+}
+
+export interface DiscussionCommentUpdate {
+  "body"?: string;
+  "is_archived"?: boolean;
 }
 
 export type DiscussionOwnerType = "task" | "section" | "project" | "document" | "milestone" | "customer_need" | "pull_request";
@@ -6278,6 +6336,20 @@ export type DocumentOwnerType = "task" | "section" | "project" | "milestone";
 export interface DocumentPage {
   "count": number;
   "results": Array<TaskDocument>;
+}
+
+export interface DocumentUpdate {
+  "owner_type"?: DocumentOwnerType;
+  "owner_id"?: string;
+  "task"?: string;
+  "section"?: string;
+  "project"?: string;
+  "milestone"?: string;
+  "title"?: string;
+  "content"?: string;
+  "icon"?: string;
+  "color"?: string;
+  "is_archived"?: boolean;
 }
 
 export interface DurationMetric {
@@ -9769,6 +9841,27 @@ export interface MeetingParticipantInput {
 
 export type MeetingStatus = "planned" | "held" | "cancelled";
 
+/** URL-путь задаёт `id`; переданные непустые поля обновляются частично. */
+export interface MeetingUpdate {
+  "project"?: string;
+  "title"?: string;
+  "kind"?: MeetingKind;
+  "status"?: MeetingStatus;
+  "starts_at"?: string;
+  "duration_minutes"?: number;
+  "location"?: string;
+  "meeting_url"?: string;
+  "recording_url"?: string;
+  "summary"?: string;
+  "transcript"?: string;
+  "calendar_event"?: string;
+  "visibility"?: HubVisibility;
+  "created_by"?: number;
+  "participants"?: Array<MeetingParticipantInput>;
+  "items"?: Array<MeetingItemInput>;
+  "replace_content"?: boolean;
+}
+
 export interface Milestone {
   "id": UUID;
   "section": UUID;
@@ -9950,6 +10043,18 @@ export interface PullRequestPage {
   "results": Array<PullRequest>;
 }
 
+export interface PullRequestUpdate {
+  "provider"?: string;
+  "repository"?: string;
+  "number"?: string;
+  "title"?: string;
+  "url"?: string;
+  "status"?: string;
+  "branch"?: string;
+  "commit_sha"?: string;
+  "is_archived"?: boolean;
+}
+
 export interface Relation {
   "id": UUID;
   "source": UUID;
@@ -9996,6 +10101,18 @@ export interface Section {
   "tasks_overdue": number;
   "members_count": number;
   "members": Array<SectionMemberPreview>;
+}
+
+export interface SectionCreate {
+  "project": UUID;
+  "key"?: string;
+  "name": string;
+  "description"?: string;
+  "color"?: string;
+  "icon"?: string;
+  "status"?: string;
+  "lead"?: number;
+  "target_date"?: string;
 }
 
 export interface SectionMember {
@@ -10291,6 +10408,16 @@ export interface StatusUpdateCreate {
 export interface StatusUpdatePage {
   "count": number;
   "results": Array<StatusUpdate>;
+}
+
+export interface StatusUpdatePatch {
+  "owner_type"?: CycleOwnerType;
+  "owner_id"?: string;
+  "section"?: string;
+  "project"?: string;
+  "health"?: StatusHealth;
+  "body"?: string;
+  "is_archived"?: boolean;
 }
 
 /** Тело черновика переноса остатка; строки подбирает сервер. */

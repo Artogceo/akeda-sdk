@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1147ce8fd91cace2a98f2c32beca78b399266da65eb8db4376e3661a37e786b1).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c7a9c5545ffa050fc7dc6cdbbdefb2320c9df8b4ce2c9539c93565f5f8963304).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1339,6 +1339,8 @@ type CRMLeadInput struct {
 	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
+type CRMLeadLockMode = string
+
 type CRMLeadPatch struct {
 	Title         *string `json:"title,omitempty"`
 	Source        *string `json:"source,omitempty"`
@@ -1354,6 +1356,26 @@ type CRMLeadPatch struct {
 	Archived      *bool   `json:"archived,omitempty"`
 	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
 	Custom map[string]json.RawMessage `json:"custom,omitempty"`
+}
+
+type CRMLeadStage struct {
+	ID UUID `json:"id"`
+	// Name — Имя этапа задаёт кабинет; код на конкретные имена не ссылается
+	Name      string `json:"name"`
+	SortOrder int64  `json:"sort_order"`
+	// IsActive — Ненужный этап выключают, а не удаляют
+	IsActive  bool   `json:"is_active"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+type CRMLeadStageInput struct {
+	Name string `json:"name"`
+}
+
+type CRMLeadStagePatch struct {
+	Name     *string `json:"name,omitempty"`
+	IsActive *bool   `json:"is_active,omitempty"`
 }
 
 type CRMLeadStatus = string
@@ -1503,6 +1525,16 @@ type CRMSalesPlansInputItemsItem struct {
 	// Amount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
 	Amount   string  `json:"amount"`
 	Currency *string `json:"currency,omitempty"`
+}
+
+type CRMSettings struct {
+	LeadLockMode CRMLeadLockMode `json:"lead_lock_mode"`
+	// UpdatedAt — Нет, пока кабинет не менял настройки
+	UpdatedAt *string `json:"updated_at,omitempty"`
+}
+
+type CRMSettingsPatch struct {
+	LeadLockMode *CRMLeadLockMode `json:"lead_lock_mode,omitempty"`
 }
 
 // CRMSourceMetric — Откуда приходят лиды и какой источник доходит до сделки
@@ -4607,9 +4639,30 @@ type CustomerNeedPage struct {
 	Results []CustomerNeed `json:"results"`
 }
 
+type CustomerNeedUpdate struct {
+	Customer   *string `json:"customer,omitempty"`
+	Section    *string `json:"section,omitempty"`
+	Task       *string `json:"task,omitempty"`
+	Body       *string `json:"body,omitempty"`
+	Priority   *int64  `json:"priority,omitempty"`
+	IsArchived *bool   `json:"is_archived,omitempty"`
+}
+
 type CustomerPage struct {
 	Count   int64      `json:"count"`
 	Results []Customer `json:"results"`
+}
+
+type CustomerUpdate struct {
+	Name        *string  `json:"name,omitempty"`
+	Owner       *string  `json:"owner,omitempty"`
+	Status      *string  `json:"status,omitempty"`
+	Tier        *string  `json:"tier,omitempty"`
+	Revenue     *string  `json:"revenue,omitempty"`
+	Size        *int64   `json:"size,omitempty"`
+	Domains     []string `json:"domains,omitempty"`
+	ExternalIds []string `json:"external_ids,omitempty"`
+	IsArchived  *bool    `json:"is_archived,omitempty"`
 }
 
 type Cycle struct {
@@ -5057,6 +5110,11 @@ type DiscussionCommentCreate struct {
 type DiscussionCommentPage struct {
 	Count   int64               `json:"count"`
 	Results []DiscussionComment `json:"results"`
+}
+
+type DiscussionCommentUpdate struct {
+	Body       *string `json:"body,omitempty"`
+	IsArchived *bool   `json:"is_archived,omitempty"`
 }
 
 type DiscussionOwnerType = string
@@ -6261,6 +6319,20 @@ type DocumentOwnerType = string
 type DocumentPage struct {
 	Count   int64          `json:"count"`
 	Results []TaskDocument `json:"results"`
+}
+
+type DocumentUpdate struct {
+	OwnerType  *DocumentOwnerType `json:"owner_type,omitempty"`
+	OwnerID    *string            `json:"owner_id,omitempty"`
+	Task       *string            `json:"task,omitempty"`
+	Section    *string            `json:"section,omitempty"`
+	Project    *string            `json:"project,omitempty"`
+	Milestone  *string            `json:"milestone,omitempty"`
+	Title      *string            `json:"title,omitempty"`
+	Content    *string            `json:"content,omitempty"`
+	Icon       *string            `json:"icon,omitempty"`
+	Color      *string            `json:"color,omitempty"`
+	IsArchived *bool              `json:"is_archived,omitempty"`
 }
 
 type DurationMetric struct {
@@ -9752,6 +9824,27 @@ type MeetingParticipantInput struct {
 
 type MeetingStatus = string
 
+// MeetingUpdate — URL-путь задаёт `id`; переданные непустые поля обновляются частично.
+type MeetingUpdate struct {
+	Project         *string                   `json:"project,omitempty"`
+	Title           *string                   `json:"title,omitempty"`
+	Kind            *MeetingKind              `json:"kind,omitempty"`
+	Status          *MeetingStatus            `json:"status,omitempty"`
+	StartsAt        *string                   `json:"starts_at,omitempty"`
+	DurationMinutes *int64                    `json:"duration_minutes,omitempty"`
+	Location        *string                   `json:"location,omitempty"`
+	MeetingURL      *string                   `json:"meeting_url,omitempty"`
+	RecordingURL    *string                   `json:"recording_url,omitempty"`
+	Summary         *string                   `json:"summary,omitempty"`
+	Transcript      *string                   `json:"transcript,omitempty"`
+	CalendarEvent   *string                   `json:"calendar_event,omitempty"`
+	Visibility      *HubVisibility            `json:"visibility,omitempty"`
+	CreatedBy       *int64                    `json:"created_by,omitempty"`
+	Participants    []MeetingParticipantInput `json:"participants,omitempty"`
+	Items           []MeetingItemInput        `json:"items,omitempty"`
+	ReplaceContent  *bool                     `json:"replace_content,omitempty"`
+}
+
 type Milestone struct {
 	ID          UUID    `json:"id"`
 	Section     UUID    `json:"section"`
@@ -9933,6 +10026,18 @@ type PullRequestPage struct {
 	Results []PullRequest `json:"results"`
 }
 
+type PullRequestUpdate struct {
+	Provider   *string `json:"provider,omitempty"`
+	Repository *string `json:"repository,omitempty"`
+	Number     *string `json:"number,omitempty"`
+	Title      *string `json:"title,omitempty"`
+	URL        *string `json:"url,omitempty"`
+	Status     *string `json:"status,omitempty"`
+	Branch     *string `json:"branch,omitempty"`
+	CommitSha  *string `json:"commit_sha,omitempty"`
+	IsArchived *bool   `json:"is_archived,omitempty"`
+}
+
 type Relation struct {
 	ID                        UUID              `json:"id"`
 	Source                    UUID              `json:"source"`
@@ -9979,6 +10084,18 @@ type Section struct {
 	TasksOverdue int64                  `json:"tasks_overdue"`
 	MembersCount int64                  `json:"members_count"`
 	Members      []SectionMemberPreview `json:"members"`
+}
+
+type SectionCreate struct {
+	Project     UUID    `json:"project"`
+	Key         *string `json:"key,omitempty"`
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	Color       *string `json:"color,omitempty"`
+	Icon        *string `json:"icon,omitempty"`
+	Status      *string `json:"status,omitempty"`
+	Lead        *int64  `json:"lead,omitempty"`
+	TargetDate  *string `json:"target_date,omitempty"`
 }
 
 type SectionMember struct {
@@ -10274,6 +10391,16 @@ type StatusUpdateCreate struct {
 type StatusUpdatePage struct {
 	Count   int64          `json:"count"`
 	Results []StatusUpdate `json:"results"`
+}
+
+type StatusUpdatePatch struct {
+	OwnerType  *CycleOwnerType `json:"owner_type,omitempty"`
+	OwnerID    *string         `json:"owner_id,omitempty"`
+	Section    *string         `json:"section,omitempty"`
+	Project    *string         `json:"project,omitempty"`
+	Health     *StatusHealth   `json:"health,omitempty"`
+	Body       *string         `json:"body,omitempty"`
+	IsArchived *bool           `json:"is_archived,omitempty"`
 }
 
 // StockAccountTransferCreate — Тело черновика переноса остатка; строки подбирает сервер.

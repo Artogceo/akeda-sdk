@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1147ce8fd91cace2a98f2c32beca78b399266da65eb8db4376e3661a37e786b1).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c7a9c5545ffa050fc7dc6cdbbdefb2320c9df8b4ce2c9539c93565f5f8963304).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -124,7 +124,11 @@ __all__ = [
     "CRMLeadDecision",
     "CRMLeadDuplicate",
     "CRMLeadInput",
+    "CRMLeadLockMode",
     "CRMLeadPatch",
+    "CRMLeadStage",
+    "CRMLeadStageInput",
+    "CRMLeadStagePatch",
     "CRMLeadStatus",
     "CRMLossReason",
     "CRMLossReasonInput",
@@ -146,6 +150,8 @@ __all__ = [
     "CRMSalesPlan",
     "CRMSalesPlansInput",
     "CRMSalesPlansInputItemsItem",
+    "CRMSettings",
+    "CRMSettingsPatch",
     "CRMSourceMetric",
     "CRMStage",
     "CRMStageCategory",
@@ -446,7 +452,9 @@ __all__ = [
     "CustomerNeed",
     "CustomerNeedCreate",
     "CustomerNeedPage",
+    "CustomerNeedUpdate",
     "CustomerPage",
+    "CustomerUpdate",
     "Cycle",
     "CycleCreate",
     "CycleOwnerType",
@@ -496,6 +504,7 @@ __all__ = [
     "DiscussionComment",
     "DiscussionCommentCreate",
     "DiscussionCommentPage",
+    "DiscussionCommentUpdate",
     "DiscussionOwnerType",
     "DocflowAppSalesOrderCounterparty",
     "DocflowAppSalesOrderInput",
@@ -581,6 +590,7 @@ __all__ = [
     "DocumentCreate",
     "DocumentOwnerType",
     "DocumentPage",
+    "DocumentUpdate",
     "DurationMetric",
     "EmptyObject",
     "Error",
@@ -870,6 +880,7 @@ __all__ = [
     "MeetingParticipant",
     "MeetingParticipantInput",
     "MeetingStatus",
+    "MeetingUpdate",
     "Milestone",
     "MilestoneCreate",
     "MilestonePage",
@@ -889,12 +900,14 @@ __all__ = [
     "PullRequestCreate",
     "PullRequestOwnerType",
     "PullRequestPage",
+    "PullRequestUpdate",
     "Relation",
     "RelationCreate",
     "RelationDirection",
     "RelationKind",
     "RelationList",
     "Section",
+    "SectionCreate",
     "SectionMember",
     "SectionMemberAssignment",
     "SectionMemberPreview",
@@ -930,6 +943,7 @@ __all__ = [
     "StatusUpdate",
     "StatusUpdateCreate",
     "StatusUpdatePage",
+    "StatusUpdatePatch",
     "StockAccountTransferCreate",
     "StockAccountTransferLine",
     "StockAccountTransferProposal",
@@ -2497,6 +2511,8 @@ class CRMLeadInput(_CRMLeadInputRequired, total=False):
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
 
+CRMLeadLockMode = Literal['owner_only', 'after_qualification']
+
 class CRMLeadPatch(TypedDict, total=False):
     title: str
     source: str
@@ -2512,6 +2528,23 @@ class CRMLeadPatch(TypedDict, total=False):
     archived: bool
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
+
+class CRMLeadStage(TypedDict):
+    id: "UUID"
+    #: Имя этапа задаёт кабинет; код на конкретные имена не ссылается
+    name: str
+    sort_order: int
+    #: Ненужный этап выключают, а не удаляют
+    is_active: bool
+    created_at: str
+    updated_at: str
+
+class CRMLeadStageInput(TypedDict):
+    name: str
+
+class CRMLeadStagePatch(TypedDict, total=False):
+    name: str
+    is_active: bool
 
 CRMLeadStatus = Literal['new', 'qualified', 'disqualified', 'converted']
 
@@ -2669,6 +2702,16 @@ class CRMSalesPlansInputItemsItem(_CRMSalesPlansInputItemsItemRequired, total=Fa
     #: Пусто - план на весь отдел
     owner_id: Optional[int]
     currency: str
+
+class _CRMSettingsRequired(TypedDict):
+    lead_lock_mode: "CRMLeadLockMode"
+
+class CRMSettings(_CRMSettingsRequired, total=False):
+    #: Нет, пока кабинет не менял настройки
+    updated_at: str
+
+class CRMSettingsPatch(TypedDict, total=False):
+    lead_lock_mode: "CRMLeadLockMode"
 
 class CRMSourceMetric(TypedDict):
     """Откуда приходят лиды и какой источник доходит до сделки"""
@@ -5726,9 +5769,28 @@ class CustomerNeedPage(TypedDict):
     count: int
     results: List["CustomerNeed"]
 
+class CustomerNeedUpdate(TypedDict, total=False):
+    customer: str
+    section: str
+    task: str
+    body: str
+    priority: int
+    is_archived: bool
+
 class CustomerPage(TypedDict):
     count: int
     results: List["Customer"]
+
+class CustomerUpdate(TypedDict, total=False):
+    name: str
+    owner: str
+    status: str
+    tier: str
+    revenue: str
+    size: int
+    domains: List[str]
+    external_ids: List[str]
+    is_archived: bool
 
 class Cycle(TypedDict):
     id: "UUID"
@@ -6169,6 +6231,10 @@ class DiscussionCommentCreate(_DiscussionCommentCreateRequired, total=False):
 class DiscussionCommentPage(TypedDict):
     count: int
     results: List["DiscussionComment"]
+
+class DiscussionCommentUpdate(TypedDict, total=False):
+    body: str
+    is_archived: bool
 
 DiscussionOwnerType = Literal['task', 'section', 'project', 'document', 'milestone', 'customer_need', 'pull_request']
 
@@ -7441,6 +7507,19 @@ DocumentOwnerType = Literal['task', 'section', 'project', 'milestone']
 class DocumentPage(TypedDict):
     count: int
     results: List["TaskDocument"]
+
+class DocumentUpdate(TypedDict, total=False):
+    owner_type: "DocumentOwnerType"
+    owner_id: str
+    task: str
+    section: str
+    project: str
+    milestone: str
+    title: str
+    content: str
+    icon: str
+    color: str
+    is_archived: bool
 
 class DurationMetric(TypedDict):
     samples: int
@@ -10783,6 +10862,27 @@ class MeetingParticipantInput(TypedDict, total=False):
 
 MeetingStatus = Literal['planned', 'held', 'cancelled']
 
+class MeetingUpdate(TypedDict, total=False):
+    """URL-путь задаёт `id`; переданные непустые поля обновляются частично."""
+
+    project: str
+    title: str
+    kind: "MeetingKind"
+    status: "MeetingStatus"
+    starts_at: str
+    duration_minutes: int
+    location: str
+    meeting_url: str
+    recording_url: str
+    summary: str
+    transcript: str
+    calendar_event: str
+    visibility: "HubVisibility"
+    created_by: int
+    participants: List["MeetingParticipantInput"]
+    items: List["MeetingItemInput"]
+    replace_content: bool
+
 class Milestone(TypedDict):
     id: "UUID"
     section: "UUID"
@@ -10963,6 +11063,17 @@ class PullRequestPage(TypedDict):
     count: int
     results: List["PullRequest"]
 
+class PullRequestUpdate(TypedDict, total=False):
+    provider: str
+    repository: str
+    number: str
+    title: str
+    url: str
+    status: str
+    branch: str
+    commit_sha: str
+    is_archived: bool
+
 class Relation(TypedDict):
     id: "UUID"
     source: "UUID"
@@ -11009,6 +11120,19 @@ class Section(TypedDict):
     tasks_overdue: int
     members_count: int
     members: List["SectionMemberPreview"]
+
+class _SectionCreateRequired(TypedDict):
+    project: "UUID"
+    name: str
+
+class SectionCreate(_SectionCreateRequired, total=False):
+    key: str
+    description: str
+    color: str
+    icon: str
+    status: str
+    lead: int
+    target_date: str
 
 class SectionMember(TypedDict):
     id: "UUID"
@@ -11281,6 +11405,15 @@ class StatusUpdateCreate(_StatusUpdateCreateRequired, total=False):
 class StatusUpdatePage(TypedDict):
     count: int
     results: List["StatusUpdate"]
+
+class StatusUpdatePatch(TypedDict, total=False):
+    owner_type: "CycleOwnerType"
+    owner_id: str
+    section: str
+    project: str
+    health: "StatusHealth"
+    body: str
+    is_archived: bool
 
 class _StockAccountTransferCreateRequired(TypedDict):
     business_id: "UUID"

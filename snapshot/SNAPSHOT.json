@@ -3,14 +3,14 @@
     "license": "LicenseRef-Akeda-Proprietary",
     "operations": {
       "by_audience": {
-        "external": 683
+        "external": 697
       },
       "by_module": {
         "automation": 3,
         "calendar": 25,
         "chat": 25,
         "core": 127,
-        "crm": 77,
+        "crm": 83,
         "developer": 22,
         "docflow": 42,
         "files": 16,
@@ -21,10 +21,10 @@
         "platform": 5,
         "settings": 5,
         "stock": 74,
-        "tasks": 92
+        "tasks": 100
       },
       "by_stage": {
-        "preview": 659,
+        "preview": 673,
         "public": 24
       },
       "installation_by_module": {
@@ -35,12 +35,12 @@
         "marketplace": 25,
         "platform": 4,
         "stock": 74,
-        "tasks": 92
+        "tasks": 100
       },
-      "installation_reachable": 426,
-      "total": 683
+      "installation_reachable": 434,
+      "total": 697
     },
-    "schemas": 1020,
+    "schemas": 1034,
     "servers": [
       "https://erp.akeda.ru"
     ],
@@ -59,14 +59,14 @@
       "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 2953762,
+      "bytes": 2988831,
       "path": "openapi/akeda-v1.json",
-      "sha256": "1147ce8fd91cace2a98f2c32beca78b399266da65eb8db4376e3661a37e786b1"
+      "sha256": "c7a9c5545ffa050fc7dc6cdbbdefb2320c9df8b4ce2c9539c93565f5f8963304"
     },
     {
-      "bytes": 2219168,
+      "bytes": 2244222,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "22c5d323d0efcf79ffb55996d06e57da42dc02ab5747f0af6045b6f105994658"
+      "sha256": "144e58354e48f8ef2d4cfc2a49eb73349d213b3b4bd5b10e074193c9d62c0953"
     },
     {
       "bytes": 18414,
@@ -79,6 +79,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "948556ff51f6b1be502719456239ccc4076c737ad51154c406d5f49435db2e5d",
+  "snapshot_digest": "e0d613e7bbef9f3a1101767fe32ba9f34e610163ecc00a14276657ebe9ea3dc5",
   "snapshot_version": 1
 }

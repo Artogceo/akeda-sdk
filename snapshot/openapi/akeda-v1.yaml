@@ -755,6 +755,54 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Tasks
+      operationId: tasksCreateSection
+      summary: Создать раздел задач
+      description: Создаёт раздел внутри выбранного проекта задач.
+      x-akeda-module: tasks
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: tasks:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SectionCreate'
+      responses:
+        '201':
+          description: Созданный раздел задач
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Section'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/IdempotencyKeyMismatch'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/IdempotencyUnavailable'
   /api/v1/tasks/sections/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -2432,6 +2480,43 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Tasks
+      operationId: tasksUpdateStatusUpdate
+      summary: Изменить отчёт о состоянии проекта
+      description: Частично обновляет выбранный отчёт о состоянии проекта задач. Идентификатор отчёта задаётся в URL.
+      x-akeda-module: tasks
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: tasks:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusUpdatePatch'
+      responses:
+        '200':
+          description: Обновлённый отчёт
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusUpdate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
     delete:
       tags:
         - Tasks
@@ -2612,6 +2697,43 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Tasks
+      operationId: tasksUpdateCustomer
+      summary: Изменить заказчика проектов
+      description: Частично обновляет выбранного заказчика проекта задач. Идентификатор заказчика задаётся в URL.
+      x-akeda-module: tasks
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: tasks:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdate'
+      responses:
+        '200':
+          description: Обновлённый заказчик
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
     delete:
       tags:
         - Tasks
@@ -2759,6 +2881,43 @@ paths:
       responses:
         '200':
           description: Карточка потребности
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerNeed'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Tasks
+      operationId: tasksUpdateCustomerNeed
+      summary: Изменить потребность заказчика
+      description: Частично обновляет выбранную потребность заказчика. Идентификатор потребности задаётся в URL.
+      x-akeda-module: tasks
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: tasks:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerNeedUpdate'
+      responses:
+        '200':
+          description: Обновлённая потребность
           content:
             application/json:
               schema:
@@ -2942,6 +3101,43 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Tasks
+      operationId: tasksUpdateDocument
+      summary: Изменить документ задачи или проекта
+      description: Частично обновляет выбранный документ проекта задач. Идентификатор документа задаётся в URL.
+      x-akeda-module: tasks
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: tasks:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentUpdate'
+      responses:
+        '200':
+          description: Обновлённый документ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
     delete:
       tags:
         - Tasks
@@ -3098,6 +3294,43 @@ paths:
       responses:
         '200':
           description: Карточка pull request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PullRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Tasks
+      operationId: tasksUpdatePullRequest
+      summary: Изменить связь с pull request
+      description: Частично обновляет выбранную связь с pull request. Идентификатор связи задаётся в URL.
+      x-akeda-module: tasks
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: tasks:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PullRequestUpdate'
+      responses:
+        '200':
+          description: Обновлённая связь
           content:
             application/json:
               schema:
@@ -3267,6 +3500,43 @@ paths:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - $ref: '#/components/parameters/ResourceID'
+    patch:
+      tags:
+        - Tasks
+      operationId: tasksUpdateDiscussionComment
+      summary: Изменить комментарий обсуждения
+      description: Частично обновляет выбранный комментарий обсуждения. Идентификатор комментария задаётся в URL.
+      x-akeda-module: tasks
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: tasks:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscussionCommentUpdate'
+      responses:
+        '200':
+          description: Обновлённый комментарий
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscussionComment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
     delete:
       tags:
         - Tasks
@@ -3540,6 +3810,43 @@ paths:
       responses:
         '200':
           description: Встреча с участниками и пунктами
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meeting'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags:
+        - Tasks
+      operationId: tasksUpdateMeeting
+      summary: Изменить встречу и её разбор
+      description: Частично обновляет выбранную встречу проекта задач. Идентификатор встречи задаётся в URL.
+      x-akeda-module: tasks
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: tasks:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeetingUpdate'
+      responses:
+        '200':
+          description: Обновлённая встреча
           content:
             application/json:
               schema:
@@ -15546,6 +15853,207 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/CRMUserRef'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/crm/lead-stages:
+    get:
+      tags:
+        - CRM leads
+      operationId: crmListLeadStages
+      summary: Получить этапы доски лидов
+      description: Этапы ручной доски приёма лидов в порядке sort_order, включая выключенные. Этап показывает, где лид лежит у менеджера до решения; исход квалификации задаёт статус лида, а не этап. Кабинет заводит и переименовывает этапы сам.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Этапы доски лидов кабинета
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CRMLeadStage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - CRM leads
+      operationId: crmCreateLeadStage
+      summary: Добавить этап доски лидов
+      description: Новый этап встаёт в конец доски и сразу включён. Пустое имя отклоняется.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMLeadStageInput'
+      responses:
+        '201':
+          description: Созданный этап
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMLeadStage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/crm/lead-stages/reorder:
+    patch:
+      tags:
+        - CRM leads
+      operationId: crmReorderLeadStages
+      summary: Изменить порядок этапов доски лидов
+      description: Передаётся полный порядок всех этапов кабинета без повторов, включая выключенные; частичный список отклоняется.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMReorderInput'
+      responses:
+        '204':
+          description: Порядок сохранён
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/crm/lead-stages/{id}:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    patch:
+      tags:
+        - CRM leads
+      operationId: crmUpdateLeadStage
+      summary: Изменить этап доски лидов
+      description: 'Меняются имя и включённость. Удаления у этапа нет: ненужный выключают.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMLeadStagePatch'
+      responses:
+        '200':
+          description: Изменённый этап
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMLeadStage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/crm/settings:
+    get:
+      tags:
+        - CRM leads
+      operationId: crmGetSettings
+      summary: Получить настройки CRM кабинета
+      description: 'Сейчас настройка одна: момент закрепления лида за менеджером. Пока кабинет её не менял, отдаётся умолчание owner_only без updated_at.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Настройки CRM кабинета
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMSettings'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    patch:
+      tags:
+        - CRM leads
+      operationId: crmUpdateSettings
+      summary: Изменить настройки CRM кабинета
+      description: Поле, которого нет в запросе, не меняется. Режим вне owner_only и after_qualification отклоняется кодом crm.lead_lock_mode_invalid.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:admin
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMSettingsPatch'
+      responses:
+        '200':
+          description: Настройки после изменения
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMSettings'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -32959,6 +33467,36 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SectionMemberPreview'
+    SectionCreate:
+      type: object
+      additionalProperties: false
+      required:
+        - project
+        - name
+      properties:
+        project:
+          $ref: '#/components/schemas/UUID'
+        key:
+          type: string
+          maxLength: 16
+          pattern: ^[A-Z0-9-]*$
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        color:
+          type: string
+        icon:
+          type: string
+        status:
+          type: string
+        lead:
+          type: integer
+          format: int64
+          minimum: 1
+        target_date:
+          type: string
     SectionUpdate:
       type: object
       additionalProperties: false
@@ -34100,6 +34638,26 @@ components:
           type: integer
           format: int64
           minimum: 1
+    StatusUpdatePatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        owner_type:
+          $ref: '#/components/schemas/CycleOwnerType'
+        owner_id:
+          type: string
+        section:
+          type: string
+        project:
+          type: string
+        health:
+          $ref: '#/components/schemas/StatusHealth'
+        body:
+          type: string
+          minLength: 1
+        is_archived:
+          type: boolean
     StatusUpdatePage:
       type: object
       additionalProperties: false
@@ -34571,6 +35129,37 @@ components:
           uniqueItems: true
           items:
             type: string
+    CustomerUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+        owner:
+          type: string
+        status:
+          type: string
+        tier:
+          type: string
+        revenue:
+          type: string
+        size:
+          type: integer
+          minimum: 0
+        domains:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        external_ids:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        is_archived:
+          type: boolean
     CustomerPage:
       type: object
       additionalProperties: false
@@ -34662,6 +35251,27 @@ components:
             - 0
             - 1
           default: 0
+    CustomerNeedUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        customer:
+          type: string
+        section:
+          type: string
+        task:
+          type: string
+        body:
+          type: string
+          minLength: 1
+        priority:
+          type: integer
+          enum:
+            - 0
+            - 1
+        is_archived:
+          type: boolean
     CustomerNeedPage:
       type: object
       additionalProperties: false
@@ -34765,6 +35375,34 @@ components:
           type: integer
           format: int64
           minimum: 1
+    DocumentUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        owner_type:
+          $ref: '#/components/schemas/DocumentOwnerType'
+        owner_id:
+          type: string
+        task:
+          type: string
+        section:
+          type: string
+        project:
+          type: string
+        milestone:
+          type: string
+        title:
+          type: string
+          minLength: 1
+        content:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        is_archived:
+          type: boolean
     DocumentPage:
       type: object
       additionalProperties: false
@@ -34870,6 +35508,30 @@ components:
           type: string
         commit_sha:
           type: string
+    PullRequestUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        provider:
+          type: string
+        repository:
+          type: string
+        number:
+          type: string
+        title:
+          type: string
+        url:
+          type: string
+          format: uri
+        status:
+          type: string
+        branch:
+          type: string
+        commit_sha:
+          type: string
+        is_archived:
+          type: boolean
     PullRequestPage:
       type: object
       additionalProperties: false
@@ -34968,6 +35630,16 @@ components:
           type: integer
           format: int64
           minimum: 1
+    DiscussionCommentUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        body:
+          type: string
+          minLength: 1
+        is_archived:
+          type: boolean
     DiscussionCommentPage:
       type: object
       additionalProperties: false
@@ -35376,6 +36048,55 @@ components:
         duration_minutes:
           type: integer
           minimum: 0
+        location:
+          type: string
+        meeting_url:
+          type: string
+        recording_url:
+          type: string
+        summary:
+          type: string
+        transcript:
+          type: string
+        calendar_event:
+          type: string
+        visibility:
+          $ref: '#/components/schemas/HubVisibility'
+        created_by:
+          type: integer
+          format: int64
+          minimum: 1
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/MeetingParticipantInput'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MeetingItemInput'
+        replace_content:
+          type: boolean
+          default: true
+    MeetingUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: URL-путь задаёт `id`; переданные непустые поля обновляются частично.
+      properties:
+        project:
+          type: string
+        title:
+          type: string
+          minLength: 1
+        kind:
+          $ref: '#/components/schemas/MeetingKind'
+        status:
+          $ref: '#/components/schemas/MeetingStatus'
+        starts_at:
+          type: string
+        duration_minutes:
+          type: integer
+          minimum: 1
         location:
           type: string
         meeting_url:
@@ -47234,6 +47955,75 @@ components:
             $ref: '#/components/schemas/CRMRequiredField'
         is_active:
           type: boolean
+    CRMLeadStage:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - sort_order
+        - is_active
+        - created_at
+        - updated_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+          description: Имя этапа задаёт кабинет; код на конкретные имена не ссылается
+        sort_order:
+          type: integer
+        is_active:
+          type: boolean
+          description: Ненужный этап выключают, а не удаляют
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CRMLeadStageInput:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+    CRMLeadStagePatch:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+        is_active:
+          type: boolean
+    CRMSettings:
+      type: object
+      additionalProperties: false
+      required:
+        - lead_lock_mode
+      properties:
+        lead_lock_mode:
+          $ref: '#/components/schemas/CRMLeadLockMode'
+        updated_at:
+          type: string
+          format: date-time
+          description: Нет, пока кабинет не менял настройки
+    CRMSettingsPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        lead_lock_mode:
+          $ref: '#/components/schemas/CRMLeadLockMode'
+    CRMLeadLockMode:
+      type: string
+      enum:
+        - owner_only
+        - after_qualification
+      description: owner_only - лид с самого начала виден только владельцу (умолчание); after_qualification - новый лид видят все, у кого есть доступ к CRM, после квалификации он закрепляется за владельцем. Роль с правом all видит все лиды в любом режиме
     CRMReorderInput:
       type: object
       additionalProperties: false
