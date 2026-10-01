@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2bf281b5ab970aa70ea34a8d558e8cfe46621bb0117821f826a583418b9c7c2f).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1147ce8fd91cace2a98f2c32beca78b399266da65eb8db4376e3661a37e786b1).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2386,6 +2386,13 @@ export interface OperationTypes {
     body: never;
     response: models.FilesFile;
   };
+  /** GET /api/v1/files/items/{id}/content-url — Временный адрес содержимого */
+  filesContentLink: {
+    params: { "id": models.UUID };
+    query: { "kind"?: "content" | "preview" | "thumbnail" };
+    body: never;
+    response: models.FilesContentLinkResponse;
+  };
   /** POST /api/v1/files/folders — Создать папку */
   filesCreateFolder: {
     params: Record<string, never>;
@@ -2435,6 +2442,13 @@ export interface OperationTypes {
     body: never;
     response: models.FilesListRootsResponse;
   };
+  /** GET /api/v1/files/items/{id}/versions — История версий файла */
+  filesListVersions: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.FilesListVersionsResponse;
+  };
   /** DELETE /api/v1/files/shares/{id} — Отозвать внешнюю ссылку */
   filesRevokeShare: {
     params: { "id": models.UUID };
@@ -2462,6 +2476,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.FilesUpload;
+  };
+  /** GET /api/v1/files/versions/{id}/content-url — Временный адрес версии файла */
+  filesVersionContentLink: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.FilesVersionContentLinkResponse;
   };
   /** GET /api/v1/finance/accountable/balances — Получить остатки подотчётных лиц */
   financeAccountableBalances: {
@@ -5129,6 +5150,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowSubmitApproval: { method: "POST", path: "/api/v1/docflow/approvals", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesAbortUpload: { method: "DELETE", path: "/api/v1/files/uploads/{id}", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesCompleteUpload: { method: "POST", path: "/api/v1/files/uploads/{id}/complete", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesContentLink: { method: "GET", path: "/api/v1/files/items/{id}/content-url", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesCreateFolder: { method: "POST", path: "/api/v1/files/folders", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesCreateShare: { method: "POST", path: "/api/v1/files/shares", module: "files", stage: "preview", permission: "files:share", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesCreateShortcut: { method: "POST", path: "/api/v1/files/shortcuts", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -5136,10 +5158,12 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   filesGetFile: { method: "GET", path: "/api/v1/files/items/{id}", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesListEntries: { method: "GET", path: "/api/v1/files/folders/{id}/entries", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
   filesListRoots: { method: "GET", path: "/api/v1/files/roots", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesListVersions: { method: "GET", path: "/api/v1/files/items/{id}/versions", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesRevokeShare: { method: "DELETE", path: "/api/v1/files/shares/{id}", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesSearch: { method: "GET", path: "/api/v1/files/search", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 25 },
   filesStartUpload: { method: "POST", path: "/api/v1/files/uploads", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesUploadStatus: { method: "GET", path: "/api/v1/files/uploads/{id}", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  filesVersionContentLink: { method: "GET", path: "/api/v1/files/versions/{id}/content-url", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeAccountableBalances: { method: "GET", path: "/api/v1/finance/accountable/balances", module: "finance", stage: "preview", permission: "finance.accountable:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeApplyExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items/{id}/apply", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeApproveDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions/{id}/approve", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

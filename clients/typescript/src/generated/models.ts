@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2bf281b5ab970aa70ea34a8d558e8cfe46621bb0117821f826a583418b9c7c2f).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1147ce8fd91cace2a98f2c32beca78b399266da65eb8db4376e3661a37e786b1).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1861,6 +1861,12 @@ export interface CalendarEvent {
   "master_event"?: UUID | null;
   "created_at": string;
   "updated_at": string;
+  /** Ссылка на видеовстречу (https). Поля нет, если видеовстречи нет. */
+  "conference_url"?: string;
+  /** Откуда ссылка: telemost — комната Яндекс Телемоста, personal — постоянная ссылка человека, link — вставлена вручную. */
+  "conference_provider"?: "telemost" | "personal" | "link";
+  /** Идентификатор конференции Яндекс Телемоста; только при conference_provider=telemost. */
+  "conference_id"?: string;
 }
 
 export interface CalendarEventCreate {
@@ -1887,6 +1893,12 @@ export interface CalendarEventCreate {
   /** local либо `<connector UUID>/<external calendar id>` */
   "export_target"?: string;
   "calendar_source"?: string;
+  /** Ссылка на видеовстречу: пусто либо абсолютный https:// без пробелов. Если поля видеовстречи не переданы, сервер применяет личную настройку «Для новых встреч»: новая комната Яндекс Телемоста или постоянная ссылка. */
+  "conference_url"?: string;
+  /** Источник ссылки. telemost без ссылки — сервер заводит комнату Яндекс Телемоста от имени человека; Телемост должен быть подключён в настройках календаря. Пусто при непустой ссылке означает link. */
+  "conference_provider"?: "" | "telemost" | "personal" | "link";
+  /** Идентификатор конференции Телемоста; для других источников сбрасывается. */
+  "conference_id"?: string;
 }
 
 export interface CalendarEventEnvelope {
@@ -1929,6 +1941,10 @@ export interface CalendarEventPatch {
   "payload"?: { [key: string]: unknown } | null;
   "export_target"?: string | null;
   "calendar_source"?: string | null;
+  /** Пустая строка убирает видеовстречу. Новая ссылка без conference_provider считается вставленной вручную (link). */
+  "conference_url"?: string | null;
+  "conference_provider"?: "" | "telemost" | "personal" | "link" | null | null;
+  "conference_id"?: string | null;
 }
 
 export interface CalendarEventResponseInput {
@@ -6468,6 +6484,23 @@ export interface FilesUploadedPart {
   "number": number;
   "etag": string;
   "size": number;
+}
+
+export interface FilesVersion {
+  "id": UUID;
+  "file_id": UUID;
+  "version_no": number;
+  "size_bytes": number;
+  "mime_type": string;
+  "content_sha256"?: string;
+  /** Версия со статусом pending, scanning или infected не отдаётся */
+  "scan_status": "pending" | "scanning" | "clean" | "infected" | "skipped" | "error";
+  "scan_verdict"?: string;
+  "preview_status": "pending" | "processing" | "ready" | "unsupported" | "error";
+  "text_status": "pending" | "processing" | "ready" | "unsupported" | "error";
+  "comment"?: string;
+  "created_by": number;
+  "created_at": string;
 }
 
 export interface FinanceAccount {
@@ -11984,6 +12017,23 @@ export interface DocflowFlowDocumentRevisionsResponseItemsItem {
   "has_approval": boolean;
 }
 
+export interface FilesContentLinkResponse {
+  "url": string;
+  /** true — адрес ведёт прямо в хранилище; false — на этот API, с заголовком авторизации */
+  "direct": boolean;
+  "expires_at"?: string;
+  "name": string;
+  "mime_type": string;
+  "size_bytes"?: number;
+  "version_id"?: UUID;
+  /** Номер версии, содержимое которой адресуется */
+  "version_no"?: number;
+}
+
+export interface FilesListVersionsResponse {
+  "versions": Array<FilesVersion>;
+}
+
 export interface FilesListRootsResponse {
   "roots": Array<FilesFolder>;
 }
@@ -11996,6 +12046,18 @@ export interface FilesCreateShortcutRequest {
   "folder_id": UUID;
   "name": string;
   "url": string;
+}
+
+export interface FilesVersionContentLinkResponse {
+  "url": string;
+  /** true — адрес ведёт прямо в хранилище; false — на этот API, с заголовком авторизации */
+  "direct": boolean;
+  "expires_at"?: string;
+  "name": string;
+  "mime_type": string;
+  "size_bytes"?: number;
+  "version_id": UUID;
+  "version_no": number;
 }
 
 export interface FinanceListDividendAccessUsersResponse {

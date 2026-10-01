@@ -103,6 +103,8 @@ tags:
     description: Модуль files (файловое хранилище кабинета)
   - name: Files access
     description: Права на папки файлового хранилища
+  - name: Files content
+    description: Скачивание файлов и выгрузка папок архивом
   - name: Files uploads
     description: Докачиваемая загрузка файлов частями
   - name: Files shares
@@ -17965,6 +17967,181 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/files/items/{id}/content-url:
+    get:
+      tags:
+        - Files content
+      operationId: filesContentLink
+      x-akeda-audience: external
+      summary: Временный адрес содержимого
+      description: 'Адрес для проигрывателя и просмотрщика: они ходят за байтами сами и заголовка авторизации не ставят. direct=false означает, что хранилище подписывать не умеет и адрес ведёт на этот же API — заголовок по-прежнему нужен.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: files
+      x-akeda-release-stage: preview
+      x-akeda-permission: files:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: kind
+          in: query
+          description: Что именно адресуется
+          schema:
+            type: string
+            enum:
+              - content
+              - preview
+              - thumbnail
+            default: content
+      responses:
+        '200':
+          description: Временный адрес
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - url
+                  - direct
+                  - name
+                  - mime_type
+                properties:
+                  url:
+                    type: string
+                  direct:
+                    type: boolean
+                    description: true — адрес ведёт прямо в хранилище; false — на этот API, с заголовком авторизации
+                  expires_at:
+                    type: string
+                    format: date-time
+                  name:
+                    type: string
+                  mime_type:
+                    type: string
+                  size_bytes:
+                    type: integer
+                    format: int64
+                  version_id:
+                    $ref: '#/components/schemas/UUID'
+                  version_no:
+                    type: integer
+                    description: Номер версии, содержимое которой адресуется
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/files/items/{id}/versions:
+    get:
+      tags:
+        - Files content
+      operationId: filesListVersions
+      x-akeda-audience: external
+      summary: История версий файла
+      description: Все версии файла, свежие первыми. Прежняя версия скачивается по своему идентификатору подписанным адресом filesVersionContentLink.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: files
+      x-akeda-release-stage: preview
+      x-akeda-permission: files:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Версии файла
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - versions
+                properties:
+                  versions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FilesVersion'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/files/versions/{id}/content-url:
+    get:
+      tags:
+        - Files content
+      operationId: filesVersionContentLink
+      x-akeda-audience: external
+      summary: Временный адрес версии файла
+      description: 'Подписанный адрес содержимого конкретной версии на 15 минут: байты идут прямо из хранилища, без заголовка авторизации. direct=false — хранилище подписывать не умеет, адрес ведёт на этот же API и требует авторизации. Непроверенная и заражённая версия адреса не получает.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: files
+      x-akeda-release-stage: preview
+      x-akeda-permission: files:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Временный адрес
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - url
+                  - direct
+                  - name
+                  - mime_type
+                  - version_id
+                  - version_no
+                properties:
+                  url:
+                    type: string
+                  direct:
+                    type: boolean
+                    description: true — адрес ведёт прямо в хранилище; false — на этот API, с заголовком авторизации
+                  expires_at:
+                    type: string
+                    format: date-time
+                  name:
+                    type: string
+                  mime_type:
+                    type: string
+                  size_bytes:
+                    type: integer
+                    format: int64
+                  version_id:
+                    $ref: '#/components/schemas/UUID'
+                  version_no:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/files/uploads:
     post:
       tags:
@@ -35475,6 +35652,19 @@ components:
           type: string
         updated_at:
           type: string
+        conference_url:
+          type: string
+          description: Ссылка на видеовстречу (https). Поля нет, если видеовстречи нет.
+        conference_provider:
+          type: string
+          enum:
+            - telemost
+            - personal
+            - link
+          description: 'Откуда ссылка: telemost — комната Яндекс Телемоста, personal — постоянная ссылка человека, link — вставлена вручную.'
+        conference_id:
+          type: string
+          description: Идентификатор конференции Яндекс Телемоста; только при conference_provider=telemost.
     CalendarEventCreate:
       type: object
       additionalProperties: false
@@ -35566,6 +35756,22 @@ components:
           description: local либо `<connector UUID>/<external calendar id>`
         calendar_source:
           type: string
+        conference_url:
+          type: string
+          maxLength: 2048
+          description: 'Ссылка на видеовстречу: пусто либо абсолютный https:// без пробелов. Если поля видеовстречи не переданы, сервер применяет личную настройку «Для новых встреч»: новая комната Яндекс Телемоста или постоянная ссылка.'
+        conference_provider:
+          type: string
+          enum:
+            - ''
+            - telemost
+            - personal
+            - link
+          description: Источник ссылки. telemost без ссылки — сервер заводит комнату Яндекс Телемоста от имени человека; Телемост должен быть подключён в настройках календаря. Пусто при непустой ссылке означает link.
+        conference_id:
+          type: string
+          maxLength: 200
+          description: Идентификатор конференции Телемоста; для других источников сбрасывается.
     CalendarEventPatch:
       type: object
       additionalProperties: false
@@ -35692,6 +35898,27 @@ components:
           type:
             - string
             - 'null'
+        conference_url:
+          type:
+            - string
+            - 'null'
+          maxLength: 2048
+          description: Пустая строка убирает видеовстречу. Новая ссылка без conference_provider считается вставленной вручную (link).
+        conference_provider:
+          type:
+            - string
+            - 'null'
+          enum:
+            - ''
+            - telemost
+            - personal
+            - link
+            - null
+        conference_id:
+          type:
+            - string
+            - 'null'
+          maxLength: 200
     CalendarEventEnvelope:
       type: object
       additionalProperties: true
@@ -49454,6 +49681,70 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FilesBreadcrumb'
+    FilesVersion:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - file_id
+        - version_no
+        - size_bytes
+        - mime_type
+        - scan_status
+        - preview_status
+        - text_status
+        - created_by
+        - created_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        file_id:
+          $ref: '#/components/schemas/UUID'
+        version_no:
+          type: integer
+        size_bytes:
+          type: integer
+          format: int64
+        mime_type:
+          type: string
+        content_sha256:
+          type: string
+        scan_status:
+          type: string
+          enum:
+            - pending
+            - scanning
+            - clean
+            - infected
+            - skipped
+            - error
+          description: Версия со статусом pending, scanning или infected не отдаётся
+        scan_verdict:
+          type: string
+        preview_status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - ready
+            - unsupported
+            - error
+        text_status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - ready
+            - unsupported
+            - error
+        comment:
+          type: string
+        created_by:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
     FilesBreadcrumb:
       type: object
       additionalProperties: false

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2bf281b5ab970aa70ea34a8d558e8cfe46621bb0117821f826a583418b9c7c2f).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1147ce8fd91cace2a98f2c32beca78b399266da65eb8db4376e3661a37e786b1).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1859,6 +1859,12 @@ type CalendarEvent struct {
 	MasterEvent        *UUID                      `json:"master_event,omitempty"`
 	CreatedAt          string                     `json:"created_at"`
 	UpdatedAt          string                     `json:"updated_at"`
+	// ConferenceURL — Ссылка на видеовстречу (https). Поля нет, если видеовстречи нет.
+	ConferenceURL *string `json:"conference_url,omitempty"`
+	// ConferenceProvider — Откуда ссылка: telemost — комната Яндекс Телемоста, personal — постоянная ссылка человека, link — вставлена вручную.
+	ConferenceProvider *string `json:"conference_provider,omitempty"`
+	// ConferenceID — Идентификатор конференции Яндекс Телемоста; только при conference_provider=telemost.
+	ConferenceID *string `json:"conference_id,omitempty"`
 }
 
 type CalendarEventCreate struct {
@@ -1885,6 +1891,12 @@ type CalendarEventCreate struct {
 	// ExportTarget — local либо `<connector UUID>/<external calendar id>`
 	ExportTarget   *string `json:"export_target,omitempty"`
 	CalendarSource *string `json:"calendar_source,omitempty"`
+	// ConferenceURL — Ссылка на видеовстречу: пусто либо абсолютный https:// без пробелов. Если поля видеовстречи не переданы, сервер применяет личную настройку «Для новых встреч»: новая комната Яндекс Телемоста или постоянная ссылка.
+	ConferenceURL *string `json:"conference_url,omitempty"`
+	// ConferenceProvider — Источник ссылки. telemost без ссылки — сервер заводит комнату Яндекс Телемоста от имени человека; Телемост должен быть подключён в настройках календаря. Пусто при непустой ссылке означает link.
+	ConferenceProvider *string `json:"conference_provider,omitempty"`
+	// ConferenceID — Идентификатор конференции Телемоста; для других источников сбрасывается.
+	ConferenceID *string `json:"conference_id,omitempty"`
 }
 
 type CalendarEventEnvelope struct {
@@ -1927,6 +1939,10 @@ type CalendarEventPatch struct {
 	Payload            map[string]json.RawMessage `json:"payload,omitempty"`
 	ExportTarget       *string                    `json:"export_target,omitempty"`
 	CalendarSource     *string                    `json:"calendar_source,omitempty"`
+	// ConferenceURL — Пустая строка убирает видеовстречу. Новая ссылка без conference_provider считается вставленной вручную (link).
+	ConferenceURL      *string          `json:"conference_url,omitempty"`
+	ConferenceProvider *json.RawMessage `json:"conference_provider,omitempty"`
+	ConferenceID       *string          `json:"conference_id,omitempty"`
 }
 
 type CalendarEventResponseInput struct {
@@ -6451,6 +6467,23 @@ type FilesUploadedPart struct {
 	Number int64  `json:"number"`
 	Etag   string `json:"etag"`
 	Size   int64  `json:"size"`
+}
+
+type FilesVersion struct {
+	ID            UUID    `json:"id"`
+	FileID        UUID    `json:"file_id"`
+	VersionNo     int64   `json:"version_no"`
+	SizeBytes     int64   `json:"size_bytes"`
+	MimeType      string  `json:"mime_type"`
+	ContentSha256 *string `json:"content_sha256,omitempty"`
+	// ScanStatus — Версия со статусом pending, scanning или infected не отдаётся
+	ScanStatus    string  `json:"scan_status"`
+	ScanVerdict   *string `json:"scan_verdict,omitempty"`
+	PreviewStatus string  `json:"preview_status"`
+	TextStatus    string  `json:"text_status"`
+	Comment       *string `json:"comment,omitempty"`
+	CreatedBy     int64   `json:"created_by"`
+	CreatedAt     string  `json:"created_at"`
 }
 
 type FinanceAccount struct {
@@ -11954,6 +11987,23 @@ type DocflowFlowDocumentRevisionsResponseItemsItem struct {
 	HasApproval bool    `json:"has_approval"`
 }
 
+type FilesContentLinkResponse struct {
+	URL string `json:"url"`
+	// Direct — true — адрес ведёт прямо в хранилище; false — на этот API, с заголовком авторизации
+	Direct    bool    `json:"direct"`
+	ExpiresAt *string `json:"expires_at,omitempty"`
+	Name      string  `json:"name"`
+	MimeType  string  `json:"mime_type"`
+	SizeBytes *int64  `json:"size_bytes,omitempty"`
+	VersionID *UUID   `json:"version_id,omitempty"`
+	// VersionNo — Номер версии, содержимое которой адресуется
+	VersionNo *int64 `json:"version_no,omitempty"`
+}
+
+type FilesListVersionsResponse struct {
+	Versions []FilesVersion `json:"versions"`
+}
+
 type FilesListRootsResponse struct {
 	Roots []FilesFolder `json:"roots"`
 }
@@ -11966,6 +12016,18 @@ type FilesCreateShortcutRequest struct {
 	FolderID UUID   `json:"folder_id"`
 	Name     string `json:"name"`
 	URL      string `json:"url"`
+}
+
+type FilesVersionContentLinkResponse struct {
+	URL string `json:"url"`
+	// Direct — true — адрес ведёт прямо в хранилище; false — на этот API, с заголовком авторизации
+	Direct    bool    `json:"direct"`
+	ExpiresAt *string `json:"expires_at,omitempty"`
+	Name      string  `json:"name"`
+	MimeType  string  `json:"mime_type"`
+	SizeBytes *int64  `json:"size_bytes,omitempty"`
+	VersionID UUID    `json:"version_id"`
+	VersionNo int64   `json:"version_no"`
 }
 
 type FinanceListDividendAccessUsersResponse struct {

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2bf281b5ab970aa70ea34a8d558e8cfe46621bb0117821f826a583418b9c7c2f).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1147ce8fd91cace2a98f2c32beca78b399266da65eb8db4376e3661a37e786b1).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -367,6 +367,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowSubmitApproval': OperationSpec('POST', '/api/v1/docflow/approvals', 'docflow', 'preview', 'docflow.flow:write', False, False, (), 'none', None, None),
     'filesAbortUpload': OperationSpec('DELETE', '/api/v1/files/uploads/{id}', 'files', 'preview', 'files:write', False, False, ('id',), 'none', None, None),
     'filesCompleteUpload': OperationSpec('POST', '/api/v1/files/uploads/{id}/complete', 'files', 'preview', 'files:write', False, False, ('id',), 'none', None, None),
+    'filesContentLink': OperationSpec('GET', '/api/v1/files/items/{id}/content-url', 'files', 'preview', 'files:read', False, False, ('id',), 'none', None, None),
     'filesCreateFolder': OperationSpec('POST', '/api/v1/files/folders', 'files', 'preview', 'files:write', False, False, (), 'none', None, None),
     'filesCreateShare': OperationSpec('POST', '/api/v1/files/shares', 'files', 'preview', 'files:share', False, False, (), 'none', None, None),
     'filesCreateShortcut': OperationSpec('POST', '/api/v1/files/shortcuts', 'files', 'preview', 'files:write', False, False, (), 'none', None, None),
@@ -374,10 +375,12 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'filesGetFile': OperationSpec('GET', '/api/v1/files/items/{id}', 'files', 'preview', 'files:read', False, False, ('id',), 'none', None, None),
     'filesListEntries': OperationSpec('GET', '/api/v1/files/folders/{id}/entries', 'files', 'preview', 'files:read', False, False, ('id',), 'limit_offset', 500, 200),
     'filesListRoots': OperationSpec('GET', '/api/v1/files/roots', 'files', 'preview', 'files:read', False, False, (), 'none', None, None),
+    'filesListVersions': OperationSpec('GET', '/api/v1/files/items/{id}/versions', 'files', 'preview', 'files:read', False, False, ('id',), 'none', None, None),
     'filesRevokeShare': OperationSpec('DELETE', '/api/v1/files/shares/{id}', 'files', 'preview', 'files:write', False, False, ('id',), 'none', None, None),
     'filesSearch': OperationSpec('GET', '/api/v1/files/search', 'files', 'preview', 'files:read', False, False, (), 'limit_offset', 100, 25),
     'filesStartUpload': OperationSpec('POST', '/api/v1/files/uploads', 'files', 'preview', 'files:write', False, False, (), 'none', None, None),
     'filesUploadStatus': OperationSpec('GET', '/api/v1/files/uploads/{id}', 'files', 'preview', 'files:read', False, False, ('id',), 'none', None, None),
+    'filesVersionContentLink': OperationSpec('GET', '/api/v1/files/versions/{id}/content-url', 'files', 'preview', 'files:read', False, False, ('id',), 'none', None, None),
     'financeAccountableBalances': OperationSpec('GET', '/api/v1/finance/accountable/balances', 'finance', 'preview', 'finance.accountable:read', False, True, (), 'none', None, None),
     'financeApplyExchangeItem': OperationSpec('POST', '/api/v1/finance/exchange/items/{id}/apply', 'finance', 'preview', 'finance.exchange:write', False, True, ('id',), 'none', None, None),
     'financeApproveDividendDecision': OperationSpec('POST', '/api/v1/finance/dividends/decisions/{id}/approve', 'finance', 'preview', 'finance.dividends:approve', False, False, ('id',), 'none', None, None),

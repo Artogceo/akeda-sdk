@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2bf281b5ab970aa70ea34a8d558e8cfe46621bb0117821f826a583418b9c7c2f).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1147ce8fd91cace2a98f2c32beca78b399266da65eb8db4376e3661a37e786b1).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -599,6 +599,7 @@ __all__ = [
     "FilesUpload",
     "FilesUploadInput",
     "FilesUploadedPart",
+    "FilesVersion",
     "FinanceAccount",
     "FinanceAccountCreate",
     "FinanceAccountPage",
@@ -1088,9 +1089,12 @@ __all__ = [
     "DocflowFlowContactStatsResponseItemsItem",
     "DocflowFlowDocumentRevisionsResponse",
     "DocflowFlowDocumentRevisionsResponseItemsItem",
+    "FilesContentLinkResponse",
+    "FilesListVersionsResponse",
     "FilesListRootsResponse",
     "FilesSearchResponse",
     "FilesCreateShortcutRequest",
+    "FilesVersionContentLinkResponse",
     "FinanceListDividendAccessUsersResponse",
     "FinanceListDividendAccessUsersResponseResultsItem",
     "FinanceListDividendAutomationRunsResponse",
@@ -3007,6 +3011,12 @@ class CalendarEvent(_CalendarEventRequired, total=False):
     booking_id: Optional["UUID"]
     occurrence_id: str
     master_event: Optional["UUID"]
+    #: Ссылка на видеовстречу (https). Поля нет, если видеовстречи нет.
+    conference_url: str
+    #: Откуда ссылка: telemost — комната Яндекс Телемоста, personal — постоянная ссылка человека, link — вставлена вручную.
+    conference_provider: Literal['telemost', 'personal', 'link']
+    #: Идентификатор конференции Яндекс Телемоста; только при conference_provider=telemost.
+    conference_id: str
 
 class _CalendarEventCreateRequired(TypedDict):
     title: str
@@ -3034,6 +3044,12 @@ class CalendarEventCreate(_CalendarEventCreateRequired, total=False):
     #: local либо `<connector UUID>/<external calendar id>`
     export_target: str
     calendar_source: str
+    #: Ссылка на видеовстречу: пусто либо абсолютный https:// без пробелов. Если поля видеовстречи не переданы, сервер применяет личную настройку «Для новых встреч»: новая комната Яндекс Телемоста или постоянная ссылка.
+    conference_url: str
+    #: Источник ссылки. telemost без ссылки — сервер заводит комнату Яндекс Телемоста от имени человека; Телемост должен быть подключён в настройках календаря. Пусто при непустой ссылке означает link.
+    conference_provider: Literal['', 'telemost', 'personal', 'link']
+    #: Идентификатор конференции Телемоста; для других источников сбрасывается.
+    conference_id: str
 
 class CalendarEventEnvelope(TypedDict):
     ok: Literal[True]
@@ -3074,6 +3090,10 @@ class CalendarEventPatch(TypedDict, total=False):
     payload: Optional[Dict[str, Any]]
     export_target: Optional[str]
     calendar_source: Optional[str]
+    #: Пустая строка убирает видеовстречу. Новая ссылка без conference_provider считается вставленной вручную (link).
+    conference_url: Optional[str]
+    conference_provider: Optional[Literal['', 'telemost', 'personal', 'link', None]]
+    conference_id: Optional[str]
 
 class CalendarEventResponseInput(TypedDict):
     response_status: Literal['needs_action', 'accepted', 'declined', 'tentative']
@@ -7632,6 +7652,24 @@ class FilesUploadedPart(TypedDict):
     number: int
     etag: str
     size: int
+
+class _FilesVersionRequired(TypedDict):
+    id: "UUID"
+    file_id: "UUID"
+    version_no: int
+    size_bytes: int
+    mime_type: str
+    #: Версия со статусом pending, scanning или infected не отдаётся
+    scan_status: Literal['pending', 'scanning', 'clean', 'infected', 'skipped', 'error']
+    preview_status: Literal['pending', 'processing', 'ready', 'unsupported', 'error']
+    text_status: Literal['pending', 'processing', 'ready', 'unsupported', 'error']
+    created_by: int
+    created_at: str
+
+class FilesVersion(_FilesVersionRequired, total=False):
+    content_sha256: str
+    scan_verdict: str
+    comment: str
 
 class _FinanceAccountRequired(TypedDict):
     id: "UUID"
@@ -12948,6 +12986,23 @@ class _DocflowFlowDocumentRevisionsResponseItemsItemRequired(TypedDict):
 class DocflowFlowDocumentRevisionsResponseItemsItem(_DocflowFlowDocumentRevisionsResponseItemsItemRequired, total=False):
     author_name: str
 
+class _FilesContentLinkResponseRequired(TypedDict):
+    url: str
+    #: true — адрес ведёт прямо в хранилище; false — на этот API, с заголовком авторизации
+    direct: bool
+    name: str
+    mime_type: str
+
+class FilesContentLinkResponse(_FilesContentLinkResponseRequired, total=False):
+    expires_at: str
+    size_bytes: int
+    version_id: "UUID"
+    #: Номер версии, содержимое которой адресуется
+    version_no: int
+
+class FilesListVersionsResponse(TypedDict):
+    versions: List["FilesVersion"]
+
 class FilesListRootsResponse(TypedDict):
     roots: List["FilesFolder"]
 
@@ -12958,6 +13013,19 @@ class FilesCreateShortcutRequest(TypedDict):
     folder_id: "UUID"
     name: str
     url: str
+
+class _FilesVersionContentLinkResponseRequired(TypedDict):
+    url: str
+    #: true — адрес ведёт прямо в хранилище; false — на этот API, с заголовком авторизации
+    direct: bool
+    name: str
+    mime_type: str
+    version_id: "UUID"
+    version_no: int
+
+class FilesVersionContentLinkResponse(_FilesVersionContentLinkResponseRequired, total=False):
+    expires_at: str
+    size_bytes: int
 
 class FinanceListDividendAccessUsersResponse(TypedDict, total=False):
     results: List["FinanceListDividendAccessUsersResponseResultsItem"]
