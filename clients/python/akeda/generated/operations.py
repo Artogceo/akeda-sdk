@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5e319aa672e15fb99dfef09b4d187f87e0a9f9ef474eaebfafc66fcb05834ec6).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2bf281b5ab970aa70ea34a8d558e8cfe46621bb0117821f826a583418b9c7c2f).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -85,13 +85,20 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'calendarUpdateBookingLink': OperationSpec('PATCH', '/api/v1/calendar/booking-links/{id}', 'calendar', 'preview', 'calendar:write', False, True, ('id',), 'none', None, None),
     'calendarUpdateConnector': OperationSpec('PATCH', '/api/v1/calendar/connectors/{id}', 'calendar', 'preview', 'calendar:write', False, True, ('id',), 'none', None, None),
     'calendarUpdateEvent': OperationSpec('PATCH', '/api/v1/calendar/events/{id}', 'calendar', 'preview', 'calendar:write', False, True, ('id',), 'none', None, None),
+    'chatAbortAttachmentUploadSession': OperationSpec('DELETE', '/api/v1/chat/upload-sessions/{sessionId}', 'chat', 'preview', 'chat:write', False, False, ('sessionId',), 'none', None, None),
     'chatChangeNotificationMode': OperationSpec('PATCH', '/api/v1/chat/conversations/{id}/notification-mode', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
     'chatClearManualUnread': OperationSpec('DELETE', '/api/v1/chat/conversations/{id}/manual-unread', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
+    'chatCreateAttachmentDownloadSession': OperationSpec('GET', '/api/v1/chat/attachments/{attachmentId}/download-session', 'chat', 'preview', 'chat:read', False, False, ('attachmentId',), 'none', None, None),
+    'chatCreateAttachmentUploadSession': OperationSpec('POST', '/api/v1/chat/conversations/{id}/upload-sessions', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
     'chatCreateGroup': OperationSpec('POST', '/api/v1/chat/conversations', 'chat', 'preview', 'chat:write', False, False, (), 'none', None, None),
     'chatEnsureDirect': OperationSpec('POST', '/api/v1/chat/conversations/direct', 'chat', 'preview', 'chat:write', False, False, (), 'none', None, None),
     'chatEnsureEntityConversation': OperationSpec('POST', '/api/v1/chat/entities/{module}/{entity}/{entityId}/conversation', 'chat', 'preview', 'chat:write', False, False, ('entity', 'entityId', 'module',), 'none', None, None),
     'chatFindEntityConversation': OperationSpec('GET', '/api/v1/chat/entities/{module}/{entity}/{entityId}/conversation', 'chat', 'preview', 'chat:read', False, False, ('entity', 'entityId', 'module',), 'none', None, None),
+    'chatFinishAttachmentUploadSession': OperationSpec('POST', '/api/v1/chat/upload-sessions/{sessionId}/finish', 'chat', 'preview', 'chat:write', False, False, ('sessionId',), 'none', None, None),
+    'chatGetAttachment': OperationSpec('GET', '/api/v1/chat/conversations/{id}/attachments/{attachmentId}', 'chat', 'preview', 'chat:read', False, False, ('attachmentId', 'id',), 'none', None, None),
+    'chatGetAttachmentUploadSession': OperationSpec('GET', '/api/v1/chat/upload-sessions/{sessionId}', 'chat', 'preview', 'chat:read', False, False, ('sessionId',), 'none', None, None),
     'chatGetConversation': OperationSpec('GET', '/api/v1/chat/conversations/{id}', 'chat', 'preview', 'chat:read', False, False, ('id',), 'none', None, None),
+    'chatListAttachments': OperationSpec('GET', '/api/v1/chat/conversations/{id}/attachments', 'chat', 'preview', 'chat:read', False, False, ('id',), 'cursor', 100, 50),
     'chatListConversationMembers': OperationSpec('GET', '/api/v1/chat/conversations/{id}/members', 'chat', 'preview', 'chat:read', False, False, ('id',), 'none', None, None),
     'chatListConversations': OperationSpec('GET', '/api/v1/chat/conversations', 'chat', 'preview', 'chat:read', False, False, (), 'cursor', 100, 50),
     'chatListMentionCandidates': OperationSpec('GET', '/api/v1/chat/conversations/{id}/mentions/candidates', 'chat', 'preview', 'chat:read', False, False, ('id',), 'none', None, None),

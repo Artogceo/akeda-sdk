@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5e319aa672e15fb99dfef09b4d187f87e0a9f9ef474eaebfafc66fcb05834ec6).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2bf281b5ab970aa70ea34a8d558e8cfe46621bb0117821f826a583418b9c7c2f).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2034,6 +2034,23 @@ export interface ChatAttachment {
   "content_url": string;
 }
 
+export interface ChatAttachmentDownloadSession {
+  /** Подписанный абсолютный URL при direct=true; иначе авторизованный относительный путь API. */
+  "url": string;
+  /** true — адрес хранилища открывается без Authorization. */
+  "direct": boolean;
+  "expires_at": string;
+  "scan_status": "clean";
+}
+
+export interface ChatAttachmentPage {
+  "items": Array<ChatForwardedAttachment>;
+  /** Следующая страница доказана прочитанной строкой за границей текущей, а не тем, что страница оказалась полной. */
+  "has_more": boolean;
+  /** Курсор следующей страницы; присутствует только вместе с has_more=true. */
+  "next_cursor"?: string;
+}
+
 export interface ChatConversation {
   "id": UUID;
   "type": "direct" | "group" | "system";
@@ -2104,6 +2121,24 @@ export interface ChatEntityConversation {
   "conversation_id": UUID;
   "title": string;
   "deep_link": string;
+}
+
+export interface ChatForwardedAttachment {
+  "id": UUID;
+  "conversation_id": UUID;
+  "message_id": string | null;
+  "original_name": string;
+  "content_type": string;
+  "size_bytes": number;
+  "sha256_hex": string;
+  "media_kind": "voice" | "video_circle" | "image" | "video" | "file";
+  "duration_ms": number | null;
+  "waveform": Array<number>;
+  "status": "quarantined" | "ready" | "failed" | "deleted";
+  "scan_status": "pending" | "clean" | "infected" | "unavailable";
+  "scan_error_code"?: string;
+  "created_at": string;
+  "content_url": string;
 }
 
 export interface ChatMember {
@@ -2220,6 +2255,48 @@ export interface ChatUnreadMention {
 
 export interface ChatUnreadMentionPage {
   "items": Array<ChatUnreadMention>;
+}
+
+export interface ChatUploadInstructions {
+  "mode": "post" | "parts" | "api";
+  "url"?: string;
+  "method"?: string;
+  "fields"?: { [key: string]: string };
+  "file_field"?: string;
+  "part_bytes"?: number;
+  "part_count"?: number;
+  "direct_urls"?: { [key: string]: string };
+  "requires_authorization"?: boolean;
+  "max_bytes": number;
+  "expires_at": string;
+}
+
+export interface ChatUploadSession {
+  "id": UUID;
+  "owner_type": "conversation";
+  "owner_id"?: UUID;
+  "name": string;
+  "mime_type": string;
+  "size_bytes": number;
+  "sha256"?: string;
+  "status": "pending" | "processing" | "attached" | "failed" | "expired";
+  "failure"?: string;
+  "failure_detail"?: string;
+  "scan_status"?: "clean" | "infected" | "skipped";
+  "scan_verdict"?: string;
+  "published_ref"?: UUID;
+  "expires_at": string;
+  "created_at": string;
+  "completed_at"?: string;
+  "upload"?: ChatUploadInstructions;
+}
+
+export interface ChatUploadSessionCreate {
+  "name": string;
+  "mime_type"?: string;
+  "size_bytes": number;
+  /** Необязательная lowercase SHA-256 сумма файла. */
+  "sha256"?: string;
 }
 
 export interface Comment {

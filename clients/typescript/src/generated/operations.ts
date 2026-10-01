@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5e319aa672e15fb99dfef09b4d187f87e0a9f9ef474eaebfafc66fcb05834ec6).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2bf281b5ab970aa70ea34a8d558e8cfe46621bb0117821f826a583418b9c7c2f).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -412,6 +412,13 @@ export interface OperationTypes {
     body: models.CalendarEventPatch;
     response: models.CalendarEventEnvelope;
   };
+  /** DELETE /api/v1/chat/upload-sessions/{sessionId} — Отменить незавершённую сессию загрузки чата */
+  chatAbortAttachmentUploadSession: {
+    params: { "sessionId": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** PATCH /api/v1/chat/conversations/{id}/notification-mode — Изменить режим уведомлений чата */
   chatChangeNotificationMode: {
     params: { "id": models.UUID };
@@ -425,6 +432,20 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.ChatReceiptState;
+  };
+  /** GET /api/v1/chat/attachments/{attachmentId}/download-session — Получить временный адрес скачивания вложения чата */
+  chatCreateAttachmentDownloadSession: {
+    params: { "attachmentId": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.ChatAttachmentDownloadSession;
+  };
+  /** POST /api/v1/chat/conversations/{id}/upload-sessions — Открыть сессию загрузки вложения чата */
+  chatCreateAttachmentUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.ChatUploadSessionCreate;
+    response: models.ChatUploadSession;
   };
   /** POST /api/v1/chat/conversations — Создать групповой чат */
   chatCreateGroup: {
@@ -454,12 +475,40 @@ export interface OperationTypes {
     body: never;
     response: models.ChatEntityConversation;
   };
+  /** POST /api/v1/chat/upload-sessions/{sessionId}/finish — Проверить и опубликовать вложение чата */
+  chatFinishAttachmentUploadSession: {
+    params: { "sessionId": models.UUID };
+    query: Record<string, never>;
+    body: models.EmptyObject;
+    response: models.ChatForwardedAttachment;
+  };
+  /** GET /api/v1/chat/conversations/{id}/attachments/{attachmentId} — Получить карточку вложения */
+  chatGetAttachment: {
+    params: { "attachmentId": models.UUID; "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.ChatForwardedAttachment;
+  };
+  /** GET /api/v1/chat/upload-sessions/{sessionId} — Получить состояние сессии загрузки чата */
+  chatGetAttachmentUploadSession: {
+    params: { "sessionId": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.ChatUploadSession;
+  };
   /** GET /api/v1/chat/conversations/{id} — Получить доступный чат */
   chatGetConversation: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.ChatConversation;
+  };
+  /** GET /api/v1/chat/conversations/{id}/attachments — Получить вложения доступного чата */
+  chatListAttachments: {
+    params: { "id": models.UUID };
+    query: { "cursor"?: string; "limit"?: number; "media_kind"?: string; "q"?: string };
+    body: never;
+    response: models.ChatAttachmentPage;
   };
   /** GET /api/v1/chat/conversations/{id}/members — Получить безопасный состав доступного чата */
   chatListConversationMembers: {
@@ -4798,13 +4847,20 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   calendarUpdateBookingLink: { method: "PATCH", path: "/api/v1/calendar/booking-links/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarUpdateConnector: { method: "PATCH", path: "/api/v1/calendar/connectors/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarUpdateEvent: { method: "PATCH", path: "/api/v1/calendar/events/{id}", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatAbortAttachmentUploadSession: { method: "DELETE", path: "/api/v1/chat/upload-sessions/{sessionId}", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatChangeNotificationMode: { method: "PATCH", path: "/api/v1/chat/conversations/{id}/notification-mode", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatClearManualUnread: { method: "DELETE", path: "/api/v1/chat/conversations/{id}/manual-unread", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatCreateAttachmentDownloadSession: { method: "GET", path: "/api/v1/chat/attachments/{attachmentId}/download-session", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatCreateAttachmentUploadSession: { method: "POST", path: "/api/v1/chat/conversations/{id}/upload-sessions", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatCreateGroup: { method: "POST", path: "/api/v1/chat/conversations", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatEnsureDirect: { method: "POST", path: "/api/v1/chat/conversations/direct", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatEnsureEntityConversation: { method: "POST", path: "/api/v1/chat/entities/{module}/{entity}/{entityId}/conversation", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatFindEntityConversation: { method: "GET", path: "/api/v1/chat/entities/{module}/{entity}/{entityId}/conversation", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatFinishAttachmentUploadSession: { method: "POST", path: "/api/v1/chat/upload-sessions/{sessionId}/finish", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatGetAttachment: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments/{attachmentId}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatGetAttachmentUploadSession: { method: "GET", path: "/api/v1/chat/upload-sessions/{sessionId}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatGetConversation: { method: "GET", path: "/api/v1/chat/conversations/{id}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatListAttachments: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "cursor", pageSizeMax: 100, pageSizeDefault: 50 },
   chatListConversationMembers: { method: "GET", path: "/api/v1/chat/conversations/{id}/members", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatListConversations: { method: "GET", path: "/api/v1/chat/conversations", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "cursor", pageSizeMax: 100, pageSizeDefault: 50 },
   chatListMentionCandidates: { method: "GET", path: "/api/v1/chat/conversations/{id}/mentions/candidates", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

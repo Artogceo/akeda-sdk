@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5e319aa672e15fb99dfef09b4d187f87e0a9f9ef474eaebfafc66fcb05834ec6).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2bf281b5ab970aa70ea34a8d558e8cfe46621bb0117821f826a583418b9c7c2f).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -2032,6 +2032,23 @@ type ChatAttachment struct {
 	ContentURL   string `json:"content_url"`
 }
 
+type ChatAttachmentDownloadSession struct {
+	// URL — Подписанный абсолютный URL при direct=true; иначе авторизованный относительный путь API.
+	URL string `json:"url"`
+	// Direct — true — адрес хранилища открывается без Authorization.
+	Direct     bool   `json:"direct"`
+	ExpiresAt  string `json:"expires_at"`
+	ScanStatus string `json:"scan_status"`
+}
+
+type ChatAttachmentPage struct {
+	Items []ChatForwardedAttachment `json:"items"`
+	// HasMore — Следующая страница доказана прочитанной строкой за границей текущей, а не тем, что страница оказалась полной.
+	HasMore bool `json:"has_more"`
+	// NextCursor — Курсор следующей страницы; присутствует только вместе с has_more=true.
+	NextCursor *string `json:"next_cursor,omitempty"`
+}
+
 type ChatConversation struct {
 	ID               UUID                          `json:"id"`
 	Type             string                        `json:"type"`
@@ -2102,6 +2119,24 @@ type ChatEntityConversation struct {
 	ConversationID UUID   `json:"conversation_id"`
 	Title          string `json:"title"`
 	DeepLink       string `json:"deep_link"`
+}
+
+type ChatForwardedAttachment struct {
+	ID             UUID    `json:"id"`
+	ConversationID UUID    `json:"conversation_id"`
+	MessageID      *string `json:"message_id"`
+	OriginalName   string  `json:"original_name"`
+	ContentType    string  `json:"content_type"`
+	SizeBytes      int64   `json:"size_bytes"`
+	Sha256Hex      string  `json:"sha256_hex"`
+	MediaKind      string  `json:"media_kind"`
+	DurationMs     *int64  `json:"duration_ms"`
+	Waveform       []int64 `json:"waveform"`
+	Status         string  `json:"status"`
+	ScanStatus     string  `json:"scan_status"`
+	ScanErrorCode  *string `json:"scan_error_code,omitempty"`
+	CreatedAt      string  `json:"created_at"`
+	ContentURL     string  `json:"content_url"`
 }
 
 type ChatMember struct {
@@ -2218,6 +2253,48 @@ type ChatUnreadMention struct {
 
 type ChatUnreadMentionPage struct {
 	Items []ChatUnreadMention `json:"items"`
+}
+
+type ChatUploadInstructions struct {
+	Mode                  string            `json:"mode"`
+	URL                   *string           `json:"url,omitempty"`
+	Method                *string           `json:"method,omitempty"`
+	Fields                map[string]string `json:"fields,omitempty"`
+	FileField             *string           `json:"file_field,omitempty"`
+	PartBytes             *int64            `json:"part_bytes,omitempty"`
+	PartCount             *int64            `json:"part_count,omitempty"`
+	DirectUrls            map[string]string `json:"direct_urls,omitempty"`
+	RequiresAuthorization *bool             `json:"requires_authorization,omitempty"`
+	MaxBytes              int64             `json:"max_bytes"`
+	ExpiresAt             string            `json:"expires_at"`
+}
+
+type ChatUploadSession struct {
+	ID            UUID                    `json:"id"`
+	OwnerType     string                  `json:"owner_type"`
+	OwnerID       *UUID                   `json:"owner_id,omitempty"`
+	Name          string                  `json:"name"`
+	MimeType      string                  `json:"mime_type"`
+	SizeBytes     int64                   `json:"size_bytes"`
+	Sha256        *string                 `json:"sha256,omitempty"`
+	Status        string                  `json:"status"`
+	Failure       *string                 `json:"failure,omitempty"`
+	FailureDetail *string                 `json:"failure_detail,omitempty"`
+	ScanStatus    *string                 `json:"scan_status,omitempty"`
+	ScanVerdict   *string                 `json:"scan_verdict,omitempty"`
+	PublishedRef  *UUID                   `json:"published_ref,omitempty"`
+	ExpiresAt     string                  `json:"expires_at"`
+	CreatedAt     string                  `json:"created_at"`
+	CompletedAt   *string                 `json:"completed_at,omitempty"`
+	Upload        *ChatUploadInstructions `json:"upload,omitempty"`
+}
+
+type ChatUploadSessionCreate struct {
+	Name      string  `json:"name"`
+	MimeType  *string `json:"mime_type,omitempty"`
+	SizeBytes int64   `json:"size_bytes"`
+	// Sha256 — Необязательная lowercase SHA-256 сумма файла.
+	Sha256 *string `json:"sha256,omitempty"`
 }
 
 type Comment struct {

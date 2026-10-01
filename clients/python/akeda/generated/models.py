@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5e319aa672e15fb99dfef09b4d187f87e0a9f9ef474eaebfafc66fcb05834ec6).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2bf281b5ab970aa70ea34a8d558e8cfe46621bb0117821f826a583418b9c7c2f).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -195,6 +195,8 @@ __all__ = [
     "CalendarSlotPage",
     "CalendarSyncResult",
     "ChatAttachment",
+    "ChatAttachmentDownloadSession",
+    "ChatAttachmentPage",
     "ChatConversation",
     "ChatConversationCapabilities",
     "ChatConversationPage",
@@ -203,6 +205,7 @@ __all__ = [
     "ChatEnsureDirect",
     "ChatEnsureDirectResult",
     "ChatEntityConversation",
+    "ChatForwardedAttachment",
     "ChatMember",
     "ChatMemberPage",
     "ChatMentionCandidate",
@@ -223,6 +226,9 @@ __all__ = [
     "ChatSendMessageResult",
     "ChatUnreadMention",
     "ChatUnreadMentionPage",
+    "ChatUploadInstructions",
+    "ChatUploadSession",
+    "ChatUploadSessionCreate",
     "Comment",
     "CommentCreate",
     "CommentList",
@@ -3164,6 +3170,23 @@ class ChatAttachment(TypedDict):
     duration_ms: int
     content_url: str
 
+class ChatAttachmentDownloadSession(TypedDict):
+    #: Подписанный абсолютный URL при direct=true; иначе авторизованный относительный путь API.
+    url: str
+    #: true — адрес хранилища открывается без Authorization.
+    direct: bool
+    expires_at: str
+    scan_status: Literal['clean']
+
+class _ChatAttachmentPageRequired(TypedDict):
+    items: List["ChatForwardedAttachment"]
+    #: Следующая страница доказана прочитанной строкой за границей текущей, а не тем, что страница оказалась полной.
+    has_more: bool
+
+class ChatAttachmentPage(_ChatAttachmentPageRequired, total=False):
+    #: Курсор следующей страницы; присутствует только вместе с has_more=true.
+    next_cursor: str
+
 class _ChatConversationRequired(TypedDict):
     id: "UUID"
     type: Literal['direct', 'group', 'system']
@@ -3233,6 +3256,25 @@ class ChatEntityConversation(TypedDict):
     conversation_id: "UUID"
     title: str
     deep_link: str
+
+class _ChatForwardedAttachmentRequired(TypedDict):
+    id: "UUID"
+    conversation_id: "UUID"
+    message_id: Optional[str]
+    original_name: str
+    content_type: str
+    size_bytes: int
+    sha256_hex: str
+    media_kind: Literal['voice', 'video_circle', 'image', 'video', 'file']
+    duration_ms: Optional[int]
+    waveform: List[int]
+    status: Literal['quarantined', 'ready', 'failed', 'deleted']
+    scan_status: Literal['pending', 'clean', 'infected', 'unavailable']
+    created_at: str
+    content_url: str
+
+class ChatForwardedAttachment(_ChatForwardedAttachmentRequired, total=False):
+    scan_error_code: str
 
 class ChatMember(TypedDict):
     user_id: int
@@ -3335,6 +3377,51 @@ class ChatUnreadMention(TypedDict):
 
 class ChatUnreadMentionPage(TypedDict):
     items: List["ChatUnreadMention"]
+
+class _ChatUploadInstructionsRequired(TypedDict):
+    mode: Literal['post', 'parts', 'api']
+    max_bytes: int
+    expires_at: str
+
+class ChatUploadInstructions(_ChatUploadInstructionsRequired, total=False):
+    url: str
+    method: str
+    fields: Dict[str, str]
+    file_field: str
+    part_bytes: int
+    part_count: int
+    direct_urls: Dict[str, str]
+    requires_authorization: bool
+
+class _ChatUploadSessionRequired(TypedDict):
+    id: "UUID"
+    owner_type: Literal['conversation']
+    name: str
+    mime_type: str
+    size_bytes: int
+    status: Literal['pending', 'processing', 'attached', 'failed', 'expired']
+    expires_at: str
+    created_at: str
+
+class ChatUploadSession(_ChatUploadSessionRequired, total=False):
+    owner_id: "UUID"
+    sha256: str
+    failure: str
+    failure_detail: str
+    scan_status: Literal['clean', 'infected', 'skipped']
+    scan_verdict: str
+    published_ref: "UUID"
+    completed_at: str
+    upload: "ChatUploadInstructions"
+
+class _ChatUploadSessionCreateRequired(TypedDict):
+    name: str
+    size_bytes: int
+
+class ChatUploadSessionCreate(_ChatUploadSessionCreateRequired, total=False):
+    mime_type: str
+    #: Необязательная lowercase SHA-256 сумма файла.
+    sha256: str
 
 class Comment(TypedDict):
     id: "UUID"

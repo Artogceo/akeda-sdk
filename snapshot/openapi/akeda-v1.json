@@ -40693,6 +40693,455 @@
         }
       }
     },
+    "/api/v1/chat/conversations/{id}/attachments": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ChatConversationID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "operationId": "chatListAttachments",
+        "summary": "Получить вложения доступного чата",
+        "description": "Указатель вложений беседы. Отдаются только вложения из видимой участнику части истории;\nдля этого нужна capability скачивания файлов, а не просто чтение чата. Удалённые сообщения\nи вложения, снятые антивирусом, не возвращаются ни списком, ни поиском.\nСтраница идёт от свежих к старым; следующая берётся непрозрачным `cursor` из `next_cursor`.\n",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "chat",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "chat:read",
+        "parameters": [
+          {
+            "name": "media_kind",
+            "in": "query",
+            "description": "Фильтр по типу вложения. Принимает перечень через запятую: media_kind=image,video,video_circle.",
+            "schema": {
+              "type": "string",
+              "example": "image,video,video_circle"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "description": "Поиск по имени файла: до 16 слов и 256 знаков, регистр и е/ё не важны, синтаксис полнотекстового запроса не исполняется.",
+            "schema": {
+              "type": "string",
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Непрозрачный курсор следующей страницы из next_cursor предыдущего ответа.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Вложения чата",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatAttachmentPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/chat/conversations/{id}/attachments/{attachmentId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ChatConversationID"
+        },
+        {
+          "$ref": "#/components/parameters/ChatAttachmentID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "operationId": "chatGetAttachment",
+        "summary": "Получить карточку вложения",
+        "description": "Отдаёт метаданные и статус проверки. Некорректный id вложения не отличается от отсутствующего и даёт 404.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "chat",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "chat:read",
+        "responses": {
+          "200": {
+            "description": "Карточка вложения",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatForwardedAttachment"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/chat/conversations/{id}/upload-sessions": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ChatConversationID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "operationId": "chatCreateAttachmentUploadSession",
+        "summary": "Открыть сессию загрузки вложения чата",
+        "description": "Проверяет право прикреплять файл и квоту кабинета до выдачи адреса. Байты идут напрямую в хранилище: post — один multipart POST, parts — PUT частей, api — запасной авторизованный путь только для клиента. После отправки байтов вызовите finish.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "chat",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "chat:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatUploadSessionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Сессия и инструкции загрузки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatUploadSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "413": {
+            "description": "Файл больше 100 MiB"
+          },
+          "503": {
+            "description": "Прямая загрузка временно не подключена"
+          }
+        }
+      }
+    },
+    "/api/v1/chat/upload-sessions/{sessionId}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "name": "sessionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "operationId": "chatGetAttachmentUploadSession",
+        "summary": "Получить состояние сессии загрузки чата",
+        "description": "Возвращает состояние только автору сессии и не раскрывает ключи хранилища.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "chat",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "chat:read",
+        "responses": {
+          "200": {
+            "description": "Состояние сессии автора",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatUploadSession"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Chat"
+        ],
+        "operationId": "chatAbortAttachmentUploadSession",
+        "summary": "Отменить незавершённую сессию загрузки чата",
+        "description": "Удаляет временные байты и отменяет только незавершённую сессию её автора.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "chat",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "chat:write",
+        "responses": {
+          "204": {
+            "description": "Сессия и временные байты удалены"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/chat/upload-sessions/{sessionId}/finish": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "name": "sessionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "operationId": "chatFinishAttachmentUploadSession",
+        "summary": "Проверить и опубликовать вложение чата",
+        "description": "Повторно проверяет право, размер, контрольную сумму и антивирус. Только чистый файл становится ready и может передаваться в attachment_ids сообщения; повтор finish возвращает тот же результат.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "chat",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "chat:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmptyObject"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Вложение, готовое для attachment_ids",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatForwardedAttachment"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "description": "Файл не прошёл проверку"
+          },
+          "503": {
+            "description": "Антивирус временно недоступен"
+          }
+        }
+      }
+    },
+    "/api/v1/chat/attachments/{attachmentId}/download-session": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ChatAttachmentID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "operationId": "chatCreateAttachmentDownloadSession",
+        "summary": "Получить временный адрес скачивания вложения чата",
+        "description": "Повторно проверяет доступ к видимой части беседы и выдаёт подписанный адрес на 15 минут. Если хранилище не поддерживает подпись, direct=false и адрес ведёт в авторизованный API.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "chat",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "chat:read",
+        "responses": {
+          "200": {
+            "description": "Временный адрес",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatAttachmentDownloadSession"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/v1/automation/manifest": {
       "get": {
         "tags": [
@@ -49949,6 +50398,14 @@
           "$ref": "#/components/schemas/UUID"
         }
       },
+      "ChatAttachmentID": {
+        "name": "attachmentId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "$ref": "#/components/schemas/UUID"
+        }
+      },
       "CoreDictionaryID": {
         "name": "id",
         "in": "path",
@@ -58831,6 +59288,114 @@
           },
           "created": {
             "type": "boolean"
+          }
+        }
+      },
+      "ChatForwardedAttachment": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "conversation_id",
+          "message_id",
+          "original_name",
+          "content_type",
+          "size_bytes",
+          "sha256_hex",
+          "media_kind",
+          "duration_ms",
+          "waveform",
+          "status",
+          "scan_status",
+          "created_at",
+          "content_url"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "conversation_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "message_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "original_name": {
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 104857600
+          },
+          "sha256_hex": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "media_kind": {
+            "type": "string",
+            "enum": [
+              "voice",
+              "video_circle",
+              "image",
+              "video",
+              "file"
+            ]
+          },
+          "duration_ms": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "minimum": 0,
+            "maximum": 600000
+          },
+          "waveform": {
+            "type": "array",
+            "maxItems": 64,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "quarantined",
+              "ready",
+              "failed",
+              "deleted"
+            ]
+          },
+          "scan_status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "clean",
+              "infected",
+              "unavailable"
+            ]
+          },
+          "scan_error_code": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "content_url": {
+            "type": "string",
+            "example": "/api/v1/chat/attachments/00000000-0000-0000-0000-000000000001/content"
           }
         }
       },
@@ -86283,6 +86848,235 @@
             "items": {
               "$ref": "#/components/schemas/FinanceAccountableBalance"
             }
+          }
+        }
+      },
+      "ChatAttachmentPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "has_more"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/ChatForwardedAttachment"
+            }
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Следующая страница доказана прочитанной строкой за границей текущей, а не тем, что страница оказалась полной."
+          },
+          "next_cursor": {
+            "type": "string",
+            "description": "Курсор следующей страницы; присутствует только вместе с has_more=true."
+          }
+        }
+      },
+      "ChatUploadSessionCreate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "size_bytes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "mime_type": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "size_bytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 104857600
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "Необязательная lowercase SHA-256 сумма файла."
+          }
+        }
+      },
+      "ChatUploadInstructions": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "max_bytes",
+          "expires_at"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "post",
+              "parts",
+              "api"
+            ]
+          },
+          "url": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "file_field": {
+            "type": "string"
+          },
+          "part_bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "part_count": {
+            "type": "integer"
+          },
+          "direct_urls": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "requires_authorization": {
+            "type": "boolean"
+          },
+          "max_bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ChatUploadSession": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "owner_type",
+          "name",
+          "mime_type",
+          "size_bytes",
+          "status",
+          "expires_at",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "owner_type": {
+            "type": "string",
+            "enum": [
+              "conversation"
+            ]
+          },
+          "owner_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "name": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "processing",
+              "attached",
+              "failed",
+              "expired"
+            ]
+          },
+          "failure": {
+            "type": "string"
+          },
+          "failure_detail": {
+            "type": "string"
+          },
+          "scan_status": {
+            "type": "string",
+            "enum": [
+              "clean",
+              "infected",
+              "skipped"
+            ]
+          },
+          "scan_verdict": {
+            "type": "string"
+          },
+          "published_ref": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "upload": {
+            "$ref": "#/components/schemas/ChatUploadInstructions"
+          }
+        }
+      },
+      "ChatAttachmentDownloadSession": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "direct",
+          "expires_at",
+          "scan_status"
+        ],
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Подписанный абсолютный URL при direct=true; иначе авторизованный относительный путь API."
+          },
+          "direct": {
+            "type": "boolean",
+            "description": "true — адрес хранилища открывается без Authorization."
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scan_status": {
+            "type": "string",
+            "enum": [
+              "clean"
+            ]
           }
         }
       },
