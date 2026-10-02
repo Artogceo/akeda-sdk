@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0d54cb24f092de6bf19d8e83bbfebc6a2f6246575c5d076fd9807fdf45f07f51).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a71c550d68dfd2f80dce68689680e0b49e026c805b95de02ef7a8f539eb1fa01).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -87,6 +87,8 @@ __all__ = [
     "CRMCreateEventLinkInput",
     "CRMCreateTaskLinkInput",
     "CRMCustomer",
+    "CRMCustomerChannel",
+    "CRMCustomerChannelInput",
     "CRMCustomerDuplicate",
     "CRMCustomerInput",
     "CRMCustomerPatch",
@@ -2004,10 +2006,14 @@ class _CRMCustomerRequired(TypedDict):
     inn: str
     #: КПП в верхнем регистре; бывает только при ИНН из 10 цифр
     kpp: str
+    #: Основной телефон — значение основного канала phone
     phone: str
+    #: Основная почта — значение основного канала email
     email: str
     #: Ник или номер клиента по мессенджерам
     messengers: Optional[Dict[str, str]]
+    #: Все телефоны, почты и мессенджеры клиента
+    channels: List["CRMCustomerChannel"]
     tags: Optional[List[str]]
     source: str
     note: str
@@ -2025,6 +2031,30 @@ class CRMCustomer(_CRMCustomerRequired, total=False):
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
 
+class _CRMCustomerChannelRequired(TypedDict):
+    kind: Literal['phone', 'email', 'messenger']
+    #: Значение, как его ввели
+    value: str
+    #: Вид для сравнения: телефон цифрами с кодом страны, почта и ник в нижнем регистре
+    normalized: str
+    #: Основной канал своего вида; он уходит в справочник контрагентов ERP
+    primary: bool
+
+class CRMCustomerChannel(_CRMCustomerChannelRequired, total=False):
+    #: Сеть мессенджера: telegram, whatsapp, max, vk и т. п.; у телефона и почты не передаётся
+    network: str
+
+class _CRMCustomerChannelInputRequired(TypedDict):
+    kind: Literal['phone', 'email', 'messenger']
+    #: Телефон в любом формате, адрес почты или ник
+    value: str
+
+class CRMCustomerChannelInput(_CRMCustomerChannelInputRequired, total=False):
+    #: Сеть мессенджера; обязательна для messenger
+    network: str
+    #: Основной канал своего вида; без отметки основным становится первый
+    primary: bool
+
 class _CRMCustomerDuplicateRequired(TypedDict):
     id: "UUID"
     kind: Literal['person', 'company', 'sole_prop']
@@ -2034,17 +2064,21 @@ class _CRMCustomerDuplicateRequired(TypedDict):
     inn: str
     #: КПП в верхнем регистре; бывает только при ИНН из 10 цифр
     kpp: str
+    #: Основной телефон — значение основного канала phone
     phone: str
+    #: Основная почта — значение основного канала email
     email: str
     #: Ник или номер клиента по мессенджерам
     messengers: Optional[Dict[str, str]]
+    #: Все телефоны, почты и мессенджеры клиента
+    channels: List["CRMCustomerChannel"]
     tags: Optional[List[str]]
     source: str
     note: str
     open_deals: int
     created_at: str
     updated_at: str
-    matched_by: Literal['inn', 'phone', 'name']
+    matched_by: Literal['inn', 'phone', 'email', 'name']
 
 class CRMCustomerDuplicate(_CRMCustomerDuplicateRequired, total=False):
     owner_id: int
@@ -2066,9 +2100,14 @@ class CRMCustomerInput(_CRMCustomerInputRequired, total=False):
     inn: str
     #: КПП: девять знаков, только вместе с ИНН из 10 цифр
     kpp: str
+    #: Телефон; несколько номеров можно перечислить через запятую. Не читается, если передан channels
     phone: str
+    #: Почта; не читается, если передан channels
     email: str
+    #: Мессенджеры объектом «сеть → ник»; не читаются, если передан channels
     messengers: Optional[Dict[str, str]]
+    #: Полный список каналов связи; главнее полей phone, email и messengers
+    channels: Optional[List["CRMCustomerChannelInput"]]
     tags: Optional[List[str]]
     source: str
     owner_id: Optional[int]
@@ -2084,9 +2123,14 @@ class CRMCustomerPatch(TypedDict, total=False):
     inn: str
     #: Пустая строка стирает КПП
     kpp: str
+    #: Заменяет основной телефон, остальные номера остаются; пустая строка снимает основной
     phone: str
+    #: Заменяет основную почту, остальные адреса остаются; пустая строка снимает основную
     email: str
+    #: Заменяет все мессенджеры клиента
     messengers: Optional[Dict[str, str]]
+    #: Заменяет список каналов целиком; поля phone, email и messengers при этом не читаются
+    channels: Optional[List["CRMCustomerChannelInput"]]
     tags: Optional[List[str]]
     source: str
     owner_id: Optional[int]

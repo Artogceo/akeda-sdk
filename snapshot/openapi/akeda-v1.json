@@ -28499,7 +28499,7 @@
         ],
         "operationId": "crmFindCustomerDuplicates",
         "summary": "Найти похожие карточки клиента",
-        "description": "Проверка перед созданием: совпадение по ИНН (с КПП, если он передан), хвосту телефона или имени. Найденные идут по силе признака.",
+        "description": "Проверка перед созданием: совпадение по ИНН (с КПП, если он передан), хвосту телефона, почте или имени. Телефон и почта сравниваются со всеми каналами клиента, а не только с основными. Найденные идут по силе признака.",
         "security": [
           {
             "erpUserToken": []
@@ -28546,6 +28546,14 @@
             "name": "kpp",
             "in": "query",
             "description": "КПП; сужает совпадение по ИНН до конкретного подразделения",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "description": "Почта; сравнивается без учёта регистра",
             "schema": {
               "type": "string"
             }
@@ -79930,6 +79938,74 @@
           }
         }
       },
+      "CRMCustomerChannel": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "value",
+          "normalized",
+          "primary"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "email",
+              "messenger"
+            ]
+          },
+          "network": {
+            "type": "string",
+            "description": "Сеть мессенджера: telegram, whatsapp, max, vk и т. п.; у телефона и почты не передаётся"
+          },
+          "value": {
+            "type": "string",
+            "description": "Значение, как его ввели"
+          },
+          "normalized": {
+            "type": "string",
+            "description": "Вид для сравнения: телефон цифрами с кодом страны, почта и ник в нижнем регистре"
+          },
+          "primary": {
+            "type": "boolean",
+            "description": "Основной канал своего вида; он уходит в справочник контрагентов ERP"
+          }
+        }
+      },
+      "CRMCustomerChannelInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "value"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "email",
+              "messenger"
+            ]
+          },
+          "network": {
+            "type": "string",
+            "description": "Сеть мессенджера; обязательна для messenger"
+          },
+          "value": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "description": "Телефон в любом формате, адрес почты или ник"
+          },
+          "primary": {
+            "type": "boolean",
+            "description": "Основной канал своего вида; без отметки основным становится первый"
+          }
+        }
+      },
       "CRMCustomer": {
         "type": "object",
         "additionalProperties": false,
@@ -79943,6 +80019,7 @@
           "phone",
           "email",
           "messengers",
+          "channels",
           "tags",
           "source",
           "note",
@@ -79977,10 +80054,12 @@
             "description": "КПП в верхнем регистре; бывает только при ИНН из 10 цифр"
           },
           "phone": {
-            "type": "string"
+            "type": "string",
+            "description": "Основной телефон — значение основного канала phone"
           },
           "email": {
-            "type": "string"
+            "type": "string",
+            "description": "Основная почта — значение основного канала email"
           },
           "messengers": {
             "type": [
@@ -79991,6 +80070,13 @@
               "type": "string"
             },
             "description": "Ник или номер клиента по мессенджерам"
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CRMCustomerChannel"
+            },
+            "description": "Все телефоны, почты и мессенджеры клиента"
           },
           "tags": {
             "type": [
@@ -80081,10 +80167,12 @@
             "description": "КПП: девять знаков, только вместе с ИНН из 10 цифр"
           },
           "phone": {
-            "type": "string"
+            "type": "string",
+            "description": "Телефон; несколько номеров можно перечислить через запятую. Не читается, если передан channels"
           },
           "email": {
-            "type": "string"
+            "type": "string",
+            "description": "Почта; не читается, если передан channels"
           },
           "messengers": {
             "type": [
@@ -80093,7 +80181,19 @@
             ],
             "additionalProperties": {
               "type": "string"
-            }
+            },
+            "description": "Мессенджеры объектом «сеть → ник»; не читаются, если передан channels"
+          },
+          "channels": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "maxItems": 30,
+            "items": {
+              "$ref": "#/components/schemas/CRMCustomerChannelInput"
+            },
+            "description": "Полный список каналов связи; главнее полей phone, email и messengers"
           },
           "tags": {
             "type": [
@@ -80155,10 +80255,12 @@
             "description": "Пустая строка стирает КПП"
           },
           "phone": {
-            "type": "string"
+            "type": "string",
+            "description": "Заменяет основной телефон, остальные номера остаются; пустая строка снимает основной"
           },
           "email": {
-            "type": "string"
+            "type": "string",
+            "description": "Заменяет основную почту, остальные адреса остаются; пустая строка снимает основную"
           },
           "messengers": {
             "type": [
@@ -80167,7 +80269,19 @@
             ],
             "additionalProperties": {
               "type": "string"
-            }
+            },
+            "description": "Заменяет все мессенджеры клиента"
+          },
+          "channels": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "maxItems": 30,
+            "items": {
+              "$ref": "#/components/schemas/CRMCustomerChannelInput"
+            },
+            "description": "Заменяет список каналов целиком; поля phone, email и messengers при этом не читаются"
           },
           "tags": {
             "type": [
@@ -80220,6 +80334,7 @@
                 "enum": [
                   "inn",
                   "phone",
+                  "email",
                   "name"
                 ]
               }

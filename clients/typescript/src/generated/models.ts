@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0d54cb24f092de6bf19d8e83bbfebc6a2f6246575c5d076fd9807fdf45f07f51).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a71c550d68dfd2f80dce68689680e0b49e026c805b95de02ef7a8f539eb1fa01).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -807,10 +807,14 @@ export interface CRMCustomer {
   "inn": string;
   /** КПП в верхнем регистре; бывает только при ИНН из 10 цифр */
   "kpp": string;
+  /** Основной телефон — значение основного канала phone */
   "phone": string;
+  /** Основная почта — значение основного канала email */
   "email": string;
   /** Ник или номер клиента по мессенджерам */
   "messengers": { [key: string]: string } | null;
+  /** Все телефоны, почты и мессенджеры клиента */
+  "channels": Array<CRMCustomerChannel>;
   "tags": Array<string> | null;
   "source": string;
   "owner_id"?: number;
@@ -825,6 +829,28 @@ export interface CRMCustomer {
   "custom"?: { [key: string]: unknown } | null;
   "created_at": string;
   "updated_at": string;
+}
+
+export interface CRMCustomerChannel {
+  "kind": "phone" | "email" | "messenger";
+  /** Сеть мессенджера: telegram, whatsapp, max, vk и т. п.; у телефона и почты не передаётся */
+  "network"?: string;
+  /** Значение, как его ввели */
+  "value": string;
+  /** Вид для сравнения: телефон цифрами с кодом страны, почта и ник в нижнем регистре */
+  "normalized": string;
+  /** Основной канал своего вида; он уходит в справочник контрагентов ERP */
+  "primary": boolean;
+}
+
+export interface CRMCustomerChannelInput {
+  "kind": "phone" | "email" | "messenger";
+  /** Сеть мессенджера; обязательна для messenger */
+  "network"?: string;
+  /** Телефон в любом формате, адрес почты или ник */
+  "value": string;
+  /** Основной канал своего вида; без отметки основным становится первый */
+  "primary"?: boolean;
 }
 
 export interface CRMCustomerDuplicate {
@@ -836,10 +862,14 @@ export interface CRMCustomerDuplicate {
   "inn": string;
   /** КПП в верхнем регистре; бывает только при ИНН из 10 цифр */
   "kpp": string;
+  /** Основной телефон — значение основного канала phone */
   "phone": string;
+  /** Основная почта — значение основного канала email */
   "email": string;
   /** Ник или номер клиента по мессенджерам */
   "messengers": { [key: string]: string } | null;
+  /** Все телефоны, почты и мессенджеры клиента */
+  "channels": Array<CRMCustomerChannel>;
   "tags": Array<string> | null;
   "source": string;
   "owner_id"?: number;
@@ -854,7 +884,7 @@ export interface CRMCustomerDuplicate {
   "custom"?: { [key: string]: unknown } | null;
   "created_at": string;
   "updated_at": string;
-  "matched_by": "inn" | "phone" | "name";
+  "matched_by": "inn" | "phone" | "email" | "name";
 }
 
 export interface CRMCustomerInput {
@@ -865,9 +895,14 @@ export interface CRMCustomerInput {
   "inn"?: string;
   /** КПП: девять знаков, только вместе с ИНН из 10 цифр */
   "kpp"?: string;
+  /** Телефон; несколько номеров можно перечислить через запятую. Не читается, если передан channels */
   "phone"?: string;
+  /** Почта; не читается, если передан channels */
   "email"?: string;
+  /** Мессенджеры объектом «сеть → ник»; не читаются, если передан channels */
   "messengers"?: { [key: string]: string } | null;
+  /** Полный список каналов связи; главнее полей phone, email и messengers */
+  "channels"?: Array<CRMCustomerChannelInput> | null;
   "tags"?: Array<string> | null;
   "source"?: string;
   "owner_id"?: number | null;
@@ -884,9 +919,14 @@ export interface CRMCustomerPatch {
   "inn"?: string;
   /** Пустая строка стирает КПП */
   "kpp"?: string;
+  /** Заменяет основной телефон, остальные номера остаются; пустая строка снимает основной */
   "phone"?: string;
+  /** Заменяет основную почту, остальные адреса остаются; пустая строка снимает основную */
   "email"?: string;
+  /** Заменяет все мессенджеры клиента */
   "messengers"?: { [key: string]: string } | null;
+  /** Заменяет список каналов целиком; поля phone, email и messengers при этом не читаются */
+  "channels"?: Array<CRMCustomerChannelInput> | null;
   "tags"?: Array<string> | null;
   "source"?: string;
   "owner_id"?: number | null;

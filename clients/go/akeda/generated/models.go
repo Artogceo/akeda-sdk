@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0d54cb24f092de6bf19d8e83bbfebc6a2f6246575c5d076fd9807fdf45f07f51).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a71c550d68dfd2f80dce68689680e0b49e026c805b95de02ef7a8f539eb1fa01).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -804,17 +804,21 @@ type CRMCustomer struct {
 	// INN — ИНН без пробелов; пустая строка - не указан
 	INN string `json:"inn"`
 	// KPP — КПП в верхнем регистре; бывает только при ИНН из 10 цифр
-	KPP   string `json:"kpp"`
+	KPP string `json:"kpp"`
+	// Phone — Основной телефон — значение основного канала phone
 	Phone string `json:"phone"`
+	// Email — Основная почта — значение основного канала email
 	Email string `json:"email"`
 	// Messengers — Ник или номер клиента по мессенджерам
-	Messengers    map[string]string `json:"messengers"`
-	Tags          []string          `json:"tags"`
-	Source        string            `json:"source"`
-	OwnerID       *int64            `json:"owner_id,omitempty"`
-	OwnerName     *string           `json:"owner_name,omitempty"`
-	Note          string            `json:"note"`
-	CoreContactID *UUID             `json:"core_contact_id,omitempty"`
+	Messengers map[string]string `json:"messengers"`
+	// Channels — Все телефоны, почты и мессенджеры клиента
+	Channels      []CRMCustomerChannel `json:"channels"`
+	Tags          []string             `json:"tags"`
+	Source        string               `json:"source"`
+	OwnerID       *int64               `json:"owner_id,omitempty"`
+	OwnerName     *string              `json:"owner_name,omitempty"`
+	Note          string               `json:"note"`
+	CoreContactID *UUID                `json:"core_contact_id,omitempty"`
 	// PromotedAt — Момент переноса в справочник контрагентов ERP
 	PromotedAt *string `json:"promoted_at,omitempty"`
 	ArchivedAt *string `json:"archived_at,omitempty"`
@@ -825,6 +829,28 @@ type CRMCustomer struct {
 	UpdatedAt string                     `json:"updated_at"`
 }
 
+type CRMCustomerChannel struct {
+	Kind string `json:"kind"`
+	// Network — Сеть мессенджера: telegram, whatsapp, max, vk и т. п.; у телефона и почты не передаётся
+	Network *string `json:"network,omitempty"`
+	// Value — Значение, как его ввели
+	Value string `json:"value"`
+	// Normalized — Вид для сравнения: телефон цифрами с кодом страны, почта и ник в нижнем регистре
+	Normalized string `json:"normalized"`
+	// Primary — Основной канал своего вида; он уходит в справочник контрагентов ERP
+	Primary bool `json:"primary"`
+}
+
+type CRMCustomerChannelInput struct {
+	Kind string `json:"kind"`
+	// Network — Сеть мессенджера; обязательна для messenger
+	Network *string `json:"network,omitempty"`
+	// Value — Телефон в любом формате, адрес почты или ник
+	Value string `json:"value"`
+	// Primary — Основной канал своего вида; без отметки основным становится первый
+	Primary *bool `json:"primary,omitempty"`
+}
+
 type CRMCustomerDuplicate struct {
 	ID        UUID   `json:"id"`
 	Kind      string `json:"kind"`
@@ -833,17 +859,21 @@ type CRMCustomerDuplicate struct {
 	// INN — ИНН без пробелов; пустая строка - не указан
 	INN string `json:"inn"`
 	// KPP — КПП в верхнем регистре; бывает только при ИНН из 10 цифр
-	KPP   string `json:"kpp"`
+	KPP string `json:"kpp"`
+	// Phone — Основной телефон — значение основного канала phone
 	Phone string `json:"phone"`
+	// Email — Основная почта — значение основного канала email
 	Email string `json:"email"`
 	// Messengers — Ник или номер клиента по мессенджерам
-	Messengers    map[string]string `json:"messengers"`
-	Tags          []string          `json:"tags"`
-	Source        string            `json:"source"`
-	OwnerID       *int64            `json:"owner_id,omitempty"`
-	OwnerName     *string           `json:"owner_name,omitempty"`
-	Note          string            `json:"note"`
-	CoreContactID *UUID             `json:"core_contact_id,omitempty"`
+	Messengers map[string]string `json:"messengers"`
+	// Channels — Все телефоны, почты и мессенджеры клиента
+	Channels      []CRMCustomerChannel `json:"channels"`
+	Tags          []string             `json:"tags"`
+	Source        string               `json:"source"`
+	OwnerID       *int64               `json:"owner_id,omitempty"`
+	OwnerName     *string              `json:"owner_name,omitempty"`
+	Note          string               `json:"note"`
+	CoreContactID *UUID                `json:"core_contact_id,omitempty"`
 	// PromotedAt — Момент переноса в справочник контрагентов ERP
 	PromotedAt *string `json:"promoted_at,omitempty"`
 	ArchivedAt *string `json:"archived_at,omitempty"`
@@ -862,14 +892,19 @@ type CRMCustomerInput struct {
 	// INN — ИНН: 10 цифр у организации, 12 у предпринимателя, с верной контрольной цифрой
 	INN *string `json:"inn,omitempty"`
 	// KPP — КПП: девять знаков, только вместе с ИНН из 10 цифр
-	KPP        *string           `json:"kpp,omitempty"`
-	Phone      *string           `json:"phone,omitempty"`
-	Email      *string           `json:"email,omitempty"`
+	KPP *string `json:"kpp,omitempty"`
+	// Phone — Телефон; несколько номеров можно перечислить через запятую. Не читается, если передан channels
+	Phone *string `json:"phone,omitempty"`
+	// Email — Почта; не читается, если передан channels
+	Email *string `json:"email,omitempty"`
+	// Messengers — Мессенджеры объектом «сеть → ник»; не читаются, если передан channels
 	Messengers map[string]string `json:"messengers,omitempty"`
-	Tags       []string          `json:"tags,omitempty"`
-	Source     *string           `json:"source,omitempty"`
-	OwnerID    *int64            `json:"owner_id,omitempty"`
-	Note       *string           `json:"note,omitempty"`
+	// Channels — Полный список каналов связи; главнее полей phone, email и messengers
+	Channels []CRMCustomerChannelInput `json:"channels,omitempty"`
+	Tags     []string                  `json:"tags,omitempty"`
+	Source   *string                   `json:"source,omitempty"`
+	OwnerID  *int64                    `json:"owner_id,omitempty"`
+	Note     *string                   `json:"note,omitempty"`
 	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
 	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
@@ -881,15 +916,20 @@ type CRMCustomerPatch struct {
 	// INN — Пустая строка стирает ИНН
 	INN *string `json:"inn,omitempty"`
 	// KPP — Пустая строка стирает КПП
-	KPP        *string           `json:"kpp,omitempty"`
-	Phone      *string           `json:"phone,omitempty"`
-	Email      *string           `json:"email,omitempty"`
+	KPP *string `json:"kpp,omitempty"`
+	// Phone — Заменяет основной телефон, остальные номера остаются; пустая строка снимает основной
+	Phone *string `json:"phone,omitempty"`
+	// Email — Заменяет основную почту, остальные адреса остаются; пустая строка снимает основную
+	Email *string `json:"email,omitempty"`
+	// Messengers — Заменяет все мессенджеры клиента
 	Messengers map[string]string `json:"messengers,omitempty"`
-	Tags       []string          `json:"tags,omitempty"`
-	Source     *string           `json:"source,omitempty"`
-	OwnerID    *int64            `json:"owner_id,omitempty"`
-	Note       *string           `json:"note,omitempty"`
-	Archived   *bool             `json:"archived,omitempty"`
+	// Channels — Заменяет список каналов целиком; поля phone, email и messengers при этом не читаются
+	Channels []CRMCustomerChannelInput `json:"channels,omitempty"`
+	Tags     []string                  `json:"tags,omitempty"`
+	Source   *string                   `json:"source,omitempty"`
+	OwnerID  *int64                    `json:"owner_id,omitempty"`
+	Note     *string                   `json:"note,omitempty"`
+	Archived *bool                     `json:"archived,omitempty"`
 	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
 	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
