@@ -12744,6 +12744,90 @@ paths:
                 $ref: '#/components/schemas/Error'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/orders/{id}/advance-offer:
+    get:
+      tags:
+        - Finance settlements
+      operationId: financeOrderAdvanceOffer
+      summary: Свободные авансы для зачёта по заказу
+      description: Свободные авансы контрагента и юрлица заказа, включая начальные остатки, датой не позже открытого долга заказа. mode=offset — можно зачесть; mode=relink — после отсечки расчётов по заказам аванс сначала переносят на заказ; пустой mode — зачитывать нечего.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.settlements:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Предложение зачёта
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/orders/{id}/advance-offset:
+    post:
+      tags:
+        - Finance settlements
+      operationId: financeOffsetOrderAdvances
+      summary: Зачесть свободные авансы в долг заказа
+      description: Зачитывает свободные авансы в открытые долги заказа штатным документом «Зачёт аванса» — ранние авансы в ранние долги, аванс не позже долга. После отсечки отказ finance.order.advance_needs_relink; нечего зачитывать — finance.order.advance_nothing.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.settlements:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Проведённые зачёты
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/finance/orders/{id}/acts:
     post:
       tags:

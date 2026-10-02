@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 34620785885d2df61d654aa3a0edb536072aea7b0f4dbe7a4695c15fecb32ffa).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0d54cb24f092de6bf19d8e83bbfebc6a2f6246575c5d076fd9807fdf45f07f51).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -3184,6 +3184,20 @@ export interface OperationTypes {
     body: models.FinanceMarkTransactionDeletedRequest;
     response: models.CoreDocument;
   };
+  /** POST /api/v1/finance/orders/{id}/advance-offset — Зачесть свободные авансы в долг заказа */
+  financeOffsetOrderAdvances: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: { [key: string]: unknown };
+  };
+  /** GET /api/v1/finance/orders/{id}/advance-offer — Свободные авансы для зачёта по заказу */
+  financeOrderAdvanceOffer: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: { [key: string]: unknown };
+  };
   /** POST /api/v1/finance/dividends/decisions/{id}/post — Провести утверждённое начисление в счета 84 и 75 */
   financePostDividendDecision: {
     params: { "id": models.UUID };
@@ -5677,6 +5691,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeListStatements: { method: "GET", path: "/api/v1/finance/statements", module: "finance", stage: "preview", permission: "finance.statements:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 100 },
   financeListTransactions: { method: "GET", path: "/api/v1/finance/transactions", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 500 },
   financeMarkTransactionDeleted: { method: "POST", path: "/api/v1/finance/transactions/{id}/mark-deleted", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeOffsetOrderAdvances: { method: "POST", path: "/api/v1/finance/orders/{id}/advance-offset", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeOrderAdvanceOffer: { method: "GET", path: "/api/v1/finance/orders/{id}/advance-offer", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePostDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions/{id}/post", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePostExpenseReport: { method: "POST", path: "/api/v1/finance/accountable/reports/{id}/post", module: "finance", stage: "preview", permission: "finance.accountable:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePostSettlementDocument: { method: "POST", path: "/api/v1/finance/settlements/documents/{id}/post", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
