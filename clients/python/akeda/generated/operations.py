@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e87c3b22fd9ba6c15c4c901cecb2fdf39dcc05d82d3ae31a52fca8b7afba1f7d).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 34620785885d2df61d654aa3a0edb536072aea7b0f4dbe7a4695c15fecb32ffa).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -63,6 +63,8 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'automationRuleTest': OperationSpec('POST', '/api/v1/automation/rules/test', 'automation', 'preview', 'settings:read', False, False, (), 'none', None, None),
     'automationRules': OperationSpec('GET', '/api/v1/automation/rules', 'automation', 'preview', 'settings:read', False, False, (), 'none', None, None),
     'bankMarkTransactionDeleted': OperationSpec('POST', '/api/v1/bank/transactions/{id}/mark-deleted', 'finance', 'preview', 'finance.transactions:write', False, False, ('id',), 'none', None, None),
+    'bankRepostTransaction': OperationSpec('POST', '/api/v1/bank/transactions/{id}/repost', 'finance', 'preview', 'finance.transactions:write', False, False, ('id',), 'none', None, None),
+    'bankRepostTransactions': OperationSpec('POST', '/api/v1/bank/transactions/repost', 'finance', 'preview', 'finance.transactions:write', False, False, (), 'none', None, None),
     'calendarCreateAvailability': OperationSpec('POST', '/api/v1/calendar/availability', 'calendar', 'preview', 'calendar:write', False, True, (), 'none', None, None),
     'calendarCreateBookingLink': OperationSpec('POST', '/api/v1/calendar/booking-links', 'calendar', 'preview', 'calendar:write', False, True, (), 'none', None, None),
     'calendarCreateConnector': OperationSpec('POST', '/api/v1/calendar/connectors', 'calendar', 'preview', 'calendar:write', False, True, (), 'none', None, None),
@@ -487,6 +489,8 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeReconcileRegisters': OperationSpec('GET', '/api/v1/finance/registers/reconcile', 'finance', 'preview', 'finance.registers:read', False, True, (), 'none', None, None),
     'financeRecordExchangeItem': OperationSpec('POST', '/api/v1/finance/exchange/items', 'finance', 'preview', 'finance.exchange:write', False, True, (), 'none', None, None),
     'financeRepairRegisters': OperationSpec('POST', '/api/v1/finance/registers/repair', 'finance', 'preview', 'finance.registers:write', False, True, (), 'none', None, None),
+    'financeRepostTransaction': OperationSpec('POST', '/api/v1/finance/transactions/{id}/repost', 'finance', 'preview', 'finance.transactions:write', False, True, ('id',), 'none', None, None),
+    'financeRepostTransactions': OperationSpec('POST', '/api/v1/finance/transactions/repost', 'finance', 'preview', 'finance.transactions:write', False, True, (), 'none', None, None),
     'financeResyncRegisters': OperationSpec('POST', '/api/v1/finance/registers/resync', 'finance', 'preview', 'finance.registers:write', False, True, (), 'none', None, None),
     'financeRunDividendAutomation': OperationSpec('POST', '/api/v1/finance/dividends/automation/run', 'finance', 'preview', 'finance.dividends:auto', False, False, (), 'none', None, None),
     'financeSaveAcquirer': OperationSpec('PUT', '/api/v1/finance/acquirers', 'finance', 'preview', 'finance.settlements:write', False, True, (), 'none', None, None),

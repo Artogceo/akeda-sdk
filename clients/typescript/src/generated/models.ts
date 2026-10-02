@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e87c3b22fd9ba6c15c4c901cecb2fdf39dcc05d82d3ae31a52fca8b7afba1f7d).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 34620785885d2df61d654aa3a0edb536072aea7b0f4dbe7a4695c15fecb32ffa).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -12562,6 +12562,15 @@ export interface AutomationRuleTestResponse {
   "problem"?: AutomationRuleProblem;
 }
 
+export interface BankRepostTransactionsRequest {
+  "ids": Array<UUID>;
+  "confirm_release"?: boolean;
+}
+
+export interface BankRepostTransactionRequest {
+  "confirm_release"?: boolean;
+}
+
 export interface CoreListBusinessesResponse {
   "results": Array<CoreBusiness>;
 }
@@ -12687,8 +12696,17 @@ export interface FinanceGetProjectBudgetHistoryResponse {
   "results": Array<FinanceProjectBudget>;
 }
 
+export interface FinanceRepostTransactionsRequest {
+  "ids": Array<UUID>;
+  "confirm_release"?: boolean;
+}
+
 export interface FinanceMarkTransactionDeletedRequest {
   /** Согласие снять аванс и зачёты операции */
+  "confirm_release"?: boolean;
+}
+
+export interface FinanceRepostTransactionRequest {
   "confirm_release"?: boolean;
 }
 

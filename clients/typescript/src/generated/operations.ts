@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e87c3b22fd9ba6c15c4c901cecb2fdf39dcc05d82d3ae31a52fca8b7afba1f7d).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 34620785885d2df61d654aa3a0edb536072aea7b0f4dbe7a4695c15fecb32ffa).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -257,6 +257,20 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.CoreDocument;
+  };
+  /** POST /api/v1/bank/transactions/{id}/repost — Перепровести банковскую операцию (исторический адрес) */
+  bankRepostTransaction: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.BankRepostTransactionRequest;
+    response: { [key: string]: unknown };
+  };
+  /** POST /api/v1/bank/transactions/repost — Перепровести выбранные банковские операции (исторический адрес) */
+  bankRepostTransactions: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.BankRepostTransactionsRequest;
+    response: { [key: string]: unknown };
   };
   /** POST /api/v1/calendar/availability — Создать правило рабочего времени */
   calendarCreateAvailability: {
@@ -3226,6 +3240,20 @@ export interface OperationTypes {
     body: models.FinanceRegisterRepairRequest;
     response: models.FinanceRegisterRepairResult;
   };
+  /** POST /api/v1/finance/transactions/{id}/repost — Перепровести банковскую операцию без смены полей */
+  financeRepostTransaction: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.FinanceRepostTransactionRequest;
+    response: { [key: string]: unknown };
+  };
+  /** POST /api/v1/finance/transactions/repost — Перепровести выбранные банковские операции без смены полей */
+  financeRepostTransactions: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FinanceRepostTransactionsRequest;
+    response: { [key: string]: unknown };
+  };
   /** POST /api/v1/finance/registers/resync — Пересинхронизировать финансовые документы и регистры */
   financeResyncRegisters: {
     params: Record<string, never>;
@@ -5231,6 +5259,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   automationRuleTest: { method: "POST", path: "/api/v1/automation/rules/test", module: "automation", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   automationRules: { method: "GET", path: "/api/v1/automation/rules", module: "automation", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   bankMarkTransactionDeleted: { method: "POST", path: "/api/v1/bank/transactions/{id}/mark-deleted", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  bankRepostTransaction: { method: "POST", path: "/api/v1/bank/transactions/{id}/repost", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  bankRepostTransactions: { method: "POST", path: "/api/v1/bank/transactions/repost", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarCreateAvailability: { method: "POST", path: "/api/v1/calendar/availability", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarCreateBookingLink: { method: "POST", path: "/api/v1/calendar/booking-links", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   calendarCreateConnector: { method: "POST", path: "/api/v1/calendar/connectors", module: "calendar", stage: "preview", permission: "calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -5655,6 +5685,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeReconcileRegisters: { method: "GET", path: "/api/v1/finance/registers/reconcile", module: "finance", stage: "preview", permission: "finance.registers:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeRecordExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeRepairRegisters: { method: "POST", path: "/api/v1/finance/registers/repair", module: "finance", stage: "preview", permission: "finance.registers:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeRepostTransaction: { method: "POST", path: "/api/v1/finance/transactions/{id}/repost", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeRepostTransactions: { method: "POST", path: "/api/v1/finance/transactions/repost", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeResyncRegisters: { method: "POST", path: "/api/v1/finance/registers/resync", module: "finance", stage: "preview", permission: "finance.registers:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeRunDividendAutomation: { method: "POST", path: "/api/v1/finance/dividends/automation/run", module: "finance", stage: "preview", permission: "finance.dividends:auto", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSaveAcquirer: { method: "PUT", path: "/api/v1/finance/acquirers", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

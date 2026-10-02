@@ -13826,6 +13826,109 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/bank/transactions/repost:
+    post:
+      tags:
+        - Finance transactions
+      operationId: bankRepostTransactions
+      summary: Перепровести выбранные банковские операции (исторический адрес)
+      description: Исторический адрес той же команды financeRepostTransactions. Проверяет право finance.transactions:write; без согласия отвечает списком снимаемого.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.transactions:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ids
+              properties:
+                ids:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/UUID'
+                confirm_release:
+                  type: boolean
+      responses:
+        '200':
+          description: Исход каждой строки
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/bank/transactions/{id}/repost:
+    post:
+      tags:
+        - Finance transactions
+      operationId: bankRepostTransaction
+      summary: Перепровести банковскую операцию (исторический адрес)
+      description: Исторический адрес той же команды financeRepostTransaction. Проверяет право finance.transactions:write; без согласия отвечает списком снимаемого.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.transactions:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirm_release:
+                  type: boolean
+      responses:
+        '200':
+          description: Перепроведённая операция
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/bank/transactions/{id}/mark-deleted:
     post:
       tags:
@@ -13923,6 +14026,123 @@ paths:
                 $ref: '#/components/schemas/Error'
         '409':
           description: Закрытый период или зависимые документы
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/transactions/repost:
+    post:
+      tags:
+        - Finance transactions
+      operationId: financeRepostTransactions
+      summary: Перепровести выбранные банковские операции без смены полей
+      description: Для каждой строки снимает опиравшиеся на неё погашения, аванс и зачёты, перепроводит документ операции одним переходом (отмена старых движений и новые в одной транзакции) и разносит её правилом заново. Без confirm_release ответ 409 finance.repost.release_needs_consent с общим списком released по всем строкам; с согласием — исход каждой строки (reposted или failed с причиной period_closed, deleted, not_posted).
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.transactions:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - ids
+              properties:
+                ids:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/UUID'
+                confirm_release:
+                  type: boolean
+      responses:
+        '200':
+          description: Исход каждой строки
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Нужно согласие на снятие зависимых
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/transactions/{id}/repost:
+    post:
+      tags:
+        - Finance transactions
+      operationId: financeRepostTransaction
+      summary: Перепровести банковскую операцию без смены полей
+      description: Снимает опиравшиеся на операцию погашения, аванс и зачёты, перепроводит её документ одним переходом и разносит её правилом заново. Без confirm_release ответ 409 finance.repost.release_needs_consent со списком released. Закрытый период — 409 finance.transaction.repost_period_closed.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.transactions:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                confirm_release:
+                  type: boolean
+      responses:
+        '200':
+          description: Перепроведённая операция
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Операция не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Закрытый период — удалённая операция — нужно согласие
           content:
             application/json:
               schema:

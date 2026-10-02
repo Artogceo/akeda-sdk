@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e87c3b22fd9ba6c15c4c901cecb2fdf39dcc05d82d3ae31a52fca8b7afba1f7d).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 34620785885d2df61d654aa3a0edb536072aea7b0f4dbe7a4695c15fecb32ffa).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1131,6 +1131,8 @@ __all__ = [
     "AutomationRulesResponse",
     "AutomationRuleSimulateResponse",
     "AutomationRuleTestResponse",
+    "BankRepostTransactionsRequest",
+    "BankRepostTransactionRequest",
     "CoreListBusinessesResponse",
     "CoreSetBusinessActiveRequest",
     "CoreListBusinessOwnershipResponse",
@@ -1153,7 +1155,9 @@ __all__ = [
     "FinanceListDividendOwnersResponseResultsItem",
     "FinanceListDividendPoliciesResponse",
     "FinanceGetProjectBudgetHistoryResponse",
+    "FinanceRepostTransactionsRequest",
     "FinanceMarkTransactionDeletedRequest",
+    "FinanceRepostTransactionRequest",
     "MailListAccountsResponse",
     "MailListFoldersResponse",
     "MailComposeMessageResponse",
@@ -13589,6 +13593,15 @@ class _AutomationRuleTestResponseRequired(TypedDict):
 class AutomationRuleTestResponse(_AutomationRuleTestResponseRequired, total=False):
     problem: "AutomationRuleProblem"
 
+class _BankRepostTransactionsRequestRequired(TypedDict):
+    ids: List["UUID"]
+
+class BankRepostTransactionsRequest(_BankRepostTransactionsRequestRequired, total=False):
+    confirm_release: bool
+
+class BankRepostTransactionRequest(TypedDict, total=False):
+    confirm_release: bool
+
 class CoreListBusinessesResponse(TypedDict):
     results: List["CoreBusiness"]
 
@@ -13698,8 +13711,17 @@ class FinanceGetProjectBudgetHistoryResponse(TypedDict):
     count: int
     results: List["FinanceProjectBudget"]
 
+class _FinanceRepostTransactionsRequestRequired(TypedDict):
+    ids: List["UUID"]
+
+class FinanceRepostTransactionsRequest(_FinanceRepostTransactionsRequestRequired, total=False):
+    confirm_release: bool
+
 class FinanceMarkTransactionDeletedRequest(TypedDict, total=False):
     #: Согласие снять аванс и зачёты операции
+    confirm_release: bool
+
+class FinanceRepostTransactionRequest(TypedDict, total=False):
     confirm_release: bool
 
 class MailListAccountsResponse(TypedDict):
