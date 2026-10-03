@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a71c550d68dfd2f80dce68689680e0b49e026c805b95de02ef7a8f539eb1fa01).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4c813a449f36690b23ee6e419f00511523ebec91408e1403e21df50df2bd57f2).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -293,6 +293,8 @@ export interface AttachmentUploadSession {
   "replace_attachment_id"?: UUID;
   "owner_type": AttachmentOwnerType;
   "owner_id": UUID;
+  /** Папка файлов проекта, куда ляжет файл */
+  "folder_id"?: string;
   "uploaded_by": number;
   "name": string;
   "mime_type": string;
@@ -313,6 +315,8 @@ export interface AttachmentUploadSession {
 export interface AttachmentUploadSessionCreate {
   "owner_type": AttachmentOwnerType;
   "owner_id": UUID;
+  /** Папка файлов проекта, куда сразу ляжет файл; только при owner_type=project */
+  "folder_id"?: string;
   "filename": string;
   "mime_type"?: string;
   "size_bytes": number;
@@ -663,7 +667,7 @@ export interface AutomationRuleTestResultActionsItemInputsItem {
 /** Лента только дописывается */
 export interface CRMActivity {
   "id": UUID;
-  "entity_type": "lead" | "deal";
+  "entity_type": "lead" | "deal" | "customer";
   "entity_id": UUID;
   /** Ключ факта; note - заметка сотрудника */
   "action": string;
@@ -824,6 +828,8 @@ export interface CRMCustomer {
   /** Момент переноса в справочник контрагентов ERP */
   "promoted_at"?: string;
   "archived_at"?: string;
+  /** Карточка слита с этой и лежит в архиве */
+  "merged_into_customer_id"?: UUID;
   "open_deals": number;
   /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
   "custom"?: { [key: string]: unknown } | null;
@@ -879,12 +885,28 @@ export interface CRMCustomerDuplicate {
   /** Момент переноса в справочник контрагентов ERP */
   "promoted_at"?: string;
   "archived_at"?: string;
+  /** Карточка слита с этой и лежит в архиве */
+  "merged_into_customer_id"?: UUID;
   "open_deals": number;
   /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
   "custom"?: { [key: string]: unknown } | null;
   "created_at": string;
   "updated_at": string;
   "matched_by": "inn" | "phone" | "email" | "name";
+}
+
+export interface CRMCustomerDuplicateGroup {
+  "matched_by": "inn" | "phone" | "email" | "name";
+  /** Общее значение признака: ИНН/КПП, последние десять цифр телефона, почта или имя */
+  "value": string;
+  "customers": Array<CRMCustomer>;
+}
+
+export interface CRMCustomerDuplicateRefusal {
+  "code": "crm.customer_inn_taken" | "crm.customer_possible_duplicate";
+  "detail": string;
+  /** Похожие карточки; чужая карточка без права видеть чужих клиентов — только имя, вид и ответственный */
+  "matches": Array<CRMCustomerDuplicate>;
 }
 
 export interface CRMCustomerInput {
@@ -909,6 +931,8 @@ export interface CRMCustomerInput {
   "note"?: string;
   /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
   "custom"?: { [key: string]: unknown } | null;
+  /** Это правда новый клиент: создать, хотя телефон или почта совпали с живой карточкой. Совпадение ИНН и КПП так не обходится */
+  "confirm_duplicate"?: boolean;
 }
 
 export interface CRMCustomerPatch {
@@ -956,6 +980,15 @@ export interface CRMDeal {
   "archived_at"?: string;
   "closed_at"?: string;
   "loss_reason_id"?: UUID;
+  "description"?: string;
+  "first_message"?: string;
+  "utm_source"?: string;
+  "utm_medium"?: string;
+  "utm_campaign"?: string;
+  "utm_term"?: string;
+  "utm_content"?: string;
+  "landing_page"?: string;
+  "referrer"?: string;
   "created_at": string;
   "updated_at": string;
 }
@@ -1001,6 +1034,15 @@ export interface CRMDealCard {
   "archived_at"?: string;
   "closed_at"?: string;
   "loss_reason_id"?: UUID;
+  "description"?: string;
+  "first_message"?: string;
+  "utm_source"?: string;
+  "utm_medium"?: string;
+  "utm_campaign"?: string;
+  "utm_term"?: string;
+  "utm_content"?: string;
+  "landing_page"?: string;
+  "referrer"?: string;
   "created_at": string;
   "updated_at": string;
   "customer_name"?: string;
@@ -1024,6 +1066,7 @@ export interface CRMDealInput {
   /** Обязателен при ненулевой сумме */
   "currency"?: string;
   "source"?: string;
+  "description"?: string;
   "probability"?: number;
   "expected_close_at"?: string | null;
   "owner_id"?: number | null;
@@ -1058,6 +1101,7 @@ export interface CRMDealPatch {
   "amount"?: string;
   "currency"?: string;
   "source"?: string;
+  "description"?: string;
   "probability"?: number;
   "expected_close_at"?: string | null;
   "owner_id"?: number | null;
@@ -1075,12 +1119,16 @@ export interface CRMDealStageHistory {
   "from_stage_id"?: UUID;
   "to_stage_id": UUID;
   "changed_by": number;
+  /** Вид записи: created - сделка заведена, move - перенос по этапам, pipeline_change - перенос в другую воронку, reopen - повторное открытие закрытой сделки */
+  "kind": "created" | "move" | "pipeline_change" | "reopen";
+  /** Причина; заполнена у повторного открытия */
+  "reason"?: string;
   "created_at": string;
 }
 
 export interface CRMEngagement {
   "id": UUID;
-  "entity_type": "lead" | "deal";
+  "entity_type": "lead" | "deal" | "customer";
   "entity_id": UUID;
   "kind": CRMEngagementKind;
   "title": string;
@@ -1123,6 +1171,24 @@ export interface CRMExternalLink {
   "created_at": string;
 }
 
+export interface CRMImportFileInfo {
+  "filename": string;
+  "format": string;
+  "sheets": Array<CRMImportSheetInfo>;
+  /** Сколько ячеек с формулами прочитано по сохранённому значению */
+  "warnings": number;
+}
+
+export interface CRMImportSheetInfo {
+  "name": string;
+  "rows": number;
+  "header_row": number;
+  "headers": Array<string>;
+  "sample": Array<Array<string>>;
+  /** Заголовок -> предложенное поле */
+  "suggested"?: { [key: string]: string };
+}
+
 export interface CRMInboxAssignInput {
   /** null снимает назначение */
   "assigned_to"?: number | null;
@@ -1134,6 +1200,7 @@ export interface CRMInboxAttachment {
   "filename": string;
   "content_type": string;
   "size_bytes": number;
+  "scan_status": CRMInboxScanStatus;
   "created_at": string;
 }
 
@@ -1236,6 +1303,18 @@ export interface CRMInboxMessage {
   "attachment_count"?: number;
 }
 
+export interface CRMInboxOutboundUpload {
+  "id": UUID;
+  "conversation_id": UUID;
+  "filename": string;
+  "content_type": string;
+  "size_bytes": number;
+  /** Контрольная сумма, посчитанная на завершении сессии; у загрузки формой её нет */
+  "sha256"?: string;
+  "scan_status": CRMInboxScanStatus;
+  "expires_at": string;
+}
+
 export interface CRMInboxProvider {
   "key": "telegram" | "vk" | "max" | "avito" | "email" | "telephony";
   "label": string;
@@ -1268,9 +1347,11 @@ export interface CRMInboxProviderField {
   "help"?: string;
 }
 
+export type CRMInboxScanStatus = "pending" | "clean" | "infected" | "skipped";
+
 export interface CRMInboxSendInput {
   "body"?: string;
-  /** Идентификаторы заранее загруженных файлов */
+  /** Идентификаторы заранее загруженных файлов: id из crmFinishInboxUploadSession (сессия загрузки) или из crmUploadInboxOutboundFile (форма) */
   "upload_ids"?: Array<UUID>;
 }
 
@@ -1310,6 +1391,13 @@ export interface CRMLead {
   "converted_deal_id"?: UUID;
   /** Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника */
   "merged_into_lead_id"?: UUID;
+  "utm_source"?: string;
+  "utm_medium"?: string;
+  "utm_campaign"?: string;
+  "utm_term"?: string;
+  "utm_content"?: string;
+  "landing_page"?: string;
+  "referrer"?: string;
   /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
   "custom"?: { [key: string]: unknown } | null;
   "created_at": string;
@@ -1340,6 +1428,13 @@ export interface CRMLeadCard {
   "converted_deal_id"?: UUID;
   /** Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника */
   "merged_into_lead_id"?: UUID;
+  "utm_source"?: string;
+  "utm_medium"?: string;
+  "utm_campaign"?: string;
+  "utm_term"?: string;
+  "utm_content"?: string;
+  "landing_page"?: string;
+  "referrer"?: string;
   /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
   "custom"?: { [key: string]: unknown } | null;
   "created_at": string;
@@ -1385,6 +1480,13 @@ export interface CRMLeadDuplicate {
   "converted_deal_id"?: UUID;
   /** Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника */
   "merged_into_lead_id"?: UUID;
+  "utm_source"?: string;
+  "utm_medium"?: string;
+  "utm_campaign"?: string;
+  "utm_term"?: string;
+  "utm_content"?: string;
+  "landing_page"?: string;
+  "referrer"?: string;
   /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
   "custom"?: { [key: string]: unknown } | null;
   "created_at": string;
@@ -1411,6 +1513,13 @@ export interface CRMLeadInput {
   "next_action_at"?: string | null;
   /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
   "custom"?: { [key: string]: unknown } | null;
+  "utm_source"?: string;
+  "utm_medium"?: string;
+  "utm_campaign"?: string;
+  "utm_term"?: string;
+  "utm_content"?: string;
+  "landing_page"?: string;
+  "referrer"?: string;
 }
 
 export type CRMLeadLockMode = "owner_only" | "after_qualification";
@@ -1440,17 +1549,22 @@ export interface CRMLeadStage {
   "sort_order": number;
   /** Ненужный этап выключают, а не удаляют */
   "is_active": boolean;
+  "meaning": CRMLeadStageMeaning;
   "created_at": string;
   "updated_at": string;
 }
 
 export interface CRMLeadStageInput {
   "name": string;
+  "meaning"?: CRMLeadStageMeaning;
 }
+
+export type CRMLeadStageMeaning = "open" | "qualified" | "converted" | "rejected";
 
 export interface CRMLeadStagePatch {
   "name"?: string;
   "is_active"?: boolean;
+  "meaning"?: CRMLeadStageMeaning;
 }
 
 export type CRMLeadStatus = "new" | "qualified" | "disqualified" | "converted";
@@ -1493,6 +1607,11 @@ export interface CRMManagerWorkload {
   "won_amount_month"?: string;
 }
 
+export interface CRMMergeCustomersInput {
+  /** Карточки, которые сливаются в эту */
+  "sources": Array<UUID>;
+}
+
 /** Какие обращения свести в это */
 export interface CRMMergeLeadsInput {
   /** Источники: уходят в архив со ссылкой на цель, их переписка и дела переезжают */
@@ -1501,6 +1620,8 @@ export interface CRMMergeLeadsInput {
 
 export interface CRMMoveDealInput {
   "stage_id": UUID;
+  /** Целевая воронка. Пусто или текущая - перенос по этапам своей воронки; другая - сделка переезжает в неё, а stage_id должен быть этапом целевой воронки. Закрытую сделку не переносят */
+  "pipeline_id"?: string | null;
   /** Обязательна для стадии категории lost */
   "loss_reason_id"?: string | null;
 }
@@ -1691,6 +1812,11 @@ export interface CRMTimelineEntry {
   "title": string;
   "body"?: string;
   "meta"?: { [key: string]: unknown } | null;
+  /** Запись, которой принадлежит событие. В ленте клиента это его сделка или лид, а не он сам */
+  "record_type"?: "lead" | "deal" | "customer";
+  "record_id"?: UUID;
+  /** Название записи; заполняется только в ленте клиента */
+  "record_title"?: string;
 }
 
 export interface CRMUserRef {
@@ -2619,6 +2745,8 @@ export interface CoreCompanyPolicy {
   "tax_regime"?: Array<CorePolicyTaxRegimeVersion>;
   /** Юрлицо — ИП (вид организации в карточке): доступны ПСН, НПД и патент */
   "sole_proprietor"?: boolean;
+  /** Вся ли зарплата в бухгалтерии и источник официальной части, с историей (ERP-1700); пусто — вся официальная */
+  "payroll_official"?: Array<CorePolicyPayrollOfficialVersion>;
 }
 
 export interface CoreConflictingRegistrar {
@@ -3272,6 +3400,26 @@ export interface CoreItemMove {
 export interface CoreItemPage {
   "count": number;
   "results": Array<CoreItem>;
+}
+
+/** Бланк юрлица. Ключи файлов наружу не отдаются: images говорит только, есть ли картинка на месте. */
+export interface CoreLetterhead {
+  "company_id": UUID;
+  "version": number;
+  "director_name"?: string;
+  "director_title"?: string;
+  "accountant_name"?: string;
+  "accountant_title"?: string;
+  "bank_account_id"?: UUID | null;
+  "print_facsimile"?: boolean;
+  "images": CoreLetterheadImages;
+}
+
+export interface CoreLetterheadImages {
+  "logo": boolean;
+  "stamp": boolean;
+  "director_signature": boolean;
+  "accountant_signature": boolean;
 }
 
 export type CoreNumberReset = "year" | "never";
@@ -4015,6 +4163,10 @@ export interface CoreOwnershipVersionInput {
   "owners": Array<CoreBusinessOwnerInput>;
 }
 
+export interface CorePhotoResult {
+  "photo_url": string;
+}
+
 export interface CorePolicyAccountableDaysVersion {
   "id": UUID;
   /** Начало версии; 0001-01-01 означает «с начала учёта» */
@@ -4022,6 +4174,27 @@ export interface CorePolicyAccountableDaysVersion {
   /** Последний день версии; отсутствует у открытой версии */
   "valid_to"?: string;
   "days": number;
+}
+
+export interface CorePolicyPayrollOfficialInput {
+  /** 0001-01-01 — с начала учёта */
+  "valid_from": string;
+  /** Вся начисленная зарплата отражается в бухгалтерии */
+  "all_official": boolean;
+  /** Источник официальной части; обязателен при all_official = false */
+  "payroll_source"?: "manual" | "onec_bp" | "onec_zup";
+}
+
+export interface CorePolicyPayrollOfficialVersion {
+  "id": UUID;
+  /** Начало версии; 0001-01-01 означает «с начала учёта» */
+  "valid_from": string;
+  /** Последний день версии; отсутствует у открытой версии */
+  "valid_to"?: string;
+  /** Вся начисленная зарплата отражается в бухгалтерии */
+  "all_official": boolean;
+  /** Источник официальной части; нет при all_official */
+  "source"?: "manual" | "onec_bp" | "onec_zup";
 }
 
 export interface CorePolicyPeriod {
@@ -4727,11 +4900,13 @@ export interface CoreTrialBalanceTotals {
   "balanced": boolean;
 }
 
-/** Итог завершения сессии core: заведённый файл товара или запуск импорта. */
+/** Итог завершения сессии core: заведённый файл товара, запуск импорта, фото сотрудника или бланк юрлица. */
 export interface CoreUploadFinishResult {
   "session": TransferSession;
   "product_file"?: CoreProductFile;
   "product_import"?: CoreProductImportRun;
+  "employee_photo"?: CorePhotoResult;
+  "letterhead"?: CoreLetterhead;
 }
 
 /** Окно, в котором обращения были, а записей о них нет: очередь писателя переполнилась либо база кабинета не приняла пачку. Признание в НАШЕЙ аварии, и печатается оно обеим сторонам — страница без него читалась бы как полная история. Кабинета в окне нет ни у одной из дверей. */
@@ -6092,6 +6267,24 @@ export interface DocflowFlowFile {
 }
 
 export type DocflowFlowKind = "contract" | "specification" | "amendment" | "invoice" | "act" | "upd" | "goods_waybill" | "transport_waybill" | "consignment_note" | "transport_order" | "tax_invoice" | "correction" | "return" | "discrepancy_act" | "reconciliation_act" | "power_of_attorney" | "other";
+
+/** Сканы подписанного оригинала документа. */
+export interface DocflowFlowOriginal {
+  "document_id": UUID;
+  "scans": Array<DocflowFlowOriginalScan>;
+}
+
+/** Скан подписанного оригинала; номер скана из сессии загрузки — номер сессии. */
+export interface DocflowFlowOriginalScan {
+  "id": UUID;
+  "document_id": UUID;
+  "name": string;
+  "size": number;
+  "sha256": string;
+  "content_type": string;
+  "uploaded_by": number;
+  "uploaded_at": string;
+}
 
 /** Страница карточек. Набор строк называется items — как у остальных страниц этого крыла; крыло обмена с контрагентами в том же модуле исторически называет его results. */
 export interface DocflowFlowPage {
@@ -8910,6 +9103,8 @@ export interface MailFolder {
   /** Вес папки в привычном порядке системных папок */
   "sort_order": number;
   "subscribed": boolean;
+  /** Вид на ту же почту (Gmail «Вся почта», «Важное», «Помеченные»): письма в нём — копии писем из настоящих папок, в сводные выборки они не попадают */
+  "mirror": boolean;
   "created_at": string;
   "updated_at": string;
 }
@@ -9123,6 +9318,14 @@ export interface MailSyncReport {
   "finished_at": string;
   /** Папки, перечитанные целиком после смены UIDVALIDITY на сервере */
   "full_reloaded"?: Array<string>;
+  /** Папки, которые в этот проход прочитать не удалось; остальные разобраны */
+  "failed_folders"?: Array<string>;
+  /** Письма, у которых проход перенёс с сервера прочтение, отметку или удаление из другого клиента */
+  "updated"?: number;
+  /** Только у проверки по требованию: done — проверено, running — ящик проверяется фоном и письма появятся сами */
+  "state"?: "done" | "running";
+  /** Проверка по требованию успела не все свои папки; остальное доделает фон */
+  "partial"?: boolean;
 }
 
 export type MailSyncStatus = "never" | "ok" | "running" | "failed";
@@ -11201,6 +11404,23 @@ export interface StockDocumentRefs {
 
 export type StockDocumentTypeKey = "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_purchase_request" | "stock_supplier_order" | "stock_inventory" | "stock_reservation" | "stock_landed_cost" | "stock_assembly" | "stock_disassembly" | "stock_reservation_release" | "stock_supplier_order_close" | "stock_opening_balance" | "stock_marketplace_return" | "stock_account_transfer" | "supplier_order";
 
+/** Временный адрес файла склада: подписанный адрес хранилища или адрес этого API. */
+export interface StockDownloadLink {
+  "url": string;
+  "method": "GET";
+  /** true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией */
+  "direct": boolean;
+  /** true — адрес требует токен API, агенту по MCP он недоступен */
+  "requires_authorization": boolean;
+  /** Срок подписанного адреса; у адреса API его нет */
+  "expires_at"?: string;
+  "name": string;
+  "mime_type": string;
+  "size_bytes": number;
+  /** Контрольная сумма SHA-256, если известна */
+  "sha256"?: string;
+}
+
 export interface StockExport {
   "id": UUID;
   "kind": StockImportKind;
@@ -11352,6 +11572,26 @@ export interface StockImportRun {
 }
 
 export type StockImportStatus = "uploaded" | "mapped" | "previewed" | "applied";
+
+/** Заявка на сессию загрузки файла складского импорта. filename и size — синонимы name и size_bytes. */
+export interface StockImportUploadSessionRequest {
+  "kind": StockImportKind;
+  "mode": CoreProductImportMode;
+  /** Имя файла с расширением xlsx, xls, ods, csv или tsv */
+  "name"?: string;
+  /** Тип содержимого; по умолчанию — по расширению файла */
+  "mime_type"?: string;
+  /** Точный размер файла в байтах */
+  "size_bytes"?: number;
+  /** Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками */
+  "sha256"?: string;
+  /** Складской документ, к которому привязан прогон; строки без document_id получают его */
+  "target_document_id"?: UUID;
+  /** Синоним поля name */
+  "filename"?: string;
+  /** Синоним поля size_bytes */
+  "size"?: number;
+}
 
 /** Документ, тронувший товар снимка после момента снимка. */
 export interface StockInventoryChange {
@@ -11610,15 +11850,17 @@ export interface StockReceiptClaimBalance {
   "open_amount": string;
 }
 
-/** Тело черновика корректировки приёмки по УКД поставщика на уменьшение. */
+/** Тело черновика корректировки приёмки по УКД поставщика на уменьшение или увеличение. */
 export interface StockReceiptCorrectionCreate {
   "basis_id": UUID;
+  /** Уменьшение (по умолчанию) или увеличение стоимости */
+  "direction"?: "decrease" | "increase";
   /** Пусто или отсутствует означает рабочую дату кабинета */
   "date"?: string;
   "supplier_document": StockReceiptCorrectionCreateSupplierDocument;
-  /** Уменьшение с налогом в валюте приёмки */
+  /** Изменение с налогом в валюте приёмки, без знака */
   "amount": string;
-  /** Налог уменьшения в валюте приёмки */
+  /** Налог изменения в валюте приёмки */
   "vat"?: string;
   "comment"?: string;
 }
@@ -11987,6 +12229,12 @@ export interface StockSupplier {
 export interface StockSupplierPage {
   "count": number;
   "results": Array<StockSupplier>;
+}
+
+/** Итог завершения сессии склада: сессия и заведённый прогон импорта. */
+export interface StockUploadFinishResult {
+  "session": TransferSession;
+  "import"?: StockImportRun;
 }
 
 export interface StockValuationPreviewRequest {

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a71c550d68dfd2f80dce68689680e0b49e026c805b95de02ef7a8f539eb1fa01).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4c813a449f36690b23ee6e419f00511523ebec91408e1403e21df50df2bd57f2).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -291,30 +291,34 @@ type AttachmentUploadSession struct {
 	ReplaceAttachmentID *UUID               `json:"replace_attachment_id,omitempty"`
 	OwnerType           AttachmentOwnerType `json:"owner_type"`
 	OwnerID             UUID                `json:"owner_id"`
-	UploadedBy          int64               `json:"uploaded_by"`
-	Name                string              `json:"name"`
-	MimeType            string              `json:"mime_type"`
-	SizeBytes           int64               `json:"size_bytes"`
-	Sha256              *string             `json:"sha256,omitempty"`
-	Status              string              `json:"status"`
-	ExpiresAt           string              `json:"expires_at"`
-	CompletedAt         *string             `json:"completed_at,omitempty"`
-	CreatedAt           string              `json:"created_at"`
-	UploadURL           *string             `json:"upload_url,omitempty"`
-	Method              *string             `json:"method,omitempty"`
-	Headers             map[string]string   `json:"headers,omitempty"`
-	Fields              map[string]string   `json:"fields,omitempty"`
-	FileField           *string             `json:"file_field,omitempty"`
-	MaxBytes            *int64              `json:"max_bytes,omitempty"`
+	// FolderID — Папка файлов проекта, куда ляжет файл
+	FolderID    *string           `json:"folder_id,omitempty"`
+	UploadedBy  int64             `json:"uploaded_by"`
+	Name        string            `json:"name"`
+	MimeType    string            `json:"mime_type"`
+	SizeBytes   int64             `json:"size_bytes"`
+	Sha256      *string           `json:"sha256,omitempty"`
+	Status      string            `json:"status"`
+	ExpiresAt   string            `json:"expires_at"`
+	CompletedAt *string           `json:"completed_at,omitempty"`
+	CreatedAt   string            `json:"created_at"`
+	UploadURL   *string           `json:"upload_url,omitempty"`
+	Method      *string           `json:"method,omitempty"`
+	Headers     map[string]string `json:"headers,omitempty"`
+	Fields      map[string]string `json:"fields,omitempty"`
+	FileField   *string           `json:"file_field,omitempty"`
+	MaxBytes    *int64            `json:"max_bytes,omitempty"`
 }
 
 type AttachmentUploadSessionCreate struct {
 	OwnerType AttachmentOwnerType `json:"owner_type"`
 	OwnerID   UUID                `json:"owner_id"`
-	Filename  string              `json:"filename"`
-	MimeType  *string             `json:"mime_type,omitempty"`
-	SizeBytes int64               `json:"size_bytes"`
-	Sha256    *string             `json:"sha256,omitempty"`
+	// FolderID — Папка файлов проекта, куда сразу ляжет файл; только при owner_type=project
+	FolderID  *string `json:"folder_id,omitempty"`
+	Filename  string  `json:"filename"`
+	MimeType  *string `json:"mime_type,omitempty"`
+	SizeBytes int64   `json:"size_bytes"`
+	Sha256    *string `json:"sha256,omitempty"`
 }
 
 // AutomationManifest — Документ akeda.automation.manifest версии 1 (AUTOMATION.md § 10.1).
@@ -822,7 +826,9 @@ type CRMCustomer struct {
 	// PromotedAt — Момент переноса в справочник контрагентов ERP
 	PromotedAt *string `json:"promoted_at,omitempty"`
 	ArchivedAt *string `json:"archived_at,omitempty"`
-	OpenDeals  int64   `json:"open_deals"`
+	// MergedIntoCustomerID — Карточка слита с этой и лежит в архиве
+	MergedIntoCustomerID *UUID `json:"merged_into_customer_id,omitempty"`
+	OpenDeals            int64 `json:"open_deals"`
 	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
 	Custom    map[string]json.RawMessage `json:"custom,omitempty"`
 	CreatedAt string                     `json:"created_at"`
@@ -877,12 +883,28 @@ type CRMCustomerDuplicate struct {
 	// PromotedAt — Момент переноса в справочник контрагентов ERP
 	PromotedAt *string `json:"promoted_at,omitempty"`
 	ArchivedAt *string `json:"archived_at,omitempty"`
-	OpenDeals  int64   `json:"open_deals"`
+	// MergedIntoCustomerID — Карточка слита с этой и лежит в архиве
+	MergedIntoCustomerID *UUID `json:"merged_into_customer_id,omitempty"`
+	OpenDeals            int64 `json:"open_deals"`
 	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
 	Custom    map[string]json.RawMessage `json:"custom,omitempty"`
 	CreatedAt string                     `json:"created_at"`
 	UpdatedAt string                     `json:"updated_at"`
 	MatchedBy string                     `json:"matched_by"`
+}
+
+type CRMCustomerDuplicateGroup struct {
+	MatchedBy string `json:"matched_by"`
+	// Value — Общее значение признака: ИНН/КПП, последние десять цифр телефона, почта или имя
+	Value     string        `json:"value"`
+	Customers []CRMCustomer `json:"customers"`
+}
+
+type CRMCustomerDuplicateRefusal struct {
+	Code   string `json:"code"`
+	Detail string `json:"detail"`
+	// Matches — Похожие карточки; чужая карточка без права видеть чужих клиентов — только имя, вид и ответственный
+	Matches []CRMCustomerDuplicate `json:"matches"`
 }
 
 type CRMCustomerInput struct {
@@ -907,6 +929,8 @@ type CRMCustomerInput struct {
 	Note     *string                   `json:"note,omitempty"`
 	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
 	Custom map[string]json.RawMessage `json:"custom,omitempty"`
+	// ConfirmDuplicate — Это правда новый клиент: создать, хотя телефон или почта совпали с живой карточкой. Совпадение ИНН и КПП так не обходится
+	ConfirmDuplicate *bool `json:"confirm_duplicate,omitempty"`
 }
 
 type CRMCustomerPatch struct {
@@ -954,6 +978,15 @@ type CRMDeal struct {
 	ArchivedAt      *string `json:"archived_at,omitempty"`
 	ClosedAt        *string `json:"closed_at,omitempty"`
 	LossReasonID    *UUID   `json:"loss_reason_id,omitempty"`
+	Description     *string `json:"description,omitempty"`
+	FirstMessage    *string `json:"first_message,omitempty"`
+	UtmSource       *string `json:"utm_source,omitempty"`
+	UtmMedium       *string `json:"utm_medium,omitempty"`
+	UtmCampaign     *string `json:"utm_campaign,omitempty"`
+	UtmTerm         *string `json:"utm_term,omitempty"`
+	UtmContent      *string `json:"utm_content,omitempty"`
+	LandingPage     *string `json:"landing_page,omitempty"`
+	Referrer        *string `json:"referrer,omitempty"`
 	CreatedAt       string  `json:"created_at"`
 	UpdatedAt       string  `json:"updated_at"`
 }
@@ -999,6 +1032,15 @@ type CRMDealCard struct {
 	ArchivedAt      *string `json:"archived_at,omitempty"`
 	ClosedAt        *string `json:"closed_at,omitempty"`
 	LossReasonID    *UUID   `json:"loss_reason_id,omitempty"`
+	Description     *string `json:"description,omitempty"`
+	FirstMessage    *string `json:"first_message,omitempty"`
+	UtmSource       *string `json:"utm_source,omitempty"`
+	UtmMedium       *string `json:"utm_medium,omitempty"`
+	UtmCampaign     *string `json:"utm_campaign,omitempty"`
+	UtmTerm         *string `json:"utm_term,omitempty"`
+	UtmContent      *string `json:"utm_content,omitempty"`
+	LandingPage     *string `json:"landing_page,omitempty"`
+	Referrer        *string `json:"referrer,omitempty"`
 	CreatedAt       string  `json:"created_at"`
 	UpdatedAt       string  `json:"updated_at"`
 	CustomerName    *string `json:"customer_name,omitempty"`
@@ -1022,6 +1064,7 @@ type CRMDealInput struct {
 	// Currency — Обязателен при ненулевой сумме
 	Currency        *string `json:"currency,omitempty"`
 	Source          *string `json:"source,omitempty"`
+	Description     *string `json:"description,omitempty"`
 	Probability     *int64  `json:"probability,omitempty"`
 	ExpectedCloseAt *string `json:"expected_close_at,omitempty"`
 	OwnerID         *int64  `json:"owner_id,omitempty"`
@@ -1056,6 +1099,7 @@ type CRMDealPatch struct {
 	Amount          *string `json:"amount,omitempty"`
 	Currency        *string `json:"currency,omitempty"`
 	Source          *string `json:"source,omitempty"`
+	Description     *string `json:"description,omitempty"`
 	Probability     *int64  `json:"probability,omitempty"`
 	ExpectedCloseAt *string `json:"expected_close_at,omitempty"`
 	OwnerID         *int64  `json:"owner_id,omitempty"`
@@ -1068,12 +1112,16 @@ type CRMDealPatch struct {
 }
 
 type CRMDealStageHistory struct {
-	ID          UUID   `json:"id"`
-	DealID      UUID   `json:"deal_id"`
-	FromStageID *UUID  `json:"from_stage_id,omitempty"`
-	ToStageID   UUID   `json:"to_stage_id"`
-	ChangedBy   int64  `json:"changed_by"`
-	CreatedAt   string `json:"created_at"`
+	ID          UUID  `json:"id"`
+	DealID      UUID  `json:"deal_id"`
+	FromStageID *UUID `json:"from_stage_id,omitempty"`
+	ToStageID   UUID  `json:"to_stage_id"`
+	ChangedBy   int64 `json:"changed_by"`
+	// Kind — Вид записи: created - сделка заведена, move - перенос по этапам, pipeline_change - перенос в другую воронку, reopen - повторное открытие закрытой сделки
+	Kind string `json:"kind"`
+	// Reason — Причина; заполнена у повторного открытия
+	Reason    *string `json:"reason,omitempty"`
+	CreatedAt string  `json:"created_at"`
 }
 
 type CRMEngagement struct {
@@ -1121,18 +1169,37 @@ type CRMExternalLink struct {
 	CreatedAt  string `json:"created_at"`
 }
 
+type CRMImportFileInfo struct {
+	Filename string               `json:"filename"`
+	Format   string               `json:"format"`
+	Sheets   []CRMImportSheetInfo `json:"sheets"`
+	// Warnings — Сколько ячеек с формулами прочитано по сохранённому значению
+	Warnings int64 `json:"warnings"`
+}
+
+type CRMImportSheetInfo struct {
+	Name      string     `json:"name"`
+	Rows      int64      `json:"rows"`
+	HeaderRow int64      `json:"header_row"`
+	Headers   []string   `json:"headers"`
+	Sample    [][]string `json:"sample"`
+	// Suggested — Заголовок -> предложенное поле
+	Suggested map[string]string `json:"suggested,omitempty"`
+}
+
 type CRMInboxAssignInput struct {
 	// AssignedTo — null снимает назначение
 	AssignedTo *int64 `json:"assigned_to,omitempty"`
 }
 
 type CRMInboxAttachment struct {
-	ID          UUID   `json:"id"`
-	MessageID   UUID   `json:"message_id"`
-	Filename    string `json:"filename"`
-	ContentType string `json:"content_type"`
-	SizeBytes   int64  `json:"size_bytes"`
-	CreatedAt   string `json:"created_at"`
+	ID          UUID               `json:"id"`
+	MessageID   UUID               `json:"message_id"`
+	Filename    string             `json:"filename"`
+	ContentType string             `json:"content_type"`
+	SizeBytes   int64              `json:"size_bytes"`
+	ScanStatus  CRMInboxScanStatus `json:"scan_status"`
+	CreatedAt   string             `json:"created_at"`
 }
 
 type CRMInboxConnection struct {
@@ -1234,6 +1301,18 @@ type CRMInboxMessage struct {
 	AttachmentCount *int64 `json:"attachment_count,omitempty"`
 }
 
+type CRMInboxOutboundUpload struct {
+	ID             UUID   `json:"id"`
+	ConversationID UUID   `json:"conversation_id"`
+	Filename       string `json:"filename"`
+	ContentType    string `json:"content_type"`
+	SizeBytes      int64  `json:"size_bytes"`
+	// Sha256 — Контрольная сумма, посчитанная на завершении сессии; у загрузки формой её нет
+	Sha256     *string            `json:"sha256,omitempty"`
+	ScanStatus CRMInboxScanStatus `json:"scan_status"`
+	ExpiresAt  string             `json:"expires_at"`
+}
+
 type CRMInboxProvider struct {
 	Key          string                       `json:"key"`
 	Label        string                       `json:"label"`
@@ -1266,9 +1345,11 @@ type CRMInboxProviderField struct {
 	Help   *string `json:"help,omitempty"`
 }
 
+type CRMInboxScanStatus = string
+
 type CRMInboxSendInput struct {
 	Body *string `json:"body,omitempty"`
-	// UploadIds — Идентификаторы заранее загруженных файлов
+	// UploadIds — Идентификаторы заранее загруженных файлов: id из crmFinishInboxUploadSession (сессия загрузки) или из crmUploadInboxOutboundFile (форма)
 	UploadIds []UUID `json:"upload_ids,omitempty"`
 }
 
@@ -1307,7 +1388,14 @@ type CRMLead struct {
 	RejectReasonID      *UUID         `json:"reject_reason_id,omitempty"`
 	ConvertedDealID     *UUID         `json:"converted_deal_id,omitempty"`
 	// MergedIntoLeadID — Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
-	MergedIntoLeadID *UUID `json:"merged_into_lead_id,omitempty"`
+	MergedIntoLeadID *UUID   `json:"merged_into_lead_id,omitempty"`
+	UtmSource        *string `json:"utm_source,omitempty"`
+	UtmMedium        *string `json:"utm_medium,omitempty"`
+	UtmCampaign      *string `json:"utm_campaign,omitempty"`
+	UtmTerm          *string `json:"utm_term,omitempty"`
+	UtmContent       *string `json:"utm_content,omitempty"`
+	LandingPage      *string `json:"landing_page,omitempty"`
+	Referrer         *string `json:"referrer,omitempty"`
 	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
 	Custom    map[string]json.RawMessage `json:"custom,omitempty"`
 	CreatedAt string                     `json:"created_at"`
@@ -1337,7 +1425,14 @@ type CRMLeadCard struct {
 	RejectReasonID      *UUID         `json:"reject_reason_id,omitempty"`
 	ConvertedDealID     *UUID         `json:"converted_deal_id,omitempty"`
 	// MergedIntoLeadID — Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
-	MergedIntoLeadID *UUID `json:"merged_into_lead_id,omitempty"`
+	MergedIntoLeadID *UUID   `json:"merged_into_lead_id,omitempty"`
+	UtmSource        *string `json:"utm_source,omitempty"`
+	UtmMedium        *string `json:"utm_medium,omitempty"`
+	UtmCampaign      *string `json:"utm_campaign,omitempty"`
+	UtmTerm          *string `json:"utm_term,omitempty"`
+	UtmContent       *string `json:"utm_content,omitempty"`
+	LandingPage      *string `json:"landing_page,omitempty"`
+	Referrer         *string `json:"referrer,omitempty"`
 	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
 	Custom             map[string]json.RawMessage `json:"custom,omitempty"`
 	CreatedAt          string                     `json:"created_at"`
@@ -1382,7 +1477,14 @@ type CRMLeadDuplicate struct {
 	RejectReasonID      *UUID         `json:"reject_reason_id,omitempty"`
 	ConvertedDealID     *UUID         `json:"converted_deal_id,omitempty"`
 	// MergedIntoLeadID — Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
-	MergedIntoLeadID *UUID `json:"merged_into_lead_id,omitempty"`
+	MergedIntoLeadID *UUID   `json:"merged_into_lead_id,omitempty"`
+	UtmSource        *string `json:"utm_source,omitempty"`
+	UtmMedium        *string `json:"utm_medium,omitempty"`
+	UtmCampaign      *string `json:"utm_campaign,omitempty"`
+	UtmTerm          *string `json:"utm_term,omitempty"`
+	UtmContent       *string `json:"utm_content,omitempty"`
+	LandingPage      *string `json:"landing_page,omitempty"`
+	Referrer         *string `json:"referrer,omitempty"`
 	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
 	Custom             map[string]json.RawMessage `json:"custom,omitempty"`
 	CreatedAt          string                     `json:"created_at"`
@@ -1408,7 +1510,14 @@ type CRMLeadInput struct {
 	NextAction    *string `json:"next_action,omitempty"`
 	NextActionAt  *string `json:"next_action_at,omitempty"`
 	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
-	Custom map[string]json.RawMessage `json:"custom,omitempty"`
+	Custom      map[string]json.RawMessage `json:"custom,omitempty"`
+	UtmSource   *string                    `json:"utm_source,omitempty"`
+	UtmMedium   *string                    `json:"utm_medium,omitempty"`
+	UtmCampaign *string                    `json:"utm_campaign,omitempty"`
+	UtmTerm     *string                    `json:"utm_term,omitempty"`
+	UtmContent  *string                    `json:"utm_content,omitempty"`
+	LandingPage *string                    `json:"landing_page,omitempty"`
+	Referrer    *string                    `json:"referrer,omitempty"`
 }
 
 type CRMLeadLockMode = string
@@ -1437,18 +1546,23 @@ type CRMLeadStage struct {
 	Name      string `json:"name"`
 	SortOrder int64  `json:"sort_order"`
 	// IsActive — Ненужный этап выключают, а не удаляют
-	IsActive  bool   `json:"is_active"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
+	IsActive  bool                `json:"is_active"`
+	Meaning   CRMLeadStageMeaning `json:"meaning"`
+	CreatedAt string              `json:"created_at"`
+	UpdatedAt string              `json:"updated_at"`
 }
 
 type CRMLeadStageInput struct {
-	Name string `json:"name"`
+	Name    string               `json:"name"`
+	Meaning *CRMLeadStageMeaning `json:"meaning,omitempty"`
 }
 
+type CRMLeadStageMeaning = string
+
 type CRMLeadStagePatch struct {
-	Name     *string `json:"name,omitempty"`
-	IsActive *bool   `json:"is_active,omitempty"`
+	Name     *string              `json:"name,omitempty"`
+	IsActive *bool                `json:"is_active,omitempty"`
+	Meaning  *CRMLeadStageMeaning `json:"meaning,omitempty"`
 }
 
 type CRMLeadStatus = string
@@ -1491,6 +1605,11 @@ type CRMManagerWorkload struct {
 	WonAmountMonth *string `json:"won_amount_month,omitempty"`
 }
 
+type CRMMergeCustomersInput struct {
+	// Sources — Карточки, которые сливаются в эту
+	Sources []UUID `json:"sources"`
+}
+
 // CRMMergeLeadsInput — Какие обращения свести в это
 type CRMMergeLeadsInput struct {
 	// SourceIds — Источники: уходят в архив со ссылкой на цель, их переписка и дела переезжают
@@ -1499,6 +1618,8 @@ type CRMMergeLeadsInput struct {
 
 type CRMMoveDealInput struct {
 	StageID UUID `json:"stage_id"`
+	// PipelineID — Целевая воронка. Пусто или текущая - перенос по этапам своей воронки; другая - сделка переезжает в неё, а stage_id должен быть этапом целевой воронки. Закрытую сделку не переносят
+	PipelineID *string `json:"pipeline_id,omitempty"`
 	// LossReasonID — Обязательна для стадии категории lost
 	LossReasonID *string `json:"loss_reason_id,omitempty"`
 }
@@ -1689,6 +1810,11 @@ type CRMTimelineEntry struct {
 	Title string                     `json:"title"`
 	Body  *string                    `json:"body,omitempty"`
 	Meta  map[string]json.RawMessage `json:"meta,omitempty"`
+	// RecordType — Запись, которой принадлежит событие. В ленте клиента это его сделка или лид, а не он сам
+	RecordType *string `json:"record_type,omitempty"`
+	RecordID   *UUID   `json:"record_id,omitempty"`
+	// RecordTitle — Название записи; заполняется только в ленте клиента
+	RecordTitle *string `json:"record_title,omitempty"`
 }
 
 type CRMUserRef struct {
@@ -2614,6 +2740,8 @@ type CoreCompanyPolicy struct {
 	TaxRegime []CorePolicyTaxRegimeVersion `json:"tax_regime,omitempty"`
 	// SoleProprietor — Юрлицо — ИП (вид организации в карточке): доступны ПСН, НПД и патент
 	SoleProprietor *bool `json:"sole_proprietor,omitempty"`
+	// PayrollOfficial — Вся ли зарплата в бухгалтерии и источник официальной части, с историей (ERP-1700); пусто — вся официальная
+	PayrollOfficial []CorePolicyPayrollOfficialVersion `json:"payroll_official,omitempty"`
 }
 
 type CoreConflictingRegistrar struct {
@@ -3267,6 +3395,26 @@ type CoreItemMove struct {
 type CoreItemPage struct {
 	Count   int64      `json:"count"`
 	Results []CoreItem `json:"results"`
+}
+
+// CoreLetterhead — Бланк юрлица. Ключи файлов наружу не отдаются: images говорит только, есть ли картинка на месте.
+type CoreLetterhead struct {
+	CompanyID       UUID                 `json:"company_id"`
+	Version         int64                `json:"version"`
+	DirectorName    *string              `json:"director_name,omitempty"`
+	DirectorTitle   *string              `json:"director_title,omitempty"`
+	AccountantName  *string              `json:"accountant_name,omitempty"`
+	AccountantTitle *string              `json:"accountant_title,omitempty"`
+	BankAccountID   *UUID                `json:"bank_account_id,omitempty"`
+	PrintFacsimile  *bool                `json:"print_facsimile,omitempty"`
+	Images          CoreLetterheadImages `json:"images"`
+}
+
+type CoreLetterheadImages struct {
+	Logo                bool `json:"logo"`
+	Stamp               bool `json:"stamp"`
+	DirectorSignature   bool `json:"director_signature"`
+	AccountantSignature bool `json:"accountant_signature"`
 }
 
 type CoreNumberReset = string
@@ -4010,6 +4158,10 @@ type CoreOwnershipVersionInput struct {
 	Owners    []CoreBusinessOwnerInput `json:"owners"`
 }
 
+type CorePhotoResult struct {
+	PhotoURL string `json:"photo_url"`
+}
+
 type CorePolicyAccountableDaysVersion struct {
 	ID UUID `json:"id"`
 	// ValidFrom — Начало версии; 0001-01-01 означает «с начала учёта»
@@ -4017,6 +4169,27 @@ type CorePolicyAccountableDaysVersion struct {
 	// ValidTo — Последний день версии; отсутствует у открытой версии
 	ValidTo *string `json:"valid_to,omitempty"`
 	Days    int64   `json:"days"`
+}
+
+type CorePolicyPayrollOfficialInput struct {
+	// ValidFrom — 0001-01-01 — с начала учёта
+	ValidFrom string `json:"valid_from"`
+	// AllOfficial — Вся начисленная зарплата отражается в бухгалтерии
+	AllOfficial bool `json:"all_official"`
+	// PayrollSource — Источник официальной части; обязателен при all_official = false
+	PayrollSource *string `json:"payroll_source,omitempty"`
+}
+
+type CorePolicyPayrollOfficialVersion struct {
+	ID UUID `json:"id"`
+	// ValidFrom — Начало версии; 0001-01-01 означает «с начала учёта»
+	ValidFrom string `json:"valid_from"`
+	// ValidTo — Последний день версии; отсутствует у открытой версии
+	ValidTo *string `json:"valid_to,omitempty"`
+	// AllOfficial — Вся начисленная зарплата отражается в бухгалтерии
+	AllOfficial bool `json:"all_official"`
+	// Source — Источник официальной части; нет при all_official
+	Source *string `json:"source,omitempty"`
 }
 
 type CorePolicyPeriod struct {
@@ -4722,11 +4895,13 @@ type CoreTrialBalanceTotals struct {
 	Balanced       bool   `json:"balanced"`
 }
 
-// CoreUploadFinishResult — Итог завершения сессии core: заведённый файл товара или запуск импорта.
+// CoreUploadFinishResult — Итог завершения сессии core: заведённый файл товара, запуск импорта, фото сотрудника или бланк юрлица.
 type CoreUploadFinishResult struct {
 	Session       TransferSession       `json:"session"`
 	ProductFile   *CoreProductFile      `json:"product_file,omitempty"`
 	ProductImport *CoreProductImportRun `json:"product_import,omitempty"`
+	EmployeePhoto *CorePhotoResult      `json:"employee_photo,omitempty"`
+	Letterhead    *CoreLetterhead       `json:"letterhead,omitempty"`
 }
 
 // CredentialRequestGap — Окно, в котором обращения были, а записей о них нет: очередь писателя переполнилась либо база кабинета не приняла пачку. Признание в НАШЕЙ аварии, и печатается оно обеим сторонам — страница без него читалась бы как полная история. Кабинета в окне нет ни у одной из дверей.
@@ -6079,6 +6254,24 @@ type DocflowFlowFile struct {
 }
 
 type DocflowFlowKind = string
+
+// DocflowFlowOriginal — Сканы подписанного оригинала документа.
+type DocflowFlowOriginal struct {
+	DocumentID UUID                      `json:"document_id"`
+	Scans      []DocflowFlowOriginalScan `json:"scans"`
+}
+
+// DocflowFlowOriginalScan — Скан подписанного оригинала; номер скана из сессии загрузки — номер сессии.
+type DocflowFlowOriginalScan struct {
+	ID          UUID   `json:"id"`
+	DocumentID  UUID   `json:"document_id"`
+	Name        string `json:"name"`
+	Size        int64  `json:"size"`
+	Sha256      string `json:"sha256"`
+	ContentType string `json:"content_type"`
+	UploadedBy  int64  `json:"uploaded_by"`
+	UploadedAt  string `json:"uploaded_at"`
+}
 
 // DocflowFlowPage — Страница карточек. Набор строк называется items — как у остальных страниц этого крыла; крыло обмена с контрагентами в том же модуле исторически называет его results.
 type DocflowFlowPage struct {
@@ -8891,10 +9084,12 @@ type MailFolder struct {
 	TotalCount  int64  `json:"total_count"`
 	UnreadCount int64  `json:"unread_count"`
 	// SortOrder — Вес папки в привычном порядке системных папок
-	SortOrder  int64  `json:"sort_order"`
-	Subscribed bool   `json:"subscribed"`
-	CreatedAt  string `json:"created_at"`
-	UpdatedAt  string `json:"updated_at"`
+	SortOrder  int64 `json:"sort_order"`
+	Subscribed bool  `json:"subscribed"`
+	// Mirror — Вид на ту же почту (Gmail «Вся почта», «Важное», «Помеченные»): письма в нём — копии писем из настоящих папок, в сводные выборки они не попадают
+	Mirror    bool   `json:"mirror"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
 }
 
 // MailFolderInput — Создание и переименование пользовательской папки
@@ -9106,6 +9301,14 @@ type MailSyncReport struct {
 	FinishedAt   string `json:"finished_at"`
 	// FullReloaded — Папки, перечитанные целиком после смены UIDVALIDITY на сервере
 	FullReloaded []string `json:"full_reloaded,omitempty"`
+	// FailedFolders — Папки, которые в этот проход прочитать не удалось; остальные разобраны
+	FailedFolders []string `json:"failed_folders,omitempty"`
+	// Updated — Письма, у которых проход перенёс с сервера прочтение, отметку или удаление из другого клиента
+	Updated *int64 `json:"updated,omitempty"`
+	// State — Только у проверки по требованию: done — проверено, running — ящик проверяется фоном и письма появятся сами
+	State *string `json:"state,omitempty"`
+	// Partial — Проверка по требованию успела не все свои папки; остальное доделает фон
+	Partial *bool `json:"partial,omitempty"`
 }
 
 type MailSyncStatus = string
@@ -11184,6 +11387,23 @@ type StockDocumentRefs struct {
 
 type StockDocumentTypeKey = string
 
+// StockDownloadLink — Временный адрес файла склада: подписанный адрес хранилища или адрес этого API.
+type StockDownloadLink struct {
+	URL    string `json:"url"`
+	Method string `json:"method"`
+	// Direct — true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией
+	Direct bool `json:"direct"`
+	// RequiresAuthorization — true — адрес требует токен API, агенту по MCP он недоступен
+	RequiresAuthorization bool `json:"requires_authorization"`
+	// ExpiresAt — Срок подписанного адреса; у адреса API его нет
+	ExpiresAt *string `json:"expires_at,omitempty"`
+	Name      string  `json:"name"`
+	MimeType  string  `json:"mime_type"`
+	SizeBytes int64   `json:"size_bytes"`
+	// Sha256 — Контрольная сумма SHA-256, если известна
+	Sha256 *string `json:"sha256,omitempty"`
+}
+
 type StockExport struct {
 	ID               UUID                      `json:"id"`
 	Kind             StockImportKind           `json:"kind"`
@@ -11335,6 +11555,26 @@ type StockImportRun struct {
 }
 
 type StockImportStatus = string
+
+// StockImportUploadSessionRequest — Заявка на сессию загрузки файла складского импорта. filename и size — синонимы name и size_bytes.
+type StockImportUploadSessionRequest struct {
+	Kind StockImportKind       `json:"kind"`
+	Mode CoreProductImportMode `json:"mode"`
+	// Name — Имя файла с расширением xlsx, xls, ods, csv или tsv
+	Name *string `json:"name,omitempty"`
+	// MimeType — Тип содержимого; по умолчанию — по расширению файла
+	MimeType *string `json:"mime_type,omitempty"`
+	// SizeBytes — Точный размер файла в байтах
+	SizeBytes *int64 `json:"size_bytes,omitempty"`
+	// Sha256 — Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками
+	Sha256 *string `json:"sha256,omitempty"`
+	// TargetDocumentID — Складской документ, к которому привязан прогон; строки без document_id получают его
+	TargetDocumentID *UUID `json:"target_document_id,omitempty"`
+	// Filename — Синоним поля name
+	Filename *string `json:"filename,omitempty"`
+	// Size — Синоним поля size_bytes
+	Size *int64 `json:"size,omitempty"`
+}
 
 // StockInventoryChange — Документ, тронувший товар снимка после момента снимка.
 type StockInventoryChange struct {
@@ -11593,15 +11833,17 @@ type StockReceiptClaimBalance struct {
 	OpenAmount string `json:"open_amount"`
 }
 
-// StockReceiptCorrectionCreate — Тело черновика корректировки приёмки по УКД поставщика на уменьшение.
+// StockReceiptCorrectionCreate — Тело черновика корректировки приёмки по УКД поставщика на уменьшение или увеличение.
 type StockReceiptCorrectionCreate struct {
 	BasisID UUID `json:"basis_id"`
+	// Direction — Уменьшение (по умолчанию) или увеличение стоимости
+	Direction *string `json:"direction,omitempty"`
 	// Date — Пусто или отсутствует означает рабочую дату кабинета
 	Date             *string                                      `json:"date,omitempty"`
 	SupplierDocument StockReceiptCorrectionCreateSupplierDocument `json:"supplier_document"`
-	// Amount — Уменьшение с налогом в валюте приёмки
+	// Amount — Изменение с налогом в валюте приёмки, без знака
 	Amount string `json:"amount"`
-	// VAT — Налог уменьшения в валюте приёмки
+	// VAT — Налог изменения в валюте приёмки
 	VAT     *string `json:"vat,omitempty"`
 	Comment *string `json:"comment,omitempty"`
 }
@@ -11957,6 +12199,12 @@ type StockSupplier struct {
 type StockSupplierPage struct {
 	Count   int64           `json:"count"`
 	Results []StockSupplier `json:"results"`
+}
+
+// StockUploadFinishResult — Итог завершения сессии склада: сессия и заведённый прогон импорта.
+type StockUploadFinishResult struct {
+	Session TransferSession `json:"session"`
+	Import  *StockImportRun `json:"import,omitempty"`
 }
 
 type StockValuationPreviewRequest struct {

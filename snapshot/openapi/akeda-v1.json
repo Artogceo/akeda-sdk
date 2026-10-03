@@ -159,6 +159,10 @@
       "description": "Модуль crm — собственная база клиентов и перенос в справочник контрагентов ERP"
     },
     {
+      "name": "CRM import",
+      "description": "Модуль crm — перенос клиентов, лидов и сделок из чужих CRM и файлов"
+    },
+    {
       "name": "CRM inbox",
       "description": "Модуль crm — каналы, диалоги, переписка и шаблоны ответов"
     },
@@ -17231,6 +17235,166 @@
         }
       }
     },
+    "/api/v1/core/accounting-policy/companies/{id}/payroll-official": {
+      "post": {
+        "tags": [
+          "Core accounting"
+        ],
+        "operationId": "coreAddPolicyPayrollOfficial",
+        "summary": "Официальная часть зарплаты юрлица с даты",
+        "description": "Вся ли начисленная зарплата отражается в бухгалтерии и, если нет, откуда берётся официальная часть — вручную в штате, 1С:Бухгалтерия или 1С:ЗУП (ERP-1700). Нет версии — вся официальная. Налог по настройке не считается, проведённые документы версию не запирают. Новая версия начинается строго позже открытой и закрывает её днём раньше.",
+        "x-akeda-module": "core",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "core:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorePolicyPayrollOfficialInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Учётная политика после записи",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreAccountingPolicy"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/core/accounting-policy/companies/{id}/payroll-official/open": {
+      "put": {
+        "tags": [
+          "Core accounting"
+        ],
+        "operationId": "coreEditPolicyPayrollOfficial",
+        "summary": "Поправить открытую версию — официальная часть зарплаты юрлица",
+        "description": "Правит дату или значение открытой версии настройки официальной зарплаты (ERP-1700); дата не раньше начала предыдущей версии.",
+        "x-akeda-module": "core",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "core:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorePolicyPayrollOfficialInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Учётная политика после записи",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreAccountingPolicy"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/v1/core/accounting-settings": {
       "get": {
         "tags": [
@@ -18727,7 +18891,7 @@
         ],
         "operationId": "coreFinishUploadSession",
         "summary": "Завершить загрузку файла товара или импорта",
-        "description": "Проверяет, что файл лёг по выданному адресу: размер, контрольную сумму (если заявлена) и антивирус; подменённый после проверки файл отклоняется, заражённый удаляется и до товара не доходит. Затем заводит строку с номером сессии: у сессии товара — файл товара (product_file, миниатюры фото строятся из объекта), у сессии импорта — запуск импорта (product_import). Повтор возвращает ту же строку. 409 transfer.not_uploaded — байтов ещё нет; 422 transfer.infected — найдена угроза, файл удалён; 503 transfer.scanner_unavailable — антивирус недоступен, повторите позже.",
+        "description": "Проверяет, что файл лёг по выданному адресу: размер, контрольную сумму (если заявлена) и антивирус; подменённый после проверки файл отклоняется, заражённый удаляется и до товара не доходит. Затем заводит строку с номером сессии: у сессии товара — файл товара (product_file, миниатюры фото строятся из объекта), у сессии импорта — запуск импорта (product_import). Сессии фото сотрудника и картинки бланка, открытые экраном, завершаются здесь же и отвечают employee_photo и letterhead. Повтор возвращает ту же строку. 409 transfer.not_uploaded — байтов ещё нет; 422 transfer.infected — найдена угроза, файл удалён; 503 transfer.scanner_unavailable — антивирус недоступен, повторите позже.",
         "security": [
           {
             "erpUserToken": []
@@ -21631,7 +21795,7 @@
         ],
         "operationId": "financeOrderAdvanceOffer",
         "summary": "Свободные авансы для зачёта по заказу",
-        "description": "Свободные авансы контрагента и юрлица заказа, включая начальные остатки, датой не позже открытого долга заказа. mode=offset — можно зачесть; mode=relink — после отсечки расчётов по заказам аванс сначала переносят на заказ; пустой mode — зачитывать нечего.",
+        "description": "Свободные авансы контрагента и юрлица заказа без заказа — на контрагенте или на договоре этого заказа, включая начальные остатки, датой не позже открытого долга заказа; одинаково до и после отсечки расчётов по заказам (ERP-1727). mode=offset — можно зачесть; пустой mode — зачитывать нечего.",
         "x-akeda-module": "finance",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -21702,7 +21866,7 @@
         ],
         "operationId": "financeOffsetOrderAdvances",
         "summary": "Зачесть свободные авансы в долг заказа",
-        "description": "Зачитывает свободные авансы в открытые долги заказа штатным документом «Зачёт аванса» — ранние авансы в ранние долги, аванс не позже долга. После отсечки отказ finance.order.advance_needs_relink; нечего зачитывать — finance.order.advance_nothing.",
+        "description": "Зачитывает свободные авансы в открытые долги заказа штатным документом «Зачёт аванса» — ранние авансы в ранние долги, аванс не позже долга. Работает до и после отсечки расчётов по заказам (ERP-1727); нечего зачитывать — finance.order.advance_nothing.",
         "x-akeda-module": "finance",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -27077,7 +27241,7 @@
         ],
         "operationId": "crmCreateDeal",
         "summary": "Создать сделку",
-        "description": "customer_id — UUID контрагента из справочника core, а не юрлицо продавца. Отдельного поля юрлица продавца у этой команды нет. Валюта суммы проверяется по справочнику валют ERP.",
+        "description": "customer_id — UUID контрагента из справочника core, а не юрлицо продавца. Отдельного поля юрлица продавца у этой команды нет. Валюта суммы проверяется по справочнику валют ERP. Читает Idempotency-Key — повтор того же запроса с тем же ключом отдаёт созданную сделку, а не вторую.",
         "security": [
           {
             "erpUserToken": []
@@ -27095,6 +27259,9 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
           }
         ],
         "requestBody": {
@@ -27127,8 +27294,11 @@
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
+          "422": {
+            "$ref": "#/components/responses/IdempotencyKeyMismatch"
+          },
           "503": {
-            "description": "Справочник валют ERP временно недоступен",
+            "description": "Справочник валют ERP или хранилище ключей идемпотентности временно недоступны",
             "content": {
               "application/json": {
                 "schema": {
@@ -27794,7 +27964,7 @@
         ],
         "operationId": "crmCreateLead",
         "summary": "Создать лид",
-        "description": "Создаёт лид CRM.",
+        "description": "Создаёт лид CRM. Читает Idempotency-Key — повтор того же запроса с тем же ключом отдаёт созданный лид, а не второй.",
         "security": [
           {
             "erpUserToken": []
@@ -27812,6 +27982,9 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
           }
         ],
         "requestBody": {
@@ -27843,6 +28016,12 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "422": {
+            "$ref": "#/components/responses/IdempotencyKeyMismatch"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyUnavailable"
           }
         }
       }
@@ -28439,7 +28618,7 @@
         ],
         "operationId": "crmCreateCustomer",
         "summary": "Создать клиента CRM",
-        "description": "Создаёт карточку клиента CRM.",
+        "description": "Создаёт карточку клиента CRM. Живая карточка того же вида с теми же ИНН и КПП уже есть — отказ 409 crm.customer_inn_taken без обхода. Совпал телефон или почта с живой карточкой — отказ 409 crm.customer_possible_duplicate со списком похожих; повтор с confirm_duplicate: true создаёт карточку. Читает Idempotency-Key — повтор того же запроса с тем же ключом отдаёт созданную карточку, а не вторую.",
         "security": [
           {
             "erpUserToken": []
@@ -28457,6 +28636,9 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
           }
         ],
         "requestBody": {
@@ -28488,6 +28670,22 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "description": "Похожий клиент уже есть: code crm.customer_inn_taken или crm.customer_possible_duplicate, в matches — похожие карточки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CRMCustomerDuplicateRefusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/IdempotencyKeyMismatch"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyUnavailable"
           }
         }
       }
@@ -28568,6 +28766,70 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/CRMCustomerDuplicate"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/crm/customers/duplicate-groups": {
+      "get": {
+        "tags": [
+          "CRM customers"
+        ],
+        "operationId": "crmListCustomerDuplicateGroups",
+        "summary": "Найти дубли во всей базе клиентов",
+        "description": "Группы живых карточек с общим признаком: ИНН и КПП одного вида лица, последние десять цифр телефона, почта или имя. Сильные признаки идут первыми. Без права видеть чужих клиентов поиск идёт только среди своих карточек.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Сколько групп вернуть, по умолчанию 50, не больше 200",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Группы похожих карточек",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CRMCustomerDuplicateGroup"
                   }
                 }
               }
@@ -28693,6 +28955,134 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Правка или возврат из архива дали бы вторую живую карточку с теми же ИНН и КПП: code crm.customer_inn_taken, в matches — уже заведённая",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CRMCustomerDuplicateRefusal"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CRM customers"
+        ],
+        "operationId": "crmDeleteCustomer",
+        "summary": "Удалить клиента CRM",
+        "description": "Удаляет карточку клиента безвозвратно вместе с её каналами связи и связями «человек — компания». Удаляется только карточка без лидов и сделок (в том числе архивных) и не заведённая в справочник ERP — иначе 409: такого клиента убирают в архив или сливают с другой карточкой. Нужно право удаления CRM (crm:delete, crm:admin или администратор кабинета) и доступ к карточке.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:write",
+        "responses": {
+          "204": {
+            "description": "Клиент удалён"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "У клиента есть лиды или сделки (crm.customer_delete_in_use) или он заведён в справочнике ERP (crm.customer_delete_in_core)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/crm/customers/{id}/merge": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "CRM customers"
+        ],
+        "operationId": "crmMergeCustomers",
+        "summary": "Слить карточки клиента в эту",
+        "description": "Сливаемые карточки уходят в архив со ссылкой сюда (merged_into_customer_id); их лиды, сделки, связи «человек — компания» и каналы связи переезжают, пустые поля этой карточки дополняются, метки объединяются, заметки складываются. Справочник ERP не меняется. Человека с компанией и карточки разных контрагентов ERP слить нельзя. Нужен доступ к каждой карточке.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CRMMergeCustomersInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Главная карточка после слияния",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CRMCustomer"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           }
         }
       }
@@ -28749,6 +29139,247 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/crm/imports/{id}/upload-sessions": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "CRM import"
+        ],
+        "operationId": "crmCreateImportUploadSession",
+        "summary": "Открыть сессию загрузки файла импорта",
+        "description": "Файл импорта (XLSX, XLS, ODS или CSV до 25 МБ) кладётся прямо в хранилище кабинета по подписанному адресу, мимо API: путь байтов — как у crmCreateInboxUploadSession (post, parts или api). Затем crmFinishImportUploadSession проверяет размер, контрольную сумму и антивирус, разбирает таблицу и делает файл источником запуска — как crmUploadImportFile. Каждая загрузка ложится в свой ключ: новый файл не перезаписывает прежний, прежний удаляется только после смены источника. Запуск — из файла, в статусе draft или extracting, иначе 409 crm.import_status.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:admin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Сессия и адрес для байтов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/crm/import-upload-sessions/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "CRM import"
+        ],
+        "operationId": "crmGetImportUploadSession",
+        "summary": "Состояние сессии загрузки файла импорта",
+        "description": "Сессию видит только её автор. status=pending — байты ждём или завершение можно повторить; attached — файл стал источником запуска, published_ref — номер запуска; failed — причина в failure. Адрес для байтов здесь не повторяется: он выдаётся один раз при открытии сессии.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:admin",
+        "responses": {
+          "200": {
+            "description": "Состояние сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CRM import"
+        ],
+        "operationId": "crmAbortImportUploadSession",
+        "summary": "Отменить сессию загрузки файла импорта",
+        "description": "Незавершённая сессия закрывается, уже загруженные байты удаляются из хранилища. Завершённую отменить нельзя — ответ 409.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:admin",
+        "responses": {
+          "204": {
+            "description": "Сессия отменена"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/crm/import-upload-sessions/{id}/finish": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "CRM import"
+        ],
+        "operationId": "crmFinishImportUploadSession",
+        "summary": "Завершить загрузку файла импорта",
+        "description": "Проверяет, что файл лёг по выданному адресу: размер, контрольную сумму (если заявлена) и антивирус; подменённый после проверки файл отклоняется. Затем разбирает таблицу, делает файл источником запуска и возвращает листы с первыми строками — как crmUploadImportFile. Повтор возвращает листы того же файла; если его уже заменила более поздняя загрузка — 409 crm.import_stale. Нечитаемый файл — 400 crm.import_file_invalid, сессия закрывается. 409 transfer.not_uploaded — байтов ещё нет; 422 transfer.infected — найдена угроза, файл удалён; 503 transfer.scanner_unavailable или transfer.publish_uncertain — повторите завершение позже.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:admin",
+        "responses": {
+          "200": {
+            "description": "Листы файла с первыми строками",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CRMImportFileInfo"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "410": {
+            "$ref": "#/components/responses/Gone"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
           }
         }
       }
@@ -29989,7 +30620,7 @@
           "$ref": "#/components/parameters/TenantHeader"
         },
         {
-          "$ref": "#/components/parameters/CRMEntityType"
+          "$ref": "#/components/parameters/CRMCardEntityType"
         },
         {
           "$ref": "#/components/parameters/ResourceID"
@@ -30000,7 +30631,7 @@
           "CRM links"
         ],
         "operationId": "crmListEngagements",
-        "summary": "Получить дела по лиду или сделке",
+        "summary": "Получить дела по лиду, сделке или клиенту",
         "description": "Незакрытые впереди по сроку, закрытые следом: менеджеру важно, что делать дальше",
         "security": [
           {
@@ -30049,7 +30680,7 @@
           "CRM links"
         ],
         "operationId": "crmCreateEngagement",
-        "summary": "Запланировать дело по лиду или сделке",
+        "summary": "Запланировать дело по лиду, сделке или клиенту",
         "description": "Дело CRM легче задачи задачника: личный шаг менеджера без проекта и рабочего процесса",
         "security": [
           {
@@ -30235,7 +30866,7 @@
           "$ref": "#/components/parameters/TenantHeader"
         },
         {
-          "$ref": "#/components/parameters/CRMEntityType"
+          "$ref": "#/components/parameters/CRMCardEntityType"
         },
         {
           "$ref": "#/components/parameters/ResourceID"
@@ -30246,8 +30877,19 @@
           "CRM links"
         ],
         "operationId": "crmGetTimeline",
-        "summary": "Получить единую хронологию лида или сделки",
-        "description": "Заметки и системные факты, смены этапов сделки, решения по лиду и переписка привязанных диалогов одной лентой по возрастанию времени",
+        "summary": "Получить единую хронологию лида, сделки или клиента",
+        "description": "Заметки и системные факты, смены этапов сделки, решения по лиду и переписка привязанных диалогов одной лентой по возрастанию времени. Лента клиента сверх своих записей собирает события его сделок и лидов, которые читающему доступны, и отдаётся страницами от курсора",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CRMTimelineLimit"
+          },
+          {
+            "$ref": "#/components/parameters/CRMTimelineBefore"
+          },
+          {
+            "$ref": "#/components/parameters/CRMTimelineBeforeID"
+          }
+        ],
         "security": [
           {
             "erpUserToken": []
@@ -30297,7 +30939,7 @@
           "$ref": "#/components/parameters/TenantHeader"
         },
         {
-          "$ref": "#/components/parameters/CRMEntityType"
+          "$ref": "#/components/parameters/CRMCardEntityType"
         },
         {
           "$ref": "#/components/parameters/ResourceID"
@@ -31159,6 +31801,235 @@
         }
       }
     },
+    "/api/v1/crm/inbox/conversations/{id}/upload-sessions": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "CRM inbox"
+        ],
+        "operationId": "crmCreateInboxUploadSession",
+        "summary": "Открыть сессию загрузки файла для сообщения диалога",
+        "description": "Файл кладётся прямо в хранилище кабинета по подписанному адресу, мимо API: так его загружают агент по MCP и клиенты с крупными файлами. Ответ называет путь байтов: post — один multipart POST на upload.url с полями upload.fields и файлом последним полем upload.file_field; parts — PUT каждой части на upload.direct_urls; api — хранилище подписывать не умеет, байты идут PUT на upload.url этого API с авторизацией. Затем crmFinishInboxUploadSession проверяет размер, контрольную сумму и антивирус и заводит загрузку для upload_ids. Потолок файла — 25 МБ. Клиенту файл уходит только через канал, у провайдера которого есть возможность files (crmListInboxProviders); иначе отправка отвечает 400 crm.inbox.files_unsupported. Диалог, назначенный другому менеджеру, отвечает 404.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferUploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Сессия и адрес для байтов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/crm/inbox/upload-sessions/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "CRM inbox"
+        ],
+        "operationId": "crmGetInboxUploadSession",
+        "summary": "Состояние сессии загрузки файла диалога",
+        "description": "Сессию видит только её автор. status=pending — байты ждём или завершение можно повторить; attached — загрузка заведена, published_ref — её номер для upload_ids; failed — причина в failure. Адрес для байтов здесь не повторяется: он выдаётся один раз при открытии сессии.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:read",
+        "responses": {
+          "200": {
+            "description": "Состояние сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CRM inbox"
+        ],
+        "operationId": "crmAbortInboxUploadSession",
+        "summary": "Отменить сессию загрузки файла диалога",
+        "description": "Незавершённая сессия закрывается, уже загруженные байты удаляются из хранилища. Завершённую отменить нельзя — ответ 409.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:write",
+        "responses": {
+          "204": {
+            "description": "Сессия отменена"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/crm/inbox/upload-sessions/{id}/finish": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "CRM inbox"
+        ],
+        "operationId": "crmFinishInboxUploadSession",
+        "summary": "Завершить загрузку файла для сообщения диалога",
+        "description": "Проверяет, что файл лёг по выданному адресу: размер, контрольную сумму (если заявлена) и антивирус; подменённый после проверки файл отклоняется. Затем заводит загрузку с номером сессии — её id передаётся в upload_ids при отправке crmSendInboxMessage. Загрузка живёт сутки. Повтор возвращает ту же загрузку. 409 transfer.not_uploaded — байтов ещё нет; 422 transfer.infected — найдена угроза, файл удалён; 503 transfer.scanner_unavailable — антивирус недоступен, повторите позже.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:write",
+        "responses": {
+          "200": {
+            "description": "Загрузка для сообщения",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CRMInboxOutboundUpload"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "410": {
+            "$ref": "#/components/responses/Gone"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
     "/api/v1/crm/inbox/messages/{id}/attachments": {
       "parameters": [
         {
@@ -31214,6 +32085,65 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/crm/inbox/attachments/{id}/download-session": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "CRM inbox"
+        ],
+        "operationId": "crmInboxAttachmentDownloadSession",
+        "summary": "Временный адрес вложения диалога",
+        "description": "Подписанный адрес вложения на 15 минут: байты идут прямо из хранилища, без заголовка авторизации — так забирает файл агент по MCP. Права — те же, что у диалога. direct=false — хранилище подписывать не умеет, адрес ведёт на crmGetInboxAttachmentContent и требует авторизации. scan_status=skipped честно говорит, что файл антивирус не проверял (загружен формой или до проверок). Файл, который антивирус ещё проверяет или признал заражённым, адреса не получает — 409 crm.inbox.attachment_not_scanned.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:read",
+        "responses": {
+          "200": {
+            "description": "Временный адрес",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferDownloadLink"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           }
         }
       }
@@ -34575,6 +35505,14 @@
             }
           },
           {
+            "name": "reason_id",
+            "in": "query",
+            "description": "Причина списания из справочника stock.stock_writeoff_reasons; берётся из payload документа",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
             "name": "offset",
             "in": "query",
             "schema": {
@@ -35031,7 +35969,7 @@
         ],
         "operationId": "stockCreateReceiptCorrection",
         "summary": "Создать черновик корректировки приёмки по УКД поставщика",
-        "description": "Черновик вида `stock_receipt_correction` («Корректировка приёмки») на\nосновании проведённой приёмки (ERP-1259): корректировочный УПД\nпоставщика на уменьшение. `amount` — уменьшение с налогом в валюте\nприёмки, `vat` — его налог, `supplier_document` — номер и дата УКД.\nУменьшение в пределах открытой претензии по недостаче гасит её против\nдолга (Дт 60.01 / Кт 76.02), склад и вычет не меняются. Проводится и\nотменяется общими `stockPostDocument` и `stockCancelDocument`.\n\nЧитает `Idempotency-Key` так же, как `stockCreateDocument`.\n",
+        "description": "Черновик вида `stock_receipt_correction` («Корректировка приёмки») на\nосновании проведённой приёмки (ERP-1259): корректировочный УПД\nпоставщика. `direction` — `decrease` (по умолчанию) или `increase`\n(ERP-1583). `amount` — изменение с налогом в валюте приёмки, `vat` —\nего налог, `supplier_document` — номер и дата УКД. Уменьшение в\nпределах открытой претензии по недостаче гасит её против долга\n(Дт 60.01 / Кт 76.02), склад и вычет не меняются. Увеличение\nдоплачивает поставщику (Кт 60.01), удорожает товар (Дт 41, проданное —\nДт 90.02) и даёт дополнительный вычет налога в квартале УКД (Дт 19).\nПроводится и отменяется общими `stockPostDocument` и\n`stockCancelDocument`.\n\nЧитает `Idempotency-Key` так же, как `stockCreateDocument`.\n",
         "x-akeda-module": "stock",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -38453,6 +39391,350 @@
         }
       }
     },
+    "/api/v1/stock/import-templates/{kind}": {
+      "get": {
+        "tags": [
+          "Stock imports"
+        ],
+        "operationId": "stockGetImportTemplate",
+        "summary": "Скачать шаблон складского импорта",
+        "description": "Всегда XLSX независимо от того, в каком формате потом придёт файл: лист\n«Данные» со стабильными ключами полей в заголовке, лист «Инструкция» и\nлист «Справочники» с подсказками, что подставить в каждую колонку.\n",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StockImportKind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/TabularFile"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/stock/import-templates/{kind}/download-session": {
+      "get": {
+        "tags": [
+          "Stock imports"
+        ],
+        "operationId": "stockImportTemplateDownloadSession",
+        "summary": "Временный адрес шаблона складского импорта",
+        "description": "Шаблон XLSX собирается на лету, кладётся в хранилище под ключ по содержимому и отдаётся подписанным адресом. Подписанный адрес живёт 15 минут и открывается GET без заголовка авторизации — так файл забирает агент по MCP. direct=false — хранилище подписывать не умеет: адрес ведёт на поток этого API и требует авторизации (requires_authorization=true).",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/StockImportKind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Временный адрес файла",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockDownloadLink"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/stock/imports/upload-sessions": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Stock imports"
+        ],
+        "operationId": "stockCreateImportUploadSession",
+        "summary": "Открыть сессию загрузки файла складского импорта",
+        "description": "Файл импорта (XLSX, XLS, ODS, CSV или TSV до 25 МиБ) кладётся прямо в хранилище кабинета по подписанному адресу, мимо API: так его загружают агент по MCP и клиенты без формы. Ответ называет путь байтов: post — один multipart POST на upload.url с полями upload.fields и файлом последним полем upload.file_field; parts — PUT каждой части на upload.direct_urls; api — хранилище подписывать не умеет, байты идут PUT на upload.url этого API с авторизацией. Затем stockFinishUploadSession проверяет размер, контрольную сумму и антивирус, разбирает таблицу и заводит прогон импорта со статусом uploaded и номером сессии — дальше inspect, mapping, preview и apply. Пара kind+mode та же, что у загрузки формой: initial_stock — только create_only, остальные виды — только upsert. Имена filename и size приняты как синонимы name и size_bytes. Прогон принадлежит открывшему сессию; её открывает пользователь или агент от его имени.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockImportUploadSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Сессия и адрес для байтов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/stock/upload-sessions/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "get": {
+        "tags": [
+          "Stock imports"
+        ],
+        "operationId": "stockGetUploadSession",
+        "summary": "Состояние сессии загрузки склада",
+        "description": "Сессию видит только её автор. status=pending — байты ждём или завершение можно повторить; attached — прогон заведён, published_ref — номер прогона импорта; failed — причина в failure. Адрес для байтов здесь не повторяется: он выдаётся один раз при открытии сессии.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:read",
+        "responses": {
+          "200": {
+            "description": "Состояние сессии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Stock imports"
+        ],
+        "operationId": "stockAbortUploadSession",
+        "summary": "Отменить сессию загрузки склада",
+        "description": "Незавершённая сессия закрывается, уже загруженные байты удаляются из хранилища. Завершённую отменить нельзя — ответ 409.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:write",
+        "responses": {
+          "204": {
+            "description": "Сессия отменена"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/stock/upload-sessions/{id}/finish": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ResourceID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Stock imports"
+        ],
+        "operationId": "stockFinishUploadSession",
+        "summary": "Завершить загрузку файла складского импорта",
+        "description": "Проверяет, что файл лёг по выданному адресу: размер, контрольную сумму (если заявлена) и антивирус; подменённый после проверки файл отклоняется, заражённый удаляется и прогоном не становится. Затем разбирает таблицу и заводит прогон импорта (import) со статусом uploaded и номером сессии — дальше stockInspectImport, stockUpdateImportMapping, stockPreviewImport и stockApplyImport. Повтор возвращает тот же прогон. 409 transfer.not_uploaded — байтов ещё нет; 422 transfer.infected — найдена угроза, файл удалён; 503 transfer.scanner_unavailable — антивирус недоступен, повторите позже.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:write",
+        "responses": {
+          "200": {
+            "description": "Сессия и заведённый прогон",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockUploadFinishResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "410": {
+            "$ref": "#/components/responses/Gone"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
     "/api/v1/stock/imports/{id}": {
       "get": {
         "tags": [
@@ -38912,6 +40194,200 @@
         }
       }
     },
+    "/api/v1/stock/imports/{id}/errors/download-session": {
+      "get": {
+        "tags": [
+          "Stock imports"
+        ],
+        "operationId": "stockImportErrorsDownloadSession",
+        "summary": "Временный адрес отчёта ошибок складского импорта",
+        "description": "Отчёт errors.xlsx своего прогона импорта подписанным адресом; отчёта ещё нет (preview не строился или прошёл без замечаний) — 404. Подписанный адрес живёт 15 минут и открывается GET без заголовка авторизации — так файл забирает агент по MCP. direct=false — хранилище подписывать не умеет: адрес ведёт на поток этого API и требует авторизации (requires_authorization=true).",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Временный адрес файла",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockDownloadLink"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/stock/imports/{id}/source": {
+      "get": {
+        "tags": [
+          "Stock imports"
+        ],
+        "operationId": "stockGetImportSource",
+        "summary": "Скачать исходный файл своего прогона импорта",
+        "description": "Поток исходного файла своего прогона импорта; чужой прогон — 404. Агенту без токена API адрес выдаёт stockImportSourceDownloadSession.",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/TabularFile"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/stock/imports/{id}/source/download-session": {
+      "get": {
+        "tags": [
+          "Stock imports"
+        ],
+        "operationId": "stockImportSourceDownloadSession",
+        "summary": "Временный адрес исходного файла складского импорта",
+        "description": "Исходный файл своего прогона импорта подписанным адресом; чужой прогон — 404. Подписанный адрес живёт 15 минут и открывается GET без заголовка авторизации — так файл забирает агент по MCP. direct=false — хранилище подписывать не умеет: адрес ведёт на поток этого API и требует авторизации (requires_authorization=true).",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Временный адрес файла",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockDownloadLink"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
     "/api/v1/stock/exports": {
       "post": {
         "tags": [
@@ -39029,6 +40505,133 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StockExport"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/stock/exports/{id}/content": {
+      "get": {
+        "tags": [
+          "Stock exports"
+        ],
+        "operationId": "stockGetExportContent",
+        "summary": "Скачать файл своего складского экспорта",
+        "description": "Поток файла своего складского экспорта; чужой экспорт — 404. Агенту без токена API адрес выдаёт stockExportDownloadSession.",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/TabularFile"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/stock/exports/{id}/download-session": {
+      "get": {
+        "tags": [
+          "Stock exports"
+        ],
+        "operationId": "stockExportDownloadSession",
+        "summary": "Временный адрес файла своего складского экспорта",
+        "description": "Файл своего складского экспорта подписанным адресом; чужой экспорт — 404. Подписанный адрес живёт 15 минут и открывается GET без заголовка авторизации — так файл забирает агент по MCP. direct=false — хранилище подписывать не умеет: адрес ведёт на поток этого API и требует авторизации (requires_authorization=true).",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Временный адрес файла",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockDownloadLink"
                 }
               }
             }
@@ -51595,7 +53198,7 @@
         "operationId": "docflowFinishFlowUploadSession",
         "x-akeda-audience": "external",
         "summary": "Завершить загрузку и приложить файл к документу",
-        "description": "Проверяет, что файл лёг по выданному адресу: размер, контрольную сумму (если заявлена) и антивирус; подменённый после проверки файл отклоняется. Затем приложение файла проводится командой документа с ожидаемой версией и ключом, названными при открытии сессии, и документ получает новую редакцию. Номер файла выводится из ключа: повтор завершения возвращает тот же документ и тот же файл, второго файла не появляется. 409 transfer.not_uploaded — байтов ещё нет; 409 docflow.flow.version_conflict — документ успели изменить, сессия закрыта; 422 transfer.infected — найдена угроза, файл удалён; 503 transfer.scanner_unavailable или transfer.publish_uncertain — повторите завершение позже.",
+        "description": "Проверяет, что файл лёг по выданному адресу: размер, контрольную сумму (если заявлена) и антивирус; подменённый после проверки файл отклоняется. Затем приложение файла проводится командой документа с ожидаемой версией и ключом, названными при открытии сессии, и документ получает новую редакцию. Номер файла выводится из ключа: повтор завершения возвращает тот же документ и тот же файл, второго файла не появляется. Сессия скана оригинала, открытая экраном карточки, завершается здесь же и отвечает сканами оригинала документа. 409 transfer.not_uploaded — байтов ещё нет; 409 docflow.flow.version_conflict — документ успели изменить, сессия закрыта; 422 transfer.infected — найдена угроза, файл удалён; 503 transfer.scanner_unavailable или transfer.publish_uncertain — повторите завершение позже.",
         "security": [
           {
             "erpUserToken": []
@@ -51624,11 +53227,18 @@
         ],
         "responses": {
           "200": {
-            "description": "Документ с приложенным файлом",
+            "description": "Документ с приложенным файлом или сканы оригинала",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DocflowFlowUploadResult"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/DocflowFlowUploadResult"
+                    },
+                    {
+                      "$ref": "#/components/schemas/DocflowFlowOriginal"
+                    }
+                  ]
                 }
               }
             }
@@ -52299,7 +53909,18 @@
         ],
         "operationId": "mailSyncAccount",
         "summary": "Синхронизировать ящик по требованию",
-        "description": "Один проход по папкам и письмам ящика. Идущая синхронизация того же ящика отвечает 409 mail.sync_in_progress, выключенный ящик — 409 mail.account_disabled, ящик без сохранённого пароля — 409 mail.not_connected. Отчёт возвращается и тогда, когда нового ничего нет: «ничего не изменилось» — тоже ответ.",
+        "description": "Быстрая проверка ящика: «Входящие» и названная папка (folder_id) не дольше 20 секунд, с переносом прочтения и удалений, сделанных в другом клиенте. Остальные папки, история и прогрев тел уходят фоновым проходом сразу следом. Ящик, который уже проверяется, или проверка, не успевшая в срок, отвечают 200 со state = running: письма появятся сами, это не ошибка. Выключенный ящик — 409 mail.account_disabled, ящик без сохранённого пароля — 409 mail.not_connected. Отчёт возвращается и тогда, когда нового ничего нет: «ничего не изменилось» — тоже ответ.",
+        "parameters": [
+          {
+            "name": "folder_id",
+            "in": "query",
+            "required": false,
+            "description": "Папка, которую человек сейчас смотрит: проверяется вместе с «Входящими»",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
         "security": [
           {
             "erpUserToken": []
@@ -54962,6 +56583,50 @@
           ]
         }
       },
+      "CRMCardEntityType": {
+        "name": "entity",
+        "in": "path",
+        "required": true,
+        "description": "Тип записи CRM, у которой есть лента, заметки и дела: лид, сделка или клиент",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "lead",
+            "deal",
+            "customer"
+          ]
+        }
+      },
+      "CRMTimelineLimit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "description": "Размер страницы ленты клиента: по умолчанию 30, не больше 100. У лида и сделки лента отдаётся целиком",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "CRMTimelineBefore": {
+        "name": "before",
+        "in": "query",
+        "required": false,
+        "description": "Курсор ленты клиента: время самой старой записи, которую экран уже показал; вместе с before_id",
+        "schema": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "CRMTimelineBeforeID": {
+        "name": "before_id",
+        "in": "query",
+        "required": false,
+        "description": "Курсор ленты клиента: id самой старой записи, которую экран уже показал; вместе с before",
+        "schema": {
+          "$ref": "#/components/schemas/UUID"
+        }
+      },
       "CRMSearchQuery": {
         "name": "q",
         "in": "query",
@@ -57398,6 +59063,11 @@
           "owner_id": {
             "$ref": "#/components/schemas/UUID"
           },
+          "folder_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Папка файлов проекта, куда сразу ляжет файл; только при owner_type=project"
+          },
           "filename": {
             "type": "string",
             "minLength": 1
@@ -57475,6 +59145,11 @@
           },
           "owner_id": {
             "$ref": "#/components/schemas/UUID"
+          },
+          "folder_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Папка файлов проекта, куда ляжет файл"
           },
           "uploaded_by": {
             "type": "integer",
@@ -65355,6 +67030,34 @@
           }
         ]
       },
+      "CorePolicyPayrollOfficialVersion": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CorePolicyPeriod"
+          },
+          {
+            "type": "object",
+            "required": [
+              "all_official"
+            ],
+            "properties": {
+              "all_official": {
+                "type": "boolean",
+                "description": "Вся начисленная зарплата отражается в бухгалтерии"
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "manual",
+                  "onec_bp",
+                  "onec_zup"
+                ],
+                "description": "Источник официальной части; нет при all_official"
+              }
+            }
+          }
+        ]
+      },
       "CoreBusinessPolicy": {
         "type": "object",
         "additionalProperties": false,
@@ -65461,6 +67164,13 @@
           "sole_proprietor": {
             "type": "boolean",
             "description": "Юрлицо — ИП (вид организации в карточке): доступны ПСН, НПД и патент"
+          },
+          "payroll_official": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CorePolicyPayrollOfficialVersion"
+            },
+            "description": "Вся ли зарплата в бухгалтерии и источник официальной части, с историей (ERP-1700); пусто — вся официальная"
           }
         }
       },
@@ -65519,6 +67229,34 @@
           "patent": {
             "type": "boolean",
             "description": "ИП совмещает основной режим с патентом; только ОСНО, УСН или ЕСХН"
+          }
+        }
+      },
+      "CorePolicyPayrollOfficialInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "valid_from",
+          "all_official"
+        ],
+        "properties": {
+          "valid_from": {
+            "type": "string",
+            "format": "date",
+            "description": "0001-01-01 — с начала учёта"
+          },
+          "all_official": {
+            "type": "boolean",
+            "description": "Вся начисленная зарплата отражается в бухгалтерии"
+          },
+          "payroll_source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "onec_bp",
+              "onec_zup"
+            ],
+            "description": "Источник официальной части; обязателен при all_official = false"
           }
         }
       },
@@ -71771,6 +73509,18 @@
           }
         }
       },
+      "CorePhotoResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "photo_url"
+        ],
+        "properties": {
+          "photo_url": {
+            "type": "string"
+          }
+        }
+      },
       "CoreCurrencyRateSourceKey": {
         "type": "string",
         "enum": [
@@ -72044,7 +73794,7 @@
       "CoreUploadFinishResult": {
         "type": "object",
         "additionalProperties": false,
-        "description": "Итог завершения сессии core: заведённый файл товара или запуск импорта.",
+        "description": "Итог завершения сессии core: заведённый файл товара, запуск импорта, фото сотрудника или бланк юрлица.",
         "required": [
           "session"
         ],
@@ -72057,6 +73807,79 @@
           },
           "product_import": {
             "$ref": "#/components/schemas/CoreProductImportRun"
+          },
+          "employee_photo": {
+            "$ref": "#/components/schemas/CorePhotoResult"
+          },
+          "letterhead": {
+            "$ref": "#/components/schemas/CoreLetterhead"
+          }
+        }
+      },
+      "CoreLetterhead": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Бланк юрлица. Ключи файлов наружу не отдаются: images говорит только, есть ли картинка на месте.",
+        "required": [
+          "company_id",
+          "version",
+          "images"
+        ],
+        "properties": {
+          "company_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "director_name": {
+            "type": "string"
+          },
+          "director_title": {
+            "type": "string"
+          },
+          "accountant_name": {
+            "type": "string"
+          },
+          "accountant_title": {
+            "type": "string"
+          },
+          "bank_account_id": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "print_facsimile": {
+            "type": "boolean"
+          },
+          "images": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "logo",
+              "stamp",
+              "director_signature",
+              "accountant_signature"
+            ],
+            "properties": {
+              "logo": {
+                "type": "boolean"
+              },
+              "stamp": {
+                "type": "boolean"
+              },
+              "director_signature": {
+                "type": "boolean"
+              },
+              "accountant_signature": {
+                "type": "boolean"
+              }
+            }
           }
         }
       },
@@ -78517,7 +80340,8 @@
           "qualified",
           "disqualified",
           "converted"
-        ]
+        ],
+        "description": "Единственный статус лида. Вычисляется из смысла этапа лида (CRMLeadStageMeaning) и напрямую не правится: меняется переносом на этап, квалификацией, отказом или конвертацией"
       },
       "CRMRequiredField": {
         "type": "string",
@@ -78759,6 +80583,7 @@
           "name",
           "sort_order",
           "is_active",
+          "meaning",
           "created_at",
           "updated_at"
         ],
@@ -78777,6 +80602,9 @@
             "type": "boolean",
             "description": "Ненужный этап выключают, а не удаляют"
           },
+          "meaning": {
+            "$ref": "#/components/schemas/CRMLeadStageMeaning"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -78786,6 +80614,16 @@
             "format": "date-time"
           }
         }
+      },
+      "CRMLeadStageMeaning": {
+        "type": "string",
+        "enum": [
+          "open",
+          "qualified",
+          "converted",
+          "rejected"
+        ],
+        "description": "Смысл этапа определяет статус лида на нём: open - в работе (статус new), qualified - квалифицирован (qualified), converted - превращён в сделку (converted), rejected - отклонён (disqualified). Статус отдельно не хранится и не правится: он вычисляется из этапа"
       },
       "CRMLeadStageInput": {
         "type": "object",
@@ -78797,6 +80635,9 @@
           "name": {
             "type": "string",
             "minLength": 1
+          },
+          "meaning": {
+            "$ref": "#/components/schemas/CRMLeadStageMeaning"
           }
         }
       },
@@ -78810,6 +80651,9 @@
           },
           "is_active": {
             "type": "boolean"
+          },
+          "meaning": {
+            "$ref": "#/components/schemas/CRMLeadStageMeaning"
           }
         }
       },
@@ -78939,6 +80783,33 @@
           "loss_reason_id": {
             "$ref": "#/components/schemas/UUID"
           },
+          "description": {
+            "type": "string"
+          },
+          "first_message": {
+            "type": "string"
+          },
+          "utm_source": {
+            "type": "string"
+          },
+          "utm_medium": {
+            "type": "string"
+          },
+          "utm_campaign": {
+            "type": "string"
+          },
+          "utm_term": {
+            "type": "string"
+          },
+          "utm_content": {
+            "type": "string"
+          },
+          "landing_page": {
+            "type": "string"
+          },
+          "referrer": {
+            "type": "string"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -78996,6 +80867,9 @@
             "description": "Обязателен при ненулевой сумме"
           },
           "source": {
+            "type": "string"
+          },
+          "description": {
             "type": "string"
           },
           "probability": {
@@ -79064,6 +80938,9 @@
           "source": {
             "type": "string"
           },
+          "description": {
+            "type": "string"
+          },
           "probability": {
             "type": "integer",
             "minimum": 0,
@@ -79124,6 +81001,14 @@
           "stage_id": {
             "$ref": "#/components/schemas/UUID"
           },
+          "pipeline_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Целевая воронка. Пусто или текущая - перенос по этапам своей воронки; другая - сделка переезжает в неё, а stage_id должен быть этапом целевой воронки. Закрытую сделку не переносят"
+          },
           "loss_reason_id": {
             "type": [
               "string",
@@ -79159,6 +81044,7 @@
           "deal_id",
           "to_stage_id",
           "changed_by",
+          "kind",
           "created_at"
         ],
         "properties": {
@@ -79177,6 +81063,20 @@
           "changed_by": {
             "type": "integer",
             "format": "int64"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "created",
+              "move",
+              "pipeline_change",
+              "reopen"
+            ],
+            "description": "Вид записи: created - сделка заведена, move - перенос по этапам, pipeline_change - перенос в другую воронку, reopen - повторное открытие закрытой сделки"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Причина; заполнена у повторного открытия"
           },
           "created_at": {
             "type": "string",
@@ -79498,6 +81398,27 @@
             "$ref": "#/components/schemas/UUID",
             "description": "Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника"
           },
+          "utm_source": {
+            "type": "string"
+          },
+          "utm_medium": {
+            "type": "string"
+          },
+          "utm_campaign": {
+            "type": "string"
+          },
+          "utm_term": {
+            "type": "string"
+          },
+          "utm_content": {
+            "type": "string"
+          },
+          "landing_page": {
+            "type": "string"
+          },
+          "referrer": {
+            "type": "string"
+          },
           "custom": {
             "type": [
               "object",
@@ -79591,6 +81512,27 @@
           "merged_into_lead_id": {
             "$ref": "#/components/schemas/UUID",
             "description": "Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника"
+          },
+          "utm_source": {
+            "type": "string"
+          },
+          "utm_medium": {
+            "type": "string"
+          },
+          "utm_campaign": {
+            "type": "string"
+          },
+          "utm_term": {
+            "type": "string"
+          },
+          "utm_content": {
+            "type": "string"
+          },
+          "landing_page": {
+            "type": "string"
+          },
+          "referrer": {
+            "type": "string"
           },
           "custom": {
             "type": [
@@ -79749,6 +81691,27 @@
             ],
             "additionalProperties": true,
             "description": "Дополнительные поля кабинета: состав задаёт «Настройки → Поля»"
+          },
+          "utm_source": {
+            "type": "string"
+          },
+          "utm_medium": {
+            "type": "string"
+          },
+          "utm_campaign": {
+            "type": "string"
+          },
+          "utm_term": {
+            "type": "string"
+          },
+          "utm_content": {
+            "type": "string"
+          },
+          "landing_page": {
+            "type": "string"
+          },
+          "referrer": {
+            "type": "string"
           }
         }
       },
@@ -80112,6 +82075,10 @@
             "type": "string",
             "format": "date-time"
           },
+          "merged_into_customer_id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Карточка слита с этой и лежит в архиве"
+          },
           "open_deals": {
             "type": "integer",
             "format": "int64",
@@ -80224,6 +82191,11 @@
             ],
             "additionalProperties": true,
             "description": "Дополнительные поля кабинета: состав задаёт «Настройки → Поля»"
+          },
+          "confirm_duplicate": {
+            "type": "boolean",
+            "default": false,
+            "description": "Это правда новый клиент: создать, хотя телефон или почта совпали с живой карточкой. Совпадение ИНН и КПП так не обходится"
           }
         }
       },
@@ -80342,6 +82314,153 @@
           }
         ]
       },
+      "CRMCustomerDuplicateRefusal": {
+        "type": "object",
+        "required": [
+          "code",
+          "detail",
+          "matches"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "crm.customer_inn_taken",
+              "crm.customer_possible_duplicate"
+            ]
+          },
+          "detail": {
+            "type": "string"
+          },
+          "matches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CRMCustomerDuplicate"
+            },
+            "description": "Похожие карточки; чужая карточка без права видеть чужих клиентов — только имя, вид и ответственный"
+          }
+        }
+      },
+      "CRMCustomerDuplicateGroup": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "matched_by",
+          "value",
+          "customers"
+        ],
+        "properties": {
+          "matched_by": {
+            "type": "string",
+            "enum": [
+              "inn",
+              "phone",
+              "email",
+              "name"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "description": "Общее значение признака: ИНН/КПП, последние десять цифр телефона, почта или имя"
+          },
+          "customers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CRMCustomer"
+            }
+          }
+        }
+      },
+      "CRMMergeCustomersInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sources"
+        ],
+        "properties": {
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/UUID"
+            },
+            "description": "Карточки, которые сливаются в эту"
+          }
+        }
+      },
+      "CRMImportSheetInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "rows",
+          "header_row",
+          "headers",
+          "sample"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "integer"
+          },
+          "header_row": {
+            "type": "integer"
+          },
+          "headers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "sample": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "suggested": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Заголовок -> предложенное поле"
+          }
+        }
+      },
+      "CRMImportFileInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "filename",
+          "format",
+          "sheets",
+          "warnings"
+        ],
+        "properties": {
+          "filename": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "sheets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CRMImportSheetInfo"
+            }
+          },
+          "warnings": {
+            "type": "integer",
+            "description": "Сколько ячеек с формулами прочитано по сохранённому значению"
+          }
+        }
+      },
       "CRMContactRef": {
         "type": "object",
         "additionalProperties": false,
@@ -80426,7 +82545,8 @@
             "type": "string",
             "enum": [
               "lead",
-              "deal"
+              "deal",
+              "customer"
             ]
           },
           "entity_id": {
@@ -80506,6 +82626,22 @@
               "null"
             ],
             "additionalProperties": true
+          },
+          "record_type": {
+            "type": "string",
+            "enum": [
+              "lead",
+              "deal",
+              "customer"
+            ],
+            "description": "Запись, которой принадлежит событие. В ленте клиента это его сделка или лид, а не он сам"
+          },
+          "record_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "record_title": {
+            "type": "string",
+            "description": "Название записи; заполняется только в ленте клиента"
           }
         }
       },
@@ -80554,7 +82690,8 @@
             "type": "string",
             "enum": [
               "lead",
-              "deal"
+              "deal",
+              "customer"
             ]
           },
           "entity_id": {
@@ -81884,7 +84021,7 @@
             "items": {
               "$ref": "#/components/schemas/UUID"
             },
-            "description": "Идентификаторы заранее загруженных файлов"
+            "description": "Идентификаторы заранее загруженных файлов: id из crmFinishInboxUploadSession (сессия загрузки) или из crmUploadInboxOutboundFile (форма)"
           }
         }
       },
@@ -82019,6 +84156,7 @@
           "filename",
           "content_type",
           "size_bytes",
+          "scan_status",
           "created_at"
         ],
         "properties": {
@@ -82039,11 +84177,68 @@
             "format": "int64",
             "minimum": 0
           },
+          "scan_status": {
+            "$ref": "#/components/schemas/CRMInboxScanStatus"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
           }
         }
+      },
+      "CRMInboxOutboundUpload": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "conversation_id",
+          "filename",
+          "content_type",
+          "size_bytes",
+          "scan_status",
+          "expires_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "conversation_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "Контрольная сумма, посчитанная на завершении сессии; у загрузки формой её нет"
+          },
+          "scan_status": {
+            "$ref": "#/components/schemas/CRMInboxScanStatus"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CRMInboxScanStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "clean",
+          "infected",
+          "skipped"
+        ],
+        "description": "Вердикт антивируса: clean — файл прошёл сессию загрузки; skipped — антивирус его не проверял (форма или файл до проверок). Ссылку на скачивание получают только clean и skipped"
       },
       "FilesFolder": {
         "type": "object",
@@ -84398,10 +86593,18 @@
           "supplier_document",
           "amount"
         ],
-        "description": "Тело черновика корректировки приёмки по УКД поставщика на уменьшение.",
+        "description": "Тело черновика корректировки приёмки по УКД поставщика на уменьшение или увеличение.",
         "properties": {
           "basis_id": {
             "$ref": "#/components/schemas/UUID"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "decrease",
+              "increase"
+            ],
+            "description": "Уменьшение (по умолчанию) или увеличение стоимости"
           },
           "date": {
             "type": "string",
@@ -84429,11 +86632,11 @@
           },
           "amount": {
             "type": "string",
-            "description": "Уменьшение с налогом в валюте приёмки"
+            "description": "Изменение с налогом в валюте приёмки, без знака"
           },
           "vat": {
             "type": "string",
-            "description": "Налог уменьшения в валюте приёмки"
+            "description": "Налог изменения в валюте приёмки"
           },
           "comment": {
             "type": "string"
@@ -86640,6 +88843,129 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "StockImportUploadSessionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Заявка на сессию загрузки файла складского импорта. filename и size — синонимы name и size_bytes.",
+        "required": [
+          "kind",
+          "mode"
+        ],
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/StockImportKind"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/CoreProductImportMode"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Имя файла с расширением xlsx, xls, ods, csv или tsv"
+          },
+          "mime_type": {
+            "type": "string",
+            "description": "Тип содержимого; по умолчанию — по расширению файла"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 26214400,
+            "description": "Точный размер файла в байтах"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками"
+          },
+          "target_document_id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Складской документ, к которому привязан прогон; строки без document_id получают его"
+          },
+          "filename": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Синоним поля name"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 1,
+            "maximum": 26214400,
+            "description": "Синоним поля size_bytes"
+          }
+        }
+      },
+      "StockUploadFinishResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Итог завершения сессии склада: сессия и заведённый прогон импорта.",
+        "required": [
+          "session"
+        ],
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/TransferSession"
+          },
+          "import": {
+            "$ref": "#/components/schemas/StockImportRun"
+          }
+        }
+      },
+      "StockDownloadLink": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Временный адрес файла склада: подписанный адрес хранилища или адрес этого API.",
+        "required": [
+          "url",
+          "method",
+          "direct",
+          "requires_authorization",
+          "name",
+          "mime_type",
+          "size_bytes"
+        ],
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "GET"
+            ]
+          },
+          "direct": {
+            "type": "boolean",
+            "description": "true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией"
+          },
+          "requires_authorization": {
+            "type": "boolean",
+            "description": "true — адрес требует токен API, агенту по MCP он недоступен"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Срок подписанного адреса; у адреса API его нет"
+          },
+          "name": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "description": "Контрольная сумма SHA-256, если известна"
           }
         }
       },
@@ -96191,6 +98517,70 @@
           }
         }
       },
+      "DocflowFlowOriginal": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Сканы подписанного оригинала документа.",
+        "required": [
+          "document_id",
+          "scans"
+        ],
+        "properties": {
+          "document_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "scans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocflowFlowOriginalScan"
+            }
+          }
+        }
+      },
+      "DocflowFlowOriginalScan": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Скан подписанного оригинала; номер скана из сессии загрузки — номер сессии.",
+        "required": [
+          "id",
+          "document_id",
+          "name",
+          "size",
+          "sha256",
+          "content_type",
+          "uploaded_by",
+          "uploaded_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "document_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "uploaded_by": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "uploaded_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "DocflowFlowRelation": {
         "type": "object",
         "additionalProperties": false,
@@ -99441,6 +101831,7 @@
           "unread_count",
           "sort_order",
           "subscribed",
+          "mirror",
           "created_at",
           "updated_at"
         ],
@@ -99489,6 +101880,10 @@
           },
           "subscribed": {
             "type": "boolean"
+          },
+          "mirror": {
+            "type": "boolean",
+            "description": "Вид на ту же почту (Gmail «Вся почта», «Важное», «Помеченные»): письма в нём — копии писем из настоящих папок, в сводные выборки они не попадают"
           },
           "created_at": {
             "type": "string",
@@ -100625,6 +103020,30 @@
               "type": "string"
             },
             "description": "Папки, перечитанные целиком после смены UIDVALIDITY на сервере"
+          },
+          "failed_folders": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Папки, которые в этот проход прочитать не удалось; остальные разобраны"
+          },
+          "updated": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Письма, у которых проход перенёс с сервера прочтение, отметку или удаление из другого клиента"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "done",
+              "running"
+            ],
+            "description": "Только у проверки по требованию: done — проверено, running — ящик проверяется фоном и письма появятся сами"
+          },
+          "partial": {
+            "type": "boolean",
+            "description": "Проверка по требованию успела не все свои папки; остальное доделает фон"
           }
         }
       },

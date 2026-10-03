@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a71c550d68dfd2f80dce68689680e0b49e026c805b95de02ef7a8f539eb1fa01).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4c813a449f36690b23ee6e419f00511523ebec91408e1403e21df50df2bd57f2).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -90,6 +90,8 @@ __all__ = [
     "CRMCustomerChannel",
     "CRMCustomerChannelInput",
     "CRMCustomerDuplicate",
+    "CRMCustomerDuplicateGroup",
+    "CRMCustomerDuplicateRefusal",
     "CRMCustomerInput",
     "CRMCustomerPatch",
     "CRMDeal",
@@ -106,6 +108,8 @@ __all__ = [
     "CRMEngagementKind",
     "CRMEngagementPatch",
     "CRMExternalLink",
+    "CRMImportFileInfo",
+    "CRMImportSheetInfo",
     "CRMInboxAssignInput",
     "CRMInboxAttachment",
     "CRMInboxConnection",
@@ -117,9 +121,11 @@ __all__ = [
     "CRMInboxLinkConversationInput",
     "CRMInboxLinkedConversation",
     "CRMInboxMessage",
+    "CRMInboxOutboundUpload",
     "CRMInboxProvider",
     "CRMInboxProviderCapabilities",
     "CRMInboxProviderField",
+    "CRMInboxScanStatus",
     "CRMInboxSendInput",
     "CRMInboxTemplate",
     "CRMInboxTemplateInput",
@@ -132,12 +138,14 @@ __all__ = [
     "CRMLeadPatch",
     "CRMLeadStage",
     "CRMLeadStageInput",
+    "CRMLeadStageMeaning",
     "CRMLeadStagePatch",
     "CRMLeadStatus",
     "CRMLossReason",
     "CRMLossReasonInput",
     "CRMLossReasonMetric",
     "CRMManagerWorkload",
+    "CRMMergeCustomersInput",
     "CRMMergeLeadsInput",
     "CRMMoveDealInput",
     "CRMNoteInput",
@@ -324,6 +332,8 @@ __all__ = [
     "CoreItemInput",
     "CoreItemMove",
     "CoreItemPage",
+    "CoreLetterhead",
+    "CoreLetterheadImages",
     "CoreNumberReset",
     "CoreNumberSource",
     "CoreOrder",
@@ -385,7 +395,10 @@ __all__ = [
     "CoreOrderVATWarning",
     "CoreOwnershipVersion",
     "CoreOwnershipVersionInput",
+    "CorePhotoResult",
     "CorePolicyAccountableDaysVersion",
+    "CorePolicyPayrollOfficialInput",
+    "CorePolicyPayrollOfficialVersion",
     "CorePolicyPeriod",
     "CorePolicyTaxModeVersion",
     "CorePolicyTaxRegimeInput",
@@ -575,6 +588,8 @@ __all__ = [
     "DocflowFlowEDOState",
     "DocflowFlowFile",
     "DocflowFlowKind",
+    "DocflowFlowOriginal",
+    "DocflowFlowOriginalScan",
     "DocflowFlowPage",
     "DocflowFlowPageStateCounts",
     "DocflowFlowPaymentRule",
@@ -1007,6 +1022,7 @@ __all__ = [
     "StockDocumentPayload",
     "StockDocumentRefs",
     "StockDocumentTypeKey",
+    "StockDownloadLink",
     "StockExport",
     "StockExportKind",
     "StockExportRequest",
@@ -1024,6 +1040,7 @@ __all__ = [
     "StockImportKind",
     "StockImportRun",
     "StockImportStatus",
+    "StockImportUploadSessionRequest",
     "StockInventoryChange",
     "StockInventoryChangePage",
     "StockInventoryCount",
@@ -1077,6 +1094,7 @@ __all__ = [
     "StockSettingsPatch",
     "StockSupplier",
     "StockSupplierPage",
+    "StockUploadFinishResult",
     "StockValuationPreviewRequest",
     "StockValuationRebuildRequest",
     "StockValuationResult",
@@ -1472,6 +1490,8 @@ class _AttachmentUploadSessionRequired(TypedDict):
 
 class AttachmentUploadSession(_AttachmentUploadSessionRequired, total=False):
     replace_attachment_id: "UUID"
+    #: Папка файлов проекта, куда ляжет файл
+    folder_id: str
     sha256: str
     completed_at: str
     upload_url: str
@@ -1488,6 +1508,8 @@ class _AttachmentUploadSessionCreateRequired(TypedDict):
     size_bytes: int
 
 class AttachmentUploadSessionCreate(_AttachmentUploadSessionCreateRequired, total=False):
+    #: Папка файлов проекта, куда сразу ляжет файл; только при owner_type=project
+    folder_id: str
     mime_type: str
     sha256: str
 
@@ -1852,7 +1874,7 @@ class AutomationRuleTestResultActionsItemInputsItem(_AutomationRuleTestResultAct
 
 class _CRMActivityRequired(TypedDict):
     id: "UUID"
-    entity_type: Literal['lead', 'deal']
+    entity_type: Literal['lead', 'deal', 'customer']
     entity_id: "UUID"
     #: Ключ факта; note - заметка сотрудника
     action: str
@@ -2028,6 +2050,8 @@ class CRMCustomer(_CRMCustomerRequired, total=False):
     #: Момент переноса в справочник контрагентов ERP
     promoted_at: str
     archived_at: str
+    #: Карточка слита с этой и лежит в архиве
+    merged_into_customer_id: "UUID"
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
 
@@ -2087,8 +2111,22 @@ class CRMCustomerDuplicate(_CRMCustomerDuplicateRequired, total=False):
     #: Момент переноса в справочник контрагентов ERP
     promoted_at: str
     archived_at: str
+    #: Карточка слита с этой и лежит в архиве
+    merged_into_customer_id: "UUID"
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
+
+class CRMCustomerDuplicateGroup(TypedDict):
+    matched_by: Literal['inn', 'phone', 'email', 'name']
+    #: Общее значение признака: ИНН/КПП, последние десять цифр телефона, почта или имя
+    value: str
+    customers: List["CRMCustomer"]
+
+class CRMCustomerDuplicateRefusal(TypedDict):
+    code: Literal['crm.customer_inn_taken', 'crm.customer_possible_duplicate']
+    detail: str
+    #: Похожие карточки; чужая карточка без права видеть чужих клиентов — только имя, вид и ответственный
+    matches: List["CRMCustomerDuplicate"]
 
 class _CRMCustomerInputRequired(TypedDict):
     name: str
@@ -2114,6 +2152,8 @@ class CRMCustomerInput(_CRMCustomerInputRequired, total=False):
     note: str
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
+    #: Это правда новый клиент: создать, хотя телефон или почта совпали с живой карточкой. Совпадение ИНН и КПП так не обходится
+    confirm_duplicate: bool
 
 class CRMCustomerPatch(TypedDict, total=False):
     kind: Literal['person', 'company', 'sole_prop']
@@ -2163,6 +2203,15 @@ class CRMDeal(_CRMDealRequired, total=False):
     archived_at: str
     closed_at: str
     loss_reason_id: "UUID"
+    description: str
+    first_message: str
+    utm_source: str
+    utm_medium: str
+    utm_campaign: str
+    utm_term: str
+    utm_content: str
+    landing_page: str
+    referrer: str
 
 class _CRMDealBoardRequired(TypedDict):
     pipeline_id: "UUID"
@@ -2211,6 +2260,15 @@ class CRMDealCard(_CRMDealCardRequired, total=False):
     archived_at: str
     closed_at: str
     loss_reason_id: "UUID"
+    description: str
+    first_message: str
+    utm_source: str
+    utm_medium: str
+    utm_campaign: str
+    utm_term: str
+    utm_content: str
+    landing_page: str
+    referrer: str
     customer_name: str
     owner_name: str
 
@@ -2232,6 +2290,7 @@ class CRMDealInput(_CRMDealInputRequired, total=False):
     #: Обязателен при ненулевой сумме
     currency: str
     source: str
+    description: str
     probability: int
     expected_close_at: Optional[str]
     owner_id: Optional[int]
@@ -2266,6 +2325,7 @@ class CRMDealPatch(TypedDict, total=False):
     amount: str
     currency: str
     source: str
+    description: str
     probability: int
     expected_close_at: Optional[str]
     owner_id: Optional[int]
@@ -2281,14 +2341,18 @@ class _CRMDealStageHistoryRequired(TypedDict):
     deal_id: "UUID"
     to_stage_id: "UUID"
     changed_by: int
+    #: Вид записи: created - сделка заведена, move - перенос по этапам, pipeline_change - перенос в другую воронку, reopen - повторное открытие закрытой сделки
+    kind: Literal['created', 'move', 'pipeline_change', 'reopen']
     created_at: str
 
 class CRMDealStageHistory(_CRMDealStageHistoryRequired, total=False):
     from_stage_id: "UUID"
+    #: Причина; заполнена у повторного открытия
+    reason: str
 
 class _CRMEngagementRequired(TypedDict):
     id: "UUID"
-    entity_type: Literal['lead', 'deal']
+    entity_type: Literal['lead', 'deal', 'customer']
     entity_id: "UUID"
     kind: "CRMEngagementKind"
     title: str
@@ -2332,6 +2396,24 @@ class CRMExternalLink(TypedDict):
     external_id: "UUID"
     created_at: str
 
+class CRMImportFileInfo(TypedDict):
+    filename: str
+    format: str
+    sheets: List["CRMImportSheetInfo"]
+    #: Сколько ячеек с формулами прочитано по сохранённому значению
+    warnings: int
+
+class _CRMImportSheetInfoRequired(TypedDict):
+    name: str
+    rows: int
+    header_row: int
+    headers: List[str]
+    sample: List[List[str]]
+
+class CRMImportSheetInfo(_CRMImportSheetInfoRequired, total=False):
+    #: Заголовок -> предложенное поле
+    suggested: Dict[str, str]
+
 class CRMInboxAssignInput(TypedDict, total=False):
     #: null снимает назначение
     assigned_to: Optional[int]
@@ -2342,6 +2424,7 @@ class CRMInboxAttachment(TypedDict):
     filename: str
     content_type: str
     size_bytes: int
+    scan_status: "CRMInboxScanStatus"
     created_at: str
 
 class _CRMInboxConnectionRequired(TypedDict):
@@ -2447,6 +2530,19 @@ class CRMInboxMessage(_CRMInboxMessageRequired, total=False):
     #: Сколько файлов у сообщения; список — GET /api/v1/crm/inbox/messages/{id}/attachments
     attachment_count: int
 
+class _CRMInboxOutboundUploadRequired(TypedDict):
+    id: "UUID"
+    conversation_id: "UUID"
+    filename: str
+    content_type: str
+    size_bytes: int
+    scan_status: "CRMInboxScanStatus"
+    expires_at: str
+
+class CRMInboxOutboundUpload(_CRMInboxOutboundUploadRequired, total=False):
+    #: Контрольная сумма, посчитанная на завершении сессии; у загрузки формой её нет
+    sha256: str
+
 class _CRMInboxProviderRequired(TypedDict):
     key: Literal['telegram', 'vk', 'max', 'avito', 'email', 'telephony']
     label: str
@@ -2480,9 +2576,11 @@ class _CRMInboxProviderFieldRequired(TypedDict):
 class CRMInboxProviderField(_CRMInboxProviderFieldRequired, total=False):
     help: str
 
+CRMInboxScanStatus = Literal['pending', 'clean', 'infected', 'skipped']
+
 class CRMInboxSendInput(TypedDict, total=False):
     body: str
-    #: Идентификаторы заранее загруженных файлов
+    #: Идентификаторы заранее загруженных файлов: id из crmFinishInboxUploadSession (сессия загрузки) или из crmUploadInboxOutboundFile (форма)
     upload_ids: List["UUID"]
 
 class CRMInboxTemplate(TypedDict):
@@ -2523,6 +2621,13 @@ class CRMLead(_CRMLeadRequired, total=False):
     converted_deal_id: "UUID"
     #: Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
     merged_into_lead_id: "UUID"
+    utm_source: str
+    utm_medium: str
+    utm_campaign: str
+    utm_term: str
+    utm_content: str
+    landing_page: str
+    referrer: str
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
 
@@ -2555,6 +2660,13 @@ class CRMLeadCard(_CRMLeadCardRequired, total=False):
     converted_deal_id: "UUID"
     #: Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
     merged_into_lead_id: "UUID"
+    utm_source: str
+    utm_medium: str
+    utm_campaign: str
+    utm_term: str
+    utm_content: str
+    landing_page: str
+    referrer: str
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
     customer_name: str
@@ -2603,6 +2715,13 @@ class CRMLeadDuplicate(_CRMLeadDuplicateRequired, total=False):
     converted_deal_id: "UUID"
     #: Во что вошло это обращение при слиянии дублей; заполнено только у архивной записи-источника
     merged_into_lead_id: "UUID"
+    utm_source: str
+    utm_medium: str
+    utm_campaign: str
+    utm_term: str
+    utm_content: str
+    landing_page: str
+    referrer: str
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
     customer_name: str
@@ -2628,6 +2747,13 @@ class CRMLeadInput(_CRMLeadInputRequired, total=False):
     next_action_at: Optional[str]
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
+    utm_source: str
+    utm_medium: str
+    utm_campaign: str
+    utm_term: str
+    utm_content: str
+    landing_page: str
+    referrer: str
 
 CRMLeadLockMode = Literal['owner_only', 'after_qualification']
 
@@ -2655,15 +2781,22 @@ class CRMLeadStage(TypedDict):
     sort_order: int
     #: Ненужный этап выключают, а не удаляют
     is_active: bool
+    meaning: "CRMLeadStageMeaning"
     created_at: str
     updated_at: str
 
-class CRMLeadStageInput(TypedDict):
+class _CRMLeadStageInputRequired(TypedDict):
     name: str
+
+class CRMLeadStageInput(_CRMLeadStageInputRequired, total=False):
+    meaning: "CRMLeadStageMeaning"
+
+CRMLeadStageMeaning = Literal['open', 'qualified', 'converted', 'rejected']
 
 class CRMLeadStagePatch(TypedDict, total=False):
     name: str
     is_active: bool
+    meaning: "CRMLeadStageMeaning"
 
 CRMLeadStatus = Literal['new', 'qualified', 'disqualified', 'converted']
 
@@ -2707,6 +2840,10 @@ class CRMManagerWorkload(_CRMManagerWorkloadRequired, total=False):
     #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
     won_amount_month: str
 
+class CRMMergeCustomersInput(TypedDict):
+    #: Карточки, которые сливаются в эту
+    sources: List["UUID"]
+
 class CRMMergeLeadsInput(TypedDict):
     """Какие обращения свести в это"""
 
@@ -2717,6 +2854,8 @@ class _CRMMoveDealInputRequired(TypedDict):
     stage_id: "UUID"
 
 class CRMMoveDealInput(_CRMMoveDealInputRequired, total=False):
+    #: Целевая воронка. Пусто или текущая - перенос по этапам своей воронки; другая - сделка переезжает в неё, а stage_id должен быть этапом целевой воронки. Закрытую сделку не переносят
+    pipeline_id: Optional[str]
     #: Обязательна для стадии категории lost
     loss_reason_id: Optional[str]
 
@@ -2911,6 +3050,11 @@ class CRMTimelineEntry(_CRMTimelineEntryRequired, total=False):
     actor_name: str
     body: str
     meta: Optional[Dict[str, Any]]
+    #: Запись, которой принадлежит событие. В ленте клиента это его сделка или лид, а не он сам
+    record_type: Literal['lead', 'deal', 'customer']
+    record_id: "UUID"
+    #: Название записи; заполняется только в ленте клиента
+    record_title: str
 
 class _CRMUserRefRequired(TypedDict):
     id: int
@@ -3804,6 +3948,8 @@ class CoreCompanyPolicy(_CoreCompanyPolicyRequired, total=False):
     tax_regime: List["CorePolicyTaxRegimeVersion"]
     #: Юрлицо — ИП (вид организации в карточке): доступны ПСН, НПД и патент
     sole_proprietor: bool
+    #: Вся ли зарплата в бухгалтерии и источник официальной части, с историей (ERP-1700); пусто — вся официальная
+    payroll_official: List["CorePolicyPayrollOfficialVersion"]
 
 class CoreConflictingRegistrar(TypedDict):
     id: "UUID"
@@ -4446,6 +4592,27 @@ class CoreItemMove(_CoreItemMoveRequired, total=False):
 class CoreItemPage(TypedDict):
     count: int
     results: List["CoreItem"]
+
+class _CoreLetterheadRequired(TypedDict):
+    company_id: "UUID"
+    version: int
+    images: "CoreLetterheadImages"
+
+class CoreLetterhead(_CoreLetterheadRequired, total=False):
+    """Бланк юрлица. Ключи файлов наружу не отдаются: images говорит только, есть ли картинка на месте."""
+
+    director_name: str
+    director_title: str
+    accountant_name: str
+    accountant_title: str
+    bank_account_id: Optional["UUID"]
+    print_facsimile: bool
+
+class CoreLetterheadImages(TypedDict):
+    logo: bool
+    stamp: bool
+    director_signature: bool
+    accountant_signature: bool
 
 CoreNumberReset = Literal['year', 'never']
 
@@ -5194,6 +5361,9 @@ class CoreOwnershipVersionInput(TypedDict):
     valid_from: str
     owners: List["CoreBusinessOwnerInput"]
 
+class CorePhotoResult(TypedDict):
+    photo_url: str
+
 class _CorePolicyAccountableDaysVersionRequired(TypedDict):
     id: "UUID"
     #: Начало версии; 0001-01-01 означает «с начала учёта»
@@ -5203,6 +5373,29 @@ class _CorePolicyAccountableDaysVersionRequired(TypedDict):
 class CorePolicyAccountableDaysVersion(_CorePolicyAccountableDaysVersionRequired, total=False):
     #: Последний день версии; отсутствует у открытой версии
     valid_to: str
+
+class _CorePolicyPayrollOfficialInputRequired(TypedDict):
+    #: 0001-01-01 — с начала учёта
+    valid_from: str
+    #: Вся начисленная зарплата отражается в бухгалтерии
+    all_official: bool
+
+class CorePolicyPayrollOfficialInput(_CorePolicyPayrollOfficialInputRequired, total=False):
+    #: Источник официальной части; обязателен при all_official = false
+    payroll_source: Literal['manual', 'onec_bp', 'onec_zup']
+
+class _CorePolicyPayrollOfficialVersionRequired(TypedDict):
+    id: "UUID"
+    #: Начало версии; 0001-01-01 означает «с начала учёта»
+    valid_from: str
+    #: Вся начисленная зарплата отражается в бухгалтерии
+    all_official: bool
+
+class CorePolicyPayrollOfficialVersion(_CorePolicyPayrollOfficialVersionRequired, total=False):
+    #: Последний день версии; отсутствует у открытой версии
+    valid_to: str
+    #: Источник официальной части; нет при all_official
+    source: Literal['manual', 'onec_bp', 'onec_zup']
 
 class _CorePolicyPeriodRequired(TypedDict):
     id: "UUID"
@@ -5909,10 +6102,12 @@ class _CoreUploadFinishResultRequired(TypedDict):
     session: "TransferSession"
 
 class CoreUploadFinishResult(_CoreUploadFinishResultRequired, total=False):
-    """Итог завершения сессии core: заведённый файл товара или запуск импорта."""
+    """Итог завершения сессии core: заведённый файл товара, запуск импорта, фото сотрудника или бланк юрлица."""
 
     product_file: "CoreProductFile"
     product_import: "CoreProductImportRun"
+    employee_photo: "CorePhotoResult"
+    letterhead: "CoreLetterhead"
 
 class CredentialRequestGap(TypedDict):
     """Окно, в котором обращения были, а записей о них нет: очередь писателя переполнилась либо база кабинета не приняла пачку. Признание в НАШЕЙ аварии, и печатается оно обеим сторонам — страница без него читалась бы как полная история. Кабинета в окне нет ни у одной из дверей."""
@@ -7302,6 +7497,24 @@ class DocflowFlowFile(_DocflowFlowFileRequired, total=False):
     scan_status: Literal['clean', 'skipped']
 
 DocflowFlowKind = Literal['contract', 'specification', 'amendment', 'invoice', 'act', 'upd', 'goods_waybill', 'transport_waybill', 'consignment_note', 'transport_order', 'tax_invoice', 'correction', 'return', 'discrepancy_act', 'reconciliation_act', 'power_of_attorney', 'other']
+
+class DocflowFlowOriginal(TypedDict):
+    """Сканы подписанного оригинала документа."""
+
+    document_id: "UUID"
+    scans: List["DocflowFlowOriginalScan"]
+
+class DocflowFlowOriginalScan(TypedDict):
+    """Скан подписанного оригинала; номер скана из сессии загрузки — номер сессии."""
+
+    id: "UUID"
+    document_id: "UUID"
+    name: str
+    size: int
+    sha256: str
+    content_type: str
+    uploaded_by: int
+    uploaded_at: str
 
 class _DocflowFlowPageRequired(TypedDict):
     items: List["DocflowFlowDocument"]
@@ -10037,6 +10250,8 @@ class MailFolder(TypedDict):
     #: Вес папки в привычном порядке системных папок
     sort_order: int
     subscribed: bool
+    #: Вид на ту же почту (Gmail «Вся почта», «Важное», «Помеченные»): письма в нём — копии писем из настоящих папок, в сводные выборки они не попадают
+    mirror: bool
     created_at: str
     updated_at: str
 
@@ -10263,6 +10478,14 @@ class MailSyncReport(_MailSyncReportRequired, total=False):
 
     #: Папки, перечитанные целиком после смены UIDVALIDITY на сервере
     full_reloaded: List[str]
+    #: Папки, которые в этот проход прочитать не удалось; остальные разобраны
+    failed_folders: List[str]
+    #: Письма, у которых проход перенёс с сервера прочтение, отметку или удаление из другого клиента
+    updated: int
+    #: Только у проверки по требованию: done — проверено, running — ящик проверяется фоном и письма появятся сами
+    state: Literal['done', 'running']
+    #: Проверка по требованию успела не все свои папки; остальное доделает фон
+    partial: bool
 
 MailSyncStatus = Literal['never', 'ok', 'running', 'failed']
 
@@ -12255,6 +12478,25 @@ class StockDocumentRefs(_StockDocumentRefsRequired, total=False):
 
 StockDocumentTypeKey = Literal['stock_receipt', 'stock_shipment', 'stock_transfer', 'stock_writeoff', 'stock_capitalization', 'stock_supplier_return', 'stock_customer_return', 'stock_purchase_request', 'stock_supplier_order', 'stock_inventory', 'stock_reservation', 'stock_landed_cost', 'stock_assembly', 'stock_disassembly', 'stock_reservation_release', 'stock_supplier_order_close', 'stock_opening_balance', 'stock_marketplace_return', 'stock_account_transfer', 'supplier_order']
 
+class _StockDownloadLinkRequired(TypedDict):
+    url: str
+    method: Literal['GET']
+    #: true — подписанный адрес хранилища, без заголовка авторизации; false — адрес этого API, с авторизацией
+    direct: bool
+    #: true — адрес требует токен API, агенту по MCP он недоступен
+    requires_authorization: bool
+    name: str
+    mime_type: str
+    size_bytes: int
+
+class StockDownloadLink(_StockDownloadLinkRequired, total=False):
+    """Временный адрес файла склада: подписанный адрес хранилища или адрес этого API."""
+
+    #: Срок подписанного адреса; у адреса API его нет
+    expires_at: str
+    #: Контрольная сумма SHA-256, если известна
+    sha256: str
+
 class _StockExportRequired(TypedDict):
     id: "UUID"
     kind: "StockImportKind"
@@ -12408,6 +12650,28 @@ class StockImportRun(_StockImportRunRequired, total=False):
     target_fields: List["CoreProductImportField"]
 
 StockImportStatus = Literal['uploaded', 'mapped', 'previewed', 'applied']
+
+class _StockImportUploadSessionRequestRequired(TypedDict):
+    kind: "StockImportKind"
+    mode: "CoreProductImportMode"
+
+class StockImportUploadSessionRequest(_StockImportUploadSessionRequestRequired, total=False):
+    """Заявка на сессию загрузки файла складского импорта. filename и size — синонимы name и size_bytes."""
+
+    #: Имя файла с расширением xlsx, xls, ods, csv или tsv
+    name: str
+    #: Тип содержимого; по умолчанию — по расширению файла
+    mime_type: str
+    #: Точный размер файла в байтах
+    size_bytes: int
+    #: Необязательная контрольная сумма SHA-256 строчными шестнадцатеричными знаками
+    sha256: str
+    #: Складской документ, к которому привязан прогон; строки без document_id получают его
+    target_document_id: "UUID"
+    #: Синоним поля name
+    filename: str
+    #: Синоним поля size_bytes
+    size: int
 
 class StockInventoryChange(TypedDict):
     """Документ, тронувший товар снимка после момента снимка."""
@@ -12676,15 +12940,17 @@ class StockReceiptClaimBalance(_StockReceiptClaimBalanceRequired, total=False):
 class _StockReceiptCorrectionCreateRequired(TypedDict):
     basis_id: "UUID"
     supplier_document: "StockReceiptCorrectionCreateSupplierDocument"
-    #: Уменьшение с налогом в валюте приёмки
+    #: Изменение с налогом в валюте приёмки, без знака
     amount: str
 
 class StockReceiptCorrectionCreate(_StockReceiptCorrectionCreateRequired, total=False):
-    """Тело черновика корректировки приёмки по УКД поставщика на уменьшение."""
+    """Тело черновика корректировки приёмки по УКД поставщика на уменьшение или увеличение."""
 
+    #: Уменьшение (по умолчанию) или увеличение стоимости
+    direction: Literal['decrease', 'increase']
     #: Пусто или отсутствует означает рабочую дату кабинета
     date: str
-    #: Налог уменьшения в валюте приёмки
+    #: Налог изменения в валюте приёмки
     vat: str
     comment: str
 
@@ -13022,6 +13288,8 @@ class StockSupplier(TypedDict):
 class StockSupplierPage(TypedDict):
     count: int
     results: List["StockSupplier"]
+
+StockUploadFinishResult = TypedDict("StockUploadFinishResult", {"session": "TransferSession", "import": "StockImportRun"}, total=False)
 
 class StockValuationPreviewRequest(TypedDict):
     document_id: "UUID"

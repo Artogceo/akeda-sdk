@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a71c550d68dfd2f80dce68689680e0b49e026c805b95de02ef7a8f539eb1fa01).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4c813a449f36690b23ee6e419f00511523ebec91408e1403e21df50df2bd57f2).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -629,6 +629,13 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
+  /** POST /api/v1/core/accounting-policy/companies/{id}/payroll-official — Официальная часть зарплаты юрлица с даты */
+  coreAddPolicyPayrollOfficial: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CorePolicyPayrollOfficialInput;
+    response: models.CoreAccountingPolicy;
+  };
   /** POST /api/v1/core/accounting-policy/companies/{id}/tax-regime — Система налогообложения юрлица с даты */
   coreAddPolicyTaxRegime: {
     params: { "id": models.UUID };
@@ -852,6 +859,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: void;
+  };
+  /** PUT /api/v1/core/accounting-policy/companies/{id}/payroll-official/open — Поправить открытую версию — официальная часть зарплаты юрлица */
+  coreEditPolicyPayrollOfficial: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CorePolicyPayrollOfficialInput;
+    response: models.CoreAccountingPolicy;
   };
   /** PUT /api/v1/core/accounting-policy/companies/{id}/tax-regime/open — Поправить открытую версию — система налогообложения юрлица */
   coreEditPolicyTaxRegime: {
@@ -1602,9 +1616,23 @@ export interface OperationTypes {
     body: models.CoreProductImportMapping;
     response: models.CoreProductImportRun;
   };
+  /** DELETE /api/v1/crm/import-upload-sessions/{id} — Отменить сессию загрузки файла импорта */
+  crmAbortImportUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** DELETE /api/v1/crm/inbox/upload-sessions/{id} — Отменить сессию загрузки файла диалога */
+  crmAbortInboxUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** POST /api/v1/crm/{entity}/{id}/notes — Добавить заметку в ленту записи */
   crmAddNote: {
-    params: { "entity": "lead" | "deal"; "id": models.UUID };
+    params: { "entity": "lead" | "deal" | "customer"; "id": models.UUID };
     query: Record<string, never>;
     body: models.CRMNoteInput;
     response: models.CRMActivity;
@@ -1658,9 +1686,9 @@ export interface OperationTypes {
     body: models.CRMInboxDealInput;
     response: models.CRMInboxConversationLink;
   };
-  /** POST /api/v1/crm/{entity}/{id}/engagements — Запланировать дело по лиду или сделке */
+  /** POST /api/v1/crm/{entity}/{id}/engagements — Запланировать дело по лиду, сделке или клиенту */
   crmCreateEngagement: {
-    params: { "entity": "lead" | "deal"; "id": models.UUID };
+    params: { "entity": "lead" | "deal" | "customer"; "id": models.UUID };
     query: Record<string, never>;
     body: models.CRMEngagementInput;
     response: models.CRMEngagement;
@@ -1671,6 +1699,20 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CRMCreateEventLinkInput;
     response: models.CRMExternalLink;
+  };
+  /** POST /api/v1/crm/imports/{id}/upload-sessions — Открыть сессию загрузки файла импорта */
+  crmCreateImportUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.TransferUploadRequest;
+    response: models.TransferSession;
+  };
+  /** POST /api/v1/crm/inbox/conversations/{id}/upload-sessions — Открыть сессию загрузки файла для сообщения диалога */
+  crmCreateInboxUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.TransferUploadRequest;
+    response: models.TransferSession;
   };
   /** POST /api/v1/crm/leads — Создать лид */
   crmCreateLead: {
@@ -1721,12 +1763,33 @@ export interface OperationTypes {
     body: models.CRMCreateTaskLinkInput;
     response: models.CRMExternalLink;
   };
+  /** DELETE /api/v1/crm/customers/{id} — Удалить клиента CRM */
+  crmDeleteCustomer: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** GET /api/v1/crm/customers/duplicates — Найти похожие карточки клиента */
   crmFindCustomerDuplicates: {
     params: Record<string, never>;
     query: { "email"?: string; "inn"?: string; "kpp"?: string; "name"?: string; "phone"?: string };
     body: never;
     response: Array<models.CRMCustomerDuplicate>;
+  };
+  /** POST /api/v1/crm/import-upload-sessions/{id}/finish — Завершить загрузку файла импорта */
+  crmFinishImportUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMImportFileInfo;
+  };
+  /** POST /api/v1/crm/inbox/upload-sessions/{id}/finish — Завершить загрузку файла для сообщения диалога */
+  crmFinishInboxUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMInboxOutboundUpload;
   };
   /** GET /api/v1/crm/analytics — Получить аналитику продаж */
   crmGetAnalytics: {
@@ -1784,12 +1847,26 @@ export interface OperationTypes {
     body: never;
     response: models.CRMContactRef;
   };
+  /** GET /api/v1/crm/import-upload-sessions/{id} — Состояние сессии загрузки файла импорта */
+  crmGetImportUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.TransferSession;
+  };
   /** GET /api/v1/crm/inbox/conversations/{id} — Получить диалог */
   crmGetInboxConversation: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.CRMInboxConversation;
+  };
+  /** GET /api/v1/crm/inbox/upload-sessions/{id} — Состояние сессии загрузки файла диалога */
+  crmGetInboxUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.TransferSession;
   };
   /** GET /api/v1/crm/leads/{id} — Получить лид */
   crmGetLead: {
@@ -1826,12 +1903,19 @@ export interface OperationTypes {
     body: never;
     response: models.CRMSettings;
   };
-  /** GET /api/v1/crm/{entity}/{id}/timeline — Получить единую хронологию лида или сделки */
+  /** GET /api/v1/crm/{entity}/{id}/timeline — Получить единую хронологию лида, сделки или клиента */
   crmGetTimeline: {
-    params: { "entity": "lead" | "deal"; "id": models.UUID };
-    query: Record<string, never>;
+    params: { "entity": "lead" | "deal" | "customer"; "id": models.UUID };
+    query: { "before"?: string; "before_id"?: models.UUID; "limit"?: number };
     body: never;
     response: Array<models.CRMTimelineEntry>;
+  };
+  /** GET /api/v1/crm/inbox/attachments/{id}/download-session — Временный адрес вложения диалога */
+  crmInboxAttachmentDownloadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.TransferDownloadLink;
   };
   /** GET /api/v1/crm/leads/{id}/duplicates — Похожие обращения */
   crmLeadDuplicates: {
@@ -1860,6 +1944,13 @@ export interface OperationTypes {
     query: { "rule_id"?: models.UUID };
     body: never;
     response: Array<models.CRMAutomationRun>;
+  };
+  /** GET /api/v1/crm/customers/duplicate-groups — Найти дубли во всей базе клиентов */
+  crmListCustomerDuplicateGroups: {
+    params: Record<string, never>;
+    query: { "limit"?: number };
+    body: never;
+    response: Array<models.CRMCustomerDuplicateGroup>;
   };
   /** GET /api/v1/crm/customers — Получить базу клиентов CRM */
   crmListCustomers: {
@@ -1896,9 +1987,9 @@ export interface OperationTypes {
     body: never;
     response: Array<models.CRMContactRef>;
   };
-  /** GET /api/v1/crm/{entity}/{id}/engagements — Получить дела по лиду или сделке */
+  /** GET /api/v1/crm/{entity}/{id}/engagements — Получить дела по лиду, сделке или клиенту */
   crmListEngagements: {
-    params: { "entity": "lead" | "deal"; "id": models.UUID };
+    params: { "entity": "lead" | "deal" | "customer"; "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: Array<models.CRMEngagement>;
@@ -2028,6 +2119,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: void;
+  };
+  /** POST /api/v1/crm/customers/{id}/merge — Слить карточки клиента в эту */
+  crmMergeCustomers: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMMergeCustomersInput;
+    response: models.CRMCustomer;
   };
   /** POST /api/v1/crm/leads/{id}/merge — Свести дубли в одно обращение */
   crmMergeLeads: {
@@ -2447,7 +2545,7 @@ export interface OperationTypes {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
-    response: models.DocflowFlowUploadResult;
+    response: models.DocflowFlowUploadResult | models.DocflowFlowOriginal;
   };
   /** POST /api/v1/docflow/flow/documents/{id}/commands — Выполнить команду правки документа */
   docflowFlowChangeDocument: {
@@ -3782,7 +3880,7 @@ export interface OperationTypes {
   /** POST /api/v1/mail/accounts/{id}/sync — Синхронизировать ящик по требованию */
   mailSyncAccount: {
     params: { "id": models.UUID };
-    query: Record<string, never>;
+    query: { "folder_id"?: models.UUID };
     body: never;
     response: models.MailSyncReport;
   };
@@ -4010,6 +4108,13 @@ export interface OperationTypes {
     body: never;
     response: models.SettingsVatRates;
   };
+  /** DELETE /api/v1/stock/upload-sessions/{id} — Отменить сессию загрузки склада */
+  stockAbortUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** GET /api/v1/stock/account-transfers/proposal — Показать остаток запасов, который надо перенести на счёт по новому правилу */
   stockAccountTransferProposal: {
     params: Record<string, never>;
@@ -4072,6 +4177,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.StockExportRequest;
     response: models.StockExport;
+  };
+  /** POST /api/v1/stock/imports/upload-sessions — Открыть сессию загрузки файла складского импорта */
+  stockCreateImportUploadSession: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.StockImportUploadSessionRequest;
+    response: models.TransferSession;
   };
   /** POST /api/v1/stock/opening-balances — Создать черновик ввода начальных остатков товара */
   stockCreateOpeningBalance: {
@@ -4143,12 +4255,26 @@ export interface OperationTypes {
     body: never;
     response: models.StockWarehouse;
   };
+  /** GET /api/v1/stock/exports/{id}/download-session — Временный адрес файла своего складского экспорта */
+  stockExportDownloadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.StockDownloadLink;
+  };
   /** POST /api/v1/stock/documents/{id}/inventory-finish — Завершить пересчёт инвентаризации */
   stockFinishInventoryCount: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.StockInventoryFinishInput;
     response: models.CoreDocument;
+  };
+  /** POST /api/v1/stock/upload-sessions/{id}/finish — Завершить загрузку файла складского импорта */
+  stockFinishUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.StockUploadFinishResult;
   };
   /** GET /api/v1/stock/assembly-specs/{id} — Получить версию спецификации */
   stockGetAssemblySpec: {
@@ -4192,6 +4318,13 @@ export interface OperationTypes {
     body: never;
     response: models.StockExport;
   };
+  /** GET /api/v1/stock/exports/{id}/content — Скачать файл своего складского экспорта */
+  stockGetExportContent: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** GET /api/v1/stock/handling-units/{id} — Получить карточку физической складской единицы */
   stockGetHandlingUnit: {
     params: { "id": models.UUID };
@@ -4212,6 +4345,20 @@ export interface OperationTypes {
     query: { "format"?: "json" | "xlsx" };
     body: never;
     response: models.CoreProductImportIssuePage;
+  };
+  /** GET /api/v1/stock/imports/{id}/source — Скачать исходный файл своего прогона импорта */
+  stockGetImportSource: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** GET /api/v1/stock/import-templates/{kind} — Скачать шаблон складского импорта */
+  stockGetImportTemplate: {
+    params: { "kind": models.StockImportKind };
+    query: Record<string, never>;
+    body: never;
+    response: void;
   };
   /** GET /api/v1/stock/documents/{id}/count-sheet — Получить бланк пересчёта инвентаризации */
   stockGetInventoryCountSheet: {
@@ -4276,6 +4423,13 @@ export interface OperationTypes {
     body: never;
     response: models.StockReportPage;
   };
+  /** GET /api/v1/stock/upload-sessions/{id} — Состояние сессии загрузки склада */
+  stockGetUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.TransferSession;
+  };
   /** GET /api/v1/stock/valuation/rebuild/{id} — Получить состояние прогона пересчёта стоимости */
   stockGetValuationRun: {
     params: { "id": models.UUID };
@@ -4296,6 +4450,27 @@ export interface OperationTypes {
     query: { "direction"?: "to_zones" | "to_warehouse" };
     body: never;
     response: models.StockZoneAllocation;
+  };
+  /** GET /api/v1/stock/imports/{id}/errors/download-session — Временный адрес отчёта ошибок складского импорта */
+  stockImportErrorsDownloadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.StockDownloadLink;
+  };
+  /** GET /api/v1/stock/imports/{id}/source/download-session — Временный адрес исходного файла складского импорта */
+  stockImportSourceDownloadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.StockDownloadLink;
+  };
+  /** GET /api/v1/stock/import-templates/{kind}/download-session — Временный адрес шаблона складского импорта */
+  stockImportTemplateDownloadSession: {
+    params: { "kind": models.StockImportKind };
+    query: Record<string, never>;
+    body: never;
+    response: models.StockDownloadLink;
   };
   /** POST /api/v1/stock/imports/{id}/inspect — Осмотреть лист и строку заголовков без сохранения */
   stockInspectImport: {
@@ -4342,7 +4517,7 @@ export interface OperationTypes {
   /** GET /api/v1/stock/documents — Получить журнал складских документов */
   stockListDocuments: {
     params: Record<string, never>;
-    query: { "comment"?: string; "company_id"?: models.UUID; "contact_id"?: models.UUID; "created_by"?: string; "date_from"?: string; "date_to"?: string; "direction"?: "asc" | "desc"; "limit"?: number; "lines_from"?: number; "lines_to"?: number; "number"?: string; "offset"?: number; "q"?: string; "qty_from"?: string; "qty_to"?: string; "sale"?: string; "sort"?: "date" | "number" | "status" | "company" | "warehouse" | "contact" | "updated_at"; "status"?: models.CoreDocumentStatus; "type"?: models.StockDocumentTypeKey; "updated_from"?: string; "updated_to"?: string; "warehouse_id"?: models.UUID; "warehouse_ids"?: string };
+    query: { "comment"?: string; "company_id"?: models.UUID; "contact_id"?: models.UUID; "created_by"?: string; "date_from"?: string; "date_to"?: string; "direction"?: "asc" | "desc"; "limit"?: number; "lines_from"?: number; "lines_to"?: number; "number"?: string; "offset"?: number; "q"?: string; "qty_from"?: string; "qty_to"?: string; "reason_id"?: models.UUID; "sale"?: string; "sort"?: "date" | "number" | "status" | "company" | "warehouse" | "contact" | "updated_at"; "status"?: models.CoreDocumentStatus; "type"?: models.StockDocumentTypeKey; "updated_from"?: string; "updated_to"?: string; "warehouse_id"?: models.UUID; "warehouse_ids"?: string };
     body: never;
     response: models.StockDocumentPage;
   };
@@ -5326,6 +5501,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   chatMarkRead: { method: "POST", path: "/api/v1/chat/conversations/{id}/read", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatSendMessage: { method: "POST", path: "/api/v1/chat/conversations/{id}/messages", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreAbortUploadSession: { method: "DELETE", path: "/api/v1/core/upload-sessions/{id}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreAddPolicyPayrollOfficial: { method: "POST", path: "/api/v1/core/accounting-policy/companies/{id}/payroll-official", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreAddPolicyTaxRegime: { method: "POST", path: "/api/v1/core/accounting-policy/companies/{id}/tax-regime", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreApplyProductImport: { method: "POST", path: "/api/v1/core/product-imports/{id}/apply", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreArchiveContact: { method: "POST", path: "/api/v1/core/contacts/{id}/archive", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -5358,6 +5534,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreCreateRegister: { method: "POST", path: "/api/v1/core/registers", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreDeactivateProductIdentifier: { method: "POST", path: "/api/v1/core/products/{id}/identifiers/{identifierId}/deactivate", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreDeleteProductFile: { method: "DELETE", path: "/api/v1/core/products/{id}/files/{fileId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  coreEditPolicyPayrollOfficial: { method: "PUT", path: "/api/v1/core/accounting-policy/companies/{id}/payroll-official/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreEditPolicyTaxRegime: { method: "PUT", path: "/api/v1/core/accounting-policy/companies/{id}/tax-regime/open", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreExecuteOrderNow: { method: "POST", path: "/api/v1/core/orders/execute-now", module: "core", stage: "preview", permission: "core.orders:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreFinishUploadSession: { method: "POST", path: "/api/v1/core/upload-sessions/{id}/finish", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -5465,24 +5642,31 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreUpdateProductFile: { method: "PATCH", path: "/api/v1/core/products/{id}/files/{fileId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateProductIdentifier: { method: "PATCH", path: "/api/v1/core/products/{id}/identifiers/{identifierId}", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateProductImportMapping: { method: "PATCH", path: "/api/v1/core/product-imports/{id}/mapping", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmAbortImportUploadSession: { method: "DELETE", path: "/api/v1/crm/import-upload-sessions/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmAbortInboxUploadSession: { method: "DELETE", path: "/api/v1/crm/inbox/upload-sessions/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmAddNote: { method: "POST", path: "/api/v1/crm/{entity}/{id}/notes", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmArchivePipeline: { method: "POST", path: "/api/v1/crm/pipelines/{id}/archive", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmAssignInboxConversation: { method: "PATCH", path: "/api/v1/crm/inbox/conversations/{id}/assign", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmConvertLead: { method: "POST", path: "/api/v1/crm/leads/{id}/convert", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateAutomationRule: { method: "POST", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateCustomer: { method: "POST", path: "/api/v1/crm/customers", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateDeal: { method: "POST", path: "/api/v1/crm/deals", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateCustomer: { method: "POST", path: "/api/v1/crm/customers", module: "crm", stage: "preview", permission: "crm:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateDeal: { method: "POST", path: "/api/v1/crm/deals", module: "crm", stage: "preview", permission: "crm:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateDealFromConversation: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/deals", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateEngagement: { method: "POST", path: "/api/v1/crm/{entity}/{id}/engagements", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateEventLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/events", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmCreateLead: { method: "POST", path: "/api/v1/crm/leads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateImportUploadSession: { method: "POST", path: "/api/v1/crm/imports/{id}/upload-sessions", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateInboxUploadSession: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/upload-sessions", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateLead: { method: "POST", path: "/api/v1/crm/leads", module: "crm", stage: "preview", permission: "crm:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateLeadFromConversation: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/leads", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateLeadStage: { method: "POST", path: "/api/v1/crm/lead-stages", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateLossReason: { method: "POST", path: "/api/v1/crm/loss-reasons", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreatePipeline: { method: "POST", path: "/api/v1/crm/pipelines", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateStage: { method: "POST", path: "/api/v1/crm/pipelines/{id}/stages", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateTaskLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/tasks", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmDeleteCustomer: { method: "DELETE", path: "/api/v1/crm/customers/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmFindCustomerDuplicates: { method: "GET", path: "/api/v1/crm/customers/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmFinishImportUploadSession: { method: "POST", path: "/api/v1/crm/import-upload-sessions/{id}/finish", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmFinishInboxUploadSession: { method: "POST", path: "/api/v1/crm/inbox/upload-sessions/{id}/finish", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetAnalytics: { method: "GET", path: "/api/v1/crm/analytics", module: "crm", stage: "preview", permission: "crm:team_read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetAutomationRule: { method: "GET", path: "/api/v1/crm/automation/rules/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetAutomationRunActions: { method: "GET", path: "/api/v1/crm/automation/runs/{id}/actions", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -5491,17 +5675,21 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmGetDealBoard: { method: "GET", path: "/api/v1/crm/deals/board", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
   crmGetDealStageHistory: { method: "GET", path: "/api/v1/crm/deals/{id}/stage-history", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetDirectoryContact: { method: "GET", path: "/api/v1/crm/contacts/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetImportUploadSession: { method: "GET", path: "/api/v1/crm/import-upload-sessions/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetInboxConversation: { method: "GET", path: "/api/v1/crm/inbox/conversations/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetInboxUploadSession: { method: "GET", path: "/api/v1/crm/inbox/upload-sessions/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetLead: { method: "GET", path: "/api/v1/crm/leads/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetLeadHistory: { method: "GET", path: "/api/v1/crm/leads/{id}/history", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetOverview: { method: "GET", path: "/api/v1/crm/overview", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetPipeline: { method: "GET", path: "/api/v1/crm/pipelines/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetSettings: { method: "GET", path: "/api/v1/crm/settings", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  crmGetTimeline: { method: "GET", path: "/api/v1/crm/{entity}/{id}/timeline", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetTimeline: { method: "GET", path: "/api/v1/crm/{entity}/{id}/timeline", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: null },
+  crmInboxAttachmentDownloadSession: { method: "GET", path: "/api/v1/crm/inbox/attachments/{id}/download-session", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmLeadDuplicates: { method: "GET", path: "/api/v1/crm/leads/{id}/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmLinkEntityConversation: { method: "POST", path: "/api/v1/crm/inbox/entities/{entity}/{id}/conversations", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListAutomationRules: { method: "GET", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListAutomationRuns: { method: "GET", path: "/api/v1/crm/automation/runs", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListCustomerDuplicateGroups: { method: "GET", path: "/api/v1/crm/customers/duplicate-groups", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 50 },
   crmListCustomers: { method: "GET", path: "/api/v1/crm/customers", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   crmListDealActivities: { method: "GET", path: "/api/v1/crm/deals/{id}/activities", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListDealContacts: { method: "GET", path: "/api/v1/crm/deals/{id}/contacts", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -5526,6 +5714,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmListPipelineDeals: { method: "GET", path: "/api/v1/crm/pipelines/{id}/deals", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   crmListPipelines: { method: "GET", path: "/api/v1/crm/pipelines", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmMarkInboxConversationRead: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/read", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmMergeCustomers: { method: "POST", path: "/api/v1/crm/customers/{id}/merge", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmMergeLeads: { method: "POST", path: "/api/v1/crm/leads/{id}/merge", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmMoveDeal: { method: "POST", path: "/api/v1/crm/deals/{id}/move", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmPromoteCustomer: { method: "POST", path: "/api/v1/crm/customers/{id}/promote", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -5809,6 +5998,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   settingsListRoles: { method: "GET", path: "/api/v1/settings/roles", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListSelectableCompanies: { method: "GET", path: "/api/v1/settings/companies/selectable", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListVatRates: { method: "GET", path: "/api/v1/settings/vat-rates", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockAbortUploadSession: { method: "DELETE", path: "/api/v1/stock/upload-sessions/{id}", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockAccountTransferProposal: { method: "GET", path: "/api/v1/stock/account-transfers/proposal", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockApplyImport: { method: "POST", path: "/api/v1/stock/imports/{id}/apply", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockApplyWarehouseZoneAllocation: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones/allocation", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -5818,6 +6008,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockCreateClaimWriteoff: { method: "POST", path: "/api/v1/stock/claim-writeoffs", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateDocument: { method: "POST", path: "/api/v1/stock/documents", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateExport: { method: "POST", path: "/api/v1/stock/exports", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockCreateImportUploadSession: { method: "POST", path: "/api/v1/stock/imports/upload-sessions", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateOpeningBalance: { method: "POST", path: "/api/v1/stock/opening-balances", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreatePurchaseOrder: { method: "POST", path: "/api/v1/stock/purchasing/orders", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockCreateReceiptCorrection: { method: "POST", path: "/api/v1/stock/receipt-corrections", module: "stock", stage: "preview", permission: "stock:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -5828,16 +6019,21 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockDisableWarehouseZones: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones/disable", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockDropWarehouseZoneAllocationDraft: { method: "DELETE", path: "/api/v1/stock/warehouses/{id}/zones/allocation/draft", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockEnableWarehouseZones: { method: "POST", path: "/api/v1/stock/warehouses/{id}/zones/enable", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockExportDownloadSession: { method: "GET", path: "/api/v1/stock/exports/{id}/download-session", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockFinishInventoryCount: { method: "POST", path: "/api/v1/stock/documents/{id}/inventory-finish", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockFinishUploadSession: { method: "POST", path: "/api/v1/stock/upload-sessions/{id}/finish", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetAssemblySpec: { method: "GET", path: "/api/v1/stock/assembly-specs/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetDocument: { method: "GET", path: "/api/v1/stock/documents/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetDocumentBlockers: { method: "GET", path: "/api/v1/stock/documents/{id}/blockers", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetDocumentFulfillment: { method: "GET", path: "/api/v1/stock/documents/{id}/fulfillment", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetDocumentLinks: { method: "GET", path: "/api/v1/stock/documents/{id}/links", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetExport: { method: "GET", path: "/api/v1/stock/exports/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetExportContent: { method: "GET", path: "/api/v1/stock/exports/{id}/content", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetHandlingUnit: { method: "GET", path: "/api/v1/stock/handling-units/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 200 },
   stockGetImport: { method: "GET", path: "/api/v1/stock/imports/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetImportErrors: { method: "GET", path: "/api/v1/stock/imports/{id}/errors", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetImportSource: { method: "GET", path: "/api/v1/stock/imports/{id}/source", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockGetImportTemplate: { method: "GET", path: "/api/v1/stock/import-templates/{kind}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetInventoryCountSheet: { method: "GET", path: "/api/v1/stock/documents/{id}/count-sheet", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetOrderShipping: { method: "GET", path: "/api/v1/stock/orders/{id}/shipping", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetOrdersToShip: { method: "GET", path: "/api/v1/stock/orders/to-ship", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -5847,9 +6043,13 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockGetReservationSummaries: { method: "GET", path: "/api/v1/stock/report/reservations", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: 500 },
   stockGetSettings: { method: "GET", path: "/api/v1/stock/settings", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetStocksReport: { method: "GET", path: "/api/v1/stock/report/stocks", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: 200 },
+  stockGetUploadSession: { method: "GET", path: "/api/v1/stock/upload-sessions/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetValuationRun: { method: "GET", path: "/api/v1/stock/valuation/rebuild/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetWarehouse: { method: "GET", path: "/api/v1/stock/warehouses/{id}", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockGetWarehouseZoneAllocation: { method: "GET", path: "/api/v1/stock/warehouses/{id}/zones/allocation", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockImportErrorsDownloadSession: { method: "GET", path: "/api/v1/stock/imports/{id}/errors/download-session", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockImportSourceDownloadSession: { method: "GET", path: "/api/v1/stock/imports/{id}/source/download-session", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockImportTemplateDownloadSession: { method: "GET", path: "/api/v1/stock/import-templates/{kind}/download-session", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockInspectImport: { method: "POST", path: "/api/v1/stock/imports/{id}/inspect", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockListAssemblySpecs: { method: "GET", path: "/api/v1/stock/assembly-specs", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   stockListBatches: { method: "GET", path: "/api/v1/stock/batches", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
