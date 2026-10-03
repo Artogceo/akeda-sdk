@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4c813a449f36690b23ee6e419f00511523ebec91408e1403e21df50df2bd57f2).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 43550fd9806a058da1a01d6a55003141c57f7b4ac8888b60f361ef7432ee9ac4).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -2700,7 +2700,7 @@ type CoreBusinessPolicy struct {
 	VATPending       []CorePolicyVATPendingVersion      `json:"vat_pending"`
 	// AccountableDays — Срок авансового отчёта, дней (ERP-1176); пусто — умолчание 30
 	AccountableDays []CorePolicyAccountableDaysVersion `json:"accountable_days,omitempty"`
-	// RevenueItems — Статьи выручки исполнений заказа по виду строки (этап 4 ERP-1427)
+	// RevenueItems — Статьи выручки исполнений продажи или закупки по виду строки (этап 4 ERP-1427)
 	RevenueItems []CoreOrderRevenueItemRule `json:"revenue_items,omitempty"`
 }
 
@@ -3421,7 +3421,7 @@ type CoreNumberReset = string
 
 type CoreNumberSource = string
 
-// CoreOrder — Заказ — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе.
+// CoreOrder — Продажа или закупка — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе.
 type CoreOrder struct {
 	ID             UUID               `json:"id"`
 	Side           CoreOrderSide      `json:"side"`
@@ -3437,26 +3437,26 @@ type CoreOrder struct {
 	CompanyName    *string            `json:"company_name,omitempty"`
 	ContactName    *string            `json:"contact_name,omitempty"`
 	ContractID     *UUID              `json:"contract_id,omitempty"`
-	// ContractNumber — Номер договора заказа — для экрана
+	// ContractNumber — Номер договора продажи или закупки — для экрана
 	ContractNumber *string `json:"contract_number,omitempty"`
-	// ContractDate — Дата договора заказа — для экрана
+	// ContractDate — Дата договора продажи или закупки — для экрана
 	ContractDate *string            `json:"contract_date,omitempty"`
 	Progress     *CoreOrderProgress `json:"progress,omitempty"`
 	ProjectID    *UUID              `json:"project_id,omitempty"`
-	// DepartmentID — Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	// DepartmentID — Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
 	DepartmentID map[string]json.RawMessage `json:"department_id,omitempty"`
-	// CfoID — ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	// CfoID — ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
 	CfoID map[string]json.RawMessage `json:"cfo_id,omitempty"`
-	// PNLItemID — Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья
+	// PNLItemID — Статья исполнений продажи или закупки (выручка у продажи, расход у закупки); пусто — правило учётной политики по виду строки, иначе системная статья
 	PNLItemID map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
-	// ExecutionCutover — Бизнес заказа прошёл отсечку этапа 4: исполнение закрывает вклад регистра «Заказы» и признаёт выручку; «Сделать акт» в документообороте выпускает бумагу и проводит исполнение одной командой
+	// ExecutionCutover — Бизнес продажи или закупки прошёл отсечку этапа 4: исполнение закрывает вклад регистра «Продажи и закупки» и признаёт выручку; «Сделать акт» в документообороте выпускает бумагу и проводит исполнение одной командой
 	ExecutionCutover *bool  `json:"execution_cutover,omitempty"`
 	WarehouseID      *UUID  `json:"warehouse_id,omitempty"`
 	BasisID          *UUID  `json:"basis_id,omitempty"`
 	Title            string `json:"title"`
 	Currency         string `json:"currency"`
 	PricesIncludeVAT bool   `json:"prices_include_vat"`
-	// Discount — Скидка на заказ целиком, как её ввели; в суммах строк уже учтена
+	// Discount — Скидка на продажу или закупку целиком, как её ввели; в суммах строк уже учтена
 	Discount          string                 `json:"discount"`
 	DeliveryDate      *string                `json:"delivery_date,omitempty"`
 	DueDate           *string                `json:"due_date,omitempty"`
@@ -3477,9 +3477,9 @@ type CoreOrder struct {
 	MigratedFrom      *string                `json:"migrated_from,omitempty"`
 	Lines             []CoreOrderLine        `json:"lines"`
 	Responsibles      []CoreOrderResponsible `json:"responsibles"`
-	// Stages — Этапы работ заказа (этап 4 ERP-1427)
+	// Stages — Этапы работ продажи или закупки (этап 4 ERP-1427)
 	Stages []CoreOrderStage `json:"stages,omitempty"`
-	// PaymentTerms — График оплат заказа; id строки — разрез stage регистра расчётов
+	// PaymentTerms — График оплат продажи или закупки; id строки — разрез stage регистра расчётов
 	PaymentTerms []CoreOrderPaymentTerm `json:"payment_terms,omitempty"`
 	Totals       CoreOrderTotals        `json:"totals"`
 	CreatedBy    *int64                 `json:"created_by,omitempty"`
@@ -3497,13 +3497,13 @@ type CoreOrder struct {
 type CoreOrderAllowedAction struct {
 	Action  string `json:"action"`
 	Allowed bool   `json:"allowed"`
-	// ReasonCode — Код отказа: core.order.has_executions, core.order.has_dependents (оплаты, авансы, черновики исполнений), core.order.closed, core.order.forbidden
+	// ReasonCode — Код отказа: core.trade.has_executions, core.trade.has_dependents (оплаты, авансы, черновики исполнений), core.trade.closed, core.trade.forbidden
 	ReasonCode *string `json:"reason_code,omitempty"`
 	// Reason — Причина словами на языке запроса
 	Reason *string `json:"reason,omitempty"`
 }
 
-// CoreOrderBuyer — Покупатель-физлицо: розничный заказ стоит на общей карточке покупателя, и различает покупателей только это.
+// CoreOrderBuyer — Покупатель-физлицо: розничный продажа или закупка стоит на общей карточке покупателя, и различает покупателей только это.
 type CoreOrderBuyer struct {
 	Name  *string `json:"name,omitempty"`
 	Phone *string `json:"phone,omitempty"`
@@ -3531,7 +3531,7 @@ type CoreOrderCounterparty struct {
 type CoreOrderEvent struct {
 	ID      UUID `json:"id"`
 	OrderID UUID `json:"order_id"`
-	// Kind — created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, executing, executed, execution_reverted (состояние исполнения сменилось само после акта, отгрузки, приёмки, их отмены или возврата: payload state, previous_state, baseline — true у строки досева заказа, исполненного до появления этих событий, без вебхука; автор — система; execution_reverted — заказ снова confirmed), step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)
+	// Kind — created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, executing, executed, execution_reverted (состояние исполнения сменилось само после акта, отгрузки, приёмки, их отмены или возврата: payload state, previous_state, baseline — true у строки досева продажи или закупки, исполненного до появления этих событий, без вебхука; автор — система; execution_reverted — продажа или закупка снова confirmed), step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)
 	Kind          string  `json:"kind"`
 	Detail        *string `json:"detail,omitempty"`
 	EffectiveDate *string `json:"effective_date,omitempty"`
@@ -3559,7 +3559,7 @@ type CoreOrderFunnel struct {
 }
 
 type CoreOrderFunnelChoice struct {
-	// FunnelID — null — заказ без воронки
+	// FunnelID — null — продажа или закупка без воронки
 	FunnelID *UUID `json:"funnel_id"`
 }
 
@@ -3592,10 +3592,10 @@ type CoreOrderFunnelStep struct {
 	Key   *string `json:"key,omitempty"`
 	Kind  string  `json:"kind"`
 	Title string  `json:"title"`
-	// Required — Участвует ли шаг в воронке: ненужный шаг заказу не строится
+	// Required — Участвует ли шаг в воронке: ненужный шаг продаже или закупке не строится
 	Required *bool                   `json:"required,omitempty"`
 	Due      *CoreOrderFunnelStepDue `json:"due,omitempty"`
-	// DoneWhen — Что закрывает шаг: manual — человек отметит (пусто так же); state:<состояние> — заказ дошёл до состояния; paid:<N> — оплачено не меньше N % суммы заказа (финансы); paper:act_signed, paper:upd_signed — контрагент подписал акт или УПД в ЭДО (документооборот)
+	// DoneWhen — Что закрывает шаг: manual — человек отметит (пусто так же); state:<состояние> — продажа или закупка дошёл до состояния; paid:<N> — оплачено не меньше N % суммы продажи или закупки (финансы); paper:act_signed, paper:upd_signed — контрагент подписал акт или УПД в ЭДО (документооборот)
 	DoneWhen *string `json:"done_when,omitempty"`
 	// RemindDays — За сколько дней до срока прийти событию «срок подходит»
 	RemindDays *int64 `json:"remind_days,omitempty"`
@@ -3640,7 +3640,7 @@ type CoreOrderHistory struct {
 	Documents []CoreOrderHistoryDocument `json:"documents"`
 }
 
-// CoreOrderHistoryDocument — Документ модуля, выросший из заказа: акт, отгрузка, счёт.
+// CoreOrderHistoryDocument — Документ модуля, выросший из продажи или закупки: акт, отгрузка, счёт.
 type CoreOrderHistoryDocument struct {
 	Source    string  `json:"source"`
 	Module    string  `json:"module"`
@@ -3686,9 +3686,9 @@ type CoreOrderImportInput struct {
 	Counterparty *CoreOrderCounterparty `json:"counterparty,omitempty"`
 	ContractID   *UUID                  `json:"contract_id,omitempty"`
 	ProjectID    *UUID                  `json:"project_id,omitempty"`
-	// DepartmentID — Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	// DepartmentID — Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
 	DepartmentID map[string]json.RawMessage `json:"department_id,omitempty"`
-	// CfoID — ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	// CfoID — ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
 	CfoID       map[string]json.RawMessage `json:"cfo_id,omitempty"`
 	WarehouseID *UUID                      `json:"warehouse_id,omitempty"`
 	// BasisID — Основание — например, заявка на закупку
@@ -3697,7 +3697,7 @@ type CoreOrderImportInput struct {
 	Currency string  `json:"currency"`
 	// PricesIncludeVAT — Цены с НДС («в том числе»); по умолчанию true
 	PricesIncludeVAT *bool `json:"prices_include_vat,omitempty"`
-	// Discount — Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+	// Discount — Скидка на продажу или закупку целиком; раскладывается по строкам пропорционально их суммам до НДС
 	Discount        *string                `json:"discount,omitempty"`
 	DeliveryDate    *string                `json:"delivery_date,omitempty"`
 	DueDate         *string                `json:"due_date,omitempty"`
@@ -3708,13 +3708,13 @@ type CoreOrderImportInput struct {
 	Lines           []CoreOrderLineInput   `json:"lines"`
 	Responsibles    []CoreOrderResponsible `json:"responsibles,omitempty"`
 	CabinetStatusID *UUID                  `json:"cabinet_status_id,omitempty"`
-	// Confirm — Подтвердить заказ, если он ещё черновик
+	// Confirm — Подтвердить продажу или закупку, если он ещё черновик
 	Confirm *bool `json:"confirm,omitempty"`
-	// ExternalID — Номер заказа у источника; по стороне и нему узнаётся повтор
+	// ExternalID — Номер продажи или закупки у источника; по стороне и нему узнаётся повтор
 	ExternalID string `json:"external_id"`
 	// SourceSystem — Имя источника для журнала загрузок: сайт, CRM
 	SourceSystem *string `json:"source_system,omitempty"`
-	// FunnelID — Необязательная действующая воронка этой стороны в данном кабинете. Выбирается атомарно с созданием заказа; повтор с другим funnel_id возвращает 409, неверная или архивная воронка — 422. Без поля действует воронка договора, источника или умолчание.
+	// FunnelID — Необязательная действующая воронка этой стороны в данном кабинете. Выбирается атомарно с созданием продажи или закупки; повтор с другим funnel_id возвращает 409, неверная или архивная воронка — 422. Без поля действует воронка договора, источника или умолчание.
 	FunnelID *UUID `json:"funnel_id,omitempty"`
 }
 
@@ -3722,7 +3722,7 @@ type CoreOrderImportList struct {
 	Items []CoreOrderImportEntry `json:"items"`
 }
 
-// CoreOrderInput — Заказ из запроса: поля одни для формы, загрузки и фасадов модулей.
+// CoreOrderInput — Продажа или закупка из запроса: поля одни для формы, загрузки и фасадов модулей.
 type CoreOrderInput struct {
 	Side CoreOrderSide `json:"side"`
 	// Number — Свой номер; пусто — номер выдаёт счётчик вида
@@ -3735,11 +3735,11 @@ type CoreOrderInput struct {
 	Counterparty *CoreOrderCounterparty `json:"counterparty,omitempty"`
 	ContractID   *UUID                  `json:"contract_id,omitempty"`
 	ProjectID    *UUID                  `json:"project_id,omitempty"`
-	// DepartmentID — Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	// DepartmentID — Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
 	DepartmentID map[string]json.RawMessage `json:"department_id,omitempty"`
-	// CfoID — ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	// CfoID — ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
 	CfoID map[string]json.RawMessage `json:"cfo_id,omitempty"`
-	// PNLItemID — Статья исполнений заказа; не названа при правке — сохраняется прежняя
+	// PNLItemID — Статья исполнений продажи или закупки; не названа при правке — сохраняется прежняя
 	PNLItemID   map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
 	WarehouseID *UUID                      `json:"warehouse_id,omitempty"`
 	// BasisID — Основание — например, заявка на закупку
@@ -3748,7 +3748,7 @@ type CoreOrderInput struct {
 	Currency string  `json:"currency"`
 	// PricesIncludeVAT — Цены с НДС («в том числе»); по умолчанию true
 	PricesIncludeVAT *bool `json:"prices_include_vat,omitempty"`
-	// Discount — Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+	// Discount — Скидка на продажу или закупку целиком; раскладывается по строкам пропорционально их суммам до НДС
 	Discount     *string                `json:"discount,omitempty"`
 	DeliveryDate *string                `json:"delivery_date,omitempty"`
 	DueDate      *string                `json:"due_date,omitempty"`
@@ -3763,7 +3763,7 @@ type CoreOrderInput struct {
 	// PaymentTerms — График оплат целиком, правка по id; не назван — не меняется
 	PaymentTerms    []CoreOrderPaymentTerm `json:"payment_terms,omitempty"`
 	CabinetStatusID *UUID                  `json:"cabinet_status_id,omitempty"`
-	// Confirm — Сразу подтвердить созданный заказ
+	// Confirm — Сразу подтвердить созданный продажу или закупку
 	Confirm *bool `json:"confirm,omitempty"`
 }
 
@@ -3781,17 +3781,17 @@ type CoreOrderLine struct {
 	Price string `json:"price"`
 	// Discount — Скидка самой строки
 	Discount string `json:"discount"`
-	// DiscountAmount — Доля скидки заказа на этой строке; суммы строки посчитаны после обеих скидок
+	// DiscountAmount — Доля скидки продажи или закупки на этой строке; суммы строки посчитаны после обеих скидок
 	DiscountAmount string `json:"discount_amount"`
 	// VATRate — Ставка, как её ввели; пусто — по учётной политике
 	VATRate *string `json:"vat_rate,omitempty"`
 	// VATRateApplied — Ставка, по которой строка посчитана; пусто — налог не выделен
 	VATRateApplied *string `json:"vat_rate_applied,omitempty"`
-	// AmountNet — Сумма строкой в разрядности валюты заказа
+	// AmountNet — Сумма строкой в разрядности валюты продажи или закупки
 	AmountNet string `json:"amount_net"`
-	// VATAmount — Сумма строкой в разрядности валюты заказа
+	// VATAmount — Сумма строкой в разрядности валюты продажи или закупки
 	VATAmount string `json:"vat_amount"`
-	// AmountGross — Сумма строкой в разрядности валюты заказа
+	// AmountGross — Сумма строкой в разрядности валюты продажи или закупки
 	AmountGross string `json:"amount_gross"`
 	// BaseQty — Количество в базовой единице склада
 	BaseQty         *string `json:"base_qty,omitempty"`
@@ -3815,7 +3815,7 @@ type CoreOrderLineInput struct {
 	Price string `json:"price"`
 	// Discount — Десятичное число строкой
 	Discount *string `json:"discount,omitempty"`
-	// VATRate — Ставка НДС строки; пусто — по учётной политике юрлица на дату заказа
+	// VATRate — Ставка НДС строки; пусто — по учётной политике юрлица на дату продажи или закупки
 	VATRate *string `json:"vat_rate,omitempty"`
 	// BaseQty — Десятичное число строкой
 	BaseQty         *string `json:"base_qty,omitempty"`
@@ -3825,7 +3825,7 @@ type CoreOrderLineInput struct {
 
 type CoreOrderLineKind = string
 
-// CoreOrderNowAct — Реквизиты акта; пусто — дата заказа, номер по счётчику, название по заказу
+// CoreOrderNowAct — Реквизиты акта; пусто — дата продажи или закупки, номер по счётчику, название по продаже или закупке
 type CoreOrderNowAct struct {
 	Date   *string `json:"date,omitempty"`
 	Number *string `json:"number,omitempty"`
@@ -3843,7 +3843,7 @@ type CoreOrderNowExecution struct {
 	ExecutionNumber *string `json:"execution_number,omitempty"`
 }
 
-// CoreOrderNowInput — Заказ целиком, его внешний номер и акт. Поля заказа — те же, что у загрузки; подтверждение подразумевается.
+// CoreOrderNowInput — Продажа или закупка целиком, его внешний номер и акт. Поля продажи или закупки — те же, что у загрузки; подтверждение подразумевается.
 type CoreOrderNowInput struct {
 	Side CoreOrderSide `json:"side"`
 	// Number — Свой номер; пусто — номер выдаёт счётчик вида
@@ -3856,9 +3856,9 @@ type CoreOrderNowInput struct {
 	Counterparty *CoreOrderCounterparty `json:"counterparty,omitempty"`
 	ContractID   *UUID                  `json:"contract_id,omitempty"`
 	ProjectID    *UUID                  `json:"project_id,omitempty"`
-	// DepartmentID — Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	// DepartmentID — Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
 	DepartmentID map[string]json.RawMessage `json:"department_id,omitempty"`
-	// CfoID — ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	// CfoID — ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
 	CfoID map[string]json.RawMessage `json:"cfo_id,omitempty"`
 	// PNLItemID — Статья выручки (у закупки — расхода) исполнения; пусто — по учётной политике бизнеса
 	PNLItemID   map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
@@ -3880,7 +3880,7 @@ type CoreOrderNowInput struct {
 	Stages           []CoreOrderStage       `json:"stages,omitempty"`
 	PaymentTerms     []CoreOrderPaymentTerm `json:"payment_terms,omitempty"`
 	CabinetStatusID  *UUID                  `json:"cabinet_status_id,omitempty"`
-	// ExternalID — Номер заказа у источника; по стороне и нему узнаётся повтор
+	// ExternalID — Номер продажи или закупки у источника; по стороне и нему узнаётся повтор
 	ExternalID string `json:"external_id"`
 	// SourceSystem — Имя источника: сайт, CRM, маркетплейс
 	SourceSystem *string          `json:"source_system,omitempty"`
@@ -3890,16 +3890,16 @@ type CoreOrderNowInput struct {
 type CoreOrderNowResult struct {
 	Order     CoreOrder             `json:"order"`
 	Execution CoreOrderNowExecution `json:"execution"`
-	// Replayed — true — заказ уже был исполнен этой командой; ничего не записано
+	// Replayed — true — продажа или закупка уже был исполнен этой командой; ничего не записано
 	Replayed bool `json:"replayed"`
 }
 
 type CoreOrderObligation struct {
-	// Ordered — Действующий приход подтверждения в регистре «Заказы»
+	// Ordered — Действующий приход подтверждения в регистре «Продажи и закупки»
 	Ordered string `json:"ordered"`
-	// Remaining — Остаток регистра «Заказы» по заказу. До этапа 4 его уменьшает только закрытие, поэтому это не «осталось исполнить»
+	// Remaining — Остаток регистра «Продажи и закупки» по продаже или закупке. До этапа 4 его уменьшает только закрытие, поэтому это не «осталось исполнить»
 	Remaining string `json:"remaining"`
-	// Executed — Исполнено: сумма проведённых исполнений заказа (акт, продажа, закупка, приёмка) за вычетом возвратов, в валюте заказа. То же число, что в журнале продаж и закупок финансов (core_order_executed)
+	// Executed — Исполнено: сумма проведённых исполнений продажи или закупки (акт, продажа, закупка, приёмка) за вычетом возвратов, в валюте продажи или закупки. То же число, что в журнале продаж и закупок финансов (core_order_executed)
 	Executed string `json:"executed"`
 	// RemainingToExecute — Осталось исполнить: заказано минус исполнено, не меньше нуля
 	RemainingToExecute string `json:"remaining_to_execute"`
@@ -3907,16 +3907,16 @@ type CoreOrderObligation struct {
 
 type CoreOrderPage struct {
 	Items []CoreOrder `json:"items"`
-	// Total — Сколько заказов под отбором всего
+	// Total — Сколько продаж или закупок под отбором всего
 	Total   int64 `json:"total"`
 	Limit   int64 `json:"limit"`
 	Offset  int64 `json:"offset"`
 	HasMore bool  `json:"has_more"`
-	// StateCounts — Только с with=counts: число заказов по состояниям при том же отборе без отбора состояний
+	// StateCounts — Только с with=counts: число продаж или закупок по состояниям при том же отборе без отбора состояний
 	StateCounts map[string]int64 `json:"state_counts,omitempty"`
 }
 
-// CoreOrderPaymentTerm — Строка графика оплат заказа — когда и сколько платят (ERP-1427, этап 4).
+// CoreOrderPaymentTerm — Строка графика оплат продажи или закупки — когда и сколько платят (ERP-1427, этап 4).
 type CoreOrderPaymentTerm struct {
 	ID       *UUID   `json:"id,omitempty"`
 	Position *int64  `json:"position,omitempty"`
@@ -3929,7 +3929,7 @@ type CoreOrderPaymentTerm struct {
 	DelayDays  *int64  `json:"delay_days,omitempty"`
 }
 
-// CoreOrderProgress — Ход заказа для строки списка (with=progress). executed — исполнено в валюте заказа; paid — оплачено, нет поля — финансы выключены; papers — счёт, акт и УПД: done — есть, wait — ждём подписи, нет ключа — нет; нет поля — документооборот выключен.
+// CoreOrderProgress — Ход продажи или закупки для строки списка (with=progress). executed — исполнено в валюте продажи или закупки; paid — оплачено, нет поля — финансы выключены; papers — счёт, акт и УПД: done — есть, wait — ждём подписи, нет ключа — нет; нет поля — документооборот выключен.
 type CoreOrderProgress struct {
 	Executed string            `json:"executed"`
 	Paid     *string           `json:"paid,omitempty"`
@@ -3966,9 +3966,9 @@ type CoreOrderRevision struct {
 	Counterparty *CoreOrderCounterparty `json:"counterparty,omitempty"`
 	ContractID   *UUID                  `json:"contract_id,omitempty"`
 	ProjectID    *UUID                  `json:"project_id,omitempty"`
-	// DepartmentID — Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	// DepartmentID — Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
 	DepartmentID map[string]json.RawMessage `json:"department_id,omitempty"`
-	// CfoID — ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+	// CfoID — ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
 	CfoID       map[string]json.RawMessage `json:"cfo_id,omitempty"`
 	WarehouseID *UUID                      `json:"warehouse_id,omitempty"`
 	// BasisID — Основание — например, заявка на закупку
@@ -3977,7 +3977,7 @@ type CoreOrderRevision struct {
 	Currency string  `json:"currency"`
 	// PricesIncludeVAT — Цены с НДС («в том числе»); по умолчанию true
 	PricesIncludeVAT *bool `json:"prices_include_vat,omitempty"`
-	// Discount — Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+	// Discount — Скидка на продажу или закупку целиком; раскладывается по строкам пропорционально их суммам до НДС
 	Discount     *string                `json:"discount,omitempty"`
 	DeliveryDate *string                `json:"delivery_date,omitempty"`
 	DueDate      *string                `json:"due_date,omitempty"`
@@ -4000,15 +4000,15 @@ type CoreOrderSide = string
 
 type CoreOrderSourceKind = string
 
-// CoreOrderStage — Этап работ заказа — что и когда сдаём (ERP-1427, этап 4).
+// CoreOrderStage — Этап работ продажи или закупки — что и когда сдаём (ERP-1427, этап 4).
 type CoreOrderStage struct {
 	ID          *UUID   `json:"id,omitempty"`
 	Position    *int64  `json:"position,omitempty"`
 	Title       *string `json:"title,omitempty"`
 	PlannedDate *string `json:"planned_date,omitempty"`
-	// Amount — Сумма этапа в валюте заказа с налогом
+	// Amount — Сумма этапа в валюте продажи или закупки с налогом
 	Amount *string `json:"amount,omitempty"`
-	// LineIds — Строки заказа, которые закрывает этап; пусто — строки-услуги по порядку
+	// LineIds — Строки продажи или закупки, которые закрывает этап; пусто — строки-услуги по порядку
 	LineIds []UUID `json:"line_ids,omitempty"`
 }
 
@@ -4078,7 +4078,7 @@ type CoreOrderTemplate struct {
 }
 
 type CoreOrderTemplateActions struct {
-	// Confirm — Провести заказ сразу; false — черновик.
+	// Confirm — Провести продажу или закупку сразу; false — черновик.
 	Confirm     *bool   `json:"confirm,omitempty"`
 	Invoice     *string `json:"invoice,omitempty"`
 	InvoiceDays *int64  `json:"invoice_days,omitempty"`
@@ -4120,17 +4120,17 @@ type CoreOrderTemplateStateInput struct {
 	ExpectedVersion int64  `json:"expected_version"`
 }
 
-// CoreOrderTotals — Итоги — сумма строк: скидка заказа уже разложена по строкам и второй раз не вычитается.
+// CoreOrderTotals — Итоги — сумма строк: скидка продажи или закупки уже разложена по строкам и второй раз не вычитается.
 type CoreOrderTotals struct {
-	// Net — Сумма строкой в разрядности валюты заказа
+	// Net — Сумма строкой в разрядности валюты продажи или закупки
 	Net string `json:"net"`
-	// VAT — Сумма строкой в разрядности валюты заказа
+	// VAT — Сумма строкой в разрядности валюты продажи или закупки
 	VAT string `json:"vat"`
-	// Gross — Сумма строкой в разрядности валюты заказа
+	// Gross — Сумма строкой в разрядности валюты продажи или закупки
 	Gross string `json:"gross"`
-	// GoodsGross — Сумма строкой в разрядности валюты заказа
+	// GoodsGross — Сумма строкой в разрядности валюты продажи или закупки
 	GoodsGross string `json:"goods_gross"`
-	// ServicesGross — Сумма строкой в разрядности валюты заказа
+	// ServicesGross — Сумма строкой в разрядности валюты продажи или закупки
 	ServicesGross string `json:"services_gross"`
 	Currency      string `json:"currency"`
 }
@@ -5517,7 +5517,7 @@ type DiscussionCommentUpdate struct {
 
 type DiscussionOwnerType = string
 
-// DocflowAppSalesOrderCounterparty — Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в заказе как реквизиты плательщика
+// DocflowAppSalesOrderCounterparty — Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в продаже или закупке как реквизиты плательщика
 type DocflowAppSalesOrderCounterparty struct {
 	Name  *string `json:"name,omitempty"`
 	INN   *string `json:"inn,omitempty"`
@@ -5533,7 +5533,7 @@ type DocflowAppSalesOrderInput struct {
 	Counterparty       *DocflowAppSalesOrderCounterparty `json:"counterparty,omitempty"`
 	// FunnelID — Необязательная действующая воронка продаж этого кабинета; повтор с другой воронкой отвечает 409
 	FunnelID *UUID `json:"funnel_id,omitempty"`
-	// ExternalID — Номер заказа у магазина — ключ идемпотентности загрузки
+	// ExternalID — Номер продажи или закупки у магазина — ключ идемпотентности загрузки
 	ExternalID string `json:"external_id"`
 	// Number — Пусто — кабинет выдаст следующий номер
 	Number *string `json:"number,omitempty"`
@@ -5548,7 +5548,7 @@ type DocflowAppSalesOrderInput struct {
 	Discount  *string `json:"discount,omitempty"`
 	// PricesIncludeVAT — Цены включают налог; пусто — умолчание кабинета
 	PricesIncludeVAT *bool `json:"prices_include_vat,omitempty"`
-	// Scenario — Путь сделки; заказ с оплатой на сайте — self_service
+	// Scenario — Путь сделки; продажа или закупка с оплатой на сайте — self_service
 	Scenario *string                      `json:"scenario,omitempty"`
 	Payment  *DocflowAppSalesOrderPayment `json:"payment,omitempty"`
 	// Source — Не используется контуром приложения: источник журнала — пространство приложения из токена
@@ -5569,11 +5569,11 @@ type DocflowAppSalesOrderItem struct {
 	Quantity string  `json:"quantity"`
 	Price    string  `json:"price"`
 	Discount *string `json:"discount,omitempty"`
-	// VATRate — Ставка строки: 22%, 10%, без НДС; пусто — учётная политика юрлица на дату заказа
+	// VATRate — Ставка строки: 22%, 10%, без НДС; пусто — учётная политика юрлица на дату продажи или закупки
 	VATRate *string `json:"vat_rate,omitempty"`
 }
 
-// DocflowAppSalesOrderPayment — Сообщение эквайринга о заказе. Идемпотентно по паре provider + external_id
+// DocflowAppSalesOrderPayment — Сообщение эквайринга о продаже или закупке. Идемпотентно по паре provider + external_id
 type DocflowAppSalesOrderPayment struct {
 	// Provider — Кто подтвердил списание: yookassa, tochka, имя платёжного кабинета сайта
 	Provider string `json:"provider"`
@@ -6142,7 +6142,7 @@ type DocflowFlowContractTerms struct {
 	Currency     *string `json:"currency,omitempty"`
 	PaymentTerms *string `json:"payment_terms,omitempty"`
 	RenewalTerms *string `json:"renewal_terms,omitempty"`
-	// OrderFunnelID — Воронка заказов договора: заказы по договору идут в неё (пометка кабинета, не текст бумаги)
+	// OrderFunnelID — Воронка продаж или закупок договора: продажи или закупки по договору идут в неё (пометка кабинета, не текст бумаги)
 	OrderFunnelID *string `json:"order_funnel_id,omitempty"`
 }
 
@@ -6308,11 +6308,11 @@ type DocflowFlowPaymentRule struct {
 	Orders *DocflowFlowPaymentRuleOrders `json:"orders,omitempty"`
 }
 
-// DocflowFlowPaymentRuleOrders — «Заводить заказ на каждый период» — только у договора (kind=contract). Зарегистрированный договор сам заводит на каждую наступившую стадию правила подтверждённый заказ ядра (source_kind=contract, external_id «<id договора>/<период>»): сразу после регистрации и фоновым проходом раз в час. Один договор и один период — один заказ навсегда: отменённый не воскресает, период не позже последнего заказа договора не заводится. Будущие периоды не заводятся; исполнение и бумаги периода — вручную.
+// DocflowFlowPaymentRuleOrders — «Заводить продажу или закупку на каждый период» — только у договора (kind=contract). Зарегистрированный договор сам заводит на каждую наступившую стадию правила подтверждённый продажу или закупку ядра (source_kind=contract, external_id «<id договора>/<период>»): сразу после регистрации и фоновым проходом раз в час. Один договор и один период — один продажа или закупка навсегда: отменённый не воскресает, период не позже последнего продажи или закупки договора не заводится. Будущие периоды не заводятся; исполнение и бумаги периода — вручную.
 type DocflowFlowPaymentRuleOrders struct {
-	// From — Первый период: стадии раньше этой даты заказов не получают. Пусто — с начала правила, прошедшие периоды догоняются
+	// From — Первый период: стадии раньше этой даты продаж или закупок не получают. Пусто — с начала правила, прошедшие периоды догоняются
 	From *string `json:"from,omitempty"`
-	// ProductID — Услуга строки заказа — активная номенклатура вида service; пусто — строка без номенклатуры, названная предметом договора
+	// ProductID — Услуга строки продажи или закупки — активная номенклатура вида service; пусто — строка без номенклатуры, названная предметом договора
 	ProductID *UUID `json:"product_id,omitempty"`
 	// ProductName — Название услуги на момент выбора; пишет сервер, присланное не читается
 	ProductName *string `json:"product_name,omitempty"`
@@ -6500,12 +6500,12 @@ type DocflowMessagePrintForm struct {
 }
 
 type DocflowOrderActInput struct {
-	// Date — Дата акта; пусто — дата заказа
+	// Date — Дата акта; пусто — дата продажи или закупки
 	Date *string `json:"date,omitempty"`
 	// Number — Пусто — следующий номер счётчика актов
 	Number *string `json:"number,omitempty"`
 	Title  *string `json:"title,omitempty"`
-	// Amount — Пусто — все услуги заказа; меньше — частичный акт суммой
+	// Amount — Пусто — все услуги продажи или закупки; меньше — частичный акт суммой
 	Amount *string `json:"amount,omitempty"`
 }
 
@@ -6522,7 +6522,7 @@ type DocflowOrderImport struct {
 	// Source — Пространство приложения, которое загружало
 	Source  *string `json:"source,omitempty"`
 	Outcome string  `json:"outcome"`
-	// Reason — Машинный код отказа, например docflow.sales_order.contact_unknown
+	// Reason — Машинный код отказа, например docflow.sale.contact_unknown
 	Reason *string `json:"reason,omitempty"`
 	// Detail — Причина отказа словами
 	Detail  *string `json:"detail,omitempty"`
@@ -6543,9 +6543,9 @@ type DocflowOrderInvoiceInput struct {
 	PaymentPurpose *string `json:"payment_purpose,omitempty"`
 	// PaymentPurposeAuto — Собрать назначение платежа умолчанием
 	PaymentPurposeAuto *bool `json:"payment_purpose_auto,omitempty"`
-	// Amount — Пусто — на весь заказ; меньше — частичный счёт
+	// Amount — Пусто — на весь продажу или закупку; меньше — частичный счёт
 	Amount *string `json:"amount,omitempty"`
-	// Date — Дата счёта; пусто — дата заказа
+	// Date — Дата счёта; пусто — дата продажи или закупки
 	Date *string `json:"date,omitempty"`
 	// Number — Пусто — следующий номер счётчика счетов
 	Number *string `json:"number,omitempty"`
@@ -6584,9 +6584,9 @@ type DocflowOrderSetOrder struct {
 }
 
 type DocflowOrderUPDInput struct {
-	// Date — Дата УПД; пусто — дата заказа
+	// Date — Дата УПД; пусто — дата продажи или закупки
 	Date *string `json:"date,omitempty"`
-	// Amount — Пусто — все услуги заказа; меньше — частичный УПД суммой
+	// Amount — Пусто — все услуги продажи или закупки; меньше — частичный УПД суммой
 	Amount  *string `json:"amount,omitempty"`
 	StageID *UUID   `json:"stage_id,omitempty"`
 	// Function — Пусто — СЧФДОП
@@ -6649,7 +6649,7 @@ type DocflowSalesOrder struct {
 	Amount           string                  `json:"amount"`
 	GoodsAmount      string                  `json:"goods_amount"`
 	ServiceAmount    string                  `json:"service_amount"`
-	// PaidAmount — Сколько денег пришло на счёт по заказу
+	// PaidAmount — Сколько денег пришло на счёт по продаже или закупке
 	PaidAmount      string  `json:"paid_amount"`
 	ShippedAmount   string  `json:"shipped_amount"`
 	InvoicedAmount  string  `json:"invoiced_amount"`
@@ -6665,7 +6665,7 @@ type DocflowSalesOrder struct {
 	UpdatedAt       string  `json:"updated_at"`
 }
 
-// DocflowSalesOrderBuyer — Как покупатель представился в заказе
+// DocflowSalesOrderBuyer — Как покупатель представился в продаже или закупке
 type DocflowSalesOrderBuyer struct {
 	Name  *string `json:"name,omitempty"`
 	Phone *string `json:"phone,omitempty"`
@@ -7037,7 +7037,7 @@ type FinanceAccount struct {
 	BankTimezone *string `json:"bank_timezone,omitempty"`
 	// BankTimezoneSource — Откуда пояс: `bic` — определён по БИК, `default` — определить не удалось, стоит умолчание (проверьте пояс), `manual` — задан человеком; подключение банка ручной пояс не трогает.
 	BankTimezoneSource *json.RawMessage `json:"bank_timezone_source,omitempty"`
-	// AccountType — Вид счёта. `settlement` — расчётный (счёт книги 51), `deposit` — вклад (депозитный счёт, 55.03). Вклад — такие же деньги: он входит в итог денег, а размещение и возврат — внутренний перевод между своими счетами, не доход и не расход.
+	// AccountType — Вид счёта. `settlement` — расчётный (счёт книги 51), `deposit` — вклад. Деньги вклада учитываются статьёй «Депозиты и вклады»: отправка и возврат идут ею, а остаток депозитного счёта в итог денег не входит.
 	AccountType *string `json:"account_type,omitempty"`
 	// AccountTypeSource — Откуда вид: `number` — выведен из номера счёта (421…–422… и 423…, 426… — вклад), `bank` — назван банком, `manual` — выбран человеком. Ручной выбор номер и банк не перебивают.
 	AccountTypeSource *string `json:"account_type_source,omitempty"`
@@ -7185,7 +7185,7 @@ type FinanceAcquiringInTransit struct {
 	Provider string `json:"provider"`
 	// ExternalID — Идентификатор платежа у провайдера
 	ExternalID string `json:"external_id"`
-	// OrderID — Заказ покупателя
+	// OrderID — Продажа
 	OrderID *UUID `json:"order_id,omitempty"`
 	// ContactID — Покупатель
 	ContactID *UUID `json:"contact_id,omitempty"`
@@ -7366,7 +7366,7 @@ type FinanceCashflowEntryCategorize struct {
 	Contact *string `json:"contact,omitempty"`
 	// ForContact — «За кого»: контрагент сотрудника или собственника, чей расчёт гасит выдача. Пусто — как контрагент; не присланное поле остаётся как было
 	ForContact *string `json:"for_contact,omitempty"`
-	// Order — Заказ, который оплачивают наличные (приход — заказ покупателя, расход — заказ поставщику того же контрагента). Пустая строка снимает заказ; не присланное поле остаётся как было
+	// Order — Продажа или закупка, который оплачивают наличные (приход — продажа, расход — закупка того же контрагента). Пустая строка снимает продажу или закупку; не присланное поле остаётся как было
 	Order *string `json:"order,omitempty"`
 }
 
@@ -7791,7 +7791,7 @@ type FinanceOperationAccrualResult struct {
 	Allocations []FinanceOperationAccrualAllocation `json:"allocations"`
 	Document    CoreDocument                        `json:"document"`
 	Operation   FinanceOperation                    `json:"operation"`
-	// VATWarnings — Акт по заказу: строки со ставкой человека, равной прежней общей ставке юрлица, а на дату акта общая ставка другая
+	// VATWarnings — Акт по продаже или закупке: строки со ставкой человека, равной прежней общей ставке юрлица, а на дату акта общая ставка другая
 	VATWarnings []CoreOrderVATWarning `json:"vat_warnings,omitempty"`
 }
 
@@ -7905,14 +7905,14 @@ type FinanceOperationVersion struct {
 type FinanceOrderActInput struct {
 	Source FinanceOperationSource `json:"source"`
 	Date   string                 `json:"date"`
-	// Amount — Сумма акта с НДС в валюте заказа, decimal string
+	// Amount — Сумма акта с НДС в валюте продажи или закупки, decimal string
 	Amount string `json:"amount"`
-	// DueDate — Срок оплаты; пусто — по строке графика заказа или условиям контрагента
+	// DueDate — Срок оплаты; пусто — по строке графика продажи или закупки или условиям контрагента
 	DueDate *string `json:"due_date,omitempty"`
 	Reason  *string `json:"reason,omitempty"`
-	// PNLItemID — Статья выручки (расхода); пусто — статья заказа, политика бизнеса или системная
+	// PNLItemID — Статья выручки (расхода); пусто — статья продажи или закупки, политика бизнеса или системная
 	PNLItemID map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
-	// StageID — Этап работ заказа, который закрывает акт
+	// StageID — Этап работ продажи или закупки, который закрывает акт
 	StageID          map[string]json.RawMessage `json:"stage_id,omitempty"`
 	VATAmount        *string                    `json:"vat_amount,omitempty"`
 	PricesIncludeVAT *bool                      `json:"prices_include_vat,omitempty"`
@@ -8242,10 +8242,10 @@ type FinanceReconciliationSummary struct {
 	TotalCount          int64 `json:"total_count"`
 	NeedsAttentionCount int64 `json:"needs_attention_count"`
 	UnmatchedCount      int64 `json:"unmatched_count"`
-	// MissingOrderCount — Входящие платежи без заказа и без проекта; имя поля сохранено для совместимости
+	// MissingOrderCount — Входящие платежи без продажи или закупки и без проекта; имя поля сохранено для совместимости
 	MissingOrderCount    int64 `json:"missing_order_count"`
 	MissingCashflowCount int64 `json:"missing_cashflow_count"`
-	// IncomingUnlinkedAmount — Сумма входящих платежей без заказа и без проекта; decimal string
+	// IncomingUnlinkedAmount — Сумма входящих платежей без продажи или закупки и без проекта; decimal string
 	IncomingUnlinkedAmount string `json:"incoming_unlinked_amount"`
 }
 
@@ -9805,7 +9805,7 @@ type MarketplaceWbCardFunnelDay struct {
 	ToCart   *int64   `json:"to_cart"`
 	CvCart   *float64 `json:"cv_cart"`
 	CvOrder  *float64 `json:"cv_order"`
-	// OrdersQty — Из «Джема», а без него из заказов
+	// OrdersQty — Из «Джема», а без него из продаж или закупок
 	OrdersQty int64  `json:"orders_qty"`
 	OrdersSum int64  `json:"orders_sum"`
 	AvgCheck  *int64 `json:"avg_check"`
@@ -10136,7 +10136,7 @@ type MarketplaceWbProduct struct {
 	// OldPrice — Цена до скидки продавца
 	OldPrice        string `json:"old_price"`
 	DiscountPercent int64  `json:"discount_percent"`
-	// BuyerPrice — Последняя цена покупателя из заказов или продаж
+	// BuyerPrice — Последняя цена покупателя из продаж или закупок или продаж
 	BuyerPrice      string `json:"buyer_price"`
 	Stock           int64  `json:"stock"`
 	InWayToClient   int64  `json:"in_way_to_client"`
@@ -10215,10 +10215,10 @@ type MarketplaceYandexCostInput struct {
 
 type MarketplaceYandexOrdersDay struct {
 	Date string `json:"date"`
-	// OrdersSum — Сумма заказов кроме отменённых; decimal строкой
+	// OrdersSum — Сумма продаж или закупок кроме отменённых; decimal строкой
 	OrdersSum string `json:"orders_sum"`
 	OrdersQty int64  `json:"orders_qty"`
-	// SalesSum — Сумма доставленных заказов; decimal строкой
+	// SalesSum — Сумма доставленных продаж или закупок; decimal строкой
 	SalesSum string `json:"sales_sum"`
 	SalesQty int64  `json:"sales_qty"`
 }
@@ -10234,7 +10234,7 @@ type MarketplaceYandexOrdersKpi struct {
 }
 
 type MarketplaceYandexOrdersOverview struct {
-	// Day — Последний день периода; без параметров — последний день с заказами
+	// Day — Последний день периода; без параметров — последний день с продажами или закупками
 	Day string `json:"day"`
 	// From — Первый день периода
 	From string `json:"from"`
@@ -11295,7 +11295,7 @@ type StockDocumentLine struct {
 	// VATAmount — Доля налога документа в строке: пропорционально сумме строки, копеечный остаток — на самую крупную. Считает сервер и перезаписывает присланное; по её наличию судят о разбивке при перепроведении
 	VATAmount   *string `json:"vat_amount,omitempty"`
 	BasisLineID *UUID   `json:"basis_line_id,omitempty"`
-	// BasisDocumentID — Построчное происхождение, когда один заказ поставщику сводит несколько заявок
+	// BasisDocumentID — Построчное происхождение, когда одна закупка сводит несколько заявок
 	BasisDocumentID         *UUID                                 `json:"basis_document_id,omitempty"`
 	BatchCode               *string                               `json:"batch_code,omitempty"`
 	ProducedAt              *string                               `json:"produced_at,omitempty"`
@@ -11338,7 +11338,7 @@ type StockDocumentPatch struct {
 	Comment    *string               `json:"comment,omitempty"`
 }
 
-// StockDocumentPayload — Содержимое складского документа. Разбор строгий — незнакомое поле отклоняется. У документа-факта, заявки, заказа и резерва `items` обязателен и не длиннее 1000 строк.
+// StockDocumentPayload — Содержимое складского документа. Разбор строгий — незнакомое поле отклоняется. У документа-факта, заявки, продажи или закупки и резерва `items` обязателен и не длиннее 1000 строк.
 type StockDocumentPayload struct {
 	Version int64   `json:"version"`
 	Reason  *string `json:"reason,omitempty"`
@@ -11873,7 +11873,7 @@ type StockReorderRule struct {
 	MinQty string `json:"min_qty"`
 	// MaxQty — Decimal string целевого остатка; null — потолок не задан
 	MaxQty *string `json:"max_qty"`
-	// OrderMultiple — Decimal string кратности заказа; null — кратность не задана
+	// OrderMultiple — Decimal string кратности продажи или закупки; null — кратность не задана
 	OrderMultiple         *string `json:"order_multiple"`
 	LeadTimeDays          int64   `json:"lead_time_days"`
 	PreferredSupplierID   *UUID   `json:"preferred_supplier_id"`
@@ -12778,7 +12778,7 @@ type WorkflowStatusUpdate struct {
 	IsFinal   *bool           `json:"is_final,omitempty"`
 }
 
-type AppDocflowRecordSalesOrderPaymentRequest struct {
+type AppDocflowRecordSalePaymentRequest struct {
 	Provider   string  `json:"provider"`
 	ExternalID string  `json:"external_id"`
 	Kind       *string `json:"kind,omitempty"`

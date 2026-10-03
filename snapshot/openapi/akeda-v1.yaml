@@ -43,8 +43,8 @@ tags:
     description: Модуль core (справочники) — товары, услуги, семейства, варианты и внешние идентификаторы
   - name: Core documents
     description: Модуль core (справочники) — типы документов, журнал, проведение, связи и блокировки
-  - name: Core orders
-    description: Модуль core (справочники, документы и проведение) — заказы покупателей и поставщикам, статусы кабинета и загрузка
+  - name: Core trade
+    description: Модуль core (справочники, документы и проведение) — продажи и поставщикам, статусы кабинета и загрузка
   - name: Core registers
     description: Модуль core (справочники) — определения регистров, остатки, обороты и движения
   - name: Core accounting
@@ -150,7 +150,7 @@ tags:
   - name: Stock settings
     description: Модуль stock (склад) — настройки склада и учётные политики юрлиц
   - name: Stock purchasing
-    description: Модуль stock (склад) — заказы поставщику
+    description: Модуль stock (склад) — закупки
   - name: Marketplace stores
     description: Модуль marketplace (торговые площадки) — магазины Ozon, Wildberries и Яндекс.Маркета
   - name: Marketplace Ozon
@@ -1651,7 +1651,7 @@ paths:
         - installationToken: []
       responses:
         '200':
-          description: Привязки к заказам, контактам, документам и другим сущностям
+          description: Привязки к продажам или закупкам, контактам, документам и другим сущностям
           content:
             application/json:
               schema:
@@ -7631,17 +7631,17 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/v1/core/orders:
+  /api/v1/core/sales:
     get:
       tags:
-        - Core orders
-      operationId: coreListOrders
-      summary: Получить журнал заказов
-      description: 'Заказы покупателей и поставщикам в области юрлиц действующего: заказ без юрлица виден только тому, кому видны все юрлица; приложение видит только заказы своего источника. Строка несёт итоги, стороны словами и статус кабинета. `total` — сколько заказов под отбором всего.'
+        - Core trade
+      operationId: coreListSales
+      summary: Получить журнал продаж
+      description: 'Продажи и поставщикам в области юрлиц действующего: продажа без юрлица виден только тому, кому видны все юрлица; приложение видит только продажи своего источника. Строка несёт итоги, стороны словами и статус кабинета. `total` — сколько продаж под отбором всего.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:read
+      x-akeda-permission: core.trade:read
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -7681,7 +7681,7 @@ paths:
             $ref: '#/components/schemas/UUID'
         - name: responsible_id
           in: query
-          description: Сотрудник среди ответственных заказа
+          description: Сотрудник среди ответственных продажи
           schema:
             $ref: '#/components/schemas/UUID'
         - name: date_from
@@ -7710,7 +7710,7 @@ paths:
             $ref: '#/components/schemas/CoreOrderSourceKind'
         - name: with
           in: query
-          description: 'Дополнения ответа через запятую: progress — ход каждого заказа (исполнено, оплачено, счёт/акт/УПД), counts — число заказов по состояниям без отбора состояний'
+          description: 'Дополнения ответа через запятую: progress — ход каждой продажи (исполнено, оплачено, счёт/акт/УПД), counts — число продаж по состояниям без отбора состояний'
           schema:
             type: string
         - name: limit
@@ -7729,7 +7729,7 @@ paths:
             default: 0
       responses:
         '200':
-          description: Страница журнала заказов
+          description: Страница журнала продаж
           content:
             application/json:
               schema:
@@ -7744,14 +7744,14 @@ paths:
           $ref: '#/components/responses/NotFound'
     post:
       tags:
-        - Core orders
-      operationId: coreCreateOrder
-      summary: Завести заказ
-      description: 'Заводит черновик заказа покупателя (side=sale, серия ЗКЛ) или поставщику (side=purchase, серия ЗП); `confirm: true` сразу подтверждает его той же транзакцией — обязательство встаёт в регистр «Заказы». Номер пустой — его выдаёт счётчик вида, свой номер берётся как есть. Скидка заказа раскладывается по строкам пропорционально их суммам до разложения НДС. Читает Idempotency-Key: повтор с тем же ключом отдаёт заведённый заказ, а не второй. Ответ — карточка заказа.'
+        - Core trade
+      operationId: coreCreateSale
+      summary: Завести продажу
+      description: 'Заводит черновик продажи (серия ЗКЛ); `confirm: true` сразу подтверждает его той же транзакцией — обязательство встаёт в регистр «Продажи и закупки». Номер пустой — его выдаёт счётчик вида, свой номер берётся как есть. Скидка продажи раскладывается по строкам пропорционально их суммам до разложения НДС. Читает Idempotency-Key: повтор с тем же ключом отдаёт заведённую продажу, а не вторую. Ответ — карточка продажи.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -7769,7 +7769,7 @@ paths:
               $ref: '#/components/schemas/CoreOrderInput'
       responses:
         '201':
-          description: Карточка заведённого заказа
+          description: Карточка заведённой продажи
           headers:
             Idempotent-Replay:
               $ref: '#/components/headers/IdempotentReplay'
@@ -7791,17 +7791,177 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyMismatch'
         '503':
           $ref: '#/components/responses/IdempotencyUnavailable'
-  /api/v1/core/orders/import:
-    post:
+  /api/v1/core/purchases:
+    get:
       tags:
-        - Core orders
-      operationId: coreImportOrder
-      summary: Загрузить заказ из внешней системы
-      description: 'Загрузка интернет-магазина, CRM или учётной системы клиента. Повтор узнаётся по стороне и внешнему номеру: тот же `external_id` правит заказ (новая версия), а не заводит второй — 200 вместо 201. Номер, занятый заказом другого источника, отвечает 409 `core.order.foreign_source`. Покупатель без id узнаётся по ИНН или заводится физлицом; позиция — по артикулу. Каждая попытка, включая отказ, попадает в журнал загрузок.'
+        - Core trade
+      operationId: coreListPurchases
+      summary: Получить журнал закупок
+      description: 'Продажи и поставщикам в области юрлиц действующего: закупка без юрлица виден только тому, кому видны все юрлица; приложение видит только закупки своего источника. Строка несёт итоги, стороны словами и статус кабинета. `total` — сколько закупок под отбором всего.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:import
+      x-akeda-permission: core.trade:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: side
+          in: query
+          schema:
+            $ref: '#/components/schemas/CoreOrderSide'
+        - name: status
+          in: query
+          description: 'Состояние по канону или несколько через запятую: draft, confirmed, executing, executed, closed, cancelled'
+          schema:
+            type: string
+        - name: contact_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: company_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: business_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: contract_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: project_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: responsible_id
+          in: query
+          description: Сотрудник среди ответственных закупки
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: search
+          in: query
+          description: Номер, название, внешний номер, покупатель или контрагент
+          schema:
+            type: string
+        - name: external_id
+          in: query
+          description: Внешний номер у источника загрузки
+          schema:
+            type: string
+        - name: source
+          in: query
+          schema:
+            $ref: '#/components/schemas/CoreOrderSourceKind'
+        - name: with
+          in: query
+          description: 'Дополнения ответа через запятую: progress — ход каждой закупки (исполнено, оплачено, счёт/акт/УПД), counts — число закупок по состояниям без отбора состояний'
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Размер страницы; больше потолка срезается до 200
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 25
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Страница журнала закупок
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - Core trade
+      operationId: coreCreatePurchase
+      summary: Завести закупку
+      description: 'Заводит черновик продажи (серия ЗКЛ); `confirm: true` сразу подтверждает его той же транзакцией — обязательство встаёт в регистр «Продажи и закупки». Номер пустой — его выдаёт счётчик вида, свой номер берётся как есть. Скидка закупки раскладывается по строкам пропорционально их суммам до разложения НДС. Читает Idempotency-Key: повтор с тем же ключом отдаёт заведённую закупку, а не вторую. Ответ — карточка закупки.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderInput'
+      responses:
+        '201':
+          description: Карточка заведённой закупки
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/IdempotencyKeyMismatch'
+        '503':
+          $ref: '#/components/responses/IdempotencyUnavailable'
+  /api/v1/core/sales/import:
+    post:
+      tags:
+        - Core trade
+      operationId: coreImportSale
+      summary: Загрузить продажу из внешней системы
+      description: 'Загрузка интернет-магазина, CRM или учётной системы клиента. Повтор узнаётся по стороне и внешнему номеру: тот же `external_id` правит продажу (новая версия), а не заводит второй — 200 вместо 201. Номер, занятый продажей другого источника, отвечает 409 `core.trade.foreign_source`. Покупатель без id узнаётся по ИНН или заводится физлицом; позиция — по артикулу. Каждая попытка, включая отказ, попадает в журнал загрузок.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:import
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
       requestBody:
@@ -7812,13 +7972,13 @@ paths:
               $ref: '#/components/schemas/CoreOrderImportInput'
       responses:
         '200':
-          description: Заказ уже был — загрузка его обновила
+          description: Продажа уже была — загрузка его обновила
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CoreOrder'
         '201':
-          description: Заказ заведён
+          description: Продажа заведена
           content:
             application/json:
               schema:
@@ -7837,17 +7997,63 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/core/orders/execute-now:
+  /api/v1/core/purchases/import:
     post:
       tags:
-        - Core orders
-      operationId: coreExecuteOrderNow
-      summary: Продать сразу — заказ и акт одной командой
-      description: '«Заказ сразу исполненным» для внешней системы, программы или модуля: заказ заводится или узнаётся по стороне и внешнему номеру, подтверждается, и по нему выпускается акт на всю сумму — одной транзакцией кабинета. Акт выпускает владелец исполнения: при включённом документообороте после отсечки этапа 4 бизнеса (и в кабинете без финансов) — «Сделать акт» документооборота, бумага и исполнение одной командой, бумага с исполнением сразу зарегистрирована; иначе — акт финансов по заказу. Кроме `core.orders:write` нужно право двери владельца: `docflow.flow:write` или `finance.operations:write` (403 `core.order.execution_forbidden`). Повтор с тем же `external_id` той же стороны отвечает 200 с `replayed: true` и тем, что сделано в первый раз: второго заказа, бумаги и акта нет; ключ идемпотентности не нужен. Отказ любого шага откатывает всё — заказ не остаётся. Акт закрывает работы и услуги; товар при включённом складе исполняет отгрузка (409 `core.order.goods_by_shipment`), товар без склада при документообороте — УПД, выпуск которого по заказу ещё не сделан (409 `core.order.goods_need_upd`). Закупка при документообороте после отсечки — бумагой поставщика (409 `core.order.purchase_needs_paper`). Без финансов и документооборота — 409 `core.order.no_executor`.'
+        - Core trade
+      operationId: coreImportPurchase
+      summary: Загрузить закупку из внешней системы
+      description: 'Загрузка интернет-магазина, CRM или учётной системы клиента. Повтор узнаётся по стороне и внешнему номеру: тот же `external_id` правит закупку (новая версия), а не заводит второй — 200 вместо 201. Номер, занятый закупкой другого источника, отвечает 409 `core.trade.foreign_source`. Покупатель без id узнаётся по ИНН или заводится физлицом; позиция — по артикулу. Каждая попытка, включая отказ, попадает в журнал загрузок.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:import
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderImportInput'
+      responses:
+        '200':
+          description: Закупка уже была — загрузка его обновила
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '201':
+          description: Закупка заведена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/core/sales/execute-now:
+    post:
+      tags:
+        - Core trade
+      operationId: coreExecuteSaleNow
+      summary: Продать сразу — продажа и акт одной командой
+      description: '«Продажа сразу исполненным» для внешней системы, программы или модуля: продажа заводится или узнаётся по стороне и внешнему номеру, подтверждается, и по нему выпускается акт на всю сумму — одной транзакцией кабинета. Акт выпускает владелец исполнения: при включённом документообороте после отсечки этапа 4 бизнеса (и в кабинете без финансов) — «Сделать акт» документооборота, бумага и исполнение одной командой, бумага с исполнением сразу зарегистрирована; иначе — акт финансов по продаже. Кроме `core.trade:write` нужно право двери владельца: `docflow.flow:write` или `finance.operations:write` (403 `core.trade.execution_forbidden`). Повтор с тем же `external_id` той же стороны отвечает 200 с `replayed: true` и тем, что сделано в первый раз: второй продажи, бумаги и акта нет; ключ идемпотентности не нужен. Отказ любого шага откатывает всё — продажа не остаётся. Акт закрывает работы и услуги; товар при включённом складе исполняет отгрузка (409 `core.trade.goods_by_shipment`), товар без склада при документообороте — УПД, выпуск которого по продаже ещё не сделан (409 `core.trade.goods_need_upd`). Закупка при документообороте после отсечки — бумагой поставщика (409 `core.trade.purchase_needs_paper`). Без финансов и документооборота — 409 `core.trade.no_executor`.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -7864,13 +8070,13 @@ paths:
               $ref: '#/components/schemas/CoreOrderNowInput'
       responses:
         '200':
-          description: Повтор — заказ уже исполнен этой командой
+          description: Повтор — продажа уже исполнена этой командой
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CoreOrderNowResult'
         '201':
-          description: Заказ заведён или узнан, подтверждён и исполнен
+          description: Продажа заведена или узнан, подтверждён и исполнен
           content:
             application/json:
               schema:
@@ -7887,7 +8093,57 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
-  /api/v1/core/orders/{id}:
+  /api/v1/core/purchases/execute-now:
+    post:
+      tags:
+        - Core trade
+      operationId: coreExecutePurchaseNow
+      summary: Продать сразу — закупка и акт одной командой
+      description: '«Закупка сразу исполненным» для внешней системы, программы или модуля: закупка заводится или узнаётся по стороне и внешнему номеру, подтверждается, и по нему выпускается акт на всю сумму — одной транзакцией кабинета. Акт выпускает владелец исполнения: при включённом документообороте после отсечки этапа 4 бизнеса (и в кабинете без финансов) — «Сделать акт» документооборота, бумага и исполнение одной командой, бумага с исполнением сразу зарегистрирована; иначе — акт финансов по закупке. Кроме `core.trade:write` нужно право двери владельца: `docflow.flow:write` или `finance.operations:write` (403 `core.trade.execution_forbidden`). Повтор с тем же `external_id` той же стороны отвечает 200 с `replayed: true` и тем, что сделано в первый раз: второй закупки, бумаги и акта нет; ключ идемпотентности не нужен. Отказ любого шага откатывает всё — закупка не остаётся. Акт закрывает работы и услуги; товар при включённом складе исполняет отгрузка (409 `core.trade.goods_by_shipment`), товар без склада при документообороте — УПД, выпуск которого по закупке ещё не сделан (409 `core.trade.goods_need_upd`). Закупка при документообороте после отсечки — бумагой поставщика (409 `core.trade.purchase_needs_paper`). Без финансов и документооборота — 409 `core.trade.no_executor`.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderNowInput'
+      responses:
+        '200':
+          description: Повтор — закупка уже исполнена этой командой
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderNowResult'
+        '201':
+          description: Закупка заведена или узнан, подтверждён и исполнен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderNowResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/core/sales/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -7897,14 +8153,14 @@ paths:
           $ref: '#/components/schemas/UUID'
     get:
       tags:
-        - Core orders
-      operationId: coreGetOrder
-      summary: Получить карточку заказа
-      description: 'Заказ целиком: заголовок, строки с суммами после скидок, итоги, ответственные, статус кабинета; обязательство из регистра «Заказы» (`obligation`: заказано и осталось — у подтверждённого и следующих состояний) и действия экрана с причинами отказа (`allowed_actions`). Чужой заказ и заказ вне области юрлиц отвечают 404.'
+        - Core trade
+      operationId: coreGetSale
+      summary: Получить карточку продажи
+      description: 'Продажа целиком: заголовок, строки с суммами после скидок, итоги, ответственные, статус кабинета; обязательство из регистра «Продажи и закупки» (`obligation`: заказано и осталось — у подтверждённого и следующих состояний) и действия экрана с причинами отказа (`allowed_actions`). Чужая продажа и продажа вне области юрлиц отвечают 404.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:read
+      x-akeda-permission: core.trade:read
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -7913,7 +8169,7 @@ paths:
         - installationToken: []
       responses:
         '200':
-          description: Карточка заказа
+          description: Карточка продажи
           content:
             application/json:
               schema:
@@ -7926,14 +8182,14 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       tags:
-        - Core orders
-      operationId: coreReviseOrder
-      summary: Изменить заказ
-      description: 'Правка заказа целиком. У черновика — просто правка; у подтверждённого — новая версия и перепроведение одной транзакцией: прежнее обязательство сторнируется, новое записывается. `expected_version` — версия, которую видел правящий: устаревшая отвечает 409 `core.order.changed`. Строки правятся по id; строку с исполнением удалить нельзя.'
+        - Core trade
+      operationId: coreReviseSale
+      summary: Изменить продажу
+      description: 'Правка продажи целиком. У черновика — просто правка; у подтверждённого — новая версия и перепроведение одной транзакцией: прежнее обязательство сторнируется, новое записывается. `expected_version` — версия, которую видел правящий: устаревшая отвечает 409 `core.trade.changed`. Строки правятся по id; строку с исполнением удалить нельзя.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -7948,7 +8204,7 @@ paths:
               $ref: '#/components/schemas/CoreOrderRevision'
       responses:
         '200':
-          description: Карточка заказа после правки
+          description: Карточка продажи после правки
           content:
             application/json:
               schema:
@@ -7965,7 +8221,7 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
-  /api/v1/core/orders/{id}/confirm:
+  /api/v1/core/purchases/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -7973,16 +8229,16 @@ paths:
         required: true
         schema:
           $ref: '#/components/schemas/UUID'
-    post:
+    get:
       tags:
-        - Core orders
-      operationId: coreConfirmOrder
-      summary: Подтвердить заказ
-      description: 'Проведение черновика: обязательство встаёт в регистр «Заказы» на итог заказа. У валюты без курса на дату заказа — 409 `core.order.rate_missing`. Повтор у подтверждённого — тот же ответ, а не ошибка.'
+        - Core trade
+      operationId: coreGetPurchase
+      summary: Получить карточку закупки
+      description: 'Закупка целиком: заголовок, строки с суммами после скидок, итоги, ответственные, статус кабинета; обязательство из регистра «Продажи и закупки» (`obligation`: заказано и осталось — у подтверждённого и следующих состояний) и действия экрана с причинами отказа (`allowed_actions`). Чужая закупка и закупка вне области юрлиц отвечают 404.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:read
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -7991,7 +8247,42 @@ paths:
         - installationToken: []
       responses:
         '200':
-          description: Карточка заказа после команды
+          description: Карточка закупки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Core trade
+      operationId: coreRevisePurchase
+      summary: Изменить закупку
+      description: 'Правка закупки целиком. У черновика — просто правка; у подтверждённого — новая версия и перепроведение одной транзакцией: прежнее обязательство сторнируется, новое записывается. `expected_version` — версия, которую видел правящий: устаревшая отвечает 409 `core.trade.changed`. Строки правятся по id; строку с исполнением удалить нельзя.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderRevision'
+      responses:
+        '200':
+          description: Карточка закупки после правки
           content:
             application/json:
               schema:
@@ -8008,7 +8299,7 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
-  /api/v1/core/orders/{id}/cancel:
+  /api/v1/core/sales/{id}/confirm:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8018,14 +8309,14 @@ paths:
           $ref: '#/components/schemas/UUID'
     post:
       tags:
-        - Core orders
-      operationId: coreCancelOrder
-      summary: Отменить заказ
-      description: Черновик отменяется без движений; подтверждённый — отменой проведения (сторно обязательства). Пока заказ держат живые исполнения (акт, отгрузка, приёмка) — 409 `core.order.has_executions`; оплаты, авансы или черновики исполнений — 409 `core.order.has_dependents` (оплаты перекидывают или возвращают, документы отменяют); закрытый сначала возвращают в работу (409 `core.order.closed`).
+        - Core trade
+      operationId: coreConfirmSale
+      summary: Подтвердить продажу
+      description: 'Проведение черновика: обязательство встаёт в регистр «Продажи и закупки» на итог продажи. У валюты без курса на дату продажи — 409 `core.trade.rate_missing`. Повтор у подтверждённого — тот же ответ, а не ошибка.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8034,7 +8325,7 @@ paths:
         - installationToken: []
       responses:
         '200':
-          description: Карточка заказа после команды
+          description: Карточка продажи после команды
           content:
             application/json:
               schema:
@@ -8051,7 +8342,7 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
-  /api/v1/core/orders/{id}/close:
+  /api/v1/core/purchases/{id}/confirm:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8061,14 +8352,143 @@ paths:
           $ref: '#/components/schemas/UUID'
     post:
       tags:
-        - Core orders
-      operationId: coreCloseOrder
-      summary: Закрыть заказ с остатком
-      description: Документ «Закрытие заказа» снимает весь остаток обязательства. Причина закрытия сохраняется в заказе и журнале.
+        - Core trade
+      operationId: coreConfirmPurchase
+      summary: Подтвердить закупку
+      description: 'Проведение черновика: обязательство встаёт в регистр «Продажи и закупки» на итог закупки. У валюты без курса на дату закупки — 409 `core.trade.rate_missing`. Повтор у подтверждённого — тот же ответ, а не ошибка.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Карточка закупки после команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/core/sales/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    post:
+      tags:
+        - Core trade
+      operationId: coreCancelSale
+      summary: Отменить продажу
+      description: Черновик отменяется без движений; подтверждённый — отменой проведения (сторно обязательства). Пока продажа держит живые исполнения (акт, отгрузка, приёмка) — 409 `core.trade.has_executions`; оплаты, авансы или черновики исполнений — 409 `core.trade.has_dependents` (оплаты перекидывают или возвращают, документы отменяют); закрытый сначала возвращают в работу (409 `core.trade.closed`).
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Карточка продажи после команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/core/purchases/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    post:
+      tags:
+        - Core trade
+      operationId: coreCancelPurchase
+      summary: Отменить закупку
+      description: Черновик отменяется без движений; подтверждённый — отменой проведения (сторно обязательства). Пока закупка держит живые исполнения (акт, отгрузка, приёмка) — 409 `core.trade.has_executions`; оплаты, авансы или черновики исполнений — 409 `core.trade.has_dependents` (оплаты перекидывают или возвращают, документы отменяют); закрытый сначала возвращают в работу (409 `core.trade.closed`).
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Карточка закупки после команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/core/sales/{id}/close:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    post:
+      tags:
+        - Core trade
+      operationId: coreCloseSale
+      summary: Закрыть продажу с остатком
+      description: Документ «Закрытие продажи» снимает весь остаток обязательства. Причина закрытия сохраняется в продаже и журнале.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8083,7 +8503,7 @@ paths:
               $ref: '#/components/schemas/CoreOrderCloseInput'
       responses:
         '200':
-          description: Карточка заказа после команды
+          description: Карточка продажи после команды
           content:
             application/json:
               schema:
@@ -8100,7 +8520,7 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
-  /api/v1/core/orders/{id}/reopen:
+  /api/v1/core/purchases/{id}/close:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8110,23 +8530,29 @@ paths:
           $ref: '#/components/schemas/UUID'
     post:
       tags:
-        - Core orders
-      operationId: coreReopenOrder
-      summary: Вернуть заказ в работу
-      description: 'Отмена живого закрытия: остаток обязательства возвращается, заказ снова «подтверждён» или «исполняется».'
+        - Core trade
+      operationId: coreClosePurchase
+      summary: Закрыть закупку с остатком
+      description: Документ «Закрытие закупки» снимает весь остаток обязательства. Причина закрытия сохраняется в закупке и журнале.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
         - mcpOAuth:
             - akeda:delegate
         - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderCloseInput'
       responses:
         '200':
-          description: Карточка заказа после команды
+          description: Карточка закупки после команды
           content:
             application/json:
               schema:
@@ -8143,7 +8569,93 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
-  /api/v1/core/orders/{id}/history:
+  /api/v1/core/sales/{id}/reopen:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    post:
+      tags:
+        - Core trade
+      operationId: coreReopenSale
+      summary: Вернуть продажу в работу
+      description: 'Отмена живого закрытия: остаток обязательства возвращается, продажа снова «подтверждён» или «исполняется».'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Карточка продажи после команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/core/purchases/{id}/reopen:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    post:
+      tags:
+        - Core trade
+      operationId: coreReopenPurchase
+      summary: Вернуть закупку в работу
+      description: 'Отмена живого закрытия: остаток обязательства возвращается, закупка снова «подтверждён» или «исполняется».'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Карточка закупки после команды
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/core/sales/{id}/history:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8153,14 +8665,14 @@ paths:
           $ref: '#/components/schemas/UUID'
     get:
       tags:
-        - Core orders
-      operationId: coreGetOrderHistory
-      summary: Получить ленту заказа
-      description: Журнал событий заказа (создан, новая версия, подтверждён, исполняется, исполнен, исполнение снято, статус, ответственные, закрыт, возвращён, отменён) с автором и датой статуса, плюс документы модулей, выросшие из заказа.
+        - Core trade
+      operationId: coreGetSaleHistory
+      summary: Получить ленту продажи
+      description: Журнал событий продажи (создан, новая версия, подтверждён, исполняется, исполнен, исполнение снято, статус, ответственные, закрыт, возвращён, отменён) с автором и датой статуса, плюс документы модулей, выросшие из продажи.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:read
+      x-akeda-permission: core.trade:read
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8169,7 +8681,7 @@ paths:
         - installationToken: []
       responses:
         '200':
-          description: Лента заказа
+          description: Лента продажи
           content:
             application/json:
               schema:
@@ -8180,7 +8692,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/v1/core/orders/{id}/blockers:
+  /api/v1/core/purchases/{id}/history:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8190,14 +8702,51 @@ paths:
           $ref: '#/components/schemas/UUID'
     get:
       tags:
-        - Core orders
-      operationId: coreGetOrderBlockers
-      summary: Проверить, что мешает подтвердить или отменить заказ
+        - Core trade
+      operationId: coreGetPurchaseHistory
+      summary: Получить ленту закупки
+      description: Журнал событий закупки (создан, новая версия, подтверждён, исполняется, исполнен, исполнение снято, статус, ответственные, закрыт, возвращён, отменён) с автором и датой статуса, плюс документы модулей, выросшие из закупки.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Лента закупки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderHistory'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/sales/{id}/blockers:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Core trade
+      operationId: coreGetSaleBlockers
+      summary: Проверить, что мешает подтвердить или отменить продажу
       description: Пробный прогон подтверждения и отмены под теми же сторожами, что у команды, без записи.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:read
+      x-akeda-permission: core.trade:read
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8217,7 +8766,44 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/v1/core/orders/{id}/responsibles:
+  /api/v1/core/purchases/{id}/blockers:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Core trade
+      operationId: coreGetPurchaseBlockers
+      summary: Проверить, что мешает подтвердить или отменить закупку
+      description: Пробный прогон подтверждения и отмены под теми же сторожами, что у команды, без записи.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Что мешает
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocumentBlockers'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/sales/{id}/responsibles:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8227,14 +8813,14 @@ paths:
           $ref: '#/components/schemas/UUID'
     put:
       tags:
-        - Core orders
-      operationId: coreSetOrderResponsibles
-      summary: Назначить ответственных заказа
+        - Core trade
+      operationId: coreSetSaleResponsibles
+      summary: Назначить ответственных продажи
       description: Заменяет ответственных сотрудников и их доли. Доля больше нуля и не больше ста, сумма долей не больше ста процентов.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8249,7 +8835,7 @@ paths:
               $ref: '#/components/schemas/CoreOrderResponsiblesInput'
       responses:
         '200':
-          description: Карточка заказа
+          description: Карточка продажи
           content:
             application/json:
               schema:
@@ -8264,7 +8850,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
-  /api/v1/core/orders/{id}/cabinet-status:
+  /api/v1/core/purchases/{id}/responsibles:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8274,14 +8860,61 @@ paths:
           $ref: '#/components/schemas/UUID'
     put:
       tags:
-        - Core orders
-      operationId: coreSetOrderCabinetStatus
-      summary: Поставить статус кабинета
-      description: Статус кабинета — надстройка над состоянием заказа. Статус другой категории отвечает 409 `core.order.status_category`.
+        - Core trade
+      operationId: coreSetPurchaseResponsibles
+      summary: Назначить ответственных закупки
+      description: Заменяет ответственных сотрудников и их доли. Доля больше нуля и не больше ста, сумма долей не больше ста процентов.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderResponsiblesInput'
+      responses:
+        '200':
+          description: Карточка закупки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/sales/{id}/cabinet-status:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    put:
+      tags:
+        - Core trade
+      operationId: coreSetSaleCabinetStatus
+      summary: Поставить статус кабинета
+      description: Статус кабинета — надстройка над состоянием продажи. Статус другой категории отвечает 409 `core.trade.status_category`.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8296,7 +8929,7 @@ paths:
               $ref: '#/components/schemas/CoreOrderCabinetStatusInput'
       responses:
         '200':
-          description: Карточка заказа
+          description: Карточка продажи
           content:
             application/json:
               schema:
@@ -8311,17 +8944,64 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
-  /api/v1/core/order-statuses:
+  /api/v1/core/purchases/{id}/cabinet-status:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    put:
+      tags:
+        - Core trade
+      operationId: coreSetPurchaseCabinetStatus
+      summary: Поставить статус кабинета
+      description: Статус кабинета — надстройка над состоянием закупки. Статус другой категории отвечает 409 `core.trade.status_category`.
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderCabinetStatusInput'
+      responses:
+        '200':
+          description: Карточка закупки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/trade/statuses:
     get:
       tags:
-        - Core orders
-      operationId: coreListOrderStatuses
-      summary: Получить статусы заказа кабинета
+        - Core trade
+      operationId: coreListTradeStatuses
+      summary: Получить статусы продажи или закупки кабинета
       description: Системные статусы (по одному на состояние) и свои статусы кабинета, включая выключенные.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:read
+      x-akeda-permission: core.trade:read
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8332,7 +9012,7 @@ paths:
         - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
-          description: Статусы заказа
+          description: Статусы продажи или закупки
           content:
             application/json:
               schema:
@@ -8343,17 +9023,17 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/v1/core/order-templates:
+  /api/v1/core/trade/templates:
     get:
       tags:
-        - Core orders
-      operationId: coreListOrderTemplates
-      summary: Получить шаблоны заказов
-      description: 'Шаблоны заказов с повторением (ERP-1578): тело заказа, повторение, действия при создании, ближайшее срабатывание и дата последнего созданного заказа. Архивные — только с archived=true или state=archived.'
+        - Core trade
+      operationId: coreListTradeTemplates
+      summary: Получить шаблоны продаж или закупок
+      description: 'Шаблоны продаж или закупок с повторением (ERP-1578): тело продажи или закупки, повторение, действия при создании, ближайшее срабатывание и дата последнего созданной продажи или закупки. Архивные — только с archived=true или state=archived.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:read
+      x-akeda-permission: core.trade:read
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8414,7 +9094,7 @@ paths:
             minimum: 0
       responses:
         '200':
-          description: Шаблоны заказов
+          description: Шаблоны продаж или закупок
           content:
             application/json:
               schema:
@@ -8427,14 +9107,14 @@ paths:
           $ref: '#/components/responses/Forbidden'
     post:
       tags:
-        - Core orders
-      operationId: coreCreateOrderTemplate
-      summary: Создать шаблон заказа
-      description: 'Шаблон — тот же заказ (order — тело заказа без номера и даты), повторение (schedule: period month|quarter|week, day, from, until) и действия (actions: confirm, invoice issue|draft через invoice_days, closing upd|act on_order|after_days|period_end). Дата from в прошлом сразу создаёт заказы прошедших периодов — по одному на период, ключ «шаблон/период». Счёт и закрывающий — только у продажи.'
+        - Core trade
+      operationId: coreCreateTradeTemplate
+      summary: Создать шаблон продажи или закупки
+      description: 'Шаблон — та же продажа или закупка (order — тело продажи или закупки без номера и даты), повторение (schedule: period month|quarter|week, day, from, until) и действия (actions: confirm, invoice issue|draft через invoice_days, closing upd|act on_order|after_days|period_end). Дата from в прошлом сразу создаёт продажи или закупки прошедших периодов — по одному на период, ключ «шаблон/период». Счёт и закрывающий — только у продажи.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8464,7 +9144,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
-  /api/v1/core/order-templates/{id}:
+  /api/v1/core/trade/templates/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8474,14 +9154,14 @@ paths:
           $ref: '#/components/schemas/UUID'
     get:
       tags:
-        - Core orders
-      operationId: coreGetOrderTemplate
-      summary: Получить шаблон заказа
-      description: 'Шаблон с ближайшими срабатываниями (upcoming: даты заказа, счёта и закрывающего), датой последнего созданного заказа и причиной отказа последнего срабатывания словами.'
+        - Core trade
+      operationId: coreGetTradeTemplate
+      summary: Получить шаблон продажи или закупки
+      description: 'Шаблон с ближайшими срабатываниями (upcoming: даты продажи или закупки, счёта и закрывающего), датой последней созданной продажи или закупки и причиной отказа последнего срабатывания словами.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:read
+      x-akeda-permission: core.trade:read
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8503,14 +9183,14 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       tags:
-        - Core orders
-      operationId: coreUpdateOrderTemplate
-      summary: Изменить шаблон заказа
-      description: 'Правка целиком от expected_version. Уже созданные заказы не меняются: шаблон только копируется в заказ при срабатывании. Смена цены с даты — окончание (until) у старого шаблона и новый шаблон с новой даты.'
+        - Core trade
+      operationId: coreUpdateTradeTemplate
+      summary: Изменить шаблон продажи или закупки
+      description: 'Правка целиком от expected_version. Уже созданные продажи или закупки не меняются: шаблон только копируется в продажу или закупку при срабатывании. Смена цены с даты — окончание (until) у старого шаблона и новый шаблон с новой даты.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8542,7 +9222,7 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
-  /api/v1/core/order-templates/{id}/state:
+  /api/v1/core/trade/templates/{id}/state:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8552,14 +9232,14 @@ paths:
           $ref: '#/components/schemas/UUID'
     post:
       tags:
-        - Core orders
-      operationId: coreSetOrderTemplateState
-      summary: Приостановить, возобновить или архивировать шаблон заказа
+        - Core trade
+      operationId: coreSetTradeTemplateState
+      summary: Приостановить, возобновить или архивировать шаблон продажи или закупки
       description: 'active, paused или archived от expected_version. Возобновлённый шаблон периоды паузы не догоняет: работает с сегодняшнего дня кабинета.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8589,7 +9269,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
-  /api/v1/core/order-templates/{id}/orders:
+  /api/v1/core/trade/templates/{id}/documents:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8599,14 +9279,14 @@ paths:
           $ref: '#/components/schemas/UUID'
     get:
       tags:
-        - Core orders
-      operationId: coreListOrderTemplateOrders
-      summary: Получить заказы, созданные шаблоном
-      description: Прошлые срабатывания шаблона — заказы с источником template и внешним номером «<id шаблона>/<период>», в любом состоянии.
+        - Core trade
+      operationId: coreListTradeTemplateDocuments
+      summary: Получить продажи или закупки, созданные шаблоном
+      description: Прошлые срабатывания шаблона — продажи или закупки с источником template и внешним номером «<id шаблона>/<период>», в любом состоянии.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:read
+      x-akeda-permission: core.trade:read
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8623,7 +9303,7 @@ paths:
             maximum: 200
       responses:
         '200':
-          description: Заказы шаблона
+          description: Продажи или закупки шаблона
           content:
             application/json:
               schema:
@@ -8634,17 +9314,17 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/v1/core/order-funnels:
+  /api/v1/core/trade/funnels:
     get:
       tags:
-        - Core orders
-      operationId: coreListOrderFunnels
-      summary: Получить воронки заказов кабинета
-      description: 'Воронки кабинета с этапами (статусы кабинета на состояниях заказа) и ожидаемыми шагами: сторона, источник заказа, умолчание стороны, версия.'
+        - Core trade
+      operationId: coreListTradeFunnels
+      summary: Получить воронки продаж или закупок кабинета
+      description: 'Воронки кабинета с этапами (статусы кабинета на состояниях продажи или закупки) и ожидаемыми шагами: сторона, источник продажи или закупки, умолчание стороны, версия.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:read
+      x-akeda-permission: core.trade:read
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8668,10 +9348,10 @@ paths:
           $ref: '#/components/responses/NotFound'
     post:
       tags:
-        - Core orders
-      operationId: coreCreateOrderFunnel
-      summary: Завести воронку заказов
-      description: 'Документ воронки целиком: этапы на состояниях, шаги со сроком по правилу и «сделано, когда». Проверка отвечает 400 `core.order.invalid` с причиной словами. Каждое сохранение — версия. Настраивает тот, кому доверены настройки кабинета (settings:write), как правила автоматизаций.'
+        - Core trade
+      operationId: coreCreateTradeFunnel
+      summary: Завести воронку продаж или закупок
+      description: 'Документ воронки целиком: этапы на состояниях, шаги со сроком по правилу и «сделано, когда». Проверка отвечает 400 `core.trade.invalid` с причиной словами. Каждое сохранение — версия. Настраивает тот, кому доверены настройки кабинета (settings:write), как правила автоматизаций.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -8701,17 +9381,17 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
-  /api/v1/core/order-funnels/templates:
+  /api/v1/core/trade/funnels/templates:
     get:
       tags:
-        - Core orders
-      operationId: coreListOrderFunnelTemplates
-      summary: Получить шаблоны воронок заказов
+        - Core trade
+      operationId: coreListTradeFunnelTemplates
+      summary: Получить шаблоны воронок продаж или закупок
       description: Стартовые воронки — интернет-магазин, поставка с монтажом, услуги по договору — документами на языке запроса. Применённый шаблон становится данными кабинета.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:read
+      x-akeda-permission: core.trade:read
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8733,7 +9413,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/v1/core/order-funnels/{id}:
+  /api/v1/core/trade/funnels/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8743,10 +9423,10 @@ paths:
           $ref: '#/components/schemas/UUID'
     put:
       tags:
-        - Core orders
-      operationId: coreUpdateOrderFunnel
-      summary: Изменить воронку заказов
-      description: Новая версия воронки. Этап с id правится, без id — заводится, убранный — выключается (на него ссылается история заказов). Состояние этапа, на котором стоят заказы, не меняется.
+        - Core trade
+      operationId: coreUpdateTradeFunnel
+      summary: Изменить воронку продаж или закупок
+      description: Новая версия воронки. Этап с id правится, без id — заводится, убранный — выключается (на него ссылается история продаж или закупок). Состояние этапа, на котором стоят продажи или закупки, не меняется.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -8774,7 +9454,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
-  /api/v1/core/order-funnels/{id}/versions:
+  /api/v1/core/trade/funnels/{id}/versions:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8784,14 +9464,14 @@ paths:
           $ref: '#/components/schemas/UUID'
     get:
       tags:
-        - Core orders
-      operationId: coreListOrderFunnelVersions
-      summary: Получить версии воронки заказов
+        - Core trade
+      operationId: coreListTradeFunnelVersions
+      summary: Получить версии воронки продаж или закупок
       description: Сохранённые версии воронки — документ целиком и кто сохранил, свежие сверху.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:read
+      x-akeda-permission: core.trade:read
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8811,7 +9491,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/v1/core/orders/{id}/funnel:
+  /api/v1/core/sales/{id}/funnel:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8821,14 +9501,14 @@ paths:
           $ref: '#/components/schemas/UUID'
     get:
       tags:
-        - Core orders
-      operationId: coreGetOrderFunnel
-      summary: Получить воронку и шаги заказа
-      description: 'Цепочка шапки заказа: воронка и ожидаемые шаги со сроком и статусом — выполнен, ждём, просрочен. Шаги ничего не блокируют.'
+        - Core trade
+      operationId: coreGetSaleFunnel
+      summary: Получить воронку и шаги продажи
+      description: 'Цепочка шапки продажи: воронка и ожидаемые шаги со сроком и статусом — выполнен, ждём, просрочен. Шаги ничего не блокируют.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:read
+      x-akeda-permission: core.trade:read
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8837,7 +9517,7 @@ paths:
         - installationToken: []
       responses:
         '200':
-          description: Воронка и шаги заказа
+          description: Воронка и шаги продажи
           content:
             application/json:
               schema:
@@ -8850,14 +9530,14 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       tags:
-        - Core orders
-      operationId: coreSetOrderFunnel
-      summary: Сменить воронку заказа
+        - Core trade
+      operationId: coreSetSaleFunnel
+      summary: Сменить воронку продажи
       description: 'Другая воронка одним выбором (или null — без воронки): невыполненные шаги прежней убираются, шаги новой строятся, выполненные остаются; этап — первый этап новой воронки в текущем состоянии.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8872,7 +9552,7 @@ paths:
               $ref: '#/components/schemas/CoreOrderFunnelChoice'
       responses:
         '200':
-          description: Воронка и шаги заказа
+          description: Воронка и шаги продажи
           content:
             application/json:
               schema:
@@ -8887,7 +9567,83 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
-  /api/v1/core/orders/{id}/steps/{key}/done:
+  /api/v1/core/purchases/{id}/funnel:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+    get:
+      tags:
+        - Core trade
+      operationId: coreGetPurchaseFunnel
+      summary: Получить воронку и шаги закупки
+      description: 'Цепочка шапки закупки: воронка и ожидаемые шаги со сроком и статусом — выполнен, ждём, просрочен. Шаги ничего не блокируют.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Воронка и шаги закупки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderFunnelView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - Core trade
+      operationId: coreSetPurchaseFunnel
+      summary: Сменить воронку закупки
+      description: 'Другая воронка одним выбором (или null — без воронки): невыполненные шаги прежней убираются, шаги новой строятся, выполненные остаются; этап — первый этап новой воронки в текущем состоянии.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderFunnelChoice'
+      responses:
+        '200':
+          description: Воронка и шаги закупки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderFunnelView'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/core/sales/{id}/steps/{key}/done:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8903,14 +9659,14 @@ paths:
           type: string
     post:
       tags:
-        - Core orders
-      operationId: coreCompleteOrderStep
-      summary: Отметить шаг заказа выполненным
-      description: 'Шаг «человек отметит» выполнен: один раз, с фактом `core.order_step.done`. Повтор ничего не меняет.'
+        - Core trade
+      operationId: coreCompleteSaleStep
+      summary: Отметить шаг продажи выполненным
+      description: 'Шаг «человек отметит» выполнен: один раз, с фактом `core.sale_step.done`. Повтор ничего не меняет.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8919,7 +9675,7 @@ paths:
         - installationToken: []
       responses:
         '200':
-          description: Воронка и шаги заказа
+          description: Воронка и шаги продажи
           content:
             application/json:
               schema:
@@ -8930,7 +9686,50 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/v1/core/orders/{id}/steps/{key}/due:
+  /api/v1/core/purchases/{id}/steps/{key}/done:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: key
+        in: path
+        required: true
+        description: Ключ шага воронки
+        schema:
+          type: string
+    post:
+      tags:
+        - Core trade
+      operationId: coreCompletePurchaseStep
+      summary: Отметить шаг закупки выполненным
+      description: 'Шаг «человек отметит» выполнен: один раз, с фактом `core.purchase_step.done`. Повтор ничего не меняет.'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      responses:
+        '200':
+          description: Воронка и шаги закупки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderFunnelView'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/sales/{id}/steps/{key}/due:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
       - name: id
@@ -8946,14 +9745,14 @@ paths:
           type: string
     put:
       tags:
-        - Core orders
-      operationId: coreSetOrderStepDue
-      summary: Изменить срок шага заказа
-      description: 'Исключение правится на самом шаге: новая дата и, по выбору, сдвиг следующих невыполненных шагов с датой на ту же разницу. Напоминания шага пересчитываются; правка пишется в журнал заказа. Выполненному шагу срок не правят (400).'
+        - Core trade
+      operationId: coreSetSaleStepDue
+      summary: Изменить срок шага продажи
+      description: 'Исключение правится на самом шаге: новая дата и, по выбору, сдвиг следующих невыполненных шагов с датой на ту же разницу. Напоминания шага пересчитываются; правка пишется в журнал продажи. Выполненному шагу срок не правят (400).'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:write
+      x-akeda-permission: core.trade:write
       security:
         - erpUserToken: []
         - tenantApiKey: []
@@ -8968,7 +9767,7 @@ paths:
               $ref: '#/components/schemas/CoreOrderStepDueInput'
       responses:
         '200':
-          description: Воронка и шаги заказа
+          description: Воронка и шаги продажи
           content:
             application/json:
               schema:
@@ -8981,17 +9780,68 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/v1/core/order-imports:
+  /api/v1/core/purchases/{id}/steps/{key}/due:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - name: id
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/UUID'
+      - name: key
+        in: path
+        required: true
+        description: Ключ шага воронки
+        schema:
+          type: string
+    put:
+      tags:
+        - Core trade
+      operationId: coreSetPurchaseStepDue
+      summary: Изменить срок шага закупки
+      description: 'Исключение правится на самом шаге: новая дата и, по выбору, сдвиг следующих невыполненных шагов с датой на ту же разницу. Напоминания шага пересчитываются; правка пишется в журнал закупки. Выполненному шагу срок не правят (400).'
+      x-akeda-module: core
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: core.trade:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreOrderStepDueInput'
+      responses:
+        '200':
+          description: Воронка и шаги закупки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreOrderFunnelView'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/core/trade/imports:
     get:
       tags:
-        - Core orders
-      operationId: coreListOrderImports
-      summary: Получить журнал загрузок заказов
+        - Core trade
+      operationId: coreListTradeImports
+      summary: Получить журнал загрузок продаж или закупок
       description: Что пришло из внешних систем, чем закончилось и почему отклонено — новые записи первыми.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: core.orders:import
+      x-akeda-permission: core.trade:import
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
         - name: limit
@@ -9099,7 +9949,7 @@ paths:
         - Core documents
       operationId: coreListDocuments
       summary: Получить журнал документов конструктора
-      description: 'Документы всех модулей, кроме заказов: заказ покупателя, заказ поставщику и закрытие заказа видны по юрлицу в области участника и только с правом `core.orders:read`, поэтому их журнал — coreListOrders.'
+      description: 'Документы всех модулей, кроме продаж или закупок: продажа, продажа или закупка поставщику и закрытие продажи или закупки видны по юрлицу в области участника и только с правом `core.trade:read`, поэтому их журналы — coreListSales и coreListPurchases.'
       x-akeda-module: core
       x-akeda-release-stage: public
       x-akeda-audience: external
@@ -9226,7 +10076,7 @@ paths:
         - Core documents
       operationId: coreGetDocument
       summary: Получить документ конструктора
-      description: Документ любого модуля. Заказ и его закрытие общая дверь отдаёт только при праве `core.orders:read` и заказе в области юрлиц читающего, иначе — 404, как несуществующий; карточка заказа — coreGetOrder.
+      description: Документ любого модуля. Продажа или закупка и его закрытие общая дверь отдаёт только при праве `core.trade:read` и продаже или закупке в области юрлиц читающего, иначе — 404, как несуществующий; карточка продажи или закупки — coreGetOrder.
       x-akeda-module: core
       x-akeda-release-stage: public
       x-akeda-audience: external
@@ -10016,7 +10866,7 @@ paths:
         - Core accounting
       operationId: coreSaveAccountingDimensionVersion
       summary: Записать решение по разрезу с даты «действует с» или поправить действующую запись истории
-      description: С edit_open=true правится действующая запись истории, в том числе её начало переносится раньше — например, на начало года при переносе учёта из прежней системы. Без него новая запись начинается с valid_from и должна быть позже действующей. Обязательность отказывает, пока после valid_from есть проведённые документы без разреза. Заказ с датой раньше начала разреза получает отказ core.order.dimension_disabled.
+      description: С edit_open=true правится действующая запись истории, в том числе её начало переносится раньше — например, на начало года при переносе учёта из прежней системы. Без него новая запись начинается с valid_from и должна быть позже действующей. Обязательность отказывает, пока после valid_from есть проведённые документы без разреза. Продажа или закупка с датой раньше начала разреза получает отказ core.trade.dimension_disabled.
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -12840,13 +13690,13 @@ paths:
                 $ref: '#/components/schemas/Error'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/finance/orders/{id}/advance-offer:
+  /api/v1/finance/trade/{id}/advance-offer:
     get:
       tags:
         - Finance settlements
-      operationId: financeOrderAdvanceOffer
-      summary: Свободные авансы для зачёта по заказу
-      description: Свободные авансы контрагента и юрлица заказа без заказа — на контрагенте или на договоре этого заказа, включая начальные остатки, датой не позже открытого долга заказа; одинаково до и после отсечки расчётов по заказам (ERP-1727). mode=offset — можно зачесть; пустой mode — зачитывать нечего.
+      operationId: financeTradeAdvanceOffer
+      summary: Свободные авансы для зачёта по продаже или закупке
+      description: Свободные авансы контрагента и юрлица продажи или закупки без продажи или закупки — на контрагенте или на договоре этого продажи или закупки, включая начальные остатки, датой не позже открытого долга продажи или закупки; одинаково до и после отсечки расчётов по продажам или закупкам (ERP-1727). mode=offset — можно зачесть; пустой mode — зачитывать нечего.
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -12882,13 +13732,13 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/v1/finance/orders/{id}/advance-offset:
+  /api/v1/finance/trade/{id}/advance-offset:
     post:
       tags:
         - Finance settlements
-      operationId: financeOffsetOrderAdvances
-      summary: Зачесть свободные авансы в долг заказа
-      description: Зачитывает свободные авансы в открытые долги заказа штатным документом «Зачёт аванса» — ранние авансы в ранние долги, аванс не позже долга. Работает до и после отсечки расчётов по заказам (ERP-1727); нечего зачитывать — finance.order.advance_nothing.
+      operationId: financeOffsetTradeAdvances
+      summary: Зачесть свободные авансы в долг продажи или закупки
+      description: Зачитывает свободные авансы в открытые долги продажи или закупки штатным документом «Зачёт аванса» — ранние авансы в ранние долги, аванс не позже долга. Работает до и после отсечки расчётов по продажам или закупкам (ERP-1727); нечего зачитывать — finance.order.advance_nothing.
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -12924,13 +13774,13 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/v1/finance/orders/{id}/acts:
+  /api/v1/finance/trade/{id}/acts:
     post:
       tags:
         - Finance operations
-      operationId: financeCreateOrderAct
-      summary: Выставить акт финансов по заказу
-      description: 'Исполнение заказа ядра актом финансов: документ продажи (у заказа поставщику — закупки) с основанием заказ, проводится сразу — долг в расчётах и выручка (расход) по статье. Черновик заказа первый акт подтверждает той же транзакцией. После отсечки этапа 4 бизнеса акт раскладывается по неисполненным строкам заказа (услуги; товар — только когда склада нет) и снимает «Заказы»; `stage_id` — этап работ. Если в кабинете включён документооборот и бизнес прошёл отсечку, дверь закрыта (409 `finance.order.act_needs_paper`): акт выпускает «Сделать акт» документооборота или составная команда `POST /api/v1/core/orders/execute-now`. Повтор узнаётся конвертом `source` (или заголовком Idempotency-Key, который становится его `idempotency_key`): тот же конверт — тот же акт.'
+      operationId: financeCreateTradeAct
+      summary: Выставить акт финансов по продаже или закупке
+      description: 'Исполнение продажи или закупки ядра актом финансов: документ продажи (у продажи или закупки поставщику — закупки) с основанием продажа или закупка, проводится сразу — долг в расчётах и выручка (расход) по статье. Черновик продажи или закупки первый акт подтверждает той же транзакцией. После отсечки этапа 4 бизнеса акт раскладывается по неисполненным строкам продажи или закупки (услуги; товар — только когда склада нет) и снимает «Продажи и закупки»; `stage_id` — этап работ. Если в кабинете включён документооборот и бизнес прошёл отсечку, дверь закрыта (409 `finance.trade.act_needs_paper`): акт выпускает «Сделать акт» документооборота или составная команда `POST /api/v1/core/sales/execute-now`. Повтор узнаётся конвертом `source` (или заголовком Idempotency-Key, который становится его `idempotency_key`): тот же конверт — тот же акт.'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -12946,7 +13796,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: Заказ ядра
+          description: Продажа или закупка ядра
           schema:
             $ref: '#/components/schemas/UUID'
       requestBody:
@@ -12957,7 +13807,7 @@ paths:
               $ref: '#/components/schemas/FinanceOrderActInput'
       responses:
         '201':
-          description: Проведённый акт и операция заказа
+          description: Проведённый акт и операция продажи или закупки
           content:
             application/json:
               schema:
@@ -14334,7 +15184,7 @@ paths:
       tags:
         - Finance transactions
       operationId: financeCategorizeTransaction
-      summary: Привязать операцию к статье ДДС, контрагенту или заказу
+      summary: Привязать операцию к статье ДДС, контрагенту или продаже или закупке
       description: |-
         Категоризация перепроводит проекцию операции; pnl_item намеренно не принимается.
 
@@ -16714,7 +17564,7 @@ paths:
         - CRM leads
       operationId: crmLeadDuplicates
       summary: Похожие обращения
-      description: Тот же телефон, ник в канале или уже связанная карточка клиента. Один человек пишет в мессенджер и звонит — в очереди разбора два обращения об одном заказе.
+      description: Тот же телефон, ник в канале или уже связанная карточка клиента. Один человек пишет в мессенджер и звонит — в очереди разбора два обращения об одном продаже или закупке.
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -16855,7 +17705,7 @@ paths:
         - CRM customers
       operationId: crmListCustomers
       summary: Получить базу клиентов CRM
-      description: Собственная база CRM; в справочник контрагентов ERP клиент попадает отдельным переносом вместе с заказом.
+      description: Собственная база CRM; в справочник контрагентов ERP клиент попадает отдельным переносом вместе с продажей или закупкой.
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -21456,10 +22306,10 @@ paths:
       tags:
         - Stock documents
       operationId: stockListDocumentFulfillments
-      summary: Получить остатки исполнения по пакету заявок и заказов
+      summary: Получить остатки исполнения по пакету заявок и продаж или закупок
       description: |
         Пакетный вариант `/documents/{id}/fulfillment` для карточек списка.
-        Принимает от 1 до 100 идентификаторов заявок на закупку и заказов
+        Принимает от 1 до 100 идентификаторов заявок на закупку и продаж или закупок
         поставщику. Один недоступный идентификатор скрывает весь пакет: ответ
         такой же, как если бы документа не существовало.
       x-akeda-module: stock
@@ -21858,10 +22708,10 @@ paths:
       tags:
         - Stock documents
       operationId: stockGetDocumentFulfillment
-      summary: Получить остаток исполнения заявки или заказа
+      summary: Получить остаток исполнения заявки или продажи или закупки
       description: |
         Остаток считается по регистру потребности для заявки на закупку и по
-        регистру ожидаемого поступления для заказа поставщику. Документу другого
+        регистру ожидаемого поступления для закупки. Документу другого
         вида остатка исполнения нет.
       x-akeda-module: stock
       x-akeda-release-stage: preview
@@ -22135,7 +22985,7 @@ paths:
         Накладные расходы проводятся пересчётом стоимости
         (`/api/v1/stock/valuation/rebuild`), а не этой ручкой.
         Комплектация на основании резерва снимает его хвост по `basis_line_id`
-        (сборка под заказ). Без основания комплектация и перемещение берут
+        (сборка под продажа или закупка). Без основания комплектация и перемещение берут
         только свободный остаток: если нужное количество держат чужие резервы,
         ответ 409 с кодом `assembly_consumes_reserved`
         или `transfer_moves_reserved` называет товар, свободное количество и
@@ -22635,7 +23485,7 @@ paths:
         - Stock warehouses
       operationId: stockEnableWarehouseZones
       summary: Включить зоны склада
-      description: Остаток на складе включению не мешает — он остаётся в состоянии «требует разнесения», иначе склад был бы заморожен на всё время разнесения. Ненулевое ожидание по заказам поставщикам даёт 409.
+      description: Остаток на складе включению не мешает — он остаётся в состоянии «требует разнесения», иначе склад был бы заморожен на всё время разнесения. Ненулевое ожидание по закупкам даёт 409.
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -24526,7 +25376,7 @@ paths:
         - Stock reports
       operationId: stockGetPurchasingReport
       summary: Получить отчёт потребности в закупке
-      description: Сводит остаток, резерв, ожидаемый приход и потребность с правилом пополнения и даёт рекомендуемое количество заказа.
+      description: Сводит остаток, резерв, ожидаемый приход и потребность с правилом пополнения и даёт рекомендуемое количество продажи или закупки.
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -24726,13 +25576,13 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-  /api/v1/stock/orders/to-ship:
+  /api/v1/stock/sales/to-ship:
     get:
       tags:
         - Stock purchasing
-      operationId: stockGetOrdersToShip
-      summary: Получить очередь заказов покупателей к отгрузке
-      description: 'Очередь склада «К отгрузке» (этап 2 ERP-1427): подтверждённые и исполняемые заказы покупателей ядра, у которых отгружен не весь товар. По каждому заказу — товарные строки (заказано, отгружено, осталось), отгрузки склада по заказу, признак живого резерва и доступность «Отгрузить» с кодом причины. Услуги в строки не попадают. Документооборот не нужен. Потолок очереди — 200 заказов.'
+      operationId: stockGetSalesToShip
+      summary: Получить очередь продаж к отгрузке
+      description: 'Очередь склада «К отгрузке» (этап 2 ERP-1427): подтверждённые и исполняемые продажи ядра, у которых отгружен не весь товар. По каждой продаже — товарные строки (заказано, отгружено, осталось), отгрузки склада по продаже, признак живого резерва и доступность «Отгрузить» с кодом причины. Услуги в строки не попадают. Документооборот не нужен. Потолок очереди — 200 продаж.'
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -24747,7 +25597,7 @@ paths:
         - $ref: '#/components/parameters/TenantHeader'
       responses:
         '200':
-          description: Заказы к отгрузке
+          description: Продажи к отгрузке
           content:
             application/json:
               schema:
@@ -24756,13 +25606,13 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-  /api/v1/stock/orders/{id}/shipping:
+  /api/v1/stock/sales/{id}/shipping:
     get:
       tags:
         - Stock purchasing
-      operationId: stockGetOrderShipping
-      summary: Получить исполнение заказа покупателя складом
-      description: 'Товарные строки заказа покупателя ядра с раскладкой отгруженного по порядку состава, отгрузки склада по заказу, признак резерва и доступность «Отгрузить» (can_ship, ship_blocked: closed, no_goods, shipped, no_counterparty, no_company; черновик отгружается — дверь его подтвердит). ship_warehouse — склад, с которого пойдёт отгрузка, если его не назвать: склад продажи, склад её резерва, склад по умолчанию юрлица или склад юрлица, где свободного остатка хватает на все оставшиеся строки (source: order, reservation, policy, stock); нет такого — поля нет. Документооборот не нужен.'
+      operationId: stockGetSaleShipping
+      summary: Получить исполнение продажи складом
+      description: 'Товарные строки продажи ядра с раскладкой отгруженного по порядку состава, отгрузки склада по продаже, признак резерва и доступность «Отгрузить» (can_ship, ship_blocked: closed, no_goods, shipped, no_counterparty, no_company; черновик отгружается — дверь его подтвердит). ship_warehouse — склад, с которого пойдёт отгрузка, если его не назвать: склад продажи, склад её резерва, склад по умолчанию юрлица или склад юрлица, где свободного остатка хватает на все оставшиеся строки (source: order, reservation, policy, stock); нет такого — поля нет. Документооборот не нужен.'
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -24782,7 +25632,7 @@ paths:
             $ref: '#/components/schemas/UUID'
       responses:
         '200':
-          description: Исполнение заказа складом
+          description: Исполнение продажи складом
           content:
             application/json:
               schema:
@@ -24793,13 +25643,13 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /api/v1/stock/orders/{id}/shipment:
+  /api/v1/stock/sales/{id}/shipment:
     post:
       tags:
         - Stock purchasing
-      operationId: stockShipOrder
-      summary: Отгрузить по заказу покупателя
-      description: '«Отгрузить» дверью склада без документооборота: создаётся и сразу проводится отгрузка склада с реквизитом «заказ» — та же сборка, что у фасада документооборота; резерв заказа гасится ею же. Количество по строке не больше остатка к отгрузке, строки без количества пропускаются, без строк — отгружается весь остаток. warehouse_id можно не передавать: склад выбирает сервер тем же правилом, что ship_warehouse у GET …/shipping (для отгружаемых количеств); не нашёл — 400 с просьбой выбрать склад. Черновик заказа дверь сначала подтверждает (КЦ § 2.1) и пишет «Заказы» +; фасад документооборота /docflow/orders/{id}/shipment зовёт эту же дверь. Читает `Idempotency-Key` — повтор с тем же ключом отдаёт ту же отгрузку.'
+      operationId: stockShipSale
+      summary: Отгрузить по продаже
+      description: '«Отгрузить» дверью склада без документооборота: создаётся и сразу проводится отгрузка склада с реквизитом «продажа» — та же сборка, что у фасада документооборота; резерв продажи гасится ею же. Количество по строке не больше остатка к отгрузке, строки без количества пропускаются, без строк — отгружается весь остаток. warehouse_id можно не передавать: склад выбирает сервер тем же правилом, что ship_warehouse у GET …/shipping (для отгружаемых количеств); не нашёл — 400 с просьбой выбрать склад. Черновик продажи дверь сначала подтверждает (КЦ § 2.1) и пишет «Продажи и закупки» +; фасад документооборота /docflow/sales/{id}/shipment зовёт эту же дверь. Читает `Idempotency-Key` — повтор с тем же ключом отдаёт ту же отгрузку.'
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -24826,7 +25676,7 @@ paths:
               $ref: '#/components/schemas/StockOrderShipInput'
       responses:
         '201':
-          description: Проведённая отгрузка по заказу
+          description: Проведённая отгрузка по продаже
           content:
             application/json:
               schema:
@@ -25419,13 +26269,13 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/v1/stock/purchasing/orders:
+  /api/v1/stock/purchasing/purchases:
     post:
       tags:
         - Stock purchasing
-      operationId: stockCreatePurchaseOrder
-      summary: Создать заказ поставщику по рассчитанной потребности
-      description: 'Создаётся ЧЕРНОВИК заказа поставщику — документа ядра вида supplier_order (этап 2 ERP-1427): дверь склада — фасад над службой заказов ядра, ответ — складской вид заказа (строки заказа в payload.items с теми же id, срок поставки в payload.delivery_at). Черновик не двигает регистры; подтверждение выполняет POST /api/v1/stock/documents/{id}/post — оно записывает «Заказы» ядра и ожидание поступления склада одной транзакцией. Цены строк считаются конечными, с налогом; валюта — валюта учёта на дату заказа. Строки берут из отчёта по закупкам GET /api/v1/stock/report/purchasing. Поля request_id и basis_line_id указываются только парой; когда все строки ссылаются на одну заявку на закупку, она становится основанием документа. Заявка-основание проверяется: она должна быть проведена, относиться к тому же юрлицу и складу и содержать эту строку с этим товаром, иначе приходит 409. Пустой date означает текущую бизнес-дату кабинета, пропущенный price записывается нулём. Читает `Idempotency-Key` — повтор того же запроса с тем же ключом отдаёт созданный заказ, а не второй такой же на ту же потребность.'
+      operationId: stockCreatePurchase
+      summary: Создать закупку по рассчитанной потребности
+      description: 'Создаётся ЧЕРНОВИК закупки — документа ядра вида supplier_order (этап 2 ERP-1427): дверь склада — фасад над службой закупок ядра, ответ — складской вид закупки (строки закупки в payload.items с теми же id, срок поставки в payload.delivery_at). Черновик не двигает регистры; подтверждение выполняет POST /api/v1/stock/documents/{id}/post — оно записывает «Продажи и закупки» ядра и ожидание поступления склада одной транзакцией. Цены строк считаются конечными, с налогом; валюта — валюта учёта на дату закупки. Строки берут из отчёта по закупкам GET /api/v1/stock/report/purchasing. Поля request_id и basis_line_id указываются только парой; когда все строки ссылаются на одну заявку на закупку, она становится основанием документа. Заявка-основание проверяется: она должна быть проведена, относиться к тому же юрлицу и складу и содержать эту строку с этим товаром, иначе приходит 409. Пустой date означает текущую бизнес-дату кабинета, пропущенный price записывается нулём. Читает `Idempotency-Key` — повтор того же запроса с тем же ключом отдаёт созданную закупку, а не второй такой же на ту же потребность.'
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -25447,7 +26297,7 @@ paths:
               $ref: '#/components/schemas/StockPurchaseOrderCreate'
       responses:
         '201':
-          description: Созданный черновик заказа поставщику
+          description: Созданный черновик закупки
           headers:
             Idempotent-Replay:
               $ref: '#/components/headers/IdempotentReplay'
@@ -26175,7 +27025,7 @@ paths:
       summary: Получить сводку заказов и продаж Wildberries
       description: |
         Показатели и товары считаются за период from–to; без параметров — за
-        опорный день, последнюю дату заказов или продаж в аналитике. Сравнение
+        опорный день, последнюю дату продаж или закупок или продаж в аналитике. Сравнение
         идёт с предыдущим периодом той же длины; если период захватывает
         опорный день, оба режутся по времени последней синхронизации. График
         показывает не меньше 14 дней, заканчивающихся последним днём периода.
@@ -26241,7 +27091,7 @@ paths:
       description: |
         Селектор карточек экрана разбора одной карточки: активные nm_id магазина
         за окно 14 дней от последнего дня данных «Джема», с артикулом, предметом,
-        наименованием, фото и числом заказов. Сортировка по заказам.
+        наименованием, фото и числом продаж или закупок. Сортировка по продажам или закупкам.
         Магазин обязателен — без корректного store ответ 503.
       x-akeda-module: marketplace
       x-akeda-release-stage: preview
@@ -26800,7 +27650,7 @@ paths:
         - Marketplace Yandex
       operationId: marketplaceYandexOrdersOverview
       summary: Получить сводку заказов Яндекс Маркета
-      description: Показатели и до двухсот товаров считаются за период from–to, без параметров — за последний день с заказами. Сравнение идёт с предыдущим периодом той же длины целыми днями. График показывает не меньше четырнадцати дней, заканчивающихся последним днём периода.
+      description: Показатели и до двухсот товаров считаются за период from–to, без параметров — за последний день с продажами или закупками. Сравнение идёт с предыдущим периодом той же длины целыми днями. График показывает не меньше четырнадцати дней, заканчивающихся последним днём периода.
       x-akeda-module: marketplace
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -27174,7 +28024,7 @@ paths:
         - Finance transactions
       operationId: financeCategorizeCashOperation
       summary: Проставить статью ДДС кассовой операции
-      description: 'Классифицирует САМ ДОКУМЕНТ кассовой операции, а не строку `finance_transaction`, и этим отличается от `financeCategorizeTransaction`: у банка классифицируется транзакция, у кассы классифицировать нечего кроме документа. Отсюда и разный состав: здесь принимаются статья ДДС, контрагент и «За кого», у банковской ручки — ещё заказ и проект. Ответ тоже разный: банковская ручка возвращает переклассифицированную операцию, эта — пустое тело. Пустая строка в любом поле снимает привязку: операция без статьи — законное состояние, её показывает строка «Без статьи ДДС», и запрещать возврат в него нельзя. Ручка нужна расшифровке ДДС: у записи с `kind` = `cash` разносить статью надо здесь, у `bank` — через `financeCategorizeTransaction`. «За кого» у расчётов с собственником проходит проверку состава владельцев на дату и может быть отклонено.'
+      description: 'Классифицирует САМ ДОКУМЕНТ кассовой операции, а не строку `finance_transaction`, и этим отличается от `financeCategorizeTransaction`: у банка классифицируется транзакция, у кассы классифицировать нечего кроме документа. Отсюда и разный состав: здесь принимаются статья ДДС, контрагент и «За кого», у банковской ручки — ещё продажа или закупка и проект. Ответ тоже разный: банковская ручка возвращает переклассифицированную операцию, эта — пустое тело. Пустая строка в любом поле снимает привязку: операция без статьи — законное состояние, её показывает строка «Без статьи ДДС», и запрещать возврат в него нельзя. Ручка нужна расшифровке ДДС: у записи с `kind` = `cash` разносить статью надо здесь, у `bank` — через `financeCategorizeTransaction`. «За кого» у расчётов с собственником проходит проверку состава владельцев на дату и может быть отклонено.'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -28194,7 +29044,7 @@ paths:
         - App runtime
       operationId: appFinanceRecordAcquiringCapture
       summary: Записать подтверждённое списание карты по продаже приложения
-      description: 'Приложение предварительно проверяет сообщение провайдера. По своему заказу оно создаёт финансовый документ: долг эквайера на 57.03 и оплату, доступную к разнесению. Повтор provider + external_id возвращает исходный документ. Удержание провайдера (fee, fee_vat) заводит отдельный документ «Комиссия эквайринга», уменьшающий долг эквайера; зачисление денег — строка выписки со статьёй «Выплата эквайера».'
+      description: 'Приложение предварительно проверяет сообщение провайдера. По своему продаже или закупке оно создаёт финансовый документ: долг эквайера на 57.03 и оплату, доступную к разнесению. Повтор provider + external_id возвращает исходный документ. Удержание провайдера (fee, fee_vat) заводит отдельный документ «Комиссия эквайринга», уменьшающий долг эквайера; зачисление денег — строка выписки со статьёй «Выплата эквайера».'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -28485,7 +29335,7 @@ paths:
         - Core directories
       operationId: coreListSellerCompanies
       summary: Получить доступные юрлица продавца
-      description: 'Возвращает только действующие юрлица, доступные участнику запроса: человеку или служебному участнику установки приложения. Поля сокращены до тех, что нужны продавцу для заказа и счёта; внутренние поля и чужие юрлица не выдаются.'
+      description: 'Возвращает только действующие юрлица, доступные участнику запроса: человеку или служебному участнику установки приложения. Поля сокращены до тех, что нужны продавцу для продажи или закупки и счёта; внутренние поля и чужие юрлица не выдаются.'
       x-akeda-module: core
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -28553,24 +29403,24 @@ paths:
           $ref: '#/components/responses/NotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/app/docflow/orders/import:
+  /api/v1/app/docflow/sales/import:
     post:
       tags:
         - App runtime
-      operationId: appDocflowImportSalesOrder
-      summary: Загрузить заказ покупателя от имени установки
+      operationId: appDocflowImportSale
+      summary: Загрузить продажу от имени установки
       description: |-
-        Интернет-магазин или CRM загружает заказ своим токеном. Повтор того же external_id обновляет ЭТОТ ЖЕ заказ, а не заводит второй, поэтому ответ 200. Внешний номер, уже занятый заказом другого источника (человека, ключа кабинета или другого приложения), отвечает 409 docflow.sales_order.foreign_source. Необязательный funnel_id выбирает действующую воронку продаж этого кабинета в момент создания заказа: повтор с другой воронкой отвечает 409 core.order.funnel_mismatch, неизвестная, чужая или архивная воронка — 422 core.order.funnel_unavailable.
+        Интернет-магазин или CRM загружает продажу своим токеном. Повтор того же external_id обновляет ЭТУ же продажу, а не заводит второй, поэтому ответ 200. Внешний номер, уже занятый продажей другого источника (человека, ключа кабинета или другого приложения), отвечает 409 docflow.sale.foreign_source. Необязательный funnel_id выбирает действующую воронку продаж этого кабинета в момент создания продажи: повтор с другой воронкой отвечает 409 core.trade.funnel_mismatch, неизвестная, чужая или архивная воронка — 422 core.trade.funnel_unavailable.
 
-        Покупатель называется человеческими ключами. Названный ИНН узнаётся строго; заказ сайта (scenario self_service) без ИНН — в том числе вовсе без покупателя — ложится на системную карточку «Розничный покупатель», а имя, телефон и почта плательщика остаются в самом заказе; в остальных сценариях покупатель с телефоном получает именную карточку физлица. Позиции узнаются по артикулу. Статусы оплаты и отгрузки не принимаются — они считаются из фактов.
+        Покупатель называется человеческими ключами. Названный ИНН узнаётся строго; продажа сайта (scenario self_service) без ИНН — в том числе вовсе без покупателя — ложится на системную карточку «Розничный покупатель», а имя, телефон и почта плательщика остаются в самом продаже; в остальных сценариях покупатель с телефоном получает именную карточку физлица. Позиции узнаются по артикулу. Статусы оплаты и отгрузки не принимаются — они считаются из фактов.
 
-        Если у юрлица есть склад (warehouse_id или склад по умолчанию политики склада) и в заказе есть складские позиции, под заказ ставится штатный резерв склада на срок из настроек склада; свободный остаток (stockGetAvailability) уменьшается на него. Резерв, который склад поставить не смог, заказу не отказывает.
+        Если у юрлица есть склад (warehouse_id или склад по умолчанию политики склада) и в продаже есть складские позиции, под продажа ставится штатный резерв склада на срок из настроек склада; свободный остаток (stockGetAvailability) уменьшается на него. Резерв, который склад поставить не смог, продаже не отказывает.
 
         Кабинет, пространство приложения и автор изменений берутся из токена установки. Строка журнала загрузок получает источником пространство приложения, а не поле source тела.
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: docflow.orders:import
+      x-akeda-permission: docflow.trade:import
       security:
         - installationToken: []
       parameters:
@@ -28583,7 +29433,7 @@ paths:
               $ref: '#/components/schemas/DocflowAppSalesOrderInput'
       responses:
         '200':
-          description: 'Заказ после загрузки: новый или обновлённый'
+          description: 'Продажа после загрузки: новый или обновлённый'
           content:
             application/json:
               schema:
@@ -28606,17 +29456,17 @@ paths:
                 $ref: '#/components/schemas/Error'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/app/docflow/orders/lookup:
+  /api/v1/app/docflow/sales/lookup:
     get:
       tags:
         - App runtime
-      operationId: appDocflowFindSalesOrderByExternalID
-      summary: Найти свой заказ по внешнему номеру
-      description: Установка находит ранее загруженный ею заказ по external_id без повторной загрузки. Номер другого приложения и отсутствующий номер одинаково отвечают 404. Кабинет и пространство источника определяются токеном установки, а не параметрами запроса.
+      operationId: appDocflowFindSaleByExternalID
+      summary: Найти свою продажу по внешнему номеру
+      description: Установка находит ранее загруженный ею продажа по external_id без повторной загрузки. Номер другого приложения и отсутствующий номер одинаково отвечают 404. Кабинет и пространство источника определяются токеном установки, а не параметрами запроса.
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: docflow.orders:import
+      x-akeda-permission: docflow.trade:import
       x-akeda-installation-read: owned-order-external-lookup
       security:
         - installationToken: []
@@ -28630,7 +29480,7 @@ paths:
             minLength: 1
       responses:
         '200':
-          description: Заказ этого приложения
+          description: Продажа этого приложения
           content:
             application/json:
               schema:
@@ -28643,17 +29493,17 @@ paths:
           $ref: '#/components/responses/NotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/app/docflow/orders/{id}:
+  /api/v1/app/docflow/sales/{id}:
     get:
       tags:
         - App runtime
-      operationId: appDocflowGetSalesOrder
-      summary: Получить заказ покупателя, загруженный этим приложением
-      description: 'Заказ вместе с состояниями оплаты и отгрузки, посчитанными из фактов. Видны только заказы, которые завело это приложение: чужой заказ отвечает 404 — тем же, чем несуществующий.'
+      operationId: appDocflowGetSale
+      summary: Получить продажу, загруженный этим приложением
+      description: 'Продажа вместе с состояниями оплаты и отгрузки, посчитанными из фактов. Видны только продажи, которые завело это приложение: чужая продажа отвечает 404 — тем же, чем несуществующий.'
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: docflow.orders:import
+      x-akeda-permission: docflow.trade:import
       security:
         - installationToken: []
       parameters:
@@ -28665,7 +29515,7 @@ paths:
             $ref: '#/components/schemas/UUID'
       responses:
         '200':
-          description: Заказ покупателя
+          description: Продажа
           content:
             application/json:
               schema:
@@ -28678,17 +29528,17 @@ paths:
           $ref: '#/components/responses/NotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/app/docflow/orders/{id}/cancel:
+  /api/v1/app/docflow/sales/{id}/cancel:
     post:
       tags:
         - App runtime
-      operationId: appDocflowCancelSalesOrder
-      summary: Отменить заказ покупателя, загруженный этим приложением
-      description: 'Покупатель передумал или не оплатил. Отмена снимает резерв склада той же транзакцией и публикует docflow.sales_order.status_changed. Идемпотентно: уже отменённый заказ отвечает сам собой, второго события нет. Выполненный заказ отвечает 409 docflow.sales_order.closed, заказ с уже отгруженным товаром — 409 docflow.sales_order.cancel_shipped: сначала оформляется возврат от покупателя.'
+      operationId: appDocflowCancelSale
+      summary: Отменить продажу, загруженный этим приложением
+      description: 'Покупатель передумал или не оплатил. Отмена снимает резерв склада той же транзакцией и публикует docflow.sale.status_changed. Идемпотентно: уже отменённая продажа отвечает сам собой, второго события нет. Выполненная продажа отвечает 409 docflow.sale.closed, продажа с уже отгруженным товаром — 409 docflow.sale.cancel_shipped: сначала оформляется возврат от покупателя.'
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: docflow.orders:import
+      x-akeda-permission: docflow.trade:import
       security:
         - installationToken: []
       parameters:
@@ -28700,7 +29550,7 @@ paths:
             $ref: '#/components/schemas/UUID'
       responses:
         '200':
-          description: Отменённый заказ
+          description: Отменённая продажа
           content:
             application/json:
               schema:
@@ -28715,13 +29565,13 @@ paths:
           $ref: '#/components/responses/Conflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/app/docflow/orders/{orderId}/invoices/{documentId}/print:
+  /api/v1/app/docflow/sales/{saleId}/invoices/{documentId}/print:
     get:
       tags:
         - App runtime
-      operationId: appDocflowPrintOrderInvoice
-      summary: Получить печатную форму своего счёта по заказу
-      description: Поток PDF или HTML отдаётся только установке, которая загрузила этот заказ. Названный документ должен быть действующим счётом именно в комплекте этого заказа; чужой заказ, другая бумага и посторонний ID отвечают 404 до обращения к движку печати. Форму печатает тот же движок, что обслуживает кабинет. Факсимиле на счёте зависит от разрешения юрлица и не является электронной подписью.
+      operationId: appDocflowPrintSaleInvoice
+      summary: Получить печатную форму своего счёта по продаже
+      description: Поток PDF или HTML отдаётся только установке, которая загрузила этот продажа. Названный документ должен быть действующим счётом именно в комплекте этой продажи; чужая продажа, другая бумага и посторонний ID отвечают 404 до обращения к движку печати. Форму печатает тот же движок, что обслуживает кабинет. Факсимиле на счёте зависит от разрешения юрлица и не является электронной подписью.
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -28731,7 +29581,7 @@ paths:
         - installationToken: []
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
-        - name: orderId
+        - name: saleId
           in: path
           required: true
           schema:
@@ -28775,13 +29625,13 @@ paths:
           $ref: '#/components/responses/NotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/app/docflow/orders/{orderId}/upds/{documentId}/print:
+  /api/v1/app/docflow/sales/{saleId}/upds/{documentId}/print:
     get:
       tags:
         - App runtime
-      operationId: appDocflowPrintOrderUPD
-      summary: Получить визуальную печатную форму УПД своего заказа
-      description: 'PDF или HTML отдаётся только установке, которая загрузила заказ. Документ должен быть действующим УПД в комплекте этого заказа; чужой заказ, другой вид бумаги и посторонний ID отвечают 404. Это визуальная форма без электронной подписи: подписание и отправка по ЭДО выполняются отдельно.'
+      operationId: appDocflowPrintSaleUPD
+      summary: Получить визуальную печатную форму УПД своей продажи
+      description: 'PDF или HTML отдаётся только установке, которая загрузила продажу. Документ должен быть действующим УПД в комплекте этой продажи; чужая продажа, другой вид бумаги и посторонний ID отвечают 404. Это визуальная форма без электронной подписи: подписание и отправка по ЭДО выполняются отдельно.'
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -28791,7 +29641,7 @@ paths:
         - installationToken: []
       parameters:
         - $ref: '#/components/parameters/TenantHeader'
-        - name: orderId
+        - name: saleId
           in: path
           required: true
           schema:
@@ -28830,17 +29680,17 @@ paths:
           $ref: '#/components/responses/NotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/app/docflow/orders/{id}/status:
+  /api/v1/app/docflow/sales/{id}/status:
     post:
       tags:
         - App runtime
-      operationId: appDocflowSetSalesOrderStatus
-      summary: Сменить состояние заказа покупателя, загруженного этим приложением
-      description: Состояние самого заказа — draft, confirmed, done или cancelled. Отмена этим путём — та же отмена, что у appDocflowCancelSalesOrder, со всеми её отказами; выполненный заказ снимает недовезённый остаток резерва. Отменённый заказ приложение обратно не открывает (409). Состояния оплаты и отгрузки не назначаются — 409 docflow.sales_order.state_derived. Повтор того же состояния ничего не меняет и событий не даёт.
+      operationId: appDocflowSetSaleStatus
+      summary: Сменить состояние продажи, загруженного этим приложением
+      description: Состояние самой продажи — draft, confirmed, done или cancelled. Отмена этим путём — та же отмена, что у appDocflowCancelSalesOrder, со всеми её отказами; выполненная продажа снимает недовезённый остаток резерва. Отменённая продажа приложение обратно не открывает (409). Состояния оплаты и отгрузки не назначаются — 409 docflow.sale.state_derived. Повтор того же состояния ничего не меняет и событий не даёт.
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: docflow.orders:import
+      x-akeda-permission: docflow.trade:import
       security:
         - installationToken: []
       parameters:
@@ -28858,7 +29708,7 @@ paths:
               $ref: '#/components/schemas/DocflowSalesOrderStatusInput'
       responses:
         '200':
-          description: Заказ в новом состоянии
+          description: Продажа в новом состоянии
           content:
             application/json:
               schema:
@@ -28875,17 +29725,17 @@ paths:
           $ref: '#/components/responses/Conflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/app/docflow/orders/{id}/invoice:
+  /api/v1/app/docflow/sales/{id}/invoice:
     post:
       tags:
         - App runtime
-      operationId: appDocflowIssueSalesOrderInvoice
-      summary: Выставить счёт по своему заказу приложения
-      description: Повтор того же Idempotency-Key возвращает тот же документ; чужой заказ отвечает 404. Номер, реквизиты и печатная форма принадлежат документообороту.
+      operationId: appDocflowIssueSaleInvoice
+      summary: Выставить счёт по своей продаже приложения
+      description: Повтор того же Idempotency-Key возвращает тот же документ; чужая продажа отвечает 404. Номер, реквизиты и печатная форма принадлежат документообороту.
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: docflow.orders:issue
+      x-akeda-permission: docflow.trade:issue
       security:
         - installationToken: []
       parameters:
@@ -28923,17 +29773,17 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/app/docflow/orders/{id}/act:
+  /api/v1/app/docflow/sales/{id}/act:
     post:
       tags:
         - App runtime
-      operationId: appDocflowIssueSalesOrderAct
-      summary: Выпустить акт по своему заказу приложения
-      description: Та же команда документооборота и проведения, что в карточке заказа. Повтор Idempotency-Key возвращает тот же акт.
+      operationId: appDocflowIssueSaleAct
+      summary: Выпустить акт по своей продаже приложения
+      description: Та же команда документооборота и проведения, что в карточке продажи. Повтор Idempotency-Key возвращает тот же акт.
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: docflow.orders:issue
+      x-akeda-permission: docflow.trade:issue
       security:
         - installationToken: []
       parameters:
@@ -28971,17 +29821,17 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/app/docflow/orders/{id}/upd:
+  /api/v1/app/docflow/sales/{id}/upd:
     post:
       tags:
         - App runtime
-      operationId: appDocflowIssueSalesOrderUPD
-      summary: Выпустить УПД и исполнить свой заказ приложения
-      description: Для заказа с услугой одной командой создаёт исполнение, номерную запись реестра и зарегистрированный УПД. Повтор Idempotency-Key возвращает тот же документ; отдельный акт не выпускается.
+      operationId: appDocflowIssueSaleUPD
+      summary: Выпустить УПД и исполнить свою продажу приложения
+      description: Для продажи с услугой одной командой создаёт исполнение, номерную запись реестра и зарегистрированный УПД. Повтор Idempotency-Key возвращает тот же документ; отдельный акт не выпускается.
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: docflow.orders:issue
+      x-akeda-permission: docflow.trade:issue
       security:
         - installationToken: []
       parameters:
@@ -29019,18 +29869,18 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/app/docflow/orders/{id}/payments:
+  /api/v1/app/docflow/sales/{id}/payments:
     post:
       tags:
         - App runtime
-      operationId: appDocflowRecordSalesOrderPayment
-      summary: Подтвердить эквайринг по заказу приложения (устаревший путь)
-      description: 'Устаревший путь совместимости: записывает прежнюю отметку эквайринга в заказе, но не создаёт финансовый документ и не разносит оплату по заказу. Для новых интеграций после проверки сообщения провайдера используйте POST /api/v1/app/finance/acquiring/captures с finance.acquiring:write: только финансовый факт может завершить шаг оплаты воронки. Устойчивый ключ старой отметки — provider плюс external_id; повтор не добавляет вторую отметку.'
+      operationId: appDocflowRecordSalePayment
+      summary: Подтвердить эквайринг по продаже приложения (устаревший путь)
+      description: 'Устаревший путь совместимости: записывает прежнюю отметку эквайринга в продаже, но не создаёт финансовый документ и не разносит оплату по продаже. Для новых интеграций после проверки сообщения провайдера используйте POST /api/v1/app/finance/acquiring/captures с finance.acquiring:write: только финансовый факт может завершить шаг оплаты воронки. Устойчивый ключ старой отметки — provider плюс external_id; повтор не добавляет вторую отметку.'
       deprecated: true
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: docflow.orders:payments
+      x-akeda-permission: docflow.trade:payments
       security:
         - installationToken: []
       parameters:
@@ -29069,7 +29919,7 @@ paths:
                   format: date-time
       responses:
         '200':
-          description: Заказ с обновлённым состоянием оплаты
+          description: Продажа с обновлённым состоянием оплаты
           content:
             application/json:
               schema:
@@ -29084,17 +29934,17 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
-  /api/v1/app/docflow/order-imports:
+  /api/v1/app/docflow/sale-imports:
     get:
       tags:
         - App runtime
-      operationId: appDocflowListSalesOrderImports
-      summary: Прочитать журнал загрузок заказов этого приложения
+      operationId: appDocflowListSaleImports
+      summary: Прочитать журнал загрузок продаж этого приложения
       description: 'Каждая попытка загрузки — принятая, обновившая и отклонённая с кодом и словами причины, свежие сверху. Только строки этого приложения: загрузки людей, ключей кабинета и других приложений сюда не попадают.'
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: docflow.orders:import
+      x-akeda-permission: docflow.trade:import
       security:
         - installationToken: []
       parameters:
@@ -31676,13 +32526,13 @@ paths:
           $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/docflow/orders/{id}/set:
+  /api/v1/docflow/sales/{id}/set:
     get:
       tags:
         - Docflow flow
-      operationId: docflowSalesOrderDocumentSet
-      summary: Получить комплект документов заказа
-      description: Возвращает счёт и другие бумаги, связанные с заказом, их номера и состояния. Человек видит заказ в своей области юрлиц. Установка приложения видит комплект только своего заказа; чужой отвечает 404. Чтение не создаёт и не проводит документы.
+      operationId: docflowSaleDocumentSet
+      summary: Получить комплект документов продажи
+      description: Возвращает счёт и другие бумаги, связанные с продажей, их номера и состояния. Человек видит продажу в своей области юрлиц. Установка приложения видит комплект только своей продажи; чужой отвечает 404. Чтение не создаёт и не проводит документы.
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -31702,7 +32552,7 @@ paths:
             $ref: '#/components/schemas/UUID'
       responses:
         '200':
-          description: Комплект документов заказа
+          description: Комплект документов продажи
           content:
             application/json:
               schema:
@@ -31717,14 +32567,14 @@ paths:
           $ref: '#/components/responses/NotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/docflow/orders/{id}/invoice:
+  /api/v1/docflow/sales/{id}/invoice:
     post:
       tags:
         - Docflow flow
-      operationId: docflowIssueOrderInvoice
+      operationId: docflowIssueSaleInvoice
       x-akeda-audience: external
-      summary: Выставить счёт на оплату по заказу
-      description: 'Счёт на оплату — бумага документооборота по заказу покупателя: пустая сумма — на весь заказ с его строками, названная — частичный счёт (аванс, остаток); вместе счета не превышают сумму заказа. Номер пустой — следующий по счётчику. Выставленный счёт сразу зарегистрирован (`draft` — черновик). Учётного факта счёт не рождает: «оплачен» — по разнесённой оплате. Заголовок Idempotency-Key обязателен: повтор того же ключа тем же автором отдаёт первый счёт.'
+      summary: Выставить счёт на оплату по продаже
+      description: 'Счёт на оплату — бумага документооборота по продаже: пустая сумма — на всю продажу с его строками, названная — частичный счёт (аванс, остаток); вместе счета не превышают сумму продажи. Номер пустой — следующий по счётчику. Выставленный счёт сразу зарегистрирован (`draft` — черновик). Учётного факта счёт не рождает: «оплачен» — по разнесённой оплате. Заголовок Idempotency-Key обязателен: повтор того же ключа тем же автором отдаёт первый счёт.'
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-permission: docflow.flow:write
@@ -31739,7 +32589,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: Заказ покупателя ядра
+          description: Продажа ядра
           schema:
             $ref: '#/components/schemas/UUID'
       requestBody:
@@ -31772,14 +32622,14 @@ paths:
           $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/docflow/orders/{id}/act:
+  /api/v1/docflow/sales/{id}/act:
     post:
       tags:
         - Docflow flow
-      operationId: docflowIssueOrderAct
+      operationId: docflowIssueSaleAct
       x-akeda-audience: external
-      summary: Сделать акт по заказу
-      description: '«Сделать акт» по строкам-услугам заказа покупателя: пустая сумма — все услуги, меньшая — частичный акт (этап работ). После отсечки этапа 4 бизнеса при включённых финансах — бумага и исполнение одной командой: финансы проводят акт (выручка и долг), ядро снимает «Заказы», у бумаги — ссылка на исполнение в `accounting_links`, и бумага сразу зарегистрирована. До отсечки и без финансов — только бумага (черновик). Заголовок Idempotency-Key обязателен: повтор того же ключа тем же автором отдаёт первую бумагу. Заказ «продать сразу» одной командой — `POST /api/v1/core/orders/execute-now`.'
+      summary: Сделать акт по продаже
+      description: '«Сделать акт» по строкам-услугам продажи: пустая сумма — все услуги, меньшая — частичный акт (этап работ). После отсечки этапа 4 бизнеса при включённых финансах — бумага и исполнение одной командой: финансы проводят акт (выручка и долг), ядро снимает «Продажи и закупки», у бумаги — ссылка на исполнение в `accounting_links`, и бумага сразу зарегистрирована. До отсечки и без финансов — только бумага (черновик). Заголовок Idempotency-Key обязателен: повтор того же ключа тем же автором отдаёт первую бумагу. Продажа «продать сразу» одной командой — `POST /api/v1/core/sales/execute-now`.'
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-permission: docflow.flow:write
@@ -31794,7 +32644,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: Заказ покупателя ядра
+          description: Продажа ядра
           schema:
             $ref: '#/components/schemas/UUID'
       requestBody:
@@ -31827,14 +32677,14 @@ paths:
           $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
-  /api/v1/docflow/orders/{id}/upd:
+  /api/v1/docflow/sales/{id}/upd:
     post:
       tags:
         - Docflow flow
-      operationId: docflowIssueOrderUPD
+      operationId: docflowIssueSaleUPD
       x-akeda-audience: external
-      summary: Сделать УПД по заказу
-      description: '«Сделать УПД» по строкам-услугам заказа покупателя — бумага, исполнение и счёт-фактура одной командой и одной транзакцией: финансы проводят исполнение (выручка и долг), выставляют УПД по получившейся реализации с номером из реестра счетов-фактур юрлица, документооборот заводит зарегистрированную карточку вида `upd` со ссылками на исполнение и на выставленную бумагу в `accounting_links`. Функция — `СЧФДОП` (по умолчанию) или `ДОП`. Только после отсечки исполнения бизнеса (до неё — 409 `docflow.sales_order.upd_needs_execution`). Сумма и этап — как у акта. Заголовок Idempotency-Key обязателен: повтор того же ключа тем же автором отдаёт первую бумагу.'
+      summary: Сделать УПД по продаже
+      description: '«Сделать УПД» по строкам-услугам продажи — бумага, исполнение и счёт-фактура одной командой и одной транзакцией: финансы проводят исполнение (выручка и долг), выставляют УПД по получившейся реализации с номером из реестра счетов-фактур юрлица, документооборот заводит зарегистрированную карточку вида `upd` со ссылками на исполнение и на выставленную бумагу в `accounting_links`. Функция — `СЧФДОП` (по умолчанию) или `ДОП`. Только после отсечки исполнения бизнеса (до неё — 409 `docflow.sale.upd_needs_execution`). Сумма и этап — как у акта. Заголовок Idempotency-Key обязателен: повтор того же ключа тем же автором отдаёт первую бумагу.'
       x-akeda-module: docflow
       x-akeda-release-stage: preview
       x-akeda-permission: docflow.flow:write
@@ -31849,7 +32699,7 @@ paths:
         - name: id
           in: path
           required: true
-          description: Заказ покупателя ядра
+          description: Продажа ядра
           schema:
             $ref: '#/components/schemas/UUID'
       requestBody:
@@ -42009,7 +42859,7 @@ components:
           description: Срок авансового отчёта, дней (ERP-1176); пусто — умолчание 30
         revenue_items:
           type: array
-          description: Статьи выручки исполнений заказа по виду строки (этап 4 ERP-1427)
+          description: Статьи выручки исполнений продажи или закупки по виду строки (этап 4 ERP-1427)
           items:
             $ref: '#/components/schemas/CoreOrderRevenueItemRule'
     CoreCompanyPolicy:
@@ -43236,7 +44086,7 @@ components:
         - cancelled
     CoreOrderSourceKind:
       type: string
-      description: 'Откуда заказ. contract — заказ периода регулярного договора документооборота (commerce-cycle.md § 2.6): его external_id — «<id договора>/<период>» (2026-10, 2026-Q4, 2026-W41), и загрузка с тем же внешним номером отвечает core.order.foreign_source.'
+      description: 'Откуда продажа или закупка. contract — продажа или закупка периода регулярного договора документооборота (commerce-cycle.md § 2.6): его external_id — «<id договора>/<период>» (2026-10, 2026-Q4, 2026-W41), и загрузка с тем же внешним номером отвечает core.trade.foreign_source.'
       enum:
         - manual
         - app
@@ -43254,7 +44104,7 @@ components:
         - semi_product
     CoreOrderBuyer:
       type: object
-      description: 'Покупатель-физлицо: розничный заказ стоит на общей карточке покупателя, и различает покупателей только это.'
+      description: 'Покупатель-физлицо: розничный продажа или закупка стоит на общей карточке покупателя, и различает покупателей только это.'
       additionalProperties: false
       properties:
         name:
@@ -43319,7 +44169,7 @@ components:
           description: Скидка самой строки
         discount_amount:
           type: string
-          description: Доля скидки заказа на этой строке; суммы строки посчитаны после обеих скидок
+          description: Доля скидки продажи или закупки на этой строке; суммы строки посчитаны после обеих скидок
         vat_rate:
           type: string
           description: Ставка, как её ввели; пусто — по учётной политике
@@ -43328,13 +44178,13 @@ components:
           description: Ставка, по которой строка посчитана; пусто — налог не выделен
         amount_net:
           type: string
-          description: Сумма строкой в разрядности валюты заказа
+          description: Сумма строкой в разрядности валюты продажи или закупки
         vat_amount:
           type: string
-          description: Сумма строкой в разрядности валюты заказа
+          description: Сумма строкой в разрядности валюты продажи или закупки
         amount_gross:
           type: string
-          description: Сумма строкой в разрядности валюты заказа
+          description: Сумма строкой в разрядности валюты продажи или закупки
         base_qty:
           type: string
           description: Количество в базовой единице склада
@@ -43377,7 +44227,7 @@ components:
           description: Десятичное число строкой
         vat_rate:
           type: string
-          description: Ставка НДС строки; пусто — по учётной политике юрлица на дату заказа
+          description: Ставка НДС строки; пусто — по учётной политике юрлица на дату продажи или закупки
         base_qty:
           type: string
           description: Десятичное число строкой
@@ -43402,7 +44252,7 @@ components:
           description: 'Доля в процентах: больше нуля, не больше ста'
     CoreOrderTotals:
       type: object
-      description: 'Итоги — сумма строк: скидка заказа уже разложена по строкам и второй раз не вычитается.'
+      description: 'Итоги — сумма строк: скидка продажи или закупки уже разложена по строкам и второй раз не вычитается.'
       additionalProperties: false
       required:
         - net
@@ -43414,19 +44264,19 @@ components:
       properties:
         net:
           type: string
-          description: Сумма строкой в разрядности валюты заказа
+          description: Сумма строкой в разрядности валюты продажи или закупки
         vat:
           type: string
-          description: Сумма строкой в разрядности валюты заказа
+          description: Сумма строкой в разрядности валюты продажи или закупки
         gross:
           type: string
-          description: Сумма строкой в разрядности валюты заказа
+          description: Сумма строкой в разрядности валюты продажи или закупки
         goods_gross:
           type: string
-          description: Сумма строкой в разрядности валюты заказа
+          description: Сумма строкой в разрядности валюты продажи или закупки
         services_gross:
           type: string
-          description: Сумма строкой в разрядности валюты заказа
+          description: Сумма строкой в разрядности валюты продажи или закупки
         currency:
           type: string
     CoreOrderObligation:
@@ -43440,13 +44290,13 @@ components:
       properties:
         ordered:
           type: string
-          description: Действующий приход подтверждения в регистре «Заказы»
+          description: Действующий приход подтверждения в регистре «Продажи и закупки»
         remaining:
           type: string
-          description: Остаток регистра «Заказы» по заказу. До этапа 4 его уменьшает только закрытие, поэтому это не «осталось исполнить»
+          description: Остаток регистра «Продажи и закупки» по продаже или закупке. До этапа 4 его уменьшает только закрытие, поэтому это не «осталось исполнить»
         executed:
           type: string
-          description: 'Исполнено: сумма проведённых исполнений заказа (акт, продажа, закупка, приёмка) за вычетом возвратов, в валюте заказа. То же число, что в журнале продаж и закупок финансов (core_order_executed)'
+          description: 'Исполнено: сумма проведённых исполнений продажи или закупки (акт, продажа, закупка, приёмка) за вычетом возвратов, в валюте продажи или закупки. То же число, что в журнале продаж и закупок финансов (core_order_executed)'
         remaining_to_execute:
           type: string
           description: 'Осталось исполнить: заказано минус исполнено, не меньше нуля'
@@ -43472,7 +44322,7 @@ components:
           type: boolean
         reason_code:
           type: string
-          description: 'Код отказа: core.order.has_executions, core.order.has_dependents (оплаты, авансы, черновики исполнений), core.order.closed, core.order.forbidden'
+          description: 'Код отказа: core.trade.has_executions, core.trade.has_dependents (оплаты, авансы, черновики исполнений), core.trade.closed, core.trade.forbidden'
         reason:
           type: string
           description: Причина словами на языке запроса
@@ -43495,7 +44345,7 @@ components:
     CoreOrderStage:
       type: object
       additionalProperties: false
-      description: Этап работ заказа — что и когда сдаём (ERP-1427, этап 4).
+      description: Этап работ продажи или закупки — что и когда сдаём (ERP-1427, этап 4).
       properties:
         id:
           $ref: '#/components/schemas/UUID'
@@ -43508,16 +44358,16 @@ components:
           format: date
         amount:
           type: string
-          description: Сумма этапа в валюте заказа с налогом
+          description: Сумма этапа в валюте продажи или закупки с налогом
         line_ids:
           type: array
-          description: Строки заказа, которые закрывает этап; пусто — строки-услуги по порядку
+          description: Строки продажи или закупки, которые закрывает этап; пусто — строки-услуги по порядку
           items:
             $ref: '#/components/schemas/UUID'
     CoreOrderPaymentTerm:
       type: object
       additionalProperties: false
-      description: Строка графика оплат заказа — когда и сколько платят (ERP-1427, этап 4).
+      description: Строка графика оплат продажи или закупки — когда и сколько платят (ERP-1427, этап 4).
       properties:
         id:
           $ref: '#/components/schemas/UUID'
@@ -43543,7 +44393,7 @@ components:
           minimum: 0
     CoreOrder:
       type: object
-      description: Заказ — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе.
+      description: Продажа или закупка — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе.
       additionalProperties: false
       required:
         - id
@@ -43602,30 +44452,30 @@ components:
           $ref: '#/components/schemas/UUID'
         contract_number:
           type: string
-          description: Номер договора заказа — для экрана
+          description: Номер договора продажи или закупки — для экрана
         contract_date:
           type: string
           format: date
-          description: Дата договора заказа — для экрана
+          description: Дата договора продажи или закупки — для экрана
         progress:
           $ref: '#/components/schemas/CoreOrderProgress'
         project_id:
           $ref: '#/components/schemas/UUID'
         department_id:
-          description: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          description: Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
           allOf:
             - $ref: '#/components/schemas/UUID'
         cfo_id:
-          description: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          description: ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
           allOf:
             - $ref: '#/components/schemas/UUID'
         pnl_item_id:
-          description: Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья
+          description: Статья исполнений продажи или закупки (выручка у продажи, расход у закупки); пусто — правило учётной политики по виду строки, иначе системная статья
           allOf:
             - $ref: '#/components/schemas/UUID'
         execution_cutover:
           type: boolean
-          description: 'Бизнес заказа прошёл отсечку этапа 4: исполнение закрывает вклад регистра «Заказы» и признаёт выручку; «Сделать акт» в документообороте выпускает бумагу и проводит исполнение одной командой'
+          description: 'Бизнес продажи или закупки прошёл отсечку этапа 4: исполнение закрывает вклад регистра «Продажи и закупки» и признаёт выручку; «Сделать акт» в документообороте выпускает бумагу и проводит исполнение одной командой'
         warehouse_id:
           $ref: '#/components/schemas/UUID'
         basis_id:
@@ -43638,7 +44488,7 @@ components:
           type: boolean
         discount:
           type: string
-          description: Скидка на заказ целиком, как её ввели; в суммах строк уже учтена
+          description: Скидка на продажу или закупку целиком, как её ввели; в суммах строк уже учтена
         delivery_date:
           type: string
           format: date
@@ -43686,12 +44536,12 @@ components:
             $ref: '#/components/schemas/CoreOrderResponsible'
         stages:
           type: array
-          description: Этапы работ заказа (этап 4 ERP-1427)
+          description: Этапы работ продажи или закупки (этап 4 ERP-1427)
           items:
             $ref: '#/components/schemas/CoreOrderStage'
         payment_terms:
           type: array
-          description: График оплат заказа; id строки — разрез stage регистра расчётов
+          description: График оплат продажи или закупки; id строки — разрез stage регистра расчётов
           items:
             $ref: '#/components/schemas/CoreOrderPaymentTerm'
         totals:
@@ -43761,7 +44611,7 @@ components:
         total:
           type: integer
           minimum: 0
-          description: Сколько заказов под отбором всего
+          description: Сколько продаж или закупок под отбором всего
         limit:
           type: integer
         offset:
@@ -43770,12 +44620,12 @@ components:
           type: boolean
         state_counts:
           type: object
-          description: 'Только с with=counts: число заказов по состояниям при том же отборе без отбора состояний'
+          description: 'Только с with=counts: число продаж или закупок по состояниям при том же отборе без отбора состояний'
           additionalProperties:
             type: integer
     CoreOrderProgress:
       type: object
-      description: 'Ход заказа для строки списка (with=progress). executed — исполнено в валюте заказа; paid — оплачено, нет поля — финансы выключены; papers — счёт, акт и УПД: done — есть, wait — ждём подписи, нет ключа — нет; нет поля — документооборот выключен.'
+      description: 'Ход продажи или закупки для строки списка (with=progress). executed — исполнено в валюте продажи или закупки; paid — оплачено, нет поля — финансы выключены; papers — счёт, акт и УПД: done — есть, wait — ждём подписи, нет ключа — нет; нет поля — документооборот выключен.'
       additionalProperties: false
       required:
         - executed
@@ -43793,7 +44643,7 @@ components:
               - wait
     CoreOrderInput:
       type: object
-      description: 'Заказ из запроса: поля одни для формы, загрузки и фасадов модулей.'
+      description: 'Продажа или закупка из запроса: поля одни для формы, загрузки и фасадов модулей.'
       additionalProperties: false
       required:
         - side
@@ -43823,15 +44673,15 @@ components:
         project_id:
           $ref: '#/components/schemas/UUID'
         department_id:
-          description: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          description: Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
           allOf:
             - $ref: '#/components/schemas/UUID'
         cfo_id:
-          description: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          description: ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
           allOf:
             - $ref: '#/components/schemas/UUID'
         pnl_item_id:
-          description: Статья исполнений заказа; не названа при правке — сохраняется прежняя
+          description: Статья исполнений продажи или закупки; не названа при правке — сохраняется прежняя
           allOf:
             - $ref: '#/components/schemas/UUID'
         warehouse_id:
@@ -43849,7 +44699,7 @@ components:
           description: Цены с НДС («в том числе»); по умолчанию true
         discount:
           type: string
-          description: Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+          description: Скидка на продажу или закупку целиком; раскладывается по строкам пропорционально их суммам до НДС
         delivery_date:
           type: string
           format: date
@@ -43890,7 +44740,7 @@ components:
           $ref: '#/components/schemas/UUID'
         confirm:
           type: boolean
-          description: Сразу подтвердить созданный заказ
+          description: Сразу подтвердить созданный продажу или закупку
     CoreOrderRevision:
       type: object
       additionalProperties: false
@@ -43922,11 +44772,11 @@ components:
         project_id:
           $ref: '#/components/schemas/UUID'
         department_id:
-          description: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          description: Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
           allOf:
             - $ref: '#/components/schemas/UUID'
         cfo_id:
-          description: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          description: ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
           allOf:
             - $ref: '#/components/schemas/UUID'
         warehouse_id:
@@ -43944,7 +44794,7 @@ components:
           description: Цены с НДС («в том числе»); по умолчанию true
         discount:
           type: string
-          description: Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+          description: Скидка на продажу или закупку целиком; раскладывается по строкам пропорционально их суммам до НДС
         delivery_date:
           type: string
           format: date
@@ -44019,11 +44869,11 @@ components:
         project_id:
           $ref: '#/components/schemas/UUID'
         department_id:
-          description: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          description: Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
           allOf:
             - $ref: '#/components/schemas/UUID'
         cfo_id:
-          description: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          description: ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
           allOf:
             - $ref: '#/components/schemas/UUID'
         warehouse_id:
@@ -44041,7 +44891,7 @@ components:
           description: Цены с НДС («в том числе»); по умолчанию true
         discount:
           type: string
-          description: Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+          description: Скидка на продажу или закупку целиком; раскладывается по строкам пропорционально их суммам до НДС
         delivery_date:
           type: string
           format: date
@@ -44072,21 +44922,21 @@ components:
           $ref: '#/components/schemas/UUID'
         confirm:
           type: boolean
-          description: Подтвердить заказ, если он ещё черновик
+          description: Подтвердить продажу или закупку, если он ещё черновик
         external_id:
           type: string
           minLength: 1
-          description: Номер заказа у источника; по стороне и нему узнаётся повтор
+          description: Номер продажи или закупки у источника; по стороне и нему узнаётся повтор
         source_system:
           type: string
           description: 'Имя источника для журнала загрузок: сайт, CRM'
         funnel_id:
           $ref: '#/components/schemas/UUID'
-          description: Необязательная действующая воронка этой стороны в данном кабинете. Выбирается атомарно с созданием заказа; повтор с другим funnel_id возвращает 409, неверная или архивная воронка — 422. Без поля действует воронка договора, источника или умолчание.
+          description: Необязательная действующая воронка этой стороны в данном кабинете. Выбирается атомарно с созданием продажи или закупки; повтор с другим funnel_id возвращает 409, неверная или архивная воронка — 422. Без поля действует воронка договора, источника или умолчание.
     CoreOrderNowAct:
       type: object
       additionalProperties: false
-      description: Реквизиты акта; пусто — дата заказа, номер по счётчику, название по заказу
+      description: Реквизиты акта; пусто — дата продажи или закупки, номер по счётчику, название по продаже или закупке
       properties:
         date:
           type: string
@@ -44098,7 +44948,7 @@ components:
     CoreOrderNowInput:
       type: object
       additionalProperties: false
-      description: Заказ целиком, его внешний номер и акт. Поля заказа — те же, что у загрузки; подтверждение подразумевается.
+      description: Продажа или закупка целиком, его внешний номер и акт. Поля продажи или закупки — те же, что у загрузки; подтверждение подразумевается.
       required:
         - side
         - date
@@ -44128,11 +44978,11 @@ components:
         project_id:
           $ref: '#/components/schemas/UUID'
         department_id:
-          description: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          description: Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
           allOf:
             - $ref: '#/components/schemas/UUID'
         cfo_id:
-          description: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+          description: ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
           allOf:
             - $ref: '#/components/schemas/UUID'
         pnl_item_id:
@@ -44192,7 +45042,7 @@ components:
         external_id:
           type: string
           minLength: 1
-          description: Номер заказа у источника; по стороне и нему узнаётся повтор
+          description: Номер продажи или закупки у источника; по стороне и нему узнаётся повтор
         source_system:
           type: string
           description: 'Имя источника: сайт, CRM, маркетплейс'
@@ -44235,7 +45085,7 @@ components:
           $ref: '#/components/schemas/CoreOrderNowExecution'
         replayed:
           type: boolean
-          description: true — заказ уже был исполнен этой командой; ничего не записано
+          description: true — продажа или закупка уже был исполнен этой командой; ничего не записано
     CoreOrderCloseInput:
       type: object
       additionalProperties: false
@@ -44352,13 +45202,13 @@ components:
           minLength: 1
         required:
           type: boolean
-          description: 'Участвует ли шаг в воронке: ненужный шаг заказу не строится'
+          description: 'Участвует ли шаг в воронке: ненужный шаг продаже или закупке не строится'
         due:
           $ref: '#/components/schemas/CoreOrderFunnelStepDue'
         done_when:
           type: string
           pattern: ^(manual|state:(confirmed|executing|executed|closed)|paid:([1-9][0-9]?|100)|paper:(act_signed|upd_signed))$
-          description: 'Что закрывает шаг: manual — человек отметит (пусто так же); state:<состояние> — заказ дошёл до состояния; paid:<N> — оплачено не меньше N % суммы заказа (финансы); paper:act_signed, paper:upd_signed — контрагент подписал акт или УПД в ЭДО (документооборот)'
+          description: 'Что закрывает шаг: manual — человек отметит (пусто так же); state:<состояние> — продажа или закупка дошёл до состояния; paid:<N> — оплачено не меньше N % суммы продажи или закупки (финансы); paper:act_signed, paper:upd_signed — контрагент подписал акт или УПД в ЭДО (документооборот)'
         remind_days:
           type: integer
           minimum: 0
@@ -44492,7 +45342,7 @@ components:
       properties:
         confirm:
           type: boolean
-          description: Провести заказ сразу; false — черновик.
+          description: Провести продажу или закупку сразу; false — черновик.
         invoice:
           type: string
           enum:
@@ -44791,7 +45641,7 @@ components:
           oneOf:
             - $ref: '#/components/schemas/UUID'
             - type: 'null'
-          description: null — заказ без воронки
+          description: null — продажа или закупка без воронки
     CoreOrderEvent:
       type: object
       additionalProperties: false
@@ -44807,7 +45657,7 @@ components:
           $ref: '#/components/schemas/UUID'
         kind:
           type: string
-          description: 'created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, executing, executed, execution_reverted (состояние исполнения сменилось само после акта, отгрузки, приёмки, их отмены или возврата: payload state, previous_state, baseline — true у строки досева заказа, исполненного до появления этих событий, без вебхука; автор — система; execution_reverted — заказ снова confirmed), step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)'
+          description: 'created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, executing, executed, execution_reverted (состояние исполнения сменилось само после акта, отгрузки, приёмки, их отмены или возврата: payload state, previous_state, baseline — true у строки досева продажи или закупки, исполненного до появления этих событий, без вебхука; автор — система; execution_reverted — продажа или закупка снова confirmed), step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)'
         detail:
           type: string
         effective_date:
@@ -44837,7 +45687,7 @@ components:
           format: date-time
     CoreOrderHistoryDocument:
       type: object
-      description: 'Документ модуля, выросший из заказа: акт, отгрузка, счёт.'
+      description: 'Документ модуля, выросший из продажи или закупки: акт, отгрузка, счёт.'
       additionalProperties: false
       required:
         - source
@@ -44952,7 +45802,7 @@ components:
         - never
     CoreNumberSource:
       type: string
-      description: sequence — номер выдаёт счётчик вида; external — номер приходит извне и обязателен; sequence_or_given — свой номер берётся как есть, пустой выдаёт счётчик (виды заказа ядра).
+      description: sequence — номер выдаёт счётчик вида; external — номер приходит извне и обязателен; sequence_or_given — свой номер берётся как есть, пустой выдаёт счётчик (виды продажи или закупки ядра).
       enum:
         - sequence
         - sequence_or_given
@@ -47481,19 +48331,19 @@ components:
           format: date
         amount:
           type: string
-          description: Сумма акта с НДС в валюте заказа, decimal string
+          description: Сумма акта с НДС в валюте продажи или закупки, decimal string
         due_date:
           type: string
           format: date
-          description: Срок оплаты; пусто — по строке графика заказа или условиям контрагента
+          description: Срок оплаты; пусто — по строке графика продажи или закупки или условиям контрагента
         reason:
           type: string
         pnl_item_id:
-          description: Статья выручки (расхода); пусто — статья заказа, политика бизнеса или системная
+          description: Статья выручки (расхода); пусто — статья продажи или закупки, политика бизнеса или системная
           allOf:
             - $ref: '#/components/schemas/UUID'
         stage_id:
-          description: Этап работ заказа, который закрывает акт
+          description: Этап работ продажи или закупки, который закрывает акт
           allOf:
             - $ref: '#/components/schemas/UUID'
         vat_amount:
@@ -47856,7 +48706,7 @@ components:
           description: Идентификатор платежа у провайдера
         order_id:
           $ref: '#/components/schemas/UUID'
-          description: Заказ покупателя
+          description: Продажа
         contact_id:
           $ref: '#/components/schemas/UUID'
           description: Покупатель
@@ -48415,7 +49265,7 @@ components:
           $ref: '#/components/schemas/FinanceOperation'
         vat_warnings:
           type: array
-          description: 'Акт по заказу: строки со ставкой человека, равной прежней общей ставке юрлица, а на дату акта общая ставка другая'
+          description: 'Акт по продаже или закупке: строки со ставкой человека, равной прежней общей ставке юрлица, а на дату акта общая ставка другая'
           items:
             $ref: '#/components/schemas/CoreOrderVATWarning'
     FinanceSettlementBalance:
@@ -49327,7 +50177,7 @@ components:
           enum:
             - settlement
             - deposit
-          description: 'Вид счёта. `settlement` — расчётный (счёт книги 51), `deposit` — вклад (депозитный счёт, 55.03). Вклад — такие же деньги: он входит в итог денег, а размещение и возврат — внутренний перевод между своими счетами, не доход и не расход.'
+          description: 'Вид счёта. `settlement` — расчётный (счёт книги 51), `deposit` — вклад. Деньги вклада учитываются статьёй «Депозиты и вклады»: отправка и возврат идут ею, а остаток депозитного счёта в итог денег не входит.'
         account_type_source:
           type: string
           enum:
@@ -50235,13 +51085,13 @@ components:
         missing_order_count:
           type: integer
           minimum: 0
-          description: Входящие платежи без заказа и без проекта; имя поля сохранено для совместимости
+          description: Входящие платежи без продажи или закупки и без проекта; имя поля сохранено для совместимости
         missing_cashflow_count:
           type: integer
           minimum: 0
         incoming_unlinked_amount:
           type: string
-          description: Сумма входящих платежей без заказа и без проекта; decimal string
+          description: Сумма входящих платежей без продажи или закупки и без проекта; decimal string
     FinanceReconciliation:
       type: object
       additionalProperties: false
@@ -55749,7 +56599,7 @@ components:
         - supplier_order
     StockDocumentCreateTypeKey:
       type: string
-      description: 'Виды, которые создаются извне. Служебные снятие резерва и закрытие заказа в список не входят. Вид `stock_supplier_order` — прежнее имя заказа поставщику: запрос заводит заказ ядра `supplier_order` и отвечает его складским видом.'
+      description: 'Виды, которые создаются извне. Служебные снятие резерва и закрытие продажи или закупки в список не входят. Вид `stock_supplier_order` — прежнее имя закупки: запрос заводит продажу или закупку ядра `supplier_order` и отвечает его складским видом.'
       enum:
         - stock_receipt
         - stock_shipment
@@ -55868,7 +56718,7 @@ components:
           oneOf:
             - $ref: '#/components/schemas/UUID'
             - type: 'null'
-          description: Построчное происхождение, когда один заказ поставщику сводит несколько заявок
+          description: Построчное происхождение, когда одна закупка сводит несколько заявок
         batch_code:
           type: string
         produced_at:
@@ -55908,7 +56758,7 @@ components:
       additionalProperties: false
       required:
         - version
-      description: Содержимое складского документа. Разбор строгий — незнакомое поле отклоняется. У документа-факта, заявки, заказа и резерва `items` обязателен и не длиннее 1000 строк.
+      description: Содержимое складского документа. Разбор строгий — незнакомое поле отклоняется. У документа-факта, заявки, продажи или закупки и резерва `items` обязателен и не длиннее 1000 строк.
       properties:
         version:
           type: integer
@@ -57220,7 +58070,7 @@ components:
         - packaging
         - consumption
         - sale
-      description: 'Где единицу предлагают первой: purchase — заказ поставщику, receipt — поступление, consumption — комплектация и списание, sale — отгрузка, packaging — тара без своего места. Выбор в документах не ограничивает'
+      description: 'Где единицу предлагают первой: purchase — закупка, receipt — поступление, consumption — комплектация и списание, sale — отгрузка, packaging — тара без своего места. Выбор в документах не ограничивает'
     StockProductUOM:
       type: object
       additionalProperties: false
@@ -58711,7 +59561,7 @@ components:
           type:
             - string
             - 'null'
-          description: Decimal string кратности заказа; null — кратность не задана
+          description: Decimal string кратности продажи или закупки; null — кратность не задана
         lead_time_days:
           type: integer
           minimum: 0
@@ -59982,7 +60832,7 @@ components:
           format: int64
         buyer_price:
           type: string
-          description: Последняя цена покупателя из заказов или продаж
+          description: Последняя цена покупателя из продаж или закупок или продаж
         stock:
           type: integer
           format: int64
@@ -60921,7 +61771,7 @@ components:
         orders_qty:
           type: integer
           format: int64
-          description: Из «Джема», а без него из заказов
+          description: Из «Джема», а без него из продаж или закупок
         orders_sum:
           type: integer
         avg_check:
@@ -61621,13 +62471,13 @@ components:
           format: date
         orders_sum:
           type: string
-          description: Сумма заказов кроме отменённых; decimal строкой
+          description: Сумма продаж или закупок кроме отменённых; decimal строкой
         orders_qty:
           type: integer
           format: int64
         sales_sum:
           type: string
-          description: Сумма доставленных заказов; decimal строкой
+          description: Сумма доставленных продаж или закупок; decimal строкой
         sales_qty:
           type: integer
           format: int64
@@ -61707,7 +62557,7 @@ components:
         day:
           type: string
           format: date
-          description: Последний день периода; без параметров — последний день с заказами
+          description: Последний день периода; без параметров — последний день с продажами или закупками
         from:
           type: string
           format: date
@@ -62298,7 +63148,7 @@ components:
           type:
             - string
             - 'null'
-          description: Заказ, который оплачивают наличные (приход — заказ покупателя, расход — заказ поставщику того же контрагента). Пустая строка снимает заказ; не присланное поле остаётся как было
+          description: Продажа или закупка, который оплачивают наличные (приход — продажа, расход — закупка того же контрагента). Пустая строка снимает продажу или закупку; не присланное поле остаётся как было
     FinanceExpenseReportRow:
       type: object
       additionalProperties: true
@@ -62923,7 +63773,7 @@ components:
     DocflowAppSalesOrderCounterparty:
       type: object
       additionalProperties: false
-      description: Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в заказе как реквизиты плательщика
+      description: Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в продаже или закупке как реквизиты плательщика
       properties:
         name:
           type: string
@@ -62942,7 +63792,7 @@ components:
         - provider
         - external_id
         - amount
-      description: Сообщение эквайринга о заказе. Идемпотентно по паре provider + external_id
+      description: Сообщение эквайринга о продаже или закупке. Идемпотентно по паре provider + external_id
       properties:
         provider:
           type: string
@@ -62997,7 +63847,7 @@ components:
           type: string
         vat_rate:
           type: string
-          description: 'Ставка строки: 22%, 10%, без НДС; пусто — учётная политика юрлица на дату заказа'
+          description: 'Ставка строки: 22%, 10%, без НДС; пусто — учётная политика юрлица на дату продажи или закупки'
     DocflowAppSalesOrderInput:
       type: object
       additionalProperties: false
@@ -63022,7 +63872,7 @@ components:
         external_id:
           type: string
           minLength: 1
-          description: Номер заказа у магазина — ключ идемпотентности загрузки
+          description: Номер продажи или закупки у магазина — ключ идемпотентности загрузки
         number:
           type: string
           description: Пусто — кабинет выдаст следующий номер
@@ -63055,7 +63905,7 @@ components:
             - self_service
             - one_off_sale
             - contract_sale
-          description: Путь сделки; заказ с оплатой на сайте — self_service
+          description: Путь сделки; продажа или закупка с оплатой на сайте — self_service
         payment:
           $ref: '#/components/schemas/DocflowAppSalesOrderPayment'
         source:
@@ -63084,7 +63934,7 @@ components:
     DocflowSalesOrderBuyer:
       type: object
       additionalProperties: false
-      description: Как покупатель представился в заказе
+      description: Как покупатель представился в продаже или закупке
       properties:
         name:
           type: string
@@ -63308,7 +64158,7 @@ components:
           type: string
         paid_amount:
           type: string
-          description: Сколько денег пришло на счёт по заказу
+          description: Сколько денег пришло на счёт по продаже или закупке
         shipped_amount:
           type: string
         invoiced_amount:
@@ -63366,7 +64216,7 @@ components:
             - rejected
         reason:
           type: string
-          description: Машинный код отказа, например docflow.sales_order.contact_unknown
+          description: Машинный код отказа, например docflow.sale.contact_unknown
         detail:
           type: string
           description: Причина отказа словами
@@ -64513,15 +65363,15 @@ components:
     DocflowFlowPaymentRuleOrders:
       type: object
       additionalProperties: false
-      description: '«Заводить заказ на каждый период» — только у договора (kind=contract). Зарегистрированный договор сам заводит на каждую наступившую стадию правила подтверждённый заказ ядра (source_kind=contract, external_id «<id договора>/<период>»): сразу после регистрации и фоновым проходом раз в час. Один договор и один период — один заказ навсегда: отменённый не воскресает, период не позже последнего заказа договора не заводится. Будущие периоды не заводятся; исполнение и бумаги периода — вручную.'
+      description: '«Заводить продажу или закупку на каждый период» — только у договора (kind=contract). Зарегистрированный договор сам заводит на каждую наступившую стадию правила подтверждённый продажу или закупку ядра (source_kind=contract, external_id «<id договора>/<период>»): сразу после регистрации и фоновым проходом раз в час. Один договор и один период — один продажа или закупка навсегда: отменённый не воскресает, период не позже последнего продажи или закупки договора не заводится. Будущие периоды не заводятся; исполнение и бумаги периода — вручную.'
       properties:
         from:
           type: string
           format: date
-          description: 'Первый период: стадии раньше этой даты заказов не получают. Пусто — с начала правила, прошедшие периоды догоняются'
+          description: 'Первый период: стадии раньше этой даты продаж или закупок не получают. Пусто — с начала правила, прошедшие периоды догоняются'
         product_id:
           $ref: '#/components/schemas/UUID'
-          description: Услуга строки заказа — активная номенклатура вида service; пусто — строка без номенклатуры, названная предметом договора
+          description: Услуга строки продажи или закупки — активная номенклатура вида service; пусто — строка без номенклатуры, названная предметом договора
         product_name:
           type: string
           readOnly: true
@@ -64646,7 +65496,7 @@ components:
         order_funnel_id:
           type: string
           format: uuid
-          description: 'Воронка заказов договора: заказы по договору идут в неё (пометка кабинета, не текст бумаги)'
+          description: 'Воронка продаж или закупок договора: продажи или закупки по договору идут в неё (пометка кабинета, не текст бумаги)'
     DocflowFlowContent:
       type: object
       additionalProperties: false
@@ -65178,7 +66028,7 @@ components:
         date:
           type: string
           format: date
-          description: Дата акта; пусто — дата заказа
+          description: Дата акта; пусто — дата продажи или закупки
         number:
           type: string
           description: Пусто — следующий номер счётчика актов
@@ -65186,7 +66036,7 @@ components:
           type: string
         amount:
           type: string
-          description: Пусто — все услуги заказа; меньше — частичный акт суммой
+          description: Пусто — все услуги продажи или закупки; меньше — частичный акт суммой
     DocflowOrderUPDInput:
       type: object
       additionalProperties: false
@@ -65194,10 +66044,10 @@ components:
         date:
           type: string
           format: date
-          description: Дата УПД; пусто — дата заказа
+          description: Дата УПД; пусто — дата продажи или закупки
         amount:
           type: string
-          description: Пусто — все услуги заказа; меньше — частичный УПД суммой
+          description: Пусто — все услуги продажи или закупки; меньше — частичный УПД суммой
         stage_id:
           $ref: '#/components/schemas/UUID'
         function:
@@ -65226,11 +66076,11 @@ components:
           description: Собрать назначение платежа умолчанием
         amount:
           type: string
-          description: Пусто — на весь заказ; меньше — частичный счёт
+          description: Пусто — на весь продажу или закупку; меньше — частичный счёт
         date:
           type: string
           format: date
-          description: Дата счёта; пусто — дата заказа
+          description: Дата счёта; пусто — дата продажи или закупки
         number:
           type: string
           description: Пусто — следующий номер счётчика счетов

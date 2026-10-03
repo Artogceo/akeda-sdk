@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4c813a449f36690b23ee6e419f00511523ebec91408e1403e21df50df2bd57f2).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 43550fd9806a058da1a01d6a55003141c57f7b4ac8888b60f361ef7432ee9ac4).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1145,7 +1145,7 @@ __all__ = [
     "TransferUploadRequest",
     "UUID",
     "WorkflowStatusUpdate",
-    "AppDocflowRecordSalesOrderPaymentRequest",
+    "AppDocflowRecordSalePaymentRequest",
     "AssistantListDigestsResponse",
     "AssistantReplaceDigestRequest",
     "AutomationRulesResponse",
@@ -3909,7 +3909,7 @@ class CoreBusinessPolicy(_CoreBusinessPolicyRequired, total=False):
     accrual_from: str
     #: Срок авансового отчёта, дней (ERP-1176); пусто — умолчание 30
     accountable_days: List["CorePolicyAccountableDaysVersion"]
-    #: Статьи выручки исполнений заказа по виду строки (этап 4 ERP-1427)
+    #: Статьи выручки исполнений продажи или закупки по виду строки (этап 4 ERP-1427)
     revenue_items: List["CoreOrderRevenueItemRule"]
 
 class CoreChange(TypedDict):
@@ -4631,7 +4631,7 @@ class _CoreOrderRequired(TypedDict):
     title: str
     currency: str
     prices_include_vat: bool
-    #: Скидка на заказ целиком, как её ввели; в суммах строк уже учтена
+    #: Скидка на продажу или закупку целиком, как её ввели; в суммах строк уже учтена
     discount: str
     scenario: str
     source_kind: "CoreOrderSourceKind"
@@ -4643,26 +4643,26 @@ class _CoreOrderRequired(TypedDict):
     updated_at: str
 
 class CoreOrder(_CoreOrderRequired, total=False):
-    """Заказ — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе."""
+    """Продажа или закупка — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе."""
 
     company_id: "UUID"
     business_name: str
     company_name: str
     contact_name: str
     contract_id: "UUID"
-    #: Номер договора заказа — для экрана
+    #: Номер договора продажи или закупки — для экрана
     contract_number: str
-    #: Дата договора заказа — для экрана
+    #: Дата договора продажи или закупки — для экрана
     contract_date: str
     progress: "CoreOrderProgress"
     project_id: "UUID"
-    #: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    #: Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
     department_id: Dict[str, Any]
-    #: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    #: ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
     cfo_id: Dict[str, Any]
-    #: Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья
+    #: Статья исполнений продажи или закупки (выручка у продажи, расход у закупки); пусто — правило учётной политики по виду строки, иначе системная статья
     pnl_item_id: Dict[str, Any]
-    #: Бизнес заказа прошёл отсечку этапа 4: исполнение закрывает вклад регистра «Заказы» и признаёт выручку; «Сделать акт» в документообороте выпускает бумагу и проводит исполнение одной командой
+    #: Бизнес продажи или закупки прошёл отсечку этапа 4: исполнение закрывает вклад регистра «Продажи и закупки» и признаёт выручку; «Сделать акт» в документообороте выпускает бумагу и проводит исполнение одной командой
     execution_cutover: bool
     warehouse_id: "UUID"
     basis_id: "UUID"
@@ -4680,9 +4680,9 @@ class CoreOrder(_CoreOrderRequired, total=False):
     closed_reason: str
     close_document_id: "UUID"
     migrated_from: str
-    #: Этапы работ заказа (этап 4 ERP-1427)
+    #: Этапы работ продажи или закупки (этап 4 ERP-1427)
     stages: List["CoreOrderStage"]
-    #: График оплат заказа; id строки — разрез stage регистра расчётов
+    #: График оплат продажи или закупки; id строки — разрез stage регистра расчётов
     payment_terms: List["CoreOrderPaymentTerm"]
     created_by: int
     posted_at: str
@@ -4698,13 +4698,13 @@ class _CoreOrderAllowedActionRequired(TypedDict):
     allowed: bool
 
 class CoreOrderAllowedAction(_CoreOrderAllowedActionRequired, total=False):
-    #: Код отказа: core.order.has_executions, core.order.has_dependents (оплаты, авансы, черновики исполнений), core.order.closed, core.order.forbidden
+    #: Код отказа: core.trade.has_executions, core.trade.has_dependents (оплаты, авансы, черновики исполнений), core.trade.closed, core.trade.forbidden
     reason_code: str
     #: Причина словами на языке запроса
     reason: str
 
 class CoreOrderBuyer(TypedDict, total=False):
-    """Покупатель-физлицо: розничный заказ стоит на общей карточке покупателя, и различает покупателей только это."""
+    """Покупатель-физлицо: розничный продажа или закупка стоит на общей карточке покупателя, и различает покупателей только это."""
 
     name: str
     phone: str
@@ -4729,7 +4729,7 @@ class CoreOrderCounterparty(TypedDict, total=False):
 class _CoreOrderEventRequired(TypedDict):
     id: "UUID"
     order_id: "UUID"
-    #: created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, executing, executed, execution_reverted (состояние исполнения сменилось само после акта, отгрузки, приёмки, их отмены или возврата: payload state, previous_state, baseline — true у строки досева заказа, исполненного до появления этих событий, без вебхука; автор — система; execution_reverted — заказ снова confirmed), step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)
+    #: created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, executing, executed, execution_reverted (состояние исполнения сменилось само после акта, отгрузки, приёмки, их отмены или возврата: payload state, previous_state, baseline — true у строки досева продажи или закупки, исполненного до появления этих событий, без вебхука; автор — система; execution_reverted — продажа или закупка снова confirmed), step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed)
     kind: str
     created_at: str
 
@@ -4757,7 +4757,7 @@ class CoreOrderFunnel(TypedDict):
     updated_at: str
 
 class CoreOrderFunnelChoice(TypedDict):
-    #: null — заказ без воронки
+    #: null — продажа или закупка без воронки
     funnel_id: Optional["UUID"]
 
 class _CoreOrderFunnelInputRequired(TypedDict):
@@ -4792,10 +4792,10 @@ class _CoreOrderFunnelStepRequired(TypedDict):
 class CoreOrderFunnelStep(_CoreOrderFunnelStepRequired, total=False):
     #: Пусто — вид и номер шага
     key: str
-    #: Участвует ли шаг в воронке: ненужный шаг заказу не строится
+    #: Участвует ли шаг в воронке: ненужный шаг продаже или закупке не строится
     required: bool
     due: "CoreOrderFunnelStepDue"
-    #: Что закрывает шаг: manual — человек отметит (пусто так же); state:<состояние> — заказ дошёл до состояния; paid:<N> — оплачено не меньше N % суммы заказа (финансы); paper:act_signed, paper:upd_signed — контрагент подписал акт или УПД в ЭДО (документооборот)
+    #: Что закрывает шаг: manual — человек отметит (пусто так же); state:<состояние> — продажа или закупка дошёл до состояния; paid:<N> — оплачено не меньше N % суммы продажи или закупки (финансы); paper:act_signed, paper:upd_signed — контрагент подписал акт или УПД в ЭДО (документооборот)
     done_when: str
     #: За сколько дней до срока прийти событию «срок подходит»
     remind_days: int
@@ -4848,7 +4848,7 @@ class _CoreOrderHistoryDocumentRequired(TypedDict):
     created_at: str
 
 class CoreOrderHistoryDocument(_CoreOrderHistoryDocumentRequired, total=False):
-    """Документ модуля, выросший из заказа: акт, отгрузка, счёт."""
+    """Документ модуля, выросший из продажи или закупки: акт, отгрузка, счёт."""
 
     kind_name: str
     due_date: str
@@ -4878,7 +4878,7 @@ class _CoreOrderImportInputRequired(TypedDict):
     date: str
     currency: str
     lines: List["CoreOrderLineInput"]
-    #: Номер заказа у источника; по стороне и нему узнаётся повтор
+    #: Номер продажи или закупки у источника; по стороне и нему узнаётся повтор
     external_id: str
 
 class CoreOrderImportInput(_CoreOrderImportInputRequired, total=False):
@@ -4891,9 +4891,9 @@ class CoreOrderImportInput(_CoreOrderImportInputRequired, total=False):
     counterparty: "CoreOrderCounterparty"
     contract_id: "UUID"
     project_id: "UUID"
-    #: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    #: Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
     department_id: Dict[str, Any]
-    #: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    #: ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
     cfo_id: Dict[str, Any]
     warehouse_id: "UUID"
     #: Основание — например, заявка на закупку
@@ -4901,7 +4901,7 @@ class CoreOrderImportInput(_CoreOrderImportInputRequired, total=False):
     title: str
     #: Цены с НДС («в том числе»); по умолчанию true
     prices_include_vat: bool
-    #: Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+    #: Скидка на продажу или закупку целиком; раскладывается по строкам пропорционально их суммам до НДС
     discount: str
     delivery_date: str
     due_date: str
@@ -4911,11 +4911,11 @@ class CoreOrderImportInput(_CoreOrderImportInputRequired, total=False):
     buyer: "CoreOrderBuyer"
     responsibles: List["CoreOrderResponsible"]
     cabinet_status_id: "UUID"
-    #: Подтвердить заказ, если он ещё черновик
+    #: Подтвердить продажу или закупку, если он ещё черновик
     confirm: bool
     #: Имя источника для журнала загрузок: сайт, CRM
     source_system: str
-    #: Необязательная действующая воронка этой стороны в данном кабинете. Выбирается атомарно с созданием заказа; повтор с другим funnel_id возвращает 409, неверная или архивная воронка — 422. Без поля действует воронка договора, источника или умолчание.
+    #: Необязательная действующая воронка этой стороны в данном кабинете. Выбирается атомарно с созданием продажи или закупки; повтор с другим funnel_id возвращает 409, неверная или архивная воронка — 422. Без поля действует воронка договора, источника или умолчание.
     funnel_id: "UUID"
 
 class CoreOrderImportList(TypedDict):
@@ -4928,7 +4928,7 @@ class _CoreOrderInputRequired(TypedDict):
     lines: List["CoreOrderLineInput"]
 
 class CoreOrderInput(_CoreOrderInputRequired, total=False):
-    """Заказ из запроса: поля одни для формы, загрузки и фасадов модулей."""
+    """Продажа или закупка из запроса: поля одни для формы, загрузки и фасадов модулей."""
 
     #: Свой номер; пусто — номер выдаёт счётчик вида
     number: str
@@ -4939,11 +4939,11 @@ class CoreOrderInput(_CoreOrderInputRequired, total=False):
     counterparty: "CoreOrderCounterparty"
     contract_id: "UUID"
     project_id: "UUID"
-    #: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    #: Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
     department_id: Dict[str, Any]
-    #: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    #: ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
     cfo_id: Dict[str, Any]
-    #: Статья исполнений заказа; не названа при правке — сохраняется прежняя
+    #: Статья исполнений продажи или закупки; не названа при правке — сохраняется прежняя
     pnl_item_id: Dict[str, Any]
     warehouse_id: "UUID"
     #: Основание — например, заявка на закупку
@@ -4951,7 +4951,7 @@ class CoreOrderInput(_CoreOrderInputRequired, total=False):
     title: str
     #: Цены с НДС («в том числе»); по умолчанию true
     prices_include_vat: bool
-    #: Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+    #: Скидка на продажу или закупку целиком; раскладывается по строкам пропорционально их суммам до НДС
     discount: str
     delivery_date: str
     due_date: str
@@ -4965,7 +4965,7 @@ class CoreOrderInput(_CoreOrderInputRequired, total=False):
     #: График оплат целиком, правка по id; не назван — не меняется
     payment_terms: List["CoreOrderPaymentTerm"]
     cabinet_status_id: "UUID"
-    #: Сразу подтвердить созданный заказ
+    #: Сразу подтвердить созданный продажу или закупку
     confirm: bool
 
 class _CoreOrderLineRequired(TypedDict):
@@ -4979,13 +4979,13 @@ class _CoreOrderLineRequired(TypedDict):
     price: str
     #: Скидка самой строки
     discount: str
-    #: Доля скидки заказа на этой строке; суммы строки посчитаны после обеих скидок
+    #: Доля скидки продажи или закупки на этой строке; суммы строки посчитаны после обеих скидок
     discount_amount: str
-    #: Сумма строкой в разрядности валюты заказа
+    #: Сумма строкой в разрядности валюты продажи или закупки
     amount_net: str
-    #: Сумма строкой в разрядности валюты заказа
+    #: Сумма строкой в разрядности валюты продажи или закупки
     vat_amount: str
-    #: Сумма строкой в разрядности валюты заказа
+    #: Сумма строкой в разрядности валюты продажи или закупки
     amount_gross: str
 
 class CoreOrderLine(_CoreOrderLineRequired, total=False):
@@ -5019,7 +5019,7 @@ class CoreOrderLineInput(_CoreOrderLineInputRequired, total=False):
     unit_id: "UUID"
     #: Десятичное число строкой
     discount: str
-    #: Ставка НДС строки; пусто — по учётной политике юрлица на дату заказа
+    #: Ставка НДС строки; пусто — по учётной политике юрлица на дату продажи или закупки
     vat_rate: str
     #: Десятичное число строкой
     base_qty: str
@@ -5029,7 +5029,7 @@ class CoreOrderLineInput(_CoreOrderLineInputRequired, total=False):
 CoreOrderLineKind = Literal['goods', 'service', 'material', 'semi_product']
 
 class CoreOrderNowAct(TypedDict, total=False):
-    """Реквизиты акта; пусто — дата заказа, номер по счётчику, название по заказу"""
+    """Реквизиты акта; пусто — дата продажи или закупки, номер по счётчику, название по продаже или закупке"""
 
     date: str
     number: str
@@ -5053,11 +5053,11 @@ class _CoreOrderNowInputRequired(TypedDict):
     date: str
     currency: str
     lines: List["CoreOrderLineInput"]
-    #: Номер заказа у источника; по стороне и нему узнаётся повтор
+    #: Номер продажи или закупки у источника; по стороне и нему узнаётся повтор
     external_id: str
 
 class CoreOrderNowInput(_CoreOrderNowInputRequired, total=False):
-    """Заказ целиком, его внешний номер и акт. Поля заказа — те же, что у загрузки; подтверждение подразумевается."""
+    """Продажа или закупка целиком, его внешний номер и акт. Поля продажи или закупки — те же, что у загрузки; подтверждение подразумевается."""
 
     #: Свой номер; пусто — номер выдаёт счётчик вида
     number: str
@@ -5068,9 +5068,9 @@ class CoreOrderNowInput(_CoreOrderNowInputRequired, total=False):
     counterparty: "CoreOrderCounterparty"
     contract_id: "UUID"
     project_id: "UUID"
-    #: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    #: Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
     department_id: Dict[str, Any]
-    #: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    #: ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
     cfo_id: Dict[str, Any]
     #: Статья выручки (у закупки — расхода) исполнения; пусто — по учётной политике бизнеса
     pnl_item_id: Dict[str, Any]
@@ -5097,33 +5097,33 @@ class CoreOrderNowInput(_CoreOrderNowInputRequired, total=False):
 class CoreOrderNowResult(TypedDict):
     order: "CoreOrder"
     execution: "CoreOrderNowExecution"
-    #: true — заказ уже был исполнен этой командой; ничего не записано
+    #: true — продажа или закупка уже был исполнен этой командой; ничего не записано
     replayed: bool
 
 class CoreOrderObligation(TypedDict):
-    #: Действующий приход подтверждения в регистре «Заказы»
+    #: Действующий приход подтверждения в регистре «Продажи и закупки»
     ordered: str
-    #: Остаток регистра «Заказы» по заказу. До этапа 4 его уменьшает только закрытие, поэтому это не «осталось исполнить»
+    #: Остаток регистра «Продажи и закупки» по продаже или закупке. До этапа 4 его уменьшает только закрытие, поэтому это не «осталось исполнить»
     remaining: str
-    #: Исполнено: сумма проведённых исполнений заказа (акт, продажа, закупка, приёмка) за вычетом возвратов, в валюте заказа. То же число, что в журнале продаж и закупок финансов (core_order_executed)
+    #: Исполнено: сумма проведённых исполнений продажи или закупки (акт, продажа, закупка, приёмка) за вычетом возвратов, в валюте продажи или закупки. То же число, что в журнале продаж и закупок финансов (core_order_executed)
     executed: str
     #: Осталось исполнить: заказано минус исполнено, не меньше нуля
     remaining_to_execute: str
 
 class _CoreOrderPageRequired(TypedDict):
     items: List["CoreOrder"]
-    #: Сколько заказов под отбором всего
+    #: Сколько продаж или закупок под отбором всего
     total: int
     limit: int
     offset: int
     has_more: bool
 
 class CoreOrderPage(_CoreOrderPageRequired, total=False):
-    #: Только с with=counts: число заказов по состояниям при том же отборе без отбора состояний
+    #: Только с with=counts: число продаж или закупок по состояниям при том же отборе без отбора состояний
     state_counts: Dict[str, int]
 
 class CoreOrderPaymentTerm(TypedDict, total=False):
-    """Строка графика оплат заказа — когда и сколько платят (ERP-1427, этап 4)."""
+    """Строка графика оплат продажи или закупки — когда и сколько платят (ERP-1427, этап 4)."""
 
     id: "UUID"
     position: int
@@ -5139,7 +5139,7 @@ class _CoreOrderProgressRequired(TypedDict):
     executed: str
 
 class CoreOrderProgress(_CoreOrderProgressRequired, total=False):
-    """Ход заказа для строки списка (with=progress). executed — исполнено в валюте заказа; paid — оплачено, нет поля — финансы выключены; papers — счёт, акт и УПД: done — есть, wait — ждём подписи, нет ключа — нет; нет поля — документооборот выключен."""
+    """Ход продажи или закупки для строки списка (with=progress). executed — исполнено в валюте продажи или закупки; paid — оплачено, нет поля — финансы выключены; papers — счёт, акт и УПД: done — есть, wait — ждём подписи, нет ключа — нет; нет поля — документооборот выключен."""
 
     paid: str
     papers: Dict[str, Literal['done', 'wait']]
@@ -5177,9 +5177,9 @@ class CoreOrderRevision(_CoreOrderRevisionRequired, total=False):
     counterparty: "CoreOrderCounterparty"
     contract_id: "UUID"
     project_id: "UUID"
-    #: Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    #: Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4)
     department_id: Dict[str, Any]
-    #: ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
+    #: ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4)
     cfo_id: Dict[str, Any]
     warehouse_id: "UUID"
     #: Основание — например, заявка на закупку
@@ -5187,7 +5187,7 @@ class CoreOrderRevision(_CoreOrderRevisionRequired, total=False):
     title: str
     #: Цены с НДС («в том числе»); по умолчанию true
     prices_include_vat: bool
-    #: Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС
+    #: Скидка на продажу или закупку целиком; раскладывается по строкам пропорционально их суммам до НДС
     discount: str
     delivery_date: str
     due_date: str
@@ -5209,15 +5209,15 @@ CoreOrderSide = Literal['sale', 'purchase']
 CoreOrderSourceKind = Literal['manual', 'app', 'import', 'marketplace', 'crm', 'migration', 'contract']
 
 class CoreOrderStage(TypedDict, total=False):
-    """Этап работ заказа — что и когда сдаём (ERP-1427, этап 4)."""
+    """Этап работ продажи или закупки — что и когда сдаём (ERP-1427, этап 4)."""
 
     id: "UUID"
     position: int
     title: str
     planned_date: str
-    #: Сумма этапа в валюте заказа с налогом
+    #: Сумма этапа в валюте продажи или закупки с налогом
     amount: str
-    #: Строки заказа, которые закрывает этап; пусто — строки-услуги по порядку
+    #: Строки продажи или закупки, которые закрывает этап; пусто — строки-услуги по порядку
     line_ids: List["UUID"]
 
 CoreOrderState = Literal['draft', 'confirmed', 'executing', 'executed', 'closed', 'cancelled']
@@ -5289,7 +5289,7 @@ class CoreOrderTemplate(_CoreOrderTemplateRequired, total=False):
     last_error_text: str
 
 class CoreOrderTemplateActions(TypedDict, total=False):
-    #: Провести заказ сразу; false — черновик.
+    #: Провести продажу или закупку сразу; false — черновик.
     confirm: bool
     invoice: Literal['', 'issue', 'draft']
     invoice_days: int
@@ -5325,17 +5325,17 @@ class CoreOrderTemplateStateInput(TypedDict):
     expected_version: int
 
 class CoreOrderTotals(TypedDict):
-    """Итоги — сумма строк: скидка заказа уже разложена по строкам и второй раз не вычитается."""
+    """Итоги — сумма строк: скидка продажи или закупки уже разложена по строкам и второй раз не вычитается."""
 
-    #: Сумма строкой в разрядности валюты заказа
+    #: Сумма строкой в разрядности валюты продажи или закупки
     net: str
-    #: Сумма строкой в разрядности валюты заказа
+    #: Сумма строкой в разрядности валюты продажи или закупки
     vat: str
-    #: Сумма строкой в разрядности валюты заказа
+    #: Сумма строкой в разрядности валюты продажи или закупки
     gross: str
-    #: Сумма строкой в разрядности валюты заказа
+    #: Сумма строкой в разрядности валюты продажи или закупки
     goods_gross: str
-    #: Сумма строкой в разрядности валюты заказа
+    #: Сумма строкой в разрядности валюты продажи или закупки
     services_gross: str
     currency: str
 
@@ -6702,7 +6702,7 @@ class DiscussionCommentUpdate(TypedDict, total=False):
 DiscussionOwnerType = Literal['task', 'section', 'project', 'document', 'milestone', 'customer_need', 'pull_request']
 
 class DocflowAppSalesOrderCounterparty(TypedDict, total=False):
-    """Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в заказе как реквизиты плательщика"""
+    """Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в продаже или закупке как реквизиты плательщика"""
 
     name: str
     inn: str
@@ -6712,7 +6712,7 @@ class DocflowAppSalesOrderCounterparty(TypedDict, total=False):
 
 class _DocflowAppSalesOrderInputRequired(TypedDict):
     company_id: "UUID"
-    #: Номер заказа у магазина — ключ идемпотентности загрузки
+    #: Номер продажи или закупки у магазина — ключ идемпотентности загрузки
     external_id: str
     #: Код валюты сделки, например RUB
     currency: str
@@ -6735,7 +6735,7 @@ class DocflowAppSalesOrderInput(_DocflowAppSalesOrderInputRequired, total=False)
     discount: str
     #: Цены включают налог; пусто — умолчание кабинета
     prices_include_vat: bool
-    #: Путь сделки; заказ с оплатой на сайте — self_service
+    #: Путь сделки; продажа или закупка с оплатой на сайте — self_service
     scenario: Literal['self_service', 'one_off_sale', 'contract_sale']
     payment: "DocflowAppSalesOrderPayment"
     #: Не используется контуром приложения: источник журнала — пространство приложения из токена
@@ -6756,7 +6756,7 @@ class DocflowAppSalesOrderItem(_DocflowAppSalesOrderItemRequired, total=False):
     kind: Literal['goods', 'service', 'material', 'semi_product']
     unit: str
     discount: str
-    #: Ставка строки: 22%, 10%, без НДС; пусто — учётная политика юрлица на дату заказа
+    #: Ставка строки: 22%, 10%, без НДС; пусто — учётная политика юрлица на дату продажи или закупки
     vat_rate: str
 
 class _DocflowAppSalesOrderPaymentRequired(TypedDict):
@@ -6768,7 +6768,7 @@ class _DocflowAppSalesOrderPaymentRequired(TypedDict):
     amount: str
 
 class DocflowAppSalesOrderPayment(_DocflowAppSalesOrderPaymentRequired, total=False):
-    """Сообщение эквайринга о заказе. Идемпотентно по паре provider + external_id"""
+    """Сообщение эквайринга о продаже или закупке. Идемпотентно по паре provider + external_id"""
 
     #: Пусто — списание (payment)
     kind: Literal['payment', 'refund']
@@ -7379,7 +7379,7 @@ class DocflowFlowContractTerms(_DocflowFlowContractTermsRequired, total=False):
     currency: str
     payment_terms: str
     renewal_terms: str
-    #: Воронка заказов договора: заказы по договору идут в неё (пометка кабинета, не текст бумаги)
+    #: Воронка продаж или закупок договора: продажи или закупки по договору идут в неё (пометка кабинета, не текст бумаги)
     order_funnel_id: str
 
 class DocflowFlowCreateInput(TypedDict):
@@ -7745,12 +7745,12 @@ class DocflowMessagePrintForm(TypedDict):
     fetched_at: str
 
 class DocflowOrderActInput(TypedDict, total=False):
-    #: Дата акта; пусто — дата заказа
+    #: Дата акта; пусто — дата продажи или закупки
     date: str
     #: Пусто — следующий номер счётчика актов
     number: str
     title: str
-    #: Пусто — все услуги заказа; меньше — частичный акт суммой
+    #: Пусто — все услуги продажи или закупки; меньше — частичный акт суммой
     amount: str
 
 class _DocflowOrderDocumentSetRequired(TypedDict):
@@ -7770,7 +7770,7 @@ class DocflowOrderImport(_DocflowOrderImportRequired, total=False):
     external_id: str
     #: Пространство приложения, которое загружало
     source: str
-    #: Машинный код отказа, например docflow.sales_order.contact_unknown
+    #: Машинный код отказа, например docflow.sale.contact_unknown
     reason: str
     #: Причина отказа словами
     detail: str
@@ -7790,9 +7790,9 @@ class DocflowOrderInvoiceInput(_DocflowOrderInvoiceInputRequired, total=False):
     payment_purpose: str
     #: Собрать назначение платежа умолчанием
     payment_purpose_auto: bool
-    #: Пусто — на весь заказ; меньше — частичный счёт
+    #: Пусто — на весь продажу или закупку; меньше — частичный счёт
     amount: str
-    #: Дата счёта; пусто — дата заказа
+    #: Дата счёта; пусто — дата продажи или закупки
     date: str
     #: Пусто — следующий номер счётчика счетов
     number: str
@@ -7832,9 +7832,9 @@ class DocflowOrderSetOrder(_DocflowOrderSetOrderRequired, total=False):
     self: bool
 
 class DocflowOrderUPDInput(TypedDict, total=False):
-    #: Дата УПД; пусто — дата заказа
+    #: Дата УПД; пусто — дата продажи или закупки
     date: str
-    #: Пусто — все услуги заказа; меньше — частичный УПД суммой
+    #: Пусто — все услуги продажи или закупки; меньше — частичный УПД суммой
     amount: str
     stage_id: "UUID"
     #: Пусто — СЧФДОП
@@ -7883,7 +7883,7 @@ class _DocflowSalesOrderRequired(TypedDict):
     amount: str
     goods_amount: str
     service_amount: str
-    #: Сколько денег пришло на счёт по заказу
+    #: Сколько денег пришло на счёт по продаже или закупке
     paid_amount: str
     shipped_amount: str
     invoiced_amount: str
@@ -7917,7 +7917,7 @@ class DocflowSalesOrder(_DocflowSalesOrderRequired, total=False):
     contact_archived: bool
 
 class DocflowSalesOrderBuyer(TypedDict, total=False):
-    """Как покупатель представился в заказе"""
+    """Как покупатель представился в продаже или закупке"""
 
     name: str
     phone: str
@@ -8300,7 +8300,7 @@ class FinanceAccount(_FinanceAccountRequired, total=False):
     bank_timezone: Optional[str]
     #: Откуда пояс: `bic` — определён по БИК, `default` — определить не удалось, стоит умолчание (проверьте пояс), `manual` — задан человеком; подключение банка ручной пояс не трогает.
     bank_timezone_source: Optional[Literal['bic', 'default', 'manual', None]]
-    #: Вид счёта. `settlement` — расчётный (счёт книги 51), `deposit` — вклад (депозитный счёт, 55.03). Вклад — такие же деньги: он входит в итог денег, а размещение и возврат — внутренний перевод между своими счетами, не доход и не расход.
+    #: Вид счёта. `settlement` — расчётный (счёт книги 51), `deposit` — вклад. Деньги вклада учитываются статьёй «Депозиты и вклады»: отправка и возврат идут ею, а остаток депозитного счёта в итог денег не входит.
     account_type: Literal['settlement', 'deposit']
     #: Откуда вид: `number` — выведен из номера счёта (421…–422… и 423…, 426… — вклад), `bank` — назван банком, `manual` — выбран человеком. Ручной выбор номер и банк не перебивают.
     account_type_source: Literal['number', 'bank', 'manual']
@@ -8457,7 +8457,7 @@ class _FinanceAcquiringInTransitRequired(TypedDict):
     fee_known: bool
 
 class FinanceAcquiringInTransit(_FinanceAcquiringInTransitRequired, total=False):
-    #: Заказ покупателя
+    #: Продажа
     order_id: "UUID"
     #: Покупатель
     contact_id: "UUID"
@@ -8630,7 +8630,7 @@ class FinanceCashflowEntryCategorize(TypedDict, total=False):
     contact: str
     #: «За кого»: контрагент сотрудника или собственника, чей расчёт гасит выдача. Пусто — как контрагент; не присланное поле остаётся как было
     for_contact: Optional[str]
-    #: Заказ, который оплачивают наличные (приход — заказ покупателя, расход — заказ поставщику того же контрагента). Пустая строка снимает заказ; не присланное поле остаётся как было
+    #: Продажа или закупка, который оплачивают наличные (приход — продажа, расход — закупка того же контрагента). Пустая строка снимает продажу или закупку; не присланное поле остаётся как было
     order: Optional[str]
 
 FinanceCashflowEntryKind = Literal['bank', 'cash']
@@ -9042,7 +9042,7 @@ class _FinanceOperationAccrualResultRequired(TypedDict):
 
 class FinanceOperationAccrualResult(_FinanceOperationAccrualResultRequired, total=False):
     accrual_id: str
-    #: Акт по заказу: строки со ставкой человека, равной прежней общей ставке юрлица, а на дату акта общая ставка другая
+    #: Акт по продаже или закупке: строки со ставкой человека, равной прежней общей ставке юрлица, а на дату акта общая ставка другая
     vat_warnings: List["CoreOrderVATWarning"]
 
 class _FinanceOperationActionRequired(TypedDict):
@@ -9157,16 +9157,16 @@ class FinanceOperationVersion(_FinanceOperationVersionRequired, total=False):
 class _FinanceOrderActInputRequired(TypedDict):
     source: "FinanceOperationSource"
     date: str
-    #: Сумма акта с НДС в валюте заказа, decimal string
+    #: Сумма акта с НДС в валюте продажи или закупки, decimal string
     amount: str
 
 class FinanceOrderActInput(_FinanceOrderActInputRequired, total=False):
-    #: Срок оплаты; пусто — по строке графика заказа или условиям контрагента
+    #: Срок оплаты; пусто — по строке графика продажи или закупки или условиям контрагента
     due_date: str
     reason: str
-    #: Статья выручки (расхода); пусто — статья заказа, политика бизнеса или системная
+    #: Статья выручки (расхода); пусто — статья продажи или закупки, политика бизнеса или системная
     pnl_item_id: Dict[str, Any]
-    #: Этап работ заказа, который закрывает акт
+    #: Этап работ продажи или закупки, который закрывает акт
     stage_id: Dict[str, Any]
     vat_amount: str
     prices_include_vat: bool
@@ -9434,10 +9434,10 @@ class FinanceReconciliationSummary(TypedDict):
     total_count: int
     needs_attention_count: int
     unmatched_count: int
-    #: Входящие платежи без заказа и без проекта; имя поля сохранено для совместимости
+    #: Входящие платежи без продажи или закупки и без проекта; имя поля сохранено для совместимости
     missing_order_count: int
     missing_cashflow_count: int
-    #: Сумма входящих платежей без заказа и без проекта; decimal string
+    #: Сумма входящих платежей без продажи или закупки и без проекта; decimal string
     incoming_unlinked_amount: str
 
 class FinanceRegisterAccountCheck(TypedDict):
@@ -10961,7 +10961,7 @@ class MarketplaceWbCardFunnelDay(TypedDict):
     to_cart: Optional[int]
     cv_cart: Optional[float]
     cv_order: Optional[float]
-    #: Из «Джема», а без него из заказов
+    #: Из «Джема», а без него из продаж или закупок
     orders_qty: int
     orders_sum: int
     avg_check: Optional[int]
@@ -11271,7 +11271,7 @@ class MarketplaceWbProduct(TypedDict):
     #: Цена до скидки продавца
     old_price: str
     discount_percent: int
-    #: Последняя цена покупателя из заказов или продаж
+    #: Последняя цена покупателя из продаж или закупок или продаж
     buyer_price: str
     stock: int
     in_way_to_client: int
@@ -11353,10 +11353,10 @@ class MarketplaceYandexCostInput(_MarketplaceYandexCostInputRequired, total=Fals
 
 class MarketplaceYandexOrdersDay(TypedDict):
     date: str
-    #: Сумма заказов кроме отменённых; decimal строкой
+    #: Сумма продаж или закупок кроме отменённых; decimal строкой
     orders_sum: str
     orders_qty: int
-    #: Сумма доставленных заказов; decimal строкой
+    #: Сумма доставленных продаж или закупок; decimal строкой
     sales_sum: str
     sales_qty: int
 
@@ -12385,7 +12385,7 @@ class StockDocumentLine(_StockDocumentLineRequired, total=False):
     #: Доля налога документа в строке: пропорционально сумме строки, копеечный остаток — на самую крупную. Считает сервер и перезаписывает присланное; по её наличию судят о разбивке при перепроведении
     vat_amount: str
     basis_line_id: Optional["UUID"]
-    #: Построчное происхождение, когда один заказ поставщику сводит несколько заявок
+    #: Построчное происхождение, когда одна закупка сводит несколько заявок
     basis_document_id: Optional["UUID"]
     batch_code: str
     produced_at: str
@@ -12429,7 +12429,7 @@ class _StockDocumentPayloadRequired(TypedDict):
     version: int
 
 class StockDocumentPayload(_StockDocumentPayloadRequired, total=False):
-    """Содержимое складского документа. Разбор строгий — незнакомое поле отклоняется. У документа-факта, заявки, заказа и резерва `items` обязателен и не длиннее 1000 строк."""
+    """Содержимое складского документа. Разбор строгий — незнакомое поле отклоняется. У документа-факта, заявки, продажи или закупки и резерва `items` обязателен и не длиннее 1000 строк."""
 
     reason: str
     #: Причина списания из справочника stock.stock_writeoff_reasons. Есть только у списания. Текст reason при этом остаётся: ссылка даёт единое значение причины, текст несёт подробности. Не прислан — сервер сам пробует узнать текст в справочнике; прислан явно, в том числе null, — решение вызывающего не переигрывается; неизвестная ссылка отклоняется
@@ -12978,7 +12978,7 @@ class StockReorderRule(TypedDict):
     min_qty: str
     #: Decimal string целевого остатка; null — потолок не задан
     max_qty: Optional[str]
-    #: Decimal string кратности заказа; null — кратность не задана
+    #: Decimal string кратности продажи или закупки; null — кратность не задана
     order_multiple: Optional[str]
     lead_time_days: int
     preferred_supplier_id: Optional["UUID"]
@@ -13861,12 +13861,12 @@ class WorkflowStatusUpdate(TypedDict, total=False):
     is_default: bool
     is_final: bool
 
-class _AppDocflowRecordSalesOrderPaymentRequestRequired(TypedDict):
+class _AppDocflowRecordSalePaymentRequestRequired(TypedDict):
     provider: str
     external_id: str
     amount: str
 
-class AppDocflowRecordSalesOrderPaymentRequest(_AppDocflowRecordSalesOrderPaymentRequestRequired, total=False):
+class AppDocflowRecordSalePaymentRequest(_AppDocflowRecordSalePaymentRequestRequired, total=False):
     kind: Literal['payment', 'refund']
     currency: str
     paid_at: str

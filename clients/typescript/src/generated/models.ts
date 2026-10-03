@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 4c813a449f36690b23ee6e419f00511523ebec91408e1403e21df50df2bd57f2).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 43550fd9806a058da1a01d6a55003141c57f7b4ac8888b60f361ef7432ee9ac4).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2705,7 +2705,7 @@ export interface CoreBusinessPolicy {
   "vat_pending": Array<CorePolicyVATPendingVersion>;
   /** Срок авансового отчёта, дней (ERP-1176); пусто — умолчание 30 */
   "accountable_days"?: Array<CorePolicyAccountableDaysVersion>;
-  /** Статьи выручки исполнений заказа по виду строки (этап 4 ERP-1427) */
+  /** Статьи выручки исполнений продажи или закупки по виду строки (этап 4 ERP-1427) */
   "revenue_items"?: Array<CoreOrderRevenueItemRule>;
 }
 
@@ -3426,7 +3426,7 @@ export type CoreNumberReset = "year" | "never";
 
 export type CoreNumberSource = "sequence" | "sequence_or_given" | "external";
 
-/** Заказ — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе. */
+/** Продажа или закупка — документ ядра. В журнале строка без obligation и allowed_actions; карточка и ответы команд несут обе. */
 export interface CoreOrder {
   "id": UUID;
   "side": CoreOrderSide;
@@ -3442,26 +3442,26 @@ export interface CoreOrder {
   "company_name"?: string;
   "contact_name"?: string;
   "contract_id"?: UUID;
-  /** Номер договора заказа — для экрана */
+  /** Номер договора продажи или закупки — для экрана */
   "contract_number"?: string;
-  /** Дата договора заказа — для экрана */
+  /** Дата договора продажи или закупки — для экрана */
   "contract_date"?: string;
   "progress"?: CoreOrderProgress;
   "project_id"?: UUID;
-  /** Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  /** Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
   "department_id"?: { [key: string]: unknown };
-  /** ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  /** ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
   "cfo_id"?: { [key: string]: unknown };
-  /** Статья исполнений заказа (выручка у заказа покупателя, расход у заказа поставщику); пусто — правило учётной политики по виду строки, иначе системная статья */
+  /** Статья исполнений продажи или закупки (выручка у продажи, расход у закупки); пусто — правило учётной политики по виду строки, иначе системная статья */
   "pnl_item_id"?: { [key: string]: unknown };
-  /** Бизнес заказа прошёл отсечку этапа 4: исполнение закрывает вклад регистра «Заказы» и признаёт выручку; «Сделать акт» в документообороте выпускает бумагу и проводит исполнение одной командой */
+  /** Бизнес продажи или закупки прошёл отсечку этапа 4: исполнение закрывает вклад регистра «Продажи и закупки» и признаёт выручку; «Сделать акт» в документообороте выпускает бумагу и проводит исполнение одной командой */
   "execution_cutover"?: boolean;
   "warehouse_id"?: UUID;
   "basis_id"?: UUID;
   "title": string;
   "currency": string;
   "prices_include_vat": boolean;
-  /** Скидка на заказ целиком, как её ввели; в суммах строк уже учтена */
+  /** Скидка на продажу или закупку целиком, как её ввели; в суммах строк уже учтена */
   "discount": string;
   "delivery_date"?: string;
   "due_date"?: string;
@@ -3482,9 +3482,9 @@ export interface CoreOrder {
   "migrated_from"?: string;
   "lines": Array<CoreOrderLine>;
   "responsibles": Array<CoreOrderResponsible>;
-  /** Этапы работ заказа (этап 4 ERP-1427) */
+  /** Этапы работ продажи или закупки (этап 4 ERP-1427) */
   "stages"?: Array<CoreOrderStage>;
-  /** График оплат заказа; id строки — разрез stage регистра расчётов */
+  /** График оплат продажи или закупки; id строки — разрез stage регистра расчётов */
   "payment_terms"?: Array<CoreOrderPaymentTerm>;
   "totals": CoreOrderTotals;
   "created_by"?: number;
@@ -3502,13 +3502,13 @@ export interface CoreOrder {
 export interface CoreOrderAllowedAction {
   "action": "edit" | "confirm" | "cancel" | "close" | "reopen" | "cabinet_status" | "responsibles" | "contract";
   "allowed": boolean;
-  /** Код отказа: core.order.has_executions, core.order.has_dependents (оплаты, авансы, черновики исполнений), core.order.closed, core.order.forbidden */
+  /** Код отказа: core.trade.has_executions, core.trade.has_dependents (оплаты, авансы, черновики исполнений), core.trade.closed, core.trade.forbidden */
   "reason_code"?: string;
   /** Причина словами на языке запроса */
   "reason"?: string;
 }
 
-/** Покупатель-физлицо: розничный заказ стоит на общей карточке покупателя, и различает покупателей только это. */
+/** Покупатель-физлицо: розничный продажа или закупка стоит на общей карточке покупателя, и различает покупателей только это. */
 export interface CoreOrderBuyer {
   "name"?: string;
   "phone"?: string;
@@ -3536,7 +3536,7 @@ export interface CoreOrderCounterparty {
 export interface CoreOrderEvent {
   "id": UUID;
   "order_id": UUID;
-  /** created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, executing, executed, execution_reverted (состояние исполнения сменилось само после акта, отгрузки, приёмки, их отмены или возврата: payload state, previous_state, baseline — true у строки досева заказа, исполненного до появления этих событий, без вебхука; автор — система; execution_reverted — заказ снова confirmed), step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed) */
+  /** created, revised, confirmed, cancelled, closed, reopened, status, responsibles, import, migrated, executing, executed, execution_reverted (состояние исполнения сменилось само после акта, отгрузки, приёмки, их отмены или возврата: payload state, previous_state, baseline — true у строки досева продажи или закупки, исполненного до появления этих событий, без вебхука; автор — система; execution_reverted — продажа или закупка снова confirmed), step (срок шага воронки: payload step_key, step_title, due_date, previous_due_date, shifted), automation (сработало правило: payload rule_id, rule_name, funnel_name, event_type, commands, failed) */
   "kind": string;
   "detail"?: string;
   "effective_date"?: string;
@@ -3564,7 +3564,7 @@ export interface CoreOrderFunnel {
 }
 
 export interface CoreOrderFunnelChoice {
-  /** null — заказ без воронки */
+  /** null — продажа или закупка без воронки */
   "funnel_id": UUID | null;
 }
 
@@ -3597,10 +3597,10 @@ export interface CoreOrderFunnelStep {
   "key"?: string;
   "kind": "contract" | "approval" | "prepayment_invoice" | "payment" | "shipment" | "act" | "upd" | "closing" | "custom";
   "title": string;
-  /** Участвует ли шаг в воронке: ненужный шаг заказу не строится */
+  /** Участвует ли шаг в воронке: ненужный шаг продаже или закупке не строится */
   "required"?: boolean;
   "due"?: CoreOrderFunnelStepDue;
-  /** Что закрывает шаг: manual — человек отметит (пусто так же); state:<состояние> — заказ дошёл до состояния; paid:<N> — оплачено не меньше N % суммы заказа (финансы); paper:act_signed, paper:upd_signed — контрагент подписал акт или УПД в ЭДО (документооборот) */
+  /** Что закрывает шаг: manual — человек отметит (пусто так же); state:<состояние> — продажа или закупка дошёл до состояния; paid:<N> — оплачено не меньше N % суммы продажи или закупки (финансы); paper:act_signed, paper:upd_signed — контрагент подписал акт или УПД в ЭДО (документооборот) */
   "done_when"?: string;
   /** За сколько дней до срока прийти событию «срок подходит» */
   "remind_days"?: number;
@@ -3645,7 +3645,7 @@ export interface CoreOrderHistory {
   "documents": Array<CoreOrderHistoryDocument>;
 }
 
-/** Документ модуля, выросший из заказа: акт, отгрузка, счёт. */
+/** Документ модуля, выросший из продажи или закупки: акт, отгрузка, счёт. */
 export interface CoreOrderHistoryDocument {
   "source": string;
   "module": string;
@@ -3691,9 +3691,9 @@ export interface CoreOrderImportInput {
   "counterparty"?: CoreOrderCounterparty;
   "contract_id"?: UUID;
   "project_id"?: UUID;
-  /** Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  /** Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
   "department_id"?: { [key: string]: unknown };
-  /** ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  /** ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
   "cfo_id"?: { [key: string]: unknown };
   "warehouse_id"?: UUID;
   /** Основание — например, заявка на закупку */
@@ -3702,7 +3702,7 @@ export interface CoreOrderImportInput {
   "currency": string;
   /** Цены с НДС («в том числе»); по умолчанию true */
   "prices_include_vat"?: boolean;
-  /** Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС */
+  /** Скидка на продажу или закупку целиком; раскладывается по строкам пропорционально их суммам до НДС */
   "discount"?: string;
   "delivery_date"?: string;
   "due_date"?: string;
@@ -3713,13 +3713,13 @@ export interface CoreOrderImportInput {
   "lines": Array<CoreOrderLineInput>;
   "responsibles"?: Array<CoreOrderResponsible>;
   "cabinet_status_id"?: UUID;
-  /** Подтвердить заказ, если он ещё черновик */
+  /** Подтвердить продажу или закупку, если он ещё черновик */
   "confirm"?: boolean;
-  /** Номер заказа у источника; по стороне и нему узнаётся повтор */
+  /** Номер продажи или закупки у источника; по стороне и нему узнаётся повтор */
   "external_id": string;
   /** Имя источника для журнала загрузок: сайт, CRM */
   "source_system"?: string;
-  /** Необязательная действующая воронка этой стороны в данном кабинете. Выбирается атомарно с созданием заказа; повтор с другим funnel_id возвращает 409, неверная или архивная воронка — 422. Без поля действует воронка договора, источника или умолчание. */
+  /** Необязательная действующая воронка этой стороны в данном кабинете. Выбирается атомарно с созданием продажи или закупки; повтор с другим funnel_id возвращает 409, неверная или архивная воронка — 422. Без поля действует воронка договора, источника или умолчание. */
   "funnel_id"?: UUID;
 }
 
@@ -3727,7 +3727,7 @@ export interface CoreOrderImportList {
   "items": Array<CoreOrderImportEntry>;
 }
 
-/** Заказ из запроса: поля одни для формы, загрузки и фасадов модулей. */
+/** Продажа или закупка из запроса: поля одни для формы, загрузки и фасадов модулей. */
 export interface CoreOrderInput {
   "side": CoreOrderSide;
   /** Свой номер; пусто — номер выдаёт счётчик вида */
@@ -3740,11 +3740,11 @@ export interface CoreOrderInput {
   "counterparty"?: CoreOrderCounterparty;
   "contract_id"?: UUID;
   "project_id"?: UUID;
-  /** Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  /** Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
   "department_id"?: { [key: string]: unknown };
-  /** ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  /** ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
   "cfo_id"?: { [key: string]: unknown };
-  /** Статья исполнений заказа; не названа при правке — сохраняется прежняя */
+  /** Статья исполнений продажи или закупки; не названа при правке — сохраняется прежняя */
   "pnl_item_id"?: { [key: string]: unknown };
   "warehouse_id"?: UUID;
   /** Основание — например, заявка на закупку */
@@ -3753,7 +3753,7 @@ export interface CoreOrderInput {
   "currency": string;
   /** Цены с НДС («в том числе»); по умолчанию true */
   "prices_include_vat"?: boolean;
-  /** Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС */
+  /** Скидка на продажу или закупку целиком; раскладывается по строкам пропорционально их суммам до НДС */
   "discount"?: string;
   "delivery_date"?: string;
   "due_date"?: string;
@@ -3768,7 +3768,7 @@ export interface CoreOrderInput {
   /** График оплат целиком, правка по id; не назван — не меняется */
   "payment_terms"?: Array<CoreOrderPaymentTerm>;
   "cabinet_status_id"?: UUID;
-  /** Сразу подтвердить созданный заказ */
+  /** Сразу подтвердить созданный продажу или закупку */
   "confirm"?: boolean;
 }
 
@@ -3786,17 +3786,17 @@ export interface CoreOrderLine {
   "price": string;
   /** Скидка самой строки */
   "discount": string;
-  /** Доля скидки заказа на этой строке; суммы строки посчитаны после обеих скидок */
+  /** Доля скидки продажи или закупки на этой строке; суммы строки посчитаны после обеих скидок */
   "discount_amount": string;
   /** Ставка, как её ввели; пусто — по учётной политике */
   "vat_rate"?: string;
   /** Ставка, по которой строка посчитана; пусто — налог не выделен */
   "vat_rate_applied"?: string;
-  /** Сумма строкой в разрядности валюты заказа */
+  /** Сумма строкой в разрядности валюты продажи или закупки */
   "amount_net": string;
-  /** Сумма строкой в разрядности валюты заказа */
+  /** Сумма строкой в разрядности валюты продажи или закупки */
   "vat_amount": string;
-  /** Сумма строкой в разрядности валюты заказа */
+  /** Сумма строкой в разрядности валюты продажи или закупки */
   "amount_gross": string;
   /** Количество в базовой единице склада */
   "base_qty"?: string;
@@ -3820,7 +3820,7 @@ export interface CoreOrderLineInput {
   "price": string;
   /** Десятичное число строкой */
   "discount"?: string;
-  /** Ставка НДС строки; пусто — по учётной политике юрлица на дату заказа */
+  /** Ставка НДС строки; пусто — по учётной политике юрлица на дату продажи или закупки */
   "vat_rate"?: string;
   /** Десятичное число строкой */
   "base_qty"?: string;
@@ -3830,7 +3830,7 @@ export interface CoreOrderLineInput {
 
 export type CoreOrderLineKind = "goods" | "service" | "material" | "semi_product";
 
-/** Реквизиты акта; пусто — дата заказа, номер по счётчику, название по заказу */
+/** Реквизиты акта; пусто — дата продажи или закупки, номер по счётчику, название по продаже или закупке */
 export interface CoreOrderNowAct {
   "date"?: string;
   "number"?: string;
@@ -3848,7 +3848,7 @@ export interface CoreOrderNowExecution {
   "execution_number"?: string;
 }
 
-/** Заказ целиком, его внешний номер и акт. Поля заказа — те же, что у загрузки; подтверждение подразумевается. */
+/** Продажа или закупка целиком, его внешний номер и акт. Поля продажи или закупки — те же, что у загрузки; подтверждение подразумевается. */
 export interface CoreOrderNowInput {
   "side": CoreOrderSide;
   /** Свой номер; пусто — номер выдаёт счётчик вида */
@@ -3861,9 +3861,9 @@ export interface CoreOrderNowInput {
   "counterparty"?: CoreOrderCounterparty;
   "contract_id"?: UUID;
   "project_id"?: UUID;
-  /** Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  /** Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
   "department_id"?: { [key: string]: unknown };
-  /** ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  /** ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
   "cfo_id"?: { [key: string]: unknown };
   /** Статья выручки (у закупки — расхода) исполнения; пусто — по учётной политике бизнеса */
   "pnl_item_id"?: { [key: string]: unknown };
@@ -3885,7 +3885,7 @@ export interface CoreOrderNowInput {
   "stages"?: Array<CoreOrderStage>;
   "payment_terms"?: Array<CoreOrderPaymentTerm>;
   "cabinet_status_id"?: UUID;
-  /** Номер заказа у источника; по стороне и нему узнаётся повтор */
+  /** Номер продажи или закупки у источника; по стороне и нему узнаётся повтор */
   "external_id": string;
   /** Имя источника: сайт, CRM, маркетплейс */
   "source_system"?: string;
@@ -3895,16 +3895,16 @@ export interface CoreOrderNowInput {
 export interface CoreOrderNowResult {
   "order": CoreOrder;
   "execution": CoreOrderNowExecution;
-  /** true — заказ уже был исполнен этой командой; ничего не записано */
+  /** true — продажа или закупка уже был исполнен этой командой; ничего не записано */
   "replayed": boolean;
 }
 
 export interface CoreOrderObligation {
-  /** Действующий приход подтверждения в регистре «Заказы» */
+  /** Действующий приход подтверждения в регистре «Продажи и закупки» */
   "ordered": string;
-  /** Остаток регистра «Заказы» по заказу. До этапа 4 его уменьшает только закрытие, поэтому это не «осталось исполнить» */
+  /** Остаток регистра «Продажи и закупки» по продаже или закупке. До этапа 4 его уменьшает только закрытие, поэтому это не «осталось исполнить» */
   "remaining": string;
-  /** Исполнено: сумма проведённых исполнений заказа (акт, продажа, закупка, приёмка) за вычетом возвратов, в валюте заказа. То же число, что в журнале продаж и закупок финансов (core_order_executed) */
+  /** Исполнено: сумма проведённых исполнений продажи или закупки (акт, продажа, закупка, приёмка) за вычетом возвратов, в валюте продажи или закупки. То же число, что в журнале продаж и закупок финансов (core_order_executed) */
   "executed": string;
   /** Осталось исполнить: заказано минус исполнено, не меньше нуля */
   "remaining_to_execute": string;
@@ -3912,16 +3912,16 @@ export interface CoreOrderObligation {
 
 export interface CoreOrderPage {
   "items": Array<CoreOrder>;
-  /** Сколько заказов под отбором всего */
+  /** Сколько продаж или закупок под отбором всего */
   "total": number;
   "limit": number;
   "offset": number;
   "has_more": boolean;
-  /** Только с with=counts: число заказов по состояниям при том же отборе без отбора состояний */
+  /** Только с with=counts: число продаж или закупок по состояниям при том же отборе без отбора состояний */
   "state_counts"?: { [key: string]: number };
 }
 
-/** Строка графика оплат заказа — когда и сколько платят (ERP-1427, этап 4). */
+/** Строка графика оплат продажи или закупки — когда и сколько платят (ERP-1427, этап 4). */
 export interface CoreOrderPaymentTerm {
   "id"?: UUID;
   "position"?: number;
@@ -3934,7 +3934,7 @@ export interface CoreOrderPaymentTerm {
   "delay_days"?: number;
 }
 
-/** Ход заказа для строки списка (with=progress). executed — исполнено в валюте заказа; paid — оплачено, нет поля — финансы выключены; papers — счёт, акт и УПД: done — есть, wait — ждём подписи, нет ключа — нет; нет поля — документооборот выключен. */
+/** Ход продажи или закупки для строки списка (with=progress). executed — исполнено в валюте продажи или закупки; paid — оплачено, нет поля — финансы выключены; papers — счёт, акт и УПД: done — есть, wait — ждём подписи, нет ключа — нет; нет поля — документооборот выключен. */
 export interface CoreOrderProgress {
   "executed": string;
   "paid"?: string;
@@ -3971,9 +3971,9 @@ export interface CoreOrderRevision {
   "counterparty"?: CoreOrderCounterparty;
   "contract_id"?: UUID;
   "project_id"?: UUID;
-  /** Подразделение заказа — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  /** Подразделение продажи или закупки — элемент справочника «Подразделения»; наследуют исполнения и себестоимость (КЦ § 4.4) */
   "department_id"?: { [key: string]: unknown };
-  /** ЦФО заказа — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
+  /** ЦФО продажи или закупки — элемент справочника «ЦФО»; наследуют исполнения и себестоимость (КЦ § 4.4) */
   "cfo_id"?: { [key: string]: unknown };
   "warehouse_id"?: UUID;
   /** Основание — например, заявка на закупку */
@@ -3982,7 +3982,7 @@ export interface CoreOrderRevision {
   "currency": string;
   /** Цены с НДС («в том числе»); по умолчанию true */
   "prices_include_vat"?: boolean;
-  /** Скидка на заказ целиком; раскладывается по строкам пропорционально их суммам до НДС */
+  /** Скидка на продажу или закупку целиком; раскладывается по строкам пропорционально их суммам до НДС */
   "discount"?: string;
   "delivery_date"?: string;
   "due_date"?: string;
@@ -4005,15 +4005,15 @@ export type CoreOrderSide = "sale" | "purchase";
 
 export type CoreOrderSourceKind = "manual" | "app" | "import" | "marketplace" | "crm" | "migration" | "contract";
 
-/** Этап работ заказа — что и когда сдаём (ERP-1427, этап 4). */
+/** Этап работ продажи или закупки — что и когда сдаём (ERP-1427, этап 4). */
 export interface CoreOrderStage {
   "id"?: UUID;
   "position"?: number;
   "title"?: string;
   "planned_date"?: string;
-  /** Сумма этапа в валюте заказа с налогом */
+  /** Сумма этапа в валюте продажи или закупки с налогом */
   "amount"?: string;
-  /** Строки заказа, которые закрывает этап; пусто — строки-услуги по порядку */
+  /** Строки продажи или закупки, которые закрывает этап; пусто — строки-услуги по порядку */
   "line_ids"?: Array<UUID>;
 }
 
@@ -4083,7 +4083,7 @@ export interface CoreOrderTemplate {
 }
 
 export interface CoreOrderTemplateActions {
-  /** Провести заказ сразу; false — черновик. */
+  /** Провести продажу или закупку сразу; false — черновик. */
   "confirm"?: boolean;
   "invoice"?: "" | "issue" | "draft";
   "invoice_days"?: number;
@@ -4125,17 +4125,17 @@ export interface CoreOrderTemplateStateInput {
   "expected_version": number;
 }
 
-/** Итоги — сумма строк: скидка заказа уже разложена по строкам и второй раз не вычитается. */
+/** Итоги — сумма строк: скидка продажи или закупки уже разложена по строкам и второй раз не вычитается. */
 export interface CoreOrderTotals {
-  /** Сумма строкой в разрядности валюты заказа */
+  /** Сумма строкой в разрядности валюты продажи или закупки */
   "net": string;
-  /** Сумма строкой в разрядности валюты заказа */
+  /** Сумма строкой в разрядности валюты продажи или закупки */
   "vat": string;
-  /** Сумма строкой в разрядности валюты заказа */
+  /** Сумма строкой в разрядности валюты продажи или закупки */
   "gross": string;
-  /** Сумма строкой в разрядности валюты заказа */
+  /** Сумма строкой в разрядности валюты продажи или закупки */
   "goods_gross": string;
-  /** Сумма строкой в разрядности валюты заказа */
+  /** Сумма строкой в разрядности валюты продажи или закупки */
   "services_gross": string;
   "currency": string;
 }
@@ -5526,7 +5526,7 @@ export interface DiscussionCommentUpdate {
 
 export type DiscussionOwnerType = "task" | "section" | "project" | "document" | "milestone" | "customer_need" | "pull_request";
 
-/** Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в заказе как реквизиты плательщика */
+/** Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в продаже или закупке как реквизиты плательщика */
 export interface DocflowAppSalesOrderCounterparty {
   "name"?: string;
   "inn"?: string;
@@ -5542,7 +5542,7 @@ export interface DocflowAppSalesOrderInput {
   "counterparty"?: DocflowAppSalesOrderCounterparty;
   /** Необязательная действующая воронка продаж этого кабинета; повтор с другой воронкой отвечает 409 */
   "funnel_id"?: UUID;
-  /** Номер заказа у магазина — ключ идемпотентности загрузки */
+  /** Номер продажи или закупки у магазина — ключ идемпотентности загрузки */
   "external_id": string;
   /** Пусто — кабинет выдаст следующий номер */
   "number"?: string;
@@ -5557,7 +5557,7 @@ export interface DocflowAppSalesOrderInput {
   "discount"?: string;
   /** Цены включают налог; пусто — умолчание кабинета */
   "prices_include_vat"?: boolean;
-  /** Путь сделки; заказ с оплатой на сайте — self_service */
+  /** Путь сделки; продажа или закупка с оплатой на сайте — self_service */
   "scenario"?: "self_service" | "one_off_sale" | "contract_sale";
   "payment"?: DocflowAppSalesOrderPayment;
   /** Не используется контуром приложения: источник журнала — пространство приложения из токена */
@@ -5578,11 +5578,11 @@ export interface DocflowAppSalesOrderItem {
   "quantity": string;
   "price": string;
   "discount"?: string;
-  /** Ставка строки: 22%, 10%, без НДС; пусто — учётная политика юрлица на дату заказа */
+  /** Ставка строки: 22%, 10%, без НДС; пусто — учётная политика юрлица на дату продажи или закупки */
   "vat_rate"?: string;
 }
 
-/** Сообщение эквайринга о заказе. Идемпотентно по паре provider + external_id */
+/** Сообщение эквайринга о продаже или закупке. Идемпотентно по паре provider + external_id */
 export interface DocflowAppSalesOrderPayment {
   /** Кто подтвердил списание: yookassa, tochka, имя платёжного кабинета сайта */
   "provider": string;
@@ -6155,7 +6155,7 @@ export interface DocflowFlowContractTerms {
   "currency"?: string;
   "payment_terms"?: string;
   "renewal_terms"?: string;
-  /** Воронка заказов договора: заказы по договору идут в неё (пометка кабинета, не текст бумаги) */
+  /** Воронка продаж или закупок договора: продажи или закупки по договору идут в неё (пометка кабинета, не текст бумаги) */
   "order_funnel_id"?: string;
 }
 
@@ -6325,11 +6325,11 @@ export interface DocflowFlowPaymentRule {
   "orders"?: DocflowFlowPaymentRuleOrders;
 }
 
-/** «Заводить заказ на каждый период» — только у договора (kind=contract). Зарегистрированный договор сам заводит на каждую наступившую стадию правила подтверждённый заказ ядра (source_kind=contract, external_id «<id договора>/<период>»): сразу после регистрации и фоновым проходом раз в час. Один договор и один период — один заказ навсегда: отменённый не воскресает, период не позже последнего заказа договора не заводится. Будущие периоды не заводятся; исполнение и бумаги периода — вручную. */
+/** «Заводить продажу или закупку на каждый период» — только у договора (kind=contract). Зарегистрированный договор сам заводит на каждую наступившую стадию правила подтверждённый продажу или закупку ядра (source_kind=contract, external_id «<id договора>/<период>»): сразу после регистрации и фоновым проходом раз в час. Один договор и один период — один продажа или закупка навсегда: отменённый не воскресает, период не позже последнего продажи или закупки договора не заводится. Будущие периоды не заводятся; исполнение и бумаги периода — вручную. */
 export interface DocflowFlowPaymentRuleOrders {
-  /** Первый период: стадии раньше этой даты заказов не получают. Пусто — с начала правила, прошедшие периоды догоняются */
+  /** Первый период: стадии раньше этой даты продаж или закупок не получают. Пусто — с начала правила, прошедшие периоды догоняются */
   "from"?: string;
-  /** Услуга строки заказа — активная номенклатура вида service; пусто — строка без номенклатуры, названная предметом договора */
+  /** Услуга строки продажи или закупки — активная номенклатура вида service; пусто — строка без номенклатуры, названная предметом договора */
   "product_id"?: UUID;
   /** Название услуги на момент выбора; пишет сервер, присланное не читается */
   "product_name"?: string;
@@ -6517,12 +6517,12 @@ export interface DocflowMessagePrintForm {
 }
 
 export interface DocflowOrderActInput {
-  /** Дата акта; пусто — дата заказа */
+  /** Дата акта; пусто — дата продажи или закупки */
   "date"?: string;
   /** Пусто — следующий номер счётчика актов */
   "number"?: string;
   "title"?: string;
-  /** Пусто — все услуги заказа; меньше — частичный акт суммой */
+  /** Пусто — все услуги продажи или закупки; меньше — частичный акт суммой */
   "amount"?: string;
 }
 
@@ -6539,7 +6539,7 @@ export interface DocflowOrderImport {
   /** Пространство приложения, которое загружало */
   "source"?: string;
   "outcome": "accepted" | "updated" | "rejected";
-  /** Машинный код отказа, например docflow.sales_order.contact_unknown */
+  /** Машинный код отказа, например docflow.sale.contact_unknown */
   "reason"?: string;
   /** Причина отказа словами */
   "detail"?: string;
@@ -6560,9 +6560,9 @@ export interface DocflowOrderInvoiceInput {
   "payment_purpose"?: string;
   /** Собрать назначение платежа умолчанием */
   "payment_purpose_auto"?: boolean;
-  /** Пусто — на весь заказ; меньше — частичный счёт */
+  /** Пусто — на весь продажу или закупку; меньше — частичный счёт */
   "amount"?: string;
-  /** Дата счёта; пусто — дата заказа */
+  /** Дата счёта; пусто — дата продажи или закупки */
   "date"?: string;
   /** Пусто — следующий номер счётчика счетов */
   "number"?: string;
@@ -6601,9 +6601,9 @@ export interface DocflowOrderSetOrder {
 }
 
 export interface DocflowOrderUPDInput {
-  /** Дата УПД; пусто — дата заказа */
+  /** Дата УПД; пусто — дата продажи или закупки */
   "date"?: string;
-  /** Пусто — все услуги заказа; меньше — частичный УПД суммой */
+  /** Пусто — все услуги продажи или закупки; меньше — частичный УПД суммой */
   "amount"?: string;
   "stage_id"?: UUID;
   /** Пусто — СЧФДОП */
@@ -6666,7 +6666,7 @@ export interface DocflowSalesOrder {
   "amount": string;
   "goods_amount": string;
   "service_amount": string;
-  /** Сколько денег пришло на счёт по заказу */
+  /** Сколько денег пришло на счёт по продаже или закупке */
   "paid_amount": string;
   "shipped_amount": string;
   "invoiced_amount": string;
@@ -6682,7 +6682,7 @@ export interface DocflowSalesOrder {
   "updated_at": string;
 }
 
-/** Как покупатель представился в заказе */
+/** Как покупатель представился в продаже или закупке */
 export interface DocflowSalesOrderBuyer {
   "name"?: string;
   "phone"?: string;
@@ -7054,7 +7054,7 @@ export interface FinanceAccount {
   "bank_timezone"?: string | null;
   /** Откуда пояс: `bic` — определён по БИК, `default` — определить не удалось, стоит умолчание (проверьте пояс), `manual` — задан человеком; подключение банка ручной пояс не трогает. */
   "bank_timezone_source"?: "bic" | "default" | "manual" | null | null;
-  /** Вид счёта. `settlement` — расчётный (счёт книги 51), `deposit` — вклад (депозитный счёт, 55.03). Вклад — такие же деньги: он входит в итог денег, а размещение и возврат — внутренний перевод между своими счетами, не доход и не расход. */
+  /** Вид счёта. `settlement` — расчётный (счёт книги 51), `deposit` — вклад. Деньги вклада учитываются статьёй «Депозиты и вклады»: отправка и возврат идут ею, а остаток депозитного счёта в итог денег не входит. */
   "account_type"?: "settlement" | "deposit";
   /** Откуда вид: `number` — выведен из номера счёта (421…–422… и 423…, 426… — вклад), `bank` — назван банком, `manual` — выбран человеком. Ручной выбор номер и банк не перебивают. */
   "account_type_source"?: "number" | "bank" | "manual";
@@ -7202,7 +7202,7 @@ export interface FinanceAcquiringInTransit {
   "provider": string;
   /** Идентификатор платежа у провайдера */
   "external_id": string;
-  /** Заказ покупателя */
+  /** Продажа */
   "order_id"?: UUID;
   /** Покупатель */
   "contact_id"?: UUID;
@@ -7383,7 +7383,7 @@ export interface FinanceCashflowEntryCategorize {
   "contact"?: string;
   /** «За кого»: контрагент сотрудника или собственника, чей расчёт гасит выдача. Пусто — как контрагент; не присланное поле остаётся как было */
   "for_contact"?: string | null;
-  /** Заказ, который оплачивают наличные (приход — заказ покупателя, расход — заказ поставщику того же контрагента). Пустая строка снимает заказ; не присланное поле остаётся как было */
+  /** Продажа или закупка, который оплачивают наличные (приход — продажа, расход — закупка того же контрагента). Пустая строка снимает продажу или закупку; не присланное поле остаётся как было */
   "order"?: string | null;
 }
 
@@ -7808,7 +7808,7 @@ export interface FinanceOperationAccrualResult {
   "allocations": Array<FinanceOperationAccrualAllocation>;
   "document": CoreDocument;
   "operation": FinanceOperation;
-  /** Акт по заказу: строки со ставкой человека, равной прежней общей ставке юрлица, а на дату акта общая ставка другая */
+  /** Акт по продаже или закупке: строки со ставкой человека, равной прежней общей ставке юрлица, а на дату акта общая ставка другая */
   "vat_warnings"?: Array<CoreOrderVATWarning>;
 }
 
@@ -7922,14 +7922,14 @@ export interface FinanceOperationVersion {
 export interface FinanceOrderActInput {
   "source": FinanceOperationSource;
   "date": string;
-  /** Сумма акта с НДС в валюте заказа, decimal string */
+  /** Сумма акта с НДС в валюте продажи или закупки, decimal string */
   "amount": string;
-  /** Срок оплаты; пусто — по строке графика заказа или условиям контрагента */
+  /** Срок оплаты; пусто — по строке графика продажи или закупки или условиям контрагента */
   "due_date"?: string;
   "reason"?: string;
-  /** Статья выручки (расхода); пусто — статья заказа, политика бизнеса или системная */
+  /** Статья выручки (расхода); пусто — статья продажи или закупки, политика бизнеса или системная */
   "pnl_item_id"?: { [key: string]: unknown };
-  /** Этап работ заказа, который закрывает акт */
+  /** Этап работ продажи или закупки, который закрывает акт */
   "stage_id"?: { [key: string]: unknown };
   "vat_amount"?: string;
   "prices_include_vat"?: boolean;
@@ -8259,10 +8259,10 @@ export interface FinanceReconciliationSummary {
   "total_count": number;
   "needs_attention_count": number;
   "unmatched_count": number;
-  /** Входящие платежи без заказа и без проекта; имя поля сохранено для совместимости */
+  /** Входящие платежи без продажи или закупки и без проекта; имя поля сохранено для совместимости */
   "missing_order_count": number;
   "missing_cashflow_count": number;
-  /** Сумма входящих платежей без заказа и без проекта; decimal string */
+  /** Сумма входящих платежей без продажи или закупки и без проекта; decimal string */
   "incoming_unlinked_amount": string;
 }
 
@@ -9822,7 +9822,7 @@ export interface MarketplaceWbCardFunnelDay {
   "to_cart": number | null;
   "cv_cart": number | null;
   "cv_order": number | null;
-  /** Из «Джема», а без него из заказов */
+  /** Из «Джема», а без него из продаж или закупок */
   "orders_qty": number;
   "orders_sum": number;
   "avg_check": number | null;
@@ -10153,7 +10153,7 @@ export interface MarketplaceWbProduct {
   /** Цена до скидки продавца */
   "old_price": string;
   "discount_percent": number;
-  /** Последняя цена покупателя из заказов или продаж */
+  /** Последняя цена покупателя из продаж или закупок или продаж */
   "buyer_price": string;
   "stock": number;
   "in_way_to_client": number;
@@ -10232,10 +10232,10 @@ export interface MarketplaceYandexCostInput {
 
 export interface MarketplaceYandexOrdersDay {
   "date": string;
-  /** Сумма заказов кроме отменённых; decimal строкой */
+  /** Сумма продаж или закупок кроме отменённых; decimal строкой */
   "orders_sum": string;
   "orders_qty": number;
-  /** Сумма доставленных заказов; decimal строкой */
+  /** Сумма доставленных продаж или закупок; decimal строкой */
   "sales_sum": string;
   "sales_qty": number;
 }
@@ -10251,7 +10251,7 @@ export interface MarketplaceYandexOrdersKpi {
 }
 
 export interface MarketplaceYandexOrdersOverview {
-  /** Последний день периода; без параметров — последний день с заказами */
+  /** Последний день периода; без параметров — последний день с продажами или закупками */
   "day": string;
   /** Первый день периода */
   "from": string;
@@ -11312,7 +11312,7 @@ export interface StockDocumentLine {
   /** Доля налога документа в строке: пропорционально сумме строки, копеечный остаток — на самую крупную. Считает сервер и перезаписывает присланное; по её наличию судят о разбивке при перепроведении */
   "vat_amount"?: string;
   "basis_line_id"?: UUID | null;
-  /** Построчное происхождение, когда один заказ поставщику сводит несколько заявок */
+  /** Построчное происхождение, когда одна закупка сводит несколько заявок */
   "basis_document_id"?: UUID | null;
   "batch_code"?: string;
   "produced_at"?: string;
@@ -11355,7 +11355,7 @@ export interface StockDocumentPatch {
   "comment"?: string;
 }
 
-/** Содержимое складского документа. Разбор строгий — незнакомое поле отклоняется. У документа-факта, заявки, заказа и резерва `items` обязателен и не длиннее 1000 строк. */
+/** Содержимое складского документа. Разбор строгий — незнакомое поле отклоняется. У документа-факта, заявки, продажи или закупки и резерва `items` обязателен и не длиннее 1000 строк. */
 export interface StockDocumentPayload {
   "version": number;
   "reason"?: string;
@@ -11890,7 +11890,7 @@ export interface StockReorderRule {
   "min_qty": string;
   /** Decimal string целевого остатка; null — потолок не задан */
   "max_qty": string | null;
-  /** Decimal string кратности заказа; null — кратность не задана */
+  /** Decimal string кратности продажи или закупки; null — кратность не задана */
   "order_multiple": string | null;
   "lead_time_days": number;
   "preferred_supplier_id": UUID | null;
@@ -12808,7 +12808,7 @@ export interface WorkflowStatusUpdate {
   "is_final"?: boolean;
 }
 
-export interface AppDocflowRecordSalesOrderPaymentRequest {
+export interface AppDocflowRecordSalePaymentRequest {
   "provider": string;
   "external_id": string;
   "kind"?: "payment" | "refund";
