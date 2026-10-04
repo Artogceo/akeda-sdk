@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9577bb6917c1908401a88856ed2a7660af72c127d9ff3e8bad0a4c04b33d70a5).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8e517e74b238ac83eed16656430f1680df33a04bc9b602f73dfab017d9ed934c).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2610,6 +2610,13 @@ export interface OperationTypes {
     body: never;
     response: models.DocflowApproval;
   };
+  /** GET /api/v1/docflow/flow/advance-invoices — Получить счёт-фактуру на аванс */
+  docflowAdvanceInvoice: {
+    params: Record<string, never>;
+    query: { "advance_id": models.UUID };
+    body: never;
+    response: models.DocflowFlowDocument;
+  };
   /** GET /api/v1/docflow/approvals/{id} — Получить согласование целиком */
   docflowApproval: {
     params: { "id": models.UUID };
@@ -2798,6 +2805,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.DocflowMessage;
+  };
+  /** POST /api/v1/docflow/flow/advance-invoices — Выставить счёт-фактуру на аванс */
+  docflowIssueAdvanceInvoice: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.DocflowAdvanceInvoiceInput;
+    response: models.DocflowFlowDocument;
   };
   /** POST /api/v1/docflow/sales/{id}/act — Сделать акт по продаже */
   docflowIssueSaleAct: {
@@ -5973,6 +5987,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   developerUploadAppFunctionArtifact: { method: "POST", path: "/api/v1/developer/apps/{key}/versions/{version}/function-artifact", module: "developer", stage: "preview", permission: "developer:self", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowAbortFlowUploadSession: { method: "DELETE", path: "/api/v1/docflow/flow/upload-sessions/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowAcknowledgeApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/acknowledge", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowAdvanceInvoice: { method: "GET", path: "/api/v1/docflow/flow/advance-invoices", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApproval: { method: "GET", path: "/api/v1/docflow/approvals/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApprovalRoutes: { method: "GET", path: "/api/v1/docflow/approval-routes", module: "docflow", stage: "preview", permission: "docflow.flow:configure_payments", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApprovalSettings: { method: "GET", path: "/api/v1/docflow/approval-settings", module: "docflow", stage: "preview", permission: "docflow.flow:configure_payments", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -6000,6 +6015,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowFlowSignatureSheetDownloadSession: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/signatures/sheet/download-session", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowGetFlowUploadSession: { method: "GET", path: "/api/v1/docflow/flow/upload-sessions/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowGetMessage: { method: "GET", path: "/api/v1/docflow/messages/{id}", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowIssueAdvanceInvoice: { method: "POST", path: "/api/v1/docflow/flow/advance-invoices", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowIssueSaleAct: { method: "POST", path: "/api/v1/docflow/sales/{id}/act", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowIssueSaleInvoice: { method: "POST", path: "/api/v1/docflow/sales/{id}/invoice", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowIssueSaleUPD: { method: "POST", path: "/api/v1/docflow/sales/{id}/upd", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9577bb6917c1908401a88856ed2a7660af72c127d9ff3e8bad0a4c04b33d70a5).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8e517e74b238ac83eed16656430f1680df33a04bc9b602f73dfab017d9ed934c).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -544,6 +544,7 @@ __all__ = [
     "DiscussionCommentPage",
     "DiscussionCommentUpdate",
     "DiscussionOwnerType",
+    "DocflowAdvanceInvoiceInput",
     "DocflowAppSalesOrderCounterparty",
     "DocflowAppSalesOrderInput",
     "DocflowAppSalesOrderItem",
@@ -6797,6 +6798,13 @@ class DiscussionCommentUpdate(TypedDict, total=False):
 
 DiscussionOwnerType = Literal['task', 'section', 'project', 'document', 'milestone', 'customer_need', 'pull_request']
 
+class _DocflowAdvanceInvoiceInputRequired(TypedDict):
+    advance_id: "UUID"
+
+class DocflowAdvanceInvoiceInput(_DocflowAdvanceInvoiceInputRequired, total=False):
+    #: Дата счёта-фактуры; пусто — дата получения аванса
+    date: str
+
 class DocflowAppSalesOrderCounterparty(TypedDict, total=False):
     """Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в продаже или закупке как реквизиты плательщика"""
 
@@ -7901,6 +7909,8 @@ class DocflowOrderInvoiceInput(_DocflowOrderInvoiceInputRequired, total=False):
     #: Пусто — следующий номер счётчика счетов
     number: str
     title: str
+    #: Строка графика оплат продажи, по которой выставлен счёт: запоминается в счёте; чужая строка — 409 docflow.sale.payment_term_unknown
+    payment_term_id: "UUID"
     #: Сохранить черновиком вместо «Выставить»
     draft: bool
 
@@ -7920,6 +7930,8 @@ class DocflowOrderSetMember(_DocflowOrderSetMemberRequired, total=False):
     due_date: str
     #: Назначение платежа, записанное на выданном счёте; только для invoice
     payment_purpose: str
+    #: Строка графика оплат продажи, по которой выставлен счёт; только для invoice
+    payment_term_id: "UUID"
     self: bool
 
 class _DocflowOrderSetOrderRequired(TypedDict):
@@ -12146,10 +12158,14 @@ class SettingsCompanyPage(TypedDict):
     count: int
     results: List["SettingsCompany"]
 
-class SettingsCompanyPerson(TypedDict):
+class _SettingsCompanyPersonRequired(TypedDict):
     surname: str
     name: str
     patronymic: str
+
+class SettingsCompanyPerson(_SettingsCompanyPersonRequired, total=False):
+    #: Дата присвоения ОГРНИП; с 01.04.2026 печатается в счёте-фактуре под подписью ИП вместе с ОГРНИП
+    ogrnip_date: str
 
 class SettingsMember(TypedDict):
     #: Идентификатор членства в кабинете, а не человека

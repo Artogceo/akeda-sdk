@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9577bb6917c1908401a88856ed2a7660af72c127d9ff3e8bad0a4c04b33d70a5).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8e517e74b238ac83eed16656430f1680df33a04bc9b602f73dfab017d9ed934c).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -399,6 +399,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'developerUploadAppFunctionArtifact': OperationSpec('POST', '/api/v1/developer/apps/{key}/versions/{version}/function-artifact', 'developer', 'preview', 'developer:self', False, False, ('key', 'version',), 'none', None, None),
     'docflowAbortFlowUploadSession': OperationSpec('DELETE', '/api/v1/docflow/flow/upload-sessions/{id}', 'docflow', 'preview', 'docflow.flow:write', False, False, ('id',), 'none', None, None),
     'docflowAcknowledgeApproval': OperationSpec('POST', '/api/v1/docflow/approvals/{id}/acknowledge', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
+    'docflowAdvanceInvoice': OperationSpec('GET', '/api/v1/docflow/flow/advance-invoices', 'docflow', 'preview', 'docflow.flow:read', False, False, (), 'none', None, None),
     'docflowApproval': OperationSpec('GET', '/api/v1/docflow/approvals/{id}', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
     'docflowApprovalRoutes': OperationSpec('GET', '/api/v1/docflow/approval-routes', 'docflow', 'preview', 'docflow.flow:configure_payments', False, False, (), 'none', None, None),
     'docflowApprovalSettings': OperationSpec('GET', '/api/v1/docflow/approval-settings', 'docflow', 'preview', 'docflow.flow:configure_payments', False, False, (), 'none', None, None),
@@ -426,6 +427,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowFlowSignatureSheetDownloadSession': OperationSpec('GET', '/api/v1/docflow/flow/documents/{id}/signatures/sheet/download-session', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
     'docflowGetFlowUploadSession': OperationSpec('GET', '/api/v1/docflow/flow/upload-sessions/{id}', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
     'docflowGetMessage': OperationSpec('GET', '/api/v1/docflow/messages/{id}', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
+    'docflowIssueAdvanceInvoice': OperationSpec('POST', '/api/v1/docflow/flow/advance-invoices', 'docflow', 'preview', 'docflow.flow:write', True, False, (), 'none', None, None),
     'docflowIssueSaleAct': OperationSpec('POST', '/api/v1/docflow/sales/{id}/act', 'docflow', 'preview', 'docflow.flow:write', True, False, ('id',), 'none', None, None),
     'docflowIssueSaleInvoice': OperationSpec('POST', '/api/v1/docflow/sales/{id}/invoice', 'docflow', 'preview', 'docflow.flow:write', True, False, ('id',), 'none', None, None),
     'docflowIssueSaleUPD': OperationSpec('POST', '/api/v1/docflow/sales/{id}/upd', 'docflow', 'preview', 'docflow.flow:write', True, False, ('id',), 'none', None, None),

@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9577bb6917c1908401a88856ed2a7660af72c127d9ff3e8bad0a4c04b33d70a5).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8e517e74b238ac83eed16656430f1680df33a04bc9b602f73dfab017d9ed934c).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -5601,6 +5601,12 @@ export interface DiscussionCommentUpdate {
 
 export type DiscussionOwnerType = "task" | "section" | "project" | "document" | "milestone" | "customer_need" | "pull_request";
 
+export interface DocflowAdvanceInvoiceInput {
+  "advance_id": UUID;
+  /** Дата счёта-фактуры; пусто — дата получения аванса */
+  "date"?: string;
+}
+
 /** Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в продаже или закупке как реквизиты плательщика */
 export interface DocflowAppSalesOrderCounterparty {
   "name"?: string;
@@ -6650,6 +6656,8 @@ export interface DocflowOrderInvoiceInput {
   /** Пусто — следующий номер счётчика счетов */
   "number"?: string;
   "title"?: string;
+  /** Строка графика оплат продажи, по которой выставлен счёт: запоминается в счёте; чужая строка — 409 docflow.sale.payment_term_unknown */
+  "payment_term_id"?: UUID;
   /** Сохранить черновиком вместо «Выставить» */
   "draft"?: boolean;
 }
@@ -6668,6 +6676,8 @@ export interface DocflowOrderSetMember {
   "due_date"?: string;
   /** Назначение платежа, записанное на выданном счёте; только для invoice */
   "payment_purpose"?: string;
+  /** Строка графика оплат продажи, по которой выставлен счёт; только для invoice */
+  "payment_term_id"?: UUID;
   "self"?: boolean;
 }
 
@@ -11043,6 +11053,8 @@ export interface SettingsCompanyPerson {
   "surname": string;
   "name": string;
   "patronymic": string;
+  /** Дата присвоения ОГРНИП; с 01.04.2026 печатается в счёте-фактуре под подписью ИП вместе с ОГРНИП */
+  "ogrnip_date"?: string;
 }
 
 export interface SettingsMember {

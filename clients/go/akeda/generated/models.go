@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9577bb6917c1908401a88856ed2a7660af72c127d9ff3e8bad0a4c04b33d70a5).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8e517e74b238ac83eed16656430f1680df33a04bc9b602f73dfab017d9ed934c).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -5592,6 +5592,12 @@ type DiscussionCommentUpdate struct {
 
 type DiscussionOwnerType = string
 
+type DocflowAdvanceInvoiceInput struct {
+	AdvanceID UUID `json:"advance_id"`
+	// Date — Дата счёта-фактуры; пусто — дата получения аванса
+	Date *string `json:"date,omitempty"`
+}
+
 // DocflowAppSalesOrderCounterparty — Покупатель человеческими ключами. ИНН узнаётся строго; телефон — признак физлица. Имя, телефон и почта остаются в продаже или закупке как реквизиты плательщика
 type DocflowAppSalesOrderCounterparty struct {
 	Name  *string `json:"name,omitempty"`
@@ -6633,6 +6639,8 @@ type DocflowOrderInvoiceInput struct {
 	// Number — Пусто — следующий номер счётчика счетов
 	Number *string `json:"number,omitempty"`
 	Title  *string `json:"title,omitempty"`
+	// PaymentTermID — Строка графика оплат продажи, по которой выставлен счёт: запоминается в счёте; чужая строка — 409 docflow.sale.payment_term_unknown
+	PaymentTermID *UUID `json:"payment_term_id,omitempty"`
 	// Draft — Сохранить черновиком вместо «Выставить»
 	Draft *bool `json:"draft,omitempty"`
 }
@@ -6651,7 +6659,9 @@ type DocflowOrderSetMember struct {
 	DueDate    *string `json:"due_date,omitempty"`
 	// PaymentPurpose — Назначение платежа, записанное на выданном счёте; только для invoice
 	PaymentPurpose *string `json:"payment_purpose,omitempty"`
-	Self           *bool   `json:"self,omitempty"`
+	// PaymentTermID — Строка графика оплат продажи, по которой выставлен счёт; только для invoice
+	PaymentTermID *UUID `json:"payment_term_id,omitempty"`
+	Self          *bool `json:"self,omitempty"`
 }
 
 type DocflowOrderSetOrder struct {
@@ -11026,6 +11036,8 @@ type SettingsCompanyPerson struct {
 	Surname    string `json:"surname"`
 	Name       string `json:"name"`
 	Patronymic string `json:"patronymic"`
+	// OgrnipDate — Дата присвоения ОГРНИП; с 01.04.2026 печатается в счёте-фактуре под подписью ИП вместе с ОГРНИП
+	OgrnipDate *string `json:"ogrnip_date,omitempty"`
 }
 
 type SettingsMember struct {

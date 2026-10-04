@@ -33101,6 +33101,96 @@ paths:
           $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/advance-invoices:
+    post:
+      tags:
+        - Docflow flow
+      operationId: docflowIssueAdvanceInvoice
+      x-akeda-audience: external
+      summary: Выставить счёт-фактуру на аванс
+      description: 'Счёт-фактура на полученный аванс покупателя (продавец на общем режиме выставляет его в пять календарных дней с получения предоплаты). Номер из единого ряда выставленных документов юрлица, строку «Предварительная оплата» с расчётной ставкой и налог, исчисленный при получении денег, отдаёт модуль финансов; документооборот заводит зарегистрированную карточку вида `tax_invoice` со ссылками на выставленную бумагу и на аванс в `accounting_links` и связью `basis` с заказом аванса. Печать — бланком УПД со статусом 1 без передаточной части, по ЭДО — XML 5.03 с функцией СЧФ и особым обстоятельством 2. Годится только проведённый аванс покупателя, с которого исчислен НДС (иначе 409). Повтор — тем же или новым ключом — отдаёт ту же карточку: на аванс одна бумага. Заголовок Idempotency-Key обязателен.'
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowAdvanceInvoiceInput'
+      responses:
+        '201':
+          description: Зарегистрированная карточка счёта-фактуры на аванс
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowAdvanceInvoice
+      x-akeda-audience: external
+      summary: Получить счёт-фактуру на аванс
+      description: Карточка счёта-фактуры, уже выставленного на аванс. 404 — бумаги ещё нет или аванс вне области юрлиц участника; 409 — по такому авансу счёт-фактура не выставляется вовсе (не проведён, аванс поставщику, без НДС). Ничего не выставляет и номер реестра не расходует.
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: advance_id
+          in: query
+          required: true
+          description: Аванс покупателя (документ расчётов финансов)
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Карточка счёта-фактуры на аванс
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/docflow/flow/documents/{id}:
     get:
       tags:
@@ -63469,6 +63559,10 @@ components:
           type: string
         patronymic:
           type: string
+        ogrnip_date:
+          type: string
+          format: date
+          description: Дата присвоения ОГРНИП; с 01.04.2026 печатается в счёте-фактуре под подписью ИП вместе с ОГРНИП
     SettingsCompanyHead:
       type: object
       additionalProperties: false
@@ -64816,6 +64910,9 @@ components:
         payment_purpose:
           type: string
           description: Назначение платежа, записанное на выданном счёте; только для invoice
+        payment_term_id:
+          $ref: '#/components/schemas/UUID'
+          description: Строка графика оплат продажи, по которой выставлен счёт; только для invoice
         self:
           type: boolean
     DocflowOrderSetOrder:
@@ -66843,6 +66940,18 @@ components:
         amount:
           type: string
           description: Пусто — все услуги продажи или закупки; меньше — частичный акт суммой
+    DocflowAdvanceInvoiceInput:
+      type: object
+      additionalProperties: false
+      required:
+        - advance_id
+      properties:
+        advance_id:
+          $ref: '#/components/schemas/UUID'
+        date:
+          type: string
+          format: date
+          description: Дата счёта-фактуры; пусто — дата получения аванса
     DocflowOrderUPDInput:
       type: object
       additionalProperties: false
@@ -66892,6 +67001,9 @@ components:
           description: Пусто — следующий номер счётчика счетов
         title:
           type: string
+        payment_term_id:
+          $ref: '#/components/schemas/UUID'
+          description: 'Строка графика оплат продажи, по которой выставлен счёт: запоминается в счёте; чужая строка — 409 docflow.sale.payment_term_unknown'
         draft:
           type: boolean
           description: Сохранить черновиком вместо «Выставить»
