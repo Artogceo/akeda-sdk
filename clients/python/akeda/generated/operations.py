@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8e517e74b238ac83eed16656430f1680df33a04bc9b602f73dfab017d9ed934c).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0620603236d8d21f99fa4c74e23de2c90ba75163b78f5872f55527f9ed205bac).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -115,6 +115,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'chatMarkMentionRead': OperationSpec('POST', '/api/v1/chat/conversations/{id}/mentions/{messageId}/read', 'chat', 'preview', 'chat:write', False, False, ('id', 'messageId',), 'none', None, None),
     'chatMarkRead': OperationSpec('POST', '/api/v1/chat/conversations/{id}/read', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
     'chatSendMessage': OperationSpec('POST', '/api/v1/chat/conversations/{id}/messages', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
+    'chatSendVideoMeeting': OperationSpec('POST', '/api/v1/chat/conversations/{id}/video-meeting', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
     'coreAbortUploadSession': OperationSpec('DELETE', '/api/v1/core/upload-sessions/{id}', 'core', 'preview', 'core:write', False, False, ('id',), 'none', None, None),
     'coreAddPolicyPayrollOfficial': OperationSpec('POST', '/api/v1/core/accounting-policy/companies/{id}/payroll-official', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreAddPolicyTaxRegime': OperationSpec('POST', '/api/v1/core/accounting-policy/companies/{id}/tax-regime', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),

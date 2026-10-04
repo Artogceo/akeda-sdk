@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8e517e74b238ac83eed16656430f1680df33a04bc9b602f73dfab017d9ed934c).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0620603236d8d21f99fa4c74e23de2c90ba75163b78f5872f55527f9ed205bac).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -114,6 +114,7 @@ var Operations = map[string]Operation{
 	"chatMarkMentionRead":                        {ID: "chatMarkMentionRead", Method: "POST", Path: "/api/v1/chat/conversations/{id}/mentions/{messageId}/read", Module: "chat", Stage: "preview", Permission: "chat:write", Idempotent: false, Installation: false, PathParams: []string{"id", "messageId"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"chatMarkRead":                               {ID: "chatMarkRead", Method: "POST", Path: "/api/v1/chat/conversations/{id}/read", Module: "chat", Stage: "preview", Permission: "chat:write", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"chatSendMessage":                            {ID: "chatSendMessage", Method: "POST", Path: "/api/v1/chat/conversations/{id}/messages", Module: "chat", Stage: "preview", Permission: "chat:write", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
+	"chatSendVideoMeeting":                       {ID: "chatSendVideoMeeting", Method: "POST", Path: "/api/v1/chat/conversations/{id}/video-meeting", Module: "chat", Stage: "preview", Permission: "chat:write", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreAbortUploadSession":                     {ID: "coreAbortUploadSession", Method: "DELETE", Path: "/api/v1/core/upload-sessions/{id}", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreAddPolicyPayrollOfficial":               {ID: "coreAddPolicyPayrollOfficial", Method: "POST", Path: "/api/v1/core/accounting-policy/companies/{id}/payroll-official", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"coreAddPolicyTaxRegime":                     {ID: "coreAddPolicyTaxRegime", Method: "POST", Path: "/api/v1/core/accounting-policy/companies/{id}/tax-regime", Module: "core", Stage: "preview", Permission: "core:write", Idempotent: false, Installation: true, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},

@@ -9608,6 +9608,95 @@
         }
       }
     },
+    "/api/v1/chat/conversations/{id}/video-meeting": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "$ref": "#/components/parameters/ChatConversationID"
+        }
+      ],
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "operationId": "chatSendVideoMeeting",
+        "summary": "Отправить в беседу карточку видеовстречи",
+        "description": "Кнопка «+» → «Видеовстреча» в чате. Ссылку клиент не передаёт: сервер сам заводит комнату Яндекс Телемоста от имени отправителя или, если Телемост не подключён, берёт его постоянную ссылку видеовстречи из личных настроек календаря, и кладёт в беседу сообщение kind=application с application_type calendar.video_meeting@1 и application_payload {url, provider}, где provider — telemost или personal. Повтор с тем же client_message_id возвращает уже отправленное сообщение и вторую комнату не заводит. 409 video_meeting_not_set_up — нет ни Телемоста, ни постоянной ссылки; 409 telemost_reconnect_required — доступ к Телемосту истёк и его нужно подключить заново; 409 conflict — client_message_id уже занят другим сообщением; 502 telemost_unavailable — Телемост не ответил.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "chat",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "chat:write",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatSendVideoMeeting"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Повтор ранее зафиксированной отправки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSendMessageResult"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Новое сообщение с карточкой видеовстречи",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatSendMessageResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "502": {
+            "description": "Яндекс Телемост не ответил; повторите позже",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/chat/conversations/{id}/read": {
       "parameters": [
         {
@@ -68425,6 +68514,23 @@
           "support_report": {
             "type": "boolean",
             "description": "Сообщение формы «Сообщить об ошибке». В чате поддержки открывает новое обращение и новую заявку, даже если в беседе уже есть открытое; обычное сообщение продолжает открытое. В любой другой беседе — 400"
+          }
+        }
+      },
+      "ChatSendVideoMeeting": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "client_message_id"
+        ],
+        "properties": {
+          "client_message_id": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              }
+            ],
+            "description": "Ключ идемпотентности отправки. Уникален в пределах беседы и отправителя: повтор с тем же ключом не заводит вторую комнату и второе сообщение, а возвращает уже отправленное"
           }
         }
       },

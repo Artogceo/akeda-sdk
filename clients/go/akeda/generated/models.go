@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8e517e74b238ac83eed16656430f1680df33a04bc9b602f73dfab017d9ed934c).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0620603236d8d21f99fa4c74e23de2c90ba75163b78f5872f55527f9ed205bac).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -2570,6 +2570,11 @@ type ChatSendMessage struct {
 type ChatSendMessageResult struct {
 	Message ChatMessage `json:"message"`
 	Created bool        `json:"created"`
+}
+
+type ChatSendVideoMeeting struct {
+	// ClientMessageID — Ключ идемпотентности отправки. Уникален в пределах беседы и отправителя: повтор с тем же ключом не заводит вторую комнату и второе сообщение, а возвращает уже отправленное
+	ClientMessageID map[string]json.RawMessage `json:"client_message_id"`
 }
 
 type ChatUnreadMention struct {
