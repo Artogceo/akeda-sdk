@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e5925bf9e30569124c9ab090661231eee5c8550d1527044d8b74e1b216e1eb04).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9577bb6917c1908401a88856ed2a7660af72c127d9ff3e8bad0a4c04b33d70a5).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -452,6 +452,8 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'filesUploadStatus': OperationSpec('GET', '/api/v1/files/uploads/{id}', 'files', 'preview', 'files:read', False, False, ('id',), 'none', None, None),
     'filesVersionContentLink': OperationSpec('GET', '/api/v1/files/versions/{id}/content-url', 'files', 'preview', 'files:read', False, False, ('id',), 'none', None, None),
     'financeAccountableBalances': OperationSpec('GET', '/api/v1/finance/accountable/balances', 'finance', 'preview', 'finance.accountable:read', False, True, (), 'none', None, None),
+    'financeAddAllocationRule': OperationSpec('POST', '/api/v1/finance/settlements/allocation-rules', 'finance', 'preview', 'finance.settlements:write', False, True, (), 'none', None, None),
+    'financeApplyAllocationRules': OperationSpec('POST', '/api/v1/finance/settlements/unapplied/apply-rules', 'finance', 'preview', 'finance.settlements:write', False, True, (), 'none', None, None),
     'financeApplyExchangeItem': OperationSpec('POST', '/api/v1/finance/exchange/items/{id}/apply', 'finance', 'preview', 'finance.exchange:write', False, True, ('id',), 'none', None, None),
     'financeApproveDividendDecision': OperationSpec('POST', '/api/v1/finance/dividends/decisions/{id}/approve', 'finance', 'preview', 'finance.dividends:approve', False, False, ('id',), 'none', None, None),
     'financeApproveDividendPolicy': OperationSpec('POST', '/api/v1/finance/dividends/policies/{id}/approve', 'finance', 'preview', 'finance.dividends:approve', False, False, ('id',), 'none', None, None),
@@ -498,6 +500,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeLinkStatementTransactions': OperationSpec('POST', '/api/v1/finance/statements/{id}/transactions', 'finance', 'preview', 'finance.statements:write', False, True, ('id',), 'none', None, None),
     'financeListAccounts': OperationSpec('GET', '/api/v1/finance/accounts', 'finance', 'preview', 'finance.accounts:read', False, True, (), 'none', None, None),
     'financeListAcquirers': OperationSpec('GET', '/api/v1/finance/acquirers', 'finance', 'preview', 'finance.settlements:read', False, True, (), 'none', None, None),
+    'financeListAllocationRules': OperationSpec('GET', '/api/v1/finance/settlements/allocation-rules', 'finance', 'preview', 'finance.settlements:read', False, True, (), 'none', None, None),
     'financeListConnectorAccounts': OperationSpec('GET', '/api/v1/finance/connectors/{id}/accounts', 'finance', 'preview', 'finance.connectors:read', False, True, ('id',), 'none', None, None),
     'financeListConnectorProviders': OperationSpec('GET', '/api/v1/finance/connectors/providers', 'finance', 'preview', 'finance.connectors:read', False, True, (), 'none', None, None),
     'financeListConnectorRuns': OperationSpec('GET', '/api/v1/finance/connectors/{id}/runs', 'finance', 'preview', 'finance.connectors:read', False, True, ('id',), 'limit', 100, 20),
@@ -516,11 +519,13 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeListStatements': OperationSpec('GET', '/api/v1/finance/statements', 'finance', 'preview', 'finance.statements:read', False, True, (), 'limit_offset', 100, 100),
     'financeListTransactions': OperationSpec('GET', '/api/v1/finance/transactions', 'finance', 'preview', 'finance.transactions:read', False, True, (), 'limit_offset', 500, 500),
     'financeMarkTransactionDeleted': OperationSpec('POST', '/api/v1/finance/transactions/{id}/mark-deleted', 'finance', 'preview', 'finance.transactions:write', False, True, ('id',), 'none', None, None),
+    'financeMergeItem': OperationSpec('POST', '/api/v1/finance/items/{id}/merge', 'finance', 'preview', 'finance.statements:write', False, True, ('id',), 'none', None, None),
     'financeOffsetTradeAdvances': OperationSpec('POST', '/api/v1/finance/trade/{id}/advance-offset', 'finance', 'preview', 'finance.settlements:write', False, True, ('id',), 'none', None, None),
     'financePostDividendDecision': OperationSpec('POST', '/api/v1/finance/dividends/decisions/{id}/post', 'finance', 'preview', 'finance.dividends:approve', False, False, ('id',), 'none', None, None),
     'financePostExpenseReport': OperationSpec('POST', '/api/v1/finance/accountable/reports/{id}/post', 'finance', 'preview', 'finance.accountable:write', False, True, ('id',), 'none', None, None),
     'financePostSettlementDocument': OperationSpec('POST', '/api/v1/finance/settlements/documents/{id}/post', 'finance', 'preview', 'finance.settlements:write', False, True, ('id',), 'none', None, None),
     'financePreviewDividendDecision': OperationSpec('GET', '/api/v1/finance/dividends/decisions/preview', 'finance', 'preview', 'finance.dividends:write', False, False, (), 'none', None, None),
+    'financePreviewItemMerge': OperationSpec('POST', '/api/v1/finance/items/{id}/merge/preview', 'finance', 'preview', 'finance.statements:write', False, True, ('id',), 'none', None, None),
     'financeQuarantineExchangeItem': OperationSpec('POST', '/api/v1/finance/exchange/items/{id}/quarantine', 'finance', 'preview', 'finance.exchange:write', False, True, ('id',), 'none', None, None),
     'financeReconcileRegisters': OperationSpec('GET', '/api/v1/finance/registers/reconcile', 'finance', 'preview', 'finance.registers:read', False, True, (), 'none', None, None),
     'financeRecordExchangeItem': OperationSpec('POST', '/api/v1/finance/exchange/items', 'finance', 'preview', 'finance.exchange:write', False, True, (), 'none', None, None),

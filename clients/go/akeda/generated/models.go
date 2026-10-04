@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e5925bf9e30569124c9ab090661231eee5c8550d1527044d8b74e1b216e1eb04).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9577bb6917c1908401a88856ed2a7660af72c127d9ff3e8bad0a4c04b33d70a5).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -2482,16 +2482,19 @@ type ChatMentionReadResult struct {
 }
 
 type ChatMessage struct {
-	ID              UUID                 `json:"id"`
-	ConversationID  UUID                 `json:"conversation_id"`
-	Seq             int64                `json:"seq"`
-	SenderUserID    *int64               `json:"sender_user_id"`
-	Kind            string               `json:"kind"`
-	Body            string               `json:"body"`
-	Mentions        []ChatMessageMention `json:"mentions"`
-	ClientMessageID *UUID                `json:"client_message_id"`
-	CreatedAt       string               `json:"created_at"`
-	Attachments     []ChatAttachment     `json:"attachments"`
+	ID               UUID                 `json:"id"`
+	ConversationID   UUID                 `json:"conversation_id"`
+	Seq              int64                `json:"seq"`
+	SenderUserID     *int64               `json:"sender_user_id"`
+	Kind             string               `json:"kind"`
+	Body             string               `json:"body"`
+	Mentions         []ChatMessageMention `json:"mentions"`
+	ClientMessageID  *UUID                `json:"client_message_id"`
+	CreatedAt        string               `json:"created_at"`
+	Attachments      []ChatAttachment     `json:"attachments"`
+	ReplyToMessageID *string              `json:"reply_to_message_id,omitempty"`
+	// ReplyQuote — Цитата части исходного сообщения; поля нет, когда ответ на сообщение целиком, исходное удалено или недоступно
+	ReplyQuote *string `json:"reply_quote,omitempty"`
 }
 
 type ChatMessageMention struct {
@@ -2558,6 +2561,10 @@ type ChatSendMessage struct {
 	MentionUserIds   []int64                    `json:"mention_user_ids,omitempty"`
 	// AttachmentIds — Готовые вложения этой беседы — id из завершения сессии загрузки или из списка вложений. Не сочетаются с mention_user_ids в одном сообщении
 	AttachmentIds []UUID `json:"attachment_ids,omitempty"`
+	// ReplyQuote — Цитата части исходного сообщения, как в Телеграме: дословный кусок его текста, не длиннее 1024 кодовых точек. Только вместе с reply_to_message_id; фрагмента нет в исходном — 404. Пустая строка — ответ на сообщение целиком
+	ReplyQuote *string `json:"reply_quote,omitempty"`
+	// SupportReport — Сообщение формы «Сообщить об ошибке». В чате поддержки открывает новое обращение и новую заявку, даже если в беседе уже есть открытое; обычное сообщение продолжает открытое. В любой другой беседе — 400
+	SupportReport *bool `json:"support_report,omitempty"`
 }
 
 type ChatSendMessageResult struct {
@@ -7225,8 +7232,12 @@ type FinanceAcquirerList struct {
 }
 
 type FinanceAcquiringCaptureInput struct {
-	// OrderID — Продажа, заведённая этой установкой приложения
-	OrderID UUID `json:"order_id"`
+	// OrderID — Продажа, заведённая этой установкой приложения. Без неё обязателен company_id: оплата розницы ложится на покупателя и разносится алгоритмом — в продажу дня, если она есть (ERP-1727)
+	OrderID *UUID `json:"order_id,omitempty"`
+	// CompanyID — Юрлицо-продавец оплаты без продажи; при order_id не нужно
+	CompanyID *UUID `json:"company_id,omitempty"`
+	// ContactID — Покупатель оплаты без продажи; не передан — системный «Розничный покупатель»
+	ContactID *UUID `json:"contact_id,omitempty"`
 	// Provider — Ключ проверенного провайдера платежа
 	Provider string `json:"provider"`
 	// ExternalID — Уникальный номер списания у провайдера; повтор использует тот же номер
@@ -7384,6 +7395,51 @@ type FinanceAcquiringRegistryRow struct {
 	ReceiptDocumentID *UUID `json:"receipt_document_id,omitempty"`
 	// Status — matched — оплата найдена и удержание сходится; unknown_payment — оплаты с таким номером в учёте нет; fee_mismatch — в учёте другое удержание
 	Status string `json:"status"`
+}
+
+// FinanceAllocationRule — Версия правила авторазнесения. Пустые уровни — правило не сужено.
+type FinanceAllocationRule struct {
+	ID         *UUID `json:"id,omitempty"`
+	BusinessID *UUID `json:"business_id,omitempty"`
+	CompanyID  *UUID `json:"company_id,omitempty"`
+	AccountID  *UUID `json:"account_id,omitempty"`
+	ContactID  *UUID `json:"contact_id,omitempty"`
+	ContractID *UUID `json:"contract_id,omitempty"`
+	// Side — Поступления или выплаты
+	Side *string `json:"side,omitempty"`
+	// Rule — Правило; inherit — как у уровня выше
+	Rule *string `json:"rule,omitempty"`
+	// ValidFrom — Дата начала действия версии
+	ValidFrom *string `json:"valid_from,omitempty"`
+	CreatedBy *int64  `json:"created_by,omitempty"`
+	CreatedAt *string `json:"created_at,omitempty"`
+}
+
+// FinanceAllocationRuleInput — Новая версия правила авторазнесения.
+type FinanceAllocationRuleInput struct {
+	BusinessID UUID   `json:"business_id"`
+	CompanyID  *UUID  `json:"company_id,omitempty"`
+	AccountID  *UUID  `json:"account_id,omitempty"`
+	ContactID  *UUID  `json:"contact_id,omitempty"`
+	ContractID *UUID  `json:"contract_id,omitempty"`
+	Side       string `json:"side"`
+	Rule       string `json:"rule"`
+	ValidFrom  string `json:"valid_from"`
+}
+
+// FinanceAllocationRuleRun — Оплаты, которые разнесёт правило, и сколько разнесено.
+type FinanceAllocationRuleRun struct {
+	DryRun *bool `json:"dry_run,omitempty"`
+	// Applied — Сколько оплат разнесено; в предпросмотре 0
+	Applied *int64                       `json:"applied,omitempty"`
+	Items   []map[string]json.RawMessage `json:"items,omitempty"`
+}
+
+// FinanceAllocationRuleRunInput — Разнесение очереди по правилу; dry_run — предпросмотр.
+type FinanceAllocationRuleRunInput struct {
+	BusinessID *UUID `json:"business_id,omitempty"`
+	// DryRun — Предпросмотр без записи
+	DryRun *bool `json:"dry_run,omitempty"`
 }
 
 type FinanceBalanceItem struct {
@@ -7788,6 +7844,24 @@ type FinanceExpenseReportRow struct {
 	Comment       *string `json:"comment,omitempty"`
 	// Closes — «Закрывает» — долг поставщику (закупка, счёт), который гасит строка по статье расчётов с поставщиками (ERP-1249); пусто — долг подберёт правило
 	Closes *UUID `json:"closes,omitempty"`
+}
+
+type FinanceItemMergeRequest struct {
+	TargetID UUID `json:"target_id"`
+}
+
+type FinanceItemMergeResult struct {
+	Preview    *bool                        `json:"preview,omitempty"`
+	SourceID   *UUID                        `json:"source_id,omitempty"`
+	SourceName *string                      `json:"source_name,omitempty"`
+	TargetID   *UUID                        `json:"target_id,omitempty"`
+	TargetName *string                      `json:"target_name,omitempty"`
+	Documents  []map[string]json.RawMessage `json:"documents,omitempty"`
+	Months     []map[string]json.RawMessage `json:"months,omitempty"`
+	Settings   []map[string]json.RawMessage `json:"settings,omitempty"`
+	References []map[string]json.RawMessage `json:"references,omitempty"`
+	Totals     []map[string]json.RawMessage `json:"totals,omitempty"`
+	Deleted    *bool                        `json:"deleted,omitempty"`
 }
 
 type FinanceOpeningDebtRequest struct {
@@ -12488,50 +12562,54 @@ type SupplierDocument struct {
 }
 
 type Task struct {
-	ID                 UUID                         `json:"id"`
-	Identifier         string                       `json:"identifier"`
-	Section            *UUID                        `json:"section"`
-	SectionKey         *string                      `json:"section_key"`
-	SectionName        *string                      `json:"section_name"`
-	Title              string                       `json:"title"`
-	Description        string                       `json:"description"`
-	Status             *UUID                        `json:"status"`
-	StatusName         *string                      `json:"status_name"`
-	StatusCategory     *string                      `json:"status_category"`
-	Priority           TaskPriority                 `json:"priority"`
-	IsImportant        bool                         `json:"is_important"`
-	Creator            *int64                       `json:"creator"`
-	CreatorName        *string                      `json:"creator_name"`
-	Executor           *int64                       `json:"executor"`
-	ExecutorName       *string                      `json:"executor_name"`
-	Assignee           *int64                       `json:"assignee,omitempty"`
-	AssigneeName       *string                      `json:"assignee_name,omitempty"`
-	Coexecutors        []TaskWatcher                `json:"coexecutors"`
-	Cycle              *UUID                        `json:"cycle"`
-	CycleName          *string                      `json:"cycle_name"`
-	Milestone          *UUID                        `json:"milestone"`
-	MilestoneName      *string                      `json:"milestone_name"`
-	StartAt            *string                      `json:"start_at"`
-	CreatedAt          string                       `json:"created_at"`
-	DueAt              *string                      `json:"due_at"`
-	Estimate           *float64                     `json:"estimate"`
-	SortOrder          float64                      `json:"sort_order"`
-	IsArchived         bool                         `json:"is_archived"`
-	Parent             *UUID                        `json:"parent"`
-	ParentIdentifier   *string                      `json:"parent_identifier"`
-	ParentTitle        *string                      `json:"parent_title"`
-	Recurrence         string                       `json:"recurrence"`
-	RecurrenceInterval int64                        `json:"recurrence_interval"`
-	RecurrenceUntil    *string                      `json:"recurrence_until"`
-	Custom             map[string]json.RawMessage   `json:"custom"`
-	Watchers           []TaskWatcher                `json:"watchers"`
-	Subtasks           []Subtask                    `json:"subtasks"`
-	SubtasksTotal      int64                        `json:"subtasks_total"`
-	SubtasksDone       int64                        `json:"subtasks_done"`
-	Tags               []TaskTag                    `json:"tags"`
-	Links              []map[string]json.RawMessage `json:"links"`
-	CommentsCount      int64                        `json:"comments_count"`
-	BlockedByCount     int64                        `json:"blocked_by_count"`
+	ID                 UUID                       `json:"id"`
+	Identifier         string                     `json:"identifier"`
+	Section            *UUID                      `json:"section"`
+	SectionKey         *string                    `json:"section_key"`
+	SectionName        *string                    `json:"section_name"`
+	Title              string                     `json:"title"`
+	Description        string                     `json:"description"`
+	Status             *UUID                      `json:"status"`
+	StatusName         *string                    `json:"status_name"`
+	StatusCategory     *string                    `json:"status_category"`
+	Priority           TaskPriority               `json:"priority"`
+	IsImportant        bool                       `json:"is_important"`
+	Creator            *int64                     `json:"creator"`
+	CreatorName        *string                    `json:"creator_name"`
+	Executor           *int64                     `json:"executor"`
+	ExecutorName       *string                    `json:"executor_name"`
+	Assignee           *int64                     `json:"assignee,omitempty"`
+	AssigneeName       *string                    `json:"assignee_name,omitempty"`
+	Coexecutors        []TaskWatcher              `json:"coexecutors"`
+	Cycle              *UUID                      `json:"cycle"`
+	CycleName          *string                    `json:"cycle_name"`
+	Milestone          *UUID                      `json:"milestone"`
+	MilestoneName      *string                    `json:"milestone_name"`
+	StartAt            *string                    `json:"start_at"`
+	CreatedAt          string                     `json:"created_at"`
+	DueAt              *string                    `json:"due_at"`
+	Estimate           *float64                   `json:"estimate"`
+	SortOrder          float64                    `json:"sort_order"`
+	IsArchived         bool                       `json:"is_archived"`
+	Parent             *UUID                      `json:"parent"`
+	ParentIdentifier   *string                    `json:"parent_identifier"`
+	ParentTitle        *string                    `json:"parent_title"`
+	Recurrence         string                     `json:"recurrence"`
+	RecurrenceInterval int64                      `json:"recurrence_interval"`
+	RecurrenceUntil    *string                    `json:"recurrence_until"`
+	Custom             map[string]json.RawMessage `json:"custom"`
+	Watchers           []TaskWatcher              `json:"watchers"`
+	Subtasks           []Subtask                  `json:"subtasks"`
+	SubtasksTotal      int64                      `json:"subtasks_total"`
+	SubtasksDone       int64                      `json:"subtasks_done"`
+	// ChecklistTotal — Пунктов во всех чек-листах задачи (ERP-1488); есть и в компактной строке списка.
+	ChecklistTotal int64 `json:"checklist_total"`
+	// ChecklistDone — Отмеченных пунктов во всех чек-листах задачи.
+	ChecklistDone  int64                        `json:"checklist_done"`
+	Tags           []TaskTag                    `json:"tags"`
+	Links          []map[string]json.RawMessage `json:"links"`
+	CommentsCount  int64                        `json:"comments_count"`
+	BlockedByCount int64                        `json:"blocked_by_count"`
 }
 
 type TaskCreate struct {
@@ -13072,6 +13150,10 @@ type FinanceListDividendPoliciesResponse struct {
 type FinanceGetProjectBudgetHistoryResponse struct {
 	Count   int64                  `json:"count"`
 	Results []FinanceProjectBudget `json:"results"`
+}
+
+type FinanceListAllocationRulesResponse struct {
+	Results []FinanceAllocationRule `json:"results,omitempty"`
 }
 
 type FinanceRepostTransactionsRequest struct {

@@ -13517,6 +13517,121 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/finance/settlements/allocation-rules:
+    get:
+      tags:
+        - Finance settlements
+      operationId: financeListAllocationRules
+      summary: Получить правила авторазнесения оплаты
+      description: Все версии правил авторазнесения бизнеса — базовое правило и исключения по юрлицу, расчётному счёту, контрагенту и договору. Правило решает только спорный выбор между открытыми продажами или закупками; ссылка в назначении всегда главнее. Без правил действует «спрашивать».
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.settlements:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/BusinessQuery'
+      responses:
+        '200':
+          description: Версии правил
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FinanceAllocationRule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - Finance settlements
+      operationId: financeAddAllocationRule
+      summary: Добавить версию правила авторазнесения
+      description: 'Новая версия правила уровня с даты действия: смена правила, исключение или его снятие (rule=inherit). Прежние версии не меняются.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.settlements:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceAllocationRuleInput'
+      responses:
+        '201':
+          description: Добавленная версия правила
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceAllocationRule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/finance/settlements/unapplied/apply-rules:
+    post:
+      tags:
+        - Finance settlements
+      operationId: financeApplyAllocationRules
+      summary: Разнести очередь по правилу авторазнесения
+      description: Оплаты очереди «Разнести оплаты», которые действующее правило разносит сейчас. dry_run — предпросмотр без записи; без него оплаты разносятся тем же путём, что при проведении платежа. Остальные ждут человека.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.settlements:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceAllocationRuleRunInput'
+      responses:
+        '200':
+          description: Предпросмотр или итог разнесения по правилу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceAllocationRuleRun'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/finance/settlements/balances:
     get:
       tags:
@@ -16587,6 +16702,100 @@ paths:
           $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+  /api/v1/finance/items/{id}/merge/preview:
+    post:
+      tags:
+        - Finance accounts
+      operationId: financePreviewItemMerge
+      summary: Предпросмотр объединения статьи с другой
+      description: 'Показывает, что сделает объединение статьи {id} со статьёй target_id, и ничего не меняет: документы со статьёй и зависимые разнесения, обороты по месяцам, переносимые настройки по модулям и итоги регистров до и после. Отказы те же, что у объединения, с перечнем мешающего.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.statements:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceItemMergeRequest'
+      responses:
+        '200':
+          description: Предпросмотр объединения
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceItemMergeResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/finance/items/{id}/merge:
+    post:
+      tags:
+        - Finance accounts
+      operationId: financeMergeItem
+      summary: Объединить статью с другой и удалить её
+      description: Переносит все операции статьи {id} на статью target_id перепроведением документов (сторно, документы те же) и удаляет статью {id}. Зависимые разнесения, зачёты и авансы перепроводятся в той же транзакции; настройки (плановые платежи, правила разноски, правила схемы проводок, маршруты согласования) переезжают на target_id. Итоги регистров по обеим статьям не меняются. Только статьи одного вида и стороны, не системная. Отказ — закрытый период, больше 500 документов, конфликт настроек, статья в продаже или закупке — ничего не меняет.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.statements:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceItemMergeRequest'
+      responses:
+        '200':
+          description: Статьи объединены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceItemMergeResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/crm/pipelines:
     get:
       tags:
@@ -35778,6 +35987,106 @@ components:
             type: string
             format: binary
   schemas:
+    FinanceAllocationRule:
+      type: object
+      description: Версия правила авторазнесения. Пустые уровни — правило не сужено.
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        account_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        contract_id:
+          $ref: '#/components/schemas/UUID'
+        side:
+          type: string
+          enum:
+            - receipt
+            - payout
+          description: Поступления или выплаты
+        rule:
+          type: string
+          enum:
+            - ask
+            - fifo
+            - due_date
+            - exact_amount
+            - inherit
+          description: Правило; inherit — как у уровня выше
+        valid_from:
+          type: string
+          format: date
+          description: Дата начала действия версии
+        created_by:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+    FinanceAllocationRuleInput:
+      type: object
+      description: Новая версия правила авторазнесения.
+      required:
+        - business_id
+        - side
+        - rule
+        - valid_from
+      properties:
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        account_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        contract_id:
+          $ref: '#/components/schemas/UUID'
+        side:
+          type: string
+          enum:
+            - receipt
+            - payout
+        rule:
+          type: string
+          enum:
+            - ask
+            - fifo
+            - due_date
+            - exact_amount
+            - inherit
+        valid_from:
+          type: string
+          format: date
+      additionalProperties: false
+    FinanceAllocationRuleRunInput:
+      type: object
+      description: Разнесение очереди по правилу; dry_run — предпросмотр.
+      properties:
+        business_id:
+          $ref: '#/components/schemas/UUID'
+        dry_run:
+          type: boolean
+          description: Предпросмотр без записи
+      additionalProperties: false
+    FinanceAllocationRuleRun:
+      type: object
+      description: Оплаты, которые разнесёт правило, и сколько разнесено.
+      properties:
+        dry_run:
+          type: boolean
+        applied:
+          type: integer
+          description: Сколько оплат разнесено; в предпросмотре 0
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
     AssistantDigestInput:
       type: object
       required:
@@ -36821,6 +37130,8 @@ components:
         - subtasks
         - subtasks_total
         - subtasks_done
+        - checklist_total
+        - checklist_done
         - tags
         - links
         - comments_count
@@ -36966,6 +37277,14 @@ components:
         subtasks_done:
           type: integer
           minimum: 0
+        checklist_total:
+          type: integer
+          minimum: 0
+          description: Пунктов во всех чек-листах задачи (ERP-1488); есть и в компактной строке списка.
+        checklist_done:
+          type: integer
+          minimum: 0
+          description: Отмеченных пунктов во всех чек-листах задачи.
         tags:
           type: array
           items:
@@ -42165,6 +42484,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ChatAttachment'
+        reply_to_message_id:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        reply_quote:
+          type: string
+          description: Цитата части исходного сообщения; поля нет, когда ответ на сообщение целиком, исходное удалено или недоступно
     ChatAttachment:
       type: object
       additionalProperties: false
@@ -42260,6 +42587,13 @@ components:
           items:
             $ref: '#/components/schemas/UUID'
           description: Готовые вложения этой беседы — id из завершения сессии загрузки или из списка вложений. Не сочетаются с mention_user_ids в одном сообщении
+        reply_quote:
+          type: string
+          maxLength: 1024
+          description: 'Цитата части исходного сообщения, как в Телеграме: дословный кусок его текста, не длиннее 1024 кодовых точек. Только вместе с reply_to_message_id; фрагмента нет в исходном — 404. Пустая строка — ответ на сообщение целиком'
+        support_report:
+          type: boolean
+          description: Сообщение формы «Сообщить об ошибке». В чате поддержки открывает новое обращение и новую заявку, даже если в беседе уже есть открытое; обычное сообщение продолжает открытое. В любой другой беседе — 400
     ChatSendMessageResult:
       type: object
       additionalProperties: false
@@ -48608,7 +48942,6 @@ components:
       type: object
       additionalProperties: false
       required:
-        - order_id
         - provider
         - external_id
         - amount
@@ -48617,7 +48950,13 @@ components:
       properties:
         order_id:
           $ref: '#/components/schemas/UUID'
-          description: Продажа, заведённая этой установкой приложения
+          description: 'Продажа, заведённая этой установкой приложения. Без неё обязателен company_id: оплата розницы ложится на покупателя и разносится алгоритмом — в продажу дня, если она есть (ERP-1727)'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+          description: Юрлицо-продавец оплаты без продажи; при order_id не нужно
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+          description: Покупатель оплаты без продажи; не передан — системный «Розничный покупатель»
         provider:
           type: string
           minLength: 1
@@ -50541,6 +50880,54 @@ components:
             - manual
             - onec
           description: 'Откуда строка: введена вручную или загружена из 1С'
+    FinanceItemMergeRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - target_id
+      properties:
+        target_id:
+          $ref: '#/components/schemas/UUID'
+    FinanceItemMergeResult:
+      type: object
+      properties:
+        preview:
+          type: boolean
+        source_id:
+          $ref: '#/components/schemas/UUID'
+        source_name:
+          type: string
+        target_id:
+          $ref: '#/components/schemas/UUID'
+        target_name:
+          type: string
+        documents:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        months:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        settings:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        references:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        totals:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        deleted:
+          type: boolean
     FinanceDividendPolicyInput:
       type: object
       additionalProperties: false

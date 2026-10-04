@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e5925bf9e30569124c9ab090661231eee5c8550d1527044d8b74e1b216e1eb04).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9577bb6917c1908401a88856ed2a7660af72c127d9ff3e8bad0a4c04b33d70a5).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -670,6 +670,10 @@ __all__ = [
     "FinanceAcquiringRegistryImport",
     "FinanceAcquiringRegistryInput",
     "FinanceAcquiringRegistryRow",
+    "FinanceAllocationRule",
+    "FinanceAllocationRuleInput",
+    "FinanceAllocationRuleRun",
+    "FinanceAllocationRuleRunInput",
     "FinanceBalanceItem",
     "FinanceBalanceReport",
     "FinanceBalanceSection",
@@ -713,6 +717,8 @@ __all__ = [
     "FinanceExpenseReportCreate",
     "FinanceExpenseReportCreatePayload",
     "FinanceExpenseReportRow",
+    "FinanceItemMergeRequest",
+    "FinanceItemMergeResult",
     "FinanceOpeningDebtRequest",
     "FinanceOperation",
     "FinanceOperationAccrualAllocation",
@@ -1183,6 +1189,7 @@ __all__ = [
     "FinanceListDividendOwnersResponseResultsItem",
     "FinanceListDividendPoliciesResponse",
     "FinanceGetProjectBudgetHistoryResponse",
+    "FinanceListAllocationRulesResponse",
     "FinanceRepostTransactionsRequest",
     "FinanceMarkTransactionDeletedRequest",
     "FinanceRepostTransactionRequest",
@@ -3704,7 +3711,7 @@ class ChatMentionReadResult(TypedDict):
     read_at: Optional[str]
     changed: bool
 
-class ChatMessage(TypedDict):
+class _ChatMessageRequired(TypedDict):
     id: "UUID"
     conversation_id: "UUID"
     seq: int
@@ -3715,6 +3722,11 @@ class ChatMessage(TypedDict):
     client_message_id: Optional["UUID"]
     created_at: str
     attachments: List["ChatAttachment"]
+
+class ChatMessage(_ChatMessageRequired, total=False):
+    reply_to_message_id: Optional[str]
+    #: Цитата части исходного сообщения; поля нет, когда ответ на сообщение целиком, исходное удалено или недоступно
+    reply_quote: str
 
 class ChatMessageMention(TypedDict):
     user_id: int
@@ -3776,6 +3788,10 @@ class ChatSendMessage(_ChatSendMessageRequired, total=False):
     mention_user_ids: List[int]
     #: Готовые вложения этой беседы — id из завершения сессии загрузки или из списка вложений. Не сочетаются с mention_user_ids в одном сообщении
     attachment_ids: List["UUID"]
+    #: Цитата части исходного сообщения, как в Телеграме: дословный кусок его текста, не длиннее 1024 кодовых точек. Только вместе с reply_to_message_id; фрагмента нет в исходном — 404. Пустая строка — ответ на сообщение целиком
+    reply_quote: str
+    #: Сообщение формы «Сообщить об ошибке». В чате поддержки открывает новое обращение и новую заявку, даже если в беседе уже есть открытое; обычное сообщение продолжает открытое. В любой другой беседе — 400
+    support_report: bool
 
 class ChatSendMessageResult(TypedDict):
     message: "ChatMessage"
@@ -8499,8 +8515,6 @@ class FinanceAcquirerList(TypedDict):
     acquirers: List["FinanceAcquirer"]
 
 class _FinanceAcquiringCaptureInputRequired(TypedDict):
-    #: Продажа, заведённая этой установкой приложения
-    order_id: "UUID"
     #: Ключ проверенного провайдера платежа
     provider: str
     #: Уникальный номер списания у провайдера; повтор использует тот же номер
@@ -8513,6 +8527,12 @@ class _FinanceAcquiringCaptureInputRequired(TypedDict):
     paid_at: str
 
 class FinanceAcquiringCaptureInput(_FinanceAcquiringCaptureInputRequired, total=False):
+    #: Продажа, заведённая этой установкой приложения. Без неё обязателен company_id: оплата розницы ложится на покупателя и разносится алгоритмом — в продажу дня, если она есть (ERP-1727)
+    order_id: "UUID"
+    #: Юрлицо-продавец оплаты без продажи; при order_id не нужно
+    company_id: "UUID"
+    #: Покупатель оплаты без продажи; не передан — системный «Розничный покупатель»
+    contact_id: "UUID"
     #: Сколько провайдер удержал из этого платежа, всего с налогом, десятичная строка; меньше суммы списания. Не передаётся, если провайдер удержание по платежу не называет. Создаёт документ «Комиссия эквайринга» (Дт 44 / Кт 57.03); в отпечаток повтора не входит, поэтому может прийти позже повтором того же платежа
     fee: str
     #: В том числе налог с комиссии, десятичная строка, если провайдер его называет; передаётся только вместе с fee. Не передан — финансы считают налог по ставке эквайера из настройки «Эквайринг». К вычету (Дт 19) идёт, если юрлицо на дату выделяет входной налог; иначе остаётся в расходе
@@ -8662,6 +8682,53 @@ class FinanceAcquiringRegistryRow(_FinanceAcquiringRegistryRowRequired, total=Fa
     paid_at: str
     #: Найденная оплата картой
     receipt_document_id: "UUID"
+
+class FinanceAllocationRule(TypedDict, total=False):
+    """Версия правила авторазнесения. Пустые уровни — правило не сужено."""
+
+    id: "UUID"
+    business_id: "UUID"
+    company_id: "UUID"
+    account_id: "UUID"
+    contact_id: "UUID"
+    contract_id: "UUID"
+    #: Поступления или выплаты
+    side: Literal['receipt', 'payout']
+    #: Правило; inherit — как у уровня выше
+    rule: Literal['ask', 'fifo', 'due_date', 'exact_amount', 'inherit']
+    #: Дата начала действия версии
+    valid_from: str
+    created_by: int
+    created_at: str
+
+class _FinanceAllocationRuleInputRequired(TypedDict):
+    business_id: "UUID"
+    side: Literal['receipt', 'payout']
+    rule: Literal['ask', 'fifo', 'due_date', 'exact_amount', 'inherit']
+    valid_from: str
+
+class FinanceAllocationRuleInput(_FinanceAllocationRuleInputRequired, total=False):
+    """Новая версия правила авторазнесения."""
+
+    company_id: "UUID"
+    account_id: "UUID"
+    contact_id: "UUID"
+    contract_id: "UUID"
+
+class FinanceAllocationRuleRun(TypedDict, total=False):
+    """Оплаты, которые разнесёт правило, и сколько разнесено."""
+
+    dry_run: bool
+    #: Сколько оплат разнесено; в предпросмотре 0
+    applied: int
+    items: List[Dict[str, Any]]
+
+class FinanceAllocationRuleRunInput(TypedDict, total=False):
+    """Разнесение очереди по правилу; dry_run — предпросмотр."""
+
+    business_id: "UUID"
+    #: Предпросмотр без записи
+    dry_run: bool
 
 class FinanceBalanceItem(TypedDict):
     code: str
@@ -9047,6 +9114,22 @@ class FinanceExpenseReportRow(_FinanceExpenseReportRowRequired, total=False):
     comment: str
     #: «Закрывает» — долг поставщику (закупка, счёт), который гасит строка по статье расчётов с поставщиками (ERP-1249); пусто — долг подберёт правило
     closes: "UUID"
+
+class FinanceItemMergeRequest(TypedDict):
+    target_id: "UUID"
+
+class FinanceItemMergeResult(TypedDict, total=False):
+    preview: bool
+    source_id: "UUID"
+    source_name: str
+    target_id: "UUID"
+    target_name: str
+    documents: List[Dict[str, Any]]
+    months: List[Dict[str, Any]]
+    settings: List[Dict[str, Any]]
+    references: List[Dict[str, Any]]
+    totals: List[Dict[str, Any]]
+    deleted: bool
 
 class _FinanceOpeningDebtRequestRequired(TypedDict):
     #: Дата остатков — дата старта учёта
@@ -13621,6 +13704,10 @@ class _TaskRequired(TypedDict):
     subtasks: List["Subtask"]
     subtasks_total: int
     subtasks_done: int
+    #: Пунктов во всех чек-листах задачи (ERP-1488); есть и в компактной строке списка.
+    checklist_total: int
+    #: Отмеченных пунктов во всех чек-листах задачи.
+    checklist_done: int
     tags: List["TaskTag"]
     links: List[Dict[str, Any]]
     comments_count: int
@@ -14154,6 +14241,9 @@ class FinanceListDividendPoliciesResponse(TypedDict, total=False):
 class FinanceGetProjectBudgetHistoryResponse(TypedDict):
     count: int
     results: List["FinanceProjectBudget"]
+
+class FinanceListAllocationRulesResponse(TypedDict, total=False):
+    results: List["FinanceAllocationRule"]
 
 class _FinanceRepostTransactionsRequestRequired(TypedDict):
     ids: List["UUID"]

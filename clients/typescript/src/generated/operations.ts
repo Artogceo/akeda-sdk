@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e5925bf9e30569124c9ab090661231eee5c8550d1527044d8b74e1b216e1eb04).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9577bb6917c1908401a88856ed2a7660af72c127d9ff3e8bad0a4c04b33d70a5).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2981,6 +2981,20 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceAccountableBalances;
   };
+  /** POST /api/v1/finance/settlements/allocation-rules — Добавить версию правила авторазнесения */
+  financeAddAllocationRule: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FinanceAllocationRuleInput;
+    response: models.FinanceAllocationRule;
+  };
+  /** POST /api/v1/finance/settlements/unapplied/apply-rules — Разнести очередь по правилу авторазнесения */
+  financeApplyAllocationRules: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FinanceAllocationRuleRunInput;
+    response: models.FinanceAllocationRuleRun;
+  };
   /** POST /api/v1/finance/exchange/items/{id}/apply — Связать элемент обмена с каноническим документом Akeda */
   financeApplyExchangeItem: {
     params: { "id": models.UUID };
@@ -3303,6 +3317,13 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceAcquirerList;
   };
+  /** GET /api/v1/finance/settlements/allocation-rules — Получить правила авторазнесения оплаты */
+  financeListAllocationRules: {
+    params: Record<string, never>;
+    query: { "business"?: models.UUID };
+    body: never;
+    response: models.FinanceListAllocationRulesResponse;
+  };
   /** GET /api/v1/finance/connectors/{id}/accounts — Получить банковские счета подключения и их привязки */
   financeListConnectorAccounts: {
     params: { "id": models.UUID };
@@ -3429,6 +3450,13 @@ export interface OperationTypes {
     body: models.FinanceMarkTransactionDeletedRequest;
     response: models.CoreDocument;
   };
+  /** POST /api/v1/finance/items/{id}/merge — Объединить статью с другой и удалить её */
+  financeMergeItem: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.FinanceItemMergeRequest;
+    response: models.FinanceItemMergeResult;
+  };
   /** POST /api/v1/finance/trade/{id}/advance-offset — Зачесть свободные авансы в долг продажи или закупки */
   financeOffsetTradeAdvances: {
     params: { "id": models.UUID };
@@ -3463,6 +3491,13 @@ export interface OperationTypes {
     query: { "business_id"?: models.UUID; "company_id"?: models.UUID; "period_from": string; "period_to": string; "policy_id"?: models.UUID };
     body: never;
     response: { [key: string]: unknown };
+  };
+  /** POST /api/v1/finance/items/{id}/merge/preview — Предпросмотр объединения статьи с другой */
+  financePreviewItemMerge: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.FinanceItemMergeRequest;
+    response: models.FinanceItemMergeResult;
   };
   /** POST /api/v1/finance/exchange/items/{id}/quarantine — Поместить элемент обмена в карантин */
   financeQuarantineExchangeItem: {
@@ -5991,6 +6026,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   filesUploadStatus: { method: "GET", path: "/api/v1/files/uploads/{id}", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesVersionContentLink: { method: "GET", path: "/api/v1/files/versions/{id}/content-url", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeAccountableBalances: { method: "GET", path: "/api/v1/finance/accountable/balances", module: "finance", stage: "preview", permission: "finance.accountable:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeAddAllocationRule: { method: "POST", path: "/api/v1/finance/settlements/allocation-rules", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeApplyAllocationRules: { method: "POST", path: "/api/v1/finance/settlements/unapplied/apply-rules", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeApplyExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items/{id}/apply", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeApproveDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions/{id}/approve", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeApproveDividendPolicy: { method: "POST", path: "/api/v1/finance/dividends/policies/{id}/approve", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -6037,6 +6074,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeLinkStatementTransactions: { method: "POST", path: "/api/v1/finance/statements/{id}/transactions", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListAccounts: { method: "GET", path: "/api/v1/finance/accounts", module: "finance", stage: "preview", permission: "finance.accounts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListAcquirers: { method: "GET", path: "/api/v1/finance/acquirers", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListAllocationRules: { method: "GET", path: "/api/v1/finance/settlements/allocation-rules", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListConnectorAccounts: { method: "GET", path: "/api/v1/finance/connectors/{id}/accounts", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListConnectorProviders: { method: "GET", path: "/api/v1/finance/connectors/providers", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListConnectorRuns: { method: "GET", path: "/api/v1/finance/connectors/{id}/runs", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 20 },
@@ -6055,11 +6093,13 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeListStatements: { method: "GET", path: "/api/v1/finance/statements", module: "finance", stage: "preview", permission: "finance.statements:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 100 },
   financeListTransactions: { method: "GET", path: "/api/v1/finance/transactions", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 500 },
   financeMarkTransactionDeleted: { method: "POST", path: "/api/v1/finance/transactions/{id}/mark-deleted", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeMergeItem: { method: "POST", path: "/api/v1/finance/items/{id}/merge", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeOffsetTradeAdvances: { method: "POST", path: "/api/v1/finance/trade/{id}/advance-offset", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePostDividendDecision: { method: "POST", path: "/api/v1/finance/dividends/decisions/{id}/post", module: "finance", stage: "preview", permission: "finance.dividends:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePostExpenseReport: { method: "POST", path: "/api/v1/finance/accountable/reports/{id}/post", module: "finance", stage: "preview", permission: "finance.accountable:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePostSettlementDocument: { method: "POST", path: "/api/v1/finance/settlements/documents/{id}/post", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePreviewDividendDecision: { method: "GET", path: "/api/v1/finance/dividends/decisions/preview", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financePreviewItemMerge: { method: "POST", path: "/api/v1/finance/items/{id}/merge/preview", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeQuarantineExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items/{id}/quarantine", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeReconcileRegisters: { method: "GET", path: "/api/v1/finance/registers/reconcile", module: "finance", stage: "preview", permission: "finance.registers:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeRecordExchangeItem: { method: "POST", path: "/api/v1/finance/exchange/items", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

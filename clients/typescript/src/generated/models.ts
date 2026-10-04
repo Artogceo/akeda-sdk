@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e5925bf9e30569124c9ab090661231eee5c8550d1527044d8b74e1b216e1eb04).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9577bb6917c1908401a88856ed2a7660af72c127d9ff3e8bad0a4c04b33d70a5).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2494,6 +2494,9 @@ export interface ChatMessage {
   "client_message_id": UUID | null;
   "created_at": string;
   "attachments": Array<ChatAttachment>;
+  "reply_to_message_id"?: string | null;
+  /** Цитата части исходного сообщения; поля нет, когда ответ на сообщение целиком, исходное удалено или недоступно */
+  "reply_quote"?: string;
 }
 
 export interface ChatMessageMention {
@@ -2560,6 +2563,10 @@ export interface ChatSendMessage {
   "mention_user_ids"?: Array<number>;
   /** Готовые вложения этой беседы — id из завершения сессии загрузки или из списка вложений. Не сочетаются с mention_user_ids в одном сообщении */
   "attachment_ids"?: Array<UUID>;
+  /** Цитата части исходного сообщения, как в Телеграме: дословный кусок его текста, не длиннее 1024 кодовых точек. Только вместе с reply_to_message_id; фрагмента нет в исходном — 404. Пустая строка — ответ на сообщение целиком */
+  "reply_quote"?: string;
+  /** Сообщение формы «Сообщить об ошибке». В чате поддержки открывает новое обращение и новую заявку, даже если в беседе уже есть открытое; обычное сообщение продолжает открытое. В любой другой беседе — 400 */
+  "support_report"?: boolean;
 }
 
 export interface ChatSendMessageResult {
@@ -7242,8 +7249,12 @@ export interface FinanceAcquirerList {
 }
 
 export interface FinanceAcquiringCaptureInput {
-  /** Продажа, заведённая этой установкой приложения */
-  "order_id": UUID;
+  /** Продажа, заведённая этой установкой приложения. Без неё обязателен company_id: оплата розницы ложится на покупателя и разносится алгоритмом — в продажу дня, если она есть (ERP-1727) */
+  "order_id"?: UUID;
+  /** Юрлицо-продавец оплаты без продажи; при order_id не нужно */
+  "company_id"?: UUID;
+  /** Покупатель оплаты без продажи; не передан — системный «Розничный покупатель» */
+  "contact_id"?: UUID;
   /** Ключ проверенного провайдера платежа */
   "provider": string;
   /** Уникальный номер списания у провайдера; повтор использует тот же номер */
@@ -7401,6 +7412,51 @@ export interface FinanceAcquiringRegistryRow {
   "receipt_document_id"?: UUID;
   /** matched — оплата найдена и удержание сходится; unknown_payment — оплаты с таким номером в учёте нет; fee_mismatch — в учёте другое удержание */
   "status": "matched" | "unknown_payment" | "fee_mismatch";
+}
+
+/** Версия правила авторазнесения. Пустые уровни — правило не сужено. */
+export interface FinanceAllocationRule {
+  "id"?: UUID;
+  "business_id"?: UUID;
+  "company_id"?: UUID;
+  "account_id"?: UUID;
+  "contact_id"?: UUID;
+  "contract_id"?: UUID;
+  /** Поступления или выплаты */
+  "side"?: "receipt" | "payout";
+  /** Правило; inherit — как у уровня выше */
+  "rule"?: "ask" | "fifo" | "due_date" | "exact_amount" | "inherit";
+  /** Дата начала действия версии */
+  "valid_from"?: string;
+  "created_by"?: number;
+  "created_at"?: string;
+}
+
+/** Новая версия правила авторазнесения. */
+export interface FinanceAllocationRuleInput {
+  "business_id": UUID;
+  "company_id"?: UUID;
+  "account_id"?: UUID;
+  "contact_id"?: UUID;
+  "contract_id"?: UUID;
+  "side": "receipt" | "payout";
+  "rule": "ask" | "fifo" | "due_date" | "exact_amount" | "inherit";
+  "valid_from": string;
+}
+
+/** Оплаты, которые разнесёт правило, и сколько разнесено. */
+export interface FinanceAllocationRuleRun {
+  "dry_run"?: boolean;
+  /** Сколько оплат разнесено; в предпросмотре 0 */
+  "applied"?: number;
+  "items"?: Array<{ [key: string]: unknown }>;
+}
+
+/** Разнесение очереди по правилу; dry_run — предпросмотр. */
+export interface FinanceAllocationRuleRunInput {
+  "business_id"?: UUID;
+  /** Предпросмотр без записи */
+  "dry_run"?: boolean;
 }
 
 export interface FinanceBalanceItem {
@@ -7805,6 +7861,24 @@ export interface FinanceExpenseReportRow {
   "comment"?: string;
   /** «Закрывает» — долг поставщику (закупка, счёт), который гасит строка по статье расчётов с поставщиками (ERP-1249); пусто — долг подберёт правило */
   "closes"?: UUID;
+}
+
+export interface FinanceItemMergeRequest {
+  "target_id": UUID;
+}
+
+export interface FinanceItemMergeResult {
+  "preview"?: boolean;
+  "source_id"?: UUID;
+  "source_name"?: string;
+  "target_id"?: UUID;
+  "target_name"?: string;
+  "documents"?: Array<{ [key: string]: unknown }>;
+  "months"?: Array<{ [key: string]: unknown }>;
+  "settings"?: Array<{ [key: string]: unknown }>;
+  "references"?: Array<{ [key: string]: unknown }>;
+  "totals"?: Array<{ [key: string]: unknown }>;
+  "deleted"?: boolean;
 }
 
 export interface FinanceOpeningDebtRequest {
@@ -12558,6 +12632,10 @@ export interface Task {
   "subtasks": Array<Subtask>;
   "subtasks_total": number;
   "subtasks_done": number;
+  /** Пунктов во всех чек-листах задачи (ERP-1488); есть и в компактной строке списка. */
+  "checklist_total": number;
+  /** Отмеченных пунктов во всех чек-листах задачи. */
+  "checklist_done": number;
   "tags": Array<TaskTag>;
   "links": Array<{ [key: string]: unknown }>;
   "comments_count": number;
@@ -13102,6 +13180,10 @@ export interface FinanceListDividendPoliciesResponse {
 export interface FinanceGetProjectBudgetHistoryResponse {
   "count": number;
   "results": Array<FinanceProjectBudget>;
+}
+
+export interface FinanceListAllocationRulesResponse {
+  "results"?: Array<FinanceAllocationRule>;
 }
 
 export interface FinanceRepostTransactionsRequest {
