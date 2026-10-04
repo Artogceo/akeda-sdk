@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 43550fd9806a058da1a01d6a55003141c57f7b4ac8888b60f361ef7432ee9ac4).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 185211b5eecd8efaeb47351d171a1a75521378c317bc74553bab505303db3c43).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -989,6 +989,8 @@ export interface CRMDeal {
   "utm_content"?: string;
   "landing_page"?: string;
   "referrer"?: string;
+  /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
+  "custom"?: { [key: string]: unknown } | null;
   "created_at": string;
   "updated_at": string;
 }
@@ -1043,10 +1045,14 @@ export interface CRMDealCard {
   "utm_content"?: string;
   "landing_page"?: string;
   "referrer"?: string;
+  /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
+  "custom"?: { [key: string]: unknown } | null;
   "created_at": string;
   "updated_at": string;
   "customer_name"?: string;
   "owner_name"?: string;
+  /** Когда сделка встала на текущий этап; от этого момента считается норматив этапа */
+  "stage_since"?: string;
 }
 
 export interface CRMDealContact {
@@ -1075,6 +1081,8 @@ export interface CRMDealInput {
   "crm_customer_id"?: string | null;
   "next_action"?: string;
   "next_action_at"?: string | null;
+  /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
+  "custom"?: { [key: string]: unknown } | null;
 }
 
 export interface CRMDealItem {
@@ -1110,6 +1118,8 @@ export interface CRMDealPatch {
   "crm_customer_id"?: string | null;
   "next_action"?: string;
   "next_action_at"?: string | null;
+  /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
+  "custom"?: { [key: string]: unknown } | null;
   "archived"?: boolean;
 }
 
@@ -1150,7 +1160,17 @@ export interface CRMEngagementInput {
   "owner_id"?: number | null;
 }
 
-export type CRMEngagementKind = "call" | "meeting" | "measurement" | "email" | "task";
+export type CRMEngagementKind = string;
+
+export interface CRMEngagementKindItem {
+  /** Код вида: то, что ложится в kind дела; после заведения не меняется */
+  "code": string;
+  /** Подпись вида - право кабинета */
+  "label": string;
+  "sort_order": number;
+  /** Выключенный вид не предлагается для новых дел, но подписывает старые */
+  "is_active": boolean;
+}
 
 export interface CRMEngagementPatch {
   "kind"?: CRMEngagementKind;
@@ -1368,6 +1388,8 @@ export interface CRMInboxTemplateInput {
   "body": string;
 }
 
+export type CRMLabelKey = string;
+
 export interface CRMLead {
   "id": UUID;
   "title": string;
@@ -1381,6 +1403,7 @@ export interface CRMLead {
   "contact_handle": string;
   "reference_id"?: UUID;
   "owner_id"?: number;
+  "stage_id"?: UUID;
   "crm_customer_id"?: UUID;
   "next_action": string;
   "next_action_at"?: string;
@@ -1404,6 +1427,19 @@ export interface CRMLead {
   "updated_at": string;
 }
 
+export interface CRMLeadBoard {
+  "stages": Array<CRMLeadBoardStage>;
+}
+
+export interface CRMLeadBoardStage {
+  "stage": CRMLeadStage;
+  /** Сколько лидов отбора стоит на этапе */
+  "total_count": number;
+  "cards": Array<CRMLeadCard>;
+  /** На этапе больше лидов, чем карточек в ответе */
+  "has_more": boolean;
+}
+
 /** Лид для экрана: тот же лид плюс человек за обращением и ответственный читаемыми именами */
 export interface CRMLeadCard {
   "id": UUID;
@@ -1418,6 +1454,7 @@ export interface CRMLeadCard {
   "contact_handle": string;
   "reference_id"?: UUID;
   "owner_id"?: number;
+  "stage_id"?: UUID;
   "crm_customer_id"?: UUID;
   "next_action": string;
   "next_action_at"?: string;
@@ -1470,6 +1507,7 @@ export interface CRMLeadDuplicate {
   "contact_handle": string;
   "reference_id"?: UUID;
   "owner_id"?: number;
+  "stage_id"?: UUID;
   "crm_customer_id"?: UUID;
   "next_action": string;
   "next_action_at"?: string;
@@ -1546,10 +1584,13 @@ export interface CRMLeadStage {
   "id": UUID;
   /** Имя этапа задаёт кабинет; код на конкретные имена не ссылается */
   "name": string;
+  "label_key"?: CRMLabelKey;
   "sort_order": number;
   /** Ненужный этап выключают, а не удаляют */
   "is_active": boolean;
   "meaning": CRMLeadStageMeaning;
+  /** Цвет этапа #RRGGBB; пусто - цвет по умолчанию */
+  "color"?: string;
   "created_at": string;
   "updated_at": string;
 }
@@ -1557,6 +1598,8 @@ export interface CRMLeadStage {
 export interface CRMLeadStageInput {
   "name": string;
   "meaning"?: CRMLeadStageMeaning;
+  /** Цвет этапа #RRGGBB; пусто - цвет по умолчанию */
+  "color"?: string;
 }
 
 export type CRMLeadStageMeaning = "open" | "qualified" | "converted" | "rejected";
@@ -1565,9 +1608,16 @@ export interface CRMLeadStagePatch {
   "name"?: string;
   "is_active"?: boolean;
   "meaning"?: CRMLeadStageMeaning;
+  /** Цвет этапа #RRGGBB; пусто - цвет по умолчанию */
+  "color"?: string;
 }
 
 export type CRMLeadStatus = "new" | "qualified" | "disqualified" | "converted";
+
+export interface CRMLeadSummary {
+  /** Лиды в очереди разбора: статус new вне архива, видимые читающему */
+  "unsorted": number;
+}
 
 export interface CRMLossReason {
   "id": UUID;
@@ -1640,9 +1690,12 @@ export interface CRMOverview {
 export interface CRMPipeline {
   "id": UUID;
   "name": string;
+  "label_key"?: CRMLabelKey;
   "sort_order": number;
   "is_default": boolean;
   "is_active": boolean;
+  /** Бизнес воронки: её сделки, лиды, ставшие такими сделками, и привязанные диалоги видят участники, чья область доступа касается бизнеса, и ответственные. null — воронка всего кабинета */
+  "business_id": UUID | null;
   "stages"?: Array<CRMStage> | null;
   "created_at": string;
   "updated_at": string;
@@ -1651,11 +1704,14 @@ export interface CRMPipeline {
 export interface CRMPipelineInput {
   "name": string;
   "is_default"?: boolean;
+  /** Бизнес воронки. Пусто — единственный бизнес области доступа или весь кабинет (его заводит только доступ ко всем бизнесам). Бизнес вне области доступа — 403 crm.pipeline_business_forbidden */
+  "business_id"?: UUID | null;
 }
 
 export interface CRMPipelineOverview {
   "pipeline_id": UUID;
   "pipeline_name": string;
+  "pipeline_label_key"?: CRMLabelKey;
   "open_count": number;
   /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
   "open_amount": string;
@@ -1666,6 +1722,8 @@ export interface CRMPipelinePatch {
   "name"?: string;
   "is_default"?: boolean;
   "is_active"?: boolean;
+  /** Бизнес воронки; поле не передано — не менять, null — весь кабинет. Бизнес вне области доступа — 403 crm.pipeline_business_forbidden */
+  "business_id"?: UUID | null;
 }
 
 export interface CRMQualifyLeadInput {
@@ -1686,7 +1744,7 @@ export interface CRMReorderInput {
   "ids": Array<UUID>;
 }
 
-export type CRMRequiredField = "title" | "amount" | "currency" | "probability" | "expected_close_at";
+export type CRMRequiredField = string;
 
 export interface CRMSLAMetric {
   "open_deals": number;
@@ -1745,6 +1803,7 @@ export interface CRMStage {
   "id": UUID;
   "pipeline_id": UUID;
   "name": string;
+  "label_key"?: CRMLabelKey;
   "sort_order": number;
   "category": CRMStageCategory;
   "color": string;
@@ -1753,6 +1812,7 @@ export interface CRMStage {
   "sla_hours": number;
   "required_fields": Array<CRMRequiredField> | null;
   "is_active": boolean;
+  "show_on_board"?: CRMStageShowOnBoard;
   "created_at": string;
   "updated_at": string;
 }
@@ -1767,13 +1827,16 @@ export interface CRMStageInput {
   "probability"?: number;
   "sla_hours"?: number;
   "required_fields"?: Array<CRMRequiredField>;
+  "show_on_board"?: CRMStageShowOnBoard;
 }
 
 export interface CRMStageMetric {
   "pipeline_id": string;
   "pipeline_name": string;
+  "pipeline_label_key"?: CRMLabelKey;
   "stage_id": string;
   "stage_name": string;
+  "stage_label_key"?: CRMLabelKey;
   "category": CRMStageCategory;
   "count": number;
   /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
@@ -1783,6 +1846,7 @@ export interface CRMStageMetric {
 export interface CRMStageOverview {
   "stage_id": UUID;
   "stage_name": string;
+  "stage_label_key"?: CRMLabelKey;
   "category": CRMStageCategory;
   "deal_count": number;
   /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
@@ -1798,7 +1862,10 @@ export interface CRMStagePatch {
   "sla_hours"?: number;
   "required_fields"?: Array<CRMRequiredField>;
   "is_active"?: boolean;
+  "show_on_board"?: CRMStageShowOnBoard;
 }
+
+export type CRMStageShowOnBoard = boolean;
 
 /** Одна запись ленты; вид говорит, из какого источника она пришла */
 export interface CRMTimelineEntry {
@@ -2213,6 +2280,7 @@ export interface CalendarMember {
   "user_name": string;
   "email"?: string;
   "department"?: string;
+  "department_id"?: string;
   "position"?: string;
   "company"?: string;
   "avatar_url"?: string;
@@ -5693,7 +5761,7 @@ export interface DocflowApprovalChainStage {
   /** Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve */
   "stage_kind"?: "approve" | "acknowledge";
   "mode": "all" | "any";
-  "assignee_kind": "user" | "department" | "role" | "manager";
+  "assignee_kind": "user" | "department" | "role" | "manager" | "department_head";
   "assignee_label"?: string;
   /** Лимит этапа: выполняется при сумме от этого значения */
   "min_amount"?: string;
@@ -5840,6 +5908,12 @@ export interface DocflowApprovalRoute {
   "contact_folder"?: string;
   "item_id"?: UUID;
   "item_name"?: string;
+  /** Условие «бизнес предмета»; без юрлица у предмета бизнес берётся из формы проверки */
+  "business_id"?: UUID;
+  "business_name"?: string;
+  /** Условие «подразделение автора»: срабатывает и на подотделы */
+  "department_id"?: UUID;
+  "department_name"?: string;
   /** Нижняя граница суммы ВКЛЮЧАЕТСЯ */
   "amount_from"?: string;
   /** Верхняя граница суммы НЕ включается */
@@ -5861,16 +5935,18 @@ export interface DocflowApprovalRouteList {
   "items": Array<DocflowApprovalRoute>;
 }
 
-/** Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался». Согласующий может быть не выбран (способ назван, ссылки нет) только у выключенного маршрута: так сеется этап «Финансы» стандартного маршрута заявок. */
+/** Этап ШАБЛОНА маршрута. Согласующий назван одним из пяти способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался», department_head — «спросить руководителя отдела» по оргструктуре: отдела автора или названного, а нет руководителя или автор руководит сам — выше по дереву. Согласующий может быть не выбран (способ назван, ссылки нет) только у выключенного маршрута: так сеется этап «Финансы» стандартного маршрута заявок. */
 export interface DocflowApprovalRouteStage {
   "id"?: UUID;
   /** Порядок этапа в маршруте */
   "position": number;
   "title"?: string;
-  "assignee_kind": "user" | "department" | "role" | "manager";
+  "assignee_kind": "user" | "department" | "role" | "manager" | "department_head";
   "assignee_user_id"?: number;
   "assignee_department_id"?: UUID;
   "assignee_role_id"?: UUID;
+  /** Только для department: спросить и сотрудников подотделов */
+  "include_subdepartments"?: boolean;
   /** Как назначение читается человеком. Подставляется на чтении; в шаблоне не хранится */
   "assignee_label"?: string;
   /** Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve */
@@ -5891,7 +5967,7 @@ export interface DocflowApprovalStage {
   /** Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve */
   "stage_kind"?: "approve" | "acknowledge";
   "mode": "all" | "any";
-  "assignee_kind": "user" | "department" | "role" | "manager";
+  "assignee_kind": "user" | "department" | "role" | "manager" | "department_head";
   "assignee_label"?: string;
   "min_amount"?: string;
   "due_hours"?: number;
@@ -6876,6 +6952,8 @@ export interface FilesFolder {
   "is_restricted": boolean;
   /** Права хранилища на эту папку не действуют */
   "break_inheritance": boolean;
+  /** Бизнес хранилища; у вложенной папки — бизнес её хранилища. Хранилище бизнеса видят участники, чья область доступа касается бизнеса, и поимённо выданные; null — хранилище всего кабинета или личное */
+  "business_id": UUID | null;
   "owner_id": number;
   "created_by": number;
   "trashed_at"?: string;
@@ -6900,6 +6978,8 @@ export interface FilesFolderInput {
   "description"?: string;
   "kind"?: "shared";
   "is_restricted"?: boolean;
+  /** Бизнес общего хранилища (только у верхнего уровня). Поле не передано — не менять (у нового — единственный бизнес области доступа или весь кабинет); null — хранилище всего кабинета. Бизнес вне области доступа — 403 files.business_forbidden */
+  "business_id"?: UUID | null;
 }
 
 export interface FilesGrant {
@@ -7015,6 +7095,8 @@ export interface FilesVersion {
 
 export interface FinanceAccount {
   "id": UUID;
+  /** Бизнес, которому принадлежат деньги — у счёта из юрлица, у кассы из её карточки. null только у старого счёта без юрлица в кабинете с несколькими бизнесами. */
+  "business"?: string | null;
   /** Где лежат деньги. `bank` — расчётный счёт, `cash` — касса из справочника «Кассы». Список общий намеренно: вопрос «сколько у меня денег» задаётся один раз. У кассы банковские поля (`bic`, `number`, `bank_name`, `connector`) пусты по построению, а не «ещё не заполнены», и карточка счёта по её идентификатору не открывается. */
   "kind": "bank" | "cash";
   "company": string | null;
@@ -8672,7 +8754,8 @@ export interface HubProject {
   "color": string;
   "contact_id": UUID | null;
   "contact_name": string;
-  "company_id": UUID | null;
+  /** Бизнес проекта (заменил информационное юрлицо); null — проект всего кабинета */
+  "business_id": UUID | null;
   "start_date": string;
   "target_date": string;
   "lead_user_id": number | null;
@@ -8711,7 +8794,7 @@ export type HubVisibility = "team" | "client";
 export interface KnowledgeACLGrant {
   "id"?: UUID;
   "principal_type": "everyone" | "user" | "role" | "department";
-  /** Ключ принципала: id пользователя, UUID роли, название подразделения или * для всех */
+  /** Ключ принципала: id пользователя, UUID роли, UUID подразделения из справочника departments или * для всех */
   "principal_key": string;
   /** Уровень «Просмотр» */
   "can_read": boolean;
@@ -8942,6 +9025,8 @@ export interface KnowledgeSpace {
   "is_restricted": boolean;
   /** Смотрящий вправе вести пространство; считается сервером по владельцу */
   "can_manage": boolean;
+  /** Бизнес пространства: его видят, ищут и цитируют в ответах помощника участники, чья область доступа касается бизнеса, и поимённо выданные. null — пространство всего кабинета */
+  "business_id": UUID | null;
   "has_cover": boolean;
   "page_count": number;
   "created_by": number;
@@ -8969,6 +9054,8 @@ export interface KnowledgeSpaceInput {
   "description"?: string;
   /** Имя иконки Lucide; по умолчанию book-open */
   "icon"?: string;
+  /** Бизнес пространства. Поле не передано — не менять (у нового — единственный бизнес области доступа или весь кабинет); null — пространство всего кабинета. Бизнес вне области доступа — 403 knowledge.business_forbidden */
+  "business_id"?: UUID | null;
 }
 
 export interface KnowledgeTag {
@@ -9006,6 +9093,8 @@ export interface MailAccount {
   "owner_user_id": number;
   /** Общий ящик отдела виден всем, у кого есть право на модуль; личный — владельцу и тому, кто видит все записи */
   "shared": boolean;
+  /** Бизнес общего ящика: ящик видят участники, чья область доступа касается этого бизнеса, а также владелец и поимённо названные сотрудники. null — ящик всего кабинета или личный */
+  "business_id": UUID | null;
   "email": string;
   "display_name": string;
   /** Уведомления владельца ящика о новой почте: все письма, только важные отправители или выключено */
@@ -9757,6 +9846,8 @@ export interface MarketplaceStore {
   "last_etl_at"?: string;
   /** Разделитель базы и размера в артикуле продавца, объявленный владельцем магазина. Пустая строка — правило не объявлено, и размер берётся только из полей площадки. Применяется на Ozon, где каждый размер продаётся своим артикулом */
   "article_size_separator"?: "" | "-" | "/" | "_";
+  /** Бизнес магазина — бизнес юрлица из учётных настроек; по нему магазин и его отчёты сужаются областью доступа участника. null — юрлицо ещё не выбрано в кабинете с несколькими бизнесами: такой магазин видит только доступ ко всем бизнесам */
+  "business_id"?: UUID | null;
 }
 
 /** Тело создания управляемого подключения. Платформу задаёт маршрут, а external_id назначает MPTrack. Для Ozon нужны ozon_client_id и ozon_api_key, для Wildberries — wb_token, для Яндекс Маркета — ym_business_id и ym_api_key. */
@@ -9781,6 +9872,8 @@ export interface MarketplaceStoreInput {
   "ym_api_key"?: string;
   /** Необязательный адрес proxy; значение не возвращается */
   "proxy"?: string;
+  /** Бизнес магазина. В кабинете с одним бизнесом подставляется сам; при нескольких обязателен — без него ответ 400 marketplace.store_business_required. Бизнес должен входить в область права участника целиком, иначе 403 marketplace.store_business_forbidden; юрлицо учёта магазина потом выбирается только этого бизнеса */
+  "business_id"?: UUID;
 }
 
 export interface MarketplaceStorePage {
@@ -10637,6 +10730,8 @@ export interface Project {
   "tasks_active": number;
   "tasks_done": number;
   "scrum_enabled": boolean;
+  /** Бизнес проекта: правило «все задачи» при области доступа не на все бизнесы видит только проекты её бизнесов и кабинета; участники проекта видят его всегда. null — проект всего кабинета */
+  "business_id": UUID | null;
 }
 
 export interface ProjectCreate {
@@ -10644,6 +10739,8 @@ export interface ProjectCreate {
   "key"?: string;
   "description"?: string;
   "color"?: string;
+  /** Бизнес проекта. Пусто — единственный бизнес области доступа или весь кабинет (его заводит только доступ ко всем бизнесам). Бизнес вне области доступа — 403 tasks.project_business_forbidden */
+  "business_id"?: UUID | null;
 }
 
 export interface ProjectPage {
@@ -10889,6 +10986,23 @@ export interface SettingsMember {
   /** Заполнен при company_scope selected */
   "companies": Array<UUID>;
   "is_active": boolean;
+  /** Роль действует во всех бизнесах кабинета, включая заведённые позже. У администратора всегда true */
+  "all_businesses": boolean;
+  /** Бизнесы сотрудника; пуст при all_businesses */
+  "businesses": Array<SettingsMemberBusinessScope>;
+}
+
+export interface SettingsMemberAccessInput {
+  /** Все бизнесы кабинета; тогда businesses не передаётся */
+  "all_businesses"?: boolean;
+  /** Бизнесы сотрудника целиком; повторы и юрлица бизнеса, выданного целиком, сворачиваются */
+  "businesses"?: Array<SettingsMemberBusinessScope>;
+}
+
+export interface SettingsMemberBusinessScope {
+  "business": UUID;
+  /** Сужает доступ до юрлица этого бизнеса; без поля — бизнес целиком */
+  "company"?: UUID;
 }
 
 export interface SettingsMemberPage {
@@ -10905,8 +11019,8 @@ export interface SettingsRole {
   "is_active": boolean;
   /** Право записывается как «модуль:действие», например settings:read */
   "permissions": Array<string>;
-  /** Ключ — ресурс модуля; пустая карта означает видимость только своих записей */
-  "record_rules": { [key: string]: "own" | "all" };
+  /** Ключ — ресурс модуля: tasks.task, crm.lead, crm.deal, crm.customer, crm.conversation, core.order, docflow.payment_request и ресурсы клиентских модулей. Значение — own (свои), projects (свои и проекты участия, у задач), team (свои и подчинённых), department (своего подразделения), department_tree (подразделения с подотделами) или all (все записи области). Пустая карта означает видимость только своих записей */
+  "record_rules": { [key: string]: "own" | "projects" | "team" | "department" | "department_tree" | "all" };
 }
 
 export interface SettingsRolePage {
@@ -12298,6 +12412,8 @@ export interface StockWarehouse {
   "needs_allocation": boolean;
   /** documents — приход обычными складскими документами; external_receipt — склад внешней стороны: приход даёт только её приёмка, поступление и входящее перемещение запрещены */
   "inbound_mode": "documents" | "external_receipt";
+  /** Бизнес склада: по нему склад и его данные сужаются областью доступа участника. null — общий склад: юрлица из нескольких бизнесов либо склад всего кабинета (например, склад площадки) */
+  "business_id": UUID | null;
   /** Пустой список означает доступность склада всем активным юрлицам кабинета */
   "company_ids": Array<UUID>;
   "created_at": string;
@@ -12312,6 +12428,8 @@ export interface StockWarehouseInput {
   "address"?: { [key: string]: unknown };
   "responsible_employee_id"?: UUID | null;
   "sort_order"?: number;
+  /** Бизнес склада. Пусто — выводится: у зоны от родителя, у склада с юрлицами одного бизнеса — их бизнес, в кабинете с одним бизнесом — он; юрлица нескольких бизнесов дают общий склад. Юрлица склада обязаны принадлежать названному бизнесу */
+  "business_id"?: UUID | null;
   "company_ids"?: Array<UUID>;
 }
 
@@ -12328,6 +12446,8 @@ export interface StockWarehousePatch {
   "address"?: { [key: string]: unknown };
   "responsible_employee_id"?: UUID | null;
   "sort_order"?: number;
+  /** Бизнес склада; null — вывести заново из родителя и юрлиц. Править склад можно только в бизнесе, доступном целиком; общий склад — только при доступе ко всем бизнесам */
+  "business_id"?: UUID | null;
   "company_ids"?: Array<UUID>;
 }
 

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 43550fd9806a058da1a01d6a55003141c57f7b4ac8888b60f361ef7432ee9ac4).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 185211b5eecd8efaeb47351d171a1a75521378c317bc74553bab505303db3c43).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -106,6 +106,7 @@ __all__ = [
     "CRMEngagement",
     "CRMEngagementInput",
     "CRMEngagementKind",
+    "CRMEngagementKindItem",
     "CRMEngagementPatch",
     "CRMExternalLink",
     "CRMImportFileInfo",
@@ -129,7 +130,10 @@ __all__ = [
     "CRMInboxSendInput",
     "CRMInboxTemplate",
     "CRMInboxTemplateInput",
+    "CRMLabelKey",
     "CRMLead",
+    "CRMLeadBoard",
+    "CRMLeadBoardStage",
     "CRMLeadCard",
     "CRMLeadDecision",
     "CRMLeadDuplicate",
@@ -141,6 +145,7 @@ __all__ = [
     "CRMLeadStageMeaning",
     "CRMLeadStagePatch",
     "CRMLeadStatus",
+    "CRMLeadSummary",
     "CRMLossReason",
     "CRMLossReasonInput",
     "CRMLossReasonMetric",
@@ -171,6 +176,7 @@ __all__ = [
     "CRMStageMetric",
     "CRMStageOverview",
     "CRMStagePatch",
+    "CRMStageShowOnBoard",
     "CRMTimelineEntry",
     "CRMUserRef",
     "CalendarAvailability",
@@ -968,6 +974,8 @@ __all__ = [
     "SettingsCompanyPage",
     "SettingsCompanyPerson",
     "SettingsMember",
+    "SettingsMemberAccessInput",
+    "SettingsMemberBusinessScope",
     "SettingsMemberPage",
     "SettingsRole",
     "SettingsRolePage",
@@ -2212,6 +2220,8 @@ class CRMDeal(_CRMDealRequired, total=False):
     utm_content: str
     landing_page: str
     referrer: str
+    #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+    custom: Optional[Dict[str, Any]]
 
 class _CRMDealBoardRequired(TypedDict):
     pipeline_id: "UUID"
@@ -2269,8 +2279,12 @@ class CRMDealCard(_CRMDealCardRequired, total=False):
     utm_content: str
     landing_page: str
     referrer: str
+    #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+    custom: Optional[Dict[str, Any]]
     customer_name: str
     owner_name: str
+    #: Когда сделка встала на текущий этап; от этого момента считается норматив этапа
+    stage_since: str
 
 class CRMDealContact(TypedDict):
     id: "UUID"
@@ -2299,6 +2313,8 @@ class CRMDealInput(_CRMDealInputRequired, total=False):
     crm_customer_id: Optional[str]
     next_action: str
     next_action_at: Optional[str]
+    #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+    custom: Optional[Dict[str, Any]]
 
 class _CRMDealItemRequired(TypedDict):
     id: "UUID"
@@ -2334,6 +2350,8 @@ class CRMDealPatch(TypedDict, total=False):
     crm_customer_id: Optional[str]
     next_action: str
     next_action_at: Optional[str]
+    #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+    custom: Optional[Dict[str, Any]]
     archived: bool
 
 class _CRMDealStageHistoryRequired(TypedDict):
@@ -2376,7 +2394,16 @@ class CRMEngagementInput(_CRMEngagementInputRequired, total=False):
     #: По умолчанию - вызывающий сотрудник
     owner_id: Optional[int]
 
-CRMEngagementKind = Literal['call', 'meeting', 'measurement', 'email', 'task']
+CRMEngagementKind = str
+
+class CRMEngagementKindItem(TypedDict):
+    #: Код вида: то, что ложится в kind дела; после заведения не меняется
+    code: str
+    #: Подпись вида - право кабинета
+    label: str
+    sort_order: int
+    #: Выключенный вид не предлагается для новых дел, но подписывает старые
+    is_active: bool
 
 class CRMEngagementPatch(TypedDict, total=False):
     kind: "CRMEngagementKind"
@@ -2594,6 +2621,8 @@ class CRMInboxTemplateInput(TypedDict):
     name: str
     body: str
 
+CRMLabelKey = str
+
 class _CRMLeadRequired(TypedDict):
     id: "UUID"
     title: str
@@ -2613,6 +2642,7 @@ class _CRMLeadRequired(TypedDict):
 class CRMLead(_CRMLeadRequired, total=False):
     reference_id: "UUID"
     owner_id: int
+    stage_id: "UUID"
     crm_customer_id: "UUID"
     next_action_at: str
     archived_at: str
@@ -2630,6 +2660,17 @@ class CRMLead(_CRMLeadRequired, total=False):
     referrer: str
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
+
+class CRMLeadBoard(TypedDict):
+    stages: List["CRMLeadBoardStage"]
+
+class CRMLeadBoardStage(TypedDict):
+    stage: "CRMLeadStage"
+    #: Сколько лидов отбора стоит на этапе
+    total_count: int
+    cards: List["CRMLeadCard"]
+    #: На этапе больше лидов, чем карточек в ответе
+    has_more: bool
 
 class _CRMLeadCardRequired(TypedDict):
     id: "UUID"
@@ -2652,6 +2693,7 @@ class CRMLeadCard(_CRMLeadCardRequired, total=False):
 
     reference_id: "UUID"
     owner_id: int
+    stage_id: "UUID"
     crm_customer_id: "UUID"
     next_action_at: str
     archived_at: str
@@ -2707,6 +2749,7 @@ class CRMLeadDuplicate(_CRMLeadDuplicateRequired, total=False):
 
     reference_id: "UUID"
     owner_id: int
+    stage_id: "UUID"
     crm_customer_id: "UUID"
     next_action_at: str
     archived_at: str
@@ -2774,7 +2817,7 @@ class CRMLeadPatch(TypedDict, total=False):
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
     custom: Optional[Dict[str, Any]]
 
-class CRMLeadStage(TypedDict):
+class _CRMLeadStageRequired(TypedDict):
     id: "UUID"
     #: Имя этапа задаёт кабинет; код на конкретные имена не ссылается
     name: str
@@ -2785,11 +2828,18 @@ class CRMLeadStage(TypedDict):
     created_at: str
     updated_at: str
 
+class CRMLeadStage(_CRMLeadStageRequired, total=False):
+    label_key: "CRMLabelKey"
+    #: Цвет этапа #RRGGBB; пусто - цвет по умолчанию
+    color: str
+
 class _CRMLeadStageInputRequired(TypedDict):
     name: str
 
 class CRMLeadStageInput(_CRMLeadStageInputRequired, total=False):
     meaning: "CRMLeadStageMeaning"
+    #: Цвет этапа #RRGGBB; пусто - цвет по умолчанию
+    color: str
 
 CRMLeadStageMeaning = Literal['open', 'qualified', 'converted', 'rejected']
 
@@ -2797,8 +2847,14 @@ class CRMLeadStagePatch(TypedDict, total=False):
     name: str
     is_active: bool
     meaning: "CRMLeadStageMeaning"
+    #: Цвет этапа #RRGGBB; пусто - цвет по умолчанию
+    color: str
 
 CRMLeadStatus = Literal['new', 'qualified', 'disqualified', 'converted']
+
+class CRMLeadSummary(TypedDict):
+    #: Лиды в очереди разбора: статус new вне архива, видимые читающему
+    unsorted: int
 
 class CRMLossReason(TypedDict):
     id: "UUID"
@@ -2875,10 +2931,13 @@ class _CRMPipelineRequired(TypedDict):
     sort_order: int
     is_default: bool
     is_active: bool
+    #: Бизнес воронки: её сделки, лиды, ставшие такими сделками, и привязанные диалоги видят участники, чья область доступа касается бизнеса, и ответственные. null — воронка всего кабинета
+    business_id: Optional["UUID"]
     created_at: str
     updated_at: str
 
 class CRMPipeline(_CRMPipelineRequired, total=False):
+    label_key: "CRMLabelKey"
     stages: Optional[List["CRMStage"]]
 
 class _CRMPipelineInputRequired(TypedDict):
@@ -2886,6 +2945,8 @@ class _CRMPipelineInputRequired(TypedDict):
 
 class CRMPipelineInput(_CRMPipelineInputRequired, total=False):
     is_default: bool
+    #: Бизнес воронки. Пусто — единственный бизнес области доступа или весь кабинет (его заводит только доступ ко всем бизнесам). Бизнес вне области доступа — 403 crm.pipeline_business_forbidden
+    business_id: Optional["UUID"]
 
 class _CRMPipelineOverviewRequired(TypedDict):
     pipeline_id: "UUID"
@@ -2895,12 +2956,15 @@ class _CRMPipelineOverviewRequired(TypedDict):
     open_amount: str
 
 class CRMPipelineOverview(_CRMPipelineOverviewRequired, total=False):
+    pipeline_label_key: "CRMLabelKey"
     stages: Optional[List["CRMStageOverview"]]
 
 class CRMPipelinePatch(TypedDict, total=False):
     name: str
     is_default: bool
     is_active: bool
+    #: Бизнес воронки; поле не передано — не менять, null — весь кабинет. Бизнес вне области доступа — 403 crm.pipeline_business_forbidden
+    business_id: Optional["UUID"]
 
 class _CRMQualifyLeadInputRequired(TypedDict):
     status: Literal['qualified', 'disqualified']
@@ -2920,7 +2984,7 @@ class CRMReorderInput(TypedDict):
 
     ids: List["UUID"]
 
-CRMRequiredField = Literal['title', 'amount', 'currency', 'probability', 'expected_close_at']
+CRMRequiredField = str
 
 class CRMSLAMetric(TypedDict):
     open_deals: int
@@ -2979,7 +3043,7 @@ class CRMSourceMetric(TypedDict):
     converted: int
     rate: float
 
-class CRMStage(TypedDict):
+class _CRMStageRequired(TypedDict):
     id: "UUID"
     pipeline_id: "UUID"
     name: str
@@ -2994,6 +3058,10 @@ class CRMStage(TypedDict):
     created_at: str
     updated_at: str
 
+class CRMStage(_CRMStageRequired, total=False):
+    label_key: "CRMLabelKey"
+    show_on_board: "CRMStageShowOnBoard"
+
 CRMStageCategory = Literal['open', 'won', 'lost']
 
 class _CRMStageInputRequired(TypedDict):
@@ -3006,8 +3074,9 @@ class CRMStageInput(_CRMStageInputRequired, total=False):
     probability: int
     sla_hours: int
     required_fields: List["CRMRequiredField"]
+    show_on_board: "CRMStageShowOnBoard"
 
-class CRMStageMetric(TypedDict):
+class _CRMStageMetricRequired(TypedDict):
     pipeline_id: str
     pipeline_name: str
     stage_id: str
@@ -3017,7 +3086,11 @@ class CRMStageMetric(TypedDict):
     #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
     amount: str
 
-class CRMStageOverview(TypedDict):
+class CRMStageMetric(_CRMStageMetricRequired, total=False):
+    pipeline_label_key: "CRMLabelKey"
+    stage_label_key: "CRMLabelKey"
+
+class _CRMStageOverviewRequired(TypedDict):
     stage_id: "UUID"
     stage_name: str
     category: "CRMStageCategory"
@@ -3025,6 +3098,9 @@ class CRMStageOverview(TypedDict):
     #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
     deal_amount: str
     updated_at: str
+
+class CRMStageOverview(_CRMStageOverviewRequired, total=False):
+    stage_label_key: "CRMLabelKey"
 
 class CRMStagePatch(TypedDict, total=False):
     name: str
@@ -3034,6 +3110,9 @@ class CRMStagePatch(TypedDict, total=False):
     sla_hours: int
     required_fields: List["CRMRequiredField"]
     is_active: bool
+    show_on_board: "CRMStageShowOnBoard"
+
+CRMStageShowOnBoard = bool
 
 class _CRMTimelineEntryRequired(TypedDict):
     id: "UUID"
@@ -3436,6 +3515,7 @@ class _CalendarMemberRequired(TypedDict):
 class CalendarMember(_CalendarMemberRequired, total=False):
     email: str
     department: str
+    department_id: str
     position: str
     company: str
     avatar_url: str
@@ -6871,7 +6951,7 @@ class DocflowApprovalChainPreview(_DocflowApprovalChainPreviewRequired, total=Fa
 class _DocflowApprovalChainStageRequired(TypedDict):
     position: int
     mode: Literal['all', 'any']
-    assignee_kind: Literal['user', 'department', 'role', 'manager']
+    assignee_kind: Literal['user', 'department', 'role', 'manager', 'department_head']
     #: Этап выполнится при этих фактах
     applies: bool
     people: List["DocflowApprovalPerson"]
@@ -7041,6 +7121,12 @@ class DocflowApprovalRoute(_DocflowApprovalRouteRequired, total=False):
     contact_folder: str
     item_id: "UUID"
     item_name: str
+    #: Условие «бизнес предмета»; без юрлица у предмета бизнес берётся из формы проверки
+    business_id: "UUID"
+    business_name: str
+    #: Условие «подразделение автора»: срабатывает и на подотделы
+    department_id: "UUID"
+    department_name: str
     #: Нижняя граница суммы ВКЛЮЧАЕТСЯ
     amount_from: str
     #: Верхняя граница суммы НЕ включается
@@ -7056,18 +7142,20 @@ class DocflowApprovalRouteList(TypedDict):
 class _DocflowApprovalRouteStageRequired(TypedDict):
     #: Порядок этапа в маршруте
     position: int
-    assignee_kind: Literal['user', 'department', 'role', 'manager']
+    assignee_kind: Literal['user', 'department', 'role', 'manager', 'department_head']
     #: Решают все или достаточно одного. Кворума с процентом нет
     mode: Literal['all', 'any']
 
 class DocflowApprovalRouteStage(_DocflowApprovalRouteStageRequired, total=False):
-    """Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался». Согласующий может быть не выбран (способ назван, ссылки нет) только у выключенного маршрута: так сеется этап «Финансы» стандартного маршрута заявок."""
+    """Этап ШАБЛОНА маршрута. Согласующий назван одним из пяти способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался», department_head — «спросить руководителя отдела» по оргструктуре: отдела автора или названного, а нет руководителя или автор руководит сам — выше по дереву. Согласующий может быть не выбран (способ назван, ссылки нет) только у выключенного маршрута: так сеется этап «Финансы» стандартного маршрута заявок."""
 
     id: "UUID"
     title: str
     assignee_user_id: int
     assignee_department_id: "UUID"
     assignee_role_id: "UUID"
+    #: Только для department: спросить и сотрудников подотделов
+    include_subdepartments: bool
     #: Как назначение читается человеком. Подставляется на чтении; в шаблоне не хранится
     assignee_label: str
     #: Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve
@@ -7081,7 +7169,7 @@ class _DocflowApprovalStageRequired(TypedDict):
     id: "UUID"
     position: int
     mode: Literal['all', 'any']
-    assignee_kind: Literal['user', 'department', 'role', 'manager']
+    assignee_kind: Literal['user', 'department', 'role', 'manager', 'department_head']
     #: notified — этап ознакомления известил участников и пропустил проход дальше; acknowledged — все отметились
     state: Literal['waiting', 'active', 'approved', 'rejected', 'returned', 'skipped', 'notified', 'acknowledged']
     reviews: List["DocflowApprovalReview"]
@@ -8112,6 +8200,8 @@ class _FilesFolderRequired(TypedDict):
     is_restricted: bool
     #: Права хранилища на эту папку не действуют
     break_inheritance: bool
+    #: Бизнес хранилища; у вложенной папки — бизнес её хранилища. Хранилище бизнеса видят участники, чья область доступа касается бизнеса, и поимённо выданные; null — хранилище всего кабинета или личное
+    business_id: Optional["UUID"]
     owner_id: int
     created_by: int
     created_at: str
@@ -8140,6 +8230,8 @@ class FilesFolderInput(_FilesFolderInputRequired, total=False):
     description: str
     kind: Literal['shared']
     is_restricted: bool
+    #: Бизнес общего хранилища (только у верхнего уровня). Поле не передано — не менять (у нового — единственный бизнес области доступа или весь кабинет); null — хранилище всего кабинета. Бизнес вне области доступа — 403 files.business_forbidden
+    business_id: Optional["UUID"]
 
 class _FilesGrantRequired(TypedDict):
     principal_type: Literal['everyone', 'user', 'role', 'department']
@@ -8288,6 +8380,8 @@ class _FinanceAccountRequired(TypedDict):
     updated_at: str
 
 class FinanceAccount(_FinanceAccountRequired, total=False):
+    #: Бизнес, которому принадлежат деньги — у счёта из юрлица, у кассы из её карточки. null только у старого счёта без юрлица в кабинете с несколькими бизнесами.
+    business: Optional[str]
     #: Остаток по данным банка на момент `bank_balance_at`, decimal string. null — банк остатка не называл (счёт не подключён или остаток ещё не приходил): это не ноль, и сверять с ним нечего.
     bank_balance: Optional[str]
     #: Когда банк назвал остаток `bank_balance`.
@@ -9817,7 +9911,8 @@ class HubProject(TypedDict):
     color: str
     contact_id: Optional["UUID"]
     contact_name: str
-    company_id: Optional["UUID"]
+    #: Бизнес проекта (заменил информационное юрлицо); null — проект всего кабинета
+    business_id: Optional["UUID"]
     start_date: str
     target_date: str
     lead_user_id: Optional[int]
@@ -9851,7 +9946,7 @@ HubVisibility = Literal['team', 'client']
 
 class _KnowledgeACLGrantRequired(TypedDict):
     principal_type: Literal['everyone', 'user', 'role', 'department']
-    #: Ключ принципала: id пользователя, UUID роли, название подразделения или * для всех
+    #: Ключ принципала: id пользователя, UUID роли, UUID подразделения из справочника departments или * для всех
     principal_key: str
     #: Уровень «Просмотр»
     can_read: bool
@@ -10088,6 +10183,8 @@ class KnowledgeSpace(TypedDict):
     is_restricted: bool
     #: Смотрящий вправе вести пространство; считается сервером по владельцу
     can_manage: bool
+    #: Бизнес пространства: его видят, ищут и цитируют в ответах помощника участники, чья область доступа касается бизнеса, и поимённо выданные. null — пространство всего кабинета
+    business_id: Optional["UUID"]
     has_cover: bool
     page_count: int
     created_by: int
@@ -10114,6 +10211,8 @@ class KnowledgeSpaceInput(_KnowledgeSpaceInputRequired, total=False):
     description: str
     #: Имя иконки Lucide; по умолчанию book-open
     icon: str
+    #: Бизнес пространства. Поле не передано — не менять (у нового — единственный бизнес области доступа или весь кабинет); null — пространство всего кабинета. Бизнес вне области доступа — 403 knowledge.business_forbidden
+    business_id: Optional["UUID"]
 
 class KnowledgeTag(TypedDict):
     id: "UUID"
@@ -10149,6 +10248,8 @@ class MailAccount(TypedDict):
     owner_user_id: int
     #: Общий ящик отдела виден всем, у кого есть право на модуль; личный — владельцу и тому, кто видит все записи
     shared: bool
+    #: Бизнес общего ящика: ящик видят участники, чья область доступа касается этого бизнеса, а также владелец и поимённо названные сотрудники. null — ящик всего кабинета или личный
+    business_id: Optional["UUID"]
     email: str
     display_name: str
     #: Уведомления владельца ящика о новой почте: все письма, только важные отправители или выключено
@@ -10896,6 +10997,8 @@ class MarketplaceStore(_MarketplaceStoreRequired, total=False):
     last_etl_at: str
     #: Разделитель базы и размера в артикуле продавца, объявленный владельцем магазина. Пустая строка — правило не объявлено, и размер берётся только из полей площадки. Применяется на Ozon, где каждый размер продаётся своим артикулом
     article_size_separator: Literal['', '-', '/', '_']
+    #: Бизнес магазина — бизнес юрлица из учётных настроек; по нему магазин и его отчёты сужаются областью доступа участника. null — юрлицо ещё не выбрано в кабинете с несколькими бизнесами: такой магазин видит только доступ ко всем бизнесам
+    business_id: Optional["UUID"]
 
 class _MarketplaceStoreInputRequired(TypedDict):
     name: str
@@ -10922,6 +11025,8 @@ class MarketplaceStoreInput(_MarketplaceStoreInputRequired, total=False):
     ym_api_key: str
     #: Необязательный адрес proxy; значение не возвращается
     proxy: str
+    #: Бизнес магазина. В кабинете с одним бизнесом подставляется сам; при нескольких обязателен — без него ответ 400 marketplace.store_business_required. Бизнес должен входить в область права участника целиком, иначе 403 marketplace.store_business_forbidden; юрлицо учёта магазина потом выбирается только этого бизнеса
+    business_id: "UUID"
 
 class MarketplaceStorePage(TypedDict):
     count: int
@@ -11730,6 +11835,8 @@ class Project(TypedDict):
     tasks_active: int
     tasks_done: int
     scrum_enabled: bool
+    #: Бизнес проекта: правило «все задачи» при области доступа не на все бизнесы видит только проекты её бизнесов и кабинета; участники проекта видят его всегда. null — проект всего кабинета
+    business_id: Optional["UUID"]
 
 class _ProjectCreateRequired(TypedDict):
     name: str
@@ -11738,6 +11845,8 @@ class ProjectCreate(_ProjectCreateRequired, total=False):
     key: str
     description: str
     color: str
+    #: Бизнес проекта. Пусто — единственный бизнес области доступа или весь кабинет (его заводит только доступ ко всем бизнесам). Бизнес вне области доступа — 403 tasks.project_business_forbidden
+    business_id: Optional["UUID"]
 
 class ProjectPage(TypedDict):
     count: int
@@ -11974,6 +12083,23 @@ class SettingsMember(TypedDict):
     #: Заполнен при company_scope selected
     companies: List["UUID"]
     is_active: bool
+    #: Роль действует во всех бизнесах кабинета, включая заведённые позже. У администратора всегда true
+    all_businesses: bool
+    #: Бизнесы сотрудника; пуст при all_businesses
+    businesses: List["SettingsMemberBusinessScope"]
+
+class SettingsMemberAccessInput(TypedDict, total=False):
+    #: Все бизнесы кабинета; тогда businesses не передаётся
+    all_businesses: bool
+    #: Бизнесы сотрудника целиком; повторы и юрлица бизнеса, выданного целиком, сворачиваются
+    businesses: List["SettingsMemberBusinessScope"]
+
+class _SettingsMemberBusinessScopeRequired(TypedDict):
+    business: "UUID"
+
+class SettingsMemberBusinessScope(_SettingsMemberBusinessScopeRequired, total=False):
+    #: Сужает доступ до юрлица этого бизнеса; без поля — бизнес целиком
+    company: "UUID"
 
 class SettingsMemberPage(TypedDict):
     #: Число строк в results, а не общее число участников кабинета
@@ -11988,8 +12114,8 @@ class SettingsRole(TypedDict):
     is_active: bool
     #: Право записывается как «модуль:действие», например settings:read
     permissions: List[str]
-    #: Ключ — ресурс модуля; пустая карта означает видимость только своих записей
-    record_rules: Dict[str, Literal['own', 'all']]
+    #: Ключ — ресурс модуля: tasks.task, crm.lead, crm.deal, crm.customer, crm.conversation, core.order, docflow.payment_request и ресурсы клиентских модулей. Значение — own (свои), projects (свои и проекты участия, у задач), team (свои и подчинённых), department (своего подразделения), department_tree (подразделения с подотделами) или all (все записи области). Пустая карта означает видимость только своих записей
+    record_rules: Dict[str, Literal['own', 'projects', 'team', 'department', 'department_tree', 'all']]
 
 class SettingsRolePage(TypedDict):
     #: Число строк в results, а не общее число ролей кабинета
@@ -13351,6 +13477,8 @@ class StockWarehouse(TypedDict):
     needs_allocation: bool
     #: documents — приход обычными складскими документами; external_receipt — склад внешней стороны: приход даёт только её приёмка, поступление и входящее перемещение запрещены
     inbound_mode: Literal['documents', 'external_receipt']
+    #: Бизнес склада: по нему склад и его данные сужаются областью доступа участника. null — общий склад: юрлица из нескольких бизнесов либо склад всего кабинета (например, склад площадки)
+    business_id: Optional["UUID"]
     #: Пустой список означает доступность склада всем активным юрлицам кабинета
     company_ids: List["UUID"]
     created_at: str
@@ -13366,6 +13494,8 @@ class StockWarehouseInput(_StockWarehouseInputRequired, total=False):
     address: Dict[str, Any]
     responsible_employee_id: Optional["UUID"]
     sort_order: int
+    #: Бизнес склада. Пусто — выводится: у зоны от родителя, у склада с юрлицами одного бизнеса — их бизнес, в кабинете с одним бизнесом — он; юрлица нескольких бизнесов дают общий склад. Юрлица склада обязаны принадлежать названному бизнесу
+    business_id: Optional["UUID"]
     company_ids: List["UUID"]
 
 class StockWarehousePage(TypedDict):
@@ -13381,6 +13511,8 @@ class StockWarehousePatch(TypedDict, total=False):
     address: Dict[str, Any]
     responsible_employee_id: Optional["UUID"]
     sort_order: int
+    #: Бизнес склада; null — вывести заново из родителя и юрлиц. Править склад можно только в бизнесе, доступном целиком; общий склад — только при доступе ко всем бизнесам
+    business_id: Optional["UUID"]
     company_ids: List["UUID"]
 
 class StockWarehouseZoneInput(TypedDict):

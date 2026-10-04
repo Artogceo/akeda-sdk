@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 43550fd9806a058da1a01d6a55003141c57f7b4ac8888b60f361ef7432ee9ac4).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 185211b5eecd8efaeb47351d171a1a75521378c317bc74553bab505303db3c43).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -987,8 +987,10 @@ type CRMDeal struct {
 	UtmContent      *string `json:"utm_content,omitempty"`
 	LandingPage     *string `json:"landing_page,omitempty"`
 	Referrer        *string `json:"referrer,omitempty"`
-	CreatedAt       string  `json:"created_at"`
-	UpdatedAt       string  `json:"updated_at"`
+	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+	Custom    map[string]json.RawMessage `json:"custom,omitempty"`
+	CreatedAt string                     `json:"created_at"`
+	UpdatedAt string                     `json:"updated_at"`
 }
 
 type CRMDealBoard struct {
@@ -1041,10 +1043,14 @@ type CRMDealCard struct {
 	UtmContent      *string `json:"utm_content,omitempty"`
 	LandingPage     *string `json:"landing_page,omitempty"`
 	Referrer        *string `json:"referrer,omitempty"`
-	CreatedAt       string  `json:"created_at"`
-	UpdatedAt       string  `json:"updated_at"`
-	CustomerName    *string `json:"customer_name,omitempty"`
-	OwnerName       *string `json:"owner_name,omitempty"`
+	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+	Custom       map[string]json.RawMessage `json:"custom,omitempty"`
+	CreatedAt    string                     `json:"created_at"`
+	UpdatedAt    string                     `json:"updated_at"`
+	CustomerName *string                    `json:"customer_name,omitempty"`
+	OwnerName    *string                    `json:"owner_name,omitempty"`
+	// StageSince — Когда сделка встала на текущий этап; от этого момента считается норматив этапа
+	StageSince *string `json:"stage_since,omitempty"`
 }
 
 type CRMDealContact struct {
@@ -1073,6 +1079,8 @@ type CRMDealInput struct {
 	CRMCustomerID *string `json:"crm_customer_id,omitempty"`
 	NextAction    *string `json:"next_action,omitempty"`
 	NextActionAt  *string `json:"next_action_at,omitempty"`
+	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
 
 type CRMDealItem struct {
@@ -1108,7 +1116,9 @@ type CRMDealPatch struct {
 	CRMCustomerID *string `json:"crm_customer_id,omitempty"`
 	NextAction    *string `json:"next_action,omitempty"`
 	NextActionAt  *string `json:"next_action_at,omitempty"`
-	Archived      *bool   `json:"archived,omitempty"`
+	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
+	Custom   map[string]json.RawMessage `json:"custom,omitempty"`
+	Archived *bool                      `json:"archived,omitempty"`
 }
 
 type CRMDealStageHistory struct {
@@ -1149,6 +1159,16 @@ type CRMEngagementInput struct {
 }
 
 type CRMEngagementKind = string
+
+type CRMEngagementKindItem struct {
+	// Code — Код вида: то, что ложится в kind дела; после заведения не меняется
+	Code string `json:"code"`
+	// Label — Подпись вида - право кабинета
+	Label     string `json:"label"`
+	SortOrder int64  `json:"sort_order"`
+	// IsActive — Выключенный вид не предлагается для новых дел, но подписывает старые
+	IsActive bool `json:"is_active"`
+}
 
 type CRMEngagementPatch struct {
 	Kind    *CRMEngagementKind `json:"kind,omitempty"`
@@ -1366,6 +1386,8 @@ type CRMInboxTemplateInput struct {
 	Body string `json:"body"`
 }
 
+type CRMLabelKey = string
+
 type CRMLead struct {
 	ID    UUID   `json:"id"`
 	Title string `json:"title"`
@@ -1379,6 +1401,7 @@ type CRMLead struct {
 	ContactHandle       string        `json:"contact_handle"`
 	ReferenceID         *UUID         `json:"reference_id,omitempty"`
 	OwnerID             *int64        `json:"owner_id,omitempty"`
+	StageID             *UUID         `json:"stage_id,omitempty"`
 	CRMCustomerID       *UUID         `json:"crm_customer_id,omitempty"`
 	NextAction          string        `json:"next_action"`
 	NextActionAt        *string       `json:"next_action_at,omitempty"`
@@ -1402,6 +1425,19 @@ type CRMLead struct {
 	UpdatedAt string                     `json:"updated_at"`
 }
 
+type CRMLeadBoard struct {
+	Stages []CRMLeadBoardStage `json:"stages"`
+}
+
+type CRMLeadBoardStage struct {
+	Stage CRMLeadStage `json:"stage"`
+	// TotalCount — Сколько лидов отбора стоит на этапе
+	TotalCount int64         `json:"total_count"`
+	Cards      []CRMLeadCard `json:"cards"`
+	// HasMore — На этапе больше лидов, чем карточек в ответе
+	HasMore bool `json:"has_more"`
+}
+
 // CRMLeadCard — Лид для экрана: тот же лид плюс человек за обращением и ответственный читаемыми именами
 type CRMLeadCard struct {
 	ID    UUID   `json:"id"`
@@ -1416,6 +1452,7 @@ type CRMLeadCard struct {
 	ContactHandle       string        `json:"contact_handle"`
 	ReferenceID         *UUID         `json:"reference_id,omitempty"`
 	OwnerID             *int64        `json:"owner_id,omitempty"`
+	StageID             *UUID         `json:"stage_id,omitempty"`
 	CRMCustomerID       *UUID         `json:"crm_customer_id,omitempty"`
 	NextAction          string        `json:"next_action"`
 	NextActionAt        *string       `json:"next_action_at,omitempty"`
@@ -1468,6 +1505,7 @@ type CRMLeadDuplicate struct {
 	ContactHandle       string        `json:"contact_handle"`
 	ReferenceID         *UUID         `json:"reference_id,omitempty"`
 	OwnerID             *int64        `json:"owner_id,omitempty"`
+	StageID             *UUID         `json:"stage_id,omitempty"`
 	CRMCustomerID       *UUID         `json:"crm_customer_id,omitempty"`
 	NextAction          string        `json:"next_action"`
 	NextActionAt        *string       `json:"next_action_at,omitempty"`
@@ -1543,18 +1581,23 @@ type CRMLeadPatch struct {
 type CRMLeadStage struct {
 	ID UUID `json:"id"`
 	// Name — Имя этапа задаёт кабинет; код на конкретные имена не ссылается
-	Name      string `json:"name"`
-	SortOrder int64  `json:"sort_order"`
+	Name      string       `json:"name"`
+	LabelKey  *CRMLabelKey `json:"label_key,omitempty"`
+	SortOrder int64        `json:"sort_order"`
 	// IsActive — Ненужный этап выключают, а не удаляют
-	IsActive  bool                `json:"is_active"`
-	Meaning   CRMLeadStageMeaning `json:"meaning"`
-	CreatedAt string              `json:"created_at"`
-	UpdatedAt string              `json:"updated_at"`
+	IsActive bool                `json:"is_active"`
+	Meaning  CRMLeadStageMeaning `json:"meaning"`
+	// Color — Цвет этапа #RRGGBB; пусто - цвет по умолчанию
+	Color     *string `json:"color,omitempty"`
+	CreatedAt string  `json:"created_at"`
+	UpdatedAt string  `json:"updated_at"`
 }
 
 type CRMLeadStageInput struct {
 	Name    string               `json:"name"`
 	Meaning *CRMLeadStageMeaning `json:"meaning,omitempty"`
+	// Color — Цвет этапа #RRGGBB; пусто - цвет по умолчанию
+	Color *string `json:"color,omitempty"`
 }
 
 type CRMLeadStageMeaning = string
@@ -1563,9 +1606,16 @@ type CRMLeadStagePatch struct {
 	Name     *string              `json:"name,omitempty"`
 	IsActive *bool                `json:"is_active,omitempty"`
 	Meaning  *CRMLeadStageMeaning `json:"meaning,omitempty"`
+	// Color — Цвет этапа #RRGGBB; пусто - цвет по умолчанию
+	Color *string `json:"color,omitempty"`
 }
 
 type CRMLeadStatus = string
+
+type CRMLeadSummary struct {
+	// Unsorted — Лиды в очереди разбора: статус new вне архива, видимые читающему
+	Unsorted int64 `json:"unsorted"`
+}
 
 type CRMLossReason struct {
 	ID   UUID   `json:"id"`
@@ -1636,25 +1686,31 @@ type CRMOverview struct {
 }
 
 type CRMPipeline struct {
-	ID        UUID       `json:"id"`
-	Name      string     `json:"name"`
-	SortOrder int64      `json:"sort_order"`
-	IsDefault bool       `json:"is_default"`
-	IsActive  bool       `json:"is_active"`
-	Stages    []CRMStage `json:"stages,omitempty"`
-	CreatedAt string     `json:"created_at"`
-	UpdatedAt string     `json:"updated_at"`
+	ID        UUID         `json:"id"`
+	Name      string       `json:"name"`
+	LabelKey  *CRMLabelKey `json:"label_key,omitempty"`
+	SortOrder int64        `json:"sort_order"`
+	IsDefault bool         `json:"is_default"`
+	IsActive  bool         `json:"is_active"`
+	// BusinessID — Бизнес воронки: её сделки, лиды, ставшие такими сделками, и привязанные диалоги видят участники, чья область доступа касается бизнеса, и ответственные. null — воронка всего кабинета
+	BusinessID *UUID      `json:"business_id"`
+	Stages     []CRMStage `json:"stages,omitempty"`
+	CreatedAt  string     `json:"created_at"`
+	UpdatedAt  string     `json:"updated_at"`
 }
 
 type CRMPipelineInput struct {
 	Name      string `json:"name"`
 	IsDefault *bool  `json:"is_default,omitempty"`
+	// BusinessID — Бизнес воронки. Пусто — единственный бизнес области доступа или весь кабинет (его заводит только доступ ко всем бизнесам). Бизнес вне области доступа — 403 crm.pipeline_business_forbidden
+	BusinessID *UUID `json:"business_id,omitempty"`
 }
 
 type CRMPipelineOverview struct {
-	PipelineID   UUID   `json:"pipeline_id"`
-	PipelineName string `json:"pipeline_name"`
-	OpenCount    int64  `json:"open_count"`
+	PipelineID       UUID         `json:"pipeline_id"`
+	PipelineName     string       `json:"pipeline_name"`
+	PipelineLabelKey *CRMLabelKey `json:"pipeline_label_key,omitempty"`
+	OpenCount        int64        `json:"open_count"`
 	// OpenAmount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
 	OpenAmount string             `json:"open_amount"`
 	Stages     []CRMStageOverview `json:"stages,omitempty"`
@@ -1664,6 +1720,8 @@ type CRMPipelinePatch struct {
 	Name      *string `json:"name,omitempty"`
 	IsDefault *bool   `json:"is_default,omitempty"`
 	IsActive  *bool   `json:"is_active,omitempty"`
+	// BusinessID — Бизнес воронки; поле не передано — не менять, null — весь кабинет. Бизнес вне области доступа — 403 crm.pipeline_business_forbidden
+	BusinessID *UUID `json:"business_id,omitempty"`
 }
 
 type CRMQualifyLeadInput struct {
@@ -1743,16 +1801,18 @@ type CRMStage struct {
 	ID          UUID             `json:"id"`
 	PipelineID  UUID             `json:"pipeline_id"`
 	Name        string           `json:"name"`
+	LabelKey    *CRMLabelKey     `json:"label_key,omitempty"`
 	SortOrder   int64            `json:"sort_order"`
 	Category    CRMStageCategory `json:"category"`
 	Color       string           `json:"color"`
 	Probability int64            `json:"probability"`
 	// SLAHours — Норматив пребывания на стадии в часах; 0 - без норматива
-	SLAHours       int64              `json:"sla_hours"`
-	RequiredFields []CRMRequiredField `json:"required_fields"`
-	IsActive       bool               `json:"is_active"`
-	CreatedAt      string             `json:"created_at"`
-	UpdatedAt      string             `json:"updated_at"`
+	SLAHours       int64                `json:"sla_hours"`
+	RequiredFields []CRMRequiredField   `json:"required_fields"`
+	IsActive       bool                 `json:"is_active"`
+	ShowOnBoard    *CRMStageShowOnBoard `json:"show_on_board,omitempty"`
+	CreatedAt      string               `json:"created_at"`
+	UpdatedAt      string               `json:"updated_at"`
 }
 
 type CRMStageCategory = string
@@ -1761,42 +1821,49 @@ type CRMStageInput struct {
 	Name     string            `json:"name"`
 	Category *CRMStageCategory `json:"category,omitempty"`
 	// Color — Пустое значение подставляет цвет категории
-	Color          *string            `json:"color,omitempty"`
-	Probability    *int64             `json:"probability,omitempty"`
-	SLAHours       *int64             `json:"sla_hours,omitempty"`
-	RequiredFields []CRMRequiredField `json:"required_fields,omitempty"`
+	Color          *string              `json:"color,omitempty"`
+	Probability    *int64               `json:"probability,omitempty"`
+	SLAHours       *int64               `json:"sla_hours,omitempty"`
+	RequiredFields []CRMRequiredField   `json:"required_fields,omitempty"`
+	ShowOnBoard    *CRMStageShowOnBoard `json:"show_on_board,omitempty"`
 }
 
 type CRMStageMetric struct {
-	PipelineID   string           `json:"pipeline_id"`
-	PipelineName string           `json:"pipeline_name"`
-	StageID      string           `json:"stage_id"`
-	StageName    string           `json:"stage_name"`
-	Category     CRMStageCategory `json:"category"`
-	Count        int64            `json:"count"`
+	PipelineID       string           `json:"pipeline_id"`
+	PipelineName     string           `json:"pipeline_name"`
+	PipelineLabelKey *CRMLabelKey     `json:"pipeline_label_key,omitempty"`
+	StageID          string           `json:"stage_id"`
+	StageName        string           `json:"stage_name"`
+	StageLabelKey    *CRMLabelKey     `json:"stage_label_key,omitempty"`
+	Category         CRMStageCategory `json:"category"`
+	Count            int64            `json:"count"`
 	// Amount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
 	Amount string `json:"amount"`
 }
 
 type CRMStageOverview struct {
-	StageID   UUID             `json:"stage_id"`
-	StageName string           `json:"stage_name"`
-	Category  CRMStageCategory `json:"category"`
-	DealCount int64            `json:"deal_count"`
+	StageID       UUID             `json:"stage_id"`
+	StageName     string           `json:"stage_name"`
+	StageLabelKey *CRMLabelKey     `json:"stage_label_key,omitempty"`
+	Category      CRMStageCategory `json:"category"`
+	DealCount     int64            `json:"deal_count"`
 	// DealAmount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
 	DealAmount string `json:"deal_amount"`
 	UpdatedAt  string `json:"updated_at"`
 }
 
 type CRMStagePatch struct {
-	Name           *string            `json:"name,omitempty"`
-	Category       *CRMStageCategory  `json:"category,omitempty"`
-	Color          *string            `json:"color,omitempty"`
-	Probability    *int64             `json:"probability,omitempty"`
-	SLAHours       *int64             `json:"sla_hours,omitempty"`
-	RequiredFields []CRMRequiredField `json:"required_fields,omitempty"`
-	IsActive       *bool              `json:"is_active,omitempty"`
+	Name           *string              `json:"name,omitempty"`
+	Category       *CRMStageCategory    `json:"category,omitempty"`
+	Color          *string              `json:"color,omitempty"`
+	Probability    *int64               `json:"probability,omitempty"`
+	SLAHours       *int64               `json:"sla_hours,omitempty"`
+	RequiredFields []CRMRequiredField   `json:"required_fields,omitempty"`
+	IsActive       *bool                `json:"is_active,omitempty"`
+	ShowOnBoard    *CRMStageShowOnBoard `json:"show_on_board,omitempty"`
 }
+
+type CRMStageShowOnBoard = bool
 
 // CRMTimelineEntry — Одна запись ленты; вид говорит, из какого источника она пришла
 type CRMTimelineEntry struct {
@@ -2207,13 +2274,14 @@ type CalendarInvitationPage struct {
 }
 
 type CalendarMember struct {
-	User       int64   `json:"user"`
-	UserName   string  `json:"user_name"`
-	Email      *string `json:"email,omitempty"`
-	Department *string `json:"department,omitempty"`
-	Position   *string `json:"position,omitempty"`
-	Company    *string `json:"company,omitempty"`
-	AvatarURL  *string `json:"avatar_url,omitempty"`
+	User         int64   `json:"user"`
+	UserName     string  `json:"user_name"`
+	Email        *string `json:"email,omitempty"`
+	Department   *string `json:"department,omitempty"`
+	DepartmentID *string `json:"department_id,omitempty"`
+	Position     *string `json:"position,omitempty"`
+	Company      *string `json:"company,omitempty"`
+	AvatarURL    *string `json:"avatar_url,omitempty"`
 }
 
 type CalendarMemberBundle struct {
@@ -5827,6 +5895,12 @@ type DocflowApprovalRoute struct {
 	ContactFolder   *string `json:"contact_folder,omitempty"`
 	ItemID          *UUID   `json:"item_id,omitempty"`
 	ItemName        *string `json:"item_name,omitempty"`
+	// BusinessID — Условие «бизнес предмета»; без юрлица у предмета бизнес берётся из формы проверки
+	BusinessID   *UUID   `json:"business_id,omitempty"`
+	BusinessName *string `json:"business_name,omitempty"`
+	// DepartmentID — Условие «подразделение автора»: срабатывает и на подотделы
+	DepartmentID   *UUID   `json:"department_id,omitempty"`
+	DepartmentName *string `json:"department_name,omitempty"`
 	// AmountFrom — Нижняя граница суммы ВКЛЮЧАЕТСЯ
 	AmountFrom *string `json:"amount_from,omitempty"`
 	// AmountTo — Верхняя граница суммы НЕ включается
@@ -5848,7 +5922,7 @@ type DocflowApprovalRouteList struct {
 	Items []DocflowApprovalRoute `json:"items"`
 }
 
-// DocflowApprovalRouteStage — Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался». Согласующий может быть не выбран (способ назван, ссылки нет) только у выключенного маршрута: так сеется этап «Финансы» стандартного маршрута заявок.
+// DocflowApprovalRouteStage — Этап ШАБЛОНА маршрута. Согласующий назван одним из пяти способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался», department_head — «спросить руководителя отдела» по оргструктуре: отдела автора или названного, а нет руководителя или автор руководит сам — выше по дереву. Согласующий может быть не выбран (способ назван, ссылки нет) только у выключенного маршрута: так сеется этап «Финансы» стандартного маршрута заявок.
 type DocflowApprovalRouteStage struct {
 	ID *UUID `json:"id,omitempty"`
 	// Position — Порядок этапа в маршруте
@@ -5858,6 +5932,8 @@ type DocflowApprovalRouteStage struct {
 	AssigneeUserID       *int64  `json:"assignee_user_id,omitempty"`
 	AssigneeDepartmentID *UUID   `json:"assignee_department_id,omitempty"`
 	AssigneeRoleID       *UUID   `json:"assignee_role_id,omitempty"`
+	// IncludeSubdepartments — Только для department: спросить и сотрудников подотделов
+	IncludeSubdepartments *bool `json:"include_subdepartments,omitempty"`
 	// AssigneeLabel — Как назначение читается человеком. Подставляется на чтении; в шаблоне не хранится
 	AssigneeLabel *string `json:"assignee_label,omitempty"`
 	// StageKind — Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve
@@ -6858,14 +6934,16 @@ type FilesFolder struct {
 	// IsRestricted — Закрытое хранилище видно только участникам его списка
 	IsRestricted bool `json:"is_restricted"`
 	// BreakInheritance — Права хранилища на эту папку не действуют
-	BreakInheritance bool    `json:"break_inheritance"`
-	OwnerID          int64   `json:"owner_id"`
-	CreatedBy        int64   `json:"created_by"`
-	TrashedAt        *string `json:"trashed_at,omitempty"`
-	CreatedAt        string  `json:"created_at"`
-	UpdatedAt        string  `json:"updated_at"`
-	CanRead          bool    `json:"can_read"`
-	CanWrite         bool    `json:"can_write"`
+	BreakInheritance bool `json:"break_inheritance"`
+	// BusinessID — Бизнес хранилища; у вложенной папки — бизнес её хранилища. Хранилище бизнеса видят участники, чья область доступа касается бизнеса, и поимённо выданные; null — хранилище всего кабинета или личное
+	BusinessID *UUID   `json:"business_id"`
+	OwnerID    int64   `json:"owner_id"`
+	CreatedBy  int64   `json:"created_by"`
+	TrashedAt  *string `json:"trashed_at,omitempty"`
+	CreatedAt  string  `json:"created_at"`
+	UpdatedAt  string  `json:"updated_at"`
+	CanRead    bool    `json:"can_read"`
+	CanWrite   bool    `json:"can_write"`
 	// CanShare — Право выпускать внешние ссылки; из открытости хранилища не следует
 	CanShare    bool  `json:"can_share"`
 	CanManage   bool  `json:"can_manage"`
@@ -6883,6 +6961,8 @@ type FilesFolderInput struct {
 	Description  *string `json:"description,omitempty"`
 	Kind         *string `json:"kind,omitempty"`
 	IsRestricted *bool   `json:"is_restricted,omitempty"`
+	// BusinessID — Бизнес общего хранилища (только у верхнего уровня). Поле не передано — не менять (у нового — единственный бизнес области доступа или весь кабинет); null — хранилище всего кабинета. Бизнес вне области доступа — 403 files.business_forbidden
+	BusinessID *UUID `json:"business_id,omitempty"`
 }
 
 type FilesGrant struct {
@@ -6998,6 +7078,8 @@ type FilesVersion struct {
 
 type FinanceAccount struct {
 	ID UUID `json:"id"`
+	// Business — Бизнес, которому принадлежат деньги — у счёта из юрлица, у кассы из её карточки. null только у старого счёта без юрлица в кабинете с несколькими бизнесами.
+	Business *string `json:"business,omitempty"`
 	// Kind — Где лежат деньги. `bank` — расчётный счёт, `cash` — касса из справочника «Кассы». Список общий намеренно: вопрос «сколько у меня денег» задаётся один раз. У кассы банковские поля (`bic`, `number`, `bank_name`, `connector`) пусты по построению, а не «ещё не заполнены», и карточка счёта по её идентификатору не открывается.
 	Kind                 string  `json:"kind"`
 	Company              *string `json:"company"`
@@ -8648,19 +8730,20 @@ type HubOverview struct {
 }
 
 type HubProject struct {
-	ID          UUID        `json:"id"`
-	Key         string      `json:"key"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Color       string      `json:"color"`
-	ContactID   *UUID       `json:"contact_id"`
-	ContactName string      `json:"contact_name"`
-	CompanyID   *UUID       `json:"company_id"`
-	StartDate   string      `json:"start_date"`
-	TargetDate  string      `json:"target_date"`
-	LeadUserID  *int64      `json:"lead_user_id"`
-	LeadName    string      `json:"lead_name"`
-	Counters    HubCounters `json:"counters"`
+	ID          UUID   `json:"id"`
+	Key         string `json:"key"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Color       string `json:"color"`
+	ContactID   *UUID  `json:"contact_id"`
+	ContactName string `json:"contact_name"`
+	// BusinessID — Бизнес проекта (заменил информационное юрлицо); null — проект всего кабинета
+	BusinessID *UUID       `json:"business_id"`
+	StartDate  string      `json:"start_date"`
+	TargetDate string      `json:"target_date"`
+	LeadUserID *int64      `json:"lead_user_id"`
+	LeadName   string      `json:"lead_name"`
+	Counters   HubCounters `json:"counters"`
 }
 
 type HubSection struct {
@@ -8694,7 +8777,7 @@ type HubVisibility = string
 type KnowledgeACLGrant struct {
 	ID            *UUID  `json:"id,omitempty"`
 	PrincipalType string `json:"principal_type"`
-	// PrincipalKey — Ключ принципала: id пользователя, UUID роли, название подразделения или * для всех
+	// PrincipalKey — Ключ принципала: id пользователя, UUID роли, UUID подразделения из справочника departments или * для всех
 	PrincipalKey string `json:"principal_key"`
 	// CanRead — Уровень «Просмотр»
 	CanRead bool `json:"can_read"`
@@ -8924,13 +9007,15 @@ type KnowledgeSpace struct {
 	// IsRestricted — Закрытое пространство видно только участникам его списка
 	IsRestricted bool `json:"is_restricted"`
 	// CanManage — Смотрящий вправе вести пространство; считается сервером по владельцу
-	CanManage bool   `json:"can_manage"`
-	HasCover  bool   `json:"has_cover"`
-	PageCount int64  `json:"page_count"`
-	CreatedBy int64  `json:"created_by"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-	IsPinned  bool   `json:"is_pinned"`
+	CanManage bool `json:"can_manage"`
+	// BusinessID — Бизнес пространства: его видят, ищут и цитируют в ответах помощника участники, чья область доступа касается бизнеса, и поимённо выданные. null — пространство всего кабинета
+	BusinessID *UUID  `json:"business_id"`
+	HasCover   bool   `json:"has_cover"`
+	PageCount  int64  `json:"page_count"`
+	CreatedBy  int64  `json:"created_by"`
+	CreatedAt  string `json:"created_at"`
+	UpdatedAt  string `json:"updated_at"`
+	IsPinned   bool   `json:"is_pinned"`
 }
 
 type KnowledgeSpaceAccessInput struct {
@@ -8952,6 +9037,8 @@ type KnowledgeSpaceInput struct {
 	Description *string `json:"description,omitempty"`
 	// Icon — Имя иконки Lucide; по умолчанию book-open
 	Icon *string `json:"icon,omitempty"`
+	// BusinessID — Бизнес пространства. Поле не передано — не менять (у нового — единственный бизнес области доступа или весь кабинет); null — пространство всего кабинета. Бизнес вне области доступа — 403 knowledge.business_forbidden
+	BusinessID *UUID `json:"business_id,omitempty"`
 }
 
 type KnowledgeTag struct {
@@ -8988,7 +9075,9 @@ type MailAccount struct {
 	// OwnerUserID — Сотрудник, которому принадлежит ящик
 	OwnerUserID int64 `json:"owner_user_id"`
 	// Shared — Общий ящик отдела виден всем, у кого есть право на модуль; личный — владельцу и тому, кто видит все записи
-	Shared      bool   `json:"shared"`
+	Shared bool `json:"shared"`
+	// BusinessID — Бизнес общего ящика: ящик видят участники, чья область доступа касается этого бизнеса, а также владелец и поимённо названные сотрудники. null — ящик всего кабинета или личный
+	BusinessID  *UUID  `json:"business_id"`
 	Email       string `json:"email"`
 	DisplayName string `json:"display_name"`
 	// NotificationMode — Уведомления владельца ящика о новой почте: все письма, только важные отправители или выключено
@@ -9740,6 +9829,8 @@ type MarketplaceStore struct {
 	LastEtlAt *string `json:"last_etl_at,omitempty"`
 	// ArticleSizeSeparator — Разделитель базы и размера в артикуле продавца, объявленный владельцем магазина. Пустая строка — правило не объявлено, и размер берётся только из полей площадки. Применяется на Ozon, где каждый размер продаётся своим артикулом
 	ArticleSizeSeparator *string `json:"article_size_separator,omitempty"`
+	// BusinessID — Бизнес магазина — бизнес юрлица из учётных настроек; по нему магазин и его отчёты сужаются областью доступа участника. null — юрлицо ещё не выбрано в кабинете с несколькими бизнесами: такой магазин видит только доступ ко всем бизнесам
+	BusinessID *UUID `json:"business_id,omitempty"`
 }
 
 // MarketplaceStoreInput — Тело создания управляемого подключения. Платформу задаёт маршрут, а external_id назначает MPTrack. Для Ozon нужны ozon_client_id и ozon_api_key, для Wildberries — wb_token, для Яндекс Маркета — ym_business_id и ym_api_key.
@@ -9764,6 +9855,8 @@ type MarketplaceStoreInput struct {
 	YmAPIKey     *string `json:"ym_api_key,omitempty"`
 	// Proxy — Необязательный адрес proxy; значение не возвращается
 	Proxy *string `json:"proxy,omitempty"`
+	// BusinessID — Бизнес магазина. В кабинете с одним бизнесом подставляется сам; при нескольких обязателен — без него ответ 400 marketplace.store_business_required. Бизнес должен входить в область права участника целиком, иначе 403 marketplace.store_business_forbidden; юрлицо учёта магазина потом выбирается только этого бизнеса
+	BusinessID *UUID `json:"business_id,omitempty"`
 }
 
 type MarketplaceStorePage struct {
@@ -10620,6 +10713,8 @@ type Project struct {
 	TasksActive  int64   `json:"tasks_active"`
 	TasksDone    int64   `json:"tasks_done"`
 	ScrumEnabled bool    `json:"scrum_enabled"`
+	// BusinessID — Бизнес проекта: правило «все задачи» при области доступа не на все бизнесы видит только проекты её бизнесов и кабинета; участники проекта видят его всегда. null — проект всего кабинета
+	BusinessID *UUID `json:"business_id"`
 }
 
 type ProjectCreate struct {
@@ -10627,6 +10722,8 @@ type ProjectCreate struct {
 	Key         *string `json:"key,omitempty"`
 	Description *string `json:"description,omitempty"`
 	Color       *string `json:"color,omitempty"`
+	// BusinessID — Бизнес проекта. Пусто — единственный бизнес области доступа или весь кабинет (его заводит только доступ ко всем бизнесам). Бизнес вне области доступа — 403 tasks.project_business_forbidden
+	BusinessID *UUID `json:"business_id,omitempty"`
 }
 
 type ProjectPage struct {
@@ -10872,6 +10969,23 @@ type SettingsMember struct {
 	// Companies — Заполнен при company_scope selected
 	Companies []UUID `json:"companies"`
 	IsActive  bool   `json:"is_active"`
+	// AllBusinesses — Роль действует во всех бизнесах кабинета, включая заведённые позже. У администратора всегда true
+	AllBusinesses bool `json:"all_businesses"`
+	// Businesses — Бизнесы сотрудника; пуст при all_businesses
+	Businesses []SettingsMemberBusinessScope `json:"businesses"`
+}
+
+type SettingsMemberAccessInput struct {
+	// AllBusinesses — Все бизнесы кабинета; тогда businesses не передаётся
+	AllBusinesses *bool `json:"all_businesses,omitempty"`
+	// Businesses — Бизнесы сотрудника целиком; повторы и юрлица бизнеса, выданного целиком, сворачиваются
+	Businesses []SettingsMemberBusinessScope `json:"businesses,omitempty"`
+}
+
+type SettingsMemberBusinessScope struct {
+	Business UUID `json:"business"`
+	// Company — Сужает доступ до юрлица этого бизнеса; без поля — бизнес целиком
+	Company *UUID `json:"company,omitempty"`
 }
 
 type SettingsMemberPage struct {
@@ -10888,7 +11002,7 @@ type SettingsRole struct {
 	IsActive bool `json:"is_active"`
 	// Permissions — Право записывается как «модуль:действие», например settings:read
 	Permissions []string `json:"permissions"`
-	// RecordRules — Ключ — ресурс модуля; пустая карта означает видимость только своих записей
+	// RecordRules — Ключ — ресурс модуля: tasks.task, crm.lead, crm.deal, crm.customer, crm.conversation, core.order, docflow.payment_request и ресурсы клиентских модулей. Значение — own (свои), projects (свои и проекты участия, у задач), team (свои и подчинённых), department (своего подразделения), department_tree (подразделения с подотделами) или all (все записи области). Пустая карта означает видимость только своих записей
 	RecordRules map[string]string `json:"record_rules"`
 }
 
@@ -12268,6 +12382,8 @@ type StockWarehouse struct {
 	NeedsAllocation bool `json:"needs_allocation"`
 	// InboundMode — documents — приход обычными складскими документами; external_receipt — склад внешней стороны: приход даёт только её приёмка, поступление и входящее перемещение запрещены
 	InboundMode string `json:"inbound_mode"`
+	// BusinessID — Бизнес склада: по нему склад и его данные сужаются областью доступа участника. null — общий склад: юрлица из нескольких бизнесов либо склад всего кабинета (например, склад площадки)
+	BusinessID *UUID `json:"business_id"`
 	// CompanyIds — Пустой список означает доступность склада всем активным юрлицам кабинета
 	CompanyIds []UUID `json:"company_ids"`
 	CreatedAt  string `json:"created_at"`
@@ -12282,7 +12398,9 @@ type StockWarehouseInput struct {
 	Address               map[string]json.RawMessage `json:"address,omitempty"`
 	ResponsibleEmployeeID *UUID                      `json:"responsible_employee_id,omitempty"`
 	SortOrder             *int64                     `json:"sort_order,omitempty"`
-	CompanyIds            []UUID                     `json:"company_ids,omitempty"`
+	// BusinessID — Бизнес склада. Пусто — выводится: у зоны от родителя, у склада с юрлицами одного бизнеса — их бизнес, в кабинете с одним бизнесом — он; юрлица нескольких бизнесов дают общий склад. Юрлица склада обязаны принадлежать названному бизнесу
+	BusinessID *UUID  `json:"business_id,omitempty"`
+	CompanyIds []UUID `json:"company_ids,omitempty"`
 }
 
 type StockWarehousePage struct {
@@ -12298,7 +12416,9 @@ type StockWarehousePatch struct {
 	Address               map[string]json.RawMessage `json:"address,omitempty"`
 	ResponsibleEmployeeID *UUID                      `json:"responsible_employee_id,omitempty"`
 	SortOrder             *int64                     `json:"sort_order,omitempty"`
-	CompanyIds            []UUID                     `json:"company_ids,omitempty"`
+	// BusinessID — Бизнес склада; null — вывести заново из родителя и юрлиц. Править склад можно только в бизнесе, доступном целиком; общий склад — только при доступе ко всем бизнесам
+	BusinessID *UUID  `json:"business_id,omitempty"`
+	CompanyIds []UUID `json:"company_ids,omitempty"`
 }
 
 type StockWarehouseZoneInput struct {

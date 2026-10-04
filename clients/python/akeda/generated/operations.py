@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 43550fd9806a058da1a01d6a55003141c57f7b4ac8888b60f361ef7432ee9ac4).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 185211b5eecd8efaeb47351d171a1a75521378c317bc74553bab505303db3c43).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -312,11 +312,13 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'crmGetInboxConversation': OperationSpec('GET', '/api/v1/crm/inbox/conversations/{id}', 'crm', 'preview', 'crm:read', False, False, ('id',), 'none', None, None),
     'crmGetInboxUploadSession': OperationSpec('GET', '/api/v1/crm/inbox/upload-sessions/{id}', 'crm', 'preview', 'crm:read', False, False, ('id',), 'none', None, None),
     'crmGetLead': OperationSpec('GET', '/api/v1/crm/leads/{id}', 'crm', 'preview', 'crm:read', False, False, ('id',), 'none', None, None),
+    'crmGetLeadBoard': OperationSpec('GET', '/api/v1/crm/leads/board', 'crm', 'preview', 'crm:read', False, False, (), 'none', None, None),
     'crmGetLeadHistory': OperationSpec('GET', '/api/v1/crm/leads/{id}/history', 'crm', 'preview', 'crm:read', False, False, ('id',), 'none', None, None),
+    'crmGetLeadSummary': OperationSpec('GET', '/api/v1/crm/leads/summary', 'crm', 'preview', 'crm:read', False, False, (), 'none', None, None),
     'crmGetOverview': OperationSpec('GET', '/api/v1/crm/overview', 'crm', 'preview', 'crm:read', False, False, (), 'none', None, None),
     'crmGetPipeline': OperationSpec('GET', '/api/v1/crm/pipelines/{id}', 'crm', 'preview', 'crm:read', False, False, ('id',), 'none', None, None),
     'crmGetSettings': OperationSpec('GET', '/api/v1/crm/settings', 'crm', 'preview', 'crm:read', False, False, (), 'none', None, None),
-    'crmGetTimeline': OperationSpec('GET', '/api/v1/crm/{entity}/{id}/timeline', 'crm', 'preview', 'crm:read', False, False, ('entity', 'id',), 'limit', 100, None),
+    'crmGetTimeline': OperationSpec('GET', '/api/v1/crm/{entity}/{id}/timeline', 'crm', 'preview', 'crm:read', False, False, ('entity', 'id',), 'limit', 100, 30),
     'crmInboxAttachmentDownloadSession': OperationSpec('GET', '/api/v1/crm/inbox/attachments/{id}/download-session', 'crm', 'preview', 'crm:read', False, False, ('id',), 'none', None, None),
     'crmLeadDuplicates': OperationSpec('GET', '/api/v1/crm/leads/{id}/duplicates', 'crm', 'preview', 'crm:read', False, False, ('id',), 'none', None, None),
     'crmLinkEntityConversation': OperationSpec('POST', '/api/v1/crm/inbox/entities/{entity}/{id}/conversations', 'crm', 'preview', 'crm:write', False, False, ('entity', 'id',), 'none', None, None),
@@ -328,6 +330,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'crmListDealContacts': OperationSpec('GET', '/api/v1/crm/deals/{id}/contacts', 'crm', 'preview', 'crm:read', False, False, ('id',), 'none', None, None),
     'crmListDealItems': OperationSpec('GET', '/api/v1/crm/deals/{id}/items', 'crm', 'preview', 'crm:read', False, False, ('id',), 'none', None, None),
     'crmListDirectoryContacts': OperationSpec('GET', '/api/v1/crm/contacts', 'crm', 'preview', 'crm:read', False, False, (), 'none', None, None),
+    'crmListEngagementKinds': OperationSpec('GET', '/api/v1/crm/engagement-kinds', 'crm', 'preview', 'crm:read', False, False, (), 'none', None, None),
     'crmListEngagements': OperationSpec('GET', '/api/v1/crm/{entity}/{id}/engagements', 'crm', 'preview', 'crm:read', False, False, ('entity', 'id',), 'none', None, None),
     'crmListEntityConversations': OperationSpec('GET', '/api/v1/crm/inbox/entities/{entity}/{id}/conversations', 'crm', 'preview', 'crm:read', False, False, ('entity', 'id',), 'none', None, None),
     'crmListEntityMessages': OperationSpec('GET', '/api/v1/crm/inbox/entities/{entity}/{id}/messages', 'crm', 'preview', 'crm:read', False, False, ('entity', 'id',), 'limit', 200, 100),
@@ -631,6 +634,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'settingsListRoles': OperationSpec('GET', '/api/v1/settings/roles', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
     'settingsListSelectableCompanies': OperationSpec('GET', '/api/v1/settings/companies/selectable', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
     'settingsListVatRates': OperationSpec('GET', '/api/v1/settings/vat-rates', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
+    'settingsReplaceMemberAccess': OperationSpec('PUT', '/api/v1/settings/members/{id}/access', 'settings', 'preview', 'settings:write', False, False, ('id',), 'none', None, None),
     'stockAbortUploadSession': OperationSpec('DELETE', '/api/v1/stock/upload-sessions/{id}', 'stock', 'preview', 'stock:write', False, False, ('id',), 'none', None, None),
     'stockAccountTransferProposal': OperationSpec('GET', '/api/v1/stock/account-transfers/proposal', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
     'stockApplyImport': OperationSpec('POST', '/api/v1/stock/imports/{id}/apply', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),

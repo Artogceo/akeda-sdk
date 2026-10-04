@@ -14418,7 +14418,7 @@ paths:
         - Finance accounts
       operationId: financeListAccounts
       summary: Получить доступные банковские счета
-      description: Возвращает только счета юрлиц, доступных текущему пользователю; поиск идёт по реквизитам и названию.
+      description: Возвращает только счета и кассы бизнесов и юрлиц области права сотрудника (AUTHZ.md § 2.2); поиск идёт по реквизитам и названию.
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -17325,7 +17325,7 @@ paths:
         - CRM leads
       operationId: crmListLeads
       summary: Получить лиды
-      description: Возвращает лиды CRM.
+      description: 'Возвращает лиды CRM. Отбор по дополнительным полям: параметры cf.<ключ поля>=<значение>, до 10 полей. Число и флажок сравниваются по типу поля, вариант справочника - по идентификатору записи, текст - по подстроке без учёта регистра; поле, которого нет, отбирает ноль записей.'
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -17344,8 +17344,10 @@ paths:
             $ref: '#/components/schemas/CRMLeadStatus'
         - $ref: '#/components/parameters/CRMOwnerFilter'
         - $ref: '#/components/parameters/CRMCustomerFilter'
+        - $ref: '#/components/parameters/CRMLeadStageFilter'
+        - $ref: '#/components/parameters/CRMLeadSourceFilter'
         - $ref: '#/components/parameters/CRMArchivedFilter'
-        - $ref: '#/components/parameters/CRMSort'
+        - $ref: '#/components/parameters/CRMLeadSort'
         - $ref: '#/components/parameters/CRMLimit'
         - $ref: '#/components/parameters/CRMOffset'
       responses:
@@ -17403,6 +17405,76 @@ paths:
           $ref: '#/components/responses/IdempotencyKeyMismatch'
         '503':
           $ref: '#/components/responses/IdempotencyUnavailable'
+  /api/v1/crm/leads/board:
+    get:
+      tags:
+        - CRM leads
+      operationId: crmGetLeadBoard
+      summary: Получить доску приёма лидов
+      description: 'Колонка на каждый живой этап доски: число лидов отбора на этапе и не больше 50 первых карточек в порядке отбора. Остальные лиды этапа читаются списком с отбором stage. Видимость та же, что у списка лидов.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/CRMSearchQuery'
+        - name: status
+          in: query
+          description: Статус лида
+          schema:
+            $ref: '#/components/schemas/CRMLeadStatus'
+        - $ref: '#/components/parameters/CRMOwnerFilter'
+        - $ref: '#/components/parameters/CRMCustomerFilter'
+        - $ref: '#/components/parameters/CRMLeadStageFilter'
+        - $ref: '#/components/parameters/CRMLeadSourceFilter'
+        - $ref: '#/components/parameters/CRMArchivedFilter'
+        - $ref: '#/components/parameters/CRMLeadSort'
+      responses:
+        '200':
+          description: Колонки доски с числом лидов и первыми карточками
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMLeadBoard'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/crm/leads/summary:
+    get:
+      tags:
+        - CRM leads
+      operationId: crmGetLeadSummary
+      summary: Получить счётчики раздела лидов
+      description: Число лидов в очереди разбора (статус new вне архива), которые читающему видны. Отбор экрана на счётчик не влияет.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Счётчики раздела лидов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMLeadSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/crm/leads/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -17705,7 +17777,7 @@ paths:
         - CRM customers
       operationId: crmListCustomers
       summary: Получить базу клиентов CRM
-      description: Собственная база CRM; в справочник контрагентов ERP клиент попадает отдельным переносом вместе с продажей или закупкой.
+      description: 'Собственная база CRM; в справочник контрагентов ERP клиент попадает отдельным переносом вместе с продажей или закупкой. Отбор по дополнительным полям: параметры cf.<ключ поля>=<значение>, до 10 полей. Число и флажок сравниваются по типу поля, вариант справочника - по идентификатору записи, текст - по подстроке без учёта регистра; поле, которого нет, отбирает ноль записей.'
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -18245,6 +18317,42 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/CRMUserRef'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/crm/engagement-kinds:
+    get:
+      tags:
+        - CRM leads
+      operationId: crmListEngagementKinds
+      summary: Получить справочник видов дел
+      description: Приватный справочник модуля CRM в конструкторе ядра (crm_engagement_kind). Пять прежних видов - умолчание нового кабинета; состав кабинет правит в «Справочники → Виды дел». Вид дела проверяется по действующим записям этого справочника.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: active
+          in: query
+          description: Только включённые виды
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Виды дел кабинета
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CRMEngagementKindItem'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -19115,7 +19223,7 @@ paths:
         - CRM links
       operationId: crmGetTimeline
       summary: Получить единую хронологию лида, сделки или клиента
-      description: Заметки и системные факты, смены этапов сделки, решения по лиду и переписка привязанных диалогов одной лентой по возрастанию времени. Лента клиента сверх своих записей собирает события его сделок и лидов, которые читающему доступны, и отдаётся страницами от курсора
+      description: 'Заметки и системные факты, смены этапов сделки, решения по лиду и переписка привязанных диалогов одной лентой по возрастанию времени. Лента клиента сверх своих записей собирает события его сделок и лидов, которые читающему доступны. Лента любой записи отдаётся страницами от курсора: без курсора - самые свежие записи'
       parameters:
         - $ref: '#/components/parameters/CRMTimelineLimit'
         - $ref: '#/components/parameters/CRMTimelineBefore'
@@ -27849,6 +27957,53 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/v1/settings/members/{id}/access:
+    put:
+      tags:
+        - Settings members
+      operationId: settingsReplaceMemberAccess
+      summary: Заменить бизнесы сотрудника
+      description: 'Записывает область сотрудника целиком: все бизнесы кабинета, включая заведённые позже, или перечисленные бизнесы, внутри бизнеса — при желании только выбранные юрлица. Роль у сотрудника одна и меняется правкой участника; область сужает данные каждого права роли. Отказ с кодом settings.access.* — 400: нет бизнесов, бизнес не найден, юрлицо чужого бизнеса. Администратор кабинета работает во всех бизнесах, сузить его область нельзя — 409 settings.access.admin_all_businesses.'
+      x-akeda-module: settings
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: settings:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingsMemberAccessInput'
+      responses:
+        '200':
+          description: Участник с новой областью
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsMember'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          description: Справочник бизнесов кабинета недоступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/v1/reference/catalog:
     get:
       tags:
@@ -32228,6 +32383,11 @@ paths:
           schema:
             type: string
             maxLength: 3
+        - name: business_id
+          in: query
+          description: Бизнес предмета, когда юрлицо не названо
+          schema:
+            $ref: '#/components/schemas/UUID'
       responses:
         '200':
           description: Кто согласует
@@ -35381,16 +35541,17 @@ components:
       name: limit
       in: query
       required: false
-      description: 'Размер страницы ленты клиента: по умолчанию 30, не больше 100. У лида и сделки лента отдаётся целиком'
+      description: 'Размер страницы ленты: по умолчанию 30, не больше 100. Страница - самые свежие записи раньше курсора'
       schema:
         type: integer
         minimum: 1
         maximum: 100
+        default: 30
     CRMTimelineBefore:
       name: before
       in: query
       required: false
-      description: 'Курсор ленты клиента: время самой старой записи, которую экран уже показал; вместе с before_id'
+      description: 'Курсор ленты: время самой старой записи, которую экран уже показал; вместе с before_id'
       schema:
         type: string
         format: date-time
@@ -35398,7 +35559,7 @@ components:
       name: before_id
       in: query
       required: false
-      description: 'Курсор ленты клиента: id самой старой записи, которую экран уже показал; вместе с before'
+      description: 'Курсор ленты: id самой старой записи, которую экран уже показал; вместе с before'
       schema:
         $ref: '#/components/schemas/UUID'
     CRMSearchQuery:
@@ -35438,6 +35599,27 @@ components:
       description: Порядок выдачи
       schema:
         type: string
+    CRMLeadSourceFilter:
+      name: source
+      in: query
+      description: 'Канал обращения лида: точное значение или канал целиком (site находит и site:akeda.ru)'
+      schema:
+        type: string
+    CRMLeadStageFilter:
+      name: stage
+      in: query
+      description: Этап доски приёма лидов
+      schema:
+        $ref: '#/components/schemas/UUID'
+    CRMLeadSort:
+      name: sort
+      in: query
+      description: 'Порядок лидов: updated_desc - свежие правки сверху (по умолчанию), created_asc - сначала давние обращения'
+      schema:
+        type: string
+        enum:
+          - updated_desc
+          - created_asc
     CRMLimit:
       name: limit
       in: query
@@ -37304,6 +37486,7 @@ components:
         - tasks_active
         - tasks_done
         - scrum_enabled
+        - business_id
       properties:
         id:
           $ref: '#/components/schemas/UUID'
@@ -37331,6 +37514,11 @@ components:
           minimum: 0
         scrum_enabled:
           type: boolean
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: 'Бизнес проекта: правило «все задачи» при области доступа не на все бизнесы видит только проекты её бизнесов и кабинета; участники проекта видят его всегда. null — проект всего кабинета'
     ProjectCreate:
       type: object
       additionalProperties: false
@@ -37349,6 +37537,11 @@ components:
         color:
           type: string
           default: '#f97316'
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Бизнес проекта. Пусто — единственный бизнес области доступа или весь кабинет (его заводит только доступ ко всем бизнесам). Бизнес вне области доступа — 403 tasks.project_business_forbidden
     ProjectPage:
       type: object
       additionalProperties: false
@@ -39764,7 +39957,7 @@ components:
         - color
         - contact_id
         - contact_name
-        - company_id
+        - business_id
         - start_date
         - target_date
         - lead_user_id
@@ -39787,10 +39980,11 @@ components:
             - type: 'null'
         contact_name:
           type: string
-        company_id:
+        business_id:
           oneOf:
             - $ref: '#/components/schemas/UUID'
             - type: 'null'
+          description: Бизнес проекта (заменил информационное юрлицо); null — проект всего кабинета
         start_date:
           type: string
         target_date:
@@ -40829,6 +41023,8 @@ components:
           type: string
           format: email
         department:
+          type: string
+        department_id:
           type: string
         position:
           type: string
@@ -50062,6 +50258,12 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/UUID'
+        business:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Бизнес, которому принадлежат деньги — у счёта из юрлица, у кассы из её карточки. null только у старого счёта без юрлица в кабинете с несколькими бизнесами.
         kind:
           type: string
           enum:
@@ -52444,12 +52646,8 @@ components:
       description: 'Единственный статус лида. Вычисляется из смысла этапа лида (CRMLeadStageMeaning) и напрямую не правится: меняется переносом на этап, квалификацией, отказом или конвертацией'
     CRMRequiredField:
       type: string
-      enum:
-        - title
-        - amount
-        - currency
-        - probability
-        - expected_close_at
+      pattern: ^(title|amount|currency|probability|expected_close_at|custom\.\S{1,200})$
+      description: 'Поле, обязательное на этапе: встроенное поле сделки (title, amount, currency, probability, expected_close_at) или дополнительное поле сделки в виде custom.<ключ поля> из «Настройки → Поля». Дополнительное поле должно быть действующим полем сделки; сделку без значения не пустят на этап с кодом crm.stage_fields_required'
     CRMStage:
       type: object
       additionalProperties: false
@@ -52473,6 +52671,8 @@ components:
           $ref: '#/components/schemas/UUID'
         name:
           type: string
+        label_key:
+          $ref: '#/components/schemas/CRMLabelKey'
         sort_order:
           type: integer
           minimum: 0
@@ -52497,6 +52697,8 @@ components:
             $ref: '#/components/schemas/CRMRequiredField'
         is_active:
           type: boolean
+        show_on_board:
+          $ref: '#/components/schemas/CRMStageShowOnBoard'
         created_at:
           type: string
           format: date-time
@@ -52512,6 +52714,7 @@ components:
         - sort_order
         - is_default
         - is_active
+        - business_id
         - created_at
         - updated_at
       properties:
@@ -52519,6 +52722,8 @@ components:
           $ref: '#/components/schemas/UUID'
         name:
           type: string
+        label_key:
+          $ref: '#/components/schemas/CRMLabelKey'
         sort_order:
           type: integer
           minimum: 0
@@ -52526,6 +52731,11 @@ components:
           type: boolean
         is_active:
           type: boolean
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: 'Бизнес воронки: её сделки, лиды, ставшие такими сделками, и привязанные диалоги видят участники, чья область доступа касается бизнеса, и ответственные. null — воронка всего кабинета'
         stages:
           type:
             - array
@@ -52550,6 +52760,11 @@ components:
         is_default:
           type: boolean
           default: false
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Бизнес воронки. Пусто — единственный бизнес области доступа или весь кабинет (его заводит только доступ ко всем бизнесам). Бизнес вне области доступа — 403 crm.pipeline_business_forbidden
     CRMPipelinePatch:
       type: object
       additionalProperties: false
@@ -52561,6 +52776,11 @@ components:
           type: boolean
         is_active:
           type: boolean
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Бизнес воронки; поле не передано — не менять, null — весь кабинет. Бизнес вне области доступа — 403 crm.pipeline_business_forbidden
     CRMStageInput:
       type: object
       additionalProperties: false
@@ -52587,6 +52807,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CRMRequiredField'
+        show_on_board:
+          $ref: '#/components/schemas/CRMStageShowOnBoard'
     CRMStagePatch:
       type: object
       additionalProperties: false
@@ -52612,6 +52834,8 @@ components:
             $ref: '#/components/schemas/CRMRequiredField'
         is_active:
           type: boolean
+        show_on_board:
+          $ref: '#/components/schemas/CRMStageShowOnBoard'
     CRMLeadStage:
       type: object
       additionalProperties: false
@@ -52629,6 +52853,8 @@ components:
         name:
           type: string
           description: Имя этапа задаёт кабинет; код на конкретные имена не ссылается
+        label_key:
+          $ref: '#/components/schemas/CRMLabelKey'
         sort_order:
           type: integer
         is_active:
@@ -52636,12 +52862,22 @@ components:
           description: Ненужный этап выключают, а не удаляют
         meaning:
           $ref: '#/components/schemas/CRMLeadStageMeaning'
+        color:
+          type: string
+          pattern: ^$|^#[0-9A-Fa-f]{6}$
+          description: 'Цвет этапа #RRGGBB; пусто - цвет по умолчанию'
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
+    CRMStageShowOnBoard:
+      type: boolean
+      description: Показывать ли этап проигрыша (category lost) колонкой на доске сделок. Решает кабинет, по умолчанию нет; для открытых и выигрышных этапов признак ничего не меняет - они на доске всегда
+    CRMLabelKey:
+      type: string
+      description: 'Ключ подписи строки, которую завёл стартовый посев (например crm.lead_stage.unsorted): экран переводит подпись по ключу, а name остаётся прежним представлением. Пусто - кабинет назвал строку сам, показывается name как есть'
     CRMLeadStageMeaning:
       type: string
       enum:
@@ -52661,6 +52897,10 @@ components:
           minLength: 1
         meaning:
           $ref: '#/components/schemas/CRMLeadStageMeaning'
+        color:
+          type: string
+          pattern: ^$|^#[0-9A-Fa-f]{6}$
+          description: 'Цвет этапа #RRGGBB; пусто - цвет по умолчанию'
     CRMLeadStagePatch:
       type: object
       additionalProperties: false
@@ -52672,6 +52912,10 @@ components:
           type: boolean
         meaning:
           $ref: '#/components/schemas/CRMLeadStageMeaning'
+        color:
+          type: string
+          pattern: ^$|^#[0-9A-Fa-f]{6}$
+          description: 'Цвет этапа #RRGGBB; пусто - цвет по умолчанию'
     CRMSettings:
       type: object
       additionalProperties: false
@@ -52784,6 +53028,12 @@ components:
           type: string
         referrer:
           type: string
+        custom:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+          description: 'Дополнительные поля кабинета: состав задаёт «Настройки → Поля»'
         created_at:
           type: string
           format: date-time
@@ -52799,6 +53049,10 @@ components:
               type: string
             owner_name:
               type: string
+            stage_since:
+              type: string
+              format: date-time
+              description: Когда сделка встала на текущий этап; от этого момента считается норматив этапа
     CRMDealInput:
       type: object
       additionalProperties: false
@@ -52858,6 +53112,12 @@ components:
             - string
             - 'null'
           format: date-time
+        custom:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+          description: 'Дополнительные поля кабинета: состав задаёт «Настройки → Поля»'
     CRMDealPatch:
       type: object
       additionalProperties: false
@@ -52908,6 +53168,12 @@ components:
             - string
             - 'null'
           format: date-time
+        custom:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+          description: 'Дополнительные поля кабинета: состав задаёт «Настройки → Поля»'
         archived:
           type: boolean
     CRMMoveDealInput:
@@ -53189,6 +53455,8 @@ components:
         owner_id:
           type: integer
           format: int64
+        stage_id:
+          $ref: '#/components/schemas/UUID'
         crm_customer_id:
           $ref: '#/components/schemas/UUID'
         next_action:
@@ -53273,6 +53541,8 @@ components:
         owner_id:
           type: integer
           format: int64
+        stage_id:
+          $ref: '#/components/schemas/UUID'
         crm_customer_id:
           $ref: '#/components/schemas/UUID'
         next_action:
@@ -53334,6 +53604,48 @@ components:
           type: string
         reject_reason:
           type: string
+    CRMLeadBoardStage:
+      type: object
+      additionalProperties: false
+      required:
+        - stage
+        - total_count
+        - cards
+        - has_more
+      properties:
+        stage:
+          $ref: '#/components/schemas/CRMLeadStage'
+        total_count:
+          type: integer
+          minimum: 0
+          description: Сколько лидов отбора стоит на этапе
+        cards:
+          type: array
+          items:
+            $ref: '#/components/schemas/CRMLeadCard'
+        has_more:
+          type: boolean
+          description: На этапе больше лидов, чем карточек в ответе
+    CRMLeadBoard:
+      type: object
+      additionalProperties: false
+      required:
+        - stages
+      properties:
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/CRMLeadBoardStage'
+    CRMLeadSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - unsorted
+      properties:
+        unsorted:
+          type: integer
+          minimum: 0
+          description: 'Лиды в очереди разбора: статус new вне архива, видимые читающему'
     CRMLeadDuplicate:
       type: object
       additionalProperties: true
@@ -54122,13 +54434,28 @@ components:
           minLength: 1
     CRMEngagementKind:
       type: string
-      enum:
-        - call
-        - meeting
-        - measurement
-        - email
-        - task
-      description: 'Что именно назначено: звонок, встреча, замер, письмо или прочий шаг'
+      minLength: 1
+      description: Код вида дела из справочника «Виды дел» кабинета (GET /api/v1/crm/engagement-kinds). Новому кабинету заведены call, meeting, measurement, email и task; свои виды кабинет добавляет в справочнике
+    CRMEngagementKindItem:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - label
+        - sort_order
+        - is_active
+      properties:
+        code:
+          type: string
+          description: 'Код вида: то, что ложится в kind дела; после заведения не меняется'
+        label:
+          type: string
+          description: Подпись вида - право кабинета
+        sort_order:
+          type: integer
+        is_active:
+          type: boolean
+          description: Выключенный вид не предлагается для новых дел, но подписывает старые
     CRMEngagement:
       type: object
       additionalProperties: false
@@ -54315,6 +54642,8 @@ components:
           $ref: '#/components/schemas/UUID'
         stage_name:
           type: string
+        stage_label_key:
+          $ref: '#/components/schemas/CRMLabelKey'
         category:
           $ref: '#/components/schemas/CRMStageCategory'
         deal_count:
@@ -54340,6 +54669,8 @@ components:
           $ref: '#/components/schemas/UUID'
         pipeline_name:
           type: string
+        pipeline_label_key:
+          $ref: '#/components/schemas/CRMLabelKey'
         open_count:
           type: integer
           format: int64
@@ -54396,10 +54727,14 @@ components:
           type: string
         pipeline_name:
           type: string
+        pipeline_label_key:
+          $ref: '#/components/schemas/CRMLabelKey'
         stage_id:
           type: string
         stage_name:
           type: string
+        stage_label_key:
+          $ref: '#/components/schemas/CRMLabelKey'
         category:
           $ref: '#/components/schemas/CRMStageCategory'
         count:
@@ -55292,6 +55627,7 @@ components:
         - description
         - is_restricted
         - break_inheritance
+        - business_id
         - owner_id
         - created_by
         - created_at
@@ -55333,6 +55669,11 @@ components:
         break_inheritance:
           type: boolean
           description: Права хранилища на эту папку не действуют
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Бизнес хранилища; у вложенной папки — бизнес её хранилища. Хранилище бизнеса видят участники, чья область доступа касается бизнеса, и поимённо выданные; null — хранилище всего кабинета или личное
         owner_id:
           type: integer
           format: int64
@@ -55390,6 +55731,11 @@ components:
             - shared
         is_restricted:
           type: boolean
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Бизнес общего хранилища (только у верхнего уровня). Поле не передано — не менять (у нового — единственный бизнес области доступа или весь кабинет); null — хранилище всего кабинета. Бизнес вне области доступа — 403 files.business_forbidden
     FilesFile:
       type: object
       additionalProperties: false
@@ -55877,6 +56223,7 @@ components:
         - sort_order
         - is_archived
         - is_restricted
+        - business_id
         - can_manage
         - has_cover
         - page_count
@@ -55905,6 +56252,11 @@ components:
         can_manage:
           type: boolean
           description: Смотрящий вправе вести пространство; считается сервером по владельцу
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: 'Бизнес пространства: его видят, ищут и цитируют в ответах помощника участники, чья область доступа касается бизнеса, и поимённо выданные. null — пространство всего кабинета'
         has_cover:
           type: boolean
         page_count:
@@ -55937,6 +56289,11 @@ components:
         icon:
           type: string
           description: Имя иконки Lucide; по умолчанию book-open
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Бизнес пространства. Поле не передано — не менять (у нового — единственный бизнес области доступа или весь кабинет); null — пространство всего кабинета. Бизнес вне области доступа — 403 knowledge.business_forbidden
     KnowledgeDocument:
       type: object
       description: Канонический блочный документ страницы; редактор читает только эту схему.
@@ -56220,7 +56577,7 @@ components:
             - department
         principal_key:
           type: string
-          description: 'Ключ принципала: id пользователя, UUID роли, название подразделения или * для всех'
+          description: 'Ключ принципала: id пользователя, UUID роли, UUID подразделения из справочника departments или * для всех'
         can_read:
           type: boolean
           description: Уровень «Просмотр»
@@ -57344,6 +57701,7 @@ components:
         - zones_enabled
         - needs_allocation
         - inbound_mode
+        - business_id
         - company_ids
         - created_at
         - updated_at
@@ -57381,6 +57739,11 @@ components:
             - documents
             - external_receipt
           description: 'documents — приход обычными складскими документами; external_receipt — склад внешней стороны: приход даёт только её приёмка, поступление и входящее перемещение запрещены'
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: 'Бизнес склада: по нему склад и его данные сужаются областью доступа участника. null — общий склад: юрлица из нескольких бизнесов либо склад всего кабинета (например, склад площадки)'
         company_ids:
           type: array
           items:
@@ -57557,6 +57920,11 @@ components:
             - type: 'null'
         sort_order:
           type: integer
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: 'Бизнес склада. Пусто — выводится: у зоны от родителя, у склада с юрлицами одного бизнеса — их бизнес, в кабинете с одним бизнесом — он; юрлица нескольких бизнесов дают общий склад. Юрлица склада обязаны принадлежать названному бизнесу'
         company_ids:
           type: array
           items:
@@ -57585,6 +57953,11 @@ components:
             - type: 'null'
         sort_order:
           type: integer
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: Бизнес склада; null — вывести заново из родителя и юрлиц. Править склад можно только в бизнесе, доступном целиком; общий склад — только при доступе ко всем бизнесам
         company_ids:
           type: array
           items:
@@ -62073,6 +62446,12 @@ components:
             - /
             - _
           description: Разделитель базы и размера в артикуле продавца, объявленный владельцем магазина. Пустая строка — правило не объявлено, и размер берётся только из полей площадки. Применяется на Ozon, где каждый размер продаётся своим артикулом
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          readOnly: true
+          description: 'Бизнес магазина — бизнес юрлица из учётных настроек; по нему магазин и его отчёты сужаются областью доступа участника. null — юрлицо ещё не выбрано в кабинете с несколькими бизнесами: такой магазин видит только доступ ко всем бизнесам'
     MarketplaceStorePage:
       type: object
       additionalProperties: false
@@ -62153,6 +62532,9 @@ components:
           minLength: 1
           writeOnly: true
           description: Необязательный адрес proxy; значение не возвращается
+        business_id:
+          $ref: '#/components/schemas/UUID'
+          description: Бизнес магазина. В кабинете с одним бизнесом подставляется сам; при нескольких обязателен — без него ответ 400 marketplace.store_business_required. Бизнес должен входить в область права участника целиком, иначе 403 marketplace.store_business_forbidden; юрлицо учёта магазина потом выбирается только этого бизнеса
     MarketplaceYandexProduct:
       type: object
       additionalProperties: false
@@ -62811,8 +63193,12 @@ components:
             type: string
             enum:
               - own
+              - projects
+              - team
+              - department
+              - department_tree
               - all
-          description: Ключ — ресурс модуля; пустая карта означает видимость только своих записей
+          description: 'Ключ — ресурс модуля: tasks.task, crm.lead, crm.deal, crm.customer, crm.conversation, core.order, docflow.payment_request и ресурсы клиентских модулей. Значение — own (свои), projects (свои и проекты участия, у задач), team (свои и подчинённых), department (своего подразделения), department_tree (подразделения с подотделами) или all (все записи области). Пустая карта означает видимость только своих записей'
     SettingsRolePage:
       type: object
       additionalProperties: false
@@ -62843,6 +63229,8 @@ components:
         - company_scope
         - companies
         - is_active
+        - all_businesses
+        - businesses
       properties:
         id:
           $ref: '#/components/schemas/UUID'
@@ -62882,6 +63270,37 @@ components:
           description: Заполнен при company_scope selected
         is_active:
           type: boolean
+        all_businesses:
+          type: boolean
+          description: Роль действует во всех бизнесах кабинета, включая заведённые позже. У администратора всегда true
+        businesses:
+          type: array
+          items:
+            $ref: '#/components/schemas/SettingsMemberBusinessScope'
+          description: Бизнесы сотрудника; пуст при all_businesses
+    SettingsMemberBusinessScope:
+      type: object
+      additionalProperties: false
+      required:
+        - business
+      properties:
+        business:
+          $ref: '#/components/schemas/UUID'
+        company:
+          $ref: '#/components/schemas/UUID'
+          description: Сужает доступ до юрлица этого бизнеса; без поля — бизнес целиком
+    SettingsMemberAccessInput:
+      type: object
+      additionalProperties: false
+      properties:
+        all_businesses:
+          type: boolean
+          description: Все бизнесы кабинета; тогда businesses не передаётся
+        businesses:
+          type: array
+          items:
+            $ref: '#/components/schemas/SettingsMemberBusinessScope'
+          description: Бизнесы сотрудника целиком; повторы и юрлица бизнеса, выданного целиком, сворачиваются
     SettingsMemberPage:
       type: object
       additionalProperties: false
@@ -66270,7 +66689,7 @@ components:
     DocflowApprovalRouteStage:
       type: object
       additionalProperties: false
-      description: 'Этап ШАБЛОНА маршрута. Согласующий назван одним из четырёх способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался». Согласующий может быть не выбран (способ назван, ссылки нет) только у выключенного маршрута: так сеется этап «Финансы» стандартного маршрута заявок.'
+      description: 'Этап ШАБЛОНА маршрута. Согласующий назван одним из пяти способов, и каждый отвечает своему вопросу: user — «решает именно он», department — «согласует склад», role — «согласует любой бухгалтер», manager — «спросить начальника автора, кем бы автор ни оказался», department_head — «спросить руководителя отдела» по оргструктуре: отдела автора или названного, а нет руководителя или автор руководит сам — выше по дереву. Согласующий может быть не выбран (способ назван, ссылки нет) только у выключенного маршрута: так сеется этап «Финансы» стандартного маршрута заявок.'
       required:
         - position
         - assignee_kind
@@ -66290,6 +66709,7 @@ components:
             - department
             - role
             - manager
+            - department_head
         assignee_user_id:
           type: integer
           format: int64
@@ -66297,6 +66717,9 @@ components:
           $ref: '#/components/schemas/UUID'
         assignee_role_id:
           $ref: '#/components/schemas/UUID'
+        include_subdepartments:
+          type: boolean
+          description: 'Только для department: спросить и сотрудников подотделов'
         assignee_label:
           type: string
           description: Как назначение читается человеком. Подставляется на чтении; в шаблоне не хранится
@@ -66368,6 +66791,16 @@ components:
         item_id:
           $ref: '#/components/schemas/UUID'
         item_name:
+          type: string
+        business_id:
+          $ref: '#/components/schemas/UUID'
+          description: Условие «бизнес предмета»; без юрлица у предмета бизнес берётся из формы проверки
+        business_name:
+          type: string
+        department_id:
+          $ref: '#/components/schemas/UUID'
+          description: 'Условие «подразделение автора»: срабатывает и на подотделы'
+        department_name:
           type: string
         amount_from:
           type: string
@@ -66544,6 +66977,7 @@ components:
             - department
             - role
             - manager
+            - department_head
         assignee_label:
           type: string
         min_amount:
@@ -66890,6 +67324,7 @@ components:
             - department
             - role
             - manager
+            - department_head
         assignee_label:
           type: string
         min_amount:
@@ -67979,6 +68414,7 @@ components:
         - id
         - owner_user_id
         - shared
+        - business_id
         - email
         - display_name
         - notification_mode
@@ -68010,6 +68446,11 @@ components:
         shared:
           type: boolean
           description: Общий ящик отдела виден всем, у кого есть право на модуль; личный — владельцу и тому, кто видит все записи
+        business_id:
+          oneOf:
+            - $ref: '#/components/schemas/UUID'
+            - type: 'null'
+          description: 'Бизнес общего ящика: ящик видят участники, чья область доступа касается этого бизнеса, а также владелец и поимённо названные сотрудники. null — ящик всего кабинета или личный'
         email:
           type: string
         display_name:
