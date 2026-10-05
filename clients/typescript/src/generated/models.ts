@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 714643e9111d5b47075b5e6ff70df3a91290a79d47f10cb1da6dfee209c157c2).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b6d966214a0201bfa9cf1fe12f178d03aa9d170cdaad1a20293aad6ed821b0e1).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2859,6 +2859,8 @@ export interface CoreContact {
   "ogrn": string;
   "address": string;
   "legal_address": CoreContactAddress;
+  /** Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет */
+  "postal_address": CoreContactPostalAddress;
   "bank_name": string;
   "bank_bic": string;
   "bank_account": string;
@@ -2875,6 +2877,23 @@ export interface CoreContact {
   "system_key"?: string;
   /** Что подсветить в реквизитах по правилу ИНН. Пусто — всё в порядке. */
   "requisites_issue"?: "" | "inn_missing" | "inn_invalid" | "kpp_invalid" | "foreign_tax_missing" | "country_invalid";
+}
+
+/** Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет */
+export interface CoreContactPostalAddress {
+  "postal_code": string;
+  /** Код субъекта РФ для формализованного документа */
+  "region_code": string;
+  "region_name": string;
+  "district": string;
+  "city": string;
+  "settlement": string;
+  "street": string;
+  "building": string;
+  "block": string;
+  /** Офис или помещение */
+  "flat": string;
+  "info": string;
 }
 
 export interface CoreContactAddress {
@@ -2909,6 +2928,8 @@ export interface CoreContactCreate {
   "ogrn"?: string;
   "address"?: string;
   "legal_address"?: CoreContactAddress;
+  /** Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет */
+  "postal_address"?: CoreContactCreatePostalAddress;
   "bank_name"?: string;
   "bank_bic"?: string;
   "bank_account"?: string;
@@ -2918,6 +2939,23 @@ export interface CoreContactCreate {
   /** Нерезидент: налоговый номер страны регистрации вместо ИНН. */
   "tax_number"?: string;
   "custom"?: { [key: string]: unknown };
+}
+
+/** Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет */
+export interface CoreContactCreatePostalAddress {
+  "postal_code": string;
+  /** Код субъекта РФ для формализованного документа */
+  "region_code": string;
+  "region_name": string;
+  "district": string;
+  "city": string;
+  "settlement": string;
+  "street": string;
+  "building": string;
+  "block": string;
+  /** Офис или помещение */
+  "flat": string;
+  "info": string;
 }
 
 export type CoreContactEntityType = "legal" | "individual" | "sole_prop";
@@ -2945,6 +2983,8 @@ export interface CoreContactPatch {
   "ogrn"?: string;
   "address"?: string;
   "legal_address"?: CoreContactAddress;
+  /** Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет */
+  "postal_address"?: CoreContactPatchPostalAddress;
   "bank_name"?: string;
   "bank_bic"?: string;
   "bank_account"?: string;
@@ -2955,6 +2995,23 @@ export interface CoreContactPatch {
   "is_customer"?: boolean;
   "is_supplier"?: boolean;
   "folder_id"?: UUID | null;
+}
+
+/** Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет */
+export interface CoreContactPatchPostalAddress {
+  "postal_code": string;
+  /** Код субъекта РФ для формализованного документа */
+  "region_code": string;
+  "region_name": string;
+  "district": string;
+  "city": string;
+  "settlement": string;
+  "street": string;
+  "building": string;
+  "block": string;
+  /** Офис или помещение */
+  "flat": string;
+  "info": string;
 }
 
 export interface CoreCurrencyRate {
@@ -4952,6 +5009,19 @@ export interface CoreTrialBalance {
   "rows": Array<CoreTrialBalanceRow>;
   "totals": CoreTrialBalanceTotals;
   "accounting_basis"?: AccountingBasis;
+  /** При отборе по юрлицу — итоги проводок без юрлица за тот же период; только при доступе ко всей книге */
+  "unassigned_company"?: CoreTrialBalanceUnassignedCompany;
+}
+
+/** При отборе по юрлицу — итоги проводок без юрлица за тот же период; только при доступе ко всей книге */
+export interface CoreTrialBalanceUnassignedCompany {
+  "opening_debit": string;
+  "opening_credit": string;
+  "turnover_debit": string;
+  "turnover_credit": string;
+  "closing_debit": string;
+  "closing_credit": string;
+  "balanced": boolean;
 }
 
 export interface CoreTrialBalanceRow {
@@ -6251,6 +6321,8 @@ export interface DocflowFlowContractTerms {
   "renewal_terms"?: string;
   /** Воронка продаж или закупок договора: продажи или закупки по договору идут в неё (пометка кабинета, не текст бумаги) */
   "order_funnel_id"?: string;
+  /** Ответственные по договору с долями: продажи и закупки периодов получают их по умолчанию; сумма долей — ровно 100 */
+  "responsibles"?: Array<DocflowFlowResponsible>;
 }
 
 export interface DocflowFlowCreateInput {
@@ -6453,6 +6525,13 @@ export interface DocflowFlowRelationInput {
   "kind": "basis" | "attachment" | "amends" | "replaces";
   "target_id": UUID;
   "target_version": number;
+}
+
+/** Ответственный сотрудник договора и его доля в процентах. */
+export interface DocflowFlowResponsible {
+  "employee_id": string;
+  /** Доля в процентах десятичным текстом */
+  "share": string;
 }
 
 /** Плановая сумма этапа работ или платежа. Ни выполнения, ни оплаты она не утверждает — это то, о чём договорились. */
@@ -7578,6 +7657,8 @@ export interface FinanceCashflowItem {
 }
 
 export interface FinanceCashflowReport {
+  /** При отборе по юрлицу — чистый поток движений без юрлица и всего бизнеса */
+  "unassigned_company"?: FinanceCashflowReportUnassignedCompany;
   "currency"?: string;
   "from": string;
   "to": string;
@@ -7589,6 +7670,12 @@ export interface FinanceCashflowReport {
   "transfer_out": string;
   "sections": Array<FinanceCashflowSection>;
   "columns": Array<FinanceReportColumn>;
+}
+
+/** При отборе по юрлицу — чистый поток движений без юрлица и всего бизнеса */
+export interface FinanceCashflowReportUnassignedCompany {
+  "net_cash_flow"?: string;
+  "business_net_cash_flow"?: string;
 }
 
 export interface FinanceCashflowSection {
@@ -7793,7 +7880,12 @@ export interface FinanceDividendPolicyInput {
   "company_id"?: UUID;
   "name": string;
   "valid_from": string;
-  "base_kind"?: "pnl" | "operating_cashflow";
+  /** База: ledger_profit — прибыль по книге (general_ledger_profit ОПиУ); cashflow_total — весь ДДС, чистый поток без внутренних переводов; operating_cashflow — операционный раздел ДДС; pnl_layout_row — строка макета ОПиУ (нужны base_layout_id и base_layout_row); pnl — устаревшее имя ledger_profit */
+  "base_kind"?: "ledger_profit" | "cashflow_total" | "operating_cashflow" | "pnl_layout_row" | "pnl";
+  /** Макет ОПиУ для base_kind=pnl_layout_row */
+  "base_layout_id"?: UUID;
+  /** Идентификатор строки макета ОПиУ для base_kind=pnl_layout_row */
+  "base_layout_row"?: string;
   /** through распределяет прибыль и убыток между владельцами в одинаковых долях */
   "loss_mode"?: "positive_only" | "through";
   /** Доля результата, 0 < x <= 100 */
@@ -8324,9 +8416,37 @@ export interface FinancePaymentPlanInput {
 
 export type FinancePaymentSourceKind = "bank" | "cash" | "unset";
 
+export interface FinancePayrollAutomationSettings {
+  /** Ежемесячно заводить черновики начисления по штату */
+  "auto_accrual": boolean;
+}
+
+export interface FinancePayrollRun {
+  "id": UUID;
+  "scope_key": string;
+  "company_id"?: UUID;
+  "business_id"?: UUID;
+  "scope_name": string;
+  /** Месяц в формате YYYY-MM */
+  "month": string;
+  "status": "running" | "draft" | "empty" | "blocked" | "failed";
+  "document_id"?: UUID;
+  "number"?: string;
+  /** Причина блокировки или ошибки */
+  "error"?: string;
+  "created_at": string;
+  "updated_at": string;
+}
+
+export interface FinancePayrollRunList {
+  "results": Array<FinancePayrollRun>;
+}
+
 export interface FinancePnlCoverage {
   "missing": Array<FinancePnlCoverageItem>;
   "duplicated": Array<FinancePnlCoverageItem>;
+  /** Налоги раздела «Налоги» за период без строки-источника «Налоги» в макете; итог и прибыль их включают */
+  "taxes"?: string;
 }
 
 export interface FinancePnlCoverageItem {
@@ -8344,6 +8464,8 @@ export interface FinancePnlLine {
 }
 
 export interface FinancePnlReport {
+  /** При отборе по юрлицу — результат движений без юрлица и всего бизнеса */
+  "unassigned_company"?: FinancePnlReportUnassignedCompany;
   "rnp_metrics"?: { [key: string]: string };
   "currency"?: string;
   "from": string;
@@ -8354,11 +8476,23 @@ export interface FinancePnlReport {
   "unclassified_in": string;
   "unclassified_out": string;
   "lines": Array<FinancePnlLine>;
+  /** Налоги раздела «Налоги» по видам — строка ОПиУ «Налоги» */
+  "taxes"?: Array<FinanceTaxKindAmount>;
+  /** Итог строки «Налоги»; входит в расходы и прибыль */
+  "taxes_total"?: string;
+  /** Отбор по проекту или разрезу учёта — налоги начислены на юрлицо и на этот разрез не распределяются */
+  "taxes_not_allocated"?: boolean;
   "layout_rows"?: Array<FinancePnlReportRow>;
   "layout"?: FinancePnlReportLayout;
   "columns": Array<FinanceReportColumn>;
   "companies"?: Array<FinanceReportCompany>;
   "accounting_basis"?: AccountingBasis;
+}
+
+/** При отборе по юрлицу — результат движений без юрлица и всего бизнеса */
+export interface FinancePnlReportUnassignedCompany {
+  "profit"?: string;
+  "business_profit"?: string;
 }
 
 export interface FinancePnlReportLayout {
@@ -8742,6 +8876,167 @@ export interface FinanceStatementPage {
   "results": Array<FinanceStatement>;
 }
 
+/** Вид налога кабинета. */
+export interface FinanceTaxKind {
+  /** Код вида из перечня закона */
+  "code": "usn" | "ausn" | "profit" | "eshn" | "patent" | "ip_insurance" | "property" | "transport" | "land" | "trade_fee" | "penalties" | "ndfl" | "insurance" | "vat";
+  /** Название вида в кабинете */
+  "name": string;
+  /** Налог-расход — начисление идёт в строку ОПиУ «Налоги» */
+  "pnl_expense": boolean;
+  /** Порядок показа */
+  "sort": number;
+}
+
+export interface FinanceTaxKindAmount {
+  /** Код вида налога */
+  "kind": string;
+  /** Сумма */
+  "amount": string;
+}
+
+export interface FinanceTaxKindPage {
+  "items": Array<FinanceTaxKind>;
+}
+
+/** Документ «Налоги за месяц». */
+export interface FinanceTaxMonth {
+  "id": UUID;
+  "number": string;
+  /** Последний день месяца */
+  "date": string;
+  /** Статус документа */
+  "status": string;
+  /** Юрлицо */
+  "company_id": string;
+  "comment": string;
+  "updated_at": string;
+  "payload": FinanceTaxMonthPayload;
+}
+
+/** Новый черновик «Налоги за месяц». */
+export interface FinanceTaxMonthInput {
+  "company_id"?: UUID;
+  "year"?: number;
+  "month"?: number;
+  "lines"?: Array<FinanceTaxMonthLine>;
+  /** Сальдо ЕНС на начало учёта — только в первом документе юрлица; плюс — долг, минус — переплата */
+  "opening"?: string | null;
+  "comment"?: string | null;
+}
+
+/** Строка начисления. */
+export interface FinanceTaxMonthLine {
+  /** Код вида налога */
+  "kind": string;
+  /** Сумма со знаком; минус — уменьшение по декларации */
+  "amount": string;
+  /** Комментарий строки */
+  "comment"?: string;
+  /** Строку заполнил сервер — из начислений зарплаты или «НДС за квартал»; во входе такие строки игнорируются */
+  "source"?: "payroll" | "vat_quarter";
+}
+
+export interface FinanceTaxMonthPage {
+  "items": Array<FinanceTaxMonth>;
+}
+
+export interface FinanceTaxMonthPayload {
+  "version": number;
+  "year": number;
+  "month": number;
+  "lines": Array<FinanceTaxMonthLine>;
+  "payments"?: Array<FinanceTaxMonthPayment>;
+  /** Сальдо ЕНС на начало учёта; плюс — долг перед бюджетом, минус — переплата */
+  "opening"?: string;
+}
+
+/** Пополнение ЕНС за месяц, собранное сервером. */
+export interface FinanceTaxMonthPayment {
+  /** Документ банковской операции */
+  "document": string;
+  "date": string;
+  /** Сумма платежа */
+  "amount": string;
+}
+
+/** Пересохранение черновика «Налоги за месяц» — строки и комментарий. */
+export interface FinanceTaxMonthUpdateInput {
+  "lines"?: Array<FinanceTaxMonthLine>;
+  /** Сальдо ЕНС на начало учёта — только в первом документе юрлица; плюс — долг, минус — переплата */
+  "opening"?: string | null;
+  "comment"?: string | null;
+}
+
+/** Платёж по статье налогов. */
+export interface FinanceTaxPayment {
+  "company": UUID;
+  "transaction": UUID;
+  "document": UUID;
+  "date": string;
+  /** Сумма платежа */
+  "amount": string;
+  /** Получатель */
+  "counterparty_name": string;
+  /** ИНН получателя */
+  "counterparty_inn": string;
+  /** Счёт получателя */
+  "counterparty_account": string;
+  /** Пополнение единого налогового счёта по правилу раздела */
+  "ens": boolean;
+}
+
+export interface FinanceTaxPaymentPage {
+  "items": Array<FinanceTaxPayment>;
+}
+
+/** Получатель единого налогового счёта. */
+export interface FinanceTaxRecipient {
+  /** ИНН получателя — 10 или 12 цифр */
+  "inn": string;
+  /** Счёт получателя; пусто — любой счёт этого ИНН */
+  "account"?: string;
+  /** Название получателя для экрана */
+  "name"?: string;
+}
+
+export interface FinanceTaxRecipientFromPaymentInput {
+  "transaction_id": UUID;
+}
+
+/** Настройка раздела «Налоги». */
+export interface FinanceTaxSettings {
+  /** Статья ДДС платежей налогов; пусто — не настроена */
+  "payment_item_id": string | null;
+  /** Получатели единого налогового счёта */
+  "ens_recipients": Array<FinanceTaxRecipient>;
+}
+
+/** Настройка раздела «Налоги» целиком. */
+export interface FinanceTaxSettingsInput {
+  /** Статья ДДС вида «Налоги»; пусто — снять */
+  "payment_item_id"?: string | null;
+  /** Получатели единого налогового счёта */
+  "ens_recipients"?: Array<FinanceTaxRecipient>;
+}
+
+/** Сальдо ЕНС юрлица и обороты отрезка из регистра раздела. Плюс — долг перед бюджетом, минус — переплата. */
+export interface FinanceTaxSummary {
+  "company": UUID;
+  "date_from": string;
+  "date_to": string;
+  /** Сальдо ЕНС на начало отрезка */
+  "opening": string;
+  /** Начислено по видам налогов */
+  "accrued": Array<FinanceTaxKindAmount>;
+  /** Начислено всего */
+  "accrued_total": string;
+  /** Пополнено ЕНС */
+  "paid": string;
+  /** Сальдо ЕНС на конец отрезка */
+  "closing": string;
+}
+
 export interface FinanceTransaction {
   "id": UUID;
   "date": string;
@@ -8828,6 +9123,20 @@ export interface FinanceTransactionPage {
   "totals": FinanceTransactionTotals;
 }
 
+/** Какие операции вернулись в учёт и какие нет. */
+export interface FinanceTransactionRestoreResult {
+  /** Возвращённые операции. */
+  "restored": Array<UUID>;
+  /** Операции, которые вернуть не удалось, с причиной. */
+  "failed": Array<FinanceTransactionRestoreResultFailedItem>;
+}
+
+export interface FinanceTransactionRestoreResultFailedItem {
+  "id": UUID;
+  /** Причина отказа для человека. */
+  "reason": string;
+}
+
 /** Итоги по всему отбору, а не по странице. Суммы в валюте учёта по историческому курсу */
 export interface FinanceTransactionTotals {
   /** Приход; null, когда итог не посчитан */
@@ -8837,6 +9146,52 @@ export interface FinanceTransactionTotals {
   "currency": string;
   /** Сколько операций осталось без пересчёта в валюту учёта: неполный пересчёт не должен выглядеть верным итогом */
   "unconverted_count": number;
+}
+
+export interface FinanceZReportInput {
+  "company_id": UUID;
+  "date": string;
+  /** Номер смены ККТ; пусто — один отчёт на юрлицо и день */
+  "shift_number"?: string;
+  /** Статья выручки; пусто — статья продажи дня или умолчание */
+  "pnl_item_id"?: { [key: string]: unknown };
+  "lines": Array<FinanceZReportLine>;
+  /** Наличные смены, decimal string */
+  "cash"?: string;
+  /** Касса для наличных; обязательна, если наличные больше нуля */
+  "cash_wallet_id"?: { [key: string]: unknown };
+  /** Статья движения денег для прихода наличных */
+  "cash_item_id"?: { [key: string]: unknown };
+  /** Оплаты картой и СБП для сверки, decimal string */
+  "card"?: string;
+}
+
+export interface FinanceZReportLine {
+  /** Услуга из каталога; без неё нужно название */
+  "product_id"?: { [key: string]: unknown };
+  /** Название услуги, если каталога нет */
+  "title"?: string;
+  /** Количество больше нуля, decimal string */
+  "quantity": string;
+  /** Сумма строки с НДС больше нуля, decimal string */
+  "amount": string;
+}
+
+export interface FinanceZReportResult {
+  /** Ключ отчёта: юрлицо, день и смена */
+  "key": string;
+  "replayed": boolean;
+  "order_id": string;
+  "order_number": string;
+  "act_document_id": string;
+  "cash_document_id"?: string;
+  /** Сумма услуг */
+  "revenue": string;
+  /** Наличные и карта */
+  "paid": string;
+  /** Услуги минус оплаты: долг или аванс дня */
+  "difference": string;
+  "card": string;
 }
 
 export interface HubCounters {
@@ -9556,6 +9911,20 @@ export interface ManagedChecklistPatch {
   "items": Array<ManagedChecklistItem>;
 }
 
+/** Выкуп когорты заказов периода — тот же расчёт, что у воронки: доля выкупленных среди заказов, у которых успело решиться, выкуплены ли они (не позже сегодня−8), окно не короче 14 дней — короткий период добирает решённые дни раньше; у Ozon — FBO и FBS вместе */
+export interface MarketplaceBuyoutCohort {
+  /** Первый день заказов когорты */
+  "from": string;
+  /** Последний день заказов когорты включительно */
+  "to": string;
+  /** Выкуплено, шт */
+  "bought": number;
+  /** Заказано без отмен, шт */
+  "base": number;
+  /** Выкуп, %; нет решённых заказов — null */
+  "pct": number | null;
+}
+
 /** Последняя дата операций площадки, уже включённых в каждый компонент отчёта; отсутствующее или null-значение означает, что дата покрытия пока неизвестна. */
 export interface MarketplaceComponentDataThrough {
   /** Финансовые операции площадки */
@@ -9739,6 +10108,7 @@ export interface MarketplaceOzonOrdersOverview {
   "products": Array<MarketplaceOzonOrdersProductRow>;
   /** Недели и месяцы всего магазина (?summary=1): окно → заказано штук */
   "summary_total"?: { [key: string]: number };
+  "buyout"?: MarketplaceBuyoutCohort;
 }
 
 export interface MarketplaceOzonOrdersProductRow {
@@ -10263,6 +10633,7 @@ export interface MarketplaceWbOrdersOverview {
   "summary_total"?: { [key: string]: number };
   /** Аналитическая база не подключена и цифры синтетические */
   "demo"?: boolean;
+  "buyout"?: MarketplaceBuyoutCohort;
 }
 
 export interface MarketplaceWbOrdersOverviewKpi {
@@ -11333,6 +11704,8 @@ export interface StockAssemblySpec {
   "version"?: number;
   "name"?: string;
   "status"?: "draft" | "active" | "archived";
+  /** Вид состава: assembly — «Сборка», production — «Производство», kit — «Комплект» (заложен, пока не заводится). Хранится у версии: следующая редакция может сменить вид */
+  "kind"?: "assembly" | "production" | "kit";
   "product_id"?: UUID;
   "product_sku"?: string;
   "product_name"?: string;
@@ -11344,12 +11717,24 @@ export interface StockAssemblySpec {
   "activated_at"?: string;
   "archived_at"?: string;
   "lines"?: Array<StockAssemblySpecLine>;
+  /** Версии, которые это действие убрало в архив: активация архивирует прежнюю действующую версию того же товара — своей или другой спецификации. Поле есть только в ответе смены состояния; отсутствует, если в архив ничего не ушло */
+  "archived_versions"?: Array<StockAssemblySpecArchivedVersion>;
+}
+
+export interface StockAssemblySpecArchivedVersion {
+  "id": UUID;
+  "spec_id": UUID;
+  "name": string;
+  "version": number;
 }
 
 /** Новая версия состава. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком. */
 export interface StockAssemblySpecCreate {
+  /** Спецификация, к которой заводится следующая редакция. Должна существовать в кабинете, а product_id — совпадать с её выходным товаром; состояние прежних версий не важно — редакцию заводят и от архивной. Пусто — новая спецификация */
   "spec_id"?: UUID;
   "name": string;
+  /** Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство». Вид kit («Комплект») пока не принимается — ответ 400 */
+  "kind"?: "assembly" | "production";
   "product_id": UUID;
   /** Сколько выходного товара даёт этот состав */
   "output_qty": string;
@@ -11389,16 +11774,39 @@ export interface StockAssemblySpecPage {
   "results": Array<StockAssemblySpec>;
 }
 
-/** Снимок версии спецификации, по которой заполнен документ. Ссылка на версию, а не на справочник: состав уже скопирован в строки, и правка спецификации завтра не меняет смысл проведённого вчера. */
+/** Снимок версии спецификации, по которой заполнен документ. Ссылка на версию, а не на справочник: состав уже скопирован в строки, и правка спецификации завтра не меняет смысл проведённого вчера. Версию сервер читает, только когда ссылка появляется — при создании документа и при правке, называющей другую версию: такая версия обязана быть действующей, черновая и архивная отклоняются. Правка черновика с прежним version_id версию не читает, и документ остаётся правимым, даже если версия ушла в архив или удалена; ссылку можно снять. */
 export interface StockAssemblySpecRef {
   "spec_id": UUID;
   "version_id": UUID;
   "version": number;
   "name"?: string;
+  /** Вид версии состава на момент заполнения документа; ставит сервер */
+  "kind"?: "assembly" | "production";
 }
 
 export interface StockAssemblySpecStatus {
   "status": "active" | "archived";
+}
+
+/** Полная замена реквизитов и состава черновика. Номер версии и спецификация, к которой она относится, не меняются. Проверки те же, что при заведении версии. */
+export interface StockAssemblySpecUpdate {
+  "name": string;
+  /** Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство». Вид kit («Комплект») пока не принимается — ответ 400 */
+  "kind"?: "assembly" | "production";
+  /** Выходной товар. Сменить его можно только у единственной версии спецификации: другой товар при нескольких версиях — это другая спецификация */
+  "product_id": UUID;
+  /** Сколько выходного товара даёт этот состав */
+  "output_qty": string;
+  "comment"?: string;
+  "lines": Array<StockAssemblySpecUpdateLinesItem>;
+}
+
+export interface StockAssemblySpecUpdateLinesItem {
+  "product_id": UUID;
+  /** Единица товара, в которой задано qty; пусто — базовая единица карточки */
+  "product_uom_id"?: UUID;
+  "qty": string;
+  "share"?: string;
 }
 
 export interface StockBatch {
@@ -11473,6 +11881,7 @@ export interface StockDocumentCreate {
   "type_key": StockDocumentCreateTypeKey;
   /** Пусто или отсутствует означает рабочую дату кабинета */
   "date"?: string;
+  /** Документ-основание. У разукомплектации (stock_disassembly) основанием может быть проведённая комплектация (stock_assembly) того же бизнеса и юрлица, родившая разбираемый товар, датой не позже разбора. Тогда части — только товары, которые комплектация списывала (вернуть можно не все), доли стоимости не присылают, комплектация вида production обратно не разбирается, а проведёнными разборами по одной комплектации нельзя разобрать больше, чем она родила. Основание-резерв у разукомплектации этих правил не включает */
   "basis_id"?: UUID | null;
   "entity_refs": StockDocumentRefs;
   /** Для инвентаризации — фильтр снимка, для остальных видов — содержимое документа */
@@ -11544,7 +11953,7 @@ export interface StockDocumentLine {
   "expires_at"?: string;
   "handling_units"?: Array<StockDocumentLineHandlingUnit>;
   "handling_unit_allocations"?: Array<StockDocumentLineHandlingAllocation>;
-  /** Доля стоимости рождённой строки; только у разукомплектации на несколько частей */
+  /** Доля стоимости рождённой строки; только у разукомплектации без комплектации-основания на несколько частей. У разукомплектации на основании комплектации доли не присылают: присланная доля отклоняется, веса частей сервер берёт из проведения основания */
   "share"?: string;
 }
 
@@ -11594,6 +12003,8 @@ export interface StockDocumentPayload {
   /** Строки, которые документ РОЖДАЕТ на складе. Только у комплектации и разукомплектации: их `items` — сторона расхода. Цена и сумма здесь не задаются, стоимость выхода равна списанной. */
   "produced"?: Array<StockDocumentLine>;
   "spec"?: StockAssemblySpecRef;
+  /** Вид комплектации (только stock_assembly): assembly — «Сборка», production — «Производство». Документ, заполненный по составу (`spec`), получает вид версии состава — присланное значение, которое с ней расходится, отклоняется; без состава вид выбирает человек, пусто — assembly. Снимок: новая версия состава с другим видом документ не меняет. Документ без поля читается как assembly. У разукомплектации вида нет */
+  "kind"?: "assembly" | "production";
   /** Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается */
   "paper_amount"?: string;
   /** В т.ч. НДС документа поставщика, одна сумма (ERP-484, подшаг 5.3). Обязательна, если на дату документа бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне этого периода непустое значение — 400. Сервер раскладывает сумму по строкам */
@@ -11613,7 +12024,7 @@ export interface StockDocumentPayload {
   "amount"?: string;
   "allocation_method"?: "quantity" | "cost" | "manual";
   "targets"?: Array<StockDocumentLandedCostTarget>;
-  /** Разложение проведения по строкам и партиям, которое пишет сам движок */
+  /** Разложение проведения по строкам и партиям, которое пишет сам движок. У разукомплектации на основании комплектации есть блок `disassembly_basis`: `document_id` и `number` основания, `amount` — фактически списанная сумма, `basis_amount` — сумма того же количества по основанию (рождённая сумма основания ÷ рождённое количество × разбираемое количество), `difference` — amount минус basis_amount, `weights` — веса частей по строкам (`line_id`, `weight`), по которым списанное разделено между частями. Веса и `basis_amount` — снимок первого проведения: пересчёт себестоимости цепочки их сохраняет и пересчитывает только `amount` и `difference`; отмена и повторное проведение считают всё заново */
   "posting"?: { [key: string]: unknown };
 }
 
@@ -12019,14 +12430,15 @@ export interface StockProductUOMInput {
   "name": string;
   "input_unit_id": UUID;
   "usage"?: StockProductUOMUsage;
+  /** Положительное число; десятичный разделитель — точка или запятая, хранится запись с точкой */
   "factor_to_base": string;
   /** Требует единицы измерения с целой точностью */
   "creates_handling_units"?: boolean;
   /** Переменная мера: приход складывает количество из фактических мер конкретных единиц, цена за базовую единицу; расход в такой единице невозможен. Требует creates_handling_units */
   "variable_measure"?: boolean;
-  /** Положительный decimal или пусто: количество строки в этой единице обязано быть кратно шагу */
+  /** Положительное число (точка или запятая) или пусто: количество строки в этой единице обязано быть кратно шагу */
   "qty_step"?: string;
-  /** Положительный decimal или пусто. Требует creates_handling_units */
+  /** Положительное число (точка или запятая) или пусто. Требует creates_handling_units */
   "remnant_threshold"?: string;
   "is_default_receipt"?: boolean;
   /** По умолчанию единица активна */
@@ -12308,8 +12720,21 @@ export interface StockReportReservationLine {
   "released_qty": string;
   /** Decimal string */
   "remaining_qty": string;
-  /** Часть остатка строки, не покрытая остатком склада: обещание ждёт поступления */
+  /** Decimal string в базовой единице товара. Часть остатка строки, не покрытая остатком склада: обещание ждёт поступления. Сумма по строкам равна unbacked_qty резерва; без товара остаются самые новые обещания */
   "unbacked_qty": string;
+  /** Действующий состав товара строки; null, если действующего состава у товара нет. Сам резерв состав не использует */
+  "active_spec": StockReportReservationLineSpec | null;
+}
+
+/** Действующая версия состава изделия у товара строки резерва. */
+export interface StockReportReservationLineSpec {
+  "version_id": UUID;
+  "spec_id": UUID;
+  "version": number;
+  "name": string;
+  "kind": "assembly" | "production";
+  /** Decimal string. Сколько изделия даёт один состав, в базовой единице товара */
+  "output_qty": string;
 }
 
 export interface StockReportReservationPage {
@@ -13134,6 +13559,10 @@ export interface DocflowFlowDocumentRevisionsResponseItemsItem {
   "status": "draft" | "registered" | "archived";
   "files": number;
   "has_approval": boolean;
+  /** Причина системной ревизии: schedule:<вид бумаги>:<registered|cancelled>:<номер>:<дата> — график договора пересчитан по допсоглашению или спецификации */
+  "reason"?: string;
+  /** Ревизию записала система, а не человек правкой карточки */
+  "system"?: boolean;
 }
 
 export interface FilesContentLinkResponse {

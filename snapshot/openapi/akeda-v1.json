@@ -19337,8 +19337,9 @@
           {
             "name": "company",
             "in": "query",
+            "description": "Юрлицо (UUID) или none — только проводки без юрлица",
             "schema": {
-              "$ref": "#/components/schemas/UUID"
+              "type": "string"
             }
           },
           {
@@ -23748,6 +23749,85 @@
         }
       }
     },
+    "/api/v1/finance/z-reports": {
+      "post": {
+        "tags": [
+          "Finance operations"
+        ],
+        "operationId": "financePostZReport",
+        "summary": "Провести Z-отчёт смены розницы услуг",
+        "description": "Сводный отчёт смены салона или сервиса без склада. Услуги встают строками в продажу дня юрлица на «Розничного покупателя» и исполняются актом той же датой; наличные приходуются в выбранную кассу. Карту отчёт не приходует — её приносит эквайринг; сумма карты нужна для сверки. Разница между услугами и оплатами остаётся долгом или авансом дня. Доступно после перехода бизнеса юрлица на расчёты по продажам. Повтор с тем же юрлицом, днём и сменой отвечает 200 и прежним актом.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.operations:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceZReportInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Повтор: прежний акт и продажа дня",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceZReportResult"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Проведённый отчёт: продажа дня, акт и приход наличных",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceZReportResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
     "/api/v1/finance/operations/{id}/documents/{documentId}/links": {
       "get": {
         "tags": [
@@ -25247,6 +25327,887 @@
         }
       }
     },
+    "/api/v1/finance/taxes/kinds": {
+      "get": {
+        "tags": [
+          "Finance registers"
+        ],
+        "operationId": "financeListTaxKinds",
+        "summary": "Получить виды налогов раздела «Налоги»",
+        "description": "Виды налогов кабинета в порядке показа — перечень закона (УСН, налог на прибыль, взносы, НДФЛ, НДС и другие). Код вида — константа, имя кабинет вправе переименовать. pnl_expense — налог-расход: его начисление попадает в строку ОПиУ «Налоги».",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.period:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Виды налогов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTaxKindPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/taxes/settings": {
+      "get": {
+        "tags": [
+          "Finance registers"
+        ],
+        "operationId": "financeGetTaxSettings",
+        "summary": "Получить настройку раздела «Налоги»",
+        "description": "Статья платежей налогов (одна общая статья ДДС вида «Налоги») и получатели единого налогового счёта. Платёж по статье получателю из списка пополняет ЕНС; пустой счёт получателя — любой счёт этого ИНН.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.period:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Настройка раздела",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTaxSettings"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Finance registers"
+        ],
+        "operationId": "financeSaveTaxSettings",
+        "summary": "Сохранить настройку раздела «Налоги»",
+        "description": "Записывает настройку целиком: статью платежей и список получателей ЕНС. Статья — только вида «Налоги»: её оплата гасит долг перед бюджетом, а расход даёт начисление раздела. ИНН получателя — 10 или 12 цифр, повторы схлопываются.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.period:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceTaxSettingsInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Сохранённая настройка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTaxSettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/taxes/settings/recipients": {
+      "post": {
+        "tags": [
+          "Finance registers"
+        ],
+        "operationId": "financeAddTaxRecipientFromPayment",
+        "summary": "Взять получателя ЕНС образцом с платежа",
+        "description": "Дописывает в настройку раздела ИНН и счёт получателя выбранной банковской операции — эталонного платежа на единый налоговый счёт. Остальные платежи этому получателю по статье налогов станут пополнениями ЕНС.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.period:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceTaxRecipientFromPaymentInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Настройка с новым получателем",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTaxSettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/taxes/payments": {
+      "get": {
+        "tags": [
+          "Finance registers"
+        ],
+        "operationId": "financeListTaxPayments",
+        "summary": "Получить платежи по статье налогов",
+        "description": "Проведённые исходящие платежи юрлица за отрезок по статье налогов из настройки раздела. ens=true — платёж пополняет единый налоговый счёт по правилу получателей; ens=false — платёж мимо ЕНС, экран его подсвечивает. Статья не настроена — пустой список.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.period:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "company_id",
+            "in": "query",
+            "required": true,
+            "description": "Юрлицо",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": true,
+            "description": "Начало отрезка",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": true,
+            "description": "Конец отрезка",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Платежи по статье налогов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTaxPaymentPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/taxes/summary": {
+      "get": {
+        "tags": [
+          "Finance registers"
+        ],
+        "operationId": "financeGetTaxSummary",
+        "summary": "Получить сальдо ЕНС и обороты раздела «Налоги»",
+        "description": "Из регистра раздела finance_tax: сальдо единого налогового счёта юрлица на начало отрезка, начислено по видам налогов, пополнено и сальдо на конец. Плюс — долг перед бюджетом, минус — переплата.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.period:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "company_id",
+            "in": "query",
+            "required": true,
+            "description": "Юрлицо",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": true,
+            "description": "Начало отрезка",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": true,
+            "description": "Конец отрезка",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Сальдо ЕНС и обороты",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTaxSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/taxes/months": {
+      "get": {
+        "tags": [
+          "Finance registers"
+        ],
+        "operationId": "financeListTaxMonths",
+        "summary": "Получить документы «Налоги за месяц»",
+        "description": "Журнал документов «Налоги за месяц» с телом: строки начислений по видам налогов и пополнения ЕНС, собранные сервером. Отбор по юрлицу необязателен.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.period:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "company_id",
+            "in": "query",
+            "required": false,
+            "description": "Юрлицо",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Документы с телом",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTaxMonthPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Finance registers"
+        ],
+        "operationId": "financeCreateTaxMonth",
+        "summary": "Сохранить черновик «Налоги за месяц»",
+        "description": "Один документ на юрлицо в месяц, датой последнего дня месяца. Строки начислений вносит человек (сумма со знаком — уменьшение по декларации со знаком «минус»); пополнения ЕНС за месяц сервер собирает сам по настройке раздела.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.period:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceTaxMonthInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Сохранённый черновик",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTaxMonth"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/taxes/months/{id}": {
+      "get": {
+        "tags": [
+          "Finance registers"
+        ],
+        "operationId": "financeGetTaxMonth",
+        "summary": "Получить документ «Налоги за месяц»",
+        "description": "Документ с телом — строками начислений и пополнениями ЕНС.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.period:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Документ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTaxMonth"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Finance registers"
+        ],
+        "operationId": "financeUpdateTaxMonth",
+        "summary": "Пересохранить черновик «Налоги за месяц»",
+        "description": "Строки начислений — из запроса, пополнения ЕНС — заново по настройке раздела. Юрлицо и месяц не меняются; проведённый документ не правится.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.period:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceTaxMonthUpdateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Пересохранённый черновик",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTaxMonth"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/taxes/months/{id}/post": {
+      "post": {
+        "tags": [
+          "Finance registers"
+        ],
+        "operationId": "financePostTaxMonth",
+        "summary": "Провести «Налоги за месяц»",
+        "description": "Проводит начисления в регистр раздела и, при методе начисления, в книгу: налог-расход Дт 91.02 / Кт 68 с видом налога, взносы Дт 69 / Кт 68, НДС Дт 68.02 / Кт 68. Пополнения ЕНС уменьшают сальдо ЕНС. Платёж изменился после сохранения — отказ «пересохраните».",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.period:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Проведённый документ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTaxMonth"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/taxes/months/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Finance registers"
+        ],
+        "operationId": "financeCancelTaxMonth",
+        "summary": "Отменить «Налоги за месяц»",
+        "description": "Отменяет проведение штатной отменой со сторно; история сохраняется.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.period:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Отменённый документ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTaxMonth"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/api/v1/finance/transactions": {
       "get": {
         "tags": [
@@ -25829,6 +26790,149 @@
                 }
               }
             }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/bank/transactions/{id}/restore": {
+      "post": {
+        "tags": [
+          "Finance transactions"
+        ],
+        "operationId": "bankRestoreTransaction",
+        "summary": "Вернуть удалённую банковскую операцию (исторический адрес)",
+        "description": "Исторический адрес той же команды financeRestoreTransaction. Проверяет право finance.transactions:write.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.transactions:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Итог восстановления",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTransactionRestoreResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/transactions/{id}/restore": {
+      "post": {
+        "tags": [
+          "Finance transactions"
+        ],
+        "operationId": "financeRestoreTransaction",
+        "summary": "Вернуть удалённую банковскую операцию",
+        "description": "Снимает пометку удаления с документа операции и перепроводит его по текущим правилам на дату операции: после перехода на расчёты по заказам операция проводится уже по заказам. Затем операция разносится автоматически так же, как только что загруженная. Итог загрузки выписки называет строки, чьи операции были удалены и повторно не загружены; вернуть их можно только этой командой.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.transactions:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Итог восстановления",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceTransactionRestoreResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           },
           "500": {
             "$ref": "#/components/responses/InternalError"
@@ -28037,9 +29141,9 @@
           {
             "name": "company",
             "in": "query",
-            "description": "Разрез по юрлицу; без него — по всем.",
+            "description": "Разрез по юрлицу (UUID) или none — только движения без юрлица; без него — по всем.",
             "schema": {
-              "$ref": "#/components/schemas/UUID"
+              "type": "string"
             }
           },
           {
@@ -28160,9 +29264,9 @@
           {
             "name": "company",
             "in": "query",
-            "description": "Разрез по юрлицу; без него — по всем.",
+            "description": "Разрез по юрлицу (UUID) или none — только движения без юрлица; без него — по всем.",
             "schema": {
-              "$ref": "#/components/schemas/UUID"
+              "type": "string"
             }
           },
           {
@@ -40661,7 +41765,7 @@
         ],
         "operationId": "stockListBatches",
         "summary": "Получить список партий",
-        "description": "Количество и сумма партии считаются из движений регистра stock.",
+        "description": "Количество и сумма партии считаются из движений регистра stock. Партия заводится уже черновиком документа, но в списке её нет, пока документ не проведён и по ней нет ни одного действующего движения: партии черновиков и отменённых документов не показываются. Израсходованная партия проведённого документа остаётся в списке с остатком 0; счётчик считает уже отобранное.",
         "x-akeda-module": "stock",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -41132,6 +42236,81 @@
             "$ref": "#/components/responses/NotFound"
           }
         }
+      },
+      "put": {
+        "tags": [
+          "Stock assembly specs"
+        ],
+        "operationId": "stockUpdateAssemblySpec",
+        "summary": "Изменить черновик версии спецификации",
+        "description": "Целиком заменяет реквизиты и состав черновика: название, вид, выходной\nтовар, количество выхода, комментарий и строки. Номер версии и\nспецификация не меняются. Опубликованная (действующая или архивная)\nверсия не правится — ответ 400, заводится новая версия. Выходной товар\nменяется только у единственной версии спецификации.\n",
+        "x-akeda-module": "stock",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "stock:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StockAssemblySpecUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Изменённый черновик",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StockAssemblySpec"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
       }
     },
     "/api/v1/stock/assembly-specs/{id}/status": {
@@ -41141,7 +42320,7 @@
         ],
         "operationId": "stockSetAssemblySpecStatus",
         "summary": "Сделать версию действующей или архивной",
-        "description": "Действующая версия у товара ровно одна: активация архивирует прежнюю. Иначе «из чего это собирают» перестало бы отвечать однозначно, а форма документа выбирала бы молча.",
+        "description": "Действующая версия у товара ровно одна: активация архивирует прежнюю.\nИначе «из чего это собирают» перестало бы отвечать однозначно, а форма\nдокумента выбирала бы молча.\n\nДопустимые переходы: черновик → действующая, черновик → архив,\nдействующая → архив. Архивную версию в работу не возвращают — ответ 400,\nзаводится новая версия. Активация отклоняется ответом 400, если изделие\nчерез действующие составы других товаров входит в собственный состав:\nтекст отказа называет товары цепочки.\n\nОтвет активации называет в `archived_versions` версии, которые ушли в\nархив этим действием. Повтор уже достигнутого состояния ничего не\nменяет.\n",
         "x-akeda-module": "stock",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -43658,7 +44837,7 @@
         ],
         "operationId": "stockGetReservationSummaries",
         "summary": "Получить сводку по резервам",
-        "description": "По каждому проведённому резерву даёт исходное, отгруженное, снятое и оставшееся количество, состояние и строки по позициям.",
+        "description": "По каждому проведённому резерву даёт исходное, отгруженное, снятое и оставшееся количество, состояние и строки по позициям. Строка называет непокрытое количество (unbacked_qty) и действующий состав её товара (active_spec): по ним непокрытое можно собрать обычной комплектацией без основания — резерв при этом не меняется, а непокрытое пересчитывается само.",
         "x-akeda-module": "stock",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -47662,6 +48841,263 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FinanceCashflowEntryPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/payroll/automation": {
+      "get": {
+        "tags": [
+          "Finance payroll"
+        ],
+        "operationId": "financeGetPayrollAutomation",
+        "summary": "Получить настройку автоначисления зарплаты",
+        "description": "Показывает, включено ли в кабинете ежемесячное автоначисление зарплаты по штатному расписанию.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.payroll:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Настройка автоначисления",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancePayrollAutomationSettings"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Finance payroll"
+        ],
+        "operationId": "financeSavePayrollAutomation",
+        "summary": "Сохранить настройку автоначисления зарплаты",
+        "description": "Включает или выключает ежемесячное автоначисление зарплаты по штатному расписанию для всего кабинета.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.payroll:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinancePayrollAutomationSettings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Сохранённая настройка",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancePayrollAutomationSettings"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/payroll/automation/runs": {
+      "get": {
+        "tags": [
+          "Finance payroll"
+        ],
+        "operationId": "financeListPayrollAutomationRuns",
+        "summary": "Получить журнал прогонов автоначисления зарплаты",
+        "description": "Возвращает прогоны автоначисления по юрлицам и месяцам, свежие сверху: созданный черновик, пустой штат, блокировку закрытым периодом или ошибку с причиной.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.payroll:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Прогоны автоначисления",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancePayrollRunList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/payroll/automation/run": {
+      "post": {
+        "tags": [
+          "Finance payroll"
+        ],
+        "operationId": "financeRunPayrollAutomation",
+        "summary": "Запустить автоначисление зарплаты за месяц",
+        "description": "Заводит черновики начисления зарплаты по штатному расписанию отдельно\nдля каждого юрлица за указанный месяц (по умолчанию прошедший).\nПовторный запуск не задваивает документы: уже обработанное юрлицо\nпропускается. Закрытый период даёт статус blocked с причиной.\n",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.payroll:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "description": "Месяц начисления в формате YYYY-MM; без него — прошедший месяц",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-[0-9]{2}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Итог прогона по юрлицам",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancePayrollRunList"
                 }
               }
             }
@@ -55098,6 +56534,14 @@
                           },
                           "has_approval": {
                             "type": "boolean"
+                          },
+                          "reason": {
+                            "type": "string",
+                            "description": "Причина системной ревизии: schedule:<вид бумаги>:<registered|cancelled>:<номер>:<дата> — график договора пересчитан по допсоглашению или спецификации"
+                          },
+                          "system": {
+                            "type": "boolean",
+                            "description": "Ревизию записала система, а не человек правкой карточки"
                           }
                         }
                       }
@@ -59425,6 +60869,43 @@
       }
     },
     "schemas": {
+      "FinanceTransactionRestoreResult": {
+        "type": "object",
+        "description": "Какие операции вернулись в учёт и какие нет.",
+        "required": [
+          "restored",
+          "failed"
+        ],
+        "properties": {
+          "restored": {
+            "type": "array",
+            "description": "Возвращённые операции.",
+            "items": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          "failed": {
+            "type": "array",
+            "description": "Операции, которые вернуть не удалось, с причиной.",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "reason"
+              ],
+              "properties": {
+                "id": {
+                  "$ref": "#/components/schemas/UUID"
+                },
+                "reason": {
+                  "type": "string",
+                  "description": "Причина отказа для человека."
+                }
+              }
+            }
+          }
+        }
+      },
       "FinanceAllocationRule": {
         "type": "object",
         "description": "Версия правила авторазнесения. Пустые уровни — правило не сужено.",
@@ -70253,6 +71734,7 @@
           "ogrn",
           "address",
           "legal_address",
+          "postal_address",
           "bank_name",
           "bank_bic",
           "bank_account",
@@ -70328,6 +71810,14 @@
           },
           "legal_address": {
             "$ref": "#/components/schemas/CoreContactAddress"
+          },
+          "postal_address": {
+            "description": "Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CoreContactAddress"
+              }
+            ]
           },
           "bank_name": {
             "type": "string"
@@ -70459,6 +71949,14 @@
           "legal_address": {
             "$ref": "#/components/schemas/CoreContactAddress"
           },
+          "postal_address": {
+            "description": "Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CoreContactAddress"
+              }
+            ]
+          },
           "bank_name": {
             "type": "string"
           },
@@ -70538,6 +72036,14 @@
           },
           "legal_address": {
             "$ref": "#/components/schemas/CoreContactAddress"
+          },
+          "postal_address": {
+            "description": "Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CoreContactAddress"
+              }
+            ]
           },
           "bank_name": {
             "type": "string"
@@ -75697,6 +77203,14 @@
           },
           "accounting_basis": {
             "$ref": "#/components/schemas/AccountingBasis"
+          },
+          "unassigned_company": {
+            "description": "При отборе по юрлицу — итоги проводок без юрлица за тот же период; только при доступе ко всей книге",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CoreTrialBalanceTotals"
+              }
+            ]
           }
         }
       },
@@ -77492,6 +79006,147 @@
           },
           "prices_include_vat": {
             "type": "boolean"
+          }
+        }
+      },
+      "FinanceZReportInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "company_id",
+          "date",
+          "lines"
+        ],
+        "properties": {
+          "company_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "shift_number": {
+            "type": "string",
+            "description": "Номер смены ККТ; пусто — один отчёт на юрлицо и день"
+          },
+          "pnl_item_id": {
+            "description": "Статья выручки; пусто — статья продажи дня или умолчание",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              }
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/FinanceZReportLine"
+            }
+          },
+          "cash": {
+            "type": "string",
+            "description": "Наличные смены, decimal string"
+          },
+          "cash_wallet_id": {
+            "description": "Касса для наличных; обязательна, если наличные больше нуля",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              }
+            ]
+          },
+          "cash_item_id": {
+            "description": "Статья движения денег для прихода наличных",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              }
+            ]
+          },
+          "card": {
+            "type": "string",
+            "description": "Оплаты картой и СБП для сверки, decimal string"
+          }
+        }
+      },
+      "FinanceZReportLine": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "quantity",
+          "amount"
+        ],
+        "properties": {
+          "product_id": {
+            "description": "Услуга из каталога; без неё нужно название",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              }
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Название услуги, если каталога нет"
+          },
+          "quantity": {
+            "type": "string",
+            "description": "Количество больше нуля, decimal string"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Сумма строки с НДС больше нуля, decimal string"
+          }
+        }
+      },
+      "FinanceZReportResult": {
+        "type": "object",
+        "required": [
+          "key",
+          "replayed",
+          "order_id",
+          "order_number",
+          "act_document_id",
+          "revenue",
+          "paid",
+          "difference",
+          "card"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Ключ отчёта: юрлицо, день и смена"
+          },
+          "replayed": {
+            "type": "boolean"
+          },
+          "order_id": {
+            "type": "string"
+          },
+          "order_number": {
+            "type": "string"
+          },
+          "act_document_id": {
+            "type": "string"
+          },
+          "cash_document_id": {
+            "type": "string"
+          },
+          "revenue": {
+            "type": "string",
+            "description": "Сумма услуг"
+          },
+          "paid": {
+            "type": "string",
+            "description": "Наличные и карта"
+          },
+          "difference": {
+            "type": "string",
+            "description": "Услуги минус оплаты: долг или аванс дня"
+          },
+          "card": {
+            "type": "string"
           }
         }
       },
@@ -80280,9 +81935,21 @@
           "base_kind": {
             "type": "string",
             "enum": [
-              "pnl",
-              "operating_cashflow"
-            ]
+              "ledger_profit",
+              "cashflow_total",
+              "operating_cashflow",
+              "pnl_layout_row",
+              "pnl"
+            ],
+            "description": "База: ledger_profit — прибыль по книге (general_ledger_profit ОПиУ); cashflow_total — весь ДДС, чистый поток без внутренних переводов; operating_cashflow — операционный раздел ДДС; pnl_layout_row — строка макета ОПиУ (нужны base_layout_id и base_layout_row); pnl — устаревшее имя ledger_profit"
+          },
+          "base_layout_id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Макет ОПиУ для base_kind=pnl_layout_row"
+          },
+          "base_layout_row": {
+            "type": "string",
+            "description": "Идентификатор строки макета ОПиУ для base_kind=pnl_layout_row"
           },
           "loss_mode": {
             "type": "string",
@@ -82331,6 +83998,500 @@
           }
         }
       },
+      "FinanceTaxKind": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Вид налога кабинета.",
+        "required": [
+          "code",
+          "name",
+          "pnl_expense",
+          "sort"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "usn",
+              "ausn",
+              "profit",
+              "eshn",
+              "patent",
+              "ip_insurance",
+              "property",
+              "transport",
+              "land",
+              "trade_fee",
+              "penalties",
+              "ndfl",
+              "insurance",
+              "vat"
+            ],
+            "description": "Код вида из перечня закона"
+          },
+          "name": {
+            "type": "string",
+            "description": "Название вида в кабинете"
+          },
+          "pnl_expense": {
+            "type": "boolean",
+            "description": "Налог-расход — начисление идёт в строку ОПиУ «Налоги»"
+          },
+          "sort": {
+            "type": "integer",
+            "description": "Порядок показа"
+          }
+        }
+      },
+      "FinanceTaxKindPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceTaxKind"
+            }
+          }
+        }
+      },
+      "FinanceTaxRecipient": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Получатель единого налогового счёта.",
+        "required": [
+          "inn"
+        ],
+        "properties": {
+          "inn": {
+            "type": "string",
+            "description": "ИНН получателя — 10 или 12 цифр"
+          },
+          "account": {
+            "type": "string",
+            "description": "Счёт получателя; пусто — любой счёт этого ИНН"
+          },
+          "name": {
+            "type": "string",
+            "description": "Название получателя для экрана"
+          }
+        }
+      },
+      "FinanceTaxSettings": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Настройка раздела «Налоги».",
+        "required": [
+          "payment_item_id",
+          "ens_recipients"
+        ],
+        "properties": {
+          "payment_item_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Статья ДДС платежей налогов; пусто — не настроена"
+          },
+          "ens_recipients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceTaxRecipient"
+            },
+            "description": "Получатели единого налогового счёта"
+          }
+        }
+      },
+      "FinanceTaxSettingsInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Настройка раздела «Налоги» целиком.",
+        "properties": {
+          "payment_item_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Статья ДДС вида «Налоги»; пусто — снять"
+          },
+          "ens_recipients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceTaxRecipient"
+            },
+            "description": "Получатели единого налогового счёта"
+          }
+        }
+      },
+      "FinanceTaxRecipientFromPaymentInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "transaction_id"
+        ],
+        "properties": {
+          "transaction_id": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        }
+      },
+      "FinanceTaxPayment": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Платёж по статье налогов.",
+        "required": [
+          "company",
+          "transaction",
+          "document",
+          "date",
+          "amount",
+          "counterparty_name",
+          "counterparty_inn",
+          "counterparty_account",
+          "ens"
+        ],
+        "properties": {
+          "company": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "transaction": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "document": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Сумма платежа"
+          },
+          "counterparty_name": {
+            "type": "string",
+            "description": "Получатель"
+          },
+          "counterparty_inn": {
+            "type": "string",
+            "description": "ИНН получателя"
+          },
+          "counterparty_account": {
+            "type": "string",
+            "description": "Счёт получателя"
+          },
+          "ens": {
+            "type": "boolean",
+            "description": "Пополнение единого налогового счёта по правилу раздела"
+          }
+        }
+      },
+      "FinanceTaxPaymentPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceTaxPayment"
+            }
+          }
+        }
+      },
+      "FinanceTaxKindAmount": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "amount"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "Код вида налога"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Сумма"
+          }
+        }
+      },
+      "FinanceTaxSummary": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Сальдо ЕНС юрлица и обороты отрезка из регистра раздела. Плюс — долг перед бюджетом, минус — переплата.",
+        "required": [
+          "company",
+          "date_from",
+          "date_to",
+          "opening",
+          "accrued",
+          "accrued_total",
+          "paid",
+          "closing"
+        ],
+        "properties": {
+          "company": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date"
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date"
+          },
+          "opening": {
+            "type": "string",
+            "description": "Сальдо ЕНС на начало отрезка"
+          },
+          "accrued": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceTaxKindAmount"
+            },
+            "description": "Начислено по видам налогов"
+          },
+          "accrued_total": {
+            "type": "string",
+            "description": "Начислено всего"
+          },
+          "paid": {
+            "type": "string",
+            "description": "Пополнено ЕНС"
+          },
+          "closing": {
+            "type": "string",
+            "description": "Сальдо ЕНС на конец отрезка"
+          }
+        }
+      },
+      "FinanceTaxMonthLine": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Строка начисления.",
+        "required": [
+          "kind",
+          "amount"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "Код вида налога"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Сумма со знаком; минус — уменьшение по декларации"
+          },
+          "comment": {
+            "type": "string",
+            "description": "Комментарий строки"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "payroll",
+              "vat_quarter"
+            ],
+            "description": "Строку заполнил сервер — из начислений зарплаты или «НДС за квартал»; во входе такие строки игнорируются"
+          }
+        }
+      },
+      "FinanceTaxMonthPayment": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Пополнение ЕНС за месяц, собранное сервером.",
+        "required": [
+          "document",
+          "date",
+          "amount"
+        ],
+        "properties": {
+          "document": {
+            "type": "string",
+            "description": "Документ банковской операции"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Сумма платежа"
+          }
+        }
+      },
+      "FinanceTaxMonthPayload": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "year",
+          "month",
+          "lines"
+        ],
+        "properties": {
+          "version": {
+            "type": "integer"
+          },
+          "year": {
+            "type": "integer"
+          },
+          "month": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceTaxMonthLine"
+            }
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceTaxMonthPayment"
+            }
+          },
+          "opening": {
+            "type": "string",
+            "description": "Сальдо ЕНС на начало учёта; плюс — долг перед бюджетом, минус — переплата"
+          }
+        }
+      },
+      "FinanceTaxMonth": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Документ «Налоги за месяц».",
+        "required": [
+          "id",
+          "number",
+          "date",
+          "status",
+          "company_id",
+          "comment",
+          "updated_at",
+          "payload"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "number": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Последний день месяца"
+          },
+          "status": {
+            "type": "string",
+            "description": "Статус документа"
+          },
+          "company_id": {
+            "type": "string",
+            "description": "Юрлицо"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/FinanceTaxMonthPayload"
+          }
+        }
+      },
+      "FinanceTaxMonthPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceTaxMonth"
+            }
+          }
+        }
+      },
+      "FinanceTaxMonthUpdateInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Пересохранение черновика «Налоги за месяц» — строки и комментарий.",
+        "properties": {
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceTaxMonthLine"
+            }
+          },
+          "opening": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Сальдо ЕНС на начало учёта — только в первом документе юрлица; плюс — долг, минус — переплата"
+          },
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "FinanceTaxMonthInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Новый черновик «Налоги за месяц».",
+        "properties": {
+          "company_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "year": {
+            "type": "integer"
+          },
+          "month": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceTaxMonthLine"
+            }
+          },
+          "opening": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Сальдо ЕНС на начало учёта — только в первом документе юрлица; плюс — долг, минус — переплата"
+          },
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "FinanceRegistersResyncResult": {
         "type": "object",
         "additionalProperties": false,
@@ -82738,6 +84899,18 @@
           "columns"
         ],
         "properties": {
+          "unassigned_company": {
+            "type": "object",
+            "description": "При отборе по юрлицу — чистый поток движений без юрлица и всего бизнеса",
+            "properties": {
+              "net_cash_flow": {
+                "type": "string"
+              },
+              "business_net_cash_flow": {
+                "type": "string"
+              }
+            }
+          },
           "currency": {
             "type": "string"
           },
@@ -82898,6 +85071,10 @@
             "items": {
               "$ref": "#/components/schemas/FinancePnlCoverageItem"
             }
+          },
+          "taxes": {
+            "type": "string",
+            "description": "Налоги раздела «Налоги» за период без строки-источника «Налоги» в макете; итог и прибыль их включают"
           }
         }
       },
@@ -82947,6 +85124,18 @@
           "columns"
         ],
         "properties": {
+          "unassigned_company": {
+            "type": "object",
+            "description": "При отборе по юрлицу — результат движений без юрлица и всего бизнеса",
+            "properties": {
+              "profit": {
+                "type": "string"
+              },
+              "business_profit": {
+                "type": "string"
+              }
+            }
+          },
           "rnp_metrics": {
             "type": "object",
             "additionalProperties": {
@@ -82984,6 +85173,21 @@
             "items": {
               "$ref": "#/components/schemas/FinancePnlLine"
             }
+          },
+          "taxes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceTaxKindAmount"
+            },
+            "description": "Налоги раздела «Налоги» по видам — строка ОПиУ «Налоги»"
+          },
+          "taxes_total": {
+            "type": "string",
+            "description": "Итог строки «Налоги»; входит в расходы и прибыль"
+          },
+          "taxes_not_allocated": {
+            "type": "boolean",
+            "description": "Отбор по проекту или разрезу учёта — налоги начислены на юрлицо и на этот разрез не распределяются"
           },
           "layout_rows": {
             "type": "array",
@@ -89273,7 +91477,7 @@
           },
           "share": {
             "type": "string",
-            "description": "Доля стоимости рождённой строки; только у разукомплектации на несколько частей"
+            "description": "Доля стоимости рождённой строки; только у разукомплектации без комплектации-основания на несколько частей. У разукомплектации на основании комплектации доли не присылают: присланная доля отклоняется, веса частей сервер берёт из проведения основания"
           }
         }
       },
@@ -89357,6 +91561,14 @@
           "spec": {
             "$ref": "#/components/schemas/StockAssemblySpecRef"
           },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "assembly",
+              "production"
+            ],
+            "description": "Вид комплектации (только stock_assembly): assembly — «Сборка», production — «Производство». Документ, заполненный по составу (`spec`), получает вид версии состава — присланное значение, которое с ней расходится, отклоняется; без состава вид выбирает человек, пусто — assembly. Снимок: новая версия состава с другим видом документ не меняет. Документ без поля читается как assembly. У разукомплектации вида нет"
+          },
           "paper_amount": {
             "type": "string",
             "description": "Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается"
@@ -89411,7 +91623,7 @@
           "posting": {
             "type": "object",
             "additionalProperties": true,
-            "description": "Разложение проведения по строкам и партиям, которое пишет сам движок"
+            "description": "Разложение проведения по строкам и партиям, которое пишет сам движок. У разукомплектации на основании комплектации есть блок `disassembly_basis`: `document_id` и `number` основания, `amount` — фактически списанная сумма, `basis_amount` — сумма того же количества по основанию (рождённая сумма основания ÷ рождённое количество × разбираемое количество), `difference` — amount минус basis_amount, `weights` — веса частей по строкам (`line_id`, `weight`), по которым списанное разделено между частями. Веса и `basis_amount` — снимок первого проведения: пересчёт себестоимости цепочки их сохраняет и пересчитывает только `amount` и `difference`; отмена и повторное проведение считают всё заново"
           }
         }
       },
@@ -89455,7 +91667,8 @@
               {
                 "type": "null"
               }
-            ]
+            ],
+            "description": "Документ-основание. У разукомплектации (stock_disassembly) основанием может быть проведённая комплектация (stock_assembly) того же бизнеса и юрлица, родившая разбираемый товар, датой не позже разбора. Тогда части — только товары, которые комплектация списывала (вернуть можно не все), доли стоимости не присылают, комплектация вида production обратно не разбирается, а проведёнными разборами по одной комплектации нельзя разобрать больше, чем она родила. Основание-резерв у разукомплектации этих правил не включает"
           },
           "entity_refs": {
             "$ref": "#/components/schemas/StockDocumentRefs"
@@ -90976,7 +93189,7 @@
           "version_id",
           "version"
         ],
-        "description": "Снимок версии спецификации, по которой заполнен документ. Ссылка на версию, а не на справочник: состав уже скопирован в строки, и правка спецификации завтра не меняет смысл проведённого вчера.",
+        "description": "Снимок версии спецификации, по которой заполнен документ. Ссылка на версию, а не на справочник: состав уже скопирован в строки, и правка спецификации завтра не меняет смысл проведённого вчера. Версию сервер читает, только когда ссылка появляется — при создании документа и при правке, называющей другую версию: такая версия обязана быть действующей, черновая и архивная отклоняются. Правка черновика с прежним version_id версию не читает, и документ остаётся правимым, даже если версия ушла в архив или удалена; ссылку можно снять.",
         "properties": {
           "spec_id": {
             "$ref": "#/components/schemas/UUID"
@@ -90990,6 +93203,14 @@
           },
           "name": {
             "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "assembly",
+              "production"
+            ],
+            "description": "Вид версии состава на момент заполнения документа; ставит сервер"
           }
         }
       },
@@ -91070,6 +93291,15 @@
               "archived"
             ]
           },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "assembly",
+              "production",
+              "kit"
+            ],
+            "description": "Вид состава: assembly — «Сборка», production — «Производство», kit — «Комплект» (заложен, пока не заводится). Хранится у версии: следующая редакция может сменить вид"
+          },
           "product_id": {
             "$ref": "#/components/schemas/UUID"
           },
@@ -91109,6 +93339,39 @@
             "items": {
               "$ref": "#/components/schemas/StockAssemblySpecLine"
             }
+          },
+          "archived_versions": {
+            "type": "array",
+            "readOnly": true,
+            "description": "Версии, которые это действие убрало в архив: активация архивирует прежнюю действующую версию того же товара — своей или другой спецификации. Поле есть только в ответе смены состояния; отсутствует, если в архив ничего не ушло",
+            "items": {
+              "$ref": "#/components/schemas/StockAssemblySpecArchivedVersion"
+            }
+          }
+        }
+      },
+      "StockAssemblySpecArchivedVersion": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "spec_id",
+          "name",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "spec_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
           }
         }
       },
@@ -91154,10 +93417,20 @@
         "description": "Новая версия состава. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком.",
         "properties": {
           "spec_id": {
-            "$ref": "#/components/schemas/UUID"
+            "$ref": "#/components/schemas/UUID",
+            "description": "Спецификация, к которой заводится следующая редакция. Должна существовать в кабинете, а product_id — совпадать с её выходным товаром; состояние прежних версий не важно — редакцию заводят и от архивной. Пусто — новая спецификация"
           },
           "name": {
             "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "assembly",
+              "production"
+            ],
+            "default": "assembly",
+            "description": "Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство». Вид kit («Комплект») пока не принимается — ответ 400"
           },
           "product_id": {
             "$ref": "#/components/schemas/UUID"
@@ -91183,6 +93456,70 @@
               "properties": {
                 "product_id": {
                   "$ref": "#/components/schemas/UUID"
+                },
+                "qty": {
+                  "type": "string"
+                },
+                "share": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "StockAssemblySpecUpdate": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "product_id",
+          "output_qty",
+          "lines"
+        ],
+        "description": "Полная замена реквизитов и состава черновика. Номер версии и спецификация, к которой она относится, не меняются. Проверки те же, что при заведении версии.",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "assembly",
+              "production"
+            ],
+            "default": "assembly",
+            "description": "Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство». Вид kit («Комплект») пока не принимается — ответ 400"
+          },
+          "product_id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Выходной товар. Сменить его можно только у единственной версии спецификации: другой товар при нескольких версиях — это другая спецификация"
+          },
+          "output_qty": {
+            "type": "string",
+            "description": "Сколько выходного товара даёт этот состав"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "product_id",
+                "qty"
+              ],
+              "properties": {
+                "product_id": {
+                  "$ref": "#/components/schemas/UUID"
+                },
+                "product_uom_id": {
+                  "$ref": "#/components/schemas/UUID",
+                  "description": "Единица товара, в которой задано qty; пусто — базовая единица карточки"
                 },
                 "qty": {
                   "type": "string"
@@ -91360,7 +93697,8 @@
             "$ref": "#/components/schemas/StockProductUOMUsage"
           },
           "factor_to_base": {
-            "type": "string"
+            "type": "string",
+            "description": "Положительное число; десятичный разделитель — точка или запятая, хранится запись с точкой"
           },
           "creates_handling_units": {
             "type": "boolean",
@@ -91372,11 +93710,11 @@
           },
           "qty_step": {
             "type": "string",
-            "description": "Положительный decimal или пусто: количество строки в этой единице обязано быть кратно шагу"
+            "description": "Положительное число (точка или запятая) или пусто: количество строки в этой единице обязано быть кратно шагу"
           },
           "remnant_threshold": {
             "type": "string",
-            "description": "Положительный decimal или пусто. Требует creates_handling_units"
+            "description": "Положительное число (точка или запятая) или пусто. Требует creates_handling_units"
           },
           "is_default_receipt": {
             "type": "boolean"
@@ -92589,7 +94927,8 @@
           "shipped_qty",
           "released_qty",
           "remaining_qty",
-          "unbacked_qty"
+          "unbacked_qty",
+          "active_spec"
         ],
         "properties": {
           "basis_line_id": {
@@ -92616,7 +94955,57 @@
           },
           "unbacked_qty": {
             "type": "string",
-            "description": "Часть остатка строки, не покрытая остатком склада: обещание ждёт поступления"
+            "description": "Decimal string в базовой единице товара. Часть остатка строки, не покрытая остатком склада: обещание ждёт поступления. Сумма по строкам равна unbacked_qty резерва; без товара остаются самые новые обещания"
+          },
+          "active_spec": {
+            "description": "Действующий состав товара строки; null, если действующего состава у товара нет. Сам резерв состав не использует",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/StockReportReservationLineSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "StockReportReservationLineSpec": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version_id",
+          "spec_id",
+          "version",
+          "name",
+          "kind",
+          "output_qty"
+        ],
+        "description": "Действующая версия состава изделия у товара строки резерва.",
+        "properties": {
+          "version_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "spec_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "assembly",
+              "production"
+            ]
+          },
+          "output_qty": {
+            "type": "string",
+            "description": "Decimal string. Сколько изделия даёт один состав, в базовой единице товара"
           }
         }
       },
@@ -94867,6 +97256,48 @@
               "format": "int64"
             },
             "description": "Недели и месяцы всего магазина (?summary=1): окно → заказано штук"
+          },
+          "buyout": {
+            "$ref": "#/components/schemas/MarketplaceBuyoutCohort"
+          }
+        }
+      },
+      "MarketplaceBuyoutCohort": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Выкуп когорты заказов периода — тот же расчёт, что у воронки: доля выкупленных среди заказов, у которых успело решиться, выкуплены ли они (не позже сегодня−8), окно не короче 14 дней — короткий период добирает решённые дни раньше; у Ozon — FBO и FBS вместе",
+        "required": [
+          "from",
+          "to",
+          "bought",
+          "base",
+          "pct"
+        ],
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date",
+            "description": "Первый день заказов когорты"
+          },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "description": "Последний день заказов когорты включительно"
+          },
+          "bought": {
+            "type": "number",
+            "description": "Выкуплено, шт"
+          },
+          "base": {
+            "type": "number",
+            "description": "Заказано без отмен, шт"
+          },
+          "pct": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Выкуп, %; нет решённых заказов — null"
           }
         }
       },
@@ -96087,6 +98518,9 @@
           "demo": {
             "type": "boolean",
             "description": "Аналитическая база не подключена и цифры синтетические"
+          },
+          "buyout": {
+            "$ref": "#/components/schemas/MarketplaceBuyoutCohort"
           }
         }
       },
@@ -98305,6 +100739,93 @@
               "null"
             ],
             "description": "Продажа или закупка, который оплачивают наличные (приход — продажа, расход — закупка того же контрагента). Пустая строка снимает продажу или закупку; не присланное поле остаётся как было"
+          }
+        }
+      },
+      "FinancePayrollAutomationSettings": {
+        "type": "object",
+        "required": [
+          "auto_accrual"
+        ],
+        "properties": {
+          "auto_accrual": {
+            "type": "boolean",
+            "description": "Ежемесячно заводить черновики начисления по штату"
+          }
+        }
+      },
+      "FinancePayrollRun": {
+        "type": "object",
+        "required": [
+          "id",
+          "scope_key",
+          "scope_name",
+          "month",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "scope_key": {
+            "type": "string"
+          },
+          "company_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "business_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "scope_name": {
+            "type": "string"
+          },
+          "month": {
+            "type": "string",
+            "description": "Месяц в формате YYYY-MM"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "draft",
+              "empty",
+              "blocked",
+              "failed"
+            ]
+          },
+          "document_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "number": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string",
+            "description": "Причина блокировки или ошибки"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "FinancePayrollRunList": {
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinancePayrollRun"
+            }
           }
         }
       },
@@ -101492,6 +104013,33 @@
             "type": "string",
             "format": "uuid",
             "description": "Воронка продаж или закупок договора: продажи или закупки по договору идут в неё (пометка кабинета, не текст бумаги)"
+          },
+          "responsibles": {
+            "type": "array",
+            "maxItems": 20,
+            "description": "Ответственные по договору с долями: продажи и закупки периодов получают их по умолчанию; сумма долей — ровно 100",
+            "items": {
+              "$ref": "#/components/schemas/DocflowFlowResponsible"
+            }
+          }
+        }
+      },
+      "DocflowFlowResponsible": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Ответственный сотрудник договора и его доля в процентах.",
+        "required": [
+          "employee_id",
+          "share"
+        ],
+        "properties": {
+          "employee_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "share": {
+            "type": "string",
+            "description": "Доля в процентах десятичным текстом"
           }
         }
       },

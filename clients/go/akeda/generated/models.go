@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 714643e9111d5b47075b5e6ff70df3a91290a79d47f10cb1da6dfee209c157c2).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b6d966214a0201bfa9cf1fe12f178d03aa9d170cdaad1a20293aad6ed821b0e1).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -2854,14 +2854,16 @@ type CoreContact struct {
 	Ogrn         string                     `json:"ogrn"`
 	Address      string                     `json:"address"`
 	LegalAddress CoreContactAddress         `json:"legal_address"`
-	BankName     string                     `json:"bank_name"`
-	BankBIC      string                     `json:"bank_bic"`
-	BankAccount  string                     `json:"bank_account"`
-	ExternalID   string                     `json:"external_id"`
-	Custom       map[string]json.RawMessage `json:"custom"`
-	IsActive     bool                       `json:"is_active"`
-	CreatedAt    string                     `json:"created_at"`
-	UpdatedAt    string                     `json:"updated_at"`
+	// PostalAddress — Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет
+	PostalAddress CoreContactPostalAddress   `json:"postal_address"`
+	BankName      string                     `json:"bank_name"`
+	BankBIC       string                     `json:"bank_bic"`
+	BankAccount   string                     `json:"bank_account"`
+	ExternalID    string                     `json:"external_id"`
+	Custom        map[string]json.RawMessage `json:"custom"`
+	IsActive      bool                       `json:"is_active"`
+	CreatedAt     string                     `json:"created_at"`
+	UpdatedAt     string                     `json:"updated_at"`
 	// Country — Нерезидент: страна регистрации кодом ISO 3166 (две буквы). Пусто — Россия.
 	Country *string `json:"country,omitempty"`
 	// TaxNumber — Нерезидент: налоговый номер страны регистрации вместо ИНН.
@@ -2870,6 +2872,23 @@ type CoreContact struct {
 	SystemKey *string `json:"system_key,omitempty"`
 	// RequisitesIssue — Что подсветить в реквизитах по правилу ИНН. Пусто — всё в порядке.
 	RequisitesIssue *string `json:"requisites_issue,omitempty"`
+}
+
+// CoreContactPostalAddress — Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет
+type CoreContactPostalAddress struct {
+	PostalCode string `json:"postal_code"`
+	// RegionCode — Код субъекта РФ для формализованного документа
+	RegionCode string `json:"region_code"`
+	RegionName string `json:"region_name"`
+	District   string `json:"district"`
+	City       string `json:"city"`
+	Settlement string `json:"settlement"`
+	Street     string `json:"street"`
+	Building   string `json:"building"`
+	Block      string `json:"block"`
+	// Flat — Офис или помещение
+	Flat string `json:"flat"`
+	Info string `json:"info"`
 }
 
 type CoreContactAddress struct {
@@ -2904,15 +2923,34 @@ type CoreContactCreate struct {
 	Ogrn         *string                    `json:"ogrn,omitempty"`
 	Address      *string                    `json:"address,omitempty"`
 	LegalAddress *CoreContactAddress        `json:"legal_address,omitempty"`
-	BankName     *string                    `json:"bank_name,omitempty"`
-	BankBIC      *string                    `json:"bank_bic,omitempty"`
-	BankAccount  *string                    `json:"bank_account,omitempty"`
-	ExternalID   *string                    `json:"external_id,omitempty"`
+	// PostalAddress — Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет
+	PostalAddress *CoreContactCreatePostalAddress `json:"postal_address,omitempty"`
+	BankName      *string                         `json:"bank_name,omitempty"`
+	BankBIC       *string                         `json:"bank_bic,omitempty"`
+	BankAccount   *string                         `json:"bank_account,omitempty"`
+	ExternalID    *string                         `json:"external_id,omitempty"`
 	// Country — Нерезидент: страна регистрации кодом ISO 3166 (две буквы).
 	Country *string `json:"country,omitempty"`
 	// TaxNumber — Нерезидент: налоговый номер страны регистрации вместо ИНН.
 	TaxNumber *string                    `json:"tax_number,omitempty"`
 	Custom    map[string]json.RawMessage `json:"custom,omitempty"`
+}
+
+// CoreContactCreatePostalAddress — Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет
+type CoreContactCreatePostalAddress struct {
+	PostalCode string `json:"postal_code"`
+	// RegionCode — Код субъекта РФ для формализованного документа
+	RegionCode string `json:"region_code"`
+	RegionName string `json:"region_name"`
+	District   string `json:"district"`
+	City       string `json:"city"`
+	Settlement string `json:"settlement"`
+	Street     string `json:"street"`
+	Building   string `json:"building"`
+	Block      string `json:"block"`
+	// Flat — Офис или помещение
+	Flat string `json:"flat"`
+	Info string `json:"info"`
 }
 
 type CoreContactEntityType = string
@@ -2940,16 +2978,35 @@ type CoreContactPatch struct {
 	Ogrn         *string                    `json:"ogrn,omitempty"`
 	Address      *string                    `json:"address,omitempty"`
 	LegalAddress *CoreContactAddress        `json:"legal_address,omitempty"`
-	BankName     *string                    `json:"bank_name,omitempty"`
-	BankBIC      *string                    `json:"bank_bic,omitempty"`
-	BankAccount  *string                    `json:"bank_account,omitempty"`
-	ExternalID   *string                    `json:"external_id,omitempty"`
-	Country      *string                    `json:"country,omitempty"`
-	TaxNumber    *string                    `json:"tax_number,omitempty"`
-	Custom       map[string]json.RawMessage `json:"custom,omitempty"`
-	IsCustomer   *bool                      `json:"is_customer,omitempty"`
-	IsSupplier   *bool                      `json:"is_supplier,omitempty"`
-	FolderID     *UUID                      `json:"folder_id,omitempty"`
+	// PostalAddress — Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет
+	PostalAddress *CoreContactPatchPostalAddress `json:"postal_address,omitempty"`
+	BankName      *string                        `json:"bank_name,omitempty"`
+	BankBIC       *string                        `json:"bank_bic,omitempty"`
+	BankAccount   *string                        `json:"bank_account,omitempty"`
+	ExternalID    *string                        `json:"external_id,omitempty"`
+	Country       *string                        `json:"country,omitempty"`
+	TaxNumber     *string                        `json:"tax_number,omitempty"`
+	Custom        map[string]json.RawMessage     `json:"custom,omitempty"`
+	IsCustomer    *bool                          `json:"is_customer,omitempty"`
+	IsSupplier    *bool                          `json:"is_supplier,omitempty"`
+	FolderID      *UUID                          `json:"folder_id,omitempty"`
+}
+
+// CoreContactPatchPostalAddress — Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет
+type CoreContactPatchPostalAddress struct {
+	PostalCode string `json:"postal_code"`
+	// RegionCode — Код субъекта РФ для формализованного документа
+	RegionCode string `json:"region_code"`
+	RegionName string `json:"region_name"`
+	District   string `json:"district"`
+	City       string `json:"city"`
+	Settlement string `json:"settlement"`
+	Street     string `json:"street"`
+	Building   string `json:"building"`
+	Block      string `json:"block"`
+	// Flat — Офис или помещение
+	Flat string `json:"flat"`
+	Info string `json:"info"`
 }
 
 type CoreCurrencyRate struct {
@@ -4947,6 +5004,19 @@ type CoreTrialBalance struct {
 	Rows            []CoreTrialBalanceRow  `json:"rows"`
 	Totals          CoreTrialBalanceTotals `json:"totals"`
 	AccountingBasis *AccountingBasis       `json:"accounting_basis,omitempty"`
+	// UnassignedCompany — При отборе по юрлицу — итоги проводок без юрлица за тот же период; только при доступе ко всей книге
+	UnassignedCompany *CoreTrialBalanceUnassignedCompany `json:"unassigned_company,omitempty"`
+}
+
+// CoreTrialBalanceUnassignedCompany — При отборе по юрлицу — итоги проводок без юрлица за тот же период; только при доступе ко всей книге
+type CoreTrialBalanceUnassignedCompany struct {
+	OpeningDebit   string `json:"opening_debit"`
+	OpeningCredit  string `json:"opening_credit"`
+	TurnoverDebit  string `json:"turnover_debit"`
+	TurnoverCredit string `json:"turnover_credit"`
+	ClosingDebit   string `json:"closing_debit"`
+	ClosingCredit  string `json:"closing_credit"`
+	Balanced       bool   `json:"balanced"`
 }
 
 type CoreTrialBalanceRow struct {
@@ -6238,6 +6308,8 @@ type DocflowFlowContractTerms struct {
 	RenewalTerms *string `json:"renewal_terms,omitempty"`
 	// OrderFunnelID — Воронка продаж или закупок договора: продажи или закупки по договору идут в неё (пометка кабинета, не текст бумаги)
 	OrderFunnelID *string `json:"order_funnel_id,omitempty"`
+	// Responsibles — Ответственные по договору с долями: продажи и закупки периодов получают их по умолчанию; сумма долей — ровно 100
+	Responsibles []DocflowFlowResponsible `json:"responsibles,omitempty"`
 }
 
 type DocflowFlowCreateInput struct {
@@ -6436,6 +6508,13 @@ type DocflowFlowRelationInput struct {
 	Kind          string `json:"kind"`
 	TargetID      UUID   `json:"target_id"`
 	TargetVersion int64  `json:"target_version"`
+}
+
+// DocflowFlowResponsible — Ответственный сотрудник договора и его доля в процентах.
+type DocflowFlowResponsible struct {
+	EmployeeID string `json:"employee_id"`
+	// Share — Доля в процентах десятичным текстом
+	Share string `json:"share"`
 }
 
 // DocflowFlowScheduleStage — Плановая сумма этапа работ или платежа. Ни выполнения, ни оплаты она не утверждает — это то, о чём договорились.
@@ -7561,17 +7640,25 @@ type FinanceCashflowItem struct {
 }
 
 type FinanceCashflowReport struct {
-	Currency         *string                  `json:"currency,omitempty"`
-	From             string                   `json:"from"`
-	To               string                   `json:"to"`
-	Inflow           string                   `json:"inflow"`
-	Outflow          string                   `json:"outflow"`
-	UncategorizedNet string                   `json:"uncategorized_net"`
-	NetCashFlow      string                   `json:"net_cash_flow"`
-	TransferIn       string                   `json:"transfer_in"`
-	TransferOut      string                   `json:"transfer_out"`
-	Sections         []FinanceCashflowSection `json:"sections"`
-	Columns          []FinanceReportColumn    `json:"columns"`
+	// UnassignedCompany — При отборе по юрлицу — чистый поток движений без юрлица и всего бизнеса
+	UnassignedCompany *FinanceCashflowReportUnassignedCompany `json:"unassigned_company,omitempty"`
+	Currency          *string                                 `json:"currency,omitempty"`
+	From              string                                  `json:"from"`
+	To                string                                  `json:"to"`
+	Inflow            string                                  `json:"inflow"`
+	Outflow           string                                  `json:"outflow"`
+	UncategorizedNet  string                                  `json:"uncategorized_net"`
+	NetCashFlow       string                                  `json:"net_cash_flow"`
+	TransferIn        string                                  `json:"transfer_in"`
+	TransferOut       string                                  `json:"transfer_out"`
+	Sections          []FinanceCashflowSection                `json:"sections"`
+	Columns           []FinanceReportColumn                   `json:"columns"`
+}
+
+// FinanceCashflowReportUnassignedCompany — При отборе по юрлицу — чистый поток движений без юрлица и всего бизнеса
+type FinanceCashflowReportUnassignedCompany struct {
+	NetCashFlow         *string `json:"net_cash_flow,omitempty"`
+	BusinessNetCashFlow *string `json:"business_net_cash_flow,omitempty"`
 }
 
 type FinanceCashflowSection struct {
@@ -7773,10 +7860,15 @@ type FinanceDividendDecisionInputRowsItem struct {
 type FinanceDividendPolicyInput struct {
 	BusinessID *UUID `json:"business_id,omitempty"`
 	// CompanyID — Совместимый алиас: сервер использует бизнес указанного юрлица
-	CompanyID *UUID   `json:"company_id,omitempty"`
-	Name      string  `json:"name"`
-	ValidFrom string  `json:"valid_from"`
-	BaseKind  *string `json:"base_kind,omitempty"`
+	CompanyID *UUID  `json:"company_id,omitempty"`
+	Name      string `json:"name"`
+	ValidFrom string `json:"valid_from"`
+	// BaseKind — База: ledger_profit — прибыль по книге (general_ledger_profit ОПиУ); cashflow_total — весь ДДС, чистый поток без внутренних переводов; operating_cashflow — операционный раздел ДДС; pnl_layout_row — строка макета ОПиУ (нужны base_layout_id и base_layout_row); pnl — устаревшее имя ledger_profit
+	BaseKind *string `json:"base_kind,omitempty"`
+	// BaseLayoutID — Макет ОПиУ для base_kind=pnl_layout_row
+	BaseLayoutID *UUID `json:"base_layout_id,omitempty"`
+	// BaseLayoutRow — Идентификатор строки макета ОПиУ для base_kind=pnl_layout_row
+	BaseLayoutRow *string `json:"base_layout_row,omitempty"`
 	// LossMode — through распределяет прибыль и убыток между владельцами в одинаковых долях
 	LossMode *string `json:"loss_mode,omitempty"`
 	// DistributionPercent — Доля результата, 0 < x <= 100
@@ -8307,9 +8399,37 @@ type FinancePaymentPlanInput struct {
 
 type FinancePaymentSourceKind = string
 
+type FinancePayrollAutomationSettings struct {
+	// AutoAccrual — Ежемесячно заводить черновики начисления по штату
+	AutoAccrual bool `json:"auto_accrual"`
+}
+
+type FinancePayrollRun struct {
+	ID         UUID   `json:"id"`
+	ScopeKey   string `json:"scope_key"`
+	CompanyID  *UUID  `json:"company_id,omitempty"`
+	BusinessID *UUID  `json:"business_id,omitempty"`
+	ScopeName  string `json:"scope_name"`
+	// Month — Месяц в формате YYYY-MM
+	Month      string  `json:"month"`
+	Status     string  `json:"status"`
+	DocumentID *UUID   `json:"document_id,omitempty"`
+	Number     *string `json:"number,omitempty"`
+	// Error — Причина блокировки или ошибки
+	Error     *string `json:"error,omitempty"`
+	CreatedAt string  `json:"created_at"`
+	UpdatedAt string  `json:"updated_at"`
+}
+
+type FinancePayrollRunList struct {
+	Results []FinancePayrollRun `json:"results"`
+}
+
 type FinancePnlCoverage struct {
 	Missing    []FinancePnlCoverageItem `json:"missing"`
 	Duplicated []FinancePnlCoverageItem `json:"duplicated"`
+	// Taxes — Налоги раздела «Налоги» за период без строки-источника «Налоги» в макете; итог и прибыль их включают
+	Taxes *string `json:"taxes,omitempty"`
 }
 
 type FinancePnlCoverageItem struct {
@@ -8327,21 +8447,35 @@ type FinancePnlLine struct {
 }
 
 type FinancePnlReport struct {
-	RnpMetrics      map[string]string       `json:"rnp_metrics,omitempty"`
-	Currency        *string                 `json:"currency,omitempty"`
-	From            string                  `json:"from"`
-	To              string                  `json:"to"`
-	Revenue         string                  `json:"revenue"`
-	Expense         string                  `json:"expense"`
-	Profit          string                  `json:"profit"`
-	UnclassifiedIn  string                  `json:"unclassified_in"`
-	UnclassifiedOut string                  `json:"unclassified_out"`
-	Lines           []FinancePnlLine        `json:"lines"`
-	LayoutRows      []FinancePnlReportRow   `json:"layout_rows,omitempty"`
-	Layout          *FinancePnlReportLayout `json:"layout,omitempty"`
-	Columns         []FinanceReportColumn   `json:"columns"`
-	Companies       []FinanceReportCompany  `json:"companies,omitempty"`
-	AccountingBasis *AccountingBasis        `json:"accounting_basis,omitempty"`
+	// UnassignedCompany — При отборе по юрлицу — результат движений без юрлица и всего бизнеса
+	UnassignedCompany *FinancePnlReportUnassignedCompany `json:"unassigned_company,omitempty"`
+	RnpMetrics        map[string]string                  `json:"rnp_metrics,omitempty"`
+	Currency          *string                            `json:"currency,omitempty"`
+	From              string                             `json:"from"`
+	To                string                             `json:"to"`
+	Revenue           string                             `json:"revenue"`
+	Expense           string                             `json:"expense"`
+	Profit            string                             `json:"profit"`
+	UnclassifiedIn    string                             `json:"unclassified_in"`
+	UnclassifiedOut   string                             `json:"unclassified_out"`
+	Lines             []FinancePnlLine                   `json:"lines"`
+	// Taxes — Налоги раздела «Налоги» по видам — строка ОПиУ «Налоги»
+	Taxes []FinanceTaxKindAmount `json:"taxes,omitempty"`
+	// TaxesTotal — Итог строки «Налоги»; входит в расходы и прибыль
+	TaxesTotal *string `json:"taxes_total,omitempty"`
+	// TaxesNotAllocated — Отбор по проекту или разрезу учёта — налоги начислены на юрлицо и на этот разрез не распределяются
+	TaxesNotAllocated *bool                   `json:"taxes_not_allocated,omitempty"`
+	LayoutRows        []FinancePnlReportRow   `json:"layout_rows,omitempty"`
+	Layout            *FinancePnlReportLayout `json:"layout,omitempty"`
+	Columns           []FinanceReportColumn   `json:"columns"`
+	Companies         []FinanceReportCompany  `json:"companies,omitempty"`
+	AccountingBasis   *AccountingBasis        `json:"accounting_basis,omitempty"`
+}
+
+// FinancePnlReportUnassignedCompany — При отборе по юрлицу — результат движений без юрлица и всего бизнеса
+type FinancePnlReportUnassignedCompany struct {
+	Profit         *string `json:"profit,omitempty"`
+	BusinessProfit *string `json:"business_profit,omitempty"`
 }
 
 type FinancePnlReportLayout struct {
@@ -8725,6 +8859,167 @@ type FinanceStatementPage struct {
 	Results []FinanceStatement `json:"results"`
 }
 
+// FinanceTaxKind — Вид налога кабинета.
+type FinanceTaxKind struct {
+	// Code — Код вида из перечня закона
+	Code string `json:"code"`
+	// Name — Название вида в кабинете
+	Name string `json:"name"`
+	// PNLExpense — Налог-расход — начисление идёт в строку ОПиУ «Налоги»
+	PNLExpense bool `json:"pnl_expense"`
+	// Sort — Порядок показа
+	Sort int64 `json:"sort"`
+}
+
+type FinanceTaxKindAmount struct {
+	// Kind — Код вида налога
+	Kind string `json:"kind"`
+	// Amount — Сумма
+	Amount string `json:"amount"`
+}
+
+type FinanceTaxKindPage struct {
+	Items []FinanceTaxKind `json:"items"`
+}
+
+// FinanceTaxMonth — Документ «Налоги за месяц».
+type FinanceTaxMonth struct {
+	ID     UUID   `json:"id"`
+	Number string `json:"number"`
+	// Date — Последний день месяца
+	Date string `json:"date"`
+	// Status — Статус документа
+	Status string `json:"status"`
+	// CompanyID — Юрлицо
+	CompanyID string                 `json:"company_id"`
+	Comment   string                 `json:"comment"`
+	UpdatedAt string                 `json:"updated_at"`
+	Payload   FinanceTaxMonthPayload `json:"payload"`
+}
+
+// FinanceTaxMonthInput — Новый черновик «Налоги за месяц».
+type FinanceTaxMonthInput struct {
+	CompanyID *UUID                 `json:"company_id,omitempty"`
+	Year      *int64                `json:"year,omitempty"`
+	Month     *int64                `json:"month,omitempty"`
+	Lines     []FinanceTaxMonthLine `json:"lines,omitempty"`
+	// Opening — Сальдо ЕНС на начало учёта — только в первом документе юрлица; плюс — долг, минус — переплата
+	Opening *string `json:"opening,omitempty"`
+	Comment *string `json:"comment,omitempty"`
+}
+
+// FinanceTaxMonthLine — Строка начисления.
+type FinanceTaxMonthLine struct {
+	// Kind — Код вида налога
+	Kind string `json:"kind"`
+	// Amount — Сумма со знаком; минус — уменьшение по декларации
+	Amount string `json:"amount"`
+	// Comment — Комментарий строки
+	Comment *string `json:"comment,omitempty"`
+	// Source — Строку заполнил сервер — из начислений зарплаты или «НДС за квартал»; во входе такие строки игнорируются
+	Source *string `json:"source,omitempty"`
+}
+
+type FinanceTaxMonthPage struct {
+	Items []FinanceTaxMonth `json:"items"`
+}
+
+type FinanceTaxMonthPayload struct {
+	Version  int64                    `json:"version"`
+	Year     int64                    `json:"year"`
+	Month    int64                    `json:"month"`
+	Lines    []FinanceTaxMonthLine    `json:"lines"`
+	Payments []FinanceTaxMonthPayment `json:"payments,omitempty"`
+	// Opening — Сальдо ЕНС на начало учёта; плюс — долг перед бюджетом, минус — переплата
+	Opening *string `json:"opening,omitempty"`
+}
+
+// FinanceTaxMonthPayment — Пополнение ЕНС за месяц, собранное сервером.
+type FinanceTaxMonthPayment struct {
+	// Document — Документ банковской операции
+	Document string `json:"document"`
+	Date     string `json:"date"`
+	// Amount — Сумма платежа
+	Amount string `json:"amount"`
+}
+
+// FinanceTaxMonthUpdateInput — Пересохранение черновика «Налоги за месяц» — строки и комментарий.
+type FinanceTaxMonthUpdateInput struct {
+	Lines []FinanceTaxMonthLine `json:"lines,omitempty"`
+	// Opening — Сальдо ЕНС на начало учёта — только в первом документе юрлица; плюс — долг, минус — переплата
+	Opening *string `json:"opening,omitempty"`
+	Comment *string `json:"comment,omitempty"`
+}
+
+// FinanceTaxPayment — Платёж по статье налогов.
+type FinanceTaxPayment struct {
+	Company     UUID   `json:"company"`
+	Transaction UUID   `json:"transaction"`
+	Document    UUID   `json:"document"`
+	Date        string `json:"date"`
+	// Amount — Сумма платежа
+	Amount string `json:"amount"`
+	// CounterpartyName — Получатель
+	CounterpartyName string `json:"counterparty_name"`
+	// CounterpartyINN — ИНН получателя
+	CounterpartyINN string `json:"counterparty_inn"`
+	// CounterpartyAccount — Счёт получателя
+	CounterpartyAccount string `json:"counterparty_account"`
+	// Ens — Пополнение единого налогового счёта по правилу раздела
+	Ens bool `json:"ens"`
+}
+
+type FinanceTaxPaymentPage struct {
+	Items []FinanceTaxPayment `json:"items"`
+}
+
+// FinanceTaxRecipient — Получатель единого налогового счёта.
+type FinanceTaxRecipient struct {
+	// INN — ИНН получателя — 10 или 12 цифр
+	INN string `json:"inn"`
+	// Account — Счёт получателя; пусто — любой счёт этого ИНН
+	Account *string `json:"account,omitempty"`
+	// Name — Название получателя для экрана
+	Name *string `json:"name,omitempty"`
+}
+
+type FinanceTaxRecipientFromPaymentInput struct {
+	TransactionID UUID `json:"transaction_id"`
+}
+
+// FinanceTaxSettings — Настройка раздела «Налоги».
+type FinanceTaxSettings struct {
+	// PaymentItemID — Статья ДДС платежей налогов; пусто — не настроена
+	PaymentItemID *string `json:"payment_item_id"`
+	// EnsRecipients — Получатели единого налогового счёта
+	EnsRecipients []FinanceTaxRecipient `json:"ens_recipients"`
+}
+
+// FinanceTaxSettingsInput — Настройка раздела «Налоги» целиком.
+type FinanceTaxSettingsInput struct {
+	// PaymentItemID — Статья ДДС вида «Налоги»; пусто — снять
+	PaymentItemID *string `json:"payment_item_id,omitempty"`
+	// EnsRecipients — Получатели единого налогового счёта
+	EnsRecipients []FinanceTaxRecipient `json:"ens_recipients,omitempty"`
+}
+
+// FinanceTaxSummary — Сальдо ЕНС юрлица и обороты отрезка из регистра раздела. Плюс — долг перед бюджетом, минус — переплата.
+type FinanceTaxSummary struct {
+	Company  UUID   `json:"company"`
+	DateFrom string `json:"date_from"`
+	DateTo   string `json:"date_to"`
+	// Opening — Сальдо ЕНС на начало отрезка
+	Opening string `json:"opening"`
+	// Accrued — Начислено по видам налогов
+	Accrued []FinanceTaxKindAmount `json:"accrued"`
+	// AccruedTotal — Начислено всего
+	AccruedTotal string `json:"accrued_total"`
+	// Paid — Пополнено ЕНС
+	Paid string `json:"paid"`
+	// Closing — Сальдо ЕНС на конец отрезка
+	Closing string `json:"closing"`
+}
+
 type FinanceTransaction struct {
 	ID        UUID             `json:"id"`
 	Date      string           `json:"date"`
@@ -8811,6 +9106,20 @@ type FinanceTransactionPage struct {
 	Totals  FinanceTransactionTotals `json:"totals"`
 }
 
+// FinanceTransactionRestoreResult — Какие операции вернулись в учёт и какие нет.
+type FinanceTransactionRestoreResult struct {
+	// Restored — Возвращённые операции.
+	Restored []UUID `json:"restored"`
+	// Failed — Операции, которые вернуть не удалось, с причиной.
+	Failed []FinanceTransactionRestoreResultFailedItem `json:"failed"`
+}
+
+type FinanceTransactionRestoreResultFailedItem struct {
+	ID UUID `json:"id"`
+	// Reason — Причина отказа для человека.
+	Reason string `json:"reason"`
+}
+
 // FinanceTransactionTotals — Итоги по всему отбору, а не по странице. Суммы в валюте учёта по историческому курсу
 type FinanceTransactionTotals struct {
 	// Inflow — Приход; null, когда итог не посчитан
@@ -8820,6 +9129,52 @@ type FinanceTransactionTotals struct {
 	Currency string  `json:"currency"`
 	// UnconvertedCount — Сколько операций осталось без пересчёта в валюту учёта: неполный пересчёт не должен выглядеть верным итогом
 	UnconvertedCount int64 `json:"unconverted_count"`
+}
+
+type FinanceZReportInput struct {
+	CompanyID UUID   `json:"company_id"`
+	Date      string `json:"date"`
+	// ShiftNumber — Номер смены ККТ; пусто — один отчёт на юрлицо и день
+	ShiftNumber *string `json:"shift_number,omitempty"`
+	// PNLItemID — Статья выручки; пусто — статья продажи дня или умолчание
+	PNLItemID map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
+	Lines     []FinanceZReportLine       `json:"lines"`
+	// Cash — Наличные смены, decimal string
+	Cash *string `json:"cash,omitempty"`
+	// CashWalletID — Касса для наличных; обязательна, если наличные больше нуля
+	CashWalletID map[string]json.RawMessage `json:"cash_wallet_id,omitempty"`
+	// CashItemID — Статья движения денег для прихода наличных
+	CashItemID map[string]json.RawMessage `json:"cash_item_id,omitempty"`
+	// Card — Оплаты картой и СБП для сверки, decimal string
+	Card *string `json:"card,omitempty"`
+}
+
+type FinanceZReportLine struct {
+	// ProductID — Услуга из каталога; без неё нужно название
+	ProductID map[string]json.RawMessage `json:"product_id,omitempty"`
+	// Title — Название услуги, если каталога нет
+	Title *string `json:"title,omitempty"`
+	// Quantity — Количество больше нуля, decimal string
+	Quantity string `json:"quantity"`
+	// Amount — Сумма строки с НДС больше нуля, decimal string
+	Amount string `json:"amount"`
+}
+
+type FinanceZReportResult struct {
+	// Key — Ключ отчёта: юрлицо, день и смена
+	Key            string  `json:"key"`
+	Replayed       bool    `json:"replayed"`
+	OrderID        string  `json:"order_id"`
+	OrderNumber    string  `json:"order_number"`
+	ActDocumentID  string  `json:"act_document_id"`
+	CashDocumentID *string `json:"cash_document_id,omitempty"`
+	// Revenue — Сумма услуг
+	Revenue string `json:"revenue"`
+	// Paid — Наличные и карта
+	Paid string `json:"paid"`
+	// Difference — Услуги минус оплаты: долг или аванс дня
+	Difference string `json:"difference"`
+	Card       string `json:"card"`
 }
 
 type HubCounters struct {
@@ -9539,6 +9894,20 @@ type ManagedChecklistPatch struct {
 	Items []ManagedChecklistItem `json:"items"`
 }
 
+// MarketplaceBuyoutCohort — Выкуп когорты заказов периода — тот же расчёт, что у воронки: доля выкупленных среди заказов, у которых успело решиться, выкуплены ли они (не позже сегодня−8), окно не короче 14 дней — короткий период добирает решённые дни раньше; у Ozon — FBO и FBS вместе
+type MarketplaceBuyoutCohort struct {
+	// From — Первый день заказов когорты
+	From string `json:"from"`
+	// To — Последний день заказов когорты включительно
+	To string `json:"to"`
+	// Bought — Выкуплено, шт
+	Bought float64 `json:"bought"`
+	// Base — Заказано без отмен, шт
+	Base float64 `json:"base"`
+	// Pct — Выкуп, %; нет решённых заказов — null
+	Pct *float64 `json:"pct"`
+}
+
 // MarketplaceComponentDataThrough — Последняя дата операций площадки, уже включённых в каждый компонент отчёта; отсутствующее или null-значение означает, что дата покрытия пока неизвестна.
 type MarketplaceComponentDataThrough struct {
 	// Finance — Финансовые операции площадки
@@ -9721,7 +10090,8 @@ type MarketplaceOzonOrdersOverview struct {
 	Daily    []MarketplaceOzonOrdersDailyRow   `json:"daily"`
 	Products []MarketplaceOzonOrdersProductRow `json:"products"`
 	// SummaryTotal — Недели и месяцы всего магазина (?summary=1): окно → заказано штук
-	SummaryTotal map[string]int64 `json:"summary_total,omitempty"`
+	SummaryTotal map[string]int64         `json:"summary_total,omitempty"`
+	Buyout       *MarketplaceBuyoutCohort `json:"buyout,omitempty"`
 }
 
 type MarketplaceOzonOrdersProductRow struct {
@@ -10245,7 +10615,8 @@ type MarketplaceWbOrdersOverview struct {
 	// SummaryTotal — Недели и месяцы всего магазина (?summary=1): окно → заказано штук
 	SummaryTotal map[string]int64 `json:"summary_total,omitempty"`
 	// Demo — Аналитическая база не подключена и цифры синтетические
-	Demo *bool `json:"demo,omitempty"`
+	Demo   *bool                    `json:"demo,omitempty"`
+	Buyout *MarketplaceBuyoutCohort `json:"buyout,omitempty"`
 }
 
 type MarketplaceWbOrdersOverviewKpi struct {
@@ -11311,11 +11682,13 @@ type StockAccountTransferProposal struct {
 
 // StockAssemblySpec — Одна версия спецификации изделия. Состав опубликованной версии неизменяем — новая редакция заводится новой версией.
 type StockAssemblySpec struct {
-	ID          *UUID                   `json:"id,omitempty"`
-	SpecID      *UUID                   `json:"spec_id,omitempty"`
-	Version     *int64                  `json:"version,omitempty"`
-	Name        *string                 `json:"name,omitempty"`
-	Status      *string                 `json:"status,omitempty"`
+	ID      *UUID   `json:"id,omitempty"`
+	SpecID  *UUID   `json:"spec_id,omitempty"`
+	Version *int64  `json:"version,omitempty"`
+	Name    *string `json:"name,omitempty"`
+	Status  *string `json:"status,omitempty"`
+	// Kind — Вид состава: assembly — «Сборка», production — «Производство», kit — «Комплект» (заложен, пока не заводится). Хранится у версии: следующая редакция может сменить вид
+	Kind        *string                 `json:"kind,omitempty"`
 	ProductID   *UUID                   `json:"product_id,omitempty"`
 	ProductSKU  *string                 `json:"product_sku,omitempty"`
 	ProductName *string                 `json:"product_name,omitempty"`
@@ -11327,13 +11700,25 @@ type StockAssemblySpec struct {
 	ActivatedAt *string                 `json:"activated_at,omitempty"`
 	ArchivedAt  *string                 `json:"archived_at,omitempty"`
 	Lines       []StockAssemblySpecLine `json:"lines,omitempty"`
+	// ArchivedVersions — Версии, которые это действие убрало в архив: активация архивирует прежнюю действующую версию того же товара — своей или другой спецификации. Поле есть только в ответе смены состояния; отсутствует, если в архив ничего не ушло
+	ArchivedVersions []StockAssemblySpecArchivedVersion `json:"archived_versions,omitempty"`
+}
+
+type StockAssemblySpecArchivedVersion struct {
+	ID      UUID   `json:"id"`
+	SpecID  UUID   `json:"spec_id"`
+	Name    string `json:"name"`
+	Version int64  `json:"version"`
 }
 
 // StockAssemblySpecCreate — Новая версия состава. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком.
 type StockAssemblySpecCreate struct {
-	SpecID    *UUID  `json:"spec_id,omitempty"`
-	Name      string `json:"name"`
-	ProductID UUID   `json:"product_id"`
+	// SpecID — Спецификация, к которой заводится следующая редакция. Должна существовать в кабинете, а product_id — совпадать с её выходным товаром; состояние прежних версий не важно — редакцию заводят и от архивной. Пусто — новая спецификация
+	SpecID *UUID  `json:"spec_id,omitempty"`
+	Name   string `json:"name"`
+	// Kind — Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство». Вид kit («Комплект») пока не принимается — ответ 400
+	Kind      *string `json:"kind,omitempty"`
+	ProductID UUID    `json:"product_id"`
 	// OutputQty — Сколько выходного товара даёт этот состав
 	OutputQty string                             `json:"output_qty"`
 	Comment   *string                            `json:"comment,omitempty"`
@@ -11372,16 +11757,39 @@ type StockAssemblySpecPage struct {
 	Results []StockAssemblySpec `json:"results"`
 }
 
-// StockAssemblySpecRef — Снимок версии спецификации, по которой заполнен документ. Ссылка на версию, а не на справочник: состав уже скопирован в строки, и правка спецификации завтра не меняет смысл проведённого вчера.
+// StockAssemblySpecRef — Снимок версии спецификации, по которой заполнен документ. Ссылка на версию, а не на справочник: состав уже скопирован в строки, и правка спецификации завтра не меняет смысл проведённого вчера. Версию сервер читает, только когда ссылка появляется — при создании документа и при правке, называющей другую версию: такая версия обязана быть действующей, черновая и архивная отклоняются. Правка черновика с прежним version_id версию не читает, и документ остаётся правимым, даже если версия ушла в архив или удалена; ссылку можно снять.
 type StockAssemblySpecRef struct {
 	SpecID    UUID    `json:"spec_id"`
 	VersionID UUID    `json:"version_id"`
 	Version   int64   `json:"version"`
 	Name      *string `json:"name,omitempty"`
+	// Kind — Вид версии состава на момент заполнения документа; ставит сервер
+	Kind *string `json:"kind,omitempty"`
 }
 
 type StockAssemblySpecStatus struct {
 	Status string `json:"status"`
+}
+
+// StockAssemblySpecUpdate — Полная замена реквизитов и состава черновика. Номер версии и спецификация, к которой она относится, не меняются. Проверки те же, что при заведении версии.
+type StockAssemblySpecUpdate struct {
+	Name string `json:"name"`
+	// Kind — Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство». Вид kit («Комплект») пока не принимается — ответ 400
+	Kind *string `json:"kind,omitempty"`
+	// ProductID — Выходной товар. Сменить его можно только у единственной версии спецификации: другой товар при нескольких версиях — это другая спецификация
+	ProductID UUID `json:"product_id"`
+	// OutputQty — Сколько выходного товара даёт этот состав
+	OutputQty string                             `json:"output_qty"`
+	Comment   *string                            `json:"comment,omitempty"`
+	Lines     []StockAssemblySpecUpdateLinesItem `json:"lines"`
+}
+
+type StockAssemblySpecUpdateLinesItem struct {
+	ProductID UUID `json:"product_id"`
+	// ProductUomID — Единица товара, в которой задано qty; пусто — базовая единица карточки
+	ProductUomID *UUID   `json:"product_uom_id,omitempty"`
+	Qty          string  `json:"qty"`
+	Share        *string `json:"share,omitempty"`
 }
 
 type StockBatch struct {
@@ -11455,7 +11863,8 @@ type StockCompanyPolicyPatch struct {
 type StockDocumentCreate struct {
 	TypeKey StockDocumentCreateTypeKey `json:"type_key"`
 	// Date — Пусто или отсутствует означает рабочую дату кабинета
-	Date       *string           `json:"date,omitempty"`
+	Date *string `json:"date,omitempty"`
+	// BasisID — Документ-основание. У разукомплектации (stock_disassembly) основанием может быть проведённая комплектация (stock_assembly) того же бизнеса и юрлица, родившая разбираемый товар, датой не позже разбора. Тогда части — только товары, которые комплектация списывала (вернуть можно не все), доли стоимости не присылают, комплектация вида production обратно не разбирается, а проведёнными разборами по одной комплектации нельзя разобрать больше, чем она родила. Основание-резерв у разукомплектации этих правил не включает
 	BasisID    *UUID             `json:"basis_id,omitempty"`
 	EntityRefs StockDocumentRefs `json:"entity_refs"`
 	// Payload — Для инвентаризации — фильтр снимка, для остальных видов — содержимое документа
@@ -11527,7 +11936,7 @@ type StockDocumentLine struct {
 	ExpiresAt               *string                               `json:"expires_at,omitempty"`
 	HandlingUnits           []StockDocumentLineHandlingUnit       `json:"handling_units,omitempty"`
 	HandlingUnitAllocations []StockDocumentLineHandlingAllocation `json:"handling_unit_allocations,omitempty"`
-	// Share — Доля стоимости рождённой строки; только у разукомплектации на несколько частей
+	// Share — Доля стоимости рождённой строки; только у разукомплектации без комплектации-основания на несколько частей. У разукомплектации на основании комплектации доли не присылают: присланная доля отклоняется, веса частей сервер берёт из проведения основания
 	Share *string `json:"share,omitempty"`
 }
 
@@ -11577,6 +11986,8 @@ type StockDocumentPayload struct {
 	// Produced — Строки, которые документ РОЖДАЕТ на складе. Только у комплектации и разукомплектации: их `items` — сторона расхода. Цена и сумма здесь не задаются, стоимость выхода равна списанной.
 	Produced []StockDocumentLine   `json:"produced,omitempty"`
 	Spec     *StockAssemblySpecRef `json:"spec,omitempty"`
+	// Kind — Вид комплектации (только stock_assembly): assembly — «Сборка», production — «Производство». Документ, заполненный по составу (`spec`), получает вид версии состава — присланное значение, которое с ней расходится, отклоняется; без состава вид выбирает человек, пусто — assembly. Снимок: новая версия состава с другим видом документ не меняет. Документ без поля читается как assembly. У разукомплектации вида нет
+	Kind *string `json:"kind,omitempty"`
 	// PaperAmount — Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается
 	PaperAmount *string `json:"paper_amount,omitempty"`
 	// PaperVATAmount — В т.ч. НДС документа поставщика, одна сумма (ERP-484, подшаг 5.3). Обязательна, если на дату документа бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне этого периода непустое значение — 400. Сервер раскладывает сумму по строкам
@@ -11596,7 +12007,7 @@ type StockDocumentPayload struct {
 	Amount           *string                         `json:"amount,omitempty"`
 	AllocationMethod *string                         `json:"allocation_method,omitempty"`
 	Targets          []StockDocumentLandedCostTarget `json:"targets,omitempty"`
-	// Posting — Разложение проведения по строкам и партиям, которое пишет сам движок
+	// Posting — Разложение проведения по строкам и партиям, которое пишет сам движок. У разукомплектации на основании комплектации есть блок `disassembly_basis`: `document_id` и `number` основания, `amount` — фактически списанная сумма, `basis_amount` — сумма того же количества по основанию (рождённая сумма основания ÷ рождённое количество × разбираемое количество), `difference` — amount минус basis_amount, `weights` — веса частей по строкам (`line_id`, `weight`), по которым списанное разделено между частями. Веса и `basis_amount` — снимок первого проведения: пересчёт себестоимости цепочки их сохраняет и пересчитывает только `amount` и `difference`; отмена и повторное проведение считают всё заново
 	Posting map[string]json.RawMessage `json:"posting,omitempty"`
 }
 
@@ -11996,20 +12407,21 @@ type StockProductUOM struct {
 
 type StockProductUOMInput struct {
 	// ID — Без идентификатора заводится новая товарная единица
-	ID           *UUID                 `json:"id,omitempty"`
-	ProductID    UUID                  `json:"product_id"`
-	Code         string                `json:"code"`
-	Name         string                `json:"name"`
-	InputUnitID  UUID                  `json:"input_unit_id"`
-	Usage        *StockProductUOMUsage `json:"usage,omitempty"`
-	FactorToBase string                `json:"factor_to_base"`
+	ID          *UUID                 `json:"id,omitempty"`
+	ProductID   UUID                  `json:"product_id"`
+	Code        string                `json:"code"`
+	Name        string                `json:"name"`
+	InputUnitID UUID                  `json:"input_unit_id"`
+	Usage       *StockProductUOMUsage `json:"usage,omitempty"`
+	// FactorToBase — Положительное число; десятичный разделитель — точка или запятая, хранится запись с точкой
+	FactorToBase string `json:"factor_to_base"`
 	// CreatesHandlingUnits — Требует единицы измерения с целой точностью
 	CreatesHandlingUnits *bool `json:"creates_handling_units,omitempty"`
 	// VariableMeasure — Переменная мера: приход складывает количество из фактических мер конкретных единиц, цена за базовую единицу; расход в такой единице невозможен. Требует creates_handling_units
 	VariableMeasure *bool `json:"variable_measure,omitempty"`
-	// QtyStep — Положительный decimal или пусто: количество строки в этой единице обязано быть кратно шагу
+	// QtyStep — Положительное число (точка или запятая) или пусто: количество строки в этой единице обязано быть кратно шагу
 	QtyStep *string `json:"qty_step,omitempty"`
-	// RemnantThreshold — Положительный decimal или пусто. Требует creates_handling_units
+	// RemnantThreshold — Положительное число (точка или запятая) или пусто. Требует creates_handling_units
 	RemnantThreshold *string `json:"remnant_threshold,omitempty"`
 	IsDefaultReceipt *bool   `json:"is_default_receipt,omitempty"`
 	// IsActive — По умолчанию единица активна
@@ -12278,8 +12690,21 @@ type StockReportReservationLine struct {
 	ReleasedQty string `json:"released_qty"`
 	// RemainingQty — Decimal string
 	RemainingQty string `json:"remaining_qty"`
-	// UnbackedQty — Часть остатка строки, не покрытая остатком склада: обещание ждёт поступления
+	// UnbackedQty — Decimal string в базовой единице товара. Часть остатка строки, не покрытая остатком склада: обещание ждёт поступления. Сумма по строкам равна unbacked_qty резерва; без товара остаются самые новые обещания
 	UnbackedQty string `json:"unbacked_qty"`
+	// ActiveSpec — Действующий состав товара строки; null, если действующего состава у товара нет. Сам резерв состав не использует
+	ActiveSpec *StockReportReservationLineSpec `json:"active_spec"`
+}
+
+// StockReportReservationLineSpec — Действующая версия состава изделия у товара строки резерва.
+type StockReportReservationLineSpec struct {
+	VersionID UUID   `json:"version_id"`
+	SpecID    UUID   `json:"spec_id"`
+	Version   int64  `json:"version"`
+	Name      string `json:"name"`
+	Kind      string `json:"kind"`
+	// OutputQty — Decimal string. Сколько изделия даёт один состав, в базовой единице товара
+	OutputQty string `json:"output_qty"`
 }
 
 type StockReportReservationPage struct {
@@ -13104,6 +13529,10 @@ type DocflowFlowDocumentRevisionsResponseItemsItem struct {
 	Status      string  `json:"status"`
 	Files       int64   `json:"files"`
 	HasApproval bool    `json:"has_approval"`
+	// Reason — Причина системной ревизии: schedule:<вид бумаги>:<registered|cancelled>:<номер>:<дата> — график договора пересчитан по допсоглашению или спецификации
+	Reason *string `json:"reason,omitempty"`
+	// System — Ревизию записала система, а не человек правкой карточки
+	System *bool `json:"system,omitempty"`
 }
 
 type FilesContentLinkResponse struct {

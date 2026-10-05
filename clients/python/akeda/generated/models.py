@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 714643e9111d5b47075b5e6ff70df3a91290a79d47f10cb1da6dfee209c157c2).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b6d966214a0201bfa9cf1fe12f178d03aa9d170cdaad1a20293aad6ed821b0e1).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -280,12 +280,15 @@ __all__ = [
     "CoreCompanyPolicy",
     "CoreConflictingRegistrar",
     "CoreContact",
+    "CoreContactPostalAddress",
     "CoreContactAddress",
     "CoreContactCreate",
+    "CoreContactCreatePostalAddress",
     "CoreContactEntityType",
     "CoreContactKind",
     "CoreContactPage",
     "CoreContactPatch",
+    "CoreContactPatchPostalAddress",
     "CoreCurrencyRate",
     "CoreCurrencyRatePage",
     "CoreCurrencyRateRefreshResult",
@@ -473,6 +476,7 @@ __all__ = [
     "CoreSellerCompany",
     "CoreSellerCompanyList",
     "CoreTrialBalance",
+    "CoreTrialBalanceUnassignedCompany",
     "CoreTrialBalanceRow",
     "CoreTrialBalanceTotals",
     "CoreUploadFinishResult",
@@ -605,6 +609,7 @@ __all__ = [
     "DocflowFlowRecognized",
     "DocflowFlowRelation",
     "DocflowFlowRelationInput",
+    "DocflowFlowResponsible",
     "DocflowFlowScheduleStage",
     "DocflowFlowUploadRequest",
     "DocflowFlowUploadResult",
@@ -689,6 +694,7 @@ __all__ = [
     "FinanceCashflowEntryPage",
     "FinanceCashflowItem",
     "FinanceCashflowReport",
+    "FinanceCashflowReportUnassignedCompany",
     "FinanceCashflowSection",
     "FinanceCommercialPosition",
     "FinanceConnector",
@@ -751,10 +757,14 @@ __all__ = [
     "FinancePaymentPlan",
     "FinancePaymentPlanInput",
     "FinancePaymentSourceKind",
+    "FinancePayrollAutomationSettings",
+    "FinancePayrollRun",
+    "FinancePayrollRunList",
     "FinancePnlCoverage",
     "FinancePnlCoverageItem",
     "FinancePnlLine",
     "FinancePnlReport",
+    "FinancePnlReportUnassignedCompany",
     "FinancePnlReportLayout",
     "FinancePnlReportRow",
     "FinanceProject",
@@ -795,11 +805,33 @@ __all__ = [
     "FinanceStatementLinkInputTransactionsItem",
     "FinanceStatementLinkResult",
     "FinanceStatementPage",
+    "FinanceTaxKind",
+    "FinanceTaxKindAmount",
+    "FinanceTaxKindPage",
+    "FinanceTaxMonth",
+    "FinanceTaxMonthInput",
+    "FinanceTaxMonthLine",
+    "FinanceTaxMonthPage",
+    "FinanceTaxMonthPayload",
+    "FinanceTaxMonthPayment",
+    "FinanceTaxMonthUpdateInput",
+    "FinanceTaxPayment",
+    "FinanceTaxPaymentPage",
+    "FinanceTaxRecipient",
+    "FinanceTaxRecipientFromPaymentInput",
+    "FinanceTaxSettings",
+    "FinanceTaxSettingsInput",
+    "FinanceTaxSummary",
     "FinanceTransaction",
     "FinanceTransactionCategorize",
     "FinanceTransactionCreate",
     "FinanceTransactionPage",
+    "FinanceTransactionRestoreResult",
+    "FinanceTransactionRestoreResultFailedItem",
     "FinanceTransactionTotals",
+    "FinanceZReportInput",
+    "FinanceZReportLine",
+    "FinanceZReportResult",
     "HubCounters",
     "HubOverview",
     "HubProject",
@@ -864,6 +896,7 @@ __all__ = [
     "MailThread",
     "ManagedChecklistItem",
     "ManagedChecklistPatch",
+    "MarketplaceBuyoutCohort",
     "MarketplaceComponentDataThrough",
     "MarketplaceComponentFreshness",
     "MarketplaceOzonCost",
@@ -1014,12 +1047,15 @@ __all__ = [
     "StockAccountTransferLine",
     "StockAccountTransferProposal",
     "StockAssemblySpec",
+    "StockAssemblySpecArchivedVersion",
     "StockAssemblySpecCreate",
     "StockAssemblySpecCreateLinesItem",
     "StockAssemblySpecLine",
     "StockAssemblySpecPage",
     "StockAssemblySpecRef",
     "StockAssemblySpecStatus",
+    "StockAssemblySpecUpdate",
+    "StockAssemblySpecUpdateLinesItem",
     "StockBatch",
     "StockBatchPage",
     "StockClaimWriteoffCreate",
@@ -1102,6 +1138,7 @@ __all__ = [
     "StockReportPurchasingRow",
     "StockReportPurchasingSource",
     "StockReportReservationLine",
+    "StockReportReservationLineSpec",
     "StockReportReservationPage",
     "StockReportReservationSummary",
     "StockReportRow",
@@ -4084,6 +4121,8 @@ class _CoreContactRequired(TypedDict):
     ogrn: str
     address: str
     legal_address: "CoreContactAddress"
+    #: Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет
+    postal_address: "CoreContactPostalAddress"
     bank_name: str
     bank_bic: str
     bank_account: str
@@ -4102,6 +4141,23 @@ class CoreContact(_CoreContactRequired, total=False):
     system_key: str
     #: Что подсветить в реквизитах по правилу ИНН. Пусто — всё в порядке.
     requisites_issue: Literal['', 'inn_missing', 'inn_invalid', 'kpp_invalid', 'foreign_tax_missing', 'country_invalid']
+
+class CoreContactPostalAddress(TypedDict):
+    """Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет"""
+
+    postal_code: str
+    #: Код субъекта РФ для формализованного документа
+    region_code: str
+    region_name: str
+    district: str
+    city: str
+    settlement: str
+    street: str
+    building: str
+    block: str
+    #: Офис или помещение
+    flat: str
+    info: str
 
 class CoreContactAddress(TypedDict):
     postal_code: str
@@ -4136,6 +4192,8 @@ class CoreContactCreate(_CoreContactCreateRequired, total=False):
     ogrn: str
     address: str
     legal_address: "CoreContactAddress"
+    #: Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет
+    postal_address: "CoreContactCreatePostalAddress"
     bank_name: str
     bank_bic: str
     bank_account: str
@@ -4145,6 +4203,23 @@ class CoreContactCreate(_CoreContactCreateRequired, total=False):
     #: Нерезидент: налоговый номер страны регистрации вместо ИНН.
     tax_number: str
     custom: Dict[str, Any]
+
+class CoreContactCreatePostalAddress(TypedDict):
+    """Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет"""
+
+    postal_code: str
+    #: Код субъекта РФ для формализованного документа
+    region_code: str
+    region_name: str
+    district: str
+    city: str
+    settlement: str
+    street: str
+    building: str
+    block: str
+    #: Офис или помещение
+    flat: str
+    info: str
 
 CoreContactEntityType = Literal['legal', 'individual', 'sole_prop']
 
@@ -4170,6 +4245,8 @@ class CoreContactPatch(TypedDict, total=False):
     ogrn: str
     address: str
     legal_address: "CoreContactAddress"
+    #: Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет
+    postal_address: "CoreContactPatchPostalAddress"
     bank_name: str
     bank_bic: str
     bank_account: str
@@ -4180,6 +4257,23 @@ class CoreContactPatch(TypedDict, total=False):
     is_customer: bool
     is_supplier: bool
     folder_id: Optional["UUID"]
+
+class CoreContactPatchPostalAddress(TypedDict):
+    """Почтовый адрес для писем и печатных форм (ERP-1782). Из реестра ФНС не приходит: автозаполнение по ИНН его не меняет"""
+
+    postal_code: str
+    #: Код субъекта РФ для формализованного документа
+    region_code: str
+    region_name: str
+    district: str
+    city: str
+    settlement: str
+    street: str
+    building: str
+    block: str
+    #: Офис или помещение
+    flat: str
+    info: str
 
 class _CoreCurrencyRateRequired(TypedDict):
     id: "UUID"
@@ -6175,6 +6269,19 @@ class _CoreTrialBalanceRequired(TypedDict):
 
 class CoreTrialBalance(_CoreTrialBalanceRequired, total=False):
     accounting_basis: "AccountingBasis"
+    #: При отборе по юрлицу — итоги проводок без юрлица за тот же период; только при доступе ко всей книге
+    unassigned_company: "CoreTrialBalanceUnassignedCompany"
+
+class CoreTrialBalanceUnassignedCompany(TypedDict):
+    """При отборе по юрлицу — итоги проводок без юрлица за тот же период; только при доступе ко всей книге"""
+
+    opening_debit: str
+    opening_credit: str
+    turnover_debit: str
+    turnover_credit: str
+    closing_debit: str
+    closing_credit: str
+    balanced: bool
 
 class _CoreTrialBalanceRowRequired(TypedDict):
     account_id: "UUID"
@@ -7500,6 +7607,8 @@ class DocflowFlowContractTerms(_DocflowFlowContractTermsRequired, total=False):
     renewal_terms: str
     #: Воронка продаж или закупок договора: продажи или закупки по договору идут в неё (пометка кабинета, не текст бумаги)
     order_funnel_id: str
+    #: Ответственные по договору с долями: продажи и закупки периодов получают их по умолчанию; сумма долей — ровно 100
+    responsibles: List["DocflowFlowResponsible"]
 
 class DocflowFlowCreateInput(TypedDict):
     company_id: "UUID"
@@ -7700,6 +7809,13 @@ class DocflowFlowRelationInput(TypedDict):
     kind: Literal['basis', 'attachment', 'amends', 'replaces']
     target_id: "UUID"
     target_version: int
+
+class DocflowFlowResponsible(TypedDict):
+    """Ответственный сотрудник договора и его доля в процентах."""
+
+    employee_id: str
+    #: Доля в процентах десятичным текстом
+    share: str
 
 class _DocflowFlowScheduleStageRequired(TypedDict):
     id: "UUID"
@@ -8848,7 +8964,13 @@ class FinanceCashflowItem(TypedDict):
     net: str
     level: str
 
-FinanceCashflowReport = TypedDict("FinanceCashflowReport", {"currency": str, "from": str, "to": str, "inflow": str, "outflow": str, "uncategorized_net": str, "net_cash_flow": str, "transfer_in": str, "transfer_out": str, "sections": List["FinanceCashflowSection"], "columns": List["FinanceReportColumn"]}, total=False)
+FinanceCashflowReport = TypedDict("FinanceCashflowReport", {"unassigned_company": "FinanceCashflowReportUnassignedCompany", "currency": str, "from": str, "to": str, "inflow": str, "outflow": str, "uncategorized_net": str, "net_cash_flow": str, "transfer_in": str, "transfer_out": str, "sections": List["FinanceCashflowSection"], "columns": List["FinanceReportColumn"]}, total=False)
+
+class FinanceCashflowReportUnassignedCompany(TypedDict, total=False):
+    """При отборе по юрлицу — чистый поток движений без юрлица и всего бизнеса"""
+
+    net_cash_flow: str
+    business_net_cash_flow: str
 
 class FinanceCashflowSection(TypedDict):
     key: Literal['operating', 'investing', 'financing']
@@ -9055,7 +9177,12 @@ class FinanceDividendPolicyInput(_FinanceDividendPolicyInputRequired, total=Fals
     business_id: "UUID"
     #: Совместимый алиас: сервер использует бизнес указанного юрлица
     company_id: "UUID"
-    base_kind: Literal['pnl', 'operating_cashflow']
+    #: База: ledger_profit — прибыль по книге (general_ledger_profit ОПиУ); cashflow_total — весь ДДС, чистый поток без внутренних переводов; operating_cashflow — операционный раздел ДДС; pnl_layout_row — строка макета ОПиУ (нужны base_layout_id и base_layout_row); pnl — устаревшее имя ledger_profit
+    base_kind: Literal['ledger_profit', 'cashflow_total', 'operating_cashflow', 'pnl_layout_row', 'pnl']
+    #: Макет ОПиУ для base_kind=pnl_layout_row
+    base_layout_id: "UUID"
+    #: Идентификатор строки макета ОПиУ для base_kind=pnl_layout_row
+    base_layout_row: str
     #: through распределяет прибыль и убыток между владельцами в одинаковых долях
     loss_mode: Literal['positive_only', 'through']
     #: Устаревшее поле; политика всегда использует процент результата
@@ -9547,9 +9674,38 @@ class FinancePaymentPlanInput(_FinancePaymentPlanInputRequired, total=False):
 
 FinancePaymentSourceKind = Literal['bank', 'cash', 'unset']
 
-class FinancePnlCoverage(TypedDict):
+class FinancePayrollAutomationSettings(TypedDict):
+    #: Ежемесячно заводить черновики начисления по штату
+    auto_accrual: bool
+
+class _FinancePayrollRunRequired(TypedDict):
+    id: "UUID"
+    scope_key: str
+    scope_name: str
+    #: Месяц в формате YYYY-MM
+    month: str
+    status: Literal['running', 'draft', 'empty', 'blocked', 'failed']
+    created_at: str
+    updated_at: str
+
+class FinancePayrollRun(_FinancePayrollRunRequired, total=False):
+    company_id: "UUID"
+    business_id: "UUID"
+    document_id: "UUID"
+    number: str
+    #: Причина блокировки или ошибки
+    error: str
+
+class FinancePayrollRunList(TypedDict):
+    results: List["FinancePayrollRun"]
+
+class _FinancePnlCoverageRequired(TypedDict):
     missing: List["FinancePnlCoverageItem"]
     duplicated: List["FinancePnlCoverageItem"]
+
+class FinancePnlCoverage(_FinancePnlCoverageRequired, total=False):
+    #: Налоги раздела «Налоги» за период без строки-источника «Налоги» в макете; итог и прибыль их включают
+    taxes: str
 
 class _FinancePnlCoverageItemRequired(TypedDict):
     id: "UUID"
@@ -9565,7 +9721,13 @@ class FinancePnlLine(TypedDict):
     sign: int
     amount: str
 
-FinancePnlReport = TypedDict("FinancePnlReport", {"rnp_metrics": Dict[str, str], "currency": str, "from": str, "to": str, "revenue": str, "expense": str, "profit": str, "unclassified_in": str, "unclassified_out": str, "lines": List["FinancePnlLine"], "layout_rows": List["FinancePnlReportRow"], "layout": "FinancePnlReportLayout", "columns": List["FinanceReportColumn"], "companies": List["FinanceReportCompany"], "accounting_basis": "AccountingBasis"}, total=False)
+FinancePnlReport = TypedDict("FinancePnlReport", {"unassigned_company": "FinancePnlReportUnassignedCompany", "rnp_metrics": Dict[str, str], "currency": str, "from": str, "to": str, "revenue": str, "expense": str, "profit": str, "unclassified_in": str, "unclassified_out": str, "lines": List["FinancePnlLine"], "taxes": List["FinanceTaxKindAmount"], "taxes_total": str, "taxes_not_allocated": bool, "layout_rows": List["FinancePnlReportRow"], "layout": "FinancePnlReportLayout", "columns": List["FinanceReportColumn"], "companies": List["FinanceReportCompany"], "accounting_basis": "AccountingBasis"}, total=False)
+
+class FinancePnlReportUnassignedCompany(TypedDict, total=False):
+    """При отборе по юрлицу — результат движений без юрлица и всего бизнеса"""
+
+    profit: str
+    business_profit: str
 
 class FinancePnlReportLayout(TypedDict):
     id: "UUID"
@@ -9914,6 +10076,167 @@ class FinanceStatementPage(TypedDict):
     offset: int
     results: List["FinanceStatement"]
 
+class FinanceTaxKind(TypedDict):
+    """Вид налога кабинета."""
+
+    #: Код вида из перечня закона
+    code: Literal['usn', 'ausn', 'profit', 'eshn', 'patent', 'ip_insurance', 'property', 'transport', 'land', 'trade_fee', 'penalties', 'ndfl', 'insurance', 'vat']
+    #: Название вида в кабинете
+    name: str
+    #: Налог-расход — начисление идёт в строку ОПиУ «Налоги»
+    pnl_expense: bool
+    #: Порядок показа
+    sort: int
+
+class FinanceTaxKindAmount(TypedDict):
+    #: Код вида налога
+    kind: str
+    #: Сумма
+    amount: str
+
+class FinanceTaxKindPage(TypedDict):
+    items: List["FinanceTaxKind"]
+
+class FinanceTaxMonth(TypedDict):
+    """Документ «Налоги за месяц»."""
+
+    id: "UUID"
+    number: str
+    #: Последний день месяца
+    date: str
+    #: Статус документа
+    status: str
+    #: Юрлицо
+    company_id: str
+    comment: str
+    updated_at: str
+    payload: "FinanceTaxMonthPayload"
+
+class FinanceTaxMonthInput(TypedDict, total=False):
+    """Новый черновик «Налоги за месяц»."""
+
+    company_id: "UUID"
+    year: int
+    month: int
+    lines: List["FinanceTaxMonthLine"]
+    #: Сальдо ЕНС на начало учёта — только в первом документе юрлица; плюс — долг, минус — переплата
+    opening: Optional[str]
+    comment: Optional[str]
+
+class _FinanceTaxMonthLineRequired(TypedDict):
+    #: Код вида налога
+    kind: str
+    #: Сумма со знаком; минус — уменьшение по декларации
+    amount: str
+
+class FinanceTaxMonthLine(_FinanceTaxMonthLineRequired, total=False):
+    """Строка начисления."""
+
+    #: Комментарий строки
+    comment: str
+    #: Строку заполнил сервер — из начислений зарплаты или «НДС за квартал»; во входе такие строки игнорируются
+    source: Literal['payroll', 'vat_quarter']
+
+class FinanceTaxMonthPage(TypedDict):
+    items: List["FinanceTaxMonth"]
+
+class _FinanceTaxMonthPayloadRequired(TypedDict):
+    version: int
+    year: int
+    month: int
+    lines: List["FinanceTaxMonthLine"]
+
+class FinanceTaxMonthPayload(_FinanceTaxMonthPayloadRequired, total=False):
+    payments: List["FinanceTaxMonthPayment"]
+    #: Сальдо ЕНС на начало учёта; плюс — долг перед бюджетом, минус — переплата
+    opening: str
+
+class FinanceTaxMonthPayment(TypedDict):
+    """Пополнение ЕНС за месяц, собранное сервером."""
+
+    #: Документ банковской операции
+    document: str
+    date: str
+    #: Сумма платежа
+    amount: str
+
+class FinanceTaxMonthUpdateInput(TypedDict, total=False):
+    """Пересохранение черновика «Налоги за месяц» — строки и комментарий."""
+
+    lines: List["FinanceTaxMonthLine"]
+    #: Сальдо ЕНС на начало учёта — только в первом документе юрлица; плюс — долг, минус — переплата
+    opening: Optional[str]
+    comment: Optional[str]
+
+class FinanceTaxPayment(TypedDict):
+    """Платёж по статье налогов."""
+
+    company: "UUID"
+    transaction: "UUID"
+    document: "UUID"
+    date: str
+    #: Сумма платежа
+    amount: str
+    #: Получатель
+    counterparty_name: str
+    #: ИНН получателя
+    counterparty_inn: str
+    #: Счёт получателя
+    counterparty_account: str
+    #: Пополнение единого налогового счёта по правилу раздела
+    ens: bool
+
+class FinanceTaxPaymentPage(TypedDict):
+    items: List["FinanceTaxPayment"]
+
+class _FinanceTaxRecipientRequired(TypedDict):
+    #: ИНН получателя — 10 или 12 цифр
+    inn: str
+
+class FinanceTaxRecipient(_FinanceTaxRecipientRequired, total=False):
+    """Получатель единого налогового счёта."""
+
+    #: Счёт получателя; пусто — любой счёт этого ИНН
+    account: str
+    #: Название получателя для экрана
+    name: str
+
+class FinanceTaxRecipientFromPaymentInput(TypedDict):
+    transaction_id: "UUID"
+
+class FinanceTaxSettings(TypedDict):
+    """Настройка раздела «Налоги»."""
+
+    #: Статья ДДС платежей налогов; пусто — не настроена
+    payment_item_id: Optional[str]
+    #: Получатели единого налогового счёта
+    ens_recipients: List["FinanceTaxRecipient"]
+
+class FinanceTaxSettingsInput(TypedDict, total=False):
+    """Настройка раздела «Налоги» целиком."""
+
+    #: Статья ДДС вида «Налоги»; пусто — снять
+    payment_item_id: Optional[str]
+    #: Получатели единого налогового счёта
+    ens_recipients: List["FinanceTaxRecipient"]
+
+class FinanceTaxSummary(TypedDict):
+    """Сальдо ЕНС юрлица и обороты отрезка из регистра раздела. Плюс — долг перед бюджетом, минус — переплата."""
+
+    company: "UUID"
+    date_from: str
+    date_to: str
+    #: Сальдо ЕНС на начало отрезка
+    opening: str
+    #: Начислено по видам налогов
+    accrued: List["FinanceTaxKindAmount"]
+    #: Начислено всего
+    accrued_total: str
+    #: Пополнено ЕНС
+    paid: str
+    #: Сальдо ЕНС на конец отрезка
+    closing: str
+
 class _FinanceTransactionRequired(TypedDict):
     id: "UUID"
     date: str
@@ -10000,6 +10323,19 @@ class FinanceTransactionPage(TypedDict):
     results: List["FinanceTransaction"]
     totals: "FinanceTransactionTotals"
 
+class FinanceTransactionRestoreResult(TypedDict):
+    """Какие операции вернулись в учёт и какие нет."""
+
+    #: Возвращённые операции.
+    restored: List["UUID"]
+    #: Операции, которые вернуть не удалось, с причиной.
+    failed: List["FinanceTransactionRestoreResultFailedItem"]
+
+class FinanceTransactionRestoreResultFailedItem(TypedDict):
+    id: "UUID"
+    #: Причина отказа для человека.
+    reason: str
+
 class FinanceTransactionTotals(TypedDict):
     """Итоги по всему отбору, а не по странице. Суммы в валюте учёта по историческому курсу"""
 
@@ -10010,6 +10346,55 @@ class FinanceTransactionTotals(TypedDict):
     currency: str
     #: Сколько операций осталось без пересчёта в валюту учёта: неполный пересчёт не должен выглядеть верным итогом
     unconverted_count: int
+
+class _FinanceZReportInputRequired(TypedDict):
+    company_id: "UUID"
+    date: str
+    lines: List["FinanceZReportLine"]
+
+class FinanceZReportInput(_FinanceZReportInputRequired, total=False):
+    #: Номер смены ККТ; пусто — один отчёт на юрлицо и день
+    shift_number: str
+    #: Статья выручки; пусто — статья продажи дня или умолчание
+    pnl_item_id: Dict[str, Any]
+    #: Наличные смены, decimal string
+    cash: str
+    #: Касса для наличных; обязательна, если наличные больше нуля
+    cash_wallet_id: Dict[str, Any]
+    #: Статья движения денег для прихода наличных
+    cash_item_id: Dict[str, Any]
+    #: Оплаты картой и СБП для сверки, decimal string
+    card: str
+
+class _FinanceZReportLineRequired(TypedDict):
+    #: Количество больше нуля, decimal string
+    quantity: str
+    #: Сумма строки с НДС больше нуля, decimal string
+    amount: str
+
+class FinanceZReportLine(_FinanceZReportLineRequired, total=False):
+    #: Услуга из каталога; без неё нужно название
+    product_id: Dict[str, Any]
+    #: Название услуги, если каталога нет
+    title: str
+
+class _FinanceZReportResultRequired(TypedDict):
+    #: Ключ отчёта: юрлицо, день и смена
+    key: str
+    replayed: bool
+    order_id: str
+    order_number: str
+    act_document_id: str
+    #: Сумма услуг
+    revenue: str
+    #: Наличные и карта
+    paid: str
+    #: Услуги минус оплаты: долг или аванс дня
+    difference: str
+    card: str
+
+class FinanceZReportResult(_FinanceZReportResultRequired, total=False):
+    cash_document_id: str
 
 class HubCounters(TypedDict):
     files: int
@@ -10740,6 +11125,8 @@ class ManagedChecklistPatch(TypedDict):
     #: Пустой массив удаляет только группу с переданным id.
     items: List["ManagedChecklistItem"]
 
+MarketplaceBuyoutCohort = TypedDict("MarketplaceBuyoutCohort", {"from": str, "to": str, "bought": float, "base": float, "pct": Optional[float]}, total=False)
+
 class MarketplaceComponentDataThrough(TypedDict, total=False):
     """Последняя дата операций площадки, уже включённых в каждый компонент отчёта; отсутствующее или null-значение означает, что дата покрытия пока неизвестна."""
 
@@ -10902,7 +11289,7 @@ class MarketplaceOzonOrdersKpi(TypedDict):
     delta_sum: Optional[float]
     delta_qty: Optional[float]
 
-MarketplaceOzonOrdersOverview = TypedDict("MarketplaceOzonOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "scheme": Literal['all', 'fbo', 'fbs'], "kpi": Dict[str, "MarketplaceOzonOrdersKpi"], "daily": List["MarketplaceOzonOrdersDailyRow"], "products": List["MarketplaceOzonOrdersProductRow"], "summary_total": Dict[str, int]}, total=False)
+MarketplaceOzonOrdersOverview = TypedDict("MarketplaceOzonOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "scheme": Literal['all', 'fbo', 'fbs'], "kpi": Dict[str, "MarketplaceOzonOrdersKpi"], "daily": List["MarketplaceOzonOrdersDailyRow"], "products": List["MarketplaceOzonOrdersProductRow"], "summary_total": Dict[str, int], "buyout": "MarketplaceBuyoutCohort"}, total=False)
 
 class _MarketplaceOzonOrdersProductRowRequired(TypedDict):
     #: Внешний числовой идентификатор магазина
@@ -11407,7 +11794,7 @@ class MarketplaceWbOrdersKpi(TypedDict):
     #: Изменение к предыдущему дню в процентах
     delta_qty: Optional[float]
 
-MarketplaceWbOrdersOverview = TypedDict("MarketplaceWbOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "kpi": "MarketplaceWbOrdersOverviewKpi", "daily": List["MarketplaceWbOrdersDay"], "products": List["MarketplaceWbOrdersProduct"], "summary_total": Dict[str, int], "demo": bool}, total=False)
+MarketplaceWbOrdersOverview = TypedDict("MarketplaceWbOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "kpi": "MarketplaceWbOrdersOverviewKpi", "daily": List["MarketplaceWbOrdersDay"], "products": List["MarketplaceWbOrdersProduct"], "summary_total": Dict[str, int], "demo": bool, "buyout": "MarketplaceBuyoutCohort"}, total=False)
 
 class MarketplaceWbOrdersOverviewKpi(TypedDict):
     orders: "MarketplaceWbOrdersKpi"
@@ -12431,6 +12818,8 @@ class StockAssemblySpec(TypedDict, total=False):
     version: int
     name: str
     status: Literal['draft', 'active', 'archived']
+    #: Вид состава: assembly — «Сборка», production — «Производство», kit — «Комплект» (заложен, пока не заводится). Хранится у версии: следующая редакция может сменить вид
+    kind: Literal['assembly', 'production', 'kit']
     product_id: "UUID"
     product_sku: str
     product_name: str
@@ -12442,6 +12831,14 @@ class StockAssemblySpec(TypedDict, total=False):
     activated_at: str
     archived_at: str
     lines: List["StockAssemblySpecLine"]
+    #: Версии, которые это действие убрало в архив: активация архивирует прежнюю действующую версию того же товара — своей или другой спецификации. Поле есть только в ответе смены состояния; отсутствует, если в архив ничего не ушло
+    archived_versions: List["StockAssemblySpecArchivedVersion"]
+
+class StockAssemblySpecArchivedVersion(TypedDict):
+    id: "UUID"
+    spec_id: "UUID"
+    name: str
+    version: int
 
 class _StockAssemblySpecCreateRequired(TypedDict):
     name: str
@@ -12453,7 +12850,10 @@ class _StockAssemblySpecCreateRequired(TypedDict):
 class StockAssemblySpecCreate(_StockAssemblySpecCreateRequired, total=False):
     """Новая версия состава. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком."""
 
+    #: Спецификация, к которой заводится следующая редакция. Должна существовать в кабинете, а product_id — совпадать с её выходным товаром; состояние прежних версий не важно — редакцию заводят и от архивной. Пусто — новая спецификация
     spec_id: "UUID"
+    #: Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство». Вид kit («Комплект») пока не принимается — ответ 400
+    kind: Literal['assembly', 'production']
     comment: str
 
 class _StockAssemblySpecCreateLinesItemRequired(TypedDict):
@@ -12495,12 +12895,38 @@ class _StockAssemblySpecRefRequired(TypedDict):
     version: int
 
 class StockAssemblySpecRef(_StockAssemblySpecRefRequired, total=False):
-    """Снимок версии спецификации, по которой заполнен документ. Ссылка на версию, а не на справочник: состав уже скопирован в строки, и правка спецификации завтра не меняет смысл проведённого вчера."""
+    """Снимок версии спецификации, по которой заполнен документ. Ссылка на версию, а не на справочник: состав уже скопирован в строки, и правка спецификации завтра не меняет смысл проведённого вчера. Версию сервер читает, только когда ссылка появляется — при создании документа и при правке, называющей другую версию: такая версия обязана быть действующей, черновая и архивная отклоняются. Правка черновика с прежним version_id версию не читает, и документ остаётся правимым, даже если версия ушла в архив или удалена; ссылку можно снять."""
 
     name: str
+    #: Вид версии состава на момент заполнения документа; ставит сервер
+    kind: Literal['assembly', 'production']
 
 class StockAssemblySpecStatus(TypedDict):
     status: Literal['active', 'archived']
+
+class _StockAssemblySpecUpdateRequired(TypedDict):
+    name: str
+    #: Выходной товар. Сменить его можно только у единственной версии спецификации: другой товар при нескольких версиях — это другая спецификация
+    product_id: "UUID"
+    #: Сколько выходного товара даёт этот состав
+    output_qty: str
+    lines: List["StockAssemblySpecUpdateLinesItem"]
+
+class StockAssemblySpecUpdate(_StockAssemblySpecUpdateRequired, total=False):
+    """Полная замена реквизитов и состава черновика. Номер версии и спецификация, к которой она относится, не меняются. Проверки те же, что при заведении версии."""
+
+    #: Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство». Вид kit («Комплект») пока не принимается — ответ 400
+    kind: Literal['assembly', 'production']
+    comment: str
+
+class _StockAssemblySpecUpdateLinesItemRequired(TypedDict):
+    product_id: "UUID"
+    qty: str
+
+class StockAssemblySpecUpdateLinesItem(_StockAssemblySpecUpdateLinesItemRequired, total=False):
+    #: Единица товара, в которой задано qty; пусто — базовая единица карточки
+    product_uom_id: "UUID"
+    share: str
 
 class StockBatch(TypedDict):
     id: "UUID"
@@ -12576,6 +13002,7 @@ class _StockDocumentCreateRequired(TypedDict):
 class StockDocumentCreate(_StockDocumentCreateRequired, total=False):
     #: Пусто или отсутствует означает рабочую дату кабинета
     date: str
+    #: Документ-основание. У разукомплектации (stock_disassembly) основанием может быть проведённая комплектация (stock_assembly) того же бизнеса и юрлица, родившая разбираемый товар, датой не позже разбора. Тогда части — только товары, которые комплектация списывала (вернуть можно не все), доли стоимости не присылают, комплектация вида production обратно не разбирается, а проведёнными разборами по одной комплектации нельзя разобрать больше, чем она родила. Основание-резерв у разукомплектации этих правил не включает
     basis_id: Optional["UUID"]
     comment: str
 
@@ -12644,7 +13071,7 @@ class StockDocumentLine(_StockDocumentLineRequired, total=False):
     expires_at: str
     handling_units: List["StockDocumentLineHandlingUnit"]
     handling_unit_allocations: List["StockDocumentLineHandlingAllocation"]
-    #: Доля стоимости рождённой строки; только у разукомплектации на несколько частей
+    #: Доля стоимости рождённой строки; только у разукомплектации без комплектации-основания на несколько частей. У разукомплектации на основании комплектации доли не присылают: присланная доля отклоняется, веса частей сервер берёт из проведения основания
     share: str
 
 class StockDocumentLineHandlingAllocation(TypedDict):
@@ -12694,6 +13121,8 @@ class StockDocumentPayload(_StockDocumentPayloadRequired, total=False):
     #: Строки, которые документ РОЖДАЕТ на складе. Только у комплектации и разукомплектации: их `items` — сторона расхода. Цена и сумма здесь не задаются, стоимость выхода равна списанной.
     produced: List["StockDocumentLine"]
     spec: "StockAssemblySpecRef"
+    #: Вид комплектации (только stock_assembly): assembly — «Сборка», production — «Производство». Документ, заполненный по составу (`spec`), получает вид версии состава — присланное значение, которое с ней расходится, отклоняется; без состава вид выбирает человек, пусто — assembly. Снимок: новая версия состава с другим видом документ не меняет. Документ без поля читается как assembly. У разукомплектации вида нет
+    kind: Literal['assembly', 'production']
     #: Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается
     paper_amount: str
     #: В т.ч. НДС документа поставщика, одна сумма (ERP-484, подшаг 5.3). Обязательна, если на дату документа бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне этого периода непустое значение — 400. Сервер раскладывает сумму по строкам
@@ -12713,7 +13142,7 @@ class StockDocumentPayload(_StockDocumentPayloadRequired, total=False):
     amount: str
     allocation_method: Literal['quantity', 'cost', 'manual']
     targets: List["StockDocumentLandedCostTarget"]
-    #: Разложение проведения по строкам и партиям, которое пишет сам движок
+    #: Разложение проведения по строкам и партиям, которое пишет сам движок. У разукомплектации на основании комплектации есть блок `disassembly_basis`: `document_id` и `number` основания, `amount` — фактически списанная сумма, `basis_amount` — сумма того же количества по основанию (рождённая сумма основания ÷ рождённое количество × разбираемое количество), `difference` — amount минус basis_amount, `weights` — веса частей по строкам (`line_id`, `weight`), по которым списанное разделено между частями. Веса и `basis_amount` — снимок первого проведения: пересчёт себестоимости цепочки их сохраняет и пересчитывает только `amount` и `difference`; отмена и повторное проведение считают всё заново
     posting: Dict[str, Any]
 
 class _StockDocumentRefsRequired(TypedDict):
@@ -13127,6 +13556,7 @@ class _StockProductUOMInputRequired(TypedDict):
     code: str
     name: str
     input_unit_id: "UUID"
+    #: Положительное число; десятичный разделитель — точка или запятая, хранится запись с точкой
     factor_to_base: str
 
 class StockProductUOMInput(_StockProductUOMInputRequired, total=False):
@@ -13137,9 +13567,9 @@ class StockProductUOMInput(_StockProductUOMInputRequired, total=False):
     creates_handling_units: bool
     #: Переменная мера: приход складывает количество из фактических мер конкретных единиц, цена за базовую единицу; расход в такой единице невозможен. Требует creates_handling_units
     variable_measure: bool
-    #: Положительный decimal или пусто: количество строки в этой единице обязано быть кратно шагу
+    #: Положительное число (точка или запятая) или пусто: количество строки в этой единице обязано быть кратно шагу
     qty_step: str
-    #: Положительный decimal или пусто. Требует creates_handling_units
+    #: Положительное число (точка или запятая) или пусто. Требует creates_handling_units
     remnant_threshold: str
     is_default_receipt: bool
     #: По умолчанию единица активна
@@ -13402,8 +13832,21 @@ class StockReportReservationLine(TypedDict):
     released_qty: str
     #: Decimal string
     remaining_qty: str
-    #: Часть остатка строки, не покрытая остатком склада: обещание ждёт поступления
+    #: Decimal string в базовой единице товара. Часть остатка строки, не покрытая остатком склада: обещание ждёт поступления. Сумма по строкам равна unbacked_qty резерва; без товара остаются самые новые обещания
     unbacked_qty: str
+    #: Действующий состав товара строки; null, если действующего состава у товара нет. Сам резерв состав не использует
+    active_spec: Optional["StockReportReservationLineSpec"]
+
+class StockReportReservationLineSpec(TypedDict):
+    """Действующая версия состава изделия у товара строки резерва."""
+
+    version_id: "UUID"
+    spec_id: "UUID"
+    version: int
+    name: str
+    kind: Literal['assembly', 'production']
+    #: Decimal string. Сколько изделия даёт один состав, в базовой единице товара
+    output_qty: str
 
 class StockReportReservationPage(TypedDict):
     count: int
@@ -14211,6 +14654,10 @@ class _DocflowFlowDocumentRevisionsResponseItemsItemRequired(TypedDict):
 
 class DocflowFlowDocumentRevisionsResponseItemsItem(_DocflowFlowDocumentRevisionsResponseItemsItemRequired, total=False):
     author_name: str
+    #: Причина системной ревизии: schedule:<вид бумаги>:<registered|cancelled>:<номер>:<дата> — график договора пересчитан по допсоглашению или спецификации
+    reason: str
+    #: Ревизию записала система, а не человек правкой карточки
+    system: bool
 
 class _FilesContentLinkResponseRequired(TypedDict):
     url: str
