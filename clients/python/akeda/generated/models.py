@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0620603236d8d21f99fa4c74e23de2c90ba75163b78f5872f55527f9ed205bac).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9abf278172259f9a37e928eeb728e0e3d9df842ffe227649a7ef1f0c2eb3cfe6).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -631,6 +631,8 @@ __all__ = [
     "DocflowStage",
     "DocflowStageAction",
     "DocflowStateCategory",
+    "DocflowTemplatePastAct",
+    "DocflowTemplatePastActs",
     "DocumentCreate",
     "DocumentOwnerType",
     "DocumentPage",
@@ -8112,6 +8114,26 @@ class DocflowStageAction(_DocflowStageActionRequired, total=False):
     requires_signature: bool
 
 DocflowStateCategory = Literal['in_work', 'awaiting_signature', 'cancellation_requested', 'cancellation_refused', 'draft', 'error', 'signer_invalid', 'approved', 'rejected', 'cancelled', 'interrupted']
+
+class _DocflowTemplatePastActRequired(TypedDict):
+    order_id: "UUID"
+    number: str
+    date: str
+    #: Дата закрывающей бумаги по правилу шаблона
+    closing_date: str
+    amount: str
+    currency: str
+    #: Бумага выпущена этим нажатием
+    issued: bool
+
+class DocflowTemplatePastAct(_DocflowTemplatePastActRequired, total=False):
+    #: Почему бумага не выпущена
+    error: Literal['period_closed', 'act_needs_no_vat', 'failed']
+
+class DocflowTemplatePastActs(TypedDict):
+    items: List["DocflowTemplatePastAct"]
+    issued: int
+    failed: int
 
 class _DocumentCreateRequired(TypedDict):
     title: str

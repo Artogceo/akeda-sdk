@@ -33044,6 +33044,83 @@ paths:
           $ref: '#/components/responses/DocflowFlowIdempotencyConflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/sale-templates/{id}/past-acts:
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowTemplatePastActs
+      x-akeda-audience: external
+      summary: Акты за прошедшие периоды шаблона — предпросмотр
+      description: Заказы шаблона продажи старше окна автоматики (100 дней), у которых срок закрывающей бумаги наступил, а самой бумаги нет. Автоматика задним числом бумаг не выпускает; этот список — что выпустит «Выпустить акты за прошедшие периоды». Заказ в закрытом периоде приходит с кодом отказа period_closed и выпущен не будет.
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          description: Шаблон продажи ядра
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Заказы без закрывающей бумаги
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowTemplatePastActs'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    post:
+      tags:
+        - Docflow flow
+      operationId: docflowIssueTemplatePastActs
+      x-akeda-audience: external
+      summary: Выпустить акты за прошедшие периоды шаблона
+      description: 'Выпускает закрывающие бумаги по заказам из предпросмотра той же функцией, что и автоматика шаблона; автор бумаг — нажавший. Заказ в закрытом периоде не выпускается: в его строке код period_closed. Повтор ничего не задваивает — выпущенное в список больше не попадает.'
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          description: Шаблон продажи ядра
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Итог выпуска по каждому заказу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowTemplatePastActs'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/docflow/sales/{id}/act:
     post:
       tags:
@@ -66987,6 +67064,59 @@ components:
             archived:
               type: integer
               minimum: 0
+    DocflowTemplatePastAct:
+      type: object
+      additionalProperties: false
+      required:
+        - order_id
+        - number
+        - date
+        - closing_date
+        - amount
+        - currency
+        - issued
+      properties:
+        order_id:
+          $ref: '#/components/schemas/UUID'
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        closing_date:
+          type: string
+          format: date
+          description: Дата закрывающей бумаги по правилу шаблона
+        amount:
+          type: string
+        currency:
+          type: string
+        issued:
+          type: boolean
+          description: Бумага выпущена этим нажатием
+        error:
+          type: string
+          enum:
+            - period_closed
+            - act_needs_no_vat
+            - failed
+          description: Почему бумага не выпущена
+    DocflowTemplatePastActs:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - issued
+        - failed
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowTemplatePastAct'
+        issued:
+          type: integer
+        failed:
+          type: integer
     DocflowOrderActInput:
       type: object
       additionalProperties: false

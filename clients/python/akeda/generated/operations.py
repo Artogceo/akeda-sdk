@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0620603236d8d21f99fa4c74e23de2c90ba75163b78f5872f55527f9ed205bac).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9abf278172259f9a37e928eeb728e0e3d9df842ffe227649a7ef1f0c2eb3cfe6).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -432,12 +432,14 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowIssueSaleAct': OperationSpec('POST', '/api/v1/docflow/sales/{id}/act', 'docflow', 'preview', 'docflow.flow:write', True, False, ('id',), 'none', None, None),
     'docflowIssueSaleInvoice': OperationSpec('POST', '/api/v1/docflow/sales/{id}/invoice', 'docflow', 'preview', 'docflow.flow:write', True, False, ('id',), 'none', None, None),
     'docflowIssueSaleUPD': OperationSpec('POST', '/api/v1/docflow/sales/{id}/upd', 'docflow', 'preview', 'docflow.flow:write', True, False, ('id',), 'none', None, None),
+    'docflowIssueTemplatePastActs': OperationSpec('POST', '/api/v1/docflow/sale-templates/{id}/past-acts', 'docflow', 'preview', 'docflow.flow:write', False, False, ('id',), 'none', None, None),
     'docflowListConnections': OperationSpec('GET', '/api/v1/docflow/connections', 'docflow', 'preview', 'docflow.edo:admin', False, False, (), 'none', None, None),
     'docflowListMessages': OperationSpec('GET', '/api/v1/docflow/messages', 'docflow', 'preview', 'docflow.edo:read', False, False, (), 'limit_offset', 200, 50),
     'docflowPaymentRequestRoutePreview': OperationSpec('GET', '/api/v1/docflow/payment-requests/route-preview', 'docflow', 'preview', 'docflow.flow:request', False, False, (), 'none', None, None),
     'docflowResubmitApproval': OperationSpec('POST', '/api/v1/docflow/approvals/{id}/resubmit', 'docflow', 'preview', 'docflow.flow:write', False, False, ('id',), 'none', None, None),
     'docflowSaleDocumentSet': OperationSpec('GET', '/api/v1/docflow/sales/{id}/set', 'docflow', 'preview', 'docflow.flow:read', False, True, ('id',), 'none', None, None),
     'docflowSubmitApproval': OperationSpec('POST', '/api/v1/docflow/approvals', 'docflow', 'preview', 'docflow.flow:write', False, False, (), 'none', None, None),
+    'docflowTemplatePastActs': OperationSpec('GET', '/api/v1/docflow/sale-templates/{id}/past-acts', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
     'filesAbortUpload': OperationSpec('DELETE', '/api/v1/files/uploads/{id}', 'files', 'preview', 'files:write', False, False, ('id',), 'none', None, None),
     'filesCompleteUpload': OperationSpec('POST', '/api/v1/files/uploads/{id}/complete', 'files', 'preview', 'files:write', False, False, ('id',), 'none', None, None),
     'filesContentLink': OperationSpec('GET', '/api/v1/files/items/{id}/content-url', 'files', 'preview', 'files:read', False, False, ('id',), 'none', None, None),

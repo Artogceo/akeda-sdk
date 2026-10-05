@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0620603236d8d21f99fa4c74e23de2c90ba75163b78f5872f55527f9ed205bac).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9abf278172259f9a37e928eeb728e0e3d9df842ffe227649a7ef1f0c2eb3cfe6).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -6834,6 +6834,26 @@ type DocflowStageAction struct {
 }
 
 type DocflowStateCategory = string
+
+type DocflowTemplatePastAct struct {
+	OrderID UUID   `json:"order_id"`
+	Number  string `json:"number"`
+	Date    string `json:"date"`
+	// ClosingDate — Дата закрывающей бумаги по правилу шаблона
+	ClosingDate string `json:"closing_date"`
+	Amount      string `json:"amount"`
+	Currency    string `json:"currency"`
+	// Issued — Бумага выпущена этим нажатием
+	Issued bool `json:"issued"`
+	// Error — Почему бумага не выпущена
+	Error *string `json:"error,omitempty"`
+}
+
+type DocflowTemplatePastActs struct {
+	Items  []DocflowTemplatePastAct `json:"items"`
+	Issued int64                    `json:"issued"`
+	Failed int64                    `json:"failed"`
+}
 
 // DocumentCreate — Владелец задаётся одной ссылкой `task`, `section`, `project`, `milestone` либо парой `owner_type`/`owner_id`.
 type DocumentCreate struct {

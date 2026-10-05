@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0620603236d8d21f99fa4c74e23de2c90ba75163b78f5872f55527f9ed205bac).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9abf278172259f9a37e928eeb728e0e3d9df842ffe227649a7ef1f0c2eb3cfe6).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -6851,6 +6851,26 @@ export interface DocflowStageAction {
 }
 
 export type DocflowStateCategory = "in_work" | "awaiting_signature" | "cancellation_requested" | "cancellation_refused" | "draft" | "error" | "signer_invalid" | "approved" | "rejected" | "cancelled" | "interrupted";
+
+export interface DocflowTemplatePastAct {
+  "order_id": UUID;
+  "number": string;
+  "date": string;
+  /** Дата закрывающей бумаги по правилу шаблона */
+  "closing_date": string;
+  "amount": string;
+  "currency": string;
+  /** Бумага выпущена этим нажатием */
+  "issued": boolean;
+  /** Почему бумага не выпущена */
+  "error"?: "period_closed" | "act_needs_no_vat" | "failed";
+}
+
+export interface DocflowTemplatePastActs {
+  "items": Array<DocflowTemplatePastAct>;
+  "issued": number;
+  "failed": number;
+}
 
 /** Владелец задаётся одной ссылкой `task`, `section`, `project`, `milestone` либо парой `owner_type`/`owner_id`. */
 export interface DocumentCreate {

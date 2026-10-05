@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0620603236d8d21f99fa4c74e23de2c90ba75163b78f5872f55527f9ed205bac).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 9abf278172259f9a37e928eeb728e0e3d9df842ffe227649a7ef1f0c2eb3cfe6).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2841,6 +2841,13 @@ export interface OperationTypes {
     body: models.DocflowOrderUPDInput;
     response: models.DocflowFlowDocument;
   };
+  /** POST /api/v1/docflow/sale-templates/{id}/past-acts — Выпустить акты за прошедшие периоды шаблона */
+  docflowIssueTemplatePastActs: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowTemplatePastActs;
+  };
   /** GET /api/v1/docflow/connections — Получить подключения к операторам ЭДО */
   docflowListConnections: {
     params: Record<string, never>;
@@ -2882,6 +2889,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.DocflowApprovalSubject;
     response: models.DocflowApproval;
+  };
+  /** GET /api/v1/docflow/sale-templates/{id}/past-acts — Акты за прошедшие периоды шаблона — предпросмотр */
+  docflowTemplatePastActs: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowTemplatePastActs;
   };
   /** DELETE /api/v1/files/uploads/{id} — Отменить загрузку */
   filesAbortUpload: {
@@ -6027,12 +6041,14 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowIssueSaleAct: { method: "POST", path: "/api/v1/docflow/sales/{id}/act", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowIssueSaleInvoice: { method: "POST", path: "/api/v1/docflow/sales/{id}/invoice", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowIssueSaleUPD: { method: "POST", path: "/api/v1/docflow/sales/{id}/upd", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowIssueTemplatePastActs: { method: "POST", path: "/api/v1/docflow/sale-templates/{id}/past-acts", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowListConnections: { method: "GET", path: "/api/v1/docflow/connections", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowListMessages: { method: "GET", path: "/api/v1/docflow/messages", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   docflowPaymentRequestRoutePreview: { method: "GET", path: "/api/v1/docflow/payment-requests/route-preview", module: "docflow", stage: "preview", permission: "docflow.flow:request", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowResubmitApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/resubmit", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSaleDocumentSet: { method: "GET", path: "/api/v1/docflow/sales/{id}/set", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowSubmitApproval: { method: "POST", path: "/api/v1/docflow/approvals", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowTemplatePastActs: { method: "GET", path: "/api/v1/docflow/sale-templates/{id}/past-acts", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesAbortUpload: { method: "DELETE", path: "/api/v1/files/uploads/{id}", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesCompleteUpload: { method: "POST", path: "/api/v1/files/uploads/{id}/complete", module: "files", stage: "preview", permission: "files:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   filesContentLink: { method: "GET", path: "/api/v1/files/items/{id}/content-url", module: "files", stage: "preview", permission: "files:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
