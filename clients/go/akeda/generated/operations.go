@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b6d966214a0201bfa9cf1fe12f178d03aa9d170cdaad1a20293aad6ed821b0e1).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 190b6c5ee47d0286df0d3c66a3834efe2694b28ed4d024c02814ae9e01e24e51).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -409,6 +409,7 @@ var Operations = map[string]Operation{
 	"docflowApprovalState":                       {ID: "docflowApprovalState", Method: "GET", Path: "/api/v1/docflow/approvals/state", Module: "docflow", Stage: "preview", Permission: "docflow.flow:read", Idempotent: false, Installation: false, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"docflowApprovals":                           {ID: "docflowApprovals", Method: "GET", Path: "/api/v1/docflow/approvals", Module: "docflow", Stage: "preview", Permission: "docflow.flow:read", Idempotent: false, Installation: false, PathParams: nil, Pagination: "limit_offset", PageSizeMax: 100, PageSizeDefault: 50},
 	"docflowCancelApproval":                      {ID: "docflowCancelApproval", Method: "POST", Path: "/api/v1/docflow/approvals/{id}/cancel", Module: "docflow", Stage: "preview", Permission: "docflow.flow:write", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
+	"docflowCancelIntake":                        {ID: "docflowCancelIntake", Method: "POST", Path: "/api/v1/docflow/messages/{id}/intake/cancel", Module: "docflow", Stage: "preview", Permission: "docflow.edo:write", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"docflowCheckApprovalRoute":                  {ID: "docflowCheckApprovalRoute", Method: "GET", Path: "/api/v1/docflow/approval-routes/check", Module: "docflow", Stage: "preview", Permission: "docflow.flow:configure_payments", Idempotent: false, Installation: false, PathParams: nil, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"docflowCreateFlowUploadSession":             {ID: "docflowCreateFlowUploadSession", Method: "POST", Path: "/api/v1/docflow/flow/documents/{id}/upload-sessions", Module: "docflow", Stage: "preview", Permission: "docflow.flow:write", Idempotent: true, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},
 	"docflowDecideApproval":                      {ID: "docflowDecideApproval", Method: "POST", Path: "/api/v1/docflow/approvals/{id}/decisions", Module: "docflow", Stage: "preview", Permission: "docflow.flow:approve", Idempotent: false, Installation: false, PathParams: []string{"id"}, Pagination: "none", PageSizeMax: 0, PageSizeDefault: 0},

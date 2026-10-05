@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b6d966214a0201bfa9cf1fe12f178d03aa9d170cdaad1a20293aad6ed821b0e1).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 190b6c5ee47d0286df0d3c66a3834efe2694b28ed4d024c02814ae9e01e24e51).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2686,6 +2686,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.DocflowApprovalCancelInput;
     response: models.DocflowApproval;
+  };
+  /** POST /api/v1/docflow/messages/{id}/intake/cancel — Отменить приёмку входящего документа к учёту */
+  docflowCancelIntake: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowIntakePreview;
   };
   /** GET /api/v1/docflow/approval-routes/check — Проверить, по какому маршруту пойдёт предмет */
   docflowCheckApprovalRoute: {
@@ -6159,6 +6166,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowApprovalState: { method: "GET", path: "/api/v1/docflow/approvals/state", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApprovals: { method: "GET", path: "/api/v1/docflow/approvals", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   docflowCancelApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/cancel", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowCancelIntake: { method: "POST", path: "/api/v1/docflow/messages/{id}/intake/cancel", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowCheckApprovalRoute: { method: "GET", path: "/api/v1/docflow/approval-routes/check", module: "docflow", stage: "preview", permission: "docflow.flow:configure_payments", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowCreateFlowUploadSession: { method: "POST", path: "/api/v1/docflow/flow/documents/{id}/upload-sessions", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowDecideApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/decisions", module: "docflow", stage: "preview", permission: "docflow.flow:approve", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

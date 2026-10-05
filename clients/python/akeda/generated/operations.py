@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b6d966214a0201bfa9cf1fe12f178d03aa9d170cdaad1a20293aad6ed821b0e1).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 190b6c5ee47d0286df0d3c66a3834efe2694b28ed4d024c02814ae9e01e24e51).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -410,6 +410,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowApprovalState': OperationSpec('GET', '/api/v1/docflow/approvals/state', 'docflow', 'preview', 'docflow.flow:read', False, False, (), 'none', None, None),
     'docflowApprovals': OperationSpec('GET', '/api/v1/docflow/approvals', 'docflow', 'preview', 'docflow.flow:read', False, False, (), 'limit_offset', 100, 50),
     'docflowCancelApproval': OperationSpec('POST', '/api/v1/docflow/approvals/{id}/cancel', 'docflow', 'preview', 'docflow.flow:write', False, False, ('id',), 'none', None, None),
+    'docflowCancelIntake': OperationSpec('POST', '/api/v1/docflow/messages/{id}/intake/cancel', 'docflow', 'preview', 'docflow.edo:write', False, False, ('id',), 'none', None, None),
     'docflowCheckApprovalRoute': OperationSpec('GET', '/api/v1/docflow/approval-routes/check', 'docflow', 'preview', 'docflow.flow:configure_payments', False, False, (), 'none', None, None),
     'docflowCreateFlowUploadSession': OperationSpec('POST', '/api/v1/docflow/flow/documents/{id}/upload-sessions', 'docflow', 'preview', 'docflow.flow:write', True, False, ('id',), 'none', None, None),
     'docflowDecideApproval': OperationSpec('POST', '/api/v1/docflow/approvals/{id}/decisions', 'docflow', 'preview', 'docflow.flow:approve', False, False, ('id',), 'none', None, None),

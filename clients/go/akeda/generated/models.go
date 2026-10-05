@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b6d966214a0201bfa9cf1fe12f178d03aa9d170cdaad1a20293aad6ed821b0e1).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 190b6c5ee47d0286df0d3c66a3834efe2694b28ed4d024c02814ae9e01e24e51).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -5667,6 +5667,25 @@ type DiscussionCommentUpdate struct {
 
 type DiscussionOwnerType = string
 
+// DocflowAcceptedDocument — Учётный документ кабинета, заведённый приёмкой.
+type DocflowAcceptedDocument struct {
+	ID UUID `json:"id"`
+	// Number — Наш номер из нумератора кабинета. Номер продавца лежит в содержимом документа: занять им наш сквозной счётчик значит однажды получить два своих документа с одним номером от двух разных поставщиков
+	Number string `json:"number"`
+	// Date — Дата документа ГГГГ-ММ-ДД. По умолчанию это дата документа поставщика: операция произошла тогда, когда её совершил он, и датировать её днём приёмки значит поставить факт не в тот период
+	Date string `json:"date"`
+	// TypeKey — Ключ вида документа; у приёмки docflow_incoming
+	TypeKey string `json:"type_key"`
+	// TypeName — Имя вида в кабинете. Право клиента: вид можно переименовать, и код держит его за ключ, а не за название
+	TypeName string `json:"type_name"`
+	// Status — Состояние учётного документа. Приёмка заводит ЧЕРНОВИК: проведение принадлежит модулям — владельцам регистров
+	Status string `json:"status"`
+	// MarkedDeleted — Документ помечен на удаление. Такой пакет принимается заново: пометка и есть способ сказать «этот документ ошибочный»
+	MarkedDeleted bool `json:"marked_deleted"`
+	// AcceptedAt — Момент приёмки; пусто, если он не записан
+	AcceptedAt string `json:"accepted_at"`
+}
+
 type DocflowAdvanceInvoiceInput struct {
 	AdvanceID UUID `json:"advance_id"`
 	// Date — Дата счёта-фактуры; пусто — дата получения аванса
@@ -6549,6 +6568,177 @@ type DocflowFlowUploadRequest struct {
 type DocflowFlowUploadResult struct {
 	Document DocflowFlowDocument `json:"document"`
 	FileID   UUID                `json:"file_id"`
+}
+
+// DocflowIntakeCounterparty — Вторая сторона и то, с кем мы её свели. Порядок узнавания жёсткий, и каждая ступень сильнее следующей: решение человека этим же запросом, сопоставление зеркала пакета, ЗАПИСАННОЕ решение по этому участнику обмена и, наконец, поиск в справочнике по ИНН и КПП. Последняя ступень — догадка, и она называет себя догадкой (match: guess), а не выдаёт себя за чьё-то решение. Разбор у неё общий с автоматчем выгрузок: второй механизм узнавания рядом с существующим разошёлся бы с ним на первой же правке — молча и в пользу дубля. Неоднозначность не разрешается никогда: ИНН, совпавший у двух юрлиц, которых не развёл КПП, уходит человеку списком options.
+type DocflowIntakeCounterparty struct {
+	// Contact — Карточка контрагента кабинета; null — свести не с кем, и приёмка отвечает проверкой docflow.edo.contact_required
+	Contact *UUID `json:"contact"`
+	// ContactName — Имя этой карточки в кабинете
+	ContactName string `json:"contact_name"`
+	// Name — Имя стороны словами оператора либо файла продавца
+	Name string `json:"name"`
+	INN  string `json:"inn"`
+	KPP  string `json:"kpp"`
+	// Match — Откуда взялся контрагент: manual — решение человека, auto — записанное сопоставление, guess — наша догадка по реквизитам прямо сейчас, нигде не записанная, none — не свели ни с кем
+	Match string `json:"match"`
+	// Options — Наши контрагенты с тем же ИНН, когда выбрать между ними обязан человек. Непустой список означает «такие у нас уже есть, выбери» — и потому же означает, что заводить нового НЕ НАДО: там, где контрагент с такими реквизитами уже заведён, место кнопке «связать с существующим», а не «завести».
+	Options []DocflowIntakeCounterpartyOption `json:"options,omitempty"`
+}
+
+// DocflowIntakeCounterpartyOption — Один наш контрагент на выбор человеку. КПП здесь не для полноты: он единственное, чем два юрлица с одним ИНН различаются.
+type DocflowIntakeCounterpartyOption struct {
+	ID   UUID   `json:"id"`
+	Name string `json:"name"`
+	KPP  string `json:"kpp"`
+}
+
+// DocflowIntakeLine — Строка товарной таблицы чужого документа вместе с тем, что мы про неё предлагаем. Числа остаются СТРОКАМИ ровно так, как их написал поставщик: сумма в чужом документе такая, какую он подписал, и наша задача её донести, а не поправить. Расхождения покажет сверка, а не молчаливое округление.
+type DocflowIntakeLine struct {
+	// Number — Номер строки в файле поставщика. По нему человек соотносит экран с бумагой, и по нему же приходит его решение
+	Number int64 `json:"number"`
+	// Name — Наименование товара словами поставщика
+	Name string `json:"name"`
+	// Article — Артикул поставщика
+	Article string `json:"article"`
+	// Code — Код товара у поставщика
+	Code string `json:"code"`
+	// UnitCode — Код ОКЕИ единицы измерения
+	UnitCode string `json:"unit_code"`
+	UnitName string `json:"unit_name"`
+	Quantity string `json:"quantity"`
+	// Price — Цена единицы словами поставщика
+	Price            string `json:"price"`
+	AmountWithoutVAT string `json:"amount_without_vat"`
+	// VATRate — Ставка налога словами файла
+	VATRate string `json:"vat_rate"`
+	// VATAmount — Сумма налога. Пуста при отметке «без НДС»: нуля там нет, и подставить его значит превратить необлагаемую поставку в облагаемую с нулевым налогом
+	VATAmount string `json:"vat_amount"`
+	// VATWithout — Отметка «без НДС» у строки
+	VATWithout    bool   `json:"vat_without"`
+	AmountWithVAT string `json:"amount_with_vat"`
+	// Key — Ключ соответствия: то, по чему эта строка узнаётся в СЛЕДУЮЩЕМ документе того же поставщика. Собирается с приставкой вида `арт:`, `код:` или `наим:` — артикул «100» и наименование «100» разные вещи, и без приставки они стали бы одной строкой соответствий. Показывается затем, чтобы человек понимал, что именно он сопоставляет: не эту накладную, а артикул поставщика на все будущие поставки.
+	Key string `json:"key"`
+	// Product — Номенклатура кабинета; null — не выбрана
+	Product *UUID `json:"product"`
+	// ProductName — Имя выбранной карточки. Подсказка, а не реквизит: карточку могли заархивировать
+	ProductName string `json:"product_name"`
+	// Match — Откуда взялась номенклатура строки. `manual` — сопоставил человек, `auto` — сопоставила машина и решение записано, `rejected` — человек уже посмотрел и сказал «не это» (догадку по такой строке мы больше не показываем), `guess` — наша догадка ПРЯМО СЕЙЧАС, нигде не записанная, `none` — сопоставить не с чем. Записанное соответствие приносит свой способ из справочника внешних ссылок, поэтому здесь встречаются и его значения (`pending`, `import`). Различать обязательно: на экране «это решил человек» и «это мы угадали» выглядят одинаково — одна строка с названием товара, — а значат противоположное.
+	Match string `json:"match"`
+	// Options — С чем ещё эта строка могла совпасть. Непусто только у неоднозначной догадки: выбрать за человека из двух одинаково подходящих товаров значит угадать монеткой и записать это как факт
+	Options []DocflowIntakeProductOption `json:"options,omitempty"`
+}
+
+// DocflowIntakeParty — Сторона сделки, прочитанная из чужого файла. Показывается ТЕКСТОМ, даже когда контрагент сопоставлен: карточку могут переименовать, а документ обязан остаться читаемым таким, каким его прислали.
+type DocflowIntakeParty struct {
+	// Kind — Вид участника словами файла: юридическое лицо, предприниматель, иностранное лицо, физическое лицо
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+	INN  string `json:"inn"`
+	KPP  string `json:"kpp"`
+	// Address — Адрес одной строкой, собранный из частей формата
+	Address string `json:"address"`
+}
+
+// DocflowIntakePreview — Что мы предлагаем принять к учёту. Ничего не меняет и никуда не ходит: предложение обязано быть безопасным, иначе «посмотреть, что там» становится действием с последствиями, и человек побоится его открыть раньше, чем решит принимать.
+type DocflowIntakePreview struct {
+	Message UUID `json:"message"`
+	// Formalized — Нашёлся ли во вложениях титул продавца. Ложь означает, что принимать нечего: пакет либо неформализованный, либо файлы ещё не скачаны — чинится это синхронизацией, а не заполнением формы
+	Formalized bool `json:"formalized"`
+	// Ready — Принимается ли пакет прямо сейчас, без правок
+	Ready bool `json:"ready"`
+	// FlowCardKind — Вид карточки документооборота, которую заведёт приёмка; пусто — карточки по этому пакету не будет. Читается вместе с formalized: непустой вид при formalized = false означает «учётного документа не будет, карточка будет», и приёмка по такому пакету осмысленна. Договор формализованным титулом не бывает по определению — его присылают подписанным PDF, — поэтому кнопку приёмки на нём гасить нельзя, её следует назвать «Завести карточку».
+	FlowCardKind string `json:"flow_card_kind"`
+	// Accepted — Учётный документ, если пакет уже принят; иначе null. Показывается вместо повторной приёмки: второй документ по тому же пакету — это задвоенный приход и задвоенный долг перед поставщиком.
+	Accepted     *DocflowAcceptedDocument  `json:"accepted"`
+	Source       DocflowIntakeSource       `json:"source"`
+	Counterparty DocflowIntakeCounterparty `json:"counterparty"`
+	// Lines — Товарная таблица чужого документа вместе с тем, что мы про неё предлагаем. Всегда массив, даже пустой
+	Lines  []DocflowIntakeLine `json:"lines"`
+	Totals DocflowIntakeTotals `json:"totals"`
+	// Issues — Что мешает принять. Тот же тип и тот же порядок, что у предполётной проверки исходящего документа: интерфейс переводит их одним словарём
+	Issues []DocflowIssue `json:"issues"`
+	// ExecutesOrder — Бумага закрывающая (УПД, акт, накладная поставщика): приёмка с закупкой проводит её исполнение — акт поставщика по заказу, без ВХ и без разнесения (ERP-1810). Строки без номенклатуры этот путь не держат: акт исполняет строки заказа
+	ExecutesOrder *bool `json:"executes_order,omitempty"`
+	// Purchases — Подбор закупки для «Куда в учёт» (ERP-1810): закупка, в которой бумага уже лежит (linked), открытые закупки того же поставщика и юрлица с остатком, равным сумме бумаги (amount), затем прочие, куда она помещается (open). Пусто у счёта и договора и когда закупок нет
+	Purchases []DocflowIntakePurchase `json:"purchases,omitempty"`
+}
+
+// DocflowIntakeProductOption — Вариант номенклатуры, предложенный неоднозначной строке.
+type DocflowIntakeProductOption struct {
+	ID   UUID   `json:"id"`
+	Name string `json:"name"`
+	SKU  string `json:"sku"`
+}
+
+// DocflowIntakePurchase — Закупка, исполнением которой можно принять закрывающую бумагу поставщика (ERP-1810).
+type DocflowIntakePurchase struct {
+	OrderID UUID `json:"order_id"`
+	// Number — Номер закупки
+	Number string  `json:"number"`
+	Title  *string `json:"title,omitempty"`
+	// Date — Дата закупки ГГГГ-ММ-ДД
+	Date *string `json:"date,omitempty"`
+	// Amount — Заказано
+	Amount string `json:"amount"`
+	// Remaining — Осталось исполнить: заказано минус проведённые исполнения
+	Remaining string  `json:"remaining"`
+	Currency  *string `json:"currency,omitempty"`
+	// ContractNumber — Договор закупки
+	ContractNumber *string `json:"contract_number,omitempty"`
+	// Reason — Почему предложена: linked — бумага уже лежит в ней; amount — остаток равен сумме бумаги; open — бумага помещается в остаток
+	Reason string `json:"reason"`
+}
+
+// DocflowIntakeSource — Реквизиты чужого файла обмена, из которого всё прочитано. Разбор частичный и ничего не проверяет: файл уже подписан и юридически значим, и отказать в его чтении из-за реквизита, который нам не нужен, значит потерять поставку из-за чужой ошибки в необязательном поле.
+type DocflowIntakeSource struct {
+	Attachment UUID `json:"attachment"`
+	// AttachmentName — Как это вложение назвал ОПЕРАТОР. Стоит рядом с file_name намеренно: имя оператора («Счёт-фактура № 12») человек видит в списке вложений, а file_name — имя файла обмена, и это разные строки
+	AttachmentName string `json:"attachment_name"`
+	// FileName — ИдФайл: имя файла обмена без расширения, как его записал продавец
+	FileName string `json:"file_name"`
+	// FormatVersion — ВерсФорм: редакция формата словами самого файла
+	FormatVersion string `json:"format_version"`
+	// Knd — Код документа по классификатору; у титула продавца 1115131
+	Knd string `json:"knd"`
+	// Function — Функция документа словами продавца: СЧФ, ДОП, СЧФДОП
+	Function string `json:"function"`
+	// DocumentKindName — Наименование документа, данное ему составителем
+	DocumentKindName string `json:"document_kind_name"`
+	// Number — Номер документа продавца
+	Number string `json:"number"`
+	// Date — Дата документа в форме ГГГГ-ММ-ДД. Пусто — дата не разобралась
+	Date string `json:"date"`
+	// DateRaw — Она же в форме поставщика ДД.ММ.ГГГГ. Показывается, когда разбор не удался: чужую опечатку человек поймёт быстрее, чем пустое поле
+	DateRaw string `json:"date_raw"`
+	// Currency — Валюта документа наименованием и кодом, словами файла
+	Currency string `json:"currency"`
+	// Operation — Содержание операции словами продавца
+	Operation string             `json:"operation"`
+	Seller    DocflowIntakeParty `json:"seller"`
+	Buyer     DocflowIntakeParty `json:"buyer"`
+}
+
+// DocflowIntakeTotals — Итоги таблицы словами поставщика. Мы их не пересчитываем: итог в чужом документе такой, какой он подписал.
+type DocflowIntakeTotals struct {
+	WithoutVAT string `json:"without_vat"`
+	// VATAmount — Пусто при отметке «без НДС» у документа
+	VATAmount string `json:"vat_amount"`
+	WithVAT   string `json:"with_vat"`
+	// VATWithout — Отметка «без НДС» у документа целиком
+	VATWithout bool `json:"vat_without"`
+}
+
+// DocflowIssue — Одна невыполненная проверка. Форма одна на сборку файла формата ФНС и на приёмку входящего документа к учёту: интерфейс переводит их одним словарём, и вторая форма списка означала бы второй словарь. Ни одной надписи для человека здесь нет: код, путь реквизита и подробности значениями — фразу собирает интерфейс, и собирает её на языке читателя.
+type DocflowIssue struct {
+	// Code — Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои пять: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке документа не сопоставлена номенклатура) и docflow.edo.sign_first (документ ещё не подписан: в учёт его принимают после подписи)
+	Code string `json:"code"`
+	// Path — Путь до реквизита ИМЕНАМИ ФНС — именами приказа, а не нашими: этими же словами человек будет искать требование в письме налоговой. Например `Документ/СвСчФакт/СвПрод/Адрес`.
+	Path string `json:"path"`
+	// Line — Номер товарной строки с единицы. Отсутствует, когда реквизит не про строку
+	Line *int64 `json:"line,omitempty"`
+	// Params — Подробности значениями: предел длины, перечень допустимых значений, пришедшее значение. Отсутствует, когда проверке нечего добавить.
+	Params map[string]string `json:"params,omitempty"`
 }
 
 // DocflowMessage — Пакет документов у оператора — конверт, а не учётный документ Акеды.

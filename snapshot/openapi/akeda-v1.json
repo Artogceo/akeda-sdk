@@ -343,6 +343,10 @@
       "description": "Модуль docflow (документы) — согласование как САМОСТОЯТЕЛЬНАЯ сущность: лист больше не часть карточки. Предмет назван нейтральной тройкой «модуль — вид — идентификатор», и внешнего ключа на него нет вовсе, поэтому одним и тем же крылом согласуются и карточка документооборота, и заявка на оплату модуля finance (счета, выписки и расчёты). Согласование ничего не проводит и ни строки регистра не пишет: оно отвечает на один вопрос — можно ли уже выполнить действие, выпускающее бумагу или деньги наружу. Таких действий ровно два: отправить документ контрагенту и отправить заявку в банк; редактирование карточки не глушится никогда. Решение стоит под ОТДЕЛЬНЫМ правом docflow.flow:approve, а настройка маршрутов, замещений и обязательности — под docflow.flow:admin: маршрут решает, кого будут спрашивать про чужие бумаги, и это работа администратора кабинета. Согласование не является подписью: усиленная квалифицированная подпись живёт в крыле обмена с контрагентами и вычисляется на машине человека"
     },
     {
+      "name": "Docflow intake",
+      "description": "Модуль docflow (документы) — приёмка входящего формализованного документа к учёту: разбор титула продавца из вложений пакета, предложение по контрагенту и номенклатуре и подтверждение человека, из которого рождается учётный документ кабинета. Предложение ничего не меняет и стоит под правом чтения. Ограничение «только чтение» раздел не гасит: в боевом ЭДО приёмка не меняет ничего — она заводит черновик в нашей базе по файлу, который уже скачан"
+    },
+    {
       "name": "Mail accounts",
       "description": "Модуль mail (почта сотрудника) — подключение ящиков по IMAP и SMTP, подсказки провайдеров, папки ящика и синхронизация по требованию. Пароль подключения не возвращает ни одна операция: о нём говорит только признак has_credentials"
     },
@@ -54041,6 +54045,71 @@
         }
       }
     },
+    "/api/v1/docflow/messages/{id}/intake/cancel": {
+      "post": {
+        "tags": [
+          "Docflow intake"
+        ],
+        "operationId": "docflowCancelIntake",
+        "x-akeda-audience": "external",
+        "summary": "Отменить приёмку входящего документа к учёту",
+        "description": "«Отменить приёмку к учёту» (ERP-1810). Входящий документ ЭДО (ВХ) и заведённые на его основании черновики помечаются удалёнными у владельца документов — история сохраняется, — а у пакета снимаются связь с учётным документом, время и автор приёмки: пакет снова «не принят», и его можно принять заново, в том числе исполнением закупки. Право docflow.edo:write, как у самой приёмки: наружу не уходит ничего.\n\nРазрешено, пока ничего не проведено. Отказы 409: docflow.edo.intake_cancel_posted — на ВХ есть проведённые документы, их номера в detail и списком documents (id, type_name, number, status, is_marked_deleted): их проведение отменяют у владельца; docflow.edo.intake_cancel_executed — пакет принят исполнением закупки (актом поставщика), его отменяют в финансах; docflow.edo.accounting.not_accepted — пакет не принят, отменять нечего. Повтор безопасен: уже помеченное пропускается, снимается ровно прочитанная связь.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.edo:write",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Входящий пакет, приёмку которого отменяют",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Пересобранное предложение приёмки: пакет снова не принят",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocflowIntakePreview"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/v1/docflow/approvals": {
       "get": {
         "tags": [
@@ -83543,7 +83612,8 @@
               "payable",
               "payment_request",
               "contract_stage",
-              "invoice"
+              "invoice",
+              "contract_rule"
             ]
           },
           "date": {
@@ -107350,6 +107420,559 @@
             "items": {
               "$ref": "#/components/schemas/DocflowMessage"
             }
+          }
+        }
+      },
+      "DocflowIssue": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Одна невыполненная проверка. Форма одна на сборку файла формата ФНС и на приёмку входящего документа к учёту: интерфейс переводит их одним словарём, и вторая форма списка означала бы второй словарь. Ни одной надписи для человека здесь нет: код, путь реквизита и подробности значениями — фразу собирает интерфейс, и собирает её на языке читателя.",
+        "required": [
+          "code",
+          "path"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои пять: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке документа не сопоставлена номенклатура) и docflow.edo.sign_first (документ ещё не подписан: в учёт его принимают после подписи)"
+          },
+          "path": {
+            "type": "string",
+            "description": "Путь до реквизита ИМЕНАМИ ФНС — именами приказа, а не нашими: этими же словами человек будет искать требование в письме налоговой. Например `Документ/СвСчФакт/СвПрод/Адрес`."
+          },
+          "line": {
+            "type": "integer",
+            "description": "Номер товарной строки с единицы. Отсутствует, когда реквизит не про строку"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Подробности значениями: предел длины, перечень допустимых значений, пришедшее значение. Отсутствует, когда проверке нечего добавить."
+          }
+        }
+      },
+      "DocflowIntakePreview": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Что мы предлагаем принять к учёту. Ничего не меняет и никуда не ходит: предложение обязано быть безопасным, иначе «посмотреть, что там» становится действием с последствиями, и человек побоится его открыть раньше, чем решит принимать.",
+        "required": [
+          "message",
+          "formalized",
+          "ready",
+          "flow_card_kind",
+          "accepted",
+          "source",
+          "counterparty",
+          "lines",
+          "totals",
+          "issues"
+        ],
+        "properties": {
+          "message": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "formalized": {
+            "type": "boolean",
+            "description": "Нашёлся ли во вложениях титул продавца. Ложь означает, что принимать нечего: пакет либо неформализованный, либо файлы ещё не скачаны — чинится это синхронизацией, а не заполнением формы"
+          },
+          "ready": {
+            "type": "boolean",
+            "description": "Принимается ли пакет прямо сейчас, без правок"
+          },
+          "flow_card_kind": {
+            "type": "string",
+            "enum": [
+              "",
+              "contract",
+              "amendment",
+              "specification",
+              "act"
+            ],
+            "description": "Вид карточки документооборота, которую заведёт приёмка; пусто — карточки по этому пакету не будет. Читается вместе с formalized: непустой вид при formalized = false означает «учётного документа не будет, карточка будет», и приёмка по такому пакету осмысленна. Договор формализованным титулом не бывает по определению — его присылают подписанным PDF, — поэтому кнопку приёмки на нём гасить нельзя, её следует назвать «Завести карточку»."
+          },
+          "accepted": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DocflowAcceptedDocument"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Учётный документ, если пакет уже принят; иначе null. Показывается вместо повторной приёмки: второй документ по тому же пакету — это задвоенный приход и задвоенный долг перед поставщиком."
+          },
+          "source": {
+            "$ref": "#/components/schemas/DocflowIntakeSource"
+          },
+          "counterparty": {
+            "$ref": "#/components/schemas/DocflowIntakeCounterparty"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocflowIntakeLine"
+            },
+            "description": "Товарная таблица чужого документа вместе с тем, что мы про неё предлагаем. Всегда массив, даже пустой"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/DocflowIntakeTotals"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocflowIssue"
+            },
+            "description": "Что мешает принять. Тот же тип и тот же порядок, что у предполётной проверки исходящего документа: интерфейс переводит их одним словарём"
+          },
+          "executes_order": {
+            "type": "boolean",
+            "description": "Бумага закрывающая (УПД, акт, накладная поставщика): приёмка с закупкой проводит её исполнение — акт поставщика по заказу, без ВХ и без разнесения (ERP-1810). Строки без номенклатуры этот путь не держат: акт исполняет строки заказа"
+          },
+          "purchases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocflowIntakePurchase"
+            },
+            "description": "Подбор закупки для «Куда в учёт» (ERP-1810): закупка, в которой бумага уже лежит (linked), открытые закупки того же поставщика и юрлица с остатком, равным сумме бумаги (amount), затем прочие, куда она помещается (open). Пусто у счёта и договора и когда закупок нет"
+          }
+        }
+      },
+      "DocflowIntakePurchase": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Закупка, исполнением которой можно принять закрывающую бумагу поставщика (ERP-1810).",
+        "required": [
+          "order_id",
+          "number",
+          "amount",
+          "remaining",
+          "reason"
+        ],
+        "properties": {
+          "order_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "number": {
+            "type": "string",
+            "description": "Номер закупки"
+          },
+          "title": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "description": "Дата закупки ГГГГ-ММ-ДД"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Заказано"
+          },
+          "remaining": {
+            "type": "string",
+            "description": "Осталось исполнить: заказано минус проведённые исполнения"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "contract_number": {
+            "type": "string",
+            "description": "Договор закупки"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "linked",
+              "amount",
+              "open"
+            ],
+            "description": "Почему предложена: linked — бумага уже лежит в ней; amount — остаток равен сумме бумаги; open — бумага помещается в остаток"
+          }
+        }
+      },
+      "DocflowIntakeSource": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Реквизиты чужого файла обмена, из которого всё прочитано. Разбор частичный и ничего не проверяет: файл уже подписан и юридически значим, и отказать в его чтении из-за реквизита, который нам не нужен, значит потерять поставку из-за чужой ошибки в необязательном поле.",
+        "required": [
+          "attachment",
+          "attachment_name",
+          "file_name",
+          "format_version",
+          "knd",
+          "function",
+          "document_kind_name",
+          "number",
+          "date",
+          "date_raw",
+          "currency",
+          "operation",
+          "seller",
+          "buyer"
+        ],
+        "properties": {
+          "attachment": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "attachment_name": {
+            "type": "string",
+            "description": "Как это вложение назвал ОПЕРАТОР. Стоит рядом с file_name намеренно: имя оператора («Счёт-фактура № 12») человек видит в списке вложений, а file_name — имя файла обмена, и это разные строки"
+          },
+          "file_name": {
+            "type": "string",
+            "description": "ИдФайл: имя файла обмена без расширения, как его записал продавец"
+          },
+          "format_version": {
+            "type": "string",
+            "description": "ВерсФорм: редакция формата словами самого файла"
+          },
+          "knd": {
+            "type": "string",
+            "description": "Код документа по классификатору; у титула продавца 1115131"
+          },
+          "function": {
+            "type": "string",
+            "description": "Функция документа словами продавца: СЧФ, ДОП, СЧФДОП"
+          },
+          "document_kind_name": {
+            "type": "string",
+            "description": "Наименование документа, данное ему составителем"
+          },
+          "number": {
+            "type": "string",
+            "description": "Номер документа продавца"
+          },
+          "date": {
+            "type": "string",
+            "description": "Дата документа в форме ГГГГ-ММ-ДД. Пусто — дата не разобралась"
+          },
+          "date_raw": {
+            "type": "string",
+            "description": "Она же в форме поставщика ДД.ММ.ГГГГ. Показывается, когда разбор не удался: чужую опечатку человек поймёт быстрее, чем пустое поле"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Валюта документа наименованием и кодом, словами файла"
+          },
+          "operation": {
+            "type": "string",
+            "description": "Содержание операции словами продавца"
+          },
+          "seller": {
+            "$ref": "#/components/schemas/DocflowIntakeParty"
+          },
+          "buyer": {
+            "$ref": "#/components/schemas/DocflowIntakeParty"
+          }
+        }
+      },
+      "DocflowIntakeParty": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Сторона сделки, прочитанная из чужого файла. Показывается ТЕКСТОМ, даже когда контрагент сопоставлен: карточку могут переименовать, а документ обязан остаться читаемым таким, каким его прислали.",
+        "required": [
+          "kind",
+          "name",
+          "inn",
+          "kpp",
+          "address"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "Вид участника словами файла: юридическое лицо, предприниматель, иностранное лицо, физическое лицо"
+          },
+          "name": {
+            "type": "string"
+          },
+          "inn": {
+            "type": "string"
+          },
+          "kpp": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string",
+            "description": "Адрес одной строкой, собранный из частей формата"
+          }
+        }
+      },
+      "DocflowIntakeCounterparty": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Вторая сторона и то, с кем мы её свели.\n\nПорядок узнавания жёсткий, и каждая ступень сильнее следующей: решение человека этим же запросом, сопоставление зеркала пакета, ЗАПИСАННОЕ решение по этому участнику обмена и, наконец, поиск в справочнике по ИНН и КПП. Последняя ступень — догадка, и она называет себя догадкой (match: guess), а не выдаёт себя за чьё-то решение. Разбор у неё общий с автоматчем выгрузок: второй механизм узнавания рядом с существующим разошёлся бы с ним на первой же правке — молча и в пользу дубля.\n\nНеоднозначность не разрешается никогда: ИНН, совпавший у двух юрлиц, которых не развёл КПП, уходит человеку списком options.",
+        "required": [
+          "contact",
+          "contact_name",
+          "name",
+          "inn",
+          "kpp",
+          "match"
+        ],
+        "properties": {
+          "contact": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Карточка контрагента кабинета; null — свести не с кем, и приёмка отвечает проверкой docflow.edo.contact_required"
+          },
+          "contact_name": {
+            "type": "string",
+            "description": "Имя этой карточки в кабинете"
+          },
+          "name": {
+            "type": "string",
+            "description": "Имя стороны словами оператора либо файла продавца"
+          },
+          "inn": {
+            "type": "string"
+          },
+          "kpp": {
+            "type": "string"
+          },
+          "match": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "auto",
+              "guess",
+              "none"
+            ],
+            "description": "Откуда взялся контрагент: manual — решение человека, auto — записанное сопоставление, guess — наша догадка по реквизитам прямо сейчас, нигде не записанная, none — не свели ни с кем"
+          },
+          "options": {
+            "type": "array",
+            "description": "Наши контрагенты с тем же ИНН, когда выбрать между ними обязан человек. Непустой список означает «такие у нас уже есть, выбери» — и потому же означает, что заводить нового НЕ НАДО: там, где контрагент с такими реквизитами уже заведён, место кнопке «связать с существующим», а не «завести».",
+            "items": {
+              "$ref": "#/components/schemas/DocflowIntakeCounterpartyOption"
+            }
+          }
+        }
+      },
+      "DocflowIntakeCounterpartyOption": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Один наш контрагент на выбор человеку. КПП здесь не для полноты: он единственное, чем два юрлица с одним ИНН различаются.",
+        "required": [
+          "id",
+          "name",
+          "kpp"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kpp": {
+            "type": "string"
+          }
+        }
+      },
+      "DocflowIntakeLine": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Строка товарной таблицы чужого документа вместе с тем, что мы про неё предлагаем. Числа остаются СТРОКАМИ ровно так, как их написал поставщик: сумма в чужом документе такая, какую он подписал, и наша задача её донести, а не поправить. Расхождения покажет сверка, а не молчаливое округление.",
+        "required": [
+          "number",
+          "name",
+          "article",
+          "code",
+          "unit_code",
+          "unit_name",
+          "quantity",
+          "price",
+          "amount_without_vat",
+          "vat_rate",
+          "vat_amount",
+          "vat_without",
+          "amount_with_vat",
+          "key",
+          "product",
+          "product_name",
+          "match"
+        ],
+        "properties": {
+          "number": {
+            "type": "integer",
+            "description": "Номер строки в файле поставщика. По нему человек соотносит экран с бумагой, и по нему же приходит его решение"
+          },
+          "name": {
+            "type": "string",
+            "description": "Наименование товара словами поставщика"
+          },
+          "article": {
+            "type": "string",
+            "description": "Артикул поставщика"
+          },
+          "code": {
+            "type": "string",
+            "description": "Код товара у поставщика"
+          },
+          "unit_code": {
+            "type": "string",
+            "description": "Код ОКЕИ единицы измерения"
+          },
+          "unit_name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string",
+            "description": "Цена единицы словами поставщика"
+          },
+          "amount_without_vat": {
+            "type": "string"
+          },
+          "vat_rate": {
+            "type": "string",
+            "description": "Ставка налога словами файла"
+          },
+          "vat_amount": {
+            "type": "string",
+            "description": "Сумма налога. Пуста при отметке «без НДС»: нуля там нет, и подставить его значит превратить необлагаемую поставку в облагаемую с нулевым налогом"
+          },
+          "vat_without": {
+            "type": "boolean",
+            "description": "Отметка «без НДС» у строки"
+          },
+          "amount_with_vat": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string",
+            "description": "Ключ соответствия: то, по чему эта строка узнаётся в СЛЕДУЮЩЕМ документе того же поставщика. Собирается с приставкой вида `арт:`, `код:` или `наим:` — артикул «100» и наименование «100» разные вещи, и без приставки они стали бы одной строкой соответствий. Показывается затем, чтобы человек понимал, что именно он сопоставляет: не эту накладную, а артикул поставщика на все будущие поставки."
+          },
+          "product": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UUID"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Номенклатура кабинета; null — не выбрана"
+          },
+          "product_name": {
+            "type": "string",
+            "description": "Имя выбранной карточки. Подсказка, а не реквизит: карточку могли заархивировать"
+          },
+          "match": {
+            "type": "string",
+            "description": "Откуда взялась номенклатура строки. `manual` — сопоставил человек, `auto` — сопоставила машина и решение записано, `rejected` — человек уже посмотрел и сказал «не это» (догадку по такой строке мы больше не показываем), `guess` — наша догадка ПРЯМО СЕЙЧАС, нигде не записанная, `none` — сопоставить не с чем. Записанное соответствие приносит свой способ из справочника внешних ссылок, поэтому здесь встречаются и его значения (`pending`, `import`). Различать обязательно: на экране «это решил человек» и «это мы угадали» выглядят одинаково — одна строка с названием товара, — а значат противоположное."
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocflowIntakeProductOption"
+            },
+            "description": "С чем ещё эта строка могла совпасть. Непусто только у неоднозначной догадки: выбрать за человека из двух одинаково подходящих товаров значит угадать монеткой и записать это как факт"
+          }
+        }
+      },
+      "DocflowIntakeProductOption": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Вариант номенклатуры, предложенный неоднозначной строке.",
+        "required": [
+          "id",
+          "name",
+          "sku"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          }
+        }
+      },
+      "DocflowIntakeTotals": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Итоги таблицы словами поставщика. Мы их не пересчитываем: итог в чужом документе такой, какой он подписал.",
+        "required": [
+          "without_vat",
+          "vat_amount",
+          "with_vat",
+          "vat_without"
+        ],
+        "properties": {
+          "without_vat": {
+            "type": "string"
+          },
+          "vat_amount": {
+            "type": "string",
+            "description": "Пусто при отметке «без НДС» у документа"
+          },
+          "with_vat": {
+            "type": "string"
+          },
+          "vat_without": {
+            "type": "boolean",
+            "description": "Отметка «без НДС» у документа целиком"
+          }
+        }
+      },
+      "DocflowAcceptedDocument": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Учётный документ кабинета, заведённый приёмкой.",
+        "required": [
+          "id",
+          "number",
+          "date",
+          "type_key",
+          "type_name",
+          "status",
+          "marked_deleted",
+          "accepted_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "number": {
+            "type": "string",
+            "description": "Наш номер из нумератора кабинета. Номер продавца лежит в содержимом документа: занять им наш сквозной счётчик значит однажды получить два своих документа с одним номером от двух разных поставщиков"
+          },
+          "date": {
+            "type": "string",
+            "description": "Дата документа ГГГГ-ММ-ДД. По умолчанию это дата документа поставщика: операция произошла тогда, когда её совершил он, и датировать её днём приёмки значит поставить факт не в тот период"
+          },
+          "type_key": {
+            "type": "string",
+            "description": "Ключ вида документа; у приёмки docflow_incoming"
+          },
+          "type_name": {
+            "type": "string",
+            "description": "Имя вида в кабинете. Право клиента: вид можно переименовать, и код держит его за ключ, а не за название"
+          },
+          "status": {
+            "type": "string",
+            "description": "Состояние учётного документа. Приёмка заводит ЧЕРНОВИК: проведение принадлежит модулям — владельцам регистров"
+          },
+          "marked_deleted": {
+            "type": "boolean",
+            "description": "Документ помечен на удаление. Такой пакет принимается заново: пометка и есть способ сказать «этот документ ошибочный»"
+          },
+          "accepted_at": {
+            "type": "string",
+            "description": "Момент приёмки; пусто, если он не записан"
           }
         }
       },
