@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 190b6c5ee47d0286df0d3c66a3834efe2694b28ed4d024c02814ae9e01e24e51).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ed6efc5496703c862db29206f28a1ef682ffe2250f267fb6e6b0107bfa4ab329).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1868,7 +1868,7 @@ type CRMStageShowOnBoard = bool
 // CRMTimelineEntry — Одна запись ленты; вид говорит, из какого источника она пришла
 type CRMTimelineEntry struct {
 	ID UUID `json:"id"`
-	// Kind — note - заметка сотрудника, system - системный факт, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей
+	// Kind — note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача
 	Kind      string  `json:"kind"`
 	At        string  `json:"at"`
 	ActorID   *int64  `json:"actor_id,omitempty"`
@@ -1877,6 +1877,8 @@ type CRMTimelineEntry struct {
 	Title string                     `json:"title"`
 	Body  *string                    `json:"body,omitempty"`
 	Meta  map[string]json.RawMessage `json:"meta,omitempty"`
+	// Source — Откуда пришла запись: ui - менеджер в интерфейсе, api - внешний API, automation - робот, import - импорт, merge - слияние дублей, system - система. Пусто у переписки и у старых записей
+	Source *string `json:"source,omitempty"`
 	// RecordType — Запись, которой принадлежит событие. В ленте клиента это его сделка или лид, а не он сам
 	RecordType *string `json:"record_type,omitempty"`
 	RecordID   *UUID   `json:"record_id,omitempty"`
@@ -6798,6 +6800,10 @@ type DocflowMessage struct {
 	AcceptedAt *string `json:"accepted_at,omitempty"`
 	// AcceptedBy — Кто принял пакет к учёту
 	AcceptedBy *int64 `json:"accepted_by,omitempty"`
+	// AccountingNumber — Номер учётного документа приёмки для строки «В учёте: … № …»; пусто — не принят или документ не прочитан
+	AccountingNumber *string `json:"accounting_number,omitempty"`
+	// AccountingType — Вид учётного документа приёмки (ключ вида документа ядра), например finance_purchase
+	AccountingType *string `json:"accounting_type,omitempty"`
 	// Draft — Пакет записан оператору и наружу ещё не ушёл. Выводится из состава пакета при чтении: исходящий, без единого события обмена и без единой подписи
 	Draft bool `json:"draft"`
 	// DeletedAt — Корзина НАШЕГО зеркала: контрагент её не видит, и пакет у оператора остаётся прежним
@@ -6851,6 +6857,8 @@ type DocflowMessagePayment struct {
 	Step *string `json:"step,omitempty"`
 	// DocflowRequest — Заявка «Документов» по этому счёту, если она есть
 	DocflowRequest map[string]json.RawMessage `json:"docflow_request,omitempty"`
+	// Order — Счёт оплачен своей закупкой: заявки нет (request нулевой), оплата закупки покрывает сумму счёта
+	Order map[string]json.RawMessage `json:"order,omitempty"`
 }
 
 // DocflowMessagePrintForm — Печатный вид пакета. operator — PDF оператора с впечатанными подписями, лежащий у нас; ours — наша форма счёта или УПД по формализованному XML, когда оператор своего вида не отдал (штампа подписи оператора на ней нет).
@@ -6936,6 +6944,8 @@ type DocflowOrderSetMember struct {
 	// PaymentTermID — Строка графика оплат продажи, по которой выставлен счёт; только для invoice
 	PaymentTermID *UUID `json:"payment_term_id,omitempty"`
 	Self          *bool `json:"self,omitempty"`
+	// PaidByOrder — Входящий счёт оплачен своей закупкой: оплата закупки комплекта покрывает его сумму
+	PaidByOrder *bool `json:"paid_by_order,omitempty"`
 }
 
 type DocflowOrderSetOrder struct {

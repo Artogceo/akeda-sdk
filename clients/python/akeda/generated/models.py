@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 190b6c5ee47d0286df0d3c66a3834efe2694b28ed4d024c02814ae9e01e24e51).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ed6efc5496703c862db29206f28a1ef682ffe2250f267fb6e6b0107bfa4ab329).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -3175,8 +3175,8 @@ CRMStageShowOnBoard = bool
 
 class _CRMTimelineEntryRequired(TypedDict):
     id: "UUID"
-    #: note - заметка сотрудника, system - системный факт, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей
-    kind: Literal['note', 'system', 'stage', 'decision', 'message', 'link']
+    #: note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача
+    kind: Literal['note', 'system', 'stage', 'decision', 'message', 'link', 'engagement']
     at: str
     #: Заголовок записи: действие, название этапа, решение или направление сообщения
     title: str
@@ -3188,6 +3188,8 @@ class CRMTimelineEntry(_CRMTimelineEntryRequired, total=False):
     actor_name: str
     body: str
     meta: Optional[Dict[str, Any]]
+    #: Откуда пришла запись: ui - менеджер в интерфейсе, api - внешний API, automation - робот, import - импорт, merge - слияние дублей, system - система. Пусто у переписки и у старых записей
+    source: Literal['ui', 'api', 'automation', 'import', 'merge', 'system']
     #: Запись, которой принадлежит событие. В ленте клиента это его сделка или лид, а не он сам
     record_type: Literal['lead', 'deal', 'customer']
     record_id: "UUID"
@@ -8137,6 +8139,10 @@ class DocflowMessage(_DocflowMessageRequired, total=False):
     accepted_at: Optional[str]
     #: Кто принял пакет к учёту
     accepted_by: Optional[int]
+    #: Номер учётного документа приёмки для строки «В учёте: … № …»; пусто — не принят или документ не прочитан
+    accounting_number: str
+    #: Вид учётного документа приёмки (ключ вида документа ядра), например finance_purchase
+    accounting_type: str
     #: Корзина НАШЕГО зеркала: контрагент её не видит, и пакет у оператора остаётся прежним
     deleted_at: Optional[str]
     deleted_by: Optional[int]
@@ -8180,6 +8186,8 @@ class DocflowMessagePayment(_DocflowMessagePaymentRequired, total=False):
     step: Literal['draft', 'on_approval', 'rework', 'approved', 'scheduled', 'sent', 'paid', 'payment_cancelled']
     #: Заявка «Документов» по этому счёту, если она есть
     docflow_request: Dict[str, Any]
+    #: Счёт оплачен своей закупкой: заявки нет (request нулевой), оплата закупки покрывает сумму счёта
+    order: Dict[str, Any]
 
 class DocflowMessagePrintForm(TypedDict):
     """Печатный вид пакета. operator — PDF оператора с впечатанными подписями, лежащий у нас; ours — наша форма счёта или УПД по формализованному XML, когда оператор своего вида не отдал (штампа подписи оператора на ней нет)."""
@@ -8267,6 +8275,8 @@ class DocflowOrderSetMember(_DocflowOrderSetMemberRequired, total=False):
     #: Строка графика оплат продажи, по которой выставлен счёт; только для invoice
     payment_term_id: "UUID"
     self: bool
+    #: Входящий счёт оплачен своей закупкой: оплата закупки комплекта покрывает его сумму
+    paid_by_order: bool
 
 class _DocflowOrderSetOrderRequired(TypedDict):
     id: "UUID"

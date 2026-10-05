@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 190b6c5ee47d0286df0d3c66a3834efe2694b28ed4d024c02814ae9e01e24e51).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ed6efc5496703c862db29206f28a1ef682ffe2250f267fb6e6b0107bfa4ab329).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1870,8 +1870,8 @@ export type CRMStageShowOnBoard = boolean;
 /** Одна запись ленты; вид говорит, из какого источника она пришла */
 export interface CRMTimelineEntry {
   "id": UUID;
-  /** note - заметка сотрудника, system - системный факт, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей */
-  "kind": "note" | "system" | "stage" | "decision" | "message" | "link";
+  /** note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача */
+  "kind": "note" | "system" | "stage" | "decision" | "message" | "link" | "engagement";
   "at": string;
   "actor_id"?: number;
   "actor_name"?: string;
@@ -1879,6 +1879,8 @@ export interface CRMTimelineEntry {
   "title": string;
   "body"?: string;
   "meta"?: { [key: string]: unknown } | null;
+  /** Откуда пришла запись: ui - менеджер в интерфейсе, api - внешний API, automation - робот, import - импорт, merge - слияние дублей, system - система. Пусто у переписки и у старых записей */
+  "source"?: "ui" | "api" | "automation" | "import" | "merge" | "system";
   /** Запись, которой принадлежит событие. В ленте клиента это его сделка или лид, а не он сам */
   "record_type"?: "lead" | "deal" | "customer";
   "record_id"?: UUID;
@@ -6821,6 +6823,10 @@ export interface DocflowMessage {
   "accepted_at"?: string | null;
   /** Кто принял пакет к учёту */
   "accepted_by"?: number | null;
+  /** Номер учётного документа приёмки для строки «В учёте: … № …»; пусто — не принят или документ не прочитан */
+  "accounting_number"?: string;
+  /** Вид учётного документа приёмки (ключ вида документа ядра), например finance_purchase */
+  "accounting_type"?: string;
   /** Пакет записан оператору и наружу ещё не ушёл. Выводится из состава пакета при чтении: исходящий, без единого события обмена и без единой подписи */
   "draft": boolean;
   /** Корзина НАШЕГО зеркала: контрагент её не видит, и пакет у оператора остаётся прежним */
@@ -6874,6 +6880,8 @@ export interface DocflowMessagePayment {
   "step"?: "draft" | "on_approval" | "rework" | "approved" | "scheduled" | "sent" | "paid" | "payment_cancelled";
   /** Заявка «Документов» по этому счёту, если она есть */
   "docflow_request"?: { [key: string]: unknown };
+  /** Счёт оплачен своей закупкой: заявки нет (request нулевой), оплата закупки покрывает сумму счёта */
+  "order"?: { [key: string]: unknown };
 }
 
 /** Печатный вид пакета. operator — PDF оператора с впечатанными подписями, лежащий у нас; ours — наша форма счёта или УПД по формализованному XML, когда оператор своего вида не отдал (штампа подписи оператора на ней нет). */
@@ -6959,6 +6967,8 @@ export interface DocflowOrderSetMember {
   /** Строка графика оплат продажи, по которой выставлен счёт; только для invoice */
   "payment_term_id"?: UUID;
   "self"?: boolean;
+  /** Входящий счёт оплачен своей закупкой: оплата закупки комплекта покрывает его сумму */
+  "paid_by_order"?: boolean;
 }
 
 export interface DocflowOrderSetOrder {
