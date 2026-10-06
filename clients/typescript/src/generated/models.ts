@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5c3dd5b33c04f6a35a6dd593e68cd2a7b8e9fdea54d8395b3e4cb36936e320a6).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 af25504aaa41e8f72754035f2646a1e30f0b88ded205525a9b9dfd257cac1377).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -671,6 +671,7 @@ export interface CRMActivity {
   "entity_id": UUID;
   /** Ключ факта; note - заметка сотрудника */
   "action": string;
+  /** Подробности факта. У заметки: text - текст, mentions - упомянутые коллеги [{id, name}] */
   "details": { [key: string]: unknown } | null;
   "actor_id": number;
   "actor_name"?: string;
@@ -1722,6 +1723,8 @@ export interface CRMMoveDealInput {
 
 export interface CRMNoteInput {
   "text": string;
+  /** Упомянутые коллеги — номера сотрудников из GET /api/v1/crm/members. Засчитывается тот, чьё «@Имя» стоит в тексте заметки */
+  "mentioned_user_ids"?: Array<number>;
 }
 
 /** Сводка менеджера; «мои» - записи с owner_id текущего пользователя */
@@ -1922,6 +1925,7 @@ export interface CRMTimelineEntry {
   /** Заголовок записи: действие, название этапа, решение или направление сообщения */
   "title": string;
   "body"?: string;
+  /** Подробности записи. У заметки: mentions - упомянутые коллеги [{id, name}], их имена стоят в тексте как «@Имя» */
   "meta"?: { [key: string]: unknown } | null;
   /** Откуда пришла запись: ui - менеджер в интерфейсе, api - внешний API, automation - робот, import - импорт, merge - слияние дублей, system - система. Пусто у переписки и у старых записей */
   "source"?: "ui" | "api" | "automation" | "import" | "merge" | "system";

@@ -20299,7 +20299,7 @@ paths:
         - CRM links
       operationId: crmAddNote
       summary: Добавить заметку в ленту записи
-      description: Заметка пишется один раз и дальше не редактируется.
+      description: 'Заметка пишется один раз и дальше не редактируется. Коллег упоминают через «@Имя» в тексте и их номера в mentioned_user_ids: каждый упомянутый получает уведомление crm_mention (ERP-1607). Не сотрудник кабинета — 422 crm.mention_not_member, больше 20 упомянутых — 400 crm.mention_too_many.'
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -20329,6 +20329,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
   /api/v1/crm/{entity}/{id}/tasks:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -56605,6 +56607,7 @@ components:
             - object
             - 'null'
           additionalProperties: true
+          description: 'Подробности факта. У заметки: text - текст, mentions - упомянутые коллеги [{id, name}]'
         actor_id:
           type: integer
           format: int64
@@ -56654,6 +56657,7 @@ components:
             - object
             - 'null'
           additionalProperties: true
+          description: 'Подробности записи. У заметки: mentions - упомянутые коллеги [{id, name}], их имена стоят в тексте как «@Имя»'
         source:
           type: string
           enum:
@@ -56685,6 +56689,14 @@ components:
         text:
           type: string
           minLength: 1
+        mentioned_user_ids:
+          type: array
+          maxItems: 20
+          items:
+            type: integer
+            format: int64
+            minimum: 1
+          description: Упомянутые коллеги — номера сотрудников из GET /api/v1/crm/members. Засчитывается тот, чьё «@Имя» стоит в тексте заметки
     CRMEngagementKind:
       type: string
       minLength: 1

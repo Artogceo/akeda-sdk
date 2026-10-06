@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5c3dd5b33c04f6a35a6dd593e68cd2a7b8e9fdea54d8395b3e4cb36936e320a6).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 af25504aaa41e8f72754035f2646a1e30f0b88ded205525a9b9dfd257cac1377).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1949,6 +1949,7 @@ class _CRMActivityRequired(TypedDict):
     entity_id: "UUID"
     #: Ключ факта; note - заметка сотрудника
     action: str
+    #: Подробности факта. У заметки: text - текст, mentions - упомянутые коллеги [{id, name}]
     details: Optional[Dict[str, Any]]
     actor_id: int
     created_at: str
@@ -3023,8 +3024,12 @@ class CRMMoveDealInput(_CRMMoveDealInputRequired, total=False):
     #: Обязательна для стадии категории lost
     loss_reason_id: Optional[str]
 
-class CRMNoteInput(TypedDict):
+class _CRMNoteInputRequired(TypedDict):
     text: str
+
+class CRMNoteInput(_CRMNoteInputRequired, total=False):
+    #: Упомянутые коллеги — номера сотрудников из GET /api/v1/crm/members. Засчитывается тот, чьё «@Имя» стоит в тексте заметки
+    mentioned_user_ids: List[int]
 
 class CRMOverview(TypedDict):
     """Сводка менеджера; «мои» - записи с owner_id текущего пользователя"""
@@ -3236,6 +3241,7 @@ class CRMTimelineEntry(_CRMTimelineEntryRequired, total=False):
     actor_id: int
     actor_name: str
     body: str
+    #: Подробности записи. У заметки: mentions - упомянутые коллеги [{id, name}], их имена стоят в тексте как «@Имя»
     meta: Optional[Dict[str, Any]]
     #: Откуда пришла запись: ui - менеджер в интерфейсе, api - внешний API, automation - робот, import - импорт, merge - слияние дублей, system - система. Пусто у переписки и у старых записей
     source: Literal['ui', 'api', 'automation', 'import', 'merge', 'system']

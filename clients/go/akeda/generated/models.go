@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5c3dd5b33c04f6a35a6dd593e68cd2a7b8e9fdea54d8395b3e4cb36936e320a6).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 af25504aaa41e8f72754035f2646a1e30f0b88ded205525a9b9dfd257cac1377).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -668,7 +668,8 @@ type CRMActivity struct {
 	EntityType string `json:"entity_type"`
 	EntityID   UUID   `json:"entity_id"`
 	// Action — Ключ факта; note - заметка сотрудника
-	Action    string                     `json:"action"`
+	Action string `json:"action"`
+	// Details — Подробности факта. У заметки: text - текст, mentions - упомянутые коллеги [{id, name}]
 	Details   map[string]json.RawMessage `json:"details"`
 	ActorID   int64                      `json:"actor_id"`
 	ActorName *string                    `json:"actor_name,omitempty"`
@@ -1720,6 +1721,8 @@ type CRMMoveDealInput struct {
 
 type CRMNoteInput struct {
 	Text string `json:"text"`
+	// MentionedUserIds — Упомянутые коллеги — номера сотрудников из GET /api/v1/crm/members. Засчитывается тот, чьё «@Имя» стоит в тексте заметки
+	MentionedUserIds []int64 `json:"mentioned_user_ids,omitempty"`
 }
 
 // CRMOverview — Сводка менеджера; «мои» - записи с owner_id текущего пользователя
@@ -1918,9 +1921,10 @@ type CRMTimelineEntry struct {
 	ActorID   *int64  `json:"actor_id,omitempty"`
 	ActorName *string `json:"actor_name,omitempty"`
 	// Title — Заголовок записи: действие, название этапа, решение или направление сообщения
-	Title string                     `json:"title"`
-	Body  *string                    `json:"body,omitempty"`
-	Meta  map[string]json.RawMessage `json:"meta,omitempty"`
+	Title string  `json:"title"`
+	Body  *string `json:"body,omitempty"`
+	// Meta — Подробности записи. У заметки: mentions - упомянутые коллеги [{id, name}], их имена стоят в тексте как «@Имя»
+	Meta map[string]json.RawMessage `json:"meta,omitempty"`
 	// Source — Откуда пришла запись: ui - менеджер в интерфейсе, api - внешний API, automation - робот, import - импорт, merge - слияние дублей, system - система. Пусто у переписки и у старых записей
 	Source *string `json:"source,omitempty"`
 	// RecordType — Запись, которой принадлежит событие. В ленте клиента это его сделка или лид, а не он сам
