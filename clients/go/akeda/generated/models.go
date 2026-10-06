@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ed6efc5496703c862db29206f28a1ef682ffe2250f267fb6e6b0107bfa4ab329).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1f6544b5195c473e6b33c6cd19419caf1980480f349c983ff40de7cce6ff2145).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1140,22 +1140,44 @@ type CRMEngagement struct {
 	EntityID   UUID              `json:"entity_id"`
 	Kind       CRMEngagementKind `json:"kind"`
 	Title      string            `json:"title"`
-	DueAt      *string           `json:"due_at,omitempty"`
+	// Description — Подробности дела: что обсудить, адрес встречи
+	Description string  `json:"description"`
+	DueAt       *string `json:"due_at,omitempty"`
 	// DoneAt — Пусто, пока дело не выполнено
-	DoneAt    *string `json:"done_at,omitempty"`
+	DoneAt *string `json:"done_at,omitempty"`
+	// RemindAt — Когда напомнить ответственному
+	RemindAt *string `json:"remind_at,omitempty"`
+	// RemindedAt — Когда напоминание ушло в центр уведомлений
+	RemindedAt *string             `json:"reminded_at,omitempty"`
+	Repeat     CRMEngagementRepeat `json:"repeat"`
+	// CalendarEventID — Событие календаря, заведённое из дела
+	CalendarEventID *UUID `json:"calendar_event_id,omitempty"`
+	// TaskID — Задача модуля «Задачи», заведённая из дела
+	TaskID    *UUID   `json:"task_id,omitempty"`
 	OwnerID   *int64  `json:"owner_id,omitempty"`
 	OwnerName *string `json:"owner_name,omitempty"`
-	CreatedBy int64   `json:"created_by"`
-	CreatedAt string  `json:"created_at"`
-	UpdatedAt string  `json:"updated_at"`
+	// EntityTitle — Название карточки дела (в списке «Мои дела»)
+	EntityTitle *string `json:"entity_title,omitempty"`
+	// Warnings — Дело сохранено, но событие календаря не заведено или не обновлено
+	Warnings  []string `json:"warnings,omitempty"`
+	CreatedBy int64    `json:"created_by"`
+	CreatedAt string   `json:"created_at"`
+	UpdatedAt string   `json:"updated_at"`
 }
 
 type CRMEngagementInput struct {
 	Kind  *CRMEngagementKind `json:"kind,omitempty"`
 	Title string             `json:"title"`
-	DueAt *string            `json:"due_at,omitempty"`
+	// Description — Подробности дела
+	Description *string `json:"description,omitempty"`
+	DueAt       *string `json:"due_at,omitempty"`
+	// RemindAt — Когда напомнить ответственному; не позже срока
+	RemindAt *string              `json:"remind_at,omitempty"`
+	Repeat   *CRMEngagementRepeat `json:"repeat,omitempty"`
 	// OwnerID — По умолчанию - вызывающий сотрудник
 	OwnerID *int64 `json:"owner_id,omitempty"`
+	// InCalendar — Поставить дело событием в календарь ответственного; нужен срок
+	InCalendar *bool `json:"in_calendar,omitempty"`
 }
 
 type CRMEngagementKind = string
@@ -1171,12 +1193,34 @@ type CRMEngagementKindItem struct {
 }
 
 type CRMEngagementPatch struct {
-	Kind    *CRMEngagementKind `json:"kind,omitempty"`
-	Title   *string            `json:"title,omitempty"`
-	DueAt   *string            `json:"due_at,omitempty"`
-	OwnerID *int64             `json:"owner_id,omitempty"`
-	// Done — true закрывает дело, false возвращает в работу
+	Kind  *CRMEngagementKind `json:"kind,omitempty"`
+	Title *string            `json:"title,omitempty"`
+	// Description — Подробности дела
+	Description *string `json:"description,omitempty"`
+	// DueAt — null снимает срок
+	DueAt *string `json:"due_at,omitempty"`
+	// RemindAt — null снимает напоминание; новое время снова ставит его в очередь
+	RemindAt *string              `json:"remind_at,omitempty"`
+	Repeat   *CRMEngagementRepeat `json:"repeat,omitempty"`
+	OwnerID  *int64               `json:"owner_id,omitempty"`
+	// Done — true закрывает дело, false возвращает в работу; закрытие повторяющегося дела заводит следующее
 	Done *bool `json:"done,omitempty"`
+	// InCalendar — true ставит в календарь дело, у которого события ещё нет
+	InCalendar *bool `json:"in_calendar,omitempty"`
+}
+
+type CRMEngagementRepeat = string
+
+type CRMEngagementTaskInput struct {
+	SectionID UUID `json:"section_id"`
+	// Title — Название задачи; по умолчанию - название дела
+	Title *string `json:"title,omitempty"`
+	// Description — Описание задачи; по умолчанию - подробности дела
+	Description *string `json:"description,omitempty"`
+	// DueAt — Срок задачи; по умолчанию - срок дела
+	DueAt *string `json:"due_at,omitempty"`
+	// ExecutorID — Исполнитель; по умолчанию - ответственный за дело
+	ExecutorID *int64 `json:"executor_id,omitempty"`
 }
 
 // CRMExternalLink — Указатель CRM на запись другого модуля; владельцем записи остаётся тот модуль
@@ -7741,7 +7785,7 @@ type FinanceAllocationRuleInput struct {
 	ValidFrom  string `json:"valid_from"`
 }
 
-// FinanceAllocationRuleRun — Оплаты, которые разнесёт правило, и сколько разнесено.
+// FinanceAllocationRuleRun — Оплаты, которые разнесёт правило, и сколько разнесено. Отказ одной оплаты прогон не обрывает: её строка несёт failure (period_closed, posting_refused или failed).
 type FinanceAllocationRuleRun struct {
 	DryRun *bool `json:"dry_run,omitempty"`
 	// Applied — Сколько оплат разнесено; в предпросмотре 0
@@ -9189,16 +9233,16 @@ type FinanceTaxRecipientFromPaymentInput struct {
 
 // FinanceTaxSettings — Настройка раздела «Налоги».
 type FinanceTaxSettings struct {
-	// PaymentItemID — Статья ДДС платежей налогов; пусто — не настроена
-	PaymentItemID *string `json:"payment_item_id"`
+	// PaymentItemIds — Статьи ДДС платежей налогов в порядке выбора; пусто — не настроены
+	PaymentItemIds []string `json:"payment_item_ids"`
 	// EnsRecipients — Получатели единого налогового счёта
 	EnsRecipients []FinanceTaxRecipient `json:"ens_recipients"`
 }
 
 // FinanceTaxSettingsInput — Настройка раздела «Налоги» целиком.
 type FinanceTaxSettingsInput struct {
-	// PaymentItemID — Статья ДДС вида «Налоги»; пусто — снять
-	PaymentItemID *string `json:"payment_item_id,omitempty"`
+	// PaymentItemIds — Статьи ДДС вида «Налоги»; пустой список — снять все
+	PaymentItemIds []string `json:"payment_item_ids,omitempty"`
 	// EnsRecipients — Получатели единого налогового счёта
 	EnsRecipients []FinanceTaxRecipient `json:"ens_recipients,omitempty"`
 }

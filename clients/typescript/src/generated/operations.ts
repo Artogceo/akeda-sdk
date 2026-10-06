@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ed6efc5496703c862db29206f28a1ef682ffe2250f267fb6e6b0107bfa4ab329).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1f6544b5195c473e6b33c6cd19419caf1980480f349c983ff40de7cce6ff2145).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1833,6 +1833,13 @@ export interface OperationTypes {
     body: models.CRMEngagementInput;
     response: models.CRMEngagement;
   };
+  /** POST /api/v1/crm/engagements/{id}/task — Сделать из дела задачу */
+  crmCreateEngagementTask: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMEngagementTaskInput;
+    response: models.CRMEngagement;
+  };
   /** POST /api/v1/crm/{entity}/{id}/events — Создать событие календаря по записи CRM */
   crmCreateEventLink: {
     params: { "entity": "lead" | "deal"; "id": models.UUID };
@@ -2259,6 +2266,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: Array<models.CRMUserRef>;
+  };
+  /** GET /api/v1/crm/engagements — Получить мои дела за период */
+  crmListMyEngagements: {
+    params: Record<string, never>;
+    query: { "from"?: string; "limit"?: number; "no_due"?: boolean; "overdue"?: boolean; "owner"?: string; "status"?: "open" | "done" | "all"; "to"?: string };
+    body: never;
+    response: Array<models.CRMEngagement>;
   };
   /** GET /api/v1/crm/pipelines/{id}/deals — Получить сделки воронки */
   crmListPipelineDeals: {
@@ -3555,7 +3569,7 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceTaxMonthPage;
   };
-  /** GET /api/v1/finance/taxes/payments — Получить платежи по статье налогов */
+  /** GET /api/v1/finance/taxes/payments — Получить платежи по статьям налогов */
   financeListTaxPayments: {
     params: Record<string, never>;
     query: { "company_id": models.UUID; "date_from": string; "date_to": string };
@@ -4055,7 +4069,7 @@ export interface OperationTypes {
   /** DELETE /api/v1/mail/messages/{id} — Переложить письмо в корзину */
   mailDeleteMessage: {
     params: { "id": models.UUID };
-    query: Record<string, never>;
+    query: { "permanent"?: boolean };
     body: never;
     response: void;
   };
@@ -6044,6 +6058,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmCreateDeal: { method: "POST", path: "/api/v1/crm/deals", module: "crm", stage: "preview", permission: "crm:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateDealFromConversation: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/deals", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateEngagement: { method: "POST", path: "/api/v1/crm/{entity}/{id}/engagements", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateEngagementTask: { method: "POST", path: "/api/v1/crm/engagements/{id}/task", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateEventLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/events", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateImportUploadSession: { method: "POST", path: "/api/v1/crm/imports/{id}/upload-sessions", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateInboxUploadSession: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/upload-sessions", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -6105,6 +6120,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmListLeads: { method: "GET", path: "/api/v1/crm/leads", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   crmListLossReasons: { method: "GET", path: "/api/v1/crm/loss-reasons", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListMembers: { method: "GET", path: "/api/v1/crm/members", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListMyEngagements: { method: "GET", path: "/api/v1/crm/engagements", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: null },
   crmListPipelineDeals: { method: "GET", path: "/api/v1/crm/pipelines/{id}/deals", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   crmListPipelines: { method: "GET", path: "/api/v1/crm/pipelines", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmMarkInboxConversationRead: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/read", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

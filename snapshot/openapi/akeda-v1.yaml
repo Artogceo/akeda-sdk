@@ -1426,7 +1426,7 @@ paths:
         - Tasks
       operationId: tasksListViews
       summary: Получить сохранённые виды задач
-      description: Возвращает сохранённые виды задач.
+      description: Возвращает только виды текущего пользователя — виды личные, чужие виды кабинета не отдаются.
       x-akeda-module: tasks
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -1496,7 +1496,7 @@ paths:
         - Tasks
       operationId: tasksDeleteView
       summary: Удалить сохранённый вид задач
-      description: Удаляет указанный сохранённый вид задач.
+      description: Удаляет вид текущего пользователя; чужой вид отвечает 404, как несуществующий.
       x-akeda-module: tasks
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -14967,7 +14967,7 @@ paths:
         - Finance registers
       operationId: financeGetTaxSettings
       summary: Получить настройку раздела «Налоги»
-      description: Статья платежей налогов (одна общая статья ДДС вида «Налоги») и получатели единого налогового счёта. Платёж по статье получателю из списка пополняет ЕНС; пустой счёт получателя — любой счёт этого ИНН.
+      description: 'Статьи платежей налогов (одна или несколько статей ДДС вида «Налоги»: у клиента налоги могут быть разнесены по своим статьям) и получатели единого налогового счёта. Платёж по любой из статей получателю из списка пополняет ЕНС; пустой счёт получателя — любой счёт этого ИНН.'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -14998,7 +14998,7 @@ paths:
         - Finance registers
       operationId: financeSaveTaxSettings
       summary: Сохранить настройку раздела «Налоги»
-      description: 'Записывает настройку целиком: статью платежей и список получателей ЕНС. Статья — только вида «Налоги»: её оплата гасит долг перед бюджетом, а расход даёт начисление раздела. ИНН получателя — 10 или 12 цифр, повторы схлопываются.'
+      description: 'Записывает настройку целиком: список статей платежей и список получателей ЕНС. Статьи — только вида «Налоги»: их оплата гасит долг перед бюджетом, а расход даёт начисление раздела; статья другого вида — отказ всей настройки. ИНН получателя — 10 или 12 цифр, повторы статей и получателей схлопываются. Проведённые платежи получателям старого и нового правила перепроводятся: при методе начисления ЕНП по статьям «Налоги» и «Взносы» ложится на 68.'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -15038,7 +15038,7 @@ paths:
         - Finance registers
       operationId: financeAddTaxRecipientFromPayment
       summary: Взять получателя ЕНС образцом с платежа
-      description: Дописывает в настройку раздела ИНН и счёт получателя выбранной банковской операции — эталонного платежа на единый налоговый счёт. Остальные платежи этому получателю по статье налогов станут пополнениями ЕНС.
+      description: Дописывает в настройку раздела ИНН и счёт получателя выбранной банковской операции — эталонного платежа на единый налоговый счёт. Остальные платежи этому получателю по статьям налогов станут пополнениями ЕНС.
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -15079,8 +15079,8 @@ paths:
       tags:
         - Finance registers
       operationId: financeListTaxPayments
-      summary: Получить платежи по статье налогов
-      description: Проведённые исходящие платежи юрлица за отрезок по статье налогов из настройки раздела. ens=true — платёж пополняет единый налоговый счёт по правилу получателей; ens=false — платёж мимо ЕНС, экран его подсвечивает. Статья не настроена — пустой список.
+      summary: Получить платежи по статьям налогов
+      description: 'Проведённые исходящие платежи юрлица за отрезок: получателям из правила ЕНС по статьям видов «Налоги» и «Взносы» и по любой из статей налогов из настройки раздела. ens=true — платёж пополняет единый налоговый счёт по правилу получателей; ens=false — платёж мимо ЕНС, экран его подсвечивает. Ни правила, ни статей — пустой список.'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -20027,7 +20027,7 @@ paths:
         - CRM links
       operationId: crmCreateEngagement
       summary: Запланировать дело по лиду, сделке или клиенту
-      description: 'Дело CRM легче задачи задачника: личный шаг менеджера без проекта и рабочего процесса'
+      description: 'Дело CRM легче задачи задачника: личный шаг менеджера без проекта и рабочего процесса. Со сроком и in_calendar дело встаёт событием в календарь ответственного, если модуль «Календарь» подключён'
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -20057,6 +20057,122 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/crm/engagements:
+    get:
+      tags:
+        - CRM links
+      operationId: crmListMyEngagements
+      summary: Получить мои дела за период
+      description: 'Дела по лидам, сделкам и клиентам с названием карточки: страница «Мои дела» со списком и календарём. Чужие дела видит только тот, кто видит все сделки'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: from
+          in: query
+          description: Начало окна по сроку дела (RFC 3339)
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: Конец окна по сроку дела, не включая (RFC 3339)
+          schema:
+            type: string
+            format: date-time
+        - name: owner
+          in: query
+          description: 'Чьи дела: me (по умолчанию), all или id сотрудника'
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: 'Состояние дел: open (по умолчанию), done или all'
+          schema:
+            type: string
+            enum:
+              - open
+              - done
+              - all
+        - name: overdue
+          in: query
+          description: Добавить открытые дела с прошедшим сроком, даже если срок раньше окна
+          schema:
+            type: boolean
+        - name: no_due
+          in: query
+          description: Добавить дела без срока
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          description: 'Сколько дел вернуть: по умолчанию 500, не больше 1000'
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+      responses:
+        '200':
+          description: Дела за период
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CRMEngagement'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/crm/engagements/{id}/task:
+    parameters:
+      - $ref: '#/components/parameters/TenantHeader'
+      - $ref: '#/components/parameters/ResourceID'
+    post:
+      tags:
+        - CRM links
+      operationId: crmCreateEngagementTask
+      summary: Сделать из дела задачу
+      description: 'Заводит из дела полноценную задачу модуля «Задачи» со связью в обе стороны: дело помнит задачу, задача ссылается на карточку CRM. Нужен подключённый модуль «Задачи»'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: crm
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: crm:write
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMEngagementTaskInput'
+      responses:
+        '201':
+          description: Дело со ссылкой на задачу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CRMEngagement'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/crm/engagements/{id}:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -36134,7 +36250,7 @@ paths:
         - Mail messages
       operationId: mailDeleteMessage
       summary: Переложить письмо в корзину
-      description: 'Письмо переносится в корзину ящика, а не стирается: удаление письма — дело почтового сервера клиента.'
+      description: 'Письмо переносится в корзину ящика; из корзины письмо удаляется с сервера окончательно. У ящика без корзины письмо не стирается молча: без permanent=true ответ 409 mail.trash_missing, и письмо остаётся на месте.'
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -36143,9 +36259,16 @@ paths:
       x-akeda-release-stage: preview
       x-akeda-audience: external
       x-akeda-permission: mail:write
+      parameters:
+        - name: permanent
+          in: query
+          description: Удалить письмо с сервера насовсем, если у ящика нет корзины. Без признака такой запрос отклоняется 409
+          schema:
+            type: boolean
+            default: false
       responses:
         '204':
-          description: Письмо в корзине
+          description: Письмо в корзине либо удалено окончательно
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -36154,6 +36277,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/mail/messages/{id}/read:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -37277,7 +37402,7 @@ components:
       additionalProperties: false
     FinanceAllocationRuleRun:
       type: object
-      description: Оплаты, которые разнесёт правило, и сколько разнесено.
+      description: 'Оплаты, которые разнесёт правило, и сколько разнесено. Отказ одной оплаты прогон не обрывает: её строка несёт failure (period_closed, posting_refused или failed).'
       properties:
         dry_run:
           type: boolean
@@ -53850,15 +53975,15 @@ components:
       additionalProperties: false
       description: Настройка раздела «Налоги».
       required:
-        - payment_item_id
+        - payment_item_ids
         - ens_recipients
       properties:
-        payment_item_id:
-          type:
-            - string
-            - 'null'
-          format: uuid
-          description: Статья ДДС платежей налогов; пусто — не настроена
+        payment_item_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Статьи ДДС платежей налогов в порядке выбора; пусто — не настроены
         ens_recipients:
           type: array
           items:
@@ -53869,12 +53994,12 @@ components:
       additionalProperties: false
       description: Настройка раздела «Налоги» целиком.
       properties:
-        payment_item_id:
-          type:
-            - string
-            - 'null'
-          format: uuid
-          description: Статья ДДС вида «Налоги»; пусто — снять
+        payment_item_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Статьи ДДС вида «Налоги»; пустой список — снять все
         ens_recipients:
           type: array
           items:
@@ -56593,6 +56718,8 @@ components:
         - entity_id
         - kind
         - title
+        - description
+        - repeat
         - created_by
         - created_at
         - updated_at
@@ -56611,6 +56738,9 @@ components:
           $ref: '#/components/schemas/CRMEngagementKind'
         title:
           type: string
+        description:
+          type: string
+          description: 'Подробности дела: что обсудить, адрес встречи'
         due_at:
           type: string
           format: date-time
@@ -56618,11 +56748,38 @@ components:
           type: string
           format: date-time
           description: Пусто, пока дело не выполнено
+        remind_at:
+          type: string
+          format: date-time
+          description: Когда напомнить ответственному
+        reminded_at:
+          type: string
+          format: date-time
+          description: Когда напоминание ушло в центр уведомлений
+        repeat:
+          $ref: '#/components/schemas/CRMEngagementRepeat'
+        calendar_event_id:
+          $ref: '#/components/schemas/UUID'
+          description: Событие календаря, заведённое из дела
+        task_id:
+          $ref: '#/components/schemas/UUID'
+          description: Задача модуля «Задачи», заведённая из дела
         owner_id:
           type: integer
           format: int64
         owner_name:
           type: string
+        entity_title:
+          type: string
+          description: Название карточки дела (в списке «Мои дела»)
+        warnings:
+          type: array
+          items:
+            type: string
+            enum:
+              - calendar_unavailable
+              - calendar_failed
+          description: Дело сохранено, но событие календаря не заведено или не обновлено
         created_by:
           type: integer
           format: int64
@@ -56643,17 +56800,31 @@ components:
         title:
           type: string
           minLength: 1
+        description:
+          type: string
+          description: Подробности дела
         due_at:
           type:
             - string
             - 'null'
           format: date-time
+        remind_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Когда напомнить ответственному; не позже срока
+        repeat:
+          $ref: '#/components/schemas/CRMEngagementRepeat'
         owner_id:
           type:
             - integer
             - 'null'
           format: int64
           description: По умолчанию - вызывающий сотрудник
+        in_calendar:
+          type: boolean
+          description: Поставить дело событием в календарь ответственного; нужен срок
     CRMEngagementPatch:
       type: object
       additionalProperties: false
@@ -56663,11 +56834,23 @@ components:
         title:
           type: string
           minLength: 1
+        description:
+          type: string
+          description: Подробности дела
         due_at:
           type:
             - string
             - 'null'
           format: date-time
+          description: null снимает срок
+        remind_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: null снимает напоминание; новое время снова ставит его в очередь
+        repeat:
+          $ref: '#/components/schemas/CRMEngagementRepeat'
         owner_id:
           type:
             - integer
@@ -56675,7 +56858,44 @@ components:
           format: int64
         done:
           type: boolean
-          description: true закрывает дело, false возвращает в работу
+          description: true закрывает дело, false возвращает в работу; закрытие повторяющегося дела заводит следующее
+        in_calendar:
+          type: boolean
+          description: true ставит в календарь дело, у которого события ещё нет
+    CRMEngagementRepeat:
+      type: string
+      enum:
+        - none
+        - daily
+        - weekly
+        - monthly
+      description: 'Повтор дела: закрытое повторяющееся дело само заводит следующее'
+    CRMEngagementTaskInput:
+      type: object
+      additionalProperties: false
+      required:
+        - section_id
+      properties:
+        section_id:
+          $ref: '#/components/schemas/UUID'
+        title:
+          type: string
+          description: Название задачи; по умолчанию - название дела
+        description:
+          type: string
+          description: Описание задачи; по умолчанию - подробности дела
+        due_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Срок задачи; по умолчанию - срок дела
+        executor_id:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Исполнитель; по умолчанию - ответственный за дело
     CRMExternalLink:
       type: object
       additionalProperties: false

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ed6efc5496703c862db29206f28a1ef682ffe2250f267fb6e6b0107bfa4ab329).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1f6544b5195c473e6b33c6cd19419caf1980480f349c983ff40de7cce6ff2145).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -288,6 +288,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'crmCreateDeal': OperationSpec('POST', '/api/v1/crm/deals', 'crm', 'preview', 'crm:write', True, False, (), 'none', None, None),
     'crmCreateDealFromConversation': OperationSpec('POST', '/api/v1/crm/inbox/conversations/{id}/deals', 'crm', 'preview', 'crm:write', False, False, ('id',), 'none', None, None),
     'crmCreateEngagement': OperationSpec('POST', '/api/v1/crm/{entity}/{id}/engagements', 'crm', 'preview', 'crm:write', False, False, ('entity', 'id',), 'none', None, None),
+    'crmCreateEngagementTask': OperationSpec('POST', '/api/v1/crm/engagements/{id}/task', 'crm', 'preview', 'crm:write', False, False, ('id',), 'none', None, None),
     'crmCreateEventLink': OperationSpec('POST', '/api/v1/crm/{entity}/{id}/events', 'crm', 'preview', 'crm:write', False, False, ('entity', 'id',), 'none', None, None),
     'crmCreateImportUploadSession': OperationSpec('POST', '/api/v1/crm/imports/{id}/upload-sessions', 'crm', 'preview', 'crm:admin', False, False, ('id',), 'none', None, None),
     'crmCreateInboxUploadSession': OperationSpec('POST', '/api/v1/crm/inbox/conversations/{id}/upload-sessions', 'crm', 'preview', 'crm:write', False, False, ('id',), 'none', None, None),
@@ -349,6 +350,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'crmListLeads': OperationSpec('GET', '/api/v1/crm/leads', 'crm', 'preview', 'crm:read', False, False, (), 'limit_offset', 100, 50),
     'crmListLossReasons': OperationSpec('GET', '/api/v1/crm/loss-reasons', 'crm', 'preview', 'crm:read', False, False, (), 'none', None, None),
     'crmListMembers': OperationSpec('GET', '/api/v1/crm/members', 'crm', 'preview', 'crm:read', False, False, (), 'none', None, None),
+    'crmListMyEngagements': OperationSpec('GET', '/api/v1/crm/engagements', 'crm', 'preview', 'crm:read', False, False, (), 'limit', 1000, None),
     'crmListPipelineDeals': OperationSpec('GET', '/api/v1/crm/pipelines/{id}/deals', 'crm', 'preview', 'crm:read', False, False, ('id',), 'limit_offset', 100, 50),
     'crmListPipelines': OperationSpec('GET', '/api/v1/crm/pipelines', 'crm', 'preview', 'crm:read', False, False, (), 'none', None, None),
     'crmMarkInboxConversationRead': OperationSpec('POST', '/api/v1/crm/inbox/conversations/{id}/read', 'crm', 'preview', 'crm:write', False, False, ('id',), 'none', None, None),

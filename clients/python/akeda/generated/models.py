@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ed6efc5496703c862db29206f28a1ef682ffe2250f267fb6e6b0107bfa4ab329).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1f6544b5195c473e6b33c6cd19419caf1980480f349c983ff40de7cce6ff2145).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -108,6 +108,8 @@ __all__ = [
     "CRMEngagementKind",
     "CRMEngagementKindItem",
     "CRMEngagementPatch",
+    "CRMEngagementRepeat",
+    "CRMEngagementTaskInput",
     "CRMExternalLink",
     "CRMImportFileInfo",
     "CRMImportSheetInfo",
@@ -2433,6 +2435,9 @@ class _CRMEngagementRequired(TypedDict):
     entity_id: "UUID"
     kind: "CRMEngagementKind"
     title: str
+    #: Подробности дела: что обсудить, адрес встречи
+    description: str
+    repeat: "CRMEngagementRepeat"
     created_by: int
     created_at: str
     updated_at: str
@@ -2441,17 +2446,36 @@ class CRMEngagement(_CRMEngagementRequired, total=False):
     due_at: str
     #: Пусто, пока дело не выполнено
     done_at: str
+    #: Когда напомнить ответственному
+    remind_at: str
+    #: Когда напоминание ушло в центр уведомлений
+    reminded_at: str
+    #: Событие календаря, заведённое из дела
+    calendar_event_id: "UUID"
+    #: Задача модуля «Задачи», заведённая из дела
+    task_id: "UUID"
     owner_id: int
     owner_name: str
+    #: Название карточки дела (в списке «Мои дела»)
+    entity_title: str
+    #: Дело сохранено, но событие календаря не заведено или не обновлено
+    warnings: List[Literal['calendar_unavailable', 'calendar_failed']]
 
 class _CRMEngagementInputRequired(TypedDict):
     title: str
 
 class CRMEngagementInput(_CRMEngagementInputRequired, total=False):
     kind: "CRMEngagementKind"
+    #: Подробности дела
+    description: str
     due_at: Optional[str]
+    #: Когда напомнить ответственному; не позже срока
+    remind_at: Optional[str]
+    repeat: "CRMEngagementRepeat"
     #: По умолчанию - вызывающий сотрудник
     owner_id: Optional[int]
+    #: Поставить дело событием в календарь ответственного; нужен срок
+    in_calendar: bool
 
 CRMEngagementKind = str
 
@@ -2467,10 +2491,33 @@ class CRMEngagementKindItem(TypedDict):
 class CRMEngagementPatch(TypedDict, total=False):
     kind: "CRMEngagementKind"
     title: str
+    #: Подробности дела
+    description: str
+    #: null снимает срок
     due_at: Optional[str]
+    #: null снимает напоминание; новое время снова ставит его в очередь
+    remind_at: Optional[str]
+    repeat: "CRMEngagementRepeat"
     owner_id: Optional[int]
-    #: true закрывает дело, false возвращает в работу
+    #: true закрывает дело, false возвращает в работу; закрытие повторяющегося дела заводит следующее
     done: bool
+    #: true ставит в календарь дело, у которого события ещё нет
+    in_calendar: bool
+
+CRMEngagementRepeat = Literal['none', 'daily', 'weekly', 'monthly']
+
+class _CRMEngagementTaskInputRequired(TypedDict):
+    section_id: "UUID"
+
+class CRMEngagementTaskInput(_CRMEngagementTaskInputRequired, total=False):
+    #: Название задачи; по умолчанию - название дела
+    title: str
+    #: Описание задачи; по умолчанию - подробности дела
+    description: str
+    #: Срок задачи; по умолчанию - срок дела
+    due_at: Optional[str]
+    #: Исполнитель; по умолчанию - ответственный за дело
+    executor_id: Optional[int]
 
 class CRMExternalLink(TypedDict):
     """Указатель CRM на запись другого модуля; владельцем записи остаётся тот модуль"""
@@ -9092,7 +9139,7 @@ class FinanceAllocationRuleInput(_FinanceAllocationRuleInputRequired, total=Fals
     contract_id: "UUID"
 
 class FinanceAllocationRuleRun(TypedDict, total=False):
-    """Оплаты, которые разнесёт правило, и сколько разнесено."""
+    """Оплаты, которые разнесёт правило, и сколько разнесено. Отказ одной оплаты прогон не обрывает: её строка несёт failure (period_closed, posting_refused или failed)."""
 
     dry_run: bool
     #: Сколько оплат разнесено; в предпросмотре 0
@@ -10428,16 +10475,16 @@ class FinanceTaxRecipientFromPaymentInput(TypedDict):
 class FinanceTaxSettings(TypedDict):
     """Настройка раздела «Налоги»."""
 
-    #: Статья ДДС платежей налогов; пусто — не настроена
-    payment_item_id: Optional[str]
+    #: Статьи ДДС платежей налогов в порядке выбора; пусто — не настроены
+    payment_item_ids: List[str]
     #: Получатели единого налогового счёта
     ens_recipients: List["FinanceTaxRecipient"]
 
 class FinanceTaxSettingsInput(TypedDict, total=False):
     """Настройка раздела «Налоги» целиком."""
 
-    #: Статья ДДС вида «Налоги»; пусто — снять
-    payment_item_id: Optional[str]
+    #: Статьи ДДС вида «Налоги»; пустой список — снять все
+    payment_item_ids: List[str]
     #: Получатели единого налогового счёта
     ens_recipients: List["FinanceTaxRecipient"]
 

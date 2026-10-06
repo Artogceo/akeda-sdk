@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ed6efc5496703c862db29206f28a1ef682ffe2250f267fb6e6b0107bfa4ab329).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1f6544b5195c473e6b33c6cd19419caf1980480f349c983ff40de7cce6ff2145).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1142,11 +1142,26 @@ export interface CRMEngagement {
   "entity_id": UUID;
   "kind": CRMEngagementKind;
   "title": string;
+  /** Подробности дела: что обсудить, адрес встречи */
+  "description": string;
   "due_at"?: string;
   /** Пусто, пока дело не выполнено */
   "done_at"?: string;
+  /** Когда напомнить ответственному */
+  "remind_at"?: string;
+  /** Когда напоминание ушло в центр уведомлений */
+  "reminded_at"?: string;
+  "repeat": CRMEngagementRepeat;
+  /** Событие календаря, заведённое из дела */
+  "calendar_event_id"?: UUID;
+  /** Задача модуля «Задачи», заведённая из дела */
+  "task_id"?: UUID;
   "owner_id"?: number;
   "owner_name"?: string;
+  /** Название карточки дела (в списке «Мои дела») */
+  "entity_title"?: string;
+  /** Дело сохранено, но событие календаря не заведено или не обновлено */
+  "warnings"?: Array<"calendar_unavailable" | "calendar_failed">;
   "created_by": number;
   "created_at": string;
   "updated_at": string;
@@ -1155,9 +1170,16 @@ export interface CRMEngagement {
 export interface CRMEngagementInput {
   "kind"?: CRMEngagementKind;
   "title": string;
+  /** Подробности дела */
+  "description"?: string;
   "due_at"?: string | null;
+  /** Когда напомнить ответственному; не позже срока */
+  "remind_at"?: string | null;
+  "repeat"?: CRMEngagementRepeat;
   /** По умолчанию - вызывающий сотрудник */
   "owner_id"?: number | null;
+  /** Поставить дело событием в календарь ответственного; нужен срок */
+  "in_calendar"?: boolean;
 }
 
 export type CRMEngagementKind = string;
@@ -1175,10 +1197,32 @@ export interface CRMEngagementKindItem {
 export interface CRMEngagementPatch {
   "kind"?: CRMEngagementKind;
   "title"?: string;
+  /** Подробности дела */
+  "description"?: string;
+  /** null снимает срок */
   "due_at"?: string | null;
+  /** null снимает напоминание; новое время снова ставит его в очередь */
+  "remind_at"?: string | null;
+  "repeat"?: CRMEngagementRepeat;
   "owner_id"?: number | null;
-  /** true закрывает дело, false возвращает в работу */
+  /** true закрывает дело, false возвращает в работу; закрытие повторяющегося дела заводит следующее */
   "done"?: boolean;
+  /** true ставит в календарь дело, у которого события ещё нет */
+  "in_calendar"?: boolean;
+}
+
+export type CRMEngagementRepeat = "none" | "daily" | "weekly" | "monthly";
+
+export interface CRMEngagementTaskInput {
+  "section_id": UUID;
+  /** Название задачи; по умолчанию - название дела */
+  "title"?: string;
+  /** Описание задачи; по умолчанию - подробности дела */
+  "description"?: string;
+  /** Срок задачи; по умолчанию - срок дела */
+  "due_at"?: string | null;
+  /** Исполнитель; по умолчанию - ответственный за дело */
+  "executor_id"?: number | null;
 }
 
 /** Указатель CRM на запись другого модуля; владельцем записи остаётся тот модуль */
@@ -7764,7 +7808,7 @@ export interface FinanceAllocationRuleInput {
   "valid_from": string;
 }
 
-/** Оплаты, которые разнесёт правило, и сколько разнесено. */
+/** Оплаты, которые разнесёт правило, и сколько разнесено. Отказ одной оплаты прогон не обрывает: её строка несёт failure (period_closed, posting_refused или failed). */
 export interface FinanceAllocationRuleRun {
   "dry_run"?: boolean;
   /** Сколько оплат разнесено; в предпросмотре 0 */
@@ -9212,16 +9256,16 @@ export interface FinanceTaxRecipientFromPaymentInput {
 
 /** Настройка раздела «Налоги». */
 export interface FinanceTaxSettings {
-  /** Статья ДДС платежей налогов; пусто — не настроена */
-  "payment_item_id": string | null;
+  /** Статьи ДДС платежей налогов в порядке выбора; пусто — не настроены */
+  "payment_item_ids": Array<string>;
   /** Получатели единого налогового счёта */
   "ens_recipients": Array<FinanceTaxRecipient>;
 }
 
 /** Настройка раздела «Налоги» целиком. */
 export interface FinanceTaxSettingsInput {
-  /** Статья ДДС вида «Налоги»; пусто — снять */
-  "payment_item_id"?: string | null;
+  /** Статьи ДДС вида «Налоги»; пустой список — снять все */
+  "payment_item_ids"?: Array<string>;
   /** Получатели единого налогового счёта */
   "ens_recipients"?: Array<FinanceTaxRecipient>;
 }
