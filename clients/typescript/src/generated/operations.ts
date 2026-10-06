@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 af25504aaa41e8f72754035f2646a1e30f0b88ded205525a9b9dfd257cac1377).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c9d8e1ff8e172f9a0456270a345502a45e5857fc0f57b474b7a0ed45dabd7f46).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1756,6 +1756,13 @@ export interface OperationTypes {
     body: models.CoreOrderTemplateInput;
     response: models.CoreOrderTemplate;
   };
+  /** DELETE /api/v1/crm/card-upload-sessions/{id} — Отменить сессию загрузки файла карточки */
+  crmAbortCardFileUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** DELETE /api/v1/crm/import-upload-sessions/{id} — Отменить сессию загрузки файла импорта */
   crmAbortImportUploadSession: {
     params: { "id": models.UUID };
@@ -1791,6 +1798,13 @@ export interface OperationTypes {
     body: models.CRMInboxAssignInput;
     response: models.CRMInboxConversation;
   };
+  /** GET /api/v1/crm/{entity}/{id}/files/{fileId}/download-session — Временный адрес файла карточки */
+  crmCardFileDownloadSession: {
+    params: { "entity": "lead" | "deal" | "customer"; "fileId": models.UUID; "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.TransferDownloadLink;
+  };
   /** POST /api/v1/crm/leads/{id}/convert — Перевести лид в сделку */
   crmConvertLead: {
     params: { "id": models.UUID };
@@ -1804,6 +1818,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CRMAutomationRuleInput;
     response: models.CRMAutomationRule;
+  };
+  /** POST /api/v1/crm/{entity}/{id}/files/upload-sessions — Открыть сессию загрузки файла в карточку */
+  crmCreateCardFileUploadSession: {
+    params: { "entity": "lead" | "deal" | "customer"; "id": models.UUID };
+    query: Record<string, never>;
+    body: models.TransferUploadRequest;
+    response: models.TransferSession;
   };
   /** POST /api/v1/crm/customers — Создать клиента CRM */
   crmCreateCustomer: {
@@ -1910,6 +1931,13 @@ export interface OperationTypes {
     body: models.CRMCreateTaskLinkInput;
     response: models.CRMExternalLink;
   };
+  /** DELETE /api/v1/crm/{entity}/{id}/files/{fileId} — Удалить файл карточки */
+  crmDeleteCardFile: {
+    params: { "entity": "lead" | "deal" | "customer"; "fileId": models.UUID; "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** DELETE /api/v1/crm/customers/{id} — Удалить клиента CRM */
   crmDeleteCustomer: {
     params: { "id": models.UUID };
@@ -1923,6 +1951,13 @@ export interface OperationTypes {
     query: { "email"?: string; "inn"?: string; "kpp"?: string; "name"?: string; "phone"?: string };
     body: never;
     response: Array<models.CRMCustomerDuplicate>;
+  };
+  /** POST /api/v1/crm/card-upload-sessions/{id}/finish — Завершить загрузку файла в карточку */
+  crmFinishCardFileUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMCardFile;
   };
   /** POST /api/v1/crm/import-upload-sessions/{id}/finish — Завершить загрузку файла импорта */
   crmFinishImportUploadSession: {
@@ -1958,6 +1993,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: Array<models.CRMAutomationActionJournal>;
+  };
+  /** GET /api/v1/crm/card-upload-sessions/{id} — Состояние сессии загрузки файла карточки */
+  crmGetCardFileUploadSession: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.TransferSession;
   };
   /** GET /api/v1/crm/customers/{id} — Получить клиента CRM */
   crmGetCustomer: {
@@ -2105,6 +2147,13 @@ export interface OperationTypes {
     query: { "rule_id"?: models.UUID };
     body: never;
     response: Array<models.CRMAutomationRun>;
+  };
+  /** GET /api/v1/crm/{entity}/{id}/files — Файлы карточки лида, сделки или клиента */
+  crmListCardFiles: {
+    params: { "entity": "lead" | "deal" | "customer"; "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMCardFileList;
   };
   /** GET /api/v1/crm/customers/duplicate-groups — Найти дубли во всей базе клиентов */
   crmListCustomerDuplicateGroups: {
@@ -6047,13 +6096,16 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   coreUpdateProductImportMapping: { method: "PATCH", path: "/api/v1/core/product-imports/{id}/mapping", module: "core", stage: "preview", permission: "core:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateTradeFunnel: { method: "PUT", path: "/api/v1/core/trade/funnels/{id}", module: "core", stage: "preview", permission: "settings:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   coreUpdateTradeTemplate: { method: "PUT", path: "/api/v1/core/trade/templates/{id}", module: "core", stage: "preview", permission: "core.trade:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmAbortCardFileUploadSession: { method: "DELETE", path: "/api/v1/crm/card-upload-sessions/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmAbortImportUploadSession: { method: "DELETE", path: "/api/v1/crm/import-upload-sessions/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmAbortInboxUploadSession: { method: "DELETE", path: "/api/v1/crm/inbox/upload-sessions/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmAddNote: { method: "POST", path: "/api/v1/crm/{entity}/{id}/notes", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmArchivePipeline: { method: "POST", path: "/api/v1/crm/pipelines/{id}/archive", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmAssignInboxConversation: { method: "PATCH", path: "/api/v1/crm/inbox/conversations/{id}/assign", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCardFileDownloadSession: { method: "GET", path: "/api/v1/crm/{entity}/{id}/files/{fileId}/download-session", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmConvertLead: { method: "POST", path: "/api/v1/crm/leads/{id}/convert", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateAutomationRule: { method: "POST", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateCardFileUploadSession: { method: "POST", path: "/api/v1/crm/{entity}/{id}/files/upload-sessions", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateCustomer: { method: "POST", path: "/api/v1/crm/customers", module: "crm", stage: "preview", permission: "crm:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateDeal: { method: "POST", path: "/api/v1/crm/deals", module: "crm", stage: "preview", permission: "crm:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateDealFromConversation: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/deals", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -6069,13 +6121,16 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmCreatePipeline: { method: "POST", path: "/api/v1/crm/pipelines", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateStage: { method: "POST", path: "/api/v1/crm/pipelines/{id}/stages", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateTaskLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/tasks", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmDeleteCardFile: { method: "DELETE", path: "/api/v1/crm/{entity}/{id}/files/{fileId}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmDeleteCustomer: { method: "DELETE", path: "/api/v1/crm/customers/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmFindCustomerDuplicates: { method: "GET", path: "/api/v1/crm/customers/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmFinishCardFileUploadSession: { method: "POST", path: "/api/v1/crm/card-upload-sessions/{id}/finish", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmFinishImportUploadSession: { method: "POST", path: "/api/v1/crm/import-upload-sessions/{id}/finish", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmFinishInboxUploadSession: { method: "POST", path: "/api/v1/crm/inbox/upload-sessions/{id}/finish", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetAnalytics: { method: "GET", path: "/api/v1/crm/analytics", module: "crm", stage: "preview", permission: "crm:team_read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetAutomationRule: { method: "GET", path: "/api/v1/crm/automation/rules/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetAutomationRunActions: { method: "GET", path: "/api/v1/crm/automation/runs/{id}/actions", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmGetCardFileUploadSession: { method: "GET", path: "/api/v1/crm/card-upload-sessions/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetCustomer: { method: "GET", path: "/api/v1/crm/customers/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetDeal: { method: "GET", path: "/api/v1/crm/deals/{id}", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmGetDealBoard: { method: "GET", path: "/api/v1/crm/deals/board", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 50 },
@@ -6097,6 +6152,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmLinkEntityConversation: { method: "POST", path: "/api/v1/crm/inbox/entities/{entity}/{id}/conversations", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListAutomationRules: { method: "GET", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListAutomationRuns: { method: "GET", path: "/api/v1/crm/automation/runs", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListCardFiles: { method: "GET", path: "/api/v1/crm/{entity}/{id}/files", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListCustomerDuplicateGroups: { method: "GET", path: "/api/v1/crm/customers/duplicate-groups", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 50 },
   crmListCustomers: { method: "GET", path: "/api/v1/crm/customers", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   crmListDealActivities: { method: "GET", path: "/api/v1/crm/deals/{id}/activities", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 af25504aaa41e8f72754035f2646a1e30f0b88ded205525a9b9dfd257cac1377).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c9d8e1ff8e172f9a0456270a345502a45e5857fc0f57b474b7a0ed45dabd7f46).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -81,6 +81,8 @@ __all__ = [
     "CRMAutomationRule",
     "CRMAutomationRuleInput",
     "CRMAutomationRun",
+    "CRMCardFile",
+    "CRMCardFileList",
     "CRMContactRef",
     "CRMConversionMetric",
     "CRMConvertLeadInput",
@@ -2039,6 +2041,31 @@ class CRMAutomationRun(_CRMAutomationRunRequired, total=False):
     entity_type: str
     entity_id: "UUID"
 
+class _CRMCardFileRequired(TypedDict):
+    id: "UUID"
+    entity_type: Literal['lead', 'deal', 'customer']
+    entity_id: "UUID"
+    #: Имя файла с расширением
+    name: str
+    mime_type: str
+    size_bytes: int
+    #: Вердикт антивируса: clean и skipped скачиваются, pending - ещё проверяется, infected - заражён
+    scan_status: Literal['clean', 'skipped', 'pending', 'infected']
+    uploaded_by: int
+    created_at: str
+
+class CRMCardFile(_CRMCardFileRequired, total=False):
+    """Файл, прикреплённый к лиду, сделке или клиенту"""
+
+    #: Контрольная сумма SHA-256, если её заявили при загрузке
+    sha256: str
+    uploaded_by_name: str
+
+class CRMCardFileList(TypedDict):
+    """Файлы карточки, новые сверху"""
+
+    items: List["CRMCardFile"]
+
 class _CRMContactRefRequired(TypedDict):
     id: "UUID"
     name: str
@@ -3229,8 +3256,8 @@ CRMStageShowOnBoard = bool
 
 class _CRMTimelineEntryRequired(TypedDict):
     id: "UUID"
-    #: note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача
-    kind: Literal['note', 'system', 'stage', 'decision', 'message', 'link', 'engagement']
+    #: note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача, file - файл прикреплён к записи или удалён
+    kind: Literal['note', 'system', 'stage', 'decision', 'message', 'link', 'engagement', 'file']
     at: str
     #: Заголовок записи: действие, название этапа, решение или направление сообщения
     title: str

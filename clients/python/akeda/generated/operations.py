@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 af25504aaa41e8f72754035f2646a1e30f0b88ded205525a9b9dfd257cac1377).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c9d8e1ff8e172f9a0456270a345502a45e5857fc0f57b474b7a0ed45dabd7f46).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -277,13 +277,16 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreUpdateProductImportMapping': OperationSpec('PATCH', '/api/v1/core/product-imports/{id}/mapping', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreUpdateTradeFunnel': OperationSpec('PUT', '/api/v1/core/trade/funnels/{id}', 'core', 'preview', 'settings:write', False, False, ('id',), 'none', None, None),
     'coreUpdateTradeTemplate': OperationSpec('PUT', '/api/v1/core/trade/templates/{id}', 'core', 'preview', 'core.trade:write', False, True, ('id',), 'none', None, None),
+    'crmAbortCardFileUploadSession': OperationSpec('DELETE', '/api/v1/crm/card-upload-sessions/{id}', 'crm', 'preview', 'crm:write', False, False, ('id',), 'none', None, None),
     'crmAbortImportUploadSession': OperationSpec('DELETE', '/api/v1/crm/import-upload-sessions/{id}', 'crm', 'preview', 'crm:admin', False, False, ('id',), 'none', None, None),
     'crmAbortInboxUploadSession': OperationSpec('DELETE', '/api/v1/crm/inbox/upload-sessions/{id}', 'crm', 'preview', 'crm:write', False, False, ('id',), 'none', None, None),
     'crmAddNote': OperationSpec('POST', '/api/v1/crm/{entity}/{id}/notes', 'crm', 'preview', 'crm:write', False, False, ('entity', 'id',), 'none', None, None),
     'crmArchivePipeline': OperationSpec('POST', '/api/v1/crm/pipelines/{id}/archive', 'crm', 'preview', 'crm:admin', False, False, ('id',), 'none', None, None),
     'crmAssignInboxConversation': OperationSpec('PATCH', '/api/v1/crm/inbox/conversations/{id}/assign', 'crm', 'preview', 'crm:write', False, False, ('id',), 'none', None, None),
+    'crmCardFileDownloadSession': OperationSpec('GET', '/api/v1/crm/{entity}/{id}/files/{fileId}/download-session', 'crm', 'preview', 'crm:read', False, False, ('entity', 'fileId', 'id',), 'none', None, None),
     'crmConvertLead': OperationSpec('POST', '/api/v1/crm/leads/{id}/convert', 'crm', 'preview', 'crm:write', False, False, ('id',), 'none', None, None),
     'crmCreateAutomationRule': OperationSpec('POST', '/api/v1/crm/automation/rules', 'crm', 'preview', 'crm:admin', False, False, (), 'none', None, None),
+    'crmCreateCardFileUploadSession': OperationSpec('POST', '/api/v1/crm/{entity}/{id}/files/upload-sessions', 'crm', 'preview', 'crm:write', False, False, ('entity', 'id',), 'none', None, None),
     'crmCreateCustomer': OperationSpec('POST', '/api/v1/crm/customers', 'crm', 'preview', 'crm:write', True, False, (), 'none', None, None),
     'crmCreateDeal': OperationSpec('POST', '/api/v1/crm/deals', 'crm', 'preview', 'crm:write', True, False, (), 'none', None, None),
     'crmCreateDealFromConversation': OperationSpec('POST', '/api/v1/crm/inbox/conversations/{id}/deals', 'crm', 'preview', 'crm:write', False, False, ('id',), 'none', None, None),
@@ -299,13 +302,16 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'crmCreatePipeline': OperationSpec('POST', '/api/v1/crm/pipelines', 'crm', 'preview', 'crm:admin', False, False, (), 'none', None, None),
     'crmCreateStage': OperationSpec('POST', '/api/v1/crm/pipelines/{id}/stages', 'crm', 'preview', 'crm:admin', False, False, ('id',), 'none', None, None),
     'crmCreateTaskLink': OperationSpec('POST', '/api/v1/crm/{entity}/{id}/tasks', 'crm', 'preview', 'crm:write', False, False, ('entity', 'id',), 'none', None, None),
+    'crmDeleteCardFile': OperationSpec('DELETE', '/api/v1/crm/{entity}/{id}/files/{fileId}', 'crm', 'preview', 'crm:write', False, False, ('entity', 'fileId', 'id',), 'none', None, None),
     'crmDeleteCustomer': OperationSpec('DELETE', '/api/v1/crm/customers/{id}', 'crm', 'preview', 'crm:write', False, False, ('id',), 'none', None, None),
     'crmFindCustomerDuplicates': OperationSpec('GET', '/api/v1/crm/customers/duplicates', 'crm', 'preview', 'crm:read', False, False, (), 'none', None, None),
+    'crmFinishCardFileUploadSession': OperationSpec('POST', '/api/v1/crm/card-upload-sessions/{id}/finish', 'crm', 'preview', 'crm:write', False, False, ('id',), 'none', None, None),
     'crmFinishImportUploadSession': OperationSpec('POST', '/api/v1/crm/import-upload-sessions/{id}/finish', 'crm', 'preview', 'crm:admin', False, False, ('id',), 'none', None, None),
     'crmFinishInboxUploadSession': OperationSpec('POST', '/api/v1/crm/inbox/upload-sessions/{id}/finish', 'crm', 'preview', 'crm:write', False, False, ('id',), 'none', None, None),
     'crmGetAnalytics': OperationSpec('GET', '/api/v1/crm/analytics', 'crm', 'preview', 'crm:team_read', False, False, (), 'none', None, None),
     'crmGetAutomationRule': OperationSpec('GET', '/api/v1/crm/automation/rules/{id}', 'crm', 'preview', 'crm:admin', False, False, ('id',), 'none', None, None),
     'crmGetAutomationRunActions': OperationSpec('GET', '/api/v1/crm/automation/runs/{id}/actions', 'crm', 'preview', 'crm:admin', False, False, ('id',), 'none', None, None),
+    'crmGetCardFileUploadSession': OperationSpec('GET', '/api/v1/crm/card-upload-sessions/{id}', 'crm', 'preview', 'crm:read', False, False, ('id',), 'none', None, None),
     'crmGetCustomer': OperationSpec('GET', '/api/v1/crm/customers/{id}', 'crm', 'preview', 'crm:read', False, False, ('id',), 'none', None, None),
     'crmGetDeal': OperationSpec('GET', '/api/v1/crm/deals/{id}', 'crm', 'preview', 'crm:read', False, False, ('id',), 'none', None, None),
     'crmGetDealBoard': OperationSpec('GET', '/api/v1/crm/deals/board', 'crm', 'preview', 'crm:read', False, False, (), 'limit', 100, 50),
@@ -327,6 +333,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'crmLinkEntityConversation': OperationSpec('POST', '/api/v1/crm/inbox/entities/{entity}/{id}/conversations', 'crm', 'preview', 'crm:write', False, False, ('entity', 'id',), 'none', None, None),
     'crmListAutomationRules': OperationSpec('GET', '/api/v1/crm/automation/rules', 'crm', 'preview', 'crm:admin', False, False, (), 'none', None, None),
     'crmListAutomationRuns': OperationSpec('GET', '/api/v1/crm/automation/runs', 'crm', 'preview', 'crm:admin', False, False, (), 'none', None, None),
+    'crmListCardFiles': OperationSpec('GET', '/api/v1/crm/{entity}/{id}/files', 'crm', 'preview', 'crm:read', False, False, ('entity', 'id',), 'none', None, None),
     'crmListCustomerDuplicateGroups': OperationSpec('GET', '/api/v1/crm/customers/duplicate-groups', 'crm', 'preview', 'crm:read', False, False, (), 'limit', 200, 50),
     'crmListCustomers': OperationSpec('GET', '/api/v1/crm/customers', 'crm', 'preview', 'crm:read', False, False, (), 'limit_offset', 100, 50),
     'crmListDealActivities': OperationSpec('GET', '/api/v1/crm/deals/{id}/activities', 'crm', 'preview', 'crm:read', False, False, ('id',), 'none', None, None),

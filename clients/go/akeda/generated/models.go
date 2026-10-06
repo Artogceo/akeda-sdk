@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 af25504aaa41e8f72754035f2646a1e30f0b88ded205525a9b9dfd257cac1377).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c9d8e1ff8e172f9a0456270a345502a45e5857fc0f57b474b7a0ed45dabd7f46).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -751,6 +751,29 @@ type CRMAutomationRun struct {
 	ActionErrors []string `json:"action_errors"`
 	CreatedAt    string   `json:"created_at"`
 	UpdatedAt    string   `json:"updated_at"`
+}
+
+// CRMCardFile — Файл, прикреплённый к лиду, сделке или клиенту
+type CRMCardFile struct {
+	ID         UUID   `json:"id"`
+	EntityType string `json:"entity_type"`
+	EntityID   UUID   `json:"entity_id"`
+	// Name — Имя файла с расширением
+	Name      string `json:"name"`
+	MimeType  string `json:"mime_type"`
+	SizeBytes int64  `json:"size_bytes"`
+	// Sha256 — Контрольная сумма SHA-256, если её заявили при загрузке
+	Sha256 *string `json:"sha256,omitempty"`
+	// ScanStatus — Вердикт антивируса: clean и skipped скачиваются, pending - ещё проверяется, infected - заражён
+	ScanStatus     string  `json:"scan_status"`
+	UploadedBy     int64   `json:"uploaded_by"`
+	UploadedByName *string `json:"uploaded_by_name,omitempty"`
+	CreatedAt      string  `json:"created_at"`
+}
+
+// CRMCardFileList — Файлы карточки, новые сверху
+type CRMCardFileList struct {
+	Items []CRMCardFile `json:"items"`
 }
 
 // CRMContactRef — Узкая проекция карточки справочника ERP; CRM её не редактирует
@@ -1915,7 +1938,7 @@ type CRMStageShowOnBoard = bool
 // CRMTimelineEntry — Одна запись ленты; вид говорит, из какого источника она пришла
 type CRMTimelineEntry struct {
 	ID UUID `json:"id"`
-	// Kind — note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача
+	// Kind — note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача, file - файл прикреплён к записи или удалён
 	Kind      string  `json:"kind"`
 	At        string  `json:"at"`
 	ActorID   *int64  `json:"actor_id,omitempty"`

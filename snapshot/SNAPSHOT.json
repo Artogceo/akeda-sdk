@@ -3,7 +3,7 @@
     "license": "LicenseRef-Akeda-Proprietary",
     "operations": {
       "by_audience": {
-        "external": 824
+        "external": 831
       },
       "by_module": {
         "assistant": 3,
@@ -11,7 +11,7 @@
         "calendar": 25,
         "chat": 26,
         "core": 162,
-        "crm": 100,
+        "crm": 107,
         "dashboard": 2,
         "developer": 22,
         "docflow": 55,
@@ -26,7 +26,7 @@
         "tasks": 100
       },
       "by_stage": {
-        "preview": 800,
+        "preview": 807,
         "public": 24
       },
       "installation_by_module": {
@@ -40,9 +40,9 @@
         "tasks": 100
       },
       "installation_reachable": 503,
-      "total": 824
+      "total": 831
     },
-    "schemas": 1140,
+    "schemas": 1142,
     "servers": [
       "https://erp.akeda.ru"
     ],
@@ -61,14 +61,14 @@
       "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 3518336,
+      "bytes": 3536120,
       "path": "openapi/akeda-v1.json",
-      "sha256": "af25504aaa41e8f72754035f2646a1e30f0b88ded205525a9b9dfd257cac1377"
+      "sha256": "c9d8e1ff8e172f9a0456270a345502a45e5857fc0f57b474b7a0ed45dabd7f46"
     },
     {
-      "bytes": 2661685,
+      "bytes": 2675578,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "b2ff4f1d6be15954399d47c1878b05ec36baedff386b72e486caaf496fad91a3"
+      "sha256": "6d2537001d1c3320a09920cddc54db10d219da9a9792a1534b63dd3978eadbd1"
     },
     {
       "bytes": 18414,
@@ -81,6 +81,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "97bace2af20ece5dd3b4b4cb6935ede6bc1d88c911c62490cf7bfab5a511679f",
+  "snapshot_digest": "94341fdb62477c32e5b0bf92e997cf9c52e4dd82e1ad3389670ebae42826db48",
   "snapshot_version": 1
 }

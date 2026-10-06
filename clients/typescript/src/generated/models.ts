@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 af25504aaa41e8f72754035f2646a1e30f0b88ded205525a9b9dfd257cac1377).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c9d8e1ff8e172f9a0456270a345502a45e5857fc0f57b474b7a0ed45dabd7f46).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -753,6 +753,29 @@ export interface CRMAutomationRun {
   "action_errors": Array<string> | null;
   "created_at": string;
   "updated_at": string;
+}
+
+/** Файл, прикреплённый к лиду, сделке или клиенту */
+export interface CRMCardFile {
+  "id": UUID;
+  "entity_type": "lead" | "deal" | "customer";
+  "entity_id": UUID;
+  /** Имя файла с расширением */
+  "name": string;
+  "mime_type": string;
+  "size_bytes": number;
+  /** Контрольная сумма SHA-256, если её заявили при загрузке */
+  "sha256"?: string;
+  /** Вердикт антивируса: clean и skipped скачиваются, pending - ещё проверяется, infected - заражён */
+  "scan_status": "clean" | "skipped" | "pending" | "infected";
+  "uploaded_by": number;
+  "uploaded_by_name"?: string;
+  "created_at": string;
+}
+
+/** Файлы карточки, новые сверху */
+export interface CRMCardFileList {
+  "items": Array<CRMCardFile>;
 }
 
 /** Узкая проекция карточки справочника ERP; CRM её не редактирует */
@@ -1917,8 +1940,8 @@ export type CRMStageShowOnBoard = boolean;
 /** Одна запись ленты; вид говорит, из какого источника она пришла */
 export interface CRMTimelineEntry {
   "id": UUID;
-  /** note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача */
-  "kind": "note" | "system" | "stage" | "decision" | "message" | "link" | "engagement";
+  /** note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача, file - файл прикреплён к записи или удалён */
+  "kind": "note" | "system" | "stage" | "decision" | "message" | "link" | "engagement" | "file";
   "at": string;
   "actor_id"?: number;
   "actor_name"?: string;
