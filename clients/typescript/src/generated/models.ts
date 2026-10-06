@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c9d8e1ff8e172f9a0456270a345502a45e5857fc0f57b474b7a0ed45dabd7f46).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c46bcc956512a51ff7a1a3400788732fa93bcbedb80ccce20857a1c4ab36abd7).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2816,6 +2816,8 @@ export interface CoreBusiness {
   "vat_presentation"?: "gross" | "net";
   /** Дата начала действующей сегодня версии очистки сумм; отсутствует, если версия действует с начала учёта */
   "vat_since"?: string;
+  /** Дата переноса бизнеса из 1С: акт поставщика со ссылкой на документ 1С по эту дату включительно принимается без бумаги */
+  "onec_migrated_until"?: string;
 }
 
 export interface CoreBusinessAccountingMethodInput {
@@ -2827,6 +2829,8 @@ export interface CoreBusinessAccountingMethodInput {
 
 export interface CoreBusinessInput {
   "name": string;
+  /** Дата переноса из 1С, ГГГГ-ММ-ДД; пустая строка снимает дату, без поля — не меняется */
+  "onec_migrated_until"?: string;
 }
 
 export interface CoreBusinessOwner {
@@ -2846,6 +2850,14 @@ export interface CoreBusinessOwnerInput {
   "company_id"?: UUID;
   "contact_id"?: UUID;
   "share": string;
+}
+
+/** Частичное изменение бизнеса: поле без значения не меняется */
+export interface CoreBusinessPatch {
+  /** Новое название; без поля — прежнее */
+  "name"?: string;
+  /** Дата переноса из 1С, ГГГГ-ММ-ДД; пустая строка снимает дату, без поля — не меняется */
+  "onec_migrated_until"?: string;
 }
 
 export interface CoreBusinessPolicy {
@@ -4045,6 +4057,17 @@ export interface CoreOrderNowAct {
   "date"?: string;
   "number"?: string;
   "title"?: string;
+  /** Номер и дата документа поставщика (СФ, УПД); только у закупки */
+  "supplier_document"?: CoreOrderNowActSupplierDocument;
+  /** «В т.ч. НДС» с документа поставщика; только у закупки. Без поля — налог заказа по строкам */
+  "vat_amount"?: string;
+  "source_1c"?: CoreOrderNowSource1C;
+}
+
+/** Номер и дата документа поставщика (СФ, УПД); только у закупки */
+export interface CoreOrderNowActSupplierDocument {
+  "number"?: string;
+  "date"?: string;
 }
 
 /** Что выпустил владелец исполнения. docflow — бумага документооборота (paper_*), при финансах после отсечки — с учётным документом исполнения (execution_*); finance — акт финансов без бумаги. */
@@ -4107,6 +4130,16 @@ export interface CoreOrderNowResult {
   "execution": CoreOrderNowExecution;
   /** true — продажа или закупка уже был исполнен этой командой; ничего не записано */
   "replayed": boolean;
+}
+
+/** Документ 1С, из которого перенесён акт поставщика: до даты переноса бизнеса принимается без бумаги */
+export interface CoreOrderNowSource1C {
+  /** Ref_Key документа 1С */
+  "ref_key": string;
+  /** Номер документа в 1С */
+  "number"?: string;
+  /** Дата документа в 1С */
+  "date"?: string;
 }
 
 export interface CoreOrderObligation {
@@ -8818,6 +8851,8 @@ export interface FinancePnlReportRow {
   "format": string;
   "system_row"?: string;
   "problem"?: string;
+  /** Вид налога у строки вида налога и у подстроки «Налогов» */
+  "tax_kind"?: string;
 }
 
 export interface FinanceProject {
@@ -9197,6 +9232,8 @@ export interface FinanceTaxKindAmount {
   "kind": string;
   /** Сумма */
   "amount": string;
+  /** Название вида налога в кабинете */
+  "name"?: string;
 }
 
 export interface FinanceTaxKindPage {
@@ -9239,6 +9276,14 @@ export interface FinanceTaxMonthLine {
   "comment"?: string;
   /** Строку заполнил сервер — из начислений зарплаты или «НДС за квартал»; во входе такие строки игнорируются */
   "source"?: "payroll" | "vat_quarter";
+  /** Сумма по декларации; строка с ней — строка декларации за прошлый период */
+  "declared"?: string;
+  /** Расчёт раздела за период декларации; заполняет сервер */
+  "calculated"?: string;
+  /** Начало периода декларации */
+  "period_from"?: string;
+  /** Конец периода декларации; не позже конца месяца документа */
+  "period_to"?: string;
 }
 
 export interface FinanceTaxMonthPage {

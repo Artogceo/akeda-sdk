@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c9d8e1ff8e172f9a0456270a345502a45e5857fc0f57b474b7a0ed45dabd7f46).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c46bcc956512a51ff7a1a3400788732fa93bcbedb80ccce20857a1c4ab36abd7).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -277,6 +277,7 @@ __all__ = [
     "CoreBusinessInput",
     "CoreBusinessOwner",
     "CoreBusinessOwnerInput",
+    "CoreBusinessPatch",
     "CoreBusinessPolicy",
     "CoreChange",
     "CoreChangeFeedPage",
@@ -379,9 +380,11 @@ __all__ = [
     "CoreOrderLineInput",
     "CoreOrderLineKind",
     "CoreOrderNowAct",
+    "CoreOrderNowActSupplierDocument",
     "CoreOrderNowExecution",
     "CoreOrderNowInput",
     "CoreOrderNowResult",
+    "CoreOrderNowSource1C",
     "CoreOrderObligation",
     "CoreOrderPage",
     "CoreOrderPaymentTerm",
@@ -4100,6 +4103,8 @@ class CoreBusiness(_CoreBusinessRequired, total=False):
     vat_presentation: Literal['gross', 'net']
     #: Дата начала действующей сегодня версии очистки сумм; отсутствует, если версия действует с начала учёта
     vat_since: str
+    #: Дата переноса бизнеса из 1С: акт поставщика со ссылкой на документ 1С по эту дату включительно принимается без бумаги
+    onec_migrated_until: str
 
 class _CoreBusinessAccountingMethodInputRequired(TypedDict):
     #: Значение приводится к нижнему регистру
@@ -4109,8 +4114,12 @@ class CoreBusinessAccountingMethodInput(_CoreBusinessAccountingMethodInputRequir
     #: Дата перехода на начисление; обязательна при accrual и не используется при cash
     accrual_from: str
 
-class CoreBusinessInput(TypedDict):
+class _CoreBusinessInputRequired(TypedDict):
     name: str
+
+class CoreBusinessInput(_CoreBusinessInputRequired, total=False):
+    #: Дата переноса из 1С, ГГГГ-ММ-ДД; пустая строка снимает дату, без поля — не меняется
+    onec_migrated_until: str
 
 class _CoreBusinessOwnerRequired(TypedDict):
     id: "UUID"
@@ -4132,6 +4141,14 @@ class CoreBusinessOwnerInput(_CoreBusinessOwnerInputRequired, total=False):
     employee_id: "UUID"
     company_id: "UUID"
     contact_id: "UUID"
+
+class CoreBusinessPatch(TypedDict, total=False):
+    """Частичное изменение бизнеса: поле без значения не меняется"""
+
+    #: Новое название; без поля — прежнее
+    name: str
+    #: Дата переноса из 1С, ГГГГ-ММ-ДД; пустая строка снимает дату, без поля — не меняется
+    onec_migrated_until: str
 
 class _CoreBusinessPolicyRequired(TypedDict):
     id: "UUID"
@@ -5327,6 +5344,17 @@ class CoreOrderNowAct(TypedDict, total=False):
     date: str
     number: str
     title: str
+    #: Номер и дата документа поставщика (СФ, УПД); только у закупки
+    supplier_document: "CoreOrderNowActSupplierDocument"
+    #: «В т.ч. НДС» с документа поставщика; только у закупки. Без поля — налог заказа по строкам
+    vat_amount: str
+    source_1c: "CoreOrderNowSource1C"
+
+class CoreOrderNowActSupplierDocument(TypedDict, total=False):
+    """Номер и дата документа поставщика (СФ, УПД); только у закупки"""
+
+    number: str
+    date: str
 
 class _CoreOrderNowExecutionRequired(TypedDict):
     owner: Literal['docflow', 'finance']
@@ -5392,6 +5420,18 @@ class CoreOrderNowResult(TypedDict):
     execution: "CoreOrderNowExecution"
     #: true — продажа или закупка уже был исполнен этой командой; ничего не записано
     replayed: bool
+
+class _CoreOrderNowSource1CRequired(TypedDict):
+    #: Ref_Key документа 1С
+    ref_key: str
+
+class CoreOrderNowSource1C(_CoreOrderNowSource1CRequired, total=False):
+    """Документ 1С, из которого перенесён акт поставщика: до даты переноса бизнеса принимается без бумаги"""
+
+    #: Номер документа в 1С
+    number: str
+    #: Дата документа в 1С
+    date: str
 
 class CoreOrderObligation(TypedDict):
     #: Действующий приход подтверждения в регистре «Продажи и закупки»
@@ -10081,6 +10121,8 @@ class FinancePnlReportRow(_FinancePnlReportRowRequired, total=False):
     amount: str
     system_row: str
     problem: str
+    #: Вид налога у строки вида налога и у подстроки «Налогов»
+    tax_kind: str
 
 class FinanceProject(TypedDict):
     id: "UUID"
@@ -10420,11 +10462,15 @@ class FinanceTaxKind(TypedDict):
     #: Порядок показа
     sort: int
 
-class FinanceTaxKindAmount(TypedDict):
+class _FinanceTaxKindAmountRequired(TypedDict):
     #: Код вида налога
     kind: str
     #: Сумма
     amount: str
+
+class FinanceTaxKindAmount(_FinanceTaxKindAmountRequired, total=False):
+    #: Название вида налога в кабинете
+    name: str
 
 class FinanceTaxKindPage(TypedDict):
     items: List["FinanceTaxKind"]
@@ -10468,6 +10514,14 @@ class FinanceTaxMonthLine(_FinanceTaxMonthLineRequired, total=False):
     comment: str
     #: Строку заполнил сервер — из начислений зарплаты или «НДС за квартал»; во входе такие строки игнорируются
     source: Literal['payroll', 'vat_quarter']
+    #: Сумма по декларации; строка с ней — строка декларации за прошлый период
+    declared: str
+    #: Расчёт раздела за период декларации; заполняет сервер
+    calculated: str
+    #: Начало периода декларации
+    period_from: str
+    #: Конец периода декларации; не позже конца месяца документа
+    period_to: str
 
 class FinanceTaxMonthPage(TypedDict):
     items: List["FinanceTaxMonth"]

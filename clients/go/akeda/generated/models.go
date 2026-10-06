@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c9d8e1ff8e172f9a0456270a345502a45e5857fc0f57b474b7a0ed45dabd7f46).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c46bcc956512a51ff7a1a3400788732fa93bcbedb80ccce20857a1c4ab36abd7).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -2811,6 +2811,8 @@ type CoreBusiness struct {
 	VATPresentation *string `json:"vat_presentation,omitempty"`
 	// VATSince — Дата начала действующей сегодня версии очистки сумм; отсутствует, если версия действует с начала учёта
 	VATSince *string `json:"vat_since,omitempty"`
+	// OnecMigratedUntil — Дата переноса бизнеса из 1С: акт поставщика со ссылкой на документ 1С по эту дату включительно принимается без бумаги
+	OnecMigratedUntil *string `json:"onec_migrated_until,omitempty"`
 }
 
 type CoreBusinessAccountingMethodInput struct {
@@ -2822,6 +2824,8 @@ type CoreBusinessAccountingMethodInput struct {
 
 type CoreBusinessInput struct {
 	Name string `json:"name"`
+	// OnecMigratedUntil — Дата переноса из 1С, ГГГГ-ММ-ДД; пустая строка снимает дату, без поля — не меняется
+	OnecMigratedUntil *string `json:"onec_migrated_until,omitempty"`
 }
 
 type CoreBusinessOwner struct {
@@ -2841,6 +2845,14 @@ type CoreBusinessOwnerInput struct {
 	CompanyID  *UUID  `json:"company_id,omitempty"`
 	ContactID  *UUID  `json:"contact_id,omitempty"`
 	Share      string `json:"share"`
+}
+
+// CoreBusinessPatch — Частичное изменение бизнеса: поле без значения не меняется
+type CoreBusinessPatch struct {
+	// Name — Новое название; без поля — прежнее
+	Name *string `json:"name,omitempty"`
+	// OnecMigratedUntil — Дата переноса из 1С, ГГГГ-ММ-ДД; пустая строка снимает дату, без поля — не меняется
+	OnecMigratedUntil *string `json:"onec_migrated_until,omitempty"`
 }
 
 type CoreBusinessPolicy struct {
@@ -4040,6 +4052,17 @@ type CoreOrderNowAct struct {
 	Date   *string `json:"date,omitempty"`
 	Number *string `json:"number,omitempty"`
 	Title  *string `json:"title,omitempty"`
+	// SupplierDocument — Номер и дата документа поставщика (СФ, УПД); только у закупки
+	SupplierDocument *CoreOrderNowActSupplierDocument `json:"supplier_document,omitempty"`
+	// VATAmount — «В т.ч. НДС» с документа поставщика; только у закупки. Без поля — налог заказа по строкам
+	VATAmount *string               `json:"vat_amount,omitempty"`
+	Source1c  *CoreOrderNowSource1C `json:"source_1c,omitempty"`
+}
+
+// CoreOrderNowActSupplierDocument — Номер и дата документа поставщика (СФ, УПД); только у закупки
+type CoreOrderNowActSupplierDocument struct {
+	Number *string `json:"number,omitempty"`
+	Date   *string `json:"date,omitempty"`
 }
 
 // CoreOrderNowExecution — Что выпустил владелец исполнения. docflow — бумага документооборота (paper_*), при финансах после отсечки — с учётным документом исполнения (execution_*); finance — акт финансов без бумаги.
@@ -4102,6 +4125,16 @@ type CoreOrderNowResult struct {
 	Execution CoreOrderNowExecution `json:"execution"`
 	// Replayed — true — продажа или закупка уже был исполнен этой командой; ничего не записано
 	Replayed bool `json:"replayed"`
+}
+
+// CoreOrderNowSource1C — Документ 1С, из которого перенесён акт поставщика: до даты переноса бизнеса принимается без бумаги
+type CoreOrderNowSource1C struct {
+	// RefKey — Ref_Key документа 1С
+	RefKey string `json:"ref_key"`
+	// Number — Номер документа в 1С
+	Number *string `json:"number,omitempty"`
+	// Date — Дата документа в 1С
+	Date *string `json:"date,omitempty"`
 }
 
 type CoreOrderObligation struct {
@@ -8795,6 +8828,8 @@ type FinancePnlReportRow struct {
 	Format      string  `json:"format"`
 	SystemRow   *string `json:"system_row,omitempty"`
 	Problem     *string `json:"problem,omitempty"`
+	// TaxKind — Вид налога у строки вида налога и у подстроки «Налогов»
+	TaxKind *string `json:"tax_kind,omitempty"`
 }
 
 type FinanceProject struct {
@@ -9174,6 +9209,8 @@ type FinanceTaxKindAmount struct {
 	Kind string `json:"kind"`
 	// Amount — Сумма
 	Amount string `json:"amount"`
+	// Name — Название вида налога в кабинете
+	Name *string `json:"name,omitempty"`
 }
 
 type FinanceTaxKindPage struct {
@@ -9216,6 +9253,14 @@ type FinanceTaxMonthLine struct {
 	Comment *string `json:"comment,omitempty"`
 	// Source — Строку заполнил сервер — из начислений зарплаты или «НДС за квартал»; во входе такие строки игнорируются
 	Source *string `json:"source,omitempty"`
+	// Declared — Сумма по декларации; строка с ней — строка декларации за прошлый период
+	Declared *string `json:"declared,omitempty"`
+	// Calculated — Расчёт раздела за период декларации; заполняет сервер
+	Calculated *string `json:"calculated,omitempty"`
+	// PeriodFrom — Начало периода декларации
+	PeriodFrom *string `json:"period_from,omitempty"`
+	// PeriodTo — Конец периода декларации; не позже конца месяца документа
+	PeriodTo *string `json:"period_to,omitempty"`
 }
 
 type FinanceTaxMonthPage struct {

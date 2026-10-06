@@ -10758,7 +10758,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CoreBusinessInput"
+                "$ref": "#/components/schemas/CoreBusinessPatch"
               }
             }
           }
@@ -72208,6 +72208,11 @@
             "type": "string",
             "format": "date",
             "description": "Дата начала действующей сегодня версии очистки сумм; отсутствует, если версия действует с начала учёта"
+          },
+          "onec_migrated_until": {
+            "type": "string",
+            "format": "date",
+            "description": "Дата переноса бизнеса из 1С: акт поставщика со ссылкой на документ 1С по эту дату включительно принимается без бумаги"
           }
         }
       },
@@ -72221,6 +72226,25 @@
           "name": {
             "type": "string",
             "minLength": 1
+          },
+          "onec_migrated_until": {
+            "type": "string",
+            "description": "Дата переноса из 1С, ГГГГ-ММ-ДД; пустая строка снимает дату, без поля — не меняется"
+          }
+        }
+      },
+      "CoreBusinessPatch": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Частичное изменение бизнеса: поле без значения не меняется",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Новое название; без поля — прежнее"
+          },
+          "onec_migrated_until": {
+            "type": "string",
+            "description": "Дата переноса из 1С, ГГГГ-ММ-ДД; пустая строка снимает дату, без поля — не меняется"
           }
         }
       },
@@ -74991,6 +75015,44 @@
           },
           "title": {
             "type": "string"
+          },
+          "supplier_document": {
+            "description": "Номер и дата документа поставщика (СФ, УПД); только у закупки",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SupplierDocument"
+              }
+            ]
+          },
+          "vat_amount": {
+            "type": "string",
+            "description": "«В т.ч. НДС» с документа поставщика; только у закупки. Без поля — налог заказа по строкам"
+          },
+          "source_1c": {
+            "$ref": "#/components/schemas/CoreOrderNowSource1C"
+          }
+        }
+      },
+      "CoreOrderNowSource1C": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ref_key"
+        ],
+        "description": "Документ 1С, из которого перенесён акт поставщика: до даты переноса бизнеса принимается без бумаги",
+        "properties": {
+          "ref_key": {
+            "type": "string",
+            "description": "Ref_Key документа 1С"
+          },
+          "number": {
+            "type": "string",
+            "description": "Номер документа в 1С"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Дата документа в 1С"
           }
         }
       },
@@ -84932,6 +84994,10 @@
           "amount": {
             "type": "string",
             "description": "Сумма"
+          },
+          "name": {
+            "type": "string",
+            "description": "Название вида налога в кабинете"
           }
         }
       },
@@ -85014,6 +85080,24 @@
               "vat_quarter"
             ],
             "description": "Строку заполнил сервер — из начислений зарплаты или «НДС за квартал»; во входе такие строки игнорируются"
+          },
+          "declared": {
+            "type": "string",
+            "description": "Сумма по декларации; строка с ней — строка декларации за прошлый период"
+          },
+          "calculated": {
+            "type": "string",
+            "description": "Расчёт раздела за период декларации; заполняет сервер"
+          },
+          "period_from": {
+            "type": "string",
+            "format": "date",
+            "description": "Начало периода декларации"
+          },
+          "period_to": {
+            "type": "string",
+            "format": "date",
+            "description": "Конец периода декларации; не позже конца месяца документа"
           }
         }
       },
@@ -85736,6 +85820,10 @@
           },
           "problem": {
             "type": "string"
+          },
+          "tax_kind": {
+            "type": "string",
+            "description": "Вид налога у строки вида налога и у подстроки «Налогов»"
           }
         }
       },
