@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1f6544b5195c473e6b33c6cd19419caf1980480f349c983ff40de7cce6ff2145).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5c3dd5b33c04f6a35a6dd593e68cd2a7b8e9fdea54d8395b3e4cb36936e320a6).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -620,11 +620,13 @@ __all__ = [
     "DocflowIntakeCounterpartyOption",
     "DocflowIntakeLine",
     "DocflowIntakeParty",
+    "DocflowIntakePnlItem",
     "DocflowIntakePreview",
     "DocflowIntakeProductOption",
     "DocflowIntakePurchase",
     "DocflowIntakeSource",
     "DocflowIntakeTotals",
+    "DocflowIntakeWarehouse",
     "DocflowIssue",
     "DocflowMessage",
     "DocflowMessageFlowLink",
@@ -8008,6 +8010,17 @@ class DocflowIntakeParty(TypedDict):
     #: Адрес одной строкой, собранный из частей формата
     address: str
 
+class _DocflowIntakePnlItemRequired(TypedDict):
+    id: "UUID"
+    #: Название статьи — так, как его назвал кабинет
+    name: str
+
+class DocflowIntakePnlItem(_DocflowIntakePnlItemRequired, total=False):
+    """Подсказка статьи расходов первого акта закупки (ERP-1810), по порядку: статья закупки, статья оплаты закупки или её счёта, статья последнего акта этого поставщика, правило разнесения контрагента. Только расходная статья ОПиУ в обращении."""
+
+    #: Откуда подсказка: order — статья закупки; payment — статья её оплаты или оплаты её счёта; last_act — статья последнего акта поставщика; rule — правило разнесения контрагента
+    source: Literal['order', 'payment', 'last_act', 'rule']
+
 class _DocflowIntakePreviewRequired(TypedDict):
     message: "UUID"
     #: Нашёлся ли во вложениях титул продавца. Ложь означает, что принимать нечего: пакет либо неформализованный, либо файлы ещё не скачаны — чинится это синхронизацией, а не заполнением формы
@@ -8033,6 +8046,8 @@ class DocflowIntakePreview(_DocflowIntakePreviewRequired, total=False):
     executes_order: bool
     #: Подбор закупки для «Куда в учёт» (ERP-1810): закупка, в которой бумага уже лежит (linked), открытые закупки того же поставщика и юрлица с остатком, равным сумме бумаги (amount), затем прочие, куда она помещается (open). Пусто у счёта и договора и когда закупок нет
     purchases: List["DocflowIntakePurchase"]
+    #: Действующие склады для выбора склада приёмки (ERP-1810). Приходят, когда в подборе есть закупка с товаром при включённом складе; выбирать склад нужно, только если у закупки goods = true нет warehouse_id
+    warehouses: List["DocflowIntakeWarehouse"]
 
 class DocflowIntakeProductOption(TypedDict):
     """Вариант номенклатуры, предложенный неоднозначной строке."""
@@ -8061,6 +8076,15 @@ class DocflowIntakePurchase(_DocflowIntakePurchaseRequired, total=False):
     currency: str
     #: Договор закупки
     contract_number: str
+    #: Первому акту этой закупки нужна статья расходов: у закупки её нет, а операции заказа в финансах ещё нет. Приёмка без pnl_item_id ответит 409 docflow.edo.intake_pnl_item_required
+    pnl_item_required: bool
+    suggested_pnl_item: "DocflowIntakePnlItem"
+    #: В закупке товар, и склад включён (ERP-1810): строки бумаги на товар закупки «Принять к учёту» заводит черновиком приёмки склада по закупке (проводит его склад), строки на услуги — актом поставщика
+    goods: bool
+    #: Склад приёмки товара: склад закупки, иначе склад по умолчанию юрлица. Нет при goods = true — склад выбирают из warehouses предложения и присылают полем warehouse_id приёмки
+    warehouse_id: "UUID"
+    #: Название склада приёмки
+    warehouse_name: str
 
 class DocflowIntakeSource(TypedDict):
     """Реквизиты чужого файла обмена, из которого всё прочитано. Разбор частичный и ничего не проверяет: файл уже подписан и юридически значим, и отказать в его чтении из-за реквизита, который нам не нужен, значит потерять поставку из-за чужой ошибки в необязательном поле."""
@@ -8100,6 +8124,13 @@ class DocflowIntakeTotals(TypedDict):
     with_vat: str
     #: Отметка «без НДС» у документа целиком
     vat_without: bool
+
+class DocflowIntakeWarehouse(TypedDict):
+    """Склад, на который можно принять товар закупки (ERP-1810)."""
+
+    id: "UUID"
+    #: Название склада
+    name: str
 
 class _DocflowIssueRequired(TypedDict):
     #: Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои пять: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке документа не сопоставлена номенклатура) и docflow.edo.sign_first (документ ещё не подписан: в учёт его принимают после подписи)

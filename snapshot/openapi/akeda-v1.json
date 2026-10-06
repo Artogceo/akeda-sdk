@@ -107911,6 +107911,13 @@
               "$ref": "#/components/schemas/DocflowIntakePurchase"
             },
             "description": "Подбор закупки для «Куда в учёт» (ERP-1810): закупка, в которой бумага уже лежит (linked), открытые закупки того же поставщика и юрлица с остатком, равным сумме бумаги (amount), затем прочие, куда она помещается (open). Пусто у счёта и договора и когда закупок нет"
+          },
+          "warehouses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocflowIntakeWarehouse"
+            },
+            "description": "Действующие склады для выбора склада приёмки (ERP-1810). Приходят, когда в подборе есть закупка с товаром при включённом складе; выбирать склад нужно, только если у закупки goods = true нет warehouse_id"
           }
         }
       },
@@ -107963,6 +107970,71 @@
               "open"
             ],
             "description": "Почему предложена: linked — бумага уже лежит в ней; amount — остаток равен сумме бумаги; open — бумага помещается в остаток"
+          },
+          "pnl_item_required": {
+            "type": "boolean",
+            "description": "Первому акту этой закупки нужна статья расходов: у закупки её нет, а операции заказа в финансах ещё нет. Приёмка без pnl_item_id ответит 409 docflow.edo.intake_pnl_item_required"
+          },
+          "suggested_pnl_item": {
+            "$ref": "#/components/schemas/DocflowIntakePnlItem"
+          },
+          "goods": {
+            "type": "boolean",
+            "description": "В закупке товар, и склад включён (ERP-1810): строки бумаги на товар закупки «Принять к учёту» заводит черновиком приёмки склада по закупке (проводит его склад), строки на услуги — актом поставщика"
+          },
+          "warehouse_id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Склад приёмки товара: склад закупки, иначе склад по умолчанию юрлица. Нет при goods = true — склад выбирают из warehouses предложения и присылают полем warehouse_id приёмки"
+          },
+          "warehouse_name": {
+            "type": "string",
+            "description": "Название склада приёмки"
+          }
+        }
+      },
+      "DocflowIntakePnlItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Подсказка статьи расходов первого акта закупки (ERP-1810), по порядку: статья закупки, статья оплаты закупки или её счёта, статья последнего акта этого поставщика, правило разнесения контрагента. Только расходная статья ОПиУ в обращении.",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Название статьи — так, как его назвал кабинет"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "order",
+              "payment",
+              "last_act",
+              "rule"
+            ],
+            "description": "Откуда подсказка: order — статья закупки; payment — статья её оплаты или оплаты её счёта; last_act — статья последнего акта поставщика; rule — правило разнесения контрагента"
+          }
+        }
+      },
+      "DocflowIntakeWarehouse": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Склад, на который можно принять товар закупки (ERP-1810).",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Название склада"
           }
         }
       },

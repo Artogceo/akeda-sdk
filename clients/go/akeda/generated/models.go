@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 1f6544b5195c473e6b33c6cd19419caf1980480f349c983ff40de7cce6ff2145).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 5c3dd5b33c04f6a35a6dd593e68cd2a7b8e9fdea54d8395b3e4cb36936e320a6).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -6686,6 +6686,15 @@ type DocflowIntakeParty struct {
 	Address string `json:"address"`
 }
 
+// DocflowIntakePnlItem — Подсказка статьи расходов первого акта закупки (ERP-1810), по порядку: статья закупки, статья оплаты закупки или её счёта, статья последнего акта этого поставщика, правило разнесения контрагента. Только расходная статья ОПиУ в обращении.
+type DocflowIntakePnlItem struct {
+	ID UUID `json:"id"`
+	// Name — Название статьи — так, как его назвал кабинет
+	Name string `json:"name"`
+	// Source — Откуда подсказка: order — статья закупки; payment — статья её оплаты или оплаты её счёта; last_act — статья последнего акта поставщика; rule — правило разнесения контрагента
+	Source *string `json:"source,omitempty"`
+}
+
 // DocflowIntakePreview — Что мы предлагаем принять к учёту. Ничего не меняет и никуда не ходит: предложение обязано быть безопасным, иначе «посмотреть, что там» становится действием с последствиями, и человек побоится его открыть раньше, чем решит принимать.
 type DocflowIntakePreview struct {
 	Message UUID `json:"message"`
@@ -6708,6 +6717,8 @@ type DocflowIntakePreview struct {
 	ExecutesOrder *bool `json:"executes_order,omitempty"`
 	// Purchases — Подбор закупки для «Куда в учёт» (ERP-1810): закупка, в которой бумага уже лежит (linked), открытые закупки того же поставщика и юрлица с остатком, равным сумме бумаги (amount), затем прочие, куда она помещается (open). Пусто у счёта и договора и когда закупок нет
 	Purchases []DocflowIntakePurchase `json:"purchases,omitempty"`
+	// Warehouses — Действующие склады для выбора склада приёмки (ERP-1810). Приходят, когда в подборе есть закупка с товаром при включённом складе; выбирать склад нужно, только если у закупки goods = true нет warehouse_id
+	Warehouses []DocflowIntakeWarehouse `json:"warehouses,omitempty"`
 }
 
 // DocflowIntakeProductOption — Вариант номенклатуры, предложенный неоднозначной строке.
@@ -6734,6 +6745,15 @@ type DocflowIntakePurchase struct {
 	ContractNumber *string `json:"contract_number,omitempty"`
 	// Reason — Почему предложена: linked — бумага уже лежит в ней; amount — остаток равен сумме бумаги; open — бумага помещается в остаток
 	Reason string `json:"reason"`
+	// PNLItemRequired — Первому акту этой закупки нужна статья расходов: у закупки её нет, а операции заказа в финансах ещё нет. Приёмка без pnl_item_id ответит 409 docflow.edo.intake_pnl_item_required
+	PNLItemRequired  *bool                 `json:"pnl_item_required,omitempty"`
+	SuggestedPNLItem *DocflowIntakePnlItem `json:"suggested_pnl_item,omitempty"`
+	// Goods — В закупке товар, и склад включён (ERP-1810): строки бумаги на товар закупки «Принять к учёту» заводит черновиком приёмки склада по закупке (проводит его склад), строки на услуги — актом поставщика
+	Goods *bool `json:"goods,omitempty"`
+	// WarehouseID — Склад приёмки товара: склад закупки, иначе склад по умолчанию юрлица. Нет при goods = true — склад выбирают из warehouses предложения и присылают полем warehouse_id приёмки
+	WarehouseID *UUID `json:"warehouse_id,omitempty"`
+	// WarehouseName — Название склада приёмки
+	WarehouseName *string `json:"warehouse_name,omitempty"`
 }
 
 // DocflowIntakeSource — Реквизиты чужого файла обмена, из которого всё прочитано. Разбор частичный и ничего не проверяет: файл уже подписан и юридически значим, и отказать в его чтении из-за реквизита, который нам не нужен, значит потерять поставку из-за чужой ошибки в необязательном поле.
@@ -6773,6 +6793,13 @@ type DocflowIntakeTotals struct {
 	WithVAT   string `json:"with_vat"`
 	// VATWithout — Отметка «без НДС» у документа целиком
 	VATWithout bool `json:"vat_without"`
+}
+
+// DocflowIntakeWarehouse — Склад, на который можно принять товар закупки (ERP-1810).
+type DocflowIntakeWarehouse struct {
+	ID UUID `json:"id"`
+	// Name — Название склада
+	Name string `json:"name"`
 }
 
 // DocflowIssue — Одна невыполненная проверка. Форма одна на сборку файла формата ФНС и на приёмку входящего документа к учёту: интерфейс переводит их одним словарём, и вторая форма списка означала бы второй словарь. Ни одной надписи для человека здесь нет: код, путь реквизита и подробности значениями — фразу собирает интерфейс, и собирает её на языке читателя.
