@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2d8fdb4d2eecb8ed8b6ea283169177bdcc3699c502400b7745bf3f8dd86b6034).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ffef4262995ac799e177cbcea4855879328c03119c50c6d0286f2113d2e30c18).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -906,6 +906,7 @@ __all__ = [
     "MailAttachment",
     "MailAttachmentLink",
     "MailComposeInput",
+    "MailDeliveryState",
     "MailEncryption",
     "MailFolder",
     "MailFolderInput",
@@ -11497,8 +11498,16 @@ class MailComposeInput(TypedDict, total=False):
     forward_of_id: Optional["UUID"]
     #: Идентификаторы заранее загруженных файлов
     upload_ids: List["UUID"]
-    #: Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо уходит получателю и отозвать его нельзя
+    #: Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо встаёт в очередь, а принятие SMTP-сервером не подтверждает доставку или прочтение получателем
     save_as_draft: bool
+
+class _MailDeliveryStateRequired(TypedDict):
+    status: Literal['queued', 'sending', 'sent', 'failed', 'cancelled']
+    attempts: int
+
+class MailDeliveryState(_MailDeliveryStateRequired, total=False):
+    error_code: str
+    next_attempt_at: str
 
 MailEncryption = Literal['tls', 'starttls']
 
@@ -11507,7 +11516,7 @@ class MailFolder(TypedDict):
 
     id: "UUID"
     account_id: "UUID"
-    #: Имя папки на почтовом сервере
+    #: Идентификатор папки у провайдера; локальная папка «Исходящие» использует внутренний идентификатор и не синхронизируется по IMAP
     external_id: str
     name: str
     role: "MailFolderRole"
@@ -11534,7 +11543,7 @@ class MailFolderInput(_MailFolderInputRequired, total=False):
     #: Родительская папка
     parent_id: Optional["UUID"]
 
-MailFolderRole = Literal['inbox', 'sent', 'drafts', 'trash', 'spam', 'archive', 'custom']
+MailFolderRole = Literal['inbox', 'outbox', 'sent', 'drafts', 'trash', 'spam', 'archive', 'custom']
 
 class _MailMessageRequired(TypedDict):
     id: "UUID"
@@ -11575,6 +11584,7 @@ class MailMessage(_MailMessageRequired, total=False):
     #: Кто вынес вердикт. Решение человека сильнее флага сервера и правил
     spam_source: Literal['provider', 'rule', 'user', 'agent']
     spam_reason: str
+    delivery: "MailDeliveryState"
     attachments: List["MailAttachment"]
 
 class MailMessageAddress(TypedDict):

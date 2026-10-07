@@ -188,7 +188,7 @@ tags:
   - name: Mail accounts
     description: 'Модуль mail (почта сотрудника) — подключение ящиков по IMAP и SMTP, подсказки провайдеров, папки ящика и синхронизация по требованию. Пароль подключения не возвращает ни одна операция: о нём говорит только признак has_credentials'
   - name: Mail messages
-    description: Модуль mail (почта сотрудника) — письма и переписки, отметки прочтения, важности и спама, перенос между папками, вложения, очередь отправки и составление письма. Письмо без признака save_as_draft уходит получателю, и отозвать его нельзя
+    description: Модуль mail (почта сотрудника) — письма и переписки, отметки прочтения, важности и спама, перенос между папками, вложения, очередь отправки и составление письма. Письмо без признака save_as_draft встаёт в очередь; принятие SMTP-сервером не подтверждает доставку или прочтение получателем
   - name: Mail rules
     description: 'Модуль mail (почта сотрудника) — правила разбора входящей почты и их применение к уже накопившимся письмам. Набор полей и операторов закрытый: правило исполняется на сервере над чужой перепиской'
   - name: Finance acquiring
@@ -36556,7 +36556,7 @@ paths:
         - Mail messages
       operationId: mailComposeMessage
       summary: Отправить письмо или сохранить черновик
-      description: При save_as_draft равном true письмо только СОХРАНЯЕТСЯ в «Черновиках» и ждёт человека — получателю оно не уходит. Без этого признака письмо встаёт в очередь отправки и уходит получателю; отозвать отправленное письмо нельзя. Для агента черновик — единственный способ подготовить ответ, не отправив его от чужого имени без подтверждения. В одном письме не больше 200 получателей и не больше 20 файлов.
+      description: При save_as_draft равном true письмо только СОХРАНЯЕТСЯ в «Черновиках» и ждёт человека — получателю оно не уходит. Без этого признака письмо встаёт в очередь отправки; после принятия SMTP-сервером его нельзя отозвать, но это принятие не подтверждает доставку или прочтение получателем. Для агента черновик — единственный способ подготовить ответ, не отправив его от чужого имени без подтверждения. В одном письме не больше 200 получателей и не больше 20 файлов.
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -36967,7 +36967,7 @@ paths:
         - Mail messages
       operationId: mailDeleteMessage
       summary: Переложить письмо в корзину
-      description: 'Письмо переносится в корзину ящика; из корзины письмо удаляется с сервера окончательно. У ящика без корзины письмо не стирается молча: без permanent=true ответ 409 mail.trash_missing, и письмо остаётся на месте.'
+      description: 'Письмо переносится в корзину ящика; из корзины письмо удаляется с сервера окончательно. У ящика без корзины письмо не стирается молча: без permanent=true ответ 409 mail.trash_missing, и письмо остаётся на месте. Письмо в локальных «Исходящих» удалять нельзя, даже с permanent=true: 409 mail.outbox_immutable сохраняет очередь и историю попыток.'
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -37104,7 +37104,7 @@ paths:
         - Mail messages
       operationId: mailMoveMessage
       summary: Переложить письмо в другую папку
-      description: 'Папка другого ящика отвечает 400 mail.folder_foreign: письмо не переезжает между ящиками.'
+      description: 'Папка другого ящика отвечает 400 mail.folder_foreign: письмо не переезжает между ящиками. Перенос в локальные «Исходящие» или из них запрещён: 409 mail.outbox_immutable сохраняет очередь и историю попыток.'
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -37136,6 +37136,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/mail/messages/{id}/spam:
     parameters:
       - $ref: '#/components/parameters/TenantHeader'
@@ -75610,6 +75612,7 @@ components:
       description: Назначение папки в нашем прочтении, а не её имя на сервере. Незнакомое имя остаётся custom — угаданная роль складывала бы туда отправленные письма.
       enum:
         - inbox
+        - outbox
         - sent
         - drafts
         - trash
@@ -75845,7 +75848,7 @@ components:
           $ref: '#/components/schemas/UUID'
         external_id:
           type: string
-          description: Имя папки на почтовом сервере
+          description: Идентификатор папки у провайдера; локальная папка «Исходящие» использует внутренний идентификатор и не синхронизируется по IMAP
         name:
           type: string
         role:
@@ -75916,6 +75919,29 @@ components:
           type: integer
           minimum: 0
           description: Порядок адреса в своей группе
+    MailDeliveryState:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - attempts
+      properties:
+        status:
+          type: string
+          enum:
+            - queued
+            - sending
+            - sent
+            - failed
+            - cancelled
+        attempts:
+          type: integer
+          minimum: 0
+        error_code:
+          type: string
+        next_attempt_at:
+          type: string
+          format: date-time
     MailMessage:
       type: object
       additionalProperties: false
@@ -76009,6 +76035,8 @@ components:
           description: Кто вынес вердикт. Решение человека сильнее флага сервера и правил
         spam_reason:
           type: string
+        delivery:
+          $ref: '#/components/schemas/MailDeliveryState'
         sent_at:
           type:
             - string
@@ -76675,7 +76703,7 @@ components:
         save_as_draft:
           type: boolean
           default: false
-          description: Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо уходит получателю и отозвать его нельзя
+          description: Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо встаёт в очередь, а принятие SMTP-сервером не подтверждает доставку или прочтение получателем
     MailSyncReport:
       type: object
       additionalProperties: false

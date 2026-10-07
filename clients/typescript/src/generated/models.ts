@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2d8fdb4d2eecb8ed8b6ea283169177bdcc3699c502400b7745bf3f8dd86b6034).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ffef4262995ac799e177cbcea4855879328c03119c50c6d0286f2113d2e30c18).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -10135,8 +10135,15 @@ export interface MailComposeInput {
   "forward_of_id"?: UUID | null;
   /** Идентификаторы заранее загруженных файлов */
   "upload_ids"?: Array<UUID>;
-  /** Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо уходит получателю и отозвать его нельзя */
+  /** Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо встаёт в очередь, а принятие SMTP-сервером не подтверждает доставку или прочтение получателем */
   "save_as_draft"?: boolean;
+}
+
+export interface MailDeliveryState {
+  "status": "queued" | "sending" | "sent" | "failed" | "cancelled";
+  "attempts": number;
+  "error_code"?: string;
+  "next_attempt_at"?: string;
 }
 
 export type MailEncryption = "tls" | "starttls";
@@ -10145,7 +10152,7 @@ export type MailEncryption = "tls" | "starttls";
 export interface MailFolder {
   "id": UUID;
   "account_id": UUID;
-  /** Имя папки на почтовом сервере */
+  /** Идентификатор папки у провайдера; локальная папка «Исходящие» использует внутренний идентификатор и не синхронизируется по IMAP */
   "external_id": string;
   "name": string;
   "role": MailFolderRole;
@@ -10171,7 +10178,7 @@ export interface MailFolderInput {
   "parent_id"?: UUID | null;
 }
 
-export type MailFolderRole = "inbox" | "sent" | "drafts" | "trash" | "spam" | "archive" | "custom";
+export type MailFolderRole = "inbox" | "outbox" | "sent" | "drafts" | "trash" | "spam" | "archive" | "custom";
 
 /** Письмо в копии кабинета. Внутренние координаты IMAP (UID и UIDVALIDITY) наружу не отдаются. Тело в HTML хранится таким, каким его прислал отправитель: обезвреживание живёт на отдаче, а не в хранимой копии. */
 export interface MailMessage {
@@ -10205,6 +10212,7 @@ export interface MailMessage {
   /** Кто вынес вердикт. Решение человека сильнее флага сервера и правил */
   "spam_source"?: "provider" | "rule" | "user" | "agent";
   "spam_reason"?: string;
+  "delivery"?: MailDeliveryState;
   "sent_at": string | null;
   "received_at": string;
   "created_at": string;

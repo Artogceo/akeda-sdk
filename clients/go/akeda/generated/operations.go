@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2d8fdb4d2eecb8ed8b6ea283169177bdcc3699c502400b7745bf3f8dd86b6034).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ffef4262995ac799e177cbcea4855879328c03119c50c6d0286f2113d2e30c18).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated

@@ -43,7 +43,7 @@
       "installation_reachable": 512,
       "total": 899
     },
-    "schemas": 1259,
+    "schemas": 1260,
     "servers": [
       "https://erp.akeda.ru"
     ],
@@ -62,14 +62,14 @@
       "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 3872698,
+      "bytes": 3874480,
       "path": "openapi/akeda-v1.json",
-      "sha256": "2d8fdb4d2eecb8ed8b6ea283169177bdcc3699c502400b7745bf3f8dd86b6034"
+      "sha256": "ffef4262995ac799e177cbcea4855879328c03119c50c6d0286f2113d2e30c18"
     },
     {
-      "bytes": 2931824,
+      "bytes": 2933348,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "70869db349ae4557fd60b351da5d621cdc46d8b569431d3b3fad00a9dcb3c56f"
+      "sha256": "a0d5f6eb9dcad94da17ce55435f7d351bd3169c780a0789286af1e07a69f7b69"
     },
     {
       "bytes": 18414,
@@ -82,6 +82,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "96f9a3384800549616cd94059f176410f9d81b4a5dde76cd5b6421b48a048ac0",
+  "snapshot_digest": "bac610cfb53997c648c64715b10dec793557c81a5d74a29582b87d4702dfbd24",
   "snapshot_version": 1
 }

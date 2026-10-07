@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2d8fdb4d2eecb8ed8b6ea283169177bdcc3699c502400b7745bf3f8dd86b6034).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ffef4262995ac799e177cbcea4855879328c03119c50c6d0286f2113d2e30c18).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -10112,8 +10112,15 @@ type MailComposeInput struct {
 	ForwardOfID *UUID `json:"forward_of_id,omitempty"`
 	// UploadIds — Идентификаторы заранее загруженных файлов
 	UploadIds []UUID `json:"upload_ids,omitempty"`
-	// SaveAsDraft — Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо уходит получателю и отозвать его нельзя
+	// SaveAsDraft — Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо встаёт в очередь, а принятие SMTP-сервером не подтверждает доставку или прочтение получателем
 	SaveAsDraft *bool `json:"save_as_draft,omitempty"`
+}
+
+type MailDeliveryState struct {
+	Status        string  `json:"status"`
+	Attempts      int64   `json:"attempts"`
+	ErrorCode     *string `json:"error_code,omitempty"`
+	NextAttemptAt *string `json:"next_attempt_at,omitempty"`
 }
 
 type MailEncryption = string
@@ -10122,7 +10129,7 @@ type MailEncryption = string
 type MailFolder struct {
 	ID        UUID `json:"id"`
 	AccountID UUID `json:"account_id"`
-	// ExternalID — Имя папки на почтовом сервере
+	// ExternalID — Идентификатор папки у провайдера; локальная папка «Исходящие» использует внутренний идентификатор и не синхронизируется по IMAP
 	ExternalID string         `json:"external_id"`
 	Name       string         `json:"name"`
 	Role       MailFolderRole `json:"role"`
@@ -10180,13 +10187,14 @@ type MailMessage struct {
 	HasAttachments bool            `json:"has_attachments"`
 	SpamVerdict    MailSpamVerdict `json:"spam_verdict"`
 	// SpamSource — Кто вынес вердикт. Решение человека сильнее флага сервера и правил
-	SpamSource  *string          `json:"spam_source,omitempty"`
-	SpamReason  *string          `json:"spam_reason,omitempty"`
-	SentAt      *string          `json:"sent_at"`
-	ReceivedAt  string           `json:"received_at"`
-	CreatedAt   string           `json:"created_at"`
-	UpdatedAt   string           `json:"updated_at"`
-	Attachments []MailAttachment `json:"attachments,omitempty"`
+	SpamSource  *string            `json:"spam_source,omitempty"`
+	SpamReason  *string            `json:"spam_reason,omitempty"`
+	Delivery    *MailDeliveryState `json:"delivery,omitempty"`
+	SentAt      *string            `json:"sent_at"`
+	ReceivedAt  string             `json:"received_at"`
+	CreatedAt   string             `json:"created_at"`
+	UpdatedAt   string             `json:"updated_at"`
+	Attachments []MailAttachment   `json:"attachments,omitempty"`
 }
 
 // MailMessageAddress — Один адрес в конверте письма
