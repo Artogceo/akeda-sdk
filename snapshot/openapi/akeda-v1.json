@@ -33586,7 +33586,7 @@
         ],
         "operationId": "crmUpdateLeadStage",
         "summary": "Изменить этап доски лидов",
-        "description": "Меняются имя и включённость. Удаления у этапа нет: ненужный выключают.",
+        "description": "Рабочий этап переименовывают, перекрашивают и убирают (is_active=false); этап с лидами убирают, указав move_leads_to — другой рабочий этап. Итоговые этапы (converted, rejected) только переименовывают и перекрашивают. Последний этап смысла не убрать.",
         "security": [
           {
             "erpUserToken": []
@@ -33633,6 +33633,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           }
         }
       }
@@ -92323,6 +92326,11 @@
             "type": "string",
             "pattern": "^$|^#[0-9A-Fa-f]{6}$",
             "description": "Цвет этапа #RRGGBB; пусто - цвет по умолчанию"
+          },
+          "move_leads_to": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Вместе с is_active=false: другой действующий рабочий этап, куда переносятся все лиды убираемого этапа"
           }
         }
       },
@@ -93043,6 +93051,15 @@
           "title": {
             "type": "string"
           },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма лида десятичной строкой: «19990.50»; переходит в сделку при конвертации"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Код валюты из справочника ERP; пусто — валюта не выбрана"
+          },
           "source": {
             "type": "string",
             "description": "Канал обращения; по нему собирается аналитика источников"
@@ -93160,6 +93177,15 @@
           },
           "title": {
             "type": "string"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма лида десятичной строкой: «19990.50»; переходит в сделку при конвертации"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Код валюты из справочника ERP; пусто — валюта не выбрана"
           },
           "source": {
             "type": "string",
@@ -93415,6 +93441,15 @@
             "type": "string",
             "minLength": 1
           },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма лида десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Обязателен при ненулевой сумме"
+          },
           "source": {
             "type": "string"
           },
@@ -93505,6 +93540,15 @@
           "title": {
             "type": "string",
             "minLength": 1
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^-?[0-9]+(\\.[0-9]{1,3})?$",
+            "description": "Сумма лида десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Обязателен при ненулевой сумме"
           },
           "source": {
             "type": "string"

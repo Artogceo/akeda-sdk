@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ffef4262995ac799e177cbcea4855879328c03119c50c6d0286f2113d2e30c18).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 32f2394890124a31c23d652ff97a7d971ebb46140401e90d043667eb27d74b6d).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -2916,6 +2916,10 @@ class _CRMLeadRequired(TypedDict):
     updated_at: str
 
 class CRMLead(_CRMLeadRequired, total=False):
+    #: Сумма лида десятичной строкой: «19990.50»; переходит в сделку при конвертации
+    amount: str
+    #: Код валюты из справочника ERP; пусто — валюта не выбрана
+    currency: str
     reference_id: "UUID"
     owner_id: int
     stage_id: "UUID"
@@ -2967,6 +2971,10 @@ class _CRMLeadCardRequired(TypedDict):
 class CRMLeadCard(_CRMLeadCardRequired, total=False):
     """Лид для экрана: тот же лид плюс человек за обращением и ответственный читаемыми именами"""
 
+    #: Сумма лида десятичной строкой: «19990.50»; переходит в сделку при конвертации
+    amount: str
+    #: Код валюты из справочника ERP; пусто — валюта не выбрана
+    currency: str
     reference_id: "UUID"
     owner_id: int
     stage_id: "UUID"
@@ -3023,6 +3031,10 @@ class _CRMLeadDuplicateRequired(TypedDict):
 class CRMLeadDuplicate(_CRMLeadDuplicateRequired, total=False):
     """Обращение, похожее на заданное, и признак, по которому похоже"""
 
+    #: Сумма лида десятичной строкой: «19990.50»; переходит в сделку при конвертации
+    amount: str
+    #: Код валюты из справочника ERP; пусто — валюта не выбрана
+    currency: str
     reference_id: "UUID"
     owner_id: int
     stage_id: "UUID"
@@ -3053,6 +3065,10 @@ class _CRMLeadInputRequired(TypedDict):
     title: str
 
 class CRMLeadInput(_CRMLeadInputRequired, total=False):
+    #: Сумма лида десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    amount: str
+    #: Обязателен при ненулевой сумме
+    currency: str
     source: str
     description: str
     first_message: str
@@ -3078,6 +3094,10 @@ CRMLeadLockMode = Literal['owner_only', 'after_qualification']
 
 class CRMLeadPatch(TypedDict, total=False):
     title: str
+    #: Сумма лида десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    amount: str
+    #: Обязателен при ненулевой сумме
+    currency: str
     source: str
     description: str
     first_message: str
@@ -3125,6 +3145,8 @@ class CRMLeadStagePatch(TypedDict, total=False):
     meaning: "CRMLeadStageMeaning"
     #: Цвет этапа #RRGGBB; пусто - цвет по умолчанию
     color: str
+    #: Вместе с is_active=false: другой действующий рабочий этап, куда переносятся все лиды убираемого этапа
+    move_leads_to: str
 
 CRMLeadStatus = Literal['new', 'qualified', 'disqualified', 'converted']
 

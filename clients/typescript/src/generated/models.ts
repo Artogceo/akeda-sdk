@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ffef4262995ac799e177cbcea4855879328c03119c50c6d0286f2113d2e30c18).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 32f2394890124a31c23d652ff97a7d971ebb46140401e90d043667eb27d74b6d).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1468,6 +1468,10 @@ export type CRMLabelKey = string;
 export interface CRMLead {
   "id": UUID;
   "title": string;
+  /** Сумма лида десятичной строкой: «19990.50»; переходит в сделку при конвертации */
+  "amount"?: string;
+  /** Код валюты из справочника ERP; пусто — валюта не выбрана */
+  "currency"?: string;
   /** Канал обращения; по нему собирается аналитика источников */
   "source": string;
   /** Заметка менеджера о заявке */
@@ -1519,6 +1523,10 @@ export interface CRMLeadBoardStage {
 export interface CRMLeadCard {
   "id": UUID;
   "title": string;
+  /** Сумма лида десятичной строкой: «19990.50»; переходит в сделку при конвертации */
+  "amount"?: string;
+  /** Код валюты из справочника ERP; пусто — валюта не выбрана */
+  "currency"?: string;
   /** Канал обращения; по нему собирается аналитика источников */
   "source": string;
   /** Заметка менеджера о заявке */
@@ -1572,6 +1580,10 @@ export interface CRMLeadDecision {
 export interface CRMLeadDuplicate {
   "id": UUID;
   "title": string;
+  /** Сумма лида десятичной строкой: «19990.50»; переходит в сделку при конвертации */
+  "amount"?: string;
+  /** Код валюты из справочника ERP; пусто — валюта не выбрана */
+  "currency"?: string;
   /** Канал обращения; по нему собирается аналитика источников */
   "source": string;
   /** Заметка менеджера о заявке */
@@ -1613,6 +1625,10 @@ export interface CRMLeadDuplicate {
 
 export interface CRMLeadInput {
   "title": string;
+  /** Сумма лида десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "amount"?: string;
+  /** Обязателен при ненулевой сумме */
+  "currency"?: string;
   "source"?: string;
   "description"?: string;
   "first_message"?: string;
@@ -1639,6 +1655,10 @@ export type CRMLeadLockMode = "owner_only" | "after_qualification";
 
 export interface CRMLeadPatch {
   "title"?: string;
+  /** Сумма лида десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "amount"?: string;
+  /** Обязателен при ненулевой сумме */
+  "currency"?: string;
   "source"?: string;
   "description"?: string;
   "first_message"?: string;
@@ -1685,6 +1705,8 @@ export interface CRMLeadStagePatch {
   "meaning"?: CRMLeadStageMeaning;
   /** Цвет этапа #RRGGBB; пусто - цвет по умолчанию */
   "color"?: string;
+  /** Вместе с is_active=false: другой действующий рабочий этап, куда переносятся все лиды убираемого этапа */
+  "move_leads_to"?: string;
 }
 
 export type CRMLeadStatus = "new" | "qualified" | "disqualified" | "converted";

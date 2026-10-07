@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ffef4262995ac799e177cbcea4855879328c03119c50c6d0286f2113d2e30c18).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 32f2394890124a31c23d652ff97a7d971ebb46140401e90d043667eb27d74b6d).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1466,6 +1466,10 @@ type CRMLabelKey = string
 type CRMLead struct {
 	ID    UUID   `json:"id"`
 	Title string `json:"title"`
+	// Amount — Сумма лида десятичной строкой: «19990.50»; переходит в сделку при конвертации
+	Amount *string `json:"amount,omitempty"`
+	// Currency — Код валюты из справочника ERP; пусто — валюта не выбрана
+	Currency *string `json:"currency,omitempty"`
 	// Source — Канал обращения; по нему собирается аналитика источников
 	Source string `json:"source"`
 	// Description — Заметка менеджера о заявке
@@ -1517,6 +1521,10 @@ type CRMLeadBoardStage struct {
 type CRMLeadCard struct {
 	ID    UUID   `json:"id"`
 	Title string `json:"title"`
+	// Amount — Сумма лида десятичной строкой: «19990.50»; переходит в сделку при конвертации
+	Amount *string `json:"amount,omitempty"`
+	// Currency — Код валюты из справочника ERP; пусто — валюта не выбрана
+	Currency *string `json:"currency,omitempty"`
 	// Source — Канал обращения; по нему собирается аналитика источников
 	Source string `json:"source"`
 	// Description — Заметка менеджера о заявке
@@ -1570,6 +1578,10 @@ type CRMLeadDecision struct {
 type CRMLeadDuplicate struct {
 	ID    UUID   `json:"id"`
 	Title string `json:"title"`
+	// Amount — Сумма лида десятичной строкой: «19990.50»; переходит в сделку при конвертации
+	Amount *string `json:"amount,omitempty"`
+	// Currency — Код валюты из справочника ERP; пусто — валюта не выбрана
+	Currency *string `json:"currency,omitempty"`
 	// Source — Канал обращения; по нему собирается аналитика источников
 	Source string `json:"source"`
 	// Description — Заметка менеджера о заявке
@@ -1610,7 +1622,11 @@ type CRMLeadDuplicate struct {
 }
 
 type CRMLeadInput struct {
-	Title         string  `json:"title"`
+	Title string `json:"title"`
+	// Amount — Сумма лида десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Amount *string `json:"amount,omitempty"`
+	// Currency — Обязателен при ненулевой сумме
+	Currency      *string `json:"currency,omitempty"`
 	Source        *string `json:"source,omitempty"`
 	Description   *string `json:"description,omitempty"`
 	FirstMessage  *string `json:"first_message,omitempty"`
@@ -1636,7 +1652,11 @@ type CRMLeadInput struct {
 type CRMLeadLockMode = string
 
 type CRMLeadPatch struct {
-	Title         *string `json:"title,omitempty"`
+	Title *string `json:"title,omitempty"`
+	// Amount — Сумма лида десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Amount *string `json:"amount,omitempty"`
+	// Currency — Обязателен при ненулевой сумме
+	Currency      *string `json:"currency,omitempty"`
 	Source        *string `json:"source,omitempty"`
 	Description   *string `json:"description,omitempty"`
 	FirstMessage  *string `json:"first_message,omitempty"`
@@ -1683,6 +1703,8 @@ type CRMLeadStagePatch struct {
 	Meaning  *CRMLeadStageMeaning `json:"meaning,omitempty"`
 	// Color — Цвет этапа #RRGGBB; пусто - цвет по умолчанию
 	Color *string `json:"color,omitempty"`
+	// MoveLeadsTo — Вместе с is_active=false: другой действующий рабочий этап, куда переносятся все лиды убираемого этапа
+	MoveLeadsTo *string `json:"move_leads_to,omitempty"`
 }
 
 type CRMLeadStatus = string
