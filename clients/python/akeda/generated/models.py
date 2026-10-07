@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c46bcc956512a51ff7a1a3400788732fa93bcbedb80ccce20857a1c4ab36abd7).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 2d8fdb4d2eecb8ed8b6ea283169177bdcc3699c502400b7745bf3f8dd86b6034).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -86,6 +86,7 @@ __all__ = [
     "CRMContactRef",
     "CRMConversionMetric",
     "CRMConvertLeadInput",
+    "CRMCounters",
     "CRMCreateEventLinkInput",
     "CRMCreateTaskLinkInput",
     "CRMCustomer",
@@ -262,6 +263,7 @@ __all__ = [
     "CommentCreate",
     "CommentList",
     "CommentOrigin",
+    "CommentUpdate",
     "CoreAccountingDimension",
     "CoreAccountingDimensionPage",
     "CoreAccountingDimensionPageReadiness",
@@ -349,6 +351,11 @@ __all__ = [
     "CoreItemPage",
     "CoreLetterhead",
     "CoreLetterheadImages",
+    "CoreMarkingGroup",
+    "CoreMarkingGroupCreate",
+    "CoreMarkingGroupMode",
+    "CoreMarkingGroupPage",
+    "CoreMarkingGroupPatch",
     "CoreNumberReset",
     "CoreNumberSource",
     "CoreOrder",
@@ -426,8 +433,12 @@ __all__ = [
     "CoreProduct",
     "CoreProductAxis",
     "CoreProductAxisValue",
+    "CoreProductCategoryMarking",
+    "CoreProductCategoryMarkingPage",
+    "CoreProductCategoryMarkingSet",
     "CoreProductCreate",
     "CoreProductCustomInput",
+    "CoreProductEffectiveMarkingGroup",
     "CoreProductExport",
     "CoreProductExportRequest",
     "CoreProductFieldDefinition",
@@ -456,6 +467,7 @@ __all__ = [
     "CoreProductImportStatus",
     "CoreProductImportUploadSessionRequest",
     "CoreProductKind",
+    "CoreProductMarkingSource",
     "CoreProductPage",
     "CoreProductPatch",
     "CoreProductRecordKind",
@@ -825,6 +837,8 @@ __all__ = [
     "FinanceStatementLinkInputTransactionsItem",
     "FinanceStatementLinkResult",
     "FinanceStatementPage",
+    "FinanceTaxCalcPage",
+    "FinanceTaxCalcRow",
     "FinanceTaxKind",
     "FinanceTaxKindAmount",
     "FinanceTaxKindPage",
@@ -987,6 +1001,118 @@ __all__ = [
     "MarketplaceYandexPnlRow",
     "MarketplaceYandexProduct",
     "MarketplaceYandexProductPage",
+    "MarkingAcceptExpectedResult",
+    "MarkingApplication",
+    "MarkingApplicationEnvelope",
+    "MarkingBalanceList",
+    "MarkingBalanceListBalancesItem",
+    "MarkingBox",
+    "MarkingBoxCard",
+    "MarkingBoxContent",
+    "MarkingBoxContentCode",
+    "MarkingBoxCreateInput",
+    "MarkingBoxDocumentScanResult",
+    "MarkingBoxDraftResult",
+    "MarkingBoxExpandSkip",
+    "MarkingBoxInventoryScanResult",
+    "MarkingBoxItem",
+    "MarkingBoxList",
+    "MarkingBoxProduct",
+    "MarkingBoxResolveInput",
+    "MarkingBoxScanInput",
+    "MarkingBoxScanResult",
+    "MarkingBoxShortage",
+    "MarkingCertificate",
+    "MarkingCheckStatus",
+    "MarkingCisInfo",
+    "MarkingCisInfoList",
+    "MarkingCisesInfoInput",
+    "MarkingCode",
+    "MarkingCodeOrder",
+    "MarkingCodeOrderEnvelope",
+    "MarkingCodeOrderItem",
+    "MarkingCodeOrderPage",
+    "MarkingCodePage",
+    "MarkingCodeState",
+    "MarkingCompany",
+    "MarkingCompanyGroup",
+    "MarkingCompanyGroupInput",
+    "MarkingCompanyGroupList",
+    "MarkingCompanyList",
+    "MarkingCompanySettings",
+    "MarkingCompanySettingsEnvelope",
+    "MarkingCompanySettingsView",
+    "MarkingCompanySettingsViewWriteoffReasonsItem",
+    "MarkingCompanySettingsViewWithdrawalReasonOptionsItem",
+    "MarkingCompanySettingsViewTemplatesItem",
+    "MarkingConnection",
+    "MarkingConnectionEnvelope",
+    "MarkingConnectionList",
+    "MarkingDocumentCodeLine",
+    "MarkingDocumentCodeProblem",
+    "MarkingDocumentCodes",
+    "MarkingDocumentCodesSummary",
+    "MarkingDocumentDraft",
+    "MarkingDocumentDraftEnvelope",
+    "MarkingDocumentDraftInput",
+    "MarkingDocumentKind",
+    "MarkingDocumentParams",
+    "MarkingError",
+    "MarkingExpectedPackage",
+    "MarkingGISMTCodePage",
+    "MarkingGISMTCodePageItemsItem",
+    "MarkingGISMTCodesInput",
+    "MarkingGISMTDocument",
+    "MarkingGISMTDocumentList",
+    "MarkingGISMTDocumentView",
+    "MarkingGISMTDocumentViewDocument",
+    "MarkingGISMTDocumentViewDocumentCodesItem",
+    "MarkingGISMTDocumentViewDocumentItemsItem",
+    "MarkingGroup",
+    "MarkingGroupList",
+    "MarkingImport",
+    "MarkingImportLineError",
+    "MarkingImportPage",
+    "MarkingInventoryCode",
+    "MarkingInventoryCodeLine",
+    "MarkingInventoryCodes",
+    "MarkingInventoryCodesSummary",
+    "MarkingInventoryRemoveResult",
+    "MarkingInventoryScanInput",
+    "MarkingInventoryScanResult",
+    "MarkingInventoryTransferDocument",
+    "MarkingInventoryTransferResult",
+    "MarkingInventoryTransferSkip",
+    "MarkingLabelTemplate",
+    "MarkingLabelTemplates",
+    "MarkingLabelTemplatesLimits",
+    "MarkingModList",
+    "MarkingModListModsItem",
+    "MarkingOrderCode",
+    "MarkingOrderCodes",
+    "MarkingOrderGtinSummary",
+    "MarkingOrderInput",
+    "MarkingOrderInputItemsItem",
+    "MarkingOrderPrintJob",
+    "MarkingOrderReceiveResult",
+    "MarkingOrderSyncResult",
+    "MarkingOutboxDocument",
+    "MarkingOutboxDocumentEnvelope",
+    "MarkingOutboxPage",
+    "MarkingParseCodeInput",
+    "MarkingParsedCode",
+    "MarkingProductProfile",
+    "MarkingProductProfileEnvelope",
+    "MarkingProductProfileInput",
+    "MarkingReplaceCodesInput",
+    "MarkingReplaceCodesInputLinesItem",
+    "MarkingScanDocumentInput",
+    "MarkingScanDocumentResult",
+    "MarkingSeqRange",
+    "MarkingSpoilInput",
+    "MarkingStockLineCode",
+    "MarkingStrictness",
+    "MarkingTransferMode",
     "Meeting",
     "MeetingCreate",
     "MeetingItem",
@@ -1164,6 +1290,8 @@ __all__ = [
     "StockReportRow",
     "StockReportTotals",
     "StockReportWarehouseTotal",
+    "StockScanGS1",
+    "StockScanMarkingGroup",
     "StockScanResult",
     "StockSettings",
     "StockSettingsPatch",
@@ -1251,6 +1379,7 @@ __all__ = [
     "FinanceListDividendPoliciesResponse",
     "FinanceGetProjectBudgetHistoryResponse",
     "FinanceListAllocationRulesResponse",
+    "FinanceRelinkPaymentRequest",
     "FinanceRepostTransactionsRequest",
     "FinanceMarkTransactionDeletedRequest",
     "FinanceRepostTransactionRequest",
@@ -1272,6 +1401,7 @@ __all__ = [
     "MailListVIPSendersResponseItemsItem",
     "MailSetVIPSenderRequest",
     "MailCountVIPUnreadResponse",
+    "MarkingSpoilOrderCodesResponse",
     "StockListDocumentAuthorsResponse",
     "StockListDocumentAuthorsResponseResultsItem",
 ]
@@ -2100,6 +2230,12 @@ class CRMConvertLeadInput(_CRMConvertLeadInputRequired, total=False):
     currency: str
     probability: int
     expected_close_at: Optional[str]
+
+class CRMCounters(TypedDict):
+    #: Лиды в очереди разбора: статус new вне архива, видимые читающему
+    new_leads: int
+    #: Открытые дела читающего, срок которых уже прошёл
+    overdue_engagements: int
 
 class _CRMCreateEventLinkInputRequired(TypedDict):
     title: str
@@ -4014,6 +4150,10 @@ CommentList = List["Comment"]
 
 CommentOrigin = Literal['web', 'mcp', 'agent']
 
+class CommentUpdate(TypedDict, total=False):
+    body: str
+    allow_empty: bool
+
 class _CoreAccountingDimensionRequired(TypedDict):
     key: Literal['company', 'project', 'department', 'cfo']
     label: str
@@ -4924,6 +5064,51 @@ class CoreLetterheadImages(TypedDict):
     director_signature: bool
     accountant_signature: bool
 
+class CoreMarkingGroup(TypedDict):
+    id: "UUID"
+    #: Устойчивый код группы. У групп Akeda — код товарной группы «Честного знака»; у групп кабинета выдаётся сервером с префиксом own-.
+    code: str
+    name: str
+    accounting_mode: "CoreMarkingGroupMode"
+    #: Дата (ГГГГ-ММ-ДД), с которой группа с режимом volume учитывается поштучно; пустая строка — перехода нет.
+    piece_from: str
+    #: Префиксы кода ТН ВЭД, по которым группа подсказывается товару.
+    tnved: List[str]
+    #: Правила группы ведёт Akeda: кабинет может изменить только её название, но не правила, активность и не может удалить.
+    is_system: bool
+    is_active: bool
+    sort_order: int
+    created_at: str
+    updated_at: str
+
+class _CoreMarkingGroupCreateRequired(TypedDict):
+    name: str
+
+class CoreMarkingGroupCreate(_CoreMarkingGroupCreateRequired, total=False):
+    accounting_mode: "CoreMarkingGroupMode"
+    #: Дата перехода на поштучный учёт, ГГГГ-ММ-ДД; допустима только с режимом volume.
+    piece_from: str
+    #: Префиксы кода ТН ВЭД: только цифры, от 2 до 10 знаков.
+    tnved: List[str]
+    #: Место в списке. Не прислано — группа встаёт после всех существующих групп кабинета.
+    sort_order: int
+
+CoreMarkingGroupMode = Literal['', 'piece', 'volume']
+
+class CoreMarkingGroupPage(TypedDict):
+    count: int
+    results: List["CoreMarkingGroup"]
+
+class CoreMarkingGroupPatch(TypedDict, total=False):
+    name: str
+    accounting_mode: "CoreMarkingGroupMode"
+    #: Дата перехода на поштучный учёт, ГГГГ-ММ-ДД; пустая строка снимает дату. Допустима только с режимом volume.
+    piece_from: str
+    #: Префиксы кода ТН ВЭД: только цифры, от 2 до 10 знаков.
+    tnved: List[str]
+    sort_order: int
+    is_active: bool
+
 CoreNumberReset = Literal['year', 'never']
 
 CoreNumberSource = Literal['sequence', 'sequence_or_given', 'external']
@@ -5344,6 +5529,8 @@ class CoreOrderNowAct(TypedDict, total=False):
     date: str
     number: str
     title: str
+    #: «За кого» закупки со статьёй вне ОПиУ: собственник для 75, сотрудник для 70/71; только у закупки
+    for_contact: Dict[str, Any]
     #: Номер и дата документа поставщика (СФ, УПД); только у закупки
     supplier_document: "CoreOrderNowActSupplierDocument"
     #: «В т.ч. НДС» с документа поставщика; только у закупки. Без поля — налог заказа по строкам
@@ -5862,6 +6049,11 @@ class _CoreProductRequired(TypedDict):
 class CoreProduct(_CoreProductRequired, total=False):
     #: Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)
     vat_kind: Literal['', 'general', 'reduced', 'zero', 'exempt']
+    marking_source: "CoreProductMarkingSource"
+    #: Своя группа маркировки товара; задана только при marking_source = own
+    marking_group_id: Optional["UUID"]
+    #: Действующая группа маркировки: своя либо унаследованная от категории; null — товар не маркируется. Считается при чтении и не хранится
+    effective_marking_group: Optional["CoreProductEffectiveMarkingGroup"]
 
 class CoreProductAxis(TypedDict):
     #: Ключ оси: латиница, цифры, _ и -
@@ -5874,6 +6066,23 @@ class CoreProductAxisValue(TypedDict):
     code: str
     #: Подпись значения; пусто — код
     label: str
+
+class CoreProductCategoryMarking(TypedDict):
+    category_id: "UUID"
+    #: Группа маркировки категории; null — категория группу не задаёт (так отвечает запись, снявшая группу).
+    marking_group_id: Optional["UUID"]
+    marking_group_name: str
+    accounting_mode: "CoreMarkingGroupMode"
+    #: Дата (ГГГГ-ММ-ДД), с которой группа с режимом volume учитывается поштучно; пустая строка — перехода нет.
+    piece_from: str
+
+class CoreProductCategoryMarkingPage(TypedDict):
+    count: int
+    results: List["CoreProductCategoryMarking"]
+
+class CoreProductCategoryMarkingSet(TypedDict):
+    #: Группа маркировки категории; null снимает группу.
+    marking_group_id: Optional["UUID"]
 
 class _CoreProductCreateRequired(TypedDict):
     name: str
@@ -5912,6 +6121,9 @@ class CoreProductCreate(_CoreProductCreateRequired, total=False):
     height_mm: str
     #: Страна происхождения — запись справочника countries (код ОКСМ в code)
     country_item_id: Optional["UUID"]
+    marking_source: "CoreProductMarkingSource"
+    #: Своя группа маркировки. Обязательна при marking_source = own; при category и none не передаётся — группа со значением отклоняется 400
+    marking_group_id: Optional["UUID"]
     #: Код ТН ВЭД, до десяти цифр
     customs_code: str
     #: Оси характеристик семейства; у остальных записей пусто
@@ -5921,6 +6133,17 @@ class CoreProductCreate(_CoreProductCreateRequired, total=False):
 
 class CoreProductCustomInput(TypedDict):
     custom: Dict[str, Any]
+
+class CoreProductEffectiveMarkingGroup(TypedDict):
+    id: "UUID"
+    name: str
+    accounting_mode: "CoreMarkingGroupMode"
+    #: Дата (ГГГГ-ММ-ДД), с которой группа с режимом volume учитывается поштучно; пустая строка — перехода нет.
+    piece_from: str
+    #: Категория, от которой группа пришла товару: категория товара или её родитель. null — группа своя.
+    inherited_from_category_id: Optional["UUID"]
+    #: Название категории, от которой пришла группа; пустая строка у своей группы.
+    inherited_from_category_name: str
 
 class _CoreProductExportRequired(TypedDict):
     id: "UUID"
@@ -6166,6 +6389,8 @@ class CoreProductImportUploadSessionRequest(_CoreProductImportUploadSessionReque
 
 CoreProductKind = Literal['goods', 'service', 'material', 'semi_product']
 
+CoreProductMarkingSource = Literal['category', 'own', 'none']
+
 class CoreProductPage(TypedDict):
     count: int
     results: List["CoreProduct"]
@@ -6201,6 +6426,9 @@ class CoreProductPatch(TypedDict, total=False):
     height_mm: str
     #: Страна происхождения — запись справочника countries (код ОКСМ в code)
     country_item_id: Optional["UUID"]
+    marking_source: "CoreProductMarkingSource"
+    #: Своя группа маркировки. Обязательна при marking_source = own; при category и none не передаётся — группа со значением отклоняется 400
+    marking_group_id: Optional["UUID"]
     #: Код ТН ВЭД, до десяти цифр
     customs_code: str
     #: Оси характеристик семейства; у остальных записей пусто
@@ -8206,7 +8434,7 @@ class DocflowIntakeWarehouse(TypedDict):
     name: str
 
 class _DocflowIssueRequired(TypedDict):
-    #: Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои пять: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке документа не сопоставлена номенклатура) и docflow.edo.sign_first (документ ещё не подписан: в учёт его принимают после подписи)
+    #: Машинный код проверки. Стабилен: по нему интерфейс ищет перевод. Проверки формата приходят кодами docflow.formats.* (required, too_long, too_short, pattern, not_allowed, not_a_number, negative, too_many_decimals, too_many_digits, not_encodable, conflict, no_lines, unsupported), а перевод учётного документа в титул добавляет свои — docflow.edo.counterparty_required (в документе не указан контрагент) и docflow.edo.seller_title_missing (во входящем пакете нет формализованного документа продавца: отвечать титулом покупателя не на что, а принимать к учёту нечего). Приёмка к учёту добавляет свои пять: docflow.edo.contact_required (не выбран контрагент), docflow.edo.date_unreadable (дата документа продавца не разобралась), docflow.edo.no_lines (в титуле продавца нет ни одной товарной строки), docflow.edo.product_required (строке документа не сопоставлена номенклатура) и docflow.edo.sign_first (документ ещё не подписан: в учёт его принимают после подписи). Коды маркировки исходящего УПД добавляют три: docflow.edo.marks_missing (отгрузка проведена не со всеми кодами; params required и assigned), docflow.edo.marks_not_in_circulation (коды не в обороте у продавца по последнему статусу ГИС МТ; params value — сколько) и docflow.edo.marks_gtin_missing (товар передаётся по GTIN, а штрихкода GTIN у него нет)
     code: str
     #: Путь до реквизита ИМЕНАМИ ФНС — именами приказа, а не нашими: этими же словами человек будет искать требование в письме налоговой. Например `Документ/СвСчФакт/СвПрод/Адрес`.
     path: str
@@ -9885,6 +10113,8 @@ class FinanceOrderActInput(_FinanceOrderActInputRequired, total=False):
     stage_id: Dict[str, Any]
     vat_amount: str
     prices_include_vat: bool
+    #: «За кого» закупки со статьёй вне ОПиУ: собственник для 75, сотрудник для 70/71; только у закупки
+    for_contact: Dict[str, Any]
 
 FinancePaymentCalendar = TypedDict("FinancePaymentCalendar", {"rnp_metrics": "FinancePaymentCalendarRnpMetrics", "valuation_date": str, "project": str, "balance_available": bool, "from": str, "to": str, "currency": str, "derived_available": bool, "derived_note": str, "opening": str, "inflow": str, "outflow": str, "closing": str, "overdue_in": str, "overdue_out": str, "done_in": str, "done_out": str, "committed_in": str, "expected_in": str, "undated": "FinancePaymentCalendarUndated", "companies": List["FinancePaymentCalendarCompany"], "step": Literal['day', 'month', 'quarter'], "periods": List["FinancePaymentCalendarPeriod"], "totals": List["FinancePaymentCalendarCell"], "days": List["FinancePaymentCalendarDay"], "rows": List["FinancePaymentCalendarRow"], "overdue": List["FinancePaymentCalendarRow"]}, total=False)
 
@@ -10450,6 +10680,35 @@ class FinanceStatementPage(TypedDict):
     offset: int
     results: List["FinanceStatement"]
 
+class FinanceTaxCalcPage(TypedDict):
+    items: List["FinanceTaxCalcRow"]
+
+class _FinanceTaxCalcRowRequired(TypedDict):
+    #: Месяц
+    month: int
+    #: Вид налога раздела
+    kind: str
+    #: Режим юрлица
+    regime: str
+    #: Ставка в процентах
+    rate: str
+    #: Доходы с начала года
+    base_income: str
+    #: Налог с начала года
+    due_cumulative: str
+    #: Налог месяца
+    amount: str
+
+class FinanceTaxCalcRow(_FinanceTaxCalcRowRequired, total=False):
+    """Месяц предварительного расчёта налога юрлица."""
+
+    #: Расходы с начала года; только у режимов с расходами
+    base_expense: str
+    #: Неофициальная зарплата вне налоговой базы с начала года
+    payroll_outside: str
+    #: Начислено строкой «из расчёта» в проведённом документе месяца
+    posted: str
+
 class FinanceTaxKind(TypedDict):
     """Вид налога кабинета."""
 
@@ -10512,8 +10771,20 @@ class FinanceTaxMonthLine(_FinanceTaxMonthLineRequired, total=False):
 
     #: Комментарий строки
     comment: str
-    #: Строку заполнил сервер — из начислений зарплаты или «НДС за квартал»; во входе такие строки игнорируются
-    source: Literal['payroll', 'vat_quarter']
+    #: Строку заполнил сервер — из начислений зарплаты, «НДС за квартал» или предварительного расчёта по режиму; во входе такие строки игнорируются
+    source: Literal['payroll', 'vat_quarter', 'calc']
+    #: Режим юрлица строки «из расчёта»
+    regime: str
+    #: Ставка режима в процентах
+    rate: str
+    #: Доходы базы с начала года
+    base_income: str
+    #: Расходы базы с начала года; только у режимов «доходы минус расходы»
+    base_expense: str
+    #: Начислено «из расчёта» в прошлых месяцах года
+    accrued_before: str
+    #: Неофициальная часть зарплаты — исключена из расходов базы
+    payroll_outside: str
     #: Сумма по декларации; строка с ней — строка декларации за прошлый период
     declared: str
     #: Расчёт раздела за период декларации; заполняет сервер
@@ -11139,10 +11410,14 @@ class MailAccount(TypedDict):
     id: "UUID"
     #: Сотрудник, которому принадлежит ящик
     owner_user_id: int
-    #: Общий ящик отдела виден всем, у кого есть право на модуль; личный — владельцу и тому, кто видит все записи
+    #: Общий ящик виден каждому сотруднику кабинета с правом mail:read (или участникам бизнеса business_id); личный — владельцу и поимённо названным в shared_with. Право видеть все записи чтения чужого ящика не даёт
     shared: bool
     #: Бизнес общего ящика: ящик видят участники, чья область доступа касается этого бизнеса, а также владелец и поимённо названные сотрудники. null — ящик всего кабинета или личный
     business_id: Optional["UUID"]
+    #: Сотрудники, которым ящик открыт поимённо, поверх правила access_scope. Всегда список: пустой — поимённо никому
+    shared_with: List[int]
+    #: Кому виден ящик кроме владельца: personal — никому; users — только сотрудникам из shared_with; cabinet — каждому сотруднику кабинета с mail:read; business — сотрудникам с mail:read, чья область касается business_id
+    access_scope: Literal['personal', 'users', 'cabinet', 'business']
     email: str
     display_name: str
     #: Уведомления владельца ящика о новой почте: все письма, только важные отправители или выключено
@@ -12485,6 +12760,1117 @@ class _MarketplaceYandexProductPageRequired(TypedDict):
 class MarketplaceYandexProductPage(_MarketplaceYandexProductPageRequired, total=False):
     #: Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические
     demo: bool
+
+class MarkingAcceptExpectedResult(TypedDict):
+    #: Кодов назначено строкам этим действием
+    added: int
+    #: Ожидаемых кодов не назначено: в строке меньше штук, чем по УПД, или строка без поштучных кодов
+    skipped: int
+    document: "MarkingDocumentCodes"
+
+class MarkingApplication(TypedDict):
+    id: "UUID"
+    company_id: "UUID"
+    order_id: Optional[str]
+    product_group: str
+    #: Отчёт в СУЗ с подписью или отметка у групп, где отчёт СУЗ формирует сама
+    mode: Literal['report', 'auto']
+    #: Черновик, отправлен, принят (коды нанесены), отклонён (коды освобождены)
+    status: Literal['draft', 'sent', 'accepted', 'rejected']
+    #: reportId СУЗ
+    oms_report_id: str
+    #: reportStatus СУЗ последней проверки как есть
+    oms_status: str
+    #: Отказ словами СУЗ или причина неотправки
+    error_text: str
+    #: Атрибуты отчёта группы как в теле
+    attributes: Dict[str, Any]
+    codes_count: int
+    ranges: List["MarkingSeqRange"]
+    created_by: Optional[int]
+    created_at: str
+    send_attempted_at: Optional[str]
+    sent_at: Optional[str]
+    checked_at: Optional[str]
+
+class MarkingApplicationEnvelope(TypedDict):
+    application: "MarkingApplication"
+
+class MarkingBalanceList(TypedDict):
+    balances: Optional[List["MarkingBalanceListBalancesItem"]]
+
+class MarkingBalanceListBalancesItem(TypedDict):
+    product_group_id: int
+    product_group: str
+    #: Рубли строкой с двумя знаками; null — счёта по группе нет
+    balance: Optional[str]
+    contract_id: str
+
+class MarkingBox(TypedDict):
+    id: "UUID"
+    company_id: "UUID"
+    company_name: str
+    #: Код короба в реестре (вид BOX)
+    code_id: "UUID"
+    #: 18 цифр SSCC без AI
+    sscc: str
+    #: КИТУ «00» + SSCC
+    identity: str
+    #: Товарная группа; у чужого короба без товара в кабинете — пусто
+    group: str
+    #: own — собран здесь, gismt — снимок чужого из ГИС МТ
+    origin: Literal['own', 'gismt']
+    status: Literal['assembling', 'closed', 'signing', 'sent', 'accepted', 'rejected', 'disbanding', 'disbanded', 'received']
+    #: Вложений первого уровня
+    units: int
+    #: Этикеток короба напечатано, без тестовых
+    printed: int
+    #: SSCC паллеты, где лежит короб; пусто — нигде
+    parent_sscc: str
+    #: Наш документ «Формирование упаковки»
+    aggregation_document_id: Optional["UUID"]
+    #: Наш документ «Расформирование упаковки»
+    disaggregation_document_id: Optional["UUID"]
+    #: Отказ ГИС МТ по отчёту агрегации
+    error_text: str
+    created_at: str
+    closed_at: Optional[str]
+    disbanded_at: Optional[str]
+
+class MarkingBoxCard(TypedDict):
+    box: "MarkingBox"
+    items: Optional[List["MarkingBoxItem"]]
+    products: Optional[List["MarkingBoxProduct"]]
+    #: Вложений с полным кодом
+    printable: int
+
+class MarkingBoxContent(TypedDict):
+    box: "MarkingBox"
+    #: Откуда состав
+    source: Literal['own', 'gismt']
+    codes: Optional[List["MarkingBoxContentCode"]]
+
+class MarkingBoxContentCode(TypedDict):
+    code_id: "UUID"
+    #: Код без криптохвоста
+    identity: str
+    gtin: str
+    product_id: Optional["UUID"]
+    product_name: str
+    #: Есть полный код для перепечатки
+    printable: bool
+
+class _MarkingBoxCreateInputRequired(TypedDict):
+    company_id: "UUID"
+
+class MarkingBoxCreateInput(_MarkingBoxCreateInputRequired, total=False):
+    #: Товарная группа; пусто — единственная включённая у юрлица
+    group: str
+
+class MarkingBoxDocumentScanResult(TypedDict):
+    box: "MarkingBox"
+    source: Literal['own', 'gismt']
+    #: Кодов единиц в коробе
+    units: int
+    #: Легло сейчас
+    added: int
+    #: Уже были в документе
+    already: int
+    #: Не легли всего
+    skipped: int
+    skipped_codes: Optional[List["MarkingBoxExpandSkip"]]
+    shortage: Optional[List["MarkingBoxShortage"]]
+    document: "MarkingDocumentCodes"
+
+class MarkingBoxDraftResult(TypedDict):
+    box: "MarkingBox"
+    #: Черновик на подпись; null — отчёт не нужен
+    draft: Optional["MarkingDocumentDraft"]
+
+class MarkingBoxExpandSkip(TypedDict):
+    identity: str
+    #: Машинная причина, как у скана по одному
+    reason: str
+
+class MarkingBoxInventoryScanResult(TypedDict):
+    box: "MarkingBox"
+    source: Literal['own', 'gismt']
+    units: int
+    added: int
+    already: int
+    skipped: int
+    skipped_codes: Optional[List["MarkingBoxExpandSkip"]]
+    shortage: Optional[List["MarkingBoxShortage"]]
+    inventory: "MarkingInventoryCodes"
+
+class MarkingBoxItem(TypedDict):
+    code_id: "UUID"
+    #: Код без криптохвоста
+    identity: str
+    #: UNIT, GROUP, SET, BUNDLE или BOX
+    kind: str
+    gtin: str
+    product_id: Optional["UUID"]
+    product_name: str
+    #: Есть полный код: этикетку можно перепечатать
+    printable: bool
+    #: Вложение — короб: его карточка
+    box_id: Optional["UUID"]
+    added_at: str
+
+class MarkingBoxList(TypedDict):
+    items: Optional[List["MarkingBox"]]
+    total: int
+
+class MarkingBoxProduct(TypedDict):
+    gtin: str
+    product_id: Optional["UUID"]
+    product_name: str
+    #: Строка — вложенные короба, а не товар
+    boxes: bool
+    count: int
+
+class MarkingBoxResolveInput(TypedDict):
+    #: Юрлицо, от имени которого читается ГИС МТ и заводятся коды
+    company_id: "UUID"
+    #: Скан SSCC
+    raw: str
+
+class MarkingBoxScanInput(TypedDict):
+    #: Скан марки или SSCC
+    raw: str
+
+class MarkingBoxScanResult(TypedDict):
+    item: "MarkingBoxItem"
+    card: "MarkingBoxCard"
+
+class MarkingBoxShortage(TypedDict):
+    product_id: "UUID"
+    #: Кодам не хватило строки или штук
+    count: int
+
+class MarkingCertificate(TypedDict, total=False):
+    thumbprint: str
+    owner: str
+    inn: str
+    valid_to: str
+
+MarkingCheckStatus = Literal['', 'ok', 'unauthorized', 'rate_limited', 'declined', 'unavailable']
+
+class _MarkingCisInfoRequired(TypedDict):
+    requested_cis: str
+
+class MarkingCisInfo(_MarkingCisInfoRequired, total=False):
+    cis: str
+    gtin: str
+    product_name: str
+    brand: str
+    product_group_id: int
+    product_group: str
+    status: str
+    status_ex: str
+    owner_inn: str
+    owner_name: str
+    producer_inn: str
+    package_type: str
+    general_package_type: str
+    parent: str
+    child: List[str]
+    emission_date: str
+    produced_date: str
+    #: Отказ ГИС МТ по этому коду
+    error_message: str
+
+class MarkingCisInfoList(TypedDict):
+    results: List["MarkingCisInfo"]
+
+class _MarkingCisesInfoInputRequired(TypedDict):
+    company_id: "UUID"
+    codes: List[str]
+
+class MarkingCisesInfoInput(_MarkingCisesInfoInputRequired, total=False):
+    #: Ключ товарной группы; необязателен
+    product_group: str
+
+class _MarkingCodeRequired(TypedDict):
+    id: "UUID"
+    company_id: "UUID"
+    company_name: str
+    product_name: str
+    #: Ключ товарной группы
+    group: str
+    #: Вид кода (единица или агрегат)
+    kind: str
+    gtin: str
+    serial: str
+    #: Код идентификации без криптохвоста
+    identity: str
+    #: Сохранён ли полный код для печати
+    has_crypto_tail: bool
+    source: Literal['order', 'import', 'upd', 'scan', 'aggregation']
+    #: Последний известный статус ГИС МТ
+    gismt_status: str
+    gismt_owner_inn: str
+    #: Этикеток напечатано без тестовых
+    printed: int
+    #: Из них дубликатов
+    duplicates: int
+    created_at: str
+
+class MarkingCode(_MarkingCodeRequired, total=False):
+    """Строка реестра кодов. Полного кода с криптохвостом в ней нет никогда."""
+
+    product_id: "UUID"
+    import_id: "UUID"
+    order_id: "UUID"
+    produced_at: str
+    expires_at: str
+    #: Вес в граммах из кода
+    weight_g: int
+    gismt_checked_at: str
+
+class MarkingCodeOrder(TypedDict):
+    id: "UUID"
+    oms_order_id: str
+    company_id: "UUID"
+    company_name: str
+    product_group: str
+    release_method: str
+    cis_type: str
+    origin: Literal['akeda', 'oms']
+    #: orderStatus СУЗ как есть
+    status: str
+    #: Статус словами на языке запроса с причиной отказа
+    status_text: str
+    status_reason: str
+    created_at: str
+    oms_created_at: Optional[str]
+    expires_at: Optional[str]
+    last_synced_at: Optional[str]
+    created_by: Optional[int]
+    items: Optional[List["MarkingCodeOrderItem"]]
+    quantity: int
+    received: int
+
+class MarkingCodeOrderEnvelope(TypedDict):
+    order: "MarkingCodeOrder"
+
+class MarkingCodeOrderItem(TypedDict):
+    gtin: str
+    product_id: Optional[str]
+    product_name: str
+    quantity: int
+    received: int
+    template_id: Optional[int]
+    #: Статус буфера СУЗ как есть
+    buffer_status: str
+    left_in_buffer: Optional[int]
+    available_codes: Optional[int]
+    total_passed: Optional[int]
+    rejection_reason: str
+    expires_at: Optional[str]
+
+class MarkingCodeOrderPage(TypedDict):
+    items: Optional[List["MarkingCodeOrder"]]
+    total: int
+
+class MarkingCodePage(TypedDict):
+    items: Optional[List["MarkingCode"]]
+    total: int
+
+MarkingCodeState = Literal['received', 'printed', 'applying', 'applied', 'introducing', 'introduced', 'spoiled']
+
+class MarkingCompany(TypedDict):
+    id: "UUID"
+    name: str
+    inn: str
+    business_id: "UUID"
+    is_active: bool
+
+class MarkingCompanyGroup(TypedDict):
+    company_id: "UUID"
+    #: Ключ товарной группы
+    group: str
+    enabled: bool
+    transfer_mode: "MarkingTransferMode"
+    updated_at: str
+
+class MarkingCompanyGroupInput(TypedDict):
+    company_id: "UUID"
+    #: Ключ товарной группы
+    group: str
+    enabled: bool
+    transfer_mode: "MarkingTransferMode"
+
+class MarkingCompanyGroupList(TypedDict):
+    company_groups: Optional[List["MarkingCompanyGroup"]]
+
+class MarkingCompanyList(TypedDict):
+    companies: List["MarkingCompany"]
+
+class MarkingCompanySettings(TypedDict, total=False):
+    company_id: "UUID"
+    #: Префикс предприятия GS1 из 6–12 цифр или пусто
+    gs1_prefix: str
+    #: Ключ шаблона этикетки; пусто — 58×40
+    label_template: str
+    label_preset: Literal['', 'marking', 'marking_marketplace']
+    label_channel: Literal['', 'wildberries', 'ozon', 'yandex']
+    #: Вид складского документа → строгость
+    strictness: Dict[str, "MarkingStrictness"]
+    #: Причина списания склада → ключ причины вывода ГИС МТ
+    withdrawal_reasons: Dict[str, str]
+
+class MarkingCompanySettingsEnvelope(TypedDict):
+    settings: "MarkingCompanySettings"
+
+class MarkingCompanySettingsView(TypedDict):
+    settings: "MarkingCompanySettings"
+    writeoff_reasons: Optional[List["MarkingCompanySettingsViewWriteoffReasonsItem"]]
+    withdrawal_reason_options: List["MarkingCompanySettingsViewWithdrawalReasonOptionsItem"]
+    templates: List["MarkingCompanySettingsViewTemplatesItem"]
+
+class MarkingCompanySettingsViewWriteoffReasonsItem(TypedDict):
+    id: "UUID"
+    name: str
+    active: bool
+
+class MarkingCompanySettingsViewWithdrawalReasonOptionsItem(TypedDict):
+    key: str
+    name_ru: str
+    name_en: str
+    document: Literal['LK_RECEIPT', 'WRITE_OFF']
+
+class MarkingCompanySettingsViewTemplatesItem(TypedDict):
+    key: str
+    name: str
+
+class _MarkingConnectionRequired(TypedDict):
+    company_id: "UUID"
+    company_name: str
+    company_inn: str
+    connected: bool
+    #: Есть живой вход в ГИС МТ
+    has_token: bool
+    oms_id: str
+    oms_connection: str
+    #: Есть живой вход в СУЗ
+    oms_has_token: bool
+    oms_token_expires_at: Optional[str]
+    oms_token_issued_at: Optional[str]
+    oms_last_ping_at: Optional[str]
+    oms_last_ping_status: "MarkingCheckStatus"
+    oms_last_ping_message: str
+
+class MarkingConnection(_MarkingConnectionRequired, total=False):
+    """Подключение юрлица. Токенов True API и СУЗ здесь нет и не будет."""
+
+    contour: Literal['sandbox', 'production']
+    #: ИНН входа
+    inn: str
+    token_kind: Literal['jwt', 'uuid']
+    token_expires_at: str
+    token_issued_at: str
+    token_issued_by: int
+    certificate: "MarkingCertificate"
+    #: Несекретные сведения об участнике из входа
+    participant: Dict[str, Any]
+    last_check_at: str
+    last_check_status: "MarkingCheckStatus"
+    last_check_message: str
+
+class MarkingConnectionEnvelope(TypedDict):
+    connection: "MarkingConnection"
+
+class MarkingConnectionList(TypedDict):
+    connections: Optional[List["MarkingConnection"]]
+
+class MarkingDocumentCodeLine(TypedDict):
+    line: "UUID"
+    #: Сторона строки у комплектации (расход или выпуск); пусто у прочих
+    side: str
+    product_id: "UUID"
+    product_name: str
+    product_sku: str
+    #: Количество в базовой единице строкой
+    quantity: str
+    #: Товар маркируется на дату документа
+    marked: bool
+    mode: Literal['', 'unit', 'gtin']
+    group: str
+    #: Сколько кодов ждёт строка
+    required: int
+    assigned: int
+    strictness: "MarkingStrictness"
+    status: Literal['ok', 'missing', 'excess', 'not_required']
+    codes: Optional[List["MarkingStockLineCode"]]
+    #: Сколько кодов единиц ждём по входящему УПД; 0 — ожидания нет
+    expected: int
+    #: Ожидаемые коды без криптохвоста
+    expected_codes: Optional[List[str]]
+    expected_packages: Optional[List["MarkingExpectedPackage"]]
+    #: Отсканировано из ожидаемых
+    accepted: int
+    #: Ожидались по УПД и не отсканированы
+    missing: int
+    #: Отсканированы, но в УПД их нет
+    extra: int
+
+class _MarkingDocumentCodeProblemRequired(TypedDict):
+    #: Вид проблемы
+    code: str
+
+class MarkingDocumentCodeProblem(_MarkingDocumentCodeProblemRequired, total=False):
+    line: "UUID"
+    product_id: "UUID"
+    code_id: "UUID"
+    identity: str
+    required: int
+    assigned: int
+    strictness: "MarkingStrictness"
+
+class MarkingDocumentCodes(TypedDict):
+    document_id: "UUID"
+    type: str
+    status: str
+    company_id: "UUID"
+    #: Коды можно менять — документ не проведён
+    editable: bool
+    lines: Optional[List["MarkingDocumentCodeLine"]]
+    summary: "MarkingDocumentCodesSummary"
+
+class _MarkingDocumentCodesSummaryRequired(TypedDict):
+    required: int
+    assigned: int
+    status: Literal['ok', 'missing', 'excess', 'not_required']
+    problems: Optional[List["MarkingDocumentCodeProblem"]]
+    #: Кодов единиц ждём по входящему УПД
+    expected: int
+    accepted: int
+    missing: int
+    extra: int
+    #: Упаковок в УПД; их состав сверяется позже
+    expected_packages: int
+    #: Входящий документ поставщика (ВХ) — основание поступления; null — основания нет
+    basis_document_id: Optional["UUID"]
+
+class MarkingDocumentCodesSummary(_MarkingDocumentCodesSummaryRequired, total=False):
+    #: Итог сверки для титула покупателя: принять, принять с расхождениями или отказ возможен. Нет поля — сверять не с чем.
+    verdict: Literal['accept', 'accept_with_discrepancy', 'reject_possible']
+    #: УПД сейчас не прочитался — ожидание не показано
+    expected_unavailable: bool
+
+class MarkingDocumentDraft(TypedDict):
+    id: "UUID"
+    company_id: "UUID"
+    kind: "MarkingDocumentKind"
+    gismt_type: str
+    product_group: str
+    codes_count: int
+    status: Literal['draft', 'sent', 'accepted', 'rejected', 'cancelled']
+    gismt_doc_id: str
+    gismt_status: str
+    error_text: str
+    params: "MarkingDocumentParams"
+    created_at: str
+    sent_at: Optional[str]
+    checked_at: Optional[str]
+    #: Тело документа base64 — его подписывает человек
+    body_base64: str
+    #: SHA-256 тела шестнадцатеричный
+    body_hash: str
+
+class MarkingDocumentDraftEnvelope(TypedDict):
+    draft: "MarkingDocumentDraft"
+
+class _MarkingDocumentDraftInputRequired(TypedDict):
+    company_id: "UUID"
+    kind: "MarkingDocumentKind"
+    product_group: str
+
+class MarkingDocumentDraftInput(_MarkingDocumentDraftInputRequired, total=False):
+    #: Коды документа; достаточно кода без криптохвоста
+    codes: List[str]
+    params: "MarkingDocumentParams"
+
+MarkingDocumentKind = Literal['withdrawal', 'withdrawal_cancel', 'return', 'introduce', 'introduce_remains', 'cancel_codes', 'aggregation', 'disaggregation']
+
+class MarkingDocumentParams(TypedDict, total=False):
+    """Параметры вида документа; незнакомое поле — отказ"""
+
+    reason: str
+    reason_other: str
+    action_date: str
+    buyer_inn: str
+    #: Цена за единицу в копейках с НДС
+    product_cost: int
+    kpp: str
+    fias_id: str
+    primary_document_type: str
+    primary_document_number: str
+    primary_document_date: str
+    primary_document_name: str
+    withdrawal_document_id: str
+    return_type: str
+    paid: bool
+    production_date: str
+    production_type: str
+    tnved_code: str
+    certificate_type: str
+    certificate_number: str
+    certificate_date: str
+    #: Формирование упаковки — код короба «00» + SSCC
+    unit_serial_number: str
+
+class _MarkingErrorRequired(TypedDict):
+    #: Одно предложение на языке запроса
+    detail: str
+
+class MarkingError(_MarkingErrorRequired, total=False):
+    """Отказ модуля маркировки. Поля сверх `code` и `detail` приходят только у отказов, где экран подсвечивает место: параметр документа ГИС МТ, номер кода в запросе или код со строкой складского документа."""
+
+    #: Машинный код отказа (`marking.…` или код причины разбора скана)
+    code: str
+    #: Идентификатор случая у ответов 5xx
+    request_id: str
+    #: Параметр документа ГИС МТ с ошибкой
+    field: str
+    #: Что не так с параметром
+    problem: Literal['required', 'format', 'value', 'not_allowed', 'unavailable', 'unsupported', 'date_range', 'unknown']
+    #: Номер нераспознанного кода в запросе с единицы
+    index: int
+    #: Нераспознанный код как пришёл
+    value: str
+    #: Код без криптохвоста, по которому отказ
+    identity: str
+    #: SSCC короба, где уже лежит код (или паллеты, где лежит короб)
+    box: str
+    #: Строка складского документа отказа
+    line: str
+
+class MarkingExpectedPackage(TypedDict):
+    #: Код упаковки из УПД без криптохвоста
+    identity: str
+    #: Групповая (НомУпак) или транспортная (ИдентТрансУпак) упаковка
+    kind: Literal['group', 'transport']
+    #: Сколько единиц в упаковке по УПД; 0 — не указано
+    units: int
+
+class _MarkingGISMTCodePageRequired(TypedDict):
+    items: List["MarkingGISMTCodePageItemsItem"]
+    is_last: bool
+    scanned: int
+
+class MarkingGISMTCodePage(_MarkingGISMTCodePageRequired, total=False):
+    next_emission_date: str
+    next_sgtin: str
+
+class _MarkingGISMTCodePageItemsItemRequired(TypedDict):
+    sgtin: str
+    gtin: str
+    status: str
+
+class MarkingGISMTCodePageItemsItem(_MarkingGISMTCodePageItemsItemRequired, total=False):
+    status_ex: str
+    emission_date: str
+    application_date: str
+    produced_date: str
+    package_type: str
+    general_package_type: str
+    owner_inn: str
+    product_group: str
+    parent: str
+    product_name: str
+    brand: str
+    product_sku: str
+    product_id: str
+
+class _MarkingGISMTCodesInputRequired(TypedDict):
+    company_id: "UUID"
+
+class MarkingGISMTCodesInput(_MarkingGISMTCodesInputRequired, total=False):
+    #: Ключ товарной группы; пусто — все включённые группы юрлица
+    group: str
+    #: Статусы ГИС МТ (EMITTED, APPLIED, INTRODUCED …); пусто — все
+    statuses: List[str]
+    #: GTIN из 8–14 цифр
+    gtin: str
+    per_page: int
+    cursor_date: str
+    cursor_sgtin: str
+
+class MarkingGISMTDocument(TypedDict):
+    id: str
+    number: str
+    doc_date: str
+    received_at: str
+    type: str
+    status: str
+    sender_inn: str
+    sender_name: str
+    receiver_inn: str
+    receiver_name: str
+    product_group: str
+    incoming: bool
+
+class MarkingGISMTDocumentList(TypedDict):
+    items: Optional[List["MarkingGISMTDocument"]]
+
+class MarkingGISMTDocumentView(TypedDict):
+    #: Документ документооборота с тем же файлом; пока всегда null
+    docflow_message_id: Optional[str]
+    document: "MarkingGISMTDocumentViewDocument"
+
+class MarkingGISMTDocumentViewDocument(TypedDict):
+    id: str
+    number: str
+    doc_date: str
+    received_at: str
+    #: Вид словами на языке запроса
+    type: str
+    #: Код вида ГИС МТ
+    raw_type: str
+    status: str
+    sender_inn: str
+    sender_name: str
+    receiver_inn: str
+    receiver_name: str
+    product_group: str
+    incoming: bool
+    errors: Optional[List[str]]
+    codes: Optional[List["MarkingGISMTDocumentViewDocumentCodesItem"]]
+    items: Optional[List["MarkingGISMTDocumentViewDocumentItemsItem"]]
+    codes_total: int
+
+class _MarkingGISMTDocumentViewDocumentCodesItemRequired(TypedDict):
+    cis: str
+    gtin: str
+
+class MarkingGISMTDocumentViewDocumentCodesItem(_MarkingGISMTDocumentViewDocumentCodesItemRequired, total=False):
+    status: str
+
+class _MarkingGISMTDocumentViewDocumentItemsItemRequired(TypedDict):
+    name: str
+    gtin: str
+    quantity: float
+
+class MarkingGISMTDocumentViewDocumentItemsItem(_MarkingGISMTDocumentViewDocumentItemsItemRequired, total=False):
+    line: int
+    #: Цена за единицу строкой, как в документе
+    price: str
+
+class _MarkingGroupRequired(TypedDict):
+    #: Ключ товарной группы (`pg` ГИС МТ)
+    key: str
+    #: Название на языке запроса
+    name: str
+    name_ru: str
+    name_en: str
+    #: Допускает ли группа маркировку остатков
+    remains: bool
+    #: Режимы передачи в УПД, разрешённые сегодня
+    transfer_modes: List["MarkingTransferMode"]
+
+class MarkingGroup(_MarkingGroupRequired, total=False):
+    #: Норма, разрешающая передачу по GTIN; нет поля — не разрешена
+    gtin_rule: str
+
+class MarkingGroupList(TypedDict):
+    groups: List["MarkingGroup"]
+
+class MarkingImport(TypedDict):
+    id: "UUID"
+    company_id: "UUID"
+    source: Literal['paste', 'file', 'scan']
+    file_name: str
+    group: str
+    total: int
+    accepted: int
+    duplicates: int
+    rejected: int
+    errors: Optional[List["MarkingImportLineError"]]
+    created_at: str
+
+class MarkingImportLineError(TypedDict):
+    line: int
+    #: Код причины отказа
+    code: str
+    pos: int
+    #: Начало строки без криптохвоста
+    input: str
+
+class MarkingImportPage(TypedDict):
+    items: Optional[List["MarkingImport"]]
+    total: int
+
+class _MarkingInventoryCodeRequired(TypedDict):
+    id: "UUID"
+    #: Код без криптохвоста
+    identity: str
+    gtin: str
+    #: Последний известный статус в ГИС МТ
+    gismt_status: str
+    #: Найден, не найден (недостача) или лишний
+    state: Literal['found', 'missing', 'extra']
+
+class MarkingInventoryCode(_MarkingInventoryCodeRequired, total=False):
+    #: Почему код лишний
+    reason: Literal['other_warehouse', 'other_company', 'not_on_stock']
+    #: Склад, где лишний код числится за этим юрлицом
+    warehouse_id: "UUID"
+    #: Когда отсканирован; у недостающего нет
+    scanned_at: str
+
+class MarkingInventoryCodeLine(TypedDict):
+    line: "UUID"
+    product_id: "UUID"
+    product_name: str
+    product_sku: str
+    #: Товарная группа профиля маркировки
+    group: str
+    #: unit — коды поштучно; gtin — юрлицо передаёт товар по GTIN; пусто — товар не маркируется на дату
+    mode: Literal['', 'unit', 'gtin']
+    #: Количество по учёту из снимка инвентаризации
+    book_qty: str
+    #: Факт пересчёта; пусто — ещё не введён
+    actual_qty: Optional[str]
+    #: Кодов числится на складе
+    expected: int
+    #: Отсканировано всего (найдено и лишних)
+    scanned: int
+    found: int
+    #: Числится, но не найдено
+    missing: int
+    #: Найдено, но здесь не числится
+    extra: int
+    #: Лишние важнее нехватки
+    status: Literal['ok', 'missing', 'extra', 'not_required']
+    codes: List["MarkingInventoryCode"]
+
+class MarkingInventoryCodes(TypedDict):
+    inventory_id: "UUID"
+    company_id: "UUID"
+    warehouse_id: "UUID"
+    #: Дата инвентаризации: на неё читается остаток кодов
+    date: str
+    #: Состояние пересчёта склада: counting, counted, acts_created, closed
+    workflow: str
+    #: Марки ещё сканируются — акты не сформированы
+    editable: bool
+    #: С чем сверено: регистр marking_codes
+    source: Literal['register']
+    lines: List["MarkingInventoryCodeLine"]
+    summary: "MarkingInventoryCodesSummary"
+
+class MarkingInventoryCodesSummary(TypedDict):
+    expected: int
+    scanned: int
+    found: int
+    missing: int
+    extra: int
+    status: Literal['ok', 'missing', 'extra', 'not_required']
+
+class MarkingInventoryRemoveResult(TypedDict):
+    line: "MarkingInventoryCodeLine"
+
+class MarkingInventoryScanInput(TypedDict):
+    #: Скан или код без криптохвоста
+    raw: str
+
+class MarkingInventoryScanResult(TypedDict):
+    code: "MarkingInventoryCode"
+    #: Код заведён в реестре юрлица этим сканом
+    created: bool
+    line: "MarkingInventoryCodeLine"
+
+class _MarkingInventoryTransferDocumentRequired(TypedDict):
+    document_id: "UUID"
+    type: Literal['stock_writeoff', 'stock_capitalization']
+    status: str
+    #: Кодов перенесено этим вызовом
+    transferred: int
+    #: Кодов в акте
+    codes: int
+
+class MarkingInventoryTransferDocument(_MarkingInventoryTransferDocumentRequired, total=False):
+    #: Почему акт не тронут
+    skipped: Literal['document_posted', 'document_has_codes']
+
+class MarkingInventoryTransferResult(TypedDict):
+    documents: List["MarkingInventoryTransferDocument"]
+    skipped: List["MarkingInventoryTransferSkip"]
+
+class MarkingInventoryTransferSkip(TypedDict):
+    code_id: "UUID"
+    identity: str
+    product_id: "UUID"
+    state: Literal['missing', 'extra']
+    #: Причина лишнего или почему код не лёг в акт
+    reason: Literal['other_warehouse', 'other_company', 'no_line', 'no_document']
+
+class MarkingLabelTemplate(TypedDict):
+    key: str
+    #: Название на языке запроса
+    name: str
+    width_mm: float
+    height_mm: float
+    #: Этикетки раскладываются на лист
+    sheet: bool
+    per_page: int
+    page_width_mm: float
+    page_height_mm: float
+
+class MarkingLabelTemplates(TypedDict):
+    templates: List["MarkingLabelTemplate"]
+    fields: List[str]
+    channels: List[str]
+    presets: List[str]
+    reasons: List[str]
+    limits: "MarkingLabelTemplatesLimits"
+
+class MarkingLabelTemplatesLimits(TypedDict):
+    #: Кодов в одной печати
+    codes: int
+    #: Копий на код
+    copies: int
+    #: Этикеток в одной печати
+    labels: int
+
+class MarkingModList(TypedDict):
+    mods: Optional[List["MarkingModListModsItem"]]
+
+class _MarkingModListModsItemRequired(TypedDict):
+    kpp: str
+    fias_id: str
+    address: str
+
+class MarkingModListModsItem(_MarkingModListModsItemRequired, total=False):
+    inn: str
+    product_groups: List[str]
+
+class MarkingOrderCode(TypedDict):
+    id: "UUID"
+    gtin: str
+    #: Порядковый номер кода в заказе по GTIN
+    seq: Optional[int]
+    #: Код без криптохвоста
+    identity: str
+    state: "MarkingCodeState"
+    #: Этикеток напечатано без тестовых
+    printed: int
+    #: Из них дубликатов
+    duplicates: int
+    #: Живой отчёт о нанесении кода
+    application_id: Optional[str]
+    #: Пояснение к испорченному коду
+    spoiled_note: str
+    spoiled_at: Optional[str]
+
+class MarkingOrderCodes(TypedDict):
+    order: "MarkingCodeOrder"
+    #: Как наносятся коды группы заказа
+    application_mode: Literal['report', 'auto']
+    gtins: List["MarkingOrderGtinSummary"]
+    items: List["MarkingOrderCode"]
+    #: Кодов по отбору
+    total: int
+    print_jobs: List["MarkingOrderPrintJob"]
+    applications: List["MarkingApplication"]
+
+class MarkingOrderGtinSummary(TypedDict):
+    gtin: str
+    product_id: Optional[str]
+    product_name: str
+    #: Заказано
+    quantity: int
+    #: Получено в реестр
+    received: int
+    #: Напечатано хотя бы раз
+    printed: int
+    #: В отчёте о нанесении в обработке
+    applying: int
+    #: Нанесено, включая введённые в оборот
+    applied: int
+    #: В отправленном документе ввода
+    introducing: int
+    #: В обороте
+    introduced: int
+    #: Испорчено
+    spoiled: int
+    #: Получено и ещё не напечатано, не нанесено и не испорчено
+    unprinted: int
+    #: Можно отметить нанесёнными
+    applicable: int
+    #: Нанесено, но ещё не вводится и не в обороте
+    introducible: int
+
+class _MarkingOrderInputRequired(TypedDict):
+    company_id: "UUID"
+    product_group: str
+    release_method: Literal['PRODUCTION', 'IMPORT', 'REMAINS', 'REMARK', 'COMMISSION', 'REAPPLY']
+    items: List["MarkingOrderInputItemsItem"]
+
+class MarkingOrderInput(_MarkingOrderInputRequired, total=False):
+    #: Вид кода всех строк; пусто — UNIT
+    cis_type: Literal['', 'UNIT', 'GROUP', 'SET', 'BUNDLE']
+    contact_person: str
+    #: Откреплённая подпись УКЭП (CMS в base64) тела заказа из «Подготовить заказ»; СУЗ без неё заказ отклоняет
+    signature: str
+
+class _MarkingOrderInputItemsItemRequired(TypedDict):
+    #: GTIN из 14 цифр
+    gtin: str
+    quantity: int
+
+class MarkingOrderInputItemsItem(_MarkingOrderInputItemsItemRequired, total=False):
+    product_id: "UUID"
+    #: Шаблон кода СУЗ; 0 — по группе
+    template_id: int
+
+class MarkingOrderPrintJob(TypedDict):
+    id: "UUID"
+    created_at: str
+    created_by: Optional[int]
+    reason: Literal['first', 'duplicate', 'test']
+    template: str
+    copies: int
+    note: str
+    #: Диапазоны номеров напечатанных кодов по GTIN
+    ranges: List["MarkingSeqRange"]
+
+class MarkingOrderReceiveResult(TypedDict):
+    order: "MarkingCodeOrder"
+    received_now: int
+    duplicates: int
+    rejected: int
+    has_more: bool
+
+class MarkingOrderSyncResult(TypedDict):
+    seen: int
+    created: int
+    updated: int
+
+class MarkingOutboxDocument(TypedDict):
+    id: "UUID"
+    company_id: "UUID"
+    kind: "MarkingDocumentKind"
+    gismt_type: str
+    product_group: str
+    codes_count: int
+    status: Literal['draft', 'sent', 'accepted', 'rejected', 'cancelled']
+    gismt_doc_id: str
+    gismt_status: str
+    error_text: str
+    params: "MarkingDocumentParams"
+    created_at: str
+    sent_at: Optional[str]
+    checked_at: Optional[str]
+
+class MarkingOutboxDocumentEnvelope(TypedDict):
+    document: "MarkingOutboxDocument"
+
+class MarkingOutboxPage(TypedDict):
+    items: Optional[List["MarkingOutboxDocument"]]
+    total: int
+
+class MarkingParseCodeInput(TypedDict):
+    company_id: "UUID"
+    #: Строка из поля поиска или скан
+    raw: str
+
+class _MarkingParsedCodeRequired(TypedDict):
+    is_marking_code: bool
+    gtin: str
+    #: Код без криптохвоста
+    identity: str
+    serial: str
+    #: Группа, по формату которой код разобран
+    group: str
+    #: Группы юрлица, под формат которых код подходит
+    groups: Optional[List[str]]
+    has_crypto_tail: bool
+    kind: str
+
+class MarkingParsedCode(_MarkingParsedCodeRequired, total=False):
+    product_id: "UUID"
+    product_name: str
+
+class _MarkingProductProfileRequired(TypedDict):
+    product_id: "UUID"
+    #: Ключ товарной группы
+    group: str
+    package_kind: Literal['unit', 'group', 'set']
+    #: Способ ввода в оборот
+    intro_method: Literal['production', 'contract', 'import', 'remains', 'commission']
+    updated_at: str
+
+class MarkingProductProfile(_MarkingProductProfileRequired, total=False):
+    #: С какой даты товар маркируется; нет поля — с начала учёта
+    marked_since: str
+
+class MarkingProductProfileEnvelope(TypedDict):
+    profile: Optional["MarkingProductProfile"]
+
+class _MarkingProductProfileInputRequired(TypedDict):
+    package_kind: Literal['unit', 'group', 'set']
+    #: Способ ввода в оборот; remains — только у групп с маркировкой остатков
+    intro_method: Literal['production', 'contract', 'import', 'remains', 'commission']
+
+class MarkingProductProfileInput(_MarkingProductProfileInputRequired, total=False):
+    """Реквизиты модуля у маркируемого товара. Группу маркировки задаёт карточка товара (core), здесь её нет."""
+
+    #: Дата ГГГГ-ММ-ДД или пусто
+    marked_since: str
+
+class MarkingReplaceCodesInput(TypedDict):
+    company_id: "UUID"
+    lines: List["MarkingReplaceCodesInputLinesItem"]
+
+class _MarkingReplaceCodesInputLinesItemRequired(TypedDict):
+    line: "UUID"
+    #: Коды строки; достаточно кода без криптохвоста
+    codes: List[str]
+
+class MarkingReplaceCodesInputLinesItem(_MarkingReplaceCodesInputLinesItemRequired, total=False):
+    product_id: "UUID"
+
+class _MarkingScanDocumentInputRequired(TypedDict):
+    #: Скан или код без криптохвоста
+    raw: str
+
+class MarkingScanDocumentInput(_MarkingScanDocumentInputRequired, total=False):
+    line: "UUID"
+
+class MarkingScanDocumentResult(TypedDict):
+    code: "MarkingCode"
+    line: "UUID"
+    #: Код заведён в реестре этим сканом
+    created: bool
+    document: "MarkingDocumentCodes"
+
+MarkingSeqRange = TypedDict("MarkingSeqRange", {"gtin": str, "from": int, "to": int, "count": int}, total=False)
+
+class _MarkingSpoilInputRequired(TypedDict):
+    code_ids: List["UUID"]
+    #: true — отметить испорченными, false — снять отметку
+    spoiled: bool
+
+class MarkingSpoilInput(_MarkingSpoilInputRequired, total=False):
+    #: Что случилось: испорчена, утрачена
+    note: str
+
+class MarkingStockLineCode(TypedDict):
+    id: "UUID"
+    #: Код без криптохвоста
+    identity: str
+    gtin: str
+    gismt_status: str
+    #: Код есть во входящем УПД поставщика
+    expected: bool
+
+MarkingStrictness = Literal['off', 'warn', 'require']
+
+MarkingTransferMode = Literal['unit', 'gtin']
 
 class Meeting(TypedDict):
     id: "UUID"
@@ -14325,7 +15711,33 @@ class StockReportWarehouseTotal(TypedDict):
     #: Decimal string
     amount: str
 
-class StockScanResult(TypedDict):
+class StockScanGS1(TypedDict):
+    """Разобранный код GS1 — код маркировки или логистическая этикетка. У обычного штрихкода блока нет. Поля, которых в коде не было, пусты. Блок криптохвост маркировки не несёт; поле barcode — сохранённое значение идентификатора как есть."""
+
+    #: GTIN из кода — четырнадцать цифр
+    gtin: str
+    #: Серийный номер экземпляра
+    serial: str
+    #: Код идентификации экземпляра — 01, GTIN, 21 и серийный номер, без криптохвоста
+    identification_code: str
+    #: Партия производителя
+    batch: str
+    #: Срок годности из кода датой ГГГГ-ММ-ДД; пусто — срока в коде нет
+    expires_on: str
+    #: Код транспортной упаковки — восемнадцать цифр
+    sscc: str
+    #: Код считан вместе с криптохвостом маркировки
+    has_crypto_tail: bool
+
+class StockScanMarkingGroup(TypedDict):
+    """Действующая группа маркировки найденного товара — своя или от категории. Поле про товар, а не про код: оно есть и у обычного штрихкода. У товара, который не маркируется, поля нет."""
+
+    #: Идентификатор группы маркировки
+    id: Dict[str, Any]
+    #: Название группы маркировки
+    name: str
+
+class _StockScanResultRequired(TypedDict):
     identifier_id: "UUID"
     barcode: str
     product_id: "UUID"
@@ -14337,6 +15749,10 @@ class StockScanResult(TypedDict):
     input_unit_id: Optional["UUID"]
     input_unit_label: str
     factor_to_base: str
+
+class StockScanResult(_StockScanResultRequired, total=False):
+    gs1: "StockScanGS1"
+    marking_group: "StockScanMarkingGroup"
 
 class StockSettings(TypedDict):
     #: Запрещать отгрузку сверх свободного остатка
@@ -15121,6 +16537,15 @@ class FinanceGetProjectBudgetHistoryResponse(TypedDict):
 class FinanceListAllocationRulesResponse(TypedDict, total=False):
     results: List["FinanceAllocationRule"]
 
+class FinanceRelinkPaymentRequest(TypedDict, total=False):
+    from_order: "UUID"
+    to_order: "UUID"
+    to_contract: "UUID"
+    amount: str
+    preview: bool
+    detach: bool
+    confirm_release: bool
+
 class _FinanceRepostTransactionsRequestRequired(TypedDict):
     ids: List["UUID"]
 
@@ -15203,6 +16628,10 @@ class MailSetVIPSenderRequest(_MailSetVIPSenderRequestRequired, total=False):
 
 class MailCountVIPUnreadResponse(TypedDict):
     unread: int
+
+class MarkingSpoilOrderCodesResponse(TypedDict):
+    #: У скольких кодов отметка изменилась
+    changed: int
 
 class StockListDocumentAuthorsResponse(TypedDict):
     count: int

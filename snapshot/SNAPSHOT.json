@@ -3,46 +3,47 @@
     "license": "LicenseRef-Akeda-Proprietary",
     "operations": {
       "by_audience": {
-        "external": 831
+        "external": 899
       },
       "by_module": {
         "assistant": 3,
         "automation": 3,
         "calendar": 25,
         "chat": 26,
-        "core": 162,
-        "crm": 107,
+        "core": 168,
+        "crm": 108,
         "dashboard": 2,
         "developer": 22,
         "docflow": 55,
         "files": 16,
-        "finance": 121,
+        "finance": 123,
         "knowledge": 28,
         "mail": 38,
         "marketplace": 25,
+        "marking": 58,
         "platform": 5,
         "settings": 6,
         "stock": 87,
-        "tasks": 100
+        "tasks": 101
       },
       "by_stage": {
-        "preview": 807,
+        "preview": 875,
         "public": 24
       },
       "installation_by_module": {
         "calendar": 25,
-        "core": 146,
+        "core": 152,
         "docflow": 13,
-        "finance": 107,
+        "finance": 109,
         "marketplace": 25,
         "platform": 4,
         "stock": 83,
-        "tasks": 100
+        "tasks": 101
       },
-      "installation_reachable": 503,
-      "total": 831
+      "installation_reachable": 512,
+      "total": 899
     },
-    "schemas": 1144,
+    "schemas": 1259,
     "servers": [
       "https://erp.akeda.ru"
     ],
@@ -61,14 +62,14 @@
       "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 3540090,
+      "bytes": 3872698,
       "path": "openapi/akeda-v1.json",
-      "sha256": "c46bcc956512a51ff7a1a3400788732fa93bcbedb80ccce20857a1c4ab36abd7"
+      "sha256": "2d8fdb4d2eecb8ed8b6ea283169177bdcc3699c502400b7745bf3f8dd86b6034"
     },
     {
-      "bytes": 2678856,
+      "bytes": 2931824,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "d4aa562cd68891c31f1af21333a5ba7b27949e1b66e5751485d7df320cdc5388"
+      "sha256": "70869db349ae4557fd60b351da5d621cdc46d8b569431d3b3fad00a9dcb3c56f"
     },
     {
       "bytes": 18414,
@@ -81,6 +82,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "61ca013c3bb252d1f9cc9b9fc4dfcb5f33a6df677e1f3cb4f761db75d61c7374",
+  "snapshot_digest": "96f9a3384800549616cd94059f176410f9d81b4a5dde76cd5b6421b48a048ac0",
   "snapshot_version": 1
 }
