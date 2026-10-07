@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c4ace798ceb5b73f4f0c1e80df57d77999a90287645e6ba4cc63c73547d52ef6).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e278ecc6f3db3051c024549b7129364efc3ac4920445da2f2eb464f464f210cb).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -435,6 +435,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowFlowContactStats': OperationSpec('GET', '/api/v1/docflow/flow/contacts', 'docflow', 'preview', 'docflow.flow:read', False, False, (), 'none', None, None),
     'docflowFlowCreateDocument': OperationSpec('POST', '/api/v1/docflow/flow/documents', 'docflow', 'preview', 'docflow.flow:write', True, False, (), 'none', None, None),
     'docflowFlowDocument': OperationSpec('GET', '/api/v1/docflow/flow/documents/{id}', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
+    'docflowFlowDocumentMarks': OperationSpec('GET', '/api/v1/docflow/flow/documents/{id}/marks', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
     'docflowFlowDocumentRevision': OperationSpec('GET', '/api/v1/docflow/flow/documents/{id}/revisions/{version}', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id', 'version',), 'none', None, None),
     'docflowFlowDocumentRevisions': OperationSpec('GET', '/api/v1/docflow/flow/documents/{id}/revisions', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
     'docflowFlowDocuments': OperationSpec('GET', '/api/v1/docflow/flow/documents', 'docflow', 'preview', 'docflow.flow:read', False, False, (), 'limit_offset', 100, 50),
@@ -684,9 +685,11 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'marketplaceYandexProducts': OperationSpec('GET', '/api/v1/marketplace/yandex/products', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'page', 10000, 50),
     'marketplaceYandexStores': OperationSpec('GET', '/api/v1/marketplace/yandex/stores', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'markingAcceptExpectedCodes': OperationSpec('POST', '/api/v1/marking/documents/{type}/{id}/codes/accept-expected', 'marking', 'preview', 'marking:write', False, False, ('id', 'type',), 'none', None, None),
+    'markingAddDocumentCodesList': OperationSpec('POST', '/api/v1/marking/documents/{type}/{id}/codes/list', 'marking', 'preview', 'marking:write', False, False, ('id', 'type',), 'none', None, None),
     'markingCheckCodes': OperationSpec('POST', '/api/v1/marking/cises/info', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
     'markingCloseBox': OperationSpec('POST', '/api/v1/marking/boxes/{id}/close', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
     'markingCloseOrder': OperationSpec('POST', '/api/v1/marking/orders/{id}/close', 'marking', 'preview', 'marking.gismt:send', False, False, ('id',), 'none', None, None),
+    'markingCodeSyncState': OperationSpec('GET', '/api/v1/marking/codes/sync', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
     'markingCreateBox': OperationSpec('POST', '/api/v1/marking/boxes', 'marking', 'preview', 'marking:write', False, False, (), 'none', None, None),
     'markingCreateDocumentDraft': OperationSpec('POST', '/api/v1/marking/gismt/document-drafts', 'marking', 'preview', 'marking:write', False, False, (), 'none', None, None),
     'markingCreateOrder': OperationSpec('POST', '/api/v1/marking/orders', 'marking', 'preview', 'marking.gismt:send', True, False, (), 'none', None, None),
@@ -695,6 +698,8 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'markingDeleteDocumentDraft': OperationSpec('DELETE', '/api/v1/marking/gismt/document-drafts/{id}', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
     'markingDeleteProductProfile': OperationSpec('DELETE', '/api/v1/marking/products/{id}/profile', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
     'markingDisbandBox': OperationSpec('POST', '/api/v1/marking/boxes/{id}/disband', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
+    'markingDistanceQueue': OperationSpec('GET', '/api/v1/marking/gismt/distance-queue', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
+    'markingDocumentSummaries': OperationSpec('GET', '/api/v1/marking/document-summaries', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
     'markingGetBox': OperationSpec('GET', '/api/v1/marking/boxes/{id}', 'marking', 'preview', 'marking:read', False, False, ('id',), 'none', None, None),
     'markingGetBoxContents': OperationSpec('GET', '/api/v1/marking/boxes/{id}/contents', 'marking', 'preview', 'marking:read', False, False, ('id',), 'none', None, None),
     'markingGetCompanySettings': OperationSpec('GET', '/api/v1/marking/company-settings/{company_id}', 'marking', 'preview', 'marking:read', False, False, ('company_id',), 'none', None, None),
@@ -729,6 +734,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'markingReplaceDocumentCodes': OperationSpec('PUT', '/api/v1/marking/documents/{type}/{id}/codes', 'marking', 'preview', 'marking:write', False, False, ('id', 'type',), 'none', None, None),
     'markingReportBox': OperationSpec('POST', '/api/v1/marking/boxes/{id}/report', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
     'markingResolveBox': OperationSpec('POST', '/api/v1/marking/boxes/resolve', 'marking', 'preview', 'marking:write', False, False, (), 'none', None, None),
+    'markingReturnQueue': OperationSpec('GET', '/api/v1/marking/gismt/return-queue', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
     'markingSaveCompanyGroup': OperationSpec('PUT', '/api/v1/marking/company-groups', 'marking', 'preview', 'marking:admin', False, False, (), 'none', None, None),
     'markingSaveCompanySettings': OperationSpec('PUT', '/api/v1/marking/company-settings/{company_id}', 'marking', 'preview', 'marking:admin', False, False, ('company_id',), 'none', None, None),
     'markingSaveProductProfile': OperationSpec('PUT', '/api/v1/marking/products/{id}/profile', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
@@ -738,8 +744,12 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'markingScanIntoBox': OperationSpec('POST', '/api/v1/marking/boxes/{id}/scan', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
     'markingScanInventoryCode': OperationSpec('POST', '/api/v1/marking/inventories/{id}/codes/scan', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
     'markingSearchGISMTCodes': OperationSpec('POST', '/api/v1/marking/gismt/codes', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
+    'markingShortDocumentCounts': OperationSpec('GET', '/api/v1/marking/document-summaries/short', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
     'markingSpoilOrderCodes': OperationSpec('POST', '/api/v1/marking/orders/{id}/codes/spoil', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
+    'markingStartCodeSync': OperationSpec('POST', '/api/v1/marking/codes/sync', 'marking', 'preview', 'marking:write', False, False, (), 'none', None, None),
+    'markingStockCodes': OperationSpec('GET', '/api/v1/marking/stock-codes', 'marking', 'preview', 'marking:read', False, False, (), 'limit_offset', 500, 200),
     'markingSyncOrders': OperationSpec('POST', '/api/v1/marking/orders/sync', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
+    'markingTraceCode': OperationSpec('GET', '/api/v1/marking/codes/trace', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
     'markingTransferInventoryCodes': OperationSpec('POST', '/api/v1/marking/inventories/{id}/codes/transfer', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
     'printFormDownloadSession': OperationSpec('GET', '/api/v1/print/forms/{kind}/{id}/download-session', 'core', 'preview', 'core:read', False, False, ('id', 'kind',), 'none', None, None),
     'settingsListCompanies': OperationSpec('GET', '/api/v1/settings/companies', 'settings', 'preview', 'settings:read', False, False, (), 'none', None, None),
@@ -816,6 +826,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'stockPostDocument': OperationSpec('POST', '/api/v1/stock/documents/{id}/post', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockPreviewImport': OperationSpec('POST', '/api/v1/stock/imports/{id}/preview', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockPreviewValuation': OperationSpec('POST', '/api/v1/stock/valuation/preview', 'stock', 'preview', 'stock:write', False, True, (), 'none', None, None),
+    'stockPriceSuggestions': OperationSpec('GET', '/api/v1/stock/price-suggestions', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
     'stockRebuildValuation': OperationSpec('POST', '/api/v1/stock/valuation/rebuild', 'stock', 'preview', 'stock:write', False, True, (), 'none', None, None),
     'stockRefreshInventorySnapshot': OperationSpec('POST', '/api/v1/stock/documents/{id}/inventory-refresh', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockReleaseReservation': OperationSpec('POST', '/api/v1/stock/documents/{id}/release', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),

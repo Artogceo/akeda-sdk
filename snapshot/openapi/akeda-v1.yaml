@@ -24063,6 +24063,13 @@ paths:
           description: Причина списания из справочника stock.stock_writeoff_reasons; берётся из payload документа
           schema:
             $ref: '#/components/schemas/UUID'
+        - name: marks
+          in: query
+          description: 'Отбор столбца «Марки»: short — документы, которым по сводке маркировки не хватает марок'
+          schema:
+            type: string
+            enum:
+              - short
         - name: offset
           in: query
           schema:
@@ -24981,7 +24988,8 @@ paths:
       summary: Завершить пересчёт инвентаризации
       description: |
         Переводит рабочий шаг из `counting` в `counted`. Требует факт по каждой
-        строке снимка и отсутствие движений склада после его момента. Тело
+        строке снимка и отсутствие движений склада после его момента;
+        `fill_uncounted` считает непосчитанные строки нулём или по учёту. Тело
         необязательно; `expected_updated_at` защищает от затирания чужой правки.
       x-akeda-module: stock
       x-akeda-release-stage: preview
@@ -26480,6 +26488,66 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/stock/price-suggestions:
+    get:
+      tags:
+        - Stock product units
+      operationId: stockPriceSuggestions
+      summary: Подобрать цену по умолчанию для прихода без цены поставщика
+      description: 'Цена по умолчанию для излишка инвентаризации, ввода остатков и оприходования: себестоимость единицы на складе, по юрлицу (без юрлица — по бизнесу), цена последнего прихода, закупочная цена карточки — первая найденная, с источником. Нет ни одной — 0 и source none: строку надо оценить до закрытия месяца (по ФСБУ 5 излишки приходуются по справедливой стоимости). Не больше 200 товаров за раз.'
+      x-akeda-module: stock
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: stock:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: products
+          in: query
+          required: true
+          description: Товары через запятую
+          schema:
+            type: string
+            minLength: 1
+        - name: company
+          in: query
+          description: Юрлицо
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: business
+          in: query
+          description: Бизнес — если юрлицо не задано
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: warehouse
+          in: query
+          description: Склад
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: date
+          in: query
+          description: Дата ГГГГ-ММ-ДД; пусто — сегодня
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Цена и источник по каждому товару
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockPriceSuggestions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/v1/stock/products/{productId}/uoms:
     get:
       tags:
@@ -35440,6 +35508,45 @@ paths:
           $ref: '#/components/responses/NotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/docflow/flow/documents/{id}/marks:
+    get:
+      tags:
+        - Docflow flow
+      operationId: docflowFlowDocumentMarks
+      x-akeda-audience: external
+      summary: Получить коды маркировки строк УПД или накладной
+      description: 'Коды маркировки, которые уйдут с исходящей УПД или товарной накладной по отгрузке склада: по каждой строке бумаги — сколько кодов нужно и сколько подставлено, сами коды (КИЗ), коды групповых упаковок, коды не в обороте у продавца и режим строки (поштучно или по GTIN). Раскладка по строкам — та же, что пишет коды в XML УПД и печатает перечень кодов листом к бланку. Кабинет без модуля маркировки, бумага без отгрузки или без маркируемого товара отвечают пустым списком, а не ошибкой. Статусы кодов спрашиваются у ГИС МТ, если у юрлица действующий вход; иначе — последний известный статус.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Коды маркировки строк бумаги
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowFlowMarks'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/docflow/flow/documents/{id}/commands:
     post:
       tags:
@@ -38070,7 +38177,7 @@ paths:
         - Marking products
       operationId: markingSaveProductProfile
       summary: Задать реквизиты маркировки товара
-      description: 'Заводит или заменяет реквизиты модуля у маркируемого товара целиком: вид упаковки, способ ввода в оборот и дату начала. Маркируемым товар делает его группа маркировки в карточке товара (core) — без неё отказ 422. Способ ввода `remains` допустим только у групп, разрешающих маркировку остатков. `marked_since` — дата ГГГГ-ММ-ДД, с которой товар маркируется; пусто — с начала учёта.'
+      description: 'Заводит или заменяет реквизиты модуля у маркируемого товара целиком: вид упаковки, способ ввода в оборот, дату начала и свой формат этикетки (`label_preset`, пусто — как у юрлица). Маркируемым товар делает его группа маркировки в карточке товара (core) — без неё отказ 422. Способ ввода `remains` допустим только у групп, разрешающих маркировку остатков. `marked_since` — дата ГГГГ-ММ-ДД, с которой товар маркируется; пусто — с начала учёта.'
       x-akeda-module: marking
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -38161,7 +38268,7 @@ paths:
         - Marking codes
       operationId: markingListCodes
       summary: Получить реестр кодов маркировки
-      description: 'Коды кабинета: юрлицо, товар по GTIN, вид, источник, зеркало статуса ГИС МТ и сколько этикеток напечатано. В ответе только код идентификации без криптохвоста (`identity`): полный код хранится шифротекстом и выходит наружу лишь символом DataMatrix на странице печати. `q` ищет по части GTIN, серийного номера или кода. `limit` больше 200 заменяется умолчанием 50.'
+      description: 'Коды кабинета: юрлицо, товар по GTIN, вид, источник, зеркало статуса ГИС МТ и сколько этикеток напечатано. В ответе только код идентификации без криптохвоста (`identity`): полный код хранится шифротекстом и выходит наружу лишь символом DataMatrix на странице печати. Реестр рассчитан на сотни тысяч кодов и читается по индексам: `q` — начало кода (или код целиком, в том числе скан), GTIN (8–14 цифр), кусок серийного номера от трёх знаков или название / артикул товара; `status` — статусы ЧЗ через запятую. Следующая порция — по курсору `after` из `next_after` прошлой (пусто — порция последняя); `skip_total=true` не считает общее число (его знает первая порция). `locations=true` — склад, где код числится по регистру `marking_codes`. `limit` больше 200 заменяется умолчанием 50.'
       x-akeda-module: marking
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -38195,9 +38302,29 @@ paths:
             $ref: '#/components/schemas/UUID'
         - name: q
           in: query
-          description: Часть GTIN, серийного номера или кода без криптохвоста
+          description: Начало кода, GTIN, кусок серийного номера или товар
           schema:
             type: string
+        - name: status
+          in: query
+          description: Статусы ЧЗ через запятую
+          schema:
+            type: string
+        - name: after
+          in: query
+          description: Курсор следующей порции — next_after прошлой
+          schema:
+            type: string
+        - name: skip_total
+          in: query
+          description: Не считать общее число
+          schema:
+            type: boolean
+        - name: locations
+          in: query
+          description: Склад, где код числится
+          schema:
+            type: boolean
         - name: limit
           in: query
           schema:
@@ -38213,7 +38340,7 @@ paths:
             default: 0
       responses:
         '200':
-          description: Страница кодов
+          description: Порция кодов
           content:
             application/json:
               schema:
@@ -38261,6 +38388,198 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarkingImportPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/marking/codes/sync:
+    post:
+      tags:
+        - Marking codes
+      operationId: markingStartCodeSync
+      summary: Обновить коды юрлица из ЧЗ
+      description: '«Обновить из ЧЗ»: загрузка списка кодов юрлица из ЧЗ (по каждой включённой товарной группе) в реестр Akeda в фоне. Новые коды добавляются (источник `gismt`, без полного кода — печатать их нельзя), известные получают свежий статус, владельца и родителя. Нужен действующий вход по УКЭП; сама загрузка ни при входе, ни по расписанию не стартует. Одна идущая загрузка на юрлицо; ход — в `GET /api/v1/marking/codes/sync`.'
+      x-akeda-module: marking
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marking:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkingCodeSyncInput'
+      responses:
+        '202':
+          description: Загрузка запущена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingCodeSyncStarted'
+        '400':
+          description: Юрлицо не распознано или у него нет включённых групп
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Юрлицо не найдено или недоступно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+        '409':
+          description: Загрузка этого юрлица уже идёт (`marking.codes.sync_running`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+        '502':
+          description: Нет действующего входа в ЧЗ или ЧЗ отказал
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+    get:
+      tags:
+        - Marking codes
+      operationId: markingCodeSyncState
+      summary: Получить ход загрузки кодов из ЧЗ
+      description: 'Идущая или последняя загрузка кодов юрлица из ЧЗ (просмотрено, добавлено, обновлено, причина остановки) и время последнего полного обновления (`refreshed_at` — «Обновлено из ЧЗ: …» на экране). Загрузка, замолчавшая дольше двух минут, показывается прерванной.'
+      x-akeda-module: marking
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marking:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: company
+          in: query
+          required: true
+          description: Юрлицо
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Ход загрузки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingCodeSyncState'
+        '400':
+          description: Юрлицо не распознано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Юрлицо не найдено или недоступно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+  /api/v1/marking/codes/trace:
+    get:
+      tags:
+        - Marking codes
+      operationId: markingTraceCode
+      summary: Найти марку и её историю
+      description: 'Карточка марки по скану или коду без криптохвоста: товар, юрлицо, склад, где она числится сейчас (регистр `marking_codes`), последний известный статус ЧЗ и складские документы, где она стояла, свежие сверху (направление: пришла, ушла, перемещение). Работает без связи с ЧЗ — только учёт Akeda.'
+      x-akeda-module: marking
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marking:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: code
+          in: query
+          required: true
+          description: Скан марки или код без криптохвоста
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Карточка марки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingCodeTrace'
+        '400':
+          description: Код не передан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Марки нет в учёте кабинета
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+  /api/v1/marking/stock-codes:
+    get:
+      tags:
+        - Marking codes
+      operationId: markingStockCodes
+      summary: Получить марки в остатке товара на складе
+      description: Марки, которые сейчас числятся на складе за товаром по регистру `marking_codes`, порциями. Работает без связи с ЧЗ. `limit` больше 500 заменяется умолчанием 200.
+      x-akeda-module: marking
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marking:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: product
+          in: query
+          required: true
+          description: Товар
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: warehouse
+          in: query
+          required: true
+          description: Склад
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 200
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Марки на складе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingStockCodes'
+        '400':
+          description: Товар или склад не распознан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -38320,7 +38639,7 @@ paths:
         - Marking labels
       operationId: markingListLabelTemplates
       summary: Получить шаблоны этикеток и пределы печати
-      description: 'Шаблоны этикеток с размерами в миллиметрах и раскладкой на лист, поля и пресеты этикетки, площадки для штрихкода, причины печати и пределы одной печати: кодов, копий на код и этикеток.'
+      description: 'Шаблоны этикеток с размерами в миллиметрах и раскладкой на лист, поля и форматы этикетки, площадки для штрихкода, причины печати, выходы (принтер или PDF) и пределы одной печати: кодов, копий на код и этикеток.'
       x-akeda-module: marking
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -38502,13 +38821,134 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarkingError'
+  /api/v1/marking/document-summaries:
+    get:
+      tags:
+        - Marking stock documents
+      operationId: markingDocumentSummaries
+      summary: Получить сводку марок складских документов
+      description: 'Сводка марок по набору складских документов (страница журнала): сколько поштучных марок нужно, сколько отсканировано и сколько не хватает строкам со строгостью «предупреждать» или «запрещать». Сводку пишет маркировка при каждом расчёте марок документа и при проведении. Не больше 200 документов за раз.'
+      x-akeda-module: marking
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marking:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: ids
+          in: query
+          required: true
+          description: Складские документы через запятую
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Сводки документов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingDocumentSummaryList'
+        '400':
+          description: Документ не распознан или их больше 200
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/marking/document-summaries/short:
+    get:
+      tags:
+        - Marking stock documents
+      operationId: markingShortDocumentCounts
+      summary: Посчитать документы без всех марок
+      description: Сколько живых (не отменённых и не удалённых) складских документов каждого вида заведено или проведено без всех марок — счётчик экрана маркировки со ссылкой в журнал с отбором `marks=short`.
+      x-akeda-module: marking
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marking:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Число документов по видам
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingShortDocumentCounts'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/marking/documents/{type}/{id}/codes/list:
+    post:
+      tags:
+        - Marking stock documents
+      operationId: markingAddDocumentCodesList
+      summary: Добавить марки списком в складской документ
+      description: 'Марки списком — вставка столбца из Excel поставщика или фабрики и сканы формы создания документа. Каждая марка ложится в незаполненную строку своего товара, как при скане по одному; отказ по одной марке не останавливает остальные — она попадает в `skips` с номером строки списка, машинной причиной и текстом на языке запроса. Товара нет в документе или его строки заполнены — марка в `shortage` по товару: экран добавляет количество и отправляет список ещё раз, уже легшие считаются в `already`. В реестр пишутся только легшие марки. Не больше 10 000 марок за раз (413). Проведённый документ — 409.'
+      x-akeda-module: marking
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marking:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/MarkingStockDocumentType'
+        - name: id
+          in: path
+          required: true
+          description: Складской документ
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkingCodesListInput'
+      responses:
+        '200':
+          description: Итог списка и документ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingCodesListResult'
+        '400':
+          description: Вид документа без кодов или у документа нет юрлица
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Складской документ не найден или недоступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+        '409':
+          description: Документ проведён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+        '413':
+          description: Больше 10 000 марок за раз
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
   /api/v1/marking/documents/{type}/{id}/codes/accept-expected:
     post:
       tags:
         - Marking stock documents
       operationId: markingAcceptExpectedCodes
       summary: Принять коды маркировки по входящему УПД
-      description: 'Назначает строкам поступления, заведённого из входящего УПД, все коды единиц, которые поставщик указал в УПД и которых ещё нет в документе. Строке достаётся не больше кодов, чем в ней штук: при недостаче остаток не назначается (`skipped`), его сканируют по факту. Повтор ничего не добавляет. Проведённый документ — 409; документ не из УПД или УПД без кодов — 409 `marking.stock_codes.no_expected_codes`. Ответ — сколько добавлено и весь документ со сверкой.'
+      description: 'Назначает строкам поступления, заведённого из входящего УПД, все коды единиц, которые поставщик указал в УПД и которых ещё нет в документе. Строке достаётся не больше кодов, чем в ней штук: при недостаче остаток не назначается (`skipped`), его сканируют по факту. У возврата покупателя по отгрузке так же ставятся марки отгрузки-основания — не больше количества строки возврата. Повтор ничего не добавляет. Проведённый документ — 409; документ не из УПД или УПД без кодов — 409 `marking.stock_codes.no_expected_codes`. Ответ — сколько добавлено и весь документ со сверкой.'
       x-akeda-module: marking
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -40522,7 +40962,7 @@ paths:
         - Marking GIS MT documents
       operationId: markingCreateDocumentDraft
       summary: Подготовить черновик документа ГИС МТ
-      description: 'Строит тело документа ГИС МТ (вывод из оборота, его отмена, возврат, ввод в оборот, ввод остатков, списание КиЗ, формирование упаковки — `params.unit_serial_number` короба и его вложения кодами, расформирование упаковки — коды коробов) и сохраняет черновик. В ГИС МТ ничего не уходит. `body_base64` — ровно то, что человек подписывает откреплённой подписью УКЭП в браузере и отправляет; агент черновик готовит, а подпись и отправку делает только человек. Параметры вида проверяются строго: незнакомое или неверное поле — 400 с `field` и `problem`, нераспознанный код — 400 с `index` и `value`.'
+      description: 'Строит тело документа ГИС МТ (вывод из оборота, его отмена, возврат, ввод в оборот, ввод остатков, списание КиЗ, формирование упаковки — `params.unit_serial_number` короба и его вложения кодами, расформирование упаковки — коды коробов) и сохраняет черновик. В ГИС МТ ничего не уходит. `body_base64` — ровно то, что человек подписывает откреплённой подписью УКЭП в браузере и отправляет; агент черновик готовит, а подпись и отправку делает только человек. Параметры вида проверяются строго: незнакомое или неверное поле — 400 с `field` и `problem`, нераспознанный код — 400 с `index` и `value`. `basis_type` и `basis_id` связывают документ ЧЗ со складским документом-основанием (вывод по проведённому списанию): по этой связи карточка списания показывает состояние вывода, а отмена списания при отправленном или принятом выводе останавливается.'
       x-akeda-module: marking
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -40626,6 +41066,11 @@ paths:
           description: Юрлицо
           schema:
             $ref: '#/components/schemas/UUID'
+        - name: basis
+          in: query
+          description: 'Складской документ-основание: документы ЧЗ, заведённые по нему'
+          schema:
+            $ref: '#/components/schemas/UUID'
         - name: limit
           in: query
           schema:
@@ -40710,6 +41155,76 @@ paths:
           $ref: '#/components/responses/MarkingRateLimited'
         '503':
           $ref: '#/components/responses/MarkingUnavailable'
+  /api/v1/marking/gismt/distance-queue:
+    get:
+      tags:
+        - Marking GIS MT documents
+      operationId: markingDistanceQueue
+      summary: Получить очередь вывода из оборота по продажам FBS
+      description: 'Очередь «Вывести из оборота (дистанционная продажа)»: проведённые отгрузки обхода FBS за 45 дней с марками, собранными в отправления на «Сборке FBS», — строка на отгрузку и товарную группу. У строки — марки без криптохвоста с ценой продажи из заказа (null — цены нет), срок подачи (3 рабочих дня после дня отгрузки, ПП РФ № 1681, п. 130; праздники считаются рабочими днями, срок не позже настоящего), рабочих дней до него (`days_left`: 0 — сегодня, меньше нуля — просрочено) и действующий вывод по отгрузке: черновик, отправленный или отклонённый. Принятый ЧЗ вывод из очереди уходит. Ничего не отправляет; без модуля «Честный знак» — 403.'
+      x-akeda-module: marking
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marking:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: company
+          in: query
+          description: Юрлицо; пусто — все юрлица в области доступа
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Очередь вывода
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingDistanceQueue'
+        '400':
+          description: Юрлицо не распознано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/marking/gismt/return-queue:
+    get:
+      tags:
+        - Marking GIS MT documents
+      operationId: markingReturnQueue
+      summary: Получить очередь возврата в оборот по невыкупам FBS
+      description: 'Очередь «Вернуть в оборот» (ERP-1857, этап 2): проведённые за 90 дней перемещения невыкупа FBS из пути к покупателю обратно, вернувшие на склад марки отправлений, по сборке которых ЧЗ уже принял вывод «Дистанционная продажа», — строка на документ невыкупа и товарную группу. У строки — марки без криптохвоста с отправлением, сборка и принятый вывод по ней, действующий возврат в оборот (LP_RETURN): черновик, отправленный или отклонённый. Принятый ЧЗ возврат из очереди уходит; вывода по сборке нет или он не принят — строки нет (марка из оборота не выводилась). Ничего не отправляет; без модуля «Честный знак» — 403.'
+      x-akeda-module: marking
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: marking:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: company
+          in: query
+          description: Юрлицо; пусто — все юрлица в области доступа
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Очередь возврата в оборот
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingReturnQueue'
+        '400':
+          description: Юрлицо не распознано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkingError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 components:
   securitySchemes:
     erpUserToken:
@@ -64068,6 +64583,10 @@ components:
             - 1
         reason:
           type: string
+        marketplace_week_sale:
+          type: boolean
+          readOnly: true
+          description: 'Недельная продажа площадки (ERP-1819): отгрузка, которой модуль маркетплейсов списывает себестоимость выкупленного по недельному отчёту — со склада площадки (FBO) или со склада «В пути к покупателю» (FBS). Выручку по ней признают финансы, поэтому заказ ядра она не заводит и цену продажи не требует и после отсечки исполнения. Ставит только модуль маркетплейсов: присланное при создании значение отклоняется (400), правка сохраняет значение документа'
         reason_id:
           description: 'Причина списания из справочника stock.stock_writeoff_reasons. Есть только у списания. Текст reason при этом остаётся: ссылка даёт единое значение причины, текст несёт подробности. Не прислан — сервер сам пробует узнать текст в справочнике; прислан явно, в том числе null, — решение вызывающего не переигрывается; неизвестная ссылка отклоняется'
           oneOf:
@@ -64519,6 +65038,12 @@ components:
         expected_updated_at:
           type: string
           description: updated_at документа, известный клиенту; несовпадение отклоняет запись
+        fill_uncounted:
+          type: string
+          enum:
+            - zero
+            - book
+          description: 'Непосчитанные строки: zero — нулём (недостача), book — по учёту (без изменений); пусто — непосчитанных быть не должно'
     StockInventoryRefreshInput:
       type: object
       additionalProperties: false
@@ -64591,6 +65116,9 @@ components:
         surplus_price:
           type: string
           description: Decimal string
+        book_qty:
+          type: string
+          description: Учётное количество; только у пересчёта не вслепую
     StockInventoryCountSheet:
       type: object
       additionalProperties: false
@@ -64624,6 +65152,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StockInventoryCountSheetItem'
+        blind:
+          type: boolean
+          description: 'Слепой пересчёт: учётное количество скрыто до завершения'
     StockInventoryDeriveResult:
       type: object
       additionalProperties: false
@@ -64638,6 +65169,29 @@ components:
           items:
             $ref: '#/components/schemas/CoreDocument'
           description: Черновики списания и оприходования; пустой список означает, что расхождений нет
+        surplus_prices:
+          type: array
+          description: Цены излишков, подставленные при формировании актов (человек их не вписал); source none — 0, оценить до закрытия месяца
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - product_id
+              - price
+              - source
+            properties:
+              product_id:
+                $ref: '#/components/schemas/UUID'
+              price:
+                type: string
+              source:
+                type: string
+                enum:
+                  - warehouse
+                  - company
+                  - last_receipt
+                  - card
+                  - none
     StockWarehouse:
       type: object
       additionalProperties: false
@@ -65609,6 +66163,36 @@ components:
             - type: boolean
             - type: 'null'
           description: По умолчанию единица активна
+    StockPriceSuggestions:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - product_id
+              - price
+              - source
+            properties:
+              product_id:
+                $ref: '#/components/schemas/UUID'
+              price:
+                type: string
+                description: Цена единицы; 0 — цены нет
+              source:
+                type: string
+                enum:
+                  - warehouse
+                  - company
+                  - last_receipt
+                  - card
+                  - none
+                description: Откуда цена
     StockScanResult:
       type: object
       additionalProperties: false
@@ -66810,6 +67394,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StockOrderShipment'
+        picking:
+          $ref: '#/components/schemas/StockOrderShipment'
+          description: 'Черновик отгрузки в сборке: в отгруженное не входит'
         reserved:
           type: boolean
         reservations:
@@ -66875,6 +67462,9 @@ components:
           description: Дата отгрузки; пусто — текущая бизнес-дата
         comment:
           type: string
+        assemble:
+          type: boolean
+          description: 'Собрать, а не провести: черновик отгрузки для скана марок; черновик по продаже уже есть — вернётся он'
         lines:
           type: array
           items:
@@ -75749,6 +76339,102 @@ components:
           additionalProperties:
             type: string
           description: 'Подробности значениями: предел длины, перечень допустимых значений, пришедшее значение. Отсутствует, когда проверке нечего добавить.'
+    DocflowFlowMarks:
+      type: object
+      additionalProperties: false
+      description: Коды маркировки строк исходящей бумаги по отгрузке склада и итог для шапки таблицы «Товары и услуги». Пустой список строк — маркируемого товара нет.
+      required:
+        - lines
+        - required
+        - assigned
+        - packages
+        - not_in_circulation
+        - checked_live
+      properties:
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowFlowLineMarks'
+        required:
+          type: integer
+          description: Сколько единиц всех строк ждут кода маркировки
+        assigned:
+          type: integer
+          description: Сколько кодов единиц подставлено во все строки
+        packages:
+          type: integer
+          description: Сколько кодов групповых упаковок подставлено
+        not_in_circulation:
+          type: integer
+          description: Сколько кодов не в обороте у продавца
+        checked_live:
+          type: boolean
+          description: Статусы хотя бы одной строки только что спрошены у ГИС МТ
+    DocflowFlowLineMarks:
+      type: object
+      additionalProperties: false
+      description: Коды маркировки одной строки бумаги.
+      required:
+        - number
+        - line_id
+        - name
+        - quantity
+        - mode
+        - required
+        - assigned
+        - complete
+        - codes
+        - packages
+        - not_in_circulation
+        - checked_live
+      properties:
+        number:
+          type: integer
+          description: Номер строки в бланке и XML с единицы
+        line_id:
+          $ref: '#/components/schemas/UUID'
+        name:
+          type: string
+        quantity:
+          type: string
+        unit:
+          type: string
+        mode:
+          type: string
+          enum:
+            - unit
+            - gtin
+          description: 'unit — поштучно, коды КИЗ; gtin — объёмно-сортовой учёт: ГТИН и количество без кодов'
+        required:
+          type: integer
+          description: Сколько единиц строки ждут кода
+        assigned:
+          type: integer
+          description: Сколько кодов единиц досталось строке; у строки по GTIN — количество, если ГТИН у товара есть
+        complete:
+          type: boolean
+          description: 'Строка закрыта кодами: единиц хватает, групповые упаковки покрывают строку или у строки по GTIN есть ГТИН'
+        codes:
+          type: array
+          items:
+            type: string
+          description: Коды идентификации единиц (КИЗ) без криптохвоста
+        packages:
+          type: array
+          items:
+            type: string
+          description: Коды групповых упаковок без криптохвоста
+        not_in_circulation:
+          type: array
+          items:
+            type: string
+          description: Коды строки не в обороте у продавца — покупатель их не примет
+        gtin:
+          type: string
+          description: ГТИН товара у строки по объёмно-сортовому учёту
+        checked_live:
+          type: boolean
+          description: Статусы кодов только что спрошены у ГИС МТ; false — по последнему известному статусу
     DocflowIntakePreview:
       type: object
       additionalProperties: false
@@ -77817,6 +78503,16 @@ components:
           type: string
           format: date-time
           description: С какой даты товар маркируется; нет поля — с начала учёта
+        label_preset:
+          type: string
+          enum:
+            - ''
+            - full
+            - short
+            - mark_only
+            - marking
+            - marking_marketplace
+          description: Свой формат этикетки товара; пусто — формат юрлица из настроек маркировки
         updated_at:
           type: string
           format: date-time
@@ -77856,6 +78552,16 @@ components:
         marked_since:
           type: string
           description: Дата ГГГГ-ММ-ДД или пусто
+        label_preset:
+          type: string
+          enum:
+            - ''
+            - full
+            - short
+            - mark_only
+            - marking
+            - marking_marketplace
+          description: Свой формат этикетки товара; пусто — как у юрлица
     MarkingCode:
       type: object
       additionalProperties: false
@@ -77912,6 +78618,7 @@ components:
             - upd
             - scan
             - aggregation
+            - gismt
         import_id:
           $ref: '#/components/schemas/UUID'
         order_id:
@@ -77943,12 +78650,15 @@ components:
         created_at:
           type: string
           format: date-time
+        warehouse_id:
+          $ref: '#/components/schemas/UUID'
+          description: Склад, где код числится (locations=true)
     MarkingCodePage:
       type: object
       additionalProperties: false
       required:
         - items
-        - total
+        - next_after
       properties:
         items:
           type:
@@ -77958,6 +78668,150 @@ components:
             $ref: '#/components/schemas/MarkingCode'
         total:
           type: integer
+          description: Всего по отбору; нет при skip_total
+        next_after:
+          type: string
+          description: Курсор следующей порции; пусто — порция последняя
+    MarkingCodeTrace:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - history
+      properties:
+        code:
+          $ref: '#/components/schemas/MarkingCode'
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarkingCodeTraceEntry'
+    MarkingCodeTraceEntry:
+      type: object
+      additionalProperties: false
+      required:
+        - document_id
+        - type
+        - number
+        - date
+        - status
+        - direction
+      properties:
+        document_id:
+          $ref: '#/components/schemas/UUID'
+        type:
+          type: string
+          description: Вид складского документа
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+          description: 'Состояние документа: draft, posted, cancelled'
+        direction:
+          type: string
+          enum:
+            - in
+            - out
+            - transfer
+            - ''
+          description: Пришла, ушла или перемещение
+        warehouse_id:
+          $ref: '#/components/schemas/UUID'
+        warehouse_to_id:
+          $ref: '#/components/schemas/UUID'
+    MarkingStockCodes:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarkingCode'
+    MarkingCodeSyncInput:
+      type: object
+      additionalProperties: false
+      required:
+        - company_id
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+    MarkingCodeSync:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - company_id
+        - status
+        - scanned
+        - added
+        - updated
+        - started_at
+        - heartbeat_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        status:
+          type: string
+          enum:
+            - running
+            - done
+            - failed
+            - interrupted
+        scanned:
+          type: integer
+          description: Кодов просмотрено в ЧЗ
+        added:
+          type: integer
+          description: Новых кодов добавлено в реестр
+        updated:
+          type: integer
+          description: Известных кодов обновлено
+        error:
+          type: string
+          description: Почему загрузка остановилась
+        started_by:
+          type: integer
+          format: int64
+        started_at:
+          type: string
+          format: date-time
+        heartbeat_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+    MarkingCodeSyncStarted:
+      type: object
+      additionalProperties: false
+      required:
+        - sync
+      properties:
+        sync:
+          $ref: '#/components/schemas/MarkingCodeSync'
+    MarkingCodeSyncState:
+      type: object
+      additionalProperties: false
+      required:
+        - current
+        - refreshed_at
+      properties:
+        current:
+          oneOf:
+            - $ref: '#/components/schemas/MarkingCodeSync'
+            - type: 'null'
+        refreshed_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Последнее полное обновление из ЧЗ
     MarkingImportLineError:
       type: object
       additionalProperties: false
@@ -78097,6 +78951,8 @@ components:
       required:
         - key
         - name
+        - group
+        - legacy
         - width_mm
         - height_mm
         - sheet
@@ -78109,6 +78965,16 @@ components:
         name:
           type: string
           description: Название на языке запроса
+        group:
+          type: string
+          enum:
+            - square
+            - roll
+            - sheet
+          description: Квадратные, прямоугольные рулоны или лист А4
+        legacy:
+          type: boolean
+          description: 'Прежний размер: печатается по сохранённым настройкам, в выборе не предлагается'
         width_mm:
           type: number
         height_mm:
@@ -78130,7 +78996,10 @@ components:
         - fields
         - channels
         - presets
+        - gallery_presets
+        - default_template
         - reasons
+        - outputs
         - limits
       properties:
         templates:
@@ -78149,10 +79018,24 @@ components:
           type: array
           items:
             type: string
+          description: 'Варианты оформления: только код, код и подпись, полная, маркетплейс (штрихкод площадки), марка и EAN-13'
+        gallery_presets:
+          type: array
+          items:
+            type: string
+          description: Варианты оформления в галерее выбора
+        default_template:
+          type: string
+          description: Шаблон, когда ни запрос, ни юрлицо его не назвали
         reasons:
           type: array
           items:
             type: string
+        outputs:
+          type: array
+          items:
+            type: string
+          description: 'Куда печатать: html — на принтер из браузера, pdf — файлом'
         limits:
           type: object
           additionalProperties: false
@@ -78425,6 +79308,140 @@ components:
             expected_unavailable:
               type: boolean
               description: УПД сейчас не прочитался — ожидание не показано
+            expected_source:
+              type: string
+              enum:
+                - upd
+                - shipment
+              description: 'Откуда ожидание: upd — входящий УПД поставщика; shipment — марки отгрузки, по которой оформлен возврат покупателя («не хватает» считается до количества возврата).'
+    MarkingDocumentSummaryList:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - document_id
+              - document_type
+              - required
+              - assigned
+              - missing
+            properties:
+              document_id:
+                $ref: '#/components/schemas/UUID'
+              document_type:
+                type: string
+              company_id:
+                $ref: '#/components/schemas/UUID'
+              required:
+                type: integer
+                description: Поштучных марок нужно
+              assigned:
+                type: integer
+                description: Отсканировано
+              missing:
+                type: integer
+                description: Не хватает строкам со строгостью не «выключено»
+    MarkingShortDocumentCounts:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - document_type
+              - count
+            properties:
+              document_type:
+                type: string
+              count:
+                type: integer
+    MarkingCodesListInput:
+      type: object
+      additionalProperties: false
+      required:
+        - codes
+      properties:
+        codes:
+          type: array
+          maxItems: 10000
+          items:
+            type: string
+          description: Марки по одной на строку — как со сканера
+    MarkingCodesListResult:
+      type: object
+      additionalProperties: false
+      required:
+        - total
+        - added
+        - already
+        - skipped
+        - skips
+        - shortage
+        - document
+      properties:
+        total:
+          type: integer
+          description: Непустых строк в списке
+        added:
+          type: integer
+          description: Легло в документ сейчас
+        already:
+          type: integer
+          description: Уже были в документе
+        skipped:
+          type: integer
+          description: Не легли всего
+        skips:
+          type: array
+          description: Первые 200 не легших марок с причиной
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - line
+              - identity
+              - reason
+              - detail
+            properties:
+              line:
+                type: integer
+                description: Номер строки списка с единицы
+              identity:
+                type: string
+                description: Код без криптохвоста или начало строки
+              reason:
+                type: string
+                description: Машинная причина
+              detail:
+                type: string
+                description: Причина словами на языке запроса
+        shortage:
+          type: array
+          description: Товары, которым не хватило строки или штук, и сколько марок не легло
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - product_id
+              - count
+            properties:
+              product_id:
+                $ref: '#/components/schemas/UUID'
+              count:
+                type: integer
+        document:
+          $ref: '#/components/schemas/MarkingDocumentCodes'
     MarkingAcceptExpectedResult:
       type: object
       additionalProperties: false
@@ -79490,8 +80507,15 @@ components:
           type: string
           enum:
             - ''
+            - full
+            - short
+            - mark_only
             - marking
             - marking_marketplace
+          description: 'Формат этикетки по умолчанию: полная, сокращённая, только марка, марка и EAN-13, марка и штрихкод площадки'
+        label_badge:
+          type: boolean
+          description: 'Печатать значок «Честного знака» рядом с маркой, если есть место: загруженный знак юрлица, иначе пометку «ЧЗ»'
         label_channel:
           type: string
           enum:
@@ -79509,6 +80533,57 @@ components:
           additionalProperties:
             type: string
           description: Причина списания склада → ключ причины вывода ГИС МТ
+        receipt_required:
+          type: boolean
+          description: Марку расходовать только после приёмки на склад; выключено — марка без прихода проходит с пометкой
+    MarkingCompanySettingsState:
+      type: object
+      additionalProperties: false
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        gs1_prefix:
+          type: string
+          description: Префикс предприятия GS1 из 6–12 цифр или пусто
+        label_template:
+          type: string
+          description: Ключ шаблона этикетки; пусто — 58×40
+        label_preset:
+          type: string
+          enum:
+            - ''
+            - full
+            - short
+            - mark_only
+            - marking
+            - marking_marketplace
+          description: 'Формат этикетки по умолчанию: полная, сокращённая, только марка, марка и EAN-13, марка и штрихкод площадки'
+        label_badge:
+          type: boolean
+          description: 'Печатать значок «Честного знака» рядом с маркой, если есть место: загруженный знак юрлица, иначе пометку «ЧЗ»'
+        label_logo:
+          type: boolean
+          description: Юрлицо загрузило знак «Честного знака»; меняется отдельной загрузкой, при сохранении настроек не учитывается
+        label_channel:
+          type: string
+          enum:
+            - ''
+            - wildberries
+            - ozon
+            - yandex
+        strictness:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/MarkingStrictness'
+          description: Вид складского документа → строгость
+        withdrawal_reasons:
+          type: object
+          additionalProperties:
+            type: string
+          description: Причина списания склада → ключ причины вывода ГИС МТ
+        receipt_required:
+          type: boolean
+          description: Марку расходовать только после приёмки на склад; выключено — марка без прихода проходит с пометкой
     MarkingCompanySettingsEnvelope:
       type: object
       additionalProperties: false
@@ -79516,7 +80591,7 @@ components:
         - settings
       properties:
         settings:
-          $ref: '#/components/schemas/MarkingCompanySettings'
+          $ref: '#/components/schemas/MarkingCompanySettingsState'
     MarkingCompanySettingsView:
       type: object
       additionalProperties: false
@@ -79527,7 +80602,7 @@ components:
         - templates
       properties:
         settings:
-          $ref: '#/components/schemas/MarkingCompanySettings'
+          $ref: '#/components/schemas/MarkingCompanySettingsState'
         writeoff_reasons:
           type:
             - array
@@ -79576,11 +80651,28 @@ components:
             required:
               - key
               - name
+              - group
+              - width_mm
+              - height_mm
+              - legacy
             properties:
               key:
                 type: string
               name:
                 type: string
+              group:
+                type: string
+                enum:
+                  - square
+                  - roll
+                  - sheet
+              width_mm:
+                type: number
+              height_mm:
+                type: number
+              legacy:
+                type: boolean
+                description: Прежний размер, в выборе не предлагается
     MarkingGISMTCodesInput:
       type: object
       additionalProperties: false
@@ -80422,6 +81514,187 @@ components:
           type: string
           maxLength: 200
           description: 'Что случилось: испорчена, утрачена'
+    MarkingDistanceCode:
+      type: object
+      additionalProperties: false
+      required:
+        - identity
+        - posting
+        - price_kopecks
+      properties:
+        identity:
+          type: string
+          description: Код идентификации без криптохвоста
+        posting:
+          type: string
+          description: Отправление площадки
+        price_kopecks:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Цена продажи единицы с НДС, копейки; null — неизвестна
+    MarkingDistanceShipment:
+      type: object
+      additionalProperties: false
+      required:
+        - document_id
+        - document_number
+        - document_type
+        - shipped_on
+        - company_id
+        - platform
+        - store_id
+        - group
+        - postings
+        - codes
+        - deadline
+        - days_left
+        - withdrawal
+      properties:
+        document_id:
+          $ref: '#/components/schemas/UUID'
+        document_number:
+          type: string
+        document_type:
+          type: string
+          enum:
+            - stock_transfer
+            - stock_shipment
+          description: Вид документа-основания — перемещение сборки в путь или прежняя отгрузка
+        shipped_on:
+          type: string
+          format: date
+          description: Дата отгрузки — от неё считается срок
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        platform:
+          type: string
+          enum:
+            - ozon
+            - wildberries
+            - yandex
+        store_id:
+          $ref: '#/components/schemas/UUID'
+        group:
+          type: string
+          description: Товарная группа ГИС МТ
+        postings:
+          type: array
+          items:
+            type: string
+        codes:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarkingDistanceCode'
+        deadline:
+          type: string
+          format: date
+          description: Последний день подачи вывода
+        days_left:
+          type: integer
+          description: 'Рабочих дней до срока: 0 — сегодня, меньше нуля — просрочено'
+        withdrawal:
+          oneOf:
+            - $ref: '#/components/schemas/MarkingOutboxDocument'
+            - type: 'null'
+          description: Действующий вывод по отгрузке и группе
+    MarkingDistanceQueue:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarkingDistanceShipment'
+    MarkingReturnCode:
+      type: object
+      additionalProperties: false
+      required:
+        - identity
+        - posting
+      properties:
+        identity:
+          type: string
+          description: Код идентификации без криптохвоста
+        posting:
+          type: string
+          description: Отправление площадки
+    MarkingReturnShipment:
+      type: object
+      additionalProperties: false
+      required:
+        - document_id
+        - document_number
+        - document_type
+        - returned_on
+        - assembly_id
+        - assembly_number
+        - company_id
+        - platform
+        - store_id
+        - group
+        - postings
+        - codes
+        - withdrawal
+        - return
+      properties:
+        document_id:
+          $ref: '#/components/schemas/UUID'
+        document_number:
+          type: string
+        document_type:
+          type: string
+          description: Вид складского документа невыкупа (stock_transfer) — основание возврата в оборот
+        returned_on:
+          type: string
+          format: date
+          description: Дата невыкупа
+        assembly_id:
+          $ref: '#/components/schemas/UUID'
+        assembly_number:
+          type: string
+          description: Номер сборки FBS, по которой выведены марки
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        platform:
+          type: string
+          enum:
+            - ozon
+            - wildberries
+            - yandex
+        store_id:
+          $ref: '#/components/schemas/UUID'
+        group:
+          type: string
+          description: Товарная группа ГИС МТ
+        postings:
+          type: array
+          items:
+            type: string
+        codes:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarkingReturnCode'
+        withdrawal:
+          $ref: '#/components/schemas/MarkingOutboxDocument'
+        return:
+          oneOf:
+            - $ref: '#/components/schemas/MarkingOutboxDocument'
+            - type: 'null'
+          description: Действующий возврат в оборот по невыкупу и группе
+    MarkingReturnQueue:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarkingReturnShipment'
     MarkingDocumentKind:
       type: string
       enum:
@@ -80433,6 +81706,7 @@ components:
         - cancel_codes
         - aggregation
         - disaggregation
+        - sets_aggregation
     MarkingDocumentParams:
       type: object
       additionalProperties: false
@@ -80450,6 +81724,13 @@ components:
           type: integer
           format: int64
           description: Цена за единицу в копейках с НДС
+        product_costs:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+            minimum: 0
+          description: 'Дистанционная продажа (DISTANCE): цена каждого кода в копейках с НДС, ключ — код (сводится к КИ без криптохвоста); код без своей цены берёт product_cost'
         kpp:
           type: string
         fias_id:
@@ -80482,7 +81763,7 @@ components:
           type: string
         unit_serial_number:
           type: string
-          description: Формирование упаковки — код короба «00» + SSCC
+          description: Формирование упаковки — код короба «00» + SSCC; формирование набора — код набора (КИН), скан или без криптохвоста
     MarkingDocumentDraftInput:
       type: object
       additionalProperties: false
@@ -80505,6 +81786,12 @@ components:
           description: Коды документа; достаточно кода без криптохвоста
         params:
           $ref: '#/components/schemas/MarkingDocumentParams'
+        basis_type:
+          type: string
+          description: Вид складского документа-основания (stock_writeoff, stock_assembly …); пусто — без основания
+        basis_id:
+          type: string
+          description: Складской документ, по которому заводится документ ЧЗ
     MarkingOutboxDocument:
       type: object
       additionalProperties: false
@@ -80565,6 +81852,11 @@ components:
             - string
             - 'null'
           format: date-time
+        basis_type:
+          type: string
+          description: Вид складского документа-основания
+        basis_id:
+          $ref: '#/components/schemas/UUID'
     MarkingOutboxDocumentEnvelope:
       type: object
       additionalProperties: false
@@ -80658,6 +81950,11 @@ components:
             - string
             - 'null'
           format: date-time
+        basis_type:
+          type: string
+          description: Вид складского документа-основания
+        basis_id:
+          $ref: '#/components/schemas/UUID'
         body_base64:
           type: string
           description: Тело документа base64 — его подписывает человек

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c4ace798ceb5b73f4f0c1e80df57d77999a90287645e6ba4cc63c73547d52ef6).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e278ecc6f3db3051c024549b7129364efc3ac4920445da2f2eb464f464f210cb).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -6674,6 +6674,49 @@ type DocflowFlowFile struct {
 
 type DocflowFlowKind = string
 
+// DocflowFlowLineMarks — Коды маркировки одной строки бумаги.
+type DocflowFlowLineMarks struct {
+	// Number — Номер строки в бланке и XML с единицы
+	Number   int64   `json:"number"`
+	LineID   UUID    `json:"line_id"`
+	Name     string  `json:"name"`
+	Quantity string  `json:"quantity"`
+	Unit     *string `json:"unit,omitempty"`
+	// Mode — unit — поштучно, коды КИЗ; gtin — объёмно-сортовой учёт: ГТИН и количество без кодов
+	Mode string `json:"mode"`
+	// Required — Сколько единиц строки ждут кода
+	Required int64 `json:"required"`
+	// Assigned — Сколько кодов единиц досталось строке; у строки по GTIN — количество, если ГТИН у товара есть
+	Assigned int64 `json:"assigned"`
+	// Complete — Строка закрыта кодами: единиц хватает, групповые упаковки покрывают строку или у строки по GTIN есть ГТИН
+	Complete bool `json:"complete"`
+	// Codes — Коды идентификации единиц (КИЗ) без криптохвоста
+	Codes []string `json:"codes"`
+	// Packages — Коды групповых упаковок без криптохвоста
+	Packages []string `json:"packages"`
+	// NotInCirculation — Коды строки не в обороте у продавца — покупатель их не примет
+	NotInCirculation []string `json:"not_in_circulation"`
+	// Gtin — ГТИН товара у строки по объёмно-сортовому учёту
+	Gtin *string `json:"gtin,omitempty"`
+	// CheckedLive — Статусы кодов только что спрошены у ГИС МТ; false — по последнему известному статусу
+	CheckedLive bool `json:"checked_live"`
+}
+
+// DocflowFlowMarks — Коды маркировки строк исходящей бумаги по отгрузке склада и итог для шапки таблицы «Товары и услуги». Пустой список строк — маркируемого товара нет.
+type DocflowFlowMarks struct {
+	Lines []DocflowFlowLineMarks `json:"lines"`
+	// Required — Сколько единиц всех строк ждут кода маркировки
+	Required int64 `json:"required"`
+	// Assigned — Сколько кодов единиц подставлено во все строки
+	Assigned int64 `json:"assigned"`
+	// Packages — Сколько кодов групповых упаковок подставлено
+	Packages int64 `json:"packages"`
+	// NotInCirculation — Сколько кодов не в обороте у продавца
+	NotInCirculation int64 `json:"not_in_circulation"`
+	// CheckedLive — Статусы хотя бы одной строки только что спрошены у ГИС МТ
+	CheckedLive bool `json:"checked_live"`
+}
+
 // DocflowFlowOriginal — Сканы подписанного оригинала документа.
 type DocflowFlowOriginal struct {
 	DocumentID UUID                      `json:"document_id"`
@@ -11850,6 +11893,8 @@ type MarkingCode struct {
 	// Duplicates — Из них дубликатов
 	Duplicates int64  `json:"duplicates"`
 	CreatedAt  string `json:"created_at"`
+	// WarehouseID — Склад, где код числится (locations=true)
+	WarehouseID *UUID `json:"warehouse_id,omitempty"`
 }
 
 type MarkingCodeOrder struct {
@@ -11903,10 +11948,101 @@ type MarkingCodeOrderPage struct {
 
 type MarkingCodePage struct {
 	Items []MarkingCode `json:"items"`
-	Total int64         `json:"total"`
+	// Total — Всего по отбору; нет при skip_total
+	Total *int64 `json:"total,omitempty"`
+	// NextAfter — Курсор следующей порции; пусто — порция последняя
+	NextAfter string `json:"next_after"`
 }
 
 type MarkingCodeState = string
+
+type MarkingCodeSync struct {
+	ID        UUID   `json:"id"`
+	CompanyID UUID   `json:"company_id"`
+	Status    string `json:"status"`
+	// Scanned — Кодов просмотрено в ЧЗ
+	Scanned int64 `json:"scanned"`
+	// Added — Новых кодов добавлено в реестр
+	Added int64 `json:"added"`
+	// Updated — Известных кодов обновлено
+	Updated int64 `json:"updated"`
+	// Error — Почему загрузка остановилась
+	Error       *string `json:"error,omitempty"`
+	StartedBy   *int64  `json:"started_by,omitempty"`
+	StartedAt   string  `json:"started_at"`
+	HeartbeatAt string  `json:"heartbeat_at"`
+	FinishedAt  *string `json:"finished_at,omitempty"`
+}
+
+type MarkingCodeSyncInput struct {
+	CompanyID UUID `json:"company_id"`
+}
+
+type MarkingCodeSyncStarted struct {
+	Sync MarkingCodeSync `json:"sync"`
+}
+
+type MarkingCodeSyncState struct {
+	Current *MarkingCodeSync `json:"current"`
+	// RefreshedAt — Последнее полное обновление из ЧЗ
+	RefreshedAt *string `json:"refreshed_at"`
+}
+
+type MarkingCodeTrace struct {
+	Code    MarkingCode             `json:"code"`
+	History []MarkingCodeTraceEntry `json:"history"`
+}
+
+type MarkingCodeTraceEntry struct {
+	DocumentID UUID `json:"document_id"`
+	// Type — Вид складского документа
+	Type   string `json:"type"`
+	Number string `json:"number"`
+	Date   string `json:"date"`
+	// Status — Состояние документа: draft, posted, cancelled
+	Status string `json:"status"`
+	// Direction — Пришла, ушла или перемещение
+	Direction     string `json:"direction"`
+	WarehouseID   *UUID  `json:"warehouse_id,omitempty"`
+	WarehouseToID *UUID  `json:"warehouse_to_id,omitempty"`
+}
+
+type MarkingCodesListInput struct {
+	// Codes — Марки по одной на строку — как со сканера
+	Codes []string `json:"codes"`
+}
+
+type MarkingCodesListResult struct {
+	// Total — Непустых строк в списке
+	Total int64 `json:"total"`
+	// Added — Легло в документ сейчас
+	Added int64 `json:"added"`
+	// Already — Уже были в документе
+	Already int64 `json:"already"`
+	// Skipped — Не легли всего
+	Skipped int64 `json:"skipped"`
+	// Skips — Первые 200 не легших марок с причиной
+	Skips []MarkingCodesListResultSkipsItem `json:"skips"`
+	// Shortage — Товары, которым не хватило строки или штук, и сколько марок не легло
+	Shortage []MarkingCodesListResultShortageItem `json:"shortage"`
+	Document MarkingDocumentCodes                 `json:"document"`
+}
+
+type MarkingCodesListResultSkipsItem struct {
+	// Line — Номер строки списка с единицы
+	Line int64 `json:"line"`
+	// Identity — Код без криптохвоста или начало строки
+	Identity string `json:"identity"`
+	// Reason — Машинная причина
+	Reason string `json:"reason"`
+	// Detail — Причина словами на языке запроса
+	Detail string `json:"detail"`
+}
+
+type MarkingCodesListResultShortageItem struct {
+	ProductID UUID  `json:"product_id"`
+	Count     int64 `json:"count"`
+}
 
 type MarkingCompany struct {
 	ID         UUID   `json:"id"`
@@ -11947,20 +12083,46 @@ type MarkingCompanySettings struct {
 	Gs1Prefix *string `json:"gs1_prefix,omitempty"`
 	// LabelTemplate — Ключ шаблона этикетки; пусто — 58×40
 	LabelTemplate *string `json:"label_template,omitempty"`
-	LabelPreset   *string `json:"label_preset,omitempty"`
-	LabelChannel  *string `json:"label_channel,omitempty"`
+	// LabelPreset — Формат этикетки по умолчанию: полная, сокращённая, только марка, марка и EAN-13, марка и штрихкод площадки
+	LabelPreset *string `json:"label_preset,omitempty"`
+	// LabelBadge — Печатать значок «Честного знака» рядом с маркой, если есть место: загруженный знак юрлица, иначе пометку «ЧЗ»
+	LabelBadge   *bool   `json:"label_badge,omitempty"`
+	LabelChannel *string `json:"label_channel,omitempty"`
 	// Strictness — Вид складского документа → строгость
 	Strictness map[string]MarkingStrictness `json:"strictness,omitempty"`
 	// WithdrawalReasons — Причина списания склада → ключ причины вывода ГИС МТ
 	WithdrawalReasons map[string]string `json:"withdrawal_reasons,omitempty"`
+	// ReceiptRequired — Марку расходовать только после приёмки на склад; выключено — марка без прихода проходит с пометкой
+	ReceiptRequired *bool `json:"receipt_required,omitempty"`
 }
 
 type MarkingCompanySettingsEnvelope struct {
-	Settings MarkingCompanySettings `json:"settings"`
+	Settings MarkingCompanySettingsState `json:"settings"`
+}
+
+type MarkingCompanySettingsState struct {
+	CompanyID *UUID `json:"company_id,omitempty"`
+	// Gs1Prefix — Префикс предприятия GS1 из 6–12 цифр или пусто
+	Gs1Prefix *string `json:"gs1_prefix,omitempty"`
+	// LabelTemplate — Ключ шаблона этикетки; пусто — 58×40
+	LabelTemplate *string `json:"label_template,omitempty"`
+	// LabelPreset — Формат этикетки по умолчанию: полная, сокращённая, только марка, марка и EAN-13, марка и штрихкод площадки
+	LabelPreset *string `json:"label_preset,omitempty"`
+	// LabelBadge — Печатать значок «Честного знака» рядом с маркой, если есть место: загруженный знак юрлица, иначе пометку «ЧЗ»
+	LabelBadge *bool `json:"label_badge,omitempty"`
+	// LabelLogo — Юрлицо загрузило знак «Честного знака»; меняется отдельной загрузкой, при сохранении настроек не учитывается
+	LabelLogo    *bool   `json:"label_logo,omitempty"`
+	LabelChannel *string `json:"label_channel,omitempty"`
+	// Strictness — Вид складского документа → строгость
+	Strictness map[string]MarkingStrictness `json:"strictness,omitempty"`
+	// WithdrawalReasons — Причина списания склада → ключ причины вывода ГИС МТ
+	WithdrawalReasons map[string]string `json:"withdrawal_reasons,omitempty"`
+	// ReceiptRequired — Марку расходовать только после приёмки на склад; выключено — марка без прихода проходит с пометкой
+	ReceiptRequired *bool `json:"receipt_required,omitempty"`
 }
 
 type MarkingCompanySettingsView struct {
-	Settings                MarkingCompanySettings                                  `json:"settings"`
+	Settings                MarkingCompanySettingsState                             `json:"settings"`
 	WriteoffReasons         []MarkingCompanySettingsViewWriteoffReasonsItem         `json:"writeoff_reasons"`
 	WithdrawalReasonOptions []MarkingCompanySettingsViewWithdrawalReasonOptionsItem `json:"withdrawal_reason_options"`
 	Templates               []MarkingCompanySettingsViewTemplatesItem               `json:"templates"`
@@ -11980,8 +12142,13 @@ type MarkingCompanySettingsViewWithdrawalReasonOptionsItem struct {
 }
 
 type MarkingCompanySettingsViewTemplatesItem struct {
-	Key  string `json:"key"`
-	Name string `json:"name"`
+	Key      string  `json:"key"`
+	Name     string  `json:"name"`
+	Group    string  `json:"group"`
+	WidthMm  float64 `json:"width_mm"`
+	HeightMm float64 `json:"height_mm"`
+	// Legacy — Прежний размер, в выборе не предлагается
+	Legacy bool `json:"legacy"`
 }
 
 // MarkingConnection — Подключение юрлица. Токенов True API и СУЗ здесь нет и не будет.
@@ -12022,6 +12189,41 @@ type MarkingConnectionEnvelope struct {
 
 type MarkingConnectionList struct {
 	Connections []MarkingConnection `json:"connections"`
+}
+
+type MarkingDistanceCode struct {
+	// Identity — Код идентификации без криптохвоста
+	Identity string `json:"identity"`
+	// Posting — Отправление площадки
+	Posting string `json:"posting"`
+	// PriceKopecks — Цена продажи единицы с НДС, копейки; null — неизвестна
+	PriceKopecks *int64 `json:"price_kopecks"`
+}
+
+type MarkingDistanceQueue struct {
+	Items []MarkingDistanceShipment `json:"items"`
+}
+
+type MarkingDistanceShipment struct {
+	DocumentID     UUID   `json:"document_id"`
+	DocumentNumber string `json:"document_number"`
+	// DocumentType — Вид документа-основания — перемещение сборки в путь или прежняя отгрузка
+	DocumentType string `json:"document_type"`
+	// ShippedOn — Дата отгрузки — от неё считается срок
+	ShippedOn string `json:"shipped_on"`
+	CompanyID UUID   `json:"company_id"`
+	Platform  string `json:"platform"`
+	StoreID   UUID   `json:"store_id"`
+	// Group — Товарная группа ГИС МТ
+	Group    string                `json:"group"`
+	Postings []string              `json:"postings"`
+	Codes    []MarkingDistanceCode `json:"codes"`
+	// Deadline — Последний день подачи вывода
+	Deadline string `json:"deadline"`
+	// DaysLeft — Рабочих дней до срока: 0 — сегодня, меньше нуля — просрочено
+	DaysLeft int64 `json:"days_left"`
+	// Withdrawal — Действующий вывод по отгрузке и группе
+	Withdrawal *MarkingOutboxDocument `json:"withdrawal"`
 }
 
 type MarkingDocumentCodeLine struct {
@@ -12097,6 +12299,8 @@ type MarkingDocumentCodesSummary struct {
 	Verdict *string `json:"verdict,omitempty"`
 	// ExpectedUnavailable — УПД сейчас не прочитался — ожидание не показано
 	ExpectedUnavailable *bool `json:"expected_unavailable,omitempty"`
+	// ExpectedSource — Откуда ожидание: upd — входящий УПД поставщика; shipment — марки отгрузки, по которой оформлен возврат покупателя («не хватает» считается до количества возврата).
+	ExpectedSource *string `json:"expected_source,omitempty"`
 }
 
 type MarkingDocumentDraft struct {
@@ -12114,6 +12318,9 @@ type MarkingDocumentDraft struct {
 	CreatedAt    string                `json:"created_at"`
 	SentAt       *string               `json:"sent_at"`
 	CheckedAt    *string               `json:"checked_at"`
+	// BasisType — Вид складского документа-основания
+	BasisType *string `json:"basis_type,omitempty"`
+	BasisID   *UUID   `json:"basis_id,omitempty"`
 	// BodyBase64 — Тело документа base64 — его подписывает человек
 	BodyBase64 string `json:"body_base64"`
 	// BodyHash — SHA-256 тела шестнадцатеричный
@@ -12131,6 +12338,10 @@ type MarkingDocumentDraftInput struct {
 	// Codes — Коды документа; достаточно кода без криптохвоста
 	Codes  []string               `json:"codes,omitempty"`
 	Params *MarkingDocumentParams `json:"params,omitempty"`
+	// BasisType — Вид складского документа-основания (stock_writeoff, stock_assembly …); пусто — без основания
+	BasisType *string `json:"basis_type,omitempty"`
+	// BasisID — Складской документ, по которому заводится документ ЧЗ
+	BasisID *string `json:"basis_id,omitempty"`
 }
 
 type MarkingDocumentKind = string
@@ -12142,24 +12353,42 @@ type MarkingDocumentParams struct {
 	ActionDate  *string `json:"action_date,omitempty"`
 	BuyerINN    *string `json:"buyer_inn,omitempty"`
 	// ProductCost — Цена за единицу в копейках с НДС
-	ProductCost           *int64  `json:"product_cost,omitempty"`
-	KPP                   *string `json:"kpp,omitempty"`
-	FiasID                *string `json:"fias_id,omitempty"`
-	PrimaryDocumentType   *string `json:"primary_document_type,omitempty"`
-	PrimaryDocumentNumber *string `json:"primary_document_number,omitempty"`
-	PrimaryDocumentDate   *string `json:"primary_document_date,omitempty"`
-	PrimaryDocumentName   *string `json:"primary_document_name,omitempty"`
-	WithdrawalDocumentID  *string `json:"withdrawal_document_id,omitempty"`
-	ReturnType            *string `json:"return_type,omitempty"`
-	Paid                  *bool   `json:"paid,omitempty"`
-	ProductionDate        *string `json:"production_date,omitempty"`
-	ProductionType        *string `json:"production_type,omitempty"`
-	TnvedCode             *string `json:"tnved_code,omitempty"`
-	CertificateType       *string `json:"certificate_type,omitempty"`
-	CertificateNumber     *string `json:"certificate_number,omitempty"`
-	CertificateDate       *string `json:"certificate_date,omitempty"`
-	// UnitSerialNumber — Формирование упаковки — код короба «00» + SSCC
+	ProductCost *int64 `json:"product_cost,omitempty"`
+	// ProductCosts — Дистанционная продажа (DISTANCE): цена каждого кода в копейках с НДС, ключ — код (сводится к КИ без криптохвоста); код без своей цены берёт product_cost
+	ProductCosts          map[string]int64 `json:"product_costs,omitempty"`
+	KPP                   *string          `json:"kpp,omitempty"`
+	FiasID                *string          `json:"fias_id,omitempty"`
+	PrimaryDocumentType   *string          `json:"primary_document_type,omitempty"`
+	PrimaryDocumentNumber *string          `json:"primary_document_number,omitempty"`
+	PrimaryDocumentDate   *string          `json:"primary_document_date,omitempty"`
+	PrimaryDocumentName   *string          `json:"primary_document_name,omitempty"`
+	WithdrawalDocumentID  *string          `json:"withdrawal_document_id,omitempty"`
+	ReturnType            *string          `json:"return_type,omitempty"`
+	Paid                  *bool            `json:"paid,omitempty"`
+	ProductionDate        *string          `json:"production_date,omitempty"`
+	ProductionType        *string          `json:"production_type,omitempty"`
+	TnvedCode             *string          `json:"tnved_code,omitempty"`
+	CertificateType       *string          `json:"certificate_type,omitempty"`
+	CertificateNumber     *string          `json:"certificate_number,omitempty"`
+	CertificateDate       *string          `json:"certificate_date,omitempty"`
+	// UnitSerialNumber — Формирование упаковки — код короба «00» + SSCC; формирование набора — код набора (КИН), скан или без криптохвоста
 	UnitSerialNumber *string `json:"unit_serial_number,omitempty"`
+}
+
+type MarkingDocumentSummaryList struct {
+	Results []MarkingDocumentSummaryListResultsItem `json:"results"`
+}
+
+type MarkingDocumentSummaryListResultsItem struct {
+	DocumentID   UUID   `json:"document_id"`
+	DocumentType string `json:"document_type"`
+	CompanyID    *UUID  `json:"company_id,omitempty"`
+	// Required — Поштучных марок нужно
+	Required int64 `json:"required"`
+	// Assigned — Отсканировано
+	Assigned int64 `json:"assigned"`
+	// Missing — Не хватает строкам со строгостью не «выключено»
+	Missing int64 `json:"missing"`
 }
 
 // MarkingError — Отказ модуля маркировки. Поля сверх `code` и `detail` приходят только у отказов, где экран подсвечивает место: параметр документа ГИС МТ, номер кода в запросе или код со строкой складского документа.
@@ -12458,7 +12687,11 @@ type MarkingInventoryTransferSkip struct {
 type MarkingLabelTemplate struct {
 	Key string `json:"key"`
 	// Name — Название на языке запроса
-	Name     string  `json:"name"`
+	Name string `json:"name"`
+	// Group — Квадратные, прямоугольные рулоны или лист А4
+	Group string `json:"group"`
+	// Legacy — Прежний размер: печатается по сохранённым настройкам, в выборе не предлагается
+	Legacy   bool    `json:"legacy"`
 	WidthMm  float64 `json:"width_mm"`
 	HeightMm float64 `json:"height_mm"`
 	// Sheet — Этикетки раскладываются на лист
@@ -12469,12 +12702,19 @@ type MarkingLabelTemplate struct {
 }
 
 type MarkingLabelTemplates struct {
-	Templates []MarkingLabelTemplate      `json:"templates"`
-	Fields    []string                    `json:"fields"`
-	Channels  []string                    `json:"channels"`
-	Presets   []string                    `json:"presets"`
-	Reasons   []string                    `json:"reasons"`
-	Limits    MarkingLabelTemplatesLimits `json:"limits"`
+	Templates []MarkingLabelTemplate `json:"templates"`
+	Fields    []string               `json:"fields"`
+	Channels  []string               `json:"channels"`
+	// Presets — Варианты оформления: только код, код и подпись, полная, маркетплейс (штрихкод площадки), марка и EAN-13
+	Presets []string `json:"presets"`
+	// GalleryPresets — Варианты оформления в галерее выбора
+	GalleryPresets []string `json:"gallery_presets"`
+	// DefaultTemplate — Шаблон, когда ни запрос, ни юрлицо его не назвали
+	DefaultTemplate string   `json:"default_template"`
+	Reasons         []string `json:"reasons"`
+	// Outputs — Куда печатать: html — на принтер из браузера, pdf — файлом
+	Outputs []string                    `json:"outputs"`
+	Limits  MarkingLabelTemplatesLimits `json:"limits"`
 }
 
 type MarkingLabelTemplatesLimits struct {
@@ -12619,6 +12859,9 @@ type MarkingOutboxDocument struct {
 	CreatedAt    string                `json:"created_at"`
 	SentAt       *string               `json:"sent_at"`
 	CheckedAt    *string               `json:"checked_at"`
+	// BasisType — Вид складского документа-основания
+	BasisType *string `json:"basis_type,omitempty"`
+	BasisID   *UUID   `json:"basis_id,omitempty"`
 }
 
 type MarkingOutboxDocumentEnvelope struct {
@@ -12661,6 +12904,8 @@ type MarkingProductProfile struct {
 	IntroMethod string `json:"intro_method"`
 	// MarkedSince — С какой даты товар маркируется; нет поля — с начала учёта
 	MarkedSince *string `json:"marked_since,omitempty"`
+	// LabelPreset — Свой формат этикетки товара; пусто — формат юрлица из настроек маркировки
+	LabelPreset *string `json:"label_preset,omitempty"`
 	UpdatedAt   string  `json:"updated_at"`
 }
 
@@ -12675,6 +12920,8 @@ type MarkingProductProfileInput struct {
 	IntroMethod string `json:"intro_method"`
 	// MarkedSince — Дата ГГГГ-ММ-ДД или пусто
 	MarkedSince *string `json:"marked_since,omitempty"`
+	// LabelPreset — Свой формат этикетки товара; пусто — как у юрлица
+	LabelPreset *string `json:"label_preset,omitempty"`
 }
 
 type MarkingReplaceCodesInput struct {
@@ -12687,6 +12934,39 @@ type MarkingReplaceCodesInputLinesItem struct {
 	ProductID *UUID `json:"product_id,omitempty"`
 	// Codes — Коды строки; достаточно кода без криптохвоста
 	Codes []string `json:"codes"`
+}
+
+type MarkingReturnCode struct {
+	// Identity — Код идентификации без криптохвоста
+	Identity string `json:"identity"`
+	// Posting — Отправление площадки
+	Posting string `json:"posting"`
+}
+
+type MarkingReturnQueue struct {
+	Items []MarkingReturnShipment `json:"items"`
+}
+
+type MarkingReturnShipment struct {
+	DocumentID     UUID   `json:"document_id"`
+	DocumentNumber string `json:"document_number"`
+	// DocumentType — Вид складского документа невыкупа (stock_transfer) — основание возврата в оборот
+	DocumentType string `json:"document_type"`
+	// ReturnedOn — Дата невыкупа
+	ReturnedOn string `json:"returned_on"`
+	AssemblyID UUID   `json:"assembly_id"`
+	// AssemblyNumber — Номер сборки FBS, по которой выведены марки
+	AssemblyNumber string `json:"assembly_number"`
+	CompanyID      UUID   `json:"company_id"`
+	Platform       string `json:"platform"`
+	StoreID        UUID   `json:"store_id"`
+	// Group — Товарная группа ГИС МТ
+	Group      string                `json:"group"`
+	Postings   []string              `json:"postings"`
+	Codes      []MarkingReturnCode   `json:"codes"`
+	Withdrawal MarkingOutboxDocument `json:"withdrawal"`
+	// Return — Действующий возврат в оборот по невыкупу и группе
+	Return *MarkingOutboxDocument `json:"return"`
 }
 
 type MarkingScanDocumentInput struct {
@@ -12713,12 +12993,25 @@ type MarkingSeqRange struct {
 	Count int64 `json:"count"`
 }
 
+type MarkingShortDocumentCounts struct {
+	Results []MarkingShortDocumentCountsResultsItem `json:"results"`
+}
+
+type MarkingShortDocumentCountsResultsItem struct {
+	DocumentType string `json:"document_type"`
+	Count        int64  `json:"count"`
+}
+
 type MarkingSpoilInput struct {
 	CodeIds []UUID `json:"code_ids"`
 	// Spoiled — true — отметить испорченными, false — снять отметку
 	Spoiled bool `json:"spoiled"`
 	// Note — Что случилось: испорчена, утрачена
 	Note *string `json:"note,omitempty"`
+}
+
+type MarkingStockCodes struct {
+	Items []MarkingCode `json:"items"`
 }
 
 type MarkingStockLineCode struct {
@@ -13765,6 +14058,8 @@ type StockDocumentPatch struct {
 type StockDocumentPayload struct {
 	Version int64   `json:"version"`
 	Reason  *string `json:"reason,omitempty"`
+	// MarketplaceWeekSale — Недельная продажа площадки (ERP-1819): отгрузка, которой модуль маркетплейсов списывает себестоимость выкупленного по недельному отчёту — со склада площадки (FBO) или со склада «В пути к покупателю» (FBS). Выручку по ней признают финансы, поэтому заказ ядра она не заводит и цену продажи не требует и после отсечки исполнения. Ставит только модуль маркетплейсов: присланное при создании значение отклоняется (400), правка сохраняет значение документа
+	MarketplaceWeekSale *bool `json:"marketplace_week_sale,omitempty"`
 	// ReasonID — Причина списания из справочника stock.stock_writeoff_reasons. Есть только у списания. Текст reason при этом остаётся: ссылка даёт единое значение причины, текст несёт подробности. Не прислан — сервер сам пробует узнать текст в справочнике; прислан явно, в том числе null, — решение вызывающего не переигрывается; неизвестная ссылка отклоняется
 	ReasonID   *UUID   `json:"reason_id,omitempty"`
 	DesiredAt  *string `json:"desired_at,omitempty"`
@@ -14032,6 +14327,8 @@ type StockInventoryCountSheet struct {
 	WarehouseID UUID                           `json:"warehouse_id"`
 	Count       int64                          `json:"count"`
 	Items       []StockInventoryCountSheetItem `json:"items"`
+	// Blind — Слепой пересчёт: учётное количество скрыто до завершения
+	Blind *bool `json:"blind,omitempty"`
 }
 
 type StockInventoryCountSheetItem struct {
@@ -14044,6 +14341,8 @@ type StockInventoryCountSheetItem struct {
 	ActualQty *string `json:"actual_qty,omitempty"`
 	// SurplusPrice — Decimal string
 	SurplusPrice *string `json:"surplus_price,omitempty"`
+	// BookQty — Учётное количество; только у пересчёта не вслепую
+	BookQty *string `json:"book_qty,omitempty"`
 }
 
 type StockInventoryCountsInput struct {
@@ -14062,6 +14361,14 @@ type StockInventoryDeriveResult struct {
 	Inventory CoreDocument `json:"inventory"`
 	// Documents — Черновики списания и оприходования; пустой список означает, что расхождений нет
 	Documents []CoreDocument `json:"documents"`
+	// SurplusPrices — Цены излишков, подставленные при формировании актов (человек их не вписал); source none — 0, оценить до закрытия месяца
+	SurplusPrices []StockInventoryDeriveResultSurplusPricesItem `json:"surplus_prices,omitempty"`
+}
+
+type StockInventoryDeriveResultSurplusPricesItem struct {
+	ProductID UUID   `json:"product_id"`
+	Price     string `json:"price"`
+	Source    string `json:"source"`
 }
 
 // StockInventoryFilter — Отбор товаров в снимок. Пустой фильтр берёт весь склад.
@@ -14073,6 +14380,8 @@ type StockInventoryFilter struct {
 type StockInventoryFinishInput struct {
 	// ExpectedUpdatedAt — updated_at документа, известный клиенту; несовпадение отклоняет запись
 	ExpectedUpdatedAt *string `json:"expected_updated_at,omitempty"`
+	// FillUncounted — Непосчитанные строки: zero — нулём (недостача), book — по учёту (без изменений); пусто — непосчитанных быть не должно
+	FillUncounted *string `json:"fill_uncounted,omitempty"`
 }
 
 type StockInventoryRefreshInput struct {
@@ -14097,9 +14406,11 @@ type StockOpeningBalanceCreate struct {
 type StockOrderShipInput struct {
 	WarehouseID *UUID `json:"warehouse_id,omitempty"`
 	// Date — Дата отгрузки; пусто — текущая бизнес-дата
-	Date    *string                        `json:"date,omitempty"`
-	Comment *string                        `json:"comment,omitempty"`
-	Lines   []StockOrderShipInputLinesItem `json:"lines"`
+	Date    *string `json:"date,omitempty"`
+	Comment *string `json:"comment,omitempty"`
+	// Assemble — Собрать, а не провести: черновик отгрузки для скана марок; черновик по продаже уже есть — вернётся он
+	Assemble *bool                          `json:"assemble,omitempty"`
+	Lines    []StockOrderShipInputLinesItem `json:"lines"`
 }
 
 type StockOrderShipInputLinesItem struct {
@@ -14134,7 +14445,9 @@ type StockOrderShipping struct {
 	WarehouseID *UUID                    `json:"warehouse_id,omitempty"`
 	Lines       []StockOrderShippingLine `json:"lines"`
 	Shipments   []StockOrderShipment     `json:"shipments"`
-	Reserved    bool                     `json:"reserved"`
+	// Picking — Черновик отгрузки в сборке: в отгруженное не входит
+	Picking  *StockOrderShipment `json:"picking,omitempty"`
+	Reserved bool                `json:"reserved"`
 	// Reservations — Остаток резерва самой продажи по складам (товар → количество). Свободный остаток склада его уже вычел, а отгрузка по продаже гасит свой резерв
 	Reservations []StockOrderShippingReservationsItem `json:"reservations,omitempty"`
 	CanShip      bool                                 `json:"can_ship"`
@@ -14168,6 +14481,18 @@ type StockOrderShippingLine struct {
 type StockOrderShippingPage struct {
 	Results []StockOrderShipping `json:"results"`
 	Count   int64                `json:"count"`
+}
+
+type StockPriceSuggestions struct {
+	Results []StockPriceSuggestionsResultsItem `json:"results"`
+}
+
+type StockPriceSuggestionsResultsItem struct {
+	ProductID UUID `json:"product_id"`
+	// Price — Цена единицы; 0 — цены нет
+	Price string `json:"price"`
+	// Source — Откуда цена
+	Source string `json:"source"`
 }
 
 type StockProductUOM struct {

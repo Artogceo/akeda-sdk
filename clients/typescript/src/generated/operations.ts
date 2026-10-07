@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c4ace798ceb5b73f4f0c1e80df57d77999a90287645e6ba4cc63c73547d52ef6).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e278ecc6f3db3051c024549b7129364efc3ac4920445da2f2eb464f464f210cb).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2862,6 +2862,13 @@ export interface OperationTypes {
     body: never;
     response: models.DocflowFlowDocument;
   };
+  /** GET /api/v1/docflow/flow/documents/{id}/marks — Получить коды маркировки строк УПД или накладной */
+  docflowFlowDocumentMarks: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowFlowMarks;
+  };
   /** GET /api/v1/docflow/flow/documents/{id}/revisions/{version} — Получить историческую редакцию документа */
   docflowFlowDocumentRevision: {
     params: { "id": models.UUID; "version": number };
@@ -4605,6 +4612,13 @@ export interface OperationTypes {
     body: never;
     response: models.MarkingAcceptExpectedResult;
   };
+  /** POST /api/v1/marking/documents/{type}/{id}/codes/list — Добавить марки списком в складской документ */
+  markingAddDocumentCodesList: {
+    params: { "id": models.UUID; "type": "stock_receipt" | "stock_shipment" | "stock_transfer" | "stock_writeoff" | "stock_capitalization" | "stock_supplier_return" | "stock_customer_return" | "stock_opening_balance" | "stock_marketplace_return" | "stock_assembly" | "stock_disassembly" };
+    query: Record<string, never>;
+    body: models.MarkingCodesListInput;
+    response: models.MarkingCodesListResult;
+  };
   /** POST /api/v1/marking/cises/info — Проверить коды в ГИС МТ */
   markingCheckCodes: {
     params: Record<string, never>;
@@ -4625,6 +4639,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.MarkingCodeOrderEnvelope;
+  };
+  /** GET /api/v1/marking/codes/sync — Получить ход загрузки кодов из ЧЗ */
+  markingCodeSyncState: {
+    params: Record<string, never>;
+    query: { "company": models.UUID };
+    body: never;
+    response: models.MarkingCodeSyncState;
   };
   /** POST /api/v1/marking/boxes — Завести короб */
   markingCreateBox: {
@@ -4681,6 +4702,20 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.MarkingBoxDraftResult;
+  };
+  /** GET /api/v1/marking/gismt/distance-queue — Получить очередь вывода из оборота по продажам FBS */
+  markingDistanceQueue: {
+    params: Record<string, never>;
+    query: { "company"?: models.UUID };
+    body: never;
+    response: models.MarkingDistanceQueue;
+  };
+  /** GET /api/v1/marking/document-summaries — Получить сводку марок складских документов */
+  markingDocumentSummaries: {
+    params: Record<string, never>;
+    query: { "ids": string };
+    body: never;
+    response: models.MarkingDocumentSummaryList;
   };
   /** GET /api/v1/marking/boxes/{id} — Получить карточку короба */
   markingGetBox: {
@@ -4769,7 +4804,7 @@ export interface OperationTypes {
   /** GET /api/v1/marking/codes — Получить реестр кодов маркировки */
   markingListCodes: {
     params: Record<string, never>;
-    query: { "company"?: models.UUID; "group"?: string; "import"?: models.UUID; "limit"?: number; "offset"?: number; "order"?: models.UUID; "product"?: models.UUID; "q"?: string };
+    query: { "after"?: string; "company"?: models.UUID; "group"?: string; "import"?: models.UUID; "limit"?: number; "locations"?: boolean; "offset"?: number; "order"?: models.UUID; "product"?: models.UUID; "q"?: string; "skip_total"?: boolean; "status"?: string };
     body: never;
     response: models.MarkingCodePage;
   };
@@ -4832,7 +4867,7 @@ export interface OperationTypes {
   /** GET /api/v1/marking/gismt/outbox — Получить исходящие документы ГИС МТ */
   markingListOutbox: {
     params: Record<string, never>;
-    query: { "company"?: models.UUID; "limit"?: number; "offset"?: number };
+    query: { "basis"?: models.UUID; "company"?: models.UUID; "limit"?: number; "offset"?: number };
     body: never;
     response: models.MarkingOutboxPage;
   };
@@ -4920,6 +4955,13 @@ export interface OperationTypes {
     body: models.MarkingBoxResolveInput;
     response: models.MarkingBoxContent;
   };
+  /** GET /api/v1/marking/gismt/return-queue — Получить очередь возврата в оборот по невыкупам FBS */
+  markingReturnQueue: {
+    params: Record<string, never>;
+    query: { "company"?: models.UUID };
+    body: never;
+    response: models.MarkingReturnQueue;
+  };
   /** PUT /api/v1/marking/company-groups — Включить товарную группу юрлицу */
   markingSaveCompanyGroup: {
     params: Record<string, never>;
@@ -4983,6 +5025,13 @@ export interface OperationTypes {
     body: models.MarkingGISMTCodesInput;
     response: models.MarkingGISMTCodePage;
   };
+  /** GET /api/v1/marking/document-summaries/short — Посчитать документы без всех марок */
+  markingShortDocumentCounts: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.MarkingShortDocumentCounts;
+  };
   /** POST /api/v1/marking/orders/{id}/codes/spoil — Отметить коды заказа испорченными */
   markingSpoilOrderCodes: {
     params: { "id": models.UUID };
@@ -4990,12 +5039,33 @@ export interface OperationTypes {
     body: models.MarkingSpoilInput;
     response: models.MarkingSpoilOrderCodesResponse;
   };
+  /** POST /api/v1/marking/codes/sync — Обновить коды юрлица из ЧЗ */
+  markingStartCodeSync: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.MarkingCodeSyncInput;
+    response: models.MarkingCodeSyncStarted;
+  };
+  /** GET /api/v1/marking/stock-codes — Получить марки в остатке товара на складе */
+  markingStockCodes: {
+    params: Record<string, never>;
+    query: { "limit"?: number; "offset"?: number; "product": models.UUID; "warehouse": models.UUID };
+    body: never;
+    response: models.MarkingStockCodes;
+  };
   /** POST /api/v1/marking/orders/sync — Сверить заказы юрлица с СУЗ */
   markingSyncOrders: {
     params: Record<string, never>;
     query: { "company": models.UUID };
     body: never;
     response: models.MarkingOrderSyncResult;
+  };
+  /** GET /api/v1/marking/codes/trace — Найти марку и её историю */
+  markingTraceCode: {
+    params: Record<string, never>;
+    query: { "code": string };
+    body: never;
+    response: models.MarkingCodeTrace;
   };
   /** POST /api/v1/marking/inventories/{id}/codes/transfer — Перенести марки инвентаризации в акты */
   markingTransferInventoryCodes: {
@@ -5462,7 +5532,7 @@ export interface OperationTypes {
   /** GET /api/v1/stock/documents — Получить журнал складских документов */
   stockListDocuments: {
     params: Record<string, never>;
-    query: { "comment"?: string; "company_id"?: models.UUID; "contact_id"?: models.UUID; "created_by"?: string; "date_from"?: string; "date_to"?: string; "direction"?: "asc" | "desc"; "limit"?: number; "lines_from"?: number; "lines_to"?: number; "number"?: string; "offset"?: number; "q"?: string; "qty_from"?: string; "qty_to"?: string; "reason_id"?: models.UUID; "sale"?: string; "sort"?: "date" | "number" | "status" | "company" | "warehouse" | "contact" | "updated_at"; "status"?: models.CoreDocumentStatus; "type"?: models.StockDocumentTypeKey; "updated_from"?: string; "updated_to"?: string; "warehouse_id"?: models.UUID; "warehouse_ids"?: string };
+    query: { "comment"?: string; "company_id"?: models.UUID; "contact_id"?: models.UUID; "created_by"?: string; "date_from"?: string; "date_to"?: string; "direction"?: "asc" | "desc"; "limit"?: number; "lines_from"?: number; "lines_to"?: number; "marks"?: "short"; "number"?: string; "offset"?: number; "q"?: string; "qty_from"?: string; "qty_to"?: string; "reason_id"?: models.UUID; "sale"?: string; "sort"?: "date" | "number" | "status" | "company" | "warehouse" | "contact" | "updated_at"; "status"?: models.CoreDocumentStatus; "type"?: models.StockDocumentTypeKey; "updated_from"?: string; "updated_to"?: string; "warehouse_id"?: models.UUID; "warehouse_ids"?: string };
     body: never;
     response: models.StockDocumentPage;
   };
@@ -5528,6 +5598,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.StockValuationPreviewRequest;
     response: models.StockValuationResult;
+  };
+  /** GET /api/v1/stock/price-suggestions — Подобрать цену по умолчанию для прихода без цены поставщика */
+  stockPriceSuggestions: {
+    params: Record<string, never>;
+    query: { "business"?: models.UUID; "company"?: models.UUID; "date"?: string; "products": string; "warehouse"?: models.UUID };
+    body: never;
+    response: models.StockPriceSuggestions;
   };
   /** POST /api/v1/stock/valuation/rebuild — Запустить пересчёт стоимости по документу накладных расходов */
   stockRebuildValuation: {
@@ -6779,6 +6856,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowFlowContactStats: { method: "GET", path: "/api/v1/docflow/flow/contacts", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowCreateDocument: { method: "POST", path: "/api/v1/docflow/flow/documents", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocument: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowFlowDocumentMarks: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/marks", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocumentRevision: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/revisions/{version}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocumentRevisions: { method: "GET", path: "/api/v1/docflow/flow/documents/{id}/revisions", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowFlowDocuments: { method: "GET", path: "/api/v1/docflow/flow/documents", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
@@ -7028,9 +7106,11 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   marketplaceYandexProducts: { method: "GET", path: "/api/v1/marketplace/yandex/products", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "page", pageSizeMax: 10000, pageSizeDefault: 50 },
   marketplaceYandexStores: { method: "GET", path: "/api/v1/marketplace/yandex/stores", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingAcceptExpectedCodes: { method: "POST", path: "/api/v1/marking/documents/{type}/{id}/codes/accept-expected", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingAddDocumentCodesList: { method: "POST", path: "/api/v1/marking/documents/{type}/{id}/codes/list", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingCheckCodes: { method: "POST", path: "/api/v1/marking/cises/info", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingCloseBox: { method: "POST", path: "/api/v1/marking/boxes/{id}/close", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingCloseOrder: { method: "POST", path: "/api/v1/marking/orders/{id}/close", module: "marking", stage: "preview", permission: "marking.gismt:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingCodeSyncState: { method: "GET", path: "/api/v1/marking/codes/sync", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingCreateBox: { method: "POST", path: "/api/v1/marking/boxes", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingCreateDocumentDraft: { method: "POST", path: "/api/v1/marking/gismt/document-drafts", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingCreateOrder: { method: "POST", path: "/api/v1/marking/orders", module: "marking", stage: "preview", permission: "marking.gismt:send", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7039,6 +7119,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   markingDeleteDocumentDraft: { method: "DELETE", path: "/api/v1/marking/gismt/document-drafts/{id}", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingDeleteProductProfile: { method: "DELETE", path: "/api/v1/marking/products/{id}/profile", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingDisbandBox: { method: "POST", path: "/api/v1/marking/boxes/{id}/disband", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingDistanceQueue: { method: "GET", path: "/api/v1/marking/gismt/distance-queue", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingDocumentSummaries: { method: "GET", path: "/api/v1/marking/document-summaries", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingGetBox: { method: "GET", path: "/api/v1/marking/boxes/{id}", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingGetBoxContents: { method: "GET", path: "/api/v1/marking/boxes/{id}/contents", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingGetCompanySettings: { method: "GET", path: "/api/v1/marking/company-settings/{company_id}", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7073,6 +7155,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   markingReplaceDocumentCodes: { method: "PUT", path: "/api/v1/marking/documents/{type}/{id}/codes", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingReportBox: { method: "POST", path: "/api/v1/marking/boxes/{id}/report", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingResolveBox: { method: "POST", path: "/api/v1/marking/boxes/resolve", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingReturnQueue: { method: "GET", path: "/api/v1/marking/gismt/return-queue", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingSaveCompanyGroup: { method: "PUT", path: "/api/v1/marking/company-groups", module: "marking", stage: "preview", permission: "marking:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingSaveCompanySettings: { method: "PUT", path: "/api/v1/marking/company-settings/{company_id}", module: "marking", stage: "preview", permission: "marking:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingSaveProductProfile: { method: "PUT", path: "/api/v1/marking/products/{id}/profile", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7082,8 +7165,12 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   markingScanIntoBox: { method: "POST", path: "/api/v1/marking/boxes/{id}/scan", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingScanInventoryCode: { method: "POST", path: "/api/v1/marking/inventories/{id}/codes/scan", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingSearchGISMTCodes: { method: "POST", path: "/api/v1/marking/gismt/codes", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingShortDocumentCounts: { method: "GET", path: "/api/v1/marking/document-summaries/short", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingSpoilOrderCodes: { method: "POST", path: "/api/v1/marking/orders/{id}/codes/spoil", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingStartCodeSync: { method: "POST", path: "/api/v1/marking/codes/sync", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingStockCodes: { method: "GET", path: "/api/v1/marking/stock-codes", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
   markingSyncOrders: { method: "POST", path: "/api/v1/marking/orders/sync", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingTraceCode: { method: "GET", path: "/api/v1/marking/codes/trace", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingTransferInventoryCodes: { method: "POST", path: "/api/v1/marking/inventories/{id}/codes/transfer", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   printFormDownloadSession: { method: "GET", path: "/api/v1/print/forms/{kind}/{id}/download-session", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListCompanies: { method: "GET", path: "/api/v1/settings/companies", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7160,6 +7247,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockPostDocument: { method: "POST", path: "/api/v1/stock/documents/{id}/post", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockPreviewImport: { method: "POST", path: "/api/v1/stock/imports/{id}/preview", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockPreviewValuation: { method: "POST", path: "/api/v1/stock/valuation/preview", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockPriceSuggestions: { method: "GET", path: "/api/v1/stock/price-suggestions", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockRebuildValuation: { method: "POST", path: "/api/v1/stock/valuation/rebuild", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockRefreshInventorySnapshot: { method: "POST", path: "/api/v1/stock/documents/{id}/inventory-refresh", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockReleaseReservation: { method: "POST", path: "/api/v1/stock/documents/{id}/release", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

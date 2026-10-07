@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c4ace798ceb5b73f4f0c1e80df57d77999a90287645e6ba4cc63c73547d52ef6).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e278ecc6f3db3051c024549b7129364efc3ac4920445da2f2eb464f464f210cb).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -6687,6 +6687,49 @@ export interface DocflowFlowFile {
 
 export type DocflowFlowKind = "contract" | "specification" | "amendment" | "invoice" | "act" | "upd" | "goods_waybill" | "transport_waybill" | "consignment_note" | "transport_order" | "tax_invoice" | "correction" | "return" | "discrepancy_act" | "reconciliation_act" | "power_of_attorney" | "other";
 
+/** Коды маркировки одной строки бумаги. */
+export interface DocflowFlowLineMarks {
+  /** Номер строки в бланке и XML с единицы */
+  "number": number;
+  "line_id": UUID;
+  "name": string;
+  "quantity": string;
+  "unit"?: string;
+  /** unit — поштучно, коды КИЗ; gtin — объёмно-сортовой учёт: ГТИН и количество без кодов */
+  "mode": "unit" | "gtin";
+  /** Сколько единиц строки ждут кода */
+  "required": number;
+  /** Сколько кодов единиц досталось строке; у строки по GTIN — количество, если ГТИН у товара есть */
+  "assigned": number;
+  /** Строка закрыта кодами: единиц хватает, групповые упаковки покрывают строку или у строки по GTIN есть ГТИН */
+  "complete": boolean;
+  /** Коды идентификации единиц (КИЗ) без криптохвоста */
+  "codes": Array<string>;
+  /** Коды групповых упаковок без криптохвоста */
+  "packages": Array<string>;
+  /** Коды строки не в обороте у продавца — покупатель их не примет */
+  "not_in_circulation": Array<string>;
+  /** ГТИН товара у строки по объёмно-сортовому учёту */
+  "gtin"?: string;
+  /** Статусы кодов только что спрошены у ГИС МТ; false — по последнему известному статусу */
+  "checked_live": boolean;
+}
+
+/** Коды маркировки строк исходящей бумаги по отгрузке склада и итог для шапки таблицы «Товары и услуги». Пустой список строк — маркируемого товара нет. */
+export interface DocflowFlowMarks {
+  "lines": Array<DocflowFlowLineMarks>;
+  /** Сколько единиц всех строк ждут кода маркировки */
+  "required": number;
+  /** Сколько кодов единиц подставлено во все строки */
+  "assigned": number;
+  /** Сколько кодов групповых упаковок подставлено */
+  "packages": number;
+  /** Сколько кодов не в обороте у продавца */
+  "not_in_circulation": number;
+  /** Статусы хотя бы одной строки только что спрошены у ГИС МТ */
+  "checked_live": boolean;
+}
+
 /** Сканы подписанного оригинала документа. */
 export interface DocflowFlowOriginal {
   "document_id": UUID;
@@ -11857,7 +11900,7 @@ export interface MarkingCode {
   "identity": string;
   /** Сохранён ли полный код для печати */
   "has_crypto_tail": boolean;
-  "source": "order" | "import" | "upd" | "scan" | "aggregation";
+  "source": "order" | "import" | "upd" | "scan" | "aggregation" | "gismt";
   "import_id"?: UUID;
   "order_id"?: UUID;
   "produced_at"?: string;
@@ -11873,6 +11916,8 @@ export interface MarkingCode {
   /** Из них дубликатов */
   "duplicates": number;
   "created_at": string;
+  /** Склад, где код числится (locations=true) */
+  "warehouse_id"?: UUID;
 }
 
 export interface MarkingCodeOrder {
@@ -11926,10 +11971,101 @@ export interface MarkingCodeOrderPage {
 
 export interface MarkingCodePage {
   "items": Array<MarkingCode> | null;
-  "total": number;
+  /** Всего по отбору; нет при skip_total */
+  "total"?: number;
+  /** Курсор следующей порции; пусто — порция последняя */
+  "next_after": string;
 }
 
 export type MarkingCodeState = "received" | "printed" | "applying" | "applied" | "introducing" | "introduced" | "spoiled";
+
+export interface MarkingCodeSync {
+  "id": UUID;
+  "company_id": UUID;
+  "status": "running" | "done" | "failed" | "interrupted";
+  /** Кодов просмотрено в ЧЗ */
+  "scanned": number;
+  /** Новых кодов добавлено в реестр */
+  "added": number;
+  /** Известных кодов обновлено */
+  "updated": number;
+  /** Почему загрузка остановилась */
+  "error"?: string;
+  "started_by"?: number;
+  "started_at": string;
+  "heartbeat_at": string;
+  "finished_at"?: string;
+}
+
+export interface MarkingCodeSyncInput {
+  "company_id": UUID;
+}
+
+export interface MarkingCodeSyncStarted {
+  "sync": MarkingCodeSync;
+}
+
+export interface MarkingCodeSyncState {
+  "current": MarkingCodeSync | null;
+  /** Последнее полное обновление из ЧЗ */
+  "refreshed_at": string | null;
+}
+
+export interface MarkingCodeTrace {
+  "code": MarkingCode;
+  "history": Array<MarkingCodeTraceEntry>;
+}
+
+export interface MarkingCodeTraceEntry {
+  "document_id": UUID;
+  /** Вид складского документа */
+  "type": string;
+  "number": string;
+  "date": string;
+  /** Состояние документа: draft, posted, cancelled */
+  "status": string;
+  /** Пришла, ушла или перемещение */
+  "direction": "in" | "out" | "transfer" | "";
+  "warehouse_id"?: UUID;
+  "warehouse_to_id"?: UUID;
+}
+
+export interface MarkingCodesListInput {
+  /** Марки по одной на строку — как со сканера */
+  "codes": Array<string>;
+}
+
+export interface MarkingCodesListResult {
+  /** Непустых строк в списке */
+  "total": number;
+  /** Легло в документ сейчас */
+  "added": number;
+  /** Уже были в документе */
+  "already": number;
+  /** Не легли всего */
+  "skipped": number;
+  /** Первые 200 не легших марок с причиной */
+  "skips": Array<MarkingCodesListResultSkipsItem>;
+  /** Товары, которым не хватило строки или штук, и сколько марок не легло */
+  "shortage": Array<MarkingCodesListResultShortageItem>;
+  "document": MarkingDocumentCodes;
+}
+
+export interface MarkingCodesListResultSkipsItem {
+  /** Номер строки списка с единицы */
+  "line": number;
+  /** Код без криптохвоста или начало строки */
+  "identity": string;
+  /** Машинная причина */
+  "reason": string;
+  /** Причина словами на языке запроса */
+  "detail": string;
+}
+
+export interface MarkingCodesListResultShortageItem {
+  "product_id": UUID;
+  "count": number;
+}
 
 export interface MarkingCompany {
   "id": UUID;
@@ -11970,20 +12106,46 @@ export interface MarkingCompanySettings {
   "gs1_prefix"?: string;
   /** Ключ шаблона этикетки; пусто — 58×40 */
   "label_template"?: string;
-  "label_preset"?: "" | "marking" | "marking_marketplace";
+  /** Формат этикетки по умолчанию: полная, сокращённая, только марка, марка и EAN-13, марка и штрихкод площадки */
+  "label_preset"?: "" | "full" | "short" | "mark_only" | "marking" | "marking_marketplace";
+  /** Печатать значок «Честного знака» рядом с маркой, если есть место: загруженный знак юрлица, иначе пометку «ЧЗ» */
+  "label_badge"?: boolean;
   "label_channel"?: "" | "wildberries" | "ozon" | "yandex";
   /** Вид складского документа → строгость */
   "strictness"?: { [key: string]: MarkingStrictness };
   /** Причина списания склада → ключ причины вывода ГИС МТ */
   "withdrawal_reasons"?: { [key: string]: string };
+  /** Марку расходовать только после приёмки на склад; выключено — марка без прихода проходит с пометкой */
+  "receipt_required"?: boolean;
 }
 
 export interface MarkingCompanySettingsEnvelope {
-  "settings": MarkingCompanySettings;
+  "settings": MarkingCompanySettingsState;
+}
+
+export interface MarkingCompanySettingsState {
+  "company_id"?: UUID;
+  /** Префикс предприятия GS1 из 6–12 цифр или пусто */
+  "gs1_prefix"?: string;
+  /** Ключ шаблона этикетки; пусто — 58×40 */
+  "label_template"?: string;
+  /** Формат этикетки по умолчанию: полная, сокращённая, только марка, марка и EAN-13, марка и штрихкод площадки */
+  "label_preset"?: "" | "full" | "short" | "mark_only" | "marking" | "marking_marketplace";
+  /** Печатать значок «Честного знака» рядом с маркой, если есть место: загруженный знак юрлица, иначе пометку «ЧЗ» */
+  "label_badge"?: boolean;
+  /** Юрлицо загрузило знак «Честного знака»; меняется отдельной загрузкой, при сохранении настроек не учитывается */
+  "label_logo"?: boolean;
+  "label_channel"?: "" | "wildberries" | "ozon" | "yandex";
+  /** Вид складского документа → строгость */
+  "strictness"?: { [key: string]: MarkingStrictness };
+  /** Причина списания склада → ключ причины вывода ГИС МТ */
+  "withdrawal_reasons"?: { [key: string]: string };
+  /** Марку расходовать только после приёмки на склад; выключено — марка без прихода проходит с пометкой */
+  "receipt_required"?: boolean;
 }
 
 export interface MarkingCompanySettingsView {
-  "settings": MarkingCompanySettings;
+  "settings": MarkingCompanySettingsState;
   "writeoff_reasons": Array<MarkingCompanySettingsViewWriteoffReasonsItem> | null;
   "withdrawal_reason_options": Array<MarkingCompanySettingsViewWithdrawalReasonOptionsItem>;
   "templates": Array<MarkingCompanySettingsViewTemplatesItem>;
@@ -12005,6 +12167,11 @@ export interface MarkingCompanySettingsViewWithdrawalReasonOptionsItem {
 export interface MarkingCompanySettingsViewTemplatesItem {
   "key": string;
   "name": string;
+  "group": "square" | "roll" | "sheet";
+  "width_mm": number;
+  "height_mm": number;
+  /** Прежний размер, в выборе не предлагается */
+  "legacy": boolean;
 }
 
 /** Подключение юрлица. Токенов True API и СУЗ здесь нет и не будет. */
@@ -12045,6 +12212,41 @@ export interface MarkingConnectionEnvelope {
 
 export interface MarkingConnectionList {
   "connections": Array<MarkingConnection> | null;
+}
+
+export interface MarkingDistanceCode {
+  /** Код идентификации без криптохвоста */
+  "identity": string;
+  /** Отправление площадки */
+  "posting": string;
+  /** Цена продажи единицы с НДС, копейки; null — неизвестна */
+  "price_kopecks": number | null;
+}
+
+export interface MarkingDistanceQueue {
+  "items": Array<MarkingDistanceShipment>;
+}
+
+export interface MarkingDistanceShipment {
+  "document_id": UUID;
+  "document_number": string;
+  /** Вид документа-основания — перемещение сборки в путь или прежняя отгрузка */
+  "document_type": "stock_transfer" | "stock_shipment";
+  /** Дата отгрузки — от неё считается срок */
+  "shipped_on": string;
+  "company_id": UUID;
+  "platform": "ozon" | "wildberries" | "yandex";
+  "store_id": UUID;
+  /** Товарная группа ГИС МТ */
+  "group": string;
+  "postings": Array<string>;
+  "codes": Array<MarkingDistanceCode>;
+  /** Последний день подачи вывода */
+  "deadline": string;
+  /** Рабочих дней до срока: 0 — сегодня, меньше нуля — просрочено */
+  "days_left": number;
+  /** Действующий вывод по отгрузке и группе */
+  "withdrawal": MarkingOutboxDocument | null;
 }
 
 export interface MarkingDocumentCodeLine {
@@ -12120,6 +12322,8 @@ export interface MarkingDocumentCodesSummary {
   "verdict"?: "accept" | "accept_with_discrepancy" | "reject_possible";
   /** УПД сейчас не прочитался — ожидание не показано */
   "expected_unavailable"?: boolean;
+  /** Откуда ожидание: upd — входящий УПД поставщика; shipment — марки отгрузки, по которой оформлен возврат покупателя («не хватает» считается до количества возврата). */
+  "expected_source"?: "upd" | "shipment";
 }
 
 export interface MarkingDocumentDraft {
@@ -12137,6 +12341,9 @@ export interface MarkingDocumentDraft {
   "created_at": string;
   "sent_at": string | null;
   "checked_at": string | null;
+  /** Вид складского документа-основания */
+  "basis_type"?: string;
+  "basis_id"?: UUID;
   /** Тело документа base64 — его подписывает человек */
   "body_base64": string;
   /** SHA-256 тела шестнадцатеричный */
@@ -12154,9 +12361,13 @@ export interface MarkingDocumentDraftInput {
   /** Коды документа; достаточно кода без криптохвоста */
   "codes"?: Array<string>;
   "params"?: MarkingDocumentParams;
+  /** Вид складского документа-основания (stock_writeoff, stock_assembly …); пусто — без основания */
+  "basis_type"?: string;
+  /** Складской документ, по которому заводится документ ЧЗ */
+  "basis_id"?: string;
 }
 
-export type MarkingDocumentKind = "withdrawal" | "withdrawal_cancel" | "return" | "introduce" | "introduce_remains" | "cancel_codes" | "aggregation" | "disaggregation";
+export type MarkingDocumentKind = "withdrawal" | "withdrawal_cancel" | "return" | "introduce" | "introduce_remains" | "cancel_codes" | "aggregation" | "disaggregation" | "sets_aggregation";
 
 /** Параметры вида документа; незнакомое поле — отказ */
 export interface MarkingDocumentParams {
@@ -12166,6 +12377,8 @@ export interface MarkingDocumentParams {
   "buyer_inn"?: string;
   /** Цена за единицу в копейках с НДС */
   "product_cost"?: number;
+  /** Дистанционная продажа (DISTANCE): цена каждого кода в копейках с НДС, ключ — код (сводится к КИ без криптохвоста); код без своей цены берёт product_cost */
+  "product_costs"?: { [key: string]: number };
   "kpp"?: string;
   "fias_id"?: string;
   "primary_document_type"?: string;
@@ -12181,8 +12394,24 @@ export interface MarkingDocumentParams {
   "certificate_type"?: string;
   "certificate_number"?: string;
   "certificate_date"?: string;
-  /** Формирование упаковки — код короба «00» + SSCC */
+  /** Формирование упаковки — код короба «00» + SSCC; формирование набора — код набора (КИН), скан или без криптохвоста */
   "unit_serial_number"?: string;
+}
+
+export interface MarkingDocumentSummaryList {
+  "results": Array<MarkingDocumentSummaryListResultsItem>;
+}
+
+export interface MarkingDocumentSummaryListResultsItem {
+  "document_id": UUID;
+  "document_type": string;
+  "company_id"?: UUID;
+  /** Поштучных марок нужно */
+  "required": number;
+  /** Отсканировано */
+  "assigned": number;
+  /** Не хватает строкам со строгостью не «выключено» */
+  "missing": number;
 }
 
 /** Отказ модуля маркировки. Поля сверх `code` и `detail` приходят только у отказов, где экран подсвечивает место: параметр документа ГИС МТ, номер кода в запросе или код со строкой складского документа. */
@@ -12482,6 +12711,10 @@ export interface MarkingLabelTemplate {
   "key": string;
   /** Название на языке запроса */
   "name": string;
+  /** Квадратные, прямоугольные рулоны или лист А4 */
+  "group": "square" | "roll" | "sheet";
+  /** Прежний размер: печатается по сохранённым настройкам, в выборе не предлагается */
+  "legacy": boolean;
   "width_mm": number;
   "height_mm": number;
   /** Этикетки раскладываются на лист */
@@ -12495,8 +12728,15 @@ export interface MarkingLabelTemplates {
   "templates": Array<MarkingLabelTemplate>;
   "fields": Array<string>;
   "channels": Array<string>;
+  /** Варианты оформления: только код, код и подпись, полная, маркетплейс (штрихкод площадки), марка и EAN-13 */
   "presets": Array<string>;
+  /** Варианты оформления в галерее выбора */
+  "gallery_presets": Array<string>;
+  /** Шаблон, когда ни запрос, ни юрлицо его не назвали */
+  "default_template": string;
   "reasons": Array<string>;
+  /** Куда печатать: html — на принтер из браузера, pdf — файлом */
+  "outputs": Array<string>;
   "limits": MarkingLabelTemplatesLimits;
 }
 
@@ -12642,6 +12882,9 @@ export interface MarkingOutboxDocument {
   "created_at": string;
   "sent_at": string | null;
   "checked_at": string | null;
+  /** Вид складского документа-основания */
+  "basis_type"?: string;
+  "basis_id"?: UUID;
 }
 
 export interface MarkingOutboxDocumentEnvelope {
@@ -12684,6 +12927,8 @@ export interface MarkingProductProfile {
   "intro_method": "production" | "contract" | "import" | "remains" | "commission";
   /** С какой даты товар маркируется; нет поля — с начала учёта */
   "marked_since"?: string;
+  /** Свой формат этикетки товара; пусто — формат юрлица из настроек маркировки */
+  "label_preset"?: "" | "full" | "short" | "mark_only" | "marking" | "marking_marketplace";
   "updated_at": string;
 }
 
@@ -12698,6 +12943,8 @@ export interface MarkingProductProfileInput {
   "intro_method": "production" | "contract" | "import" | "remains" | "commission";
   /** Дата ГГГГ-ММ-ДД или пусто */
   "marked_since"?: string;
+  /** Свой формат этикетки товара; пусто — как у юрлица */
+  "label_preset"?: "" | "full" | "short" | "mark_only" | "marking" | "marking_marketplace";
 }
 
 export interface MarkingReplaceCodesInput {
@@ -12710,6 +12957,39 @@ export interface MarkingReplaceCodesInputLinesItem {
   "product_id"?: UUID;
   /** Коды строки; достаточно кода без криптохвоста */
   "codes": Array<string>;
+}
+
+export interface MarkingReturnCode {
+  /** Код идентификации без криптохвоста */
+  "identity": string;
+  /** Отправление площадки */
+  "posting": string;
+}
+
+export interface MarkingReturnQueue {
+  "items": Array<MarkingReturnShipment>;
+}
+
+export interface MarkingReturnShipment {
+  "document_id": UUID;
+  "document_number": string;
+  /** Вид складского документа невыкупа (stock_transfer) — основание возврата в оборот */
+  "document_type": string;
+  /** Дата невыкупа */
+  "returned_on": string;
+  "assembly_id": UUID;
+  /** Номер сборки FBS, по которой выведены марки */
+  "assembly_number": string;
+  "company_id": UUID;
+  "platform": "ozon" | "wildberries" | "yandex";
+  "store_id": UUID;
+  /** Товарная группа ГИС МТ */
+  "group": string;
+  "postings": Array<string>;
+  "codes": Array<MarkingReturnCode>;
+  "withdrawal": MarkingOutboxDocument;
+  /** Действующий возврат в оборот по невыкупу и группе */
+  "return": MarkingOutboxDocument | null;
 }
 
 export interface MarkingScanDocumentInput {
@@ -12736,12 +13016,25 @@ export interface MarkingSeqRange {
   "count": number;
 }
 
+export interface MarkingShortDocumentCounts {
+  "results": Array<MarkingShortDocumentCountsResultsItem>;
+}
+
+export interface MarkingShortDocumentCountsResultsItem {
+  "document_type": string;
+  "count": number;
+}
+
 export interface MarkingSpoilInput {
   "code_ids": Array<UUID>;
   /** true — отметить испорченными, false — снять отметку */
   "spoiled": boolean;
   /** Что случилось: испорчена, утрачена */
   "note"?: string;
+}
+
+export interface MarkingStockCodes {
+  "items": Array<MarkingCode>;
 }
 
 export interface MarkingStockLineCode {
@@ -13788,6 +14081,8 @@ export interface StockDocumentPatch {
 export interface StockDocumentPayload {
   "version": number;
   "reason"?: string;
+  /** Недельная продажа площадки (ERP-1819): отгрузка, которой модуль маркетплейсов списывает себестоимость выкупленного по недельному отчёту — со склада площадки (FBO) или со склада «В пути к покупателю» (FBS). Выручку по ней признают финансы, поэтому заказ ядра она не заводит и цену продажи не требует и после отсечки исполнения. Ставит только модуль маркетплейсов: присланное при создании значение отклоняется (400), правка сохраняет значение документа */
+  "marketplace_week_sale"?: boolean;
   /** Причина списания из справочника stock.stock_writeoff_reasons. Есть только у списания. Текст reason при этом остаётся: ссылка даёт единое значение причины, текст несёт подробности. Не прислан — сервер сам пробует узнать текст в справочнике; прислан явно, в том числе null, — решение вызывающего не переигрывается; неизвестная ссылка отклоняется */
   "reason_id"?: UUID | null;
   "desired_at"?: string;
@@ -14055,6 +14350,8 @@ export interface StockInventoryCountSheet {
   "warehouse_id": UUID;
   "count": number;
   "items": Array<StockInventoryCountSheetItem>;
+  /** Слепой пересчёт: учётное количество скрыто до завершения */
+  "blind"?: boolean;
 }
 
 export interface StockInventoryCountSheetItem {
@@ -14067,6 +14364,8 @@ export interface StockInventoryCountSheetItem {
   "actual_qty"?: string;
   /** Decimal string */
   "surplus_price"?: string;
+  /** Учётное количество; только у пересчёта не вслепую */
+  "book_qty"?: string;
 }
 
 export interface StockInventoryCountsInput {
@@ -14085,6 +14384,14 @@ export interface StockInventoryDeriveResult {
   "inventory": CoreDocument;
   /** Черновики списания и оприходования; пустой список означает, что расхождений нет */
   "documents": Array<CoreDocument>;
+  /** Цены излишков, подставленные при формировании актов (человек их не вписал); source none — 0, оценить до закрытия месяца */
+  "surplus_prices"?: Array<StockInventoryDeriveResultSurplusPricesItem>;
+}
+
+export interface StockInventoryDeriveResultSurplusPricesItem {
+  "product_id": UUID;
+  "price": string;
+  "source": "warehouse" | "company" | "last_receipt" | "card" | "none";
 }
 
 /** Отбор товаров в снимок. Пустой фильтр берёт весь склад. */
@@ -14096,6 +14403,8 @@ export interface StockInventoryFilter {
 export interface StockInventoryFinishInput {
   /** updated_at документа, известный клиенту; несовпадение отклоняет запись */
   "expected_updated_at"?: string;
+  /** Непосчитанные строки: zero — нулём (недостача), book — по учёту (без изменений); пусто — непосчитанных быть не должно */
+  "fill_uncounted"?: "zero" | "book";
 }
 
 export interface StockInventoryRefreshInput {
@@ -14122,6 +14431,8 @@ export interface StockOrderShipInput {
   /** Дата отгрузки; пусто — текущая бизнес-дата */
   "date"?: string;
   "comment"?: string;
+  /** Собрать, а не провести: черновик отгрузки для скана марок; черновик по продаже уже есть — вернётся он */
+  "assemble"?: boolean;
   "lines": Array<StockOrderShipInputLinesItem>;
 }
 
@@ -14157,6 +14468,8 @@ export interface StockOrderShipping {
   "warehouse_id"?: UUID;
   "lines": Array<StockOrderShippingLine>;
   "shipments": Array<StockOrderShipment>;
+  /** Черновик отгрузки в сборке: в отгруженное не входит */
+  "picking"?: StockOrderShipment;
   "reserved": boolean;
   /** Остаток резерва самой продажи по складам (товар → количество). Свободный остаток склада его уже вычел, а отгрузка по продаже гасит свой резерв */
   "reservations"?: Array<StockOrderShippingReservationsItem>;
@@ -14191,6 +14504,18 @@ export interface StockOrderShippingLine {
 export interface StockOrderShippingPage {
   "results": Array<StockOrderShipping>;
   "count": number;
+}
+
+export interface StockPriceSuggestions {
+  "results": Array<StockPriceSuggestionsResultsItem>;
+}
+
+export interface StockPriceSuggestionsResultsItem {
+  "product_id": UUID;
+  /** Цена единицы; 0 — цены нет */
+  "price": string;
+  /** Откуда цена */
+  "source": "warehouse" | "company" | "last_receipt" | "card" | "none";
 }
 
 export interface StockProductUOM {
