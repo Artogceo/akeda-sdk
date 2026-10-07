@@ -15016,6 +15016,282 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/finance/exchange/onec/connections:
+    get:
+      tags:
+        - Finance exchange
+      operationId: financeListOneCConnections
+      summary: Получить подключения баз 1С
+      description: 'Базы 1С:Бухгалтерии юрлиц кабинета: адрес, пользователь, шаг подключения и состав обмена. Пароль не возвращается — только признак has_password.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.exchange:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Подключения баз 1С открытых юрлиц
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOneCConnectionPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Finance exchange
+      operationId: financeCreateOneCConnection
+      summary: Подключить базу 1С юрлица
+      description: 'Заводит подключение базы 1С:Бухгалтерии юрлица. Пароль пользователя 1С вводит человек на экране подключения: через MCP пароль не передаётся, без него Акеда к базе не обращается. С паролем доступ проверяется сразу.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.exchange:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceOneCConnectionInput'
+      responses:
+        '201':
+          description: Созданное подключение без пароля
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOneCConnection'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/exchange/onec/connections/{id}:
+    get:
+      tags:
+        - Finance exchange
+      operationId: financeGetOneCConnection
+      summary: Получить подключение базы 1С
+      description: 'Карточка подключения базы 1С: шаг подключения, сведения базы, номера сообщений, последняя ошибка 1С.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.exchange:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Подключение базы 1С без пароля
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOneCConnection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    patch:
+      tags:
+        - Finance exchange
+      operationId: financeUpdateOneCConnection
+      summary: Изменить подключение базы 1С
+      description: Меняет адрес, пользователя, версию формата, состав обмена и расписание. Пустой пароль сохраняет прежний; смена адреса, пользователя или пароля возвращает подключение к проверке доступа.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.exchange:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceOneCConnectionInput'
+      responses:
+        '200':
+          description: Подключение базы 1С без пароля
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOneCConnection'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    delete:
+      tags:
+        - Finance exchange
+      operationId: financeDeleteOneCConnection
+      summary: Отключить базу 1С
+      description: Удаляет подключение базы 1С в Акеде. Узел Акеды в базе 1С остаётся, его снимает бухгалтер в 1С.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.exchange:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Подключение удалено
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/exchange/onec/connections/{id}/check:
+    post:
+      tags:
+        - Finance exchange
+      operationId: financeCheckOneCConnection
+      summary: Проверить доступ к базе 1С
+      description: 'Обращается к базе 1С (только чтение) и обновляет шаг подключения: доступ, узел Акеды, мастер в 1С, обмен. Ошибка доступа записывается в подключение, а не возвращается отказом.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.exchange:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Подключение базы 1С без пароля
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOneCConnection'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/exchange/onec/connections/{id}/register:
+    post:
+      tags:
+        - Finance exchange
+      operationId: financeRegisterOneCNode
+      summary: Зарегистрировать Акеду в базе 1С
+      description: Регистрирует Акеду узлом обмена в плане «Синхронизация данных через универсальный формат» базы 1С и передаёт состав обмена. Пишет в базу 1С. После этого бухгалтер проходит мастер в 1С.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.exchange:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Подключение базы 1С без пароля
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOneCConnection'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/finance/accounts:
     get:
       tags:
@@ -28463,6 +28739,18 @@ paths:
           schema:
             type: string
             format: date
+        - name: from
+          in: query
+          description: Начало своего отрезка вместо месяца (вместе с to), например отчётной недели; ответ несёт один период с id range
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Конец своего отрезка включительно
+          schema:
+            type: string
+            format: date
       responses:
         '200':
           description: Декомпозиция за месяц
@@ -28470,6 +28758,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarketplaceOzonDecomposition'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -28871,6 +29161,18 @@ paths:
           schema:
             type: string
             format: date
+        - name: from
+          in: query
+          description: Начало своего отрезка вместо месяца (вместе с to), например отчётной недели; ответ несёт один период с id range
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          description: Конец своего отрезка включительно
+          schema:
+            type: string
+            format: date
       responses:
         '200':
           description: Декомпозиция за выбранный месяц
@@ -28878,6 +29180,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarketplaceWbDecomposition'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -55195,6 +55499,7 @@ components:
         - finance_purchase
         - finance_payment_allocation
         - finance_sale_return
+        - finance_advance_contact_transfer
     FinanceSettlementSourceAllocationInput:
       type: object
       additionalProperties: false
@@ -55255,7 +55560,11 @@ components:
         advance_id:
           type: string
           format: uuid
-          description: Обязателен для зачёта аванса
+          description: 'Обязателен для зачёта аванса и переноса аванса между контрагентами (finance_advance_contact_transfer): переносимый аванс; контрагент документа — получатель, источник — тот, за кем числится остаток'
+        order_id:
+          type: string
+          format: uuid
+          description: 'Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя; пусто — без заказа'
         pnl_item_id:
           type: string
           format: uuid
@@ -55451,6 +55760,178 @@ components:
         reason:
           type: string
           minLength: 1
+    FinanceOneCConnection:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - company_id
+        - company_name
+        - base_url
+        - username
+        - has_password
+        - format_version
+        - node_code
+        - node_prefix
+        - base_node_code
+        - base_name
+        - base_config_version
+        - setup_step
+        - sent_no
+        - received_no
+        - objects
+        - send_every_minutes
+        - receive_daily_at
+        - created_at
+        - updated_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        company_name:
+          type: string
+        base_url:
+          type: string
+          description: Адрес публикации базы 1С без хвоста /ws
+        username:
+          type: string
+        has_password:
+          type: boolean
+        format_version:
+          type: string
+          description: Версия EnterpriseData; пусто — старшая, которую назовёт база
+        node_code:
+          $ref: '#/components/schemas/UUID'
+        node_prefix:
+          type: string
+        base_node_code:
+          type: string
+        base_name:
+          type: string
+        base_config_version:
+          type: string
+        setup_step:
+          type: string
+          enum:
+            - access
+            - node
+            - wizard
+            - ready
+          description: access — доступ не проверен; node — узла Акеды в базе нет; wizard — бухгалтер не прошёл мастер в 1С; ready — обмен идёт
+        sent_no:
+          type: integer
+          format: int64
+          minimum: 0
+        received_no:
+          type: integer
+          format: int64
+          minimum: 0
+        objects:
+          $ref: '#/components/schemas/FinanceOneCObjects'
+        documents_since:
+          type: string
+          format: date
+        send_every_minutes:
+          type: integer
+          minimum: 5
+          maximum: 1440
+        receive_daily_at:
+          type: string
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+        errors_owner_user_id:
+          type: integer
+          format: int64
+        last_session_at:
+          type: string
+          format: date-time
+        last_error:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    FinanceOneCConnectionPage:
+      type: object
+      additionalProperties: false
+      required:
+        - count
+        - results
+      properties:
+        count:
+          type: integer
+          minimum: 0
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceOneCConnection'
+    FinanceOneCObjects:
+      type: object
+      description: Состав обмена — вид данных → включён.
+      additionalProperties: false
+      properties:
+        counterparties:
+          type: boolean
+        contracts:
+          type: boolean
+        services:
+          type: boolean
+        sales:
+          type: boolean
+        purchases:
+          type: boolean
+        bank:
+          type: boolean
+        cash:
+          type: boolean
+        payroll:
+          type: boolean
+        budget:
+          type: boolean
+        declarations:
+          type: boolean
+    FinanceOneCConnectionInput:
+      type: object
+      additionalProperties: false
+      required:
+        - company_id
+        - base_url
+        - username
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        base_url:
+          type: string
+          minLength: 1
+          description: 'Адрес публикации базы 1С: https://сервер/ИмяБазы'
+        username:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          format: password
+          writeOnly: true
+          description: Пароль пользователя 1С; вводится только на экране подключения, через MCP не передаётся
+        format_version:
+          type: string
+          pattern: ^(1\.[0-9]{1,3})?$
+        objects:
+          $ref: '#/components/schemas/FinanceOneCObjects'
+        documents_since:
+          type: string
+          format: date
+        send_every_minutes:
+          type: integer
+          minimum: 5
+          maximum: 1440
+        receive_daily_at:
+          type: string
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+        errors_owner_user_id:
+          type: integer
+          format: int64
     FinanceConnectorProviderKey:
       type: string
       enum:
@@ -67139,6 +67620,7 @@ components:
       required:
         - revenue
         - units
+        - avg_check
         - return_units
         - returns
         - returns_pct
@@ -67156,6 +67638,7 @@ components:
         - expenses
         - profit
         - margin_pct
+        - roi
         - rr_revenue
         - rr_profit
       properties:
@@ -67163,6 +67646,11 @@ components:
           type: integer
         units:
           type: integer
+        avg_check:
+          type:
+            - integer
+            - 'null'
+          description: 'Средний чек: выручка на проданную штуку; null без продаж'
         return_units:
           type: integer
         returns:
@@ -67207,6 +67695,11 @@ components:
           type:
             - number
             - 'null'
+        roi:
+          type:
+            - number
+            - 'null'
+          description: Прибыль к себестоимости по модулю, %; null без себестоимости
         rr_revenue:
           type: integer
           description: Выручка спроецированная на весь период
@@ -67263,6 +67756,7 @@ components:
           enum:
             - month
             - sprint
+            - range
         'n':
           type:
             - integer
@@ -68056,6 +68550,7 @@ components:
       required:
         - revenue
         - units
+        - avg_check
         - return_units
         - returns
         - returns_pct
@@ -68067,6 +68562,7 @@ components:
         - acceptance
         - penalty
         - deduction
+        - penalties_other
         - acquiring
         - other
         - internal_ad
@@ -68076,6 +68572,10 @@ components:
         - expenses
         - profit
         - margin_pct
+        - roi
+        - deliveries
+        - back_deliveries
+        - buyout_pct
         - rr_revenue
         - rr_profit
       description: Ячейка декомпозиции. Расходы приходят отрицательными числами.
@@ -68087,6 +68587,11 @@ components:
           type: integer
         units:
           type: integer
+        avg_check:
+          type:
+            - integer
+            - 'null'
+          description: 'Средний чек: выручка на проданную штуку; null без продаж'
         return_units:
           type: integer
         returns:
@@ -68116,6 +68621,9 @@ components:
           type: integer
         deduction:
           type: integer
+        penalties_other:
+          type: integer
+          description: Штрафы, удержания, компенсации и доплаты одной суммой
         acquiring:
           type: integer
         other:
@@ -68141,6 +68649,26 @@ components:
           type:
             - number
             - 'null'
+        roi:
+          type:
+            - number
+            - 'null'
+          description: Прибыль к себестоимости по модулю, %; null без себестоимости
+        deliveries:
+          type:
+            - integer
+            - 'null'
+          description: Доставки покупателю в штуках по строкам логистики отчёта; null — штук доставки за период нет в своде
+        back_deliveries:
+          type:
+            - integer
+            - 'null'
+          description: Обратные доставки в штуках по строкам логистики отчёта; null — штук доставки за период нет в своде
+        buyout_pct:
+          type:
+            - number
+            - 'null'
+          description: 'Выкуп: доставки минус обратные доставки к доставкам, %; null без доставок'
         rr_revenue:
           type: integer
           description: Выручка в прогнозе run-rate
@@ -68194,6 +68722,7 @@ components:
           enum:
             - month
             - sprint
+            - range
         'n':
           type:
             - integer
@@ -69103,6 +69632,51 @@ components:
             - unknown
           readOnly: true
           description: 'Безопасная классификация токена Wildberries без раскрытия токена: basic — ограниченный базовый, personal — персональный, test — тестовый, service — сервисный, unknown — тип не определён'
+        credential:
+          type: object
+          readOnly: true
+          additionalProperties: false
+          required:
+            - kind
+            - scopes
+            - read_only
+          description: 'Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена'
+          properties:
+            kind:
+              type: string
+              enum:
+                - basic
+                - personal
+                - test
+                - service
+                - unknown
+              description: Тип ключа по полю acc токена
+            scopes:
+              type: array
+              items:
+                type: string
+                enum:
+                  - content
+                  - analytics
+                  - prices
+                  - marketplace
+                  - statistics
+                  - promotion
+                  - feedbacks
+                  - chat
+                  - supplies
+                  - returns
+                  - documents
+                  - finance
+                  - users
+              description: Категории методов, к которым у ключа есть доступ
+            read_only:
+              type: boolean
+              description: Ключ только на чтение
+            expires_at:
+              type: string
+              format: date-time
+              description: Когда ключ перестанет работать
         connection_status:
           type: string
           enum:

@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 32f2394890124a31c23d652ff97a7d971ebb46140401e90d043667eb27d74b6d).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c4ace798ceb5b73f4f0c1e80df57d77999a90287645e6ba4cc63c73547d52ef6).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -8450,6 +8450,70 @@ type FinanceItemMergeResult struct {
 	Deleted    *bool                        `json:"deleted,omitempty"`
 }
 
+type FinanceOneCConnection struct {
+	ID          UUID   `json:"id"`
+	CompanyID   UUID   `json:"company_id"`
+	CompanyName string `json:"company_name"`
+	// BaseURL — Адрес публикации базы 1С без хвоста /ws
+	BaseURL     string `json:"base_url"`
+	Username    string `json:"username"`
+	HasPassword bool   `json:"has_password"`
+	// FormatVersion — Версия EnterpriseData; пусто — старшая, которую назовёт база
+	FormatVersion     string `json:"format_version"`
+	NodeCode          UUID   `json:"node_code"`
+	NodePrefix        string `json:"node_prefix"`
+	BaseNodeCode      string `json:"base_node_code"`
+	BaseName          string `json:"base_name"`
+	BaseConfigVersion string `json:"base_config_version"`
+	// SetupStep — access — доступ не проверен; node — узла Акеды в базе нет; wizard — бухгалтер не прошёл мастер в 1С; ready — обмен идёт
+	SetupStep         string             `json:"setup_step"`
+	SentNo            int64              `json:"sent_no"`
+	ReceivedNo        int64              `json:"received_no"`
+	Objects           FinanceOneCObjects `json:"objects"`
+	DocumentsSince    *string            `json:"documents_since,omitempty"`
+	SendEveryMinutes  int64              `json:"send_every_minutes"`
+	ReceiveDailyAt    string             `json:"receive_daily_at"`
+	ErrorsOwnerUserID *int64             `json:"errors_owner_user_id,omitempty"`
+	LastSessionAt     *string            `json:"last_session_at,omitempty"`
+	LastError         *string            `json:"last_error,omitempty"`
+	CreatedAt         string             `json:"created_at"`
+	UpdatedAt         string             `json:"updated_at"`
+}
+
+type FinanceOneCConnectionInput struct {
+	CompanyID UUID `json:"company_id"`
+	// BaseURL — Адрес публикации базы 1С: https://сервер/ИмяБазы
+	BaseURL  string `json:"base_url"`
+	Username string `json:"username"`
+	// Password — Пароль пользователя 1С; вводится только на экране подключения, через MCP не передаётся
+	Password          *string             `json:"password,omitempty"`
+	FormatVersion     *string             `json:"format_version,omitempty"`
+	Objects           *FinanceOneCObjects `json:"objects,omitempty"`
+	DocumentsSince    *string             `json:"documents_since,omitempty"`
+	SendEveryMinutes  *int64              `json:"send_every_minutes,omitempty"`
+	ReceiveDailyAt    *string             `json:"receive_daily_at,omitempty"`
+	ErrorsOwnerUserID *int64              `json:"errors_owner_user_id,omitempty"`
+}
+
+type FinanceOneCConnectionPage struct {
+	Count   int64                   `json:"count"`
+	Results []FinanceOneCConnection `json:"results"`
+}
+
+// FinanceOneCObjects — Состав обмена — вид данных → включён.
+type FinanceOneCObjects struct {
+	Counterparties *bool `json:"counterparties,omitempty"`
+	Contracts      *bool `json:"contracts,omitempty"`
+	Services       *bool `json:"services,omitempty"`
+	Sales          *bool `json:"sales,omitempty"`
+	Purchases      *bool `json:"purchases,omitempty"`
+	Bank           *bool `json:"bank,omitempty"`
+	Cash           *bool `json:"cash,omitempty"`
+	Payroll        *bool `json:"payroll,omitempty"`
+	Budget         *bool `json:"budget,omitempty"`
+	Declarations   *bool `json:"declarations,omitempty"`
+}
+
 type FinanceOpeningDebtRequest struct {
 	// Date — Дата остатков — дата старта учёта
 	Date       string `json:"date"`
@@ -9196,8 +9260,10 @@ type FinanceSettlementDocumentCreate struct {
 	// PaymentID — Оплата-источник аванса либо обязательная оплата для распределения
 	PaymentID *string                                  `json:"payment_id,omitempty"`
 	Sources   []FinanceSettlementSourceAllocationInput `json:"sources,omitempty"`
-	// AdvanceID — Обязателен для зачёта аванса
+	// AdvanceID — Обязателен для зачёта аванса и переноса аванса между контрагентами (finance_advance_contact_transfer): переносимый аванс; контрагент документа — получатель, источник — тот, за кем числится остаток
 	AdvanceID *string `json:"advance_id,omitempty"`
+	// OrderID — Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя; пусто — без заказа
+	OrderID *string `json:"order_id,omitempty"`
 	// PNLItemID — Обязательна для продажи и закупки
 	PNLItemID *string `json:"pnl_item_id,omitempty"`
 	// ProjectID — Путешествие или проект продажи и закупки
@@ -10514,8 +10580,10 @@ type MarketplaceOzonDecompositionArticle struct {
 }
 
 type MarketplaceOzonDecompositionCell struct {
-	Revenue          int64    `json:"revenue"`
-	Units            int64    `json:"units"`
+	Revenue int64 `json:"revenue"`
+	Units   int64 `json:"units"`
+	// AvgCheck — Средний чек: выручка на проданную штуку; null без продаж
+	AvgCheck         *int64   `json:"avg_check"`
 	ReturnUnits      int64    `json:"return_units"`
 	Returns          int64    `json:"returns"`
 	ReturnsPct       *float64 `json:"returns_pct"`
@@ -10533,6 +10601,8 @@ type MarketplaceOzonDecompositionCell struct {
 	Expenses         int64    `json:"expenses"`
 	Profit           int64    `json:"profit"`
 	MarginPct        *float64 `json:"margin_pct"`
+	// Roi — Прибыль к себестоимости по модулю, %; null без себестоимости
+	Roi *float64 `json:"roi"`
 	// RrRevenue — Выручка спроецированная на весь период
 	RrRevenue int64 `json:"rr_revenue"`
 	// RrProfit — Прибыль спроецированная на период; разовое не проецируется
@@ -10825,6 +10895,8 @@ type MarketplaceStore struct {
 	ConfigSyncedAt   *string `json:"config_synced_at,omitempty"`
 	// TokenClass — Безопасная классификация токена Wildberries без раскрытия токена: basic — ограниченный базовый, personal — персональный, test — тестовый, service — сервисный, unknown — тип не определён
 	TokenClass *string `json:"token_class,omitempty"`
+	// Credential — Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена
+	Credential *MarketplaceStoreCredential `json:"credential,omitempty"`
 	// ConnectionStatus — Безопасное состояние подключения в ERP: not_checked — проверка ещё не запускалась, pending — MPTrack проверяет реквизиты или запускает первую загрузку, disabled — загрузки отключены, ok — подключение работает, warning — требуется внимание, error — подключение не работает. Сырые статусы и тексты MPTrack не публикуются
 	ConnectionStatus string `json:"connection_status"`
 	// ConnectionErrorCode — Безопасный стабильный код состояния подключения; сырой текст ошибки не публикуется
@@ -10835,6 +10907,18 @@ type MarketplaceStore struct {
 	ArticleSizeSeparator *string `json:"article_size_separator,omitempty"`
 	// BusinessID — Бизнес магазина — бизнес юрлица из учётных настроек; по нему магазин и его отчёты сужаются областью доступа участника. null — юрлицо ещё не выбрано в кабинете с несколькими бизнесами: такой магазин видит только доступ ко всем бизнесам
 	BusinessID *UUID `json:"business_id,omitempty"`
+}
+
+// MarketplaceStoreCredential — Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена
+type MarketplaceStoreCredential struct {
+	// Kind — Тип ключа по полю acc токена
+	Kind string `json:"kind"`
+	// Scopes — Категории методов, к которым у ключа есть доступ
+	Scopes []string `json:"scopes"`
+	// ReadOnly — Ключ только на чтение
+	ReadOnly bool `json:"read_only"`
+	// ExpiresAt — Когда ключ перестанет работать
+	ExpiresAt *string `json:"expires_at,omitempty"`
 }
 
 // MarketplaceStoreInput — Тело создания управляемого подключения. Платформу задаёт маршрут, а external_id назначает MPTrack. Для Ozon нужны ozon_client_id и ozon_api_key, для Wildberries — wb_token, для Яндекс Маркета — ym_business_id и ym_api_key.
@@ -11072,9 +11156,11 @@ type MarketplaceWbDecompositionPeriod struct {
 // MarketplaceWbMetricCell — Ячейка декомпозиции. Расходы приходят отрицательными числами.
 type MarketplaceWbMetricCell struct {
 	// ID — Идентификатор блока; присутствует только в итогах периода
-	ID          *string  `json:"id,omitempty"`
-	Revenue     int64    `json:"revenue"`
-	Units       int64    `json:"units"`
+	ID      *string `json:"id,omitempty"`
+	Revenue int64   `json:"revenue"`
+	Units   int64   `json:"units"`
+	// AvgCheck — Средний чек: выручка на проданную штуку; null без продаж
+	AvgCheck    *int64   `json:"avg_check"`
 	ReturnUnits int64    `json:"return_units"`
 	Returns     int64    `json:"returns"`
 	ReturnsPct  *float64 `json:"returns_pct"`
@@ -11087,7 +11173,9 @@ type MarketplaceWbMetricCell struct {
 	Acceptance       int64    `json:"acceptance"`
 	Penalty          int64    `json:"penalty"`
 	Deduction        int64    `json:"deduction"`
-	Acquiring        int64    `json:"acquiring"`
+	// PenaltiesOther — Штрафы, удержания, компенсации и доплаты одной суммой
+	PenaltiesOther int64 `json:"penalties_other"`
+	Acquiring      int64 `json:"acquiring"`
 	// Other — Компенсации и прочие операции
 	Other int64 `json:"other"`
 	// InternalAd — Внутренняя реклама WB
@@ -11099,6 +11187,14 @@ type MarketplaceWbMetricCell struct {
 	Expenses  int64    `json:"expenses"`
 	Profit    int64    `json:"profit"`
 	MarginPct *float64 `json:"margin_pct"`
+	// Roi — Прибыль к себестоимости по модулю, %; null без себестоимости
+	Roi *float64 `json:"roi"`
+	// Deliveries — Доставки покупателю в штуках по строкам логистики отчёта; null — штук доставки за период нет в своде
+	Deliveries *int64 `json:"deliveries"`
+	// BackDeliveries — Обратные доставки в штуках по строкам логистики отчёта; null — штук доставки за период нет в своде
+	BackDeliveries *int64 `json:"back_deliveries"`
+	// BuyoutPct — Выкуп: доставки минус обратные доставки к доставкам, %; null без доставок
+	BuyoutPct *float64 `json:"buyout_pct"`
 	// RrRevenue — Выручка в прогнозе run-rate
 	RrRevenue int64 `json:"rr_revenue"`
 	// RrProfit — Прибыль в прогнозе run-rate; штрафы, удержания и прочее не проецируются

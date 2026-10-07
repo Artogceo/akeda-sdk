@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 32f2394890124a31c23d652ff97a7d971ebb46140401e90d043667eb27d74b6d).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c4ace798ceb5b73f4f0c1e80df57d77999a90287645e6ba4cc63c73547d52ef6).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -761,6 +761,10 @@ __all__ = [
     "FinanceExpenseReportRow",
     "FinanceItemMergeRequest",
     "FinanceItemMergeResult",
+    "FinanceOneCConnection",
+    "FinanceOneCConnectionInput",
+    "FinanceOneCConnectionPage",
+    "FinanceOneCObjects",
     "FinanceOpeningDebtRequest",
     "FinanceOperation",
     "FinanceOperationAccrualAllocation",
@@ -959,6 +963,7 @@ __all__ = [
     "MarketplaceOzonSyncJob",
     "MarketplaceOzonSyncJobList",
     "MarketplaceStore",
+    "MarketplaceStoreCredential",
     "MarketplaceStoreInput",
     "MarketplaceStorePage",
     "MarketplaceWbCardAdDay",
@@ -9920,6 +9925,71 @@ class FinanceItemMergeResult(TypedDict, total=False):
     totals: List[Dict[str, Any]]
     deleted: bool
 
+class _FinanceOneCConnectionRequired(TypedDict):
+    id: "UUID"
+    company_id: "UUID"
+    company_name: str
+    #: Адрес публикации базы 1С без хвоста /ws
+    base_url: str
+    username: str
+    has_password: bool
+    #: Версия EnterpriseData; пусто — старшая, которую назовёт база
+    format_version: str
+    node_code: "UUID"
+    node_prefix: str
+    base_node_code: str
+    base_name: str
+    base_config_version: str
+    #: access — доступ не проверен; node — узла Акеды в базе нет; wizard — бухгалтер не прошёл мастер в 1С; ready — обмен идёт
+    setup_step: Literal['access', 'node', 'wizard', 'ready']
+    sent_no: int
+    received_no: int
+    objects: "FinanceOneCObjects"
+    send_every_minutes: int
+    receive_daily_at: str
+    created_at: str
+    updated_at: str
+
+class FinanceOneCConnection(_FinanceOneCConnectionRequired, total=False):
+    documents_since: str
+    errors_owner_user_id: int
+    last_session_at: str
+    last_error: str
+
+class _FinanceOneCConnectionInputRequired(TypedDict):
+    company_id: "UUID"
+    #: Адрес публикации базы 1С: https://сервер/ИмяБазы
+    base_url: str
+    username: str
+
+class FinanceOneCConnectionInput(_FinanceOneCConnectionInputRequired, total=False):
+    #: Пароль пользователя 1С; вводится только на экране подключения, через MCP не передаётся
+    password: str
+    format_version: str
+    objects: "FinanceOneCObjects"
+    documents_since: str
+    send_every_minutes: int
+    receive_daily_at: str
+    errors_owner_user_id: int
+
+class FinanceOneCConnectionPage(TypedDict):
+    count: int
+    results: List["FinanceOneCConnection"]
+
+class FinanceOneCObjects(TypedDict, total=False):
+    """Состав обмена — вид данных → включён."""
+
+    counterparties: bool
+    contracts: bool
+    services: bool
+    sales: bool
+    purchases: bool
+    bank: bool
+    cash: bool
+    payroll: bool
+    budget: bool
+    declarations: bool
+
 class _FinanceOpeningDebtRequestRequired(TypedDict):
     #: Дата остатков — дата старта учёта
     date: str
@@ -10588,8 +10658,10 @@ class FinanceSettlementDocumentCreate(_FinanceSettlementDocumentCreateRequired, 
     #: Оплата-источник аванса либо обязательная оплата для распределения
     payment_id: str
     sources: List["FinanceSettlementSourceAllocationInput"]
-    #: Обязателен для зачёта аванса
+    #: Обязателен для зачёта аванса и переноса аванса между контрагентами (finance_advance_contact_transfer): переносимый аванс; контрагент документа — получатель, источник — тот, за кем числится остаток
     advance_id: str
+    #: Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя; пусто — без заказа
+    order_id: str
     #: Обязательна для продажи и закупки
     pnl_item_id: str
     #: Путешествие или проект продажи и закупки
@@ -10613,7 +10685,7 @@ class FinanceSettlementDocumentCreate(_FinanceSettlementDocumentCreateRequired, 
     #: Только вместе со строками: цены строк включают налог (умолчание) либо налог начисляется сверху
     prices_include_vat: bool
 
-FinanceSettlementDocumentType = Literal['finance_settlement_baseline', 'finance_receivable_opening', 'finance_receivable', 'finance_payable_opening', 'finance_payable', 'finance_advance', 'finance_advance_offset', 'finance_sale', 'finance_purchase', 'finance_payment_allocation', 'finance_sale_return']
+FinanceSettlementDocumentType = Literal['finance_settlement_baseline', 'finance_receivable_opening', 'finance_receivable', 'finance_payable_opening', 'finance_payable', 'finance_advance', 'finance_advance_offset', 'finance_sale', 'finance_purchase', 'finance_payment_allocation', 'finance_sale_return', 'finance_advance_contact_transfer']
 
 class FinanceSettlementExposure(TypedDict):
     available: bool
@@ -11905,6 +11977,8 @@ class MarketplaceOzonDecompositionArticle(_MarketplaceOzonDecompositionArticleRe
 class _MarketplaceOzonDecompositionCellRequired(TypedDict):
     revenue: int
     units: int
+    #: Средний чек: выручка на проданную штуку; null без продаж
+    avg_check: Optional[int]
     return_units: int
     returns: int
     returns_pct: Optional[float]
@@ -11922,6 +11996,8 @@ class _MarketplaceOzonDecompositionCellRequired(TypedDict):
     expenses: int
     profit: int
     margin_pct: Optional[float]
+    #: Прибыль к себестоимости по модулю, %; null без себестоимости
+    roi: Optional[float]
     #: Выручка спроецированная на весь период
     rr_revenue: int
     #: Прибыль спроецированная на период; разовое не проецируется
@@ -11953,7 +12029,7 @@ class MarketplaceOzonDecompositionOtherItem(TypedDict):
 class MarketplaceOzonDecompositionPeriod(TypedDict):
     #: month для накопительной колонки, иначе s и номер спринта
     id: str
-    kind: Literal['month', 'sprint']
+    kind: Literal['month', 'sprint', 'range']
     #: Номер спринта; null у накопительной колонки
     n: Optional[int]
     label: str
@@ -12193,6 +12269,8 @@ class MarketplaceStore(_MarketplaceStoreRequired, total=False):
     config_synced_at: str
     #: Безопасная классификация токена Wildberries без раскрытия токена: basic — ограниченный базовый, personal — персональный, test — тестовый, service — сервисный, unknown — тип не определён
     token_class: Literal['basic', 'personal', 'test', 'service', 'unknown']
+    #: Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена
+    credential: "MarketplaceStoreCredential"
     #: Безопасный стабильный код состояния подключения; сырой текст ошибки не публикуется
     connection_error_code: str
     #: Момент последней успешной загрузки этого подключения
@@ -12201,6 +12279,20 @@ class MarketplaceStore(_MarketplaceStoreRequired, total=False):
     article_size_separator: Literal['', '-', '/', '_']
     #: Бизнес магазина — бизнес юрлица из учётных настроек; по нему магазин и его отчёты сужаются областью доступа участника. null — юрлицо ещё не выбрано в кабинете с несколькими бизнесами: такой магазин видит только доступ ко всем бизнесам
     business_id: Optional["UUID"]
+
+class _MarketplaceStoreCredentialRequired(TypedDict):
+    #: Тип ключа по полю acc токена
+    kind: Literal['basic', 'personal', 'test', 'service', 'unknown']
+    #: Категории методов, к которым у ключа есть доступ
+    scopes: List[Literal['content', 'analytics', 'prices', 'marketplace', 'statistics', 'promotion', 'feedbacks', 'chat', 'supplies', 'returns', 'documents', 'finance', 'users']]
+    #: Ключ только на чтение
+    read_only: bool
+
+class MarketplaceStoreCredential(_MarketplaceStoreCredentialRequired, total=False):
+    """Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена"""
+
+    #: Когда ключ перестанет работать
+    expires_at: str
 
 class _MarketplaceStoreInputRequired(TypedDict):
     name: str
@@ -12422,7 +12514,7 @@ class MarketplaceWbDecompositionOther(TypedDict):
 class MarketplaceWbDecompositionPeriod(TypedDict):
     #: Идентификатор блока: month либо s с номером спринта
     id: str
-    kind: Literal['month', 'sprint']
+    kind: Literal['month', 'sprint', 'range']
     #: Номер спринта внутри месяца
     n: Optional[int]
     label: str
@@ -12437,6 +12529,8 @@ class MarketplaceWbDecompositionPeriod(TypedDict):
 class _MarketplaceWbMetricCellRequired(TypedDict):
     revenue: int
     units: int
+    #: Средний чек: выручка на проданную штуку; null без продаж
+    avg_check: Optional[int]
     return_units: int
     returns: int
     returns_pct: Optional[float]
@@ -12449,6 +12543,8 @@ class _MarketplaceWbMetricCellRequired(TypedDict):
     acceptance: int
     penalty: int
     deduction: int
+    #: Штрафы, удержания, компенсации и доплаты одной суммой
+    penalties_other: int
     acquiring: int
     #: Компенсации и прочие операции
     other: int
@@ -12461,6 +12557,14 @@ class _MarketplaceWbMetricCellRequired(TypedDict):
     expenses: int
     profit: int
     margin_pct: Optional[float]
+    #: Прибыль к себестоимости по модулю, %; null без себестоимости
+    roi: Optional[float]
+    #: Доставки покупателю в штуках по строкам логистики отчёта; null — штук доставки за период нет в своде
+    deliveries: Optional[int]
+    #: Обратные доставки в штуках по строкам логистики отчёта; null — штук доставки за период нет в своде
+    back_deliveries: Optional[int]
+    #: Выкуп: доставки минус обратные доставки к доставкам, %; null без доставок
+    buyout_pct: Optional[float]
     #: Выручка в прогнозе run-rate
     rr_revenue: int
     #: Прибыль в прогнозе run-rate; штрафы, удержания и прочее не проецируются

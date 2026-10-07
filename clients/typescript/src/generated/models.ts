@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 32f2394890124a31c23d652ff97a7d971ebb46140401e90d043667eb27d74b6d).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 c4ace798ceb5b73f4f0c1e80df57d77999a90287645e6ba4cc63c73547d52ef6).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -8473,6 +8473,70 @@ export interface FinanceItemMergeResult {
   "deleted"?: boolean;
 }
 
+export interface FinanceOneCConnection {
+  "id": UUID;
+  "company_id": UUID;
+  "company_name": string;
+  /** Адрес публикации базы 1С без хвоста /ws */
+  "base_url": string;
+  "username": string;
+  "has_password": boolean;
+  /** Версия EnterpriseData; пусто — старшая, которую назовёт база */
+  "format_version": string;
+  "node_code": UUID;
+  "node_prefix": string;
+  "base_node_code": string;
+  "base_name": string;
+  "base_config_version": string;
+  /** access — доступ не проверен; node — узла Акеды в базе нет; wizard — бухгалтер не прошёл мастер в 1С; ready — обмен идёт */
+  "setup_step": "access" | "node" | "wizard" | "ready";
+  "sent_no": number;
+  "received_no": number;
+  "objects": FinanceOneCObjects;
+  "documents_since"?: string;
+  "send_every_minutes": number;
+  "receive_daily_at": string;
+  "errors_owner_user_id"?: number;
+  "last_session_at"?: string;
+  "last_error"?: string;
+  "created_at": string;
+  "updated_at": string;
+}
+
+export interface FinanceOneCConnectionInput {
+  "company_id": UUID;
+  /** Адрес публикации базы 1С: https://сервер/ИмяБазы */
+  "base_url": string;
+  "username": string;
+  /** Пароль пользователя 1С; вводится только на экране подключения, через MCP не передаётся */
+  "password"?: string;
+  "format_version"?: string;
+  "objects"?: FinanceOneCObjects;
+  "documents_since"?: string;
+  "send_every_minutes"?: number;
+  "receive_daily_at"?: string;
+  "errors_owner_user_id"?: number;
+}
+
+export interface FinanceOneCConnectionPage {
+  "count": number;
+  "results": Array<FinanceOneCConnection>;
+}
+
+/** Состав обмена — вид данных → включён. */
+export interface FinanceOneCObjects {
+  "counterparties"?: boolean;
+  "contracts"?: boolean;
+  "services"?: boolean;
+  "sales"?: boolean;
+  "purchases"?: boolean;
+  "bank"?: boolean;
+  "cash"?: boolean;
+  "payroll"?: boolean;
+  "budget"?: boolean;
+  "declarations"?: boolean;
+}
+
 export interface FinanceOpeningDebtRequest {
   /** Дата остатков — дата старта учёта */
   "date": string;
@@ -9219,8 +9283,10 @@ export interface FinanceSettlementDocumentCreate {
   /** Оплата-источник аванса либо обязательная оплата для распределения */
   "payment_id"?: string;
   "sources"?: Array<FinanceSettlementSourceAllocationInput>;
-  /** Обязателен для зачёта аванса */
+  /** Обязателен для зачёта аванса и переноса аванса между контрагентами (finance_advance_contact_transfer): переносимый аванс; контрагент документа — получатель, источник — тот, за кем числится остаток */
   "advance_id"?: string;
+  /** Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя; пусто — без заказа */
+  "order_id"?: string;
   /** Обязательна для продажи и закупки */
   "pnl_item_id"?: string;
   /** Путешествие или проект продажи и закупки */
@@ -9245,7 +9311,7 @@ export interface FinanceSettlementDocumentCreate {
   "prices_include_vat"?: boolean;
 }
 
-export type FinanceSettlementDocumentType = "finance_settlement_baseline" | "finance_receivable_opening" | "finance_receivable" | "finance_payable_opening" | "finance_payable" | "finance_advance" | "finance_advance_offset" | "finance_sale" | "finance_purchase" | "finance_payment_allocation" | "finance_sale_return";
+export type FinanceSettlementDocumentType = "finance_settlement_baseline" | "finance_receivable_opening" | "finance_receivable" | "finance_payable_opening" | "finance_payable" | "finance_advance" | "finance_advance_offset" | "finance_sale" | "finance_purchase" | "finance_payment_allocation" | "finance_sale_return" | "finance_advance_contact_transfer";
 
 export interface FinanceSettlementExposure {
   "available": boolean;
@@ -10539,6 +10605,8 @@ export interface MarketplaceOzonDecompositionArticle {
 export interface MarketplaceOzonDecompositionCell {
   "revenue": number;
   "units": number;
+  /** Средний чек: выручка на проданную штуку; null без продаж */
+  "avg_check": number | null;
   "return_units": number;
   "returns": number;
   "returns_pct": number | null;
@@ -10556,6 +10624,8 @@ export interface MarketplaceOzonDecompositionCell {
   "expenses": number;
   "profit": number;
   "margin_pct": number | null;
+  /** Прибыль к себестоимости по модулю, %; null без себестоимости */
+  "roi": number | null;
   /** Выручка спроецированная на весь период */
   "rr_revenue": number;
   /** Прибыль спроецированная на период; разовое не проецируется */
@@ -10589,7 +10659,7 @@ export interface MarketplaceOzonDecompositionOtherItem {
 export interface MarketplaceOzonDecompositionPeriod {
   /** month для накопительной колонки, иначе s и номер спринта */
   "id": string;
-  "kind": "month" | "sprint";
+  "kind": "month" | "sprint" | "range";
   /** Номер спринта; null у накопительной колонки */
   "n": number | null;
   "label": string;
@@ -10848,6 +10918,8 @@ export interface MarketplaceStore {
   "config_synced_at"?: string;
   /** Безопасная классификация токена Wildberries без раскрытия токена: basic — ограниченный базовый, personal — персональный, test — тестовый, service — сервисный, unknown — тип не определён */
   "token_class"?: "basic" | "personal" | "test" | "service" | "unknown";
+  /** Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена */
+  "credential"?: MarketplaceStoreCredential;
   /** Безопасное состояние подключения в ERP: not_checked — проверка ещё не запускалась, pending — MPTrack проверяет реквизиты или запускает первую загрузку, disabled — загрузки отключены, ok — подключение работает, warning — требуется внимание, error — подключение не работает. Сырые статусы и тексты MPTrack не публикуются */
   "connection_status": "not_checked" | "pending" | "disabled" | "ok" | "warning" | "error";
   /** Безопасный стабильный код состояния подключения; сырой текст ошибки не публикуется */
@@ -10858,6 +10930,18 @@ export interface MarketplaceStore {
   "article_size_separator"?: "" | "-" | "/" | "_";
   /** Бизнес магазина — бизнес юрлица из учётных настроек; по нему магазин и его отчёты сужаются областью доступа участника. null — юрлицо ещё не выбрано в кабинете с несколькими бизнесами: такой магазин видит только доступ ко всем бизнесам */
   "business_id"?: UUID | null;
+}
+
+/** Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена */
+export interface MarketplaceStoreCredential {
+  /** Тип ключа по полю acc токена */
+  "kind": "basic" | "personal" | "test" | "service" | "unknown";
+  /** Категории методов, к которым у ключа есть доступ */
+  "scopes": Array<"content" | "analytics" | "prices" | "marketplace" | "statistics" | "promotion" | "feedbacks" | "chat" | "supplies" | "returns" | "documents" | "finance" | "users">;
+  /** Ключ только на чтение */
+  "read_only": boolean;
+  /** Когда ключ перестанет работать */
+  "expires_at"?: string;
 }
 
 /** Тело создания управляемого подключения. Платформу задаёт маршрут, а external_id назначает MPTrack. Для Ozon нужны ozon_client_id и ozon_api_key, для Wildberries — wb_token, для Яндекс Маркета — ym_business_id и ym_api_key. */
@@ -11079,7 +11163,7 @@ export interface MarketplaceWbDecompositionOther {
 export interface MarketplaceWbDecompositionPeriod {
   /** Идентификатор блока: month либо s с номером спринта */
   "id": string;
-  "kind": "month" | "sprint";
+  "kind": "month" | "sprint" | "range";
   /** Номер спринта внутри месяца */
   "n": number | null;
   "label": string;
@@ -11098,6 +11182,8 @@ export interface MarketplaceWbMetricCell {
   "id"?: string;
   "revenue": number;
   "units": number;
+  /** Средний чек: выручка на проданную штуку; null без продаж */
+  "avg_check": number | null;
   "return_units": number;
   "returns": number;
   "returns_pct": number | null;
@@ -11110,6 +11196,8 @@ export interface MarketplaceWbMetricCell {
   "acceptance": number;
   "penalty": number;
   "deduction": number;
+  /** Штрафы, удержания, компенсации и доплаты одной суммой */
+  "penalties_other": number;
   "acquiring": number;
   /** Компенсации и прочие операции */
   "other": number;
@@ -11122,6 +11210,14 @@ export interface MarketplaceWbMetricCell {
   "expenses": number;
   "profit": number;
   "margin_pct": number | null;
+  /** Прибыль к себестоимости по модулю, %; null без себестоимости */
+  "roi": number | null;
+  /** Доставки покупателю в штуках по строкам логистики отчёта; null — штук доставки за период нет в своде */
+  "deliveries": number | null;
+  /** Обратные доставки в штуках по строкам логистики отчёта; null — штук доставки за период нет в своде */
+  "back_deliveries": number | null;
+  /** Выкуп: доставки минус обратные доставки к доставкам, %; null без доставок */
+  "buyout_pct": number | null;
   /** Выручка в прогнозе run-rate */
   "rr_revenue": number;
   /** Прибыль в прогнозе run-rate; штрафы, удержания и прочее не проецируются */
