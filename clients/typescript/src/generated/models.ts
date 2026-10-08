@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e278ecc6f3db3051c024549b7129364efc3ac4920445da2f2eb464f464f210cb).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3c581e130f57cf5a137bcc64a450f9997a217c7b8ccf491799d22139003f6b12).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -323,6 +323,101 @@ export interface AttachmentUploadSessionCreate {
   "sha256"?: string;
 }
 
+/**
+ * Установка приложения кабинета глазами действия «Передать приложению»
+ * (`platform.deliver_to_app`). Передача — адресное событие
+ * `app.automation.delivered.v1` только этой установке; готова та,
+ * что включена, имеет адрес доставки, подписана на тему и получила от
+ * кабинета право `app.automation:read`. Права и адрес не возвращаются.
+ */
+export interface AutomationAppInstallation {
+  /** Идентификатор установки — вход installation_id действия */
+  "id": string;
+  /** Название приложения */
+  "title": string;
+  /** Издатель */
+  "publisher": string;
+  /** Ключ приложения у издателя */
+  "app_key": string;
+  /** Установка включена, издатель, приложение и версия не выключены платформой */
+  "active": boolean;
+  /** У установки есть адрес доставки событий */
+  "receiver": boolean;
+  /** Манифест версии подписан на app.automation.delivered.v1 */
+  "subscribed": boolean;
+  /** Кабинет дал право app.automation:read */
+  "granted": boolean;
+  /** Передача дойдёт до установки */
+  "ready": boolean;
+  /** Первая причина, по которой не дойдёт; пусто у готовой */
+  "missing"?: "app_installation_disabled" | "app_no_receiver" | "app_consent_missing";
+}
+
+/** Внешнее подключение автоматизаций. Секрет не возвращается — только признак has_secret. */
+export interface AutomationConnection {
+  "id": string;
+  "name": string;
+  /** Базовый адрес; путь действия дописывается к нему */
+  "base_url": string;
+  /** Разрешённый домен: вызов уходит только на него */
+  "host": string;
+  /** Способ авторизации */
+  "auth_kind": "none" | "header" | "bearer" | "basic" | "hmac";
+  /** Имя заголовка с секретом при способе header */
+  "auth_header"?: string;
+  /** Логин при способе basic */
+  "basic_user"?: string;
+  /** Задан ли секрет; сам секрет не возвращается */
+  "has_secret": boolean;
+  "enabled": boolean;
+  "last_check"?: AutomationConnectionCheck;
+  "created_by": number;
+  "created_at": string;
+  "updated_at": string;
+}
+
+/** Последняя проверка подключения по кнопке на экране. */
+export interface AutomationConnectionCheck {
+  "at": string;
+  "ok": boolean;
+  /** HTTP-статус ответа приёмника */
+  "status"?: number;
+  "duration_ms": number;
+  /** Почему не ответил; нет поля — ответил */
+  "code"?: "unreachable" | "blocked" | "timeout" | "http_error";
+}
+
+export interface AutomationEnableActionsItem {
+  "index": number;
+  "command": string;
+  "label": string;
+}
+
+export type AutomationEnableActions = Array<AutomationEnableActionsItem>;
+
+export interface AutomationEnablePreview {
+  "rule_id": string;
+  "name": string;
+  "version": number;
+  "event_type": string;
+  "event_label": string;
+  "executor_user_id": number;
+  "external_actions": AutomationEnableActions;
+  "posting_actions": AutomationEnableActions;
+  "required": Array<"allow_external_send" | "allow_money_posting">;
+  "simulated": boolean;
+  "simulation_message"?: string;
+  "days": number;
+  "events": number;
+  "fired": number;
+  "truncated": boolean;
+  /** Сколько отправок наружу ушло бы за период */
+  "external_sends": number;
+  /** Сколько учётных документов и движений выпустило бы правило за период */
+  "postings": number;
+  "executed": boolean;
+}
+
 /** Документ akeda.automation.manifest версии 1 (AUTOMATION.md § 10.1). */
 export interface AutomationManifest {
   "$schema"?: string;
@@ -335,8 +430,12 @@ export interface AutomationManifest {
   "events": Array<AutomationManifestEvent>;
   "conditions": AutomationManifestConditions;
   "actions": Array<AutomationManifestAction>;
+  /** Блок «Когда выполнить» (ERP-1928): виды, единицы, повторы расписания, события отмены; отборы записей по расписанию — selections (ERP-1939). Полная схема — docs/architecture/automation/manifest.schema.json */
+  "timing"?: AutomationManifestTiming;
   "references": Array<AutomationManifestReferencesItem>;
   "placeholders": Array<AutomationManifestPlaceholdersItem>;
+  /** Ветки «Если ещё / Иначе», пауза «Подождать» и ссылки на результаты шагов (ERP-1932) */
+  "blocks"?: { [key: string]: unknown };
   "limits": AutomationManifestLimits;
 }
 
@@ -353,6 +452,26 @@ export interface AutomationManifestConditionsOperatorsItem {
   "field_types": Array<string>;
   "needs_value": boolean;
   "case_insensitive": boolean;
+}
+
+/** Блок «Когда выполнить» (ERP-1928): виды, единицы, повторы расписания, события отмены; отборы записей по расписанию — selections (ERP-1939). Полная схема — docs/architecture/automation/manifest.schema.json */
+export interface AutomationManifestTiming {
+  /** Сколько записей отбора берёт один запуск расписания */
+  "max_selection_records"?: number;
+  "selections"?: Array<AutomationManifestTimingSelectionsItem>;
+}
+
+export interface AutomationManifestTimingSelectionsItem {
+  "key": string;
+  "module": string;
+  /** Объект записи: действия над записью события берутся по нему */
+  "object": string;
+  "entity": string;
+  "label": string;
+  "description"?: string;
+  "status": "live" | "unavailable";
+  "params": Array<{ [key: string]: unknown }>;
+  "fields": Array<{ [key: string]: unknown }>;
 }
 
 export interface AutomationManifestReferencesItem {
@@ -391,23 +510,33 @@ export interface AutomationManifestAction {
   "unavailable_reason"?: string;
   "permission": string;
   "reversible": boolean;
-  "danger": "none" | "external" | "irreversible";
+  "danger": "none" | "external" | "posting" | "irreversible";
   "idempotency": string;
   "target": "new" | "event_entity";
   "event_entities"?: Array<string>;
   "mcp_twin"?: string;
   "inputs"?: Array<AutomationManifestActionInputsItem>;
   "example_inputs"?: { [key: string]: string };
+  /** Результаты шага для следующих шагов пути: {{step:<id шага>.<key>}} (ERP-1932) */
+  "outputs"?: Array<AutomationManifestActionOutputsItem>;
 }
 
 export interface AutomationManifestActionInputsItem {
   "key": string;
-  "type": "string" | "number" | "bool" | "reference" | "datetime" | "choice";
+  /** reference_list — несколько значений справочника ref через запятую, например группа распределения ответственного (ERP-1938) */
+  "type": "string" | "number" | "bool" | "reference" | "datetime" | "choice" | "event_date" | "time" | "json" | "headers" | "code" | "reference_list";
   "required": boolean;
   "label": string;
   "options"?: Array<AutomationManifestOption>;
   "ref"?: string;
   "accepts_placeholders": boolean;
+}
+
+export interface AutomationManifestActionOutputsItem {
+  "key": string;
+  "type": "string" | "number" | "reference";
+  "ref"?: string;
+  "label": string;
 }
 
 export interface AutomationManifestEvent {
@@ -434,11 +563,60 @@ export interface AutomationManifestEventFieldsItem {
   "options"?: Array<AutomationManifestOption>;
   "ref"?: string;
   "operators": Array<string>;
+  /** custom — своё поле кабинета, webhook — поле тела входящего вебхука body.<путь> (ERP-1938), selection — поле записи отбора по расписанию (ERP-1939) */
+  "group"?: "custom" | "webhook" | "selection";
+  /** У поля тела вебхука — вебхуки, в образце которых оно есть */
+  "hooks"?: Array<string>;
 }
 
 export interface AutomationManifestOption {
   "value": string;
   "label": string;
+}
+
+/**
+ * Шаг пути правила (ERP-1932): действие каталога или пауза «Подождать»
+ * (`kind: wait`). `id` — устойчивый id шага: журнал, ключ повтора и
+ * ссылки `{{step:<id>.<результат>}}` во входах следующих шагов того же
+ * пути. Пусто — сервер ставит a1, a2 … (пауза — w1 …).
+ */
+export interface AutomationRuleBlock {
+  "id"?: string;
+  /** Пусто — действие */
+  "kind"?: "action" | "wait";
+  "command"?: string;
+  "inputs"?: { [key: string]: string };
+  /** Пауза: after_event — через amount единиц unit от начала паузы; relative_to_field — до даты поля field (± amount); cancel_on — события, факт которых по той же записи прекращает правило */
+  "wait"?: AutomationRuleBlockWait;
+}
+
+/** Пауза: after_event — через amount единиц unit от начала паузы; relative_to_field — до даты поля field (± amount); cancel_on — события, факт которых по той же записи прекращает правило */
+export interface AutomationRuleBlockWait {
+  "kind"?: "after_event" | "relative_to_field";
+  "amount"?: number;
+  "unit"?: "minutes" | "hours" | "days" | "working_days";
+  "direction"?: "before" | "after";
+  "field"?: string;
+  "at"?: string;
+  "cancel_on"?: Array<string>;
+}
+
+/** «Если ещё …»: своё условие сравнениями и свои шаги */
+export interface AutomationRuleBranch {
+  "id"?: string;
+  /** Выражение, собранное сервером из conditions */
+  "condition"?: string;
+  "conditions": Array<AutomationRuleBranchConditionsItem>;
+  "actions": Array<AutomationRuleBlock>;
+}
+
+export interface AutomationRuleBranchConditionsItem {
+  "field": string;
+  "op": string;
+  "value"?: string;
+  "value_to"?: string;
+  "of"?: string;
+  "group"?: number;
 }
 
 export interface AutomationRuleDocument {
@@ -448,7 +626,14 @@ export interface AutomationRuleDocument {
   /** Выражение вычислителя; у правила из конструктора собрано из conditions */
   "condition": string;
   "conditions": Array<AutomationRuleDocumentConditionsItem>;
-  "actions": Array<AutomationRuleDocumentActionsItem>;
+  /** Путь «Если да»: действия и паузы по порядку (ERP-1932) */
+  "actions": Array<AutomationRuleBlock>;
+  /** «Если ещё …»: до трёх путей со своим условием, проверяются по порядку */
+  "branches"?: Array<AutomationRuleBranch>;
+  /** «Иначе»: блоки, когда не подошло ни одно условие; пусто — правило промолчит */
+  "otherwise"?: Array<AutomationRuleBlock>;
+  /** Версия языка документа правила (rule.schema.json); 2 — пути, паузы и результаты шагов */
+  "doc_version"?: number;
   "executor_user_id": number;
   "is_enabled": boolean;
   "origin": "manual" | "configuration";
@@ -467,9 +652,27 @@ export interface AutomationRuleDocumentConditionsItem {
   "group"?: number;
 }
 
-export interface AutomationRuleDocumentActionsItem {
-  "command": string;
-  "inputs"?: { [key: string]: string };
+/** Документ правила в той же форме, что у записи с экрана и у проверки; новые поля документа принимаются без смены этой схемы. Правка без branches и otherwise сохраняет прежние ветки; убрать их — прислать пустые списки. */
+export interface AutomationRuleDraft {
+  "name"?: string;
+  "event_type": string;
+  "conditions"?: Array<AutomationRuleDraftConditionsItem>;
+  "actions"?: Array<AutomationRuleBlock>;
+  "branches"?: Array<AutomationRuleBranch>;
+  "otherwise"?: Array<AutomationRuleBlock>;
+}
+
+export interface AutomationRuleDraftConditionsItem {
+  "field": string;
+  "op": string;
+  "value"?: string;
+  "value_to"?: string;
+  "of"?: string;
+  "group"?: number;
+}
+
+export interface AutomationRuleEnvelope {
+  "rule": AutomationRuleDocument;
 }
 
 export interface AutomationRuleProblem {
@@ -480,6 +683,18 @@ export interface AutomationRuleProblem {
   "hint"?: string;
   "params"?: { [key: string]: string };
   "allowed"?: Array<string>;
+}
+
+export interface AutomationRuleRefusal {
+  "code"?: string;
+  "detail": string;
+  "problem"?: AutomationRuleProblem;
+}
+
+export interface AutomationRuleSaveRequest {
+  "rule": AutomationRuleDraft;
+  /** Версия правила, которую вы прочитали (поле version) */
+  "expected_version": number;
 }
 
 export interface AutomationRuleSimulateRequest {
@@ -508,8 +723,12 @@ export interface AutomationRuleSimulation {
   /** Больше всего срабатываний за один день */
   "max_per_day": number;
   "records": Array<AutomationRuleSimulationRecordsItem>;
+  /** У правила с ветками — сколько фактов пошло бы каждым путём */
+  "paths"?: Array<AutomationRuleSimulationPathsItem>;
   "actions": Array<AutomationRuleSimulationActionsItem>;
   "before"?: AutomationRuleSimulationBefore;
+  /** Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример */
+  "selection"?: AutomationRuleSimulationSelection;
   /** Всегда false: прогон ничего не исполняет */
   "executed": boolean;
 }
@@ -520,10 +739,19 @@ export interface AutomationRuleSimulationRecordsItem {
   /** Номер, идентификатор или тема записи */
   "title"?: string;
   "occurred_at": string;
+  /** Каким путём пошёл бы факт */
+  "path_id"?: string;
+}
+
+export interface AutomationRuleSimulationPathsItem {
+  "id": string;
+  "count": number;
 }
 
 export interface AutomationRuleSimulationActionsItem {
   "index": number;
+  "block_id"?: string;
+  "path_id"?: string;
   "command": string;
   "label": string;
   "permission": string;
@@ -542,6 +770,29 @@ export interface AutomationRuleSimulationBefore {
   "fired": number;
 }
 
+/** Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример */
+export interface AutomationRuleSimulationSelection {
+  "key": string;
+  "label": string;
+  "count": number;
+  /** Сколько записей прошли бы условие и пути */
+  "matched": number;
+  /** Записей больше limit — за запуск возьмутся первые */
+  "truncated": boolean;
+  "limit": number;
+  /** Почему отбор не прочитан (automation.reason.<код>) */
+  "code"?: string;
+  "message"?: string;
+  "sample": Array<AutomationRuleSimulationSelectionSampleItem>;
+}
+
+export interface AutomationRuleSimulationSelectionSampleItem {
+  "entity_id": string;
+  "title": string;
+  "matched": boolean;
+  "fields": { [key: string]: string };
+}
+
 export interface AutomationRuleTestRequest {
   /** Документ правила в той же форме, что у записи правила; название и исполнитель не нужны. */
   "rule": AutomationRuleTestRequestRule;
@@ -557,7 +808,9 @@ export interface AutomationRuleTestRequestRule {
   "event_type": string;
   "condition"?: string;
   "conditions"?: Array<AutomationRuleTestRequestRuleConditionsItem>;
-  "actions"?: Array<AutomationRuleTestRequestRuleActionsItem>;
+  "actions"?: Array<AutomationRuleBlock>;
+  "branches"?: Array<AutomationRuleBranch>;
+  "otherwise"?: Array<AutomationRuleBlock>;
 }
 
 export interface AutomationRuleTestRequestRuleConditionsItem {
@@ -573,19 +826,20 @@ export interface AutomationRuleTestRequestRuleConditionsItem {
   "group"?: number;
 }
 
-export interface AutomationRuleTestRequestRuleActionsItem {
-  "command": string;
-  "inputs"?: { [key: string]: string };
-}
-
 export interface AutomationRuleTestResult {
   "sample"?: AutomationRuleTestResultSample | null;
   "executor_user_id": number;
   "when": AutomationRuleTestResultWhen;
   "condition": AutomationRuleTestResultCondition;
   "matched": boolean;
+  /** Какой путь выбран бы на этой записи: yes, id «Если ещё», else; пусто — ни один */
+  "path_id"?: string;
+  /** Итог условия каждого «Если ещё» по порядку */
+  "branches"?: Array<AutomationRuleTestResultBranchesItem>;
   "actions": Array<AutomationRuleTestResultActionsItem>;
   "problem"?: AutomationRuleProblem;
+  /** Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример */
+  "selection"?: AutomationRuleTestResultSelection;
   /** Всегда false: проверка ничего не делает */
   "executed": boolean;
 }
@@ -643,8 +897,17 @@ export interface AutomationRuleTestResultConditionClausesItem {
   "ok": boolean;
 }
 
+export interface AutomationRuleTestResultBranchesItem {
+  "id": string;
+  "condition": { [key: string]: unknown };
+}
+
 export interface AutomationRuleTestResultActionsItem {
   "index": number;
+  "block_id"?: string;
+  "path_id"?: string;
+  /** Пауза «Подождать»; у действия поля нет */
+  "kind"?: "wait";
   "command": string;
   "label": string;
   "permission": string;
@@ -662,6 +925,145 @@ export interface AutomationRuleTestResultActionsItemInputsItem {
   "template": string;
   "value": string;
   "missing"?: Array<string>;
+}
+
+/** Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример */
+export interface AutomationRuleTestResultSelection {
+  "key": string;
+  "label": string;
+  "count": number;
+  /** Сколько записей прошли бы условие и пути */
+  "matched": number;
+  /** Записей больше limit — за запуск возьмутся первые */
+  "truncated": boolean;
+  "limit": number;
+  /** Почему отбор не прочитан (automation.reason.<код>) */
+  "code"?: string;
+  "message"?: string;
+  "sample": Array<AutomationRuleTestResultSelectionSampleItem>;
+}
+
+export interface AutomationRuleTestResultSelectionSampleItem {
+  "entity_id": string;
+  "title": string;
+  "matched": boolean;
+  "fields": { [key: string]: string };
+}
+
+export interface AutomationRuleValidation {
+  "valid": boolean;
+  "rule": AutomationRuleDraft;
+  "problem"?: AutomationRuleProblem;
+  "actions": Array<AutomationRuleValidationActionsItem>;
+  /** Включение правила потребует подтверждения человеком */
+  "external_send": boolean;
+  /** Включение правила потребует подтверждения человеком по классу «деньги и проводки» */
+  "money_posting"?: boolean;
+  "saved": boolean;
+}
+
+export interface AutomationRuleValidationActionsItem {
+  /** Номер действия по путям подряд: «Если да», «Если ещё», «Иначе» */
+  "index": number;
+  "block_id"?: string;
+  "command": string;
+  "label": string;
+  "status": "live" | "declared" | "unknown";
+  "permission": string;
+  /** Хватает ли права вызывающему — он станет исполнителем правила */
+  "allowed": boolean;
+  "connected": boolean;
+  "danger": string;
+  /** Действие уходит за пределы кабинета */
+  "external": boolean;
+  /** Действие выпускает учётный документ или двигает товар и деньги */
+  "posting"?: boolean;
+  "code"?: string;
+  "message"?: string;
+}
+
+export interface AutomationRuleVersion {
+  "rule_id": string;
+  "version": number;
+  "name": string;
+  "event_type": string;
+  "condition": string;
+  "conditions": Array<{ [key: string]: unknown }>;
+  "actions": Array<{ [key: string]: unknown }>;
+  "executor_user_id": number;
+  "author_user_id": number;
+  "changes": Array<AutomationRuleVersionChangesItem>;
+  "restored_from"?: number;
+  "created_at": string;
+}
+
+export interface AutomationRuleVersionChangesItem {
+  "code": string;
+  "params"?: { [key: string]: string };
+}
+
+export interface AutomationRunActionReport {
+  "index": number;
+  /** id шага правила (ERP-1932); у паузы command пуст, code — paused или pause_no_wait */
+  "block_id"?: string;
+  "path_id"?: string;
+  "command": string;
+  "label": string;
+  "status": string;
+  "code": string;
+  "params": { [key: string]: string } | null;
+  "reason"?: string;
+  "produced_entity_id"?: string;
+  "updated_at": string;
+}
+
+export interface AutomationRunReport {
+  "id": string;
+  "rule_id": string;
+  "rule_name": string;
+  "rule_version": number;
+  "event_type": string;
+  "entity": string;
+  "entity_id": string;
+  "status": "queued" | "running" | "waiting" | "success" | "failed" | "skipped";
+  "attempts": number;
+  "max_attempts": number;
+  /** Выбранный путь: yes, id «Если ещё», else; пусто — путь не выбран */
+  "path_id"?: string;
+  "wait_id"?: string;
+  "wait_state"?: "waiting" | "done" | "cancelled";
+  "wait_until"?: string;
+  /** Шаг «Подождать», на котором прогон ждёт или ждал; пусто — время правила */
+  "wait_block_id"?: string;
+  "outcome_code": string;
+  "outcome_params": { [key: string]: string } | null;
+  /** Причина исхода словами на языке запроса */
+  "reason"?: string;
+  "next_attempt_at"?: string;
+  "created_at": string;
+  "updated_at": string;
+}
+
+/** Входящий вебхук кабинета. Токен адреса и секрет подписи не возвращаются. */
+export interface AutomationWebhook {
+  "id": string;
+  "name": string;
+  /** Проверка подписи входящего вызова */
+  "signature": "none" | "hmac_sha256";
+  /** Поля события, выведенные из образца */
+  "fields": Array<AutomationWebhookField>;
+  "enabled": boolean;
+  /** Когда вебхук принимал вызов последний раз */
+  "last_received_at"?: string;
+  "created_by": number;
+  "created_at": string;
+  "updated_at": string;
+}
+
+export interface AutomationWebhookField {
+  /** Плоский путь поля в теле (a.b) */
+  "path": string;
+  "type": "string" | "number" | "bool" | "date";
 }
 
 /** Лента только дописывается */
@@ -727,6 +1129,18 @@ export interface CRMAutomationRule {
   /** Правило перенесено на общий движок: события после этого момента исполняет правило adopted_rule_id; здесь оно не правится (409) */
   "adopted_at"?: string;
   "adopted_rule_id"?: UUID;
+  /** Почему правило осталось в CRM: общий движок его не принял. Перенос идёт сам, правило с исправленным условием переедет при следующем проходе */
+  "adoption_problem"?: CRMAutomationRuleAdoptionProblem;
+}
+
+/** Почему правило осталось в CRM: общий движок его не принял. Перенос идёт сам, правило с исправленным условием переедет при следующем проходе */
+export interface CRMAutomationRuleAdoptionProblem {
+  /** Код отказа проверки правила общим движком; текст — automation.problems.<code> */
+  "code": string;
+  /** Поле правила, к которому относится отказ */
+  "field"?: string;
+  /** Значения для текста отказа */
+  "params"?: { [key: string]: string };
 }
 
 export interface CRMAutomationRuleInput {
@@ -2430,6 +2844,10 @@ export interface CalendarSlot {
 
 export interface CalendarSlotPage {
   "items": Array<CalendarSlot>;
+  /** Состояние ссылки записи для её владельца: active или paused */
+  "status"?: string;
+  /** Можно ли записаться по ссылке прямо сейчас; у приостановленной — нет, хотя слоты считаются */
+  "bookable"?: boolean;
 }
 
 export interface CalendarSyncResult {
@@ -2816,6 +3234,12 @@ export interface CoreAccountingPolicy {
   "companies": Array<CoreCompanyPolicy>;
 }
 
+/** Ответ записи версии с view=owner: политика одного бизнеса или одного юрлица */
+export interface CoreAccountingPolicyOwner {
+  "business"?: CoreBusinessPolicy;
+  "company"?: CoreCompanyPolicy;
+}
+
 export interface CoreAccountingSettings {
   "currency": string;
   "valid_from"?: string;
@@ -3084,6 +3508,12 @@ export type CoreContactKind = "client" | "supplier" | "both";
 export interface CoreContactPage {
   "count": number;
   "results": Array<CoreContact>;
+  /** Применённый размер страницы */
+  "limit"?: number;
+  /** Применённое смещение */
+  "offset"?: number;
+  /** true — за страницей есть ещё контрагенты: запросите следующую с offset += limit. На потолке 500 значит «страница полная, дальше может быть ещё» */
+  "has_more"?: boolean;
 }
 
 export interface CoreContactPatch {
@@ -3163,6 +3593,8 @@ export interface CoreCurrencyRateSource {
   "serves": boolean;
   "bridge"?: string;
   "unavailable"?: boolean;
+  /** Почему serves=false: manual_source — у источника нет загрузчика, currency_missing — валюта не названа, accounting_currency — названа валюта учёта (её курс к себе — единица, не загружается), not_quoted — источник эту валюту не котирует */
+  "reason"?: "manual_source" | "currency_missing" | "accounting_currency" | "not_quoted";
 }
 
 export type CoreCurrencyRateSourceKey = "manual" | "cbr" | "ecb" | "coingecko" | "erapi" | "moex" | "fixed";
@@ -3578,7 +4010,7 @@ export type CoreGLAccountType = "asset" | "liability" | "equity" | "income" | "e
 
 export interface CoreGLMapping {
   "id": UUID;
-  "subject_type": "item" | "money_account" | "contact";
+  "subject_type": "item" | "money_account" | "contact" | "product" | "document_type" | "acquiring_clearing" | "warehouse";
   "subject_id"?: UUID;
   "account_id": UUID;
   "account_code": string;
@@ -3590,7 +4022,7 @@ export interface CoreGLMapping {
 }
 
 export interface CoreGLMappingCreate {
-  "subject_type": "item" | "money_account" | "contact";
+  "subject_type": "item" | "money_account" | "contact" | "product" | "document_type" | "acquiring_clearing" | "warehouse";
   "subject_id"?: UUID;
   "account_id": UUID;
   /** Omitted means today */
@@ -3600,6 +4032,8 @@ export interface CoreGLMappingCreate {
 
 export interface CoreGLMappingPage {
   "count": number;
+  /** Сколько правил под отбором всего, до среза limit/offset */
+  "total"?: number;
   "results": Array<CoreGLMapping>;
 }
 
@@ -3651,6 +4085,10 @@ export interface CoreItemMove {
   "parent_id"?: UUID;
   "cashflow_section"?: "operating" | "investing" | "financing" | "transfer";
   "position": number;
+}
+
+export interface CoreItemMoved {
+  "item": CoreItem;
 }
 
 export interface CoreItemPage {
@@ -3800,6 +4238,13 @@ export interface CoreOrder {
   "allowed_actions"?: Array<CoreOrderAllowedAction>;
   /** Только в карточке: строки со ставкой, названной человеком, равной прежней общей ставке юрлица, когда на сегодня общая ставка уже другая — «проверьте ставку», не отказ */
   "vat_warnings"?: Array<CoreOrderVATWarning>;
+  /** Только в ответах команд подтверждения, отмены и возврата в работу: true — команде нечего было делать (подтверждена уже, отменена уже, не закрыта), заказ не изменился. Повтор команды отвечает той же карточкой, а не ошибкой */
+  "unchanged"?: boolean;
+}
+
+export interface CoreOrderActionCheck {
+  "allowed": boolean;
+  "reasons": Array<CoreOrderBlockReason>;
 }
 
 export interface CoreOrderAllowedAction {
@@ -3809,6 +4254,28 @@ export interface CoreOrderAllowedAction {
   "reason_code"?: string;
   /** Причина словами на языке запроса */
   "reason"?: string;
+}
+
+export interface CoreOrderBlockReason {
+  /** Причина уровня документа (posted, not_posted, balance_negative, period_closed и другие причины проведения) или отказ сделки с кодом core.trade.* — тот же, что вернула бы команда */
+  "code": string;
+  "message": string;
+  "detail"?: string;
+  /** Причина показывается, но действие не запрещает */
+  "warning"?: boolean;
+  "shortages"?: Array<CoreBalanceShortage>;
+  /** Код отказа проводчика внутри причины; detail для него собран на языке запроса. */
+  "detail_code"?: string;
+  /** Параметры отказа с кодом detail_code: из них собрана фраза detail. */
+  "detail_params"?: { [key: string]: string };
+}
+
+/** Что мешает командам продажи или закупки: подтверждению и отмене. У черновика отмена разрешена без движений; подтверждённую отменяют отменой проведения под сторожем исполнений и закрытия */
+export interface CoreOrderBlockers {
+  "document_id": UUID;
+  "state": CoreOrderState;
+  "confirm": CoreOrderActionCheck;
+  "cancel": CoreOrderActionCheck;
 }
 
 /** Покупатель-физлицо: розничный продажа или закупка стоит на общей карточке покупателя, и различает покупателей только это. */
@@ -4932,7 +5399,6 @@ export interface CoreProductImportMappingState {
   "sheet_name": string;
   "header_row": number;
   "columns": { [key: string]: string };
-  "expected_revision"?: number;
 }
 
 export type CoreProductImportMode = "create_only" | "upsert";
@@ -5121,7 +5587,8 @@ export interface CoreRegisterBalancePage {
 
 export interface CoreRegisterBalanceRow {
   "dims": { [key: string]: unknown };
-  "totals": { [key: string]: unknown };
+  /** Итог по каждому ресурсу — числом JSON, а не десятичной строкой, как денежные поля документов: {"qty": 6.8, "amount": 34000} */
+  "totals": { [key: string]: number };
   "entry_count": number;
 }
 
@@ -5203,9 +5670,12 @@ export interface CoreRegisterTurnoverPage {
 export interface CoreRegisterTurnoverRow {
   "period"?: string;
   "dims": { [key: string]: unknown };
-  "incoming": { [key: string]: unknown };
-  "outgoing": { [key: string]: unknown };
-  "net": { [key: string]: unknown };
+  /** Приход по каждому ресурсу — числом JSON */
+  "incoming": { [key: string]: number };
+  /** Расход по каждому ресурсу — числом JSON */
+  "outgoing": { [key: string]: number };
+  /** Сальдо оборота по каждому ресурсу — числом JSON, а не десятичной строкой */
+  "net": { [key: string]: number };
   "entry_count": number;
 }
 
@@ -6065,6 +6535,8 @@ export interface DocflowApprovalBlockers {
   "send_to_counterparty": DocflowApprovalActionCheck;
   "send_to_bank": DocflowApprovalActionCheck;
   "can_submit": boolean;
+  /** Почему отправить на согласование нельзя; есть только при can_submit=false */
+  "submit_blocked"?: DocflowApprovalBlockReason;
   "can_decide": boolean;
   /** У человека есть неотмеченное «ознакомиться» в этом проходе — своё или делегированное */
   "can_acknowledge"?: boolean;
@@ -6556,6 +7028,7 @@ export interface DocflowFlowContent {
   "date": string;
   "contract"?: DocflowFlowContractTerms;
   "commercial"?: DocflowFlowCommercial;
+  "correction"?: DocflowFlowCorrection;
   "recognized"?: DocflowFlowRecognized;
   /** Значения своих полей кабинета (графы вида docflow.document.<вид>). В save не прислано — не меняются; правятся действием custom */
   "custom"?: { [key: string]: unknown };
@@ -6578,6 +7051,41 @@ export interface DocflowFlowContractTerms {
   "responsibles"?: Array<DocflowFlowResponsible>;
 }
 
+/** Содержание УКД по возврату покупателя: строки исходного УПД «до» и остаток «после». Снимается при выпуске и дальше не пересчитывается. */
+export interface DocflowFlowCorrection {
+  "return_id": UUID;
+  "return_number"?: string;
+  "return_date"?: string;
+  "basis_id": UUID;
+  "basis_number": string;
+  "basis_date": string;
+  "lines": Array<DocflowFlowCorrectionLine>;
+}
+
+export interface DocflowFlowCorrectionLine {
+  "id": UUID;
+  /** Номер строки в исходном УПД */
+  "number": number;
+  "product_id"?: UUID;
+  "name": string;
+  "unit"?: string;
+  /** Код единицы по ОКЕИ */
+  "unit_code"?: string;
+  "vat_rate": string;
+  "before": DocflowFlowCorrectionState;
+  "after": DocflowFlowCorrectionState;
+}
+
+export interface DocflowFlowCorrectionState {
+  "quantity": string;
+  /** Цена за единицу без налога */
+  "price"?: string;
+  "amount_without_vat": string;
+  /** Пусто у необлагаемой строки */
+  "vat_amount"?: string;
+  "amount_with_vat": string;
+}
+
 export interface DocflowFlowCreateInput {
   "company_id": UUID;
   "contact_id": UUID;
@@ -6590,6 +7098,8 @@ export interface DocflowFlowCreateInput {
 export interface DocflowFlowDocument {
   "id": UUID;
   "company_id": UUID;
+  /** Бизнес бумаги. У бумаги без юрлица (company_id — нулевой id) он один называет сторону «мы»; в печати стоит его название */
+  "business_id"?: string;
   /** Бизнес юрлица бумаги прошёл отсечку этапа 4: мастер «Принять акт» и «Создать продажу / закупку» у бумаги сняты */
   "execution_cutover"?: boolean;
   "company_name": string;
@@ -7459,6 +7969,23 @@ export interface DocflowTemplatePastActs {
   "failed": number;
 }
 
+export interface DocflowUKDBasisRef {
+  "id": UUID;
+  "kind": string;
+  "number"?: string;
+  "date"?: string;
+}
+
+export interface DocflowUKDInput {
+  "return_id": UUID;
+}
+
+/** УКД по возврату: карточка, если выпущена, и исходный УПД, если он есть */
+export interface DocflowUKDState {
+  "document"?: DocflowFlowDocument;
+  "basis_upd"?: DocflowUKDBasisRef;
+}
+
 /** Владелец задаётся одной ссылкой `task`, `section`, `project`, `milestone` либо парой `owner_type`/`owner_id`. */
 export interface DocumentCreate {
   "owner_type"?: DocumentOwnerType;
@@ -8096,6 +8623,12 @@ export interface FinanceBalanceReport {
   "retained_earnings": string;
   "difference": string;
   "accounting_basis"?: AccountingBasis;
+  /** Только при кассовом и смешанном основании: весь открытый долг поставщикам в регистре расчётов (счёт стороны 60.01, все обязательства и валюты в балансовой стоимости на дату) минус то, что баланс несёт на 60; нет разницы — нет поля */
+  "off_balance_supplier_debt"?: string;
+  /** Только при кассовом и смешанном основании: весь открытый долг покупателей в регистре расчётов (счёт стороны 62.01, все обязательства и валюты в балансовой стоимости на дату) минус то, что баланс несёт на 62; нет разницы — нет поля */
+  "off_balance_customer_debt"?: string;
+  /** Только при кассовом и смешанном основании: долг перед сотрудниками по журналу зарплаты на дату; при начислении он стоит на счёте 70, и поля нет */
+  "off_balance_payroll_debt"?: string;
 }
 
 export interface FinanceBalanceSection {
@@ -8167,7 +8700,10 @@ export interface FinanceCashflowItem {
 export interface FinanceCashflowReport {
   /** При отборе по юрлицу — чистый поток движений без юрлица и всего бизнеса */
   "unassigned_company"?: FinanceCashflowReportUnassignedCompany;
+  /** Валюта сумм отчёта: валюта учёта либо выбранная параметром currency */
   "currency"?: string;
+  /** Есть только в сводном виде */
+  "view"?: "summary";
   "from": string;
   "to": string;
   "inflow": string;
@@ -8330,7 +8866,8 @@ export interface FinanceConnectorSyncRunPage {
 }
 
 export interface FinanceCounterpartyTerms {
-  "id": UUID;
+  /** Версия условий; null при configured=false — настройки нет, а не запись с нулевым id */
+  "id": string | null;
   "contact_id": UUID;
   "company_id"?: string;
   "currency": string;
@@ -8339,11 +8876,17 @@ export interface FinanceCounterpartyTerms {
   "payment_delay_days": number;
   /** Decimal string от 0 до 100 */
   "prepayment_percent": string;
-  "valid_from": string;
+  /** Момент начала действия; null при configured=false */
+  "valid_from": string | null;
+  /** Дата начала действия в поясе кабинета: 01.01.2026 по Москве — 2026-01-01, хотя valid_from — 2025-12-31T21:00:00Z */
+  "valid_from_date"?: string;
   "valid_to"?: string;
+  /** Первый день в поясе кабинета, когда версия уже не действует */
+  "valid_to_date"?: string;
   "reason": string;
   "created_by"?: number;
-  "created_at": string;
+  /** null при configured=false */
+  "created_at": string | null;
   "configured": boolean;
 }
 
@@ -8355,7 +8898,9 @@ export interface FinanceCounterpartyTermsCreate {
   "payment_delay_days": number;
   /** Decimal string от 0 до 100 */
   "prepayment_percent": string;
+  /** Дата ГГГГ-ММ-ДД (полночь в поясе кабинета) или момент RFC3339 */
   "valid_from": string;
+  /** Дата ГГГГ-ММ-ДД или момент RFC3339; не входит в период */
   "valid_to"?: string;
   "reason"?: string;
 }
@@ -8816,6 +9361,12 @@ export interface FinancePaymentCalendar {
   "committed_in": string;
   /** «С ожиданиями» — то же плюс выставленные счета и этапы графиков договоров */
   "expected_in": string;
+  /** Вид ответа; в summary списки rows, overdue, days, undated.rows и клетки счетов пусты */
+  "view"?: "full" | "summary";
+  /** Строк в окне календаря; в сводном виде сами строки не отдаются */
+  "row_count"?: number;
+  /** Просроченных строк */
+  "overdue_count"?: number;
   "undated"?: FinancePaymentCalendarUndated;
   "companies": Array<FinancePaymentCalendarCompany>;
   "step": "day" | "month" | "quarter";
@@ -9019,6 +9570,10 @@ export interface FinancePayrollRunList {
 export interface FinancePnlCoverage {
   "missing": Array<FinancePnlCoverageItem>;
   "duplicated": Array<FinancePnlCoverageItem>;
+  /** Строки макета, ссылающиеся на статьи вне ОПиУ */
+  "foreign"?: Array<FinancePnlCoverageItem> | null;
+  /** Статьи вне ОПиУ с оборотом за период: итог отчёта их включает, строки макета — нет */
+  "outside"?: Array<FinancePnlCoverageItem> | null;
   /** Налоги раздела «Налоги» за период без строки-источника «Налоги» в макете; итог и прибыль их включают */
   "taxes"?: string;
 }
@@ -9028,6 +9583,8 @@ export interface FinancePnlCoverageItem {
   "name": string;
   "path": string;
   "times"?: number;
+  /** Оборот статьи за период — у статьи вне ОПиУ */
+  "amount"?: string;
 }
 
 export interface FinancePnlLine {
@@ -9035,17 +9592,25 @@ export interface FinancePnlLine {
   "name": string;
   "sign": number;
   "amount": string;
+  /** Статья вне дерева ОПиУ, по которой обороты всё же легли на счета результата: в итог входит, строкой макета быть не может */
+  "outside_pnl"?: boolean;
 }
 
 export interface FinancePnlReport {
   /** При отборе по юрлицу — результат движений без юрлица и всего бизнеса */
   "unassigned_company"?: FinancePnlReportUnassignedCompany;
+  /** Показатели из системных ролей макета; revenue — строка «Выручка» макета, а без неё — revenue отчёта */
   "rnp_metrics"?: { [key: string]: string };
   "currency"?: string;
+  /** Есть только в сводном виде */
+  "view"?: "summary";
   "from": string;
   "to": string;
+  /** Сумма положительных оборотов статей на счетах результата: выручка, прочие доходы, положительная курсовая; не строка «Выручка» макета */
   "revenue": string;
+  /** Сумма отрицательных оборотов статей и налогов раздела «Налоги» */
   "expense": string;
+  /** revenue + expense — прибыль по книге и управленческим суммам вне книги */
   "profit": string;
   "unclassified_in": string;
   "unclassified_out": string;
@@ -9075,6 +9640,22 @@ export interface FinancePnlReportLayout {
   "is_default": boolean;
   "coverage": FinancePnlCoverage;
   "system_rows": { [key: string]: string };
+  /** Сверка итога макета («Чистая прибыль») с прибылью книги */
+  "reconcile"?: FinancePnlReportLayoutReconcile;
+}
+
+/** Сверка итога макета («Чистая прибыль») с прибылью книги */
+export interface FinancePnlReportLayoutReconcile {
+  /** В макете есть строка «Чистая прибыль» */
+  "available": boolean;
+  "ledger_profit": string;
+  "layout_profit": string;
+  /** Прибыль книги минус итог макета */
+  "mismatch": string;
+  /** Статьи с оборотом вне формулы макета: непокрытые и вне ОПиУ */
+  "outside_items": Array<string>;
+  /** Статьи, посчитанные макетом дважды */
+  "duplicated_items": Array<string>;
 }
 
 export interface FinancePnlReportRow {
@@ -9163,8 +9744,23 @@ export interface FinanceReconciliationSummary {
   /** Входящие платежи без продажи или закупки и без проекта; имя поля сохранено для совместимости */
   "missing_order_count": number;
   "missing_cashflow_count": number;
-  /** Сумма входящих платежей без продажи или закупки и без проекта; decimal string */
-  "incoming_unlinked_amount": string;
+  /** Сумма входящих платежей без продажи или закупки и без проекта в валюте учёта по пересчёту, зафиксированному у операции; decimal string. null — часть операций не пересчитана, исходные валюты не складываются */
+  "incoming_unlinked_amount": string | null;
+  /** Валюта учёта, в которой дан incoming_unlinked_amount */
+  "incoming_unlinked_currency": string;
+  /** Сколько таких операций без пересчёта в валюту учёта */
+  "incoming_unlinked_unconverted_count": number;
+  /** Те же операции по исходным валютам, каждая сумма в своей валюте */
+  "incoming_unlinked_by_currency": Array<FinanceReconciliationSummaryIncomingUnlinkedByCurrencyItem>;
+}
+
+export interface FinanceReconciliationSummaryIncomingUnlinkedByCurrencyItem {
+  /** Исходная валюта операций */
+  "currency": string;
+  /** Сумма в этой валюте; decimal string */
+  "amount": string;
+  /** Число операций */
+  "count": number;
 }
 
 export interface FinanceRegisterAccountCheck {
@@ -9199,6 +9795,18 @@ export interface FinanceRegisterReconciliation {
   "stock_transfer_pending"?: Array<FinanceRegisterReconciliationStockTransferPendingItem>;
   /** Пояснение к неперенесённому остатку для человека; пусто, если переносить нечего. */
   "stock_transfer_hint"?: string;
+  /** Есть бизнесы на методе начисления; расчёты и книга сверяются только по ним */
+  "settlements_applicable"?: boolean;
+  /** Сальдо счёта 45 «Товары отгруженные» по всему кабинету */
+  "shipped_unsold"?: string;
+  /** Сальдо счёта 45 бизнесов на методе начисления — то, что обязано быть нулём */
+  "shipped_unsold_accrual"?: string;
+  /** Сальдо 45 бизнесов на начислении равно нулю */
+  "shipped_unsold_match"?: boolean;
+  /** Прибавка переоценки валютных остатков к прибыли */
+  "currency_effect"?: string;
+  /** Та же переоценка по счетам имущества и долгов (дебетовый знак); сумма строк равна currency_effect */
+  "currency_effect_accounts"?: Array<FinanceRegisterReconciliationCurrencyEffectAccountsItem>;
 }
 
 export interface FinanceRegisterReconciliationInputVatUnexplainedItem {
@@ -9221,6 +9829,11 @@ export interface FinanceRegisterReconciliationStockTransferPendingItem {
   "to_code": string;
   "amount": string;
   "warehouses": number;
+}
+
+export interface FinanceRegisterReconciliationCurrencyEffectAccountsItem {
+  "code": string;
+  "amount": string;
 }
 
 export interface FinanceRegisterRepairFailure {
@@ -9257,7 +9870,12 @@ export interface FinanceReportColumn {
   "from": string;
   "to": string;
   "total": boolean;
-  "payload": { [key: string]: unknown };
+  /** Витрина колонки целиком; только в полном виде */
+  "payload"?: { [key: string]: unknown };
+  /** Ключевые цифры колонки; только в сводном виде */
+  "figures"?: { [key: string]: string };
+  /** Суммы системных строк макета за колонку; в сводном виде, когда отчёт строится по макету */
+  "system_rows"?: { [key: string]: string };
 }
 
 export interface FinanceReportCompany {
@@ -9301,11 +9919,14 @@ export interface FinanceSaleLineInput {
 
 export interface FinanceSettlementBalance {
   "obligation_id": UUID;
-  /** Decimal string */
+  /** Decimal string с разрядностью валюты обязательства: 196000.00, 4638.65 */
   "remaining": string;
+  /** Валюта обязательства */
+  "currency": string;
 }
 
 export interface FinanceSettlementBalancePage {
+  /** Число строк после отбора валюты, до страницы */
   "count": number;
   "results": Array<FinanceSettlementBalance>;
 }
@@ -10791,7 +11412,7 @@ export interface MarketplaceOzonPnl {
   "demo"?: boolean;
   /** Расшифровка прочего по периодам */
   "breakdown"?: { [key: string]: Array<MarketplaceOzonDecompositionOtherItem> };
-  /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода */
+  /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть */
   "cost_missing"?: { [key: string]: number };
   /** Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon */
   "units_missing"?: { [key: string]: number };
@@ -10915,7 +11536,10 @@ export interface MarketplaceOzonSyncJob {
   /** Идентификатор задания в очереди */
   "river_job_id": number | null;
   "period": string;
+  /** Магазины задания в области участника; пусто — задание по всем магазинам */
   "store_ids": Array<UUID>;
+  /** Те же магазины с названием и состоянием: выключенного магазина нет в списке магазинов, а его задания остаются */
+  "stores": Array<MarketplaceSyncJobStore>;
   "message": string;
   /** Сырой JSON итогов задания; форма зависит от вида */
   "stats": unknown;
@@ -10963,6 +11587,7 @@ export interface MarketplaceStore {
   "token_class"?: "basic" | "personal" | "test" | "service" | "unknown";
   /** Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена */
   "credential"?: MarketplaceStoreCredential;
+  "write_key"?: MarketplaceStoreWriteKey;
   /** Безопасное состояние подключения в ERP: not_checked — проверка ещё не запускалась, pending — MPTrack проверяет реквизиты или запускает первую загрузку, disabled — загрузки отключены, ok — подключение работает, warning — требуется внимание, error — подключение не работает. Сырые статусы и тексты MPTrack не публикуются */
   "connection_status": "not_checked" | "pending" | "disabled" | "ok" | "warning" | "error";
   /** Безопасный стабильный код состояния подключения; сырой текст ошибки не публикуется */
@@ -11016,6 +11641,44 @@ export interface MarketplaceStoreInput {
 export interface MarketplaceStorePage {
   "count": number;
   "results": Array<MarketplaceStore>;
+}
+
+/** Признаки ключа магазина на запись в площадку (марки в сборочные задания FBS); сам ключ не возвращается */
+export interface MarketplaceStoreWriteKey {
+  /** Ключ задан */
+  "set": boolean;
+  /** Последние 4 символа токена или Api-Key */
+  "mask"?: string;
+  /** Тип токена Wildberries */
+  "kind"?: "basic" | "personal" | "test" | "service" | "unknown";
+  /** Категории токена Wildberries */
+  "scopes": Array<string>;
+  /** Токен только на чтение */
+  "read_only": boolean;
+  /** Можно ли передавать марки: ready — можно, no_key — ключа нет, no_write_scope — нет права записи, unchecked — не проверено */
+  "ability": "ready" | "no_key" | "no_write_scope" | "unchecked";
+  /** Кто задал ключ */
+  "set_by": number | null;
+  /** Когда задан ключ */
+  "set_at": string | null;
+  /** Когда ключ проверяли */
+  "checked_at": string | null;
+  /** Итог последней проверки без записи */
+  "check_result"?: "ready" | "no_write_scope" | "rejected" | "unchecked" | "unavailable";
+  /** Когда ключом последний раз передавали марки */
+  "last_used_at": string | null;
+  /** Итог последней передачи марок */
+  "last_result"?: "not_sent" | "sent" | "accepted" | "rejected";
+  /** Код отказа последней передачи */
+  "last_error_code"?: string;
+}
+
+export interface MarketplaceSyncJobStore {
+  "id": UUID;
+  /** Название магазина */
+  "name": string;
+  /** Магазин включён; выключенный в обычном списке магазинов не виден */
+  "is_active": boolean;
 }
 
 export interface MarketplaceWbCardAdDay {
@@ -11347,7 +12010,7 @@ export interface MarketplaceWbPnl {
   "demo"?: boolean;
   /** Разбор строки «Прочее» по периодам */
   "breakdown"?: { [key: string]: Array<MarketplaceWbDecompOtherItem> };
-  /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода */
+  /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть */
   "cost_missing"?: { [key: string]: number };
   /** Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon */
   "units_missing"?: { [key: string]: number };
@@ -11557,7 +12220,7 @@ export interface MarketplaceYandexPnl {
   "range": MarketplaceYandexPnlRange;
   "periods": Array<MarketplaceYandexPnlPeriod>;
   "rows": Array<MarketplaceYandexPnlRow>;
-  /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода */
+  /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть */
   "cost_missing"?: { [key: string]: number };
   /** Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon */
   "units_missing"?: { [key: string]: number };
@@ -14000,6 +14663,16 @@ export interface StockDocumentFulfillmentLine {
 export interface StockDocumentFulfillmentPage {
   "count": number;
   "results": Array<StockDocumentFulfillment>;
+  /** Документы пакета, у которых исполнение не считается (другой вид документа); пакет из-за них не падает. */
+  "skipped"?: Array<StockDocumentFulfillmentSkipped>;
+}
+
+export interface StockDocumentFulfillmentSkipped {
+  "document_id": UUID;
+  "type_key": string;
+  "number": string;
+  /** Почему исполнение не считается */
+  "reason": string;
 }
 
 /** Партия, на которую распределяются накладные расходы. */
@@ -14920,7 +15593,7 @@ export interface StockReportRow {
   "entry_count": number;
 }
 
-/** Итог по всей выборке отчёта, а не по странице. Количества, включая минимум, имеют смысл только при одной единице измерения на всю выборку — её называет поле unit. Себестоимости единицы здесь нет вовсе: сумма средних цен не значит ничего ни при какой однородности. */
+/** Итог по всей выборке отчёта, а не по странице. Количества, включая минимум, имеют смысл только при одной единице измерения на всю выборку — её называет поле unit; без общей единицы количества приходят пустой строкой, а сумма денег — числом. Себестоимости единицы здесь нет вовсе: сумма средних цен не значит ничего ни при какой однородности. */
 export interface StockReportTotals {
   /** Decimal string */
   "on_hand": string;
@@ -14938,7 +15611,7 @@ export interface StockReportTotals {
   "suggested": string;
   /** Decimal string. Деньги аддитивны всегда и от единицы измерения не зависят */
   "amount": string;
-  /** Единица измерения итога, если она одна на всю выборку. Пусто, когда единицы разные: складывать штуки с килограммами нельзя, и потребитель обязан показать прочерк вместо суммы. */
+  /** Единица измерения итога, если она одна на всю выборку. Пусто, когда единицы разные: складывать штуки с килограммами нельзя, количества итога тогда пусты, и потребитель показывает прочерк вместо суммы. */
   "unit": string;
 }
 
@@ -15248,6 +15921,7 @@ export interface Task {
   "checklist_done": number;
   "tags": Array<TaskTag>;
   "links": Array<{ [key: string]: unknown }>;
+  /** Всегда 0. Обсуждение людей читают через комментарии обсуждения, рабочий журнал агентов — через комментарии задачи; ни то ни другое не попадает в этот счётчик. */
   "comments_count": number;
   "blocked_by_count": number;
 }
@@ -15644,8 +16318,25 @@ export interface AssistantReplaceDigestRequest {
   "version": number;
 }
 
+export interface AutomationConnectionsResponse {
+  "connections": Array<AutomationConnection>;
+  "webhooks": Array<AutomationWebhook>;
+  /** Установки приложений кабинета (кроме удалённых) для действия «Передать приложению» */
+  "installations": Array<AutomationAppInstallation>;
+  /** Способы авторизации подключения в порядке показа */
+  "auth_kinds": Array<"none" | "header" | "bearer" | "basic" | "hmac">;
+  /** Начало адреса приёма вебхука; полный адрес с токеном показывается человеку один раз при выпуске */
+  "hook_path_prefix": string;
+  /** Локальные приёмники, разрешённые стенду; в бою пусто */
+  "allow_local": Array<string>;
+}
+
 export interface AutomationRulesResponse {
   "rules": Array<AutomationRuleDocument>;
+}
+
+export interface AutomationCreateRuleRequest {
+  "rule": AutomationRuleDraft;
 }
 
 export interface AutomationRuleSimulateResponse {
@@ -15656,6 +16347,30 @@ export interface AutomationRuleSimulateResponse {
 export interface AutomationRuleTestResponse {
   "result": AutomationRuleTestResult;
   "problem"?: AutomationRuleProblem;
+}
+
+export interface AutomationRuleValidateRequest {
+  "rule": AutomationRuleDraft;
+}
+
+export interface AutomationSetRuleEnabledRequest {
+  "enabled": boolean;
+  /** Человек согласился, что правило будет отправлять за пределы кабинета */
+  "allow_external_send"?: boolean;
+  /** Человек согласился, что правило будет выпускать учётные документы или двигать товар и деньги */
+  "allow_money_posting"?: boolean;
+}
+
+export interface AutomationRuleVersionsResponse {
+  "versions": Array<AutomationRuleVersion>;
+}
+
+export interface AutomationRunsResponse {
+  "runs": Array<AutomationRunReport>;
+}
+
+export interface AutomationRunActionsResponse {
+  "actions": Array<AutomationRunActionReport>;
 }
 
 export interface BankRepostTransactionsRequest {
@@ -15780,6 +16495,7 @@ export interface FinanceListDividendOwnersResponse {
 
 export interface FinanceListDividendOwnersResponseResultsItem {
   "id": UUID;
+  /** Кем владелец записан в структуре владения: employee — человек из справочника сотрудников, company — юрлицо кабинета, contact — контрагент. employee не значит, что выплата — зарплата: это дивиденды собственнику */
   "kind": "employee" | "company" | "contact";
   "name": string;
   "share_percent": string;

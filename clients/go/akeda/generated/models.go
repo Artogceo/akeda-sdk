@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e278ecc6f3db3051c024549b7129364efc3ac4920445da2f2eb464f464f210cb).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3c581e130f57cf5a137bcc64a450f9997a217c7b8ccf491799d22139003f6b12).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -321,21 +321,114 @@ type AttachmentUploadSessionCreate struct {
 	Sha256    *string `json:"sha256,omitempty"`
 }
 
+// AutomationAppInstallation — Установка приложения кабинета глазами действия «Передать приложению» (`platform.deliver_to_app`). Передача — адресное событие `app.automation.delivered.v1` только этой установке; готова та, что включена, имеет адрес доставки, подписана на тему и получила от кабинета право `app.automation:read`. Права и адрес не возвращаются.
+type AutomationAppInstallation struct {
+	// ID — Идентификатор установки — вход installation_id действия
+	ID string `json:"id"`
+	// Title — Название приложения
+	Title string `json:"title"`
+	// Publisher — Издатель
+	Publisher string `json:"publisher"`
+	// AppKey — Ключ приложения у издателя
+	AppKey string `json:"app_key"`
+	// Active — Установка включена, издатель, приложение и версия не выключены платформой
+	Active bool `json:"active"`
+	// Receiver — У установки есть адрес доставки событий
+	Receiver bool `json:"receiver"`
+	// Subscribed — Манифест версии подписан на app.automation.delivered.v1
+	Subscribed bool `json:"subscribed"`
+	// Granted — Кабинет дал право app.automation:read
+	Granted bool `json:"granted"`
+	// Ready — Передача дойдёт до установки
+	Ready bool `json:"ready"`
+	// Missing — Первая причина, по которой не дойдёт; пусто у готовой
+	Missing *string `json:"missing,omitempty"`
+}
+
+// AutomationConnection — Внешнее подключение автоматизаций. Секрет не возвращается — только признак has_secret.
+type AutomationConnection struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	// BaseURL — Базовый адрес; путь действия дописывается к нему
+	BaseURL string `json:"base_url"`
+	// Host — Разрешённый домен: вызов уходит только на него
+	Host string `json:"host"`
+	// AuthKind — Способ авторизации
+	AuthKind string `json:"auth_kind"`
+	// AuthHeader — Имя заголовка с секретом при способе header
+	AuthHeader *string `json:"auth_header,omitempty"`
+	// BasicUser — Логин при способе basic
+	BasicUser *string `json:"basic_user,omitempty"`
+	// HasSecret — Задан ли секрет; сам секрет не возвращается
+	HasSecret bool                       `json:"has_secret"`
+	Enabled   bool                       `json:"enabled"`
+	LastCheck *AutomationConnectionCheck `json:"last_check,omitempty"`
+	CreatedBy int64                      `json:"created_by"`
+	CreatedAt string                     `json:"created_at"`
+	UpdatedAt string                     `json:"updated_at"`
+}
+
+// AutomationConnectionCheck — Последняя проверка подключения по кнопке на экране.
+type AutomationConnectionCheck struct {
+	At string `json:"at"`
+	OK bool   `json:"ok"`
+	// Status — HTTP-статус ответа приёмника
+	Status     *int64 `json:"status,omitempty"`
+	DurationMs int64  `json:"duration_ms"`
+	// Code — Почему не ответил; нет поля — ответил
+	Code *string `json:"code,omitempty"`
+}
+
+type AutomationEnableActionsItem struct {
+	Index   int64  `json:"index"`
+	Command string `json:"command"`
+	Label   string `json:"label"`
+}
+
+type AutomationEnableActions = []AutomationEnableActionsItem
+
+type AutomationEnablePreview struct {
+	RuleID            string                  `json:"rule_id"`
+	Name              string                  `json:"name"`
+	Version           int64                   `json:"version"`
+	EventType         string                  `json:"event_type"`
+	EventLabel        string                  `json:"event_label"`
+	ExecutorUserID    int64                   `json:"executor_user_id"`
+	ExternalActions   AutomationEnableActions `json:"external_actions"`
+	PostingActions    AutomationEnableActions `json:"posting_actions"`
+	Required          []string                `json:"required"`
+	Simulated         bool                    `json:"simulated"`
+	SimulationMessage *string                 `json:"simulation_message,omitempty"`
+	Days              int64                   `json:"days"`
+	Events            int64                   `json:"events"`
+	Fired             int64                   `json:"fired"`
+	Truncated         bool                    `json:"truncated"`
+	// ExternalSends — Сколько отправок наружу ушло бы за период
+	ExternalSends int64 `json:"external_sends"`
+	// Postings — Сколько учётных документов и движений выпустило бы правило за период
+	Postings int64 `json:"postings"`
+	Executed bool  `json:"executed"`
+}
+
 // AutomationManifest — Документ akeda.automation.manifest версии 1 (AUTOMATION.md § 10.1).
 type AutomationManifest struct {
 	Schema  *string `json:"$schema,omitempty"`
 	Format  string  `json:"format"`
 	Version int64   `json:"version"`
 	// Revision — Отпечаток содержимого sha256:…
-	Revision     string                               `json:"revision"`
-	Locale       string                               `json:"locale"`
-	Detail       string                               `json:"detail"`
-	Events       []AutomationManifestEvent            `json:"events"`
-	Conditions   AutomationManifestConditions         `json:"conditions"`
-	Actions      []AutomationManifestAction           `json:"actions"`
+	Revision   string                       `json:"revision"`
+	Locale     string                       `json:"locale"`
+	Detail     string                       `json:"detail"`
+	Events     []AutomationManifestEvent    `json:"events"`
+	Conditions AutomationManifestConditions `json:"conditions"`
+	Actions    []AutomationManifestAction   `json:"actions"`
+	// Timing — Блок «Когда выполнить» (ERP-1928): виды, единицы, повторы расписания, события отмены; отборы записей по расписанию — selections (ERP-1939). Полная схема — docs/architecture/automation/manifest.schema.json
+	Timing       *AutomationManifestTiming            `json:"timing,omitempty"`
 	References   []AutomationManifestReferencesItem   `json:"references"`
 	Placeholders []AutomationManifestPlaceholdersItem `json:"placeholders"`
-	Limits       AutomationManifestLimits             `json:"limits"`
+	// Blocks — Ветки «Если ещё / Иначе», пауза «Подождать» и ссылки на результаты шагов (ERP-1932)
+	Blocks map[string]json.RawMessage `json:"blocks,omitempty"`
+	Limits AutomationManifestLimits   `json:"limits"`
 }
 
 type AutomationManifestConditions struct {
@@ -351,6 +444,26 @@ type AutomationManifestConditionsOperatorsItem struct {
 	FieldTypes      []string `json:"field_types"`
 	NeedsValue      bool     `json:"needs_value"`
 	CaseInsensitive bool     `json:"case_insensitive"`
+}
+
+// AutomationManifestTiming — Блок «Когда выполнить» (ERP-1928): виды, единицы, повторы расписания, события отмены; отборы записей по расписанию — selections (ERP-1939). Полная схема — docs/architecture/automation/manifest.schema.json
+type AutomationManifestTiming struct {
+	// MaxSelectionRecords — Сколько записей отбора берёт один запуск расписания
+	MaxSelectionRecords *int64                                   `json:"max_selection_records,omitempty"`
+	Selections          []AutomationManifestTimingSelectionsItem `json:"selections,omitempty"`
+}
+
+type AutomationManifestTimingSelectionsItem struct {
+	Key    string `json:"key"`
+	Module string `json:"module"`
+	// Object — Объект записи: действия над записью события берутся по нему
+	Object      string                       `json:"object"`
+	Entity      string                       `json:"entity"`
+	Label       string                       `json:"label"`
+	Description *string                      `json:"description,omitempty"`
+	Status      string                       `json:"status"`
+	Params      []map[string]json.RawMessage `json:"params"`
+	Fields      []map[string]json.RawMessage `json:"fields"`
 }
 
 type AutomationManifestReferencesItem struct {
@@ -396,16 +509,26 @@ type AutomationManifestAction struct {
 	MCPTwin           *string                              `json:"mcp_twin,omitempty"`
 	Inputs            []AutomationManifestActionInputsItem `json:"inputs,omitempty"`
 	ExampleInputs     map[string]string                    `json:"example_inputs,omitempty"`
+	// Outputs — Результаты шага для следующих шагов пути: {{step:<id шага>.<key>}} (ERP-1932)
+	Outputs []AutomationManifestActionOutputsItem `json:"outputs,omitempty"`
 }
 
 type AutomationManifestActionInputsItem struct {
-	Key                 string                     `json:"key"`
+	Key string `json:"key"`
+	// Type — reference_list — несколько значений справочника ref через запятую, например группа распределения ответственного (ERP-1938)
 	Type                string                     `json:"type"`
 	Required            bool                       `json:"required"`
 	Label               string                     `json:"label"`
 	Options             []AutomationManifestOption `json:"options,omitempty"`
 	Ref                 *string                    `json:"ref,omitempty"`
 	AcceptsPlaceholders bool                       `json:"accepts_placeholders"`
+}
+
+type AutomationManifestActionOutputsItem struct {
+	Key   string  `json:"key"`
+	Type  string  `json:"type"`
+	Ref   *string `json:"ref,omitempty"`
+	Label string  `json:"label"`
 }
 
 type AutomationManifestEvent struct {
@@ -432,6 +555,10 @@ type AutomationManifestEventFieldsItem struct {
 	Options   []AutomationManifestOption `json:"options,omitempty"`
 	Ref       *string                    `json:"ref,omitempty"`
 	Operators []string                   `json:"operators"`
+	// Group — custom — своё поле кабинета, webhook — поле тела входящего вебхука body.<путь> (ERP-1938), selection — поле записи отбора по расписанию (ERP-1939)
+	Group *string `json:"group,omitempty"`
+	// Hooks — У поля тела вебхука — вебхуки, в образце которых оно есть
+	Hooks []string `json:"hooks,omitempty"`
 }
 
 type AutomationManifestOption struct {
@@ -439,21 +566,68 @@ type AutomationManifestOption struct {
 	Label string `json:"label"`
 }
 
+// AutomationRuleBlock — Шаг пути правила (ERP-1932): действие каталога или пауза «Подождать» (`kind: wait`). `id` — устойчивый id шага: журнал, ключ повтора и ссылки `{{step:<id>.<результат>}}` во входах следующих шагов того же пути. Пусто — сервер ставит a1, a2 … (пауза — w1 …).
+type AutomationRuleBlock struct {
+	ID *string `json:"id,omitempty"`
+	// Kind — Пусто — действие
+	Kind    *string           `json:"kind,omitempty"`
+	Command *string           `json:"command,omitempty"`
+	Inputs  map[string]string `json:"inputs,omitempty"`
+	// Wait — Пауза: after_event — через amount единиц unit от начала паузы; relative_to_field — до даты поля field (± amount); cancel_on — события, факт которых по той же записи прекращает правило
+	Wait *AutomationRuleBlockWait `json:"wait,omitempty"`
+}
+
+// AutomationRuleBlockWait — Пауза: after_event — через amount единиц unit от начала паузы; relative_to_field — до даты поля field (± amount); cancel_on — события, факт которых по той же записи прекращает правило
+type AutomationRuleBlockWait struct {
+	Kind      *string  `json:"kind,omitempty"`
+	Amount    *int64   `json:"amount,omitempty"`
+	Unit      *string  `json:"unit,omitempty"`
+	Direction *string  `json:"direction,omitempty"`
+	Field     *string  `json:"field,omitempty"`
+	At        *string  `json:"at,omitempty"`
+	CancelOn  []string `json:"cancel_on,omitempty"`
+}
+
+// AutomationRuleBranch — «Если ещё …»: своё условие сравнениями и свои шаги
+type AutomationRuleBranch struct {
+	ID *string `json:"id,omitempty"`
+	// Condition — Выражение, собранное сервером из conditions
+	Condition  *string                              `json:"condition,omitempty"`
+	Conditions []AutomationRuleBranchConditionsItem `json:"conditions"`
+	Actions    []AutomationRuleBlock                `json:"actions"`
+}
+
+type AutomationRuleBranchConditionsItem struct {
+	Field   string  `json:"field"`
+	Op      string  `json:"op"`
+	Value   *string `json:"value,omitempty"`
+	ValueTo *string `json:"value_to,omitempty"`
+	Of      *string `json:"of,omitempty"`
+	Group   *int64  `json:"group,omitempty"`
+}
+
 type AutomationRuleDocument struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	EventType string `json:"event_type"`
 	// Condition — Выражение вычислителя; у правила из конструктора собрано из conditions
-	Condition      string                                 `json:"condition"`
-	Conditions     []AutomationRuleDocumentConditionsItem `json:"conditions"`
-	Actions        []AutomationRuleDocumentActionsItem    `json:"actions"`
-	ExecutorUserID int64                                  `json:"executor_user_id"`
-	IsEnabled      bool                                   `json:"is_enabled"`
-	Origin         string                                 `json:"origin"`
-	Version        int64                                  `json:"version"`
-	CreatedBy      *int64                                 `json:"created_by,omitempty"`
-	CreatedAt      *string                                `json:"created_at,omitempty"`
-	UpdatedAt      *string                                `json:"updated_at,omitempty"`
+	Condition  string                                 `json:"condition"`
+	Conditions []AutomationRuleDocumentConditionsItem `json:"conditions"`
+	// Actions — Путь «Если да»: действия и паузы по порядку (ERP-1932)
+	Actions []AutomationRuleBlock `json:"actions"`
+	// Branches — «Если ещё …»: до трёх путей со своим условием, проверяются по порядку
+	Branches []AutomationRuleBranch `json:"branches,omitempty"`
+	// Otherwise — «Иначе»: блоки, когда не подошло ни одно условие; пусто — правило промолчит
+	Otherwise []AutomationRuleBlock `json:"otherwise,omitempty"`
+	// DocVersion — Версия языка документа правила (rule.schema.json); 2 — пути, паузы и результаты шагов
+	DocVersion     *int64  `json:"doc_version,omitempty"`
+	ExecutorUserID int64   `json:"executor_user_id"`
+	IsEnabled      bool    `json:"is_enabled"`
+	Origin         string  `json:"origin"`
+	Version        int64   `json:"version"`
+	CreatedBy      *int64  `json:"created_by,omitempty"`
+	CreatedAt      *string `json:"created_at,omitempty"`
+	UpdatedAt      *string `json:"updated_at,omitempty"`
 }
 
 type AutomationRuleDocumentConditionsItem struct {
@@ -465,9 +639,27 @@ type AutomationRuleDocumentConditionsItem struct {
 	Group   *int64  `json:"group,omitempty"`
 }
 
-type AutomationRuleDocumentActionsItem struct {
-	Command string            `json:"command"`
-	Inputs  map[string]string `json:"inputs,omitempty"`
+// AutomationRuleDraft — Документ правила в той же форме, что у записи с экрана и у проверки; новые поля документа принимаются без смены этой схемы. Правка без branches и otherwise сохраняет прежние ветки; убрать их — прислать пустые списки.
+type AutomationRuleDraft struct {
+	Name       *string                             `json:"name,omitempty"`
+	EventType  string                              `json:"event_type"`
+	Conditions []AutomationRuleDraftConditionsItem `json:"conditions,omitempty"`
+	Actions    []AutomationRuleBlock               `json:"actions,omitempty"`
+	Branches   []AutomationRuleBranch              `json:"branches,omitempty"`
+	Otherwise  []AutomationRuleBlock               `json:"otherwise,omitempty"`
+}
+
+type AutomationRuleDraftConditionsItem struct {
+	Field   string  `json:"field"`
+	Op      string  `json:"op"`
+	Value   *string `json:"value,omitempty"`
+	ValueTo *string `json:"value_to,omitempty"`
+	Of      *string `json:"of,omitempty"`
+	Group   *int64  `json:"group,omitempty"`
+}
+
+type AutomationRuleEnvelope struct {
+	Rule AutomationRuleDocument `json:"rule"`
 }
 
 type AutomationRuleProblem struct {
@@ -478,6 +670,18 @@ type AutomationRuleProblem struct {
 	Hint    *string           `json:"hint,omitempty"`
 	Params  map[string]string `json:"params,omitempty"`
 	Allowed []string          `json:"allowed,omitempty"`
+}
+
+type AutomationRuleRefusal struct {
+	Code    *string                `json:"code,omitempty"`
+	Detail  string                 `json:"detail"`
+	Problem *AutomationRuleProblem `json:"problem,omitempty"`
+}
+
+type AutomationRuleSaveRequest struct {
+	Rule AutomationRuleDraft `json:"rule"`
+	// ExpectedVersion — Версия правила, которую вы прочитали (поле version)
+	ExpectedVersion int64 `json:"expected_version"`
 }
 
 type AutomationRuleSimulateRequest struct {
@@ -506,8 +710,12 @@ type AutomationRuleSimulation struct {
 	// MaxPerDay — Больше всего срабатываний за один день
 	MaxPerDay int64                                 `json:"max_per_day"`
 	Records   []AutomationRuleSimulationRecordsItem `json:"records"`
-	Actions   []AutomationRuleSimulationActionsItem `json:"actions"`
-	Before    *AutomationRuleSimulationBefore       `json:"before,omitempty"`
+	// Paths — У правила с ветками — сколько фактов пошло бы каждым путём
+	Paths   []AutomationRuleSimulationPathsItem   `json:"paths,omitempty"`
+	Actions []AutomationRuleSimulationActionsItem `json:"actions"`
+	Before  *AutomationRuleSimulationBefore       `json:"before,omitempty"`
+	// Selection — Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример
+	Selection *AutomationRuleSimulationSelection `json:"selection,omitempty"`
 	// Executed — Всегда false: прогон ничего не исполняет
 	Executed bool `json:"executed"`
 }
@@ -518,15 +726,24 @@ type AutomationRuleSimulationRecordsItem struct {
 	// Title — Номер, идентификатор или тема записи
 	Title      *string `json:"title,omitempty"`
 	OccurredAt string  `json:"occurred_at"`
+	// PathID — Каким путём пошёл бы факт
+	PathID *string `json:"path_id,omitempty"`
+}
+
+type AutomationRuleSimulationPathsItem struct {
+	ID    string `json:"id"`
+	Count int64  `json:"count"`
 }
 
 type AutomationRuleSimulationActionsItem struct {
-	Index      int64  `json:"index"`
-	Command    string `json:"command"`
-	Label      string `json:"label"`
-	Permission string `json:"permission"`
-	Allowed    bool   `json:"allowed"`
-	Connected  bool   `json:"connected"`
+	Index      int64   `json:"index"`
+	BlockID    *string `json:"block_id,omitempty"`
+	PathID     *string `json:"path_id,omitempty"`
+	Command    string  `json:"command"`
+	Label      string  `json:"label"`
+	Permission string  `json:"permission"`
+	Allowed    bool    `json:"allowed"`
+	Connected  bool    `json:"connected"`
 	// Count — Сколько раз действие выполнилось бы; 0 — его заблокировали права или нет исполнителя
 	Count   int64   `json:"count"`
 	Code    *string `json:"code,omitempty"`
@@ -538,6 +755,29 @@ type AutomationRuleSimulationBefore struct {
 	Version int64 `json:"version"`
 	// Fired — Сколько раз сработала бы сохранённая версия; выключенное правило — 0
 	Fired int64 `json:"fired"`
+}
+
+// AutomationRuleSimulationSelection — Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример
+type AutomationRuleSimulationSelection struct {
+	Key   string `json:"key"`
+	Label string `json:"label"`
+	Count int64  `json:"count"`
+	// Matched — Сколько записей прошли бы условие и пути
+	Matched int64 `json:"matched"`
+	// Truncated — Записей больше limit — за запуск возьмутся первые
+	Truncated bool  `json:"truncated"`
+	Limit     int64 `json:"limit"`
+	// Code — Почему отбор не прочитан (automation.reason.<код>)
+	Code    *string                                       `json:"code,omitempty"`
+	Message *string                                       `json:"message,omitempty"`
+	Sample  []AutomationRuleSimulationSelectionSampleItem `json:"sample"`
+}
+
+type AutomationRuleSimulationSelectionSampleItem struct {
+	EntityID string            `json:"entity_id"`
+	Title    string            `json:"title"`
+	Matched  bool              `json:"matched"`
+	Fields   map[string]string `json:"fields"`
 }
 
 type AutomationRuleTestRequest struct {
@@ -555,7 +795,9 @@ type AutomationRuleTestRequestRule struct {
 	EventType  string                                        `json:"event_type"`
 	Condition  *string                                       `json:"condition,omitempty"`
 	Conditions []AutomationRuleTestRequestRuleConditionsItem `json:"conditions,omitempty"`
-	Actions    []AutomationRuleTestRequestRuleActionsItem    `json:"actions,omitempty"`
+	Actions    []AutomationRuleBlock                         `json:"actions,omitempty"`
+	Branches   []AutomationRuleBranch                        `json:"branches,omitempty"`
+	Otherwise  []AutomationRuleBlock                         `json:"otherwise,omitempty"`
 }
 
 type AutomationRuleTestRequestRuleConditionsItem struct {
@@ -571,19 +813,20 @@ type AutomationRuleTestRequestRuleConditionsItem struct {
 	Group *int64 `json:"group,omitempty"`
 }
 
-type AutomationRuleTestRequestRuleActionsItem struct {
-	Command string            `json:"command"`
-	Inputs  map[string]string `json:"inputs,omitempty"`
-}
-
 type AutomationRuleTestResult struct {
-	Sample         *AutomationRuleTestResultSample       `json:"sample,omitempty"`
-	ExecutorUserID int64                                 `json:"executor_user_id"`
-	When           AutomationRuleTestResultWhen          `json:"when"`
-	Condition      AutomationRuleTestResultCondition     `json:"condition"`
-	Matched        bool                                  `json:"matched"`
-	Actions        []AutomationRuleTestResultActionsItem `json:"actions"`
-	Problem        *AutomationRuleProblem                `json:"problem,omitempty"`
+	Sample         *AutomationRuleTestResultSample   `json:"sample,omitempty"`
+	ExecutorUserID int64                             `json:"executor_user_id"`
+	When           AutomationRuleTestResultWhen      `json:"when"`
+	Condition      AutomationRuleTestResultCondition `json:"condition"`
+	Matched        bool                              `json:"matched"`
+	// PathID — Какой путь выбран бы на этой записи: yes, id «Если ещё», else; пусто — ни один
+	PathID *string `json:"path_id,omitempty"`
+	// Branches — Итог условия каждого «Если ещё» по порядку
+	Branches []AutomationRuleTestResultBranchesItem `json:"branches,omitempty"`
+	Actions  []AutomationRuleTestResultActionsItem  `json:"actions"`
+	Problem  *AutomationRuleProblem                 `json:"problem,omitempty"`
+	// Selection — Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример
+	Selection *AutomationRuleTestResultSelection `json:"selection,omitempty"`
 	// Executed — Всегда false: проверка ничего не делает
 	Executed bool `json:"executed"`
 }
@@ -641,8 +884,17 @@ type AutomationRuleTestResultConditionClausesItem struct {
 	OK         bool    `json:"ok"`
 }
 
+type AutomationRuleTestResultBranchesItem struct {
+	ID        string                     `json:"id"`
+	Condition map[string]json.RawMessage `json:"condition"`
+}
+
 type AutomationRuleTestResultActionsItem struct {
-	Index      int64                                           `json:"index"`
+	Index   int64   `json:"index"`
+	BlockID *string `json:"block_id,omitempty"`
+	PathID  *string `json:"path_id,omitempty"`
+	// Kind — Пауза «Подождать»; у действия поля нет
+	Kind       *string                                         `json:"kind,omitempty"`
 	Command    string                                          `json:"command"`
 	Label      string                                          `json:"label"`
 	Permission string                                          `json:"permission"`
@@ -660,6 +912,145 @@ type AutomationRuleTestResultActionsItemInputsItem struct {
 	Template string   `json:"template"`
 	Value    string   `json:"value"`
 	Missing  []string `json:"missing,omitempty"`
+}
+
+// AutomationRuleTestResultSelection — Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример
+type AutomationRuleTestResultSelection struct {
+	Key   string `json:"key"`
+	Label string `json:"label"`
+	Count int64  `json:"count"`
+	// Matched — Сколько записей прошли бы условие и пути
+	Matched int64 `json:"matched"`
+	// Truncated — Записей больше limit — за запуск возьмутся первые
+	Truncated bool  `json:"truncated"`
+	Limit     int64 `json:"limit"`
+	// Code — Почему отбор не прочитан (automation.reason.<код>)
+	Code    *string                                       `json:"code,omitempty"`
+	Message *string                                       `json:"message,omitempty"`
+	Sample  []AutomationRuleTestResultSelectionSampleItem `json:"sample"`
+}
+
+type AutomationRuleTestResultSelectionSampleItem struct {
+	EntityID string            `json:"entity_id"`
+	Title    string            `json:"title"`
+	Matched  bool              `json:"matched"`
+	Fields   map[string]string `json:"fields"`
+}
+
+type AutomationRuleValidation struct {
+	Valid   bool                                  `json:"valid"`
+	Rule    AutomationRuleDraft                   `json:"rule"`
+	Problem *AutomationRuleProblem                `json:"problem,omitempty"`
+	Actions []AutomationRuleValidationActionsItem `json:"actions"`
+	// ExternalSend — Включение правила потребует подтверждения человеком
+	ExternalSend bool `json:"external_send"`
+	// MoneyPosting — Включение правила потребует подтверждения человеком по классу «деньги и проводки»
+	MoneyPosting *bool `json:"money_posting,omitempty"`
+	Saved        bool  `json:"saved"`
+}
+
+type AutomationRuleValidationActionsItem struct {
+	// Index — Номер действия по путям подряд: «Если да», «Если ещё», «Иначе»
+	Index      int64   `json:"index"`
+	BlockID    *string `json:"block_id,omitempty"`
+	Command    string  `json:"command"`
+	Label      string  `json:"label"`
+	Status     string  `json:"status"`
+	Permission string  `json:"permission"`
+	// Allowed — Хватает ли права вызывающему — он станет исполнителем правила
+	Allowed   bool   `json:"allowed"`
+	Connected bool   `json:"connected"`
+	Danger    string `json:"danger"`
+	// External — Действие уходит за пределы кабинета
+	External bool `json:"external"`
+	// Posting — Действие выпускает учётный документ или двигает товар и деньги
+	Posting *bool   `json:"posting,omitempty"`
+	Code    *string `json:"code,omitempty"`
+	Message *string `json:"message,omitempty"`
+}
+
+type AutomationRuleVersion struct {
+	RuleID         string                             `json:"rule_id"`
+	Version        int64                              `json:"version"`
+	Name           string                             `json:"name"`
+	EventType      string                             `json:"event_type"`
+	Condition      string                             `json:"condition"`
+	Conditions     []map[string]json.RawMessage       `json:"conditions"`
+	Actions        []map[string]json.RawMessage       `json:"actions"`
+	ExecutorUserID int64                              `json:"executor_user_id"`
+	AuthorUserID   int64                              `json:"author_user_id"`
+	Changes        []AutomationRuleVersionChangesItem `json:"changes"`
+	RestoredFrom   *int64                             `json:"restored_from,omitempty"`
+	CreatedAt      string                             `json:"created_at"`
+}
+
+type AutomationRuleVersionChangesItem struct {
+	Code   string            `json:"code"`
+	Params map[string]string `json:"params,omitempty"`
+}
+
+type AutomationRunActionReport struct {
+	Index int64 `json:"index"`
+	// BlockID — id шага правила (ERP-1932); у паузы command пуст, code — paused или pause_no_wait
+	BlockID          *string           `json:"block_id,omitempty"`
+	PathID           *string           `json:"path_id,omitempty"`
+	Command          string            `json:"command"`
+	Label            string            `json:"label"`
+	Status           string            `json:"status"`
+	Code             string            `json:"code"`
+	Params           map[string]string `json:"params"`
+	Reason           *string           `json:"reason,omitempty"`
+	ProducedEntityID *string           `json:"produced_entity_id,omitempty"`
+	UpdatedAt        string            `json:"updated_at"`
+}
+
+type AutomationRunReport struct {
+	ID          string `json:"id"`
+	RuleID      string `json:"rule_id"`
+	RuleName    string `json:"rule_name"`
+	RuleVersion int64  `json:"rule_version"`
+	EventType   string `json:"event_type"`
+	Entity      string `json:"entity"`
+	EntityID    string `json:"entity_id"`
+	Status      string `json:"status"`
+	Attempts    int64  `json:"attempts"`
+	MaxAttempts int64  `json:"max_attempts"`
+	// PathID — Выбранный путь: yes, id «Если ещё», else; пусто — путь не выбран
+	PathID    *string `json:"path_id,omitempty"`
+	WaitID    *string `json:"wait_id,omitempty"`
+	WaitState *string `json:"wait_state,omitempty"`
+	WaitUntil *string `json:"wait_until,omitempty"`
+	// WaitBlockID — Шаг «Подождать», на котором прогон ждёт или ждал; пусто — время правила
+	WaitBlockID   *string           `json:"wait_block_id,omitempty"`
+	OutcomeCode   string            `json:"outcome_code"`
+	OutcomeParams map[string]string `json:"outcome_params"`
+	// Reason — Причина исхода словами на языке запроса
+	Reason        *string `json:"reason,omitempty"`
+	NextAttemptAt *string `json:"next_attempt_at,omitempty"`
+	CreatedAt     string  `json:"created_at"`
+	UpdatedAt     string  `json:"updated_at"`
+}
+
+// AutomationWebhook — Входящий вебхук кабинета. Токен адреса и секрет подписи не возвращаются.
+type AutomationWebhook struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	// Signature — Проверка подписи входящего вызова
+	Signature string `json:"signature"`
+	// Fields — Поля события, выведенные из образца
+	Fields  []AutomationWebhookField `json:"fields"`
+	Enabled bool                     `json:"enabled"`
+	// LastReceivedAt — Когда вебхук принимал вызов последний раз
+	LastReceivedAt *string `json:"last_received_at,omitempty"`
+	CreatedBy      int64   `json:"created_by"`
+	CreatedAt      string  `json:"created_at"`
+	UpdatedAt      string  `json:"updated_at"`
+}
+
+type AutomationWebhookField struct {
+	// Path — Плоский путь поля в теле (a.b)
+	Path string `json:"path"`
+	Type string `json:"type"`
 }
 
 // CRMActivity — Лента только дописывается
@@ -725,6 +1116,18 @@ type CRMAutomationRule struct {
 	// AdoptedAt — Правило перенесено на общий движок: события после этого момента исполняет правило adopted_rule_id; здесь оно не правится (409)
 	AdoptedAt     *string `json:"adopted_at,omitempty"`
 	AdoptedRuleID *UUID   `json:"adopted_rule_id,omitempty"`
+	// AdoptionProblem — Почему правило осталось в CRM: общий движок его не принял. Перенос идёт сам, правило с исправленным условием переедет при следующем проходе
+	AdoptionProblem *CRMAutomationRuleAdoptionProblem `json:"adoption_problem,omitempty"`
+}
+
+// CRMAutomationRuleAdoptionProblem — Почему правило осталось в CRM: общий движок его не принял. Перенос идёт сам, правило с исправленным условием переедет при следующем проходе
+type CRMAutomationRuleAdoptionProblem struct {
+	// Code — Код отказа проверки правила общим движком; текст — automation.problems.<code>
+	Code string `json:"code"`
+	// Field — Поле правила, к которому относится отказ
+	Field *string `json:"field,omitempty"`
+	// Params — Значения для текста отказа
+	Params map[string]string `json:"params,omitempty"`
 }
 
 type CRMAutomationRuleInput struct {
@@ -2428,6 +2831,10 @@ type CalendarSlot struct {
 
 type CalendarSlotPage struct {
 	Items []CalendarSlot `json:"items"`
+	// Status — Состояние ссылки записи для её владельца: active или paused
+	Status *string `json:"status,omitempty"`
+	// Bookable — Можно ли записаться по ссылке прямо сейчас; у приостановленной — нет, хотя слоты считаются
+	Bookable *bool `json:"bookable,omitempty"`
 }
 
 type CalendarSyncResult struct {
@@ -2811,6 +3218,12 @@ type CoreAccountingPolicy struct {
 	Companies  []CoreCompanyPolicy  `json:"companies"`
 }
 
+// CoreAccountingPolicyOwner — Ответ записи версии с view=owner: политика одного бизнеса или одного юрлица
+type CoreAccountingPolicyOwner struct {
+	Business *CoreBusinessPolicy `json:"business,omitempty"`
+	Company  *CoreCompanyPolicy  `json:"company,omitempty"`
+}
+
 type CoreAccountingSettings struct {
 	Currency      string  `json:"currency"`
 	ValidFrom     *string `json:"valid_from,omitempty"`
@@ -3079,6 +3492,12 @@ type CoreContactKind = string
 type CoreContactPage struct {
 	Count   int64         `json:"count"`
 	Results []CoreContact `json:"results"`
+	// Limit — Применённый размер страницы
+	Limit *int64 `json:"limit,omitempty"`
+	// Offset — Применённое смещение
+	Offset *int64 `json:"offset,omitempty"`
+	// HasMore — true — за страницей есть ещё контрагенты: запросите следующую с offset += limit. На потолке 500 значит «страница полная, дальше может быть ещё»
+	HasMore *bool `json:"has_more,omitempty"`
 }
 
 type CoreContactPatch struct {
@@ -3158,6 +3577,8 @@ type CoreCurrencyRateSource struct {
 	Serves      bool                      `json:"serves"`
 	Bridge      *string                   `json:"bridge,omitempty"`
 	Unavailable *bool                     `json:"unavailable,omitempty"`
+	// Reason — Почему serves=false: manual_source — у источника нет загрузчика, currency_missing — валюта не названа, accounting_currency — названа валюта учёта (её курс к себе — единица, не загружается), not_quoted — источник эту валюту не котирует
+	Reason *string `json:"reason,omitempty"`
 }
 
 type CoreCurrencyRateSourceKey = string
@@ -3594,7 +4015,9 @@ type CoreGLMappingCreate struct {
 }
 
 type CoreGLMappingPage struct {
-	Count   int64           `json:"count"`
+	Count int64 `json:"count"`
+	// Total — Сколько правил под отбором всего, до среза limit/offset
+	Total   *int64          `json:"total,omitempty"`
 	Results []CoreGLMapping `json:"results"`
 }
 
@@ -3646,6 +4069,10 @@ type CoreItemMove struct {
 	ParentID        *UUID   `json:"parent_id,omitempty"`
 	CashflowSection *string `json:"cashflow_section,omitempty"`
 	Position        int64   `json:"position"`
+}
+
+type CoreItemMoved struct {
+	Item CoreItem `json:"item"`
 }
 
 type CoreItemPage struct {
@@ -3795,6 +4222,13 @@ type CoreOrder struct {
 	AllowedActions []CoreOrderAllowedAction `json:"allowed_actions,omitempty"`
 	// VATWarnings — Только в карточке: строки со ставкой, названной человеком, равной прежней общей ставке юрлица, когда на сегодня общая ставка уже другая — «проверьте ставку», не отказ
 	VATWarnings []CoreOrderVATWarning `json:"vat_warnings,omitempty"`
+	// Unchanged — Только в ответах команд подтверждения, отмены и возврата в работу: true — команде нечего было делать (подтверждена уже, отменена уже, не закрыта), заказ не изменился. Повтор команды отвечает той же карточкой, а не ошибкой
+	Unchanged *bool `json:"unchanged,omitempty"`
+}
+
+type CoreOrderActionCheck struct {
+	Allowed bool                   `json:"allowed"`
+	Reasons []CoreOrderBlockReason `json:"reasons"`
 }
 
 type CoreOrderAllowedAction struct {
@@ -3804,6 +4238,28 @@ type CoreOrderAllowedAction struct {
 	ReasonCode *string `json:"reason_code,omitempty"`
 	// Reason — Причина словами на языке запроса
 	Reason *string `json:"reason,omitempty"`
+}
+
+type CoreOrderBlockReason struct {
+	// Code — Причина уровня документа (posted, not_posted, balance_negative, period_closed и другие причины проведения) или отказ сделки с кодом core.trade.* — тот же, что вернула бы команда
+	Code    string  `json:"code"`
+	Message string  `json:"message"`
+	Detail  *string `json:"detail,omitempty"`
+	// Warning — Причина показывается, но действие не запрещает
+	Warning   *bool                 `json:"warning,omitempty"`
+	Shortages []CoreBalanceShortage `json:"shortages,omitempty"`
+	// DetailCode — Код отказа проводчика внутри причины; detail для него собран на языке запроса.
+	DetailCode *string `json:"detail_code,omitempty"`
+	// DetailParams — Параметры отказа с кодом detail_code: из них собрана фраза detail.
+	DetailParams map[string]string `json:"detail_params,omitempty"`
+}
+
+// CoreOrderBlockers — Что мешает командам продажи или закупки: подтверждению и отмене. У черновика отмена разрешена без движений; подтверждённую отменяют отменой проведения под сторожем исполнений и закрытия
+type CoreOrderBlockers struct {
+	DocumentID UUID                 `json:"document_id"`
+	State      CoreOrderState       `json:"state"`
+	Confirm    CoreOrderActionCheck `json:"confirm"`
+	Cancel     CoreOrderActionCheck `json:"cancel"`
 }
 
 // CoreOrderBuyer — Покупатель-физлицо: розничный продажа или закупка стоит на общей карточке покупателя, и различает покупателей только это.
@@ -4924,10 +5380,9 @@ type CoreProductImportIssuePage struct {
 type CoreProductImportMapping = json.RawMessage
 
 type CoreProductImportMappingState struct {
-	SheetName        string            `json:"sheet_name"`
-	HeaderRow        int64             `json:"header_row"`
-	Columns          map[string]string `json:"columns"`
-	ExpectedRevision *int64            `json:"expected_revision,omitempty"`
+	SheetName string            `json:"sheet_name"`
+	HeaderRow int64             `json:"header_row"`
+	Columns   map[string]string `json:"columns"`
 }
 
 type CoreProductImportMode = string
@@ -5115,9 +5570,10 @@ type CoreRegisterBalancePage struct {
 }
 
 type CoreRegisterBalanceRow struct {
-	Dims       map[string]json.RawMessage `json:"dims"`
-	Totals     map[string]json.RawMessage `json:"totals"`
-	EntryCount int64                      `json:"entry_count"`
+	Dims map[string]json.RawMessage `json:"dims"`
+	// Totals — Итог по каждому ресурсу — числом JSON, а не десятичной строкой, как денежные поля документов: {"qty": 6.8, "amount": 34000}
+	Totals     map[string]float64 `json:"totals"`
+	EntryCount int64              `json:"entry_count"`
 }
 
 type CoreRegisterCreate struct {
@@ -5196,12 +5652,15 @@ type CoreRegisterTurnoverPage struct {
 }
 
 type CoreRegisterTurnoverRow struct {
-	Period     *string                    `json:"period,omitempty"`
-	Dims       map[string]json.RawMessage `json:"dims"`
-	Incoming   map[string]json.RawMessage `json:"incoming"`
-	Outgoing   map[string]json.RawMessage `json:"outgoing"`
-	Net        map[string]json.RawMessage `json:"net"`
-	EntryCount int64                      `json:"entry_count"`
+	Period *string                    `json:"period,omitempty"`
+	Dims   map[string]json.RawMessage `json:"dims"`
+	// Incoming — Приход по каждому ресурсу — числом JSON
+	Incoming map[string]float64 `json:"incoming"`
+	// Outgoing — Расход по каждому ресурсу — числом JSON
+	Outgoing map[string]float64 `json:"outgoing"`
+	// Net — Сальдо оборота по каждому ресурсу — числом JSON, а не десятичной строкой
+	Net        map[string]float64 `json:"net"`
+	EntryCount int64              `json:"entry_count"`
 }
 
 type CoreSellerBank struct {
@@ -6052,7 +6511,9 @@ type DocflowApprovalBlockers struct {
 	SendToCounterparty DocflowApprovalActionCheck `json:"send_to_counterparty"`
 	SendToBank         DocflowApprovalActionCheck `json:"send_to_bank"`
 	CanSubmit          bool                       `json:"can_submit"`
-	CanDecide          bool                       `json:"can_decide"`
+	// SubmitBlocked — Почему отправить на согласование нельзя; есть только при can_submit=false
+	SubmitBlocked *DocflowApprovalBlockReason `json:"submit_blocked,omitempty"`
+	CanDecide     bool                        `json:"can_decide"`
 	// CanAcknowledge — У человека есть неотмеченное «ознакомиться» в этом проходе — своё или делегированное
 	CanAcknowledge   *bool   `json:"can_acknowledge,omitempty"`
 	CanCancel        bool    `json:"can_cancel"`
@@ -6543,6 +7004,7 @@ type DocflowFlowContent struct {
 	Date       string                    `json:"date"`
 	Contract   *DocflowFlowContractTerms `json:"contract,omitempty"`
 	Commercial *DocflowFlowCommercial    `json:"commercial,omitempty"`
+	Correction *DocflowFlowCorrection    `json:"correction,omitempty"`
 	Recognized *DocflowFlowRecognized    `json:"recognized,omitempty"`
 	// Custom — Значения своих полей кабинета (графы вида docflow.document.<вид>). В save не прислано — не меняются; правятся действием custom
 	Custom map[string]json.RawMessage `json:"custom,omitempty"`
@@ -6565,6 +7027,41 @@ type DocflowFlowContractTerms struct {
 	Responsibles []DocflowFlowResponsible `json:"responsibles,omitempty"`
 }
 
+// DocflowFlowCorrection — Содержание УКД по возврату покупателя: строки исходного УПД «до» и остаток «после». Снимается при выпуске и дальше не пересчитывается.
+type DocflowFlowCorrection struct {
+	ReturnID     UUID                        `json:"return_id"`
+	ReturnNumber *string                     `json:"return_number,omitempty"`
+	ReturnDate   *string                     `json:"return_date,omitempty"`
+	BasisID      UUID                        `json:"basis_id"`
+	BasisNumber  string                      `json:"basis_number"`
+	BasisDate    string                      `json:"basis_date"`
+	Lines        []DocflowFlowCorrectionLine `json:"lines"`
+}
+
+type DocflowFlowCorrectionLine struct {
+	ID UUID `json:"id"`
+	// Number — Номер строки в исходном УПД
+	Number    int64   `json:"number"`
+	ProductID *UUID   `json:"product_id,omitempty"`
+	Name      string  `json:"name"`
+	Unit      *string `json:"unit,omitempty"`
+	// UnitCode — Код единицы по ОКЕИ
+	UnitCode *string                    `json:"unit_code,omitempty"`
+	VATRate  string                     `json:"vat_rate"`
+	Before   DocflowFlowCorrectionState `json:"before"`
+	After    DocflowFlowCorrectionState `json:"after"`
+}
+
+type DocflowFlowCorrectionState struct {
+	Quantity string `json:"quantity"`
+	// Price — Цена за единицу без налога
+	Price            *string `json:"price,omitempty"`
+	AmountWithoutVAT string  `json:"amount_without_vat"`
+	// VATAmount — Пусто у необлагаемой строки
+	VATAmount     *string `json:"vat_amount,omitempty"`
+	AmountWithVAT string  `json:"amount_with_vat"`
+}
+
 type DocflowFlowCreateInput struct {
 	CompanyID UUID               `json:"company_id"`
 	ContactID UUID               `json:"contact_id"`
@@ -6577,6 +7074,8 @@ type DocflowFlowCreateInput struct {
 type DocflowFlowDocument struct {
 	ID        UUID `json:"id"`
 	CompanyID UUID `json:"company_id"`
+	// BusinessID — Бизнес бумаги. У бумаги без юрлица (company_id — нулевой id) он один называет сторону «мы»; в печати стоит его название
+	BusinessID *string `json:"business_id,omitempty"`
 	// ExecutionCutover — Бизнес юрлица бумаги прошёл отсечку этапа 4: мастер «Принять акт» и «Создать продажу / закупку» у бумаги сняты
 	ExecutionCutover *bool           `json:"execution_cutover,omitempty"`
 	CompanyName      string          `json:"company_name"`
@@ -7436,6 +7935,23 @@ type DocflowTemplatePastActs struct {
 	Failed int64                    `json:"failed"`
 }
 
+type DocflowUKDBasisRef struct {
+	ID     UUID    `json:"id"`
+	Kind   string  `json:"kind"`
+	Number *string `json:"number,omitempty"`
+	Date   *string `json:"date,omitempty"`
+}
+
+type DocflowUKDInput struct {
+	ReturnID UUID `json:"return_id"`
+}
+
+// DocflowUKDState — УКД по возврату: карточка, если выпущена, и исходный УПД, если он есть
+type DocflowUKDState struct {
+	Document *DocflowFlowDocument `json:"document,omitempty"`
+	BasisUpd *DocflowUKDBasisRef  `json:"basis_upd,omitempty"`
+}
+
 // DocumentCreate — Владелец задаётся одной ссылкой `task`, `section`, `project`, `milestone` либо парой `owner_type`/`owner_id`.
 type DocumentCreate struct {
 	OwnerType *DocumentOwnerType `json:"owner_type,omitempty"`
@@ -8073,6 +8589,12 @@ type FinanceBalanceReport struct {
 	RetainedEarnings string                  `json:"retained_earnings"`
 	Difference       string                  `json:"difference"`
 	AccountingBasis  *AccountingBasis        `json:"accounting_basis,omitempty"`
+	// OffBalanceSupplierDebt — Только при кассовом и смешанном основании: весь открытый долг поставщикам в регистре расчётов (счёт стороны 60.01, все обязательства и валюты в балансовой стоимости на дату) минус то, что баланс несёт на 60; нет разницы — нет поля
+	OffBalanceSupplierDebt *string `json:"off_balance_supplier_debt,omitempty"`
+	// OffBalanceCustomerDebt — Только при кассовом и смешанном основании: весь открытый долг покупателей в регистре расчётов (счёт стороны 62.01, все обязательства и валюты в балансовой стоимости на дату) минус то, что баланс несёт на 62; нет разницы — нет поля
+	OffBalanceCustomerDebt *string `json:"off_balance_customer_debt,omitempty"`
+	// OffBalancePayrollDebt — Только при кассовом и смешанном основании: долг перед сотрудниками по журналу зарплаты на дату; при начислении он стоит на счёте 70, и поля нет
+	OffBalancePayrollDebt *string `json:"off_balance_payroll_debt,omitempty"`
 }
 
 type FinanceBalanceSection struct {
@@ -8144,17 +8666,20 @@ type FinanceCashflowItem struct {
 type FinanceCashflowReport struct {
 	// UnassignedCompany — При отборе по юрлицу — чистый поток движений без юрлица и всего бизнеса
 	UnassignedCompany *FinanceCashflowReportUnassignedCompany `json:"unassigned_company,omitempty"`
-	Currency          *string                                 `json:"currency,omitempty"`
-	From              string                                  `json:"from"`
-	To                string                                  `json:"to"`
-	Inflow            string                                  `json:"inflow"`
-	Outflow           string                                  `json:"outflow"`
-	UncategorizedNet  string                                  `json:"uncategorized_net"`
-	NetCashFlow       string                                  `json:"net_cash_flow"`
-	TransferIn        string                                  `json:"transfer_in"`
-	TransferOut       string                                  `json:"transfer_out"`
-	Sections          []FinanceCashflowSection                `json:"sections"`
-	Columns           []FinanceReportColumn                   `json:"columns"`
+	// Currency — Валюта сумм отчёта: валюта учёта либо выбранная параметром currency
+	Currency *string `json:"currency,omitempty"`
+	// View — Есть только в сводном виде
+	View             *string                  `json:"view,omitempty"`
+	From             string                   `json:"from"`
+	To               string                   `json:"to"`
+	Inflow           string                   `json:"inflow"`
+	Outflow          string                   `json:"outflow"`
+	UncategorizedNet string                   `json:"uncategorized_net"`
+	NetCashFlow      string                   `json:"net_cash_flow"`
+	TransferIn       string                   `json:"transfer_in"`
+	TransferOut      string                   `json:"transfer_out"`
+	Sections         []FinanceCashflowSection `json:"sections"`
+	Columns          []FinanceReportColumn    `json:"columns"`
 }
 
 // FinanceCashflowReportUnassignedCompany — При отборе по юрлицу — чистый поток движений без юрлица и всего бизнеса
@@ -8307,7 +8832,8 @@ type FinanceConnectorSyncRunPage struct {
 }
 
 type FinanceCounterpartyTerms struct {
-	ID        UUID    `json:"id"`
+	// ID — Версия условий; null при configured=false — настройки нет, а не запись с нулевым id
+	ID        *string `json:"id"`
 	ContactID UUID    `json:"contact_id"`
 	CompanyID *string `json:"company_id,omitempty"`
 	Currency  string  `json:"currency"`
@@ -8315,13 +8841,19 @@ type FinanceCounterpartyTerms struct {
 	CreditLimit      *string `json:"credit_limit,omitempty"`
 	PaymentDelayDays int64   `json:"payment_delay_days"`
 	// PrepaymentPercent — Decimal string от 0 до 100
-	PrepaymentPercent string  `json:"prepayment_percent"`
-	ValidFrom         string  `json:"valid_from"`
-	ValidTo           *string `json:"valid_to,omitempty"`
-	Reason            string  `json:"reason"`
-	CreatedBy         *int64  `json:"created_by,omitempty"`
-	CreatedAt         string  `json:"created_at"`
-	Configured        bool    `json:"configured"`
+	PrepaymentPercent string `json:"prepayment_percent"`
+	// ValidFrom — Момент начала действия; null при configured=false
+	ValidFrom *string `json:"valid_from"`
+	// ValidFromDate — Дата начала действия в поясе кабинета: 01.01.2026 по Москве — 2026-01-01, хотя valid_from — 2025-12-31T21:00:00Z
+	ValidFromDate *string `json:"valid_from_date,omitempty"`
+	ValidTo       *string `json:"valid_to,omitempty"`
+	// ValidToDate — Первый день в поясе кабинета, когда версия уже не действует
+	ValidToDate *string `json:"valid_to_date,omitempty"`
+	Reason      string  `json:"reason"`
+	CreatedBy   *int64  `json:"created_by,omitempty"`
+	// CreatedAt — null при configured=false
+	CreatedAt  *string `json:"created_at"`
+	Configured bool    `json:"configured"`
 }
 
 type FinanceCounterpartyTermsCreate struct {
@@ -8331,10 +8863,12 @@ type FinanceCounterpartyTermsCreate struct {
 	CreditLimit      *string `json:"credit_limit,omitempty"`
 	PaymentDelayDays int64   `json:"payment_delay_days"`
 	// PrepaymentPercent — Decimal string от 0 до 100
-	PrepaymentPercent string  `json:"prepayment_percent"`
-	ValidFrom         string  `json:"valid_from"`
-	ValidTo           *string `json:"valid_to,omitempty"`
-	Reason            *string `json:"reason,omitempty"`
+	PrepaymentPercent string `json:"prepayment_percent"`
+	// ValidFrom — Дата ГГГГ-ММ-ДД (полночь в поясе кабинета) или момент RFC3339
+	ValidFrom string `json:"valid_from"`
+	// ValidTo — Дата ГГГГ-ММ-ДД или момент RFC3339; не входит в период
+	ValidTo *string `json:"valid_to,omitempty"`
+	Reason  *string `json:"reason,omitempty"`
 }
 
 type FinanceDirection = string
@@ -8792,15 +9326,21 @@ type FinancePaymentCalendar struct {
 	// CommittedIn — «Должны» — поступления, выведенные из регистра расчётов: долг записан, его можно требовать
 	CommittedIn string `json:"committed_in"`
 	// ExpectedIn — «С ожиданиями» — то же плюс выставленные счета и этапы графиков договоров
-	ExpectedIn string                          `json:"expected_in"`
-	Undated    *FinancePaymentCalendarUndated  `json:"undated,omitempty"`
-	Companies  []FinancePaymentCalendarCompany `json:"companies"`
-	Step       string                          `json:"step"`
-	Periods    []FinancePaymentCalendarPeriod  `json:"periods"`
-	Totals     []FinancePaymentCalendarCell    `json:"totals"`
-	Days       []FinancePaymentCalendarDay     `json:"days"`
-	Rows       []FinancePaymentCalendarRow     `json:"rows"`
-	Overdue    []FinancePaymentCalendarRow     `json:"overdue"`
+	ExpectedIn string `json:"expected_in"`
+	// View — Вид ответа; в summary списки rows, overdue, days, undated.rows и клетки счетов пусты
+	View *string `json:"view,omitempty"`
+	// RowCount — Строк в окне календаря; в сводном виде сами строки не отдаются
+	RowCount *int64 `json:"row_count,omitempty"`
+	// OverdueCount — Просроченных строк
+	OverdueCount *int64                          `json:"overdue_count,omitempty"`
+	Undated      *FinancePaymentCalendarUndated  `json:"undated,omitempty"`
+	Companies    []FinancePaymentCalendarCompany `json:"companies"`
+	Step         string                          `json:"step"`
+	Periods      []FinancePaymentCalendarPeriod  `json:"periods"`
+	Totals       []FinancePaymentCalendarCell    `json:"totals"`
+	Days         []FinancePaymentCalendarDay     `json:"days"`
+	Rows         []FinancePaymentCalendarRow     `json:"rows"`
+	Overdue      []FinancePaymentCalendarRow     `json:"overdue"`
 }
 
 type FinancePaymentCalendarRnpMetrics struct {
@@ -8996,6 +9536,10 @@ type FinancePayrollRunList struct {
 type FinancePnlCoverage struct {
 	Missing    []FinancePnlCoverageItem `json:"missing"`
 	Duplicated []FinancePnlCoverageItem `json:"duplicated"`
+	// Foreign — Строки макета, ссылающиеся на статьи вне ОПиУ
+	Foreign []FinancePnlCoverageItem `json:"foreign,omitempty"`
+	// Outside — Статьи вне ОПиУ с оборотом за период: итог отчёта их включает, строки макета — нет
+	Outside []FinancePnlCoverageItem `json:"outside,omitempty"`
 	// Taxes — Налоги раздела «Налоги» за период без строки-источника «Налоги» в макете; итог и прибыль их включают
 	Taxes *string `json:"taxes,omitempty"`
 }
@@ -9005,6 +9549,8 @@ type FinancePnlCoverageItem struct {
 	Name  string `json:"name"`
 	Path  string `json:"path"`
 	Times *int64 `json:"times,omitempty"`
+	// Amount — Оборот статьи за период — у статьи вне ОПиУ
+	Amount *string `json:"amount,omitempty"`
 }
 
 type FinancePnlLine struct {
@@ -9012,21 +9558,29 @@ type FinancePnlLine struct {
 	Name   string `json:"name"`
 	Sign   int64  `json:"sign"`
 	Amount string `json:"amount"`
+	// OutsidePNL — Статья вне дерева ОПиУ, по которой обороты всё же легли на счета результата: в итог входит, строкой макета быть не может
+	OutsidePNL *bool `json:"outside_pnl,omitempty"`
 }
 
 type FinancePnlReport struct {
 	// UnassignedCompany — При отборе по юрлицу — результат движений без юрлица и всего бизнеса
 	UnassignedCompany *FinancePnlReportUnassignedCompany `json:"unassigned_company,omitempty"`
-	RnpMetrics        map[string]string                  `json:"rnp_metrics,omitempty"`
-	Currency          *string                            `json:"currency,omitempty"`
-	From              string                             `json:"from"`
-	To                string                             `json:"to"`
-	Revenue           string                             `json:"revenue"`
-	Expense           string                             `json:"expense"`
-	Profit            string                             `json:"profit"`
-	UnclassifiedIn    string                             `json:"unclassified_in"`
-	UnclassifiedOut   string                             `json:"unclassified_out"`
-	Lines             []FinancePnlLine                   `json:"lines"`
+	// RnpMetrics — Показатели из системных ролей макета; revenue — строка «Выручка» макета, а без неё — revenue отчёта
+	RnpMetrics map[string]string `json:"rnp_metrics,omitempty"`
+	Currency   *string           `json:"currency,omitempty"`
+	// View — Есть только в сводном виде
+	View *string `json:"view,omitempty"`
+	From string  `json:"from"`
+	To   string  `json:"to"`
+	// Revenue — Сумма положительных оборотов статей на счетах результата: выручка, прочие доходы, положительная курсовая; не строка «Выручка» макета
+	Revenue string `json:"revenue"`
+	// Expense — Сумма отрицательных оборотов статей и налогов раздела «Налоги»
+	Expense string `json:"expense"`
+	// Profit — revenue + expense — прибыль по книге и управленческим суммам вне книги
+	Profit          string           `json:"profit"`
+	UnclassifiedIn  string           `json:"unclassified_in"`
+	UnclassifiedOut string           `json:"unclassified_out"`
+	Lines           []FinancePnlLine `json:"lines"`
 	// Taxes — Налоги раздела «Налоги» по видам — строка ОПиУ «Налоги»
 	Taxes []FinanceTaxKindAmount `json:"taxes,omitempty"`
 	// TaxesTotal — Итог строки «Налоги»; входит в расходы и прибыль
@@ -9052,6 +9606,22 @@ type FinancePnlReportLayout struct {
 	IsDefault  bool               `json:"is_default"`
 	Coverage   FinancePnlCoverage `json:"coverage"`
 	SystemRows map[string]string  `json:"system_rows"`
+	// Reconcile — Сверка итога макета («Чистая прибыль») с прибылью книги
+	Reconcile *FinancePnlReportLayoutReconcile `json:"reconcile,omitempty"`
+}
+
+// FinancePnlReportLayoutReconcile — Сверка итога макета («Чистая прибыль») с прибылью книги
+type FinancePnlReportLayoutReconcile struct {
+	// Available — В макете есть строка «Чистая прибыль»
+	Available    bool   `json:"available"`
+	LedgerProfit string `json:"ledger_profit"`
+	LayoutProfit string `json:"layout_profit"`
+	// Mismatch — Прибыль книги минус итог макета
+	Mismatch string `json:"mismatch"`
+	// OutsideItems — Статьи с оборотом вне формулы макета: непокрытые и вне ОПиУ
+	OutsideItems []string `json:"outside_items"`
+	// DuplicatedItems — Статьи, посчитанные макетом дважды
+	DuplicatedItems []string `json:"duplicated_items"`
 }
 
 type FinancePnlReportRow struct {
@@ -9140,8 +9710,23 @@ type FinanceReconciliationSummary struct {
 	// MissingOrderCount — Входящие платежи без продажи или закупки и без проекта; имя поля сохранено для совместимости
 	MissingOrderCount    int64 `json:"missing_order_count"`
 	MissingCashflowCount int64 `json:"missing_cashflow_count"`
-	// IncomingUnlinkedAmount — Сумма входящих платежей без продажи или закупки и без проекта; decimal string
-	IncomingUnlinkedAmount string `json:"incoming_unlinked_amount"`
+	// IncomingUnlinkedAmount — Сумма входящих платежей без продажи или закупки и без проекта в валюте учёта по пересчёту, зафиксированному у операции; decimal string. null — часть операций не пересчитана, исходные валюты не складываются
+	IncomingUnlinkedAmount *string `json:"incoming_unlinked_amount"`
+	// IncomingUnlinkedCurrency — Валюта учёта, в которой дан incoming_unlinked_amount
+	IncomingUnlinkedCurrency string `json:"incoming_unlinked_currency"`
+	// IncomingUnlinkedUnconvertedCount — Сколько таких операций без пересчёта в валюту учёта
+	IncomingUnlinkedUnconvertedCount int64 `json:"incoming_unlinked_unconverted_count"`
+	// IncomingUnlinkedByCurrency — Те же операции по исходным валютам, каждая сумма в своей валюте
+	IncomingUnlinkedByCurrency []FinanceReconciliationSummaryIncomingUnlinkedByCurrencyItem `json:"incoming_unlinked_by_currency"`
+}
+
+type FinanceReconciliationSummaryIncomingUnlinkedByCurrencyItem struct {
+	// Currency — Исходная валюта операций
+	Currency string `json:"currency"`
+	// Amount — Сумма в этой валюте; decimal string
+	Amount string `json:"amount"`
+	// Count — Число операций
+	Count int64 `json:"count"`
 }
 
 type FinanceRegisterAccountCheck struct {
@@ -9176,6 +9761,18 @@ type FinanceRegisterReconciliation struct {
 	StockTransferPending []FinanceRegisterReconciliationStockTransferPendingItem `json:"stock_transfer_pending,omitempty"`
 	// StockTransferHint — Пояснение к неперенесённому остатку для человека; пусто, если переносить нечего.
 	StockTransferHint *string `json:"stock_transfer_hint,omitempty"`
+	// SettlementsApplicable — Есть бизнесы на методе начисления; расчёты и книга сверяются только по ним
+	SettlementsApplicable *bool `json:"settlements_applicable,omitempty"`
+	// ShippedUnsold — Сальдо счёта 45 «Товары отгруженные» по всему кабинету
+	ShippedUnsold *string `json:"shipped_unsold,omitempty"`
+	// ShippedUnsoldAccrual — Сальдо счёта 45 бизнесов на методе начисления — то, что обязано быть нулём
+	ShippedUnsoldAccrual *string `json:"shipped_unsold_accrual,omitempty"`
+	// ShippedUnsoldMatch — Сальдо 45 бизнесов на начислении равно нулю
+	ShippedUnsoldMatch *bool `json:"shipped_unsold_match,omitempty"`
+	// CurrencyEffect — Прибавка переоценки валютных остатков к прибыли
+	CurrencyEffect *string `json:"currency_effect,omitempty"`
+	// CurrencyEffectAccounts — Та же переоценка по счетам имущества и долгов (дебетовый знак); сумма строк равна currency_effect
+	CurrencyEffectAccounts []FinanceRegisterReconciliationCurrencyEffectAccountsItem `json:"currency_effect_accounts,omitempty"`
 }
 
 type FinanceRegisterReconciliationInputVatUnexplainedItem struct {
@@ -9198,6 +9795,11 @@ type FinanceRegisterReconciliationStockTransferPendingItem struct {
 	ToCode     string `json:"to_code"`
 	Amount     string `json:"amount"`
 	Warehouses int64  `json:"warehouses"`
+}
+
+type FinanceRegisterReconciliationCurrencyEffectAccountsItem struct {
+	Code   string `json:"code"`
+	Amount string `json:"amount"`
 }
 
 type FinanceRegisterRepairFailure struct {
@@ -9229,12 +9831,17 @@ type FinanceRegistersResyncResult struct {
 }
 
 type FinanceReportColumn struct {
-	Key     string                     `json:"key"`
-	Label   string                     `json:"label"`
-	From    string                     `json:"from"`
-	To      string                     `json:"to"`
-	Total   bool                       `json:"total"`
-	Payload map[string]json.RawMessage `json:"payload"`
+	Key   string `json:"key"`
+	Label string `json:"label"`
+	From  string `json:"from"`
+	To    string `json:"to"`
+	Total bool   `json:"total"`
+	// Payload — Витрина колонки целиком; только в полном виде
+	Payload map[string]json.RawMessage `json:"payload,omitempty"`
+	// Figures — Ключевые цифры колонки; только в сводном виде
+	Figures map[string]string `json:"figures,omitempty"`
+	// SystemRows — Суммы системных строк макета за колонку; в сводном виде, когда отчёт строится по макету
+	SystemRows map[string]string `json:"system_rows,omitempty"`
 }
 
 type FinanceReportCompany struct {
@@ -9278,11 +9885,14 @@ type FinanceSaleLineInput struct {
 
 type FinanceSettlementBalance struct {
 	ObligationID UUID `json:"obligation_id"`
-	// Remaining — Decimal string
+	// Remaining — Decimal string с разрядностью валюты обязательства: 196000.00, 4638.65
 	Remaining string `json:"remaining"`
+	// Currency — Валюта обязательства
+	Currency string `json:"currency"`
 }
 
 type FinanceSettlementBalancePage struct {
+	// Count — Число строк после отбора валюты, до страницы
 	Count   int64                      `json:"count"`
 	Results []FinanceSettlementBalance `json:"results"`
 }
@@ -10768,7 +11378,7 @@ type MarketplaceOzonPnl struct {
 	Demo *bool `json:"demo,omitempty"`
 	// Breakdown — Расшифровка прочего по периодам
 	Breakdown map[string][]MarketplaceOzonDecompositionOtherItem `json:"breakdown,omitempty"`
-	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
+	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
 	CostMissing map[string]float64 `json:"cost_missing,omitempty"`
 	// UnitsMissing — Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
 	UnitsMissing map[string]float64               `json:"units_missing,omitempty"`
@@ -10892,8 +11502,11 @@ type MarketplaceOzonSyncJob struct {
 	// RiverJobID — Идентификатор задания в очереди
 	RiverJobID *int64 `json:"river_job_id"`
 	Period     string `json:"period"`
-	StoreIds   []UUID `json:"store_ids"`
-	Message    string `json:"message"`
+	// StoreIds — Магазины задания в области участника; пусто — задание по всем магазинам
+	StoreIds []UUID `json:"store_ids"`
+	// Stores — Те же магазины с названием и состоянием: выключенного магазина нет в списке магазинов, а его задания остаются
+	Stores  []MarketplaceSyncJobStore `json:"stores"`
+	Message string                    `json:"message"`
 	// Stats — Сырой JSON итогов задания; форма зависит от вида
 	Stats      json.RawMessage `json:"stats"`
 	StartedAt  *string         `json:"started_at"`
@@ -10940,6 +11553,7 @@ type MarketplaceStore struct {
 	TokenClass *string `json:"token_class,omitempty"`
 	// Credential — Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена
 	Credential *MarketplaceStoreCredential `json:"credential,omitempty"`
+	WriteKey   *MarketplaceStoreWriteKey   `json:"write_key,omitempty"`
 	// ConnectionStatus — Безопасное состояние подключения в ERP: not_checked — проверка ещё не запускалась, pending — MPTrack проверяет реквизиты или запускает первую загрузку, disabled — загрузки отключены, ok — подключение работает, warning — требуется внимание, error — подключение не работает. Сырые статусы и тексты MPTrack не публикуются
 	ConnectionStatus string `json:"connection_status"`
 	// ConnectionErrorCode — Безопасный стабильный код состояния подключения; сырой текст ошибки не публикуется
@@ -10993,6 +11607,44 @@ type MarketplaceStoreInput struct {
 type MarketplaceStorePage struct {
 	Count   int64              `json:"count"`
 	Results []MarketplaceStore `json:"results"`
+}
+
+// MarketplaceStoreWriteKey — Признаки ключа магазина на запись в площадку (марки в сборочные задания FBS); сам ключ не возвращается
+type MarketplaceStoreWriteKey struct {
+	// Set — Ключ задан
+	Set bool `json:"set"`
+	// Mask — Последние 4 символа токена или Api-Key
+	Mask *string `json:"mask,omitempty"`
+	// Kind — Тип токена Wildberries
+	Kind *string `json:"kind,omitempty"`
+	// Scopes — Категории токена Wildberries
+	Scopes []string `json:"scopes"`
+	// ReadOnly — Токен только на чтение
+	ReadOnly bool `json:"read_only"`
+	// Ability — Можно ли передавать марки: ready — можно, no_key — ключа нет, no_write_scope — нет права записи, unchecked — не проверено
+	Ability string `json:"ability"`
+	// SetBy — Кто задал ключ
+	SetBy *int64 `json:"set_by"`
+	// SetAt — Когда задан ключ
+	SetAt *string `json:"set_at"`
+	// CheckedAt — Когда ключ проверяли
+	CheckedAt *string `json:"checked_at"`
+	// CheckResult — Итог последней проверки без записи
+	CheckResult *string `json:"check_result,omitempty"`
+	// LastUsedAt — Когда ключом последний раз передавали марки
+	LastUsedAt *string `json:"last_used_at"`
+	// LastResult — Итог последней передачи марок
+	LastResult *string `json:"last_result,omitempty"`
+	// LastErrorCode — Код отказа последней передачи
+	LastErrorCode *string `json:"last_error_code,omitempty"`
+}
+
+type MarketplaceSyncJobStore struct {
+	ID UUID `json:"id"`
+	// Name — Название магазина
+	Name string `json:"name"`
+	// IsActive — Магазин включён; выключенный в обычном списке магазинов не виден
+	IsActive bool `json:"is_active"`
 }
 
 type MarketplaceWbCardAdDay struct {
@@ -11324,7 +11976,7 @@ type MarketplaceWbPnl struct {
 	Demo *bool `json:"demo,omitempty"`
 	// Breakdown — Разбор строки «Прочее» по периодам
 	Breakdown map[string][]MarketplaceWbDecompOtherItem `json:"breakdown,omitempty"`
-	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
+	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
 	CostMissing map[string]float64 `json:"cost_missing,omitempty"`
 	// UnitsMissing — Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
 	UnitsMissing map[string]float64               `json:"units_missing,omitempty"`
@@ -11534,7 +12186,7 @@ type MarketplaceYandexPnl struct {
 	Range   MarketplaceYandexPnlRange    `json:"range"`
 	Periods []MarketplaceYandexPnlPeriod `json:"periods"`
 	Rows    []MarketplaceYandexPnlRow    `json:"rows"`
-	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
+	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
 	CostMissing map[string]float64 `json:"cost_missing,omitempty"`
 	// UnitsMissing — Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
 	UnitsMissing map[string]float64 `json:"units_missing,omitempty"`
@@ -13977,6 +14629,16 @@ type StockDocumentFulfillmentLine struct {
 type StockDocumentFulfillmentPage struct {
 	Count   int64                      `json:"count"`
 	Results []StockDocumentFulfillment `json:"results"`
+	// Skipped — Документы пакета, у которых исполнение не считается (другой вид документа); пакет из-за них не падает.
+	Skipped []StockDocumentFulfillmentSkipped `json:"skipped,omitempty"`
+}
+
+type StockDocumentFulfillmentSkipped struct {
+	DocumentID UUID   `json:"document_id"`
+	TypeKey    string `json:"type_key"`
+	Number     string `json:"number"`
+	// Reason — Почему исполнение не считается
+	Reason string `json:"reason"`
 }
 
 // StockDocumentLandedCostTarget — Партия, на которую распределяются накладные расходы.
@@ -14884,7 +15546,7 @@ type StockReportRow struct {
 	EntryCount int64  `json:"entry_count"`
 }
 
-// StockReportTotals — Итог по всей выборке отчёта, а не по странице. Количества, включая минимум, имеют смысл только при одной единице измерения на всю выборку — её называет поле unit. Себестоимости единицы здесь нет вовсе: сумма средних цен не значит ничего ни при какой однородности.
+// StockReportTotals — Итог по всей выборке отчёта, а не по странице. Количества, включая минимум, имеют смысл только при одной единице измерения на всю выборку — её называет поле unit; без общей единицы количества приходят пустой строкой, а сумма денег — числом. Себестоимости единицы здесь нет вовсе: сумма средних цен не значит ничего ни при какой однородности.
 type StockReportTotals struct {
 	// OnHand — Decimal string
 	OnHand string `json:"on_hand"`
@@ -14902,7 +15564,7 @@ type StockReportTotals struct {
 	Suggested string `json:"suggested"`
 	// Amount — Decimal string. Деньги аддитивны всегда и от единицы измерения не зависят
 	Amount string `json:"amount"`
-	// Unit — Единица измерения итога, если она одна на всю выборку. Пусто, когда единицы разные: складывать штуки с килограммами нельзя, и потребитель обязан показать прочерк вместо суммы.
+	// Unit — Единица измерения итога, если она одна на всю выборку. Пусто, когда единицы разные: складывать штуки с килограммами нельзя, количества итога тогда пусты, и потребитель показывает прочерк вместо суммы.
 	Unit string `json:"unit"`
 }
 
@@ -15209,11 +15871,12 @@ type Task struct {
 	// ChecklistTotal — Пунктов во всех чек-листах задачи (ERP-1488); есть и в компактной строке списка.
 	ChecklistTotal int64 `json:"checklist_total"`
 	// ChecklistDone — Отмеченных пунктов во всех чек-листах задачи.
-	ChecklistDone  int64                        `json:"checklist_done"`
-	Tags           []TaskTag                    `json:"tags"`
-	Links          []map[string]json.RawMessage `json:"links"`
-	CommentsCount  int64                        `json:"comments_count"`
-	BlockedByCount int64                        `json:"blocked_by_count"`
+	ChecklistDone int64                        `json:"checklist_done"`
+	Tags          []TaskTag                    `json:"tags"`
+	Links         []map[string]json.RawMessage `json:"links"`
+	// CommentsCount — Всегда 0. Обсуждение людей читают через комментарии обсуждения, рабочий журнал агентов — через комментарии задачи; ни то ни другое не попадает в этот счётчик.
+	CommentsCount  int64 `json:"comments_count"`
+	BlockedByCount int64 `json:"blocked_by_count"`
 }
 
 type TaskCreate struct {
@@ -15608,8 +16271,25 @@ type AssistantReplaceDigestRequest struct {
 	Version        int64    `json:"version"`
 }
 
+type AutomationConnectionsResponse struct {
+	Connections []AutomationConnection `json:"connections"`
+	Webhooks    []AutomationWebhook    `json:"webhooks"`
+	// Installations — Установки приложений кабинета (кроме удалённых) для действия «Передать приложению»
+	Installations []AutomationAppInstallation `json:"installations"`
+	// AuthKinds — Способы авторизации подключения в порядке показа
+	AuthKinds []string `json:"auth_kinds"`
+	// HookPathPrefix — Начало адреса приёма вебхука; полный адрес с токеном показывается человеку один раз при выпуске
+	HookPathPrefix string `json:"hook_path_prefix"`
+	// AllowLocal — Локальные приёмники, разрешённые стенду; в бою пусто
+	AllowLocal []string `json:"allow_local"`
+}
+
 type AutomationRulesResponse struct {
 	Rules []AutomationRuleDocument `json:"rules"`
+}
+
+type AutomationCreateRuleRequest struct {
+	Rule AutomationRuleDraft `json:"rule"`
 }
 
 type AutomationRuleSimulateResponse struct {
@@ -15620,6 +16300,30 @@ type AutomationRuleSimulateResponse struct {
 type AutomationRuleTestResponse struct {
 	Result  AutomationRuleTestResult `json:"result"`
 	Problem *AutomationRuleProblem   `json:"problem,omitempty"`
+}
+
+type AutomationRuleValidateRequest struct {
+	Rule AutomationRuleDraft `json:"rule"`
+}
+
+type AutomationSetRuleEnabledRequest struct {
+	Enabled bool `json:"enabled"`
+	// AllowExternalSend — Человек согласился, что правило будет отправлять за пределы кабинета
+	AllowExternalSend *bool `json:"allow_external_send,omitempty"`
+	// AllowMoneyPosting — Человек согласился, что правило будет выпускать учётные документы или двигать товар и деньги
+	AllowMoneyPosting *bool `json:"allow_money_posting,omitempty"`
+}
+
+type AutomationRuleVersionsResponse struct {
+	Versions []AutomationRuleVersion `json:"versions"`
+}
+
+type AutomationRunsResponse struct {
+	Runs []AutomationRunReport `json:"runs"`
+}
+
+type AutomationRunActionsResponse struct {
+	Actions []AutomationRunActionReport `json:"actions"`
 }
 
 type BankRepostTransactionsRequest struct {
@@ -15743,7 +16447,8 @@ type FinanceListDividendOwnersResponse struct {
 }
 
 type FinanceListDividendOwnersResponseResultsItem struct {
-	ID             UUID   `json:"id"`
+	ID UUID `json:"id"`
+	// Kind — Кем владелец записан в структуре владения: employee — человек из справочника сотрудников, company — юрлицо кабинета, contact — контрагент. employee не значит, что выплата — зарплата: это дивиденды собственнику
 	Kind           string `json:"kind"`
 	Name           string `json:"name"`
 	SharePercent   string `json:"share_percent"`

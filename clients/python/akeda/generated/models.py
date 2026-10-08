@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e278ecc6f3db3051c024549b7129364efc3ac4920445da2f2eb464f464f210cb).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3c581e130f57cf5a137bcc64a450f9997a217c7b8ccf491799d22139003f6b12).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -40,45 +40,76 @@ __all__ = [
     "AttachmentReplacementSessionCreate",
     "AttachmentUploadSession",
     "AttachmentUploadSessionCreate",
+    "AutomationAppInstallation",
+    "AutomationConnection",
+    "AutomationConnectionCheck",
+    "AutomationEnableActionsItem",
+    "AutomationEnableActions",
+    "AutomationEnablePreview",
     "AutomationManifest",
     "AutomationManifestConditions",
     "AutomationManifestConditionsOperatorsItem",
+    "AutomationManifestTiming",
+    "AutomationManifestTimingSelectionsItem",
     "AutomationManifestReferencesItem",
     "AutomationManifestPlaceholdersItem",
     "AutomationManifestLimits",
     "AutomationManifestAction",
     "AutomationManifestActionInputsItem",
+    "AutomationManifestActionOutputsItem",
     "AutomationManifestEvent",
     "AutomationManifestEventFieldsItem",
     "AutomationManifestOption",
+    "AutomationRuleBlock",
+    "AutomationRuleBlockWait",
+    "AutomationRuleBranch",
+    "AutomationRuleBranchConditionsItem",
     "AutomationRuleDocument",
     "AutomationRuleDocumentConditionsItem",
-    "AutomationRuleDocumentActionsItem",
+    "AutomationRuleDraft",
+    "AutomationRuleDraftConditionsItem",
+    "AutomationRuleEnvelope",
     "AutomationRuleProblem",
+    "AutomationRuleRefusal",
+    "AutomationRuleSaveRequest",
     "AutomationRuleSimulateRequest",
     "AutomationRuleSimulateRequestRule",
     "AutomationRuleSimulation",
     "AutomationRuleSimulationRecordsItem",
+    "AutomationRuleSimulationPathsItem",
     "AutomationRuleSimulationActionsItem",
     "AutomationRuleSimulationBefore",
+    "AutomationRuleSimulationSelection",
+    "AutomationRuleSimulationSelectionSampleItem",
     "AutomationRuleTestRequest",
     "AutomationRuleTestRequestRule",
     "AutomationRuleTestRequestRuleConditionsItem",
-    "AutomationRuleTestRequestRuleActionsItem",
     "AutomationRuleTestResult",
     "AutomationRuleTestResultSample",
     "AutomationRuleTestResultWhen",
     "AutomationRuleTestResultWhenValuesItem",
     "AutomationRuleTestResultCondition",
     "AutomationRuleTestResultConditionClausesItem",
+    "AutomationRuleTestResultBranchesItem",
     "AutomationRuleTestResultActionsItem",
     "AutomationRuleTestResultActionsItemInputsItem",
+    "AutomationRuleTestResultSelection",
+    "AutomationRuleTestResultSelectionSampleItem",
+    "AutomationRuleValidation",
+    "AutomationRuleValidationActionsItem",
+    "AutomationRuleVersion",
+    "AutomationRuleVersionChangesItem",
+    "AutomationRunActionReport",
+    "AutomationRunReport",
+    "AutomationWebhook",
+    "AutomationWebhookField",
     "CRMActivity",
     "CRMAnalytics",
     "CRMAutomationAction",
     "CRMAutomationActionJournal",
     "CRMAutomationEventType",
     "CRMAutomationRule",
+    "CRMAutomationRuleAdoptionProblem",
     "CRMAutomationRuleInput",
     "CRMAutomationRun",
     "CRMCardFile",
@@ -271,6 +302,7 @@ __all__ = [
     "CoreAccountingDimensionVersion",
     "CoreAccountingDimensionVersionInput",
     "CoreAccountingPolicy",
+    "CoreAccountingPolicyOwner",
     "CoreAccountingSettings",
     "CoreAccountingSettingsInput",
     "CoreBalanceShortage",
@@ -348,6 +380,7 @@ __all__ = [
     "CoreItem",
     "CoreItemInput",
     "CoreItemMove",
+    "CoreItemMoved",
     "CoreItemPage",
     "CoreLetterhead",
     "CoreLetterheadImages",
@@ -359,7 +392,10 @@ __all__ = [
     "CoreNumberReset",
     "CoreNumberSource",
     "CoreOrder",
+    "CoreOrderActionCheck",
     "CoreOrderAllowedAction",
+    "CoreOrderBlockReason",
+    "CoreOrderBlockers",
     "CoreOrderBuyer",
     "CoreOrderCabinetStatusInput",
     "CoreOrderCloseInput",
@@ -613,6 +649,9 @@ __all__ = [
     "DocflowFlowCommercialTaxLine",
     "DocflowFlowContent",
     "DocflowFlowContractTerms",
+    "DocflowFlowCorrection",
+    "DocflowFlowCorrectionLine",
+    "DocflowFlowCorrectionState",
     "DocflowFlowCreateInput",
     "DocflowFlowDocument",
     "DocflowFlowEDOAttachment",
@@ -672,6 +711,9 @@ __all__ = [
     "DocflowStateCategory",
     "DocflowTemplatePastAct",
     "DocflowTemplatePastActs",
+    "DocflowUKDBasisRef",
+    "DocflowUKDInput",
+    "DocflowUKDState",
     "DocumentCreate",
     "DocumentOwnerType",
     "DocumentPage",
@@ -804,6 +846,7 @@ __all__ = [
     "FinancePnlReport",
     "FinancePnlReportUnassignedCompany",
     "FinancePnlReportLayout",
+    "FinancePnlReportLayoutReconcile",
     "FinancePnlReportRow",
     "FinanceProject",
     "FinanceProjectBudget",
@@ -813,11 +856,13 @@ __all__ = [
     "FinanceProjectReport",
     "FinanceReconciliation",
     "FinanceReconciliationSummary",
+    "FinanceReconciliationSummaryIncomingUnlinkedByCurrencyItem",
     "FinanceRegisterAccountCheck",
     "FinanceRegisterReconciliation",
     "FinanceRegisterReconciliationInputVatUnexplainedItem",
     "FinanceRegisterReconciliationStockItem",
     "FinanceRegisterReconciliationStockTransferPendingItem",
+    "FinanceRegisterReconciliationCurrencyEffectAccountsItem",
     "FinanceRegisterRepairFailure",
     "FinanceRegisterRepairRequest",
     "FinanceRegisterRepairResult",
@@ -968,6 +1013,8 @@ __all__ = [
     "MarketplaceStoreCredential",
     "MarketplaceStoreInput",
     "MarketplaceStorePage",
+    "MarketplaceStoreWriteKey",
+    "MarketplaceSyncJobStore",
     "MarketplaceWbCardAdDay",
     "MarketplaceWbCardBoard",
     "MarketplaceWbCardFunnelDay",
@@ -1243,6 +1290,7 @@ __all__ = [
     "StockDocumentFulfillment",
     "StockDocumentFulfillmentLine",
     "StockDocumentFulfillmentPage",
+    "StockDocumentFulfillmentSkipped",
     "StockDocumentLandedCostTarget",
     "StockDocumentLine",
     "StockDocumentLineHandlingAllocation",
@@ -1384,9 +1432,16 @@ __all__ = [
     "AppDocflowRecordSalePaymentRequest",
     "AssistantListDigestsResponse",
     "AssistantReplaceDigestRequest",
+    "AutomationConnectionsResponse",
     "AutomationRulesResponse",
+    "AutomationCreateRuleRequest",
     "AutomationRuleSimulateResponse",
     "AutomationRuleTestResponse",
+    "AutomationRuleValidateRequest",
+    "AutomationSetRuleEnabledRequest",
+    "AutomationRuleVersionsResponse",
+    "AutomationRunsResponse",
+    "AutomationRunActionsResponse",
     "BankRepostTransactionsRequest",
     "BankRepostTransactionRequest",
     "CoreListBusinessesResponse",
@@ -1752,6 +1807,101 @@ class AttachmentUploadSessionCreate(_AttachmentUploadSessionCreateRequired, tota
     mime_type: str
     sha256: str
 
+class _AutomationAppInstallationRequired(TypedDict):
+    #: Идентификатор установки — вход installation_id действия
+    id: str
+    #: Название приложения
+    title: str
+    #: Издатель
+    publisher: str
+    #: Ключ приложения у издателя
+    app_key: str
+    #: Установка включена, издатель, приложение и версия не выключены платформой
+    active: bool
+    #: У установки есть адрес доставки событий
+    receiver: bool
+    #: Манифест версии подписан на app.automation.delivered.v1
+    subscribed: bool
+    #: Кабинет дал право app.automation:read
+    granted: bool
+    #: Передача дойдёт до установки
+    ready: bool
+
+class AutomationAppInstallation(_AutomationAppInstallationRequired, total=False):
+    """Установка приложения кабинета глазами действия «Передать приложению» (`platform.deliver_to_app`). Передача — адресное событие `app.automation.delivered.v1` только этой установке; готова та, что включена, имеет адрес доставки, подписана на тему и получила от кабинета право `app.automation:read`. Права и адрес не возвращаются."""
+
+    #: Первая причина, по которой не дойдёт; пусто у готовой
+    missing: Literal['app_installation_disabled', 'app_no_receiver', 'app_consent_missing']
+
+class _AutomationConnectionRequired(TypedDict):
+    id: str
+    name: str
+    #: Базовый адрес; путь действия дописывается к нему
+    base_url: str
+    #: Разрешённый домен: вызов уходит только на него
+    host: str
+    #: Способ авторизации
+    auth_kind: Literal['none', 'header', 'bearer', 'basic', 'hmac']
+    #: Задан ли секрет; сам секрет не возвращается
+    has_secret: bool
+    enabled: bool
+    created_by: int
+    created_at: str
+    updated_at: str
+
+class AutomationConnection(_AutomationConnectionRequired, total=False):
+    """Внешнее подключение автоматизаций. Секрет не возвращается — только признак has_secret."""
+
+    #: Имя заголовка с секретом при способе header
+    auth_header: str
+    #: Логин при способе basic
+    basic_user: str
+    last_check: "AutomationConnectionCheck"
+
+class _AutomationConnectionCheckRequired(TypedDict):
+    at: str
+    ok: bool
+    duration_ms: int
+
+class AutomationConnectionCheck(_AutomationConnectionCheckRequired, total=False):
+    """Последняя проверка подключения по кнопке на экране."""
+
+    #: HTTP-статус ответа приёмника
+    status: int
+    #: Почему не ответил; нет поля — ответил
+    code: Literal['unreachable', 'blocked', 'timeout', 'http_error']
+
+class AutomationEnableActionsItem(TypedDict):
+    index: int
+    command: str
+    label: str
+
+AutomationEnableActions = List["AutomationEnableActionsItem"]
+
+class _AutomationEnablePreviewRequired(TypedDict):
+    rule_id: str
+    name: str
+    version: int
+    event_type: str
+    event_label: str
+    executor_user_id: int
+    external_actions: "AutomationEnableActions"
+    posting_actions: "AutomationEnableActions"
+    required: List[Literal['allow_external_send', 'allow_money_posting']]
+    simulated: bool
+    days: int
+    events: int
+    fired: int
+    truncated: bool
+    #: Сколько отправок наружу ушло бы за период
+    external_sends: int
+    #: Сколько учётных документов и движений выпустило бы правило за период
+    postings: int
+    executed: bool
+
+class AutomationEnablePreview(_AutomationEnablePreviewRequired, total=False):
+    simulation_message: str
+
 class _AutomationManifestRequired(TypedDict):
     format: Literal['akeda.automation.manifest']
     version: int
@@ -1770,6 +1920,10 @@ class AutomationManifest(_AutomationManifestRequired, total=False):
     """Документ akeda.automation.manifest версии 1 (AUTOMATION.md § 10.1)."""
 
     $schema: str
+    #: Блок «Когда выполнить» (ERP-1928): виды, единицы, повторы расписания, события отмены; отборы записей по расписанию — selections (ERP-1939). Полная схема — docs/architecture/automation/manifest.schema.json
+    timing: "AutomationManifestTiming"
+    #: Ветки «Если ещё / Иначе», пауза «Подождать» и ссылки на результаты шагов (ERP-1932)
+    blocks: Dict[str, Any]
 
 class AutomationManifestConditions(TypedDict):
     combinator: Literal['all']
@@ -1783,6 +1937,27 @@ class AutomationManifestConditionsOperatorsItem(TypedDict):
     field_types: List[str]
     needs_value: bool
     case_insensitive: bool
+
+class AutomationManifestTiming(TypedDict, total=False):
+    """Блок «Когда выполнить» (ERP-1928): виды, единицы, повторы расписания, события отмены; отборы записей по расписанию — selections (ERP-1939). Полная схема — docs/architecture/automation/manifest.schema.json"""
+
+    #: Сколько записей отбора берёт один запуск расписания
+    max_selection_records: int
+    selections: List["AutomationManifestTimingSelectionsItem"]
+
+class _AutomationManifestTimingSelectionsItemRequired(TypedDict):
+    key: str
+    module: str
+    #: Объект записи: действия над записью события берутся по нему
+    object: str
+    entity: str
+    label: str
+    status: Literal['live', 'unavailable']
+    params: List[Dict[str, Any]]
+    fields: List[Dict[str, Any]]
+
+class AutomationManifestTimingSelectionsItem(_AutomationManifestTimingSelectionsItemRequired, total=False):
+    description: str
 
 class AutomationManifestReferencesItem(TypedDict):
     kind: str
@@ -1816,7 +1991,7 @@ class _AutomationManifestActionRequired(TypedDict):
     status: Literal['live', 'declared', 'unavailable']
     permission: str
     reversible: bool
-    danger: Literal['none', 'external', 'irreversible']
+    danger: Literal['none', 'external', 'posting', 'irreversible']
     idempotency: str
     target: Literal['new', 'event_entity']
 
@@ -1826,16 +2001,27 @@ class AutomationManifestAction(_AutomationManifestActionRequired, total=False):
     mcp_twin: str
     inputs: List["AutomationManifestActionInputsItem"]
     example_inputs: Dict[str, str]
+    #: Результаты шага для следующих шагов пути: {{step:<id шага>.<key>}} (ERP-1932)
+    outputs: List["AutomationManifestActionOutputsItem"]
 
 class _AutomationManifestActionInputsItemRequired(TypedDict):
     key: str
-    type: Literal['string', 'number', 'bool', 'reference', 'datetime', 'choice']
+    #: reference_list — несколько значений справочника ref через запятую, например группа распределения ответственного (ERP-1938)
+    type: Literal['string', 'number', 'bool', 'reference', 'datetime', 'choice', 'event_date', 'time', 'json', 'headers', 'code', 'reference_list']
     required: bool
     label: str
     accepts_placeholders: bool
 
 class AutomationManifestActionInputsItem(_AutomationManifestActionInputsItemRequired, total=False):
     options: List["AutomationManifestOption"]
+    ref: str
+
+class _AutomationManifestActionOutputsItemRequired(TypedDict):
+    key: str
+    type: Literal['string', 'number', 'reference']
+    label: str
+
+class AutomationManifestActionOutputsItem(_AutomationManifestActionOutputsItemRequired, total=False):
     ref: str
 
 class _AutomationManifestEventRequired(TypedDict):
@@ -1865,10 +2051,57 @@ class _AutomationManifestEventFieldsItemRequired(TypedDict):
 class AutomationManifestEventFieldsItem(_AutomationManifestEventFieldsItemRequired, total=False):
     options: List["AutomationManifestOption"]
     ref: str
+    #: custom — своё поле кабинета, webhook — поле тела входящего вебхука body.<путь> (ERP-1938), selection — поле записи отбора по расписанию (ERP-1939)
+    group: Literal['custom', 'webhook', 'selection']
+    #: У поля тела вебхука — вебхуки, в образце которых оно есть
+    hooks: List[str]
 
 class AutomationManifestOption(TypedDict):
     value: str
     label: str
+
+class AutomationRuleBlock(TypedDict, total=False):
+    """Шаг пути правила (ERP-1932): действие каталога или пауза «Подождать» (`kind: wait`). `id` — устойчивый id шага: журнал, ключ повтора и ссылки `{{step:<id>.<результат>}}` во входах следующих шагов того же пути. Пусто — сервер ставит a1, a2 … (пауза — w1 …)."""
+
+    id: str
+    #: Пусто — действие
+    kind: Literal['action', 'wait']
+    command: str
+    inputs: Dict[str, str]
+    #: Пауза: after_event — через amount единиц unit от начала паузы; relative_to_field — до даты поля field (± amount); cancel_on — события, факт которых по той же записи прекращает правило
+    wait: "AutomationRuleBlockWait"
+
+class AutomationRuleBlockWait(TypedDict, total=False):
+    """Пауза: after_event — через amount единиц unit от начала паузы; relative_to_field — до даты поля field (± amount); cancel_on — события, факт которых по той же записи прекращает правило"""
+
+    kind: Literal['after_event', 'relative_to_field']
+    amount: int
+    unit: Literal['minutes', 'hours', 'days', 'working_days']
+    direction: Literal['before', 'after']
+    field: str
+    at: str
+    cancel_on: List[str]
+
+class _AutomationRuleBranchRequired(TypedDict):
+    conditions: List["AutomationRuleBranchConditionsItem"]
+    actions: List["AutomationRuleBlock"]
+
+class AutomationRuleBranch(_AutomationRuleBranchRequired, total=False):
+    """«Если ещё …»: своё условие сравнениями и свои шаги"""
+
+    id: str
+    #: Выражение, собранное сервером из conditions
+    condition: str
+
+class _AutomationRuleBranchConditionsItemRequired(TypedDict):
+    field: str
+    op: str
+
+class AutomationRuleBranchConditionsItem(_AutomationRuleBranchConditionsItemRequired, total=False):
+    value: str
+    value_to: str
+    of: str
+    group: int
 
 class _AutomationRuleDocumentRequired(TypedDict):
     id: str
@@ -1877,13 +2110,20 @@ class _AutomationRuleDocumentRequired(TypedDict):
     #: Выражение вычислителя; у правила из конструктора собрано из conditions
     condition: str
     conditions: List["AutomationRuleDocumentConditionsItem"]
-    actions: List["AutomationRuleDocumentActionsItem"]
+    #: Путь «Если да»: действия и паузы по порядку (ERP-1932)
+    actions: List["AutomationRuleBlock"]
     executor_user_id: int
     is_enabled: bool
     origin: Literal['manual', 'configuration']
     version: int
 
 class AutomationRuleDocument(_AutomationRuleDocumentRequired, total=False):
+    #: «Если ещё …»: до трёх путей со своим условием, проверяются по порядку
+    branches: List["AutomationRuleBranch"]
+    #: «Иначе»: блоки, когда не подошло ни одно условие; пусто — правило промолчит
+    otherwise: List["AutomationRuleBlock"]
+    #: Версия языка документа правила (rule.schema.json); 2 — пути, паузы и результаты шагов
+    doc_version: int
     created_by: int
     created_at: str
     updated_at: str
@@ -1898,11 +2138,30 @@ class AutomationRuleDocumentConditionsItem(_AutomationRuleDocumentConditionsItem
     of: str
     group: int
 
-class _AutomationRuleDocumentActionsItemRequired(TypedDict):
-    command: str
+class _AutomationRuleDraftRequired(TypedDict):
+    event_type: str
 
-class AutomationRuleDocumentActionsItem(_AutomationRuleDocumentActionsItemRequired, total=False):
-    inputs: Dict[str, str]
+class AutomationRuleDraft(_AutomationRuleDraftRequired, total=False):
+    """Документ правила в той же форме, что у записи с экрана и у проверки; новые поля документа принимаются без смены этой схемы. Правка без branches и otherwise сохраняет прежние ветки; убрать их — прислать пустые списки."""
+
+    name: str
+    conditions: List["AutomationRuleDraftConditionsItem"]
+    actions: List["AutomationRuleBlock"]
+    branches: List["AutomationRuleBranch"]
+    otherwise: List["AutomationRuleBlock"]
+
+class _AutomationRuleDraftConditionsItemRequired(TypedDict):
+    field: str
+    op: str
+
+class AutomationRuleDraftConditionsItem(_AutomationRuleDraftConditionsItemRequired, total=False):
+    value: str
+    value_to: str
+    of: str
+    group: int
+
+class AutomationRuleEnvelope(TypedDict):
+    rule: "AutomationRuleDocument"
 
 class _AutomationRuleProblemRequired(TypedDict):
     #: Путь в документе правила: event_type, conditions[1].op, actions[0].inputs.title
@@ -1914,6 +2173,18 @@ class AutomationRuleProblem(_AutomationRuleProblemRequired, total=False):
     hint: str
     params: Dict[str, str]
     allowed: List[str]
+
+class _AutomationRuleRefusalRequired(TypedDict):
+    detail: str
+
+class AutomationRuleRefusal(_AutomationRuleRefusalRequired, total=False):
+    code: str
+    problem: "AutomationRuleProblem"
+
+class AutomationRuleSaveRequest(TypedDict):
+    rule: "AutomationRuleDraft"
+    #: Версия правила, которую вы прочитали (поле version)
+    expected_version: int
 
 class _AutomationRuleSimulateRequestRequired(TypedDict):
     #: Документ правила в той же форме, что у проверки правила (event_type, conditions, actions); название и исполнитель не нужны.
@@ -1947,7 +2218,11 @@ class _AutomationRuleSimulationRequired(TypedDict):
     executed: bool
 
 class AutomationRuleSimulation(_AutomationRuleSimulationRequired, total=False):
+    #: У правила с ветками — сколько фактов пошло бы каждым путём
+    paths: List["AutomationRuleSimulationPathsItem"]
     before: "AutomationRuleSimulationBefore"
+    #: Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример
+    selection: "AutomationRuleSimulationSelection"
 
 class _AutomationRuleSimulationRecordsItemRequired(TypedDict):
     key: str
@@ -1957,6 +2232,12 @@ class _AutomationRuleSimulationRecordsItemRequired(TypedDict):
 class AutomationRuleSimulationRecordsItem(_AutomationRuleSimulationRecordsItemRequired, total=False):
     #: Номер, идентификатор или тема записи
     title: str
+    #: Каким путём пошёл бы факт
+    path_id: str
+
+class AutomationRuleSimulationPathsItem(TypedDict):
+    id: str
+    count: int
 
 class _AutomationRuleSimulationActionsItemRequired(TypedDict):
     index: int
@@ -1969,6 +2250,8 @@ class _AutomationRuleSimulationActionsItemRequired(TypedDict):
     count: int
 
 class AutomationRuleSimulationActionsItem(_AutomationRuleSimulationActionsItemRequired, total=False):
+    block_id: str
+    path_id: str
     code: str
     message: str
 
@@ -1977,6 +2260,30 @@ class AutomationRuleSimulationBefore(TypedDict):
     version: int
     #: Сколько раз сработала бы сохранённая версия; выключенное правило — 0
     fired: int
+
+class _AutomationRuleSimulationSelectionRequired(TypedDict):
+    key: str
+    label: str
+    count: int
+    #: Сколько записей прошли бы условие и пути
+    matched: int
+    #: Записей больше limit — за запуск возьмутся первые
+    truncated: bool
+    limit: int
+    sample: List["AutomationRuleSimulationSelectionSampleItem"]
+
+class AutomationRuleSimulationSelection(_AutomationRuleSimulationSelectionRequired, total=False):
+    """Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример"""
+
+    #: Почему отбор не прочитан (automation.reason.<код>)
+    code: str
+    message: str
+
+class AutomationRuleSimulationSelectionSampleItem(TypedDict):
+    entity_id: str
+    title: str
+    matched: bool
+    fields: Dict[str, str]
 
 class _AutomationRuleTestRequestRequired(TypedDict):
     #: Документ правила в той же форме, что у записи правила; название и исполнитель не нужны.
@@ -1997,7 +2304,9 @@ class AutomationRuleTestRequestRule(_AutomationRuleTestRequestRuleRequired, tota
     name: str
     condition: str
     conditions: List["AutomationRuleTestRequestRuleConditionsItem"]
-    actions: List["AutomationRuleTestRequestRuleActionsItem"]
+    actions: List["AutomationRuleBlock"]
+    branches: List["AutomationRuleBranch"]
+    otherwise: List["AutomationRuleBlock"]
 
 class _AutomationRuleTestRequestRuleConditionsItemRequired(TypedDict):
     field: str
@@ -2013,12 +2322,6 @@ class AutomationRuleTestRequestRuleConditionsItem(_AutomationRuleTestRequestRule
     #: Группа «или»: сравнения группы — «и», группы между собой — «или»
     group: int
 
-class _AutomationRuleTestRequestRuleActionsItemRequired(TypedDict):
-    command: str
-
-class AutomationRuleTestRequestRuleActionsItem(_AutomationRuleTestRequestRuleActionsItemRequired, total=False):
-    inputs: Dict[str, str]
-
 class _AutomationRuleTestResultRequired(TypedDict):
     executor_user_id: int
     when: "AutomationRuleTestResultWhen"
@@ -2030,7 +2333,13 @@ class _AutomationRuleTestResultRequired(TypedDict):
 
 class AutomationRuleTestResult(_AutomationRuleTestResultRequired, total=False):
     sample: Optional["AutomationRuleTestResultSample"]
+    #: Какой путь выбран бы на этой записи: yes, id «Если ещё», else; пусто — ни один
+    path_id: str
+    #: Итог условия каждого «Если ещё» по порядку
+    branches: List["AutomationRuleTestResultBranchesItem"]
     problem: "AutomationRuleProblem"
+    #: Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример
+    selection: "AutomationRuleTestResultSelection"
 
 class _AutomationRuleTestResultSampleRequired(TypedDict):
     key: str
@@ -2088,6 +2397,10 @@ class AutomationRuleTestResultConditionClausesItem(_AutomationRuleTestResultCond
     of_actual: str
     group: int
 
+class AutomationRuleTestResultBranchesItem(TypedDict):
+    id: str
+    condition: Dict[str, Any]
+
 class _AutomationRuleTestResultActionsItemRequired(TypedDict):
     index: int
     command: str
@@ -2099,6 +2412,10 @@ class _AutomationRuleTestResultActionsItemRequired(TypedDict):
     inputs: List["AutomationRuleTestResultActionsItemInputsItem"]
 
 class AutomationRuleTestResultActionsItem(_AutomationRuleTestResultActionsItemRequired, total=False):
+    block_id: str
+    path_id: str
+    #: Пауза «Подождать»; у действия поля нет
+    kind: Literal['wait']
     code: str
     message: str
 
@@ -2110,6 +2427,153 @@ class _AutomationRuleTestResultActionsItemInputsItemRequired(TypedDict):
 
 class AutomationRuleTestResultActionsItemInputsItem(_AutomationRuleTestResultActionsItemInputsItemRequired, total=False):
     missing: List[str]
+
+class _AutomationRuleTestResultSelectionRequired(TypedDict):
+    key: str
+    label: str
+    count: int
+    #: Сколько записей прошли бы условие и пути
+    matched: int
+    #: Записей больше limit — за запуск возьмутся первые
+    truncated: bool
+    limit: int
+    sample: List["AutomationRuleTestResultSelectionSampleItem"]
+
+class AutomationRuleTestResultSelection(_AutomationRuleTestResultSelectionRequired, total=False):
+    """Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример"""
+
+    #: Почему отбор не прочитан (automation.reason.<код>)
+    code: str
+    message: str
+
+class AutomationRuleTestResultSelectionSampleItem(TypedDict):
+    entity_id: str
+    title: str
+    matched: bool
+    fields: Dict[str, str]
+
+class _AutomationRuleValidationRequired(TypedDict):
+    valid: bool
+    rule: "AutomationRuleDraft"
+    actions: List["AutomationRuleValidationActionsItem"]
+    #: Включение правила потребует подтверждения человеком
+    external_send: bool
+    saved: bool
+
+class AutomationRuleValidation(_AutomationRuleValidationRequired, total=False):
+    problem: "AutomationRuleProblem"
+    #: Включение правила потребует подтверждения человеком по классу «деньги и проводки»
+    money_posting: bool
+
+class _AutomationRuleValidationActionsItemRequired(TypedDict):
+    #: Номер действия по путям подряд: «Если да», «Если ещё», «Иначе»
+    index: int
+    command: str
+    label: str
+    status: Literal['live', 'declared', 'unknown']
+    permission: str
+    #: Хватает ли права вызывающему — он станет исполнителем правила
+    allowed: bool
+    connected: bool
+    danger: str
+    #: Действие уходит за пределы кабинета
+    external: bool
+
+class AutomationRuleValidationActionsItem(_AutomationRuleValidationActionsItemRequired, total=False):
+    block_id: str
+    #: Действие выпускает учётный документ или двигает товар и деньги
+    posting: bool
+    code: str
+    message: str
+
+class _AutomationRuleVersionRequired(TypedDict):
+    rule_id: str
+    version: int
+    name: str
+    event_type: str
+    condition: str
+    conditions: List[Dict[str, Any]]
+    actions: List[Dict[str, Any]]
+    executor_user_id: int
+    author_user_id: int
+    changes: List["AutomationRuleVersionChangesItem"]
+    created_at: str
+
+class AutomationRuleVersion(_AutomationRuleVersionRequired, total=False):
+    restored_from: int
+
+class _AutomationRuleVersionChangesItemRequired(TypedDict):
+    code: str
+
+class AutomationRuleVersionChangesItem(_AutomationRuleVersionChangesItemRequired, total=False):
+    params: Dict[str, str]
+
+class _AutomationRunActionReportRequired(TypedDict):
+    index: int
+    command: str
+    label: str
+    status: str
+    code: str
+    params: Optional[Dict[str, str]]
+    updated_at: str
+
+class AutomationRunActionReport(_AutomationRunActionReportRequired, total=False):
+    #: id шага правила (ERP-1932); у паузы command пуст, code — paused или pause_no_wait
+    block_id: str
+    path_id: str
+    reason: str
+    produced_entity_id: str
+
+class _AutomationRunReportRequired(TypedDict):
+    id: str
+    rule_id: str
+    rule_name: str
+    rule_version: int
+    event_type: str
+    entity: str
+    entity_id: str
+    status: Literal['queued', 'running', 'waiting', 'success', 'failed', 'skipped']
+    attempts: int
+    max_attempts: int
+    outcome_code: str
+    outcome_params: Optional[Dict[str, str]]
+    created_at: str
+    updated_at: str
+
+class AutomationRunReport(_AutomationRunReportRequired, total=False):
+    #: Выбранный путь: yes, id «Если ещё», else; пусто — путь не выбран
+    path_id: str
+    wait_id: str
+    wait_state: Literal['waiting', 'done', 'cancelled']
+    wait_until: str
+    #: Шаг «Подождать», на котором прогон ждёт или ждал; пусто — время правила
+    wait_block_id: str
+    #: Причина исхода словами на языке запроса
+    reason: str
+    next_attempt_at: str
+
+class _AutomationWebhookRequired(TypedDict):
+    id: str
+    name: str
+    #: Проверка подписи входящего вызова
+    signature: Literal['none', 'hmac_sha256']
+    #: Поля события, выведенные из образца
+    fields: List["AutomationWebhookField"]
+    enabled: bool
+    created_by: int
+    created_at: str
+    updated_at: str
+
+class AutomationWebhook(_AutomationWebhookRequired, total=False):
+    """Входящий вебхук кабинета. Токен адреса и секрет подписи не возвращаются."""
+
+    #: Когда вебхук принимал вызов последний раз
+    last_received_at: str
+
+class AutomationWebhookField(TypedDict):
+    #: Плоский путь поля в теле (a.b)
+    path: str
+    type: Literal['string', 'number', 'bool', 'date']
 
 class _CRMActivityRequired(TypedDict):
     id: "UUID"
@@ -2178,6 +2642,20 @@ class CRMAutomationRule(_CRMAutomationRuleRequired, total=False):
     #: Правило перенесено на общий движок: события после этого момента исполняет правило adopted_rule_id; здесь оно не правится (409)
     adopted_at: str
     adopted_rule_id: "UUID"
+    #: Почему правило осталось в CRM: общий движок его не принял. Перенос идёт сам, правило с исправленным условием переедет при следующем проходе
+    adoption_problem: "CRMAutomationRuleAdoptionProblem"
+
+class _CRMAutomationRuleAdoptionProblemRequired(TypedDict):
+    #: Код отказа проверки правила общим движком; текст — automation.problems.<code>
+    code: str
+
+class CRMAutomationRuleAdoptionProblem(_CRMAutomationRuleAdoptionProblemRequired, total=False):
+    """Почему правило осталось в CRM: общий движок его не принял. Перенос идёт сам, правило с исправленным условием переедет при следующем проходе"""
+
+    #: Поле правила, к которому относится отказ
+    field: str
+    #: Значения для текста отказа
+    params: Dict[str, str]
 
 class _CRMAutomationRuleInputRequired(TypedDict):
     name: str
@@ -3893,8 +4371,14 @@ class CalendarSlot(TypedDict):
     starts_at: str
     ends_at: str
 
-class CalendarSlotPage(TypedDict):
+class _CalendarSlotPageRequired(TypedDict):
     items: List["CalendarSlot"]
+
+class CalendarSlotPage(_CalendarSlotPageRequired, total=False):
+    #: Состояние ссылки записи для её владельца: active или paused
+    status: str
+    #: Можно ли записаться по ссылке прямо сейчас; у приостановленной — нет, хотя слоты считаются
+    bookable: bool
 
 class CalendarSyncResult(TypedDict):
     connector: "CalendarConnector"
@@ -4261,6 +4745,12 @@ class CoreAccountingPolicy(TypedDict):
     businesses: List["CoreBusinessPolicy"]
     companies: List["CoreCompanyPolicy"]
 
+class CoreAccountingPolicyOwner(TypedDict, total=False):
+    """Ответ записи версии с view=owner: политика одного бизнеса или одного юрлица"""
+
+    business: "CoreBusinessPolicy"
+    company: "CoreCompanyPolicy"
+
 class _CoreAccountingSettingsRequired(TypedDict):
     currency: str
     locked: bool
@@ -4532,9 +5022,17 @@ CoreContactEntityType = Literal['legal', 'individual', 'sole_prop']
 
 CoreContactKind = Literal['client', 'supplier', 'both']
 
-class CoreContactPage(TypedDict):
+class _CoreContactPageRequired(TypedDict):
     count: int
     results: List["CoreContact"]
+
+class CoreContactPage(_CoreContactPageRequired, total=False):
+    #: Применённый размер страницы
+    limit: int
+    #: Применённое смещение
+    offset: int
+    #: true — за страницей есть ещё контрагенты: запросите следующую с offset += limit. На потолке 500 значит «страница полная, дальше может быть ещё»
+    has_more: bool
 
 class CoreContactPatch(TypedDict, total=False):
     name: str
@@ -4613,6 +5111,8 @@ class CoreCurrencyRateSource(_CoreCurrencyRateSourceRequired, total=False):
     note: str
     bridge: str
     unavailable: bool
+    #: Почему serves=false: manual_source — у источника нет загрузчика, currency_missing — валюта не названа, accounting_currency — названа валюта учёта (её курс к себе — единица, не загружается), not_quoted — источник эту валюту не котирует
+    reason: Literal['manual_source', 'currency_missing', 'accounting_currency', 'not_quoted']
 
 CoreCurrencyRateSourceKey = Literal['manual', 'cbr', 'ecb', 'coingecko', 'erapi', 'moex', 'fixed']
 
@@ -5016,7 +5516,7 @@ CoreGLAccountType = Literal['asset', 'liability', 'equity', 'income', 'expense']
 
 class _CoreGLMappingRequired(TypedDict):
     id: "UUID"
-    subject_type: Literal['item', 'money_account', 'contact']
+    subject_type: Literal['item', 'money_account', 'contact', 'product', 'document_type', 'acquiring_clearing', 'warehouse']
     account_id: "UUID"
     account_code: str
     account_name: str
@@ -5029,7 +5529,7 @@ class CoreGLMapping(_CoreGLMappingRequired, total=False):
     valid_to: str
 
 class _CoreGLMappingCreateRequired(TypedDict):
-    subject_type: Literal['item', 'money_account', 'contact']
+    subject_type: Literal['item', 'money_account', 'contact', 'product', 'document_type', 'acquiring_clearing', 'warehouse']
     account_id: "UUID"
 
 class CoreGLMappingCreate(_CoreGLMappingCreateRequired, total=False):
@@ -5038,9 +5538,13 @@ class CoreGLMappingCreate(_CoreGLMappingCreateRequired, total=False):
     valid_from: str
     comment: str
 
-class CoreGLMappingPage(TypedDict):
+class _CoreGLMappingPageRequired(TypedDict):
     count: int
     results: List["CoreGLMapping"]
+
+class CoreGLMappingPage(_CoreGLMappingPageRequired, total=False):
+    #: Сколько правил под отбором всего, до среза limit/offset
+    total: int
 
 class CoreImportResult(TypedDict):
     created: int
@@ -5093,6 +5597,9 @@ class _CoreItemMoveRequired(TypedDict):
 class CoreItemMove(_CoreItemMoveRequired, total=False):
     parent_id: "UUID"
     cashflow_section: Literal['operating', 'investing', 'financing', 'transfer']
+
+class CoreItemMoved(TypedDict):
+    item: "CoreItem"
 
 class CoreItemPage(TypedDict):
     count: int
@@ -5242,6 +5749,12 @@ class CoreOrder(_CoreOrderRequired, total=False):
     allowed_actions: List["CoreOrderAllowedAction"]
     #: Только в карточке: строки со ставкой, названной человеком, равной прежней общей ставке юрлица, когда на сегодня общая ставка уже другая — «проверьте ставку», не отказ
     vat_warnings: List["CoreOrderVATWarning"]
+    #: Только в ответах команд подтверждения, отмены и возврата в работу: true — команде нечего было делать (подтверждена уже, отменена уже, не закрыта), заказ не изменился. Повтор команды отвечает той же карточкой, а не ошибкой
+    unchanged: bool
+
+class CoreOrderActionCheck(TypedDict):
+    allowed: bool
+    reasons: List["CoreOrderBlockReason"]
 
 class _CoreOrderAllowedActionRequired(TypedDict):
     action: Literal['edit', 'confirm', 'cancel', 'close', 'reopen', 'cabinet_status', 'responsibles', 'contract']
@@ -5252,6 +5765,29 @@ class CoreOrderAllowedAction(_CoreOrderAllowedActionRequired, total=False):
     reason_code: str
     #: Причина словами на языке запроса
     reason: str
+
+class _CoreOrderBlockReasonRequired(TypedDict):
+    #: Причина уровня документа (posted, not_posted, balance_negative, period_closed и другие причины проведения) или отказ сделки с кодом core.trade.* — тот же, что вернула бы команда
+    code: str
+    message: str
+
+class CoreOrderBlockReason(_CoreOrderBlockReasonRequired, total=False):
+    detail: str
+    #: Причина показывается, но действие не запрещает
+    warning: bool
+    shortages: List["CoreBalanceShortage"]
+    #: Код отказа проводчика внутри причины; detail для него собран на языке запроса.
+    detail_code: str
+    #: Параметры отказа с кодом detail_code: из них собрана фраза detail.
+    detail_params: Dict[str, str]
+
+class CoreOrderBlockers(TypedDict):
+    """Что мешает командам продажи или закупки: подтверждению и отмене. У черновика отмена разрешена без движений; подтверждённую отменяют отменой проведения под сторожем исполнений и закрытия"""
+
+    document_id: "UUID"
+    state: "CoreOrderState"
+    confirm: "CoreOrderActionCheck"
+    cancel: "CoreOrderActionCheck"
 
 class CoreOrderBuyer(TypedDict, total=False):
     """Покупатель-физлицо: розничный продажа или закупка стоит на общей карточке покупателя, и различает покупателей только это."""
@@ -6375,13 +6911,10 @@ class CoreProductImportIssuePage(TypedDict):
 
 CoreProductImportMapping = Union[Any, Any]
 
-class _CoreProductImportMappingStateRequired(TypedDict):
+class CoreProductImportMappingState(TypedDict):
     sheet_name: str
     header_row: int
     columns: Dict[str, str]
-
-class CoreProductImportMappingState(_CoreProductImportMappingStateRequired, total=False):
-    expected_revision: int
 
 CoreProductImportMode = Literal['create_only', 'upsert']
 
@@ -6567,7 +7100,8 @@ class CoreRegisterBalancePage(TypedDict):
 
 class CoreRegisterBalanceRow(TypedDict):
     dims: Dict[str, Any]
-    totals: Dict[str, Any]
+    #: Итог по каждому ресурсу — числом JSON, а не десятичной строкой, как денежные поля документов: {"qty": 6.8, "amount": 34000}
+    totals: Dict[str, float]
     entry_count: int
 
 class _CoreRegisterCreateRequired(TypedDict):
@@ -6646,9 +7180,12 @@ class CoreRegisterTurnoverPage(TypedDict):
 
 class _CoreRegisterTurnoverRowRequired(TypedDict):
     dims: Dict[str, Any]
-    incoming: Dict[str, Any]
-    outgoing: Dict[str, Any]
-    net: Dict[str, Any]
+    #: Приход по каждому ресурсу — числом JSON
+    incoming: Dict[str, float]
+    #: Расход по каждому ресурсу — числом JSON
+    outgoing: Dict[str, float]
+    #: Сальдо оборота по каждому ресурсу — числом JSON, а не десятичной строкой
+    net: Dict[str, float]
     entry_count: int
 
 class CoreRegisterTurnoverRow(_CoreRegisterTurnoverRowRequired, total=False):
@@ -7498,6 +8035,8 @@ class DocflowApprovalBlockers(_DocflowApprovalBlockersRequired, total=False):
 
     approval_id: "UUID"
     state: Literal['pending', 'approved', 'rejected', 'returned', 'cancelled']
+    #: Почему отправить на согласование нельзя; есть только при can_submit=false
+    submit_blocked: "DocflowApprovalBlockReason"
     #: У человека есть неотмеченное «ознакомиться» в этом проходе — своё или делегированное
     can_acknowledge: bool
     matched_route_id: "UUID"
@@ -8024,6 +8563,7 @@ class DocflowFlowContent(_DocflowFlowContentRequired, total=False):
     number: str
     contract: "DocflowFlowContractTerms"
     commercial: "DocflowFlowCommercial"
+    correction: "DocflowFlowCorrection"
     recognized: "DocflowFlowRecognized"
     #: Значения своих полей кабинета (графы вида docflow.document.<вид>). В save не прислано — не меняются; правятся действием custom
     custom: Dict[str, Any]
@@ -8046,6 +8586,45 @@ class DocflowFlowContractTerms(_DocflowFlowContractTermsRequired, total=False):
     order_funnel_id: str
     #: Ответственные по договору с долями: продажи и закупки периодов получают их по умолчанию; сумма долей — ровно 100
     responsibles: List["DocflowFlowResponsible"]
+
+class _DocflowFlowCorrectionRequired(TypedDict):
+    return_id: "UUID"
+    basis_id: "UUID"
+    basis_number: str
+    basis_date: str
+    lines: List["DocflowFlowCorrectionLine"]
+
+class DocflowFlowCorrection(_DocflowFlowCorrectionRequired, total=False):
+    """Содержание УКД по возврату покупателя: строки исходного УПД «до» и остаток «после». Снимается при выпуске и дальше не пересчитывается."""
+
+    return_number: str
+    return_date: str
+
+class _DocflowFlowCorrectionLineRequired(TypedDict):
+    id: "UUID"
+    #: Номер строки в исходном УПД
+    number: int
+    name: str
+    vat_rate: str
+    before: "DocflowFlowCorrectionState"
+    after: "DocflowFlowCorrectionState"
+
+class DocflowFlowCorrectionLine(_DocflowFlowCorrectionLineRequired, total=False):
+    product_id: "UUID"
+    unit: str
+    #: Код единицы по ОКЕИ
+    unit_code: str
+
+class _DocflowFlowCorrectionStateRequired(TypedDict):
+    quantity: str
+    amount_without_vat: str
+    amount_with_vat: str
+
+class DocflowFlowCorrectionState(_DocflowFlowCorrectionStateRequired, total=False):
+    #: Цена за единицу без налога
+    price: str
+    #: Пусто у необлагаемой строки
+    vat_amount: str
 
 class DocflowFlowCreateInput(TypedDict):
     company_id: "UUID"
@@ -8074,6 +8653,8 @@ class _DocflowFlowDocumentRequired(TypedDict):
 class DocflowFlowDocument(_DocflowFlowDocumentRequired, total=False):
     """Карточка документа внутреннего контура в одной редакции. Каждая принятая команда рождает новую неизменяемую редакцию, а прежняя остаётся читаемой по своему адресу."""
 
+    #: Бизнес бумаги. У бумаги без юрлица (company_id — нулевой id) он один называет сторону «мы»; в печати стоит его название
+    business_id: str
     #: Бизнес юрлица бумаги прошёл отсечку этапа 4: мастер «Принять акт» и «Создать продажу / закупку» у бумаги сняты
     execution_cutover: bool
     #: Из какого состояния бумага ушла в архив
@@ -8951,6 +9532,23 @@ class DocflowTemplatePastActs(TypedDict):
     issued: int
     failed: int
 
+class _DocflowUKDBasisRefRequired(TypedDict):
+    id: "UUID"
+    kind: str
+
+class DocflowUKDBasisRef(_DocflowUKDBasisRefRequired, total=False):
+    number: str
+    date: str
+
+class DocflowUKDInput(TypedDict):
+    return_id: "UUID"
+
+class DocflowUKDState(TypedDict, total=False):
+    """УКД по возврату: карточка, если выпущена, и исходный УПД, если он есть"""
+
+    document: "DocflowFlowDocument"
+    basis_upd: "DocflowUKDBasisRef"
+
 class _DocumentCreateRequired(TypedDict):
     title: str
 
@@ -9601,6 +10199,12 @@ class _FinanceBalanceReportRequired(TypedDict):
 
 class FinanceBalanceReport(_FinanceBalanceReportRequired, total=False):
     accounting_basis: "AccountingBasis"
+    #: Только при кассовом и смешанном основании: весь открытый долг поставщикам в регистре расчётов (счёт стороны 60.01, все обязательства и валюты в балансовой стоимости на дату) минус то, что баланс несёт на 60; нет разницы — нет поля
+    off_balance_supplier_debt: str
+    #: Только при кассовом и смешанном основании: весь открытый долг покупателей в регистре расчётов (счёт стороны 62.01, все обязательства и валюты в балансовой стоимости на дату) минус то, что баланс несёт на 62; нет разницы — нет поля
+    off_balance_customer_debt: str
+    #: Только при кассовом и смешанном основании: долг перед сотрудниками по журналу зарплаты на дату; при начислении он стоит на счёте 70, и поля нет
+    off_balance_payroll_debt: str
 
 class FinanceBalanceSection(TypedDict):
     key: Literal['asset', 'liability', 'equity']
@@ -9664,7 +10268,7 @@ class FinanceCashflowItem(TypedDict):
     net: str
     level: str
 
-FinanceCashflowReport = TypedDict("FinanceCashflowReport", {"unassigned_company": "FinanceCashflowReportUnassignedCompany", "currency": str, "from": str, "to": str, "inflow": str, "outflow": str, "uncategorized_net": str, "net_cash_flow": str, "transfer_in": str, "transfer_out": str, "sections": List["FinanceCashflowSection"], "columns": List["FinanceReportColumn"]}, total=False)
+FinanceCashflowReport = TypedDict("FinanceCashflowReport", {"unassigned_company": "FinanceCashflowReportUnassignedCompany", "currency": str, "view": Literal['summary'], "from": str, "to": str, "inflow": str, "outflow": str, "uncategorized_net": str, "net_cash_flow": str, "transfer_in": str, "transfer_out": str, "sections": List["FinanceCashflowSection"], "columns": List["FinanceReportColumn"]}, total=False)
 
 class FinanceCashflowReportUnassignedCompany(TypedDict, total=False):
     """При отборе по юрлицу — чистый поток движений без юрлица и всего бизнеса"""
@@ -9807,22 +10411,29 @@ class FinanceConnectorSyncRunPage(TypedDict):
     results: List["FinanceConnectorSyncRun"]
 
 class _FinanceCounterpartyTermsRequired(TypedDict):
-    id: "UUID"
+    #: Версия условий; null при configured=false — настройки нет, а не запись с нулевым id
+    id: Optional[str]
     contact_id: "UUID"
     currency: str
     payment_delay_days: int
     #: Decimal string от 0 до 100
     prepayment_percent: str
-    valid_from: str
+    #: Момент начала действия; null при configured=false
+    valid_from: Optional[str]
     reason: str
-    created_at: str
+    #: null при configured=false
+    created_at: Optional[str]
     configured: bool
 
 class FinanceCounterpartyTerms(_FinanceCounterpartyTermsRequired, total=False):
     company_id: str
     #: Decimal string; отсутствие означает, что лимит не задан
     credit_limit: str
+    #: Дата начала действия в поясе кабинета: 01.01.2026 по Москве — 2026-01-01, хотя valid_from — 2025-12-31T21:00:00Z
+    valid_from_date: str
     valid_to: str
+    #: Первый день в поясе кабинета, когда версия уже не действует
+    valid_to_date: str
     created_by: int
 
 class _FinanceCounterpartyTermsCreateRequired(TypedDict):
@@ -9830,12 +10441,14 @@ class _FinanceCounterpartyTermsCreateRequired(TypedDict):
     payment_delay_days: int
     #: Decimal string от 0 до 100
     prepayment_percent: str
+    #: Дата ГГГГ-ММ-ДД (полночь в поясе кабинета) или момент RFC3339
     valid_from: str
 
 class FinanceCounterpartyTermsCreate(_FinanceCounterpartyTermsCreateRequired, total=False):
     company_id: str
     #: Неотрицательная decimal string
     credit_limit: str
+    #: Дата ГГГГ-ММ-ДД или момент RFC3339; не входит в период
     valid_to: str
     reason: str
 
@@ -10281,7 +10894,7 @@ class FinanceOrderActInput(_FinanceOrderActInputRequired, total=False):
     #: «За кого» закупки со статьёй вне ОПиУ: собственник для 75, сотрудник для 70/71; только у закупки
     for_contact: Dict[str, Any]
 
-FinancePaymentCalendar = TypedDict("FinancePaymentCalendar", {"rnp_metrics": "FinancePaymentCalendarRnpMetrics", "valuation_date": str, "project": str, "balance_available": bool, "from": str, "to": str, "currency": str, "derived_available": bool, "derived_note": str, "opening": str, "inflow": str, "outflow": str, "closing": str, "overdue_in": str, "overdue_out": str, "done_in": str, "done_out": str, "committed_in": str, "expected_in": str, "undated": "FinancePaymentCalendarUndated", "companies": List["FinancePaymentCalendarCompany"], "step": Literal['day', 'month', 'quarter'], "periods": List["FinancePaymentCalendarPeriod"], "totals": List["FinancePaymentCalendarCell"], "days": List["FinancePaymentCalendarDay"], "rows": List["FinancePaymentCalendarRow"], "overdue": List["FinancePaymentCalendarRow"]}, total=False)
+FinancePaymentCalendar = TypedDict("FinancePaymentCalendar", {"rnp_metrics": "FinancePaymentCalendarRnpMetrics", "valuation_date": str, "project": str, "balance_available": bool, "from": str, "to": str, "currency": str, "derived_available": bool, "derived_note": str, "opening": str, "inflow": str, "outflow": str, "closing": str, "overdue_in": str, "overdue_out": str, "done_in": str, "done_out": str, "committed_in": str, "expected_in": str, "view": Literal['full', 'summary'], "row_count": int, "overdue_count": int, "undated": "FinancePaymentCalendarUndated", "companies": List["FinancePaymentCalendarCompany"], "step": Literal['day', 'month', 'quarter'], "periods": List["FinancePaymentCalendarPeriod"], "totals": List["FinancePaymentCalendarCell"], "days": List["FinancePaymentCalendarDay"], "rows": List["FinancePaymentCalendarRow"], "overdue": List["FinancePaymentCalendarRow"]}, total=False)
 
 class FinancePaymentCalendarRnpMetrics(TypedDict, total=False):
     minimum_balance: str
@@ -10471,6 +11084,10 @@ class _FinancePnlCoverageRequired(TypedDict):
     duplicated: List["FinancePnlCoverageItem"]
 
 class FinancePnlCoverage(_FinancePnlCoverageRequired, total=False):
+    #: Строки макета, ссылающиеся на статьи вне ОПиУ
+    foreign: Optional[List["FinancePnlCoverageItem"]]
+    #: Статьи вне ОПиУ с оборотом за период: итог отчёта их включает, строки макета — нет
+    outside: Optional[List["FinancePnlCoverageItem"]]
     #: Налоги раздела «Налоги» за период без строки-источника «Налоги» в макете; итог и прибыль их включают
     taxes: str
 
@@ -10481,14 +11098,20 @@ class _FinancePnlCoverageItemRequired(TypedDict):
 
 class FinancePnlCoverageItem(_FinancePnlCoverageItemRequired, total=False):
     times: int
+    #: Оборот статьи за период — у статьи вне ОПиУ
+    amount: str
 
-class FinancePnlLine(TypedDict):
+class _FinancePnlLineRequired(TypedDict):
     id: str
     name: str
     sign: int
     amount: str
 
-FinancePnlReport = TypedDict("FinancePnlReport", {"unassigned_company": "FinancePnlReportUnassignedCompany", "rnp_metrics": Dict[str, str], "currency": str, "from": str, "to": str, "revenue": str, "expense": str, "profit": str, "unclassified_in": str, "unclassified_out": str, "lines": List["FinancePnlLine"], "taxes": List["FinanceTaxKindAmount"], "taxes_total": str, "taxes_not_allocated": bool, "layout_rows": List["FinancePnlReportRow"], "layout": "FinancePnlReportLayout", "columns": List["FinanceReportColumn"], "companies": List["FinanceReportCompany"], "accounting_basis": "AccountingBasis"}, total=False)
+class FinancePnlLine(_FinancePnlLineRequired, total=False):
+    #: Статья вне дерева ОПиУ, по которой обороты всё же легли на счета результата: в итог входит, строкой макета быть не может
+    outside_pnl: bool
+
+FinancePnlReport = TypedDict("FinancePnlReport", {"unassigned_company": "FinancePnlReportUnassignedCompany", "rnp_metrics": Dict[str, str], "currency": str, "view": Literal['summary'], "from": str, "to": str, "revenue": str, "expense": str, "profit": str, "unclassified_in": str, "unclassified_out": str, "lines": List["FinancePnlLine"], "taxes": List["FinanceTaxKindAmount"], "taxes_total": str, "taxes_not_allocated": bool, "layout_rows": List["FinancePnlReportRow"], "layout": "FinancePnlReportLayout", "columns": List["FinanceReportColumn"], "companies": List["FinanceReportCompany"], "accounting_basis": "AccountingBasis"}, total=False)
 
 class FinancePnlReportUnassignedCompany(TypedDict, total=False):
     """При отборе по юрлицу — результат движений без юрлица и всего бизнеса"""
@@ -10496,12 +11119,30 @@ class FinancePnlReportUnassignedCompany(TypedDict, total=False):
     profit: str
     business_profit: str
 
-class FinancePnlReportLayout(TypedDict):
+class _FinancePnlReportLayoutRequired(TypedDict):
     id: "UUID"
     name: str
     is_default: bool
     coverage: "FinancePnlCoverage"
     system_rows: Dict[str, str]
+
+class FinancePnlReportLayout(_FinancePnlReportLayoutRequired, total=False):
+    #: Сверка итога макета («Чистая прибыль») с прибылью книги
+    reconcile: "FinancePnlReportLayoutReconcile"
+
+class FinancePnlReportLayoutReconcile(TypedDict):
+    """Сверка итога макета («Чистая прибыль») с прибылью книги"""
+
+    #: В макете есть строка «Чистая прибыль»
+    available: bool
+    ledger_profit: str
+    layout_profit: str
+    #: Прибыль книги минус итог макета
+    mismatch: str
+    #: Статьи с оборотом вне формулы макета: непокрытые и вне ОПиУ
+    outside_items: List[str]
+    #: Статьи, посчитанные макетом дважды
+    duplicated_items: List[str]
 
 class _FinancePnlReportRowRequired(TypedDict):
     id: str
@@ -10584,8 +11225,22 @@ class FinanceReconciliationSummary(TypedDict):
     #: Входящие платежи без продажи или закупки и без проекта; имя поля сохранено для совместимости
     missing_order_count: int
     missing_cashflow_count: int
-    #: Сумма входящих платежей без продажи или закупки и без проекта; decimal string
-    incoming_unlinked_amount: str
+    #: Сумма входящих платежей без продажи или закупки и без проекта в валюте учёта по пересчёту, зафиксированному у операции; decimal string. null — часть операций не пересчитана, исходные валюты не складываются
+    incoming_unlinked_amount: Optional[str]
+    #: Валюта учёта, в которой дан incoming_unlinked_amount
+    incoming_unlinked_currency: str
+    #: Сколько таких операций без пересчёта в валюту учёта
+    incoming_unlinked_unconverted_count: int
+    #: Те же операции по исходным валютам, каждая сумма в своей валюте
+    incoming_unlinked_by_currency: List["FinanceReconciliationSummaryIncomingUnlinkedByCurrencyItem"]
+
+class FinanceReconciliationSummaryIncomingUnlinkedByCurrencyItem(TypedDict):
+    #: Исходная валюта операций
+    currency: str
+    #: Сумма в этой валюте; decimal string
+    amount: str
+    #: Число операций
+    count: int
 
 class FinanceRegisterAccountCheck(TypedDict):
     account: str
@@ -10620,6 +11275,18 @@ class FinanceRegisterReconciliation(_FinanceRegisterReconciliationRequired, tota
     stock_transfer_pending: List["FinanceRegisterReconciliationStockTransferPendingItem"]
     #: Пояснение к неперенесённому остатку для человека; пусто, если переносить нечего.
     stock_transfer_hint: str
+    #: Есть бизнесы на методе начисления; расчёты и книга сверяются только по ним
+    settlements_applicable: bool
+    #: Сальдо счёта 45 «Товары отгруженные» по всему кабинету
+    shipped_unsold: str
+    #: Сальдо счёта 45 бизнесов на методе начисления — то, что обязано быть нулём
+    shipped_unsold_accrual: str
+    #: Сальдо 45 бизнесов на начислении равно нулю
+    shipped_unsold_match: bool
+    #: Прибавка переоценки валютных остатков к прибыли
+    currency_effect: str
+    #: Та же переоценка по счетам имущества и долгов (дебетовый знак); сумма строк равна currency_effect
+    currency_effect_accounts: List["FinanceRegisterReconciliationCurrencyEffectAccountsItem"]
 
 class FinanceRegisterReconciliationInputVatUnexplainedItem(TypedDict):
     source: str
@@ -10639,6 +11306,10 @@ class FinanceRegisterReconciliationStockTransferPendingItem(TypedDict):
     to_code: str
     amount: str
     warehouses: int
+
+class FinanceRegisterReconciliationCurrencyEffectAccountsItem(TypedDict):
+    code: str
+    amount: str
 
 class FinanceRegisterRepairFailure(TypedDict):
     id: "UUID"
@@ -10664,7 +11335,7 @@ class FinanceRegistersResyncResult(TypedDict):
     settlements_reposted: int
     failed: int
 
-FinanceReportColumn = TypedDict("FinanceReportColumn", {"key": str, "label": str, "from": str, "to": str, "total": bool, "payload": Dict[str, Any]}, total=False)
+FinanceReportColumn = TypedDict("FinanceReportColumn", {"key": str, "label": str, "from": str, "to": str, "total": bool, "payload": Dict[str, Any], "figures": Dict[str, str], "system_rows": Dict[str, str]}, total=False)
 
 class FinanceReportCompany(TypedDict):
     id: str
@@ -10705,10 +11376,13 @@ class FinanceSaleLineInput(_FinanceSaleLineInputRequired, total=False):
 
 class FinanceSettlementBalance(TypedDict):
     obligation_id: "UUID"
-    #: Decimal string
+    #: Decimal string с разрядностью валюты обязательства: 196000.00, 4638.65
     remaining: str
+    #: Валюта обязательства
+    currency: str
 
 class FinanceSettlementBalancePage(TypedDict):
+    #: Число строк после отбора валюты, до страницы
     count: int
     results: List["FinanceSettlementBalance"]
 
@@ -12171,7 +12845,7 @@ class MarketplaceOzonPnl(_MarketplaceOzonPnlRequired, total=False):
     demo: bool
     #: Расшифровка прочего по периодам
     breakdown: Dict[str, List["MarketplaceOzonDecompositionOtherItem"]]
-    #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
+    #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
     cost_missing: Dict[str, float]
     #: Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
     units_missing: Dict[str, float]
@@ -12292,7 +12966,10 @@ class MarketplaceOzonSyncJob(TypedDict):
     #: Идентификатор задания в очереди
     river_job_id: Optional[int]
     period: str
+    #: Магазины задания в области участника; пусто — задание по всем магазинам
     store_ids: List["UUID"]
+    #: Те же магазины с названием и состоянием: выключенного магазина нет в списке магазинов, а его задания остаются
+    stores: List["MarketplaceSyncJobStore"]
     message: str
     #: Сырой JSON итогов задания; форма зависит от вида
     stats: Any
@@ -12343,6 +13020,7 @@ class MarketplaceStore(_MarketplaceStoreRequired, total=False):
     token_class: Literal['basic', 'personal', 'test', 'service', 'unknown']
     #: Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена
     credential: "MarketplaceStoreCredential"
+    write_key: "MarketplaceStoreWriteKey"
     #: Безопасный стабильный код состояния подключения; сырой текст ошибки не публикуется
     connection_error_code: str
     #: Момент последней успешной загрузки этого подключения
@@ -12397,6 +13075,45 @@ class MarketplaceStoreInput(_MarketplaceStoreInputRequired, total=False):
 class MarketplaceStorePage(TypedDict):
     count: int
     results: List["MarketplaceStore"]
+
+class _MarketplaceStoreWriteKeyRequired(TypedDict):
+    #: Ключ задан
+    set: bool
+    #: Категории токена Wildberries
+    scopes: List[str]
+    #: Токен только на чтение
+    read_only: bool
+    #: Можно ли передавать марки: ready — можно, no_key — ключа нет, no_write_scope — нет права записи, unchecked — не проверено
+    ability: Literal['ready', 'no_key', 'no_write_scope', 'unchecked']
+    #: Кто задал ключ
+    set_by: Optional[int]
+    #: Когда задан ключ
+    set_at: Optional[str]
+    #: Когда ключ проверяли
+    checked_at: Optional[str]
+    #: Когда ключом последний раз передавали марки
+    last_used_at: Optional[str]
+
+class MarketplaceStoreWriteKey(_MarketplaceStoreWriteKeyRequired, total=False):
+    """Признаки ключа магазина на запись в площадку (марки в сборочные задания FBS); сам ключ не возвращается"""
+
+    #: Последние 4 символа токена или Api-Key
+    mask: str
+    #: Тип токена Wildberries
+    kind: Literal['basic', 'personal', 'test', 'service', 'unknown']
+    #: Итог последней проверки без записи
+    check_result: Literal['ready', 'no_write_scope', 'rejected', 'unchecked', 'unavailable']
+    #: Итог последней передачи марок
+    last_result: Literal['not_sent', 'sent', 'accepted', 'rejected']
+    #: Код отказа последней передачи
+    last_error_code: str
+
+class MarketplaceSyncJobStore(TypedDict):
+    id: "UUID"
+    #: Название магазина
+    name: str
+    #: Магазин включён; выключенный в обычном списке магазинов не виден
+    is_active: bool
 
 class MarketplaceWbCardAdDay(TypedDict):
     date: str
@@ -12708,7 +13425,7 @@ class MarketplaceWbPnl(_MarketplaceWbPnlRequired, total=False):
     demo: bool
     #: Разбор строки «Прочее» по периодам
     breakdown: Dict[str, List["MarketplaceWbDecompOtherItem"]]
-    #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
+    #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
     cost_missing: Dict[str, float]
     #: Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
     units_missing: Dict[str, float]
@@ -12899,7 +13616,7 @@ class _MarketplaceYandexPnlRequired(TypedDict):
     rows: List["MarketplaceYandexPnlRow"]
 
 class MarketplaceYandexPnl(_MarketplaceYandexPnlRequired, total=False):
-    #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода
+    #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
     cost_missing: Dict[str, float]
     #: Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
     units_missing: Dict[str, float]
@@ -15225,9 +15942,20 @@ class StockDocumentFulfillmentLine(TypedDict):
     #: Decimal string из регистра потребности или ожидаемого поступления
     remaining_qty: str
 
-class StockDocumentFulfillmentPage(TypedDict):
+class _StockDocumentFulfillmentPageRequired(TypedDict):
     count: int
     results: List["StockDocumentFulfillment"]
+
+class StockDocumentFulfillmentPage(_StockDocumentFulfillmentPageRequired, total=False):
+    #: Документы пакета, у которых исполнение не считается (другой вид документа); пакет из-за них не падает.
+    skipped: List["StockDocumentFulfillmentSkipped"]
+
+class StockDocumentFulfillmentSkipped(TypedDict):
+    document_id: "UUID"
+    type_key: str
+    number: str
+    #: Почему исполнение не считается
+    reason: str
 
 class _StockDocumentLandedCostTargetRequired(TypedDict):
     batch_id: "UUID"
@@ -16143,7 +16871,7 @@ class StockReportRow(TypedDict):
     entry_count: int
 
 class StockReportTotals(TypedDict):
-    """Итог по всей выборке отчёта, а не по странице. Количества, включая минимум, имеют смысл только при одной единице измерения на всю выборку — её называет поле unit. Себестоимости единицы здесь нет вовсе: сумма средних цен не значит ничего ни при какой однородности."""
+    """Итог по всей выборке отчёта, а не по странице. Количества, включая минимум, имеют смысл только при одной единице измерения на всю выборку — её называет поле unit; без общей единицы количества приходят пустой строкой, а сумма денег — числом. Себестоимости единицы здесь нет вовсе: сумма средних цен не значит ничего ни при какой однородности."""
 
     #: Decimal string
     on_hand: str
@@ -16161,7 +16889,7 @@ class StockReportTotals(TypedDict):
     suggested: str
     #: Decimal string. Деньги аддитивны всегда и от единицы измерения не зависят
     amount: str
-    #: Единица измерения итога, если она одна на всю выборку. Пусто, когда единицы разные: складывать штуки с килограммами нельзя, и потребитель обязан показать прочерк вместо суммы.
+    #: Единица измерения итога, если она одна на всю выборку. Пусто, когда единицы разные: складывать штуки с килограммами нельзя, количества итога тогда пусты, и потребитель показывает прочерк вместо суммы.
     unit: str
 
 class StockReportWarehouseTotal(TypedDict):
@@ -16460,6 +17188,7 @@ class _TaskRequired(TypedDict):
     checklist_done: int
     tags: List["TaskTag"]
     links: List[Dict[str, Any]]
+    #: Всегда 0. Обсуждение людей читают через комментарии обсуждения, рабочий журнал агентов — через комментарии задачи; ни то ни другое не попадает в этот счётчик.
     comments_count: int
     blocked_by_count: int
 
@@ -16859,8 +17588,23 @@ class AssistantReplaceDigestRequest(_AssistantReplaceDigestRequestRequired, tota
     company: "UUID"
     project: "UUID"
 
+class AutomationConnectionsResponse(TypedDict):
+    connections: List["AutomationConnection"]
+    webhooks: List["AutomationWebhook"]
+    #: Установки приложений кабинета (кроме удалённых) для действия «Передать приложению»
+    installations: List["AutomationAppInstallation"]
+    #: Способы авторизации подключения в порядке показа
+    auth_kinds: List[Literal['none', 'header', 'bearer', 'basic', 'hmac']]
+    #: Начало адреса приёма вебхука; полный адрес с токеном показывается человеку один раз при выпуске
+    hook_path_prefix: str
+    #: Локальные приёмники, разрешённые стенду; в бою пусто
+    allow_local: List[str]
+
 class AutomationRulesResponse(TypedDict):
     rules: List["AutomationRuleDocument"]
+
+class AutomationCreateRuleRequest(TypedDict):
+    rule: "AutomationRuleDraft"
 
 class _AutomationRuleSimulateResponseRequired(TypedDict):
     result: "AutomationRuleSimulation"
@@ -16873,6 +17617,27 @@ class _AutomationRuleTestResponseRequired(TypedDict):
 
 class AutomationRuleTestResponse(_AutomationRuleTestResponseRequired, total=False):
     problem: "AutomationRuleProblem"
+
+class AutomationRuleValidateRequest(TypedDict):
+    rule: "AutomationRuleDraft"
+
+class _AutomationSetRuleEnabledRequestRequired(TypedDict):
+    enabled: bool
+
+class AutomationSetRuleEnabledRequest(_AutomationSetRuleEnabledRequestRequired, total=False):
+    #: Человек согласился, что правило будет отправлять за пределы кабинета
+    allow_external_send: bool
+    #: Человек согласился, что правило будет выпускать учётные документы или двигать товар и деньги
+    allow_money_posting: bool
+
+class AutomationRuleVersionsResponse(TypedDict):
+    versions: List["AutomationRuleVersion"]
+
+class AutomationRunsResponse(TypedDict):
+    runs: List["AutomationRunReport"]
+
+class AutomationRunActionsResponse(TypedDict):
+    actions: List["AutomationRunActionReport"]
 
 class _BankRepostTransactionsRequestRequired(TypedDict):
     ids: List["UUID"]
@@ -16983,6 +17748,7 @@ class FinanceListDividendOwnersResponse(TypedDict):
 
 class FinanceListDividendOwnersResponseResultsItem(TypedDict):
     id: "UUID"
+    #: Кем владелец записан в структуре владения: employee — человек из справочника сотрудников, company — юрлицо кабинета, contact — контрагент. employee не значит, что выплата — зарплата: это дивиденды собственнику
     kind: Literal['employee', 'company', 'contact']
     name: str
     share_percent: str

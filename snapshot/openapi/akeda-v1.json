@@ -8880,6 +8880,9 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       },
@@ -8929,6 +8932,9 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -8998,6 +9004,9 @@
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
@@ -10594,7 +10603,7 @@
         ],
         "operationId": "coreImportDictionaryItems",
         "summary": "Дополнить справочник пачкой до 1000 записей",
-        "description": "Существующие коды обновляются, новые создаются, отсутствующие в пачке не удаляются.",
+        "description": "Существующие коды обновляются, новые создаются, отсутствующие в пачке не удаляются. Код, повторённый в пачке, — отказ 400 core.dictionary.import_duplicate_code с номерами строк до записи.",
         "x-akeda-module": "core",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -15135,7 +15144,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CoreDocumentBlockers"
+                  "$ref": "#/components/schemas/CoreOrderBlockers"
                 }
               }
             }
@@ -15199,7 +15208,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CoreDocumentBlockers"
+                  "$ref": "#/components/schemas/CoreOrderBlockers"
                 }
               }
             }
@@ -16660,7 +16669,7 @@
         ],
         "operationId": "coreCompleteSaleStep",
         "summary": "Отметить шаг продажи выполненным",
-        "description": "Шаг «человек отметит» выполнен: один раз, с фактом `core.sale_step.done`. Повтор ничего не меняет.",
+        "description": "Шаг «человек отметит» выполнен: один раз, с фактом `core.sale_step.done`. Повтор ничего не меняет; ключ, которого у продажи нет, — отказ 400.",
         "x-akeda-module": "core",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -16691,6 +16700,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -16733,7 +16745,7 @@
         ],
         "operationId": "coreCompletePurchaseStep",
         "summary": "Отметить шаг закупки выполненным",
-        "description": "Шаг «человек отметит» выполнен: один раз, с фактом `core.purchase_step.done`. Повтор ничего не меняет.",
+        "description": "Шаг «человек отметит» выполнен: один раз, с фактом `core.purchase_step.done`. Повтор ничего не меняет; ключ, которого у закупки нет, — отказ 400.",
         "x-akeda-module": "core",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -16764,6 +16776,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -18800,6 +18815,17 @@
             "schema": {
               "$ref": "#/components/schemas/UUID"
             }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "description": "owner — ответить политикой только этого бизнеса или юрлица, без всего раздела",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "owner"
+              ]
+            }
           }
         ],
         "requestBody": {
@@ -18818,7 +18844,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CoreAccountingPolicy"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/CoreAccountingPolicy"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CoreAccountingPolicyOwner"
+                    }
+                  ]
                 }
               }
             }
@@ -18880,6 +18913,17 @@
             "schema": {
               "$ref": "#/components/schemas/UUID"
             }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "description": "owner — ответить политикой только этого бизнеса или юрлица, без всего раздела",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "owner"
+              ]
+            }
           }
         ],
         "requestBody": {
@@ -18898,7 +18942,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CoreAccountingPolicy"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/CoreAccountingPolicy"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CoreAccountingPolicyOwner"
+                    }
+                  ]
                 }
               }
             }
@@ -18960,6 +19011,17 @@
             "schema": {
               "$ref": "#/components/schemas/UUID"
             }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "description": "owner — ответить политикой только этого бизнеса или юрлица, без всего раздела",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "owner"
+              ]
+            }
           }
         ],
         "requestBody": {
@@ -18978,7 +19040,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CoreAccountingPolicy"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/CoreAccountingPolicy"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CoreAccountingPolicyOwner"
+                    }
+                  ]
                 }
               }
             }
@@ -19040,6 +19109,17 @@
             "schema": {
               "$ref": "#/components/schemas/UUID"
             }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "description": "owner — ответить политикой только этого бизнеса или юрлица, без всего раздела",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "owner"
+              ]
+            }
           }
         ],
         "requestBody": {
@@ -19058,7 +19138,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CoreAccountingPolicy"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/CoreAccountingPolicy"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CoreAccountingPolicyOwner"
+                    }
+                  ]
                 }
               }
             }
@@ -19758,6 +19845,26 @@
               "type": "boolean",
               "default": false
             }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Размер страницы; не задан — все правила. Запрос сверх потолка 500 зажимается до него",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Сколько правил пропустить; учитывается вместе с limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
           }
         ],
         "responses": {
@@ -19770,6 +19877,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -20177,6 +20287,17 @@
             "schema": {
               "$ref": "#/components/schemas/UUID"
             }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "description": "item — ответить только перенесённой статьёй, без всего справочника",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "item"
+              ]
+            }
           }
         ],
         "requestBody": {
@@ -20191,11 +20312,18 @@
         },
         "responses": {
           "200": {
-            "description": "Полный обновлённый справочник",
+            "description": "Полный обновлённый справочник; с view=item — только перенесённая статья",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CoreItemPage"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/CoreItemPage"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CoreItemMoved"
+                    }
+                  ]
                 }
               }
             }
@@ -22364,7 +22492,7 @@
         ],
         "operationId": "financeListConnectorRuns",
         "summary": "Получить журнал запусков синхронизации",
-        "description": "Возвращает журнал запусков синхронизации указанного банковского подключения.",
+        "description": "Возвращает журнал запусков синхронизации указанного банковского подключения. Подключения нет — 404 finance.connector.not_found; limit вне 1–100 — 400 finance.connector.runs_limit_invalid.",
         "x-akeda-module": "finance",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -22441,7 +22569,7 @@
         ],
         "operationId": "financeListConnectorAccounts",
         "summary": "Получить банковские счета подключения и их привязки",
-        "description": "Пока account пуст, импортировать операции по внешнему счёту некуда; клиент должен предложить привязку или создание счёта Akeda.",
+        "description": "Пока account пуст, импортировать операции по внешнему счёту некуда; клиент должен предложить привязку или создание счёта Akeda. Подключения нет — 404 finance.connector.not_found, а не пустой список.",
         "x-akeda-module": "finance",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -22697,7 +22825,7 @@
         ],
         "operationId": "financeGetCounterpartyTerms",
         "summary": "Получить коммерческие условия на указанную дату",
-        "description": "Возвращает действующую неизменяемую версию; если настройка отсутствует, configured=false и безопасные нулевые значения.",
+        "description": "Возвращает действующую неизменяемую версию; если настройка отсутствует, configured=false, id, valid_from и created_at — null. Контрагента нет в справочнике — 404 finance.counterparty_terms.contact_not_found.",
         "x-akeda-module": "finance",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -23878,7 +24006,7 @@
         ],
         "operationId": "financeListSettlementBalances",
         "summary": "Получить остатки обязательств, доступных пользователю",
-        "description": "Возвращает остатки обязательств, доступных текущему пользователю.",
+        "description": "Возвращает остатки обязательств, доступных текущему пользователю, с валютой обязательства. Без limit — все строки; с limit — страница от offset, count — число строк после отбора валюты. Неверные limit/offset — 400 finance.settlement_balances.page_invalid.",
         "x-akeda-module": "finance",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -23905,6 +24033,35 @@
           },
           {
             "$ref": "#/components/parameters/BusinessQuery"
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 3
+            },
+            "description": "Только обязательства в этой валюте"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            },
+            "description": "Размер страницы; без него — все строки"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
           }
         ],
         "responses": {
@@ -23917,6 +24074,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -24176,7 +24336,7 @@
         ],
         "operationId": "financeTradeAdvanceOffer",
         "summary": "Свободные авансы для зачёта по продаже или закупке",
-        "description": "Свободные авансы контрагента и юрлица продажи или закупки без продажи или закупки — на контрагенте или на договоре этого продажи или закупки, включая начальные остатки, датой не позже открытого долга продажи или закупки; одинаково до и после отсечки расчётов по продажам или закупкам (ERP-1727). mode=offset — можно зачесть; пустой mode — зачитывать нечего.",
+        "description": "Свободные авансы контрагента и юрлица продажи или закупки без продажи или закупки — на контрагенте или на договоре этого продажи или закупки, включая начальные остатки, датой не позже открытого долга продажи или закупки; одинаково до и после отсечки расчётов по продажам или закупкам (ERP-1727). mode=offset — можно зачесть, amount — сумма к зачёту; пустой mode — зачитывать нечего, amount null.",
         "x-akeda-module": "finance",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -28983,6 +29143,19 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "description": "Вид ответа: full (по умолчанию) — со строками, днями и клетками счетов; summary — итоги, клетки юрлиц и итоговой строки, сводка без срока и счётчики строк, без списков строк и дней.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "full",
+                "summary"
+              ],
+              "default": "full"
+            }
           }
         ],
         "responses": {
@@ -29620,7 +29793,8 @@
                               "employee",
                               "company",
                               "contact"
-                            ]
+                            ],
+                            "description": "Кем владелец записан в структуре владения: employee — человек из справочника сотрудников, company — юрлицо кабинета, contact — контрагент. employee не значит, что выплата — зарплата: это дивиденды собственнику"
                           },
                           "name": {
                             "type": "string"
@@ -30384,6 +30558,7 @@
           {
             "name": "currency",
             "in": "query",
+            "description": "Исходная валюта: отчёт целиком, с остатками, строится в ней без пересчёта, и currency ответа называет её; без параметра — суммы в валюте учёта.",
             "schema": {
               "type": "string"
             }
@@ -30394,6 +30569,19 @@
             "description": "Макет формы отчёта; без него — макет кабинета по умолчанию, а если его нет, встроенная форма с тремя разделами.",
             "schema": {
               "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "description": "Вид ответа: full (по умолчанию) — витрина целиком в каждой колонке; summary — итог периода один раз в корне, колонки с границами, ключевыми цифрами (figures) и системными строками макета (system_rows).",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "full",
+                "summary"
+              ],
+              "default": "full"
             }
           }
         ],
@@ -30407,6 +30595,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -30508,6 +30699,19 @@
                 "total"
               ],
               "default": "month"
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "description": "Вид ответа: full (по умолчанию) — витрина целиком в каждой колонке; summary — итог периода один раз в корне, колонки с границами, ключевыми цифрами (figures) и системными строками макета (system_rows).",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "full",
+                "summary"
+              ],
+              "default": "full"
             }
           }
         ],
@@ -31108,6 +31312,48 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CRM pipelines"
+        ],
+        "operationId": "crmDeletePipeline",
+        "summary": "Удалить воронку",
+        "description": "Удаляет воронку вместе с её этапами. Только пустую: основную воронку и воронку, через которую проходили сделки, удалить нельзя (409 crm.pipeline_default, crm.pipeline_has_deals) — такую архивируют.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "crm",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "crm:admin",
+        "responses": {
+          "204": {
+            "description": "Воронка удалена"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           }
         }
       }
@@ -40705,7 +40951,7 @@
         ],
         "operationId": "stockCreateOpeningBalance",
         "summary": "Создать черновик ввода начальных остатков товара",
-        "description": "Черновик вида `stock_opening_balance`: запас, который был у бизнеса на\nначало учёта. Проведённый, он ложится в капитал на начало учёта (счёт\n80) без движения ОПиУ — в отличие от оприходования излишков, которое\nдаёт прочий доход (ERP-1134). Общая ручка `stockCreateDocument` этот вид\nне заводит.\n\nНа складе площадки ввод принимается только до начала учёта бизнеса:\nесли в книге уже есть проводка раньше даты ввода (кроме самих вводов\nостатков), ответ — 400 с объяснением оформить приёмку.\n\nЧитает `Idempotency-Key` так же, как `stockCreateDocument`.\n",
+        "description": "Черновик вида `stock_opening_balance`: запас, который был у бизнеса на\nначало учёта. Проведённый, он ложится в капитал на начало учёта (счёт\n80) без движения ОПиУ — в отличие от оприходования излишков, которое\nдаёт прочий доход (ERP-1134). Общая ручка `stockCreateDocument` этот вид\nне заводит.\n\nНа склад площадки ввод принимается на любую дату, в том числе после\nначала учёта бизнеса: модуль площадок подключают и позже, и товар на\nскладе площадки входит в учёт на дату подключения (ERP-1980).\n\nЧитает `Idempotency-Key` так же, как `stockCreateDocument`.\n",
         "x-akeda-module": "stock",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -48198,10 +48444,9 @@
           {
             "name": "month",
             "in": "query",
-            "description": "Ключ месяца из months; неизвестный ключ даёт последний месяц",
+            "description": "Месяц разбора: ГГГГ-ММ или любой его день ГГГГ-ММ-ДД (ключ из months); месяц без данных считается нулями, неразборчивое значение — 400 marketplace.month_invalid; пусто — последний месяц с данными",
             "schema": {
-              "type": "string",
-              "format": "date"
+              "type": "string"
             }
           },
           {
@@ -48300,7 +48545,7 @@
           {
             "name": "period",
             "in": "query",
-            "description": "Гранулярность колонок; любое иное значение читается как week",
+            "description": "Гранулярность колонок: week или month; иное значение — 400 marketplace.period_kind_invalid",
             "schema": {
               "type": "string",
               "enum": [
@@ -48342,6 +48587,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -48482,7 +48730,7 @@
         ],
         "operationId": "marketplaceOzonSyncJobs",
         "summary": "Получить задания синхронизации Ozon",
-        "description": "Пятьдесят последних заданий синхронизации Ozon из базы кабинета.\nЕдинственный маршрут группы, который не ходит в аналитику и не\nпринимает ни одного параметра запроса: ни магазина, ни страницы.\n",
+        "description": "Пятьдесят последних заданий синхронизации Ozon из базы кабинета.\nЕдинственный маршрут группы, который не ходит в аналитику и не\nпринимает ни одного параметра запроса: ни магазина, ни страницы.\nКаждое задание называет свои магазины (stores) с состоянием; задание\nтолько по магазинам вне области участника не показывается.\n",
         "x-akeda-module": "marketplace",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -48854,10 +49102,9 @@
           {
             "name": "month",
             "in": "query",
-            "description": "Первый день месяца из списка months; неизвестное значение берёт последний доступный месяц",
+            "description": "Месяц разбора: ГГГГ-ММ или любой его день ГГГГ-ММ-ДД (ключ из months); месяц без данных считается нулями, неразборчивое значение — 400 marketplace.month_invalid; пусто — последний месяц с данными",
             "schema": {
-              "type": "string",
-              "format": "date"
+              "type": "string"
             }
           },
           {
@@ -48984,6 +49231,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -49223,11 +49473,17 @@
               }
             }
           },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
           "403": {
             "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
           },
           "503": {
             "$ref": "#/components/responses/ServiceUnavailable"
@@ -49995,7 +50251,7 @@
               ],
               "default": "week"
             },
-            "description": "Любое значение кроме month читается как week"
+            "description": "Гранулярность колонок: week или month; иное значение — 400 marketplace.period_kind_invalid"
           },
           {
             "name": "year",
@@ -50035,6 +50291,9 @@
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -51293,7 +51552,7 @@
         ],
         "operationId": "financeCreateExpenseReport",
         "summary": "Создать авансовый отчёт",
-        "description": "Заводит черновик авансового отчёта сотрудника. Строка ведёт себя как\nплатёж со своей статьёй: расход — Дт счёт статьи / Кт 71, налог гасит\n68, поставщик уходит на клиринговый 76.09. Ограничений по статьям нет.\nДДС: отчёт переносит выбытие со статьи подотчёта на статьи строк; денег\nне двигает.\n\n`post: true` проводит тем же вызовом. Неудачное проведение не отменяет\nзаведение: документ остаётся черновиком, ответом приходит отказ.\n",
+        "description": "Заводит черновик авансового отчёта сотрудника. Строка ведёт себя как\nплатёж со своей статьёй: расход — Дт счёт статьи / Кт 71, налог гасит\n68, поставщик уходит на клиринговый 76.09. Ограничений по статьям нет.\nДДС: отчёт переносит выбытие со статьи подотчёта на статьи строк; денег\nне двигает.\n\nШапка обязательна: `refs.company` или `refs.business`, сотрудник\n`refs.for_contact` и статья подотчёта `refs.item`; без них — 400 с\nназванием поля. Строки черновика можно дописать позже.\n\n`post: true` проводит тем же вызовом. Неудачное проведение не отменяет\nзаведение: документ остаётся черновиком, ответом приходит отказ.\n",
         "x-akeda-module": "finance",
         "x-akeda-release-stage": "preview",
         "x-akeda-audience": "external",
@@ -52145,6 +52404,853 @@
                       "type": "array",
                       "items": {
                         "$ref": "#/components/schemas/AutomationRuleDocument"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Automation"
+        ],
+        "operationId": "automationCreateRule",
+        "summary": "Завести правило автоматизации выключенным",
+        "description": "Заводит правило документом «когда → если → то» той же проверкой, что\nи запись с экрана. Новое правило ВСЕГДА выключено, присланный\n`is_enabled` не учитывается: включение — отдельный шаг с прогоном на\nистории и, для действий наружу, согласием человека. Исполнитель —\nвызывающий; присланный исполнитель не принимается.\n\nПовтор с тем же `Idempotency-Key` не заводит второе правило, а\nвозвращает первый ответ. Кривой документ — 422 с путём и подсказкой.\n",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "automation",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "settings:write",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rule"
+                ],
+                "properties": {
+                  "rule": {
+                    "$ref": "#/components/schemas/AutomationRuleDraft"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Заведённое выключенное правило",
+            "headers": {
+              "Idempotent-Replay": {
+                "$ref": "#/components/headers/IdempotentReplay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationRuleEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "description": "Документ не проходит проверку или ключ уже использован для другого запроса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationRuleRefusal"
+                }
+              }
+            }
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/automation/rules/validate": {
+      "post": {
+        "tags": [
+          "Automation"
+        ],
+        "operationId": "automationRuleValidate",
+        "summary": "Проверить документ правила автоматизации без записи",
+        "description": "Проверяет документ правила «когда → если → то» той же проверкой, что\nи запись правила: событие и условие по каталогам, сборка условия\nвычислителем, обязательные входы действий, подключённость модулей.\nНичего не сохраняет (`saved` всегда `false`).\n\nОтвечает нормализованным документом (условие собрано из сравнений,\nисполнитель — вызывающий), первым замечанием `problem` с путём в\nдокументе, текстом и подсказкой на языке запроса и статусом каждого\nдействия: исполняется ли оно движком, хватает ли вызывающему права\n(он станет исполнителем правила) и уходит ли оно за пределы кабинета\n(`external`). `external_send` — включение такого правила потребует\nподтверждения человеком. Документ с замечанием — это ответ 200 с\n`valid: false`, а не ошибка.\n",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "automation",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "settings:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "description": "Язык слов: ru или en; без него — по Accept-Language",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ru",
+                "en"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rule"
+                ],
+                "properties": {
+                  "rule": {
+                    "$ref": "#/components/schemas/AutomationRuleDraft"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Итог проверки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationRuleValidation"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/automation/rules/{id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/TenantHeader"
+        },
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Идентификатор правила",
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Automation"
+        ],
+        "operationId": "automationGetRule",
+        "summary": "Получить правило автоматизации",
+        "description": "Одно правило кабинета документом в той же форме, что у списка правил:\nсобытие, условие, действия, исполнитель, включено ли и `version` —\nеё передают в `expected_version` при изменении правила.\n",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "automation",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "settings:read",
+        "responses": {
+          "200": {
+            "description": "Правило",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationRuleDocument"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Automation"
+        ],
+        "operationId": "automationUpdateRule",
+        "summary": "Изменить выключенное правило автоматизации",
+        "description": "Переписывает правило документом поверх прочитанной версии. Проверка —\nта же, что у записи с экрана; исполнителем становится изменивший.\n\n`expected_version` обязателен: правило изменилось после чтения —\n409 `version_conflict`, ничего не записано. Включённое правило так не\nправится (409 `rule_enabled`): сначала выключить, затем сохранить,\nпроверить и включить снова. Выключать правило молча при сохранении\nсервер не станет — это остановило бы рабочий процесс.\n",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "automation",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "settings:write",
+        "parameters": [
+          {
+            "name": "locale",
+            "in": "query",
+            "description": "Язык слов: ru или en; без него — по Accept-Language",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ru",
+                "en"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutomationRuleSaveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Сохранённое правило",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationRuleEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Правило изменилось после чтения или включено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationRuleRefusal"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Документ не проходит проверку или нет ожидаемой версии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationRuleRefusal"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Automation"
+        ],
+        "operationId": "automationDeleteRule",
+        "summary": "Удалить правило автоматизации",
+        "description": "Удаляет правило вместе с его прогонами и журналом. Чтобы правило\nперестало срабатывать, сохранив историю, его выключают. Агенту MCP\nудаление исполняется только после подтверждения человеком.\n",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "automation",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "settings:write",
+        "x-akeda-confirmation": "delete",
+        "responses": {
+          "204": {
+            "description": "Правило удалено"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/automation/rules/{id}/enabled": {
+      "post": {
+        "tags": [
+          "Automation"
+        ],
+        "operationId": "automationSetRuleEnabled",
+        "summary": "Включить или выключить правило автоматизации",
+        "description": "Выключение исполняется сразу. Включённое правило реагирует только на\nфакты после включения.\n\nПравило с действием, уходящим за пределы кабинета (письмо наружу,\nдоставка бумаги), без `allow_external_send: true` и правило с действием,\nкоторое выпускает учётные документы или двигает товар и деньги (счёт,\nакт, УПД, отгрузка), без `allow_money_posting: true` не включаются:\nответ 428 с предпросмотром — что включается, какие действия требуют\nсогласия (`required`) и прогон на 30 днях истории (срабатывания,\nотправки наружу, документы и движения). Агенту MCP вызов с этими\nпризнаками исполняется только после подтверждения человеком. Правило\nбез таких действий включается без подтверждения.\n",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "automation",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "settings:write",
+        "x-akeda-confirmation": "external_send",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Идентификатор правила",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "description": "Язык слов: ru или en; без него — по Accept-Language",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ru",
+                "en"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "enabled"
+                ],
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "allow_external_send": {
+                    "type": "boolean",
+                    "description": "Человек согласился, что правило будет отправлять за пределы кабинета"
+                  },
+                  "allow_money_posting": {
+                    "type": "boolean",
+                    "description": "Человек согласился, что правило будет выпускать учётные документы или двигать товар и деньги"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Правило после переключения",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationRuleEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "description": "Модуль действия не подключён в кабинете",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutomationRuleRefusal"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Правило отправляет наружу или проводит — нужно согласие человека",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code",
+                    "detail",
+                    "problem",
+                    "preview",
+                    "executed"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "detail": {
+                      "type": "string"
+                    },
+                    "problem": {
+                      "$ref": "#/components/schemas/AutomationRuleProblem"
+                    },
+                    "preview": {
+                      "$ref": "#/components/schemas/AutomationEnablePreview"
+                    },
+                    "executed": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/automation/rules/{id}/versions": {
+      "get": {
+        "tags": [
+          "Automation"
+        ],
+        "operationId": "automationRuleVersions",
+        "summary": "Получить версии правила автоматизации",
+        "description": "Версии правила, свежие сверху: кто сохранил, когда, что изменилось\n(коды с параметрами) и документ версии целиком.\n",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "automation",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "settings:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Идентификатор правила",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Версии правила",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "versions"
+                  ],
+                  "properties": {
+                    "versions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AutomationRuleVersion"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/automation/runs": {
+      "get": {
+        "tags": [
+          "Automation"
+        ],
+        "operationId": "automationRuns",
+        "summary": "Получить журнал прогонов автоматизаций",
+        "description": "Прогоны правил кабинета, свежие сверху: правило и его версия, событие\nи запись, статус, попытки, причина исхода кодом и словами (`reason`).\nПолей события (темы письма, отправителя) журнал не отдаёт.\n",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "automation",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "settings:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "rule_id",
+            "in": "query",
+            "description": "Только прогоны этого правила",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Сколько строк; по умолчанию 50, не больше 200",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200
+            }
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "description": "Язык слов: ru или en; без него — по Accept-Language",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ru",
+                "en"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Журнал прогонов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "runs"
+                  ],
+                  "properties": {
+                    "runs": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AutomationRunReport"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/automation/runs/{id}/actions": {
+      "get": {
+        "tags": [
+          "Automation"
+        ],
+        "operationId": "automationRunActions",
+        "summary": "Получить журнал действий прогона автоматизации",
+        "description": "Что сделало каждое действие прогона: команда и её название, статус,\nпричина кодом и словами, созданная или изменённая запись.\n",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "automation",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "settings:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Идентификатор прогона",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "description": "Язык слов: ru или en; без него — по Accept-Language",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ru",
+                "en"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Журнал действий",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "actions"
+                  ],
+                  "properties": {
+                    "actions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AutomationRunActionReport"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1/automation/connections": {
+      "get": {
+        "tags": [
+          "Automation"
+        ],
+        "operationId": "automationConnections",
+        "summary": "Получить подключения и вебхуки автоматизаций",
+        "description": "Внешние подключения кабинета (адрес, разрешённый домен, способ\nавторизации, есть ли секрет, последняя проверка) и входящие вебхуки\n(поля образца, подпись, последний приём). Отсюда берут `id`\nподключения для действия «Отправить вебхук» и `id` вебхука для события\n«Пришёл вебхук», а также `id` установки приложения для действия\n«Передать приложению» (`installations`: имя, издатель, готовность\nпринимать передачи и причина, если не примет; без прав и адресов).\n\nСекреты подключений и подписи, токен адреса вебхука в ответе не\nвозвращаются никогда: виден только признак `has_secret`. Заводит\nподключения и вебхуки человек на экране «Настройки → Автоматизации →\nВебхуки и API».\n",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "automation",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "settings:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Подключения и вебхуки кабинета",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "connections",
+                    "webhooks",
+                    "installations",
+                    "auth_kinds",
+                    "hook_path_prefix",
+                    "allow_local"
+                  ],
+                  "properties": {
+                    "connections": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AutomationConnection"
+                      }
+                    },
+                    "webhooks": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/AutomationWebhook"
+                      }
+                    },
+                    "installations": {
+                      "type": "array",
+                      "description": "Установки приложений кабинета (кроме удалённых) для действия «Передать приложению»",
+                      "items": {
+                        "$ref": "#/components/schemas/AutomationAppInstallation"
+                      }
+                    },
+                    "auth_kinds": {
+                      "type": "array",
+                      "description": "Способы авторизации подключения в порядке показа",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "header",
+                          "bearer",
+                          "basic",
+                          "hmac"
+                        ]
+                      }
+                    },
+                    "hook_path_prefix": {
+                      "type": "string",
+                      "description": "Начало адреса приёма вебхука; полный адрес с токеном показывается человеку один раз при выпуске"
+                    },
+                    "allow_local": {
+                      "type": "array",
+                      "description": "Локальные приёмники, разрешённые стенду; в бою пусто",
+                      "items": {
+                        "type": "string"
                       }
                     }
                   }
@@ -58363,6 +59469,155 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DocflowFlowDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/docflow/flow/ukd": {
+      "post": {
+        "tags": [
+          "Docflow flow"
+        ],
+        "operationId": "docflowIssueUKD",
+        "x-akeda-audience": "external",
+        "summary": "Выпустить УКД по возврату покупателя",
+        "description": "Универсальный корректировочный документ по проведённому возврату от покупателя (вид складского документа `stock_customer_return`). Исходный УПД — карточка документооборота, выпущенная по отгрузке-основанию возврата; строки «до» — его строки с разложением налога, «после» — остаток после возврата, разница — уменьшение. Документооборот заводит зарегистрированную карточку вида `correction` с номером «УКД-ГГ-NNNNN», содержанием `content.correction`, ссылкой на возврат в `accounting_links` и связью `basis` с УПД. Коды возвращённых марок модуль маркировки отдаёт при каждой сборке XML (корректировочный документ 5.01, файлы ON_NKORSCHFDOPPRMARK) — скачивание и отправка тем же путём `fns`, что у УПД. Учётных проводок команда не делает: их делают склад и финансы при проведении возврата. 409 — возврат не проведён, по отгрузке нет УПД или возврат не сходится с УПД. Повтор — тем же или новым ключом — отдаёт ту же карточку: на возврат одна бумага. Заголовок Idempotency-Key обязателен.",
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.flow:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocflowUKDInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Зарегистрированная карточка УКД",
+            "headers": {
+              "Idempotent-Replay": {
+                "$ref": "#/components/headers/IdempotentReplay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocflowFlowDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/DocflowFlowIdempotencyConflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Docflow flow"
+        ],
+        "operationId": "docflowReturnUKD",
+        "x-akeda-audience": "external",
+        "summary": "Получить УКД по возврату покупателя",
+        "description": "Что с УКД по проведённому возврату покупателя: карточка, если уже выпущена, и исходный УПД отгрузки-основания, если он есть (без него выпускать не по чему). Ничего не выпускает. 404 — возврат вне области юрлиц участника; 409 — документ не проведённый возврат покупателя.",
+        "x-akeda-module": "docflow",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-permission": "docflow.flow:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "return_id",
+            "in": "query",
+            "required": true,
+            "description": "Возврат от покупателя (складской документ)",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "УКД по возврату и исходный УПД",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocflowUKDState"
                 }
               }
             }
@@ -68655,6 +69910,76 @@
               "$ref": "#/components/schemas/AutomationManifestAction"
             }
           },
+          "timing": {
+            "type": "object",
+            "description": "Блок «Когда выполнить» (ERP-1928): виды, единицы, повторы расписания, события отмены; отборы записей по расписанию — selections (ERP-1939). Полная схема — docs/architecture/automation/manifest.schema.json",
+            "additionalProperties": true,
+            "properties": {
+              "max_selection_records": {
+                "type": "integer",
+                "description": "Сколько записей отбора берёт один запуск расписания"
+              },
+              "selections": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "key",
+                    "module",
+                    "object",
+                    "entity",
+                    "label",
+                    "status",
+                    "params",
+                    "fields"
+                  ],
+                  "additionalProperties": true,
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "module": {
+                      "type": "string"
+                    },
+                    "object": {
+                      "type": "string",
+                      "description": "Объект записи: действия над записью события берутся по нему"
+                    },
+                    "entity": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "live",
+                        "unavailable"
+                      ]
+                    },
+                    "params": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    },
+                    "fields": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
           "references": {
             "type": "array",
             "items": {
@@ -68715,6 +70040,11 @@
                 }
               }
             }
+          },
+          "blocks": {
+            "type": "object",
+            "description": "Ветки «Если ещё / Иначе», пауза «Подождать» и ссылки на результаты шагов (ERP-1932)",
+            "additionalProperties": true
           },
           "limits": {
             "type": "object",
@@ -68809,21 +70139,19 @@
               "actions": {
                 "type": "array",
                 "items": {
-                  "type": "object",
-                  "required": [
-                    "command"
-                  ],
-                  "properties": {
-                    "command": {
-                      "type": "string"
-                    },
-                    "inputs": {
-                      "type": "object",
-                      "additionalProperties": {
-                        "type": "string"
-                      }
-                    }
-                  }
+                  "$ref": "#/components/schemas/AutomationRuleBlock"
+                }
+              },
+              "branches": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AutomationRuleBranch"
+                }
+              },
+              "otherwise": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AutomationRuleBlock"
                 }
               }
             }
@@ -68902,23 +70230,28 @@
           },
           "actions": {
             "type": "array",
+            "description": "Путь «Если да»: действия и паузы по порядку (ERP-1932)",
             "items": {
-              "type": "object",
-              "required": [
-                "command"
-              ],
-              "properties": {
-                "command": {
-                  "type": "string"
-                },
-                "inputs": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  }
-                }
-              }
+              "$ref": "#/components/schemas/AutomationRuleBlock"
             }
+          },
+          "branches": {
+            "type": "array",
+            "description": "«Если ещё …»: до трёх путей со своим условием, проверяются по порядку",
+            "items": {
+              "$ref": "#/components/schemas/AutomationRuleBranch"
+            }
+          },
+          "otherwise": {
+            "type": "array",
+            "description": "«Иначе»: блоки, когда не подошло ни одно условие; пусто — правило промолчит",
+            "items": {
+              "$ref": "#/components/schemas/AutomationRuleBlock"
+            }
+          },
+          "doc_version": {
+            "type": "integer",
+            "description": "Версия языка документа правила (rule.schema.json); 2 — пути, паузы и результаты шагов"
           },
           "executor_user_id": {
             "type": "integer",
@@ -68948,6 +70281,956 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "AutomationRuleDraft": {
+        "type": "object",
+        "description": "Документ правила в той же форме, что у записи с экрана и у проверки; новые поля документа принимаются без смены этой схемы. Правка без branches и otherwise сохраняет прежние ветки; убрать их — прислать пустые списки.",
+        "required": [
+          "event_type"
+        ],
+        "additionalProperties": true,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "event_type": {
+            "type": "string"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "field",
+                "op"
+              ],
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "op": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                },
+                "value_to": {
+                  "type": "string"
+                },
+                "of": {
+                  "type": "string"
+                },
+                "group": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutomationRuleBlock"
+            }
+          },
+          "branches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutomationRuleBranch"
+            }
+          },
+          "otherwise": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutomationRuleBlock"
+            }
+          }
+        }
+      },
+      "AutomationRuleBlock": {
+        "type": "object",
+        "description": "Шаг пути правила (ERP-1932): действие каталога или пауза «Подождать»\n(`kind: wait`). `id` — устойчивый id шага: журнал, ключ повтора и\nссылки `{{step:<id>.<результат>}}` во входах следующих шагов того же\nпути. Пусто — сервер ставит a1, a2 … (пауза — w1 …).\n",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "action",
+              "wait"
+            ],
+            "description": "Пусто — действие"
+          },
+          "command": {
+            "type": "string"
+          },
+          "inputs": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "wait": {
+            "type": "object",
+            "description": "Пауза: after_event — через amount единиц unit от начала паузы; relative_to_field — до даты поля field (± amount); cancel_on — события, факт которых по той же записи прекращает правило",
+            "additionalProperties": true,
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "after_event",
+                  "relative_to_field"
+                ]
+              },
+              "amount": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "minutes",
+                  "hours",
+                  "days",
+                  "working_days"
+                ]
+              },
+              "direction": {
+                "type": "string",
+                "enum": [
+                  "before",
+                  "after"
+                ]
+              },
+              "field": {
+                "type": "string"
+              },
+              "at": {
+                "type": "string"
+              },
+              "cancel_on": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "AutomationRuleBranch": {
+        "type": "object",
+        "description": "«Если ещё …»: своё условие сравнениями и свои шаги",
+        "required": [
+          "conditions",
+          "actions"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          },
+          "condition": {
+            "type": "string",
+            "description": "Выражение, собранное сервером из conditions"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "field",
+                "op"
+              ],
+              "properties": {
+                "field": {
+                  "type": "string"
+                },
+                "op": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                },
+                "value_to": {
+                  "type": "string"
+                },
+                "of": {
+                  "type": "string"
+                },
+                "group": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutomationRuleBlock"
+            }
+          }
+        }
+      },
+      "AutomationRuleSaveRequest": {
+        "type": "object",
+        "required": [
+          "rule",
+          "expected_version"
+        ],
+        "properties": {
+          "rule": {
+            "$ref": "#/components/schemas/AutomationRuleDraft"
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Версия правила, которую вы прочитали (поле version)"
+          }
+        }
+      },
+      "AutomationRuleEnvelope": {
+        "type": "object",
+        "required": [
+          "rule"
+        ],
+        "properties": {
+          "rule": {
+            "$ref": "#/components/schemas/AutomationRuleDocument"
+          }
+        }
+      },
+      "AutomationRuleRefusal": {
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "problem": {
+            "$ref": "#/components/schemas/AutomationRuleProblem"
+          }
+        }
+      },
+      "AutomationRuleValidation": {
+        "type": "object",
+        "required": [
+          "valid",
+          "rule",
+          "actions",
+          "external_send",
+          "saved"
+        ],
+        "properties": {
+          "valid": {
+            "type": "boolean"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/AutomationRuleDraft"
+          },
+          "problem": {
+            "$ref": "#/components/schemas/AutomationRuleProblem"
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "index",
+                "command",
+                "label",
+                "status",
+                "permission",
+                "allowed",
+                "connected",
+                "danger",
+                "external"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "description": "Номер действия по путям подряд: «Если да», «Если ещё», «Иначе»"
+                },
+                "block_id": {
+                  "type": "string"
+                },
+                "command": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "live",
+                    "declared",
+                    "unknown"
+                  ]
+                },
+                "permission": {
+                  "type": "string"
+                },
+                "allowed": {
+                  "type": "boolean",
+                  "description": "Хватает ли права вызывающему — он станет исполнителем правила"
+                },
+                "connected": {
+                  "type": "boolean"
+                },
+                "danger": {
+                  "type": "string"
+                },
+                "external": {
+                  "type": "boolean",
+                  "description": "Действие уходит за пределы кабинета"
+                },
+                "posting": {
+                  "type": "boolean",
+                  "description": "Действие выпускает учётный документ или двигает товар и деньги"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "external_send": {
+            "type": "boolean",
+            "description": "Включение правила потребует подтверждения человеком"
+          },
+          "money_posting": {
+            "type": "boolean",
+            "description": "Включение правила потребует подтверждения человеком по классу «деньги и проводки»"
+          },
+          "saved": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AutomationEnablePreview": {
+        "type": "object",
+        "required": [
+          "rule_id",
+          "name",
+          "version",
+          "event_type",
+          "event_label",
+          "executor_user_id",
+          "external_actions",
+          "posting_actions",
+          "required",
+          "simulated",
+          "days",
+          "events",
+          "fired",
+          "truncated",
+          "external_sends",
+          "postings",
+          "executed"
+        ],
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "event_type": {
+            "type": "string"
+          },
+          "event_label": {
+            "type": "string"
+          },
+          "executor_user_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "external_actions": {
+            "$ref": "#/components/schemas/AutomationEnableActions"
+          },
+          "posting_actions": {
+            "$ref": "#/components/schemas/AutomationEnableActions"
+          },
+          "required": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "allow_external_send",
+                "allow_money_posting"
+              ]
+            }
+          },
+          "simulated": {
+            "type": "boolean"
+          },
+          "simulation_message": {
+            "type": "string"
+          },
+          "days": {
+            "type": "integer"
+          },
+          "events": {
+            "type": "integer"
+          },
+          "fired": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "external_sends": {
+            "type": "integer",
+            "description": "Сколько отправок наружу ушло бы за период"
+          },
+          "postings": {
+            "type": "integer",
+            "description": "Сколько учётных документов и движений выпустило бы правило за период"
+          },
+          "executed": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AutomationEnableActions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "index",
+            "command",
+            "label"
+          ],
+          "properties": {
+            "index": {
+              "type": "integer"
+            },
+            "command": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AutomationRuleVersion": {
+        "type": "object",
+        "required": [
+          "rule_id",
+          "version",
+          "name",
+          "event_type",
+          "condition",
+          "conditions",
+          "actions",
+          "executor_user_id",
+          "author_user_id",
+          "changes",
+          "created_at"
+        ],
+        "properties": {
+          "rule_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "event_type": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "string"
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "executor_user_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "author_user_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "code"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "restored_from": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AutomationRunReport": {
+        "type": "object",
+        "required": [
+          "id",
+          "rule_id",
+          "rule_name",
+          "rule_version",
+          "event_type",
+          "entity",
+          "entity_id",
+          "status",
+          "attempts",
+          "max_attempts",
+          "outcome_code",
+          "outcome_params",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rule_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rule_name": {
+            "type": "string"
+          },
+          "rule_version": {
+            "type": "integer"
+          },
+          "event_type": {
+            "type": "string"
+          },
+          "entity": {
+            "type": "string"
+          },
+          "entity_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "running",
+              "waiting",
+              "success",
+              "failed",
+              "skipped"
+            ]
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "max_attempts": {
+            "type": "integer"
+          },
+          "path_id": {
+            "type": "string",
+            "description": "Выбранный путь: yes, id «Если ещё», else; пусто — путь не выбран"
+          },
+          "wait_id": {
+            "type": "string"
+          },
+          "wait_state": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "done",
+              "cancelled"
+            ]
+          },
+          "wait_until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "wait_block_id": {
+            "type": "string",
+            "description": "Шаг «Подождать», на котором прогон ждёт или ждал; пусто — время правила"
+          },
+          "outcome_code": {
+            "type": "string"
+          },
+          "outcome_params": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "type": "string",
+            "description": "Причина исхода словами на языке запроса"
+          },
+          "next_attempt_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AutomationRunActionReport": {
+        "type": "object",
+        "required": [
+          "index",
+          "command",
+          "label",
+          "status",
+          "code",
+          "params",
+          "updated_at"
+        ],
+        "properties": {
+          "index": {
+            "type": "integer"
+          },
+          "block_id": {
+            "type": "string",
+            "description": "id шага правила (ERP-1932); у паузы command пуст, code — paused или pause_no_wait"
+          },
+          "path_id": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "params": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "type": "string"
+          },
+          "produced_entity_id": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AutomationConnection": {
+        "type": "object",
+        "description": "Внешнее подключение автоматизаций. Секрет не возвращается — только признак has_secret.",
+        "required": [
+          "id",
+          "name",
+          "base_url",
+          "host",
+          "auth_kind",
+          "has_secret",
+          "enabled",
+          "created_by",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "base_url": {
+            "type": "string",
+            "description": "Базовый адрес; путь действия дописывается к нему"
+          },
+          "host": {
+            "type": "string",
+            "description": "Разрешённый домен: вызов уходит только на него"
+          },
+          "auth_kind": {
+            "type": "string",
+            "enum": [
+              "none",
+              "header",
+              "bearer",
+              "basic",
+              "hmac"
+            ],
+            "description": "Способ авторизации"
+          },
+          "auth_header": {
+            "type": "string",
+            "description": "Имя заголовка с секретом при способе header"
+          },
+          "basic_user": {
+            "type": "string",
+            "description": "Логин при способе basic"
+          },
+          "has_secret": {
+            "type": "boolean",
+            "description": "Задан ли секрет; сам секрет не возвращается"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "last_check": {
+            "$ref": "#/components/schemas/AutomationConnectionCheck"
+          },
+          "created_by": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AutomationConnectionCheck": {
+        "type": "object",
+        "description": "Последняя проверка подключения по кнопке на экране.",
+        "required": [
+          "at",
+          "ok",
+          "duration_ms"
+        ],
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer",
+            "description": "HTTP-статус ответа приёмника"
+          },
+          "duration_ms": {
+            "type": "integer"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "unreachable",
+              "blocked",
+              "timeout",
+              "http_error"
+            ],
+            "description": "Почему не ответил; нет поля — ответил"
+          }
+        }
+      },
+      "AutomationWebhook": {
+        "type": "object",
+        "description": "Входящий вебхук кабинета. Токен адреса и секрет подписи не возвращаются.",
+        "required": [
+          "id",
+          "name",
+          "signature",
+          "fields",
+          "enabled",
+          "created_by",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string",
+            "enum": [
+              "none",
+              "hmac_sha256"
+            ],
+            "description": "Проверка подписи входящего вызова"
+          },
+          "fields": {
+            "type": "array",
+            "description": "Поля события, выведенные из образца",
+            "items": {
+              "$ref": "#/components/schemas/AutomationWebhookField"
+            }
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "last_received_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Когда вебхук принимал вызов последний раз"
+          },
+          "created_by": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AutomationAppInstallation": {
+        "type": "object",
+        "description": "Установка приложения кабинета глазами действия «Передать приложению»\n(`platform.deliver_to_app`). Передача — адресное событие\n`app.automation.delivered.v1` только этой установке; готова та,\nчто включена, имеет адрес доставки, подписана на тему и получила от\nкабинета право `app.automation:read`. Права и адрес не возвращаются.\n",
+        "required": [
+          "id",
+          "title",
+          "publisher",
+          "app_key",
+          "active",
+          "receiver",
+          "subscribed",
+          "granted",
+          "ready"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Идентификатор установки — вход installation_id действия"
+          },
+          "title": {
+            "type": "string",
+            "description": "Название приложения"
+          },
+          "publisher": {
+            "type": "string",
+            "description": "Издатель"
+          },
+          "app_key": {
+            "type": "string",
+            "description": "Ключ приложения у издателя"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Установка включена, издатель, приложение и версия не выключены платформой"
+          },
+          "receiver": {
+            "type": "boolean",
+            "description": "У установки есть адрес доставки событий"
+          },
+          "subscribed": {
+            "type": "boolean",
+            "description": "Манифест версии подписан на app.automation.delivered.v1"
+          },
+          "granted": {
+            "type": "boolean",
+            "description": "Кабинет дал право app.automation:read"
+          },
+          "ready": {
+            "type": "boolean",
+            "description": "Передача дойдёт до установки"
+          },
+          "missing": {
+            "type": "string",
+            "enum": [
+              "app_installation_disabled",
+              "app_no_receiver",
+              "app_consent_missing"
+            ],
+            "description": "Первая причина, по которой не дойдёт; пусто у готовой"
+          }
+        }
+      },
+      "AutomationWebhookField": {
+        "type": "object",
+        "required": [
+          "path",
+          "type"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Плоский путь поля в теле (a.b)"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "string",
+              "number",
+              "bool",
+              "date"
+            ]
           }
         }
       },
@@ -69043,6 +71326,29 @@
                 "occurred_at": {
                   "type": "string",
                   "format": "date-time"
+                },
+                "path_id": {
+                  "type": "string",
+                  "description": "Каким путём пошёл бы факт"
+                }
+              }
+            }
+          },
+          "paths": {
+            "type": "array",
+            "description": "У правила с ветками — сколько фактов пошло бы каждым путём",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "count"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "integer"
                 }
               }
             }
@@ -69063,6 +71369,12 @@
               "properties": {
                 "index": {
                   "type": "integer"
+                },
+                "block_id": {
+                  "type": "string"
+                },
+                "path_id": {
+                  "type": "string"
                 },
                 "command": {
                   "type": "string"
@@ -69109,6 +71421,77 @@
               "fired": {
                 "type": "integer",
                 "description": "Сколько раз сработала бы сохранённая версия; выключенное правило — 0"
+              }
+            }
+          },
+          "selection": {
+            "type": "object",
+            "description": "Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример",
+            "required": [
+              "key",
+              "label",
+              "count",
+              "matched",
+              "truncated",
+              "limit",
+              "sample"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer"
+              },
+              "matched": {
+                "type": "integer",
+                "description": "Сколько записей прошли бы условие и пути"
+              },
+              "truncated": {
+                "type": "boolean",
+                "description": "Записей больше limit — за запуск возьмутся первые"
+              },
+              "limit": {
+                "type": "integer"
+              },
+              "code": {
+                "type": "string",
+                "description": "Почему отбор не прочитан (automation.reason.<код>)"
+              },
+              "message": {
+                "type": "string"
+              },
+              "sample": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "entity_id",
+                    "title",
+                    "matched",
+                    "fields"
+                  ],
+                  "properties": {
+                    "entity_id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "matched": {
+                      "type": "boolean"
+                    },
+                    "fields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
               }
             }
           },
@@ -69353,6 +71736,30 @@
           "matched": {
             "type": "boolean"
           },
+          "path_id": {
+            "type": "string",
+            "description": "Какой путь выбран бы на этой записи: yes, id «Если ещё», else; пусто — ни один"
+          },
+          "branches": {
+            "type": "array",
+            "description": "Итог условия каждого «Если ещё» по порядку",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "condition"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "condition": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
           "actions": {
             "type": "array",
             "items": {
@@ -69370,6 +71777,19 @@
               "properties": {
                 "index": {
                   "type": "integer"
+                },
+                "block_id": {
+                  "type": "string"
+                },
+                "path_id": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "wait"
+                  ],
+                  "description": "Пауза «Подождать»; у действия поля нет"
                 },
                 "command": {
                   "type": "string"
@@ -69437,6 +71857,77 @@
           },
           "problem": {
             "$ref": "#/components/schemas/AutomationRuleProblem"
+          },
+          "selection": {
+            "type": "object",
+            "description": "Отбор записей правила по расписанию (ERP-1939): сколько записей отобрал бы модуль-владелец сегодня под проверяющим, сколько прошли бы «если», пример",
+            "required": [
+              "key",
+              "label",
+              "count",
+              "matched",
+              "truncated",
+              "limit",
+              "sample"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer"
+              },
+              "matched": {
+                "type": "integer",
+                "description": "Сколько записей прошли бы условие и пути"
+              },
+              "truncated": {
+                "type": "boolean",
+                "description": "Записей больше limit — за запуск возьмутся первые"
+              },
+              "limit": {
+                "type": "integer"
+              },
+              "code": {
+                "type": "string",
+                "description": "Почему отбор не прочитан (automation.reason.<код>)"
+              },
+              "message": {
+                "type": "string"
+              },
+              "sample": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "entity_id",
+                    "title",
+                    "matched",
+                    "fields"
+                  ],
+                  "properties": {
+                    "entity_id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "matched": {
+                      "type": "boolean"
+                    },
+                    "fields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "executed": {
             "type": "boolean",
@@ -69552,6 +72043,22 @@
                   "items": {
                     "type": "string"
                   }
+                },
+                "group": {
+                  "type": "string",
+                  "enum": [
+                    "custom",
+                    "webhook",
+                    "selection"
+                  ],
+                  "description": "custom — своё поле кабинета, webhook — поле тела входящего вебхука body.<путь> (ERP-1938), selection — поле записи отбора по расписанию (ERP-1939)"
+                },
+                "hooks": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "У поля тела вебхука — вебхуки, в образце которых оно есть"
                 }
               }
             }
@@ -69619,6 +72126,7 @@
             "enum": [
               "none",
               "external",
+              "posting",
               "irreversible"
             ]
           },
@@ -69664,8 +72172,15 @@
                     "bool",
                     "reference",
                     "datetime",
-                    "choice"
-                  ]
+                    "choice",
+                    "event_date",
+                    "time",
+                    "json",
+                    "headers",
+                    "code",
+                    "reference_list"
+                  ],
+                  "description": "reference_list — несколько значений справочника ref через запятую, например группа распределения ответственного (ERP-1938)"
                 },
                 "required": {
                   "type": "boolean"
@@ -69692,6 +72207,37 @@
             "type": "object",
             "additionalProperties": {
               "type": "string"
+            }
+          },
+          "outputs": {
+            "type": "array",
+            "description": "Результаты шага для следующих шагов пути: {{step:<id шага>.<key>}} (ERP-1932)",
+            "items": {
+              "type": "object",
+              "required": [
+                "key",
+                "type",
+                "label"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "string",
+                    "number",
+                    "reference"
+                  ]
+                },
+                "ref": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              }
             }
           }
         }
@@ -70129,7 +72675,9 @@
           },
           "comments_count": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "deprecated": true,
+            "description": "Всегда 0. Обсуждение людей читают через комментарии обсуждения, рабочий журнал агентов — через комментарии задачи; ни то ни другое не попадает в этот счётчик."
           },
           "blocked_by_count": {
             "type": "integer",
@@ -76474,6 +79022,14 @@
             "items": {
               "$ref": "#/components/schemas/CalendarSlot"
             }
+          },
+          "status": {
+            "type": "string",
+            "description": "Состояние ссылки записи для её владельца: active или paused"
+          },
+          "bookable": {
+            "type": "boolean",
+            "description": "Можно ли записаться по ссылке прямо сейчас; у приостановленной — нет, хотя слоты считаются"
           }
         }
       },
@@ -78761,6 +81317,19 @@
           }
         }
       },
+      "CoreAccountingPolicyOwner": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Ответ записи версии с view=owner: политика одного бизнеса или одного юрлица",
+        "properties": {
+          "business": {
+            "$ref": "#/components/schemas/CoreBusinessPolicy"
+          },
+          "company": {
+            "$ref": "#/components/schemas/CoreCompanyPolicy"
+          }
+        }
+      },
       "CoreAccountingPolicy": {
         "type": "object",
         "additionalProperties": false,
@@ -79306,6 +81875,20 @@
             "items": {
               "$ref": "#/components/schemas/CoreContact"
             }
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Применённый размер страницы"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Применённое смещение"
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "true — за страницей есть ещё контрагенты: запросите следующую с offset += limit. На потолке 500 значит «страница полная, дальше может быть ещё»"
           }
         }
       },
@@ -81341,6 +83924,10 @@
             "items": {
               "$ref": "#/components/schemas/CoreOrderVATWarning"
             }
+          },
+          "unchanged": {
+            "type": "boolean",
+            "description": "Только в ответах команд подтверждения, отмены и возврата в работу: true — команде нечего было делать (подтверждена уже, отменена уже, не закрыта), заказ не изменился. Повтор команды отвечает той же карточкой, а не ошибкой"
           }
         }
       },
@@ -83785,6 +86372,91 @@
           }
         }
       },
+      "CoreOrderBlockers": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Что мешает командам продажи или закупки: подтверждению и отмене. У черновика отмена разрешена без движений; подтверждённую отменяют отменой проведения под сторожем исполнений и закрытия",
+        "required": [
+          "document_id",
+          "state",
+          "confirm",
+          "cancel"
+        ],
+        "properties": {
+          "document_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CoreOrderState"
+          },
+          "confirm": {
+            "$ref": "#/components/schemas/CoreOrderActionCheck"
+          },
+          "cancel": {
+            "$ref": "#/components/schemas/CoreOrderActionCheck"
+          }
+        }
+      },
+      "CoreOrderActionCheck": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "allowed",
+          "reasons"
+        ],
+        "properties": {
+          "allowed": {
+            "type": "boolean"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreOrderBlockReason"
+            }
+          }
+        }
+      },
+      "CoreOrderBlockReason": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Причина уровня документа (posted, not_posted, balance_negative, period_closed и другие причины проведения) или отказ сделки с кодом core.trade.* — тот же, что вернула бы команда"
+          },
+          "message": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "warning": {
+            "type": "boolean",
+            "description": "Причина показывается, но действие не запрещает"
+          },
+          "shortages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreBalanceShortage"
+            }
+          },
+          "detail_code": {
+            "type": "string",
+            "description": "Код отказа проводчика внутри причины; detail для него собран на языке запроса."
+          },
+          "detail_params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Параметры отказа с кодом detail_code: из них собрана фраза detail."
+          }
+        }
+      },
       "CoreDocumentBlockers": {
         "type": "object",
         "additionalProperties": false,
@@ -84057,7 +86729,10 @@
           },
           "totals": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Итог по каждому ресурсу — числом JSON, а не десятичной строкой, как денежные поля документов: {\"qty\": 6.8, \"amount\": 34000}"
           },
           "entry_count": {
             "type": "integer",
@@ -84119,15 +86794,24 @@
           },
           "incoming": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Приход по каждому ресурсу — числом JSON"
           },
           "outgoing": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Расход по каждому ресурсу — числом JSON"
           },
           "net": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Сальдо оборота по каждому ресурсу — числом JSON, а не десятичной строкой"
           },
           "entry_count": {
             "type": "integer",
@@ -84783,7 +87467,11 @@
             "enum": [
               "item",
               "money_account",
-              "contact"
+              "contact",
+              "product",
+              "document_type",
+              "acquiring_clearing",
+              "warehouse"
             ]
           },
           "subject_id": {
@@ -84826,6 +87514,11 @@
             "type": "integer",
             "minimum": 0
           },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Сколько правил под отбором всего, до среза limit/offset"
+          },
           "results": {
             "type": "array",
             "items": {
@@ -84847,7 +87540,11 @@
             "enum": [
               "item",
               "money_account",
-              "contact"
+              "contact",
+              "product",
+              "document_type",
+              "acquiring_clearing",
+              "warehouse"
             ]
           },
           "subject_id": {
@@ -85098,6 +87795,18 @@
               "exempt"
             ],
             "description": "Вид ставки НДС сделки без товара по статье дохода; пусто — общая"
+          }
+        }
+      },
+      "CoreItemMoved": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "item"
+        ],
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/CoreItem"
           }
         }
       },
@@ -85664,6 +88373,16 @@
           },
           "unavailable": {
             "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "manual_source",
+              "currency_missing",
+              "accounting_currency",
+              "not_quoted"
+            ],
+            "description": "Почему serves=false: manual_source — у источника нет загрузчика, currency_missing — валюта не названа, accounting_currency — названа валюта учёта (её курс к себе — единица, не загружается), not_quoted — источник эту валюту не котирует"
           }
         }
       },
@@ -86368,11 +89087,6 @@
             "additionalProperties": {
               "type": "string"
             }
-          },
-          "expected_revision": {
-            "type": "integer",
-            "format": "int64",
-            "minimum": 1
           }
         }
       },
@@ -86458,7 +89172,12 @@
         ],
         "properties": {
           "id": {
-            "$ref": "#/components/schemas/UUID"
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Версия условий; null при configured=false — настройки нет, а не запись с нулевым id"
           },
           "contact_id": {
             "$ref": "#/components/schemas/UUID"
@@ -86485,12 +89204,26 @@
             "description": "Decimal string от 0 до 100"
           },
           "valid_from": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Момент начала действия; null при configured=false"
+          },
+          "valid_from_date": {
             "type": "string",
-            "format": "date-time"
+            "format": "date",
+            "description": "Дата начала действия в поясе кабинета: 01.01.2026 по Москве — 2026-01-01, хотя valid_from — 2025-12-31T21:00:00Z"
           },
           "valid_to": {
             "type": "string",
             "format": "date-time"
+          },
+          "valid_to_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Первый день в поясе кабинета, когда версия уже не действует"
           },
           "reason": {
             "type": "string"
@@ -86500,8 +89233,12 @@
             "format": "int64"
           },
           "created_at": {
-            "type": "string",
-            "format": "date-time"
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "null при configured=false"
           },
           "configured": {
             "type": "boolean"
@@ -86541,11 +89278,15 @@
           },
           "valid_from": {
             "type": "string",
-            "format": "date-time"
+            "description": "Дата ГГГГ-ММ-ДД (полночь в поясе кабинета) или момент RFC3339",
+            "examples": [
+              "2026-01-01",
+              "2026-01-01T00:00:00+03:00"
+            ]
           },
           "valid_to": {
             "type": "string",
-            "format": "date-time"
+            "description": "Дата ГГГГ-ММ-ДД или момент RFC3339; не входит в период"
           },
           "reason": {
             "type": "string"
@@ -88192,7 +90933,8 @@
         "additionalProperties": false,
         "required": [
           "obligation_id",
-          "remaining"
+          "remaining",
+          "currency"
         ],
         "properties": {
           "obligation_id": {
@@ -88200,7 +90942,11 @@
           },
           "remaining": {
             "type": "string",
-            "description": "Decimal string"
+            "description": "Decimal string с разрядностью валюты обязательства: 196000.00, 4638.65"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Валюта обязательства"
           }
         }
       },
@@ -88214,7 +90960,8 @@
         "properties": {
           "count": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Число строк после отбора валюты, до страницы"
           },
           "results": {
             "type": "array",
@@ -90956,7 +93703,10 @@
           "unmatched_count",
           "missing_order_count",
           "missing_cashflow_count",
-          "incoming_unlinked_amount"
+          "incoming_unlinked_amount",
+          "incoming_unlinked_currency",
+          "incoming_unlinked_unconverted_count",
+          "incoming_unlinked_by_currency"
         ],
         "properties": {
           "total_count": {
@@ -90981,8 +93731,48 @@
             "minimum": 0
           },
           "incoming_unlinked_amount": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Сумма входящих платежей без продажи или закупки и без проекта в валюте учёта по пересчёту, зафиксированному у операции; decimal string. null — часть операций не пересчитана, исходные валюты не складываются"
+          },
+          "incoming_unlinked_currency": {
             "type": "string",
-            "description": "Сумма входящих платежей без продажи или закупки и без проекта; decimal string"
+            "description": "Валюта учёта, в которой дан incoming_unlinked_amount"
+          },
+          "incoming_unlinked_unconverted_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Сколько таких операций без пересчёта в валюту учёта"
+          },
+          "incoming_unlinked_by_currency": {
+            "type": "array",
+            "description": "Те же операции по исходным валютам, каждая сумма в своей валюте",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "currency",
+                "amount",
+                "count"
+              ],
+              "properties": {
+                "currency": {
+                  "type": "string",
+                  "description": "Исходная валюта операций"
+                },
+                "amount": {
+                  "type": "string",
+                  "description": "Сумма в этой валюте; decimal string"
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Число операций"
+                }
+              }
+            }
           }
         }
       },
@@ -91966,6 +94756,24 @@
           "expected_in": {
             "type": "string",
             "description": "«С ожиданиями» — то же плюс выставленные счета и этапы графиков договоров"
+          },
+          "view": {
+            "type": "string",
+            "enum": [
+              "full",
+              "summary"
+            ],
+            "description": "Вид ответа; в summary списки rows, overdue, days, undated.rows и клетки счетов пусты"
+          },
+          "row_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Строк в окне календаря; в сводном виде сами строки не отдаются"
+          },
+          "overdue_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Просроченных строк"
           },
           "undated": {
             "type": "object",
@@ -92953,6 +95761,46 @@
           "stock_transfer_hint": {
             "type": "string",
             "description": "Пояснение к неперенесённому остатку для человека; пусто, если переносить нечего."
+          },
+          "settlements_applicable": {
+            "type": "boolean",
+            "description": "Есть бизнесы на методе начисления; расчёты и книга сверяются только по ним"
+          },
+          "shipped_unsold": {
+            "type": "string",
+            "description": "Сальдо счёта 45 «Товары отгруженные» по всему кабинету"
+          },
+          "shipped_unsold_accrual": {
+            "type": "string",
+            "description": "Сальдо счёта 45 бизнесов на методе начисления — то, что обязано быть нулём"
+          },
+          "shipped_unsold_match": {
+            "type": "boolean",
+            "description": "Сальдо 45 бизнесов на начислении равно нулю"
+          },
+          "currency_effect": {
+            "type": "string",
+            "description": "Прибавка переоценки валютных остатков к прибыли"
+          },
+          "currency_effect_accounts": {
+            "type": "array",
+            "description": "Та же переоценка по счетам имущества и долгов (дебетовый знак); сумма строк равна currency_effect",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "code",
+                "amount"
+              ],
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       },
@@ -92964,8 +95812,7 @@
           "label",
           "from",
           "to",
-          "total",
-          "payload"
+          "total"
         ],
         "properties": {
           "key": {
@@ -92987,7 +95834,22 @@
           },
           "payload": {
             "type": "object",
-            "additionalProperties": true
+            "additionalProperties": true,
+            "description": "Витрина колонки целиком; только в полном виде"
+          },
+          "figures": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Ключевые цифры колонки; только в сводном виде"
+          },
+          "system_rows": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Суммы системных строк макета за колонку; в сводном виде, когда отчёт строится по макету"
           }
         }
       },
@@ -93076,7 +95938,15 @@
             }
           },
           "currency": {
-            "type": "string"
+            "type": "string",
+            "description": "Валюта сумм отчёта: валюта учёта либо выбранная параметром currency"
+          },
+          "view": {
+            "type": "string",
+            "enum": [
+              "summary"
+            ],
+            "description": "Есть только в сводном виде"
           },
           "from": {
             "type": "string",
@@ -93143,6 +96013,10 @@
           },
           "amount": {
             "type": "string"
+          },
+          "outside_pnl": {
+            "type": "boolean",
+            "description": "Статья вне дерева ОПиУ, по которой обороты всё же легли на счета результата: в итог входит, строкой макета быть не может"
           }
         }
       },
@@ -93217,6 +96091,10 @@
           "times": {
             "type": "integer",
             "minimum": 1
+          },
+          "amount": {
+            "type": "string",
+            "description": "Оборот статьи за период — у статьи вне ОПиУ"
           }
         }
       },
@@ -93239,6 +96117,26 @@
             "items": {
               "$ref": "#/components/schemas/FinancePnlCoverageItem"
             }
+          },
+          "foreign": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/FinancePnlCoverageItem"
+            },
+            "description": "Строки макета, ссылающиеся на статьи вне ОПиУ"
+          },
+          "outside": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/FinancePnlCoverageItem"
+            },
+            "description": "Статьи вне ОПиУ с оборотом за период: итог отчёта их включает, строки макета — нет"
           },
           "taxes": {
             "type": "string",
@@ -93274,6 +96172,49 @@
             "additionalProperties": {
               "type": "string"
             }
+          },
+          "reconcile": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Сверка итога макета («Чистая прибыль») с прибылью книги",
+            "required": [
+              "available",
+              "ledger_profit",
+              "layout_profit",
+              "mismatch",
+              "outside_items",
+              "duplicated_items"
+            ],
+            "properties": {
+              "available": {
+                "type": "boolean",
+                "description": "В макете есть строка «Чистая прибыль»"
+              },
+              "ledger_profit": {
+                "type": "string"
+              },
+              "layout_profit": {
+                "type": "string"
+              },
+              "mismatch": {
+                "type": "string",
+                "description": "Прибыль книги минус итог макета"
+              },
+              "outside_items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Статьи с оборотом вне формулы макета: непокрытые и вне ОПиУ"
+              },
+              "duplicated_items": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Статьи, посчитанные макетом дважды"
+              }
+            }
           }
         }
       },
@@ -93308,10 +96249,18 @@
             "type": "object",
             "additionalProperties": {
               "type": "string"
-            }
+            },
+            "description": "Показатели из системных ролей макета; revenue — строка «Выручка» макета, а без неё — revenue отчёта"
           },
           "currency": {
             "type": "string"
+          },
+          "view": {
+            "type": "string",
+            "enum": [
+              "summary"
+            ],
+            "description": "Есть только в сводном виде"
           },
           "from": {
             "type": "string",
@@ -93322,13 +96271,16 @@
             "format": "date"
           },
           "revenue": {
-            "type": "string"
+            "type": "string",
+            "description": "Сумма положительных оборотов статей на счетах результата: выручка, прочие доходы, положительная курсовая; не строка «Выручка» макета"
           },
           "expense": {
-            "type": "string"
+            "type": "string",
+            "description": "Сумма отрицательных оборотов статей и налогов раздела «Налоги»"
           },
           "profit": {
-            "type": "string"
+            "type": "string",
+            "description": "revenue + expense — прибыль по книге и управленческим суммам вне книги"
           },
           "unclassified_in": {
             "type": "string"
@@ -93491,6 +96443,18 @@
           },
           "accounting_basis": {
             "$ref": "#/components/schemas/AccountingBasis"
+          },
+          "off_balance_supplier_debt": {
+            "type": "string",
+            "description": "Только при кассовом и смешанном основании: весь открытый долг поставщикам в регистре расчётов (счёт стороны 60.01, все обязательства и валюты в балансовой стоимости на дату) минус то, что баланс несёт на 60; нет разницы — нет поля"
+          },
+          "off_balance_customer_debt": {
+            "type": "string",
+            "description": "Только при кассовом и смешанном основании: весь открытый долг покупателей в регистре расчётов (счёт стороны 62.01, все обязательства и валюты в балансовой стоимости на дату) минус то, что баланс несёт на 62; нет разницы — нет поля"
+          },
+          "off_balance_payroll_debt": {
+            "type": "string",
+            "description": "Только при кассовом и смешанном основании: долг перед сотрудниками по журналу зарплаты на дату; при начислении он стоит на счёте 70, и поля нет"
           }
         }
       },
@@ -97148,6 +100112,31 @@
           },
           "adopted_rule_id": {
             "$ref": "#/components/schemas/UUID"
+          },
+          "adoption_problem": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code"
+            ],
+            "description": "Почему правило осталось в CRM: общий движок его не принял. Перенос идёт сам, правило с исправленным условием переедет при следующем проходе",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Код отказа проверки правила общим движком; текст — automation.problems.<code>"
+              },
+              "field": {
+                "type": "string",
+                "description": "Поле правила, к которому относится отказ"
+              },
+              "params": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Значения для текста отказа"
+              }
+            }
           }
         }
       },
@@ -100531,6 +103520,38 @@
             "items": {
               "$ref": "#/components/schemas/StockDocumentFulfillment"
             }
+          },
+          "skipped": {
+            "type": "array",
+            "description": "Документы пакета, у которых исполнение не считается (другой вид документа); пакет из-за них не падает.",
+            "items": {
+              "$ref": "#/components/schemas/StockDocumentFulfillmentSkipped"
+            }
+          }
+        }
+      },
+      "StockDocumentFulfillmentSkipped": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "document_id",
+          "type_key",
+          "number",
+          "reason"
+        ],
+        "properties": {
+          "document_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "type_key": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Почему исполнение не считается"
           }
         }
       },
@@ -103182,7 +106203,7 @@
           "amount",
           "unit"
         ],
-        "description": "Итог по всей выборке отчёта, а не по странице. Количества, включая минимум, имеют смысл только при одной единице измерения на всю выборку — её называет поле unit. Себестоимости единицы здесь нет вовсе: сумма средних цен не значит ничего ни при какой однородности.",
+        "description": "Итог по всей выборке отчёта, а не по странице. Количества, включая минимум, имеют смысл только при одной единице измерения на всю выборку — её называет поле unit; без общей единицы количества приходят пустой строкой, а сумма денег — числом. Себестоимости единицы здесь нет вовсе: сумма средних цен не значит ничего ни при какой однородности.",
         "properties": {
           "on_hand": {
             "type": "string",
@@ -103218,7 +106239,7 @@
           },
           "unit": {
             "type": "string",
-            "description": "Единица измерения итога, если она одна на всю выборку. Пусто, когда единицы разные: складывать штуки с килограммами нельзя, и потребитель обязан показать прочерк вместо суммы."
+            "description": "Единица измерения итога, если она одна на всю выборку. Пусто, когда единицы разные: складывать штуки с килограммами нельзя, количества итога тогда пусты, и потребитель показывает прочерк вместо суммы."
           }
         }
       },
@@ -105673,7 +108694,7 @@
               "type": "number",
               "minimum": 0
             },
-            "description": "Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода"
+            "description": "Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть"
           },
           "units_missing": {
             "type": "object",
@@ -105970,6 +108991,7 @@
           "river_job_id",
           "period",
           "store_ids",
+          "stores",
           "message",
           "stats",
           "started_at",
@@ -106007,7 +109029,15 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/UUID"
-            }
+            },
+            "description": "Магазины задания в области участника; пусто — задание по всем магазинам"
+          },
+          "stores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceSyncJobStore"
+            },
+            "description": "Те же магазины с названием и состоянием: выключенного магазина нет в списке магазинов, а его задания остаются"
           },
           "message": {
             "type": "string"
@@ -106032,6 +109062,28 @@
           },
           "updated_at": {
             "type": "string"
+          }
+        }
+      },
+      "MarketplaceSyncJobStore": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "is_active"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Название магазина"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "Магазин включён; выключенный в обычном списке магазинов не виден"
           }
         }
       },
@@ -106982,7 +110034,7 @@
               "type": "number",
               "minimum": 0
             },
-            "description": "Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода"
+            "description": "Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть"
           },
           "units_missing": {
             "type": "object",
@@ -107898,6 +110950,9 @@
               }
             }
           },
+          "write_key": {
+            "$ref": "#/components/schemas/MarketplaceStoreWriteKey"
+          },
           "connection_status": {
             "type": "string",
             "enum": [
@@ -107944,6 +110999,121 @@
             ],
             "readOnly": true,
             "description": "Бизнес магазина — бизнес юрлица из учётных настроек; по нему магазин и его отчёты сужаются областью доступа участника. null — юрлицо ещё не выбрано в кабинете с несколькими бизнесами: такой магазин видит только доступ ко всем бизнесам"
+          }
+        }
+      },
+      "MarketplaceStoreWriteKey": {
+        "type": "object",
+        "readOnly": true,
+        "additionalProperties": false,
+        "required": [
+          "set",
+          "scopes",
+          "read_only",
+          "ability",
+          "set_by",
+          "set_at",
+          "checked_at",
+          "last_used_at"
+        ],
+        "description": "Признаки ключа магазина на запись в площадку (марки в сборочные задания FBS); сам ключ не возвращается",
+        "properties": {
+          "set": {
+            "type": "boolean",
+            "description": "Ключ задан"
+          },
+          "mask": {
+            "type": "string",
+            "description": "Последние 4 символа токена или Api-Key"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "basic",
+              "personal",
+              "test",
+              "service",
+              "unknown"
+            ],
+            "description": "Тип токена Wildberries"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Категории токена Wildberries"
+          },
+          "read_only": {
+            "type": "boolean",
+            "description": "Токен только на чтение"
+          },
+          "ability": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "no_key",
+              "no_write_scope",
+              "unchecked"
+            ],
+            "description": "Можно ли передавать марки: ready — можно, no_key — ключа нет, no_write_scope — нет права записи, unchecked — не проверено"
+          },
+          "set_by": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Кто задал ключ"
+          },
+          "set_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Когда задан ключ"
+          },
+          "checked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Когда ключ проверяли"
+          },
+          "check_result": {
+            "type": "string",
+            "enum": [
+              "ready",
+              "no_write_scope",
+              "rejected",
+              "unchecked",
+              "unavailable"
+            ],
+            "description": "Итог последней проверки без записи"
+          },
+          "last_used_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Когда ключом последний раз передавали марки"
+          },
+          "last_result": {
+            "type": "string",
+            "enum": [
+              "not_sent",
+              "sent",
+              "accepted",
+              "rejected"
+            ],
+            "description": "Итог последней передачи марок"
+          },
+          "last_error_code": {
+            "type": "string",
+            "description": "Код отказа последней передачи"
           }
         }
       },
@@ -108425,7 +111595,7 @@
               "type": "number",
               "minimum": 0
             },
-            "description": "Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода"
+            "description": "Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть"
           },
           "units_missing": {
             "type": "object",
@@ -112833,6 +116003,9 @@
           "commercial": {
             "$ref": "#/components/schemas/DocflowFlowCommercial"
           },
+          "correction": {
+            "$ref": "#/components/schemas/DocflowFlowCorrection"
+          },
           "recognized": {
             "$ref": "#/components/schemas/DocflowFlowRecognized"
           },
@@ -113165,6 +116338,11 @@
           },
           "company_id": {
             "$ref": "#/components/schemas/UUID"
+          },
+          "business_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Бизнес бумаги. У бумаги без юрлица (company_id — нулевой id) он один называет сторону «мы»; в печати стоит его название"
           },
           "execution_cutover": {
             "type": "boolean",
@@ -113623,6 +116801,165 @@
             "type": "string",
             "format": "date",
             "description": "Дата счёта-фактуры; пусто — дата получения аванса"
+          }
+        }
+      },
+      "DocflowUKDInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "return_id"
+        ],
+        "properties": {
+          "return_id": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        }
+      },
+      "DocflowUKDState": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "УКД по возврату: карточка, если выпущена, и исходный УПД, если он есть",
+        "properties": {
+          "document": {
+            "$ref": "#/components/schemas/DocflowFlowDocument"
+          },
+          "basis_upd": {
+            "$ref": "#/components/schemas/DocflowUKDBasisRef"
+          }
+        }
+      },
+      "DocflowUKDBasisRef": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "DocflowFlowCorrection": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Содержание УКД по возврату покупателя: строки исходного УПД «до» и остаток «после». Снимается при выпуске и дальше не пересчитывается.",
+        "required": [
+          "return_id",
+          "basis_id",
+          "basis_number",
+          "basis_date",
+          "lines"
+        ],
+        "properties": {
+          "return_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "return_number": {
+            "type": "string"
+          },
+          "return_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "basis_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "basis_number": {
+            "type": "string"
+          },
+          "basis_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocflowFlowCorrectionLine"
+            }
+          }
+        }
+      },
+      "DocflowFlowCorrectionLine": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "number",
+          "name",
+          "vat_rate",
+          "before",
+          "after"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "number": {
+            "type": "integer",
+            "description": "Номер строки в исходном УПД"
+          },
+          "product_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "name": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "unit_code": {
+            "type": "string",
+            "description": "Код единицы по ОКЕИ"
+          },
+          "vat_rate": {
+            "type": "string"
+          },
+          "before": {
+            "$ref": "#/components/schemas/DocflowFlowCorrectionState"
+          },
+          "after": {
+            "$ref": "#/components/schemas/DocflowFlowCorrectionState"
+          }
+        }
+      },
+      "DocflowFlowCorrectionState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "quantity",
+          "amount_without_vat",
+          "amount_with_vat"
+        ],
+        "properties": {
+          "quantity": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string",
+            "description": "Цена за единицу без налога"
+          },
+          "amount_without_vat": {
+            "type": "string"
+          },
+          "vat_amount": {
+            "type": "string",
+            "description": "Пусто у необлагаемой строки"
+          },
+          "amount_with_vat": {
+            "type": "string"
           }
         }
       },
@@ -114706,6 +118043,10 @@
           },
           "can_submit": {
             "type": "boolean"
+          },
+          "submit_blocked": {
+            "$ref": "#/components/schemas/DocflowApprovalBlockReason",
+            "description": "Почему отправить на согласование нельзя; есть только при can_submit=false"
           },
           "can_decide": {
             "type": "boolean"
