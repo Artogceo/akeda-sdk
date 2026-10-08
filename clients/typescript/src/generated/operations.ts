@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3c581e130f57cf5a137bcc64a450f9997a217c7b8ccf491799d22139003f6b12).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6c36bf4789b73f2b45c991bd664f456a5d43881b0409b778be538f9194f41748).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -4542,12 +4542,33 @@ export interface OperationTypes {
     body: models.MarketplaceStoreInput;
     response: models.MarketplaceStore;
   };
+  /** GET /api/v1/marketplace/{platform}/stores/{id}/finance/weeks — Получить готовность недельных финансовых отчётов */
+  marketplaceListWeeklyFinanceRuns: {
+    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" };
+    query: Record<string, never>;
+    body: never;
+    response: models.MarketplaceWeeklyFinanceRuns;
+  };
   /** GET /api/v1/marketplace/ozon/decomposition — Получить декомпозицию юнит-экономики Ozon */
   marketplaceOzonDecomposition: {
     params: Record<string, never>;
     query: { "from"?: string; "group"?: string; "month"?: string; "store"?: string; "to"?: string };
     body: never;
     response: models.MarketplaceOzonDecomposition;
+  };
+  /** GET /api/v1/marketplace/ozon/funnel — Получить воронку продаж Ozon */
+  marketplaceOzonFunnel: {
+    params: Record<string, never>;
+    query: { "group"?: string; "store"?: string };
+    body: never;
+    response: models.MarketplaceOzonFunnel;
+  };
+  /** GET /api/v1/marketplace/ozon/funnel-daily — Получить дневную воронку одного артикула Ozon */
+  marketplaceOzonFunnelDaily: {
+    params: Record<string, never>;
+    query: { "days"?: number; "from"?: string; "group"?: string; "groupBy"?: "subject" | "model" | "brand" | "article"; "groupMetrics"?: string; "pulseLimit"?: number; "pulseOffset"?: number; "pulseQuery"?: string; "pulseSort"?: "orders" | "alerts"; "scope"?: string; "sku"?: string; "slice"?: "article" | "store" | "list" | "model" | "brand" | "subject"; "sliceValue"?: string; "store"?: string; "summary"?: "1"; "to"?: string; "view"?: "pulse" };
+    body: never;
+    response: models.MarketplaceOzonFunnelDaily;
   };
   /** GET /api/v1/marketplace/ozon/orders/overview — Получить сводку заказов Ozon */
   marketplaceOzonOrdersOverview: {
@@ -4562,6 +4583,13 @@ export interface OperationTypes {
     query: { "group"?: string; "period"?: "week" | "month"; "scheme"?: "all" | "fbo" | "fbs"; "store"?: string; "year"?: number };
     body: never;
     response: models.MarketplaceOzonPnl;
+  };
+  /** GET /api/v1/marketplace/ozon/pricing — Получить прайс-лист Ozon с юнит-экономикой */
+  marketplaceOzonPricing: {
+    params: Record<string, never>;
+    query: { "group"?: string; "n"?: number; "store"?: string };
+    body: never;
+    response: models.MarketplaceOzonPricing;
   };
   /** GET /api/v1/marketplace/ozon/products — Получить товары Ozon */
   marketplaceOzonProducts: {
@@ -4626,6 +4654,20 @@ export interface OperationTypes {
     body: never;
     response: models.MarketplaceWbDecomposition;
   };
+  /** GET /api/v1/marketplace/wb/funnel — Получить воронку продаж Wildberries */
+  marketplaceWbFunnel: {
+    params: Record<string, never>;
+    query: { "ext"?: number; "store"?: models.UUID };
+    body: never;
+    response: models.MarketplaceWbFunnel;
+  };
+  /** GET /api/v1/marketplace/wb/funnel-daily — Получить дневную экономику артикула Wildberries */
+  marketplaceWbFunnelDaily: {
+    params: Record<string, never>;
+    query: { "days"?: number; "from"?: string; "groupBy"?: "subject" | "model" | "brand" | "article"; "groupMetrics"?: string; "pulseLimit"?: number; "pulseOffset"?: number; "pulseQuery"?: string; "pulseSort"?: "orders" | "alerts"; "sku"?: string; "slice"?: "article" | "store" | "list" | "model" | "brand" | "subject"; "sliceValue"?: string; "store"?: string; "summary"?: "1"; "to"?: string; "view"?: "pulse" };
+    body: never;
+    response: models.MarketplaceWbFunnelDaily;
+  };
   /** GET /api/v1/marketplace/wb/orders/overview — Получить сводку заказов и продаж Wildberries */
   marketplaceWbOrdersOverview: {
     params: Record<string, never>;
@@ -4639,6 +4681,13 @@ export interface OperationTypes {
     query: { "group"?: string; "period"?: "week" | "month"; "store"?: string; "year"?: number };
     body: never;
     response: models.MarketplaceWbPnl;
+  };
+  /** GET /api/v1/marketplace/wb/pricing — Получить ценообразование Wildberries */
+  marketplaceWbPricing: {
+    params: Record<string, never>;
+    query: { "store"?: string };
+    body: never;
+    response: models.MarketplaceWbPricing;
   };
   /** GET /api/v1/marketplace/wb/products — Получить товары Wildberries */
   marketplaceWbProducts: {
@@ -4983,6 +5032,20 @@ export interface OperationTypes {
     body: never;
     response: models.MarkingOrderReceiveResult;
   };
+  /** GET /api/v1/marking/reconcile/{id}/items — Получить расхождения сверки с ЧЗ */
+  markingReconcileItems: {
+    params: { "id": models.UUID };
+    query: { "kind"?: "stock_only" | "gismt_only" | "status_mismatch"; "limit"?: number; "offset"?: number; "reason"?: models.MarkingReconcileReason; "resolved"?: boolean };
+    body: never;
+    response: models.MarkingReconcileItemPage;
+  };
+  /** GET /api/v1/marking/reconcile — Получить ход сверки с ЧЗ */
+  markingReconcileState: {
+    params: Record<string, never>;
+    query: { "company": models.UUID };
+    body: never;
+    response: models.MarkingReconcileState;
+  };
   /** POST /api/v1/marking/applications/{id}/refresh — Обновить статус отчёта о нанесении из СУЗ */
   markingRefreshApplication: {
     params: { "id": models.UUID };
@@ -5045,6 +5108,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.MarkingBoxResolveInput;
     response: models.MarkingBoxContent;
+  };
+  /** PUT /api/v1/marking/reconcile/items/{id}/resolution — Отметить расхождение сверки разобранным */
+  markingResolveReconcileItem: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MarkingReconcileResolveInput;
+    response: models.MarkingReconcileItem;
   };
   /** GET /api/v1/marking/gismt/return-queue — Получить очередь возврата в оборот по невыкупам FBS */
   markingReturnQueue: {
@@ -5136,6 +5206,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.MarkingCodeSyncInput;
     response: models.MarkingCodeSyncStarted;
+  };
+  /** POST /api/v1/marking/reconcile — Сверить коды склада юрлица с ЧЗ */
+  markingStartReconcile: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.MarkingReconcileInput;
+    response: models.MarkingReconcileStarted;
   };
   /** GET /api/v1/marking/stock-codes — Получить марки в остатке товара на складе */
   markingStockCodes: {
@@ -7187,9 +7264,13 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   marketplaceCreateOzonStore: { method: "POST", path: "/api/v1/marketplace/ozon/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceCreateWbStore: { method: "POST", path: "/api/v1/marketplace/wb/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceCreateYandexStore: { method: "POST", path: "/api/v1/marketplace/yandex/stores", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceListWeeklyFinanceRuns: { method: "GET", path: "/api/v1/marketplace/{platform}/stores/{id}/finance/weeks", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonDecomposition: { method: "GET", path: "/api/v1/marketplace/ozon/decomposition", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonFunnel: { method: "GET", path: "/api/v1/marketplace/ozon/funnel", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonFunnelDaily: { method: "GET", path: "/api/v1/marketplace/ozon/funnel-daily", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonOrdersOverview: { method: "GET", path: "/api/v1/marketplace/ozon/orders/overview", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonPnl: { method: "GET", path: "/api/v1/marketplace/ozon/pnl", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceOzonPricing: { method: "GET", path: "/api/v1/marketplace/ozon/pricing", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonProducts: { method: "GET", path: "/api/v1/marketplace/ozon/products", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "page", pageSizeMax: 10000, pageSizeDefault: 50 },
   marketplaceOzonSetCost: { method: "POST", path: "/api/v1/marketplace/ozon/cost", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceOzonStocks: { method: "GET", path: "/api/v1/marketplace/ozon/stocks", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7199,8 +7280,11 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   marketplaceWbCardBoard: { method: "GET", path: "/api/v1/marketplace/wb/card/board", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbCardOptions: { method: "GET", path: "/api/v1/marketplace/wb/card/options", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbDecomposition: { method: "GET", path: "/api/v1/marketplace/wb/decomposition", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbFunnel: { method: "GET", path: "/api/v1/marketplace/wb/funnel", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbFunnelDaily: { method: "GET", path: "/api/v1/marketplace/wb/funnel-daily", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbOrdersOverview: { method: "GET", path: "/api/v1/marketplace/wb/orders/overview", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbPnl: { method: "GET", path: "/api/v1/marketplace/wb/pnl", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceWbPricing: { method: "GET", path: "/api/v1/marketplace/wb/pricing", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbProducts: { method: "GET", path: "/api/v1/marketplace/wb/products", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "page", pageSizeMax: 10000, pageSizeDefault: 50 },
   marketplaceWbSetCost: { method: "POST", path: "/api/v1/marketplace/wb/cost", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceWbStocks: { method: "GET", path: "/api/v1/marketplace/wb/stocks", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7250,6 +7334,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   markingParseCode: { method: "POST", path: "/api/v1/marking/codes/parse", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingPingOMS: { method: "POST", path: "/api/v1/marking/connections/{company_id}/oms/ping", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingReceiveOrderCodes: { method: "POST", path: "/api/v1/marking/orders/{id}/receive", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingReconcileItems: { method: "GET", path: "/api/v1/marking/reconcile/{id}/items", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 100 },
+  markingReconcileState: { method: "GET", path: "/api/v1/marking/reconcile", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingRefreshApplication: { method: "POST", path: "/api/v1/marking/applications/{id}/refresh", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingRefreshOutboxDocument: { method: "POST", path: "/api/v1/marking/gismt/outbox/{id}/refresh", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingRemoveBoxItem: { method: "DELETE", path: "/api/v1/marking/boxes/{id}/items/{code_id}", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7259,6 +7345,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   markingReplaceDocumentCodes: { method: "PUT", path: "/api/v1/marking/documents/{type}/{id}/codes", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingReportBox: { method: "POST", path: "/api/v1/marking/boxes/{id}/report", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingResolveBox: { method: "POST", path: "/api/v1/marking/boxes/resolve", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingResolveReconcileItem: { method: "PUT", path: "/api/v1/marking/reconcile/items/{id}/resolution", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingReturnQueue: { method: "GET", path: "/api/v1/marking/gismt/return-queue", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingSaveCompanyGroup: { method: "PUT", path: "/api/v1/marking/company-groups", module: "marking", stage: "preview", permission: "marking:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingSaveCompanySettings: { method: "PUT", path: "/api/v1/marking/company-settings/{company_id}", module: "marking", stage: "preview", permission: "marking:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7272,6 +7359,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   markingShortDocumentCounts: { method: "GET", path: "/api/v1/marking/document-summaries/short", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingSpoilOrderCodes: { method: "POST", path: "/api/v1/marking/orders/{id}/codes/spoil", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingStartCodeSync: { method: "POST", path: "/api/v1/marking/codes/sync", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingStartReconcile: { method: "POST", path: "/api/v1/marking/reconcile", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingStockCodes: { method: "GET", path: "/api/v1/marking/stock-codes", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
   markingSyncOrders: { method: "POST", path: "/api/v1/marking/orders/sync", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingTraceCode: { method: "GET", path: "/api/v1/marking/codes/trace", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

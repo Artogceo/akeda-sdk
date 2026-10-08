@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3c581e130f57cf5a137bcc64a450f9997a217c7b8ccf491799d22139003f6b12).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6c36bf4789b73f2b45c991bd664f456a5d43881b0409b778be538f9194f41748).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -11214,6 +11214,22 @@ export interface MarketplaceComponentFreshness {
   "products"?: string | null;
 }
 
+export interface MarketplaceFunnelDailyReference {
+  "buyoutFrom": string;
+  "buyoutTo": string;
+  "bought": number;
+  "cancelled": number;
+  "pending": number;
+  "from": string;
+  "to": string;
+  "units": number;
+  "commission": number | null;
+  "logistics": number | null;
+  "other": number | null;
+  "buyout": number | null;
+  "missing": Array<string>;
+}
+
 export interface MarketplaceOzonCost {
   "store": UUID;
   "offer_id": string;
@@ -11336,6 +11352,221 @@ export interface MarketplaceOzonDecompositionPeriod {
   "totals": MarketplaceOzonDecompositionCell;
 }
 
+export interface MarketplaceOzonFunnel {
+  "platform": "ozon";
+  "source"?: "ozon_analytics";
+  "from"?: string;
+  "to"?: string;
+  "totals"?: MarketplaceOzonFunnelTotals;
+  "rows": Array<MarketplaceOzonFunnelRow>;
+  /** Почему воронка пуста или неполна */
+  "note"?: string;
+  /** Присутствует и равно false, когда аналитика не подключена */
+  "analytics"?: boolean;
+}
+
+export interface MarketplaceOzonFunnelDaily {
+  /** Срез ответа, когда запрошен slice */
+  "slice"?: string;
+  "sliceValue"?: string;
+  "sliceLabel"?: string;
+  /** Варианты срезов с числом артикулов */
+  "slices"?: { [key: string]: Array<{ [key: string]: unknown }> };
+  /** Итоги каждого артикула среза за окно */
+  "breakdown"?: Array<{ [key: string]: unknown }>;
+  "articlesTruncated"?: boolean;
+  /** Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null */
+  "summary"?: { [key: string]: { [key: string]: number | null } };
+  /**
+   * РНП (view=pulse): days — показанные полные дни (до 14, без
+   * сегодняшнего); total — строки
+   * итога набора; items — страница товаров (sku, name, photo, store_id,
+   * store, subject, brand, passport — в т.ч. storage: хранение WB в день, ₽; brief — итоги дней, в т.ч.
+   * drrSales: ДРР от продаж, %, drrLimit: предельный ДРР — маржа до рекламы к выручке продаж, %, drrState:
+   * over — реклама съела маржу (в т.ч. реклама без продаж), near — ДРР не ниже 80 % предела, ok, пусто — нет себестоимости или рекламы; rows); setCount — товаров в
+   * наборе, count — подошло под поиск, offset — начало страницы. Строка: key, days (значения по дням),
+   * windows (w3, w2, w1, prev_month, month), flags (good, bad или пусто —
+   * отклонение от обычного уровня товара за показанные дни).
+   */
+  "pulse"?: { [key: string]: unknown };
+  /** Чем разложен срез, когда запрошен groupBy */
+  "groupBy"?: string;
+  /**
+   * Группы среза по дням: value (пусто — артикулы без значения группы),
+   * label, count артикулов, series и totals только по groupMetrics.
+   * Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно;
+   * сверх 200 групп хвост сложен в одну строку с rest: true.
+   */
+  "groups"?: Array<{ [key: string]: unknown }>;
+  "platform": "ozon";
+  "source"?: "ozon_orders_and_finance";
+  "estimateModel"?: "sales_and_orders_weekly";
+  /** Артикул за который построена матрица */
+  "sku"?: string;
+  "from"?: string;
+  "to"?: string;
+  /** Четырнадцать дней от старого к новому */
+  "days": Array<string>;
+  "series": MarketplaceOzonFunnelDailySeries;
+  "totals"?: MarketplaceOzonFunnelDailyTotals;
+  "card"?: MarketplaceOzonFunnelDailyCard;
+  "articles"?: Array<MarketplaceOzonFunnelDailyArticle>;
+  "references"?: { [key: string]: MarketplaceFunnelDailyReference };
+  "dataThrough"?: { [key: string]: string | null };
+  /** Пустая строка, когда сказать нечего */
+  "note"?: string;
+  /** Присутствует и равно false, когда аналитика не подключена */
+  "analytics"?: boolean;
+}
+
+export interface MarketplaceOzonFunnelDailyArticle {
+  "sku": string;
+  "name": string;
+  "photo": string;
+  /** Название магазина артикула — различает один артикул в нескольких магазинах */
+  "store"?: string;
+  /** Магазин кабинета артикула: по нему экран закрепляет артикул за магазином */
+  "store_id"?: string;
+  /** Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом */
+  "brand"?: string;
+}
+
+export interface MarketplaceOzonFunnelDailyCard {
+  /** Предмет товара — по нему берётся эталон воронки */
+  "subject"?: string;
+  /** Артикул продавца */
+  "sku": string;
+  "name": string;
+  "photo": string;
+  "store"?: string;
+  /** Общий остаток, только когда известны оба источника */
+  "stock"?: number | null;
+  "stockMarketplace"?: number | null;
+  "stockFbs"?: number | null;
+  "ordersToday"?: number | null;
+  "rating"?: number | null;
+  "reviews"?: number | null;
+  "cost"?: number;
+  /** Взвешенная ставка предыдущей полной недели */
+  "commission"?: number | null;
+  "acquiring"?: number | null;
+  "tax"?: number | null;
+  "logisticsUnit"?: number | null;
+  "otherUnit"?: number | null;
+  "buyoutAll"?: number | null;
+  "buyoutRolling"?: number | null;
+  /** Цена до СПП последнего дня окна, где цена известна */
+  "priceBase"?: number | null;
+  /** Цена покупателя того же дня */
+  "priceBuyer"?: number | null;
+  /** СПП того же дня, % */
+  "spp"?: number | null;
+  /** Доля продаж или закупок FBO из кластера покупателя за окно, % */
+  "localization"?: number | null;
+}
+
+/**
+ * Каждый ряд — значение на каждый день окна в том же порядке что days.
+ * Ряды без источника заполнены null целиком.
+ */
+export interface MarketplaceOzonFunnelDailySeries {
+  "traffic": Array<number | null>;
+  "views": Array<number | null>;
+  "cv2": Array<number | null>;
+  "cart": Array<number | null>;
+  "cv3": Array<number | null>;
+  "orders": Array<number | null>;
+  "adShare": Array<number | null>;
+  "ordersSum": Array<number | null>;
+  "buyouts": Array<number | null>;
+  "buyoutsSum": Array<number | null>;
+  /** Средняя цена продавца в продажах или закупках без отмен; имя ключа сохранено для совместимости */
+  "avgBuyer": Array<number | null>;
+  "spp": Array<number | null>;
+  "position": Array<number | null>;
+  "adSpend": Array<number | null>;
+  "drrOrders": Array<number | null>;
+  "drrSales": Array<number | null>;
+  "margin": Array<number | null>;
+  "marginSheet": Array<number | null>;
+  "buyoutRate"?: Array<number | null>;
+  "expectedUnits"?: Array<number | null>;
+  "expectedRevenue"?: Array<number | null>;
+  "costUnit"?: Array<number | null>;
+  "acquiringRate"?: Array<number | null>;
+  "commissionRate"?: Array<number | null>;
+  "logisticsUnit"?: Array<number | null>;
+  "otherUnit"?: Array<number | null>;
+  "taxRate"?: Array<number | null>;
+  "umd": Array<number | null>;
+  "roi": Array<number | null>;
+  "roiOrders"?: Array<number | null>;
+  "marginTot": Array<number | null>;
+  "marginSheetTot": Array<number | null>;
+  "sales"?: Array<number | null>;
+  "salesSum"?: Array<number | null>;
+  "costSales"?: Array<number | null>;
+  "romi"?: Array<number | null>;
+  "feesSum"?: Array<number | null>;
+  "commissionSum"?: Array<number | null>;
+  "acquiringSum"?: Array<number | null>;
+  "logisticsSum"?: Array<number | null>;
+  "otherSum"?: Array<number | null>;
+  "taxSum"?: Array<number | null>;
+  /** К перечислению за день по отчёту площадки — формула ОПиУ; день без отчёта — null */
+  "payout"?: Array<number | null>;
+}
+
+/** Каждый итог — массив из одного значения, чтобы колонка ИТОГО рисовалась тем же кодом что и дни */
+export interface MarketplaceOzonFunnelDailyTotals {
+  "traffic": Array<number | null>;
+  "views": Array<number | null>;
+  "cart": Array<number | null>;
+  "orders": Array<number | null>;
+  "ordersSum": Array<number | null>;
+  "buyouts": Array<number | null>;
+  "marginTot": Array<number | null>;
+  "marginSheetTot": Array<number | null>;
+  "adSpend": Array<number | null>;
+  "cv2": Array<number | null>;
+  "cv3": Array<number | null>;
+  /** Средняя цена продавца в продажах или закупках без отмен */
+  "avgBuyer"?: Array<number | null>;
+  [key: string]: Array<number | null> | undefined;
+}
+
+export interface MarketplaceOzonFunnelRow {
+  /** Артикул продавца строкой: имя поля досталось от Wildberries */
+  "nm_id": string;
+  "vendor": string;
+  "name": string;
+  "photo": string;
+  "open": number;
+  "cart": number;
+  "orders": number;
+  "buyouts": null;
+  "orders_sum": number;
+  "buyouts_sum": null;
+  "cv_cart": number | null;
+  "cv_order": number | null;
+  "buyout_pct": null;
+}
+
+export interface MarketplaceOzonFunnelTotals {
+  /** Показы; 0 без подписки Premium Plus */
+  "open": number;
+  "cart": number;
+  "orders": number;
+  /** Всегда null: выкупов у Ozon нет */
+  "buyouts": null;
+  "orders_sum": number;
+  "buyouts_sum": null;
+  /** Конверсия в корзину в процентах */
+  "cv_cart": number | null;
+  "cv_order": number | null;
+  "buyout_pct": null;
+}
+
 export interface MarketplaceOzonOrdersDailyRow {
   "date": string;
   /** Decimal string */
@@ -11442,6 +11673,55 @@ export interface MarketplaceOzonPnlRow {
   "kind": string;
   /** По одному значению на период в том же порядке */
   "values": Array<number | null>;
+}
+
+export interface MarketplaceOzonPricing {
+  "platform": "ozon";
+  /** Начало окна в 30 дней */
+  "from"?: string;
+  /** Последняя дата финотчёта */
+  "to"?: string;
+  /** Строк до отсечки по n */
+  "total"?: number;
+  "shown"?: number;
+  "rows": Array<MarketplaceOzonPricingRow>;
+  /** Присутствует и равно false, когда аналитика не подключена */
+  "analytics"?: boolean;
+}
+
+export interface MarketplaceOzonPricingRow {
+  /** Артикул продавца, а не числовой SKU площадки */
+  "sku": string;
+  /** Внешний числовой идентификатор магазина в аналитике */
+  "store_id": number;
+  "name": string;
+  "photo": string;
+  /** Название магазина */
+  "store": string;
+  /** Установочная цена карточки, до скидки площадки */
+  "price": number;
+  /** То же значение что price */
+  "setPrice": number;
+  /** Фактическая цена покупателя за единицу */
+  "factBuyer": number;
+  "oldPrice": number;
+  "minPrice": number;
+  /** Себестоимость из базы кабинета; 0 — не заведена */
+  "cost": number;
+  /** Последняя фактическая ставка комиссии по артикулу, проценты */
+  "comm": number;
+  /** Логистика доставки и возврата суммарно на единицу */
+  "log": number;
+  "logDirect": number;
+  "logReturn": number;
+  /** Эквайринг в процентах от выручки */
+  "acquiring": number;
+  /** Ставка налога магазина в процентах */
+  "tax": number;
+  /** Доля скидки площадки, 0..1 */
+  "spp": number;
+  /** Доставленных единиц за окно */
+  "units": number;
 }
 
 export interface MarketplaceOzonProduct {
@@ -11882,6 +12162,167 @@ export interface MarketplaceWbDecompositionPeriod {
   "totals": MarketplaceWbMetricCell;
 }
 
+export interface MarketplaceWbFunnel {
+  "platform": "wildberries";
+  /** Название магазина */
+  "store"?: string;
+  /** jam — данные подписки, v3 — живой отчёт WB, v3_pending — площадка не ответила */
+  "source"?: "jam" | "v3" | "v3_pending";
+  "from"?: string;
+  "to"?: string;
+  "totals"?: MarketplaceWbFunnelTotals;
+  /** Отсортированы по числу заказов по убыванию */
+  "rows": Array<MarketplaceWbFunnelRow>;
+  "note"?: string;
+  /** Присутствует и равно false, когда аналитическая база не подключена */
+  "analytics"?: boolean;
+}
+
+export interface MarketplaceWbFunnelDaily {
+  /** Срез ответа, когда запрошен slice */
+  "slice"?: string;
+  "sliceValue"?: string;
+  "sliceLabel"?: string;
+  /** Варианты срезов с числом артикулов */
+  "slices"?: { [key: string]: Array<{ [key: string]: unknown }> };
+  /** Итоги каждого артикула среза за окно */
+  "breakdown"?: Array<{ [key: string]: unknown }>;
+  "articlesTruncated"?: boolean;
+  /** Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null */
+  "summary"?: { [key: string]: { [key: string]: number | null } };
+  /**
+   * РНП (view=pulse): days — показанные полные дни (до 14, без
+   * сегодняшнего); total — строки
+   * итога набора; items — страница товаров (sku, name, photo, store_id,
+   * store, subject, brand, passport — в т.ч. storage: хранение WB в день, ₽; brief — итоги дней, в т.ч.
+   * drrSales: ДРР от продаж, %, drrLimit: предельный ДРР — маржа до рекламы к выручке продаж, %, drrState:
+   * over — реклама съела маржу (в т.ч. реклама без продаж), near — ДРР не ниже 80 % предела, ok, пусто — нет себестоимости или рекламы; rows); setCount — товаров в
+   * наборе, count — подошло под поиск, offset — начало страницы. Строка: key, days (значения по дням),
+   * windows (w3, w2, w1, prev_month, month), flags (good, bad или пусто —
+   * отклонение от обычного уровня товара за показанные дни).
+   */
+  "pulse"?: { [key: string]: unknown };
+  /** Чем разложен срез, когда запрошен groupBy */
+  "groupBy"?: string;
+  /**
+   * Группы среза по дням: value (пусто — артикулы без значения группы),
+   * label, count артикулов, series и totals только по groupMetrics.
+   * Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно;
+   * сверх 200 групп хвост сложен в одну строку с rest: true.
+   */
+  "groups"?: Array<{ [key: string]: unknown }>;
+  "platform": "wb";
+  "source"?: "wb_orders_sales_and_finance";
+  "estimateModel"?: "sales_and_orders_weekly";
+  /** Артикул поставщика выбранной строки */
+  "sku"?: string;
+  "from"?: string;
+  "to"?: string;
+  /** Окно 14 дней по опорный включительно */
+  "days": Array<string>;
+  /**
+   * Ряды по дням окна той же длины, что days. Ключи traffic, views, cv2,
+   * cart, cv3, orders, adShare, ordersSum, buyouts, buyoutsSum, avgBuyer,
+   * spp, position, adSpend, drrOrders, drrSales, buyoutRate,
+   * expectedUnits, expectedRevenue, costUnit, acquiringRate,
+   * commissionRate, logisticsUnit, otherUnit, taxRate, margin,
+   * marginSheet, umd, roi, roiOrders, marginTot, marginSheetTot, sales,
+   * salesSum, costSales, romi и удержания в рублях: feesSum,
+   * commissionSum, acquiringSum, logisticsSum, otherSum, taxSum;
+   * payout — к перечислению за день по отчёту площадки (формула ОПиУ),
+   * день без отчёта — null.
+   * Отсутствующий источник даёт null, а не ложный ноль.
+   */
+  "series": { [key: string]: Array<number | null> };
+  /** Итог по каждому ряду одним элементом массива */
+  "totals"?: { [key: string]: Array<number | null> };
+  "card"?: MarketplaceWbFunnelDailyCard;
+  /** До 300 артикулов по выручке за окно */
+  "articles"?: Array<MarketplaceWbFunnelDailyArticle>;
+  "references"?: { [key: string]: MarketplaceFunnelDailyReference };
+  "dataThrough"?: { [key: string]: string | null };
+  "note"?: string;
+  /** Присутствует и равно false, когда аналитическая база не подключена */
+  "analytics"?: boolean;
+}
+
+export interface MarketplaceWbFunnelDailyArticle {
+  /** Артикул поставщика */
+  "sku": string;
+  "name": string;
+  /** В этом списке не заполняется и приходит пустой строкой */
+  "photo": string;
+  /** Название магазина артикула — различает один артикул в нескольких магазинах */
+  "store"?: string;
+  /** Магазин кабинета артикула: по нему экран закрепляет артикул за магазином */
+  "store_id"?: string;
+  /** Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом */
+  "brand"?: string;
+}
+
+export interface MarketplaceWbFunnelDailyCard {
+  /** Предмет товара — по нему берётся эталон воронки */
+  "subject"?: string;
+  /** Артикул поставщика */
+  "sku": string;
+  "name": string;
+  "photo": string;
+  "store"?: string;
+  "stock"?: number | null;
+  "stockMarketplace"?: number | null;
+  "stockFbs"?: number | null;
+  "ordersToday"?: number | null;
+  "rating"?: number | null;
+  "reviews"?: number | null;
+  /** Себестоимость из кабинета */
+  "cost"?: number;
+  "commission"?: number | null;
+  "acquiring"?: number | null;
+  "tax"?: number | null;
+  "logisticsUnit"?: number | null;
+  "otherUnit"?: number | null;
+  "buyoutAll"?: number | null;
+  "buyoutRolling"?: number | null;
+  /** Цена до СПП последнего дня окна, где цена известна */
+  "priceBase"?: number | null;
+  /** Цена покупателя того же дня */
+  "priceBuyer"?: number | null;
+  /** СПП того же дня, % */
+  "spp"?: number | null;
+}
+
+export interface MarketplaceWbFunnelRow {
+  "nm_id": number;
+  /** Артикул поставщика */
+  "vendor": string;
+  "name": string;
+  "photo": string;
+  /** Открытия карточки */
+  "open": number;
+  "cart": number;
+  "orders": number;
+  "buyouts": number;
+  "orders_sum": number;
+  "buyouts_sum": number;
+  /** Конверсия из открытия в корзину в процентах */
+  "cv_cart": number | null;
+  /** Конверсия из корзины в заказ в процентах */
+  "cv_order": number | null;
+  "buyout_pct": number | null;
+}
+
+export interface MarketplaceWbFunnelTotals {
+  "open": number;
+  "cart": number;
+  "orders": number;
+  "buyouts": number;
+  "orders_sum": number;
+  "buyouts_sum": number;
+  "cv_cart": number | null;
+  "cv_order": number | null;
+  "buyout_pct": number | null;
+}
+
 /** Ячейка декомпозиции. Расходы приходят отрицательными числами. */
 export interface MarketplaceWbMetricCell {
   /** Идентификатор блока; присутствует только в итогах периода */
@@ -12036,6 +12477,56 @@ export interface MarketplaceWbPnlRow {
   "values": Array<number | null>;
 }
 
+export interface MarketplaceWbPricing {
+  "platform": "wb";
+  "from"?: string;
+  "to"?: string;
+  "total"?: number;
+  "shown"?: number;
+  "rows": Array<MarketplaceWbPricingRow>;
+  /** Присутствует и равно false, когда аналитическая база не подключена */
+  "analytics"?: boolean;
+}
+
+export interface MarketplaceWbPricingRow {
+  /** Артикул поставщика */
+  "sku": string;
+  /** Внешний идентификатор магазина в аналитике */
+  "store_id": number;
+  "nm_id": number;
+  "name": string;
+  "photo": string;
+  /** Название магазина */
+  "store": string;
+  /** Установочная цена до СПП */
+  "price": number;
+  /** Установочная цена до СПП */
+  "setPrice": number;
+  /** Фактическая цена клиента */
+  "factClient": number;
+  "cost": number;
+  /** Комиссия в процентах от установочной цены */
+  "comm": number;
+  /** Выплата продавцу на единицу */
+  "forPay": number;
+  /** Логистика на единицу */
+  "logDirect": number;
+  /** Хранение на единицу */
+  "storageUnit": number;
+  /** Платная приёмка на единицу */
+  "acceptUnit": number;
+  /** Штрафы на единицу */
+  "penaltyUnit": number;
+  /** Эквайринг в процентах от установочной цены */
+  "acquiring": number;
+  /** Ставка налога магазина в процентах */
+  "tax": number;
+  /** Скидка постоянного покупателя долей единицы */
+  "spp": number;
+  /** Продано единиц за окно */
+  "units": number;
+}
+
 export interface MarketplaceWbProduct {
   /** Составной ключ строки: идентификатор магазина и артикул поставщика через двоеточие */
   "id": string;
@@ -12117,6 +12608,32 @@ export interface MarketplaceWbStockWarehouse {
   /** Кластер склада; у Wildberries не заполняется и в ответ не попадает */
   "cluster"?: string;
   "qty": number;
+}
+
+export interface MarketplaceWeeklyFinanceRun {
+  "run_id": string;
+  "week_start": string;
+  "week_end": string;
+  "source_ref": string;
+  "source_hash": string;
+  "report_complete": boolean;
+  "report_ready": boolean;
+  "blocking_code"?: "source_unavailable" | "report_incomplete" | "report_empty" | "week_open" | "source_empty" | "source_semantics_unverified" | "accounting_setup_incomplete" | "cost_evidence_missing";
+  "captured_at"?: string;
+  "row_count": number;
+  "expense_row_count": number;
+  /** Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж. */
+  "zero_cost"?: Array<MarketplaceWeeklyFinanceRunZeroCostItem>;
+}
+
+export interface MarketplaceWeeklyFinanceRunZeroCostItem {
+  "offer_id": string;
+  /** Штуки — точная десятичная строка */
+  "units": string;
+}
+
+export interface MarketplaceWeeklyFinanceRuns {
+  "results": Array<MarketplaceWeeklyFinanceRun>;
 }
 
 export interface MarketplaceYandexCost {
@@ -13608,6 +14125,85 @@ export interface MarkingProductProfileInput {
   "marked_since"?: string;
   /** Свой формат этикетки товара; пусто — как у юрлица */
   "label_preset"?: "" | "full" | "short" | "mark_only" | "marking" | "marking_marketplace";
+}
+
+export interface MarkingReconcileInput {
+  "company_id": UUID;
+}
+
+export interface MarkingReconcileItem {
+  "id": UUID;
+  "run_id": UUID;
+  "kind": "stock_only" | "gismt_only" | "status_mismatch";
+  "reason": MarkingReconcileReason;
+  /** Код без криптохвоста */
+  "identity": string;
+  "code_id"?: UUID;
+  "warehouse_id"?: UUID;
+  "product_id"?: UUID;
+  "product_name"?: string;
+  "product_sku"?: string;
+  "gtin"?: string;
+  /** Ключ товарной группы */
+  "group"?: string;
+  /** Статус кода в ЧЗ */
+  "gismt_status"?: string;
+  /** ИНН владельца по ЧЗ */
+  "gismt_owner_inn"?: string;
+  /** Агрегат, в который код вложен по ЧЗ */
+  "gismt_parent"?: string;
+  /** Ключ действия отметки «разобрано» */
+  "resolution"?: string;
+  "resolution_note"?: string;
+  "resolution_document_id"?: UUID;
+  "resolved_by"?: number;
+  "resolved_at"?: string;
+}
+
+export interface MarkingReconcileItemPage {
+  "items": Array<MarkingReconcileItem>;
+  /** Расхождений по отбору */
+  "total": number;
+}
+
+export type MarkingReconcileReason = "not_introduced" | "retired" | "other_owner" | "not_found" | "unknown" | "not_in_registry" | "not_on_stock" | "in_aggregate";
+
+export interface MarkingReconcileResolveInput {
+  /** Ключ действия; пусто — снять отметку */
+  "resolution"?: string;
+  "note"?: string;
+  "document_id"?: UUID;
+}
+
+export interface MarkingReconcileRun {
+  "id": UUID;
+  "company_id": UUID;
+  "status": "running" | "done" | "failed" | "interrupted";
+  /** Шаг прогона */
+  "phase": "read_gismt" | "read_stock" | "check" | "compare" | "finished";
+  /** Кодов юрлица «в обороте» прочитано из ЧЗ */
+  "gismt_codes": number;
+  /** Кодов на складах юрлица по регистру */
+  "stock_codes": number;
+  /** Кодов склада досверено поштучно */
+  "checked_codes": number;
+  /** Расхождений по видам: {"stock_only": n, ...} */
+  "summary": { [key: string]: number };
+  /** Почему сверка остановилась */
+  "error"?: string;
+  "started_by"?: number;
+  "started_at": string;
+  "heartbeat_at": string;
+  "finished_at"?: string;
+}
+
+export interface MarkingReconcileStarted {
+  "run": MarkingReconcileRun;
+}
+
+export interface MarkingReconcileState {
+  "current": MarkingReconcileRun | null;
+  "last_done": MarkingReconcileRun | null;
 }
 
 export interface MarkingReplaceCodesInput {

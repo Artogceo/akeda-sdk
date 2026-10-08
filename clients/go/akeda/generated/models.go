@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3c581e130f57cf5a137bcc64a450f9997a217c7b8ccf491799d22139003f6b12).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6c36bf4789b73f2b45c991bd664f456a5d43881b0409b778be538f9194f41748).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -11180,6 +11180,22 @@ type MarketplaceComponentFreshness struct {
 	Products *string `json:"products,omitempty"`
 }
 
+type MarketplaceFunnelDailyReference struct {
+	BuyoutFrom string   `json:"buyoutFrom"`
+	BuyoutTo   string   `json:"buyoutTo"`
+	Bought     float64  `json:"bought"`
+	Cancelled  float64  `json:"cancelled"`
+	Pending    float64  `json:"pending"`
+	From       string   `json:"from"`
+	To         string   `json:"to"`
+	Units      float64  `json:"units"`
+	Commission *float64 `json:"commission"`
+	Logistics  *float64 `json:"logistics"`
+	Other      *float64 `json:"other"`
+	Buyout     *float64 `json:"buyout"`
+	Missing    []string `json:"missing"`
+}
+
 type MarketplaceOzonCost struct {
 	Store   UUID   `json:"store"`
 	OfferID string `json:"offer_id"`
@@ -11302,6 +11318,204 @@ type MarketplaceOzonDecompositionPeriod struct {
 	Totals        MarketplaceOzonDecompositionCell `json:"totals"`
 }
 
+type MarketplaceOzonFunnel struct {
+	Platform string                       `json:"platform"`
+	Source   *string                      `json:"source,omitempty"`
+	From     *string                      `json:"from,omitempty"`
+	To       *string                      `json:"to,omitempty"`
+	Totals   *MarketplaceOzonFunnelTotals `json:"totals,omitempty"`
+	Rows     []MarketplaceOzonFunnelRow   `json:"rows"`
+	// Note — Почему воронка пуста или неполна
+	Note *string `json:"note,omitempty"`
+	// Analytics — Присутствует и равно false, когда аналитика не подключена
+	Analytics *bool `json:"analytics,omitempty"`
+}
+
+type MarketplaceOzonFunnelDaily struct {
+	// Slice — Срез ответа, когда запрошен slice
+	Slice      *string `json:"slice,omitempty"`
+	SliceValue *string `json:"sliceValue,omitempty"`
+	SliceLabel *string `json:"sliceLabel,omitempty"`
+	// Slices — Варианты срезов с числом артикулов
+	Slices map[string][]map[string]json.RawMessage `json:"slices,omitempty"`
+	// Breakdown — Итоги каждого артикула среза за окно
+	Breakdown         []map[string]json.RawMessage `json:"breakdown,omitempty"`
+	ArticlesTruncated *bool                        `json:"articlesTruncated,omitempty"`
+	// Summary — Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null
+	Summary map[string]map[string]*float64 `json:"summary,omitempty"`
+	// Pulse — РНП (view=pulse): days — показанные полные дни (до 14, без сегодняшнего); total — строки итога набора; items — страница товаров (sku, name, photo, store_id, store, subject, brand, passport — в т.ч. storage: хранение WB в день, ₽; brief — итоги дней, в т.ч. drrSales: ДРР от продаж, %, drrLimit: предельный ДРР — маржа до рекламы к выручке продаж, %, drrState: over — реклама съела маржу (в т.ч. реклама без продаж), near — ДРР не ниже 80 % предела, ok, пусто — нет себестоимости или рекламы; rows); setCount — товаров в наборе, count — подошло под поиск, offset — начало страницы. Строка: key, days (значения по дням), windows (w3, w2, w1, prev_month, month), flags (good, bad или пусто — отклонение от обычного уровня товара за показанные дни).
+	Pulse map[string]json.RawMessage `json:"pulse,omitempty"`
+	// GroupBy — Чем разложен срез, когда запрошен groupBy
+	GroupBy *string `json:"groupBy,omitempty"`
+	// Groups — Группы среза по дням: value (пусто — артикулы без значения группы), label, count артикулов, series и totals только по groupMetrics. Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно; сверх 200 групп хвост сложен в одну строку с rest: true.
+	Groups        []map[string]json.RawMessage `json:"groups,omitempty"`
+	Platform      string                       `json:"platform"`
+	Source        *string                      `json:"source,omitempty"`
+	EstimateModel *string                      `json:"estimateModel,omitempty"`
+	// SKU — Артикул за который построена матрица
+	SKU  *string `json:"sku,omitempty"`
+	From *string `json:"from,omitempty"`
+	To   *string `json:"to,omitempty"`
+	// Days — Четырнадцать дней от старого к новому
+	Days        []string                                   `json:"days"`
+	Series      MarketplaceOzonFunnelDailySeries           `json:"series"`
+	Totals      *MarketplaceOzonFunnelDailyTotals          `json:"totals,omitempty"`
+	Card        *MarketplaceOzonFunnelDailyCard            `json:"card,omitempty"`
+	Articles    []MarketplaceOzonFunnelDailyArticle        `json:"articles,omitempty"`
+	References  map[string]MarketplaceFunnelDailyReference `json:"references,omitempty"`
+	DataThrough map[string]*string                         `json:"dataThrough,omitempty"`
+	// Note — Пустая строка, когда сказать нечего
+	Note *string `json:"note,omitempty"`
+	// Analytics — Присутствует и равно false, когда аналитика не подключена
+	Analytics *bool `json:"analytics,omitempty"`
+}
+
+type MarketplaceOzonFunnelDailyArticle struct {
+	SKU   string `json:"sku"`
+	Name  string `json:"name"`
+	Photo string `json:"photo"`
+	// Store — Название магазина артикула — различает один артикул в нескольких магазинах
+	Store *string `json:"store,omitempty"`
+	// StoreID — Магазин кабинета артикула: по нему экран закрепляет артикул за магазином
+	StoreID *string `json:"store_id,omitempty"`
+	// Brand — Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
+	Brand *string `json:"brand,omitempty"`
+}
+
+type MarketplaceOzonFunnelDailyCard struct {
+	// Subject — Предмет товара — по нему берётся эталон воронки
+	Subject *string `json:"subject,omitempty"`
+	// SKU — Артикул продавца
+	SKU   string  `json:"sku"`
+	Name  string  `json:"name"`
+	Photo string  `json:"photo"`
+	Store *string `json:"store,omitempty"`
+	// Stock — Общий остаток, только когда известны оба источника
+	Stock            *float64 `json:"stock,omitempty"`
+	StockMarketplace *float64 `json:"stockMarketplace,omitempty"`
+	StockFbs         *float64 `json:"stockFbs,omitempty"`
+	OrdersToday      *float64 `json:"ordersToday,omitempty"`
+	Rating           *float64 `json:"rating,omitempty"`
+	Reviews          *float64 `json:"reviews,omitempty"`
+	Cost             *float64 `json:"cost,omitempty"`
+	// Commission — Взвешенная ставка предыдущей полной недели
+	Commission    *float64 `json:"commission,omitempty"`
+	Acquiring     *float64 `json:"acquiring,omitempty"`
+	Tax           *float64 `json:"tax,omitempty"`
+	LogisticsUnit *float64 `json:"logisticsUnit,omitempty"`
+	OtherUnit     *float64 `json:"otherUnit,omitempty"`
+	BuyoutAll     *float64 `json:"buyoutAll,omitempty"`
+	BuyoutRolling *float64 `json:"buyoutRolling,omitempty"`
+	// PriceBase — Цена до СПП последнего дня окна, где цена известна
+	PriceBase *float64 `json:"priceBase,omitempty"`
+	// PriceBuyer — Цена покупателя того же дня
+	PriceBuyer *float64 `json:"priceBuyer,omitempty"`
+	// Spp — СПП того же дня, %
+	Spp *float64 `json:"spp,omitempty"`
+	// Localization — Доля продаж или закупок FBO из кластера покупателя за окно, %
+	Localization *float64 `json:"localization,omitempty"`
+}
+
+// MarketplaceOzonFunnelDailySeries — Каждый ряд — значение на каждый день окна в том же порядке что days. Ряды без источника заполнены null целиком.
+type MarketplaceOzonFunnelDailySeries struct {
+	Traffic    []*float64 `json:"traffic"`
+	Views      []*float64 `json:"views"`
+	Cv2        []*float64 `json:"cv2"`
+	Cart       []*float64 `json:"cart"`
+	Cv3        []*float64 `json:"cv3"`
+	Orders     []*float64 `json:"orders"`
+	AdShare    []*float64 `json:"adShare"`
+	OrdersSum  []*float64 `json:"ordersSum"`
+	Buyouts    []*float64 `json:"buyouts"`
+	BuyoutsSum []*float64 `json:"buyoutsSum"`
+	// AvgBuyer — Средняя цена продавца в продажах или закупках без отмен; имя ключа сохранено для совместимости
+	AvgBuyer        []*float64 `json:"avgBuyer"`
+	Spp             []*float64 `json:"spp"`
+	Position        []*float64 `json:"position"`
+	AdSpend         []*float64 `json:"adSpend"`
+	DrrOrders       []*float64 `json:"drrOrders"`
+	DrrSales        []*float64 `json:"drrSales"`
+	Margin          []*float64 `json:"margin"`
+	MarginSheet     []*float64 `json:"marginSheet"`
+	BuyoutRate      []*float64 `json:"buyoutRate,omitempty"`
+	ExpectedUnits   []*float64 `json:"expectedUnits,omitempty"`
+	ExpectedRevenue []*float64 `json:"expectedRevenue,omitempty"`
+	CostUnit        []*float64 `json:"costUnit,omitempty"`
+	AcquiringRate   []*float64 `json:"acquiringRate,omitempty"`
+	CommissionRate  []*float64 `json:"commissionRate,omitempty"`
+	LogisticsUnit   []*float64 `json:"logisticsUnit,omitempty"`
+	OtherUnit       []*float64 `json:"otherUnit,omitempty"`
+	TaxRate         []*float64 `json:"taxRate,omitempty"`
+	Umd             []*float64 `json:"umd"`
+	Roi             []*float64 `json:"roi"`
+	RoiOrders       []*float64 `json:"roiOrders,omitempty"`
+	MarginTot       []*float64 `json:"marginTot"`
+	MarginSheetTot  []*float64 `json:"marginSheetTot"`
+	Sales           []*float64 `json:"sales,omitempty"`
+	SalesSum        []*float64 `json:"salesSum,omitempty"`
+	CostSales       []*float64 `json:"costSales,omitempty"`
+	Romi            []*float64 `json:"romi,omitempty"`
+	FeesSum         []*float64 `json:"feesSum,omitempty"`
+	CommissionSum   []*float64 `json:"commissionSum,omitempty"`
+	AcquiringSum    []*float64 `json:"acquiringSum,omitempty"`
+	LogisticsSum    []*float64 `json:"logisticsSum,omitempty"`
+	OtherSum        []*float64 `json:"otherSum,omitempty"`
+	TaxSum          []*float64 `json:"taxSum,omitempty"`
+	// Payout — К перечислению за день по отчёту площадки — формула ОПиУ; день без отчёта — null
+	Payout []*float64 `json:"payout,omitempty"`
+}
+
+// MarketplaceOzonFunnelDailyTotals — Каждый итог — массив из одного значения, чтобы колонка ИТОГО рисовалась тем же кодом что и дни
+type MarketplaceOzonFunnelDailyTotals struct {
+	Traffic        []*float64 `json:"traffic"`
+	Views          []*float64 `json:"views"`
+	Cart           []*float64 `json:"cart"`
+	Orders         []*float64 `json:"orders"`
+	OrdersSum      []*float64 `json:"ordersSum"`
+	Buyouts        []*float64 `json:"buyouts"`
+	MarginTot      []*float64 `json:"marginTot"`
+	MarginSheetTot []*float64 `json:"marginSheetTot"`
+	AdSpend        []*float64 `json:"adSpend"`
+	Cv2            []*float64 `json:"cv2"`
+	Cv3            []*float64 `json:"cv3"`
+	// AvgBuyer — Средняя цена продавца в продажах или закупках без отмен
+	AvgBuyer []*float64 `json:"avgBuyer,omitempty"`
+	// Extra — поля сверх схемы; заполняется вызывающим кодом при необходимости.
+	Extra map[string][]*float64 `json:"-"`
+}
+
+type MarketplaceOzonFunnelRow struct {
+	// NmID — Артикул продавца строкой: имя поля досталось от Wildberries
+	NmID       string          `json:"nm_id"`
+	Vendor     string          `json:"vendor"`
+	Name       string          `json:"name"`
+	Photo      string          `json:"photo"`
+	Open       int64           `json:"open"`
+	Cart       int64           `json:"cart"`
+	Orders     int64           `json:"orders"`
+	Buyouts    json.RawMessage `json:"buyouts"`
+	OrdersSum  int64           `json:"orders_sum"`
+	BuyoutsSum json.RawMessage `json:"buyouts_sum"`
+	CvCart     *float64        `json:"cv_cart"`
+	CvOrder    *float64        `json:"cv_order"`
+	BuyoutPct  json.RawMessage `json:"buyout_pct"`
+}
+
+type MarketplaceOzonFunnelTotals struct {
+	// Open — Показы; 0 без подписки Premium Plus
+	Open   int64 `json:"open"`
+	Cart   int64 `json:"cart"`
+	Orders int64 `json:"orders"`
+	// Buyouts — Всегда null: выкупов у Ozon нет
+	Buyouts    json.RawMessage `json:"buyouts"`
+	OrdersSum  int64           `json:"orders_sum"`
+	BuyoutsSum json.RawMessage `json:"buyouts_sum"`
+	// CvCart — Конверсия в корзину в процентах
+	CvCart    *float64        `json:"cv_cart"`
+	CvOrder   *float64        `json:"cv_order"`
+	BuyoutPct json.RawMessage `json:"buyout_pct"`
+}
+
 type MarketplaceOzonOrdersDailyRow struct {
 	Date string `json:"date"`
 	// OrdersSum — Decimal string
@@ -11408,6 +11622,55 @@ type MarketplaceOzonPnlRow struct {
 	Kind string `json:"kind"`
 	// Values — По одному значению на период в том же порядке
 	Values []*float64 `json:"values"`
+}
+
+type MarketplaceOzonPricing struct {
+	Platform string `json:"platform"`
+	// From — Начало окна в 30 дней
+	From *string `json:"from,omitempty"`
+	// To — Последняя дата финотчёта
+	To *string `json:"to,omitempty"`
+	// Total — Строк до отсечки по n
+	Total *int64                      `json:"total,omitempty"`
+	Shown *int64                      `json:"shown,omitempty"`
+	Rows  []MarketplaceOzonPricingRow `json:"rows"`
+	// Analytics — Присутствует и равно false, когда аналитика не подключена
+	Analytics *bool `json:"analytics,omitempty"`
+}
+
+type MarketplaceOzonPricingRow struct {
+	// SKU — Артикул продавца, а не числовой SKU площадки
+	SKU string `json:"sku"`
+	// StoreID — Внешний числовой идентификатор магазина в аналитике
+	StoreID int64  `json:"store_id"`
+	Name    string `json:"name"`
+	Photo   string `json:"photo"`
+	// Store — Название магазина
+	Store string `json:"store"`
+	// Price — Установочная цена карточки, до скидки площадки
+	Price float64 `json:"price"`
+	// SetPrice — То же значение что price
+	SetPrice float64 `json:"setPrice"`
+	// FactBuyer — Фактическая цена покупателя за единицу
+	FactBuyer float64 `json:"factBuyer"`
+	OldPrice  float64 `json:"oldPrice"`
+	MinPrice  float64 `json:"minPrice"`
+	// Cost — Себестоимость из базы кабинета; 0 — не заведена
+	Cost float64 `json:"cost"`
+	// Comm — Последняя фактическая ставка комиссии по артикулу, проценты
+	Comm float64 `json:"comm"`
+	// Log — Логистика доставки и возврата суммарно на единицу
+	Log       float64 `json:"log"`
+	LogDirect float64 `json:"logDirect"`
+	LogReturn float64 `json:"logReturn"`
+	// Acquiring — Эквайринг в процентах от выручки
+	Acquiring float64 `json:"acquiring"`
+	// Tax — Ставка налога магазина в процентах
+	Tax float64 `json:"tax"`
+	// Spp — Доля скидки площадки, 0..1
+	Spp float64 `json:"spp"`
+	// Units — Доставленных единиц за окно
+	Units int64 `json:"units"`
 }
 
 type MarketplaceOzonProduct struct {
@@ -11848,6 +12111,140 @@ type MarketplaceWbDecompositionPeriod struct {
 	Totals        MarketplaceWbMetricCell `json:"totals"`
 }
 
+type MarketplaceWbFunnel struct {
+	Platform string `json:"platform"`
+	// Store — Название магазина
+	Store *string `json:"store,omitempty"`
+	// Source — jam — данные подписки, v3 — живой отчёт WB, v3_pending — площадка не ответила
+	Source *string                    `json:"source,omitempty"`
+	From   *string                    `json:"from,omitempty"`
+	To     *string                    `json:"to,omitempty"`
+	Totals *MarketplaceWbFunnelTotals `json:"totals,omitempty"`
+	// Rows — Отсортированы по числу заказов по убыванию
+	Rows []MarketplaceWbFunnelRow `json:"rows"`
+	Note *string                  `json:"note,omitempty"`
+	// Analytics — Присутствует и равно false, когда аналитическая база не подключена
+	Analytics *bool `json:"analytics,omitempty"`
+}
+
+type MarketplaceWbFunnelDaily struct {
+	// Slice — Срез ответа, когда запрошен slice
+	Slice      *string `json:"slice,omitempty"`
+	SliceValue *string `json:"sliceValue,omitempty"`
+	SliceLabel *string `json:"sliceLabel,omitempty"`
+	// Slices — Варианты срезов с числом артикулов
+	Slices map[string][]map[string]json.RawMessage `json:"slices,omitempty"`
+	// Breakdown — Итоги каждого артикула среза за окно
+	Breakdown         []map[string]json.RawMessage `json:"breakdown,omitempty"`
+	ArticlesTruncated *bool                        `json:"articlesTruncated,omitempty"`
+	// Summary — Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null
+	Summary map[string]map[string]*float64 `json:"summary,omitempty"`
+	// Pulse — РНП (view=pulse): days — показанные полные дни (до 14, без сегодняшнего); total — строки итога набора; items — страница товаров (sku, name, photo, store_id, store, subject, brand, passport — в т.ч. storage: хранение WB в день, ₽; brief — итоги дней, в т.ч. drrSales: ДРР от продаж, %, drrLimit: предельный ДРР — маржа до рекламы к выручке продаж, %, drrState: over — реклама съела маржу (в т.ч. реклама без продаж), near — ДРР не ниже 80 % предела, ok, пусто — нет себестоимости или рекламы; rows); setCount — товаров в наборе, count — подошло под поиск, offset — начало страницы. Строка: key, days (значения по дням), windows (w3, w2, w1, prev_month, month), flags (good, bad или пусто — отклонение от обычного уровня товара за показанные дни).
+	Pulse map[string]json.RawMessage `json:"pulse,omitempty"`
+	// GroupBy — Чем разложен срез, когда запрошен groupBy
+	GroupBy *string `json:"groupBy,omitempty"`
+	// Groups — Группы среза по дням: value (пусто — артикулы без значения группы), label, count артикулов, series и totals только по groupMetrics. Сумма групп по дню равна ряду среза. Порядок — по ordersSum за окно; сверх 200 групп хвост сложен в одну строку с rest: true.
+	Groups        []map[string]json.RawMessage `json:"groups,omitempty"`
+	Platform      string                       `json:"platform"`
+	Source        *string                      `json:"source,omitempty"`
+	EstimateModel *string                      `json:"estimateModel,omitempty"`
+	// SKU — Артикул поставщика выбранной строки
+	SKU  *string `json:"sku,omitempty"`
+	From *string `json:"from,omitempty"`
+	To   *string `json:"to,omitempty"`
+	// Days — Окно 14 дней по опорный включительно
+	Days []string `json:"days"`
+	// Series — Ряды по дням окна той же длины, что days. Ключи traffic, views, cv2, cart, cv3, orders, adShare, ordersSum, buyouts, buyoutsSum, avgBuyer, spp, position, adSpend, drrOrders, drrSales, buyoutRate, expectedUnits, expectedRevenue, costUnit, acquiringRate, commissionRate, logisticsUnit, otherUnit, taxRate, margin, marginSheet, umd, roi, roiOrders, marginTot, marginSheetTot, sales, salesSum, costSales, romi и удержания в рублях: feesSum, commissionSum, acquiringSum, logisticsSum, otherSum, taxSum; payout — к перечислению за день по отчёту площадки (формула ОПиУ), день без отчёта — null. Отсутствующий источник даёт null, а не ложный ноль.
+	Series map[string][]*float64 `json:"series"`
+	// Totals — Итог по каждому ряду одним элементом массива
+	Totals map[string][]*float64         `json:"totals,omitempty"`
+	Card   *MarketplaceWbFunnelDailyCard `json:"card,omitempty"`
+	// Articles — До 300 артикулов по выручке за окно
+	Articles    []MarketplaceWbFunnelDailyArticle          `json:"articles,omitempty"`
+	References  map[string]MarketplaceFunnelDailyReference `json:"references,omitempty"`
+	DataThrough map[string]*string                         `json:"dataThrough,omitempty"`
+	Note        *string                                    `json:"note,omitempty"`
+	// Analytics — Присутствует и равно false, когда аналитическая база не подключена
+	Analytics *bool `json:"analytics,omitempty"`
+}
+
+type MarketplaceWbFunnelDailyArticle struct {
+	// SKU — Артикул поставщика
+	SKU  string `json:"sku"`
+	Name string `json:"name"`
+	// Photo — В этом списке не заполняется и приходит пустой строкой
+	Photo string `json:"photo"`
+	// Store — Название магазина артикула — различает один артикул в нескольких магазинах
+	Store *string `json:"store,omitempty"`
+	// StoreID — Магазин кабинета артикула: по нему экран закрепляет артикул за магазином
+	StoreID *string `json:"store_id,omitempty"`
+	// Brand — Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
+	Brand *string `json:"brand,omitempty"`
+}
+
+type MarketplaceWbFunnelDailyCard struct {
+	// Subject — Предмет товара — по нему берётся эталон воронки
+	Subject *string `json:"subject,omitempty"`
+	// SKU — Артикул поставщика
+	SKU              string   `json:"sku"`
+	Name             string   `json:"name"`
+	Photo            string   `json:"photo"`
+	Store            *string  `json:"store,omitempty"`
+	Stock            *float64 `json:"stock,omitempty"`
+	StockMarketplace *float64 `json:"stockMarketplace,omitempty"`
+	StockFbs         *float64 `json:"stockFbs,omitempty"`
+	OrdersToday      *float64 `json:"ordersToday,omitempty"`
+	Rating           *float64 `json:"rating,omitempty"`
+	Reviews          *float64 `json:"reviews,omitempty"`
+	// Cost — Себестоимость из кабинета
+	Cost          *float64 `json:"cost,omitempty"`
+	Commission    *float64 `json:"commission,omitempty"`
+	Acquiring     *float64 `json:"acquiring,omitempty"`
+	Tax           *float64 `json:"tax,omitempty"`
+	LogisticsUnit *float64 `json:"logisticsUnit,omitempty"`
+	OtherUnit     *float64 `json:"otherUnit,omitempty"`
+	BuyoutAll     *float64 `json:"buyoutAll,omitempty"`
+	BuyoutRolling *float64 `json:"buyoutRolling,omitempty"`
+	// PriceBase — Цена до СПП последнего дня окна, где цена известна
+	PriceBase *float64 `json:"priceBase,omitempty"`
+	// PriceBuyer — Цена покупателя того же дня
+	PriceBuyer *float64 `json:"priceBuyer,omitempty"`
+	// Spp — СПП того же дня, %
+	Spp *float64 `json:"spp,omitempty"`
+}
+
+type MarketplaceWbFunnelRow struct {
+	NmID int64 `json:"nm_id"`
+	// Vendor — Артикул поставщика
+	Vendor string `json:"vendor"`
+	Name   string `json:"name"`
+	Photo  string `json:"photo"`
+	// Open — Открытия карточки
+	Open       int64 `json:"open"`
+	Cart       int64 `json:"cart"`
+	Orders     int64 `json:"orders"`
+	Buyouts    int64 `json:"buyouts"`
+	OrdersSum  int64 `json:"orders_sum"`
+	BuyoutsSum int64 `json:"buyouts_sum"`
+	// CvCart — Конверсия из открытия в корзину в процентах
+	CvCart *float64 `json:"cv_cart"`
+	// CvOrder — Конверсия из корзины в заказ в процентах
+	CvOrder   *float64 `json:"cv_order"`
+	BuyoutPct *float64 `json:"buyout_pct"`
+}
+
+type MarketplaceWbFunnelTotals struct {
+	Open       int64    `json:"open"`
+	Cart       int64    `json:"cart"`
+	Orders     int64    `json:"orders"`
+	Buyouts    int64    `json:"buyouts"`
+	OrdersSum  int64    `json:"orders_sum"`
+	BuyoutsSum int64    `json:"buyouts_sum"`
+	CvCart     *float64 `json:"cv_cart"`
+	CvOrder    *float64 `json:"cv_order"`
+	BuyoutPct  *float64 `json:"buyout_pct"`
+}
+
 // MarketplaceWbMetricCell — Ячейка декомпозиции. Расходы приходят отрицательными числами.
 type MarketplaceWbMetricCell struct {
 	// ID — Идентификатор блока; присутствует только в итогах периода
@@ -12002,6 +12399,56 @@ type MarketplaceWbPnlRow struct {
 	Values []*float64 `json:"values"`
 }
 
+type MarketplaceWbPricing struct {
+	Platform string                    `json:"platform"`
+	From     *string                   `json:"from,omitempty"`
+	To       *string                   `json:"to,omitempty"`
+	Total    *int64                    `json:"total,omitempty"`
+	Shown    *int64                    `json:"shown,omitempty"`
+	Rows     []MarketplaceWbPricingRow `json:"rows"`
+	// Analytics — Присутствует и равно false, когда аналитическая база не подключена
+	Analytics *bool `json:"analytics,omitempty"`
+}
+
+type MarketplaceWbPricingRow struct {
+	// SKU — Артикул поставщика
+	SKU string `json:"sku"`
+	// StoreID — Внешний идентификатор магазина в аналитике
+	StoreID int64  `json:"store_id"`
+	NmID    int64  `json:"nm_id"`
+	Name    string `json:"name"`
+	Photo   string `json:"photo"`
+	// Store — Название магазина
+	Store string `json:"store"`
+	// Price — Установочная цена до СПП
+	Price int64 `json:"price"`
+	// SetPrice — Установочная цена до СПП
+	SetPrice int64 `json:"setPrice"`
+	// FactClient — Фактическая цена клиента
+	FactClient int64 `json:"factClient"`
+	Cost       int64 `json:"cost"`
+	// Comm — Комиссия в процентах от установочной цены
+	Comm float64 `json:"comm"`
+	// ForPay — Выплата продавцу на единицу
+	ForPay int64 `json:"forPay"`
+	// LogDirect — Логистика на единицу
+	LogDirect int64 `json:"logDirect"`
+	// StorageUnit — Хранение на единицу
+	StorageUnit int64 `json:"storageUnit"`
+	// AcceptUnit — Платная приёмка на единицу
+	AcceptUnit int64 `json:"acceptUnit"`
+	// PenaltyUnit — Штрафы на единицу
+	PenaltyUnit int64 `json:"penaltyUnit"`
+	// Acquiring — Эквайринг в процентах от установочной цены
+	Acquiring float64 `json:"acquiring"`
+	// Tax — Ставка налога магазина в процентах
+	Tax float64 `json:"tax"`
+	// Spp — Скидка постоянного покупателя долей единицы
+	Spp float64 `json:"spp"`
+	// Units — Продано единиц за окно
+	Units int64 `json:"units"`
+}
+
 type MarketplaceWbProduct struct {
 	// ID — Составной ключ строки: идентификатор магазина и артикул поставщика через двоеточие
 	ID        string `json:"id"`
@@ -12083,6 +12530,32 @@ type MarketplaceWbStockWarehouse struct {
 	// Cluster — Кластер склада; у Wildberries не заполняется и в ответ не попадает
 	Cluster *string `json:"cluster,omitempty"`
 	Qty     int64   `json:"qty"`
+}
+
+type MarketplaceWeeklyFinanceRun struct {
+	RunID           string  `json:"run_id"`
+	WeekStart       string  `json:"week_start"`
+	WeekEnd         string  `json:"week_end"`
+	SourceRef       string  `json:"source_ref"`
+	SourceHash      string  `json:"source_hash"`
+	ReportComplete  bool    `json:"report_complete"`
+	ReportReady     bool    `json:"report_ready"`
+	BlockingCode    *string `json:"blocking_code,omitempty"`
+	CapturedAt      *string `json:"captured_at,omitempty"`
+	RowCount        int64   `json:"row_count"`
+	ExpenseRowCount int64   `json:"expense_row_count"`
+	// ZeroCost — Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж.
+	ZeroCost []MarketplaceWeeklyFinanceRunZeroCostItem `json:"zero_cost,omitempty"`
+}
+
+type MarketplaceWeeklyFinanceRunZeroCostItem struct {
+	OfferID string `json:"offer_id"`
+	// Units — Штуки — точная десятичная строка
+	Units string `json:"units"`
+}
+
+type MarketplaceWeeklyFinanceRuns struct {
+	Results []MarketplaceWeeklyFinanceRun `json:"results"`
 }
 
 type MarketplaceYandexCost struct {
@@ -13574,6 +14047,85 @@ type MarkingProductProfileInput struct {
 	MarkedSince *string `json:"marked_since,omitempty"`
 	// LabelPreset — Свой формат этикетки товара; пусто — как у юрлица
 	LabelPreset *string `json:"label_preset,omitempty"`
+}
+
+type MarkingReconcileInput struct {
+	CompanyID UUID `json:"company_id"`
+}
+
+type MarkingReconcileItem struct {
+	ID     UUID                   `json:"id"`
+	RunID  UUID                   `json:"run_id"`
+	Kind   string                 `json:"kind"`
+	Reason MarkingReconcileReason `json:"reason"`
+	// Identity — Код без криптохвоста
+	Identity    string  `json:"identity"`
+	CodeID      *UUID   `json:"code_id,omitempty"`
+	WarehouseID *UUID   `json:"warehouse_id,omitempty"`
+	ProductID   *UUID   `json:"product_id,omitempty"`
+	ProductName *string `json:"product_name,omitempty"`
+	ProductSKU  *string `json:"product_sku,omitempty"`
+	Gtin        *string `json:"gtin,omitempty"`
+	// Group — Ключ товарной группы
+	Group *string `json:"group,omitempty"`
+	// GismtStatus — Статус кода в ЧЗ
+	GismtStatus *string `json:"gismt_status,omitempty"`
+	// GismtOwnerINN — ИНН владельца по ЧЗ
+	GismtOwnerINN *string `json:"gismt_owner_inn,omitempty"`
+	// GismtParent — Агрегат, в который код вложен по ЧЗ
+	GismtParent *string `json:"gismt_parent,omitempty"`
+	// Resolution — Ключ действия отметки «разобрано»
+	Resolution           *string `json:"resolution,omitempty"`
+	ResolutionNote       *string `json:"resolution_note,omitempty"`
+	ResolutionDocumentID *UUID   `json:"resolution_document_id,omitempty"`
+	ResolvedBy           *int64  `json:"resolved_by,omitempty"`
+	ResolvedAt           *string `json:"resolved_at,omitempty"`
+}
+
+type MarkingReconcileItemPage struct {
+	Items []MarkingReconcileItem `json:"items"`
+	// Total — Расхождений по отбору
+	Total int64 `json:"total"`
+}
+
+type MarkingReconcileReason = string
+
+type MarkingReconcileResolveInput struct {
+	// Resolution — Ключ действия; пусто — снять отметку
+	Resolution *string `json:"resolution,omitempty"`
+	Note       *string `json:"note,omitempty"`
+	DocumentID *UUID   `json:"document_id,omitempty"`
+}
+
+type MarkingReconcileRun struct {
+	ID        UUID   `json:"id"`
+	CompanyID UUID   `json:"company_id"`
+	Status    string `json:"status"`
+	// Phase — Шаг прогона
+	Phase string `json:"phase"`
+	// GismtCodes — Кодов юрлица «в обороте» прочитано из ЧЗ
+	GismtCodes int64 `json:"gismt_codes"`
+	// StockCodes — Кодов на складах юрлица по регистру
+	StockCodes int64 `json:"stock_codes"`
+	// CheckedCodes — Кодов склада досверено поштучно
+	CheckedCodes int64 `json:"checked_codes"`
+	// Summary — Расхождений по видам: {"stock_only": n, ...}
+	Summary map[string]int64 `json:"summary"`
+	// Error — Почему сверка остановилась
+	Error       *string `json:"error,omitempty"`
+	StartedBy   *int64  `json:"started_by,omitempty"`
+	StartedAt   string  `json:"started_at"`
+	HeartbeatAt string  `json:"heartbeat_at"`
+	FinishedAt  *string `json:"finished_at,omitempty"`
+}
+
+type MarkingReconcileStarted struct {
+	Run MarkingReconcileRun `json:"run"`
+}
+
+type MarkingReconcileState struct {
+	Current  *MarkingReconcileRun `json:"current"`
+	LastDone *MarkingReconcileRun `json:"last_done"`
 }
 
 type MarkingReplaceCodesInput struct {

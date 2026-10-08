@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3c581e130f57cf5a137bcc64a450f9997a217c7b8ccf491799d22139003f6b12).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6c36bf4789b73f2b45c991bd664f456a5d43881b0409b778be538f9194f41748).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -985,6 +985,7 @@ __all__ = [
     "MarketplaceBuyoutCohort",
     "MarketplaceComponentDataThrough",
     "MarketplaceComponentFreshness",
+    "MarketplaceFunnelDailyReference",
     "MarketplaceOzonCost",
     "MarketplaceOzonCostRequest",
     "MarketplaceOzonDecomposition",
@@ -994,6 +995,14 @@ __all__ = [
     "MarketplaceOzonDecompositionOtherBlock",
     "MarketplaceOzonDecompositionOtherItem",
     "MarketplaceOzonDecompositionPeriod",
+    "MarketplaceOzonFunnel",
+    "MarketplaceOzonFunnelDaily",
+    "MarketplaceOzonFunnelDailyArticle",
+    "MarketplaceOzonFunnelDailyCard",
+    "MarketplaceOzonFunnelDailySeries",
+    "MarketplaceOzonFunnelDailyTotals",
+    "MarketplaceOzonFunnelRow",
+    "MarketplaceOzonFunnelTotals",
     "MarketplaceOzonOrdersDailyRow",
     "MarketplaceOzonOrdersKpi",
     "MarketplaceOzonOrdersOverview",
@@ -1002,6 +1011,8 @@ __all__ = [
     "MarketplaceOzonPnlPeriod",
     "MarketplaceOzonPnlRange",
     "MarketplaceOzonPnlRow",
+    "MarketplaceOzonPricing",
+    "MarketplaceOzonPricingRow",
     "MarketplaceOzonProduct",
     "MarketplaceOzonProductPage",
     "MarketplaceOzonStockProduct",
@@ -1029,6 +1040,12 @@ __all__ = [
     "MarketplaceWbDecompositionMonth",
     "MarketplaceWbDecompositionOther",
     "MarketplaceWbDecompositionPeriod",
+    "MarketplaceWbFunnel",
+    "MarketplaceWbFunnelDaily",
+    "MarketplaceWbFunnelDailyArticle",
+    "MarketplaceWbFunnelDailyCard",
+    "MarketplaceWbFunnelRow",
+    "MarketplaceWbFunnelTotals",
     "MarketplaceWbMetricCell",
     "MarketplaceWbOrdersDay",
     "MarketplaceWbOrdersKpi",
@@ -1038,11 +1055,16 @@ __all__ = [
     "MarketplaceWbPnl",
     "MarketplaceWbPnlPeriod",
     "MarketplaceWbPnlRow",
+    "MarketplaceWbPricing",
+    "MarketplaceWbPricingRow",
     "MarketplaceWbProduct",
     "MarketplaceWbProductPage",
     "MarketplaceWbStockPage",
     "MarketplaceWbStockProduct",
     "MarketplaceWbStockWarehouse",
+    "MarketplaceWeeklyFinanceRun",
+    "MarketplaceWeeklyFinanceRunZeroCostItem",
+    "MarketplaceWeeklyFinanceRuns",
     "MarketplaceYandexCost",
     "MarketplaceYandexCostInput",
     "MarketplaceYandexOrdersDay",
@@ -1175,6 +1197,14 @@ __all__ = [
     "MarkingProductProfile",
     "MarkingProductProfileEnvelope",
     "MarkingProductProfileInput",
+    "MarkingReconcileInput",
+    "MarkingReconcileItem",
+    "MarkingReconcileItemPage",
+    "MarkingReconcileReason",
+    "MarkingReconcileResolveInput",
+    "MarkingReconcileRun",
+    "MarkingReconcileStarted",
+    "MarkingReconcileState",
     "MarkingReplaceCodesInput",
     "MarkingReplaceCodesInputLinesItem",
     "MarkingReturnCode",
@@ -12666,6 +12696,8 @@ class MarketplaceComponentFreshness(TypedDict, total=False):
     #: Карточки товаров
     products: Optional[str]
 
+MarketplaceFunnelDailyReference = TypedDict("MarketplaceFunnelDailyReference", {"buyoutFrom": str, "buyoutTo": str, "bought": float, "cancelled": float, "pending": float, "from": str, "to": str, "units": float, "commission": Optional[float], "logistics": Optional[float], "other": Optional[float], "buyout": Optional[float], "missing": List[str]}, total=False)
+
 class MarketplaceOzonCost(TypedDict):
     store: "UUID"
     offer_id: str
@@ -12787,6 +12819,158 @@ class MarketplaceOzonDecompositionPeriod(TypedDict):
     run_rate_factor: float
     totals: "MarketplaceOzonDecompositionCell"
 
+MarketplaceOzonFunnel = TypedDict("MarketplaceOzonFunnel", {"platform": Literal['ozon'], "source": Literal['ozon_analytics'], "from": str, "to": str, "totals": "MarketplaceOzonFunnelTotals", "rows": List["MarketplaceOzonFunnelRow"], "note": str, "analytics": bool}, total=False)
+
+MarketplaceOzonFunnelDaily = TypedDict("MarketplaceOzonFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "summary": Dict[str, Dict[str, Optional[float]]], "pulse": Dict[str, Any], "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['ozon'], "source": Literal['ozon_orders_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": "MarketplaceOzonFunnelDailySeries", "totals": "MarketplaceOzonFunnelDailyTotals", "card": "MarketplaceOzonFunnelDailyCard", "articles": List["MarketplaceOzonFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
+
+class _MarketplaceOzonFunnelDailyArticleRequired(TypedDict):
+    sku: str
+    name: str
+    photo: str
+
+class MarketplaceOzonFunnelDailyArticle(_MarketplaceOzonFunnelDailyArticleRequired, total=False):
+    #: Название магазина артикула — различает один артикул в нескольких магазинах
+    store: str
+    #: Магазин кабинета артикула: по нему экран закрепляет артикул за магазином
+    store_id: str
+    #: Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
+    brand: str
+
+class _MarketplaceOzonFunnelDailyCardRequired(TypedDict):
+    #: Артикул продавца
+    sku: str
+    name: str
+    photo: str
+
+class MarketplaceOzonFunnelDailyCard(_MarketplaceOzonFunnelDailyCardRequired, total=False):
+    #: Предмет товара — по нему берётся эталон воронки
+    subject: str
+    store: str
+    #: Общий остаток, только когда известны оба источника
+    stock: Optional[float]
+    stockMarketplace: Optional[float]
+    stockFbs: Optional[float]
+    ordersToday: Optional[float]
+    rating: Optional[float]
+    reviews: Optional[float]
+    cost: float
+    #: Взвешенная ставка предыдущей полной недели
+    commission: Optional[float]
+    acquiring: Optional[float]
+    tax: Optional[float]
+    logisticsUnit: Optional[float]
+    otherUnit: Optional[float]
+    buyoutAll: Optional[float]
+    buyoutRolling: Optional[float]
+    #: Цена до СПП последнего дня окна, где цена известна
+    priceBase: Optional[float]
+    #: Цена покупателя того же дня
+    priceBuyer: Optional[float]
+    #: СПП того же дня, %
+    spp: Optional[float]
+    #: Доля продаж или закупок FBO из кластера покупателя за окно, %
+    localization: Optional[float]
+
+class _MarketplaceOzonFunnelDailySeriesRequired(TypedDict):
+    traffic: List[Optional[float]]
+    views: List[Optional[float]]
+    cv2: List[Optional[float]]
+    cart: List[Optional[float]]
+    cv3: List[Optional[float]]
+    orders: List[Optional[float]]
+    adShare: List[Optional[float]]
+    ordersSum: List[Optional[float]]
+    buyouts: List[Optional[float]]
+    buyoutsSum: List[Optional[float]]
+    #: Средняя цена продавца в продажах или закупках без отмен; имя ключа сохранено для совместимости
+    avgBuyer: List[Optional[float]]
+    spp: List[Optional[float]]
+    position: List[Optional[float]]
+    adSpend: List[Optional[float]]
+    drrOrders: List[Optional[float]]
+    drrSales: List[Optional[float]]
+    margin: List[Optional[float]]
+    marginSheet: List[Optional[float]]
+    umd: List[Optional[float]]
+    roi: List[Optional[float]]
+    marginTot: List[Optional[float]]
+    marginSheetTot: List[Optional[float]]
+
+class MarketplaceOzonFunnelDailySeries(_MarketplaceOzonFunnelDailySeriesRequired, total=False):
+    """Каждый ряд — значение на каждый день окна в том же порядке что days. Ряды без источника заполнены null целиком."""
+
+    buyoutRate: List[Optional[float]]
+    expectedUnits: List[Optional[float]]
+    expectedRevenue: List[Optional[float]]
+    costUnit: List[Optional[float]]
+    acquiringRate: List[Optional[float]]
+    commissionRate: List[Optional[float]]
+    logisticsUnit: List[Optional[float]]
+    otherUnit: List[Optional[float]]
+    taxRate: List[Optional[float]]
+    roiOrders: List[Optional[float]]
+    sales: List[Optional[float]]
+    salesSum: List[Optional[float]]
+    costSales: List[Optional[float]]
+    romi: List[Optional[float]]
+    feesSum: List[Optional[float]]
+    commissionSum: List[Optional[float]]
+    acquiringSum: List[Optional[float]]
+    logisticsSum: List[Optional[float]]
+    otherSum: List[Optional[float]]
+    taxSum: List[Optional[float]]
+    #: К перечислению за день по отчёту площадки — формула ОПиУ; день без отчёта — null
+    payout: List[Optional[float]]
+
+class _MarketplaceOzonFunnelDailyTotalsRequired(TypedDict):
+    traffic: List[Optional[float]]
+    views: List[Optional[float]]
+    cart: List[Optional[float]]
+    orders: List[Optional[float]]
+    ordersSum: List[Optional[float]]
+    buyouts: List[Optional[float]]
+    marginTot: List[Optional[float]]
+    marginSheetTot: List[Optional[float]]
+    adSpend: List[Optional[float]]
+    cv2: List[Optional[float]]
+    cv3: List[Optional[float]]
+
+class MarketplaceOzonFunnelDailyTotals(_MarketplaceOzonFunnelDailyTotalsRequired, total=False):
+    """Каждый итог — массив из одного значения, чтобы колонка ИТОГО рисовалась тем же кодом что и дни"""
+
+    #: Средняя цена продавца в продажах или закупках без отмен
+    avgBuyer: List[Optional[float]]
+
+class MarketplaceOzonFunnelRow(TypedDict):
+    #: Артикул продавца строкой: имя поля досталось от Wildberries
+    nm_id: str
+    vendor: str
+    name: str
+    photo: str
+    open: int
+    cart: int
+    orders: int
+    buyouts: None
+    orders_sum: int
+    buyouts_sum: None
+    cv_cart: Optional[float]
+    cv_order: Optional[float]
+    buyout_pct: None
+
+class MarketplaceOzonFunnelTotals(TypedDict):
+    #: Показы; 0 без подписки Premium Plus
+    open: int
+    cart: int
+    orders: int
+    #: Всегда null: выкупов у Ozon нет
+    buyouts: None
+    orders_sum: int
+    buyouts_sum: None
+    #: Конверсия в корзину в процентах
+    cv_cart: Optional[float]
+    cv_order: Optional[float]
+    buyout_pct: None
+
 class MarketplaceOzonOrdersDailyRow(TypedDict):
     date: str
     #: Decimal string
@@ -12870,6 +13054,42 @@ class MarketplaceOzonPnlRow(TypedDict):
     kind: str
     #: По одному значению на период в том же порядке
     values: List[Optional[float]]
+
+MarketplaceOzonPricing = TypedDict("MarketplaceOzonPricing", {"platform": Literal['ozon'], "from": str, "to": str, "total": int, "shown": int, "rows": List["MarketplaceOzonPricingRow"], "analytics": bool}, total=False)
+
+class MarketplaceOzonPricingRow(TypedDict):
+    #: Артикул продавца, а не числовой SKU площадки
+    sku: str
+    #: Внешний числовой идентификатор магазина в аналитике
+    store_id: int
+    name: str
+    photo: str
+    #: Название магазина
+    store: str
+    #: Установочная цена карточки, до скидки площадки
+    price: float
+    #: То же значение что price
+    setPrice: float
+    #: Фактическая цена покупателя за единицу
+    factBuyer: float
+    oldPrice: float
+    minPrice: float
+    #: Себестоимость из базы кабинета; 0 — не заведена
+    cost: float
+    #: Последняя фактическая ставка комиссии по артикулу, проценты
+    comm: float
+    #: Логистика доставки и возврата суммарно на единицу
+    log: float
+    logDirect: float
+    logReturn: float
+    #: Эквайринг в процентах от выручки
+    acquiring: float
+    #: Ставка налога магазина в процентах
+    tax: float
+    #: Доля скидки площадки, 0..1
+    spp: float
+    #: Доставленных единиц за окно
+    units: int
 
 class MarketplaceOzonProduct(TypedDict):
     #: Синтетический ключ магазин и артикул через двоеточие
@@ -13315,6 +13535,87 @@ class MarketplaceWbDecompositionPeriod(TypedDict):
     run_rate_factor: float
     totals: "MarketplaceWbMetricCell"
 
+MarketplaceWbFunnel = TypedDict("MarketplaceWbFunnel", {"platform": Literal['wildberries'], "store": str, "source": Literal['jam', 'v3', 'v3_pending'], "from": str, "to": str, "totals": "MarketplaceWbFunnelTotals", "rows": List["MarketplaceWbFunnelRow"], "note": str, "analytics": bool}, total=False)
+
+MarketplaceWbFunnelDaily = TypedDict("MarketplaceWbFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "summary": Dict[str, Dict[str, Optional[float]]], "pulse": Dict[str, Any], "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['wb'], "source": Literal['wb_orders_sales_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": Dict[str, List[Optional[float]]], "totals": Dict[str, List[Optional[float]]], "card": "MarketplaceWbFunnelDailyCard", "articles": List["MarketplaceWbFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "dataThrough": Dict[str, Optional[str]], "note": str, "analytics": bool}, total=False)
+
+class _MarketplaceWbFunnelDailyArticleRequired(TypedDict):
+    #: Артикул поставщика
+    sku: str
+    name: str
+    #: В этом списке не заполняется и приходит пустой строкой
+    photo: str
+
+class MarketplaceWbFunnelDailyArticle(_MarketplaceWbFunnelDailyArticleRequired, total=False):
+    #: Название магазина артикула — различает один артикул в нескольких магазинах
+    store: str
+    #: Магазин кабинета артикула: по нему экран закрепляет артикул за магазином
+    store_id: str
+    #: Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом
+    brand: str
+
+class _MarketplaceWbFunnelDailyCardRequired(TypedDict):
+    #: Артикул поставщика
+    sku: str
+    name: str
+    photo: str
+
+class MarketplaceWbFunnelDailyCard(_MarketplaceWbFunnelDailyCardRequired, total=False):
+    #: Предмет товара — по нему берётся эталон воронки
+    subject: str
+    store: str
+    stock: Optional[float]
+    stockMarketplace: Optional[float]
+    stockFbs: Optional[float]
+    ordersToday: Optional[float]
+    rating: Optional[float]
+    reviews: Optional[float]
+    #: Себестоимость из кабинета
+    cost: float
+    commission: Optional[float]
+    acquiring: Optional[float]
+    tax: Optional[float]
+    logisticsUnit: Optional[float]
+    otherUnit: Optional[float]
+    buyoutAll: Optional[float]
+    buyoutRolling: Optional[float]
+    #: Цена до СПП последнего дня окна, где цена известна
+    priceBase: Optional[float]
+    #: Цена покупателя того же дня
+    priceBuyer: Optional[float]
+    #: СПП того же дня, %
+    spp: Optional[float]
+
+class MarketplaceWbFunnelRow(TypedDict):
+    nm_id: int
+    #: Артикул поставщика
+    vendor: str
+    name: str
+    photo: str
+    #: Открытия карточки
+    open: int
+    cart: int
+    orders: int
+    buyouts: int
+    orders_sum: int
+    buyouts_sum: int
+    #: Конверсия из открытия в корзину в процентах
+    cv_cart: Optional[float]
+    #: Конверсия из корзины в заказ в процентах
+    cv_order: Optional[float]
+    buyout_pct: Optional[float]
+
+class MarketplaceWbFunnelTotals(TypedDict):
+    open: int
+    cart: int
+    orders: int
+    buyouts: int
+    orders_sum: int
+    buyouts_sum: int
+    cv_cart: Optional[float]
+    cv_order: Optional[float]
+    buyout_pct: Optional[float]
+
 class _MarketplaceWbMetricCellRequired(TypedDict):
     revenue: int
     units: int
@@ -13448,6 +13749,46 @@ class MarketplaceWbPnlRow(TypedDict):
     #: Значения по периодам в порядке periods
     values: List[Optional[float]]
 
+MarketplaceWbPricing = TypedDict("MarketplaceWbPricing", {"platform": Literal['wb'], "from": str, "to": str, "total": int, "shown": int, "rows": List["MarketplaceWbPricingRow"], "analytics": bool}, total=False)
+
+class MarketplaceWbPricingRow(TypedDict):
+    #: Артикул поставщика
+    sku: str
+    #: Внешний идентификатор магазина в аналитике
+    store_id: int
+    nm_id: int
+    name: str
+    photo: str
+    #: Название магазина
+    store: str
+    #: Установочная цена до СПП
+    price: int
+    #: Установочная цена до СПП
+    setPrice: int
+    #: Фактическая цена клиента
+    factClient: int
+    cost: int
+    #: Комиссия в процентах от установочной цены
+    comm: float
+    #: Выплата продавцу на единицу
+    forPay: int
+    #: Логистика на единицу
+    logDirect: int
+    #: Хранение на единицу
+    storageUnit: int
+    #: Платная приёмка на единицу
+    acceptUnit: int
+    #: Штрафы на единицу
+    penaltyUnit: int
+    #: Эквайринг в процентах от установочной цены
+    acquiring: float
+    #: Ставка налога магазина в процентах
+    tax: float
+    #: Скидка постоянного покупателя долей единицы
+    spp: float
+    #: Продано единиц за окно
+    units: int
+
 class MarketplaceWbProduct(TypedDict):
     #: Составной ключ строки: идентификатор магазина и артикул поставщика через двоеточие
     id: str
@@ -13533,6 +13874,31 @@ class _MarketplaceWbStockWarehouseRequired(TypedDict):
 class MarketplaceWbStockWarehouse(_MarketplaceWbStockWarehouseRequired, total=False):
     #: Кластер склада; у Wildberries не заполняется и в ответ не попадает
     cluster: str
+
+class _MarketplaceWeeklyFinanceRunRequired(TypedDict):
+    run_id: str
+    week_start: str
+    week_end: str
+    source_ref: str
+    source_hash: str
+    report_complete: bool
+    report_ready: bool
+    row_count: int
+    expense_row_count: int
+
+class MarketplaceWeeklyFinanceRun(_MarketplaceWeeklyFinanceRunRequired, total=False):
+    blocking_code: Literal['source_unavailable', 'report_incomplete', 'report_empty', 'week_open', 'source_empty', 'source_semantics_unverified', 'accounting_setup_incomplete', 'cost_evidence_missing']
+    captured_at: str
+    #: Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж.
+    zero_cost: List["MarketplaceWeeklyFinanceRunZeroCostItem"]
+
+class MarketplaceWeeklyFinanceRunZeroCostItem(TypedDict):
+    offer_id: str
+    #: Штуки — точная десятичная строка
+    units: str
+
+class MarketplaceWeeklyFinanceRuns(TypedDict):
+    results: List["MarketplaceWeeklyFinanceRun"]
 
 class MarketplaceYandexCost(TypedDict):
     store: "UUID"
@@ -14946,6 +15312,82 @@ class MarkingProductProfileInput(_MarkingProductProfileInputRequired, total=Fals
     marked_since: str
     #: Свой формат этикетки товара; пусто — как у юрлица
     label_preset: Literal['', 'full', 'short', 'mark_only', 'marking', 'marking_marketplace']
+
+class MarkingReconcileInput(TypedDict):
+    company_id: "UUID"
+
+class _MarkingReconcileItemRequired(TypedDict):
+    id: "UUID"
+    run_id: "UUID"
+    kind: Literal['stock_only', 'gismt_only', 'status_mismatch']
+    reason: "MarkingReconcileReason"
+    #: Код без криптохвоста
+    identity: str
+
+class MarkingReconcileItem(_MarkingReconcileItemRequired, total=False):
+    code_id: "UUID"
+    warehouse_id: "UUID"
+    product_id: "UUID"
+    product_name: str
+    product_sku: str
+    gtin: str
+    #: Ключ товарной группы
+    group: str
+    #: Статус кода в ЧЗ
+    gismt_status: str
+    #: ИНН владельца по ЧЗ
+    gismt_owner_inn: str
+    #: Агрегат, в который код вложен по ЧЗ
+    gismt_parent: str
+    #: Ключ действия отметки «разобрано»
+    resolution: str
+    resolution_note: str
+    resolution_document_id: "UUID"
+    resolved_by: int
+    resolved_at: str
+
+class MarkingReconcileItemPage(TypedDict):
+    items: List["MarkingReconcileItem"]
+    #: Расхождений по отбору
+    total: int
+
+MarkingReconcileReason = Literal['not_introduced', 'retired', 'other_owner', 'not_found', 'unknown', 'not_in_registry', 'not_on_stock', 'in_aggregate']
+
+class MarkingReconcileResolveInput(TypedDict, total=False):
+    #: Ключ действия; пусто — снять отметку
+    resolution: str
+    note: str
+    document_id: "UUID"
+
+class _MarkingReconcileRunRequired(TypedDict):
+    id: "UUID"
+    company_id: "UUID"
+    status: Literal['running', 'done', 'failed', 'interrupted']
+    #: Шаг прогона
+    phase: Literal['read_gismt', 'read_stock', 'check', 'compare', 'finished']
+    #: Кодов юрлица «в обороте» прочитано из ЧЗ
+    gismt_codes: int
+    #: Кодов на складах юрлица по регистру
+    stock_codes: int
+    #: Кодов склада досверено поштучно
+    checked_codes: int
+    #: Расхождений по видам: {"stock_only": n, ...}
+    summary: Dict[str, int]
+    started_at: str
+    heartbeat_at: str
+
+class MarkingReconcileRun(_MarkingReconcileRunRequired, total=False):
+    #: Почему сверка остановилась
+    error: str
+    started_by: int
+    finished_at: str
+
+class MarkingReconcileStarted(TypedDict):
+    run: "MarkingReconcileRun"
+
+class MarkingReconcileState(TypedDict):
+    current: Optional["MarkingReconcileRun"]
+    last_done: Optional["MarkingReconcileRun"]
 
 class MarkingReplaceCodesInput(TypedDict):
     company_id: "UUID"

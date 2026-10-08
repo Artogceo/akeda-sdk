@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3c581e130f57cf5a137bcc64a450f9997a217c7b8ccf491799d22139003f6b12).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6c36bf4789b73f2b45c991bd664f456a5d43881b0409b778be538f9194f41748).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -675,9 +675,13 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'marketplaceCreateOzonStore': OperationSpec('POST', '/api/v1/marketplace/ozon/stores', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
     'marketplaceCreateWbStore': OperationSpec('POST', '/api/v1/marketplace/wb/stores', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
     'marketplaceCreateYandexStore': OperationSpec('POST', '/api/v1/marketplace/yandex/stores', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
+    'marketplaceListWeeklyFinanceRuns': OperationSpec('GET', '/api/v1/marketplace/{platform}/stores/{id}/finance/weeks', 'marketplace', 'preview', 'marketplace:read', False, True, ('id', 'platform',), 'none', None, None),
     'marketplaceOzonDecomposition': OperationSpec('GET', '/api/v1/marketplace/ozon/decomposition', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
+    'marketplaceOzonFunnel': OperationSpec('GET', '/api/v1/marketplace/ozon/funnel', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
+    'marketplaceOzonFunnelDaily': OperationSpec('GET', '/api/v1/marketplace/ozon/funnel-daily', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceOzonOrdersOverview': OperationSpec('GET', '/api/v1/marketplace/ozon/orders/overview', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceOzonPnl': OperationSpec('GET', '/api/v1/marketplace/ozon/pnl', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
+    'marketplaceOzonPricing': OperationSpec('GET', '/api/v1/marketplace/ozon/pricing', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceOzonProducts': OperationSpec('GET', '/api/v1/marketplace/ozon/products', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'page', 10000, 50),
     'marketplaceOzonSetCost': OperationSpec('POST', '/api/v1/marketplace/ozon/cost', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
     'marketplaceOzonStocks': OperationSpec('GET', '/api/v1/marketplace/ozon/stocks', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
@@ -687,8 +691,11 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'marketplaceWbCardBoard': OperationSpec('GET', '/api/v1/marketplace/wb/card/board', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceWbCardOptions': OperationSpec('GET', '/api/v1/marketplace/wb/card/options', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceWbDecomposition': OperationSpec('GET', '/api/v1/marketplace/wb/decomposition', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
+    'marketplaceWbFunnel': OperationSpec('GET', '/api/v1/marketplace/wb/funnel', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
+    'marketplaceWbFunnelDaily': OperationSpec('GET', '/api/v1/marketplace/wb/funnel-daily', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceWbOrdersOverview': OperationSpec('GET', '/api/v1/marketplace/wb/orders/overview', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceWbPnl': OperationSpec('GET', '/api/v1/marketplace/wb/pnl', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
+    'marketplaceWbPricing': OperationSpec('GET', '/api/v1/marketplace/wb/pricing', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceWbProducts': OperationSpec('GET', '/api/v1/marketplace/wb/products', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'page', 10000, 50),
     'marketplaceWbSetCost': OperationSpec('POST', '/api/v1/marketplace/wb/cost', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
     'marketplaceWbStocks': OperationSpec('GET', '/api/v1/marketplace/wb/stocks', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
@@ -738,6 +745,8 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'markingParseCode': OperationSpec('POST', '/api/v1/marking/codes/parse', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
     'markingPingOMS': OperationSpec('POST', '/api/v1/marking/connections/{company_id}/oms/ping', 'marking', 'preview', 'marking:read', False, False, ('company_id',), 'none', None, None),
     'markingReceiveOrderCodes': OperationSpec('POST', '/api/v1/marking/orders/{id}/receive', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
+    'markingReconcileItems': OperationSpec('GET', '/api/v1/marking/reconcile/{id}/items', 'marking', 'preview', 'marking:read', False, False, ('id',), 'limit_offset', 500, 100),
+    'markingReconcileState': OperationSpec('GET', '/api/v1/marking/reconcile', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
     'markingRefreshApplication': OperationSpec('POST', '/api/v1/marking/applications/{id}/refresh', 'marking', 'preview', 'marking:read', False, False, ('id',), 'none', None, None),
     'markingRefreshOutboxDocument': OperationSpec('POST', '/api/v1/marking/gismt/outbox/{id}/refresh', 'marking', 'preview', 'marking:read', False, False, ('id',), 'none', None, None),
     'markingRemoveBoxItem': OperationSpec('DELETE', '/api/v1/marking/boxes/{id}/items/{code_id}', 'marking', 'preview', 'marking:write', False, False, ('code_id', 'id',), 'none', None, None),
@@ -747,6 +756,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'markingReplaceDocumentCodes': OperationSpec('PUT', '/api/v1/marking/documents/{type}/{id}/codes', 'marking', 'preview', 'marking:write', False, False, ('id', 'type',), 'none', None, None),
     'markingReportBox': OperationSpec('POST', '/api/v1/marking/boxes/{id}/report', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
     'markingResolveBox': OperationSpec('POST', '/api/v1/marking/boxes/resolve', 'marking', 'preview', 'marking:write', False, False, (), 'none', None, None),
+    'markingResolveReconcileItem': OperationSpec('PUT', '/api/v1/marking/reconcile/items/{id}/resolution', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
     'markingReturnQueue': OperationSpec('GET', '/api/v1/marking/gismt/return-queue', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
     'markingSaveCompanyGroup': OperationSpec('PUT', '/api/v1/marking/company-groups', 'marking', 'preview', 'marking:admin', False, False, (), 'none', None, None),
     'markingSaveCompanySettings': OperationSpec('PUT', '/api/v1/marking/company-settings/{company_id}', 'marking', 'preview', 'marking:admin', False, False, ('company_id',), 'none', None, None),
@@ -760,6 +770,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'markingShortDocumentCounts': OperationSpec('GET', '/api/v1/marking/document-summaries/short', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
     'markingSpoilOrderCodes': OperationSpec('POST', '/api/v1/marking/orders/{id}/codes/spoil', 'marking', 'preview', 'marking:write', False, False, ('id',), 'none', None, None),
     'markingStartCodeSync': OperationSpec('POST', '/api/v1/marking/codes/sync', 'marking', 'preview', 'marking:write', False, False, (), 'none', None, None),
+    'markingStartReconcile': OperationSpec('POST', '/api/v1/marking/reconcile', 'marking', 'preview', 'marking:write', False, False, (), 'none', None, None),
     'markingStockCodes': OperationSpec('GET', '/api/v1/marking/stock-codes', 'marking', 'preview', 'marking:read', False, False, (), 'limit_offset', 500, 200),
     'markingSyncOrders': OperationSpec('POST', '/api/v1/marking/orders/sync', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),
     'markingTraceCode': OperationSpec('GET', '/api/v1/marking/codes/trace', 'marking', 'preview', 'marking:read', False, False, (), 'none', None, None),

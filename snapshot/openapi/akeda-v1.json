@@ -295,6 +295,10 @@
       "description": "Модуль marketplace (торговые площадки) — витрины Яндекс.Маркета"
     },
     {
+      "name": "Marketplace accounting",
+      "description": "Модуль marketplace (торговые площадки) — юрлицо магазина, источник себестоимости и передача недельного отчёта в учёт"
+    },
+    {
       "name": "Finance payroll",
       "description": "Модуль finance (счета и выписки) — зарплатные документы, реестры выплат и загрузка ведомости"
     },
@@ -48393,6 +48397,89 @@
         }
       }
     },
+    "/api/v1/marketplace/ozon/pricing": {
+      "get": {
+        "tags": [
+          "Marketplace Ozon"
+        ],
+        "operationId": "marketplaceOzonPricing",
+        "summary": "Получить прайс-лист Ozon с юнит-экономикой",
+        "description": "Оперативная экономика на единицу за окно в 30 дней до последней даты\nфинотчёта: период задаётся кодом и параметрами не управляется. Ключи\nстрок смешанные: часть в snake_case, часть в camelCase. Строки без\nвыручки или без доставленных единиц не попадают в ответ.\n",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "store",
+            "in": "query",
+            "description": "UUID магазинов через запятую или all",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "description": "UUID срезов товаров через запятую",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "n",
+            "in": "query",
+            "description": "Сколько строк вернуть; сортировка по продажам убыв.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Прайс-лист с экономикой",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceOzonPricing"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
     "/api/v1/marketplace/ozon/decomposition": {
       "get": {
         "tags": [
@@ -48710,6 +48797,301 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/marketplace/ozon/funnel": {
+      "get": {
+        "tags": [
+          "Marketplace Ozon"
+        ],
+        "operationId": "marketplaceOzonFunnel",
+        "summary": "Получить воронку продаж Ozon",
+        "description": "Источник — живой Ozon Analytics API по ключам магазина, а не\nаналитическая база; окно жёстко 14 дней до сегодня. Ответ кэшируется\nв памяти на 30 минут по кабинету Ozon. Недоступность площадки,\nотсутствие ключей и лимит запросов дают 200 с пустым rows и note.\nПоказы и корзина требуют подписки Premium Plus. Этапы выкупа у Ozon\nнет: buyouts, buyouts_sum и buyout_pct всегда null.\n",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "store",
+            "in": "query",
+            "description": "UUID магазинов через запятую или all",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "description": "UUID срезов товаров через запятую",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Воронка по товарам",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceOzonFunnel"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/marketplace/ozon/funnel-daily": {
+      "get": {
+        "tags": [
+          "Marketplace Ozon"
+        ],
+        "operationId": "marketplaceOzonFunnelDaily",
+        "summary": "Получить дневную воронку одного артикула Ozon",
+        "description": "Матрица показателей по дням для одного артикула за 14 дней до\nпоследней даты финотчёта. Воронка берётся из живого Ozon Analytics\nAPI, экономика — из аналитической базы. Неизвестный или пустой sku\nзаменяется первым артикулом списка articles, а не ошибкой. Строки без\nисточника отдаются массивом null.\n",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "store",
+            "in": "query",
+            "description": "UUID магазинов через запятую или all",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "description": "UUID срезов товаров через запятую",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sku",
+            "in": "query",
+            "description": "Артикул товара; при промахе берётся первый из articles",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "description": "all — все карточки магазина; иначе только артикулы с движением",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "description": "Глубина окна в днях по сегодня, 1–92; по умолчанию 14",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 92
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Начало своего отрезка (вместе с to); длиннее 92 дней обрезается до последних 92",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Конец своего отрезка; будущее обрезается сегодняшним днём",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "slice",
+            "in": "query",
+            "description": "Срез вместо одного артикула: store, list, model, brand, subject; пусто — артикул",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "article",
+                "store",
+                "list",
+                "model",
+                "brand",
+                "subject"
+              ]
+            }
+          },
+          {
+            "name": "sliceValue",
+            "in": "query",
+            "description": "Значение среза model/brand/subject; пусто — самый крупный вариант",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "Разложить срез по группам по дням (ERP-1309): subject, model, brand или article; работает вместе с groupMetrics",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "subject",
+                "model",
+                "brand",
+                "article"
+              ]
+            }
+          },
+          {
+            "name": "groupMetrics",
+            "in": "query",
+            "description": "Ряды групп через запятую — ключи series, не больше 4; без них группы не считаются",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "summary",
+            "in": "query",
+            "description": "Недели и месяцы (1): окно данных расширяется до начала прошлого месяца, ответ несёт summary и groups[].summary — показатель → окно (w3, w2, w1, prev_month, month) → значение",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "description": "РНП (pulse): с отбором slice ответ несёт блок pulse — итог набора и страницу товаров по убыванию заказов за 14 дней, недели, месяцы и оценку дней",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pulse"
+              ]
+            }
+          },
+          {
+            "name": "pulseOffset",
+            "in": "query",
+            "description": "Начало страницы товаров РНП, по 20",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "pulseLimit",
+            "in": "query",
+            "description": "Сколько товаров РНП за раз (по умолчанию 20, не больше 200): автообновление уже раскрытого списка",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 200
+            }
+          },
+          {
+            "name": "pulseQuery",
+            "in": "query",
+            "description": "Поиск товаров РНП по артикулу и названию",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pulseSort",
+            "in": "query",
+            "description": "Порядок товаров РНП: orders — по заказам за 14 дней, alerts — сначала с красными клетками за 7 дней",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "orders",
+                "alerts"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Дневная воронка артикула",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceOzonFunnelDaily"
+                }
+              }
+            }
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -49059,6 +49441,70 @@
         }
       }
     },
+    "/api/v1/marketplace/wb/pricing": {
+      "get": {
+        "tags": [
+          "Marketplace Wildberries"
+        ],
+        "operationId": "marketplaceWbPricing",
+        "summary": "Получить ценообразование Wildberries",
+        "description": "Юнит-экономика на единицу за последнее окно финансового отчёта:\nустановочная цена до СПП, фактическая цена клиента, выплата продавцу,\nкомиссия, логистика, хранение, приёмка, штрафы, эквайринг и налог.\nСтроки отсортированы по числу продаж. Фильтр по срезу здесь не действует.\n",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "store",
+            "in": "query",
+            "description": "Идентификаторы магазинов через запятую либо all; пусто — все активные магазины WB",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Прайс-лист с юнит-экономикой",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceWbPricing"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
     "/api/v1/marketplace/wb/decomposition": {
       "get": {
         "tags": [
@@ -49332,6 +49778,286 @@
           },
           "400": {
             "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/marketplace/wb/funnel": {
+      "get": {
+        "tags": [
+          "Marketplace Wildberries"
+        ],
+        "operationId": "marketplaceWbFunnel",
+        "summary": "Получить воронку продаж Wildberries",
+        "description": "Показы карточки, корзина, заказы и выкупы по товарам за окно 7 дней.\nИсточник выбирается сам: данные подписки «Джем» из аналитики, иначе\nживой бесплатный отчёт WB по токену кабинета. Магазин обязателен —\nнужен параметр ext или store, иначе ответ 503.\n",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "store",
+            "in": "query",
+            "description": "Идентификатор одного магазина WB; здесь это одно значение, не список",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "ext",
+            "in": "query",
+            "description": "Внешний идентификатор магазина в аналитике; имеет приоритет над store",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Воронка по товарам за окно",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceWbFunnel"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/marketplace/wb/funnel-daily": {
+      "get": {
+        "tags": [
+          "Marketplace Wildberries"
+        ],
+        "operationId": "marketplaceWbFunnelDaily",
+        "summary": "Получить дневную экономику артикула Wildberries",
+        "description": "Окно 14 дней по одному артикулу: СПП, средний чек покупателя, маржа на\nединицу и маржа итого. Строки самой воронки WB пока не подключены и\nприходят пустыми. Неизвестный или пустой sku заменяется первым артикулом\nсписка.\n",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "store",
+            "in": "query",
+            "description": "Идентификаторы магазинов через запятую либо all; пусто — все активные магазины WB",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sku",
+            "in": "query",
+            "description": "Артикул поставщика; пустой заменяется первым артикулом по выручке",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "description": "Глубина окна в днях по сегодня, 1–92; по умолчанию 14",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 92
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Начало своего отрезка (вместе с to); длиннее 92 дней обрезается до последних 92",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Конец своего отрезка; будущее обрезается сегодняшним днём",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "slice",
+            "in": "query",
+            "description": "Срез вместо одного артикула: store, list, model, brand, subject; пусто — артикул",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "article",
+                "store",
+                "list",
+                "model",
+                "brand",
+                "subject"
+              ]
+            }
+          },
+          {
+            "name": "sliceValue",
+            "in": "query",
+            "description": "Значение среза model/brand/subject; пусто — самый крупный вариант",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "description": "Разложить срез по группам по дням (ERP-1309): subject, model, brand или article; работает вместе с groupMetrics",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "subject",
+                "model",
+                "brand",
+                "article"
+              ]
+            }
+          },
+          {
+            "name": "groupMetrics",
+            "in": "query",
+            "description": "Ряды групп через запятую — ключи series, не больше 4; без них группы не считаются",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "summary",
+            "in": "query",
+            "description": "Недели и месяцы (1): окно данных расширяется до начала прошлого месяца, ответ несёт summary и groups[].summary — показатель → окно (w3, w2, w1, prev_month, month) → значение",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "1"
+              ]
+            }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "description": "РНП (pulse): с отбором slice ответ несёт блок pulse — итог набора и страницу товаров по убыванию заказов за 14 дней, недели, месяцы и оценку дней",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pulse"
+              ]
+            }
+          },
+          {
+            "name": "pulseOffset",
+            "in": "query",
+            "description": "Начало страницы товаров РНП, по 20",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "pulseLimit",
+            "in": "query",
+            "description": "Сколько товаров РНП за раз (по умолчанию 20, не больше 200): автообновление уже раскрытого списка",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 200
+            }
+          },
+          {
+            "name": "pulseQuery",
+            "in": "query",
+            "description": "Поиск товаров РНП по артикулу и названию",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pulseSort",
+            "in": "query",
+            "description": "Порядок товаров РНП: orders — по заказам за 14 дней, alerts — сначала с красными клетками за 7 дней",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "orders",
+                "alerts"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Дневная экономика артикула",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceWbFunnelDaily"
+                }
+              }
+            }
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -50396,6 +51122,86 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MarketplaceYandexOrdersOverview"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/marketplace/{platform}/stores/{id}/finance/weeks": {
+      "get": {
+        "tags": [
+          "Marketplace accounting"
+        ],
+        "operationId": "marketplaceListWeeklyFinanceRuns",
+        "summary": "Получить готовность недельных финансовых отчётов",
+        "description": "Читает только tenant/store-scoped source views аналитической БД. Сырой blocking_reason наружу не возвращается.",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "platform",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ozon",
+                "wb",
+                "wildberries"
+              ]
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Последние недельные отчёты и безопасные коды блокировки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceWeeklyFinanceRuns"
                 }
               }
             }
@@ -64494,6 +65300,357 @@
           },
           "404": {
             "description": "Юрлицо не найдено или недоступно",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/marking/reconcile": {
+      "post": {
+        "tags": [
+          "Marking codes"
+        ],
+        "operationId": "markingStartReconcile",
+        "summary": "Сверить коды склада юрлица с ЧЗ",
+        "description": "«Сверить с ЧЗ»: прогон сверки в фоне. Читаются коды юрлица «в обороте» из ЧЗ (по каждой включённой товарной группе) и коды, числящиеся на складах юрлица по регистру `marking_codes` на сегодня; коды склада, которых нет в выдаче ЧЗ, досверяются поштучно, чтобы назвать причину. Итог — расхождения трёх видов: `stock_only` (на складе, а в ЧЗ не в обороте у юрлица), `gismt_only` (в обороте у юрлица, а на складах не числится) и `status_mismatch` (код вложен в агрегат). Сверка не двигает склад и не добавляет кодов в реестр; досверенным кодам реестра освежается статус ЧЗ. Нужен действующий вход по УКЭП. Одна идущая сверка на юрлицо; ход — в `GET /api/v1/marking/reconcile`.",
+        "x-akeda-module": "marking",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marking:write",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkingReconcileInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Сверка запущена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingReconcileStarted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Юрлицо не распознано или у него нет включённых групп",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingError"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Юрлицо не найдено или недоступно",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Сверка этого юрлица уже идёт (`marking.reconcile.running`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Нет действующего входа в ЧЗ или ЧЗ отказал",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Сверка недоступна на сервере",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Marking codes"
+        ],
+        "operationId": "markingReconcileState",
+        "summary": "Получить ход сверки с ЧЗ",
+        "description": "Идущая или последняя сверка юрлица (шаг, прочитано кодов с каждой стороны, досверено, счётчики расхождений по видам, причина остановки) и последняя дошедшая до конца — её расхождения и показывает экран. Сверка, замолчавшая дольше двух минут, показывается прерванной. Работает без связи с ЧЗ.",
+        "x-akeda-module": "marking",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marking:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "company",
+            "in": "query",
+            "required": true,
+            "description": "Юрлицо",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ход сверки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingReconcileState"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Юрлицо не распознано",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingError"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Юрлицо не найдено или недоступно",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/marking/reconcile/{id}/items": {
+      "get": {
+        "tags": [
+          "Marking codes"
+        ],
+        "operationId": "markingReconcileItems",
+        "summary": "Получить расхождения сверки с ЧЗ",
+        "description": "Расхождения прогона порциями по коду и их число по отбору (`total`). Отбор по виду, подпричине и отметке «разобрано». `limit` по умолчанию 100, больше 500 не отдаётся. Работает без связи с ЧЗ.",
+        "x-akeda-module": "marking",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marking:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Прогон сверки",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "description": "Вид расхождения",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "stock_only",
+                "gismt_only",
+                "status_mismatch"
+              ]
+            }
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "description": "Подпричина",
+            "schema": {
+              "$ref": "#/components/schemas/MarkingReconcileReason"
+            }
+          },
+          {
+            "name": "resolved",
+            "in": "query",
+            "description": "true — только разобранные, false — только неразобранные",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Порция расхождений",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingReconcileItemPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Отбор не распознан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingError"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Сверка не найдена или недоступна",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/marking/reconcile/items/{id}/resolution": {
+      "put": {
+        "tags": [
+          "Marking codes"
+        ],
+        "operationId": "markingResolveReconcileItem",
+        "summary": "Отметить расхождение сверки разобранным",
+        "description": "Ставит отметку «разобрано»: ключ действия (`written_off`, `received`, `introduced`, `withdrawn`, `returned`, `ignored` и т. п.), заметка и, если действие сделано документом, его id. Пустой `resolution` без заметки и документа снимает отметку. Сама отметка ничего не двигает: действие делается обычным документом склада или маркировки.",
+        "x-akeda-module": "marking",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marking:write",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Расхождение",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkingReconcileResolveInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Расхождение с отметкой",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingReconcileItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Отметка заполнена неверно (`marking.reconcile.resolution_invalid`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkingError"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "description": "Расхождение не найдено или недоступно",
             "content": {
               "application/json": {
                 "schema": {
@@ -108123,6 +109280,147 @@
           }
         }
       },
+      "MarketplaceOzonPricingRow": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sku",
+          "store_id",
+          "name",
+          "photo",
+          "store",
+          "price",
+          "setPrice",
+          "factBuyer",
+          "oldPrice",
+          "minPrice",
+          "cost",
+          "comm",
+          "log",
+          "logDirect",
+          "logReturn",
+          "acquiring",
+          "tax",
+          "spp",
+          "units"
+        ],
+        "properties": {
+          "sku": {
+            "type": "string",
+            "description": "Артикул продавца, а не числовой SKU площадки"
+          },
+          "store_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Внешний числовой идентификатор магазина в аналитике"
+          },
+          "name": {
+            "type": "string"
+          },
+          "photo": {
+            "type": "string"
+          },
+          "store": {
+            "type": "string",
+            "description": "Название магазина"
+          },
+          "price": {
+            "type": "number",
+            "description": "Установочная цена карточки, до скидки площадки"
+          },
+          "setPrice": {
+            "type": "number",
+            "description": "То же значение что price"
+          },
+          "factBuyer": {
+            "type": "number",
+            "description": "Фактическая цена покупателя за единицу"
+          },
+          "oldPrice": {
+            "type": "number"
+          },
+          "minPrice": {
+            "type": "number"
+          },
+          "cost": {
+            "type": "number",
+            "description": "Себестоимость из базы кабинета; 0 — не заведена"
+          },
+          "comm": {
+            "type": "number",
+            "description": "Последняя фактическая ставка комиссии по артикулу, проценты"
+          },
+          "log": {
+            "type": "number",
+            "description": "Логистика доставки и возврата суммарно на единицу"
+          },
+          "logDirect": {
+            "type": "number"
+          },
+          "logReturn": {
+            "type": "number"
+          },
+          "acquiring": {
+            "type": "number",
+            "description": "Эквайринг в процентах от выручки"
+          },
+          "tax": {
+            "type": "number",
+            "description": "Ставка налога магазина в процентах"
+          },
+          "spp": {
+            "type": "number",
+            "description": "Доля скидки площадки, 0..1"
+          },
+          "units": {
+            "type": "integer",
+            "description": "Доставленных единиц за окно"
+          }
+        }
+      },
+      "MarketplaceOzonPricing": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "rows"
+        ],
+        "properties": {
+          "platform": {
+            "type": "string",
+            "const": "ozon"
+          },
+          "from": {
+            "type": "string",
+            "format": "date",
+            "description": "Начало окна в 30 дней"
+          },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "description": "Последняя дата финотчёта"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Строк до отсечки по n"
+          },
+          "shown": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceOzonPricingRow"
+            }
+          },
+          "analytics": {
+            "type": "boolean",
+            "description": "Присутствует и равно false, когда аналитика не подключена"
+          }
+        }
+      },
       "MarketplaceOzonDecompositionCell": {
         "type": "object",
         "additionalProperties": false,
@@ -108980,6 +110278,1123 @@
           }
         }
       },
+      "MarketplaceOzonFunnelTotals": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "open",
+          "cart",
+          "orders",
+          "buyouts",
+          "orders_sum",
+          "buyouts_sum",
+          "cv_cart",
+          "cv_order",
+          "buyout_pct"
+        ],
+        "properties": {
+          "open": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Показы; 0 без подписки Premium Plus"
+          },
+          "cart": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "orders": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "buyouts": {
+            "type": "null",
+            "description": "Всегда null: выкупов у Ozon нет"
+          },
+          "orders_sum": {
+            "type": "integer"
+          },
+          "buyouts_sum": {
+            "type": "null"
+          },
+          "cv_cart": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Конверсия в корзину в процентах"
+          },
+          "cv_order": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "buyout_pct": {
+            "type": "null"
+          }
+        }
+      },
+      "MarketplaceOzonFunnelRow": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "nm_id",
+          "vendor",
+          "name",
+          "photo",
+          "open",
+          "cart",
+          "orders",
+          "buyouts",
+          "orders_sum",
+          "buyouts_sum",
+          "cv_cart",
+          "cv_order",
+          "buyout_pct"
+        ],
+        "properties": {
+          "nm_id": {
+            "type": "string",
+            "description": "Артикул продавца строкой: имя поля досталось от Wildberries"
+          },
+          "vendor": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "photo": {
+            "type": "string"
+          },
+          "open": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cart": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "orders": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "buyouts": {
+            "type": "null"
+          },
+          "orders_sum": {
+            "type": "integer"
+          },
+          "buyouts_sum": {
+            "type": "null"
+          },
+          "cv_cart": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "cv_order": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "buyout_pct": {
+            "type": "null"
+          }
+        }
+      },
+      "MarketplaceOzonFunnel": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "rows"
+        ],
+        "properties": {
+          "platform": {
+            "type": "string",
+            "const": "ozon"
+          },
+          "source": {
+            "type": "string",
+            "const": "ozon_analytics"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/MarketplaceOzonFunnelTotals"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceOzonFunnelRow"
+            }
+          },
+          "note": {
+            "type": "string",
+            "description": "Почему воронка пуста или неполна"
+          },
+          "analytics": {
+            "type": "boolean",
+            "description": "Присутствует и равно false, когда аналитика не подключена"
+          }
+        }
+      },
+      "MarketplaceFunnelDailyReference": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "buyoutFrom",
+          "buyoutTo",
+          "bought",
+          "cancelled",
+          "pending",
+          "from",
+          "to",
+          "units",
+          "commission",
+          "logistics",
+          "other",
+          "buyout",
+          "missing"
+        ],
+        "properties": {
+          "buyoutFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "buyoutTo": {
+            "type": "string",
+            "format": "date"
+          },
+          "bought": {
+            "type": "number"
+          },
+          "cancelled": {
+            "type": "number"
+          },
+          "pending": {
+            "type": "number"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "units": {
+            "type": "number"
+          },
+          "commission": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "logistics": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "other": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "buyout": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "MarketplaceOzonFunnelDailyCard": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sku",
+          "name",
+          "photo"
+        ],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "Предмет товара — по нему берётся эталон воронки"
+          },
+          "sku": {
+            "type": "string",
+            "description": "Артикул продавца"
+          },
+          "name": {
+            "type": "string"
+          },
+          "photo": {
+            "type": "string"
+          },
+          "store": {
+            "type": "string"
+          },
+          "stock": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Общий остаток, только когда известны оба источника"
+          },
+          "stockMarketplace": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "stockFbs": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "ordersToday": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "rating": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "reviews": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "cost": {
+            "type": "number"
+          },
+          "commission": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Взвешенная ставка предыдущей полной недели"
+          },
+          "acquiring": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "tax": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "logisticsUnit": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "otherUnit": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "buyoutAll": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "buyoutRolling": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "priceBase": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Цена до СПП последнего дня окна, где цена известна"
+          },
+          "priceBuyer": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Цена покупателя того же дня"
+          },
+          "spp": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "СПП того же дня, %"
+          },
+          "localization": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Доля продаж или закупок FBO из кластера покупателя за окно, %"
+          }
+        }
+      },
+      "MarketplaceOzonFunnelDailyArticle": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sku",
+          "name",
+          "photo"
+        ],
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "photo": {
+            "type": "string"
+          },
+          "store": {
+            "type": "string",
+            "description": "Название магазина артикула — различает один артикул в нескольких магазинах"
+          },
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Магазин кабинета артикула: по нему экран закрепляет артикул за магазином"
+          },
+          "brand": {
+            "type": "string",
+            "description": "Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом"
+          }
+        }
+      },
+      "MarketplaceOzonFunnelDailySeries": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Каждый ряд — значение на каждый день окна в том же порядке что days.\nРяды без источника заполнены null целиком.\n",
+        "required": [
+          "traffic",
+          "views",
+          "cv2",
+          "cart",
+          "cv3",
+          "orders",
+          "adShare",
+          "ordersSum",
+          "buyouts",
+          "buyoutsSum",
+          "avgBuyer",
+          "spp",
+          "position",
+          "adSpend",
+          "drrOrders",
+          "drrSales",
+          "margin",
+          "marginSheet",
+          "umd",
+          "roi",
+          "marginTot",
+          "marginSheetTot"
+        ],
+        "properties": {
+          "traffic": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "views": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "cv2": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "cart": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "cv3": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "adShare": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "ordersSum": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "buyouts": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "buyoutsSum": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "avgBuyer": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "description": "Средняя цена продавца в продажах или закупках без отмен; имя ключа сохранено для совместимости"
+          },
+          "spp": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "position": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "adSpend": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "drrOrders": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "drrSales": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "margin": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "marginSheet": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "buyoutRate": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "expectedUnits": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "expectedRevenue": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "costUnit": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "acquiringRate": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "commissionRate": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "logisticsUnit": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "otherUnit": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "taxRate": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "umd": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "roi": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "roiOrders": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "marginTot": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "marginSheetTot": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "sales": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "salesSum": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "costSales": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "romi": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "feesSum": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "commissionSum": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "acquiringSum": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "logisticsSum": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "otherSum": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "taxSum": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "payout": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "description": "К перечислению за день по отчёту площадки — формула ОПиУ; день без отчёта — null"
+          }
+        }
+      },
+      "MarketplaceOzonFunnelDailyTotals": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "description": "Каждый итог — массив из одного значения, чтобы колонка ИТОГО рисовалась тем же кодом что и дни",
+        "required": [
+          "traffic",
+          "views",
+          "cart",
+          "orders",
+          "ordersSum",
+          "buyouts",
+          "marginTot",
+          "marginSheetTot",
+          "adSpend",
+          "cv2",
+          "cv3"
+        ],
+        "properties": {
+          "traffic": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "views": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "cart": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "ordersSum": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "buyouts": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "marginTot": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "marginSheetTot": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "adSpend": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "cv2": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "cv3": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "avgBuyer": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "description": "Средняя цена продавца в продажах или закупках без отмен"
+          }
+        }
+      },
+      "MarketplaceOzonFunnelDaily": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "days",
+          "series"
+        ],
+        "properties": {
+          "slice": {
+            "type": "string",
+            "description": "Срез ответа, когда запрошен slice"
+          },
+          "sliceValue": {
+            "type": "string"
+          },
+          "sliceLabel": {
+            "type": "string"
+          },
+          "slices": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "description": "Варианты срезов с числом артикулов"
+          },
+          "breakdown": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "Итоги каждого артикула среза за окно"
+          },
+          "articlesTruncated": {
+            "type": "boolean"
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "description": "Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null"
+          },
+          "pulse": {
+            "type": "object",
+            "description": "РНП (view=pulse): days — показанные полные дни (до 14, без\nсегодняшнего); total — строки\nитога набора; items — страница товаров (sku, name, photo, store_id,\nstore, subject, brand, passport — в т.ч. storage: хранение WB в день, ₽; brief — итоги дней, в т.ч.\ndrrSales: ДРР от продаж, %, drrLimit: предельный ДРР — маржа до рекламы к выручке продаж, %, drrState:\nover — реклама съела маржу (в т.ч. реклама без продаж), near — ДРР не ниже 80 % предела, ok, пусто — нет себестоимости или рекламы; rows); setCount — товаров в\nнаборе, count — подошло под поиск, offset — начало страницы. Строка: key, days (значения по дням),\nwindows (w3, w2, w1, prev_month, month), flags (good, bad или пусто —\nотклонение от обычного уровня товара за показанные дни).\n",
+            "additionalProperties": true
+          },
+          "groupBy": {
+            "type": "string",
+            "description": "Чем разложен срез, когда запрошен groupBy"
+          },
+          "groups": {
+            "type": "array",
+            "description": "Группы среза по дням: value (пусто — артикулы без значения группы),\nlabel, count артикулов, series и totals только по groupMetrics.\nСумма групп по дню равна ряду среза. Порядок — по ordersSum за окно;\nсверх 200 групп хвост сложен в одну строку с rest: true.\n",
+            "items": {
+              "type": "object"
+            }
+          },
+          "platform": {
+            "type": "string",
+            "const": "ozon"
+          },
+          "source": {
+            "type": "string",
+            "const": "ozon_orders_and_finance"
+          },
+          "estimateModel": {
+            "type": "string",
+            "const": "sales_and_orders_weekly"
+          },
+          "sku": {
+            "type": "string",
+            "description": "Артикул за который построена матрица"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Четырнадцать дней от старого к новому"
+          },
+          "series": {
+            "$ref": "#/components/schemas/MarketplaceOzonFunnelDailySeries"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/MarketplaceOzonFunnelDailyTotals"
+          },
+          "card": {
+            "$ref": "#/components/schemas/MarketplaceOzonFunnelDailyCard"
+          },
+          "articles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceOzonFunnelDailyArticle"
+            }
+          },
+          "references": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MarketplaceFunnelDailyReference"
+            }
+          },
+          "dataThrough": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "note": {
+            "type": "string",
+            "description": "Пустая строка, когда сказать нечего"
+          },
+          "analytics": {
+            "type": "boolean",
+            "description": "Присутствует и равно false, когда аналитика не подключена"
+          }
+        }
+      },
       "MarketplaceOzonSyncJob": {
         "type": "object",
         "additionalProperties": false,
@@ -109421,6 +111836,152 @@
           },
           "cost": {
             "type": "string"
+          }
+        }
+      },
+      "MarketplaceWbPricingRow": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sku",
+          "store_id",
+          "nm_id",
+          "name",
+          "photo",
+          "store",
+          "price",
+          "setPrice",
+          "factClient",
+          "cost",
+          "comm",
+          "forPay",
+          "logDirect",
+          "storageUnit",
+          "acceptUnit",
+          "penaltyUnit",
+          "acquiring",
+          "tax",
+          "spp",
+          "units"
+        ],
+        "properties": {
+          "sku": {
+            "type": "string",
+            "description": "Артикул поставщика"
+          },
+          "store_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Внешний идентификатор магазина в аналитике"
+          },
+          "nm_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "photo": {
+            "type": "string"
+          },
+          "store": {
+            "type": "string",
+            "description": "Название магазина"
+          },
+          "price": {
+            "type": "integer",
+            "description": "Установочная цена до СПП"
+          },
+          "setPrice": {
+            "type": "integer",
+            "description": "Установочная цена до СПП"
+          },
+          "factClient": {
+            "type": "integer",
+            "description": "Фактическая цена клиента"
+          },
+          "cost": {
+            "type": "integer"
+          },
+          "comm": {
+            "type": "number",
+            "description": "Комиссия в процентах от установочной цены"
+          },
+          "forPay": {
+            "type": "integer",
+            "description": "Выплата продавцу на единицу"
+          },
+          "logDirect": {
+            "type": "integer",
+            "description": "Логистика на единицу"
+          },
+          "storageUnit": {
+            "type": "integer",
+            "description": "Хранение на единицу"
+          },
+          "acceptUnit": {
+            "type": "integer",
+            "description": "Платная приёмка на единицу"
+          },
+          "penaltyUnit": {
+            "type": "integer",
+            "description": "Штрафы на единицу"
+          },
+          "acquiring": {
+            "type": "number",
+            "description": "Эквайринг в процентах от установочной цены"
+          },
+          "tax": {
+            "type": "number",
+            "description": "Ставка налога магазина в процентах"
+          },
+          "spp": {
+            "type": "number",
+            "description": "Скидка постоянного покупателя долей единицы"
+          },
+          "units": {
+            "type": "integer",
+            "description": "Продано единиц за окно"
+          }
+        }
+      },
+      "MarketplaceWbPricing": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "rows"
+        ],
+        "properties": {
+          "platform": {
+            "type": "string",
+            "const": "wb"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "shown": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceWbPricingRow"
+            }
+          },
+          "analytics": {
+            "type": "boolean",
+            "description": "Присутствует и равно false, когда аналитическая база не подключена"
           }
         }
       },
@@ -110277,6 +112838,519 @@
           },
           "buyout": {
             "$ref": "#/components/schemas/MarketplaceBuyoutCohort"
+          }
+        }
+      },
+      "MarketplaceWbFunnelRow": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "nm_id",
+          "vendor",
+          "name",
+          "photo",
+          "open",
+          "cart",
+          "orders",
+          "buyouts",
+          "orders_sum",
+          "buyouts_sum",
+          "cv_cart",
+          "cv_order",
+          "buyout_pct"
+        ],
+        "properties": {
+          "nm_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "vendor": {
+            "type": "string",
+            "description": "Артикул поставщика"
+          },
+          "name": {
+            "type": "string"
+          },
+          "photo": {
+            "type": "string"
+          },
+          "open": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Открытия карточки"
+          },
+          "cart": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "orders": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "buyouts": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "orders_sum": {
+            "type": "integer"
+          },
+          "buyouts_sum": {
+            "type": "integer"
+          },
+          "cv_cart": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Конверсия из открытия в корзину в процентах"
+          },
+          "cv_order": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Конверсия из корзины в заказ в процентах"
+          },
+          "buyout_pct": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "MarketplaceWbFunnelTotals": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "open",
+          "cart",
+          "orders",
+          "buyouts",
+          "orders_sum",
+          "buyouts_sum",
+          "cv_cart",
+          "cv_order",
+          "buyout_pct"
+        ],
+        "properties": {
+          "open": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cart": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "orders": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "buyouts": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "orders_sum": {
+            "type": "integer"
+          },
+          "buyouts_sum": {
+            "type": "integer"
+          },
+          "cv_cart": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "cv_order": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "buyout_pct": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "MarketplaceWbFunnel": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "rows"
+        ],
+        "properties": {
+          "platform": {
+            "type": "string",
+            "const": "wildberries"
+          },
+          "store": {
+            "type": "string",
+            "description": "Название магазина"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "jam",
+              "v3",
+              "v3_pending"
+            ],
+            "description": "jam — данные подписки, v3 — живой отчёт WB, v3_pending — площадка не ответила"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/MarketplaceWbFunnelTotals"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceWbFunnelRow"
+            },
+            "description": "Отсортированы по числу заказов по убыванию"
+          },
+          "note": {
+            "type": "string"
+          },
+          "analytics": {
+            "type": "boolean",
+            "description": "Присутствует и равно false, когда аналитическая база не подключена"
+          }
+        }
+      },
+      "MarketplaceWbFunnelDailyCard": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sku",
+          "name",
+          "photo"
+        ],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "Предмет товара — по нему берётся эталон воронки"
+          },
+          "sku": {
+            "type": "string",
+            "description": "Артикул поставщика"
+          },
+          "name": {
+            "type": "string"
+          },
+          "photo": {
+            "type": "string"
+          },
+          "store": {
+            "type": "string"
+          },
+          "stock": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "stockMarketplace": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "stockFbs": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "ordersToday": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "rating": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "reviews": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "cost": {
+            "type": "number",
+            "description": "Себестоимость из кабинета"
+          },
+          "commission": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "acquiring": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "tax": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "logisticsUnit": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "otherUnit": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "buyoutAll": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "buyoutRolling": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "priceBase": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Цена до СПП последнего дня окна, где цена известна"
+          },
+          "priceBuyer": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Цена покупателя того же дня"
+          },
+          "spp": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "СПП того же дня, %"
+          }
+        }
+      },
+      "MarketplaceWbFunnelDailyArticle": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sku",
+          "name",
+          "photo"
+        ],
+        "properties": {
+          "sku": {
+            "type": "string",
+            "description": "Артикул поставщика"
+          },
+          "name": {
+            "type": "string"
+          },
+          "photo": {
+            "type": "string",
+            "description": "В этом списке не заполняется и приходит пустой строкой"
+          },
+          "store": {
+            "type": "string",
+            "description": "Название магазина артикула — различает один артикул в нескольких магазинах"
+          },
+          "store_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Магазин кабинета артикула: по нему экран закрепляет артикул за магазином"
+          },
+          "brand": {
+            "type": "string",
+            "description": "Бренд из каталога площадки; только в ответе по срезу и только у артикулов с брендом"
+          }
+        }
+      },
+      "MarketplaceWbFunnelDaily": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "days",
+          "series"
+        ],
+        "properties": {
+          "slice": {
+            "type": "string",
+            "description": "Срез ответа, когда запрошен slice"
+          },
+          "sliceValue": {
+            "type": "string"
+          },
+          "sliceLabel": {
+            "type": "string"
+          },
+          "slices": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "description": "Варианты срезов с числом артикулов"
+          },
+          "breakdown": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "Итоги каждого артикула среза за окно"
+          },
+          "articlesTruncated": {
+            "type": "boolean"
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "description": "Недели и месяцы всего среза (?summary=1 с groupBy): показатель → окно → значение; окно без дней — null"
+          },
+          "pulse": {
+            "type": "object",
+            "description": "РНП (view=pulse): days — показанные полные дни (до 14, без\nсегодняшнего); total — строки\nитога набора; items — страница товаров (sku, name, photo, store_id,\nstore, subject, brand, passport — в т.ч. storage: хранение WB в день, ₽; brief — итоги дней, в т.ч.\ndrrSales: ДРР от продаж, %, drrLimit: предельный ДРР — маржа до рекламы к выручке продаж, %, drrState:\nover — реклама съела маржу (в т.ч. реклама без продаж), near — ДРР не ниже 80 % предела, ok, пусто — нет себестоимости или рекламы; rows); setCount — товаров в\nнаборе, count — подошло под поиск, offset — начало страницы. Строка: key, days (значения по дням),\nwindows (w3, w2, w1, prev_month, month), flags (good, bad или пусто —\nотклонение от обычного уровня товара за показанные дни).\n",
+            "additionalProperties": true
+          },
+          "groupBy": {
+            "type": "string",
+            "description": "Чем разложен срез, когда запрошен groupBy"
+          },
+          "groups": {
+            "type": "array",
+            "description": "Группы среза по дням: value (пусто — артикулы без значения группы),\nlabel, count артикулов, series и totals только по groupMetrics.\nСумма групп по дню равна ряду среза. Порядок — по ordersSum за окно;\nсверх 200 групп хвост сложен в одну строку с rest: true.\n",
+            "items": {
+              "type": "object"
+            }
+          },
+          "platform": {
+            "type": "string",
+            "const": "wb"
+          },
+          "source": {
+            "type": "string",
+            "const": "wb_orders_sales_and_finance"
+          },
+          "estimateModel": {
+            "type": "string",
+            "const": "sales_and_orders_weekly"
+          },
+          "sku": {
+            "type": "string",
+            "description": "Артикул поставщика выбранной строки"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Окно 14 дней по опорный включительно"
+          },
+          "series": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "description": "Ряды по дням окна той же длины, что days. Ключи traffic, views, cv2,\ncart, cv3, orders, adShare, ordersSum, buyouts, buyoutsSum, avgBuyer,\nspp, position, adSpend, drrOrders, drrSales, buyoutRate,\nexpectedUnits, expectedRevenue, costUnit, acquiringRate,\ncommissionRate, logisticsUnit, otherUnit, taxRate, margin,\nmarginSheet, umd, roi, roiOrders, marginTot, marginSheetTot, sales,\nsalesSum, costSales, romi и удержания в рублях: feesSum,\ncommissionSum, acquiringSum, logisticsSum, otherSum, taxSum;\npayout — к перечислению за день по отчёту площадки (формула ОПиУ),\nдень без отчёта — null.\nОтсутствующий источник даёт null, а не ложный ноль.\n"
+          },
+          "totals": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "description": "Итог по каждому ряду одним элементом массива"
+          },
+          "card": {
+            "$ref": "#/components/schemas/MarketplaceWbFunnelDailyCard"
+          },
+          "articles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceWbFunnelDailyArticle"
+            },
+            "description": "До 300 артикулов по выручке за окно"
+          },
+          "references": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MarketplaceFunnelDailyReference"
+            }
+          },
+          "dataThrough": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "note": {
+            "type": "string"
+          },
+          "analytics": {
+            "type": "boolean",
+            "description": "Присутствует и равно false, когда аналитическая база не подключена"
           }
         }
       },
@@ -111862,6 +114936,107 @@
           "demo": {
             "type": "boolean",
             "description": "Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические"
+          }
+        }
+      },
+      "MarketplaceWeeklyFinanceRun": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "run_id",
+          "week_start",
+          "week_end",
+          "source_ref",
+          "source_hash",
+          "report_complete",
+          "report_ready",
+          "row_count",
+          "expense_row_count"
+        ],
+        "properties": {
+          "run_id": {
+            "type": "string"
+          },
+          "week_start": {
+            "type": "string",
+            "format": "date"
+          },
+          "week_end": {
+            "type": "string",
+            "format": "date"
+          },
+          "source_ref": {
+            "type": "string"
+          },
+          "source_hash": {
+            "type": "string"
+          },
+          "report_complete": {
+            "type": "boolean"
+          },
+          "report_ready": {
+            "type": "boolean"
+          },
+          "blocking_code": {
+            "type": "string",
+            "enum": [
+              "source_unavailable",
+              "report_incomplete",
+              "report_empty",
+              "week_open",
+              "source_empty",
+              "source_semantics_unverified",
+              "accounting_setup_incomplete",
+              "cost_evidence_missing"
+            ]
+          },
+          "captured_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "row_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expense_row_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "zero_cost": {
+            "type": "array",
+            "description": "Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "offer_id",
+                "units"
+              ],
+              "properties": {
+                "offer_id": {
+                  "type": "string"
+                },
+                "units": {
+                  "type": "string",
+                  "description": "Штуки — точная десятичная строка"
+                }
+              }
+            }
+          }
+        }
+      },
+      "MarketplaceWeeklyFinanceRuns": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "results"
+        ],
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceWeeklyFinanceRun"
+            }
           }
         }
       },
@@ -122839,6 +126014,281 @@
             ],
             "format": "date-time",
             "description": "Последнее полное обновление из ЧЗ"
+          }
+        }
+      },
+      "MarkingReconcileInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "company_id"
+        ],
+        "properties": {
+          "company_id": {
+            "$ref": "#/components/schemas/UUID"
+          }
+        }
+      },
+      "MarkingReconcileReason": {
+        "type": "string",
+        "description": "Подпричина расхождения. stock_only: not_introduced (эмитирован или нанесён, в оборот не введён), retired (выбыл: продан, списан, выведен), other_owner (в обороте у другого владельца), not_found (в ЧЗ такого кода нет), unknown (ЧЗ не назвал статус); gismt_only: not_in_registry (кода нет в реестре Akeda), not_on_stock (в реестре есть, на складах юрлица не числится); status_mismatch: in_aggregate.",
+        "enum": [
+          "not_introduced",
+          "retired",
+          "other_owner",
+          "not_found",
+          "unknown",
+          "not_in_registry",
+          "not_on_stock",
+          "in_aggregate"
+        ]
+      },
+      "MarkingReconcileRun": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "company_id",
+          "status",
+          "phase",
+          "gismt_codes",
+          "stock_codes",
+          "checked_codes",
+          "summary",
+          "started_at",
+          "heartbeat_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "company_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "done",
+              "failed",
+              "interrupted"
+            ]
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "read_gismt",
+              "read_stock",
+              "check",
+              "compare",
+              "finished"
+            ],
+            "description": "Шаг прогона"
+          },
+          "gismt_codes": {
+            "type": "integer",
+            "description": "Кодов юрлица «в обороте» прочитано из ЧЗ"
+          },
+          "stock_codes": {
+            "type": "integer",
+            "description": "Кодов на складах юрлица по регистру"
+          },
+          "checked_codes": {
+            "type": "integer",
+            "description": "Кодов склада досверено поштучно"
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Расхождений по видам: {\"stock_only\": n, ...}"
+          },
+          "error": {
+            "type": "string",
+            "description": "Почему сверка остановилась"
+          },
+          "started_by": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "heartbeat_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finished_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MarkingReconcileStarted": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "run"
+        ],
+        "properties": {
+          "run": {
+            "$ref": "#/components/schemas/MarkingReconcileRun"
+          }
+        }
+      },
+      "MarkingReconcileState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "current",
+          "last_done"
+        ],
+        "properties": {
+          "current": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MarkingReconcileRun"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "last_done": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MarkingReconcileRun"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "MarkingReconcileItem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "run_id",
+          "kind",
+          "reason",
+          "identity"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "run_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "stock_only",
+              "gismt_only",
+              "status_mismatch"
+            ]
+          },
+          "reason": {
+            "$ref": "#/components/schemas/MarkingReconcileReason"
+          },
+          "identity": {
+            "type": "string",
+            "description": "Код без криптохвоста"
+          },
+          "code_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "warehouse_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "product_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "product_name": {
+            "type": "string"
+          },
+          "product_sku": {
+            "type": "string"
+          },
+          "gtin": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string",
+            "description": "Ключ товарной группы"
+          },
+          "gismt_status": {
+            "type": "string",
+            "description": "Статус кода в ЧЗ"
+          },
+          "gismt_owner_inn": {
+            "type": "string",
+            "description": "ИНН владельца по ЧЗ"
+          },
+          "gismt_parent": {
+            "type": "string",
+            "description": "Агрегат, в который код вложен по ЧЗ"
+          },
+          "resolution": {
+            "type": "string",
+            "description": "Ключ действия отметки «разобрано»"
+          },
+          "resolution_note": {
+            "type": "string"
+          },
+          "resolution_document_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "resolved_by": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "resolved_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MarkingReconcileItemPage": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "items",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarkingReconcileItem"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "description": "Расхождений по отбору"
+          }
+        }
+      },
+      "MarkingReconcileResolveInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "resolution": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "Ключ действия; пусто — снять отметку"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "document_id": {
+            "$ref": "#/components/schemas/UUID"
           }
         }
       },
