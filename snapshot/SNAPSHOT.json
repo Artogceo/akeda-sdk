@@ -3,7 +3,7 @@
     "license": "LicenseRef-Akeda-Proprietary",
     "operations": {
       "by_audience": {
-        "external": 941
+        "external": 996
       },
       "by_module": {
         "assistant": 3,
@@ -11,39 +11,39 @@
         "calendar": 25,
         "chat": 26,
         "core": 168,
-        "crm": 109,
+        "crm": 124,
         "dashboard": 2,
         "developer": 22,
         "docflow": 58,
         "files": 16,
-        "finance": 130,
+        "finance": 132,
         "knowledge": 28,
-        "mail": 38,
+        "mail": 43,
         "marketplace": 32,
-        "marking": 71,
+        "marking": 82,
         "platform": 5,
         "settings": 6,
         "stock": 88,
-        "tasks": 101
+        "tasks": 123
       },
       "by_stage": {
-        "preview": 917,
+        "preview": 972,
         "public": 24
       },
       "installation_by_module": {
         "calendar": 25,
         "core": 152,
         "docflow": 13,
-        "finance": 116,
+        "finance": 118,
         "marketplace": 32,
         "platform": 4,
         "stock": 84,
-        "tasks": 101
+        "tasks": 123
       },
-      "installation_reachable": 527,
-      "total": 941
+      "installation_reachable": 551,
+      "total": 996
     },
-    "schemas": 1345,
+    "schemas": 1419,
     "servers": [
       "https://erp.akeda.ru"
     ],
@@ -62,14 +62,14 @@
       "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 4204609,
+      "bytes": 4434981,
       "path": "openapi/akeda-v1.json",
-      "sha256": "6c36bf4789b73f2b45c991bd664f456a5d43881b0409b778be538f9194f41748"
+      "sha256": "b3ac5a9b869156c40ca5842e03e97e94ec698c957b42a92d3065a89fdf2bc0a8"
     },
     {
-      "bytes": 3189439,
+      "bytes": 3365112,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "33953a2e17a8292b739a671b6e1763ab588140a67e78d1ff89fad22719ac2376"
+      "sha256": "3a5b7ef5cb69942c0a88469c3a99b26417a7d557b8cb411cc03ddc6d34f6435a"
     },
     {
       "bytes": 18414,
@@ -82,6 +82,6 @@
       "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
     }
   ],
-  "snapshot_digest": "38b8a25c2373adf678da483a48389309a252e3d8a86aecfe374c4c5587ccd691",
+  "snapshot_digest": "1f1fa31c744cad24cfed12eb6560116b460d74e790d24d5741694d0bae8b36b7",
   "snapshot_version": 1
 }

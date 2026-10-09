@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6c36bf4789b73f2b45c991bd664f456a5d43881b0409b778be538f9194f41748).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b3ac5a9b869156c40ca5842e03e97e94ec698c957b42a92d3065a89fdf2bc0a8).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1066,6 +1066,24 @@ export interface AutomationWebhookField {
   "type": "string" | "number" | "bool" | "date";
 }
 
+export interface Burndown {
+  "sprint": UUID;
+  "planned_points": number;
+  /** false — снимка плана нет: идеальная линия от текущего объёма, журнал в текущих оценках */
+  "plan_fixed": boolean;
+  "points": Array<BurndownPoint>;
+}
+
+export interface BurndownPoint {
+  "date": string;
+  "ideal": number;
+  /** Остаток баллов незавершённых задач; null у будущих дней */
+  "remaining": number | null;
+  "scope": number | null;
+  /** Баллы, добавленные или убранные за день после старта */
+  "scope_change": number;
+}
+
 /** Лента только дописывается */
 export interface CRMActivity {
   "id": UUID;
@@ -1169,6 +1187,61 @@ export interface CRMAutomationRun {
   "updated_at": string;
 }
 
+/** Одно действие над выбранными карточками клиентов */
+export interface CRMBulkCustomersInput {
+  /** Выбранные клиенты: от 1 до 200, повторы отбрасываются */
+  "ids": Array<UUID>;
+  /** Действие: assign — сменить ответственного, archive — убрать в архив, restore — вернуть из архива */
+  "action": "assign" | "archive" | "restore";
+  /** Новый ответственный; обязателен для assign */
+  "owner_id"?: number;
+}
+
+/** Одно действие над выбранными сделками */
+export interface CRMBulkDealsInput {
+  /** Выбранные сделки: от 1 до 200, повторы отбрасываются */
+  "ids": Array<UUID>;
+  /** Действие: assign — сменить ответственного, move — перенести на этап, archive — убрать в архив, restore — вернуть из архива */
+  "action": "assign" | "move" | "archive" | "restore";
+  /** Новый ответственный; обязателен для assign */
+  "owner_id"?: number;
+  /** Этап воронки; обязателен для move */
+  "stage_id"?: UUID;
+  /** Воронка этапа: нужна, когда сделки переходят в другую воронку */
+  "pipeline_id"?: UUID;
+  /** Причина проигрыша для этапа категории lost */
+  "loss_reason_id"?: UUID;
+}
+
+/** Одно действие над выбранными лидами */
+export interface CRMBulkLeadsInput {
+  /** Выбранные лиды: от 1 до 200, повторы отбрасываются */
+  "ids": Array<UUID>;
+  /** Действие: assign — сменить ответственного, move — перенести на этап, archive — убрать в архив, restore — вернуть из архива */
+  "action": "assign" | "move" | "archive" | "restore";
+  /** Новый ответственный; обязателен для assign */
+  "owner_id"?: number;
+  /** Этап доски лидов; обязателен для move */
+  "stage_id"?: UUID;
+}
+
+/** Итог массового действия: подходящие записи изменены, неподходящие пропущены с причиной */
+export interface CRMBulkResult {
+  /** Изменённые записи */
+  "updated": Array<UUID>;
+  /** Пропущенные записи с причиной */
+  "skipped": Array<CRMBulkSkip>;
+}
+
+/** Запись, к которой действие не применилось */
+export interface CRMBulkSkip {
+  "id": UUID;
+  /** Тот же код отказа, что вернула бы правка этой записи по одной, например crm.record_forbidden или crm.stage_fields_required */
+  "code"?: string;
+  /** Причина на языке запроса */
+  "detail": string;
+}
+
 /** Файл, прикреплённый к лиду, сделке или клиенту */
 export interface CRMCardFile {
   "id": UUID;
@@ -1190,6 +1263,76 @@ export interface CRMCardFile {
 /** Файлы карточки, новые сверху */
 export interface CRMCardFileList {
   "items": Array<CRMCardFile>;
+}
+
+/** Письмо, чья переписка привязывается к карточке */
+export interface CRMCardMailLinkRequest {
+  /** Письмо из почты, видимое человеку */
+  "message_id": string;
+}
+
+/** Переписки карточки, свежие сверху, и адреса почты клиента */
+export interface CRMCardMailList {
+  "items": Array<CRMCardMailThread>;
+  /** Адреса почты клиента записи без повторов, в нижнем регистре */
+  "addresses": Array<string>;
+}
+
+/** Письмо из карточки. Нужны адресат и тема или текст */
+export interface CRMCardMailSendRequest {
+  "account_id": UUID;
+  /** Адресаты, по одному адресу в строке */
+  "to": Array<string>;
+  /** Копия, по одному адресу в строке */
+  "cc"?: Array<string>;
+  "subject"?: string;
+  /** Текст письма */
+  "body_text"?: string;
+  /** Письмо, на которое отвечаем: ответ уходит в ту же переписку из того же ящика */
+  "in_reply_to_id"?: UUID | null;
+}
+
+/** Переписка, привязанная к карточке. Если ящик смотрящему не виден, visible=false и нет ни темы, ни писем */
+export interface CRMCardMailThread {
+  "link_id": UUID;
+  "thread_id": UUID;
+  /** sent - письмо отправлено из карточки, linked - сотрудник привязал письмо */
+  "source": "sent" | "linked";
+  "linked_by": number;
+  "linked_at": string;
+  /** Видит ли смотрящий ящик этой переписки */
+  "visible": boolean;
+  "subject"?: string;
+  /** Письма переписки от старых к новым */
+  "messages"?: Array<CRMMailMessage>;
+}
+
+export interface CRMCatalogPage {
+  "results": Array<CRMCatalogProduct>;
+  "limit": number;
+  "offset": number;
+  "has_more": boolean;
+}
+
+export interface CRMCatalogProduct {
+  "id": UUID;
+  "sku": string;
+  "name": string;
+  /** Вид позиции ядра: goods, service, material, semi_product */
+  "kind": string;
+  "unit": string;
+  "unit_id"?: UUID;
+  /** Цена продажи из карточки десятичной строкой; пусто или 0 - не задана */
+  "price": string;
+  /** Вид ставки НДС карточки: general, reduced, zero, exempt; пусто - общая ставка юрлица */
+  "vat_kind": string;
+  /** Ставка продажи по учётной политике кабинета */
+  "vat_rate": string;
+  /** false - ставку не определить (у юрлиц разные ставки или режим налога не заведён), менеджер выбирает сам */
+  "vat_rate_known": boolean;
+  "is_stockable": boolean;
+  "is_sellable": boolean;
+  "archived": boolean;
 }
 
 /** Узкая проекция карточки справочника ERP; CRM её не редактирует */
@@ -1414,6 +1557,10 @@ export interface CRMDeal {
   "amount": string;
   /** Код валюты из справочника ERP */
   "currency": string;
+  /** Сумма набрана руками, а не сложена из состава сделки; сохранение состава снимает признак */
+  "amount_manual"?: boolean;
+  /** Цены строк состава включают НДС */
+  "prices_include_vat"?: boolean;
   /** Канал обращения; manual для ручного заведения */
   "source": string;
   "probability": number;
@@ -1470,6 +1617,10 @@ export interface CRMDealCard {
   "amount": string;
   /** Код валюты из справочника ERP */
   "currency": string;
+  /** Сумма набрана руками, а не сложена из состава сделки; сохранение состава снимает признак */
+  "amount_manual"?: boolean;
+  /** Цены строк состава включают НДС */
+  "prices_include_vat"?: boolean;
   /** Канал обращения; manual для ручного заведения */
   "source": string;
   "probability": number;
@@ -1535,17 +1686,59 @@ export interface CRMDealItem {
   "deal_id": UUID;
   "position": number;
   "name": string;
-  /** Ссылка на номенклатуру необязательна - на этапе расчёта половина строк ещё не заведена в каталоге */
+  /** Позиция номенклатуры ядра (товар или услуга); нет - строка не из каталога */
   "product_id"?: UUID;
   "quantity": number;
   "unit": string;
+  /** Единица из справочника «Единицы измерения» ядра; у строки из каталога - единица карточки товара */
+  "unit_id"?: UUID;
   /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
   "price": string;
   "discount_percent": number;
-  /** Сумма строки со скидкой; считает сервер, чтобы клиенты не разошлись на округлении */
-  "total": number;
+  /** Ставка НДС записью ядра: «22%», «0%», «без НДС»; пусто - ставка не указана, налог не выделяется */
+  "vat_rate": string;
+  /** Сумма строки со скидкой, как записаны цены сделки (с налогом или без); считает сервер, чтобы клиенты не разошлись на округлении */
+  "total": string;
+  /** Сумма строки без НДС */
+  "amount_net": string;
+  /** НДС строки */
+  "vat_amount": string;
+  /** Сумма строки с НДС */
+  "amount_gross": string;
+  "product"?: CRMDealItemProduct;
   "created_at": string;
   "updated_at": string;
+}
+
+export interface CRMDealItemInput {
+  "name": string;
+  "product_id"?: string | null;
+  "quantity": number;
+  "unit"?: string;
+  /** Единица справочника ядра; у строки из каталога сервер берёт единицу карточки товара */
+  "unit_id"?: string | null;
+  /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
+  "price"?: string;
+  "discount_percent"?: number;
+  /** Ставка НДС записью ядра: «22%», «20» (станет «20%»), «0%», «без НДС»; пусто - не указана */
+  "vat_rate"?: string;
+}
+
+/** Сведения карточки номенклатуры на момент чтения: CRM их не копирует */
+export interface CRMDealItemProduct {
+  "sku": string;
+  /** Вид позиции ядра: goods, service, material, semi_product */
+  "kind": string;
+  /** Товар ведётся на складе: только у него есть остаток */
+  "is_stockable": boolean;
+  /** Карточка в архиве: строка остаётся, новую так не выбрать */
+  "archived": boolean;
+}
+
+export interface CRMDealItemsInput {
+  "items": Array<CRMDealItemInput> | null;
+  /** Цены строк включают НДС; не передан - не менять */
+  "prices_include_vat"?: boolean | null;
 }
 
 export interface CRMDealPatch {
@@ -1561,6 +1754,8 @@ export interface CRMDealPatch {
   /** Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет. */
   "customer_id"?: string | null;
   "crm_customer_id"?: string | null;
+  /** Отвязать клиента от сделки. Пустой crm_customer_id значит «не менять», поэтому отвязка — этим признаком */
+  "clear_customer"?: boolean;
   "next_action"?: string;
   "next_action_at"?: string | null;
   /** Дополнительные поля кабинета: состав задаёт «Настройки → Поля» */
@@ -2082,6 +2277,8 @@ export interface CRMLeadPatch {
   /** Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет. */
   "customer_id"?: string | null;
   "crm_customer_id"?: string | null;
+  /** Отвязать клиента от лида. Пустой crm_customer_id значит «не менять», поэтому отвязка — этим признаком */
+  "clear_customer"?: boolean;
   "next_action"?: string;
   "next_action_at"?: string | null;
   "archived"?: boolean;
@@ -2150,6 +2347,60 @@ export interface CRMLossReasonMetric {
   "count": number;
   /** Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md) */
   "amount": string;
+}
+
+/** Ящик модуля «Почта», из которого человек вправе написать из карточки */
+export interface CRMMailAccount {
+  "id": UUID;
+  /** Адрес ящика */
+  "email": string;
+  /** Имя отправителя ящика */
+  "name": string;
+  /** true - личный ящик человека, false - общий ящик, открытый ему */
+  "personal": boolean;
+}
+
+/** Ящики для письма из карточки, личный первым */
+export interface CRMMailAccountList {
+  "items": Array<CRMMailAccount>;
+}
+
+/** Связь переписки модуля «Почта» с лидом, сделкой или клиентом */
+export interface CRMMailLink {
+  "id": UUID;
+  "entity_type": "lead" | "deal" | "customer";
+  "entity_id": UUID;
+  "account_id": UUID;
+  "thread_id": UUID;
+  "message_id": UUID;
+  /** sent - письмо отправлено из карточки, linked - сотрудник привязал письмо */
+  "source": "sent" | "linked";
+  "linked_by": number;
+  "linked_at": string;
+}
+
+/** Письмо так, как его показывает модуль «Почта»; черновики не попадают */
+export interface CRMMailMessage {
+  "id": UUID;
+  "thread_id": UUID;
+  "account_id": UUID;
+  "subject": string;
+  "from_address": string;
+  "from_name": string;
+  /** Адреса получателей и копии */
+  "to": Array<string>;
+  /** Начало текста письма */
+  "snippet": string;
+  /** inbound - пришло в ящик, outbound - ушло из него */
+  "direction": "inbound" | "outbound";
+  /** Когда письмо отправлено или получено */
+  "at": string;
+  "is_read": boolean;
+}
+
+/** Письма, свежие сверху */
+export interface CRMMailMessageList {
+  "items": Array<CRMMailMessage>;
 }
 
 export interface CRMManagerWorkload {
@@ -2294,6 +2545,54 @@ export interface CRMSalesPlansInputItemsItem {
   "currency"?: string;
 }
 
+/** Сохранённое представление списка: отбор и раскладка столбцов под своим названием */
+export interface CRMSavedView {
+  "id": UUID;
+  /** Автор представления */
+  "owner_id": number;
+  "list": CRMSavedViewListKind;
+  "name": string;
+  /** Общее представление видят все, кому открыт список; личное — только автор */
+  "shared": boolean;
+  /** Отбор списка в форме экрана */
+  "filters": { [key: string]: unknown };
+  /** Видимость, порядок и ширина столбцов в форме экрана */
+  "columns": { [key: string]: unknown };
+  "created_at": string;
+  "updated_at": string;
+}
+
+export interface CRMSavedViewInput {
+  "list": CRMSavedViewListKind;
+  /** Название в меню «Мои представления»; пробелы по краям обрезаются */
+  "name": string;
+  /** Общее представление: заводит только администратор CRM */
+  "shared"?: boolean;
+  /** Отбор списка; без значения — пустой объект */
+  "filters"?: { [key: string]: unknown };
+  /** Раскладка столбцов; без значения — пустой объект */
+  "columns"?: { [key: string]: unknown };
+}
+
+export interface CRMSavedViewList {
+  "views": Array<CRMSavedView>;
+  /** Вызывающий — администратор CRM: может заводить, править и удалять общие представления */
+  "can_share": boolean;
+}
+
+export type CRMSavedViewListKind = "leads" | "deals" | "customers";
+
+/** Поле, которого нет в запросе, не меняется */
+export interface CRMSavedViewPatch {
+  "name"?: string;
+  /** Общее представление: сделать общим или личным может только администратор CRM */
+  "shared"?: boolean;
+  /** Новый отбор списка */
+  "filters"?: { [key: string]: unknown };
+  /** Новая раскладка столбцов */
+  "columns"?: { [key: string]: unknown };
+}
+
 export interface CRMSettings {
   "lead_lock_mode": CRMLeadLockMode;
   /** Нет, пока кабинет не менял настройки */
@@ -2383,8 +2682,8 @@ export type CRMStageShowOnBoard = boolean;
 /** Одна запись ленты; вид говорит, из какого источника она пришла */
 export interface CRMTimelineEntry {
   "id": UUID;
-  /** note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача, file - файл прикреплён к записи или удалён */
-  "kind": "note" | "system" | "stage" | "decision" | "message" | "link" | "engagement" | "file";
+  /** note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача, file - файл прикреплён к записи или удалён, mail - письмо отправлено из карточки, привязано к ней или отвязано */
+  "kind": "note" | "system" | "stage" | "decision" | "message" | "link" | "engagement" | "file" | "mail";
   "at": string;
   "actor_id"?: number;
   "actor_name"?: string;
@@ -2903,6 +3202,10 @@ export interface ChatConversation {
   "first_unread_seq": number | null;
   "manual_unread_seq": number | null;
   "notification_mode": string;
+  /** До какого момента беседа молчит, если звук выключен на время: пока срок не вышел, notification_mode = muted. После срока поле пустое, а режим снова прежний */
+  "notification_muted_until"?: string | null;
+  /** Какой режим вернётся, когда выйдет срок «без звука»; есть только пока срок идёт. По нему «Включить звук» возвращает прежний выбор */
+  "notification_mode_after_mute"?: "all" | "mentions" | null | null;
   "mention_count": number;
   "origin"?: string;
   "origin_ref"?: UUID | null;
@@ -2925,6 +3228,8 @@ export interface ChatConversationCapabilities {
   "canMarkUnread": boolean;
   "canMention": boolean;
   "canSetNotificationMode": boolean;
+  /** Можно записать голосовое или видеокружок и переслать такое сюда. В чатах задач и поддержки — нет: там только текст, файлы и снимки экрана */
+  "canSendVoice"?: boolean;
 }
 
 export interface ChatConversationPage {
@@ -3015,8 +3320,16 @@ export interface ChatMessage {
   "created_at": string;
   "attachments": Array<ChatAttachment>;
   "reply_to_message_id"?: string | null;
+  /** Пересланное: исходное сообщение. Нет у обычных сообщений */
+  "forwarded_from_message_id"?: string | null;
+  /** Пересланное: автор оригинала — участник кабинета (ERP-1964, «Переслано от …»). При пересылке пересланного — тот, кто написал первым. Нет у обычных и у старых пересланных сообщений */
+  "forwarded_from_user_id"?: number;
+  /** Пересланное: подпись автора оригинала, когда участника нет в справочнике людей, — имя под ответом поддержки или название исходной беседы. Нет у обычных и у старых пересланных сообщений */
+  "forwarded_from_name"?: string;
   /** Цитата части исходного сообщения; поля нет, когда ответ на сообщение целиком, исходное удалено или недоступно */
   "reply_quote"?: string;
+  /** Надгробие: сообщение удалено у всех. Тела, вложений, упоминаний и реакций у него нет; показывать его в ленте не нужно */
+  "deleted_at"?: string | null;
 }
 
 export interface ChatMessageMention {
@@ -3032,10 +3345,16 @@ export interface ChatMessagePage {
 
 export interface ChatNotificationModeInput {
   "mode": "all" | "mentions" | "muted";
+  /** Без звука на время: до этого момента беседа молчит, потом снова действует прежний режим. Только вместе с mode = muted, в будущем и не дальше года; без срока — без звука навсегда */
+  "muted_until"?: string | null;
 }
 
 export interface ChatNotificationModeResult {
   "mode": "all" | "mentions" | "muted";
+  /** Какой режим вернётся, когда выйдет срок; пусто, если срока нет */
+  "mode_after_mute": "all" | "mentions" | null | null;
+  /** До какого момента беседа молчит, если звук выключен на время; пусто, если срока нет */
+  "muted_until": string | null;
   "changed": boolean;
 }
 
@@ -4725,6 +5044,8 @@ export interface CoreOrderPaymentTerm {
   "due_trigger"?: "" | "after_stage";
   "stage_id"?: UUID;
   "delay_days"?: number;
+  /** Доля итога документа в процентах, только на входе: строка без суммы получает сумму от итога с НДС, последняя такая строка добирает копейки */
+  "share"?: string;
 }
 
 /** Ход продажи или закупки для строки списка (with=progress). executed — исполнено в валюте продажи или закупки; paid — оплачено, нет поля — финансы выключены; papers — счёт, акт и УПД: done — есть, wait — ждём подписи, нет ключа — нет; нет поля — документооборот выключен. */
@@ -5093,7 +5414,7 @@ export interface CoreProduct {
   "vat_rate": string;
   /** Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика) */
   "vat_kind"?: "" | "general" | "reduced" | "zero" | "exempt";
-  /** Вес одной базовой единицы, кг; пусто — не задан */
+  /** Вес одной базовой единицы, кг, десятичной строкой: до 9 цифр до запятой и до 6 после (0.0127 — это 12,7 г); пусто — не задан */
   "weight_kg": string;
   /** Объём одной базовой единицы, м³; пусто — не задан */
   "volume_m3": string;
@@ -5177,7 +5498,7 @@ export interface CoreProductCreate {
   "purchase_price"?: string;
   /** Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика) */
   "vat_kind"?: "" | "general" | "reduced" | "zero" | "exempt";
-  /** Вес одной базовой единицы, кг; пусто — не задан */
+  /** Вес одной базовой единицы, кг, десятичной строкой: до 9 цифр до запятой и до 6 после (0.0127 — это 12,7 г); пусто — не задан */
   "weight_kg"?: string;
   /** Объём одной базовой единицы, м³; пусто — не задан */
   "volume_m3"?: string;
@@ -5486,7 +5807,7 @@ export interface CoreProductPatch {
   "purchase_price"?: string;
   /** Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика) */
   "vat_kind"?: "" | "general" | "reduced" | "zero" | "exempt";
-  /** Вес одной базовой единицы, кг; пусто — не задан */
+  /** Вес одной базовой единицы, кг, десятичной строкой: до 9 цифр до запятой и до 6 после (0.0127 — это 12,7 г); пусто — не задан */
   "weight_kg"?: string;
   /** Объём одной базовой единицы, м³; пусто — не задан */
   "volume_m3"?: string;
@@ -7295,6 +7616,8 @@ export interface DocflowFlowPaymentRule {
   /** Пока действует договор: окончания нет, итога нет, раскрываются ближайшие 12 платежей */
   "open"?: boolean;
   "orders"?: DocflowFlowPaymentRuleOrders;
+  /** Оплата периода долями: проценты вместе ровно 100. Продажа или закупка периода получает график оплат из долей. Пусто — один платёж периода в дату правила */
+  "shares"?: Array<DocflowFlowPaymentShare>;
 }
 
 /** «Заводить продажу или закупку на каждый период» — только у договора (kind=contract). Зарегистрированный договор сам заводит на каждую наступившую стадию правила подтверждённый продажу или закупку ядра (source_kind=contract, external_id «<id договора>/<период>»): сразу после регистрации и фоновым проходом раз в час. Один договор и один период — один продажа или закупка навсегда: отменённый не воскресает, период не позже последнего продажи или закупки договора не заводится. Будущие периоды не заводятся; исполнение и бумаги периода — вручную. */
@@ -7305,6 +7628,16 @@ export interface DocflowFlowPaymentRuleOrders {
   "product_id"?: UUID;
   /** Название услуги на момент выбора; пишет сервер, присланное не читается */
   "product_name"?: string;
+}
+
+/** Доля оплаты периода: процент суммы периода и ровно один срок — день периода или дни после акта. */
+export interface DocflowFlowPaymentShare {
+  /** Доля суммы периода в процентах десятичным текстом, до двух знаков */
+  "percent": string;
+  /** День периода: число месяца стадии (month, quarter) или день недели ISO 1..7 (week) */
+  "day"?: number;
+  /** Срок через столько дней после акта периода */
+  "after_act_days"?: number;
 }
 
 /** Прочитанное машиной из файла карточки — НА ПРОВЕРКУ. Живёт отдельно от условий договора: в условия сумма и срок попадают только рукой человека. Пустое поле означает «не прочиталось», а не ноль. Приёмка входящего договора в PDF заполняет его текстом бумаги. */
@@ -9125,6 +9458,15 @@ export interface FinanceOneCObjects {
   "declarations"?: boolean;
 }
 
+export interface FinanceOpeningAdvanceVATRequest {
+  /** Расчётная ставка, например 20/120 */
+  "vat_rate": string;
+  /** Сумма налога, больше нуля и меньше аванса */
+  "vat_amount": string;
+  /** Откуда строка: введена вручную или загружена из 1С */
+  "source"?: "manual" | "onec";
+}
+
 export interface FinanceOpeningDebtRequest {
   /** Дата остатков — дата старта учёта */
   "date": string;
@@ -10176,6 +10518,8 @@ export interface FinanceTaxMonthLine {
   "accrued_before"?: string;
   /** Неофициальная часть зарплаты — исключена из расходов базы */
   "payroll_outside"?: string;
+  /** Налог юрлица за собственника: контрагент-собственник; начисление идёт на расчёты с ним (Дт 75), а не в расход ОПиУ */
+  "for_contact"?: string;
   /** Сумма по декларации; строка с ней — строка декларации за прошлый период */
   "declared"?: string;
   /** Расчёт раздела за период декларации; заполняет сервер */
@@ -10844,6 +11188,28 @@ export interface MailAccount {
 
 export type MailAccountStatus = "active" | "disabled" | "error";
 
+export interface MailAddressBookPage {
+  "items": Array<MailAddressBookRecord>;
+  "total": number;
+  "limit": number;
+  "offset": number;
+  "has_more": boolean;
+}
+
+/** Адресат из адресной книги почты */
+export interface MailAddressBookRecord {
+  "id": UUID;
+  /** Адрес строчными буквами, уникален в кабинете */
+  "email": string;
+  "name": string;
+  /** Привязанный контрагент справочника core */
+  "contact_id": UUID | null;
+  /** Кто сохранил адресата */
+  "created_by": number | null;
+  "created_at": string;
+  "updated_at": string;
+}
+
 /** Вложение письма. Ключ объектного хранилища наружу не отдаётся: знание ключа — половина пути к чужому файлу. */
 export interface MailAttachment {
   "id": UUID;
@@ -10889,6 +11255,10 @@ export interface MailComposeInput {
   "upload_ids"?: Array<UUID>;
   /** Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо встаёт в очередь, а принятие SMTP-сервером не подтверждает доставку или прочтение получателем */
   "save_as_draft"?: boolean;
+  /** Черновик, который это письмо заменяет: после сохранения прежний черновик удаляется, и в «Черновиках» не копятся версии одного письма */
+  "replace_draft_id"?: UUID | null;
+  /** Вложения заменяемого черновика, которые остаются в письме; только вместе с replace_draft_id */
+  "keep_attachment_ids"?: Array<UUID>;
 }
 
 export interface MailDeliveryState {
@@ -11115,6 +11485,12 @@ export interface MailRuleOutcome {
   "marked_read"?: boolean | null;
   "flagged"?: boolean;
   "spam_verdict"?: string;
+}
+
+export interface MailSavedAddress {
+  "entry": MailAddressBookRecord;
+  /** true — сохранён сейчас, false — адрес уже был в книге */
+  "created": boolean;
 }
 
 export type MailScanStatus = "pending" | "clean" | "infected" | "skipped";
@@ -11865,7 +12241,7 @@ export interface MarketplaceStore {
   "config_synced_at"?: string;
   /** Безопасная классификация токена Wildberries без раскрытия токена: basic — ограниченный базовый, personal — персональный, test — тестовый, service — сервисный, unknown — тип не определён */
   "token_class"?: "basic" | "personal" | "test" | "service" | "unknown";
-  /** Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена */
+  /** Несекретные сведения о ключе площадки: тип, категории доступа или роли, только чтение и срок действия. Wildberries — разобрано из самого токена; Ozon — роли и срок по методу Ozon /v1/roles, только при key_info=1 */
   "credential"?: MarketplaceStoreCredential;
   "write_key"?: MarketplaceStoreWriteKey;
   /** Безопасное состояние подключения в ERP: not_checked — проверка ещё не запускалась, pending — MPTrack проверяет реквизиты или запускает первую загрузку, disabled — загрузки отключены, ok — подключение работает, warning — требуется внимание, error — подключение не работает. Сырые статусы и тексты MPTrack не публикуются */
@@ -11880,10 +12256,12 @@ export interface MarketplaceStore {
   "business_id"?: UUID | null;
 }
 
-/** Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена */
+/** Несекретные сведения о ключе площадки: тип, категории доступа или роли, только чтение и срок действия. Wildberries — разобрано из самого токена; Ozon — роли и срок по методу Ozon /v1/roles, только при key_info=1 */
 export interface MarketplaceStoreCredential {
-  /** Тип ключа по полю acc токена */
-  "kind": "basic" | "personal" | "test" | "service" | "unknown";
+  /** Тип ключа по полю acc токена Wildberries; ozon — ключ Seller API Ozon */
+  "kind": "basic" | "personal" | "test" | "service" | "unknown" | "ozon";
+  /** Роли ключа Ozon названиями площадки */
+  "roles"?: Array<string>;
   /** Категории методов, к которым у ключа есть доступ */
   "scopes": Array<"content" | "analytics" | "prices" | "marketplace" | "statistics" | "promotion" | "feedbacks" | "chat" | "supplies" | "returns" | "documents" | "finance" | "users">;
   /** Ключ только на чтение */
@@ -13547,7 +13925,7 @@ export interface MarkingDocumentDraftInput {
   "basis_id"?: string;
 }
 
-export type MarkingDocumentKind = "withdrawal" | "withdrawal_cancel" | "return" | "introduce" | "introduce_remains" | "cancel_codes" | "aggregation" | "disaggregation" | "sets_aggregation";
+export type MarkingDocumentKind = "withdrawal" | "withdrawal_cancel" | "return" | "introduce" | "introduce_remains" | "introduce_import" | "remark" | "cancel_codes" | "aggregation" | "disaggregation" | "sets_aggregation";
 
 /** Параметры вида документа; незнакомое поле — отказ */
 export interface MarkingDocumentParams {
@@ -13574,6 +13952,12 @@ export interface MarkingDocumentParams {
   "certificate_type"?: string;
   "certificate_number"?: string;
   "certificate_date"?: string;
+  /** Ввод импорта (introduce_import) — регистрационный номер ДТ «XXXXXXXX/ДДММГГ/XXXXXXX» */
+  "declaration_number"?: string;
+  /** Ввод импорта — дата регистрации ДТ, ГГГГ-ММ-ДД; совпадает с датой в номере */
+  "declaration_date"?: string;
+  /** Перемаркировка (remark): предыдущий код к новому — ключ новый код, значение предыдущий (оба сводятся к КИ без криптохвоста); у нового кода без предыдущего нужен tnved_code */
+  "previous_codes"?: { [key: string]: string };
   /** Формирование упаковки — код короба «00» + SSCC; формирование набора — код набора (КИН), скан или без криптохвоста */
   "unit_serial_number"?: string;
 }
@@ -14206,6 +14590,95 @@ export interface MarkingReconcileState {
   "last_done": MarkingReconcileRun | null;
 }
 
+export interface MarkingRemark {
+  "id": UUID;
+  "company_id": UUID;
+  "group": string;
+  "reason": "KM_SPOILED" | "DESCRIPTION_ERRORS";
+  "source": "card" | "return" | "stock" | "manual";
+  "basis_type"?: string;
+  "basis_id"?: UUID;
+  "due_date"?: string;
+  "order_id"?: UUID;
+  "application_id"?: UUID;
+  "document_id"?: UUID;
+  "stock_document_id"?: UUID;
+  "note"?: string;
+  "cancelled_at"?: string;
+  "created_by"?: number;
+  "created_at": string;
+  "items": Array<MarkingRemarkItem>;
+  /** Шаг перемаркировки */
+  "stage": "collecting" | "labeling" | "applying" | "ready" | "sent" | "rejected" | "done" | "cancelled";
+  /** Срок прошёл, а марка на складе не заменена */
+  "overdue": boolean;
+  /** Пар с новой маркой */
+  "paired": number;
+}
+
+export interface MarkingRemarkDocumentInput {
+  /** ТН ВЭД (10 цифр) для пар без прежней марки */
+  "tnved_code"?: string;
+  /** Дата перемаркировки; пусто — сегодня */
+  "date"?: string;
+}
+
+export interface MarkingRemarkInput {
+  "company_id": UUID;
+  /** Ключ товарной группы */
+  "group": string;
+  /** Причина; по умолчанию KM_SPOILED */
+  "reason"?: "KM_SPOILED" | "DESCRIPTION_ERRORS";
+  /** Откуда начата; по умолчанию manual */
+  "source"?: "card" | "return" | "stock" | "manual";
+  /** Вид документа-основания */
+  "basis_type"?: string;
+  "basis_id"?: UUID;
+  /** Срок; у возврата без срока — 20 рабочих дней */
+  "due_date"?: string;
+  "note"?: string;
+}
+
+export interface MarkingRemarkItem {
+  "id": UUID;
+  "seq": number;
+  "product_id": UUID;
+  "product_name"?: string;
+  "product_sku"?: string;
+  "gtin": string;
+  "warehouse_id"?: UUID;
+  "old_code_id"?: UUID;
+  /** Прежняя марка без криптохвоста */
+  "old_identity"?: string;
+  "new_code_id"?: UUID;
+  /** Новая марка без криптохвоста */
+  "new_identity"?: string;
+}
+
+export interface MarkingRemarkItemsInput {
+  /** Сканы прежних марок */
+  "codes"?: Array<string>;
+  "product_id"?: UUID;
+  "warehouse_id"?: UUID;
+  /** Сколько единиц без марки */
+  "quantity"?: number;
+}
+
+export interface MarkingRemarkList {
+  "items": Array<MarkingRemark> | null;
+  "total": number;
+}
+
+export interface MarkingRemarkOrderInput {
+  "order_id": UUID;
+}
+
+export interface MarkingRemarkPairInput {
+  /** Скан новой марки */
+  "code": string;
+  "item_id"?: UUID;
+}
+
 export interface MarkingReplaceCodesInput {
   "company_id": UUID;
   "lines": Array<MarkingReplaceCodesInputLinesItem>;
@@ -14545,6 +15018,62 @@ export interface PlatformAppVersion {
 
 export type PlatformAppVersionStatus = "draft" | "review" | "published" | "deprecated" | "blocked";
 
+export interface PokerFinish {
+  "points": number | null;
+  "make_reference"?: boolean;
+}
+
+export interface PokerSession {
+  "id": UUID;
+  "project": UUID;
+  "task": UUID;
+  "task_identifier": string;
+  "task_title": string;
+  "task_points": number | null;
+  "mode": "live" | "async";
+  "status": "voting" | "revealed" | "closed";
+  "round": number;
+  "host": number;
+  "host_name": string;
+  "voters": Array<PokerVoter>;
+  "voted": number;
+  "my_card": string | null;
+  /** Карты раунда; пусто, пока раунд не открыт */
+  "votes": Array<PokerVote>;
+  "low": string | null;
+  "high": string | null;
+  "consensus": number | null;
+  "result": number | null;
+  "can_manage": boolean;
+  "can_vote": boolean;
+  "created_at": string;
+}
+
+export interface PokerSessionPage {
+  "count": number;
+  "results": Array<PokerSession>;
+}
+
+export interface PokerStart {
+  "mode"?: "live" | "async";
+}
+
+export interface PokerVote {
+  "user": number;
+  "name": string;
+  "card": "1" | "2" | "3" | "5" | "8" | "13" | "20" | "?";
+}
+
+export interface PokerVoteInput {
+  "card": "1" | "2" | "3" | "5" | "8" | "13" | "20" | "?";
+}
+
+export interface PokerVoter {
+  "user": number;
+  "name": string;
+  "voted": boolean;
+}
+
 export interface Project {
   "id": UUID;
   "key": string;
@@ -14556,9 +15085,12 @@ export interface Project {
   "tasks_total": number;
   "tasks_active": number;
   "tasks_done": number;
-  "scrum_enabled": boolean;
   /** Бизнес проекта: правило «все задачи» при области доступа не на все бизнесы видит только проекты её бизнесов и кабинета; участники проекта видят его всегда. null — проект всего кабинета */
   "business_id": UUID | null;
+  /** Может ли текущий пользователь заводить разделы в проекте: владелец или совладелец проекта либо правило «все задачи», открывающее проект. */
+  "can_manage_sections": boolean;
+  /** Может ли текущий пользователь управлять проектом: менять название, код, описание и цвет, этапы и метки его разделов, состав и удалять проект — владелец или совладелец проекта либо правило «все задачи», открывающее проект. */
+  "can_manage_project": boolean;
 }
 
 export interface ProjectCreate {
@@ -14654,6 +15186,118 @@ export type RelationDirection = "outgoing" | "incoming" | "all";
 export type RelationKind = "relates" | "blocks" | "blocked_by" | "duplicate";
 
 export type RelationList = Array<Relation>;
+
+export interface Scrum {
+  "project": UUID;
+  "board": ScrumBoard;
+  /** Разделы проекта, чью воронку можно взять для доски */
+  "board_sources": Array<ScrumBoardSource>;
+  "project_key": string;
+  "project_name": string;
+  "section": UUID;
+  "columns": Array<ScrumColumn>;
+  /** Идущий спринт, который экран открывает смотрящему по умолчанию: где он участник, иначе ближайший по дате окончания */
+  "active_sprint": Sprint | null;
+  /** Все идущие спринты проекта (их может быть несколько), раньше заканчивающийся — первым */
+  "active_sprints": Array<Sprint>;
+  "sprint_defaults": SprintSettings;
+  "people": Array<ScrumPerson>;
+  "reference": ScrumReference | null;
+  "velocity": Velocity;
+  "me": number;
+  "can_write": boolean;
+  "can_manage": boolean;
+}
+
+export interface ScrumBoard {
+  /** Действующий набор колонок; по умолчанию — stages из эталона кабинета */
+  "mode": "scrum" | "stages";
+  /** Раздел проекта, чья воронка скопирована; null в режиме stages — эталон кабинета */
+  "source": UUID | null;
+  "source_name": string;
+  /** Режим выбрал кабинет; false — действует умолчание */
+  "explicit": boolean;
+  /** Этапы, скрытые на канбане спринта */
+  "hidden": Array<UUID>;
+}
+
+export interface ScrumBoardInput {
+  "mode": "scrum" | "stages";
+  /** Только для stages: раздел проекта; null — эталон кабинета */
+  "source"?: UUID | null;
+  /** Этапы текущего набора, скрытые на канбане; без поля — как было. Начальный этап и все этапы разом скрыть нельзя; при смене набора скрытие переходит на одноимённые этапы */
+  "hidden"?: Array<UUID>;
+}
+
+export interface ScrumBoardSource {
+  "section": UUID;
+  "name": string;
+}
+
+/** Колонка доски спринта — этап раздела «Скрам», в порядке доски. */
+export interface ScrumColumn {
+  /** Четыре колонки скрама или копия этапа источника (scrum.stage.<hex>) в режиме «Этапы как у задач» */
+  "key": string;
+  "status": UUID;
+  "name": string;
+  "color": string;
+  "category": "backlog" | "todo" | "in_progress" | "review" | "done" | "cancelled";
+  /** Начальный этап — бэклог спринта, куда заводятся новые задачи */
+  "default": boolean;
+  /** Колонка скрыта на канбане спринта; задачи в ней не теряются и считаются в отчётах */
+  "hidden": boolean;
+  /** Сколько задач скрама стоит на этом этапе во всех спринтах */
+  "tasks": number;
+}
+
+export interface ScrumPerson {
+  "user": number;
+  "name": string;
+}
+
+export interface ScrumReference {
+  "task": UUID;
+  "identifier": string;
+  "title": string;
+  "points": number | null;
+}
+
+export interface ScrumReferenceInput {
+  "task": UUID | null;
+}
+
+export interface ScrumReports {
+  "sprints": Array<SprintPoints>;
+  "velocity": Velocity;
+  "team": ScrumTeam;
+  /** Burndown каждого идущего спринта, раньше заканчивающийся — первым */
+  "burndowns": Array<Burndown>;
+  /** Burndown спринта по умолчанию для смотрящего: где он участник, иначе ближайший по дате окончания */
+  "burndown": Burndown | null;
+}
+
+/** Поля обычной задачи без раздела и спринта — спринт задаёт путь. */
+export interface ScrumTaskCreate {
+  "title": string;
+  "description"?: string;
+  "priority"?: string;
+  "executor"?: number;
+  "due_at"?: string;
+}
+
+export interface ScrumTaskSprint {
+  /** Спринт проекта; задача встаёт в его колонку «Бэклог». */
+  "sprint": UUID;
+}
+
+/** Командные серии скрама — без мест и сравнения людей */
+export interface ScrumTeam {
+  /** Сколько последних завершённых спринтов подряд выполнили цель */
+  "goal_streak": number;
+  /** Факт последних (до трёх) завершённых спринтов, от старого к новому */
+  "velocity_trend": Array<number>;
+  "velocity_growing": boolean;
+}
 
 export interface Section {
   "id": UUID;
@@ -14863,11 +15507,74 @@ export interface SettingsVatRates {
   "rates": Array<number>;
 }
 
+export interface Sprint {
+  "id": UUID;
+  "project": UUID;
+  "name": string;
+  "goal": string;
+  "starts_at": string | null;
+  "ends_at": string | null;
+  "status": SprintStatus;
+  "started_at": string | null;
+  "completed_at": string | null;
+  "order": number;
+  "length_days": number;
+  "members": Array<number>;
+  "daily_time": string | null;
+  /** Длительность ежедневной встречи в минутах; по умолчанию 15 */
+  "daily_minutes": number;
+  "timezone": string;
+  /** Серия ежедневной встречи в календаре (source tasks:scrum); null — встреча не назначена */
+  "daily_event": UUID | null;
+  "task_count": number;
+  "tasks_done": number;
+  /** Сумма баллов задач спринта сейчас */
+  "points": number;
+  "points_done": number;
+  /** Снимок плана на старте */
+  "planned_points": number | null;
+  /** Снимок факта на завершении: только задачи в «Готово» */
+  "completed_points": number | null;
+  /** Баллы задач в колонке «В работе» сейчас */
+  "points_in_progress": number;
+  /** Прогресс идущего спринта — вычисляется при чтении; у остальных null */
+  "progress": SprintProgress | null;
+  "created_at": string;
+  "updated_at": string;
+}
+
 export interface SprintAgingTask {
   "id": UUID;
   "code": string;
   "title": string;
   "seconds": number;
+}
+
+export interface SprintComplete {
+  /** Куда незавершённые задачи: бэклог запланированного спринта или нового; без значения — только если все задачи готовы */
+  "carry_over"?: "sprint" | "new";
+  "target_sprint"?: UUID;
+  "new_sprint_name"?: string;
+}
+
+export interface SprintCompletion {
+  "sprint": Sprint;
+  "done": number;
+  "carried_over": number;
+  "target": Sprint | null;
+}
+
+export interface SprintCreate {
+  "name": string;
+  "goal"?: string;
+  "starts_at"?: string;
+  "ends_at"?: string;
+  "length_days"?: number;
+  "members"?: Array<number>;
+  /** ЧЧ:ММ; пустая строка снимает время встречи */
+  "daily_time"?: string;
+  /** Длительность ежедневной встречи в минутах; по умолчанию 15 */
+  "daily_minutes"?: number;
 }
 
 export interface SprintMetrics {
@@ -14884,10 +15591,97 @@ export interface SprintMetrics {
   "aging_wip": Array<SprintAgingTask>;
   "sizing": SprintSizing;
   "outcomes": SprintOutcomeMetrics;
+  /** Баллы спринта скрама; null у цикла не из скрама. */
+  "points"?: SprintMetricsPoints | null;
+}
+
+export interface SprintMetricsPoints {
+  "planned_points": number | null;
+  "completed_points": number | null;
+  /** План зафиксирован снимком при старте */
+  "plan_fixed": boolean;
+  "velocity": Velocity;
+  "burndown": Burndown | null;
 }
 
 export interface SprintOutcomeMetrics {
   "available": boolean;
+}
+
+export interface SprintPage {
+  "count": number;
+  "results": Array<Sprint>;
+}
+
+export interface SprintPoints {
+  "sprint": UUID;
+  "name": string;
+  "status": SprintStatus;
+  "starts_at": string | null;
+  "ends_at": string | null;
+  /** План: снимок на старте; у идущего спринта без снимка (начат до оценок в баллах) — текущий объём, тогда plan_fixed = false */
+  "planned_points": number | null;
+  /** Факт: снимок на завершении */
+  "completed_points": number | null;
+  "completed_at": string | null;
+  /** План зафиксирован снимком при старте */
+  "plan_fixed": boolean;
+  /** Сумма текущих оценок задач спринта */
+  "scope_points": number;
+  /** Сумма текущих оценок задач спринта в «Готово» — текущий факт идущего спринта */
+  "done_points": number;
+  /** Баллы задач, добавленных после старта (журнал объёма) */
+  "added_points": number;
+  /** Баллы задач, перенесённых при завершении в другой спринт */
+  "carried_points": number;
+  /** Цель выполнена: спринт завершён, были оценённые задачи и ничего с баллами не перенесено */
+  "goal_met": boolean;
+}
+
+/** Где идущий спринт сейчас. Идеал — сколько баллов должно быть готово к началу сегодняшнего дня (план × (день − 1) / дней); «в графике», если отставание не больше 10% плана (не меньше 1 балла). */
+export interface SprintProgress {
+  /** День спринта в его поясе */
+  "day": number;
+  "days": number;
+  "days_left": number;
+  /** Снимок плана на старте, без снимка — текущий объём */
+  "plan": number;
+  "plan_fixed": boolean;
+  /** Текущий объём спринта */
+  "scope": number;
+  "done": number;
+  "in_progress": number;
+  /** Баллы ещё не начатых задач (бэклог спринта и «Туду») */
+  "todo": number;
+  "ideal_done": number;
+  /** На сколько баллов готово меньше идеала */
+  "behind": number;
+  "on_track": boolean;
+}
+
+export interface SprintReport {
+  "sprint": SprintPoints;
+  "done": Array<SprintReportTask>;
+  "carried_over": Array<SprintReportTask>;
+  "added_after_start": number;
+  "removed_after_start": number;
+}
+
+export interface SprintReportTask {
+  "id": UUID;
+  "identifier": string;
+  "title": string;
+  "points": number | null;
+}
+
+export interface SprintSettings {
+  "length_days": number;
+  "members": Array<number>;
+  /** Время ежедневной встречи ЧЧ:ММ в поясе спринта; null — не задано */
+  "daily_time": string | null;
+  /** Длительность ежедневной встречи в минутах; по умолчанию 15 */
+  "daily_minutes": number;
+  "timezone": string;
 }
 
 export interface SprintSizing {
@@ -14897,12 +15691,33 @@ export interface SprintSizing {
   "unestimated": number;
 }
 
+export interface SprintStart {
+  "starts_at"?: string;
+  "ends_at"?: string;
+  "goal"?: string;
+}
+
+export type SprintStatus = "planned" | "active" | "completed";
+
 export interface SprintThroughputPoint {
   "cycle": UUID;
   "name": string;
   "completed": number;
   "starts_at": string | null;
   "ends_at": string | null;
+}
+
+export interface SprintUpdate {
+  "name"?: string;
+  "goal"?: string;
+  "starts_at"?: string;
+  "ends_at"?: string;
+  "length_days"?: number;
+  "members"?: Array<number>;
+  /** ЧЧ:ММ; пустая строка снимает время встречи */
+  "daily_time"?: string;
+  /** Длительность ежедневной встречи в минутах; по умолчанию 15 */
+  "daily_minutes"?: number;
 }
 
 export interface Status {
@@ -14914,6 +15729,8 @@ export interface Status {
   "color": string;
   "is_default": boolean;
   "is_final": boolean;
+  /** Может ли текущий пользователь менять, удалять и переставлять этап: этап раздела — владелец или совладелец проекта, общий этап — полный доступ по кабинету. */
+  "can_manage": boolean;
 }
 
 export type StatusCategory = "backlog" | "todo" | "in_progress" | "review" | "done" | "cancelled";
@@ -14949,6 +15766,8 @@ export interface StatusMetrics {
 export interface StatusPage {
   "count": number;
   "results": Array<Status>;
+  /** Может ли текущий пользователь заводить общие этапы кабинета (без раздела): только полный доступ по кабинету. */
+  "can_manage_shared": boolean;
 }
 
 export interface StatusReorder {
@@ -16454,6 +17273,10 @@ export interface StockZoneStockRow {
   "quantity": string;
 }
 
+export interface StoryPointsInput {
+  "points": number | null;
+}
+
 export interface Subtask {
   "id": UUID;
   "identifier": string;
@@ -16498,6 +17321,10 @@ export interface Task {
   "created_at": string;
   "due_at": string | null;
   "estimate": number | null;
+  /** Баллы задачи скрама; у обычных задач пусто */
+  "story_points": number | null;
+  /** Проект задачи раздела «Скрам»; у обычных задач null. */
+  "scrum_project": UUID | null;
   "sort_order": number;
   "is_archived": boolean;
   "parent": UUID | null;
@@ -16592,6 +17419,8 @@ export interface TaskTagCatalogItem {
   "color": string;
   "description": string;
   "is_archived": boolean;
+  /** Может ли текущий пользователь менять и удалять метку: метка раздела — владелец или совладелец проекта, общая метка — полный доступ по кабинету. */
+  "can_manage": boolean;
 }
 
 export interface TaskTagCreate {
@@ -16604,6 +17433,8 @@ export interface TaskTagCreate {
 export interface TaskTagPage {
   "count": number;
   "results": Array<TaskTagCatalogItem>;
+  /** Может ли текущий пользователь заводить общие метки кабинета (без раздела): только полный доступ по кабинету. */
+  "can_manage_shared": boolean;
 }
 
 export interface TaskTagUpdate {
@@ -16877,6 +17708,16 @@ export interface TransferUploadRequest {
 
 export type UUID = string;
 
+/** Сколько баллов команда обычно закрывает за спринт — по последним пяти завершённым спринтам. Прогноз — с трёх спринтов истории. Не мерило людей. */
+export interface Velocity {
+  "sprints": number;
+  "average": number;
+  "min": number;
+  "max": number;
+  "forecast_low": number | null;
+  "forecast_high": number | null;
+}
+
 export interface WorkflowStatusUpdate {
   "name"?: string;
   "category"?: StatusCategory;
@@ -17122,6 +17963,11 @@ export interface FinanceRelinkPaymentRequest {
   "confirm_release"?: boolean;
 }
 
+export interface FinanceChangeActPnlItemRequest {
+  /** Новая статья доходов и расходов */
+  "pnl_item_id": UUID;
+}
+
 export interface FinanceRepostTransactionsRequest {
   "ids": Array<UUID>;
   "confirm_release"?: boolean;
@@ -17169,6 +18015,23 @@ export interface MailApplyRulesResponse {
 export interface MailAttachStoredFileRequest {
   /** Файл в хранилище кабинета */
   "file_id": string;
+}
+
+export interface MailSaveAddressBookEntryRequest {
+  /** Почтовый адрес; можно в виде «Имя <адрес>» */
+  "email": string;
+  /** Имя адресата */
+  "name"?: string;
+}
+
+export interface MailRenameAddressBookEntryRequest {
+  /** Новое имя; пустое снимает имя */
+  "name": string;
+}
+
+export interface MailLinkAddressBookEntryRequest {
+  /** Контрагент; null снимает привязку */
+  "contact_id": UUID | null;
 }
 
 export interface MailReadBatchRequest {

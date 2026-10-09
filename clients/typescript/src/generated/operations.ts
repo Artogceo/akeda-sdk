@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6c36bf4789b73f2b45c991bd664f456a5d43881b0409b778be538f9194f41748).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b3ac5a9b869156c40ca5842e03e97e94ec698c957b42a92d3065a89fdf2bc0a8).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1437,7 +1437,7 @@ export interface OperationTypes {
   /** GET /api/v1/core/purchases — Получить журнал закупок */
   coreListPurchases: {
     params: Record<string, never>;
-    query: { "business_id"?: models.UUID; "company_id"?: models.UUID; "contact_id"?: models.UUID; "contract_id"?: models.UUID; "date_from"?: string; "date_to"?: string; "external_id"?: string; "limit"?: number; "offset"?: number; "project_id"?: models.UUID; "responsible_id"?: models.UUID; "search"?: string; "side"?: models.CoreOrderSide; "source"?: models.CoreOrderSourceKind; "status"?: string; "with"?: string };
+    query: { "amount_from"?: string; "amount_to"?: string; "business_id"?: models.UUID; "company_id"?: models.UUID; "contact_id"?: models.UUID; "contract_id"?: models.UUID; "date_from"?: string; "date_to"?: string; "external_id"?: string; "limit"?: number; "offset"?: number; "papers"?: string; "project_id"?: models.UUID; "responsible_id"?: models.UUID; "search"?: string; "side"?: models.CoreOrderSide; "source"?: models.CoreOrderSourceKind; "status"?: string; "with"?: string };
     body: never;
     response: models.CoreOrderPage;
   };
@@ -1458,7 +1458,7 @@ export interface OperationTypes {
   /** GET /api/v1/core/sales — Получить журнал продаж */
   coreListSales: {
     params: Record<string, never>;
-    query: { "business_id"?: models.UUID; "company_id"?: models.UUID; "contact_id"?: models.UUID; "contract_id"?: models.UUID; "date_from"?: string; "date_to"?: string; "external_id"?: string; "limit"?: number; "offset"?: number; "project_id"?: models.UUID; "responsible_id"?: models.UUID; "search"?: string; "side"?: models.CoreOrderSide; "source"?: models.CoreOrderSourceKind; "status"?: string; "with"?: string };
+    query: { "amount_from"?: string; "amount_to"?: string; "business_id"?: models.UUID; "company_id"?: models.UUID; "contact_id"?: models.UUID; "contract_id"?: models.UUID; "date_from"?: string; "date_to"?: string; "external_id"?: string; "limit"?: number; "offset"?: number; "papers"?: string; "project_id"?: models.UUID; "responsible_id"?: models.UUID; "search"?: string; "side"?: models.CoreOrderSide; "source"?: models.CoreOrderSourceKind; "status"?: string; "with"?: string };
     body: never;
     response: models.CoreOrderPage;
   };
@@ -1910,6 +1910,27 @@ export interface OperationTypes {
     body: models.CRMInboxAssignInput;
     response: models.CRMInboxConversation;
   };
+  /** POST /api/v1/crm/customers/bulk — Массово изменить клиентов CRM */
+  crmBulkCustomers: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.CRMBulkCustomersInput;
+    response: models.CRMBulkResult;
+  };
+  /** POST /api/v1/crm/deals/bulk — Массово изменить сделки */
+  crmBulkDeals: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.CRMBulkDealsInput;
+    response: models.CRMBulkResult;
+  };
+  /** POST /api/v1/crm/leads/bulk — Массово изменить лиды */
+  crmBulkLeads: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.CRMBulkLeadsInput;
+    response: models.CRMBulkResult;
+  };
   /** GET /api/v1/crm/{entity}/{id}/files/{fileId}/download-session — Временный адрес файла карточки */
   crmCardFileDownloadSession: {
     params: { "entity": "lead" | "deal" | "customer"; "fileId": models.UUID; "id": models.UUID };
@@ -2029,6 +2050,13 @@ export interface OperationTypes {
     body: models.CRMPipelineInput;
     response: models.CRMPipeline;
   };
+  /** POST /api/v1/crm/views — Сохранить представление списка CRM */
+  crmCreateSavedView: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.CRMSavedViewInput;
+    response: models.CRMSavedView;
+  };
   /** POST /api/v1/crm/pipelines/{id}/stages — Добавить стадию в воронку */
   crmCreateStage: {
     params: { "id": models.UUID };
@@ -2059,6 +2087,13 @@ export interface OperationTypes {
   };
   /** DELETE /api/v1/crm/pipelines/{id} — Удалить воронку */
   crmDeletePipeline: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** DELETE /api/v1/crm/views/{id} — Удалить представление списка CRM */
+  crmDeleteSavedView: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
@@ -2253,6 +2288,13 @@ export interface OperationTypes {
     body: never;
     response: Array<models.CRMLeadDuplicate>;
   };
+  /** POST /api/v1/crm/{entity}/{id}/mail/links — Привязать письмо к карточке */
+  crmLinkCardMail: {
+    params: { "entity": "lead" | "deal" | "customer"; "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMCardMailLinkRequest;
+    response: models.CRMMailLink;
+  };
   /** POST /api/v1/crm/inbox/entities/{entity}/{id}/conversations — Привязать диалог к записи CRM */
   crmLinkEntityConversation: {
     params: { "entity": "lead" | "deal"; "id": models.UUID };
@@ -2281,6 +2323,20 @@ export interface OperationTypes {
     body: never;
     response: models.CRMCardFileList;
   };
+  /** GET /api/v1/crm/{entity}/{id}/mail — Письма карточки лида, сделки или клиента */
+  crmListCardMail: {
+    params: { "entity": "lead" | "deal" | "customer"; "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMCardMailList;
+  };
+  /** GET /api/v1/crm/{entity}/{id}/mail/candidates — Письма клиента, которые можно привязать к карточке */
+  crmListCardMailCandidates: {
+    params: { "entity": "lead" | "deal" | "customer"; "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMMailMessageList;
+  };
   /** GET /api/v1/crm/customers/duplicate-groups — Найти дубли во всей базе клиентов */
   crmListCustomerDuplicateGroups: {
     params: Record<string, never>;
@@ -2302,14 +2358,14 @@ export interface OperationTypes {
     body: never;
     response: Array<models.CRMActivity>;
   };
-  /** GET /api/v1/crm/deals/{id}/contacts — Получить контрагентов сделки */
+  /** GET /api/v1/crm/deals/{id}/contacts — Получить контакты сделки */
   crmListDealContacts: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: never;
     response: Array<models.CRMDealContact>;
   };
-  /** GET /api/v1/crm/deals/{id}/items — Получить смету сделки */
+  /** GET /api/v1/crm/deals/{id}/items — Получить состав сделки */
   crmListDealItems: {
     params: { "id": models.UUID };
     query: Record<string, never>;
@@ -2435,6 +2491,13 @@ export interface OperationTypes {
     body: never;
     response: Array<models.CRMLossReason>;
   };
+  /** GET /api/v1/crm/mail/accounts — Почтовые ящики для письма из карточки */
+  crmListMailAccounts: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.CRMMailAccountList;
+  };
   /** GET /api/v1/crm/members — Получить сотрудников для назначения ответственным */
   crmListMembers: {
     params: Record<string, never>;
@@ -2462,6 +2525,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: Array<models.CRMPipeline>;
+  };
+  /** GET /api/v1/crm/views — Получить сохранённые представления списка CRM */
+  crmListSavedViews: {
+    params: Record<string, never>;
+    query: { "list": models.CRMSavedViewListKind };
+    body: never;
+    response: models.CRMSavedViewList;
   };
   /** POST /api/v1/crm/inbox/conversations/{id}/read — Обнулить непрочитанные в диалоге */
   crmMarkInboxConversationRead: {
@@ -2533,6 +2603,13 @@ export interface OperationTypes {
     body: models.CRMReorderInput;
     response: void;
   };
+  /** PUT /api/v1/crm/deals/{id}/items — Заменить состав сделки */
+  crmReplaceDealItems: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMDealItemsInput | Array<models.CRMDealItemInput>;
+    response: Array<models.CRMDealItem>;
+  };
   /** POST /api/v1/crm/automation/runs/{id}/retry — Повторить неуспешный запуск */
   crmRetryAutomationRun: {
     params: { "id": models.UUID };
@@ -2561,12 +2638,33 @@ export interface OperationTypes {
     body: models.CRMSalesPlansInput;
     response: Array<models.CRMSalesPlan>;
   };
+  /** GET /api/v1/crm/catalog — Найти товар или услугу для состава сделки */
+  crmSearchCatalog: {
+    params: Record<string, never>;
+    query: { "limit"?: number; "offset"?: number; "q"?: string };
+    body: never;
+    response: models.CRMCatalogPage;
+  };
+  /** POST /api/v1/crm/{entity}/{id}/mail — Отправить письмо из карточки */
+  crmSendCardMail: {
+    params: { "entity": "lead" | "deal" | "customer"; "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMCardMailSendRequest;
+    response: models.CRMMailLink;
+  };
   /** POST /api/v1/crm/inbox/conversations/{id}/messages — Отправить сообщение в диалог */
   crmSendInboxMessage: {
     params: { "id": models.UUID };
     query: Record<string, never>;
     body: models.CRMInboxSendInput;
     response: models.CRMInboxMessage;
+  };
+  /** DELETE /api/v1/crm/{entity}/{id}/mail/links/{linkId} — Отвязать переписку от карточки */
+  crmUnlinkCardMail: {
+    params: { "entity": "lead" | "deal" | "customer"; "id": models.UUID; "linkId": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
   };
   /** PUT /api/v1/crm/automation/rules/{id} — Заменить правило автоматизации */
   crmUpdateAutomationRule: {
@@ -2616,6 +2714,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.CRMPipelinePatch;
     response: models.CRMPipeline;
+  };
+  /** PATCH /api/v1/crm/views/{id} — Изменить представление списка CRM */
+  crmUpdateSavedView: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CRMSavedViewPatch;
+    response: models.CRMSavedView;
   };
   /** PATCH /api/v1/crm/settings — Изменить настройки CRM кабинета */
   crmUpdateSettings: {
@@ -3324,6 +3429,13 @@ export interface OperationTypes {
     body: models.FinanceTransactionCategorize;
     response: models.FinanceTransaction;
   };
+  /** POST /api/v1/finance/trade/acts/{id}/pnl-item — Сменить статью доходов и расходов у проведённого акта */
+  financeChangeActPnlItem: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.FinanceChangeActPnlItemRequest;
+    response: { [key: string]: unknown };
+  };
   /** POST /api/v1/finance/exchange/onec/connections/{id}/check — Проверить доступ к базе 1С */
   financeCheckOneCConnection: {
     params: { "id": models.UUID };
@@ -3372,6 +3484,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.FinanceOneCConnectionInput;
     response: models.FinanceOneCConnection;
+  };
+  /** POST /api/v1/finance/opening-debts/{id}/advance-vat — Дописать НДС к авансу начальных остатков */
+  financeCreateOpeningAdvanceVAT: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.FinanceOpeningAdvanceVATRequest;
+    response: models.CoreDocument;
   };
   /** POST /api/v1/finance/opening-debts — Завести начальный долг контрагента документом */
   financeCreateOpeningDebt: {
@@ -4318,6 +4437,13 @@ export interface OperationTypes {
     body: models.TransferUploadRequest;
     response: models.TransferSession;
   };
+  /** DELETE /api/v1/mail/address-book/entries/{id} — Убрать адресата из адресной книги */
+  mailDeleteAddressBookEntry: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** DELETE /api/v1/mail/folders/{id} — Удалить пользовательскую папку */
   mailDeleteFolder: {
     params: { "id": models.UUID };
@@ -4388,12 +4514,26 @@ export interface OperationTypes {
     body: never;
     response: models.TransferSession;
   };
+  /** PUT /api/v1/mail/address-book/entries/{id}/contact — Привязать адресата к контрагенту */
+  mailLinkAddressBookEntry: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MailLinkAddressBookEntryRequest;
+    response: models.MailAddressBookRecord;
+  };
   /** GET /api/v1/mail/accounts — Получить почтовые ящики сотрудника */
   mailListAccounts: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: never;
     response: models.MailListAccountsResponse;
+  };
+  /** GET /api/v1/mail/address-book/entries — Получить адресную книгу почты */
+  mailListAddressBookEntries: {
+    params: Record<string, never>;
+    query: { "limit"?: number; "offset"?: number; "q"?: string };
+    body: never;
+    response: models.MailAddressBookPage;
   };
   /** GET /api/v1/mail/accounts/{id}/folders — Получить папки ящика */
   mailListFolders: {
@@ -4412,7 +4552,7 @@ export interface OperationTypes {
   /** GET /api/v1/mail/messages — Получить письма по фильтру */
   mailListMessages: {
     params: Record<string, never>;
-    query: { "account_id"?: models.UUID; "folder_id"?: models.UUID; "folder_role"?: models.MailFolderRole; "from"?: string; "has_files"?: boolean; "is_flagged"?: boolean; "is_read"?: boolean; "limit"?: number; "offset"?: number; "q"?: string; "sent_after"?: string; "sent_before"?: string; "spam_verdict"?: models.MailSpamVerdict; "thread_id"?: models.UUID };
+    query: { "account_id"?: models.UUID; "all_mail"?: boolean; "folder_id"?: models.UUID; "folder_role"?: models.MailFolderRole; "from"?: string; "has_files"?: boolean; "is_flagged"?: boolean; "is_read"?: boolean; "limit"?: number; "offset"?: number; "q"?: string; "sent_after"?: string; "sent_before"?: string; "spam_verdict"?: models.MailSpamVerdict; "thread_id"?: models.UUID };
     body: never;
     response: models.MailMessagePage;
   };
@@ -4489,9 +4629,16 @@ export interface OperationTypes {
   /** POST /api/v1/mail/messages/read — Отметить письма, папку или весь выбранный вид прочитанными */
   mailReadBatch: {
     params: Record<string, never>;
-    query: { "account_id"?: models.UUID; "all_matching"?: boolean; "folder_id"?: models.UUID; "folder_name"?: string; "folder_role"?: string; "is_read"?: boolean; "is_vip"?: boolean; "q"?: string; "sent_after"?: string; "sent_before"?: string };
+    query: { "account_id"?: models.UUID; "all_mail"?: boolean; "all_matching"?: boolean; "folder_id"?: models.UUID; "folder_name"?: string; "folder_role"?: string; "is_read"?: boolean; "is_vip"?: boolean; "q"?: string; "sent_after"?: string; "sent_before"?: string };
     body: models.MailReadBatchRequest;
     response: models.MailReadBatchResponse;
+  };
+  /** PATCH /api/v1/mail/address-book/entries/{id} — Поправить имя адресата */
+  mailRenameAddressBookEntry: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MailRenameAddressBookEntryRequest;
+    response: models.MailAddressBookRecord;
   };
   /** PATCH /api/v1/mail/folders/{id} — Переименовать папку ящика */
   mailRenameFolder: {
@@ -4499,6 +4646,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.MailFolderInput;
     response: models.MailFolder;
+  };
+  /** POST /api/v1/mail/address-book/entries — Сохранить адресата в адресную книгу почты */
+  mailSaveAddressBookEntry: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.MailSaveAddressBookEntryRequest;
+    response: models.MailSavedAddress;
   };
   /** POST /api/v1/mail/vip-senders — Добавить или убрать важного отправителя */
   mailSetVIPSender: {
@@ -4615,7 +4769,7 @@ export interface OperationTypes {
   /** GET /api/v1/marketplace/ozon/stores — Получить магазины Ozon */
   marketplaceOzonStores: {
     params: Record<string, never>;
-    query: { "all"?: "1"; "reports"?: "1" };
+    query: { "all"?: "1"; "key_info"?: "1"; "reports"?: "1" };
     body: never;
     response: models.MarketplaceStorePage;
   };
@@ -4713,7 +4867,7 @@ export interface OperationTypes {
   /** GET /api/v1/marketplace/wb/stores — Получить магазины Wildberries */
   marketplaceWbStores: {
     params: Record<string, never>;
-    query: { "all"?: "1"; "reports"?: "1" };
+    query: { "all"?: "1"; "key_info"?: "1"; "reports"?: "1" };
     body: never;
     response: models.MarketplaceStorePage;
   };
@@ -4741,7 +4895,7 @@ export interface OperationTypes {
   /** GET /api/v1/marketplace/yandex/stores — Получить магазины Яндекс Маркета */
   marketplaceYandexStores: {
     params: Record<string, never>;
-    query: { "all"?: "1"; "reports"?: "1" };
+    query: { "all"?: "1"; "key_info"?: "1"; "reports"?: "1" };
     body: never;
     response: models.MarketplaceStorePage;
   };
@@ -4758,6 +4912,20 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.MarkingCodesListInput;
     response: models.MarkingCodesListResult;
+  };
+  /** POST /api/v1/marking/remarks/{id}/items — Добавить в перемаркировку */
+  markingAddRemarkItems: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MarkingRemarkItemsInput;
+    response: models.MarkingRemark;
+  };
+  /** POST /api/v1/marking/remarks/{id}/cancel — Отменить перемаркировку */
+  markingCancelRemark: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MarkingRemark;
   };
   /** POST /api/v1/marking/cises/info — Проверить коды в ГИС МТ */
   markingCheckCodes: {
@@ -4807,6 +4975,20 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.MarkingOrderInput;
     response: models.MarkingCodeOrderEnvelope;
+  };
+  /** POST /api/v1/marking/remarks — Начать перемаркировку */
+  markingCreateRemark: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.MarkingRemarkInput;
+    response: models.MarkingRemark;
+  };
+  /** POST /api/v1/marking/remarks/{id}/document — Собрать документ ЧЗ перемаркировки */
+  markingCreateRemarkDocument: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MarkingRemarkDocumentInput;
+    response: models.MarkingDocumentDraftEnvelope;
   };
   /** DELETE /api/v1/marking/applications/{id} — Удалить неотправленный отчёт о нанесении */
   markingDeleteApplication: {
@@ -4920,6 +5102,20 @@ export interface OperationTypes {
     body: never;
     response: models.MarkingProductProfileEnvelope;
   };
+  /** GET /api/v1/marking/remarks/{id} — Получить перемаркировку */
+  markingGetRemark: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MarkingRemark;
+  };
+  /** PUT /api/v1/marking/remarks/{id}/order — Привязать заказ новых кодов */
+  markingLinkRemarkOrder: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MarkingRemarkOrderInput;
+    response: models.MarkingRemark;
+  };
   /** GET /api/v1/marking/connections/{company_id}/balance — Получить баланс лицевых счетов «Честного знака» */
   markingListBalances: {
     params: { "company_id": models.UUID };
@@ -5011,6 +5207,20 @@ export interface OperationTypes {
     body: never;
     response: models.MarkingOutboxPage;
   };
+  /** GET /api/v1/marking/remarks — Получить перемаркировки юрлица */
+  markingListRemarks: {
+    params: Record<string, never>;
+    query: { "company": models.UUID; "limit"?: number; "offset"?: number; "open"?: boolean };
+    body: never;
+    response: models.MarkingRemarkList;
+  };
+  /** POST /api/v1/marking/remarks/{id}/pair — Связать новую марку с парой */
+  markingPairRemarkCode: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.MarkingRemarkPairInput;
+    response: models.MarkingRemark;
+  };
   /** POST /api/v1/marking/codes/parse — Разобрать код маркировки без записи */
   markingParseCode: {
     params: Record<string, never>;
@@ -5080,6 +5290,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.MarkingInventoryRemoveResult;
+  };
+  /** DELETE /api/v1/marking/remarks/{id}/items/{item_id} — Убрать строку перемаркировки */
+  markingRemoveRemarkItem: {
+    params: { "id": models.UUID; "item_id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MarkingRemark;
   };
   /** POST /api/v1/marking/boxes/{id}/reopen — Открыть короб снова */
   markingReopenBox: {
@@ -5221,6 +5438,13 @@ export interface OperationTypes {
     body: never;
     response: models.MarkingStockCodes;
   };
+  /** POST /api/v1/marking/remarks/{id}/swap — Заменить марку на складе */
+  markingSwapRemark: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MarkingRemark;
+  };
   /** POST /api/v1/marking/orders/sync — Сверить заказы юрлица с СУЗ */
   markingSyncOrders: {
     params: Record<string, never>;
@@ -5241,6 +5465,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.MarkingInventoryTransferResult;
+  };
+  /** DELETE /api/v1/marking/remarks/{id}/items/{item_id}/pair — Снять новую марку с пары */
+  markingUnpairRemarkCode: {
+    params: { "id": models.UUID; "item_id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.MarkingRemark;
   };
   /** GET /api/v1/print/forms/{kind}/{id}/download-session — Временный адрес печатной формы документа */
   printFormDownloadSession: {
@@ -5942,6 +6173,13 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
+  /** POST /api/v1/tasks/scrum/{project}/sprints/{id}/complete — Завершить спринт */
+  tasksCompleteSprint: {
+    params: { "id": models.UUID; "project": models.UUID };
+    query: Record<string, never>;
+    body: models.SprintComplete;
+    response: models.SprintCompletion;
+  };
   /** POST /api/v1/tasks/attachments/{id}/replace-sessions — Создать прямую upload-сессию для замены файла */
   tasksCreateAttachmentReplacementSession: {
     params: { "id": models.UUID };
@@ -6040,12 +6278,26 @@ export interface OperationTypes {
     body: models.RelationCreate;
     response: models.Relation;
   };
+  /** POST /api/v1/tasks/scrum/{project}/sprints/{id}/tasks — Создать задачу в бэклоге спринта */
+  tasksCreateScrumTask: {
+    params: { "id": models.UUID; "project": models.UUID };
+    query: Record<string, never>;
+    body: models.ScrumTaskCreate;
+    response: models.Task;
+  };
   /** POST /api/v1/tasks/sections — Создать раздел задач */
   tasksCreateSection: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.SectionCreate;
     response: models.Section;
+  };
+  /** POST /api/v1/tasks/scrum/{project}/sprints — Запланировать спринт */
+  tasksCreateSprint: {
+    params: { "project": models.UUID };
+    query: Record<string, never>;
+    body: models.SprintCreate;
+    response: models.Sprint;
   };
   /** POST /api/v1/tasks/statuses — Создать workflow-статус */
   tasksCreateStatus: {
@@ -6180,6 +6432,13 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
+  /** DELETE /api/v1/tasks/scrum/{project}/sprints/{id} — Удалить пустой запланированный спринт */
+  tasksDeleteSprint: {
+    params: { "id": models.UUID; "project": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** DELETE /api/v1/tasks/statuses/{id} — Удалить workflow-статус */
   tasksDeleteStatus: {
     params: { "id": models.UUID };
@@ -6214,6 +6473,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.Attachment;
+  };
+  /** POST /api/v1/tasks/scrum/{project}/poker/{id}/finish — Зафиксировать итог оценки */
+  tasksFinishScrumPoker: {
+    params: { "id": models.UUID; "project": models.UUID };
+    query: Record<string, never>;
+    body: models.PokerFinish;
+    response: models.PokerSession;
   };
   /** GET /api/v1/tasks/attachments/{id}/content — Скачать содержимое вложения через Akeda */
   tasksGetAttachmentContent: {
@@ -6271,6 +6537,13 @@ export interface OperationTypes {
     body: never;
     response: models.Milestone;
   };
+  /** GET /api/v1/tasks/scrum/{project} — Открыть скрам проекта задач */
+  tasksGetProjectScrum: {
+    params: { "project": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.Scrum;
+  };
   /** GET /api/v1/tasks/projects/{id}/team-metrics — Получить командный отчёт проекта задач */
   tasksGetProjectTeamMetrics: {
     params: { "id": models.UUID };
@@ -6285,12 +6558,33 @@ export interface OperationTypes {
     body: never;
     response: models.PullRequest;
   };
+  /** GET /api/v1/tasks/scrum/{project}/poker/{id} — Получить сессию оценки командой */
+  tasksGetScrumPoker: {
+    params: { "id": models.UUID; "project": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.PokerSession;
+  };
+  /** GET /api/v1/tasks/scrum/{project}/reports — Получить командные отчёты скрама */
+  tasksGetScrumReports: {
+    params: { "project": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.ScrumReports;
+  };
   /** GET /api/v1/tasks/scrum/metrics/{cycle} — Получить командные метрики спринта */
   tasksGetSprintMetrics: {
     params: { "cycle": models.UUID };
     query: Record<string, never>;
     body: never;
     response: models.SprintMetrics;
+  };
+  /** GET /api/v1/tasks/scrum/{project}/sprints/{id}/report — Получить отчёт спринта */
+  tasksGetSprintReport: {
+    params: { "id": models.UUID; "project": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.SprintReport;
   };
   /** GET /api/v1/tasks/tasks/{id}/status-metrics — Получить историю переходов и время задачи в статусах */
   tasksGetStatusMetrics: {
@@ -6411,6 +6705,13 @@ export interface OperationTypes {
     body: never;
     response: models.RelationList;
   };
+  /** GET /api/v1/tasks/scrum/{project}/poker — Открытые сессии оценки командой */
+  tasksListScrumPoker: {
+    params: { "project": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.PokerSessionPage;
+  };
   /** GET /api/v1/tasks/sections/{id}/members — Получить участников проекта задач */
   tasksListSectionMembers: {
     params: { "id": models.UUID };
@@ -6424,6 +6725,20 @@ export interface OperationTypes {
     query: { "counters"?: "mine"; "mine_roles"?: string };
     body: never;
     response: models.SectionPage;
+  };
+  /** GET /api/v1/tasks/scrum/{project}/sprints/{id}/tasks — Получить задачи спринта для доски */
+  tasksListSprintTasks: {
+    params: { "id": models.UUID; "project": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.TaskPage;
+  };
+  /** GET /api/v1/tasks/scrum/{project}/sprints — Получить спринты проекта */
+  tasksListSprints: {
+    params: { "project": models.UUID };
+    query: { "include_completed"?: boolean };
+    body: never;
+    response: models.SprintPage;
   };
   /** GET /api/v1/tasks/status-updates — Получить отчёты о состоянии проекта */
   tasksListStatusUpdates: {
@@ -6474,6 +6789,13 @@ export interface OperationTypes {
     body: never;
     response: models.TaskViewPage;
   };
+  /** POST /api/v1/tasks/scrum/{project}/tasks/{task}/sprint — Перенести задачу скрама в бэклог другого спринта */
+  tasksMoveScrumTask: {
+    params: { "project": models.UUID; "task": models.UUID };
+    query: Record<string, never>;
+    body: models.ScrumTaskSprint;
+    response: models.Task;
+  };
   /** POST /api/v1/tasks/tasks/{id}/move — Переместить задачу в другой workflow-статус */
   tasksMoveTask: {
     params: { "id": models.UUID };
@@ -6481,12 +6803,26 @@ export interface OperationTypes {
     body: models.TaskMove;
     response: models.Task;
   };
+  /** POST /api/v1/tasks/scrum/{project}/poker/{id}/round — Начать новый раунд */
+  tasksNewScrumPokerRound: {
+    params: { "id": models.UUID; "project": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.PokerSession;
+  };
   /** PATCH /api/v1/tasks/statuses/reorder — Изменить порядок workflow-статусов */
   tasksReorderStatuses: {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.StatusReorder;
     response: models.OK;
+  };
+  /** POST /api/v1/tasks/scrum/{project}/poker/{id}/reveal — Открыть карты раунда */
+  tasksRevealScrumPoker: {
+    params: { "id": models.UUID; "project": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.PokerSession;
   };
   /** POST /api/v1/tasks/templates/run-due — Запустить все шаблоны, срок которых наступил */
   tasksRunDueTemplates: {
@@ -6501,6 +6837,41 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.TemplateRunResult;
+  };
+  /** PUT /api/v1/tasks/scrum/{project}/board — Выбрать колонки канбана спринта */
+  tasksSetScrumBoard: {
+    params: { "project": models.UUID };
+    query: Record<string, never>;
+    body: models.ScrumBoardInput;
+    response: models.Scrum;
+  };
+  /** PUT /api/v1/tasks/scrum/{project}/reference — Выбрать эталонную задачу проекта */
+  tasksSetScrumReference: {
+    params: { "project": models.UUID };
+    query: Record<string, never>;
+    body: models.ScrumReferenceInput;
+    response: models.Scrum;
+  };
+  /** PUT /api/v1/tasks/scrum/{project}/tasks/{task}/points — Оценить задачу скрама в баллах */
+  tasksSetScrumStoryPoints: {
+    params: { "project": models.UUID; "task": models.UUID };
+    query: Record<string, never>;
+    body: models.StoryPointsInput;
+    response: models.Task;
+  };
+  /** POST /api/v1/tasks/scrum/{project}/tasks/{task}/poker — Оценить задачу командой (planning poker) */
+  tasksStartScrumPoker: {
+    params: { "project": models.UUID; "task": models.UUID };
+    query: Record<string, never>;
+    body: models.PokerStart;
+    response: models.PokerSession;
+  };
+  /** POST /api/v1/tasks/scrum/{project}/sprints/{id}/start — Начать спринт */
+  tasksStartSprint: {
+    params: { "id": models.UUID; "project": models.UUID };
+    query: Record<string, never>;
+    body: models.SprintStart;
+    response: models.Sprint;
   };
   /** PATCH /api/v1/tasks/comments/{id} — Изменить комментарий */
   tasksUpdateComment: {
@@ -6579,6 +6950,13 @@ export interface OperationTypes {
     body: models.SectionUpdate;
     response: models.Section;
   };
+  /** PATCH /api/v1/tasks/scrum/{project}/sprints/{id} — Изменить имя, цель, даты или настройки спринта */
+  tasksUpdateSprint: {
+    params: { "id": models.UUID; "project": models.UUID };
+    query: Record<string, never>;
+    body: models.SprintUpdate;
+    response: models.Sprint;
+  };
   /** PATCH /api/v1/tasks/statuses/{id} — Изменить workflow-статус */
   tasksUpdateStatus: {
     params: { "id": models.UUID };
@@ -6613,6 +6991,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.Attachment;
+  };
+  /** PUT /api/v1/tasks/scrum/{project}/poker/{id}/vote — Выбрать карту в раунде */
+  tasksVoteScrumPoker: {
+    params: { "id": models.UUID; "project": models.UUID };
+    query: Record<string, never>;
+    body: models.PokerVoteInput;
+    response: models.PokerSession;
   };
 }
 
@@ -6888,6 +7273,9 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmAddNote: { method: "POST", path: "/api/v1/crm/{entity}/{id}/notes", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmArchivePipeline: { method: "POST", path: "/api/v1/crm/pipelines/{id}/archive", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmAssignInboxConversation: { method: "PATCH", path: "/api/v1/crm/inbox/conversations/{id}/assign", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmBulkCustomers: { method: "POST", path: "/api/v1/crm/customers/bulk", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmBulkDeals: { method: "POST", path: "/api/v1/crm/deals/bulk", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmBulkLeads: { method: "POST", path: "/api/v1/crm/leads/bulk", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCardFileDownloadSession: { method: "GET", path: "/api/v1/crm/{entity}/{id}/files/{fileId}/download-session", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmConvertLead: { method: "POST", path: "/api/v1/crm/leads/{id}/convert", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateAutomationRule: { method: "POST", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -6905,11 +7293,13 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmCreateLeadStage: { method: "POST", path: "/api/v1/crm/lead-stages", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateLossReason: { method: "POST", path: "/api/v1/crm/loss-reasons", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreatePipeline: { method: "POST", path: "/api/v1/crm/pipelines", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmCreateSavedView: { method: "POST", path: "/api/v1/crm/views", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateStage: { method: "POST", path: "/api/v1/crm/pipelines/{id}/stages", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmCreateTaskLink: { method: "POST", path: "/api/v1/crm/{entity}/{id}/tasks", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmDeleteCardFile: { method: "DELETE", path: "/api/v1/crm/{entity}/{id}/files/{fileId}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmDeleteCustomer: { method: "DELETE", path: "/api/v1/crm/customers/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmDeletePipeline: { method: "DELETE", path: "/api/v1/crm/pipelines/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmDeleteSavedView: { method: "DELETE", path: "/api/v1/crm/views/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmFindCustomerDuplicates: { method: "GET", path: "/api/v1/crm/customers/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmFinishCardFileUploadSession: { method: "POST", path: "/api/v1/crm/card-upload-sessions/{id}/finish", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmFinishImportUploadSession: { method: "POST", path: "/api/v1/crm/import-upload-sessions/{id}/finish", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -6937,10 +7327,13 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmGetTimeline: { method: "GET", path: "/api/v1/crm/{entity}/{id}/timeline", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 100, pageSizeDefault: 30 },
   crmInboxAttachmentDownloadSession: { method: "GET", path: "/api/v1/crm/inbox/attachments/{id}/download-session", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmLeadDuplicates: { method: "GET", path: "/api/v1/crm/leads/{id}/duplicates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmLinkCardMail: { method: "POST", path: "/api/v1/crm/{entity}/{id}/mail/links", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmLinkEntityConversation: { method: "POST", path: "/api/v1/crm/inbox/entities/{entity}/{id}/conversations", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListAutomationRules: { method: "GET", path: "/api/v1/crm/automation/rules", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListAutomationRuns: { method: "GET", path: "/api/v1/crm/automation/runs", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListCardFiles: { method: "GET", path: "/api/v1/crm/{entity}/{id}/files", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListCardMail: { method: "GET", path: "/api/v1/crm/{entity}/{id}/mail", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListCardMailCandidates: { method: "GET", path: "/api/v1/crm/{entity}/{id}/mail/candidates", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListCustomerDuplicateGroups: { method: "GET", path: "/api/v1/crm/customers/duplicate-groups", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 200, pageSizeDefault: 50 },
   crmListCustomers: { method: "GET", path: "/api/v1/crm/customers", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   crmListDealActivities: { method: "GET", path: "/api/v1/crm/deals/{id}/activities", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -6963,10 +7356,12 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmListLeadStages: { method: "GET", path: "/api/v1/crm/lead-stages", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListLeads: { method: "GET", path: "/api/v1/crm/leads", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   crmListLossReasons: { method: "GET", path: "/api/v1/crm/loss-reasons", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListMailAccounts: { method: "GET", path: "/api/v1/crm/mail/accounts", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListMembers: { method: "GET", path: "/api/v1/crm/members", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmListMyEngagements: { method: "GET", path: "/api/v1/crm/engagements", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit", pageSizeMax: 1000, pageSizeDefault: null },
   crmListPipelineDeals: { method: "GET", path: "/api/v1/crm/pipelines/{id}/deals", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 50 },
   crmListPipelines: { method: "GET", path: "/api/v1/crm/pipelines", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmListSavedViews: { method: "GET", path: "/api/v1/crm/views", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmMarkInboxConversationRead: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/read", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmMergeCustomers: { method: "POST", path: "/api/v1/crm/customers/{id}/merge", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmMergeLeads: { method: "POST", path: "/api/v1/crm/leads/{id}/merge", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -6977,11 +7372,15 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmReorderLeadStages: { method: "PATCH", path: "/api/v1/crm/lead-stages/reorder", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmReorderPipelines: { method: "PATCH", path: "/api/v1/crm/pipelines/reorder", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmReorderStages: { method: "PATCH", path: "/api/v1/crm/pipelines/{id}/stages/reorder", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmReplaceDealItems: { method: "PUT", path: "/api/v1/crm/deals/{id}/items", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmRetryAutomationRun: { method: "POST", path: "/api/v1/crm/automation/runs/{id}/retry", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSalesPlans: { method: "GET", path: "/api/v1/crm/sales-plans", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSaveInboxTemplate: { method: "POST", path: "/api/v1/crm/inbox/templates", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSaveSalesPlans: { method: "PUT", path: "/api/v1/crm/sales-plans", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmSearchCatalog: { method: "GET", path: "/api/v1/crm/catalog", module: "crm", stage: "preview", permission: "crm:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 50, pageSizeDefault: 50 },
+  crmSendCardMail: { method: "POST", path: "/api/v1/crm/{entity}/{id}/mail", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmSendInboxMessage: { method: "POST", path: "/api/v1/crm/inbox/conversations/{id}/messages", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUnlinkCardMail: { method: "DELETE", path: "/api/v1/crm/{entity}/{id}/mail/links/{linkId}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateAutomationRule: { method: "PUT", path: "/api/v1/crm/automation/rules/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateCustomer: { method: "PATCH", path: "/api/v1/crm/customers/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateDeal: { method: "PATCH", path: "/api/v1/crm/deals/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -6989,6 +7388,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   crmUpdateLead: { method: "PATCH", path: "/api/v1/crm/leads/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateLeadStage: { method: "PATCH", path: "/api/v1/crm/lead-stages/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdatePipeline: { method: "PATCH", path: "/api/v1/crm/pipelines/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  crmUpdateSavedView: { method: "PATCH", path: "/api/v1/crm/views/{id}", module: "crm", stage: "preview", permission: "crm:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateSettings: { method: "PATCH", path: "/api/v1/crm/settings", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   crmUpdateStage: { method: "PATCH", path: "/api/v1/crm/stages/{id}", module: "crm", stage: "preview", permission: "crm:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   dashboardGetMetricSnapshot: { method: "GET", path: "/api/v1/dashboard/metrics/{id}/snapshot", module: "dashboard", stage: "preview", permission: "dashboard:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7090,6 +7490,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeCashflowEntries: { method: "GET", path: "/api/v1/finance/reports/cashflow/entries", module: "finance", stage: "preview", permission: "finance.reports.cashflow:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCategorizeCashOperation: { method: "POST", path: "/api/v1/finance/cash-operations/{id}/categorize", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCategorizeTransaction: { method: "POST", path: "/api/v1/finance/transactions/{id}/categorize", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeChangeActPnlItem: { method: "POST", path: "/api/v1/finance/trade/acts/{id}/pnl-item", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCheckOneCConnection: { method: "POST", path: "/api/v1/finance/exchange/onec/connections/{id}/check", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateAccount: { method: "POST", path: "/api/v1/finance/accounts", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateCounterpartyTerms: { method: "POST", path: "/api/v1/finance/counterparties/{contactId}/terms", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7097,6 +7498,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeCreateDividendPolicy: { method: "POST", path: "/api/v1/finance/dividends/policies", module: "finance", stage: "preview", permission: "finance.dividends:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateExpenseReport: { method: "POST", path: "/api/v1/finance/accountable/reports", module: "finance", stage: "preview", permission: "finance.accountable:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOneCConnection: { method: "POST", path: "/api/v1/finance/exchange/onec/connections", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateOpeningAdvanceVAT: { method: "POST", path: "/api/v1/finance/opening-debts/{id}/advance-vat", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOpeningDebt: { method: "POST", path: "/api/v1/finance/opening-debts", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOperation: { method: "POST", path: "/api/v1/finance/operations", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOperationAccrual: { method: "POST", path: "/api/v1/finance/operations/{id}/accruals", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7232,6 +7634,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   mailCreateFolder: { method: "POST", path: "/api/v1/mail/accounts/{id}/folders", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailCreateRule: { method: "POST", path: "/api/v1/mail/accounts/{id}/rules", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailCreateUploadSession: { method: "POST", path: "/api/v1/mail/accounts/{id}/upload-sessions", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailDeleteAddressBookEntry: { method: "DELETE", path: "/api/v1/mail/address-book/entries/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailDeleteFolder: { method: "DELETE", path: "/api/v1/mail/folders/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailDeleteMessage: { method: "DELETE", path: "/api/v1/mail/messages/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailDeleteRule: { method: "DELETE", path: "/api/v1/mail/rules/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7242,7 +7645,9 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   mailGetMessage: { method: "GET", path: "/api/v1/mail/messages/{id}", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailGetThread: { method: "GET", path: "/api/v1/mail/threads/{id}", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailGetUploadSession: { method: "GET", path: "/api/v1/mail/upload-sessions/{id}", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailLinkAddressBookEntry: { method: "PUT", path: "/api/v1/mail/address-book/entries/{id}/contact", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailListAccounts: { method: "GET", path: "/api/v1/mail/accounts", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailListAddressBookEntries: { method: "GET", path: "/api/v1/mail/address-book/entries", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   mailListFolders: { method: "GET", path: "/api/v1/mail/accounts/{id}/folders", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailListMessageAttachments: { method: "GET", path: "/api/v1/mail/messages/{id}/attachments", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailListMessages: { method: "GET", path: "/api/v1/mail/messages", module: "mail", stage: "preview", permission: "mail:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
@@ -7257,7 +7662,9 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   mailMarkMessageUnread: { method: "POST", path: "/api/v1/mail/messages/{id}/unread", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailMoveMessage: { method: "POST", path: "/api/v1/mail/messages/{id}/move", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailReadBatch: { method: "POST", path: "/api/v1/mail/messages/read", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailRenameAddressBookEntry: { method: "PATCH", path: "/api/v1/mail/address-book/entries/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailRenameFolder: { method: "PATCH", path: "/api/v1/mail/folders/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  mailSaveAddressBookEntry: { method: "POST", path: "/api/v1/mail/address-book/entries", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailSetVIPSender: { method: "POST", path: "/api/v1/mail/vip-senders", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailSyncAccount: { method: "POST", path: "/api/v1/mail/accounts/{id}/sync", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   mailUpdateRule: { method: "PATCH", path: "/api/v1/mail/rules/{id}", module: "mail", stage: "preview", permission: "mail:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7295,6 +7702,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   marketplaceYandexStores: { method: "GET", path: "/api/v1/marketplace/yandex/stores", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingAcceptExpectedCodes: { method: "POST", path: "/api/v1/marking/documents/{type}/{id}/codes/accept-expected", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingAddDocumentCodesList: { method: "POST", path: "/api/v1/marking/documents/{type}/{id}/codes/list", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingAddRemarkItems: { method: "POST", path: "/api/v1/marking/remarks/{id}/items", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingCancelRemark: { method: "POST", path: "/api/v1/marking/remarks/{id}/cancel", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingCheckCodes: { method: "POST", path: "/api/v1/marking/cises/info", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingCloseBox: { method: "POST", path: "/api/v1/marking/boxes/{id}/close", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingCloseOrder: { method: "POST", path: "/api/v1/marking/orders/{id}/close", module: "marking", stage: "preview", permission: "marking.gismt:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7302,6 +7711,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   markingCreateBox: { method: "POST", path: "/api/v1/marking/boxes", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingCreateDocumentDraft: { method: "POST", path: "/api/v1/marking/gismt/document-drafts", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingCreateOrder: { method: "POST", path: "/api/v1/marking/orders", module: "marking", stage: "preview", permission: "marking.gismt:send", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingCreateRemark: { method: "POST", path: "/api/v1/marking/remarks", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingCreateRemarkDocument: { method: "POST", path: "/api/v1/marking/remarks/{id}/document", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingDeleteApplication: { method: "DELETE", path: "/api/v1/marking/applications/{id}", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingDeleteCompanyGroup: { method: "DELETE", path: "/api/v1/marking/company-groups/{company}/{group}", module: "marking", stage: "preview", permission: "marking:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingDeleteDocumentDraft: { method: "DELETE", path: "/api/v1/marking/gismt/document-drafts/{id}", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7318,6 +7729,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   markingGetOrder: { method: "GET", path: "/api/v1/marking/orders/{id}", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingGetOrderCodes: { method: "GET", path: "/api/v1/marking/orders/{id}/codes", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: null },
   markingGetProductProfile: { method: "GET", path: "/api/v1/marking/products/{id}/profile", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingGetRemark: { method: "GET", path: "/api/v1/marking/remarks/{id}", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingLinkRemarkOrder: { method: "PUT", path: "/api/v1/marking/remarks/{id}/order", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingListBalances: { method: "GET", path: "/api/v1/marking/connections/{company_id}/balance", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingListBoxes: { method: "GET", path: "/api/v1/marking/boxes", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   markingListCodeImports: { method: "GET", path: "/api/v1/marking/codes/imports", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 100, pageSizeDefault: 20 },
@@ -7331,6 +7744,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   markingListMods: { method: "GET", path: "/api/v1/marking/connections/{company_id}/mods", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingListOrders: { method: "GET", path: "/api/v1/marking/orders", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   markingListOutbox: { method: "GET", path: "/api/v1/marking/gismt/outbox", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
+  markingListRemarks: { method: "GET", path: "/api/v1/marking/remarks", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
+  markingPairRemarkCode: { method: "POST", path: "/api/v1/marking/remarks/{id}/pair", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingParseCode: { method: "POST", path: "/api/v1/marking/codes/parse", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingPingOMS: { method: "POST", path: "/api/v1/marking/connections/{company_id}/oms/ping", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingReceiveOrderCodes: { method: "POST", path: "/api/v1/marking/orders/{id}/receive", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7341,6 +7756,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   markingRemoveBoxItem: { method: "DELETE", path: "/api/v1/marking/boxes/{id}/items/{code_id}", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingRemoveDocumentCode: { method: "DELETE", path: "/api/v1/marking/documents/{type}/{id}/codes/{code_id}", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingRemoveInventoryCode: { method: "DELETE", path: "/api/v1/marking/inventories/{id}/codes/{code_id}", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingRemoveRemarkItem: { method: "DELETE", path: "/api/v1/marking/remarks/{id}/items/{item_id}", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingReopenBox: { method: "POST", path: "/api/v1/marking/boxes/{id}/reopen", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingReplaceDocumentCodes: { method: "PUT", path: "/api/v1/marking/documents/{type}/{id}/codes", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingReportBox: { method: "POST", path: "/api/v1/marking/boxes/{id}/report", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7361,9 +7777,11 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   markingStartCodeSync: { method: "POST", path: "/api/v1/marking/codes/sync", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingStartReconcile: { method: "POST", path: "/api/v1/marking/reconcile", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingStockCodes: { method: "GET", path: "/api/v1/marking/stock-codes", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
+  markingSwapRemark: { method: "POST", path: "/api/v1/marking/remarks/{id}/swap", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingSyncOrders: { method: "POST", path: "/api/v1/marking/orders/sync", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingTraceCode: { method: "GET", path: "/api/v1/marking/codes/trace", module: "marking", stage: "preview", permission: "marking:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   markingTransferInventoryCodes: { method: "POST", path: "/api/v1/marking/inventories/{id}/codes/transfer", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  markingUnpairRemarkCode: { method: "DELETE", path: "/api/v1/marking/remarks/{id}/items/{item_id}/pair", module: "marking", stage: "preview", permission: "marking:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   printFormDownloadSession: { method: "GET", path: "/api/v1/print/forms/{kind}/{id}/download-session", module: "core", stage: "preview", permission: "core:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListCompanies: { method: "GET", path: "/api/v1/settings/companies", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   settingsListMembers: { method: "GET", path: "/api/v1/settings/members", module: "settings", stage: "preview", permission: "settings:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7464,6 +7882,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   tasksArchiveSection: { method: "DELETE", path: "/api/v1/tasks/sections/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksArchiveTask: { method: "DELETE", path: "/api/v1/tasks/tasks/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksArchiveTemplate: { method: "DELETE", path: "/api/v1/tasks/templates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCompleteSprint: { method: "POST", path: "/api/v1/tasks/scrum/{project}/sprints/{id}/complete", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateAttachmentReplacementSession: { method: "POST", path: "/api/v1/tasks/attachments/{id}/replace-sessions", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateAttachmentUploadSession: { method: "POST", path: "/api/v1/tasks/attachments/upload-sessions", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateComment: { method: "POST", path: "/api/v1/tasks/tasks/{id}/comments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7478,7 +7897,9 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   tasksCreateProject: { method: "POST", path: "/api/v1/tasks/projects", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreatePullRequest: { method: "POST", path: "/api/v1/tasks/pull-requests", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateRelation: { method: "POST", path: "/api/v1/tasks/tasks/{id}/relations", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateScrumTask: { method: "POST", path: "/api/v1/tasks/scrum/{project}/sprints/{id}/tasks", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateSection: { method: "POST", path: "/api/v1/tasks/sections", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksCreateSprint: { method: "POST", path: "/api/v1/tasks/scrum/{project}/sprints", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateStatus: { method: "POST", path: "/api/v1/tasks/statuses", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateStatusUpdate: { method: "POST", path: "/api/v1/tasks/status-updates", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksCreateTag: { method: "POST", path: "/api/v1/tasks/tags", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7498,11 +7919,13 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   tasksDeletePullRequest: { method: "DELETE", path: "/api/v1/tasks/pull-requests/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksDeleteRelation: { method: "DELETE", path: "/api/v1/tasks/relations/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksDeleteSectionMember: { method: "DELETE", path: "/api/v1/tasks/section-members/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksDeleteSprint: { method: "DELETE", path: "/api/v1/tasks/scrum/{project}/sprints/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksDeleteStatus: { method: "DELETE", path: "/api/v1/tasks/statuses/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksDeleteStatusUpdate: { method: "DELETE", path: "/api/v1/tasks/status-updates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksDeleteTag: { method: "DELETE", path: "/api/v1/tasks/tags/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksDeleteView: { method: "DELETE", path: "/api/v1/tasks/views/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksFinishAttachmentUploadSession: { method: "POST", path: "/api/v1/tasks/attachments/upload-sessions/{id}/finish", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksFinishScrumPoker: { method: "POST", path: "/api/v1/tasks/scrum/{project}/poker/{id}/finish", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetAttachmentContent: { method: "GET", path: "/api/v1/tasks/attachments/{id}/content", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetCustomer: { method: "GET", path: "/api/v1/tasks/customers/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetCustomerNeed: { method: "GET", path: "/api/v1/tasks/customer-needs/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7511,9 +7934,13 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   tasksGetHubOverview: { method: "GET", path: "/api/v1/tasks/hub/overview", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetMeeting: { method: "GET", path: "/api/v1/tasks/hub/meetings/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetMilestone: { method: "GET", path: "/api/v1/tasks/milestones/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetProjectScrum: { method: "GET", path: "/api/v1/tasks/scrum/{project}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetProjectTeamMetrics: { method: "GET", path: "/api/v1/tasks/projects/{id}/team-metrics", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetPullRequest: { method: "GET", path: "/api/v1/tasks/pull-requests/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetScrumPoker: { method: "GET", path: "/api/v1/tasks/scrum/{project}/poker/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetScrumReports: { method: "GET", path: "/api/v1/tasks/scrum/{project}/reports", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetSprintMetrics: { method: "GET", path: "/api/v1/tasks/scrum/metrics/{cycle}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksGetSprintReport: { method: "GET", path: "/api/v1/tasks/scrum/{project}/sprints/{id}/report", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetStatusMetrics: { method: "GET", path: "/api/v1/tasks/tasks/{id}/status-metrics", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetStatusUpdate: { method: "GET", path: "/api/v1/tasks/status-updates/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksGetTask: { method: "GET", path: "/api/v1/tasks/tasks/{id}", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7531,8 +7958,11 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   tasksListProjects: { method: "GET", path: "/api/v1/tasks/projects", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListPullRequests: { method: "GET", path: "/api/v1/tasks/pull-requests", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListRelations: { method: "GET", path: "/api/v1/tasks/tasks/{id}/relations", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListScrumPoker: { method: "GET", path: "/api/v1/tasks/scrum/{project}/poker", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListSectionMembers: { method: "GET", path: "/api/v1/tasks/sections/{id}/members", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListSections: { method: "GET", path: "/api/v1/tasks/sections", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListSprintTasks: { method: "GET", path: "/api/v1/tasks/scrum/{project}/sprints/{id}/tasks", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksListSprints: { method: "GET", path: "/api/v1/tasks/scrum/{project}/sprints", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListStatusUpdates: { method: "GET", path: "/api/v1/tasks/status-updates", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListStatuses: { method: "GET", path: "/api/v1/tasks/statuses", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListTagCatalog: { method: "GET", path: "/api/v1/tasks/tags", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7540,10 +7970,18 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   tasksListTasks: { method: "GET", path: "/api/v1/tasks/tasks", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: null },
   tasksListTemplates: { method: "GET", path: "/api/v1/tasks/templates", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksListViews: { method: "GET", path: "/api/v1/tasks/views", module: "tasks", stage: "preview", permission: "tasks:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksMoveScrumTask: { method: "POST", path: "/api/v1/tasks/scrum/{project}/tasks/{task}/sprint", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksMoveTask: { method: "POST", path: "/api/v1/tasks/tasks/{id}/move", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksNewScrumPokerRound: { method: "POST", path: "/api/v1/tasks/scrum/{project}/poker/{id}/round", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksReorderStatuses: { method: "PATCH", path: "/api/v1/tasks/statuses/reorder", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksRevealScrumPoker: { method: "POST", path: "/api/v1/tasks/scrum/{project}/poker/{id}/reveal", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksRunDueTemplates: { method: "POST", path: "/api/v1/tasks/templates/run-due", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksRunTemplate: { method: "POST", path: "/api/v1/tasks/templates/{id}/run", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksSetScrumBoard: { method: "PUT", path: "/api/v1/tasks/scrum/{project}/board", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksSetScrumReference: { method: "PUT", path: "/api/v1/tasks/scrum/{project}/reference", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksSetScrumStoryPoints: { method: "PUT", path: "/api/v1/tasks/scrum/{project}/tasks/{task}/points", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksStartScrumPoker: { method: "POST", path: "/api/v1/tasks/scrum/{project}/tasks/{task}/poker", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksStartSprint: { method: "POST", path: "/api/v1/tasks/scrum/{project}/sprints/{id}/start", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateComment: { method: "PATCH", path: "/api/v1/tasks/comments/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateCustomer: { method: "PATCH", path: "/api/v1/tasks/customers/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateCustomerNeed: { method: "PATCH", path: "/api/v1/tasks/customer-needs/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7555,9 +7993,11 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   tasksUpdateMilestone: { method: "PATCH", path: "/api/v1/tasks/milestones/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdatePullRequest: { method: "PATCH", path: "/api/v1/tasks/pull-requests/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateSection: { method: "PATCH", path: "/api/v1/tasks/sections/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksUpdateSprint: { method: "PATCH", path: "/api/v1/tasks/scrum/{project}/sprints/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateStatus: { method: "PATCH", path: "/api/v1/tasks/statuses/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateStatusUpdate: { method: "PATCH", path: "/api/v1/tasks/status-updates/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateTag: { method: "PATCH", path: "/api/v1/tasks/tags/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUpdateTask: { method: "PATCH", path: "/api/v1/tasks/tasks/{id}", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   tasksUploadTaskAttachment: { method: "POST", path: "/api/v1/tasks/tasks/{id}/attachments", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  tasksVoteScrumPoker: { method: "PUT", path: "/api/v1/tasks/scrum/{project}/poker/{id}/vote", module: "tasks", stage: "preview", permission: "tasks:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
 };

@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6c36bf4789b73f2b45c991bd664f456a5d43881b0409b778be538f9194f41748).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b3ac5a9b869156c40ca5842e03e97e94ec698c957b42a92d3065a89fdf2bc0a8).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -103,6 +103,8 @@ __all__ = [
     "AutomationRunReport",
     "AutomationWebhook",
     "AutomationWebhookField",
+    "Burndown",
+    "BurndownPoint",
     "CRMActivity",
     "CRMAnalytics",
     "CRMAutomationAction",
@@ -112,8 +114,19 @@ __all__ = [
     "CRMAutomationRuleAdoptionProblem",
     "CRMAutomationRuleInput",
     "CRMAutomationRun",
+    "CRMBulkCustomersInput",
+    "CRMBulkDealsInput",
+    "CRMBulkLeadsInput",
+    "CRMBulkResult",
+    "CRMBulkSkip",
     "CRMCardFile",
     "CRMCardFileList",
+    "CRMCardMailLinkRequest",
+    "CRMCardMailList",
+    "CRMCardMailSendRequest",
+    "CRMCardMailThread",
+    "CRMCatalogPage",
+    "CRMCatalogProduct",
     "CRMContactRef",
     "CRMConversionMetric",
     "CRMConvertLeadInput",
@@ -135,6 +148,9 @@ __all__ = [
     "CRMDealContact",
     "CRMDealInput",
     "CRMDealItem",
+    "CRMDealItemInput",
+    "CRMDealItemProduct",
+    "CRMDealItemsInput",
     "CRMDealPatch",
     "CRMDealStageHistory",
     "CRMEngagement",
@@ -185,6 +201,11 @@ __all__ = [
     "CRMLossReason",
     "CRMLossReasonInput",
     "CRMLossReasonMetric",
+    "CRMMailAccount",
+    "CRMMailAccountList",
+    "CRMMailLink",
+    "CRMMailMessage",
+    "CRMMailMessageList",
     "CRMManagerWorkload",
     "CRMMergeCustomersInput",
     "CRMMergeLeadsInput",
@@ -203,6 +224,11 @@ __all__ = [
     "CRMSalesPlan",
     "CRMSalesPlansInput",
     "CRMSalesPlansInputItemsItem",
+    "CRMSavedView",
+    "CRMSavedViewInput",
+    "CRMSavedViewList",
+    "CRMSavedViewListKind",
+    "CRMSavedViewPatch",
     "CRMSettings",
     "CRMSettingsPatch",
     "CRMSourceMetric",
@@ -667,6 +693,7 @@ __all__ = [
     "DocflowFlowPageStateCounts",
     "DocflowFlowPaymentRule",
     "DocflowFlowPaymentRuleOrders",
+    "DocflowFlowPaymentShare",
     "DocflowFlowRecognized",
     "DocflowFlowRelation",
     "DocflowFlowRelationInput",
@@ -809,6 +836,7 @@ __all__ = [
     "FinanceOneCConnectionInput",
     "FinanceOneCConnectionPage",
     "FinanceOneCObjects",
+    "FinanceOpeningAdvanceVATRequest",
     "FinanceOpeningDebtRequest",
     "FinanceOperation",
     "FinanceOperationAccrualAllocation",
@@ -954,6 +982,8 @@ __all__ = [
     "LinkList",
     "MailAccount",
     "MailAccountStatus",
+    "MailAddressBookPage",
+    "MailAddressBookRecord",
     "MailAttachment",
     "MailAttachmentLink",
     "MailComposeInput",
@@ -975,6 +1005,7 @@ __all__ = [
     "MailRuleCondition",
     "MailRuleInput",
     "MailRuleOutcome",
+    "MailSavedAddress",
     "MailScanStatus",
     "MailSpamVerdict",
     "MailSyncReport",
@@ -1205,6 +1236,14 @@ __all__ = [
     "MarkingReconcileRun",
     "MarkingReconcileStarted",
     "MarkingReconcileState",
+    "MarkingRemark",
+    "MarkingRemarkDocumentInput",
+    "MarkingRemarkInput",
+    "MarkingRemarkItem",
+    "MarkingRemarkItemsInput",
+    "MarkingRemarkList",
+    "MarkingRemarkOrderInput",
+    "MarkingRemarkPairInput",
     "MarkingReplaceCodesInput",
     "MarkingReplaceCodesInputLinesItem",
     "MarkingReturnCode",
@@ -1243,6 +1282,13 @@ __all__ = [
     "PlatformAppStatus",
     "PlatformAppVersion",
     "PlatformAppVersionStatus",
+    "PokerFinish",
+    "PokerSession",
+    "PokerSessionPage",
+    "PokerStart",
+    "PokerVote",
+    "PokerVoteInput",
+    "PokerVoter",
     "Project",
     "ProjectCreate",
     "ProjectPage",
@@ -1256,6 +1302,18 @@ __all__ = [
     "RelationDirection",
     "RelationKind",
     "RelationList",
+    "Scrum",
+    "ScrumBoard",
+    "ScrumBoardInput",
+    "ScrumBoardSource",
+    "ScrumColumn",
+    "ScrumPerson",
+    "ScrumReference",
+    "ScrumReferenceInput",
+    "ScrumReports",
+    "ScrumTaskCreate",
+    "ScrumTaskSprint",
+    "ScrumTeam",
     "Section",
     "SectionCreate",
     "SectionMember",
@@ -1276,11 +1334,25 @@ __all__ = [
     "SettingsRole",
     "SettingsRolePage",
     "SettingsVatRates",
+    "Sprint",
     "SprintAgingTask",
+    "SprintComplete",
+    "SprintCompletion",
+    "SprintCreate",
     "SprintMetrics",
+    "SprintMetricsPoints",
     "SprintOutcomeMetrics",
+    "SprintPage",
+    "SprintPoints",
+    "SprintProgress",
+    "SprintReport",
+    "SprintReportTask",
+    "SprintSettings",
     "SprintSizing",
+    "SprintStart",
+    "SprintStatus",
     "SprintThroughputPoint",
+    "SprintUpdate",
     "Status",
     "StatusCategory",
     "StatusCreate",
@@ -1424,6 +1496,7 @@ __all__ = [
     "StockZoneAllocationLine",
     "StockZoneAllocationResult",
     "StockZoneStockRow",
+    "StoryPointsInput",
     "Subtask",
     "SupplierDocument",
     "Task",
@@ -1458,6 +1531,7 @@ __all__ = [
     "TransferSession",
     "TransferUploadRequest",
     "UUID",
+    "Velocity",
     "WorkflowStatusUpdate",
     "AppDocflowRecordSalePaymentRequest",
     "AssistantListDigestsResponse",
@@ -1498,6 +1572,7 @@ __all__ = [
     "FinanceGetProjectBudgetHistoryResponse",
     "FinanceListAllocationRulesResponse",
     "FinanceRelinkPaymentRequest",
+    "FinanceChangeActPnlItemRequest",
     "FinanceRepostTransactionsRequest",
     "FinanceMarkTransactionDeletedRequest",
     "FinanceRepostTransactionRequest",
@@ -1508,6 +1583,9 @@ __all__ = [
     "MailApplyRulesRequest",
     "MailApplyRulesResponse",
     "MailAttachStoredFileRequest",
+    "MailSaveAddressBookEntryRequest",
+    "MailRenameAddressBookEntryRequest",
+    "MailLinkAddressBookEntryRequest",
     "MailReadBatchRequest",
     "MailReadBatchResponse",
     "MailListMessageAttachmentsResponse",
@@ -2605,6 +2683,22 @@ class AutomationWebhookField(TypedDict):
     path: str
     type: Literal['string', 'number', 'bool', 'date']
 
+class Burndown(TypedDict):
+    sprint: "UUID"
+    planned_points: int
+    #: false — снимка плана нет: идеальная линия от текущего объёма, журнал в текущих оценках
+    plan_fixed: bool
+    points: List["BurndownPoint"]
+
+class BurndownPoint(TypedDict):
+    date: str
+    ideal: float
+    #: Остаток баллов незавершённых задач; null у будущих дней
+    remaining: Optional[float]
+    scope: Optional[float]
+    #: Баллы, добавленные или убранные за день после старта
+    scope_change: float
+
 class _CRMActivityRequired(TypedDict):
     id: "UUID"
     entity_type: Literal['lead', 'deal', 'customer']
@@ -2715,6 +2809,69 @@ class CRMAutomationRun(_CRMAutomationRunRequired, total=False):
     entity_type: str
     entity_id: "UUID"
 
+class _CRMBulkCustomersInputRequired(TypedDict):
+    #: Выбранные клиенты: от 1 до 200, повторы отбрасываются
+    ids: List["UUID"]
+    #: Действие: assign — сменить ответственного, archive — убрать в архив, restore — вернуть из архива
+    action: Literal['assign', 'archive', 'restore']
+
+class CRMBulkCustomersInput(_CRMBulkCustomersInputRequired, total=False):
+    """Одно действие над выбранными карточками клиентов"""
+
+    #: Новый ответственный; обязателен для assign
+    owner_id: int
+
+class _CRMBulkDealsInputRequired(TypedDict):
+    #: Выбранные сделки: от 1 до 200, повторы отбрасываются
+    ids: List["UUID"]
+    #: Действие: assign — сменить ответственного, move — перенести на этап, archive — убрать в архив, restore — вернуть из архива
+    action: Literal['assign', 'move', 'archive', 'restore']
+
+class CRMBulkDealsInput(_CRMBulkDealsInputRequired, total=False):
+    """Одно действие над выбранными сделками"""
+
+    #: Новый ответственный; обязателен для assign
+    owner_id: int
+    #: Этап воронки; обязателен для move
+    stage_id: "UUID"
+    #: Воронка этапа: нужна, когда сделки переходят в другую воронку
+    pipeline_id: "UUID"
+    #: Причина проигрыша для этапа категории lost
+    loss_reason_id: "UUID"
+
+class _CRMBulkLeadsInputRequired(TypedDict):
+    #: Выбранные лиды: от 1 до 200, повторы отбрасываются
+    ids: List["UUID"]
+    #: Действие: assign — сменить ответственного, move — перенести на этап, archive — убрать в архив, restore — вернуть из архива
+    action: Literal['assign', 'move', 'archive', 'restore']
+
+class CRMBulkLeadsInput(_CRMBulkLeadsInputRequired, total=False):
+    """Одно действие над выбранными лидами"""
+
+    #: Новый ответственный; обязателен для assign
+    owner_id: int
+    #: Этап доски лидов; обязателен для move
+    stage_id: "UUID"
+
+class CRMBulkResult(TypedDict):
+    """Итог массового действия: подходящие записи изменены, неподходящие пропущены с причиной"""
+
+    #: Изменённые записи
+    updated: List["UUID"]
+    #: Пропущенные записи с причиной
+    skipped: List["CRMBulkSkip"]
+
+class _CRMBulkSkipRequired(TypedDict):
+    id: "UUID"
+    #: Причина на языке запроса
+    detail: str
+
+class CRMBulkSkip(_CRMBulkSkipRequired, total=False):
+    """Запись, к которой действие не применилось"""
+
+    #: Тот же код отказа, что вернула бы правка этой записи по одной, например crm.record_forbidden или crm.stage_fields_required
+    code: str
+
 class _CRMCardFileRequired(TypedDict):
     id: "UUID"
     entity_type: Literal['lead', 'deal', 'customer']
@@ -2739,6 +2896,80 @@ class CRMCardFileList(TypedDict):
     """Файлы карточки, новые сверху"""
 
     items: List["CRMCardFile"]
+
+class CRMCardMailLinkRequest(TypedDict):
+    """Письмо, чья переписка привязывается к карточке"""
+
+    #: Письмо из почты, видимое человеку
+    message_id: str
+
+class CRMCardMailList(TypedDict):
+    """Переписки карточки, свежие сверху, и адреса почты клиента"""
+
+    items: List["CRMCardMailThread"]
+    #: Адреса почты клиента записи без повторов, в нижнем регистре
+    addresses: List[str]
+
+class _CRMCardMailSendRequestRequired(TypedDict):
+    account_id: "UUID"
+    #: Адресаты, по одному адресу в строке
+    to: List[str]
+
+class CRMCardMailSendRequest(_CRMCardMailSendRequestRequired, total=False):
+    """Письмо из карточки. Нужны адресат и тема или текст"""
+
+    #: Копия, по одному адресу в строке
+    cc: List[str]
+    subject: str
+    #: Текст письма
+    body_text: str
+    #: Письмо, на которое отвечаем: ответ уходит в ту же переписку из того же ящика
+    in_reply_to_id: Optional["UUID"]
+
+class _CRMCardMailThreadRequired(TypedDict):
+    link_id: "UUID"
+    thread_id: "UUID"
+    #: sent - письмо отправлено из карточки, linked - сотрудник привязал письмо
+    source: Literal['sent', 'linked']
+    linked_by: int
+    linked_at: str
+    #: Видит ли смотрящий ящик этой переписки
+    visible: bool
+
+class CRMCardMailThread(_CRMCardMailThreadRequired, total=False):
+    """Переписка, привязанная к карточке. Если ящик смотрящему не виден, visible=false и нет ни темы, ни писем"""
+
+    subject: str
+    #: Письма переписки от старых к новым
+    messages: List["CRMMailMessage"]
+
+class CRMCatalogPage(TypedDict):
+    results: List["CRMCatalogProduct"]
+    limit: int
+    offset: int
+    has_more: bool
+
+class _CRMCatalogProductRequired(TypedDict):
+    id: "UUID"
+    sku: str
+    name: str
+    #: Вид позиции ядра: goods, service, material, semi_product
+    kind: str
+    unit: str
+    #: Цена продажи из карточки десятичной строкой; пусто или 0 - не задана
+    price: str
+    #: Вид ставки НДС карточки: general, reduced, zero, exempt; пусто - общая ставка юрлица
+    vat_kind: str
+    #: Ставка продажи по учётной политике кабинета
+    vat_rate: str
+    #: false - ставку не определить (у юрлиц разные ставки или режим налога не заведён), менеджер выбирает сам
+    vat_rate_known: bool
+    is_stockable: bool
+    is_sellable: bool
+    archived: bool
+
+class CRMCatalogProduct(_CRMCatalogProductRequired, total=False):
+    unit_id: "UUID"
 
 class _CRMContactRefRequired(TypedDict):
     id: "UUID"
@@ -2975,6 +3206,10 @@ class _CRMDealRequired(TypedDict):
     updated_at: str
 
 class CRMDeal(_CRMDealRequired, total=False):
+    #: Сумма набрана руками, а не сложена из состава сделки; сохранение состава снимает признак
+    amount_manual: bool
+    #: Цены строк состава включают НДС
+    prices_include_vat: bool
     expected_close_at: str
     owner_id: int
     crm_customer_id: "UUID"
@@ -3034,6 +3269,10 @@ class _CRMDealCardRequired(TypedDict):
     updated_at: str
 
 class CRMDealCard(_CRMDealCardRequired, total=False):
+    #: Сумма набрана руками, а не сложена из состава сделки; сохранение состава снимает признак
+    amount_manual: bool
+    #: Цены строк состава включают НДС
+    prices_include_vat: bool
     expected_close_at: str
     owner_id: int
     crm_customer_id: "UUID"
@@ -3097,14 +3336,58 @@ class _CRMDealItemRequired(TypedDict):
     #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
     price: str
     discount_percent: float
-    #: Сумма строки со скидкой; считает сервер, чтобы клиенты не разошлись на округлении
-    total: int
+    #: Ставка НДС записью ядра: «22%», «0%», «без НДС»; пусто - ставка не указана, налог не выделяется
+    vat_rate: str
+    #: Сумма строки со скидкой, как записаны цены сделки (с налогом или без); считает сервер, чтобы клиенты не разошлись на округлении
+    total: str
+    #: Сумма строки без НДС
+    amount_net: str
+    #: НДС строки
+    vat_amount: str
+    #: Сумма строки с НДС
+    amount_gross: str
     created_at: str
     updated_at: str
 
 class CRMDealItem(_CRMDealItemRequired, total=False):
-    #: Ссылка на номенклатуру необязательна - на этапе расчёта половина строк ещё не заведена в каталоге
+    #: Позиция номенклатуры ядра (товар или услуга); нет - строка не из каталога
     product_id: "UUID"
+    #: Единица из справочника «Единицы измерения» ядра; у строки из каталога - единица карточки товара
+    unit_id: "UUID"
+    product: "CRMDealItemProduct"
+
+class _CRMDealItemInputRequired(TypedDict):
+    name: str
+    quantity: float
+
+class CRMDealItemInput(_CRMDealItemInputRequired, total=False):
+    product_id: Optional[str]
+    unit: str
+    #: Единица справочника ядра; у строки из каталога сервер берёт единицу карточки товара
+    unit_id: Optional[str]
+    #: Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+    price: str
+    discount_percent: float
+    #: Ставка НДС записью ядра: «22%», «20» (станет «20%»), «0%», «без НДС»; пусто - не указана
+    vat_rate: str
+
+class CRMDealItemProduct(TypedDict):
+    """Сведения карточки номенклатуры на момент чтения: CRM их не копирует"""
+
+    sku: str
+    #: Вид позиции ядра: goods, service, material, semi_product
+    kind: str
+    #: Товар ведётся на складе: только у него есть остаток
+    is_stockable: bool
+    #: Карточка в архиве: строка остаётся, новую так не выбрать
+    archived: bool
+
+class _CRMDealItemsInputRequired(TypedDict):
+    items: Optional[List["CRMDealItemInput"]]
+
+class CRMDealItemsInput(_CRMDealItemsInputRequired, total=False):
+    #: Цены строк включают НДС; не передан - не менять
+    prices_include_vat: Optional[bool]
 
 class CRMDealPatch(TypedDict, total=False):
     title: str
@@ -3119,6 +3402,8 @@ class CRMDealPatch(TypedDict, total=False):
     #: Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.
     customer_id: Optional[str]
     crm_customer_id: Optional[str]
+    #: Отвязать клиента от сделки. Пустой crm_customer_id значит «не менять», поэтому отвязка — этим признаком
+    clear_customer: bool
     next_action: str
     next_action_at: Optional[str]
     #: Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
@@ -3647,6 +3932,8 @@ class CRMLeadPatch(TypedDict, total=False):
     #: Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.
     customer_id: Optional[str]
     crm_customer_id: Optional[str]
+    #: Отвязать клиента от лида. Пустой crm_customer_id значит «не менять», поэтому отвязка — этим признаком
+    clear_customer: bool
     next_action: str
     next_action_at: Optional[str]
     archived: bool
@@ -3716,6 +4003,60 @@ class _CRMLossReasonMetricRequired(TypedDict):
 
 class CRMLossReasonMetric(_CRMLossReasonMetricRequired, total=False):
     id: str
+
+class CRMMailAccount(TypedDict):
+    """Ящик модуля «Почта», из которого человек вправе написать из карточки"""
+
+    id: "UUID"
+    #: Адрес ящика
+    email: str
+    #: Имя отправителя ящика
+    name: str
+    #: true - личный ящик человека, false - общий ящик, открытый ему
+    personal: bool
+
+class CRMMailAccountList(TypedDict):
+    """Ящики для письма из карточки, личный первым"""
+
+    items: List["CRMMailAccount"]
+
+class CRMMailLink(TypedDict):
+    """Связь переписки модуля «Почта» с лидом, сделкой или клиентом"""
+
+    id: "UUID"
+    entity_type: Literal['lead', 'deal', 'customer']
+    entity_id: "UUID"
+    account_id: "UUID"
+    thread_id: "UUID"
+    message_id: "UUID"
+    #: sent - письмо отправлено из карточки, linked - сотрудник привязал письмо
+    source: Literal['sent', 'linked']
+    linked_by: int
+    linked_at: str
+
+class CRMMailMessage(TypedDict):
+    """Письмо так, как его показывает модуль «Почта»; черновики не попадают"""
+
+    id: "UUID"
+    thread_id: "UUID"
+    account_id: "UUID"
+    subject: str
+    from_address: str
+    from_name: str
+    #: Адреса получателей и копии
+    to: List[str]
+    #: Начало текста письма
+    snippet: str
+    #: inbound - пришло в ящик, outbound - ушло из него
+    direction: Literal['inbound', 'outbound']
+    #: Когда письмо отправлено или получено
+    at: str
+    is_read: bool
+
+class CRMMailMessageList(TypedDict):
+    """Письма, свежие сверху"""
+
+    items: List["CRMMailMessage"]
 
 class _CRMManagerWorkloadRequired(TypedDict):
     owner_id: int
@@ -3867,6 +4208,54 @@ class CRMSalesPlansInputItemsItem(_CRMSalesPlansInputItemsItemRequired, total=Fa
     owner_id: Optional[int]
     currency: str
 
+class CRMSavedView(TypedDict):
+    """Сохранённое представление списка: отбор и раскладка столбцов под своим названием"""
+
+    id: "UUID"
+    #: Автор представления
+    owner_id: int
+    list: "CRMSavedViewListKind"
+    name: str
+    #: Общее представление видят все, кому открыт список; личное — только автор
+    shared: bool
+    #: Отбор списка в форме экрана
+    filters: Dict[str, Any]
+    #: Видимость, порядок и ширина столбцов в форме экрана
+    columns: Dict[str, Any]
+    created_at: str
+    updated_at: str
+
+class _CRMSavedViewInputRequired(TypedDict):
+    list: "CRMSavedViewListKind"
+    #: Название в меню «Мои представления»; пробелы по краям обрезаются
+    name: str
+
+class CRMSavedViewInput(_CRMSavedViewInputRequired, total=False):
+    #: Общее представление: заводит только администратор CRM
+    shared: bool
+    #: Отбор списка; без значения — пустой объект
+    filters: Dict[str, Any]
+    #: Раскладка столбцов; без значения — пустой объект
+    columns: Dict[str, Any]
+
+class CRMSavedViewList(TypedDict):
+    views: List["CRMSavedView"]
+    #: Вызывающий — администратор CRM: может заводить, править и удалять общие представления
+    can_share: bool
+
+CRMSavedViewListKind = Literal['leads', 'deals', 'customers']
+
+class CRMSavedViewPatch(TypedDict, total=False):
+    """Поле, которого нет в запросе, не меняется"""
+
+    name: str
+    #: Общее представление: сделать общим или личным может только администратор CRM
+    shared: bool
+    #: Новый отбор списка
+    filters: Dict[str, Any]
+    #: Новая раскладка столбцов
+    columns: Dict[str, Any]
+
 class _CRMSettingsRequired(TypedDict):
     lead_lock_mode: "CRMLeadLockMode"
 
@@ -3958,8 +4347,8 @@ CRMStageShowOnBoard = bool
 
 class _CRMTimelineEntryRequired(TypedDict):
     id: "UUID"
-    #: note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача, file - файл прикреплён к записи или удалён
-    kind: Literal['note', 'system', 'stage', 'decision', 'message', 'link', 'engagement', 'file']
+    #: note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача, file - файл прикреплён к записи или удалён, mail - письмо отправлено из карточки, привязано к ней или отвязано
+    kind: Literal['note', 'system', 'stage', 'decision', 'message', 'link', 'engagement', 'file', 'mail']
     at: str
     #: Заголовок записи: действие, название этапа, решение или направление сообщения
     title: str
@@ -4464,6 +4853,10 @@ class _ChatConversationRequired(TypedDict):
 class ChatConversation(_ChatConversationRequired, total=False):
     preview: "ChatMessage"
     capabilities: "ChatConversationCapabilities"
+    #: До какого момента беседа молчит, если звук выключен на время: пока срок не вышел, notification_mode = muted. После срока поле пустое, а режим снова прежний
+    notification_muted_until: Optional[str]
+    #: Какой режим вернётся, когда выйдет срок «без звука»; есть только пока срок идёт. По нему «Включить звук» возвращает прежний выбор
+    notification_mode_after_mute: Optional[Literal['all', 'mentions', None]]
     origin: str
     origin_ref: Optional["UUID"]
     last_read_seq: int
@@ -4473,7 +4866,7 @@ class ChatConversation(_ChatConversationRequired, total=False):
     peer_user_id: Optional[int]
     peer_avatar_url: str
 
-class ChatConversationCapabilities(TypedDict):
+class _ChatConversationCapabilitiesRequired(TypedDict):
     canRead: bool
     canWrite: bool
     canManageMembers: bool
@@ -4484,6 +4877,10 @@ class ChatConversationCapabilities(TypedDict):
     canMarkUnread: bool
     canMention: bool
     canSetNotificationMode: bool
+
+class ChatConversationCapabilities(_ChatConversationCapabilitiesRequired, total=False):
+    #: Можно записать голосовое или видеокружок и переслать такое сюда. В чатах задач и поддержки — нет: там только текст, файлы и снимки экрана
+    canSendVoice: bool
 
 class _ChatConversationPageRequired(TypedDict):
     items: List["ChatConversation"]
@@ -4569,8 +4966,16 @@ class _ChatMessageRequired(TypedDict):
 
 class ChatMessage(_ChatMessageRequired, total=False):
     reply_to_message_id: Optional[str]
+    #: Пересланное: исходное сообщение. Нет у обычных сообщений
+    forwarded_from_message_id: Optional[str]
+    #: Пересланное: автор оригинала — участник кабинета (ERP-1964, «Переслано от …»). При пересылке пересланного — тот, кто написал первым. Нет у обычных и у старых пересланных сообщений
+    forwarded_from_user_id: int
+    #: Пересланное: подпись автора оригинала, когда участника нет в справочнике людей, — имя под ответом поддержки или название исходной беседы. Нет у обычных и у старых пересланных сообщений
+    forwarded_from_name: str
     #: Цитата части исходного сообщения; поля нет, когда ответ на сообщение целиком, исходное удалено или недоступно
     reply_quote: str
+    #: Надгробие: сообщение удалено у всех. Тела, вложений, упоминаний и реакций у него нет; показывать его в ленте не нужно
+    deleted_at: Optional[str]
 
 class ChatMessageMention(TypedDict):
     user_id: int
@@ -4583,11 +4988,19 @@ class ChatMessagePage(_ChatMessagePageRequired, total=False):
     first_seq: int
     last_seq: int
 
-class ChatNotificationModeInput(TypedDict):
+class _ChatNotificationModeInputRequired(TypedDict):
     mode: Literal['all', 'mentions', 'muted']
+
+class ChatNotificationModeInput(_ChatNotificationModeInputRequired, total=False):
+    #: Без звука на время: до этого момента беседа молчит, потом снова действует прежний режим. Только вместе с mode = muted, в будущем и не дальше года; без срока — без звука навсегда
+    muted_until: Optional[str]
 
 class ChatNotificationModeResult(TypedDict):
     mode: Literal['all', 'mentions', 'muted']
+    #: Какой режим вернётся, когда выйдет срок; пусто, если срока нет
+    mode_after_mute: Optional[Literal['all', 'mentions', None]]
+    #: До какого момента беседа молчит, если звук выключен на время; пусто, если срока нет
+    muted_until: Optional[str]
     changed: bool
 
 class _ChatPeoplePageRequired(TypedDict):
@@ -6275,6 +6688,8 @@ class CoreOrderPaymentTerm(TypedDict, total=False):
     due_trigger: Literal['', 'after_stage']
     stage_id: "UUID"
     delay_days: int
+    #: Доля итога документа в процентах, только на входе: строка без суммы получает сумму от итога с НДС, последняя такая строка добирает копейки
+    share: str
 
 class _CoreOrderProgressRequired(TypedDict):
     executed: str
@@ -6646,7 +7061,7 @@ class _CoreProductRequired(TypedDict):
     purchase_price: str
     #: Устарело (ERP-484): снимается, ставка определяется видом товара (vat_kind) и налоговой политикой юрлица на дату документа. Всегда пустая строка
     vat_rate: str
-    #: Вес одной базовой единицы, кг; пусто — не задан
+    #: Вес одной базовой единицы, кг, десятичной строкой: до 9 цифр до запятой и до 6 после (0.0127 — это 12,7 г); пусто — не задан
     weight_kg: str
     #: Объём одной базовой единицы, м³; пусто — не задан
     volume_m3: str
@@ -6730,7 +7145,7 @@ class CoreProductCreate(_CoreProductCreateRequired, total=False):
     purchase_price: str
     #: Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)
     vat_kind: Literal['', 'general', 'reduced', 'zero', 'exempt']
-    #: Вес одной базовой единицы, кг; пусто — не задан
+    #: Вес одной базовой единицы, кг, десятичной строкой: до 9 цифр до запятой и до 6 после (0.0127 — это 12,7 г); пусто — не задан
     weight_kg: str
     #: Объём одной базовой единицы, м³; пусто — не задан
     volume_m3: str
@@ -7032,7 +7447,7 @@ class CoreProductPatch(TypedDict, total=False):
     purchase_price: str
     #: Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)
     vat_kind: Literal['', 'general', 'reduced', 'zero', 'exempt']
-    #: Вес одной базовой единицы, кг; пусто — не задан
+    #: Вес одной базовой единицы, кг, десятичной строкой: до 9 цифр до запятой и до 6 после (0.0127 — это 12,7 г); пусто — не задан
     weight_kg: str
     #: Объём одной базовой единицы, м³; пусто — не задан
     volume_m3: str
@@ -8875,8 +9290,22 @@ class DocflowFlowPaymentRule(_DocflowFlowPaymentRuleRequired, total=False):
     #: Пока действует договор: окончания нет, итога нет, раскрываются ближайшие 12 платежей
     open: bool
     orders: "DocflowFlowPaymentRuleOrders"
+    #: Оплата периода долями: проценты вместе ровно 100. Продажа или закупка периода получает график оплат из долей. Пусто — один платёж периода в дату правила
+    shares: List["DocflowFlowPaymentShare"]
 
 DocflowFlowPaymentRuleOrders = TypedDict("DocflowFlowPaymentRuleOrders", {"from": str, "product_id": "UUID", "product_name": str}, total=False)
+
+class _DocflowFlowPaymentShareRequired(TypedDict):
+    #: Доля суммы периода в процентах десятичным текстом, до двух знаков
+    percent: str
+
+class DocflowFlowPaymentShare(_DocflowFlowPaymentShareRequired, total=False):
+    """Доля оплаты периода: процент суммы периода и ровно один срок — день периода или дни после акта."""
+
+    #: День периода: число месяца стадии (month, quarter) или день недели ISO 1..7 (week)
+    day: int
+    #: Срок через столько дней после акта периода
+    after_act_days: int
 
 class DocflowFlowRecognized(TypedDict, total=False):
     """Прочитанное машиной из файла карточки — НА ПРОВЕРКУ. Живёт отдельно от условий договора: в условия сумма и срок попадают только рукой человека. Пустое поле означает «не прочиталось», а не ноль. Приёмка входящего договора в PDF заполняет его текстом бумаги."""
@@ -10705,6 +11134,16 @@ class FinanceOneCObjects(TypedDict, total=False):
     budget: bool
     declarations: bool
 
+class _FinanceOpeningAdvanceVATRequestRequired(TypedDict):
+    #: Расчётная ставка, например 20/120
+    vat_rate: str
+    #: Сумма налога, больше нуля и меньше аванса
+    vat_amount: str
+
+class FinanceOpeningAdvanceVATRequest(_FinanceOpeningAdvanceVATRequestRequired, total=False):
+    #: Откуда строка: введена вручную или загружена из 1С
+    source: Literal['manual', 'onec']
+
 class _FinanceOpeningDebtRequestRequired(TypedDict):
     #: Дата остатков — дата старта учёта
     date: str
@@ -11656,6 +12095,8 @@ class FinanceTaxMonthLine(_FinanceTaxMonthLineRequired, total=False):
     accrued_before: str
     #: Неофициальная часть зарплаты — исключена из расходов базы
     payroll_outside: str
+    #: Налог юрлица за собственника: контрагент-собственник; начисление идёт на расчёты с ним (Дт 75), а не в расход ОПиУ
+    for_contact: str
     #: Сумма по декларации; строка с ней — строка декларации за прошлый период
     declared: str
     #: Расчёт раздела за период декларации; заполняет сервер
@@ -12320,6 +12761,27 @@ class MailAccount(TypedDict):
 
 MailAccountStatus = Literal['active', 'disabled', 'error']
 
+class MailAddressBookPage(TypedDict):
+    items: List["MailAddressBookRecord"]
+    total: int
+    limit: int
+    offset: int
+    has_more: bool
+
+class MailAddressBookRecord(TypedDict):
+    """Адресат из адресной книги почты"""
+
+    id: "UUID"
+    #: Адрес строчными буквами, уникален в кабинете
+    email: str
+    name: str
+    #: Привязанный контрагент справочника core
+    contact_id: Optional["UUID"]
+    #: Кто сохранил адресата
+    created_by: Optional[int]
+    created_at: str
+    updated_at: str
+
 class _MailAttachmentRequired(TypedDict):
     id: "UUID"
     message_id: "UUID"
@@ -12370,6 +12832,10 @@ class MailComposeInput(TypedDict, total=False):
     upload_ids: List["UUID"]
     #: Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо встаёт в очередь, а принятие SMTP-сервером не подтверждает доставку или прочтение получателем
     save_as_draft: bool
+    #: Черновик, который это письмо заменяет: после сохранения прежний черновик удаляется, и в «Черновиках» не копятся версии одного письма
+    replace_draft_id: Optional["UUID"]
+    #: Вложения заменяемого черновика, которые остаются в письме; только вместе с replace_draft_id
+    keep_attachment_ids: List["UUID"]
 
 class _MailDeliveryStateRequired(TypedDict):
     status: Literal['queued', 'sending', 'sent', 'failed', 'cancelled']
@@ -12608,6 +13074,11 @@ class MailRuleOutcome(_MailRuleOutcomeRequired, total=False):
     marked_read: Optional[bool]
     flagged: bool
     spam_verdict: str
+
+class MailSavedAddress(TypedDict):
+    entry: "MailAddressBookRecord"
+    #: true — сохранён сейчас, false — адрес уже был в книге
+    created: bool
 
 MailScanStatus = Literal['pending', 'clean', 'infected', 'skipped']
 
@@ -13238,7 +13709,7 @@ class MarketplaceStore(_MarketplaceStoreRequired, total=False):
     config_synced_at: str
     #: Безопасная классификация токена Wildberries без раскрытия токена: basic — ограниченный базовый, personal — персональный, test — тестовый, service — сервисный, unknown — тип не определён
     token_class: Literal['basic', 'personal', 'test', 'service', 'unknown']
-    #: Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена
+    #: Несекретные сведения о ключе площадки: тип, категории доступа или роли, только чтение и срок действия. Wildberries — разобрано из самого токена; Ozon — роли и срок по методу Ozon /v1/roles, только при key_info=1
     credential: "MarketplaceStoreCredential"
     write_key: "MarketplaceStoreWriteKey"
     #: Безопасный стабильный код состояния подключения; сырой текст ошибки не публикуется
@@ -13251,16 +13722,18 @@ class MarketplaceStore(_MarketplaceStoreRequired, total=False):
     business_id: Optional["UUID"]
 
 class _MarketplaceStoreCredentialRequired(TypedDict):
-    #: Тип ключа по полю acc токена
-    kind: Literal['basic', 'personal', 'test', 'service', 'unknown']
+    #: Тип ключа по полю acc токена Wildberries; ozon — ключ Seller API Ozon
+    kind: Literal['basic', 'personal', 'test', 'service', 'unknown', 'ozon']
     #: Категории методов, к которым у ключа есть доступ
     scopes: List[Literal['content', 'analytics', 'prices', 'marketplace', 'statistics', 'promotion', 'feedbacks', 'chat', 'supplies', 'returns', 'documents', 'finance', 'users']]
     #: Ключ только на чтение
     read_only: bool
 
 class MarketplaceStoreCredential(_MarketplaceStoreCredentialRequired, total=False):
-    """Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена"""
+    """Несекретные сведения о ключе площадки: тип, категории доступа или роли, только чтение и срок действия. Wildberries — разобрано из самого токена; Ozon — роли и срок по методу Ozon /v1/roles, только при key_info=1"""
 
+    #: Роли ключа Ozon названиями площадки
+    roles: List[str]
     #: Когда ключ перестанет работать
     expires_at: str
 
@@ -14746,7 +15219,7 @@ class MarkingDocumentDraftInput(_MarkingDocumentDraftInputRequired, total=False)
     #: Складской документ, по которому заводится документ ЧЗ
     basis_id: str
 
-MarkingDocumentKind = Literal['withdrawal', 'withdrawal_cancel', 'return', 'introduce', 'introduce_remains', 'cancel_codes', 'aggregation', 'disaggregation', 'sets_aggregation']
+MarkingDocumentKind = Literal['withdrawal', 'withdrawal_cancel', 'return', 'introduce', 'introduce_remains', 'introduce_import', 'remark', 'cancel_codes', 'aggregation', 'disaggregation', 'sets_aggregation']
 
 class MarkingDocumentParams(TypedDict, total=False):
     """Параметры вида документа; незнакомое поле — отказ"""
@@ -14774,6 +15247,12 @@ class MarkingDocumentParams(TypedDict, total=False):
     certificate_type: str
     certificate_number: str
     certificate_date: str
+    #: Ввод импорта (introduce_import) — регистрационный номер ДТ «XXXXXXXX/ДДММГГ/XXXXXXX»
+    declaration_number: str
+    #: Ввод импорта — дата регистрации ДТ, ГГГГ-ММ-ДД; совпадает с датой в номере
+    declaration_date: str
+    #: Перемаркировка (remark): предыдущий код к новому — ключ новый код, значение предыдущий (оба сводятся к КИ без криптохвоста); у нового кода без предыдущего нужен tnved_code
+    previous_codes: Dict[str, str]
     #: Формирование упаковки — код короба «00» + SSCC; формирование набора — код набора (КИН), скан или без криптохвоста
     unit_serial_number: str
 
@@ -15389,6 +15868,95 @@ class MarkingReconcileState(TypedDict):
     current: Optional["MarkingReconcileRun"]
     last_done: Optional["MarkingReconcileRun"]
 
+class _MarkingRemarkRequired(TypedDict):
+    id: "UUID"
+    company_id: "UUID"
+    group: str
+    reason: Literal['KM_SPOILED', 'DESCRIPTION_ERRORS']
+    source: Literal['card', 'return', 'stock', 'manual']
+    created_at: str
+    items: List["MarkingRemarkItem"]
+    #: Шаг перемаркировки
+    stage: Literal['collecting', 'labeling', 'applying', 'ready', 'sent', 'rejected', 'done', 'cancelled']
+    #: Срок прошёл, а марка на складе не заменена
+    overdue: bool
+    #: Пар с новой маркой
+    paired: int
+
+class MarkingRemark(_MarkingRemarkRequired, total=False):
+    basis_type: str
+    basis_id: "UUID"
+    due_date: str
+    order_id: "UUID"
+    application_id: "UUID"
+    document_id: "UUID"
+    stock_document_id: "UUID"
+    note: str
+    cancelled_at: str
+    created_by: int
+
+class MarkingRemarkDocumentInput(TypedDict, total=False):
+    #: ТН ВЭД (10 цифр) для пар без прежней марки
+    tnved_code: str
+    #: Дата перемаркировки; пусто — сегодня
+    date: str
+
+class _MarkingRemarkInputRequired(TypedDict):
+    company_id: "UUID"
+    #: Ключ товарной группы
+    group: str
+
+class MarkingRemarkInput(_MarkingRemarkInputRequired, total=False):
+    #: Причина; по умолчанию KM_SPOILED
+    reason: Literal['KM_SPOILED', 'DESCRIPTION_ERRORS']
+    #: Откуда начата; по умолчанию manual
+    source: Literal['card', 'return', 'stock', 'manual']
+    #: Вид документа-основания
+    basis_type: str
+    basis_id: "UUID"
+    #: Срок; у возврата без срока — 20 рабочих дней
+    due_date: str
+    note: str
+
+class _MarkingRemarkItemRequired(TypedDict):
+    id: "UUID"
+    seq: int
+    product_id: "UUID"
+    gtin: str
+
+class MarkingRemarkItem(_MarkingRemarkItemRequired, total=False):
+    product_name: str
+    product_sku: str
+    warehouse_id: "UUID"
+    old_code_id: "UUID"
+    #: Прежняя марка без криптохвоста
+    old_identity: str
+    new_code_id: "UUID"
+    #: Новая марка без криптохвоста
+    new_identity: str
+
+class MarkingRemarkItemsInput(TypedDict, total=False):
+    #: Сканы прежних марок
+    codes: List[str]
+    product_id: "UUID"
+    warehouse_id: "UUID"
+    #: Сколько единиц без марки
+    quantity: int
+
+class MarkingRemarkList(TypedDict):
+    items: Optional[List["MarkingRemark"]]
+    total: int
+
+class MarkingRemarkOrderInput(TypedDict):
+    order_id: "UUID"
+
+class _MarkingRemarkPairInputRequired(TypedDict):
+    #: Скан новой марки
+    code: str
+
+class MarkingRemarkPairInput(_MarkingRemarkPairInputRequired, total=False):
+    item_id: "UUID"
+
 class MarkingReplaceCodesInput(TypedDict):
     company_id: "UUID"
     lines: List["MarkingReplaceCodesInputLinesItem"]
@@ -15692,6 +16260,57 @@ class PlatformAppVersion(_PlatformAppVersionRequired, total=False):
 
 PlatformAppVersionStatus = Literal['draft', 'review', 'published', 'deprecated', 'blocked']
 
+class _PokerFinishRequired(TypedDict):
+    points: Optional[int]
+
+class PokerFinish(_PokerFinishRequired, total=False):
+    make_reference: bool
+
+class PokerSession(TypedDict):
+    id: "UUID"
+    project: "UUID"
+    task: "UUID"
+    task_identifier: str
+    task_title: str
+    task_points: Optional[int]
+    mode: Literal['live', 'async']
+    status: Literal['voting', 'revealed', 'closed']
+    round: int
+    host: int
+    host_name: str
+    voters: List["PokerVoter"]
+    voted: int
+    my_card: Optional[str]
+    #: Карты раунда; пусто, пока раунд не открыт
+    votes: List["PokerVote"]
+    low: Optional[str]
+    high: Optional[str]
+    consensus: Optional[int]
+    result: Optional[int]
+    can_manage: bool
+    can_vote: bool
+    created_at: str
+
+class PokerSessionPage(TypedDict):
+    count: int
+    results: List["PokerSession"]
+
+class PokerStart(TypedDict, total=False):
+    mode: Literal['live', 'async']
+
+class PokerVote(TypedDict):
+    user: int
+    name: str
+    card: Literal['1', '2', '3', '5', '8', '13', '20', '?']
+
+class PokerVoteInput(TypedDict):
+    card: Literal['1', '2', '3', '5', '8', '13', '20', '?']
+
+class PokerVoter(TypedDict):
+    user: int
+    name: str
+    voted: bool
+
 class Project(TypedDict):
     id: "UUID"
     key: str
@@ -15703,9 +16322,12 @@ class Project(TypedDict):
     tasks_total: int
     tasks_active: int
     tasks_done: int
-    scrum_enabled: bool
     #: Бизнес проекта: правило «все задачи» при области доступа не на все бизнесы видит только проекты её бизнесов и кабинета; участники проекта видят его всегда. null — проект всего кабинета
     business_id: Optional["UUID"]
+    #: Может ли текущий пользователь заводить разделы в проекте: владелец или совладелец проекта либо правило «все задачи», открывающее проект.
+    can_manage_sections: bool
+    #: Может ли текущий пользователь управлять проектом: менять название, код, описание и цвет, этапы и метки его разделов, состав и удалять проект — владелец или совладелец проекта либо правило «все задачи», открывающее проект.
+    can_manage_project: bool
 
 class _ProjectCreateRequired(TypedDict):
     name: str
@@ -15799,6 +16421,113 @@ RelationDirection = Literal['outgoing', 'incoming', 'all']
 RelationKind = Literal['relates', 'blocks', 'blocked_by', 'duplicate']
 
 RelationList = List["Relation"]
+
+class Scrum(TypedDict):
+    project: "UUID"
+    board: "ScrumBoard"
+    #: Разделы проекта, чью воронку можно взять для доски
+    board_sources: List["ScrumBoardSource"]
+    project_key: str
+    project_name: str
+    section: "UUID"
+    columns: List["ScrumColumn"]
+    #: Идущий спринт, который экран открывает смотрящему по умолчанию: где он участник, иначе ближайший по дате окончания
+    active_sprint: Optional["Sprint"]
+    #: Все идущие спринты проекта (их может быть несколько), раньше заканчивающийся — первым
+    active_sprints: List["Sprint"]
+    sprint_defaults: "SprintSettings"
+    people: List["ScrumPerson"]
+    reference: Optional["ScrumReference"]
+    velocity: "Velocity"
+    me: int
+    can_write: bool
+    can_manage: bool
+
+class ScrumBoard(TypedDict):
+    #: Действующий набор колонок; по умолчанию — stages из эталона кабинета
+    mode: Literal['scrum', 'stages']
+    #: Раздел проекта, чья воронка скопирована; null в режиме stages — эталон кабинета
+    source: Optional["UUID"]
+    source_name: str
+    #: Режим выбрал кабинет; false — действует умолчание
+    explicit: bool
+    #: Этапы, скрытые на канбане спринта
+    hidden: List["UUID"]
+
+class _ScrumBoardInputRequired(TypedDict):
+    mode: Literal['scrum', 'stages']
+
+class ScrumBoardInput(_ScrumBoardInputRequired, total=False):
+    #: Только для stages: раздел проекта; null — эталон кабинета
+    source: Optional["UUID"]
+    #: Этапы текущего набора, скрытые на канбане; без поля — как было. Начальный этап и все этапы разом скрыть нельзя; при смене набора скрытие переходит на одноимённые этапы
+    hidden: List["UUID"]
+
+class ScrumBoardSource(TypedDict):
+    section: "UUID"
+    name: str
+
+class ScrumColumn(TypedDict):
+    """Колонка доски спринта — этап раздела «Скрам», в порядке доски."""
+
+    #: Четыре колонки скрама или копия этапа источника (scrum.stage.<hex>) в режиме «Этапы как у задач»
+    key: str
+    status: "UUID"
+    name: str
+    color: str
+    category: Literal['backlog', 'todo', 'in_progress', 'review', 'done', 'cancelled']
+    #: Начальный этап — бэклог спринта, куда заводятся новые задачи
+    default: bool
+    #: Колонка скрыта на канбане спринта; задачи в ней не теряются и считаются в отчётах
+    hidden: bool
+    #: Сколько задач скрама стоит на этом этапе во всех спринтах
+    tasks: int
+
+class ScrumPerson(TypedDict):
+    user: int
+    name: str
+
+class ScrumReference(TypedDict):
+    task: "UUID"
+    identifier: str
+    title: str
+    points: Optional[int]
+
+class ScrumReferenceInput(TypedDict):
+    task: Optional["UUID"]
+
+class ScrumReports(TypedDict):
+    sprints: List["SprintPoints"]
+    velocity: "Velocity"
+    team: "ScrumTeam"
+    #: Burndown каждого идущего спринта, раньше заканчивающийся — первым
+    burndowns: List["Burndown"]
+    #: Burndown спринта по умолчанию для смотрящего: где он участник, иначе ближайший по дате окончания
+    burndown: Optional["Burndown"]
+
+class _ScrumTaskCreateRequired(TypedDict):
+    title: str
+
+class ScrumTaskCreate(_ScrumTaskCreateRequired, total=False):
+    """Поля обычной задачи без раздела и спринта — спринт задаёт путь."""
+
+    description: str
+    priority: str
+    executor: int
+    due_at: str
+
+class ScrumTaskSprint(TypedDict):
+    #: Спринт проекта; задача встаёт в его колонку «Бэклог».
+    sprint: "UUID"
+
+class ScrumTeam(TypedDict):
+    """Командные серии скрама — без мест и сравнения людей"""
+
+    #: Сколько последних завершённых спринтов подряд выполнили цель
+    goal_streak: int
+    #: Факт последних (до трёх) завершённых спринтов, от старого к новому
+    velocity_trend: List[int]
+    velocity_growing: bool
 
 class Section(TypedDict):
     id: "UUID"
@@ -15999,13 +16728,74 @@ class SettingsVatRates(TypedDict):
     #: Фиксированный профиль 22, 20, 10 и 0 процентов
     rates: List[int]
 
+class Sprint(TypedDict):
+    id: "UUID"
+    project: "UUID"
+    name: str
+    goal: str
+    starts_at: Optional[str]
+    ends_at: Optional[str]
+    status: "SprintStatus"
+    started_at: Optional[str]
+    completed_at: Optional[str]
+    order: int
+    length_days: int
+    members: List[int]
+    daily_time: Optional[str]
+    #: Длительность ежедневной встречи в минутах; по умолчанию 15
+    daily_minutes: int
+    timezone: str
+    #: Серия ежедневной встречи в календаре (source tasks:scrum); null — встреча не назначена
+    daily_event: Optional["UUID"]
+    task_count: int
+    tasks_done: int
+    #: Сумма баллов задач спринта сейчас
+    points: int
+    points_done: int
+    #: Снимок плана на старте
+    planned_points: Optional[int]
+    #: Снимок факта на завершении: только задачи в «Готово»
+    completed_points: Optional[int]
+    #: Баллы задач в колонке «В работе» сейчас
+    points_in_progress: int
+    #: Прогресс идущего спринта — вычисляется при чтении; у остальных null
+    progress: Optional["SprintProgress"]
+    created_at: str
+    updated_at: str
+
 class SprintAgingTask(TypedDict):
     id: "UUID"
     code: str
     title: str
     seconds: int
 
-class SprintMetrics(TypedDict):
+class SprintComplete(TypedDict, total=False):
+    #: Куда незавершённые задачи: бэклог запланированного спринта или нового; без значения — только если все задачи готовы
+    carry_over: Literal['sprint', 'new']
+    target_sprint: "UUID"
+    new_sprint_name: str
+
+class SprintCompletion(TypedDict):
+    sprint: "Sprint"
+    done: int
+    carried_over: int
+    target: Optional["Sprint"]
+
+class _SprintCreateRequired(TypedDict):
+    name: str
+
+class SprintCreate(_SprintCreateRequired, total=False):
+    goal: str
+    starts_at: str
+    ends_at: str
+    length_days: int
+    members: List[int]
+    #: ЧЧ:ММ; пустая строка снимает время встречи
+    daily_time: str
+    #: Длительность ежедневной встречи в минутах; по умолчанию 15
+    daily_minutes: int
+
+class _SprintMetricsRequired(TypedDict):
     cycle: "UUID"
     window_from: str
     window_to: str
@@ -16020,8 +16810,91 @@ class SprintMetrics(TypedDict):
     sizing: "SprintSizing"
     outcomes: "SprintOutcomeMetrics"
 
+class SprintMetrics(_SprintMetricsRequired, total=False):
+    #: Баллы спринта скрама; null у цикла не из скрама.
+    points: Optional["SprintMetricsPoints"]
+
+class SprintMetricsPoints(TypedDict):
+    planned_points: Optional[int]
+    completed_points: Optional[int]
+    #: План зафиксирован снимком при старте
+    plan_fixed: bool
+    velocity: "Velocity"
+    burndown: Optional["Burndown"]
+
 class SprintOutcomeMetrics(TypedDict):
     available: bool
+
+class SprintPage(TypedDict):
+    count: int
+    results: List["Sprint"]
+
+class SprintPoints(TypedDict):
+    sprint: "UUID"
+    name: str
+    status: "SprintStatus"
+    starts_at: Optional[str]
+    ends_at: Optional[str]
+    #: План: снимок на старте; у идущего спринта без снимка (начат до оценок в баллах) — текущий объём, тогда plan_fixed = false
+    planned_points: Optional[int]
+    #: Факт: снимок на завершении
+    completed_points: Optional[int]
+    completed_at: Optional[str]
+    #: План зафиксирован снимком при старте
+    plan_fixed: bool
+    #: Сумма текущих оценок задач спринта
+    scope_points: int
+    #: Сумма текущих оценок задач спринта в «Готово» — текущий факт идущего спринта
+    done_points: int
+    #: Баллы задач, добавленных после старта (журнал объёма)
+    added_points: int
+    #: Баллы задач, перенесённых при завершении в другой спринт
+    carried_points: int
+    #: Цель выполнена: спринт завершён, были оценённые задачи и ничего с баллами не перенесено
+    goal_met: bool
+
+class SprintProgress(TypedDict):
+    """Где идущий спринт сейчас. Идеал — сколько баллов должно быть готово к началу сегодняшнего дня (план × (день − 1) / дней); «в графике», если отставание не больше 10% плана (не меньше 1 балла)."""
+
+    #: День спринта в его поясе
+    day: int
+    days: int
+    days_left: int
+    #: Снимок плана на старте, без снимка — текущий объём
+    plan: int
+    plan_fixed: bool
+    #: Текущий объём спринта
+    scope: int
+    done: int
+    in_progress: int
+    #: Баллы ещё не начатых задач (бэклог спринта и «Туду»)
+    todo: int
+    ideal_done: float
+    #: На сколько баллов готово меньше идеала
+    behind: int
+    on_track: bool
+
+class SprintReport(TypedDict):
+    sprint: "SprintPoints"
+    done: List["SprintReportTask"]
+    carried_over: List["SprintReportTask"]
+    added_after_start: int
+    removed_after_start: int
+
+class SprintReportTask(TypedDict):
+    id: "UUID"
+    identifier: str
+    title: str
+    points: Optional[int]
+
+class SprintSettings(TypedDict):
+    length_days: int
+    members: List[int]
+    #: Время ежедневной встречи ЧЧ:ММ в поясе спринта; null — не задано
+    daily_time: Optional[str]
+    #: Длительность ежедневной встречи в минутах; по умолчанию 15
+    daily_minutes: int
+    timezone: str
 
 class SprintSizing(TypedDict):
     up_to_half_tact: int
@@ -16029,12 +16902,31 @@ class SprintSizing(TypedDict):
     over_tact: int
     unestimated: int
 
+class SprintStart(TypedDict, total=False):
+    starts_at: str
+    ends_at: str
+    goal: str
+
+SprintStatus = Literal['planned', 'active', 'completed']
+
 class SprintThroughputPoint(TypedDict):
     cycle: "UUID"
     name: str
     completed: int
     starts_at: Optional[str]
     ends_at: Optional[str]
+
+class SprintUpdate(TypedDict, total=False):
+    name: str
+    goal: str
+    starts_at: str
+    ends_at: str
+    length_days: int
+    members: List[int]
+    #: ЧЧ:ММ; пустая строка снимает время встречи
+    daily_time: str
+    #: Длительность ежедневной встречи в минутах; по умолчанию 15
+    daily_minutes: int
 
 class Status(TypedDict):
     id: "UUID"
@@ -16045,6 +16937,8 @@ class Status(TypedDict):
     color: str
     is_default: bool
     is_final: bool
+    #: Может ли текущий пользователь менять, удалять и переставлять этап: этап раздела — владелец или совладелец проекта, общий этап — полный доступ по кабинету.
+    can_manage: bool
 
 StatusCategory = Literal['backlog', 'todo', 'in_progress', 'review', 'done', 'cancelled']
 
@@ -16077,6 +16971,8 @@ class StatusMetrics(TypedDict):
 class StatusPage(TypedDict):
     count: int
     results: List["Status"]
+    #: Может ли текущий пользователь заводить общие этапы кабинета (без раздела): только полный доступ по кабинету.
+    can_manage_shared: bool
 
 class StatusReorder(TypedDict):
     items: List["StatusReorderItem"]
@@ -17570,6 +18466,9 @@ class StockZoneStockRow(TypedDict):
     #: Точное decimal-количество строкой
     quantity: str
 
+class StoryPointsInput(TypedDict):
+    points: Optional[int]
+
 class Subtask(TypedDict):
     id: "UUID"
     identifier: str
@@ -17611,6 +18510,10 @@ class _TaskRequired(TypedDict):
     created_at: str
     due_at: Optional[str]
     estimate: Optional[float]
+    #: Баллы задачи скрама; у обычных задач пусто
+    story_points: Optional[int]
+    #: Проект задачи раздела «Скрам»; у обычных задач null.
+    scrum_project: Optional["UUID"]
     sort_order: float
     is_archived: bool
     parent: Optional["UUID"]
@@ -17709,6 +18612,8 @@ class TaskTagCatalogItem(TypedDict):
     color: str
     description: str
     is_archived: bool
+    #: Может ли текущий пользователь менять и удалять метку: метка раздела — владелец или совладелец проекта, общая метка — полный доступ по кабинету.
+    can_manage: bool
 
 class _TaskTagCreateRequired(TypedDict):
     name: str
@@ -17721,6 +18626,8 @@ class TaskTagCreate(_TaskTagCreateRequired, total=False):
 class TaskTagPage(TypedDict):
     count: int
     results: List["TaskTagCatalogItem"]
+    #: Может ли текущий пользователь заводить общие метки кабинета (без раздела): только полный доступ по кабинету.
+    can_manage_shared: bool
 
 class TaskTagUpdate(TypedDict, total=False):
     name: str
@@ -17993,6 +18900,16 @@ class TransferUploadRequest(_TransferUploadRequestRequired, total=False):
 
 UUID = str
 
+class Velocity(TypedDict):
+    """Сколько баллов команда обычно закрывает за спринт — по последним пяти завершённым спринтам. Прогноз — с трёх спринтов истории. Не мерило людей."""
+
+    sprints: int
+    average: float
+    min: int
+    max: int
+    forecast_low: Optional[int]
+    forecast_high: Optional[int]
+
 class WorkflowStatusUpdate(TypedDict, total=False):
     name: str
     category: "StatusCategory"
@@ -18216,6 +19133,10 @@ class FinanceRelinkPaymentRequest(TypedDict, total=False):
     detach: bool
     confirm_release: bool
 
+class FinanceChangeActPnlItemRequest(TypedDict):
+    #: Новая статья доходов и расходов
+    pnl_item_id: "UUID"
+
 class _FinanceRepostTransactionsRequestRequired(TypedDict):
     ids: List["UUID"]
 
@@ -18256,6 +19177,22 @@ class MailApplyRulesResponse(TypedDict):
 class MailAttachStoredFileRequest(TypedDict):
     #: Файл в хранилище кабинета
     file_id: str
+
+class _MailSaveAddressBookEntryRequestRequired(TypedDict):
+    #: Почтовый адрес; можно в виде «Имя <адрес>»
+    email: str
+
+class MailSaveAddressBookEntryRequest(_MailSaveAddressBookEntryRequestRequired, total=False):
+    #: Имя адресата
+    name: str
+
+class MailRenameAddressBookEntryRequest(TypedDict):
+    #: Новое имя; пустое снимает имя
+    name: str
+
+class MailLinkAddressBookEntryRequest(TypedDict):
+    #: Контрагент; null снимает привязку
+    contact_id: Optional["UUID"]
 
 class MailReadBatchRequest(TypedDict, total=False):
     ids: List["UUID"]

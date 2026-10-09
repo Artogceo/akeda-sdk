@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6c36bf4789b73f2b45c991bd664f456a5d43881b0409b778be538f9194f41748).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b3ac5a9b869156c40ca5842e03e97e94ec698c957b42a92d3065a89fdf2bc0a8).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1053,6 +1053,24 @@ type AutomationWebhookField struct {
 	Type string `json:"type"`
 }
 
+type Burndown struct {
+	Sprint        UUID  `json:"sprint"`
+	PlannedPoints int64 `json:"planned_points"`
+	// PlanFixed — false — снимка плана нет: идеальная линия от текущего объёма, журнал в текущих оценках
+	PlanFixed bool            `json:"plan_fixed"`
+	Points    []BurndownPoint `json:"points"`
+}
+
+type BurndownPoint struct {
+	Date  string  `json:"date"`
+	Ideal float64 `json:"ideal"`
+	// Remaining — Остаток баллов незавершённых задач; null у будущих дней
+	Remaining *float64 `json:"remaining"`
+	Scope     *float64 `json:"scope"`
+	// ScopeChange — Баллы, добавленные или убранные за день после старта
+	ScopeChange float64 `json:"scope_change"`
+}
+
 // CRMActivity — Лента только дописывается
 type CRMActivity struct {
 	ID         UUID   `json:"id"`
@@ -1156,6 +1174,61 @@ type CRMAutomationRun struct {
 	UpdatedAt    string   `json:"updated_at"`
 }
 
+// CRMBulkCustomersInput — Одно действие над выбранными карточками клиентов
+type CRMBulkCustomersInput struct {
+	// Ids — Выбранные клиенты: от 1 до 200, повторы отбрасываются
+	Ids []UUID `json:"ids"`
+	// Action — Действие: assign — сменить ответственного, archive — убрать в архив, restore — вернуть из архива
+	Action string `json:"action"`
+	// OwnerID — Новый ответственный; обязателен для assign
+	OwnerID *int64 `json:"owner_id,omitempty"`
+}
+
+// CRMBulkDealsInput — Одно действие над выбранными сделками
+type CRMBulkDealsInput struct {
+	// Ids — Выбранные сделки: от 1 до 200, повторы отбрасываются
+	Ids []UUID `json:"ids"`
+	// Action — Действие: assign — сменить ответственного, move — перенести на этап, archive — убрать в архив, restore — вернуть из архива
+	Action string `json:"action"`
+	// OwnerID — Новый ответственный; обязателен для assign
+	OwnerID *int64 `json:"owner_id,omitempty"`
+	// StageID — Этап воронки; обязателен для move
+	StageID *UUID `json:"stage_id,omitempty"`
+	// PipelineID — Воронка этапа: нужна, когда сделки переходят в другую воронку
+	PipelineID *UUID `json:"pipeline_id,omitempty"`
+	// LossReasonID — Причина проигрыша для этапа категории lost
+	LossReasonID *UUID `json:"loss_reason_id,omitempty"`
+}
+
+// CRMBulkLeadsInput — Одно действие над выбранными лидами
+type CRMBulkLeadsInput struct {
+	// Ids — Выбранные лиды: от 1 до 200, повторы отбрасываются
+	Ids []UUID `json:"ids"`
+	// Action — Действие: assign — сменить ответственного, move — перенести на этап, archive — убрать в архив, restore — вернуть из архива
+	Action string `json:"action"`
+	// OwnerID — Новый ответственный; обязателен для assign
+	OwnerID *int64 `json:"owner_id,omitempty"`
+	// StageID — Этап доски лидов; обязателен для move
+	StageID *UUID `json:"stage_id,omitempty"`
+}
+
+// CRMBulkResult — Итог массового действия: подходящие записи изменены, неподходящие пропущены с причиной
+type CRMBulkResult struct {
+	// Updated — Изменённые записи
+	Updated []UUID `json:"updated"`
+	// Skipped — Пропущенные записи с причиной
+	Skipped []CRMBulkSkip `json:"skipped"`
+}
+
+// CRMBulkSkip — Запись, к которой действие не применилось
+type CRMBulkSkip struct {
+	ID UUID `json:"id"`
+	// Code — Тот же код отказа, что вернула бы правка этой записи по одной, например crm.record_forbidden или crm.stage_fields_required
+	Code *string `json:"code,omitempty"`
+	// Detail — Причина на языке запроса
+	Detail string `json:"detail"`
+}
+
 // CRMCardFile — Файл, прикреплённый к лиду, сделке или клиенту
 type CRMCardFile struct {
 	ID         UUID   `json:"id"`
@@ -1177,6 +1250,76 @@ type CRMCardFile struct {
 // CRMCardFileList — Файлы карточки, новые сверху
 type CRMCardFileList struct {
 	Items []CRMCardFile `json:"items"`
+}
+
+// CRMCardMailLinkRequest — Письмо, чья переписка привязывается к карточке
+type CRMCardMailLinkRequest struct {
+	// MessageID — Письмо из почты, видимое человеку
+	MessageID string `json:"message_id"`
+}
+
+// CRMCardMailList — Переписки карточки, свежие сверху, и адреса почты клиента
+type CRMCardMailList struct {
+	Items []CRMCardMailThread `json:"items"`
+	// Addresses — Адреса почты клиента записи без повторов, в нижнем регистре
+	Addresses []string `json:"addresses"`
+}
+
+// CRMCardMailSendRequest — Письмо из карточки. Нужны адресат и тема или текст
+type CRMCardMailSendRequest struct {
+	AccountID UUID `json:"account_id"`
+	// To — Адресаты, по одному адресу в строке
+	To []string `json:"to"`
+	// Cc — Копия, по одному адресу в строке
+	Cc      []string `json:"cc,omitempty"`
+	Subject *string  `json:"subject,omitempty"`
+	// BodyText — Текст письма
+	BodyText *string `json:"body_text,omitempty"`
+	// InReplyToID — Письмо, на которое отвечаем: ответ уходит в ту же переписку из того же ящика
+	InReplyToID *UUID `json:"in_reply_to_id,omitempty"`
+}
+
+// CRMCardMailThread — Переписка, привязанная к карточке. Если ящик смотрящему не виден, visible=false и нет ни темы, ни писем
+type CRMCardMailThread struct {
+	LinkID   UUID `json:"link_id"`
+	ThreadID UUID `json:"thread_id"`
+	// Source — sent - письмо отправлено из карточки, linked - сотрудник привязал письмо
+	Source   string `json:"source"`
+	LinkedBy int64  `json:"linked_by"`
+	LinkedAt string `json:"linked_at"`
+	// Visible — Видит ли смотрящий ящик этой переписки
+	Visible bool    `json:"visible"`
+	Subject *string `json:"subject,omitempty"`
+	// Messages — Письма переписки от старых к новым
+	Messages []CRMMailMessage `json:"messages,omitempty"`
+}
+
+type CRMCatalogPage struct {
+	Results []CRMCatalogProduct `json:"results"`
+	Limit   int64               `json:"limit"`
+	Offset  int64               `json:"offset"`
+	HasMore bool                `json:"has_more"`
+}
+
+type CRMCatalogProduct struct {
+	ID   UUID   `json:"id"`
+	SKU  string `json:"sku"`
+	Name string `json:"name"`
+	// Kind — Вид позиции ядра: goods, service, material, semi_product
+	Kind   string `json:"kind"`
+	Unit   string `json:"unit"`
+	UnitID *UUID  `json:"unit_id,omitempty"`
+	// Price — Цена продажи из карточки десятичной строкой; пусто или 0 - не задана
+	Price string `json:"price"`
+	// VATKind — Вид ставки НДС карточки: general, reduced, zero, exempt; пусто - общая ставка юрлица
+	VATKind string `json:"vat_kind"`
+	// VATRate — Ставка продажи по учётной политике кабинета
+	VATRate string `json:"vat_rate"`
+	// VATRateKnown — false - ставку не определить (у юрлиц разные ставки или режим налога не заведён), менеджер выбирает сам
+	VATRateKnown bool `json:"vat_rate_known"`
+	IsStockable  bool `json:"is_stockable"`
+	IsSellable   bool `json:"is_sellable"`
+	Archived     bool `json:"archived"`
 }
 
 // CRMContactRef — Узкая проекция карточки справочника ERP; CRM её не редактирует
@@ -1401,6 +1544,10 @@ type CRMDeal struct {
 	Amount string `json:"amount"`
 	// Currency — Код валюты из справочника ERP
 	Currency string `json:"currency"`
+	// AmountManual — Сумма набрана руками, а не сложена из состава сделки; сохранение состава снимает признак
+	AmountManual *bool `json:"amount_manual,omitempty"`
+	// PricesIncludeVAT — Цены строк состава включают НДС
+	PricesIncludeVAT *bool `json:"prices_include_vat,omitempty"`
 	// Source — Канал обращения; manual для ручного заведения
 	Source          string  `json:"source"`
 	Probability     int64   `json:"probability"`
@@ -1457,6 +1604,10 @@ type CRMDealCard struct {
 	Amount string `json:"amount"`
 	// Currency — Код валюты из справочника ERP
 	Currency string `json:"currency"`
+	// AmountManual — Сумма набрана руками, а не сложена из состава сделки; сохранение состава снимает признак
+	AmountManual *bool `json:"amount_manual,omitempty"`
+	// PricesIncludeVAT — Цены строк состава включают НДС
+	PricesIncludeVAT *bool `json:"prices_include_vat,omitempty"`
 	// Source — Канал обращения; manual для ручного заведения
 	Source          string  `json:"source"`
 	Probability     int64   `json:"probability"`
@@ -1522,17 +1673,59 @@ type CRMDealItem struct {
 	DealID   UUID   `json:"deal_id"`
 	Position int64  `json:"position"`
 	Name     string `json:"name"`
-	// ProductID — Ссылка на номенклатуру необязательна - на этапе расчёта половина строк ещё не заведена в каталоге
+	// ProductID — Позиция номенклатуры ядра (товар или услуга); нет - строка не из каталога
 	ProductID *UUID   `json:"product_id,omitempty"`
 	Quantity  float64 `json:"quantity"`
 	Unit      string  `json:"unit"`
+	// UnitID — Единица из справочника «Единицы измерения» ядра; у строки из каталога - единица карточки товара
+	UnitID *UUID `json:"unit_id,omitempty"`
 	// Price — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
 	Price           string  `json:"price"`
 	DiscountPercent float64 `json:"discount_percent"`
-	// Total — Сумма строки со скидкой; считает сервер, чтобы клиенты не разошлись на округлении
-	Total     int64  `json:"total"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
+	// VATRate — Ставка НДС записью ядра: «22%», «0%», «без НДС»; пусто - ставка не указана, налог не выделяется
+	VATRate string `json:"vat_rate"`
+	// Total — Сумма строки со скидкой, как записаны цены сделки (с налогом или без); считает сервер, чтобы клиенты не разошлись на округлении
+	Total string `json:"total"`
+	// AmountNet — Сумма строки без НДС
+	AmountNet string `json:"amount_net"`
+	// VATAmount — НДС строки
+	VATAmount string `json:"vat_amount"`
+	// AmountGross — Сумма строки с НДС
+	AmountGross string              `json:"amount_gross"`
+	Product     *CRMDealItemProduct `json:"product,omitempty"`
+	CreatedAt   string              `json:"created_at"`
+	UpdatedAt   string              `json:"updated_at"`
+}
+
+type CRMDealItemInput struct {
+	Name      string  `json:"name"`
+	ProductID *string `json:"product_id,omitempty"`
+	Quantity  float64 `json:"quantity"`
+	Unit      *string `json:"unit,omitempty"`
+	// UnitID — Единица справочника ядра; у строки из каталога сервер берёт единицу карточки товара
+	UnitID *string `json:"unit_id,omitempty"`
+	// Price — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
+	Price           *string  `json:"price,omitempty"`
+	DiscountPercent *float64 `json:"discount_percent,omitempty"`
+	// VATRate — Ставка НДС записью ядра: «22%», «20» (станет «20%»), «0%», «без НДС»; пусто - не указана
+	VATRate *string `json:"vat_rate,omitempty"`
+}
+
+// CRMDealItemProduct — Сведения карточки номенклатуры на момент чтения: CRM их не копирует
+type CRMDealItemProduct struct {
+	SKU string `json:"sku"`
+	// Kind — Вид позиции ядра: goods, service, material, semi_product
+	Kind string `json:"kind"`
+	// IsStockable — Товар ведётся на складе: только у него есть остаток
+	IsStockable bool `json:"is_stockable"`
+	// Archived — Карточка в архиве: строка остаётся, новую так не выбрать
+	Archived bool `json:"archived"`
+}
+
+type CRMDealItemsInput struct {
+	Items []CRMDealItemInput `json:"items"`
+	// PricesIncludeVAT — Цены строк включают НДС; не передан - не менять
+	PricesIncludeVAT *bool `json:"prices_include_vat,omitempty"`
 }
 
 type CRMDealPatch struct {
@@ -1548,6 +1741,8 @@ type CRMDealPatch struct {
 	// CustomerID — Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.
 	CustomerID    *string `json:"customer_id,omitempty"`
 	CRMCustomerID *string `json:"crm_customer_id,omitempty"`
+	// ClearCustomer — Отвязать клиента от сделки. Пустой crm_customer_id значит «не менять», поэтому отвязка — этим признаком
+	ClearCustomer *bool   `json:"clear_customer,omitempty"`
 	NextAction    *string `json:"next_action,omitempty"`
 	NextActionAt  *string `json:"next_action_at,omitempty"`
 	// Custom — Дополнительные поля кабинета: состав задаёт «Настройки → Поля»
@@ -2069,6 +2264,8 @@ type CRMLeadPatch struct {
 	// CustomerID — Прежний вход: контрагент справочника ERP. Сервер находит или заводит по нему клиента CRM и записывает crm_customer_id; в ответе поля нет.
 	CustomerID    *string `json:"customer_id,omitempty"`
 	CRMCustomerID *string `json:"crm_customer_id,omitempty"`
+	// ClearCustomer — Отвязать клиента от лида. Пустой crm_customer_id значит «не менять», поэтому отвязка — этим признаком
+	ClearCustomer *bool   `json:"clear_customer,omitempty"`
 	NextAction    *string `json:"next_action,omitempty"`
 	NextActionAt  *string `json:"next_action_at,omitempty"`
 	Archived      *bool   `json:"archived,omitempty"`
@@ -2137,6 +2334,60 @@ type CRMLossReasonMetric struct {
 	Count int64   `json:"count"`
 	// Amount — Сумма десятичной строкой: «19990.50». Разрядность берёт валюта (MONEY-ROUNDING.md)
 	Amount string `json:"amount"`
+}
+
+// CRMMailAccount — Ящик модуля «Почта», из которого человек вправе написать из карточки
+type CRMMailAccount struct {
+	ID UUID `json:"id"`
+	// Email — Адрес ящика
+	Email string `json:"email"`
+	// Name — Имя отправителя ящика
+	Name string `json:"name"`
+	// Personal — true - личный ящик человека, false - общий ящик, открытый ему
+	Personal bool `json:"personal"`
+}
+
+// CRMMailAccountList — Ящики для письма из карточки, личный первым
+type CRMMailAccountList struct {
+	Items []CRMMailAccount `json:"items"`
+}
+
+// CRMMailLink — Связь переписки модуля «Почта» с лидом, сделкой или клиентом
+type CRMMailLink struct {
+	ID         UUID   `json:"id"`
+	EntityType string `json:"entity_type"`
+	EntityID   UUID   `json:"entity_id"`
+	AccountID  UUID   `json:"account_id"`
+	ThreadID   UUID   `json:"thread_id"`
+	MessageID  UUID   `json:"message_id"`
+	// Source — sent - письмо отправлено из карточки, linked - сотрудник привязал письмо
+	Source   string `json:"source"`
+	LinkedBy int64  `json:"linked_by"`
+	LinkedAt string `json:"linked_at"`
+}
+
+// CRMMailMessage — Письмо так, как его показывает модуль «Почта»; черновики не попадают
+type CRMMailMessage struct {
+	ID          UUID   `json:"id"`
+	ThreadID    UUID   `json:"thread_id"`
+	AccountID   UUID   `json:"account_id"`
+	Subject     string `json:"subject"`
+	FromAddress string `json:"from_address"`
+	FromName    string `json:"from_name"`
+	// To — Адреса получателей и копии
+	To []string `json:"to"`
+	// Snippet — Начало текста письма
+	Snippet string `json:"snippet"`
+	// Direction — inbound - пришло в ящик, outbound - ушло из него
+	Direction string `json:"direction"`
+	// At — Когда письмо отправлено или получено
+	At     string `json:"at"`
+	IsRead bool   `json:"is_read"`
+}
+
+// CRMMailMessageList — Письма, свежие сверху
+type CRMMailMessageList struct {
+	Items []CRMMailMessage `json:"items"`
 }
 
 type CRMManagerWorkload struct {
@@ -2281,6 +2532,54 @@ type CRMSalesPlansInputItemsItem struct {
 	Currency *string `json:"currency,omitempty"`
 }
 
+// CRMSavedView — Сохранённое представление списка: отбор и раскладка столбцов под своим названием
+type CRMSavedView struct {
+	ID UUID `json:"id"`
+	// OwnerID — Автор представления
+	OwnerID int64                `json:"owner_id"`
+	List    CRMSavedViewListKind `json:"list"`
+	Name    string               `json:"name"`
+	// Shared — Общее представление видят все, кому открыт список; личное — только автор
+	Shared bool `json:"shared"`
+	// Filters — Отбор списка в форме экрана
+	Filters map[string]json.RawMessage `json:"filters"`
+	// Columns — Видимость, порядок и ширина столбцов в форме экрана
+	Columns   map[string]json.RawMessage `json:"columns"`
+	CreatedAt string                     `json:"created_at"`
+	UpdatedAt string                     `json:"updated_at"`
+}
+
+type CRMSavedViewInput struct {
+	List CRMSavedViewListKind `json:"list"`
+	// Name — Название в меню «Мои представления»; пробелы по краям обрезаются
+	Name string `json:"name"`
+	// Shared — Общее представление: заводит только администратор CRM
+	Shared *bool `json:"shared,omitempty"`
+	// Filters — Отбор списка; без значения — пустой объект
+	Filters map[string]json.RawMessage `json:"filters,omitempty"`
+	// Columns — Раскладка столбцов; без значения — пустой объект
+	Columns map[string]json.RawMessage `json:"columns,omitempty"`
+}
+
+type CRMSavedViewList struct {
+	Views []CRMSavedView `json:"views"`
+	// CanShare — Вызывающий — администратор CRM: может заводить, править и удалять общие представления
+	CanShare bool `json:"can_share"`
+}
+
+type CRMSavedViewListKind = string
+
+// CRMSavedViewPatch — Поле, которого нет в запросе, не меняется
+type CRMSavedViewPatch struct {
+	Name *string `json:"name,omitempty"`
+	// Shared — Общее представление: сделать общим или личным может только администратор CRM
+	Shared *bool `json:"shared,omitempty"`
+	// Filters — Новый отбор списка
+	Filters map[string]json.RawMessage `json:"filters,omitempty"`
+	// Columns — Новая раскладка столбцов
+	Columns map[string]json.RawMessage `json:"columns,omitempty"`
+}
+
 type CRMSettings struct {
 	LeadLockMode CRMLeadLockMode `json:"lead_lock_mode"`
 	// UpdatedAt — Нет, пока кабинет не менял настройки
@@ -2370,7 +2669,7 @@ type CRMStageShowOnBoard = bool
 // CRMTimelineEntry — Одна запись ленты; вид говорит, из какого источника она пришла
 type CRMTimelineEntry struct {
 	ID UUID `json:"id"`
-	// Kind — note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача, file - файл прикреплён к записи или удалён
+	// Kind — note - заметка сотрудника, system - системный факт или правка полей, stage - смена этапа, decision - решение по лиду, message - сообщение канала, link - связь с задачей, событием или встречей, engagement - дело: звонок, встреча, задача, file - файл прикреплён к записи или удалён, mail - письмо отправлено из карточки, привязано к ней или отвязано
 	Kind      string  `json:"kind"`
 	At        string  `json:"at"`
 	ActorID   *int64  `json:"actor_id,omitempty"`
@@ -2890,15 +3189,19 @@ type ChatConversation struct {
 	FirstUnreadSeq   *int64                        `json:"first_unread_seq"`
 	ManualUnreadSeq  *int64                        `json:"manual_unread_seq"`
 	NotificationMode string                        `json:"notification_mode"`
-	MentionCount     int64                         `json:"mention_count"`
-	Origin           *string                       `json:"origin,omitempty"`
-	OriginRef        *UUID                         `json:"origin_ref,omitempty"`
-	LastReadSeq      *int64                        `json:"last_read_seq,omitempty"`
-	OthersReadSeq    *int64                        `json:"others_read_seq,omitempty"`
-	HasAvatar        *bool                         `json:"has_avatar,omitempty"`
-	AvatarURL        *string                       `json:"avatar_url,omitempty"`
-	PeerUserID       *int64                        `json:"peer_user_id,omitempty"`
-	PeerAvatarURL    *string                       `json:"peer_avatar_url,omitempty"`
+	// NotificationMutedUntil — До какого момента беседа молчит, если звук выключен на время: пока срок не вышел, notification_mode = muted. После срока поле пустое, а режим снова прежний
+	NotificationMutedUntil *string `json:"notification_muted_until,omitempty"`
+	// NotificationModeAfterMute — Какой режим вернётся, когда выйдет срок «без звука»; есть только пока срок идёт. По нему «Включить звук» возвращает прежний выбор
+	NotificationModeAfterMute *json.RawMessage `json:"notification_mode_after_mute,omitempty"`
+	MentionCount              int64            `json:"mention_count"`
+	Origin                    *string          `json:"origin,omitempty"`
+	OriginRef                 *UUID            `json:"origin_ref,omitempty"`
+	LastReadSeq               *int64           `json:"last_read_seq,omitempty"`
+	OthersReadSeq             *int64           `json:"others_read_seq,omitempty"`
+	HasAvatar                 *bool            `json:"has_avatar,omitempty"`
+	AvatarURL                 *string          `json:"avatar_url,omitempty"`
+	PeerUserID                *int64           `json:"peer_user_id,omitempty"`
+	PeerAvatarURL             *string          `json:"peer_avatar_url,omitempty"`
 }
 
 type ChatConversationCapabilities struct {
@@ -2912,6 +3215,8 @@ type ChatConversationCapabilities struct {
 	CanMarkUnread          bool `json:"canMarkUnread"`
 	CanMention             bool `json:"canMention"`
 	CanSetNotificationMode bool `json:"canSetNotificationMode"`
+	// CanSendVoice — Можно записать голосовое или видеокружок и переслать такое сюда. В чатах задач и поддержки — нет: там только текст, файлы и снимки экрана
+	CanSendVoice *bool `json:"canSendVoice,omitempty"`
 }
 
 type ChatConversationPage struct {
@@ -3002,8 +3307,16 @@ type ChatMessage struct {
 	CreatedAt        string               `json:"created_at"`
 	Attachments      []ChatAttachment     `json:"attachments"`
 	ReplyToMessageID *string              `json:"reply_to_message_id,omitempty"`
+	// ForwardedFromMessageID — Пересланное: исходное сообщение. Нет у обычных сообщений
+	ForwardedFromMessageID *string `json:"forwarded_from_message_id,omitempty"`
+	// ForwardedFromUserID — Пересланное: автор оригинала — участник кабинета (ERP-1964, «Переслано от …»). При пересылке пересланного — тот, кто написал первым. Нет у обычных и у старых пересланных сообщений
+	ForwardedFromUserID *int64 `json:"forwarded_from_user_id,omitempty"`
+	// ForwardedFromName — Пересланное: подпись автора оригинала, когда участника нет в справочнике людей, — имя под ответом поддержки или название исходной беседы. Нет у обычных и у старых пересланных сообщений
+	ForwardedFromName *string `json:"forwarded_from_name,omitempty"`
 	// ReplyQuote — Цитата части исходного сообщения; поля нет, когда ответ на сообщение целиком, исходное удалено или недоступно
 	ReplyQuote *string `json:"reply_quote,omitempty"`
+	// DeletedAt — Надгробие: сообщение удалено у всех. Тела, вложений, упоминаний и реакций у него нет; показывать его в ленте не нужно
+	DeletedAt *string `json:"deleted_at,omitempty"`
 }
 
 type ChatMessageMention struct {
@@ -3019,11 +3332,17 @@ type ChatMessagePage struct {
 
 type ChatNotificationModeInput struct {
 	Mode string `json:"mode"`
+	// MutedUntil — Без звука на время: до этого момента беседа молчит, потом снова действует прежний режим. Только вместе с mode = muted, в будущем и не дальше года; без срока — без звука навсегда
+	MutedUntil *string `json:"muted_until,omitempty"`
 }
 
 type ChatNotificationModeResult struct {
-	Mode    string `json:"mode"`
-	Changed bool   `json:"changed"`
+	Mode string `json:"mode"`
+	// ModeAfterMute — Какой режим вернётся, когда выйдет срок; пусто, если срока нет
+	ModeAfterMute *json.RawMessage `json:"mode_after_mute"`
+	// MutedUntil — До какого момента беседа молчит, если звук выключен на время; пусто, если срока нет
+	MutedUntil *string `json:"muted_until"`
+	Changed    bool    `json:"changed"`
 }
 
 type ChatPeoplePage struct {
@@ -4709,6 +5028,8 @@ type CoreOrderPaymentTerm struct {
 	DueTrigger *string `json:"due_trigger,omitempty"`
 	StageID    *UUID   `json:"stage_id,omitempty"`
 	DelayDays  *int64  `json:"delay_days,omitempty"`
+	// Share — Доля итога документа в процентах, только на входе: строка без суммы получает сумму от итога с НДС, последняя такая строка добирает копейки
+	Share *string `json:"share,omitempty"`
 }
 
 // CoreOrderProgress — Ход продажи или закупки для строки списка (with=progress). executed — исполнено в валюте продажи или закупки; paid — оплачено, нет поля — финансы выключены; papers — счёт, акт и УПД: done — есть, wait — ждём подписи, нет ключа — нет; нет поля — документооборот выключен.
@@ -5077,7 +5398,7 @@ type CoreProduct struct {
 	VATRate string `json:"vat_rate"`
 	// VATKind — Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)
 	VATKind *string `json:"vat_kind,omitempty"`
-	// WeightKg — Вес одной базовой единицы, кг; пусто — не задан
+	// WeightKg — Вес одной базовой единицы, кг, десятичной строкой: до 9 цифр до запятой и до 6 после (0.0127 — это 12,7 г); пусто — не задан
 	WeightKg string `json:"weight_kg"`
 	// VolumeM3 — Объём одной базовой единицы, м³; пусто — не задан
 	VolumeM3 string `json:"volume_m3"`
@@ -5161,7 +5482,7 @@ type CoreProductCreate struct {
 	PurchasePrice *string `json:"purchase_price,omitempty"`
 	// VATKind — Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)
 	VATKind *string `json:"vat_kind,omitempty"`
-	// WeightKg — Вес одной базовой единицы, кг; пусто — не задан
+	// WeightKg — Вес одной базовой единицы, кг, десятичной строкой: до 9 цифр до запятой и до 6 после (0.0127 — это 12,7 г); пусто — не задан
 	WeightKg *string `json:"weight_kg,omitempty"`
 	// VolumeM3 — Объём одной базовой единицы, м³; пусто — не задан
 	VolumeM3 *string `json:"volume_m3,omitempty"`
@@ -5470,7 +5791,7 @@ type CoreProductPatch struct {
 	PurchasePrice *string `json:"purchase_price,omitempty"`
 	// VATKind — Вид ставки НДС товара: общая, льготная, нулевая, без НДС; пусто — общая. Процент берётся у юрлица на дату документа (учётная политика)
 	VATKind *string `json:"vat_kind,omitempty"`
-	// WeightKg — Вес одной базовой единицы, кг; пусто — не задан
+	// WeightKg — Вес одной базовой единицы, кг, десятичной строкой: до 9 цифр до запятой и до 6 после (0.0127 — это 12,7 г); пусто — не задан
 	WeightKg *string `json:"weight_kg,omitempty"`
 	// VolumeM3 — Объём одной базовой единицы, м³; пусто — не задан
 	VolumeM3 *string `json:"volume_m3,omitempty"`
@@ -7267,6 +7588,8 @@ type DocflowFlowPaymentRule struct {
 	// Open — Пока действует договор: окончания нет, итога нет, раскрываются ближайшие 12 платежей
 	Open   *bool                         `json:"open,omitempty"`
 	Orders *DocflowFlowPaymentRuleOrders `json:"orders,omitempty"`
+	// Shares — Оплата периода долями: проценты вместе ровно 100. Продажа или закупка периода получает график оплат из долей. Пусто — один платёж периода в дату правила
+	Shares []DocflowFlowPaymentShare `json:"shares,omitempty"`
 }
 
 // DocflowFlowPaymentRuleOrders — «Заводить продажу или закупку на каждый период» — только у договора (kind=contract). Зарегистрированный договор сам заводит на каждую наступившую стадию правила подтверждённый продажу или закупку ядра (source_kind=contract, external_id «<id договора>/<период>»): сразу после регистрации и фоновым проходом раз в час. Один договор и один период — один продажа или закупка навсегда: отменённый не воскресает, период не позже последнего продажи или закупки договора не заводится. Будущие периоды не заводятся; исполнение и бумаги периода — вручную.
@@ -7277,6 +7600,16 @@ type DocflowFlowPaymentRuleOrders struct {
 	ProductID *UUID `json:"product_id,omitempty"`
 	// ProductName — Название услуги на момент выбора; пишет сервер, присланное не читается
 	ProductName *string `json:"product_name,omitempty"`
+}
+
+// DocflowFlowPaymentShare — Доля оплаты периода: процент суммы периода и ровно один срок — день периода или дни после акта.
+type DocflowFlowPaymentShare struct {
+	// Percent — Доля суммы периода в процентах десятичным текстом, до двух знаков
+	Percent string `json:"percent"`
+	// Day — День периода: число месяца стадии (month, quarter) или день недели ISO 1..7 (week)
+	Day *int64 `json:"day,omitempty"`
+	// AfterActDays — Срок через столько дней после акта периода
+	AfterActDays *int64 `json:"after_act_days,omitempty"`
 }
 
 // DocflowFlowRecognized — Прочитанное машиной из файла карточки — НА ПРОВЕРКУ. Живёт отдельно от условий договора: в условия сумма и срок попадают только рукой человека. Пустое поле означает «не прочиталось», а не ноль. Приёмка входящего договора в PDF заполняет его текстом бумаги.
@@ -9091,6 +9424,15 @@ type FinanceOneCObjects struct {
 	Declarations   *bool `json:"declarations,omitempty"`
 }
 
+type FinanceOpeningAdvanceVATRequest struct {
+	// VATRate — Расчётная ставка, например 20/120
+	VATRate string `json:"vat_rate"`
+	// VATAmount — Сумма налога, больше нуля и меньше аванса
+	VATAmount string `json:"vat_amount"`
+	// Source — Откуда строка: введена вручную или загружена из 1С
+	Source *string `json:"source,omitempty"`
+}
+
 type FinanceOpeningDebtRequest struct {
 	// Date — Дата остатков — дата старта учёта
 	Date       string `json:"date"`
@@ -10142,6 +10484,8 @@ type FinanceTaxMonthLine struct {
 	AccruedBefore *string `json:"accrued_before,omitempty"`
 	// PayrollOutside — Неофициальная часть зарплаты — исключена из расходов базы
 	PayrollOutside *string `json:"payroll_outside,omitempty"`
+	// ForContact — Налог юрлица за собственника: контрагент-собственник; начисление идёт на расчёты с ним (Дт 75), а не в расход ОПиУ
+	ForContact *string `json:"for_contact,omitempty"`
 	// Declared — Сумма по декларации; строка с ней — строка декларации за прошлый период
 	Declared *string `json:"declared,omitempty"`
 	// Calculated — Расчёт раздела за период декларации; заполняет сервер
@@ -10810,6 +11154,28 @@ type MailAccount struct {
 
 type MailAccountStatus = string
 
+type MailAddressBookPage struct {
+	Items   []MailAddressBookRecord `json:"items"`
+	Total   int64                   `json:"total"`
+	Limit   int64                   `json:"limit"`
+	Offset  int64                   `json:"offset"`
+	HasMore bool                    `json:"has_more"`
+}
+
+// MailAddressBookRecord — Адресат из адресной книги почты
+type MailAddressBookRecord struct {
+	ID UUID `json:"id"`
+	// Email — Адрес строчными буквами, уникален в кабинете
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	// ContactID — Привязанный контрагент справочника core
+	ContactID *UUID `json:"contact_id"`
+	// CreatedBy — Кто сохранил адресата
+	CreatedBy *int64 `json:"created_by"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
 // MailAttachment — Вложение письма. Ключ объектного хранилища наружу не отдаётся: знание ключа — половина пути к чужому файлу.
 type MailAttachment struct {
 	ID          UUID   `json:"id"`
@@ -10855,6 +11221,10 @@ type MailComposeInput struct {
 	UploadIds []UUID `json:"upload_ids,omitempty"`
 	// SaveAsDraft — Значение true СОХРАНЯЕТ письмо в «Черновиках» и не отправляет его; без признака письмо встаёт в очередь, а принятие SMTP-сервером не подтверждает доставку или прочтение получателем
 	SaveAsDraft *bool `json:"save_as_draft,omitempty"`
+	// ReplaceDraftID — Черновик, который это письмо заменяет: после сохранения прежний черновик удаляется, и в «Черновиках» не копятся версии одного письма
+	ReplaceDraftID *UUID `json:"replace_draft_id,omitempty"`
+	// KeepAttachmentIds — Вложения заменяемого черновика, которые остаются в письме; только вместе с replace_draft_id
+	KeepAttachmentIds []UUID `json:"keep_attachment_ids,omitempty"`
 }
 
 type MailDeliveryState struct {
@@ -11081,6 +11451,12 @@ type MailRuleOutcome struct {
 	MarkedRead    *bool   `json:"marked_read,omitempty"`
 	Flagged       *bool   `json:"flagged,omitempty"`
 	SpamVerdict   *string `json:"spam_verdict,omitempty"`
+}
+
+type MailSavedAddress struct {
+	Entry MailAddressBookRecord `json:"entry"`
+	// Created — true — сохранён сейчас, false — адрес уже был в книге
+	Created bool `json:"created"`
 }
 
 type MailScanStatus = string
@@ -11814,7 +12190,7 @@ type MarketplaceStore struct {
 	ConfigSyncedAt   *string `json:"config_synced_at,omitempty"`
 	// TokenClass — Безопасная классификация токена Wildberries без раскрытия токена: basic — ограниченный базовый, personal — персональный, test — тестовый, service — сервисный, unknown — тип не определён
 	TokenClass *string `json:"token_class,omitempty"`
-	// Credential — Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена
+	// Credential — Несекретные сведения о ключе площадки: тип, категории доступа или роли, только чтение и срок действия. Wildberries — разобрано из самого токена; Ozon — роли и срок по методу Ozon /v1/roles, только при key_info=1
 	Credential *MarketplaceStoreCredential `json:"credential,omitempty"`
 	WriteKey   *MarketplaceStoreWriteKey   `json:"write_key,omitempty"`
 	// ConnectionStatus — Безопасное состояние подключения в ERP: not_checked — проверка ещё не запускалась, pending — MPTrack проверяет реквизиты или запускает первую загрузку, disabled — загрузки отключены, ok — подключение работает, warning — требуется внимание, error — подключение не работает. Сырые статусы и тексты MPTrack не публикуются
@@ -11829,10 +12205,12 @@ type MarketplaceStore struct {
 	BusinessID *UUID `json:"business_id,omitempty"`
 }
 
-// MarketplaceStoreCredential — Несекретные сведения о ключе площадки: тип, категории доступа, только чтение и срок действия; сейчас — для токена Wildberries, разобранного из самого токена
+// MarketplaceStoreCredential — Несекретные сведения о ключе площадки: тип, категории доступа или роли, только чтение и срок действия. Wildberries — разобрано из самого токена; Ozon — роли и срок по методу Ozon /v1/roles, только при key_info=1
 type MarketplaceStoreCredential struct {
-	// Kind — Тип ключа по полю acc токена
+	// Kind — Тип ключа по полю acc токена Wildberries; ozon — ключ Seller API Ozon
 	Kind string `json:"kind"`
+	// Roles — Роли ключа Ozon названиями площадки
+	Roles []string `json:"roles,omitempty"`
 	// Scopes — Категории методов, к которым у ключа есть доступ
 	Scopes []string `json:"scopes"`
 	// ReadOnly — Ключ только на чтение
@@ -13496,6 +13874,12 @@ type MarkingDocumentParams struct {
 	CertificateType       *string          `json:"certificate_type,omitempty"`
 	CertificateNumber     *string          `json:"certificate_number,omitempty"`
 	CertificateDate       *string          `json:"certificate_date,omitempty"`
+	// DeclarationNumber — Ввод импорта (introduce_import) — регистрационный номер ДТ «XXXXXXXX/ДДММГГ/XXXXXXX»
+	DeclarationNumber *string `json:"declaration_number,omitempty"`
+	// DeclarationDate — Ввод импорта — дата регистрации ДТ, ГГГГ-ММ-ДД; совпадает с датой в номере
+	DeclarationDate *string `json:"declaration_date,omitempty"`
+	// PreviousCodes — Перемаркировка (remark): предыдущий код к новому — ключ новый код, значение предыдущий (оба сводятся к КИ без криптохвоста); у нового кода без предыдущего нужен tnved_code
+	PreviousCodes map[string]string `json:"previous_codes,omitempty"`
 	// UnitSerialNumber — Формирование упаковки — код короба «00» + SSCC; формирование набора — код набора (КИН), скан или без криптохвоста
 	UnitSerialNumber *string `json:"unit_serial_number,omitempty"`
 }
@@ -14128,6 +14512,95 @@ type MarkingReconcileState struct {
 	LastDone *MarkingReconcileRun `json:"last_done"`
 }
 
+type MarkingRemark struct {
+	ID              UUID                `json:"id"`
+	CompanyID       UUID                `json:"company_id"`
+	Group           string              `json:"group"`
+	Reason          string              `json:"reason"`
+	Source          string              `json:"source"`
+	BasisType       *string             `json:"basis_type,omitempty"`
+	BasisID         *UUID               `json:"basis_id,omitempty"`
+	DueDate         *string             `json:"due_date,omitempty"`
+	OrderID         *UUID               `json:"order_id,omitempty"`
+	ApplicationID   *UUID               `json:"application_id,omitempty"`
+	DocumentID      *UUID               `json:"document_id,omitempty"`
+	StockDocumentID *UUID               `json:"stock_document_id,omitempty"`
+	Note            *string             `json:"note,omitempty"`
+	CancelledAt     *string             `json:"cancelled_at,omitempty"`
+	CreatedBy       *int64              `json:"created_by,omitempty"`
+	CreatedAt       string              `json:"created_at"`
+	Items           []MarkingRemarkItem `json:"items"`
+	// Stage — Шаг перемаркировки
+	Stage string `json:"stage"`
+	// Overdue — Срок прошёл, а марка на складе не заменена
+	Overdue bool `json:"overdue"`
+	// Paired — Пар с новой маркой
+	Paired int64 `json:"paired"`
+}
+
+type MarkingRemarkDocumentInput struct {
+	// TnvedCode — ТН ВЭД (10 цифр) для пар без прежней марки
+	TnvedCode *string `json:"tnved_code,omitempty"`
+	// Date — Дата перемаркировки; пусто — сегодня
+	Date *string `json:"date,omitempty"`
+}
+
+type MarkingRemarkInput struct {
+	CompanyID UUID `json:"company_id"`
+	// Group — Ключ товарной группы
+	Group string `json:"group"`
+	// Reason — Причина; по умолчанию KM_SPOILED
+	Reason *string `json:"reason,omitempty"`
+	// Source — Откуда начата; по умолчанию manual
+	Source *string `json:"source,omitempty"`
+	// BasisType — Вид документа-основания
+	BasisType *string `json:"basis_type,omitempty"`
+	BasisID   *UUID   `json:"basis_id,omitempty"`
+	// DueDate — Срок; у возврата без срока — 20 рабочих дней
+	DueDate *string `json:"due_date,omitempty"`
+	Note    *string `json:"note,omitempty"`
+}
+
+type MarkingRemarkItem struct {
+	ID          UUID    `json:"id"`
+	Seq         int64   `json:"seq"`
+	ProductID   UUID    `json:"product_id"`
+	ProductName *string `json:"product_name,omitempty"`
+	ProductSKU  *string `json:"product_sku,omitempty"`
+	Gtin        string  `json:"gtin"`
+	WarehouseID *UUID   `json:"warehouse_id,omitempty"`
+	OldCodeID   *UUID   `json:"old_code_id,omitempty"`
+	// OldIdentity — Прежняя марка без криптохвоста
+	OldIdentity *string `json:"old_identity,omitempty"`
+	NewCodeID   *UUID   `json:"new_code_id,omitempty"`
+	// NewIdentity — Новая марка без криптохвоста
+	NewIdentity *string `json:"new_identity,omitempty"`
+}
+
+type MarkingRemarkItemsInput struct {
+	// Codes — Сканы прежних марок
+	Codes       []string `json:"codes,omitempty"`
+	ProductID   *UUID    `json:"product_id,omitempty"`
+	WarehouseID *UUID    `json:"warehouse_id,omitempty"`
+	// Quantity — Сколько единиц без марки
+	Quantity *int64 `json:"quantity,omitempty"`
+}
+
+type MarkingRemarkList struct {
+	Items []MarkingRemark `json:"items"`
+	Total int64           `json:"total"`
+}
+
+type MarkingRemarkOrderInput struct {
+	OrderID UUID `json:"order_id"`
+}
+
+type MarkingRemarkPairInput struct {
+	// Code — Скан новой марки
+	Code   string `json:"code"`
+	ItemID *UUID  `json:"item_id,omitempty"`
+}
+
 type MarkingReplaceCodesInput struct {
 	CompanyID UUID                                `json:"company_id"`
 	Lines     []MarkingReplaceCodesInputLinesItem `json:"lines"`
@@ -14467,20 +14940,79 @@ type PlatformAppVersion struct {
 
 type PlatformAppVersionStatus = string
 
+type PokerFinish struct {
+	Points        *int64 `json:"points"`
+	MakeReference *bool  `json:"make_reference,omitempty"`
+}
+
+type PokerSession struct {
+	ID             UUID         `json:"id"`
+	Project        UUID         `json:"project"`
+	Task           UUID         `json:"task"`
+	TaskIdentifier string       `json:"task_identifier"`
+	TaskTitle      string       `json:"task_title"`
+	TaskPoints     *int64       `json:"task_points"`
+	Mode           string       `json:"mode"`
+	Status         string       `json:"status"`
+	Round          int64        `json:"round"`
+	Host           int64        `json:"host"`
+	HostName       string       `json:"host_name"`
+	Voters         []PokerVoter `json:"voters"`
+	Voted          int64        `json:"voted"`
+	MyCard         *string      `json:"my_card"`
+	// Votes — Карты раунда; пусто, пока раунд не открыт
+	Votes     []PokerVote `json:"votes"`
+	Low       *string     `json:"low"`
+	High      *string     `json:"high"`
+	Consensus *int64      `json:"consensus"`
+	Result    *int64      `json:"result"`
+	CanManage bool        `json:"can_manage"`
+	CanVote   bool        `json:"can_vote"`
+	CreatedAt string      `json:"created_at"`
+}
+
+type PokerSessionPage struct {
+	Count   int64          `json:"count"`
+	Results []PokerSession `json:"results"`
+}
+
+type PokerStart struct {
+	Mode *string `json:"mode,omitempty"`
+}
+
+type PokerVote struct {
+	User int64  `json:"user"`
+	Name string `json:"name"`
+	Card string `json:"card"`
+}
+
+type PokerVoteInput struct {
+	Card string `json:"card"`
+}
+
+type PokerVoter struct {
+	User  int64  `json:"user"`
+	Name  string `json:"name"`
+	Voted bool   `json:"voted"`
+}
+
 type Project struct {
-	ID           UUID    `json:"id"`
-	Key          string  `json:"key"`
-	Name         string  `json:"name"`
-	Description  string  `json:"description"`
-	Color        string  `json:"color"`
-	Order        float64 `json:"order"`
-	Sections     int64   `json:"sections"`
-	TasksTotal   int64   `json:"tasks_total"`
-	TasksActive  int64   `json:"tasks_active"`
-	TasksDone    int64   `json:"tasks_done"`
-	ScrumEnabled bool    `json:"scrum_enabled"`
+	ID          UUID    `json:"id"`
+	Key         string  `json:"key"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Color       string  `json:"color"`
+	Order       float64 `json:"order"`
+	Sections    int64   `json:"sections"`
+	TasksTotal  int64   `json:"tasks_total"`
+	TasksActive int64   `json:"tasks_active"`
+	TasksDone   int64   `json:"tasks_done"`
 	// BusinessID — Бизнес проекта: правило «все задачи» при области доступа не на все бизнесы видит только проекты её бизнесов и кабинета; участники проекта видят его всегда. null — проект всего кабинета
 	BusinessID *UUID `json:"business_id"`
+	// CanManageSections — Может ли текущий пользователь заводить разделы в проекте: владелец или совладелец проекта либо правило «все задачи», открывающее проект.
+	CanManageSections bool `json:"can_manage_sections"`
+	// CanManageProject — Может ли текущий пользователь управлять проектом: менять название, код, описание и цвет, этапы и метки его разделов, состав и удалять проект — владелец или совладелец проекта либо правило «все задачи», открывающее проект.
+	CanManageProject bool `json:"can_manage_project"`
 }
 
 type ProjectCreate struct {
@@ -14576,6 +15108,118 @@ type RelationDirection = string
 type RelationKind = string
 
 type RelationList = []Relation
+
+type Scrum struct {
+	Project UUID       `json:"project"`
+	Board   ScrumBoard `json:"board"`
+	// BoardSources — Разделы проекта, чью воронку можно взять для доски
+	BoardSources []ScrumBoardSource `json:"board_sources"`
+	ProjectKey   string             `json:"project_key"`
+	ProjectName  string             `json:"project_name"`
+	Section      UUID               `json:"section"`
+	Columns      []ScrumColumn      `json:"columns"`
+	// ActiveSprint — Идущий спринт, который экран открывает смотрящему по умолчанию: где он участник, иначе ближайший по дате окончания
+	ActiveSprint *Sprint `json:"active_sprint"`
+	// ActiveSprints — Все идущие спринты проекта (их может быть несколько), раньше заканчивающийся — первым
+	ActiveSprints  []Sprint        `json:"active_sprints"`
+	SprintDefaults SprintSettings  `json:"sprint_defaults"`
+	People         []ScrumPerson   `json:"people"`
+	Reference      *ScrumReference `json:"reference"`
+	Velocity       Velocity        `json:"velocity"`
+	Me             int64           `json:"me"`
+	CanWrite       bool            `json:"can_write"`
+	CanManage      bool            `json:"can_manage"`
+}
+
+type ScrumBoard struct {
+	// Mode — Действующий набор колонок; по умолчанию — stages из эталона кабинета
+	Mode string `json:"mode"`
+	// Source — Раздел проекта, чья воронка скопирована; null в режиме stages — эталон кабинета
+	Source     *UUID  `json:"source"`
+	SourceName string `json:"source_name"`
+	// Explicit — Режим выбрал кабинет; false — действует умолчание
+	Explicit bool `json:"explicit"`
+	// Hidden — Этапы, скрытые на канбане спринта
+	Hidden []UUID `json:"hidden"`
+}
+
+type ScrumBoardInput struct {
+	Mode string `json:"mode"`
+	// Source — Только для stages: раздел проекта; null — эталон кабинета
+	Source *UUID `json:"source,omitempty"`
+	// Hidden — Этапы текущего набора, скрытые на канбане; без поля — как было. Начальный этап и все этапы разом скрыть нельзя; при смене набора скрытие переходит на одноимённые этапы
+	Hidden []UUID `json:"hidden,omitempty"`
+}
+
+type ScrumBoardSource struct {
+	Section UUID   `json:"section"`
+	Name    string `json:"name"`
+}
+
+// ScrumColumn — Колонка доски спринта — этап раздела «Скрам», в порядке доски.
+type ScrumColumn struct {
+	// Key — Четыре колонки скрама или копия этапа источника (scrum.stage.<hex>) в режиме «Этапы как у задач»
+	Key      string `json:"key"`
+	Status   UUID   `json:"status"`
+	Name     string `json:"name"`
+	Color    string `json:"color"`
+	Category string `json:"category"`
+	// Default — Начальный этап — бэклог спринта, куда заводятся новые задачи
+	Default bool `json:"default"`
+	// Hidden — Колонка скрыта на канбане спринта; задачи в ней не теряются и считаются в отчётах
+	Hidden bool `json:"hidden"`
+	// Tasks — Сколько задач скрама стоит на этом этапе во всех спринтах
+	Tasks int64 `json:"tasks"`
+}
+
+type ScrumPerson struct {
+	User int64  `json:"user"`
+	Name string `json:"name"`
+}
+
+type ScrumReference struct {
+	Task       UUID   `json:"task"`
+	Identifier string `json:"identifier"`
+	Title      string `json:"title"`
+	Points     *int64 `json:"points"`
+}
+
+type ScrumReferenceInput struct {
+	Task *UUID `json:"task"`
+}
+
+type ScrumReports struct {
+	Sprints  []SprintPoints `json:"sprints"`
+	Velocity Velocity       `json:"velocity"`
+	Team     ScrumTeam      `json:"team"`
+	// Burndowns — Burndown каждого идущего спринта, раньше заканчивающийся — первым
+	Burndowns []Burndown `json:"burndowns"`
+	// Burndown — Burndown спринта по умолчанию для смотрящего: где он участник, иначе ближайший по дате окончания
+	Burndown *Burndown `json:"burndown"`
+}
+
+// ScrumTaskCreate — Поля обычной задачи без раздела и спринта — спринт задаёт путь.
+type ScrumTaskCreate struct {
+	Title       string  `json:"title"`
+	Description *string `json:"description,omitempty"`
+	Priority    *string `json:"priority,omitempty"`
+	Executor    *int64  `json:"executor,omitempty"`
+	DueAt       *string `json:"due_at,omitempty"`
+}
+
+type ScrumTaskSprint struct {
+	// Sprint — Спринт проекта; задача встаёт в его колонку «Бэклог».
+	Sprint UUID `json:"sprint"`
+}
+
+// ScrumTeam — Командные серии скрама — без мест и сравнения людей
+type ScrumTeam struct {
+	// GoalStreak — Сколько последних завершённых спринтов подряд выполнили цель
+	GoalStreak int64 `json:"goal_streak"`
+	// VelocityTrend — Факт последних (до трёх) завершённых спринтов, от старого к новому
+	VelocityTrend   []int64 `json:"velocity_trend"`
+	VelocityGrowing bool    `json:"velocity_growing"`
+}
 
 type Section struct {
 	ID           UUID                   `json:"id"`
@@ -14785,11 +15429,74 @@ type SettingsVatRates struct {
 	Rates []int64 `json:"rates"`
 }
 
+type Sprint struct {
+	ID          UUID         `json:"id"`
+	Project     UUID         `json:"project"`
+	Name        string       `json:"name"`
+	Goal        string       `json:"goal"`
+	StartsAt    *string      `json:"starts_at"`
+	EndsAt      *string      `json:"ends_at"`
+	Status      SprintStatus `json:"status"`
+	StartedAt   *string      `json:"started_at"`
+	CompletedAt *string      `json:"completed_at"`
+	Order       int64        `json:"order"`
+	LengthDays  int64        `json:"length_days"`
+	Members     []int64      `json:"members"`
+	DailyTime   *string      `json:"daily_time"`
+	// DailyMinutes — Длительность ежедневной встречи в минутах; по умолчанию 15
+	DailyMinutes int64  `json:"daily_minutes"`
+	Timezone     string `json:"timezone"`
+	// DailyEvent — Серия ежедневной встречи в календаре (source tasks:scrum); null — встреча не назначена
+	DailyEvent *UUID `json:"daily_event"`
+	TaskCount  int64 `json:"task_count"`
+	TasksDone  int64 `json:"tasks_done"`
+	// Points — Сумма баллов задач спринта сейчас
+	Points     int64 `json:"points"`
+	PointsDone int64 `json:"points_done"`
+	// PlannedPoints — Снимок плана на старте
+	PlannedPoints *int64 `json:"planned_points"`
+	// CompletedPoints — Снимок факта на завершении: только задачи в «Готово»
+	CompletedPoints *int64 `json:"completed_points"`
+	// PointsInProgress — Баллы задач в колонке «В работе» сейчас
+	PointsInProgress int64 `json:"points_in_progress"`
+	// Progress — Прогресс идущего спринта — вычисляется при чтении; у остальных null
+	Progress  *SprintProgress `json:"progress"`
+	CreatedAt string          `json:"created_at"`
+	UpdatedAt string          `json:"updated_at"`
+}
+
 type SprintAgingTask struct {
 	ID      UUID   `json:"id"`
 	Code    string `json:"code"`
 	Title   string `json:"title"`
 	Seconds int64  `json:"seconds"`
+}
+
+type SprintComplete struct {
+	// CarryOver — Куда незавершённые задачи: бэклог запланированного спринта или нового; без значения — только если все задачи готовы
+	CarryOver     *string `json:"carry_over,omitempty"`
+	TargetSprint  *UUID   `json:"target_sprint,omitempty"`
+	NewSprintName *string `json:"new_sprint_name,omitempty"`
+}
+
+type SprintCompletion struct {
+	Sprint      Sprint  `json:"sprint"`
+	Done        int64   `json:"done"`
+	CarriedOver int64   `json:"carried_over"`
+	Target      *Sprint `json:"target"`
+}
+
+type SprintCreate struct {
+	Name       string  `json:"name"`
+	Goal       *string `json:"goal,omitempty"`
+	StartsAt   *string `json:"starts_at,omitempty"`
+	EndsAt     *string `json:"ends_at,omitempty"`
+	LengthDays *int64  `json:"length_days,omitempty"`
+	Members    []int64 `json:"members,omitempty"`
+	// DailyTime — ЧЧ:ММ; пустая строка снимает время встречи
+	DailyTime *string `json:"daily_time,omitempty"`
+	// DailyMinutes — Длительность ежедневной встречи в минутах; по умолчанию 15
+	DailyMinutes *int64 `json:"daily_minutes,omitempty"`
 }
 
 type SprintMetrics struct {
@@ -14806,10 +15513,97 @@ type SprintMetrics struct {
 	AgingWip          []SprintAgingTask       `json:"aging_wip"`
 	Sizing            SprintSizing            `json:"sizing"`
 	Outcomes          SprintOutcomeMetrics    `json:"outcomes"`
+	// Points — Баллы спринта скрама; null у цикла не из скрама.
+	Points *SprintMetricsPoints `json:"points,omitempty"`
+}
+
+type SprintMetricsPoints struct {
+	PlannedPoints   *int64 `json:"planned_points"`
+	CompletedPoints *int64 `json:"completed_points"`
+	// PlanFixed — План зафиксирован снимком при старте
+	PlanFixed bool      `json:"plan_fixed"`
+	Velocity  Velocity  `json:"velocity"`
+	Burndown  *Burndown `json:"burndown"`
 }
 
 type SprintOutcomeMetrics struct {
 	Available bool `json:"available"`
+}
+
+type SprintPage struct {
+	Count   int64    `json:"count"`
+	Results []Sprint `json:"results"`
+}
+
+type SprintPoints struct {
+	Sprint   UUID         `json:"sprint"`
+	Name     string       `json:"name"`
+	Status   SprintStatus `json:"status"`
+	StartsAt *string      `json:"starts_at"`
+	EndsAt   *string      `json:"ends_at"`
+	// PlannedPoints — План: снимок на старте; у идущего спринта без снимка (начат до оценок в баллах) — текущий объём, тогда plan_fixed = false
+	PlannedPoints *int64 `json:"planned_points"`
+	// CompletedPoints — Факт: снимок на завершении
+	CompletedPoints *int64  `json:"completed_points"`
+	CompletedAt     *string `json:"completed_at"`
+	// PlanFixed — План зафиксирован снимком при старте
+	PlanFixed bool `json:"plan_fixed"`
+	// ScopePoints — Сумма текущих оценок задач спринта
+	ScopePoints int64 `json:"scope_points"`
+	// DonePoints — Сумма текущих оценок задач спринта в «Готово» — текущий факт идущего спринта
+	DonePoints int64 `json:"done_points"`
+	// AddedPoints — Баллы задач, добавленных после старта (журнал объёма)
+	AddedPoints int64 `json:"added_points"`
+	// CarriedPoints — Баллы задач, перенесённых при завершении в другой спринт
+	CarriedPoints int64 `json:"carried_points"`
+	// GoalMet — Цель выполнена: спринт завершён, были оценённые задачи и ничего с баллами не перенесено
+	GoalMet bool `json:"goal_met"`
+}
+
+// SprintProgress — Где идущий спринт сейчас. Идеал — сколько баллов должно быть готово к началу сегодняшнего дня (план × (день − 1) / дней); «в графике», если отставание не больше 10% плана (не меньше 1 балла).
+type SprintProgress struct {
+	// Day — День спринта в его поясе
+	Day      int64 `json:"day"`
+	Days     int64 `json:"days"`
+	DaysLeft int64 `json:"days_left"`
+	// Plan — Снимок плана на старте, без снимка — текущий объём
+	Plan      int64 `json:"plan"`
+	PlanFixed bool  `json:"plan_fixed"`
+	// Scope — Текущий объём спринта
+	Scope      int64 `json:"scope"`
+	Done       int64 `json:"done"`
+	InProgress int64 `json:"in_progress"`
+	// Todo — Баллы ещё не начатых задач (бэклог спринта и «Туду»)
+	Todo      int64   `json:"todo"`
+	IdealDone float64 `json:"ideal_done"`
+	// Behind — На сколько баллов готово меньше идеала
+	Behind  int64 `json:"behind"`
+	OnTrack bool  `json:"on_track"`
+}
+
+type SprintReport struct {
+	Sprint            SprintPoints       `json:"sprint"`
+	Done              []SprintReportTask `json:"done"`
+	CarriedOver       []SprintReportTask `json:"carried_over"`
+	AddedAfterStart   int64              `json:"added_after_start"`
+	RemovedAfterStart int64              `json:"removed_after_start"`
+}
+
+type SprintReportTask struct {
+	ID         UUID   `json:"id"`
+	Identifier string `json:"identifier"`
+	Title      string `json:"title"`
+	Points     *int64 `json:"points"`
+}
+
+type SprintSettings struct {
+	LengthDays int64   `json:"length_days"`
+	Members    []int64 `json:"members"`
+	// DailyTime — Время ежедневной встречи ЧЧ:ММ в поясе спринта; null — не задано
+	DailyTime *string `json:"daily_time"`
+	// DailyMinutes — Длительность ежедневной встречи в минутах; по умолчанию 15
+	DailyMinutes int64  `json:"daily_minutes"`
+	Timezone     string `json:"timezone"`
 }
 
 type SprintSizing struct {
@@ -14819,12 +15613,33 @@ type SprintSizing struct {
 	Unestimated  int64 `json:"unestimated"`
 }
 
+type SprintStart struct {
+	StartsAt *string `json:"starts_at,omitempty"`
+	EndsAt   *string `json:"ends_at,omitempty"`
+	Goal     *string `json:"goal,omitempty"`
+}
+
+type SprintStatus = string
+
 type SprintThroughputPoint struct {
 	Cycle     UUID    `json:"cycle"`
 	Name      string  `json:"name"`
 	Completed int64   `json:"completed"`
 	StartsAt  *string `json:"starts_at"`
 	EndsAt    *string `json:"ends_at"`
+}
+
+type SprintUpdate struct {
+	Name       *string `json:"name,omitempty"`
+	Goal       *string `json:"goal,omitempty"`
+	StartsAt   *string `json:"starts_at,omitempty"`
+	EndsAt     *string `json:"ends_at,omitempty"`
+	LengthDays *int64  `json:"length_days,omitempty"`
+	Members    []int64 `json:"members,omitempty"`
+	// DailyTime — ЧЧ:ММ; пустая строка снимает время встречи
+	DailyTime *string `json:"daily_time,omitempty"`
+	// DailyMinutes — Длительность ежедневной встречи в минутах; по умолчанию 15
+	DailyMinutes *int64 `json:"daily_minutes,omitempty"`
 }
 
 type Status struct {
@@ -14836,6 +15651,8 @@ type Status struct {
 	Color     string         `json:"color"`
 	IsDefault bool           `json:"is_default"`
 	IsFinal   bool           `json:"is_final"`
+	// CanManage — Может ли текущий пользователь менять, удалять и переставлять этап: этап раздела — владелец или совладелец проекта, общий этап — полный доступ по кабинету.
+	CanManage bool `json:"can_manage"`
 }
 
 type StatusCategory = string
@@ -14871,6 +15688,8 @@ type StatusMetrics struct {
 type StatusPage struct {
 	Count   int64    `json:"count"`
 	Results []Status `json:"results"`
+	// CanManageShared — Может ли текущий пользователь заводить общие этапы кабинета (без раздела): только полный доступ по кабинету.
+	CanManageShared bool `json:"can_manage_shared"`
 }
 
 type StatusReorder struct {
@@ -16363,6 +17182,10 @@ type StockZoneStockRow struct {
 	Quantity string `json:"quantity"`
 }
 
+type StoryPointsInput struct {
+	Points *int64 `json:"points"`
+}
+
 type Subtask struct {
 	ID             UUID    `json:"id"`
 	Identifier     string  `json:"identifier"`
@@ -16380,33 +17203,37 @@ type SupplierDocument struct {
 }
 
 type Task struct {
-	ID                 UUID                       `json:"id"`
-	Identifier         string                     `json:"identifier"`
-	Section            *UUID                      `json:"section"`
-	SectionKey         *string                    `json:"section_key"`
-	SectionName        *string                    `json:"section_name"`
-	Title              string                     `json:"title"`
-	Description        string                     `json:"description"`
-	Status             *UUID                      `json:"status"`
-	StatusName         *string                    `json:"status_name"`
-	StatusCategory     *string                    `json:"status_category"`
-	Priority           TaskPriority               `json:"priority"`
-	IsImportant        bool                       `json:"is_important"`
-	Creator            *int64                     `json:"creator"`
-	CreatorName        *string                    `json:"creator_name"`
-	Executor           *int64                     `json:"executor"`
-	ExecutorName       *string                    `json:"executor_name"`
-	Assignee           *int64                     `json:"assignee,omitempty"`
-	AssigneeName       *string                    `json:"assignee_name,omitempty"`
-	Coexecutors        []TaskWatcher              `json:"coexecutors"`
-	Cycle              *UUID                      `json:"cycle"`
-	CycleName          *string                    `json:"cycle_name"`
-	Milestone          *UUID                      `json:"milestone"`
-	MilestoneName      *string                    `json:"milestone_name"`
-	StartAt            *string                    `json:"start_at"`
-	CreatedAt          string                     `json:"created_at"`
-	DueAt              *string                    `json:"due_at"`
-	Estimate           *float64                   `json:"estimate"`
+	ID             UUID          `json:"id"`
+	Identifier     string        `json:"identifier"`
+	Section        *UUID         `json:"section"`
+	SectionKey     *string       `json:"section_key"`
+	SectionName    *string       `json:"section_name"`
+	Title          string        `json:"title"`
+	Description    string        `json:"description"`
+	Status         *UUID         `json:"status"`
+	StatusName     *string       `json:"status_name"`
+	StatusCategory *string       `json:"status_category"`
+	Priority       TaskPriority  `json:"priority"`
+	IsImportant    bool          `json:"is_important"`
+	Creator        *int64        `json:"creator"`
+	CreatorName    *string       `json:"creator_name"`
+	Executor       *int64        `json:"executor"`
+	ExecutorName   *string       `json:"executor_name"`
+	Assignee       *int64        `json:"assignee,omitempty"`
+	AssigneeName   *string       `json:"assignee_name,omitempty"`
+	Coexecutors    []TaskWatcher `json:"coexecutors"`
+	Cycle          *UUID         `json:"cycle"`
+	CycleName      *string       `json:"cycle_name"`
+	Milestone      *UUID         `json:"milestone"`
+	MilestoneName  *string       `json:"milestone_name"`
+	StartAt        *string       `json:"start_at"`
+	CreatedAt      string        `json:"created_at"`
+	DueAt          *string       `json:"due_at"`
+	Estimate       *float64      `json:"estimate"`
+	// StoryPoints — Баллы задачи скрама; у обычных задач пусто
+	StoryPoints *int64 `json:"story_points"`
+	// ScrumProject — Проект задачи раздела «Скрам»; у обычных задач null.
+	ScrumProject       *UUID                      `json:"scrum_project"`
 	SortOrder          float64                    `json:"sort_order"`
 	IsArchived         bool                       `json:"is_archived"`
 	Parent             *UUID                      `json:"parent"`
@@ -16501,6 +17328,8 @@ type TaskTagCatalogItem struct {
 	Color       string `json:"color"`
 	Description string `json:"description"`
 	IsArchived  bool   `json:"is_archived"`
+	// CanManage — Может ли текущий пользователь менять и удалять метку: метка раздела — владелец или совладелец проекта, общая метка — полный доступ по кабинету.
+	CanManage bool `json:"can_manage"`
 }
 
 type TaskTagCreate struct {
@@ -16513,6 +17342,8 @@ type TaskTagCreate struct {
 type TaskTagPage struct {
 	Count   int64                `json:"count"`
 	Results []TaskTagCatalogItem `json:"results"`
+	// CanManageShared — Может ли текущий пользователь заводить общие метки кабинета (без раздела): только полный доступ по кабинету.
+	CanManageShared bool `json:"can_manage_shared"`
 }
 
 type TaskTagUpdate struct {
@@ -16786,6 +17617,16 @@ type TransferUploadRequest struct {
 
 type UUID = string
 
+// Velocity — Сколько баллов команда обычно закрывает за спринт — по последним пяти завершённым спринтам. Прогноз — с трёх спринтов истории. Не мерило людей.
+type Velocity struct {
+	Sprints      int64   `json:"sprints"`
+	Average      float64 `json:"average"`
+	Min          int64   `json:"min"`
+	Max          int64   `json:"max"`
+	ForecastLow  *int64  `json:"forecast_low"`
+	ForecastHigh *int64  `json:"forecast_high"`
+}
+
 type WorkflowStatusUpdate struct {
 	Name      *string         `json:"name,omitempty"`
 	Category  *StatusCategory `json:"category,omitempty"`
@@ -17031,6 +17872,11 @@ type FinanceRelinkPaymentRequest struct {
 	ConfirmRelease *bool   `json:"confirm_release,omitempty"`
 }
 
+type FinanceChangeActPnlItemRequest struct {
+	// PNLItemID — Новая статья доходов и расходов
+	PNLItemID UUID `json:"pnl_item_id"`
+}
+
 type FinanceRepostTransactionsRequest struct {
 	Ids            []UUID `json:"ids"`
 	ConfirmRelease *bool  `json:"confirm_release,omitempty"`
@@ -17078,6 +17924,23 @@ type MailApplyRulesResponse struct {
 type MailAttachStoredFileRequest struct {
 	// FileID — Файл в хранилище кабинета
 	FileID string `json:"file_id"`
+}
+
+type MailSaveAddressBookEntryRequest struct {
+	// Email — Почтовый адрес; можно в виде «Имя <адрес>»
+	Email string `json:"email"`
+	// Name — Имя адресата
+	Name *string `json:"name,omitempty"`
+}
+
+type MailRenameAddressBookEntryRequest struct {
+	// Name — Новое имя; пустое снимает имя
+	Name string `json:"name"`
+}
+
+type MailLinkAddressBookEntryRequest struct {
+	// ContactID — Контрагент; null снимает привязку
+	ContactID *UUID `json:"contact_id"`
 }
 
 type MailReadBatchRequest struct {
