@@ -37381,6 +37381,101 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/v1/docflow/messages/{id}/papers:
+    get:
+      tags:
+        - Docflow intake
+      operationId: docflowPackagePapers
+      x-akeda-audience: external
+      summary: Разобрать входящий пакет по файлам
+      description: |-
+        Бумаги пакета (ERP-2063). Пакет оператора — конверт, а не документ: в одном пакете вида «ДоговорВх» может лежать допсоглашение к договору и счёт. Поэтому вид определяется У КАЖДОГО содержательного файла (извещения и формализованные титулы не считаются): по тексту первой страницы, затем по имени файла, и только у пакета из одного файла — по слову оператора. Определённое — ПРЕДЛОЖЕНИЕ: человек сам выбирает вид каждого файла, в том числе когда разбор ничего не понял (kind пустой).
+
+        По каждому файлу: предложенный вид и откуда он взят (kind_source), у допсоглашения — назначение (purpose: terms меняет условия договора, deal — отдельная покупка или продажа), номер, дата, сумма и валюта, прочитанные из файла, номер и дата договора, который бумага назвала основанием, предложенный договор (parent: заведённая карточка или файл-договор этого же пакета), у счёта — номер ДС или спецификации из основания (base_deal) и бумага сделки этого же пакета, по которой он выставлен (deal), и карточка документооборота, уже заведённая по этому файлу. Рядом — договоры контрагента у юрлица пакета, из которых выбирают основание, открытые закупки поставщика у того же юрлица (purchases), куда кладут счёт, акт, УПД и накладную, закупка, в которой бумага уже лежит (order), контрагент, с которым свело зеркало, и число файлов, ещё ждущих решения. Только чтение: ничего не меняет. Завести карточки по решению человека — POST того же адреса.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.edo:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          description: Входящий пакет ЭДО, который разбираем по файлам
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: 'Пакет по файлам: вид, реквизиты, предложенный договор и заведённая карточка каждого файла'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowPackagePapers'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    post:
+      tags:
+        - Docflow intake
+      operationId: docflowApplyPackagePapers
+      x-akeda-audience: external
+      summary: Завести карточки бумаг входящего пакета
+      description: |-
+        «Принять бумаги пакета» (ERP-2063): по решению человека каждый файл пакета получает СВОЮ карточку документооборота. Допсоглашение встаёт под договор связью amends, спецификация — связью attachment; договор называют заведённой карточкой (parent_card) или файлом-договором этого же пакета (parent_attachment) — договоры пакета заводятся первыми, поэтому ДС того же пакета встаёт под только что заведённый договор. Назначение ДС задаёт purpose: terms меняет условия договора, deal оформляет отдельную покупку или продажу и ведёт себя как спецификация; не прислано — предложенное разбором. Счёт получает сумму и строки из своего PDF, номенклатура строк — из прошлых закупок того же поставщика. Счёт, акт, УПД и накладную можно сразу положить в закупку поставщика (order) связью basis — в том числе бумагу, карточка которой уже заведена: так её разносят позже. Файл с видом skip карточки не получает. Файл, у которого карточка уже есть, второй раз не заводится: повтор команды безопасен. Проводок нет, наружу не уходит ничего, поэтому право docflow.edo:write, как у приёмки. Ответ — разбор пакета заново.
+
+        Отказы 400 с кодом и фразой: docflow.papers.empty (не выбрано ни одного файла), docflow.papers.attachment (файла нет в пакете или он назван дважды), docflow.papers.kind (вид не из перечня), docflow.papers.parent (у ДС или спецификации назван не один договор, файл назван договором самому себе или parent_attachment указывает на файл, не отмеченный как договор), docflow.papers.order (в закупку кладут только счёт, акт, УПД и накладную; закупка другого юрлица или поставщика либо это продажа), docflow.papers.purpose (у допсоглашения назначение не terms и не deal). Отказ 422 docflow.formats.invalid с проверкой docflow.edo.counterparty_required — контрагент не сведён зеркалом и не назван полем contact_id. Отказы карточки — кодами docflow.flow.*, 503 docflow.flow.unavailable — карточки документооборота на сервере не включены.
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.edo:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          description: Входящий пакет ЭДО, бумаги которого заводим
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocflowPackagePapersInput'
+      responses:
+        '200':
+          description: 'Пакет по файлам после заведения: у принятых файлов заполнено card'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowPackagePapers'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/DocflowFormatInvalid'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/docflow/approvals:
     get:
       tags:
@@ -46161,6 +46256,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+    DocflowFormatInvalid:
+      description: 'Документ не отвечает формату ФНС: не хватает реквизитов. Код `docflow.formats.invalid`, и поле `issues` несёт СПИСОК непройденных проверок целиком — код, путь реквизита именами ФНС, номер товарной строки и подробности значениями. 422, а не 400: запрос составлен верно, и чинится это заполнением карточек, а не переписыванием запроса.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DocflowFormatIssues'
     DocflowFlowFileContent:
       description: Байты файла как вложение. Содержимое приходит потоком, а не полем JSON, и посредникам кэшировать его запрещено.
       headers:
@@ -83693,6 +83794,12 @@ components:
           $ref: '#/components/schemas/DocflowFlowCommercial'
         correction:
           $ref: '#/components/schemas/DocflowFlowCorrection'
+        amendment_purpose:
+          type: string
+          enum:
+            - terms
+            - deal
+          description: 'Назначение допсоглашения (ERP-2063), только у вида amendment: terms — меняет условия договора (цену, срок, абонентскую плату), deal — оформляет отдельную покупку или продажу по договору и ведёт себя как спецификация: может быть основанием сделки, его условия услуг в договор не идут. Не прислано у ДС — terms; у другого вида — отказ'
         recognized:
           $ref: '#/components/schemas/DocflowFlowRecognized'
         custom:
@@ -83888,6 +83995,7 @@ components:
             - attachment
             - amends
             - replaces
+          description: 'amends — допсоглашение изменяет договор; attachment — приложение или спецификация под договором, спецификацией или допсоглашением; basis — основание, в том числе бумага сделки на заказе: спецификация и допсоглашение с назначением deal могут стоять на заказе, ДС с назначением terms — нет; replaces — замена'
         target_id:
           $ref: '#/components/schemas/UUID'
         target_version:
@@ -85975,6 +86083,232 @@ components:
         created_at:
           type: string
           format: date-time
+        external_attachment_id:
+          type: string
+          description: 'Файл пакета, по которому заведена карточка (ERP-2063): идентификатор вложения у оператора (external_id), а без него — «id:» и id вложения. У пакета «ДС + счёт» своя карточка у каждого файла. Нет у карточки на весь пакет — так заводила приёмка до разбора по файлам'
+    DocflowPackagePaperKind:
+      type: string
+      description: 'Что человек назначает файлу пакета: договор, допсоглашение, спецификация, счёт, акт, УПД, товарная накладная, акт сверки, доверенность, прочее; skip — файл не бумага сделки (сопроводительное письмо, копия уже заведённого) и карточки не получает.'
+      enum:
+        - contract
+        - amendment
+        - specification
+        - invoice
+        - act
+        - upd
+        - goods_waybill
+        - reconciliation_act
+        - power_of_attorney
+        - other
+        - skip
+    DocflowPackagePaperParent:
+      type: object
+      additionalProperties: false
+      description: 'Договор, под которым стоит бумага: уже заведённая карточка (card) или файл-договор этого же пакета (attachment), которому карточку заведёт та же команда. Назван ровно один из двух.'
+      properties:
+        card:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Карточка договора в документообороте
+        attachment:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Файл-договор этого же пакета
+        title:
+          type: string
+          description: 'Название договора для показа человеку: заголовок карточки или имя файла'
+    DocflowPackagePaper:
+      type: object
+      additionalProperties: false
+      description: Один содержательный файл пакета глазами разбора.
+      required:
+        - attachment
+        - name
+        - kind
+        - kind_source
+      properties:
+        attachment:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Файл пакета — id вложения
+        name:
+          type: string
+          description: Имя файла словами оператора
+        kind:
+          type: string
+          description: Вид уже заведённой карточки, иначе предложенный разбором. Пустая строка — разбор не понял, вид выбирает человек. У файла с карточкой — любой вид документооборота, у остальных — из перечня DocflowPackagePaperKind.
+        kind_source:
+          type: string
+          enum:
+            - ''
+            - text
+            - name
+            - operator
+            - card
+          description: 'Откуда взят вид: text — по тексту первой страницы, name — по имени файла, operator — по слову оператора (только у пакета из одного файла), card — у файла уже есть карточка; пусто — вид не определён'
+        number:
+          type: string
+          description: Номер бумаги, прочитанный из файла
+        date:
+          type: string
+          description: Дата бумаги в форме ГГГГ-ММ-ДД, прочитанная из файла
+        amount:
+          type: string
+          description: 'Сумма строкой, как в бумаге: через число с плавающей точкой теряются копейки'
+        currency:
+          type: string
+          description: Валюта, если бумага её назвала; пусто — не сказано
+        base_number:
+          type: string
+          description: 'Номер договора, который бумага назвала основанием: «к договору 332/26» у ДС, «Основание: Договор № 332/26» у счёта'
+        base_date:
+          type: string
+          description: Дата договора-основания, если бумага её назвала
+        parent:
+          allOf:
+            - $ref: '#/components/schemas/DocflowPackagePaperParent'
+          description: Предложенный договор. У ДС и спецификации он станет связью карточки, у счёта — договором будущей закупки. Нет — подобрать не удалось, выбирает человек
+        card:
+          allOf:
+            - $ref: '#/components/schemas/DocflowMessageFlowLink'
+          description: Карточка документооборота, уже заведённая по этому файлу; нет — файл ещё ждёт решения
+        order:
+          allOf:
+            - $ref: '#/components/schemas/DocflowPackagePaperOrder'
+          description: Закупка, в которой карточка бумаги уже лежит основанием (счёт, акт, УПД, накладная); нет — бумага ни в какую закупку не положена
+        purpose:
+          type: string
+          enum:
+            - terms
+            - deal
+          description: 'Назначение допсоглашения: у заведённой карточки — её, иначе предложенное по тексту. terms — меняет условия договора, deal — отдельная покупка или продажа по договору. Только у вида amendment'
+        base_deal:
+          type: string
+          description: 'Номер допсоглашения или спецификации, названный в основании счёта: «2» из «ДС № 2»'
+        deal:
+          allOf:
+            - $ref: '#/components/schemas/DocflowPackagePaperParent'
+          description: 'ДС-покупка (назначение deal) или спецификация этого же пакета, по которой выставлена бумага сделки: новая закупка по счёту заводится по ней — состав и график из неё, договор родительский, — и она ложится в закупку основанием'
+    DocflowPackagePaperOrder:
+      type: object
+      additionalProperties: false
+      description: Закупка, в которой лежит бумага пакета.
+      required:
+        - id
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Закупка — заказ модуля core
+        number:
+          type: string
+        title:
+          type: string
+    DocflowPackageContract:
+      type: object
+      additionalProperties: false
+      description: Договор контрагента, который можно выбрать основанием бумаги.
+      required:
+        - id
+        - title
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Карточка договора в документообороте
+        title:
+          type: string
+        number:
+          type: string
+        date:
+          type: string
+          description: Дата договора в форме ГГГГ-ММ-ДД
+    DocflowPackagePapers:
+      type: object
+      additionalProperties: false
+      description: 'Входящий пакет, разобранный по файлам (ERP-2063): каждый файл — своя бумага со своей карточкой.'
+      required:
+        - message
+        - papers
+        - contracts
+        - purchases
+        - pending
+      properties:
+        message:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Входящий пакет ЭДО
+        papers:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowPackagePaper'
+        contracts:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowPackageContract'
+          description: 'Договоры этого контрагента у юрлица пакета: из них выбирают основание ДС и договор закупки'
+        purchases:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowIntakePurchase'
+          description: 'Открытые закупки этого поставщика у юрлица пакета: в них кладут счёт, акт, УПД и накладную полем order команды. Пусто, когда контрагент не выбран или закупок нет'
+        contact:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Контрагент справочника, с которым свело зеркало или которого назвала команда; нет — контрагента выбирает человек
+        pending:
+          type: integer
+          minimum: 0
+          description: Сколько файлов ещё без карточки и не отмечены skip
+    DocflowPackagePaperInput:
+      type: object
+      additionalProperties: false
+      description: Решение человека по одному файлу пакета.
+      required:
+        - attachment
+        - kind
+      properties:
+        attachment:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Файл пакета — attachment из разбора
+        kind:
+          $ref: '#/components/schemas/DocflowPackagePaperKind'
+        parent_card:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Заведённый договор для ДС или спецификации — карточка из contracts или parent.card разбора
+        parent_attachment:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Файл-договор этого же пакета для ДС или спецификации; сам файл должен быть в этой же команде с видом contract
+        purpose:
+          type: string
+          enum:
+            - terms
+            - deal
+          description: 'Назначение допсоглашения: terms — меняет условия договора, deal — отдельная покупка или продажа по договору. Только у вида amendment, у прочих игнорируется; не прислано — предложенное разбором'
+        order:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Закупка из purchases разбора, в которую положить счёт, акт, УПД или накладную основанием. Годится и для файла, у которого карточка уже есть, — так бумагу разносят позже. У прочих видов игнорируется
+    DocflowPackagePapersInput:
+      type: object
+      additionalProperties: false
+      description: 'Команда «Принять бумаги пакета». У ДС и спецификации назван не более чем один договор — parent_card или parent_attachment; у прочих видов договор не передаётся и игнорируется: счёт кладут в закупку, а не в договор.'
+      required:
+        - papers
+      properties:
+        papers:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/DocflowPackagePaperInput'
+          description: 'Бумаги пакета: решение по каждому принимаемому файлу, один файл — один раз'
+        contact_id:
+          allOf:
+            - $ref: '#/components/schemas/UUID'
+          description: Контрагент справочника, если зеркало пакет с ним не свело
     DocflowAttachment:
       type: object
       additionalProperties: false
@@ -86814,6 +87148,25 @@ components:
         accepted_at:
           type: string
           description: Момент приёмки; пусто, если он не записан
+    DocflowFormatIssues:
+      type: object
+      additionalProperties: false
+      description: 'Документ не отвечает формату ФНС. Список непройденных проверок уходит ЦЕЛИКОМ: человек обязан увидеть всё сразу, а не по одной причине за попытку.'
+      required:
+        - detail
+        - code
+        - issues
+      properties:
+        detail:
+          type: string
+          description: Одна фраза на языке запроса
+        code:
+          type: string
+          const: docflow.formats.invalid
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowIssue'
     MailEncryption:
       type: string
       description: 'Режим шифрования канала. Открытого соединения без TLS в перечне нет намеренно: пароль от почты в открытом канале не передаётся.'

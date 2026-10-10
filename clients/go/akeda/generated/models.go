@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 086ae530551778bf0bdc50d9b5b445742b02c04408f7c40421231fb50b86d021).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 63fafd6626a8f063497c1410a202c7408b904b98902ad513422073dc4d7aadb0).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -7424,7 +7424,9 @@ type DocflowFlowContent struct {
 	Contract   *DocflowFlowContractTerms `json:"contract,omitempty"`
 	Commercial *DocflowFlowCommercial    `json:"commercial,omitempty"`
 	Correction *DocflowFlowCorrection    `json:"correction,omitempty"`
-	Recognized *DocflowFlowRecognized    `json:"recognized,omitempty"`
+	// AmendmentPurpose — Назначение допсоглашения (ERP-2063), только у вида amendment: terms — меняет условия договора (цену, срок, абонентскую плату), deal — оформляет отдельную покупку или продажу по договору и ведёт себя как спецификация: может быть основанием сделки, его условия услуг в договор не идут. Не прислано у ДС — terms; у другого вида — отказ
+	AmendmentPurpose *string                `json:"amendment_purpose,omitempty"`
+	Recognized       *DocflowFlowRecognized `json:"recognized,omitempty"`
 	// Custom — Значения своих полей кабинета (графы вида docflow.document.<вид>). В save не прислано — не меняются; правятся действием custom
 	Custom map[string]json.RawMessage `json:"custom,omitempty"`
 }
@@ -7731,6 +7733,7 @@ type DocflowFlowRelation struct {
 }
 
 type DocflowFlowRelationInput struct {
+	// Kind — amends — допсоглашение изменяет договор; attachment — приложение или спецификация под договором, спецификацией или допсоглашением; basis — основание, в том числе бумага сделки на заказе: спецификация и допсоглашение с назначением deal могут стоять на заказе, ДС с назначением terms — нет; replaces — замена
 	Kind          string `json:"kind"`
 	TargetID      UUID   `json:"target_id"`
 	TargetVersion int64  `json:"target_version"`
@@ -7775,6 +7778,14 @@ type DocflowFlowUploadRequest struct {
 type DocflowFlowUploadResult struct {
 	Document DocflowFlowDocument `json:"document"`
 	FileID   UUID                `json:"file_id"`
+}
+
+// DocflowFormatIssues — Документ не отвечает формату ФНС. Список непройденных проверок уходит ЦЕЛИКОМ: человек обязан увидеть всё сразу, а не по одной причине за попытку.
+type DocflowFormatIssues struct {
+	// Detail — Одна фраза на языке запроса
+	Detail string         `json:"detail"`
+	Code   string         `json:"code"`
+	Issues []DocflowIssue `json:"issues"`
 }
 
 // DocflowIntakeCounterparty — Вторая сторона и то, с кем мы её свели. Порядок узнавания жёсткий, и каждая ступень сильнее следующей: решение человека этим же запросом, сопоставление зеркала пакета, ЗАПИСАННОЕ решение по этому участнику обмена и, наконец, поиск в справочнике по ИНН и КПП. Последняя ступень — догадка, и она называет себя догадкой (match: guess), а не выдаёт себя за чьё-то решение. Разбор у неё общий с автоматчем выгрузок: второй механизм узнавания рядом с существующим разошёлся бы с ним на первой же правке — молча и в пользу дубля. Неоднозначность не разрешается никогда: ИНН, совпавший у двух юрлиц, которых не развёл КПП, уходит человеку списком options.
@@ -8069,6 +8080,8 @@ type DocflowMessageFlowLink struct {
 	Number    string          `json:"number"`
 	Date      string          `json:"date"`
 	CreatedAt string          `json:"created_at"`
+	// ExternalAttachmentID — Файл пакета, по которому заведена карточка (ERP-2063): идентификатор вложения у оператора (external_id), а без него — «id:» и id вложения. У пакета «ДС + счёт» своя карточка у каждого файла. Нет у карточки на весь пакет — так заводила приёмка до разбора по файлам
+	ExternalAttachmentID *string `json:"external_attachment_id,omitempty"`
 }
 
 type DocflowMessageList struct {
@@ -8200,6 +8213,174 @@ type DocflowOrderUPDInput struct {
 	StageID *UUID   `json:"stage_id,omitempty"`
 	// Function — Пусто — СЧФДОП
 	Function *string `json:"function,omitempty"`
+}
+
+// DocflowPackageContract — Договор контрагента, который можно выбрать основанием бумаги.
+type DocflowPackageContract struct {
+	// ID — Карточка договора в документообороте
+	ID     map[string]json.RawMessage `json:"id"`
+	Title  string                     `json:"title"`
+	Number *string                    `json:"number,omitempty"`
+	// Date — Дата договора в форме ГГГГ-ММ-ДД
+	Date *string `json:"date,omitempty"`
+}
+
+// DocflowPackagePaper — Один содержательный файл пакета глазами разбора.
+type DocflowPackagePaper struct {
+	// Attachment — Файл пакета — id вложения
+	Attachment map[string]json.RawMessage `json:"attachment"`
+	// Name — Имя файла словами оператора
+	Name string `json:"name"`
+	// Kind — Вид уже заведённой карточки, иначе предложенный разбором. Пустая строка — разбор не понял, вид выбирает человек. У файла с карточкой — любой вид документооборота, у остальных — из перечня DocflowPackagePaperKind.
+	Kind string `json:"kind"`
+	// KindSource — Откуда взят вид: text — по тексту первой страницы, name — по имени файла, operator — по слову оператора (только у пакета из одного файла), card — у файла уже есть карточка; пусто — вид не определён
+	KindSource string `json:"kind_source"`
+	// Number — Номер бумаги, прочитанный из файла
+	Number *string `json:"number,omitempty"`
+	// Date — Дата бумаги в форме ГГГГ-ММ-ДД, прочитанная из файла
+	Date *string `json:"date,omitempty"`
+	// Amount — Сумма строкой, как в бумаге: через число с плавающей точкой теряются копейки
+	Amount *string `json:"amount,omitempty"`
+	// Currency — Валюта, если бумага её назвала; пусто — не сказано
+	Currency *string `json:"currency,omitempty"`
+	// BaseNumber — Номер договора, который бумага назвала основанием: «к договору 332/26» у ДС, «Основание: Договор № 332/26» у счёта
+	BaseNumber *string `json:"base_number,omitempty"`
+	// BaseDate — Дата договора-основания, если бумага её назвала
+	BaseDate *string `json:"base_date,omitempty"`
+	// Parent — Предложенный договор. У ДС и спецификации он станет связью карточки, у счёта — договором будущей закупки. Нет — подобрать не удалось, выбирает человек
+	Parent *DocflowPackagePaperParent `json:"parent,omitempty"`
+	// Card — Карточка документооборота, уже заведённая по этому файлу; нет — файл ещё ждёт решения
+	Card *DocflowPackagePaperCard `json:"card,omitempty"`
+	// Order — Закупка, в которой карточка бумаги уже лежит основанием (счёт, акт, УПД, накладная); нет — бумага ни в какую закупку не положена
+	Order *DocflowPackagePaperOrder `json:"order,omitempty"`
+	// Purpose — Назначение допсоглашения: у заведённой карточки — её, иначе предложенное по тексту. terms — меняет условия договора, deal — отдельная покупка или продажа по договору. Только у вида amendment
+	Purpose *string `json:"purpose,omitempty"`
+	// BaseDeal — Номер допсоглашения или спецификации, названный в основании счёта: «2» из «ДС № 2»
+	BaseDeal *string `json:"base_deal,omitempty"`
+	// Deal — ДС-покупка (назначение deal) или спецификация этого же пакета, по которой выставлена бумага сделки: новая закупка по счёту заводится по ней — состав и график из неё, договор родительский, — и она ложится в закупку основанием
+	Deal *DocflowPackagePaperDeal `json:"deal,omitempty"`
+}
+
+// DocflowPackagePaperParent — Предложенный договор. У ДС и спецификации он станет связью карточки, у счёта — договором будущей закупки. Нет — подобрать не удалось, выбирает человек
+type DocflowPackagePaperParent struct {
+	// Card — Карточка договора в документообороте
+	Card map[string]json.RawMessage `json:"card,omitempty"`
+	// Attachment — Файл-договор этого же пакета
+	Attachment map[string]json.RawMessage `json:"attachment,omitempty"`
+	// Title — Название договора для показа человеку: заголовок карточки или имя файла
+	Title *string `json:"title,omitempty"`
+}
+
+// DocflowPackagePaperCard — Карточка документооборота, уже заведённая по этому файлу; нет — файл ещё ждёт решения
+type DocflowPackagePaperCard struct {
+	ID       UUID `json:"id"`
+	Document UUID `json:"document"`
+	// Role — Чем карточка приходится конверту: основной документ, приложение или основание
+	Role string `json:"role"`
+	// Version — Текущая редакция карточки: открывать человеку следует её
+	Version   int64           `json:"version"`
+	Kind      DocflowFlowKind `json:"kind"`
+	Status    string          `json:"status"`
+	Title     string          `json:"title"`
+	Number    string          `json:"number"`
+	Date      string          `json:"date"`
+	CreatedAt string          `json:"created_at"`
+	// ExternalAttachmentID — Файл пакета, по которому заведена карточка (ERP-2063): идентификатор вложения у оператора (external_id), а без него — «id:» и id вложения. У пакета «ДС + счёт» своя карточка у каждого файла. Нет у карточки на весь пакет — так заводила приёмка до разбора по файлам
+	ExternalAttachmentID *string `json:"external_attachment_id,omitempty"`
+}
+
+// DocflowPackagePaperOrder — Закупка, в которой карточка бумаги уже лежит основанием (счёт, акт, УПД, накладная); нет — бумага ни в какую закупку не положена
+type DocflowPackagePaperOrder struct {
+	// ID — Закупка — заказ модуля core
+	ID     map[string]json.RawMessage `json:"id"`
+	Number *string                    `json:"number,omitempty"`
+	Title  *string                    `json:"title,omitempty"`
+}
+
+// DocflowPackagePaperDeal — ДС-покупка (назначение deal) или спецификация этого же пакета, по которой выставлена бумага сделки: новая закупка по счёту заводится по ней — состав и график из неё, договор родительский, — и она ложится в закупку основанием
+type DocflowPackagePaperDeal struct {
+	// Card — Карточка договора в документообороте
+	Card map[string]json.RawMessage `json:"card,omitempty"`
+	// Attachment — Файл-договор этого же пакета
+	Attachment map[string]json.RawMessage `json:"attachment,omitempty"`
+	// Title — Название договора для показа человеку: заголовок карточки или имя файла
+	Title *string `json:"title,omitempty"`
+}
+
+// DocflowPackagePaperInput — Решение человека по одному файлу пакета.
+type DocflowPackagePaperInput struct {
+	// Attachment — Файл пакета — attachment из разбора
+	Attachment map[string]json.RawMessage `json:"attachment"`
+	Kind       DocflowPackagePaperKind    `json:"kind"`
+	// ParentCard — Заведённый договор для ДС или спецификации — карточка из contracts или parent.card разбора
+	ParentCard map[string]json.RawMessage `json:"parent_card,omitempty"`
+	// ParentAttachment — Файл-договор этого же пакета для ДС или спецификации; сам файл должен быть в этой же команде с видом contract
+	ParentAttachment map[string]json.RawMessage `json:"parent_attachment,omitempty"`
+	// Purpose — Назначение допсоглашения: terms — меняет условия договора, deal — отдельная покупка или продажа по договору. Только у вида amendment, у прочих игнорируется; не прислано — предложенное разбором
+	Purpose *string `json:"purpose,omitempty"`
+	// Order — Закупка из purchases разбора, в которую положить счёт, акт, УПД или накладную основанием. Годится и для файла, у которого карточка уже есть, — так бумагу разносят позже. У прочих видов игнорируется
+	Order map[string]json.RawMessage `json:"order,omitempty"`
+}
+
+type DocflowPackagePaperKind = string
+
+// DocflowPackagePaperOrder2 — Закупка, в которой лежит бумага пакета.
+type DocflowPackagePaperOrder2 struct {
+	// ID — Закупка — заказ модуля core
+	ID     map[string]json.RawMessage `json:"id"`
+	Number *string                    `json:"number,omitempty"`
+	Title  *string                    `json:"title,omitempty"`
+}
+
+// DocflowPackagePaperOrder — Закупка, в которой карточка бумаги уже лежит основанием (счёт, акт, УПД, накладная); нет — бумага ни в какую закупку не положена
+type DocflowPackagePaperOrder struct {
+	// ID — Закупка — заказ модуля core
+	ID     map[string]json.RawMessage `json:"id"`
+	Number *string                    `json:"number,omitempty"`
+	Title  *string                    `json:"title,omitempty"`
+}
+
+// DocflowPackagePaperParent2 — Договор, под которым стоит бумага: уже заведённая карточка (card) или файл-договор этого же пакета (attachment), которому карточку заведёт та же команда. Назван ровно один из двух.
+type DocflowPackagePaperParent2 struct {
+	// Card — Карточка договора в документообороте
+	Card map[string]json.RawMessage `json:"card,omitempty"`
+	// Attachment — Файл-договор этого же пакета
+	Attachment map[string]json.RawMessage `json:"attachment,omitempty"`
+	// Title — Название договора для показа человеку: заголовок карточки или имя файла
+	Title *string `json:"title,omitempty"`
+}
+
+// DocflowPackagePaperParent — Предложенный договор. У ДС и спецификации он станет связью карточки, у счёта — договором будущей закупки. Нет — подобрать не удалось, выбирает человек
+type DocflowPackagePaperParent struct {
+	// Card — Карточка договора в документообороте
+	Card map[string]json.RawMessage `json:"card,omitempty"`
+	// Attachment — Файл-договор этого же пакета
+	Attachment map[string]json.RawMessage `json:"attachment,omitempty"`
+	// Title — Название договора для показа человеку: заголовок карточки или имя файла
+	Title *string `json:"title,omitempty"`
+}
+
+// DocflowPackagePapers — Входящий пакет, разобранный по файлам (ERP-2063): каждый файл — своя бумага со своей карточкой.
+type DocflowPackagePapers struct {
+	// Message — Входящий пакет ЭДО
+	Message map[string]json.RawMessage `json:"message"`
+	Papers  []DocflowPackagePaper      `json:"papers"`
+	// Contracts — Договоры этого контрагента у юрлица пакета: из них выбирают основание ДС и договор закупки
+	Contracts []DocflowPackageContract `json:"contracts"`
+	// Purchases — Открытые закупки этого поставщика у юрлица пакета: в них кладут счёт, акт, УПД и накладную полем order команды. Пусто, когда контрагент не выбран или закупок нет
+	Purchases []DocflowIntakePurchase `json:"purchases"`
+	// Contact — Контрагент справочника, с которым свело зеркало или которого назвала команда; нет — контрагента выбирает человек
+	Contact map[string]json.RawMessage `json:"contact,omitempty"`
+	// Pending — Сколько файлов ещё без карточки и не отмечены skip
+	Pending int64 `json:"pending"`
+}
+
+// DocflowPackagePapersInput — Команда «Принять бумаги пакета». У ДС и спецификации назван не более чем один договор — parent_card или parent_attachment; у прочих видов договор не передаётся и игнорируется: счёт кладут в закупку, а не в договор.
+type DocflowPackagePapersInput struct {
+	// Papers — Бумаги пакета: решение по каждому принимаемому файлу, один файл — один раз
+	Papers []DocflowPackagePaperInput `json:"papers"`
+	// ContactID — Контрагент справочника, если зеркало пакет с ним не свело
+	ContactID map[string]json.RawMessage `json:"contact_id,omitempty"`
 }
 
 type DocflowPaymentRequestRoutePreview struct {

@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 086ae530551778bf0bdc50d9b5b445742b02c04408f7c40421231fb50b86d021).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 63fafd6626a8f063497c1410a202c7408b904b98902ad513422073dc4d7aadb0).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -2960,6 +2960,13 @@ export interface OperationTypes {
     body: never;
     response: models.DocflowFlowDocument;
   };
+  /** POST /api/v1/docflow/messages/{id}/papers — Завести карточки бумаг входящего пакета */
+  docflowApplyPackagePapers: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.DocflowPackagePapersInput;
+    response: models.DocflowPackagePapers;
+  };
   /** GET /api/v1/docflow/approvals/{id} — Получить согласование целиком */
   docflowApproval: {
     params: { "id": models.UUID };
@@ -3218,6 +3225,13 @@ export interface OperationTypes {
     query: { "actions_due"?: "1"; "company"?: models.UUID; "connection"?: models.UUID; "contact"?: models.UUID; "counterparty_inn"?: string; "date_from"?: string; "date_to"?: string; "direction"?: "incoming" | "outgoing"; "limit"?: number; "offset"?: number; "state_category"?: models.DocflowStateCategory; "state_code"?: string };
     body: never;
     response: models.DocflowMessageList;
+  };
+  /** GET /api/v1/docflow/messages/{id}/papers — Разобрать входящий пакет по файлам */
+  docflowPackagePapers: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.DocflowPackagePapers;
   };
   /** GET /api/v1/docflow/payment-requests/route-preview — Предварительно определить путь заявки на оплату */
   docflowPaymentRequestRoutePreview: {
@@ -7493,6 +7507,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowAbortFlowUploadSession: { method: "DELETE", path: "/api/v1/docflow/flow/upload-sessions/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowAcknowledgeApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/acknowledge", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowAdvanceInvoice: { method: "GET", path: "/api/v1/docflow/flow/advance-invoices", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowApplyPackagePapers: { method: "POST", path: "/api/v1/docflow/messages/{id}/papers", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApproval: { method: "GET", path: "/api/v1/docflow/approvals/{id}", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApprovalRoutes: { method: "GET", path: "/api/v1/docflow/approval-routes", module: "docflow", stage: "preview", permission: "docflow.flow:configure_payments", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowApprovalSettings: { method: "GET", path: "/api/v1/docflow/approval-settings", module: "docflow", stage: "preview", permission: "docflow.flow:configure_payments", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -7530,6 +7545,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowIssueUKD: { method: "POST", path: "/api/v1/docflow/flow/ukd", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: true, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowListConnections: { method: "GET", path: "/api/v1/docflow/connections", module: "docflow", stage: "preview", permission: "docflow.edo:admin", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowListMessages: { method: "GET", path: "/api/v1/docflow/messages", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
+  docflowPackagePapers: { method: "GET", path: "/api/v1/docflow/messages/{id}/papers", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowPaymentRequestRoutePreview: { method: "GET", path: "/api/v1/docflow/payment-requests/route-preview", module: "docflow", stage: "preview", permission: "docflow.flow:request", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowResubmitApproval: { method: "POST", path: "/api/v1/docflow/approvals/{id}/resubmit", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowReturnUKD: { method: "GET", path: "/api/v1/docflow/flow/ukd", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

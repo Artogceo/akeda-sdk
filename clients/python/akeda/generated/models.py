@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 086ae530551778bf0bdc50d9b5b445742b02c04408f7c40421231fb50b86d021).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 63fafd6626a8f063497c1410a202c7408b904b98902ad513422073dc4d7aadb0).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -711,6 +711,7 @@ __all__ = [
     "DocflowFlowScheduleStage",
     "DocflowFlowUploadRequest",
     "DocflowFlowUploadResult",
+    "DocflowFormatIssues",
     "DocflowIntakeCounterparty",
     "DocflowIntakeCounterpartyOption",
     "DocflowIntakeLine",
@@ -736,6 +737,20 @@ __all__ = [
     "DocflowOrderSetMember",
     "DocflowOrderSetOrder",
     "DocflowOrderUPDInput",
+    "DocflowPackageContract",
+    "DocflowPackagePaper",
+    "DocflowPackagePaperParent",
+    "DocflowPackagePaperCard",
+    "DocflowPackagePaperOrder",
+    "DocflowPackagePaperDeal",
+    "DocflowPackagePaperInput",
+    "DocflowPackagePaperKind",
+    "DocflowPackagePaperOrder2",
+    "DocflowPackagePaperOrder",
+    "DocflowPackagePaperParent2",
+    "DocflowPackagePaperParent",
+    "DocflowPackagePapers",
+    "DocflowPackagePapersInput",
     "DocflowPaymentRequestRoutePreview",
     "DocflowRecognized",
     "DocflowSalesOrder",
@@ -9122,6 +9137,8 @@ class DocflowFlowContent(_DocflowFlowContentRequired, total=False):
     contract: "DocflowFlowContractTerms"
     commercial: "DocflowFlowCommercial"
     correction: "DocflowFlowCorrection"
+    #: Назначение допсоглашения (ERP-2063), только у вида amendment: terms — меняет условия договора (цену, срок, абонентскую плату), deal — оформляет отдельную покупку или продажу по договору и ведёт себя как спецификация: может быть основанием сделки, его условия услуг в договор не идут. Не прислано у ДС — terms; у другого вида — отказ
+    amendment_purpose: Literal['terms', 'deal']
     recognized: "DocflowFlowRecognized"
     #: Значения своих полей кабинета (графы вида docflow.document.<вид>). В save не прислано — не меняются; правятся действием custom
     custom: Dict[str, Any]
@@ -9441,6 +9458,7 @@ class DocflowFlowRelation(TypedDict):
     target_version: int
 
 class DocflowFlowRelationInput(TypedDict):
+    #: amends — допсоглашение изменяет договор; attachment — приложение или спецификация под договором, спецификацией или допсоглашением; basis — основание, в том числе бумага сделки на заказе: спецификация и допсоглашение с назначением deal могут стоять на заказе, ДС с назначением terms — нет; replaces — замена
     kind: Literal['basis', 'attachment', 'amends', 'replaces']
     target_id: "UUID"
     target_version: int
@@ -9489,6 +9507,14 @@ class DocflowFlowUploadResult(TypedDict):
 
     document: "DocflowFlowDocument"
     file_id: "UUID"
+
+class DocflowFormatIssues(TypedDict):
+    """Документ не отвечает формату ФНС. Список непройденных проверок уходит ЦЕЛИКОМ: человек обязан увидеть всё сразу, а не по одной причине за попытку."""
+
+    #: Одна фраза на языке запроса
+    detail: str
+    code: Literal['docflow.formats.invalid']
+    issues: List["DocflowIssue"]
 
 class _DocflowIntakeCounterpartyRequired(TypedDict):
     #: Карточка контрагента кабинета; null — свести не с кем, и приёмка отвечает проверкой docflow.edo.contact_required
@@ -9782,9 +9808,7 @@ class DocflowMessage(_DocflowMessageRequired, total=False):
     #: Что стало с оплатой этого счёта. Приходит И В СПИСКЕ, в отличие от состава пакета: состояние оплаты — ровно то, что человек читает глазами в каждой строке. Считает его модуль finance (счета, выписки и расчёты) одним запросом на всю страницу. null означает «этот счёт никто не оплачивает»: ни заведённой заявки, ни платежа, — именно там и остаётся кнопка «Отправить в оплату».
     payment: Optional["DocflowMessagePayment"]
 
-class DocflowMessageFlowLink(TypedDict):
-    """Карточка документооборота в пакете — обратная сторона связи edo_links карточки. Пакет доказывает отправку и подпись, а содержание живёт в карточке; здесь видно, чьё содержание он вёз и чем карточка ему приходится."""
-
+class _DocflowMessageFlowLinkRequired(TypedDict):
     id: "UUID"
     document: "UUID"
     #: Чем карточка приходится конверту: основной документ, приложение или основание
@@ -9797,6 +9821,12 @@ class DocflowMessageFlowLink(TypedDict):
     number: str
     date: str
     created_at: str
+
+class DocflowMessageFlowLink(_DocflowMessageFlowLinkRequired, total=False):
+    """Карточка документооборота в пакете — обратная сторона связи edo_links карточки. Пакет доказывает отправку и подпись, а содержание живёт в карточке; здесь видно, чьё содержание он вёз и чем карточка ему приходится."""
+
+    #: Файл пакета, по которому заведена карточка (ERP-2063): идентификатор вложения у оператора (external_id), а без него — «id:» и id вложения. У пакета «ДС + счёт» своя карточка у каждого файла. Нет у карточки на весь пакет — так заводила приёмка до разбора по файлам
+    external_attachment_id: str
 
 class DocflowMessageList(TypedDict):
     count: int
@@ -9931,6 +9961,192 @@ class DocflowOrderUPDInput(TypedDict, total=False):
     stage_id: "UUID"
     #: Пусто — СЧФДОП
     function: Literal['СЧФДОП', 'ДОП']
+
+class _DocflowPackageContractRequired(TypedDict):
+    #: Карточка договора в документообороте
+    id: Dict[str, Any]
+    title: str
+
+class DocflowPackageContract(_DocflowPackageContractRequired, total=False):
+    """Договор контрагента, который можно выбрать основанием бумаги."""
+
+    number: str
+    #: Дата договора в форме ГГГГ-ММ-ДД
+    date: str
+
+class _DocflowPackagePaperRequired(TypedDict):
+    #: Файл пакета — id вложения
+    attachment: Dict[str, Any]
+    #: Имя файла словами оператора
+    name: str
+    #: Вид уже заведённой карточки, иначе предложенный разбором. Пустая строка — разбор не понял, вид выбирает человек. У файла с карточкой — любой вид документооборота, у остальных — из перечня DocflowPackagePaperKind.
+    kind: str
+    #: Откуда взят вид: text — по тексту первой страницы, name — по имени файла, operator — по слову оператора (только у пакета из одного файла), card — у файла уже есть карточка; пусто — вид не определён
+    kind_source: Literal['', 'text', 'name', 'operator', 'card']
+
+class DocflowPackagePaper(_DocflowPackagePaperRequired, total=False):
+    """Один содержательный файл пакета глазами разбора."""
+
+    #: Номер бумаги, прочитанный из файла
+    number: str
+    #: Дата бумаги в форме ГГГГ-ММ-ДД, прочитанная из файла
+    date: str
+    #: Сумма строкой, как в бумаге: через число с плавающей точкой теряются копейки
+    amount: str
+    #: Валюта, если бумага её назвала; пусто — не сказано
+    currency: str
+    #: Номер договора, который бумага назвала основанием: «к договору 332/26» у ДС, «Основание: Договор № 332/26» у счёта
+    base_number: str
+    #: Дата договора-основания, если бумага её назвала
+    base_date: str
+    #: Предложенный договор. У ДС и спецификации он станет связью карточки, у счёта — договором будущей закупки. Нет — подобрать не удалось, выбирает человек
+    parent: "DocflowPackagePaperParent"
+    #: Карточка документооборота, уже заведённая по этому файлу; нет — файл ещё ждёт решения
+    card: "DocflowPackagePaperCard"
+    #: Закупка, в которой карточка бумаги уже лежит основанием (счёт, акт, УПД, накладная); нет — бумага ни в какую закупку не положена
+    order: "DocflowPackagePaperOrder"
+    #: Назначение допсоглашения: у заведённой карточки — её, иначе предложенное по тексту. terms — меняет условия договора, deal — отдельная покупка или продажа по договору. Только у вида amendment
+    purpose: Literal['terms', 'deal']
+    #: Номер допсоглашения или спецификации, названный в основании счёта: «2» из «ДС № 2»
+    base_deal: str
+    #: ДС-покупка (назначение deal) или спецификация этого же пакета, по которой выставлена бумага сделки: новая закупка по счёту заводится по ней — состав и график из неё, договор родительский, — и она ложится в закупку основанием
+    deal: "DocflowPackagePaperDeal"
+
+class DocflowPackagePaperParent(TypedDict, total=False):
+    """Предложенный договор. У ДС и спецификации он станет связью карточки, у счёта — договором будущей закупки. Нет — подобрать не удалось, выбирает человек"""
+
+    #: Карточка договора в документообороте
+    card: Dict[str, Any]
+    #: Файл-договор этого же пакета
+    attachment: Dict[str, Any]
+    #: Название договора для показа человеку: заголовок карточки или имя файла
+    title: str
+
+class _DocflowPackagePaperCardRequired(TypedDict):
+    id: "UUID"
+    document: "UUID"
+    #: Чем карточка приходится конверту: основной документ, приложение или основание
+    role: Literal['primary', 'attachment', 'basis']
+    #: Текущая редакция карточки: открывать человеку следует её
+    version: int
+    kind: "DocflowFlowKind"
+    status: Literal['draft', 'registered', 'archived']
+    title: str
+    number: str
+    date: str
+    created_at: str
+
+class DocflowPackagePaperCard(_DocflowPackagePaperCardRequired, total=False):
+    """Карточка документооборота, уже заведённая по этому файлу; нет — файл ещё ждёт решения"""
+
+    #: Файл пакета, по которому заведена карточка (ERP-2063): идентификатор вложения у оператора (external_id), а без него — «id:» и id вложения. У пакета «ДС + счёт» своя карточка у каждого файла. Нет у карточки на весь пакет — так заводила приёмка до разбора по файлам
+    external_attachment_id: str
+
+class _DocflowPackagePaperOrderRequired(TypedDict):
+    #: Закупка — заказ модуля core
+    id: Dict[str, Any]
+
+class DocflowPackagePaperOrder(_DocflowPackagePaperOrderRequired, total=False):
+    """Закупка, в которой карточка бумаги уже лежит основанием (счёт, акт, УПД, накладная); нет — бумага ни в какую закупку не положена"""
+
+    number: str
+    title: str
+
+class DocflowPackagePaperDeal(TypedDict, total=False):
+    """ДС-покупка (назначение deal) или спецификация этого же пакета, по которой выставлена бумага сделки: новая закупка по счёту заводится по ней — состав и график из неё, договор родительский, — и она ложится в закупку основанием"""
+
+    #: Карточка договора в документообороте
+    card: Dict[str, Any]
+    #: Файл-договор этого же пакета
+    attachment: Dict[str, Any]
+    #: Название договора для показа человеку: заголовок карточки или имя файла
+    title: str
+
+class _DocflowPackagePaperInputRequired(TypedDict):
+    #: Файл пакета — attachment из разбора
+    attachment: Dict[str, Any]
+    kind: "DocflowPackagePaperKind"
+
+class DocflowPackagePaperInput(_DocflowPackagePaperInputRequired, total=False):
+    """Решение человека по одному файлу пакета."""
+
+    #: Заведённый договор для ДС или спецификации — карточка из contracts или parent.card разбора
+    parent_card: Dict[str, Any]
+    #: Файл-договор этого же пакета для ДС или спецификации; сам файл должен быть в этой же команде с видом contract
+    parent_attachment: Dict[str, Any]
+    #: Назначение допсоглашения: terms — меняет условия договора, deal — отдельная покупка или продажа по договору. Только у вида amendment, у прочих игнорируется; не прислано — предложенное разбором
+    purpose: Literal['terms', 'deal']
+    #: Закупка из purchases разбора, в которую положить счёт, акт, УПД или накладную основанием. Годится и для файла, у которого карточка уже есть, — так бумагу разносят позже. У прочих видов игнорируется
+    order: Dict[str, Any]
+
+DocflowPackagePaperKind = Literal['contract', 'amendment', 'specification', 'invoice', 'act', 'upd', 'goods_waybill', 'reconciliation_act', 'power_of_attorney', 'other', 'skip']
+
+class _DocflowPackagePaperOrder2Required(TypedDict):
+    #: Закупка — заказ модуля core
+    id: Dict[str, Any]
+
+class DocflowPackagePaperOrder2(_DocflowPackagePaperOrder2Required, total=False):
+    """Закупка, в которой лежит бумага пакета."""
+
+    number: str
+    title: str
+
+class _DocflowPackagePaperOrderRequired(TypedDict):
+    #: Закупка — заказ модуля core
+    id: Dict[str, Any]
+
+class DocflowPackagePaperOrder(_DocflowPackagePaperOrderRequired, total=False):
+    """Закупка, в которой карточка бумаги уже лежит основанием (счёт, акт, УПД, накладная); нет — бумага ни в какую закупку не положена"""
+
+    number: str
+    title: str
+
+class DocflowPackagePaperParent2(TypedDict, total=False):
+    """Договор, под которым стоит бумага: уже заведённая карточка (card) или файл-договор этого же пакета (attachment), которому карточку заведёт та же команда. Назван ровно один из двух."""
+
+    #: Карточка договора в документообороте
+    card: Dict[str, Any]
+    #: Файл-договор этого же пакета
+    attachment: Dict[str, Any]
+    #: Название договора для показа человеку: заголовок карточки или имя файла
+    title: str
+
+class DocflowPackagePaperParent(TypedDict, total=False):
+    """Предложенный договор. У ДС и спецификации он станет связью карточки, у счёта — договором будущей закупки. Нет — подобрать не удалось, выбирает человек"""
+
+    #: Карточка договора в документообороте
+    card: Dict[str, Any]
+    #: Файл-договор этого же пакета
+    attachment: Dict[str, Any]
+    #: Название договора для показа человеку: заголовок карточки или имя файла
+    title: str
+
+class _DocflowPackagePapersRequired(TypedDict):
+    #: Входящий пакет ЭДО
+    message: Dict[str, Any]
+    papers: List["DocflowPackagePaper"]
+    #: Договоры этого контрагента у юрлица пакета: из них выбирают основание ДС и договор закупки
+    contracts: List["DocflowPackageContract"]
+    #: Открытые закупки этого поставщика у юрлица пакета: в них кладут счёт, акт, УПД и накладную полем order команды. Пусто, когда контрагент не выбран или закупок нет
+    purchases: List["DocflowIntakePurchase"]
+    #: Сколько файлов ещё без карточки и не отмечены skip
+    pending: int
+
+class DocflowPackagePapers(_DocflowPackagePapersRequired, total=False):
+    """Входящий пакет, разобранный по файлам (ERP-2063): каждый файл — своя бумага со своей карточкой."""
+
+    #: Контрагент справочника, с которым свело зеркало или которого назвала команда; нет — контрагента выбирает человек
+    contact: Dict[str, Any]
+
+class _DocflowPackagePapersInputRequired(TypedDict):
+    #: Бумаги пакета: решение по каждому принимаемому файлу, один файл — один раз
+    papers: List["DocflowPackagePaperInput"]
+
+class DocflowPackagePapersInput(_DocflowPackagePapersInputRequired, total=False):
+    """Команда «Принять бумаги пакета». У ДС и спецификации назван не более чем один договор — parent_card или parent_attachment; у прочих видов договор не передаётся и игнорируется: счёт кладут в закупку, а не в договор."""
+
+    #: Контрагент справочника, если зеркало пакет с ним не свело
+    contact_id: Dict[str, Any]
 
 class _DocflowPaymentRequestRoutePreviewRequired(TypedDict):
     approval: bool

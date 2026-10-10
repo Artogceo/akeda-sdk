@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 086ae530551778bf0bdc50d9b5b445742b02c04408f7c40421231fb50b86d021).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 63fafd6626a8f063497c1410a202c7408b904b98902ad513422073dc4d7aadb0).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -449,6 +449,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowAbortFlowUploadSession': OperationSpec('DELETE', '/api/v1/docflow/flow/upload-sessions/{id}', 'docflow', 'preview', 'docflow.flow:write', False, False, ('id',), 'none', None, None),
     'docflowAcknowledgeApproval': OperationSpec('POST', '/api/v1/docflow/approvals/{id}/acknowledge', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
     'docflowAdvanceInvoice': OperationSpec('GET', '/api/v1/docflow/flow/advance-invoices', 'docflow', 'preview', 'docflow.flow:read', False, False, (), 'none', None, None),
+    'docflowApplyPackagePapers': OperationSpec('POST', '/api/v1/docflow/messages/{id}/papers', 'docflow', 'preview', 'docflow.edo:write', False, False, ('id',), 'none', None, None),
     'docflowApproval': OperationSpec('GET', '/api/v1/docflow/approvals/{id}', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
     'docflowApprovalRoutes': OperationSpec('GET', '/api/v1/docflow/approval-routes', 'docflow', 'preview', 'docflow.flow:configure_payments', False, False, (), 'none', None, None),
     'docflowApprovalSettings': OperationSpec('GET', '/api/v1/docflow/approval-settings', 'docflow', 'preview', 'docflow.flow:configure_payments', False, False, (), 'none', None, None),
@@ -486,6 +487,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowIssueUKD': OperationSpec('POST', '/api/v1/docflow/flow/ukd', 'docflow', 'preview', 'docflow.flow:write', True, False, (), 'none', None, None),
     'docflowListConnections': OperationSpec('GET', '/api/v1/docflow/connections', 'docflow', 'preview', 'docflow.edo:admin', False, False, (), 'none', None, None),
     'docflowListMessages': OperationSpec('GET', '/api/v1/docflow/messages', 'docflow', 'preview', 'docflow.edo:read', False, False, (), 'limit_offset', 200, 50),
+    'docflowPackagePapers': OperationSpec('GET', '/api/v1/docflow/messages/{id}/papers', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
     'docflowPaymentRequestRoutePreview': OperationSpec('GET', '/api/v1/docflow/payment-requests/route-preview', 'docflow', 'preview', 'docflow.flow:request', False, False, (), 'none', None, None),
     'docflowResubmitApproval': OperationSpec('POST', '/api/v1/docflow/approvals/{id}/resubmit', 'docflow', 'preview', 'docflow.flow:write', False, False, ('id',), 'none', None, None),
     'docflowReturnUKD': OperationSpec('GET', '/api/v1/docflow/flow/ukd', 'docflow', 'preview', 'docflow.flow:read', False, False, (), 'none', None, None),

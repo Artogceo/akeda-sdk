@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 086ae530551778bf0bdc50d9b5b445742b02c04408f7c40421231fb50b86d021).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 63fafd6626a8f063497c1410a202c7408b904b98902ad513422073dc4d7aadb0).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -7448,6 +7448,8 @@ export interface DocflowFlowContent {
   "contract"?: DocflowFlowContractTerms;
   "commercial"?: DocflowFlowCommercial;
   "correction"?: DocflowFlowCorrection;
+  /** Назначение допсоглашения (ERP-2063), только у вида amendment: terms — меняет условия договора (цену, срок, абонентскую плату), deal — оформляет отдельную покупку или продажу по договору и ведёт себя как спецификация: может быть основанием сделки, его условия услуг в договор не идут. Не прислано у ДС — terms; у другого вида — отказ */
+  "amendment_purpose"?: "terms" | "deal";
   "recognized"?: DocflowFlowRecognized;
   /** Значения своих полей кабинета (графы вида docflow.document.<вид>). В save не прислано — не меняются; правятся действием custom */
   "custom"?: { [key: string]: unknown };
@@ -7759,6 +7761,7 @@ export interface DocflowFlowRelation {
 }
 
 export interface DocflowFlowRelationInput {
+  /** amends — допсоглашение изменяет договор; attachment — приложение или спецификация под договором, спецификацией или допсоглашением; basis — основание, в том числе бумага сделки на заказе: спецификация и допсоглашение с назначением deal могут стоять на заказе, ДС с назначением terms — нет; replaces — замена */
   "kind": "basis" | "attachment" | "amends" | "replaces";
   "target_id": UUID;
   "target_version": number;
@@ -7803,6 +7806,14 @@ export interface DocflowFlowUploadRequest {
 export interface DocflowFlowUploadResult {
   "document": DocflowFlowDocument;
   "file_id": UUID;
+}
+
+/** Документ не отвечает формату ФНС. Список непройденных проверок уходит ЦЕЛИКОМ: человек обязан увидеть всё сразу, а не по одной причине за попытку. */
+export interface DocflowFormatIssues {
+  /** Одна фраза на языке запроса */
+  "detail": string;
+  "code": "docflow.formats.invalid";
+  "issues": Array<DocflowIssue>;
 }
 
 /**
@@ -8103,6 +8114,8 @@ export interface DocflowMessageFlowLink {
   "number": string;
   "date": string;
   "created_at": string;
+  /** Файл пакета, по которому заведена карточка (ERP-2063): идентификатор вложения у оператора (external_id), а без него — «id:» и id вложения. У пакета «ДС + счёт» своя карточка у каждого файла. Нет у карточки на весь пакет — так заводила приёмка до разбора по файлам */
+  "external_attachment_id"?: string;
 }
 
 export interface DocflowMessageList {
@@ -8234,6 +8247,174 @@ export interface DocflowOrderUPDInput {
   "stage_id"?: UUID;
   /** Пусто — СЧФДОП */
   "function"?: "СЧФДОП" | "ДОП";
+}
+
+/** Договор контрагента, который можно выбрать основанием бумаги. */
+export interface DocflowPackageContract {
+  /** Карточка договора в документообороте */
+  "id": { [key: string]: unknown };
+  "title": string;
+  "number"?: string;
+  /** Дата договора в форме ГГГГ-ММ-ДД */
+  "date"?: string;
+}
+
+/** Один содержательный файл пакета глазами разбора. */
+export interface DocflowPackagePaper {
+  /** Файл пакета — id вложения */
+  "attachment": { [key: string]: unknown };
+  /** Имя файла словами оператора */
+  "name": string;
+  /** Вид уже заведённой карточки, иначе предложенный разбором. Пустая строка — разбор не понял, вид выбирает человек. У файла с карточкой — любой вид документооборота, у остальных — из перечня DocflowPackagePaperKind. */
+  "kind": string;
+  /** Откуда взят вид: text — по тексту первой страницы, name — по имени файла, operator — по слову оператора (только у пакета из одного файла), card — у файла уже есть карточка; пусто — вид не определён */
+  "kind_source": "" | "text" | "name" | "operator" | "card";
+  /** Номер бумаги, прочитанный из файла */
+  "number"?: string;
+  /** Дата бумаги в форме ГГГГ-ММ-ДД, прочитанная из файла */
+  "date"?: string;
+  /** Сумма строкой, как в бумаге: через число с плавающей точкой теряются копейки */
+  "amount"?: string;
+  /** Валюта, если бумага её назвала; пусто — не сказано */
+  "currency"?: string;
+  /** Номер договора, который бумага назвала основанием: «к договору 332/26» у ДС, «Основание: Договор № 332/26» у счёта */
+  "base_number"?: string;
+  /** Дата договора-основания, если бумага её назвала */
+  "base_date"?: string;
+  /** Предложенный договор. У ДС и спецификации он станет связью карточки, у счёта — договором будущей закупки. Нет — подобрать не удалось, выбирает человек */
+  "parent"?: DocflowPackagePaperParent;
+  /** Карточка документооборота, уже заведённая по этому файлу; нет — файл ещё ждёт решения */
+  "card"?: DocflowPackagePaperCard;
+  /** Закупка, в которой карточка бумаги уже лежит основанием (счёт, акт, УПД, накладная); нет — бумага ни в какую закупку не положена */
+  "order"?: DocflowPackagePaperOrder;
+  /** Назначение допсоглашения: у заведённой карточки — её, иначе предложенное по тексту. terms — меняет условия договора, deal — отдельная покупка или продажа по договору. Только у вида amendment */
+  "purpose"?: "terms" | "deal";
+  /** Номер допсоглашения или спецификации, названный в основании счёта: «2» из «ДС № 2» */
+  "base_deal"?: string;
+  /** ДС-покупка (назначение deal) или спецификация этого же пакета, по которой выставлена бумага сделки: новая закупка по счёту заводится по ней — состав и график из неё, договор родительский, — и она ложится в закупку основанием */
+  "deal"?: DocflowPackagePaperDeal;
+}
+
+/** Предложенный договор. У ДС и спецификации он станет связью карточки, у счёта — договором будущей закупки. Нет — подобрать не удалось, выбирает человек */
+export interface DocflowPackagePaperParent {
+  /** Карточка договора в документообороте */
+  "card"?: { [key: string]: unknown };
+  /** Файл-договор этого же пакета */
+  "attachment"?: { [key: string]: unknown };
+  /** Название договора для показа человеку: заголовок карточки или имя файла */
+  "title"?: string;
+}
+
+/** Карточка документооборота, уже заведённая по этому файлу; нет — файл ещё ждёт решения */
+export interface DocflowPackagePaperCard {
+  "id": UUID;
+  "document": UUID;
+  /** Чем карточка приходится конверту: основной документ, приложение или основание */
+  "role": "primary" | "attachment" | "basis";
+  /** Текущая редакция карточки: открывать человеку следует её */
+  "version": number;
+  "kind": DocflowFlowKind;
+  "status": "draft" | "registered" | "archived";
+  "title": string;
+  "number": string;
+  "date": string;
+  "created_at": string;
+  /** Файл пакета, по которому заведена карточка (ERP-2063): идентификатор вложения у оператора (external_id), а без него — «id:» и id вложения. У пакета «ДС + счёт» своя карточка у каждого файла. Нет у карточки на весь пакет — так заводила приёмка до разбора по файлам */
+  "external_attachment_id"?: string;
+}
+
+/** Закупка, в которой карточка бумаги уже лежит основанием (счёт, акт, УПД, накладная); нет — бумага ни в какую закупку не положена */
+export interface DocflowPackagePaperOrder {
+  /** Закупка — заказ модуля core */
+  "id": { [key: string]: unknown };
+  "number"?: string;
+  "title"?: string;
+}
+
+/** ДС-покупка (назначение deal) или спецификация этого же пакета, по которой выставлена бумага сделки: новая закупка по счёту заводится по ней — состав и график из неё, договор родительский, — и она ложится в закупку основанием */
+export interface DocflowPackagePaperDeal {
+  /** Карточка договора в документообороте */
+  "card"?: { [key: string]: unknown };
+  /** Файл-договор этого же пакета */
+  "attachment"?: { [key: string]: unknown };
+  /** Название договора для показа человеку: заголовок карточки или имя файла */
+  "title"?: string;
+}
+
+/** Решение человека по одному файлу пакета. */
+export interface DocflowPackagePaperInput {
+  /** Файл пакета — attachment из разбора */
+  "attachment": { [key: string]: unknown };
+  "kind": DocflowPackagePaperKind;
+  /** Заведённый договор для ДС или спецификации — карточка из contracts или parent.card разбора */
+  "parent_card"?: { [key: string]: unknown };
+  /** Файл-договор этого же пакета для ДС или спецификации; сам файл должен быть в этой же команде с видом contract */
+  "parent_attachment"?: { [key: string]: unknown };
+  /** Назначение допсоглашения: terms — меняет условия договора, deal — отдельная покупка или продажа по договору. Только у вида amendment, у прочих игнорируется; не прислано — предложенное разбором */
+  "purpose"?: "terms" | "deal";
+  /** Закупка из purchases разбора, в которую положить счёт, акт, УПД или накладную основанием. Годится и для файла, у которого карточка уже есть, — так бумагу разносят позже. У прочих видов игнорируется */
+  "order"?: { [key: string]: unknown };
+}
+
+export type DocflowPackagePaperKind = "contract" | "amendment" | "specification" | "invoice" | "act" | "upd" | "goods_waybill" | "reconciliation_act" | "power_of_attorney" | "other" | "skip";
+
+/** Закупка, в которой лежит бумага пакета. */
+export interface DocflowPackagePaperOrder2 {
+  /** Закупка — заказ модуля core */
+  "id": { [key: string]: unknown };
+  "number"?: string;
+  "title"?: string;
+}
+
+/** Закупка, в которой карточка бумаги уже лежит основанием (счёт, акт, УПД, накладная); нет — бумага ни в какую закупку не положена */
+export interface DocflowPackagePaperOrder {
+  /** Закупка — заказ модуля core */
+  "id": { [key: string]: unknown };
+  "number"?: string;
+  "title"?: string;
+}
+
+/** Договор, под которым стоит бумага: уже заведённая карточка (card) или файл-договор этого же пакета (attachment), которому карточку заведёт та же команда. Назван ровно один из двух. */
+export interface DocflowPackagePaperParent2 {
+  /** Карточка договора в документообороте */
+  "card"?: { [key: string]: unknown };
+  /** Файл-договор этого же пакета */
+  "attachment"?: { [key: string]: unknown };
+  /** Название договора для показа человеку: заголовок карточки или имя файла */
+  "title"?: string;
+}
+
+/** Предложенный договор. У ДС и спецификации он станет связью карточки, у счёта — договором будущей закупки. Нет — подобрать не удалось, выбирает человек */
+export interface DocflowPackagePaperParent {
+  /** Карточка договора в документообороте */
+  "card"?: { [key: string]: unknown };
+  /** Файл-договор этого же пакета */
+  "attachment"?: { [key: string]: unknown };
+  /** Название договора для показа человеку: заголовок карточки или имя файла */
+  "title"?: string;
+}
+
+/** Входящий пакет, разобранный по файлам (ERP-2063): каждый файл — своя бумага со своей карточкой. */
+export interface DocflowPackagePapers {
+  /** Входящий пакет ЭДО */
+  "message": { [key: string]: unknown };
+  "papers": Array<DocflowPackagePaper>;
+  /** Договоры этого контрагента у юрлица пакета: из них выбирают основание ДС и договор закупки */
+  "contracts": Array<DocflowPackageContract>;
+  /** Открытые закупки этого поставщика у юрлица пакета: в них кладут счёт, акт, УПД и накладную полем order команды. Пусто, когда контрагент не выбран или закупок нет */
+  "purchases": Array<DocflowIntakePurchase>;
+  /** Контрагент справочника, с которым свело зеркало или которого назвала команда; нет — контрагента выбирает человек */
+  "contact"?: { [key: string]: unknown };
+  /** Сколько файлов ещё без карточки и не отмечены skip */
+  "pending": number;
+}
+
+/** Команда «Принять бумаги пакета». У ДС и спецификации назван не более чем один договор — parent_card или parent_attachment; у прочих видов договор не передаётся и игнорируется: счёт кладут в закупку, а не в договор. */
+export interface DocflowPackagePapersInput {
+  /** Бумаги пакета: решение по каждому принимаемому файлу, один файл — один раз */
+  "papers": Array<DocflowPackagePaperInput>;
+  /** Контрагент справочника, если зеркало пакет с ним не свело */
+  "contact_id"?: { [key: string]: unknown };
 }
 
 export interface DocflowPaymentRequestRoutePreview {
