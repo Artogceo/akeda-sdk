@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b3ac5a9b869156c40ca5842e03e97e94ec698c957b42a92d3065a89fdf2bc0a8).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 086ae530551778bf0bdc50d9b5b445742b02c04408f7c40421231fb50b86d021).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -75,6 +75,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'bankMarkTransactionDeleted': OperationSpec('POST', '/api/v1/bank/transactions/{id}/mark-deleted', 'finance', 'preview', 'finance.transactions:write', False, False, ('id',), 'none', None, None),
     'bankRepostTransaction': OperationSpec('POST', '/api/v1/bank/transactions/{id}/repost', 'finance', 'preview', 'finance.transactions:write', False, False, ('id',), 'none', None, None),
     'bankRepostTransactions': OperationSpec('POST', '/api/v1/bank/transactions/repost', 'finance', 'preview', 'finance.transactions:write', False, False, (), 'none', None, None),
+    'bankResolveOneCConflict': OperationSpec('POST', '/api/v1/bank/exchange/items/{id}/onec-resolve', 'finance', 'preview', 'finance.exchange:write', False, False, ('id',), 'none', None, None),
     'bankRestoreTransaction': OperationSpec('POST', '/api/v1/bank/transactions/{id}/restore', 'finance', 'preview', 'finance.transactions:write', False, False, ('id',), 'none', None, None),
     'calendarCreateAvailability': OperationSpec('POST', '/api/v1/calendar/availability', 'calendar', 'preview', 'calendar:write', False, True, (), 'none', None, None),
     'calendarCreateBookingLink': OperationSpec('POST', '/api/v1/calendar/booking-links', 'calendar', 'preview', 'calendar:write', False, True, (), 'none', None, None),
@@ -173,6 +174,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreExecutePurchaseNow': OperationSpec('POST', '/api/v1/core/purchases/execute-now', 'core', 'preview', 'core.trade:write', False, True, (), 'none', None, None),
     'coreExecuteSaleNow': OperationSpec('POST', '/api/v1/core/sales/execute-now', 'core', 'preview', 'core.trade:write', False, True, (), 'none', None, None),
     'coreFinishUploadSession': OperationSpec('POST', '/api/v1/core/upload-sessions/{id}/finish', 'core', 'preview', 'core:write', False, False, ('id',), 'none', None, None),
+    'coreGenerateProductVariants': OperationSpec('POST', '/api/v1/core/products/{id}/variants/generate', 'core', 'preview', 'core:write', True, True, ('id',), 'none', None, None),
     'coreGetAccountingSettings': OperationSpec('GET', '/api/v1/core/accounting-settings', 'core', 'preview', 'core:read', False, True, (), 'none', None, None),
     'coreGetBusiness': OperationSpec('GET', '/api/v1/core/businesses/{id}', 'core', 'preview', 'core:read', False, True, ('id',), 'none', None, None),
     'coreGetContact': OperationSpec('GET', '/api/v1/core/contacts/{id}', 'core', 'public', 'core:read', False, True, ('id',), 'none', None, None),
@@ -245,8 +247,10 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreListTradeTemplates': OperationSpec('GET', '/api/v1/core/trade/templates', 'core', 'preview', 'core.trade:read', False, True, (), 'limit_offset', 1000, None),
     'coreLookupBank': OperationSpec('GET', '/api/v1/core/lookup/bank', 'finance', 'preview', 'core:read', False, False, (), 'none', None, None),
     'coreMarkDocumentDeleted': OperationSpec('POST', '/api/v1/core/documents/{id}/mark-deleted', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
+    'coreMergeContacts': OperationSpec('POST', '/api/v1/core/contacts/{id}/merge', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreMoveItem': OperationSpec('POST', '/api/v1/core/items/{id}/move', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'corePostDocument': OperationSpec('POST', '/api/v1/core/documents/{id}/post', 'core', 'preview', 'core:write', True, True, ('id',), 'none', None, None),
+    'corePreviewContactMerge': OperationSpec('POST', '/api/v1/core/contacts/{id}/merge/preview', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'corePreviewProductImport': OperationSpec('POST', '/api/v1/core/product-imports/{id}/preview', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreProductExportDownloadSession': OperationSpec('GET', '/api/v1/core/product-exports/{id}/download-session', 'core', 'preview', 'core:read', False, True, ('id',), 'none', None, None),
     'coreProductFileDownloadSession': OperationSpec('GET', '/api/v1/core/products/{id}/files/{fileId}/download-session', 'core', 'preview', 'core:read', False, True, ('fileId', 'id',), 'none', None, None),
@@ -268,6 +272,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'coreSellerBank': OperationSpec('GET', '/api/v1/core/companies/{id}/seller-bank', 'core', 'preview', 'core:read', False, True, ('id',), 'none', None, None),
     'coreSetBusinessAccountingMethod': OperationSpec('POST', '/api/v1/core/businesses/{id}/accounting-method', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreSetBusinessActive': OperationSpec('POST', '/api/v1/core/businesses/{id}/activation', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
+    'coreSetContactEmployee': OperationSpec('PUT', '/api/v1/core/contacts/{id}/employee', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreSetProductCategoryMarking': OperationSpec('PUT', '/api/v1/core/product-categories/{id}/marking-group', 'core', 'preview', 'core:write', False, True, ('id',), 'none', None, None),
     'coreSetPurchaseCabinetStatus': OperationSpec('PUT', '/api/v1/core/purchases/{id}/cabinet-status', 'core', 'preview', 'core.trade:write', False, True, ('id',), 'none', None, None),
     'coreSetPurchaseFunnel': OperationSpec('PUT', '/api/v1/core/purchases/{id}/funnel', 'core', 'preview', 'core.trade:write', False, True, ('id',), 'none', None, None),
@@ -508,6 +513,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeAddTaxRecipientFromPayment': OperationSpec('POST', '/api/v1/finance/taxes/settings/recipients', 'finance', 'preview', 'finance.period:write', False, True, (), 'none', None, None),
     'financeApplyAllocationRules': OperationSpec('POST', '/api/v1/finance/settlements/unapplied/apply-rules', 'finance', 'preview', 'finance.settlements:write', False, True, (), 'none', None, None),
     'financeApplyExchangeItem': OperationSpec('POST', '/api/v1/finance/exchange/items/{id}/apply', 'finance', 'preview', 'finance.exchange:write', False, True, ('id',), 'none', None, None),
+    'financeApplyRefundSettlement': OperationSpec('POST', '/api/v1/finance/settlements/refunds', 'finance', 'preview', 'finance.settlements:write', True, True, (), 'none', None, None),
     'financeApproveDividendDecision': OperationSpec('POST', '/api/v1/finance/dividends/decisions/{id}/approve', 'finance', 'preview', 'finance.dividends:approve', False, False, ('id',), 'none', None, None),
     'financeApproveDividendPolicy': OperationSpec('POST', '/api/v1/finance/dividends/policies/{id}/approve', 'finance', 'preview', 'finance.dividends:approve', False, False, ('id',), 'none', None, None),
     'financeCancelOperation': OperationSpec('POST', '/api/v1/finance/operations/{id}/cancel', 'finance', 'preview', 'finance.operations:write', False, True, ('id',), 'none', None, None),
@@ -592,6 +598,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeMarkTransactionDeleted': OperationSpec('POST', '/api/v1/finance/transactions/{id}/mark-deleted', 'finance', 'preview', 'finance.transactions:write', False, True, ('id',), 'none', None, None),
     'financeMergeItem': OperationSpec('POST', '/api/v1/finance/items/{id}/merge', 'finance', 'preview', 'finance.statements:write', False, True, ('id',), 'none', None, None),
     'financeOffsetTradeAdvances': OperationSpec('POST', '/api/v1/finance/trade/{id}/advance-offset', 'finance', 'preview', 'finance.settlements:write', False, True, ('id',), 'none', None, None),
+    'financeOneCBankReconciliation': OperationSpec('GET', '/api/v1/finance/exchange/onec/connections/{id}/bank-reconciliation', 'finance', 'preview', 'finance.exchange:read', False, True, ('id',), 'none', None, None),
     'financePostDividendDecision': OperationSpec('POST', '/api/v1/finance/dividends/decisions/{id}/post', 'finance', 'preview', 'finance.dividends:approve', False, False, ('id',), 'none', None, None),
     'financePostExpenseReport': OperationSpec('POST', '/api/v1/finance/accountable/reports/{id}/post', 'finance', 'preview', 'finance.accountable:write', False, True, ('id',), 'none', None, None),
     'financePostSettlementDocument': OperationSpec('POST', '/api/v1/finance/settlements/documents/{id}/post', 'finance', 'preview', 'finance.settlements:write', False, True, ('id',), 'none', None, None),
@@ -599,6 +606,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financePostZReport': OperationSpec('POST', '/api/v1/finance/z-reports', 'finance', 'preview', 'finance.operations:write', False, False, (), 'none', None, None),
     'financePreviewDividendDecision': OperationSpec('GET', '/api/v1/finance/dividends/decisions/preview', 'finance', 'preview', 'finance.dividends:write', False, False, (), 'none', None, None),
     'financePreviewItemMerge': OperationSpec('POST', '/api/v1/finance/items/{id}/merge/preview', 'finance', 'preview', 'finance.statements:write', False, True, ('id',), 'none', None, None),
+    'financePreviewRefundSettlement': OperationSpec('POST', '/api/v1/finance/settlements/refunds/preview', 'finance', 'preview', 'finance.settlements:write', False, True, (), 'none', None, None),
     'financeQuarantineExchangeItem': OperationSpec('POST', '/api/v1/finance/exchange/items/{id}/quarantine', 'finance', 'preview', 'finance.exchange:write', False, True, ('id',), 'none', None, None),
     'financeReconcileRegisters': OperationSpec('GET', '/api/v1/finance/registers/reconcile', 'finance', 'preview', 'finance.registers:read', False, True, (), 'none', None, None),
     'financeRecordExchangeItem': OperationSpec('POST', '/api/v1/finance/exchange/items', 'finance', 'preview', 'finance.exchange:write', False, True, (), 'none', None, None),
@@ -607,6 +615,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeRepairRegisters': OperationSpec('POST', '/api/v1/finance/registers/repair', 'finance', 'preview', 'finance.registers:write', False, True, (), 'none', None, None),
     'financeRepostTransaction': OperationSpec('POST', '/api/v1/finance/transactions/{id}/repost', 'finance', 'preview', 'finance.transactions:write', False, True, ('id',), 'none', None, None),
     'financeRepostTransactions': OperationSpec('POST', '/api/v1/finance/transactions/repost', 'finance', 'preview', 'finance.transactions:write', False, True, (), 'none', None, None),
+    'financeResolveOneCConflict': OperationSpec('POST', '/api/v1/finance/exchange/items/{id}/onec-resolve', 'finance', 'preview', 'finance.exchange:write', False, True, ('id',), 'none', None, None),
     'financeRestoreTransaction': OperationSpec('POST', '/api/v1/finance/transactions/{id}/restore', 'finance', 'preview', 'finance.transactions:write', False, True, ('id',), 'none', None, None),
     'financeResyncRegisters': OperationSpec('POST', '/api/v1/finance/registers/resync', 'finance', 'preview', 'finance.registers:write', False, True, (), 'none', None, None),
     'financeRunDividendAutomation': OperationSpec('POST', '/api/v1/finance/dividends/automation/run', 'finance', 'preview', 'finance.dividends:auto', False, False, (), 'none', None, None),
@@ -672,6 +681,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'mailGetThread': OperationSpec('GET', '/api/v1/mail/threads/{id}', 'mail', 'preview', 'mail:read', False, False, ('id',), 'none', None, None),
     'mailGetUploadSession': OperationSpec('GET', '/api/v1/mail/upload-sessions/{id}', 'mail', 'preview', 'mail:read', False, False, ('id',), 'none', None, None),
     'mailLinkAddressBookEntry': OperationSpec('PUT', '/api/v1/mail/address-book/entries/{id}/contact', 'mail', 'preview', 'mail:write', False, False, ('id',), 'none', None, None),
+    'mailListAccountJournal': OperationSpec('GET', '/api/v1/mail/accounts/journal', 'mail', 'preview', 'mail:read', False, False, (), 'none', None, None),
     'mailListAccounts': OperationSpec('GET', '/api/v1/mail/accounts', 'mail', 'preview', 'mail:read', False, False, (), 'none', None, None),
     'mailListAddressBookEntries': OperationSpec('GET', '/api/v1/mail/address-book/entries', 'mail', 'preview', 'mail:read', False, False, (), 'limit_offset', 200, 50),
     'mailListFolders': OperationSpec('GET', '/api/v1/mail/accounts/{id}/folders', 'mail', 'preview', 'mail:read', False, False, ('id',), 'none', None, None),

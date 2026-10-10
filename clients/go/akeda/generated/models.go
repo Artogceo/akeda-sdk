@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b3ac5a9b869156c40ca5842e03e97e94ec698c957b42a92d3065a89fdf2bc0a8).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 086ae530551778bf0bdc50d9b5b445742b02c04408f7c40421231fb50b86d021).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -3804,9 +3804,90 @@ type CoreContactCreatePostalAddress struct {
 	Info string `json:"info"`
 }
 
+type CoreContactEmployeeInput struct {
+	// EmployeeID — Сотрудник; null — снять привязку
+	EmployeeID *string `json:"employee_id"`
+}
+
 type CoreContactEntityType = string
 
 type CoreContactKind = string
+
+type CoreContactMergeBlocked struct {
+	// Code — core.contact.merge_blocked
+	Code *string `json:"code,omitempty"`
+	// Reason — Причина
+	Reason *string `json:"reason,omitempty"`
+	// Detail — Причина словами
+	Detail *string `json:"detail,omitempty"`
+	// Documents — Документы в закрытом периоде
+	Documents []CoreContactMergeDocument `json:"documents,omitempty"`
+	// Holders — Таблицы без переноса
+	Holders []CoreContactMergeHolder `json:"holders,omitempty"`
+	// Totals — Итоги при расхождении
+	Totals []CoreContactMergeTotal `json:"totals,omitempty"`
+}
+
+type CoreContactMergeDocument struct {
+	// ID — Документ
+	ID *string `json:"id,omitempty"`
+	// Number — Номер
+	Number *string `json:"number,omitempty"`
+	// TypeKey — Вид документа
+	TypeKey *string `json:"type_key,omitempty"`
+	// Date — Дата
+	Date *string `json:"date,omitempty"`
+	// Status — Статус
+	Status *string `json:"status,omitempty"`
+}
+
+type CoreContactMergeHolder struct {
+	// Table — Таблица
+	Table *string `json:"table,omitempty"`
+	// Column — Колонка
+	Column *string `json:"column,omitempty"`
+	// Rows — Строк с карточкой-источником
+	Rows *int64 `json:"rows,omitempty"`
+}
+
+type CoreContactMergeInput struct {
+	// TargetID — Целевая карточка — остаётся
+	TargetID UUID `json:"target_id"`
+}
+
+type CoreContactMergeResult struct {
+	// Preview — Только предпросмотр
+	Preview *bool `json:"preview,omitempty"`
+	// SourceID — Карточка-источник
+	SourceID *string `json:"source_id,omitempty"`
+	// SourceName — Имя источника
+	SourceName *string `json:"source_name,omitempty"`
+	// TargetID — Целевая карточка
+	TargetID *string `json:"target_id,omitempty"`
+	// TargetName — Имя цели
+	TargetName *string `json:"target_name,omitempty"`
+	// Documents — Документы со ссылкой на источник
+	Documents []CoreContactMergeDocument `json:"documents,omitempty"`
+	// Holders — Таблицы со ссылкой на источник
+	Holders []CoreContactMergeHolder `json:"holders,omitempty"`
+	// Totals — Итоги регистров до и после
+	Totals []CoreContactMergeTotal `json:"totals,omitempty"`
+	// EmployeeMoved — Привязка к сотруднику перенесена
+	EmployeeMoved *bool `json:"employee_moved,omitempty"`
+	// Archived — Источник в архиве
+	Archived *bool `json:"archived,omitempty"`
+}
+
+type CoreContactMergeTotal struct {
+	// Register — Регистр
+	Register *string `json:"register,omitempty"`
+	// Value — Значение регистра
+	Value *string `json:"value,omitempty"`
+	// Before — Сумма по обеим карточкам до
+	Before *string `json:"before,omitempty"`
+	// After — Итог у цели после
+	After *string `json:"after,omitempty"`
+}
 
 type CoreContactPage struct {
 	Count   int64         `json:"count"`
@@ -5421,7 +5502,7 @@ type CoreProduct struct {
 	CountryLabel string `json:"country_label"`
 	// OptionSchema — Оси характеристик семейства; у остальных записей пусто
 	OptionSchema []CoreProductAxis `json:"option_schema"`
-	// VariantValues — Значения варианта по осям семейства: ось → код; у остальных записей пусто
+	// VariantValues — Значения варианта по осям семейства: ось → код; у семейства с осями — значение каждой оси, у семейства без осей и у остальных записей пусто
 	VariantValues map[string]string `json:"variant_values"`
 }
 
@@ -5501,7 +5582,7 @@ type CoreProductCreate struct {
 	CustomsCode *string `json:"customs_code,omitempty"`
 	// OptionSchema — Оси характеристик семейства; у остальных записей пусто
 	OptionSchema []CoreProductAxis `json:"option_schema,omitempty"`
-	// VariantValues — Значения варианта по осям семейства: ось → код; у остальных записей пусто
+	// VariantValues — Значения варианта по осям семейства: ось → код; у семейства с осями — значение каждой оси, у семейства без осей и у остальных записей пусто
 	VariantValues map[string]string `json:"variant_values,omitempty"`
 }
 
@@ -5810,7 +5891,7 @@ type CoreProductPatch struct {
 	CustomsCode *string `json:"customs_code,omitempty"`
 	// OptionSchema — Оси характеристик семейства; у остальных записей пусто
 	OptionSchema []CoreProductAxis `json:"option_schema,omitempty"`
-	// VariantValues — Значения варианта по осям семейства: ось → код; у остальных записей пусто
+	// VariantValues — Значения варианта по осям семейства: ось → код; у семейства с осями — значение каждой оси, у семейства без осей и у остальных записей пусто
 	VariantValues map[string]string `json:"variant_values,omitempty"`
 }
 
@@ -5819,6 +5900,23 @@ type CoreProductRecordKind = string
 type CoreProductTransferFormat = string
 
 type CoreProductTransferKind = string
+
+type CoreProductVariantGenerate struct {
+	// Axes — Какие коды осей участвуют; пусто — все оси семейства целиком. Ось без списка кодов или не названная здесь — все её значения: вариант семейства с осями называет значение каждой оси
+	Axes []CoreProductVariantGenerateAxesItem `json:"axes,omitempty"`
+}
+
+type CoreProductVariantGenerateAxesItem struct {
+	Key   string   `json:"key"`
+	Codes []string `json:"codes,omitempty"`
+}
+
+type CoreProductVariantGenerateResult struct {
+	Created int64 `json:"created"`
+	// Skipped — Сочетания, у которых вариант уже был
+	Skipped int64         `json:"skipped"`
+	Results []CoreProduct `json:"results"`
+}
 
 type CoreReferenceItem struct {
 	ID UUID `json:"id"`
@@ -9293,8 +9391,14 @@ type FinanceExchangeItem struct {
 	LastError           string                     `json:"last_error"`
 	LastActorID         *int64                     `json:"last_actor_id,omitempty"`
 	Metadata            map[string]json.RawMessage `json:"metadata"`
-	Duplicate           *bool                      `json:"duplicate,omitempty"`
-	Conflict            *bool                      `json:"conflict,omitempty"`
+	// Action — Исходящее: создать или обновить документ во внешней системе либо отменить его.
+	Action *string `json:"action,omitempty"`
+	// NextAttemptAt — Исходящее: когда повторить отклонённую отправку.
+	NextAttemptAt *string `json:"next_attempt_at,omitempty"`
+	// SentAt — Исходящее: когда внешняя система приняла документ.
+	SentAt    *string `json:"sent_at,omitempty"`
+	Duplicate *bool   `json:"duplicate,omitempty"`
+	Conflict  *bool   `json:"conflict,omitempty"`
 }
 
 type FinanceExchangePage struct {
@@ -9360,6 +9464,67 @@ type FinanceItemMergeResult struct {
 	Deleted    *bool                        `json:"deleted,omitempty"`
 }
 
+type FinanceOneCBankAccount struct {
+	// AccountNumber — Номер расчётного счёта организации
+	AccountNumber string `json:"account_number"`
+	// AccountID — Счёт Акеды; нет — счёт есть только в 1С
+	AccountID   *string `json:"account_id,omitempty"`
+	AccountName *string `json:"account_name,omitempty"`
+	// AkedaIn — Поступления по ленте Акеды за период
+	AkedaIn string `json:"akeda_in"`
+	// AkedaOut — Списания по ленте Акеды за период
+	AkedaOut string `json:"akeda_out"`
+	// OnecIn — Поступления по документам 1С за период
+	OnecIn string `json:"onec_in"`
+	// OnecOut — Списания по документам 1С за период
+	OnecOut string `json:"onec_out"`
+	// Matched — Совпавших пар
+	Matched int64 `json:"matched"`
+	// Differs — Пар с отличиями
+	Differs int64 `json:"differs"`
+	// AkedaOnly — Операций только в Акеде
+	AkedaOnly int64 `json:"akeda_only"`
+	// OnecOnly — Документов только в 1С
+	OnecOnly int64                `json:"onec_only"`
+	Rows     []FinanceOneCBankRow `json:"rows"`
+}
+
+type FinanceOneCBankLine struct {
+	// ID — Операция Акеды или ссылка документа 1С
+	ID            string  `json:"id"`
+	Date          string  `json:"date"`
+	Incoming      bool    `json:"incoming"`
+	Amount        string  `json:"amount"`
+	AccountNumber string  `json:"account_number"`
+	PartyINN      *string `json:"party_inn,omitempty"`
+	PartyName     *string `json:"party_name,omitempty"`
+	// DocNumber — Номер платёжного поручения
+	DocNumber *string `json:"doc_number,omitempty"`
+	Purpose   *string `json:"purpose,omitempty"`
+	// Number — Номер документа в 1С
+	Number *string `json:"number,omitempty"`
+	// Operation — Вид операции документа 1С
+	Operation *string `json:"operation,omitempty"`
+	// Posted — Документ 1С проведён
+	Posted *bool `json:"posted,omitempty"`
+}
+
+type FinanceOneCBankReconciliation struct {
+	ConnectionID UUID                     `json:"connection_id"`
+	CompanyID    UUID                     `json:"company_id"`
+	From         string                   `json:"from"`
+	To           string                   `json:"to"`
+	Accounts     []FinanceOneCBankAccount `json:"accounts"`
+}
+
+type FinanceOneCBankRow struct {
+	Status string               `json:"status"`
+	Akeda  *FinanceOneCBankLine `json:"akeda,omitempty"`
+	Onec   *FinanceOneCBankLine `json:"onec,omitempty"`
+	// Notes — Отличия пары: дата, контрагент, номер платёжки, документ 1С не проведён
+	Notes []string `json:"notes"`
+}
+
 type FinanceOneCConnection struct {
 	ID          UUID   `json:"id"`
 	CompanyID   UUID   `json:"company_id"`
@@ -9422,6 +9587,11 @@ type FinanceOneCObjects struct {
 	Payroll        *bool `json:"payroll,omitempty"`
 	Budget         *bool `json:"budget,omitempty"`
 	Declarations   *bool `json:"declarations,omitempty"`
+}
+
+type FinanceOneCResolve struct {
+	// Choice — Решение: keep_1c — оставить как в 1С, send_akeda — отправить версию Акеды поверх правки бухгалтера.
+	Choice string `json:"choice"`
 }
 
 type FinanceOpeningAdvanceVATRequest struct {
@@ -10069,6 +10239,81 @@ type FinanceReconciliationSummaryIncomingUnlinkedByCurrencyItem struct {
 	Amount string `json:"amount"`
 	// Count — Число операций
 	Count int64 `json:"count"`
+}
+
+type FinanceRefundSettlementDocument struct {
+	// ID — Документ сведения
+	ID *string `json:"id,omitempty"`
+	// Number — Номер документа
+	Number *string `json:"number,omitempty"`
+	// ReturnNumber — Номер возврата
+	ReturnNumber *string `json:"return_number,omitempty"`
+	// Amount — Сведённая сумма
+	Amount *string `json:"amount,omitempty"`
+}
+
+type FinanceRefundSettlementInput struct {
+	// BusinessID — Бизнес; пусто — бизнес прихода
+	BusinessID *UUID `json:"business_id,omitempty"`
+	// CompanyID — Юрлицо; пусто — юрлицо прихода
+	CompanyID *UUID `json:"company_id,omitempty"`
+	// ContactID — Контрагент прихода и возвратов
+	ContactID UUID `json:"contact_id"`
+	// Currency — Валюта прихода и возвратов, код ISO 4217
+	Currency string `json:"currency"`
+	// Date — Дата сведения
+	Date string `json:"date"`
+	// Payment — Приход денег от контрагента
+	Payment UUID `json:"payment"`
+	// Returns — Возвраты денег тому же контрагенту
+	Returns []UUID `json:"returns"`
+	// Comment — Комментарий к документам сведения
+	Comment *string `json:"comment,omitempty"`
+	// Source — Происхождение внешнего вызова
+	Source *FinanceRefundSettlementInputSource `json:"source,omitempty"`
+}
+
+// FinanceRefundSettlementInputSource — Происхождение внешнего вызова
+type FinanceRefundSettlementInputSource struct {
+	// SourceSystem — Внешняя система
+	SourceSystem *string `json:"source_system,omitempty"`
+	// SourceRef — Ссылка во внешней системе
+	SourceRef *string `json:"source_ref,omitempty"`
+	// ExternalID — Внешний идентификатор
+	ExternalID *string `json:"external_id,omitempty"`
+}
+
+type FinanceRefundSettlementPair struct {
+	// ReturnPaymentID — Возврат
+	ReturnPaymentID *string `json:"return_payment_id,omitempty"`
+	// ReturnNumber — Номер возврата
+	ReturnNumber *string `json:"return_number,omitempty"`
+	// ReturnRemaining — Остаток возврата в расчётах
+	ReturnRemaining *string `json:"return_remaining,omitempty"`
+	// Amount — Сколько сведётся у пары
+	Amount *string `json:"amount,omitempty"`
+}
+
+type FinanceRefundSettlementPreview struct {
+	// PaymentNumber — Номер прихода
+	PaymentNumber *string `json:"payment_number,omitempty"`
+	// PaymentRemaining — Остаток прихода в расчётах
+	PaymentRemaining *string `json:"payment_remaining,omitempty"`
+	// Currency — Валюта
+	Currency *string                       `json:"currency,omitempty"`
+	Pairs    []FinanceRefundSettlementPair `json:"pairs,omitempty"`
+	// Total — Сумма по всем парам
+	Total *string `json:"total,omitempty"`
+	// Unmatched — Остаток прихода, не покрытый возвратами
+	Unmatched *string `json:"unmatched,omitempty"`
+}
+
+type FinanceRefundSettlementResult struct {
+	Documents []FinanceRefundSettlementDocument `json:"documents,omitempty"`
+	// Currency — Валюта
+	Currency *string `json:"currency,omitempty"`
+	// Total — Сведено всего
+	Total *string `json:"total,omitempty"`
 }
 
 type FinanceRegisterAccountCheck struct {
@@ -11150,6 +11395,25 @@ type MailAccount struct {
 	UnreadCount   int64  `json:"unread_count"`
 	CreatedAt     string `json:"created_at"`
 	UpdatedAt     string `json:"updated_at"`
+}
+
+// MailAccountJournalEntry — Строка журнала почтовых ящиков: кто и когда удалил ящик
+type MailAccountJournalEntry struct {
+	ID        UUID `json:"id"`
+	AccountID UUID `json:"account_id"`
+	// Email — Адрес ящика на момент действия
+	Email string `json:"email"`
+	// OwnerUserID — Владелец ящика
+	OwnerUserID int64 `json:"owner_user_id"`
+	// Shared — Ящик был общим для кабинета
+	Shared bool `json:"shared"`
+	// SharedWithCount — Скольким сотрудникам ящик был открыт поимённо
+	SharedWithCount int64 `json:"shared_with_count"`
+	// Action — Действие с ящиком
+	Action string `json:"action"`
+	// ActorUserID — Кто выполнил действие
+	ActorUserID int64  `json:"actor_user_id"`
+	CreatedAt   string `json:"created_at"`
 }
 
 type MailAccountStatus = string
@@ -17893,6 +18157,10 @@ type FinanceRepostTransactionRequest struct {
 
 type MailListAccountsResponse struct {
 	Items []MailAccount `json:"items"`
+}
+
+type MailListAccountJournalResponse struct {
+	Items []MailAccountJournalEntry `json:"items"`
 }
 
 type MailListFoldersResponse struct {

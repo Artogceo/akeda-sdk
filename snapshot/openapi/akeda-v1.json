@@ -13188,6 +13188,260 @@
         }
       }
     },
+    "/api/v1/core/contacts/{id}/employee": {
+      "put": {
+        "tags": [
+          "Core contacts"
+        ],
+        "operationId": "coreSetContactEmployee",
+        "summary": "Привязать контрагента к сотруднику",
+        "description": "Ставит или снимает привязку карточки контрагента к сотруднику (employee_id): по ней выплаты по статьям зарплаты и подотчёта находят человека. Привязывается только карточка физлица без юрлица кабинета; у сотрудника одна карточка — занятую сначала освобождают или объединяют. employee_id null снимает привязку.",
+        "x-akeda-module": "core",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "core:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoreContactEmployeeInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Карточка после привязки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreContact"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/core/contacts/{id}/merge/preview": {
+      "post": {
+        "tags": [
+          "Core contacts"
+        ],
+        "operationId": "corePreviewContactMerge",
+        "summary": "Предпросмотр объединения контрагентов",
+        "description": "Показывает, что сделает объединение карточки {id} в target_id, ничего не записывая: документы к перепроведению, таблицы со ссылками, итоги регистров до и после, перенос привязки к сотруднику. Отказ — те же причины, что у объединения.",
+        "x-akeda-module": "core",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "core:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoreContactMergeInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Что сделает объединение",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreContactMergeResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Объединить нельзя — причина и перечень",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreContactMergeBlocked"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/core/contacts/{id}/merge": {
+      "post": {
+        "tags": [
+          "Core contacts"
+        ],
+        "operationId": "coreMergeContacts",
+        "summary": "Объединить контрагентов",
+        "description": "Переносит на target_id всё, что держит карточку {id}, одной транзакцией: документы перепроводятся, таблицы модулей переписывают их владельцы, итоги регистров сверяются (у цели — сумма двух, у источника — ноль), привязка к сотруднику переезжает, источник уходит в архив. Не сходится или есть держатели без переноса, документы в закрытом периоде — отказ с перечнем, ничего не меняется.",
+        "x-akeda-module": "core",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "core:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoreContactMergeInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Что сделано",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreContactMergeResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "description": "Объединить нельзя — причина и перечень",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreContactMergeBlocked"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/core/contacts/{id}/restore": {
       "post": {
         "tags": [
@@ -14033,6 +14287,100 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/core/products/{id}/variants/generate": {
+      "post": {
+        "tags": [
+          "Core products"
+        ],
+        "operationId": "coreGenerateProductVariants",
+        "summary": "Создать варианты семейства по сочетаниям осей",
+        "description": "Строит декартово произведение выбранных значений осей семейства и заводит недостающие варианты. Каждое сочетание называет значение КАЖДОЙ оси семейства: ось, не названная в axes или названная без кодов, участвует всеми значениями. Занятыми считаются сочетания ВСЕХ существующих вариантов семейства, а не первой их страницы, поэтому повторный вызов ничего не дублирует. Вариант наследует вид, единицу, цены, категорию, реквизиты и характеристики семейства; имя — «семейство, подписи», SKU — «SKU-КОДЫ». Каждый вариант создаётся своей транзакцией: отказ на середине оставляет уже созданные в базе, и тело отказа 4xx несёт created и skipped на момент отказа. Читает Idempotency-Key — повтор того же запроса с тем же ключом отдаёт прежний результат, а не вторую партию.",
+        "x-akeda-module": "core",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "core:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoreProductVariantGenerate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Созданные варианты и число пропущенных сочетаний",
+            "headers": {
+              "Idempotent-Replay": {
+                "$ref": "#/components/headers/IdempotentReplay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoreProductVariantGenerateResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/IdempotencyKeyMismatch"
+          },
+          "503": {
+            "$ref": "#/components/responses/IdempotencyUnavailable"
           }
         }
       }
@@ -25281,6 +25629,168 @@
         }
       }
     },
+    "/api/v1/finance/settlements/refunds/preview": {
+      "post": {
+        "tags": [
+          "Finance settlements"
+        ],
+        "operationId": "financePreviewRefundSettlement",
+        "summary": "Показать сведение прихода с возвратами",
+        "description": "Ничего не записывает. Для пары «приход ↔ возврат(ы)» одного контрагента в одной валюте показывает, какие суммы сведутся: остаток прихода, остаток каждого возврата, сумму каждой пары, итог и несведённую часть прихода.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.settlements:write",
+        "x-akeda-read-only": true,
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceRefundSettlementInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "План сведения по парам",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceRefundSettlementPreview"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/settlements/refunds": {
+      "post": {
+        "tags": [
+          "Finance settlements"
+        ],
+        "operationId": "financeApplyRefundSettlement",
+        "summary": "Свести приход с возвратами",
+        "description": "Сводит приход с возвратом денег тому же контрагенту: на каждую пару «приход ↔ возврат» заводит и проводит документ сведения на меньший из остатков. Перед вызовом покажите план financePreviewRefundSettlement. Нечего сводить — 409 finance.settlement.refund_nothing. Повтор с тем же Idempotency-Key отдаёт прежний ответ.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.settlements:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceRefundSettlementInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Проведённые документы сведения",
+            "headers": {
+              "Idempotent-Replay": {
+                "$ref": "#/components/headers/IdempotentReplay"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceRefundSettlementResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/IdempotencyKeyMismatch"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
     "/api/v1/finance/settlements/payments": {
       "get": {
         "tags": [
@@ -27035,6 +27545,34 @@
             }
           },
           {
+            "name": "adapter",
+            "in": "query",
+            "description": "Ключ адаптера, например onec.",
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]{1,63}$"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "import",
+                "export"
+              ]
+            }
+          },
+          {
+            "name": "external_id",
+            "in": "query",
+            "description": "Внешние ключи через запятую, не больше 100. У исходящих — id документов Акеды.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "limit",
             "in": "query",
             "schema": {
@@ -27316,6 +27854,150 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v1/bank/exchange/items/{id}/onec-resolve": {
+      "post": {
+        "tags": [
+          "Finance exchange"
+        ],
+        "operationId": "bankResolveOneCConflict",
+        "summary": "Решить, чья версия документа остаётся в 1С (исторический адрес)",
+        "description": "Исторический адрес той же команды financeResolveOneCConflict. Решает судьбу документа, который бухгалтер изменил в 1С после отправки Акеды: keep_1c оставляет правку бухгалтера и закрывает отправку, send_akeda отправляет версию Акеды поверх правки.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.exchange:write",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceOneCResolve"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Решение принято",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceExchangeItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/exchange/items/{id}/onec-resolve": {
+      "post": {
+        "tags": [
+          "Finance exchange"
+        ],
+        "operationId": "financeResolveOneCConflict",
+        "summary": "Решить, чья версия документа остаётся в 1С",
+        "description": "Решает судьбу документа, который бухгалтер изменил в 1С после отправки Акеды. Акеда такой документ сама не перезаписывает: keep_1c оставляет правку бухгалтера и закрывает отправку, send_akeda отправляет версию Акеды поверх правки.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.exchange:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceOneCResolve"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Решение принято",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceExchangeItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
           }
         }
       }
@@ -27785,6 +28467,118 @@
           },
           "409": {
             "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/finance/exchange/onec/connections/{id}/bank-reconciliation": {
+      "get": {
+        "tags": [
+          "Finance exchange"
+        ],
+        "operationId": "financeOneCBankReconciliation",
+        "summary": "Сверить банк с базой 1С",
+        "description": "Сверка банка юрлица подключения с базой 1С за период до трёх месяцев: лента банка Акеды против поступлений и списаний по расчётным счетам в 1С. Только чтение 1С. По каждому счёту — обороты обеих сторон и расхождения: операция только в Акеде или только в 1С, пара с другой датой, контрагентом или номером платёжки, непроведённый документ 1С.",
+        "x-akeda-module": "finance",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "finance.exchange:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "required": true,
+            "description": "Начало периода сверки (ГГГГ-ММ-ДД)",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "required": true,
+            "description": "Конец периода сверки включительно (ГГГГ-ММ-ДД)",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "matched",
+            "in": "query",
+            "required": false,
+            "description": "Показать и совпавшие пары: без него в строках только расхождения",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Сверка банка по расчётным счетам",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinanceOneCBankReconciliation"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "502": {
+            "description": "База 1С не ответила; повторите позже",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           },
           "503": {
             "$ref": "#/components/responses/ServiceUnavailable"
@@ -65070,6 +65864,65 @@
         }
       }
     },
+    "/api/v1/mail/accounts/journal": {
+      "get": {
+        "tags": [
+          "Mail accounts"
+        ],
+        "operationId": "mailListAccountJournal",
+        "summary": "Получить журнал почтовых ящиков",
+        "description": "Кто и когда удалил почтовый ящик (ERP-2067). Строка пишется в той же транзакции, что удаление, и переживает ящик: адрес, владелец и признак общего ящика скопированы в момент действия. Тот, кому роль разрешает видеть все записи ресурса mail.account, видит весь журнал; остальные — записи о своих ящиках и о своих действиях. Последние 100 строк, новые сверху. Переписки и учётных данных журнал не содержит.",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          }
+        ],
+        "x-akeda-module": "mail",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "mail:read",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Журнал ящиков",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "items"
+                  ],
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MailAccountJournalEntry"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          }
+        }
+      }
+    },
     "/api/v1/mail/accounts/{id}": {
       "parameters": [
         {
@@ -89188,7 +90041,7 @@
             "additionalProperties": {
               "type": "string"
             },
-            "description": "Значения варианта по осям семейства: ось → код; у остальных записей пусто"
+            "description": "Значения варианта по осям семейства: ось → код; у семейства с осями — значение каждой оси, у семейства без осей и у остальных записей пусто"
           }
         }
       },
@@ -89504,7 +90357,7 @@
             "additionalProperties": {
               "type": "string"
             },
-            "description": "Значения варианта по осям семейства: ось → код; у остальных записей пусто"
+            "description": "Значения варианта по осям семейства: ось → код; у семейства с осями — значение каждой оси, у семейства без осей и у остальных записей пусто"
           }
         }
       },
@@ -89653,7 +90506,7 @@
             "additionalProperties": {
               "type": "string"
             },
-            "description": "Значения варианта по осям семейства: ось → код; у остальных записей пусто"
+            "description": "Значения варианта по осям семейства: ось → код; у семейства с осями — значение каждой оси, у семейства без осей и у остальных записей пусто"
           }
         }
       },
@@ -89702,6 +90555,61 @@
             "maxItems": 100,
             "items": {
               "$ref": "#/components/schemas/CoreProductAxisValue"
+            }
+          }
+        }
+      },
+      "CoreProductVariantGenerate": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "axes": {
+            "type": "array",
+            "description": "Какие коды осей участвуют; пусто — все оси семейства целиком. Ось без списка кодов или не названная здесь — все её значения: вариант семейства с осями называет значение каждой оси",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "key"
+              ],
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "codes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "CoreProductVariantGenerateResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "created",
+          "skipped",
+          "results"
+        ],
+        "properties": {
+          "created": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "skipped": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Сочетания, у которых вариант уже был"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreProduct"
             }
           }
         }
@@ -91565,6 +92473,202 @@
           "replayed": {
             "type": "boolean",
             "description": "true — продажа или закупка уже был исполнен этой командой; ничего не записано"
+          }
+        }
+      },
+      "CoreContactEmployeeInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "employee_id"
+        ],
+        "properties": {
+          "employee_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Сотрудник; null — снять привязку"
+          }
+        }
+      },
+      "CoreContactMergeInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target_id"
+        ],
+        "properties": {
+          "target_id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Целевая карточка — остаётся"
+          }
+        }
+      },
+      "CoreContactMergeDocument": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Документ"
+          },
+          "number": {
+            "type": "string",
+            "description": "Номер"
+          },
+          "type_key": {
+            "type": "string",
+            "description": "Вид документа"
+          },
+          "date": {
+            "type": "string",
+            "description": "Дата"
+          },
+          "status": {
+            "type": "string",
+            "description": "Статус"
+          }
+        }
+      },
+      "CoreContactMergeHolder": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "table": {
+            "type": "string",
+            "description": "Таблица"
+          },
+          "column": {
+            "type": "string",
+            "description": "Колонка"
+          },
+          "rows": {
+            "type": "integer",
+            "description": "Строк с карточкой-источником"
+          }
+        }
+      },
+      "CoreContactMergeTotal": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "register": {
+            "type": "string",
+            "description": "Регистр"
+          },
+          "value": {
+            "type": "string",
+            "description": "Значение регистра"
+          },
+          "before": {
+            "type": "string",
+            "description": "Сумма по обеим карточкам до"
+          },
+          "after": {
+            "type": "string",
+            "description": "Итог у цели после"
+          }
+        }
+      },
+      "CoreContactMergeResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "preview": {
+            "type": "boolean",
+            "description": "Только предпросмотр"
+          },
+          "source_id": {
+            "type": "string",
+            "description": "Карточка-источник"
+          },
+          "source_name": {
+            "type": "string",
+            "description": "Имя источника"
+          },
+          "target_id": {
+            "type": "string",
+            "description": "Целевая карточка"
+          },
+          "target_name": {
+            "type": "string",
+            "description": "Имя цели"
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreContactMergeDocument"
+            },
+            "description": "Документы со ссылкой на источник"
+          },
+          "holders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreContactMergeHolder"
+            },
+            "description": "Таблицы со ссылкой на источник"
+          },
+          "totals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreContactMergeTotal"
+            },
+            "description": "Итоги регистров до и после"
+          },
+          "employee_moved": {
+            "type": "boolean",
+            "description": "Привязка к сотруднику перенесена"
+          },
+          "archived": {
+            "type": "boolean",
+            "description": "Источник в архиве"
+          }
+        }
+      },
+      "CoreContactMergeBlocked": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "core.contact.merge_blocked"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "closed_period",
+              "foreign_holders",
+              "totals_changed",
+              "employee_both",
+              "too_large"
+            ],
+            "description": "Причина"
+          },
+          "detail": {
+            "type": "string",
+            "description": "Причина словами"
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreContactMergeDocument"
+            },
+            "description": "Документы в закрытом периоде"
+          },
+          "holders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreContactMergeHolder"
+            },
+            "description": "Таблицы без переноса"
+          },
+          "totals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CoreContactMergeTotal"
+            },
+            "description": "Итоги при расхождении"
           }
         }
       },
@@ -96405,6 +97509,167 @@
           }
         }
       },
+      "FinanceRefundSettlementInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contact_id",
+          "currency",
+          "date",
+          "payment",
+          "returns"
+        ],
+        "properties": {
+          "business_id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Бизнес; пусто — бизнес прихода"
+          },
+          "company_id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Юрлицо; пусто — юрлицо прихода"
+          },
+          "contact_id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Контрагент прихода и возвратов"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Валюта прихода и возвратов, код ISO 4217"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Дата сведения"
+          },
+          "payment": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Приход денег от контрагента"
+          },
+          "returns": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Возвраты денег тому же контрагенту",
+            "items": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          "comment": {
+            "type": "string",
+            "description": "Комментарий к документам сведения"
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Происхождение внешнего вызова",
+            "properties": {
+              "source_system": {
+                "type": "string",
+                "description": "Внешняя система"
+              },
+              "source_ref": {
+                "type": "string",
+                "description": "Ссылка во внешней системе"
+              },
+              "external_id": {
+                "type": "string",
+                "description": "Внешний идентификатор"
+              }
+            }
+          }
+        }
+      },
+      "FinanceRefundSettlementPair": {
+        "type": "object",
+        "properties": {
+          "return_payment_id": {
+            "type": "string",
+            "description": "Возврат"
+          },
+          "return_number": {
+            "type": "string",
+            "description": "Номер возврата"
+          },
+          "return_remaining": {
+            "type": "string",
+            "description": "Остаток возврата в расчётах"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Сколько сведётся у пары"
+          }
+        }
+      },
+      "FinanceRefundSettlementPreview": {
+        "type": "object",
+        "properties": {
+          "payment_number": {
+            "type": "string",
+            "description": "Номер прихода"
+          },
+          "payment_remaining": {
+            "type": "string",
+            "description": "Остаток прихода в расчётах"
+          },
+          "currency": {
+            "type": "string",
+            "description": "Валюта"
+          },
+          "pairs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceRefundSettlementPair"
+            }
+          },
+          "total": {
+            "type": "string",
+            "description": "Сумма по всем парам"
+          },
+          "unmatched": {
+            "type": "string",
+            "description": "Остаток прихода, не покрытый возвратами"
+          }
+        }
+      },
+      "FinanceRefundSettlementDocument": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Документ сведения"
+          },
+          "number": {
+            "type": "string",
+            "description": "Номер документа"
+          },
+          "return_number": {
+            "type": "string",
+            "description": "Номер возврата"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Сведённая сумма"
+          }
+        }
+      },
+      "FinanceRefundSettlementResult": {
+        "type": "object",
+        "properties": {
+          "documents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceRefundSettlementDocument"
+            }
+          },
+          "currency": {
+            "type": "string",
+            "description": "Валюта"
+          },
+          "total": {
+            "type": "string",
+            "description": "Сведено всего"
+          }
+        }
+      },
       "FinanceZReportInput": {
         "type": "object",
         "additionalProperties": false,
@@ -97983,10 +99248,14 @@
       },
       "FinanceExchangeStatus": {
         "type": "string",
+        "description": "Входящее: received, applied, quarantined. Исходящее (отправка в 1С): pending — ждёт отправки, sent — принято, failed — отклонено, повтор по next_attempt_at.",
         "enum": [
           "received",
           "applied",
-          "quarantined"
+          "quarantined",
+          "pending",
+          "sent",
+          "failed"
         ]
       },
       "FinanceExchangeItem": {
@@ -98032,7 +99301,11 @@
               "invoice",
               "upd",
               "closing_document",
-              "payment"
+              "payment",
+              "advance_invoice",
+              "supplier_invoice",
+              "purchase",
+              "ukd"
             ]
           },
           "external_id": {
@@ -98080,6 +99353,24 @@
           "metadata": {
             "type": "object",
             "additionalProperties": true
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "upsert",
+              "delete"
+            ],
+            "description": "Исходящее: создать или обновить документ во внешней системе либо отменить его."
+          },
+          "next_attempt_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Исходящее: когда повторить отклонённую отправку."
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Исходящее: когда внешняя система приняла документ."
           },
           "duplicate": {
             "type": "boolean"
@@ -98167,6 +99458,216 @@
         "properties": {
           "document_id": {
             "$ref": "#/components/schemas/UUID"
+          }
+        }
+      },
+      "FinanceOneCResolve": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "choice"
+        ],
+        "properties": {
+          "choice": {
+            "type": "string",
+            "enum": [
+              "keep_1c",
+              "send_akeda"
+            ],
+            "description": "Решение: keep_1c — оставить как в 1С, send_akeda — отправить версию Акеды поверх правки бухгалтера."
+          }
+        }
+      },
+      "FinanceOneCBankReconciliation": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "connection_id",
+          "company_id",
+          "from",
+          "to",
+          "accounts"
+        ],
+        "properties": {
+          "connection_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "company_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceOneCBankAccount"
+            }
+          }
+        }
+      },
+      "FinanceOneCBankAccount": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "account_number",
+          "akeda_in",
+          "akeda_out",
+          "onec_in",
+          "onec_out",
+          "matched",
+          "differs",
+          "akeda_only",
+          "onec_only",
+          "rows"
+        ],
+        "properties": {
+          "account_number": {
+            "type": "string",
+            "description": "Номер расчётного счёта организации"
+          },
+          "account_id": {
+            "type": "string",
+            "description": "Счёт Акеды; нет — счёт есть только в 1С"
+          },
+          "account_name": {
+            "type": "string"
+          },
+          "akeda_in": {
+            "type": "string",
+            "description": "Поступления по ленте Акеды за период"
+          },
+          "akeda_out": {
+            "type": "string",
+            "description": "Списания по ленте Акеды за период"
+          },
+          "onec_in": {
+            "type": "string",
+            "description": "Поступления по документам 1С за период"
+          },
+          "onec_out": {
+            "type": "string",
+            "description": "Списания по документам 1С за период"
+          },
+          "matched": {
+            "type": "integer",
+            "description": "Совпавших пар"
+          },
+          "differs": {
+            "type": "integer",
+            "description": "Пар с отличиями"
+          },
+          "akeda_only": {
+            "type": "integer",
+            "description": "Операций только в Акеде"
+          },
+          "onec_only": {
+            "type": "integer",
+            "description": "Документов только в 1С"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinanceOneCBankRow"
+            }
+          }
+        }
+      },
+      "FinanceOneCBankRow": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "status",
+          "notes"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "matched",
+              "differs",
+              "akeda_only",
+              "onec_only"
+            ]
+          },
+          "akeda": {
+            "$ref": "#/components/schemas/FinanceOneCBankLine"
+          },
+          "onec": {
+            "$ref": "#/components/schemas/FinanceOneCBankLine"
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "date",
+                "party",
+                "number",
+                "not_posted"
+              ]
+            },
+            "description": "Отличия пары: дата, контрагент, номер платёжки, документ 1С не проведён"
+          }
+        }
+      },
+      "FinanceOneCBankLine": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "date",
+          "incoming",
+          "amount",
+          "account_number"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Операция Акеды или ссылка документа 1С"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "incoming": {
+            "type": "boolean"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "account_number": {
+            "type": "string"
+          },
+          "party_inn": {
+            "type": "string"
+          },
+          "party_name": {
+            "type": "string"
+          },
+          "doc_number": {
+            "type": "string",
+            "description": "Номер платёжного поручения"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string",
+            "description": "Номер документа в 1С"
+          },
+          "operation": {
+            "type": "string",
+            "description": "Вид операции документа 1С"
+          },
+          "posted": {
+            "type": "boolean",
+            "description": "Документ 1С проведён"
           }
         }
       },
@@ -130113,6 +131614,64 @@
           },
           "name": {
             "type": "string"
+          }
+        }
+      },
+      "MailAccountJournalEntry": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Строка журнала почтовых ящиков: кто и когда удалил ящик",
+        "required": [
+          "id",
+          "account_id",
+          "email",
+          "owner_user_id",
+          "shared",
+          "shared_with_count",
+          "action",
+          "actor_user_id",
+          "created_at"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "account_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "email": {
+            "type": "string",
+            "description": "Адрес ящика на момент действия"
+          },
+          "owner_user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Владелец ящика"
+          },
+          "shared": {
+            "type": "boolean",
+            "description": "Ящик был общим для кабинета"
+          },
+          "shared_with_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Скольким сотрудникам ящик был открыт поимённо"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "deleted"
+            ],
+            "description": "Действие с ящиком"
+          },
+          "actor_user_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Кто выполнил действие"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },

@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b3ac5a9b869156c40ca5842e03e97e94ec698c957b42a92d3065a89fdf2bc0a8).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 086ae530551778bf0bdc50d9b5b445742b02c04408f7c40421231fb50b86d021).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -3820,9 +3820,90 @@ export interface CoreContactCreatePostalAddress {
   "info": string;
 }
 
+export interface CoreContactEmployeeInput {
+  /** Сотрудник; null — снять привязку */
+  "employee_id": string | null;
+}
+
 export type CoreContactEntityType = "legal" | "individual" | "sole_prop";
 
 export type CoreContactKind = "client" | "supplier" | "both";
+
+export interface CoreContactMergeBlocked {
+  /** core.contact.merge_blocked */
+  "code"?: string;
+  /** Причина */
+  "reason"?: "closed_period" | "foreign_holders" | "totals_changed" | "employee_both" | "too_large";
+  /** Причина словами */
+  "detail"?: string;
+  /** Документы в закрытом периоде */
+  "documents"?: Array<CoreContactMergeDocument>;
+  /** Таблицы без переноса */
+  "holders"?: Array<CoreContactMergeHolder>;
+  /** Итоги при расхождении */
+  "totals"?: Array<CoreContactMergeTotal>;
+}
+
+export interface CoreContactMergeDocument {
+  /** Документ */
+  "id"?: string;
+  /** Номер */
+  "number"?: string;
+  /** Вид документа */
+  "type_key"?: string;
+  /** Дата */
+  "date"?: string;
+  /** Статус */
+  "status"?: string;
+}
+
+export interface CoreContactMergeHolder {
+  /** Таблица */
+  "table"?: string;
+  /** Колонка */
+  "column"?: string;
+  /** Строк с карточкой-источником */
+  "rows"?: number;
+}
+
+export interface CoreContactMergeInput {
+  /** Целевая карточка — остаётся */
+  "target_id": UUID;
+}
+
+export interface CoreContactMergeResult {
+  /** Только предпросмотр */
+  "preview"?: boolean;
+  /** Карточка-источник */
+  "source_id"?: string;
+  /** Имя источника */
+  "source_name"?: string;
+  /** Целевая карточка */
+  "target_id"?: string;
+  /** Имя цели */
+  "target_name"?: string;
+  /** Документы со ссылкой на источник */
+  "documents"?: Array<CoreContactMergeDocument>;
+  /** Таблицы со ссылкой на источник */
+  "holders"?: Array<CoreContactMergeHolder>;
+  /** Итоги регистров до и после */
+  "totals"?: Array<CoreContactMergeTotal>;
+  /** Привязка к сотруднику перенесена */
+  "employee_moved"?: boolean;
+  /** Источник в архиве */
+  "archived"?: boolean;
+}
+
+export interface CoreContactMergeTotal {
+  /** Регистр */
+  "register"?: string;
+  /** Значение регистра */
+  "value"?: string;
+  /** Сумма по обеим карточкам до */
+  "before"?: string;
+  /** Итог у цели после */
+  "after"?: string;
+}
 
 export interface CoreContactPage {
   "count": number;
@@ -5437,7 +5518,7 @@ export interface CoreProduct {
   "country_label": string;
   /** Оси характеристик семейства; у остальных записей пусто */
   "option_schema": Array<CoreProductAxis>;
-  /** Значения варианта по осям семейства: ось → код; у остальных записей пусто */
+  /** Значения варианта по осям семейства: ось → код; у семейства с осями — значение каждой оси, у семейства без осей и у остальных записей пусто */
   "variant_values": { [key: string]: string };
 }
 
@@ -5517,7 +5598,7 @@ export interface CoreProductCreate {
   "customs_code"?: string;
   /** Оси характеристик семейства; у остальных записей пусто */
   "option_schema"?: Array<CoreProductAxis>;
-  /** Значения варианта по осям семейства: ось → код; у остальных записей пусто */
+  /** Значения варианта по осям семейства: ось → код; у семейства с осями — значение каждой оси, у семейства без осей и у остальных записей пусто */
   "variant_values"?: { [key: string]: string };
 }
 
@@ -5826,7 +5907,7 @@ export interface CoreProductPatch {
   "customs_code"?: string;
   /** Оси характеристик семейства; у остальных записей пусто */
   "option_schema"?: Array<CoreProductAxis>;
-  /** Значения варианта по осям семейства: ось → код; у остальных записей пусто */
+  /** Значения варианта по осям семейства: ось → код; у семейства с осями — значение каждой оси, у семейства без осей и у остальных записей пусто */
   "variant_values"?: { [key: string]: string };
 }
 
@@ -5835,6 +5916,23 @@ export type CoreProductRecordKind = "standalone" | "family" | "variant";
 export type CoreProductTransferFormat = "xlsx" | "xls" | "ods" | "csv" | "tsv";
 
 export type CoreProductTransferKind = "product_families" | "products" | "product_identifiers";
+
+export interface CoreProductVariantGenerate {
+  /** Какие коды осей участвуют; пусто — все оси семейства целиком. Ось без списка кодов или не названная здесь — все её значения: вариант семейства с осями называет значение каждой оси */
+  "axes"?: Array<CoreProductVariantGenerateAxesItem>;
+}
+
+export interface CoreProductVariantGenerateAxesItem {
+  "key": string;
+  "codes"?: Array<string>;
+}
+
+export interface CoreProductVariantGenerateResult {
+  "created": number;
+  /** Сочетания, у которых вариант уже был */
+  "skipped": number;
+  "results": Array<CoreProduct>;
+}
 
 export interface CoreReferenceItem {
   "id": UUID;
@@ -9314,7 +9412,7 @@ export interface FinanceExchangeItem {
   "company_id": UUID;
   "adapter_key": string;
   "direction": "import" | "export";
-  "object_type": "invoice" | "upd" | "closing_document" | "payment";
+  "object_type": "invoice" | "upd" | "closing_document" | "payment" | "advance_invoice" | "supplier_invoice" | "purchase" | "ukd";
   "external_id": string;
   "payload_hash": string;
   "last_payload_hash": string;
@@ -9327,6 +9425,12 @@ export interface FinanceExchangeItem {
   "last_error": string;
   "last_actor_id"?: number;
   "metadata": { [key: string]: unknown };
+  /** Исходящее: создать или обновить документ во внешней системе либо отменить его. */
+  "action"?: "upsert" | "delete";
+  /** Исходящее: когда повторить отклонённую отправку. */
+  "next_attempt_at"?: string;
+  /** Исходящее: когда внешняя система приняла документ. */
+  "sent_at"?: string;
   "duplicate"?: boolean;
   "conflict"?: boolean;
 }
@@ -9340,7 +9444,7 @@ export interface FinanceExchangeQuarantine {
   "reason": string;
 }
 
-export type FinanceExchangeStatus = "received" | "applied" | "quarantined";
+export type FinanceExchangeStatus = "received" | "applied" | "quarantined" | "pending" | "sent" | "failed";
 
 export interface FinanceExpenseReportCreate {
   "date"?: string;
@@ -9392,6 +9496,67 @@ export interface FinanceItemMergeResult {
   "references"?: Array<{ [key: string]: unknown }>;
   "totals"?: Array<{ [key: string]: unknown }>;
   "deleted"?: boolean;
+}
+
+export interface FinanceOneCBankAccount {
+  /** Номер расчётного счёта организации */
+  "account_number": string;
+  /** Счёт Акеды; нет — счёт есть только в 1С */
+  "account_id"?: string;
+  "account_name"?: string;
+  /** Поступления по ленте Акеды за период */
+  "akeda_in": string;
+  /** Списания по ленте Акеды за период */
+  "akeda_out": string;
+  /** Поступления по документам 1С за период */
+  "onec_in": string;
+  /** Списания по документам 1С за период */
+  "onec_out": string;
+  /** Совпавших пар */
+  "matched": number;
+  /** Пар с отличиями */
+  "differs": number;
+  /** Операций только в Акеде */
+  "akeda_only": number;
+  /** Документов только в 1С */
+  "onec_only": number;
+  "rows": Array<FinanceOneCBankRow>;
+}
+
+export interface FinanceOneCBankLine {
+  /** Операция Акеды или ссылка документа 1С */
+  "id": string;
+  "date": string;
+  "incoming": boolean;
+  "amount": string;
+  "account_number": string;
+  "party_inn"?: string;
+  "party_name"?: string;
+  /** Номер платёжного поручения */
+  "doc_number"?: string;
+  "purpose"?: string;
+  /** Номер документа в 1С */
+  "number"?: string;
+  /** Вид операции документа 1С */
+  "operation"?: string;
+  /** Документ 1С проведён */
+  "posted"?: boolean;
+}
+
+export interface FinanceOneCBankReconciliation {
+  "connection_id": UUID;
+  "company_id": UUID;
+  "from": string;
+  "to": string;
+  "accounts": Array<FinanceOneCBankAccount>;
+}
+
+export interface FinanceOneCBankRow {
+  "status": "matched" | "differs" | "akeda_only" | "onec_only";
+  "akeda"?: FinanceOneCBankLine;
+  "onec"?: FinanceOneCBankLine;
+  /** Отличия пары: дата, контрагент, номер платёжки, документ 1С не проведён */
+  "notes": Array<"date" | "party" | "number" | "not_posted">;
 }
 
 export interface FinanceOneCConnection {
@@ -9456,6 +9621,11 @@ export interface FinanceOneCObjects {
   "payroll"?: boolean;
   "budget"?: boolean;
   "declarations"?: boolean;
+}
+
+export interface FinanceOneCResolve {
+  /** Решение: keep_1c — оставить как в 1С, send_akeda — отправить версию Акеды поверх правки бухгалтера. */
+  "choice": "keep_1c" | "send_akeda";
 }
 
 export interface FinanceOpeningAdvanceVATRequest {
@@ -10103,6 +10273,81 @@ export interface FinanceReconciliationSummaryIncomingUnlinkedByCurrencyItem {
   "amount": string;
   /** Число операций */
   "count": number;
+}
+
+export interface FinanceRefundSettlementDocument {
+  /** Документ сведения */
+  "id"?: string;
+  /** Номер документа */
+  "number"?: string;
+  /** Номер возврата */
+  "return_number"?: string;
+  /** Сведённая сумма */
+  "amount"?: string;
+}
+
+export interface FinanceRefundSettlementInput {
+  /** Бизнес; пусто — бизнес прихода */
+  "business_id"?: UUID;
+  /** Юрлицо; пусто — юрлицо прихода */
+  "company_id"?: UUID;
+  /** Контрагент прихода и возвратов */
+  "contact_id": UUID;
+  /** Валюта прихода и возвратов, код ISO 4217 */
+  "currency": string;
+  /** Дата сведения */
+  "date": string;
+  /** Приход денег от контрагента */
+  "payment": UUID;
+  /** Возвраты денег тому же контрагенту */
+  "returns": Array<UUID>;
+  /** Комментарий к документам сведения */
+  "comment"?: string;
+  /** Происхождение внешнего вызова */
+  "source"?: FinanceRefundSettlementInputSource;
+}
+
+/** Происхождение внешнего вызова */
+export interface FinanceRefundSettlementInputSource {
+  /** Внешняя система */
+  "source_system"?: string;
+  /** Ссылка во внешней системе */
+  "source_ref"?: string;
+  /** Внешний идентификатор */
+  "external_id"?: string;
+}
+
+export interface FinanceRefundSettlementPair {
+  /** Возврат */
+  "return_payment_id"?: string;
+  /** Номер возврата */
+  "return_number"?: string;
+  /** Остаток возврата в расчётах */
+  "return_remaining"?: string;
+  /** Сколько сведётся у пары */
+  "amount"?: string;
+}
+
+export interface FinanceRefundSettlementPreview {
+  /** Номер прихода */
+  "payment_number"?: string;
+  /** Остаток прихода в расчётах */
+  "payment_remaining"?: string;
+  /** Валюта */
+  "currency"?: string;
+  "pairs"?: Array<FinanceRefundSettlementPair>;
+  /** Сумма по всем парам */
+  "total"?: string;
+  /** Остаток прихода, не покрытый возвратами */
+  "unmatched"?: string;
+}
+
+export interface FinanceRefundSettlementResult {
+  "documents"?: Array<FinanceRefundSettlementDocument>;
+  /** Валюта */
+  "currency"?: string;
+  /** Сведено всего */
+  "total"?: string;
 }
 
 export interface FinanceRegisterAccountCheck {
@@ -11184,6 +11429,25 @@ export interface MailAccount {
   "unread_count": number;
   "created_at": string;
   "updated_at": string;
+}
+
+/** Строка журнала почтовых ящиков: кто и когда удалил ящик */
+export interface MailAccountJournalEntry {
+  "id": UUID;
+  "account_id": UUID;
+  /** Адрес ящика на момент действия */
+  "email": string;
+  /** Владелец ящика */
+  "owner_user_id": number;
+  /** Ящик был общим для кабинета */
+  "shared": boolean;
+  /** Скольким сотрудникам ящик был открыт поимённо */
+  "shared_with_count": number;
+  /** Действие с ящиком */
+  "action": "deleted";
+  /** Кто выполнил действие */
+  "actor_user_id": number;
+  "created_at": string;
 }
 
 export type MailAccountStatus = "active" | "disabled" | "error";
@@ -17984,6 +18248,10 @@ export interface FinanceRepostTransactionRequest {
 
 export interface MailListAccountsResponse {
   "items": Array<MailAccount>;
+}
+
+export interface MailListAccountJournalResponse {
+  "items": Array<MailAccountJournalEntry>;
 }
 
 export interface MailListFoldersResponse {

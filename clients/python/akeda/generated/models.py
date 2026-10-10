@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b3ac5a9b869156c40ca5842e03e97e94ec698c957b42a92d3065a89fdf2bc0a8).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 086ae530551778bf0bdc50d9b5b445742b02c04408f7c40421231fb50b86d021).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -349,8 +349,15 @@ __all__ = [
     "CoreContactAddress",
     "CoreContactCreate",
     "CoreContactCreatePostalAddress",
+    "CoreContactEmployeeInput",
     "CoreContactEntityType",
     "CoreContactKind",
+    "CoreContactMergeBlocked",
+    "CoreContactMergeDocument",
+    "CoreContactMergeHolder",
+    "CoreContactMergeInput",
+    "CoreContactMergeResult",
+    "CoreContactMergeTotal",
     "CoreContactPage",
     "CoreContactPatch",
     "CoreContactPatchPostalAddress",
@@ -535,6 +542,9 @@ __all__ = [
     "CoreProductRecordKind",
     "CoreProductTransferFormat",
     "CoreProductTransferKind",
+    "CoreProductVariantGenerate",
+    "CoreProductVariantGenerateAxesItem",
+    "CoreProductVariantGenerateResult",
     "CoreReferenceItem",
     "CoreReferenceItemPage",
     "CoreReferenceRef",
@@ -832,10 +842,15 @@ __all__ = [
     "FinanceExpenseReportRow",
     "FinanceItemMergeRequest",
     "FinanceItemMergeResult",
+    "FinanceOneCBankAccount",
+    "FinanceOneCBankLine",
+    "FinanceOneCBankReconciliation",
+    "FinanceOneCBankRow",
     "FinanceOneCConnection",
     "FinanceOneCConnectionInput",
     "FinanceOneCConnectionPage",
     "FinanceOneCObjects",
+    "FinanceOneCResolve",
     "FinanceOpeningAdvanceVATRequest",
     "FinanceOpeningDebtRequest",
     "FinanceOperation",
@@ -885,6 +900,12 @@ __all__ = [
     "FinanceReconciliation",
     "FinanceReconciliationSummary",
     "FinanceReconciliationSummaryIncomingUnlinkedByCurrencyItem",
+    "FinanceRefundSettlementDocument",
+    "FinanceRefundSettlementInput",
+    "FinanceRefundSettlementInputSource",
+    "FinanceRefundSettlementPair",
+    "FinanceRefundSettlementPreview",
+    "FinanceRefundSettlementResult",
     "FinanceRegisterAccountCheck",
     "FinanceRegisterReconciliation",
     "FinanceRegisterReconciliationInputVatUnexplainedItem",
@@ -981,6 +1002,7 @@ __all__ = [
     "LinkCreate",
     "LinkList",
     "MailAccount",
+    "MailAccountJournalEntry",
     "MailAccountStatus",
     "MailAddressBookPage",
     "MailAddressBookRecord",
@@ -1577,6 +1599,7 @@ __all__ = [
     "FinanceMarkTransactionDeletedRequest",
     "FinanceRepostTransactionRequest",
     "MailListAccountsResponse",
+    "MailListAccountJournalResponse",
     "MailListFoldersResponse",
     "MailComposeMessageResponse",
     "MailListRulesResponse",
@@ -5461,9 +5484,83 @@ class CoreContactCreatePostalAddress(TypedDict):
     flat: str
     info: str
 
+class CoreContactEmployeeInput(TypedDict):
+    #: Сотрудник; null — снять привязку
+    employee_id: Optional[str]
+
 CoreContactEntityType = Literal['legal', 'individual', 'sole_prop']
 
 CoreContactKind = Literal['client', 'supplier', 'both']
+
+class CoreContactMergeBlocked(TypedDict, total=False):
+    #: core.contact.merge_blocked
+    code: str
+    #: Причина
+    reason: Literal['closed_period', 'foreign_holders', 'totals_changed', 'employee_both', 'too_large']
+    #: Причина словами
+    detail: str
+    #: Документы в закрытом периоде
+    documents: List["CoreContactMergeDocument"]
+    #: Таблицы без переноса
+    holders: List["CoreContactMergeHolder"]
+    #: Итоги при расхождении
+    totals: List["CoreContactMergeTotal"]
+
+class CoreContactMergeDocument(TypedDict, total=False):
+    #: Документ
+    id: str
+    #: Номер
+    number: str
+    #: Вид документа
+    type_key: str
+    #: Дата
+    date: str
+    #: Статус
+    status: str
+
+class CoreContactMergeHolder(TypedDict, total=False):
+    #: Таблица
+    table: str
+    #: Колонка
+    column: str
+    #: Строк с карточкой-источником
+    rows: int
+
+class CoreContactMergeInput(TypedDict):
+    #: Целевая карточка — остаётся
+    target_id: "UUID"
+
+class CoreContactMergeResult(TypedDict, total=False):
+    #: Только предпросмотр
+    preview: bool
+    #: Карточка-источник
+    source_id: str
+    #: Имя источника
+    source_name: str
+    #: Целевая карточка
+    target_id: str
+    #: Имя цели
+    target_name: str
+    #: Документы со ссылкой на источник
+    documents: List["CoreContactMergeDocument"]
+    #: Таблицы со ссылкой на источник
+    holders: List["CoreContactMergeHolder"]
+    #: Итоги регистров до и после
+    totals: List["CoreContactMergeTotal"]
+    #: Привязка к сотруднику перенесена
+    employee_moved: bool
+    #: Источник в архиве
+    archived: bool
+
+class CoreContactMergeTotal(TypedDict, total=False):
+    #: Регистр
+    register: str
+    #: Значение регистра
+    value: str
+    #: Сумма по обеим карточкам до
+    before: str
+    #: Итог у цели после
+    after: str
 
 class _CoreContactPageRequired(TypedDict):
     count: int
@@ -7079,7 +7176,7 @@ class _CoreProductRequired(TypedDict):
     country_label: str
     #: Оси характеристик семейства; у остальных записей пусто
     option_schema: List["CoreProductAxis"]
-    #: Значения варианта по осям семейства: ось → код; у остальных записей пусто
+    #: Значения варианта по осям семейства: ось → код; у семейства с осями — значение каждой оси, у семейства без осей и у остальных записей пусто
     variant_values: Dict[str, str]
 
 class CoreProduct(_CoreProductRequired, total=False):
@@ -7164,7 +7261,7 @@ class CoreProductCreate(_CoreProductCreateRequired, total=False):
     customs_code: str
     #: Оси характеристик семейства; у остальных записей пусто
     option_schema: List["CoreProductAxis"]
-    #: Значения варианта по осям семейства: ось → код; у остальных записей пусто
+    #: Значения варианта по осям семейства: ось → код; у семейства с осями — значение каждой оси, у семейства без осей и у остальных записей пусто
     variant_values: Dict[str, str]
 
 class CoreProductCustomInput(TypedDict):
@@ -7466,7 +7563,7 @@ class CoreProductPatch(TypedDict, total=False):
     customs_code: str
     #: Оси характеристик семейства; у остальных записей пусто
     option_schema: List["CoreProductAxis"]
-    #: Значения варианта по осям семейства: ось → код; у остальных записей пусто
+    #: Значения варианта по осям семейства: ось → код; у семейства с осями — значение каждой оси, у семейства без осей и у остальных записей пусто
     variant_values: Dict[str, str]
 
 CoreProductRecordKind = Literal['standalone', 'family', 'variant']
@@ -7474,6 +7571,22 @@ CoreProductRecordKind = Literal['standalone', 'family', 'variant']
 CoreProductTransferFormat = Literal['xlsx', 'xls', 'ods', 'csv', 'tsv']
 
 CoreProductTransferKind = Literal['product_families', 'products', 'product_identifiers']
+
+class CoreProductVariantGenerate(TypedDict, total=False):
+    #: Какие коды осей участвуют; пусто — все оси семейства целиком. Ось без списка кодов или не названная здесь — все её значения: вариант семейства с осями называет значение каждой оси
+    axes: List["CoreProductVariantGenerateAxesItem"]
+
+class _CoreProductVariantGenerateAxesItemRequired(TypedDict):
+    key: str
+
+class CoreProductVariantGenerateAxesItem(_CoreProductVariantGenerateAxesItemRequired, total=False):
+    codes: List[str]
+
+class CoreProductVariantGenerateResult(TypedDict):
+    created: int
+    #: Сочетания, у которых вариант уже был
+    skipped: int
+    results: List["CoreProduct"]
 
 class CoreReferenceItem(TypedDict):
     id: "UUID"
@@ -10991,7 +11104,7 @@ class _FinanceExchangeItemRequired(TypedDict):
     company_id: "UUID"
     adapter_key: str
     direction: Literal['import', 'export']
-    object_type: Literal['invoice', 'upd', 'closing_document', 'payment']
+    object_type: Literal['invoice', 'upd', 'closing_document', 'payment', 'advance_invoice', 'supplier_invoice', 'purchase', 'ukd']
     external_id: str
     payload_hash: str
     last_payload_hash: str
@@ -11006,6 +11119,12 @@ class FinanceExchangeItem(_FinanceExchangeItemRequired, total=False):
     canonical_document_id: str
     applied_at: str
     last_actor_id: int
+    #: Исходящее: создать или обновить документ во внешней системе либо отменить его.
+    action: Literal['upsert', 'delete']
+    #: Исходящее: когда повторить отклонённую отправку.
+    next_attempt_at: str
+    #: Исходящее: когда внешняя система приняла документ.
+    sent_at: str
     duplicate: bool
     conflict: bool
 
@@ -11016,7 +11135,7 @@ class FinanceExchangePage(TypedDict):
 class FinanceExchangeQuarantine(TypedDict):
     reason: str
 
-FinanceExchangeStatus = Literal['received', 'applied', 'quarantined']
+FinanceExchangeStatus = Literal['received', 'applied', 'quarantined', 'pending', 'sent', 'failed']
 
 class _FinanceExpenseReportCreateRequired(TypedDict):
     #: business или company обязателен; item — статья вида «подотчёт»; for_contact — сотрудник (контрагент из папки «Сотрудники»)
@@ -11068,6 +11187,64 @@ class FinanceItemMergeResult(TypedDict, total=False):
     references: List[Dict[str, Any]]
     totals: List[Dict[str, Any]]
     deleted: bool
+
+class _FinanceOneCBankAccountRequired(TypedDict):
+    #: Номер расчётного счёта организации
+    account_number: str
+    #: Поступления по ленте Акеды за период
+    akeda_in: str
+    #: Списания по ленте Акеды за период
+    akeda_out: str
+    #: Поступления по документам 1С за период
+    onec_in: str
+    #: Списания по документам 1С за период
+    onec_out: str
+    #: Совпавших пар
+    matched: int
+    #: Пар с отличиями
+    differs: int
+    #: Операций только в Акеде
+    akeda_only: int
+    #: Документов только в 1С
+    onec_only: int
+    rows: List["FinanceOneCBankRow"]
+
+class FinanceOneCBankAccount(_FinanceOneCBankAccountRequired, total=False):
+    #: Счёт Акеды; нет — счёт есть только в 1С
+    account_id: str
+    account_name: str
+
+class _FinanceOneCBankLineRequired(TypedDict):
+    #: Операция Акеды или ссылка документа 1С
+    id: str
+    date: str
+    incoming: bool
+    amount: str
+    account_number: str
+
+class FinanceOneCBankLine(_FinanceOneCBankLineRequired, total=False):
+    party_inn: str
+    party_name: str
+    #: Номер платёжного поручения
+    doc_number: str
+    purpose: str
+    #: Номер документа в 1С
+    number: str
+    #: Вид операции документа 1С
+    operation: str
+    #: Документ 1С проведён
+    posted: bool
+
+FinanceOneCBankReconciliation = TypedDict("FinanceOneCBankReconciliation", {"connection_id": "UUID", "company_id": "UUID", "from": str, "to": str, "accounts": List["FinanceOneCBankAccount"]}, total=False)
+
+class _FinanceOneCBankRowRequired(TypedDict):
+    status: Literal['matched', 'differs', 'akeda_only', 'onec_only']
+    #: Отличия пары: дата, контрагент, номер платёжки, документ 1С не проведён
+    notes: List[Literal['date', 'party', 'number', 'not_posted']]
+
+class FinanceOneCBankRow(_FinanceOneCBankRowRequired, total=False):
+    akeda: "FinanceOneCBankLine"
+    onec: "FinanceOneCBankLine"
 
 class _FinanceOneCConnectionRequired(TypedDict):
     id: "UUID"
@@ -11133,6 +11310,10 @@ class FinanceOneCObjects(TypedDict, total=False):
     payroll: bool
     budget: bool
     declarations: bool
+
+class FinanceOneCResolve(TypedDict):
+    #: Решение: keep_1c — оставить как в 1С, send_akeda — отправить версию Акеды поверх правки бухгалтера.
+    choice: Literal['keep_1c', 'send_akeda']
 
 class _FinanceOpeningAdvanceVATRequestRequired(TypedDict):
     #: Расчётная ставка, например 20/120
@@ -11710,6 +11891,78 @@ class FinanceReconciliationSummaryIncomingUnlinkedByCurrencyItem(TypedDict):
     amount: str
     #: Число операций
     count: int
+
+class FinanceRefundSettlementDocument(TypedDict, total=False):
+    #: Документ сведения
+    id: str
+    #: Номер документа
+    number: str
+    #: Номер возврата
+    return_number: str
+    #: Сведённая сумма
+    amount: str
+
+class _FinanceRefundSettlementInputRequired(TypedDict):
+    #: Контрагент прихода и возвратов
+    contact_id: "UUID"
+    #: Валюта прихода и возвратов, код ISO 4217
+    currency: str
+    #: Дата сведения
+    date: str
+    #: Приход денег от контрагента
+    payment: "UUID"
+    #: Возвраты денег тому же контрагенту
+    returns: List["UUID"]
+
+class FinanceRefundSettlementInput(_FinanceRefundSettlementInputRequired, total=False):
+    #: Бизнес; пусто — бизнес прихода
+    business_id: "UUID"
+    #: Юрлицо; пусто — юрлицо прихода
+    company_id: "UUID"
+    #: Комментарий к документам сведения
+    comment: str
+    #: Происхождение внешнего вызова
+    source: "FinanceRefundSettlementInputSource"
+
+class FinanceRefundSettlementInputSource(TypedDict, total=False):
+    """Происхождение внешнего вызова"""
+
+    #: Внешняя система
+    source_system: str
+    #: Ссылка во внешней системе
+    source_ref: str
+    #: Внешний идентификатор
+    external_id: str
+
+class FinanceRefundSettlementPair(TypedDict, total=False):
+    #: Возврат
+    return_payment_id: str
+    #: Номер возврата
+    return_number: str
+    #: Остаток возврата в расчётах
+    return_remaining: str
+    #: Сколько сведётся у пары
+    amount: str
+
+class FinanceRefundSettlementPreview(TypedDict, total=False):
+    #: Номер прихода
+    payment_number: str
+    #: Остаток прихода в расчётах
+    payment_remaining: str
+    #: Валюта
+    currency: str
+    pairs: List["FinanceRefundSettlementPair"]
+    #: Сумма по всем парам
+    total: str
+    #: Остаток прихода, не покрытый возвратами
+    unmatched: str
+
+class FinanceRefundSettlementResult(TypedDict, total=False):
+    documents: List["FinanceRefundSettlementDocument"]
+    #: Валюта
+    currency: str
+    #: Сведено всего
+    total: str
 
 class FinanceRegisterAccountCheck(TypedDict):
     account: str
@@ -12758,6 +13011,25 @@ class MailAccount(TypedDict):
     unread_count: int
     created_at: str
     updated_at: str
+
+class MailAccountJournalEntry(TypedDict):
+    """Строка журнала почтовых ящиков: кто и когда удалил ящик"""
+
+    id: "UUID"
+    account_id: "UUID"
+    #: Адрес ящика на момент действия
+    email: str
+    #: Владелец ящика
+    owner_user_id: int
+    #: Ящик был общим для кабинета
+    shared: bool
+    #: Скольким сотрудникам ящик был открыт поимённо
+    shared_with_count: int
+    #: Действие с ящиком
+    action: Literal['deleted']
+    #: Кто выполнил действие
+    actor_user_id: int
+    created_at: str
 
 MailAccountStatus = Literal['active', 'disabled', 'error']
 
@@ -19152,6 +19424,9 @@ class FinanceRepostTransactionRequest(TypedDict, total=False):
 
 class MailListAccountsResponse(TypedDict):
     items: List["MailAccount"]
+
+class MailListAccountJournalResponse(TypedDict):
+    items: List["MailAccountJournalEntry"]
 
 class MailListFoldersResponse(TypedDict):
     items: List["MailFolder"]
