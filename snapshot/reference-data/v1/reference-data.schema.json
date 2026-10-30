@@ -475,7 +475,7 @@
     "coreReferenceItems": {
       "method": "GET",
       "path": "/api/v1/reference/{key}/items",
-      "permission": "core:read",
+      "permission": "core:read|core.accounting:read|core.money:read|core.constants:read",
       "stage": "public",
       "summary": "Получить значения справочника по ключу"
     },

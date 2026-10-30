@@ -3,47 +3,48 @@
     "license": "LicenseRef-Akeda-Proprietary",
     "operations": {
       "by_audience": {
-        "external": 1008
+        "external": 1805
       },
       "by_module": {
         "assistant": 3,
         "automation": 13,
-        "calendar": 25,
-        "chat": 26,
-        "core": 172,
-        "crm": 124,
-        "dashboard": 2,
+        "calendar": 28,
+        "chat": 44,
+        "core": 308,
+        "crm": 175,
+        "dashboard": 3,
         "developer": 22,
-        "docflow": 60,
-        "files": 16,
-        "finance": 137,
-        "knowledge": 28,
-        "mail": 44,
-        "marketplace": 32,
-        "marking": 82,
+        "docflow": 168,
+        "files": 20,
+        "finance": 325,
+        "invitations": 10,
+        "knowledge": 40,
+        "mail": 53,
+        "marketplace": 107,
+        "marking": 105,
         "platform": 5,
-        "settings": 6,
-        "stock": 88,
-        "tasks": 123
+        "settings": 28,
+        "stock": 206,
+        "tasks": 142
       },
       "by_stage": {
-        "preview": 984,
-        "public": 24
+        "preview": 1775,
+        "public": 30
       },
       "installation_by_module": {
-        "calendar": 25,
-        "core": 156,
+        "calendar": 28,
+        "core": 279,
         "docflow": 13,
-        "finance": 122,
-        "marketplace": 32,
+        "finance": 260,
+        "marketplace": 105,
         "platform": 4,
-        "stock": 84,
-        "tasks": 123
+        "stock": 200,
+        "tasks": 142
       },
-      "installation_reachable": 559,
-      "total": 1008
+      "installation_reachable": 1031,
+      "total": 1805
     },
-    "schemas": 1448,
+    "schemas": 2628,
     "servers": [
       "https://erp.akeda.ru"
     ],
@@ -62,14 +63,14 @@
       "sha256": "80b5742106fda07c814d4f22aff63d33774cfcd9a0d5fe53bf190c3f21ce0e83"
     },
     {
-      "bytes": 4515905,
+      "bytes": 8649970,
       "path": "openapi/akeda-v1.json",
-      "sha256": "63fafd6626a8f063497c1410a202c7408b904b98902ad513422073dc4d7aadb0"
+      "sha256": "e92e353ee3fdb32e44b1a2024cbde9b718dc7af9f1b15252468e69f89d1033c9"
     },
     {
-      "bytes": 3429500,
+      "bytes": 6674347,
       "path": "openapi/akeda-v1.yaml",
-      "sha256": "15a77db936f7b47b44874049a877308b1f5f80fca2b6d7879b6987b42fb3f2f3"
+      "sha256": "7948dce3f6c9453b03f10857c6b99233a1623d032a4a9e77f6346dcf090de808"
     },
     {
       "bytes": 18414,
@@ -77,11 +78,11 @@
       "sha256": "dbe0d5916bceb9b4e1c593a49a7df9425d1850ce8ad2c84b67fb0a433b7151e7"
     },
     {
-      "bytes": 19148,
+      "bytes": 19205,
       "path": "reference-data/v1/reference-data.schema.json",
-      "sha256": "3c699f269e1e87daea0346e8fa0af0af984aeb8db7a38361b871ec86d41670ad"
+      "sha256": "cde19feb6e429f52e01f9174a64261b8cf307be3d08d3a4ba8bb4bc0bdcf81b7"
     }
   ],
-  "snapshot_digest": "1be9d120f3c39014741e08f02d8e3e6a6761a84b33e8507e0bda260d9f70c62d",
+  "snapshot_digest": "cbf76b544762546b8602255334fe33ccc7ddbc38e37e86eddf4cd42012c08956",
   "snapshot_version": 1
 }
