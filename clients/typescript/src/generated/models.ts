@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e92e353ee3fdb32e44b1a2024cbde9b718dc7af9f1b15252468e69f89d1033c9).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 43b97103ee8b6aa5fa33f3dbe0832f467e53b1148993653812fe6de8cd27a6d1).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -15923,6 +15923,7 @@ export interface FinanceBudget {
   "approved_at"?: string;
   "total": string;
   "lines": Array<FinanceBudgetLine>;
+  "regulation"?: FinanceBudgetRegulation;
 }
 
 export interface FinanceBudgetAnomaly {
@@ -16159,11 +16160,24 @@ export interface FinanceBudgetPlanFactRow {
   "department_id"?: UUID;
   "department_name"?: string;
   "plan": string;
+  /** Чистый поток статьи за месяц в её направлении: у статьи расходов — выплаты минус поступления, у доходов и статей без направления (депозиты) — поступления минус выплаты */
   "fact": string;
+  /** Валовые поступления по статье за месяц */
+  "fact_in"?: string;
+  /** Валовые выплаты по статье за месяц */
+  "fact_out"?: string;
   "deviation": string;
   "deviation_pct"?: string;
   "needs_note"?: boolean;
   "note"?: string;
+}
+
+export interface FinanceBudgetRegulation {
+  "approve_by"?: string;
+  "lock_after"?: string;
+  "locked": boolean;
+  "overdue": boolean;
+  "owner_id"?: number;
 }
 
 export interface FinanceBudgetReservation {
@@ -16206,6 +16220,9 @@ export interface FinanceBudgetSetting {
   "tolerance_pct"?: string;
   "tolerance_amount"?: string;
   "variance_note_pct"?: string;
+  "approve_day"?: number;
+  "lock_day"?: number;
+  "owner_id"?: number | null;
 }
 
 export interface FinanceBudgetSubmission {
@@ -16933,6 +16950,60 @@ export interface FinanceExpenseReportRow {
   "comment"?: string;
   /** «Закрывает» — долг поставщику (закупка, счёт), который гасит строка по статье расчётов с поставщиками (ERP-1249); пусто — долг подберёт правило */
   "closes"?: UUID;
+}
+
+export interface FinanceFactoringOpenSale {
+  /** Продажа */
+  "order_id": UUID;
+  /** Номер продажи */
+  "number": string;
+  /** День, когда возник долг (акт, УПД) */
+  "date": string;
+  /** Открытый долг покупателя по продаже */
+  "debt": string;
+}
+
+export interface FinanceFactoringRegistryInput {
+  /** Юрлицо, чьи продажи уступлены */
+  "company_id": UUID;
+  /** Покупатель, чей долг уступлен фактору */
+  "buyer_id": UUID;
+  /** Валюта долга; пусто — RUB */
+  "currency"?: string;
+  /** Имя файла */
+  "file_name"?: string;
+  /** Файл xlsx в base64, до 5 МБ */
+  "content": string;
+}
+
+export interface FinanceFactoringRegistryPreview {
+  /** Строки реестра */
+  "rows": Array<FinanceFactoringRegistryRow>;
+}
+
+export interface FinanceFactoringRegistryRow {
+  /** Номер реестра фактора */
+  "registry": string;
+  /** Покупатель, как его назвал фактор */
+  "buyer": string;
+  /** Начало периода поставок */
+  "from": string;
+  /** Конец периода поставок */
+  "to": string;
+  /** Сумма с НДС */
+  "gross": string;
+  /** Сумма к уступке */
+  "assigned": string;
+  /** Номер договора поставки */
+  "supply_contract": string;
+  /** Номер договора факторинга */
+  "factoring_contract": string;
+  /** matched — продажи периода или единственный их набор дают сумму к уступке; choose — таких наборов несколько (например, две продажи на одну сумму в один день), уступаемые продажи выбирает человек из sales; mismatch — сумма другая; not_found — открытых продаж в периоде нет */
+  "status": "matched" | "choose" | "mismatch" | "not_found";
+  /** Сумма открытого долга найденных продаж */
+  "found": string;
+  /** Продажи периода с открытым долгом */
+  "sales": Array<FinanceFactoringOpenSale>;
 }
 
 export interface FinanceFixedAsset {
@@ -17822,11 +17893,19 @@ export interface FinanceOrderActInput {
   /** Этап работ продажи или закупки, который закрывает акт */
   "stage_id"?: { [key: string]: unknown };
   "vat_amount"?: string;
+  /** Номер и дата СФ/УПД поставщика — только у закупки; по ним налог попадает в книгу покупок */
+  "supplier_document"?: FinanceOrderActInputSupplierDocument;
   "prices_include_vat"?: boolean;
   /** «За кого» закупки со статьёй вне ОПиУ: собственник для 75, сотрудник для 70/71; только у закупки */
   "for_contact"?: { [key: string]: unknown };
   /** Расход по графику (ERP-2634): только акт закупки бизнеса с методом начисления. Сумма без НДС ложится на 97 «Расходы будущих периодов», а по месяцам срока заводятся служебные «Списания РБП»: Дт счёт статьи Кт 97 и расход в ОПиУ датой конца месяца */
   "expense_schedule"?: FinanceOrderActInputExpenseSchedule;
+}
+
+/** Номер и дата СФ/УПД поставщика — только у закупки; по ним налог попадает в книгу покупок */
+export interface FinanceOrderActInputSupplierDocument {
+  "number"?: string;
+  "date"?: string;
 }
 
 /** Расход по графику (ERP-2634): только акт закупки бизнеса с методом начисления. Сумма без НДС ложится на 97 «Расходы будущих периодов», а по месяцам срока заводятся служебные «Списания РБП»: Дт счёт статьи Кт 97 и расход в ОПиУ датой конца месяца */
@@ -20103,7 +20182,7 @@ export interface FinanceSettlementDocumentCreate {
   "sources"?: Array<FinanceSettlementSourceAllocationInput>;
   /** Обязателен для зачёта аванса и переноса аванса между контрагентами (finance_advance_contact_transfer): переносимый аванс; контрагент документа — получатель, источник — тот, за кем числится остаток */
   "advance_id"?: string;
-  /** Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя; пусто — без заказа */
+  /** Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя, у уступки долга покупателя (finance_receivable_assignment) — продажа, чей долг уступлен; контрагент уступки — фактор; пусто — без заказа */
   "order_id"?: string;
   /** Обязательна для продажи и закупки */
   "pnl_item_id"?: string;
@@ -20129,7 +20208,7 @@ export interface FinanceSettlementDocumentCreate {
   "prices_include_vat"?: boolean;
 }
 
-export type FinanceSettlementDocumentType = "finance_settlement_baseline" | "finance_receivable_opening" | "finance_receivable" | "finance_payable_opening" | "finance_payable" | "finance_advance" | "finance_advance_offset" | "finance_sale" | "finance_purchase" | "finance_payment_allocation" | "finance_sale_return" | "finance_advance_contact_transfer";
+export type FinanceSettlementDocumentType = "finance_settlement_baseline" | "finance_receivable_opening" | "finance_receivable" | "finance_payable_opening" | "finance_payable" | "finance_advance" | "finance_advance_offset" | "finance_sale" | "finance_purchase" | "finance_payment_allocation" | "finance_sale_return" | "finance_advance_contact_transfer" | "finance_receivable_assignment";
 
 export interface FinanceSettlementExposure {
   "available": boolean;

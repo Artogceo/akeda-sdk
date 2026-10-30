@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e92e353ee3fdb32e44b1a2024cbde9b718dc7af9f1b15252468e69f89d1033c9).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 43b97103ee8b6aa5fa33f3dbe0832f467e53b1148993653812fe6de8cd27a6d1).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1064,6 +1064,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financePostZReport': OperationSpec('POST', '/api/v1/finance/z-reports', 'finance', 'preview', 'finance.operations:write', False, False, (), 'none', None, None),
     'financePreviewBonusScheme': OperationSpec('POST', '/api/v1/finance/staffing/bonus-schemes/preview', 'finance', 'preview', 'finance.staffing:write', False, False, (), 'none', None, None),
     'financePreviewDividendDecision': OperationSpec('GET', '/api/v1/finance/dividends/decisions/preview', 'finance', 'preview', 'finance.dividends:write', False, False, (), 'none', None, None),
+    'financePreviewFactoringRegistry': OperationSpec('POST', '/api/v1/finance/factoring/registry-preview', 'finance', 'preview', 'finance.settlements:write', False, True, (), 'none', None, None),
     'financePreviewFixedAssetDepreciation': OperationSpec('GET', '/api/v1/finance/fixed-assets/depreciation', 'finance', 'preview', 'finance.period:read', False, True, (), 'none', None, None),
     'financePreviewFixedAssetImport': OperationSpec('POST', '/api/v1/finance/fixed-assets/import/preview', 'finance', 'preview', 'finance.period:write', False, True, (), 'none', None, None),
     'financePreviewImport': OperationSpec('POST', '/api/v1/finance/imports/{id}/preview', 'finance', 'preview', 'finance.imports:write', False, True, ('id',), 'none', None, None),
@@ -1114,6 +1115,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeSetOneCMapping': OperationSpec('PUT', '/api/v1/finance/exchange/onec/connections/{id}/mappings', 'finance', 'preview', 'finance.exchange:write', False, True, ('id',), 'none', None, None),
     'financeSetPayrollPayoutMonth': OperationSpec('PUT', '/api/v1/finance/payroll/payout-months/{document}', 'finance', 'preview', 'finance.payroll:write', False, True, ('document',), 'none', None, None),
     'financeSetPurchaseSaleOrder': OperationSpec('PUT', '/api/v1/finance/purchases/{id}/sale-order', 'finance', 'preview', 'finance.operations:write', False, True, ('id',), 'none', None, None),
+    'financeSetPurchaseSupplierDocument': OperationSpec('PATCH', '/api/v1/finance/settlements/documents/{id}/supplier-document', 'finance', 'preview', 'finance.settlements:write', False, True, ('id',), 'none', None, None),
     'financeSetWalletOpeningBalance': OperationSpec('POST', '/api/v1/finance/wallets/{id}/opening-balance', 'finance', 'preview', 'finance.accounts:write', False, True, ('id',), 'none', None, None),
     'financeSettlementAging': OperationSpec('GET', '/api/v1/finance/settlements/aging', 'finance', 'preview', 'finance.settlements:read', False, True, (), 'none', None, None),
     'financeSettlementReconciliationTurnover': OperationSpec('GET', '/api/v1/finance/settlements/reconciliation-turnover', 'finance', 'preview', 'finance.settlements:read', False, True, (), 'none', None, None),

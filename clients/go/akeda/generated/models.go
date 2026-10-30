@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e92e353ee3fdb32e44b1a2024cbde9b718dc7af9f1b15252468e69f89d1033c9).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 43b97103ee8b6aa5fa33f3dbe0832f467e53b1148993653812fe6de8cd27a6d1).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -15863,28 +15863,29 @@ type FinanceBonusTier struct {
 }
 
 type FinanceBudget struct {
-	ID             UUID                `json:"id"`
-	BudgetID       UUID                `json:"budget_id"`
-	ScenarioID     UUID                `json:"scenario_id"`
-	ScenarioName   string              `json:"scenario_name"`
-	Kind           string              `json:"kind"`
-	CompanyID      UUID                `json:"company_id"`
-	PeriodFrom     string              `json:"period_from"`
-	PeriodTo       string              `json:"period_to"`
-	Month          *string             `json:"month,omitempty"`
-	Number         int64               `json:"number"`
-	Status         string              `json:"status"`
-	ApprovedNumber int64               `json:"approved_number"`
-	Currency       string              `json:"currency"`
-	Source         string              `json:"source"`
-	SourceName     *string             `json:"source_name,omitempty"`
-	Note           *string             `json:"note,omitempty"`
-	CreatedBy      *int64              `json:"created_by,omitempty"`
-	CreatedAt      string              `json:"created_at"`
-	ApprovedBy     *int64              `json:"approved_by,omitempty"`
-	ApprovedAt     *string             `json:"approved_at,omitempty"`
-	Total          string              `json:"total"`
-	Lines          []FinanceBudgetLine `json:"lines"`
+	ID             UUID                     `json:"id"`
+	BudgetID       UUID                     `json:"budget_id"`
+	ScenarioID     UUID                     `json:"scenario_id"`
+	ScenarioName   string                   `json:"scenario_name"`
+	Kind           string                   `json:"kind"`
+	CompanyID      UUID                     `json:"company_id"`
+	PeriodFrom     string                   `json:"period_from"`
+	PeriodTo       string                   `json:"period_to"`
+	Month          *string                  `json:"month,omitempty"`
+	Number         int64                    `json:"number"`
+	Status         string                   `json:"status"`
+	ApprovedNumber int64                    `json:"approved_number"`
+	Currency       string                   `json:"currency"`
+	Source         string                   `json:"source"`
+	SourceName     *string                  `json:"source_name,omitempty"`
+	Note           *string                  `json:"note,omitempty"`
+	CreatedBy      *int64                   `json:"created_by,omitempty"`
+	CreatedAt      string                   `json:"created_at"`
+	ApprovedBy     *int64                   `json:"approved_by,omitempty"`
+	ApprovedAt     *string                  `json:"approved_at,omitempty"`
+	Total          string                   `json:"total"`
+	Lines          []FinanceBudgetLine      `json:"lines"`
+	Regulation     *FinanceBudgetRegulation `json:"regulation,omitempty"`
 }
 
 type FinanceBudgetAnomaly struct {
@@ -16121,11 +16122,24 @@ type FinanceBudgetPlanFactRow struct {
 	DepartmentID   *UUID   `json:"department_id,omitempty"`
 	DepartmentName *string `json:"department_name,omitempty"`
 	Plan           string  `json:"plan"`
-	Fact           string  `json:"fact"`
-	Deviation      string  `json:"deviation"`
-	DeviationPct   *string `json:"deviation_pct,omitempty"`
-	NeedsNote      *bool   `json:"needs_note,omitempty"`
-	Note           *string `json:"note,omitempty"`
+	// Fact — Чистый поток статьи за месяц в её направлении: у статьи расходов — выплаты минус поступления, у доходов и статей без направления (депозиты) — поступления минус выплаты
+	Fact string `json:"fact"`
+	// FactIn — Валовые поступления по статье за месяц
+	FactIn *string `json:"fact_in,omitempty"`
+	// FactOut — Валовые выплаты по статье за месяц
+	FactOut      *string `json:"fact_out,omitempty"`
+	Deviation    string  `json:"deviation"`
+	DeviationPct *string `json:"deviation_pct,omitempty"`
+	NeedsNote    *bool   `json:"needs_note,omitempty"`
+	Note         *string `json:"note,omitempty"`
+}
+
+type FinanceBudgetRegulation struct {
+	ApproveBy *string `json:"approve_by,omitempty"`
+	LockAfter *string `json:"lock_after,omitempty"`
+	Locked    bool    `json:"locked"`
+	Overdue   bool    `json:"overdue"`
+	OwnerID   *int64  `json:"owner_id,omitempty"`
 }
 
 type FinanceBudgetReservation struct {
@@ -16168,6 +16182,9 @@ type FinanceBudgetSetting struct {
 	TolerancePct    *string `json:"tolerance_pct,omitempty"`
 	ToleranceAmount *string `json:"tolerance_amount,omitempty"`
 	VarianceNotePct *string `json:"variance_note_pct,omitempty"`
+	ApproveDay      *int64  `json:"approve_day,omitempty"`
+	LockDay         *int64  `json:"lock_day,omitempty"`
+	OwnerID         *int64  `json:"owner_id,omitempty"`
 }
 
 type FinanceBudgetSubmission struct {
@@ -16895,6 +16912,60 @@ type FinanceExpenseReportRow struct {
 	Comment       *string `json:"comment,omitempty"`
 	// Closes — «Закрывает» — долг поставщику (закупка, счёт), который гасит строка по статье расчётов с поставщиками (ERP-1249); пусто — долг подберёт правило
 	Closes *UUID `json:"closes,omitempty"`
+}
+
+type FinanceFactoringOpenSale struct {
+	// OrderID — Продажа
+	OrderID UUID `json:"order_id"`
+	// Number — Номер продажи
+	Number string `json:"number"`
+	// Date — День, когда возник долг (акт, УПД)
+	Date string `json:"date"`
+	// Debt — Открытый долг покупателя по продаже
+	Debt string `json:"debt"`
+}
+
+type FinanceFactoringRegistryInput struct {
+	// CompanyID — Юрлицо, чьи продажи уступлены
+	CompanyID UUID `json:"company_id"`
+	// BuyerID — Покупатель, чей долг уступлен фактору
+	BuyerID UUID `json:"buyer_id"`
+	// Currency — Валюта долга; пусто — RUB
+	Currency *string `json:"currency,omitempty"`
+	// FileName — Имя файла
+	FileName *string `json:"file_name,omitempty"`
+	// Content — Файл xlsx в base64, до 5 МБ
+	Content string `json:"content"`
+}
+
+type FinanceFactoringRegistryPreview struct {
+	// Rows — Строки реестра
+	Rows []FinanceFactoringRegistryRow `json:"rows"`
+}
+
+type FinanceFactoringRegistryRow struct {
+	// Registry — Номер реестра фактора
+	Registry string `json:"registry"`
+	// Buyer — Покупатель, как его назвал фактор
+	Buyer string `json:"buyer"`
+	// From — Начало периода поставок
+	From string `json:"from"`
+	// To — Конец периода поставок
+	To string `json:"to"`
+	// Gross — Сумма с НДС
+	Gross string `json:"gross"`
+	// Assigned — Сумма к уступке
+	Assigned string `json:"assigned"`
+	// SupplyContract — Номер договора поставки
+	SupplyContract string `json:"supply_contract"`
+	// FactoringContract — Номер договора факторинга
+	FactoringContract string `json:"factoring_contract"`
+	// Status — matched — продажи периода или единственный их набор дают сумму к уступке; choose — таких наборов несколько (например, две продажи на одну сумму в один день), уступаемые продажи выбирает человек из sales; mismatch — сумма другая; not_found — открытых продаж в периоде нет
+	Status string `json:"status"`
+	// Found — Сумма открытого долга найденных продаж
+	Found string `json:"found"`
+	// Sales — Продажи периода с открытым долгом
+	Sales []FinanceFactoringOpenSale `json:"sales"`
 }
 
 type FinanceFixedAsset struct {
@@ -17782,13 +17853,21 @@ type FinanceOrderActInput struct {
 	// PNLItemID — Статья выручки (расхода); пусто — статья продажи или закупки, политика бизнеса или системная
 	PNLItemID map[string]json.RawMessage `json:"pnl_item_id,omitempty"`
 	// StageID — Этап работ продажи или закупки, который закрывает акт
-	StageID          map[string]json.RawMessage `json:"stage_id,omitempty"`
-	VATAmount        *string                    `json:"vat_amount,omitempty"`
-	PricesIncludeVAT *bool                      `json:"prices_include_vat,omitempty"`
+	StageID   map[string]json.RawMessage `json:"stage_id,omitempty"`
+	VATAmount *string                    `json:"vat_amount,omitempty"`
+	// SupplierDocument — Номер и дата СФ/УПД поставщика — только у закупки; по ним налог попадает в книгу покупок
+	SupplierDocument *FinanceOrderActInputSupplierDocument `json:"supplier_document,omitempty"`
+	PricesIncludeVAT *bool                                 `json:"prices_include_vat,omitempty"`
 	// ForContact — «За кого» закупки со статьёй вне ОПиУ: собственник для 75, сотрудник для 70/71; только у закупки
 	ForContact map[string]json.RawMessage `json:"for_contact,omitempty"`
 	// ExpenseSchedule — Расход по графику (ERP-2634): только акт закупки бизнеса с методом начисления. Сумма без НДС ложится на 97 «Расходы будущих периодов», а по месяцам срока заводятся служебные «Списания РБП»: Дт счёт статьи Кт 97 и расход в ОПиУ датой конца месяца
 	ExpenseSchedule *FinanceOrderActInputExpenseSchedule `json:"expense_schedule,omitempty"`
+}
+
+// FinanceOrderActInputSupplierDocument — Номер и дата СФ/УПД поставщика — только у закупки; по ним налог попадает в книгу покупок
+type FinanceOrderActInputSupplierDocument struct {
+	Number *string `json:"number,omitempty"`
+	Date   *string `json:"date,omitempty"`
 }
 
 // FinanceOrderActInputExpenseSchedule — Расход по графику (ERP-2634): только акт закупки бизнеса с методом начисления. Сумма без НДС ложится на 97 «Расходы будущих периодов», а по месяцам срока заводятся служебные «Списания РБП»: Дт счёт статьи Кт 97 и расход в ОПиУ датой конца месяца
@@ -20054,7 +20133,7 @@ type FinanceSettlementDocumentCreate struct {
 	Sources   []FinanceSettlementSourceAllocationInput `json:"sources,omitempty"`
 	// AdvanceID — Обязателен для зачёта аванса и переноса аванса между контрагентами (finance_advance_contact_transfer): переносимый аванс; контрагент документа — получатель, источник — тот, за кем числится остаток
 	AdvanceID *string `json:"advance_id,omitempty"`
-	// OrderID — Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя; пусто — без заказа
+	// OrderID — Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя, у уступки долга покупателя (finance_receivable_assignment) — продажа, чей долг уступлен; контрагент уступки — фактор; пусто — без заказа
 	OrderID *string `json:"order_id,omitempty"`
 	// PNLItemID — Обязательна для продажи и закупки
 	PNLItemID *string `json:"pnl_item_id,omitempty"`

@@ -22467,6 +22467,48 @@ paths:
           $ref: '#/components/responses/NotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/factoring/registry-preview:
+    post:
+      tags:
+        - Finance acquiring
+      operationId: financePreviewFactoringRegistry
+      summary: Сопоставить реестр фактора с продажами покупателя
+      description: 'Факторинг (ERP-2872): выгрузка «Реестры» фактора в xlsx (base64). Каждая строка — номер реестра, период поставок «От»–«До» и сумма к уступке. Сервер ищет у покупателя продажи с открытым долгом, возникшим в периоде строки: matched — продажи периода дают ровно сумму к уступке, mismatch — сумма другая, not_found — открытых продаж нет (долг уже уступлен или не заведён). Ничего не пишет: уступает человек документами finance_receivable_assignment через POST /api/v1/finance/settlements/documents.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.settlements:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceFactoringRegistryInput'
+      responses:
+        '200':
+          description: Строки реестра и найденные продажи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceFactoringRegistryPreview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/finance/acquirers:
     get:
       tags:
@@ -25272,6 +25314,54 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/finance/settlements/documents/{id}/supplier-document:
+    patch:
+      tags:
+        - Finance settlements
+      operationId: financeSetPurchaseSupplierDocument
+      summary: Указать документ поставщика у закупки
+      description: 'Называет номер и дату счёта-фактуры или УПД поставщика у закупки финансов — в том числе проведённой — без перепроведения: суммы и движения не меняются, книга покупок и выгрузка в 1С читают новый реквизит. Пустые номер и дата снимают реквизит. В закрытом периоде правка отклоняется (409). Правка попадает в историю документа.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.settlements:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+          description: Закупка финансов (акт поставщика)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierDocument'
+      responses:
+        '200':
+          description: Закупка с новым документом поставщика
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/v1/finance/settlements/documents/{id}/post:
     post:
       tags:
@@ -106398,6 +106488,10 @@ components:
             - $ref: '#/components/schemas/UUID'
         vat_amount:
           type: string
+        supplier_document:
+          description: Номер и дата СФ/УПД поставщика — только у закупки; по ним налог попадает в книгу покупок
+          allOf:
+            - $ref: '#/components/schemas/SupplierDocument'
         prices_include_vat:
           type: boolean
         for_contact:
@@ -106913,6 +107007,123 @@ components:
           items:
             $ref: '#/components/schemas/FinanceAcquirer'
           description: Эквайеры доступных юрлиц
+    FinanceFactoringRegistryInput:
+      type: object
+      additionalProperties: false
+      required:
+        - company_id
+        - buyer_id
+        - content
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+          description: Юрлицо, чьи продажи уступлены
+        buyer_id:
+          $ref: '#/components/schemas/UUID'
+          description: Покупатель, чей долг уступлен фактору
+        currency:
+          type: string
+          maxLength: 3
+          description: Валюта долга; пусто — RUB
+        file_name:
+          type: string
+          maxLength: 255
+          description: Имя файла
+        content:
+          type: string
+          minLength: 1
+          description: Файл xlsx в base64, до 5 МБ
+    FinanceFactoringOpenSale:
+      type: object
+      additionalProperties: false
+      required:
+        - order_id
+        - number
+        - date
+        - debt
+      properties:
+        order_id:
+          $ref: '#/components/schemas/UUID'
+          description: Продажа
+        number:
+          type: string
+          description: Номер продажи
+        date:
+          type: string
+          format: date
+          description: День, когда возник долг (акт, УПД)
+        debt:
+          type: string
+          description: Открытый долг покупателя по продаже
+    FinanceFactoringRegistryRow:
+      type: object
+      additionalProperties: false
+      required:
+        - registry
+        - buyer
+        - from
+        - to
+        - gross
+        - assigned
+        - supply_contract
+        - factoring_contract
+        - status
+        - found
+        - sales
+      properties:
+        registry:
+          type: string
+          description: Номер реестра фактора
+        buyer:
+          type: string
+          description: Покупатель, как его назвал фактор
+        from:
+          type: string
+          format: date
+          description: Начало периода поставок
+        to:
+          type: string
+          format: date
+          description: Конец периода поставок
+        gross:
+          type: string
+          description: Сумма с НДС
+        assigned:
+          type: string
+          description: Сумма к уступке
+        supply_contract:
+          type: string
+          description: Номер договора поставки
+        factoring_contract:
+          type: string
+          description: Номер договора факторинга
+        status:
+          type: string
+          enum:
+            - matched
+            - choose
+            - mismatch
+            - not_found
+          description: matched — продажи периода или единственный их набор дают сумму к уступке; choose — таких наборов несколько (например, две продажи на одну сумму в один день), уступаемые продажи выбирает человек из sales; mismatch — сумма другая; not_found — открытых продаж в периоде нет
+        found:
+          type: string
+          description: Сумма открытого долга найденных продаж
+        sales:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceFactoringOpenSale'
+          description: Продажи периода с открытым долгом
+    FinanceFactoringRegistryPreview:
+      type: object
+      additionalProperties: false
+      required:
+        - rows
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceFactoringRegistryRow'
+          description: Строки реестра
     FinanceAcquiringRegistryInput:
       type: object
       additionalProperties: false
@@ -107902,6 +108113,7 @@ components:
         - finance_payment_allocation
         - finance_sale_return
         - finance_advance_contact_transfer
+        - finance_receivable_assignment
     FinanceSettlementSourceAllocationInput:
       type: object
       additionalProperties: false
@@ -107969,7 +108181,7 @@ components:
         order_id:
           type: string
           format: uuid
-          description: 'Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя; пусто — без заказа'
+          description: 'Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя, у уступки долга покупателя (finance_receivable_assignment) — продажа, чей долг уступлен; контрагент уступки — фактор; пусто — без заказа'
         pnl_item_id:
           type: string
           format: uuid
@@ -108935,6 +109147,28 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FinanceBudgetLine'
+        regulation:
+          $ref: '#/components/schemas/FinanceBudgetRegulation'
+    FinanceBudgetRegulation:
+      type: object
+      additionalProperties: false
+      required:
+        - locked
+        - overdue
+      properties:
+        approve_by:
+          type: string
+          format: date
+        lock_after:
+          type: string
+          format: date
+        locked:
+          type: boolean
+        overdue:
+          type: boolean
+        owner_id:
+          type: integer
+          format: int64
     FinanceBudgetInput:
       type: object
       additionalProperties: false
@@ -108995,6 +109229,13 @@ components:
           type: string
         fact:
           type: string
+          description: 'Чистый поток статьи за месяц в её направлении: у статьи расходов — выплаты минус поступления, у доходов и статей без направления (депозиты) — поступления минус выплаты'
+        fact_in:
+          type: string
+          description: Валовые поступления по статье за месяц
+        fact_out:
+          type: string
+          description: Валовые выплаты по статье за месяц
         deviation:
           type: string
         deviation_pct:
@@ -109281,6 +109522,19 @@ components:
           type: string
         variance_note_pct:
           type: string
+        approve_day:
+          type: integer
+          minimum: 0
+          maximum: 31
+        lock_day:
+          type: integer
+          minimum: 0
+          maximum: 31
+        owner_id:
+          type:
+            - integer
+            - 'null'
+          format: int64
     FinanceBudgetPaymentTerm:
       type: object
       additionalProperties: false

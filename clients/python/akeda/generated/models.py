@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 e92e353ee3fdb32e44b1a2024cbde9b718dc7af9f1b15252468e69f89d1033c9).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 43b97103ee8b6aa5fa33f3dbe0832f467e53b1148993653812fe6de8cd27a6d1).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1360,6 +1360,7 @@ __all__ = [
     "FinanceBudgetPayrollModelInput",
     "FinanceBudgetPlanFact",
     "FinanceBudgetPlanFactRow",
+    "FinanceBudgetRegulation",
     "FinanceBudgetReservation",
     "FinanceBudgetReservationInput",
     "FinanceBudgetReservations",
@@ -1433,6 +1434,10 @@ __all__ = [
     "FinanceExpenseReportCreatePayload",
     "FinanceExpenseReportPage",
     "FinanceExpenseReportRow",
+    "FinanceFactoringOpenSale",
+    "FinanceFactoringRegistryInput",
+    "FinanceFactoringRegistryPreview",
+    "FinanceFactoringRegistryRow",
     "FinanceFixedAsset",
     "FinanceFixedAssetAcceptanceInput",
     "FinanceFixedAssetDepreciationLine",
@@ -1509,6 +1514,7 @@ __all__ = [
     "FinanceOperationStageInput",
     "FinanceOperationVersion",
     "FinanceOrderActInput",
+    "FinanceOrderActInputSupplierDocument",
     "FinanceOrderActInputExpenseSchedule",
     "FinanceOrderOpeningRelease",
     "FinanceOrderOpeningReleaseInput",
@@ -19007,6 +19013,7 @@ class FinanceBudget(_FinanceBudgetRequired, total=False):
     created_by: int
     approved_by: int
     approved_at: str
+    regulation: "FinanceBudgetRegulation"
 
 class _FinanceBudgetAnomalyRequired(TypedDict):
     month: str
@@ -19224,6 +19231,7 @@ class _FinanceBudgetPlanFactRowRequired(TypedDict):
     month: str
     item_id: "UUID"
     plan: str
+    #: Чистый поток статьи за месяц в её направлении: у статьи расходов — выплаты минус поступления, у доходов и статей без направления (депозиты) — поступления минус выплаты
     fact: str
     deviation: str
 
@@ -19231,9 +19239,22 @@ class FinanceBudgetPlanFactRow(_FinanceBudgetPlanFactRowRequired, total=False):
     item_name: str
     department_id: "UUID"
     department_name: str
+    #: Валовые поступления по статье за месяц
+    fact_in: str
+    #: Валовые выплаты по статье за месяц
+    fact_out: str
     deviation_pct: str
     needs_note: bool
     note: str
+
+class _FinanceBudgetRegulationRequired(TypedDict):
+    locked: bool
+    overdue: bool
+
+class FinanceBudgetRegulation(_FinanceBudgetRegulationRequired, total=False):
+    approve_by: str
+    lock_after: str
+    owner_id: int
 
 class _FinanceBudgetReservationRequired(TypedDict):
     id: "UUID"
@@ -19278,6 +19299,9 @@ class FinanceBudgetSetting(_FinanceBudgetSettingRequired, total=False):
     tolerance_pct: str
     tolerance_amount: str
     variance_note_pct: str
+    approve_day: int
+    lock_day: int
+    owner_id: Optional[int]
 
 class _FinanceBudgetSubmissionRequired(TypedDict):
     status: Literal['draft', 'submitted', 'accepted', 'returned']
@@ -19977,6 +20001,36 @@ class FinanceExpenseReportRow(_FinanceExpenseReportRowRequired, total=False):
     comment: str
     #: «Закрывает» — долг поставщику (закупка, счёт), который гасит строка по статье расчётов с поставщиками (ERP-1249); пусто — долг подберёт правило
     closes: "UUID"
+
+class FinanceFactoringOpenSale(TypedDict):
+    #: Продажа
+    order_id: "UUID"
+    #: Номер продажи
+    number: str
+    #: День, когда возник долг (акт, УПД)
+    date: str
+    #: Открытый долг покупателя по продаже
+    debt: str
+
+class _FinanceFactoringRegistryInputRequired(TypedDict):
+    #: Юрлицо, чьи продажи уступлены
+    company_id: "UUID"
+    #: Покупатель, чей долг уступлен фактору
+    buyer_id: "UUID"
+    #: Файл xlsx в base64, до 5 МБ
+    content: str
+
+class FinanceFactoringRegistryInput(_FinanceFactoringRegistryInputRequired, total=False):
+    #: Валюта долга; пусто — RUB
+    currency: str
+    #: Имя файла
+    file_name: str
+
+class FinanceFactoringRegistryPreview(TypedDict):
+    #: Строки реестра
+    rows: List["FinanceFactoringRegistryRow"]
+
+FinanceFactoringRegistryRow = TypedDict("FinanceFactoringRegistryRow", {"registry": str, "buyer": str, "from": str, "to": str, "gross": str, "assigned": str, "supply_contract": str, "factoring_contract": str, "status": Literal['matched', 'choose', 'mismatch', 'not_found'], "found": str, "sales": List["FinanceFactoringOpenSale"]}, total=False)
 
 class _FinanceFixedAssetRequired(TypedDict):
     id: "UUID"
@@ -20855,11 +20909,19 @@ class FinanceOrderActInput(_FinanceOrderActInputRequired, total=False):
     #: Этап работ продажи или закупки, который закрывает акт
     stage_id: Dict[str, Any]
     vat_amount: str
+    #: Номер и дата СФ/УПД поставщика — только у закупки; по ним налог попадает в книгу покупок
+    supplier_document: "FinanceOrderActInputSupplierDocument"
     prices_include_vat: bool
     #: «За кого» закупки со статьёй вне ОПиУ: собственник для 75, сотрудник для 70/71; только у закупки
     for_contact: Dict[str, Any]
     #: Расход по графику (ERP-2634): только акт закупки бизнеса с методом начисления. Сумма без НДС ложится на 97 «Расходы будущих периодов», а по месяцам срока заводятся служебные «Списания РБП»: Дт счёт статьи Кт 97 и расход в ОПиУ датой конца месяца
     expense_schedule: "FinanceOrderActInputExpenseSchedule"
+
+class FinanceOrderActInputSupplierDocument(TypedDict, total=False):
+    """Номер и дата СФ/УПД поставщика — только у закупки; по ним налог попадает в книгу покупок"""
+
+    number: str
+    date: str
 
 FinanceOrderActInputExpenseSchedule = TypedDict("FinanceOrderActInputExpenseSchedule", {"from": str, "to": str, "method": Literal['monthly']}, total=False)
 
@@ -22937,7 +22999,7 @@ class FinanceSettlementDocumentCreate(_FinanceSettlementDocumentCreateRequired, 
     sources: List["FinanceSettlementSourceAllocationInput"]
     #: Обязателен для зачёта аванса и переноса аванса между контрагентами (finance_advance_contact_transfer): переносимый аванс; контрагент документа — получатель, источник — тот, за кем числится остаток
     advance_id: str
-    #: Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя; пусто — без заказа
+    #: Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя, у уступки долга покупателя (finance_receivable_assignment) — продажа, чей долг уступлен; контрагент уступки — фактор; пусто — без заказа
     order_id: str
     #: Обязательна для продажи и закупки
     pnl_item_id: str
@@ -22962,7 +23024,7 @@ class FinanceSettlementDocumentCreate(_FinanceSettlementDocumentCreateRequired, 
     #: Только вместе со строками: цены строк включают налог (умолчание) либо налог начисляется сверху
     prices_include_vat: bool
 
-FinanceSettlementDocumentType = Literal['finance_settlement_baseline', 'finance_receivable_opening', 'finance_receivable', 'finance_payable_opening', 'finance_payable', 'finance_advance', 'finance_advance_offset', 'finance_sale', 'finance_purchase', 'finance_payment_allocation', 'finance_sale_return', 'finance_advance_contact_transfer']
+FinanceSettlementDocumentType = Literal['finance_settlement_baseline', 'finance_receivable_opening', 'finance_receivable', 'finance_payable_opening', 'finance_payable', 'finance_advance', 'finance_advance_offset', 'finance_sale', 'finance_purchase', 'finance_payment_allocation', 'finance_sale_return', 'finance_advance_contact_transfer', 'finance_receivable_assignment']
 
 class FinanceSettlementExposure(TypedDict):
     available: bool
