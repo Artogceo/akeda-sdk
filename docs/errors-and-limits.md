@@ -72,16 +72,22 @@ go run ./cmd/akeda contract op coreListContacts
 #   листание      limit_offset (умолчание 100, потолок 500)
 ```
 
-## 3. Идемпотентность: 24 команды, а не все
+## 3. Идемпотентность: 91 команда, а не все
 
-Заголовок `Idempotency-Key` читают ровно 24 команды — полный список отдаёт
+Заголовок `Idempotency-Key` читает ровно 91 команда — полный список отдаёт
 `akeda.IdempotentOperations()`:
 
-- ядро: `coreCreateContact`, `coreCreateDocument`, `coreCreateProduct`, `coreGenerateProductVariants`, `corePostDocument`;
-- документооборот: `docflowFlowAcceptFinanceAct`, `docflowFlowChangeDocument`, `docflowFlowCreateAccountingOriginal`, `docflowFlowCreateDocument`, `docflowFlowCreateFinancePlan`, `docflowFlowLinkAccountingDocument`, `docflowFlowUnlinkAccountingDocument`, `docflowFlowUploadFile`;
-- финансы: `financeCreateDividendDecision`, `financeCreateSettlementDocument`;
-- склад: `stockCreateAccountTransfer`, `stockCreateAssemblySpec`, `stockCreateClaimWriteoff`, `stockCreateDocument`, `stockCreateOpeningBalance`, `stockCreatePurchaseOrder`;
-- задачи: `tasksCreateProject`, `tasksCreateSection`, `tasksCreateTask`.
+- ядро: `coreChangeOwnerDocument`, `coreCloseAccountingPeriod`, `coreCreateActionRequest`, `coreCreateContact`, `coreCreateContactBankAccount`, `coreCreateContactDeliveryPoint`, `coreCreateDocument`, `coreCreateFinancingContract`, `coreCreateOwnerDocument`, `coreCreateProduct`, `coreCreatePurchase`, `coreCreateSale`, `coreCreateSupplierPriceSet`, `coreExecuteActionRequest`, `coreGenerateProductVariants`, `corePostDocument`, `coreSubmitActionRequest`, `coreWithdrawActionRequest`;
+- документооборот: `docflowAssignFlowDocument`, `docflowCreateFlowUploadSession`, `docflowFlowChangeDocument`, `docflowFlowCreateAccountingOriginal`, `docflowFlowCreateDocument`, `docflowFlowLinkAccountingDocument`, `docflowFlowSupplierAct`, `docflowFlowUnlinkAccountingDocument`, `docflowIssueAdvanceInvoice`, `docflowIssueSaleAct`, `docflowIssueSaleInvoice`, `docflowIssueSaleUPD`, `docflowIssueShipmentUPD`, `docflowIssueUKD`, `docflowSalesActRelink`;
+- финансы: `financeAcceptFixedAsset`, `financeApplyImport`, `financeApplyRefundSettlement`, `financeAttachPaymentToReceipts`, `financeCloseAdvancesToExpense`, `financeCreateCashOperation`, `financeCreateDividendDecision`, `financeCreateSettlementDocument`, `financeDisposeFixedAsset`, `financeImpairFixedAsset`, `financeImportFixedAssets`, `financePostFixedAssetDepreciation`, `financeReceiveLeasedAsset`, `financeSyncConnector`, `financeWriteOffDebt`;
+- склад: `stockAcceptShipment`, `stockApplyRegradeOffer`, `stockAssignCondition`, `stockCloseShipmentDiscrepancy`, `stockCreateAccountTransfer`, `stockCreateAssemblySpec`, `stockCreateClaimWriteoff`, `stockCreateDocument`, `stockCreateOpeningBalance`, `stockCreateOpeningCorrection`, `stockCreatePurchase`, `stockCreateReceiptCorrection`, `stockCreateReceiptCost`, `stockCreateTransitReceipt`, `stockMarkShipmentRefused`, `stockPostWithRebuild`, `stockResolveDiscrepancy`, `stockResolveTransitShipment`, `stockReviseWithRebuild`, `stockSettleNegativeBalances`, `stockShipSale`, `stockUpdateDocument`;
+- задачи: `tasksCreateProject`, `tasksCreateSection`, `tasksCreateTask`;
+- приложения: `appDocflowIssueSaleAct`, `appDocflowIssueSaleInvoice`, `appDocflowIssueSaleUPD`;
+- автоматизация: `automationCreateRule`;
+- календарь: `calendarCreateEvent`;
+- CRM: `crmCreateCustomer`, `crmCreateDeal`, `crmCreateLead`, `crmIssueDealInvoice`;
+- маркетплейсы: `marketplaceApplyWeeklyFinanceRun`, `marketplaceCreateLamodaStore`, `marketplaceCreateOzonStore`, `marketplaceCreateWbStore`, `marketplaceCreateYandexStore`, `marketplaceFbsSupplyCreate`, `marketplaceFbsWaveCreate`, `marketplaceRepostWeeklyFinanceRun`;
+- маркировка: `markingCreateOrder`.
 
 Остальные его не читают, и контракт этого не скрывает: параметр стоит только
 там, где на маршруте стоит мидлварь.

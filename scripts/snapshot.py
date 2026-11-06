@@ -211,7 +211,8 @@ def build_reference_bundle(contract: dict) -> bytes:
         if isinstance(node, dict):
             ref = node.get("$ref")
             if isinstance(ref, str) and ref.startswith(prefix):
-                name = ref[len(prefix):]
+                # Ссылка внутрь схемы (`Схема/properties/поле`) тянет всю схему.
+                name = ref[len(prefix):].split("/", 1)[0]
                 if name not in seen:
                     seen.add(name)
                     visit(schemas.get(name, {}))

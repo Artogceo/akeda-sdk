@@ -95,23 +95,35 @@ class Registry:
         self.models: dict[str, Model] = {}
         self.aliases: dict[str, dict] = {}
         self.order: list[str] = []
+        self.declaring: str | None = None
 
     def unique(self, base: str) -> str:
         name = base
         index = 2
-        while name in self.models or name in self.aliases:
+        # Вложенный объект не занимает имя схемы контракта: `Paper` со свойством
+        # `parent` и отдельная схема `PaperParent` дали бы два одинаковых типа.
+        while name in self.models or name in self.aliases or (name in self.schemas and name != self.declaring):
             name = f"{base}{index}"
             index += 1
         return name
 
     def declare(self, name: str, schema: dict) -> None:
         """Объявить тип верхнего уровня под точным именем из контракта."""
+        self.declaring = name
         node = self.convert(schema, name)
+        self.declaring = None
         if node["kind"] == "ref" and node["name"] == name:
             # объект уже зарегистрирован моделью под этим же именем
             return
         self.aliases[name] = node
         self.order.append(name)
+
+    def resolve_inner(self, pointer: str) -> dict:
+        """Схема по ссылке вида `Схема` или `Схема/properties/поле`."""
+        node = self.schemas
+        for part in pointer.split("/"):
+            node = node[part.replace("~1", "/").replace("~0", "~")]
+        return node
 
     # ---- преобразование схемы в язык-независимое дерево -------------------
 
@@ -121,7 +133,12 @@ class Registry:
 
         ref = schema.get("$ref")
         if isinstance(ref, str) and ref.startswith(REF_PREFIX):
-            return {"kind": "ref", "name": ref[len(REF_PREFIX):]}
+            name = ref[len(REF_PREFIX):]
+            if "/" in name:
+                # Ссылка внутрь схемы (`Схема/properties/поле`): своего типа у неё
+                # нет, поэтому берётся то, на что она указывает.
+                return self.convert(self.resolve_inner(name), hint)
+            return {"kind": "ref", "name": name}
 
         if "allOf" in schema:
             return self.merge_all_of(schema, hint)
@@ -178,7 +195,7 @@ class Registry:
             resolved = item
             ref = item.get("$ref")
             if isinstance(ref, str) and ref.startswith(REF_PREFIX):
-                resolved = self.schemas[ref[len(REF_PREFIX):]]
+                resolved = self.resolve_inner(ref[len(REF_PREFIX):])
             merged["properties"].update(resolved.get("properties", {}))
             merged["required"].extend(resolved.get("required", []))
             if resolved.get("additionalProperties") is not None and "additionalProperties" not in merged:
@@ -198,7 +215,7 @@ class Registry:
                 return {"kind": "map", "values": self.convert(additional, hint + "Value")}
             return {"kind": "map", "values": {"kind": "any"}}
 
-        name = hint if hint not in self.models and hint not in self.aliases else self.unique(hint)
+        name = self.unique(hint)
         model = Model(name, schema.get("description", ""))
         self.models[name] = model
         self.order.append(name)
@@ -225,7 +242,7 @@ class Registry:
 # ---------------------------------------------------------------------------
 
 METHODS = ("get", "post", "put", "patch", "delete", "head", "options")
-IDEMPOTENCY_PARAM = "#/components/parameters/IdempotencyKey"
+IDEMPOTENCY_HEADER = "idempotency-key"
 
 
 def build_operations(contract: dict, registry: Registry) -> list[dict]:
@@ -252,11 +269,15 @@ def build_operations(contract: dict, registry: Registry) -> list[dict]:
             # приходит он у партнёра, а не в сборке.
             for parameter in list(item.get("parameters", [])) + list(operation.get("parameters", [])):
                 ref = parameter.get("$ref")
-                if ref == IDEMPOTENCY_PARAM:
-                    idempotent = True
-                    continue
                 resolved = components[ref.rsplit("/", 1)[1]] if ref else parameter
                 where = resolved.get("in")
+                # Заголовок узнаётся по имени, а не по одной ссылке: контракт
+                # объявляет его и общим параметром, и его обязательным вариантом,
+                # и прямо в операции. Пропущенное объявление — клиент, который
+                # отказывается послать ключ туда, где сервер его читает.
+                if where == "header" and str(resolved.get("name", "")).lower() == IDEMPOTENCY_HEADER:
+                    idempotent = True
+                    continue
                 if where == "path":
                     path_params.append(
                         {
@@ -538,10 +559,13 @@ def emit_python(registry: Registry, operations: list[dict], header: str) -> dict
         model = registry.models[name]
         required = [f for f in model.fields if f["required"]]
         optional = [f for f in model.fields if not f["required"]]
-        hard_keyword = any(keyword.iskeyword(f["json"]) for f in model.fields)
+        unwritable = any(
+            keyword.iskeyword(f["json"]) or not f["json"].isidentifier() for f in model.fields
+        )
 
-        if hard_keyword:
-            # У поля есть имя, которое в class-синтаксисе не написать («from»).
+        if unwritable:
+            # У поля есть имя, которое в class-синтаксисе не написать: ключевое
+            # слово («from») или не идентификатор («$schema»).
             # Функциональная форма TypedDict — единственный способ; она же
             # теряет разделение на обязательные и необязательные, поэтому
             # total=False, а обязательность остаётся в контракте.
