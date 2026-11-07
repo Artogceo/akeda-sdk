@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3ba1ee6fc904a89363e6eb1a68db7e953521d041d595d51b2b405174b2fed205).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 65835ed26937c617e018128914fb71b5b0936e74d3554f8de561f9e0f2ae6783).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -530,6 +530,8 @@ __all__ = [
     "CoreContactPage",
     "CoreContactPatch",
     "CoreContactPatchPostalAddress",
+    "CoreContactsPaymentConditionInput",
+    "CoreContactsPaymentConditionResult",
     "CoreContractFinancing",
     "CoreContractList",
     "CoreContractSettlementDetailInput",
@@ -625,6 +627,9 @@ __all__ = [
     "CoreFinancingContract",
     "CoreFinancingContractInput",
     "CoreFinancingContractList",
+    "CoreFinancingPayment",
+    "CoreFinancingSchedule",
+    "CoreFinancingScheduleParams",
     "CoreFolder",
     "CoreFolderInput",
     "CoreFolderPage",
@@ -790,6 +795,10 @@ __all__ = [
     "CoreOwnInternalDocumentPage",
     "CoreOwnershipVersion",
     "CoreOwnershipVersionInput",
+    "CorePaymentCondition",
+    "CorePaymentConditionInput",
+    "CorePaymentConditionLine",
+    "CorePaymentConditionPage",
     "CorePhotoResult",
     "CorePolicyAccountableDaysInput",
     "CorePolicyAccountableDaysVersion",
@@ -947,6 +956,8 @@ __all__ = [
     "CoreTrialBalanceRow",
     "CoreTrialBalanceTotals",
     "CoreUPDProfile",
+    "CoreUPDProfileSigner",
+    "CoreUPDProfileTransferEmployee",
     "CoreUPDProfileSellerContact",
     "CoreUPDProfileSellerAddress",
     "CoreUPDTextInfoRule",
@@ -1200,6 +1211,8 @@ __all__ = [
     "DocflowFlowRelationInput",
     "DocflowFlowRenewalInput",
     "DocflowFlowResponsible",
+    "DocflowFlowSalePaperExecutionInput",
+    "DocflowFlowSalePaperExecutionResult",
     "DocflowFlowScheduleStage",
     "DocflowFlowSupplierActInput",
     "DocflowFlowSupplierActInputExpenseSchedule",
@@ -1259,6 +1272,8 @@ __all__ = [
     "DocflowOrderImport",
     "DocflowOrderImportPage",
     "DocflowOrderInvoiceInput",
+    "DocflowOrderOneCPapers",
+    "DocflowOrderOneCPapersResultsItem",
     "DocflowOrderOutgoingUPD",
     "DocflowOrderSetMember",
     "DocflowOrderSetOrder",
@@ -1323,10 +1338,14 @@ __all__ = [
     "DocflowPersonRequisites",
     "DocflowPreflight",
     "DocflowPreflightConsignee",
+    "DocflowPreflightDefaultSigner",
+    "DocflowPreflightDefaultTransferEmployee",
     "DocflowPreflightDocument",
     "DocflowPreflightLine",
     "DocflowPreflightLineCustomsItem",
     "DocflowPreflightParty",
+    "DocflowPreflightPerson",
+    "DocflowPreflightSigner",
     "DocflowPreflightTotals",
     "DocflowRecognized",
     "DocflowRequisites",
@@ -1440,7 +1459,11 @@ __all__ = [
     "FinanceBonusSchemePreviewInput",
     "FinanceBonusTier",
     "FinanceBudget",
+    "FinanceBudgetAllocationRule",
+    "FinanceBudgetAllocationTarget",
+    "FinanceBudgetAllocations",
     "FinanceBudgetAnomaly",
+    "FinanceBudgetAssetModelInput",
     "FinanceBudgetBalance",
     "FinanceBudgetBalanceMonth",
     "FinanceBudgetBridge",
@@ -1452,6 +1475,17 @@ __all__ = [
     "FinanceBudgetCellCommentList",
     "FinanceBudgetCompare",
     "FinanceBudgetCompareRow",
+    "FinanceBudgetCopyYearInput",
+    "FinanceBudgetCopyYearResult",
+    "FinanceBudgetCorrection",
+    "FinanceBudgetCorrectionInput",
+    "FinanceBudgetCorrectionLine",
+    "FinanceBudgetCorrectionList",
+    "FinanceBudgetCorrectionWithdraw",
+    "FinanceBudgetDealModelInput",
+    "FinanceBudgetDealPipeline",
+    "FinanceBudgetDealPipelines",
+    "FinanceBudgetDealPipelinesInput",
     "FinanceBudgetDriver",
     "FinanceBudgetDriverRule",
     "FinanceBudgetDrivers",
@@ -1467,6 +1501,10 @@ __all__ = [
     "FinanceBudgetHistoryLine",
     "FinanceBudgetInput",
     "FinanceBudgetItemReference",
+    "FinanceBudgetJustification",
+    "FinanceBudgetJustificationInput",
+    "FinanceBudgetJustificationList",
+    "FinanceBudgetJustificationPosition",
     "FinanceBudgetLedgerOpening",
     "FinanceBudgetLine",
     "FinanceBudgetOwnerCandidate",
@@ -1476,6 +1514,8 @@ __all__ = [
     "FinanceBudgetPayrollModelInput",
     "FinanceBudgetPlanFact",
     "FinanceBudgetPlanFactRow",
+    "FinanceBudgetPnlSummary",
+    "FinanceBudgetPnlSummaryRow",
     "FinanceBudgetRate",
     "FinanceBudgetRateList",
     "FinanceBudgetRatesInput",
@@ -1573,6 +1613,8 @@ __all__ = [
     "FinanceFactoringRegistryInput",
     "FinanceFactoringRegistryPreview",
     "FinanceFactoringRegistryRow",
+    "FinanceFinancingFactoring",
+    "FinanceFinancingFactoringList",
     "FinanceFinancingLimit",
     "FinanceFinancingLimitList",
     "FinanceFixedAsset",
@@ -1611,6 +1653,7 @@ __all__ = [
     "FinanceItemMergeResult",
     "FinanceLeasingReceipt",
     "FinanceLeasingReceiptInput",
+    "FinanceLeasingReturnInput",
     "FinanceObligationDueDateInput",
     "FinanceOffBooksSide",
     "FinanceOffBooksSideContactsItem",
@@ -1859,6 +1902,8 @@ __all__ = [
     "FinanceStaffPositionInput",
     "FinanceStaffPositionList",
     "FinanceStaffPositionRemoval",
+    "FinanceStaffVacancy",
+    "FinanceStaffVacancyList",
     "FinanceStaffingDismissalCreate",
     "FinanceStaffingDismissalResult",
     "FinanceStaffingOrderCreate",
@@ -2038,6 +2083,19 @@ __all__ = [
     "ManagedChecklistPatch",
     "MarketplaceAdsAbsence",
     "MarketplaceAdsAbsenceRequest",
+    "MarketplaceAllPnl",
+    "MarketplaceAllPnlGap",
+    "MarketplaceAllPnlPeriod",
+    "MarketplaceAllPnlPlatform",
+    "MarketplaceAllPnlRow",
+    "MarketplaceAllProducts",
+    "MarketplaceAllProductsResultsItem",
+    "MarketplaceAllProductsResultsItemCardsItem",
+    "MarketplaceAllStocks",
+    "MarketplaceAllStocksPlatform",
+    "MarketplaceAllStocksRow",
+    "MarketplaceAllStocksRowPartsItem",
+    "MarketplaceAllStocksRowWarehousesItem",
     "MarketplaceBuyoutCohort",
     "MarketplaceCardActivity",
     "MarketplaceCatalogCandidate",
@@ -2068,6 +2126,7 @@ __all__ = [
     "MarketplaceCatalogWritten",
     "MarketplaceComponentDataThrough",
     "MarketplaceComponentFreshness",
+    "MarketplaceDocumentEstimate",
     "MarketplaceEconBaseRow",
     "MarketplaceEconOverrides",
     "MarketplaceEconOzonInput",
@@ -2182,6 +2241,20 @@ __all__ = [
     "MarketplaceProductGroupPage",
     "MarketplaceProductGroupPatch",
     "MarketplaceProductGroupPlatform",
+    "MarketplacePromoChange",
+    "MarketplacePromoCodeNameRequest",
+    "MarketplacePromoDay",
+    "MarketplacePromoProduct",
+    "MarketplacePromoReport",
+    "MarketplacePromoRow",
+    "MarketplacePromoSource",
+    "MarketplacePromoTotals",
+    "MarketplacePromoUse",
+    "MarketplaceReportPnl",
+    "MarketplaceReportPnlRowsItem",
+    "MarketplaceReportPnlCoverageValue",
+    "MarketplaceReportPnlProductsItem",
+    "MarketplaceReportPnlDaysItem",
     "MarketplaceSectionUsage",
     "MarketplaceSectionUsageList",
     "MarketplaceStore",
@@ -2270,6 +2343,7 @@ __all__ = [
     "MarketplaceWeeklyFinanceOutcome",
     "MarketplaceWeeklyFinancePostingResult",
     "MarketplaceWeeklyFinanceRun",
+    "MarketplaceWeeklyFinanceRunChargesItem",
     "MarketplaceWeeklyFinanceRunTransfer",
     "MarketplaceWeeklyFinanceRunZeroCostItem",
     "MarketplaceWeeklyFinanceRuns",
@@ -2444,6 +2518,9 @@ __all__ = [
     "MarkingParseCodeInput",
     "MarkingParsedCode",
     "MarkingPrintSkipped",
+    "MarkingProductCatalogCard",
+    "MarkingProductCatalogCardCard",
+    "MarkingProductCatalogCardCardSetItemsItem",
     "MarkingProductLabelLine",
     "MarkingProductLabelRequest",
     "MarkingProductProfile",
@@ -2741,6 +2818,11 @@ __all__ = [
     "StockDocumentFulfillmentLine",
     "StockDocumentFulfillmentPage",
     "StockDocumentFulfillmentSkipped",
+    "StockDocumentKitAssembly",
+    "StockDocumentKitBin",
+    "StockDocumentKitLine",
+    "StockDocumentKitPart",
+    "StockDocumentKits",
     "StockDocumentLandedCostTarget",
     "StockDocumentLine",
     "StockDocumentLineKitComponent",
@@ -2839,6 +2921,8 @@ __all__ = [
     "StockOpeningCorrectionCreateItemsItem",
     "StockOrderFulfillmentExportRequest",
     "StockOrderPallets",
+    "StockOrderPickKit",
+    "StockOrderPickKitPart",
     "StockOrderPickLine",
     "StockOrderPickPlan",
     "StockOrderPickPlanLine",
@@ -3077,6 +3161,7 @@ __all__ = [
     "CoreListBusinessOwnershipResponse",
     "CoreCompanyCardsResponse",
     "CoreUserEmployeesWithoutStaffingRequest",
+    "CoreHireCandidateRequest",
     "DashboardListMetricsResponse",
     "DocflowLookupParticipantRequest",
     "DocflowLookupParticipantResponse",
@@ -3108,11 +3193,15 @@ __all__ = [
     "FinanceConfirmPaymentRequestPayeeRequest",
     "FinancePaymentRequestFactCandidatesResponse",
     "FinanceGetProjectBudgetHistoryResponse",
+    "FinanceSaleReturnLastPriceResponse",
     "FinanceListAllocationRulesResponse",
     "FinanceLinkPaymentToNewOrderRequest",
     "FinanceRelinkPaymentRequest",
     "FinanceChangeActPnlItemRequest",
     "FinanceOffsetTradeAdvancesRequest",
+    "FinanceCategorizeTransactionsRequest",
+    "FinanceCategorizeTransactionsResponse",
+    "FinanceCategorizeTransactionsResponseResultsItem",
     "FinanceRepostTransactionsRequest",
     "FinanceMarkTransactionDeletedRequest",
     "FinanceRepostTransactionRequest",
@@ -8491,6 +8580,8 @@ class CoreActionRequestExecuteInputInputOrder(_CoreActionRequestExecuteInputInpu
     consignee_point_id: Dict[str, Any]
     #: Переход права в продаже: shipment, acceptance, пустая строка — снять перекрытие; не прислано — не менять (ERP-2772)
     title_transfer: Literal['', 'shipment', 'acceptance']
+    #: Условие оплаты продажи (ERP-2140): не прислано — у новой продажи условие контрагента, если своего payment_terms нет (ручной график главнее), у правки — прежнее; пустая строка — отвязать условие, график не трогать; UUID условия — построить график из условия и заменить им строки графика (строку с оплатами удалить нельзя — 409 core.trade.stage_in_use). Тот же UUID, что уже у продажи, график не перестраивает. Условие в архиве или чужое — 422. Закупка поле не читает
+    payment_condition_id: str
     #: Причина продажи ниже минимальной цены; принимается только с правом core.price_below_min и пишется в журнал продажи
     price_below_min_reason: str
     project_id: "UUID"
@@ -8969,6 +9060,10 @@ class CoreContact(_CoreContactRequired, total=False):
     gln: str
     #: НДС поставщика по умолчанию для закупок: «без НДС» или ставка (22%, 10%, 0%); подставляется в новые строки закупки; пусто — не задан (ERP-115)
     purchase_vat_rate: str
+    #: Условие оплаты контрагента (ERP-2140): новая продажа строит из него график оплат; null — условия нет, график набирают руками
+    payment_condition_id: Optional["UUID"]
+    #: Название условия оплаты; пусто — условия нет
+    payment_condition_name: str
     #: Код системного контрагента (fns, sfr, bank:<БИК>). Только чтение.
     system_key: str
     #: Что подсветить в реквизитах по правилу ИНН. Пусто — всё в порядке.
@@ -9144,6 +9239,8 @@ class CoreContactCreate(_CoreContactCreateRequired, total=False):
     gln: str
     #: НДС поставщика по умолчанию для закупок: «без НДС» или ставка (22%, 10%, 0%); пустая строка — снять (ERP-115)
     purchase_vat_rate: str
+    #: Условие оплаты контрагента (ERP-2140): новая продажа строит из него график оплат. Не прислано — не менять; null или пустая строка — снять. Условие в архиве или чужое — 422
+    payment_condition_id: Optional[Union["UUID", Literal['']]]
     custom: Dict[str, Any]
 
 class CoreContactCreatePostalAddress(TypedDict):
@@ -9370,6 +9467,8 @@ class CoreContactPatch(TypedDict, total=False):
     gln: str
     #: НДС поставщика по умолчанию для закупок: «без НДС» или ставка (22%, 10%, 0%); пустая строка — снять (ERP-115)
     purchase_vat_rate: str
+    #: Условие оплаты контрагента (ERP-2140): новая продажа строит из него график оплат. Не прислано — не менять; null или пустая строка — снять. Условие в архиве или чужое — 422
+    payment_condition_id: Optional[Union["UUID", Literal['']]]
     custom: Dict[str, Any]
     is_customer: bool
     is_supplier: bool
@@ -9392,6 +9491,15 @@ class CoreContactPatchPostalAddress(TypedDict):
     flat: str
     info: str
 
+class CoreContactsPaymentConditionInput(TypedDict):
+    contact_ids: List["UUID"]
+    #: Условие оплаты; null или пустая строка — снять условие
+    payment_condition_id: Optional[Union["UUID", Literal['']]]
+
+class CoreContactsPaymentConditionResult(TypedDict):
+    #: У скольких контрагентов условие изменилось
+    updated: int
+
 class _CoreContractFinancingRequired(TypedDict):
     #: Вид финансирования: возобновляемая и невозобновляемая кредитная линия, овердрафт, кредит, заём собственника, лизинг с выкупом, факторинг (ERP-3117)
     kind: Literal['revolving_line', 'line', 'overdraft', 'loan', 'owner_loan', 'leasing', 'factoring']
@@ -9407,6 +9515,10 @@ class CoreContractFinancing(_CoreContractFinancingRequired, total=False):
     leasing_buyout: bool
     #: Факторинг с регрессом: при неоплате покупателем долг возвращается к нам
     factoring_recourse: bool
+    #: Плановая дата выкупа лизинга; у других видов пусто
+    buyout_date: str
+    #: Фактическая дата перехода права на предмет лизинга; пусто до выкупа
+    title_transferred_on: str
 
 class CoreContractList(TypedDict):
     results: List["CoreContractTerms"]
@@ -9934,8 +10046,8 @@ class _CoreEmployeeRequired(TypedDict):
     has_photo: bool
     created_at: str
     updated_at: str
-    #: own — свой человек кабинета, external — внешний участник: интегратор, аутсорс; guest — гость-подрядчик: видит только задачи, чаты и папки, куда его позвали, места тарифа не занимает. Внешний и гость не стоят в оргструктуре и штате и руководителем не выбираются
-    affiliation: Literal['own', 'external', 'guest']
+    #: own — свой человек кабинета, external — внешний участник: интегратор, аутсорс; guest — гость-подрядчик: видит только задачи, чаты и папки, куда его позвали, места тарифа не занимает; candidate — кандидат подбора, ещё не принятый. Внешний, гость и кандидат не стоят в оргструктуре и штате и руководителем не выбираются
+    affiliation: Literal['own', 'external', 'guest', 'candidate']
     #: Контрагент-организация, от которой пришёл внешний участник
     organization_contact_id: Optional[str]
     #: Название организации внешнего участника
@@ -9948,6 +10060,10 @@ class CoreEmployee(_CoreEmployeeRequired, total=False):
     bank_bic: str
     #: Счёт или карта выплаты; пусто у чужой карточки без права core.employee_requisites:read
     bank_account: str
+    #: Этап подбора кандидата: отклик, собеседование, оффер, принят, отказ; пусто — карточка не из подбора (ERP-2139)
+    hiring_stage: Literal['', 'response', 'interview', 'offer', 'hired', 'rejected']
+    #: Вакансия кандидата — штатная позиция финансов
+    vacancy_position_id: Optional[str]
     #: Постановки в оргструктуру на сегодня; только в ответе одной карточки. Отдел и должность человека живут в постановках
     placements: List["CoreOrgPlacement"]
 
@@ -10100,10 +10216,14 @@ class CoreEmployeePatch(TypedDict, total=False):
     bank_bic: str
     #: Применяется только с правом core.employee_requisites:write
     bank_account: str
-    #: Смена принадлежности. Внешнему и гостю нужна организация, иначе 400 core.employee.affiliation_invalid. Принятого в штат внешним или гостем не сделать — 409 core.employee.external_hired. Перевод гостя с доступом в own или external занимает место тарифа: мест нет — 409 core.employee.seat_limit
-    affiliation: Literal['own', 'external', 'guest']
+    #: Смена принадлежности. Внешнему и гостю нужна организация, иначе 400 core.employee.affiliation_invalid. Принятого в штат внешним или гостем не сделать — 409 core.employee.external_hired. Перевод гостя с доступом в own или external занимает место тарифа: мест нет — 409 core.employee.seat_limit. Кандидатом становятся только при заведении, выходят — только coreHireCandidate
+    affiliation: Literal['own', 'external', 'guest', 'candidate']
     #: Контрагент-организация внешнего участника; null снимает ссылку
     organization_contact_id: Optional[str]
+    #: Этап кандидата; «принят» ставит только coreHireCandidate. У не кандидата — 400 core.employee.hiring_stage_invalid
+    hiring_stage: Literal['response', 'interview', 'offer', 'rejected']
+    #: Вакансия кандидата; null снимает
+    vacancy_position_id: Optional[str]
 
 class CoreEmployeeRequisites(TypedDict):
     """Реквизиты сотрудника для выплаты"""
@@ -10276,8 +10396,14 @@ class _CoreFinancingContractRequired(TypedDict):
     settlement_detail: Literal['order', 'contract', 'execution']
     fifo_allowed: bool
     version: int
+    #: Долг по договору — сальдо 66 в разрезе договора из книги, в валюте договора
+    debt: str
     #: Кредитор — банк, фактор, лизингодатель, собственник
     contact_name: str
+    #: Неоплаченных строк графика: оплачена строка, чьё накопленное тело покрыто погашением долга по договору
+    payments_left: int
+    #: Всего строк графика
+    payments_total: int
 
 class CoreFinancingContract(_CoreFinancingContractRequired, total=False):
     company_id: str
@@ -10297,6 +10423,10 @@ class CoreFinancingContract(_CoreFinancingContractRequired, total=False):
     financing: "CoreContractFinancing"
     #: Юрлицо договора
     company_name: str
+    #: Дата первого неоплаченного платежа графика; нет — графика нет или он погашен
+    next_payment_date: str
+    #: Первый неоплаченный платёж графика: тело + проценты, десятичная строка в валюте договора
+    next_payment_amount: str
 
 class _CoreFinancingContractInputRequired(TypedDict):
     financing: "CoreContractFinancing"
@@ -10317,6 +10447,38 @@ class CoreFinancingContractInput(_CoreFinancingContractInputRequired, total=Fals
 
 class CoreFinancingContractList(TypedDict):
     results: List["CoreFinancingContract"]
+
+class CoreFinancingPayment(TypedDict):
+    """Строка графика платежей."""
+
+    #: Дата платежа.
+    date: str
+    #: Тело платежа — десятичная строка в валюте договора.
+    principal: str
+    #: Проценты платежа — десятичная строка в валюте договора.
+    interest: str
+
+class CoreFinancingSchedule(TypedDict):
+    """График платежей договора финансирования."""
+
+    #: Строки графика по дате.
+    payments: List["CoreFinancingPayment"]
+
+class _CoreFinancingScheduleParamsRequired(TypedDict):
+    #: Способ погашения: annuity — равные платежи, differentiated — тело равными долями, bullet — всё тело в конце срока.
+    method: Literal['annuity', 'differentiated', 'bullet']
+    #: Число помесячных платежей.
+    payments: int
+
+class CoreFinancingScheduleParams(_CoreFinancingScheduleParamsRequired, total=False):
+    """Условия расчёта графика; пустые поля берутся из договора."""
+
+    #: Сумма кредита; пусто — сумма договора.
+    amount: str
+    #: Ставка, % годовых; пусто — ставка договора.
+    rate: str
+    #: Дата выдачи; пусто — дата договора. Первый платёж — через месяц.
+    start: str
 
 class CoreFolder(TypedDict):
     id: "UUID"
@@ -10716,6 +10878,10 @@ class CoreOrder(_CoreOrderRequired, total=False):
     consignee_point_name: str
     #: Переход права, перекрытый в продаже: shipment, acceptance; пусто — по договору, контрагенту и каналу. Новая отгрузка замораживает выбранное правило (ERP-2772)
     title_transfer: Literal['', 'shipment', 'acceptance']
+    #: Условие оплаты, из которого построен график продажи (ERP-2140); нет поля — график набран руками или условия нет
+    payment_condition_id: Dict[str, Any]
+    #: Название условия оплаты — для экрана
+    payment_condition_name: str
     #: Номер договора продажи или закупки — для экрана
     contract_number: str
     #: Дата договора продажи или закупки — для экрана
@@ -10896,6 +11062,10 @@ class CoreOrderExecutedRevisionInput(TypedDict, total=False):
     pnl_item_id: Optional[str]
     #: Проект заказа и его актов; долг, оплаты и зачёты переезжают в корзину нового проекта, зачтённый аванс другого проекта — отказ core.trade.executed_offset
     project_id: Optional[str]
+    #: Грузополучатель продажи — другой контрагент; null — сам покупатель. У закупки — отказ core.trade.executed_revision
+    consignee_contact_id: Optional[str]
+    #: Склад грузополучателя, а без него — покупателя; склад другого контрагента — отказ; null — снять. Смена грузополучателя без склада прежний склад снимает
+    consignee_point_id: Optional[str]
     #: Новая услуга строк-услуг; строку товара этой командой не меняют
     lines: List["CoreOrderExecutedRevisionInputLinesItem"]
 
@@ -11120,6 +11290,8 @@ class CoreOrderInput(_CoreOrderInputRequired, total=False):
     consignee_point_id: Dict[str, Any]
     #: Переход права в продаже: shipment, acceptance, пустая строка — снять перекрытие; не прислано — не менять (ERP-2772)
     title_transfer: Literal['', 'shipment', 'acceptance']
+    #: Условие оплаты продажи (ERP-2140): не прислано — у новой продажи условие контрагента, если своего payment_terms нет (ручной график главнее), у правки — прежнее; пустая строка — отвязать условие, график не трогать; UUID условия — построить график из условия и заменить им строки графика (строку с оплатами удалить нельзя — 409 core.trade.stage_in_use). Тот же UUID, что уже у продажи, график не перестраивает. Условие в архиве или чужое — 422. Закупка поле не читает
+    payment_condition_id: str
     #: Причина продажи ниже минимальной цены; принимается только с правом core.price_below_min и пишется в журнал продажи
     price_below_min_reason: str
     project_id: "UUID"
@@ -11379,10 +11551,14 @@ class CoreOrderPaymentTerm(TypedDict, total=False):
     title: str
     amount: str
     due_date: str
-    #: '' — срок датой; after_stage — через delay_days после исполнения этапа stage_id
-    due_trigger: Literal['', 'after_stage']
+    #: '' — срок датой; after_stage — через delay_days после исполнения этапа stage_id; after_execution — через delay_days после исполнения без этапа (отгрузки или акта), stage_id не задан
+    due_trigger: Literal['', 'after_stage', 'after_execution']
     stage_id: "UUID"
     delay_days: int
+    #: Дни отсрочки строк after_stage и after_execution: пусто или calendar — календарные, working — рабочие по производственному календарю РФ. У строки датой не читается
+    delay_unit: Literal['', 'calendar', 'working']
+    #: Строка условия оплаты, из которой построена строка графика (ERP-2140)
+    payment_condition_line_id: "UUID"
     #: Доля итога документа в процентах, только на входе: строка без суммы получает сумму от итога с НДС, последняя такая строка добирает копейки
     share: str
 
@@ -11446,6 +11622,8 @@ class CoreOrderRevision(_CoreOrderRevisionRequired, total=False):
     consignee_point_id: Dict[str, Any]
     #: Переход права в продаже: shipment, acceptance, пустая строка — снять перекрытие; не прислано — не менять (ERP-2772)
     title_transfer: Literal['', 'shipment', 'acceptance']
+    #: Условие оплаты продажи (ERP-2140): не прислано — у новой продажи условие контрагента, если своего payment_terms нет (ручной график главнее), у правки — прежнее; пустая строка — отвязать условие, график не трогать; UUID условия — построить график из условия и заменить им строки графика (строку с оплатами удалить нельзя — 409 core.trade.stage_in_use). Тот же UUID, что уже у продажи, график не перестраивает. Условие в архиве или чужое — 422. Закупка поле не читает
+    payment_condition_id: str
     #: Причина продажи ниже минимальной цены; принимается только с правом core.price_below_min и пишется в журнал продажи
     price_below_min_reason: str
     project_id: "UUID"
@@ -12311,6 +12489,56 @@ class CoreOwnershipVersion(_CoreOwnershipVersionRequired, total=False):
 class CoreOwnershipVersionInput(TypedDict):
     valid_from: str
     owners: List["CoreBusinessOwnerInput"]
+
+class _CorePaymentConditionRequired(TypedDict):
+    id: "UUID"
+    #: Название, которое видит менеджер, например «Предоплата 100 %»
+    name: str
+    #: Условие в архиве: остаётся у контрагентов, но новая продажа его не берёт
+    archived: bool
+    #: Порядок в списке выбора
+    sort_order: int
+    lines: List["CorePaymentConditionLine"]
+    #: Скольким контрагентам условие назначено
+    used_by: int
+
+class CorePaymentCondition(_CorePaymentConditionRequired, total=False):
+    """Условие оплаты в справочнике модуля core: шаблон графика оплат продажи. Назначается в карточке контрагента; новая продажа строит из него свой график."""
+
+    created_at: str
+    updated_at: str
+
+class CorePaymentConditionInput(TypedDict, total=False):
+    """Условие оплаты. При создании нужны name и lines; при правке непереданное поле не меняется, lines заменяют строки целиком."""
+
+    name: str
+    #: true — убрать в архив, false — вернуть
+    archived: bool
+    #: Порядок в списке; при создании без значения — в конец
+    sort_order: int
+    lines: List["CorePaymentConditionLine"]
+
+class _CorePaymentConditionLineRequired(TypedDict):
+    #: От чего считать срок: confirm — от подтверждения продажи (дата продажи), execution — от исполнения (дата отгрузки или акта)
+    anchor: Literal['confirm', 'execution']
+
+class CorePaymentConditionLine(_CorePaymentConditionLineRequired, total=False):
+    """Строка условия оплаты: доля итога продажи или остаток, от чего считать срок и сколько дней."""
+
+    id: "UUID"
+    #: Номер строки по порядку; на входе задаётся порядком массива
+    position: int
+    #: Доля итога продажи с НДС в процентах, больше 0 и не больше 100, не точнее четырёх знаков («50», «33.3333»); null — «остаток»: одна последняя строка добирает всё, что не разложено долями
+    share: Optional[str]
+    #: Сколько дней после точки отсчёта
+    delay_days: int
+    #: Дни: calendar — календарные, working — рабочие по производственному календарю РФ
+    day_kind: Literal['calendar', 'working']
+    #: «До отгрузки — запрет»: склад не начнёт сборку, пока доля не оплачена. Только у строки confirm. Сейчас признак хранится и отдаётся, запрет сборки — следующим этапом
+    before_shipment: bool
+
+class CorePaymentConditionPage(TypedDict):
+    items: List["CorePaymentCondition"]
 
 class CorePhotoResult(TypedDict):
     photo_url: str
@@ -14150,6 +14378,10 @@ class CoreUPDProfile(TypedDict, total=False):
     operation_kind: str
     #: СвЛицПер из подписанта бумаги, если форма не назвала другого; не задано — да
     transfer_employee_from_signer: bool
+    #: Подписант по умолчанию, если форма отправки его не назвала: должность, ФИО полностью и СпосПодтПолном (authority). Сильнее руководителя из карточки юрлица, и у формы, и у бумаги по ЭДО из правила. Должность, фамилия, имя и authority обязательны вместе; 3 и 5 не принимаются: при них в файле нужны реквизиты доверенности, их вписывают в форме отправки. Пустой объект снимает значение канала — подписывает руководитель
+    signer: "CoreUPDProfileSigner"
+    #: Кто передал товар (СвЛицПер/РабОргПрод), если форма отправки не назвала: должность и ФИО полностью, сильнее transfer_employee_from_signer. Должность, фамилия и имя обязательны вместе; передача агенту не получает. Пустой объект снимает значение канала
+    transfer_employee: "CoreUPDProfileTransferEmployee"
     #: ЦенаТов в файле: two_digits — два знака, four_digits — четыре знака, exact — точная цена; пусто — two_digits. Суммы и итоги от неё не зависят
     price_rounding: Literal['', 'two_digits', 'four_digits', 'exact']
     #: БанкРекв продавца со счёта бланка юрлица; не задано — да. seller_bank_account_id сильнее
@@ -14192,6 +14424,23 @@ class CoreUPDProfile(TypedDict, total=False):
     document_number_template: str
     #: Обрезать номер по шаблону до стольких знаков; 0 — не обрезать
     document_number_max_length: int
+
+class CoreUPDProfileSigner(TypedDict, total=False):
+    """Подписант по умолчанию, если форма отправки его не назвала: должность, ФИО полностью и СпосПодтПолном (authority). Сильнее руководителя из карточки юрлица, и у формы, и у бумаги по ЭДО из правила. Должность, фамилия, имя и authority обязательны вместе; 3 и 5 не принимаются: при них в файле нужны реквизиты доверенности, их вписывают в форме отправки. Пустой объект снимает значение канала — подписывает руководитель"""
+
+    position: str
+    surname: str
+    name: str
+    patronymic: str
+    authority: Literal['', '1', '2', '4', '6']
+
+class CoreUPDProfileTransferEmployee(TypedDict, total=False):
+    """Кто передал товар (СвЛицПер/РабОргПрод), если форма отправки не назвала: должность и ФИО полностью, сильнее transfer_employee_from_signer. Должность, фамилия и имя обязательны вместе; передача агенту не получает. Пустой объект снимает значение канала"""
+
+    position: str
+    surname: str
+    name: str
+    patronymic: str
 
 class CoreUPDProfileSellerContact(TypedDict, total=False):
     """Контакт продавца: телефон и почта; в карточке юрлица их нет. Пустой объект — не писать"""
@@ -15257,7 +15506,7 @@ class DocflowApprovalChainPreview(_DocflowApprovalChainPreviewRequired, total=Fa
 class _DocflowApprovalChainStageRequired(TypedDict):
     position: int
     mode: Literal['all', 'any']
-    assignee_kind: Literal['user', 'department', 'role', 'manager', 'department_head']
+    assignee_kind: Literal['user', 'department', 'role', 'manager', 'department_head', 'cfo_head', 'role_chain']
     #: Этап выполнится при этих фактах
     applies: bool
     people: List["DocflowApprovalPerson"]
@@ -15542,7 +15791,7 @@ class DocflowApprovalRouteList(TypedDict):
 class _DocflowApprovalRouteStageRequired(TypedDict):
     #: Порядок этапа в маршруте
     position: int
-    assignee_kind: Literal['user', 'department', 'role', 'manager', 'department_head']
+    assignee_kind: Literal['user', 'department', 'role', 'manager', 'department_head', 'cfo_head', 'role_chain']
     #: Решают все или достаточно одного. Кворума с процентом нет
     mode: Literal['all', 'any']
 
@@ -15554,6 +15803,7 @@ class DocflowApprovalRouteStage(_DocflowApprovalRouteStageRequired, total=False)
     assignee_user_id: int
     assignee_department_id: "UUID"
     assignee_role_id: "UUID"
+    assignee_role_ids: List["UUID"]
     #: Только для department: спросить и сотрудников подотделов
     include_subdepartments: bool
     #: Как назначение читается человеком. Подставляется на чтении; в шаблоне не хранится
@@ -15571,7 +15821,7 @@ class _DocflowApprovalStageRequired(TypedDict):
     id: "UUID"
     position: int
     mode: Literal['all', 'any']
-    assignee_kind: Literal['user', 'department', 'role', 'manager', 'department_head']
+    assignee_kind: Literal['user', 'department', 'role', 'manager', 'department_head', 'cfo_head', 'role_chain']
     #: notified — этап ознакомления известил участников и пропустил проход дальше; acknowledged — все отметились
     state: Literal['waiting', 'active', 'approved', 'rejected', 'returned', 'skipped', 'notified', 'acknowledged']
     reviews: List["DocflowApprovalReview"]
@@ -16576,6 +16826,8 @@ class _DocflowFlowContentRequired(TypedDict):
 class DocflowFlowContent(_DocflowFlowContentRequired, total=False):
     """Содержание бумаги: реквизиты и простой текст, если вид его поддерживает."""
 
+    #: Ссылка документа в 1С: документ принят оттуда и обратно не отправляется
+    onec_ref: str
     #: Необязательный простой текст документа, до 100000 знаков Unicode. Непустой текст разрешён только для memo, letter, decree, directive, minutes и other. HTML отображается как текст. Отсутствие поля совместимо с историческими и загруженными бумагами.
     body: str
     number: str
@@ -17394,6 +17646,20 @@ class DocflowFlowResponsible(TypedDict):
     employee_id: str
     #: Доля в процентах десятичным текстом
     share: str
+
+class _DocflowFlowSalePaperExecutionInputRequired(TypedDict):
+    #: Версия карточки.
+    expected_version: int
+
+class DocflowFlowSalePaperExecutionInput(_DocflowFlowSalePaperExecutionInputRequired, total=False):
+    execution_id: "UUID"
+
+class DocflowFlowSalePaperExecutionResult(TypedDict):
+    #: Карточка после команды.
+    document: Dict[str, Any]
+    execution_id: "UUID"
+    #: Карточка встала на уже проведённую реализацию.
+    attached: bool
 
 class _DocflowFlowScheduleStageRequired(TypedDict):
     id: "UUID"
@@ -18396,6 +18662,8 @@ class _DocflowOrderInvoiceInputRequired(TypedDict):
     due_date: str
 
 class DocflowOrderInvoiceInput(_DocflowOrderInvoiceInputRequired, total=False):
+    #: Документ, уже заведённый в 1С (`ref` из списка документов продажи в 1С): номер, дату и сумму даёт он, а в 1С документ не отправляется
+    onec_ref: str
     expected_until: str
     payment_purpose: str
     #: Собрать назначение платежа умолчанием
@@ -18411,6 +18679,28 @@ class DocflowOrderInvoiceInput(_DocflowOrderInvoiceInputRequired, total=False):
     payment_term_id: "UUID"
     #: Сохранить черновиком вместо «Выставить»
     draft: bool
+
+class DocflowOrderOneCPapers(TypedDict):
+    #: У юрлица продажи настроена база 1С
+    connected: bool
+    #: Документы покупателя в 1С, новые сверху
+    results: List["DocflowOrderOneCPapersResultsItem"]
+
+class _DocflowOrderOneCPapersResultsItemRequired(TypedDict):
+    #: Ссылка документа в 1С
+    ref: str
+    #: Номер документа в 1С
+    number: str
+    #: Дата документа в 1С
+    date: str
+    #: Сумма документа в 1С
+    amount: str
+    #: Документ уже принят в Акеду
+    taken: bool
+
+class DocflowOrderOneCPapersResultsItem(_DocflowOrderOneCPapersResultsItemRequired, total=False):
+    #: Покупатель в 1С
+    party_name: str
 
 class _DocflowOrderOutgoingUPDRequired(TypedDict):
     message: "UUID"
@@ -18469,6 +18759,8 @@ class DocflowOrderSetOrder(_DocflowOrderSetOrderRequired, total=False):
     self: bool
 
 class DocflowOrderUPDInput(TypedDict, total=False):
+    #: Документ, уже заведённый в 1С (`ref` из списка документов продажи в 1С): номер, дату и сумму даёт он, а в 1С документ не отправляется
+    onec_ref: str
     #: Дата УПД; пусто — дата продажи или закупки
     date: str
     #: Пусто — все услуги продажи или закупки; меньше — частичный УПД суммой
@@ -19371,9 +19663,15 @@ class DocflowPreflight(_DocflowPreflightRequired, total=False):
     schema: str
     #: Грузополучатель из заказа бумаги — филиал или склад покупателя. Нет — ГрузПолуч не пишется, грузополучатель сам покупатель
     consignee: "DocflowPreflightConsignee"
+    #: Продажа бумаги, у которой меняют грузополучателя перед выпуском (правкой исполненного). Бумага по нескольким продажам — нет поля
+    consignee_order_id: str
     acceptance: "DocflowBuyerAcceptance"
     #: Что соберётся, но не так, как настроено: у товара нет артикула покупателя и ушёл основной SKU (docflow.articles.fallback_sku), нет кода покупателя (docflow.articles.code_missing). Отправку не останавливают
     warnings: List["DocflowIssue"]
+    #: Подписант из профиля реквизитов УПД покупателя (signer): форма предлагает его вместо руководителя из карточки юрлица, а без подписанта формы он и уходит. Нет — профиль подписанта не назвал
+    default_signer: "DocflowPreflightDefaultSigner"
+    #: Кто передал товар по профилю реквизитов УПД покупателя (transfer_employee): форма предлагает его, а без значения формы он и уходит. Нет — профиль не назвал или это передача агенту
+    default_transfer_employee: "DocflowPreflightDefaultTransferEmployee"
 
 class _DocflowPreflightConsigneeRequired(TypedDict):
     name: str
@@ -19391,6 +19689,24 @@ class DocflowPreflightConsignee(_DocflowPreflightConsigneeRequired, total=False)
     contact_id: Dict[str, Any]
     #: Только у продавца — руководитель своего юрлица из его карточки (у ИП — сам предприниматель без должности); форма предлагает его подписантом по нажатию
     head: "SettingsCompanyHead"
+
+class DocflowPreflightDefaultSigner(TypedDict):
+    """Подписант из профиля реквизитов УПД покупателя (signer): форма предлагает его вместо руководителя из карточки юрлица, а без подписанта формы он и уходит. Нет — профиль подписанта не назвал"""
+
+    position: str
+    surname: str
+    name: str
+    patronymic: str
+    #: СпосПодтПолном: 1, 2, 4 или 6
+    authority: str
+
+class DocflowPreflightDefaultTransferEmployee(TypedDict):
+    """Кто передал товар по профилю реквизитов УПД покупателя (transfer_employee): форма предлагает его, а без значения формы он и уходит. Нет — профиль не назвал или это передача агенту"""
+
+    position: str
+    surname: str
+    name: str
+    patronymic: str
 
 class DocflowPreflightDocument(TypedDict):
     """Учётный документ кабинета, который формализуем."""
@@ -19469,6 +19785,24 @@ class DocflowPreflightParty(_DocflowPreflightPartyRequired, total=False):
     contact_id: Dict[str, Any]
     #: Только у продавца — руководитель своего юрлица из его карточки (у ИП — сам предприниматель без должности); форма предлагает его подписантом по нажатию
     head: "SettingsCompanyHead"
+
+class DocflowPreflightPerson(TypedDict):
+    """Работник продавца полным ФИО и должностью."""
+
+    position: str
+    surname: str
+    name: str
+    patronymic: str
+
+class DocflowPreflightSigner(TypedDict):
+    """Подписант продавца полным ФИО, должностью и способом подтверждения полномочий."""
+
+    position: str
+    surname: str
+    name: str
+    patronymic: str
+    #: СпосПодтПолном: 1, 2, 4 или 6
+    authority: str
 
 class DocflowPreflightTotals(TypedDict):
     """Итоги товарной таблицы. Складываются из уже напечатанных строк, а не пересчитываются от исходных величин: итог обязан сойтись со строками до копейки."""
@@ -20439,12 +20773,15 @@ class _FinanceAccountingEntryRequired(TypedDict):
     #: Сумма документа на момент постановки в реестр
     amount: str
     status: "FinanceAccountingStatus"
-    #: Номер документа в 1С; заполняется чтением статуса следующего этапа
+    #: Номер документа в 1С; ставит чтение статуса из 1С
     onec_number: str
-    #: Ссылка документа в 1С; заполняется чтением статуса следующего этапа
+    #: Ссылка документа в 1С; ставит отправка документа
     onec_ref: str
+    #: Причина отклонения — кнопкой реестра или комментарий бухгалтера в 1С
     reject_reason: str
     decided_by_name: str
+    #: Документ изменён или отменён в Акеде после принятия в учёт; в 1С ничего не ушло
+    changed_after_accept: bool
     created_at: str
     updated_at: str
 
@@ -20471,6 +20808,7 @@ class _FinanceAccountingEntryCardRequired(TypedDict):
     onec_ref: str
     reject_reason: str
     decided_by_name: str
+    changed_after_accept: bool
     created_at: str
     updated_at: str
     reference: "FinanceAccountingReference"
@@ -21046,6 +21384,27 @@ class FinanceBudget(_FinanceBudgetRequired, total=False):
     missing_rates: List[str]
     regulation: "FinanceBudgetRegulation"
 
+class _FinanceBudgetAllocationRuleRequired(TypedDict):
+    source_cfo_id: "UUID"
+    #: share — доли вручную, headcount — численность по штатному расписанию
+    base: Literal['share', 'headcount']
+    targets: List["FinanceBudgetAllocationTarget"]
+
+class FinanceBudgetAllocationRule(_FinanceBudgetAllocationRuleRequired, total=False):
+    source_cfo_name: str
+
+class _FinanceBudgetAllocationTargetRequired(TypedDict):
+    cfo_id: "UUID"
+
+class FinanceBudgetAllocationTarget(_FinanceBudgetAllocationTargetRequired, total=False):
+    cfo_name: str
+    #: Доля в процентах при base = share
+    share: str
+
+class FinanceBudgetAllocations(TypedDict):
+    company_id: "UUID"
+    rules: List["FinanceBudgetAllocationRule"]
+
 class _FinanceBudgetAnomalyRequired(TypedDict):
     month: str
     item_id: "UUID"
@@ -21055,6 +21414,10 @@ class _FinanceBudgetAnomalyRequired(TypedDict):
 
 class FinanceBudgetAnomaly(_FinanceBudgetAnomalyRequired, total=False):
     department_id: "UUID"
+
+class FinanceBudgetAssetModelInput(TypedDict):
+    company_id: "UUID"
+    month: str
 
 class FinanceBudgetBalance(TypedDict):
     opening: "FinanceBudgetLedgerOpening"
@@ -21144,6 +21507,99 @@ class FinanceBudgetCompareRow(_FinanceBudgetCompareRowRequired, total=False):
     department_id: "UUID"
     department_name: str
 
+class _FinanceBudgetCopyYearInputRequired(TypedDict):
+    company_id: "UUID"
+    month: str
+
+class FinanceBudgetCopyYearInput(_FinanceBudgetCopyYearInputRequired, total=False):
+    kind: Literal['cashflow', 'pnl']
+    #: Поправка в процентах, от −100 до 1000; пусто — 0
+    percent: str
+
+class FinanceBudgetCopyYearResult(TypedDict):
+    budget: "FinanceBudget"
+    lines: int
+    #: Строк статей «с нуля» не скопировано
+    skipped_zero_based: int
+    #: Строк прежнего разреза бюджета не скопировано
+    skipped_dimension: int
+
+class _FinanceBudgetCorrectionRequired(TypedDict):
+    id: "UUID"
+    number: int
+    company_id: "UUID"
+    kind: Literal['cashflow', 'pnl']
+    month: str
+    status: Literal['draft', 'pending', 'approved', 'rejected', 'withdrawn']
+    reason: str
+    base_version_id: "UUID"
+    #: Итог изменения по строкам в валюте учёта
+    delta: str
+    created_at: str
+    lines: List["FinanceBudgetCorrectionLine"]
+
+class FinanceBudgetCorrection(_FinanceBudgetCorrectionRequired, total=False):
+    result_version_id: "UUID"
+    approval_id: "UUID"
+    created_by: int
+
+class _FinanceBudgetCorrectionInputRequired(TypedDict):
+    company_id: "UUID"
+    month: str
+    reason: str
+    lines: List["FinanceBudgetCorrectionLine"]
+
+class FinanceBudgetCorrectionInput(_FinanceBudgetCorrectionInputRequired, total=False):
+    kind: Literal['cashflow', 'pnl']
+
+class _FinanceBudgetCorrectionLineRequired(TypedDict):
+    month: str
+    item_id: "UUID"
+    #: Новая сумма, не меньше нуля; ноль убирает ячейку из бюджета
+    after: str
+
+class FinanceBudgetCorrectionLine(_FinanceBudgetCorrectionLineRequired, total=False):
+    item_name: str
+    department_id: "UUID"
+    department_name: str
+    #: Код валюты строки; пусто — валюта учёта
+    currency: str
+    #: Сумма утверждённой версии на момент заведения; заполняет сервер
+    before: str
+
+class FinanceBudgetCorrectionList(TypedDict):
+    results: List["FinanceBudgetCorrection"]
+
+class FinanceBudgetCorrectionWithdraw(TypedDict, total=False):
+    reason: str
+
+class _FinanceBudgetDealModelInputRequired(TypedDict):
+    company_id: "UUID"
+    month: str
+    item_id: "UUID"
+
+class FinanceBudgetDealModelInput(_FinanceBudgetDealModelInputRequired, total=False):
+    kind: Literal['cashflow', 'pnl']
+
+class _FinanceBudgetDealPipelineRequired(TypedDict):
+    pipeline_id: "UUID"
+
+class FinanceBudgetDealPipeline(_FinanceBudgetDealPipelineRequired, total=False):
+    pipeline_name: str
+    dimension_id: "UUID"
+
+class _FinanceBudgetDealPipelinesRequired(TypedDict):
+    company_id: "UUID"
+    pipelines: List["FinanceBudgetDealPipeline"]
+
+class FinanceBudgetDealPipelines(_FinanceBudgetDealPipelinesRequired, total=False):
+    #: Действующие воронки CRM кабинета для выбора
+    available: List["FinanceBudgetDealPipeline"]
+
+class FinanceBudgetDealPipelinesInput(TypedDict):
+    company_id: "UUID"
+    pipelines: List["FinanceBudgetDealPipeline"]
+
 class _FinanceBudgetDriverRequired(TypedDict):
     id: "UUID"
     name: str
@@ -21192,9 +21648,7 @@ class _FinanceBudgetForecastMonthRequired(TypedDict):
 class FinanceBudgetForecastMonth(_FinanceBudgetForecastMonthRequired, total=False):
     gap: bool
 
-class FinanceBudgetForm(TypedDict):
-    """Реквизиты формы бюджета без финансовых фактов и настройки согласований."""
-
+class _FinanceBudgetFormRequired(TypedDict):
     #: Активные юрлица в области финансового права.
     companies: List["FinanceBudgetReference"]
     #: Действующие доступные статьи БДДС без групп.
@@ -21205,6 +21659,14 @@ class FinanceBudgetForm(TypedDict):
     departments: List["FinanceBudgetReference"]
     #: Кандидаты ответственного за бюджет; не список согласующих.
     owners: List["FinanceBudgetOwnerCandidate"]
+
+class FinanceBudgetForm(_FinanceBudgetFormRequired, total=False):
+    """Реквизиты формы бюджета без финансовых фактов и настройки согласований."""
+
+    #: Действующие ЦФО для разреза бюджета ЦФО.
+    cfos: List["FinanceBudgetReference"]
+    #: Действующие проекты для разреза бюджета «проект».
+    projects: List["FinanceBudgetReference"]
 
 class FinanceBudgetGroup(TypedDict):
     kind: Literal['cashflow', 'pnl']
@@ -21266,6 +21728,42 @@ class FinanceBudgetItemReference(TypedDict):
     #: Порядок в ОПиУ.
     pnl_sort_order: int
 
+class _FinanceBudgetJustificationRequired(TypedDict):
+    company_id: "UUID"
+    month: str
+    item_id: "UUID"
+    positions: List["FinanceBudgetJustificationPosition"]
+
+class FinanceBudgetJustification(_FinanceBudgetJustificationRequired, total=False):
+    kind: Literal['cashflow', 'pnl']
+    item_name: str
+    department_id: "UUID"
+    #: Итог расшифровки, считает сервер
+    total: str
+
+class _FinanceBudgetJustificationInputRequired(TypedDict):
+    company_id: "UUID"
+    month: str
+    item_id: "UUID"
+    positions: List["FinanceBudgetJustificationPosition"]
+
+class FinanceBudgetJustificationInput(_FinanceBudgetJustificationInputRequired, total=False):
+    kind: Literal['cashflow', 'pnl']
+    department_id: "UUID"
+
+class FinanceBudgetJustificationList(TypedDict):
+    results: List["FinanceBudgetJustification"]
+
+class _FinanceBudgetJustificationPositionRequired(TypedDict):
+    name: str
+    quantity: str
+    price: str
+    reason: str
+
+class FinanceBudgetJustificationPosition(_FinanceBudgetJustificationPositionRequired, total=False):
+    #: Количество × цена, считает сервер
+    amount: str
+
 class FinanceBudgetLedgerOpening(TypedDict):
     cash: str
     other_assets: str
@@ -21320,7 +21818,7 @@ class FinanceBudgetPayrollModelInput(_FinanceBudgetPayrollModelInputRequired, to
     contributions_pct: str
     include_vacant: bool
 
-class FinanceBudgetPlanFact(TypedDict):
+class _FinanceBudgetPlanFactRequired(TypedDict):
     kind: Literal['cashflow', 'pnl']
     company_id: "UUID"
     period_from: str
@@ -21328,6 +21826,10 @@ class FinanceBudgetPlanFact(TypedDict):
     approved_number: int
     currency: str
     rows: List["FinanceBudgetPlanFactRow"]
+
+class FinanceBudgetPlanFact(_FinanceBudgetPlanFactRequired, total=False):
+    #: Строки после распределения сервисных ЦФО
+    allocated: bool
 
 class _FinanceBudgetPlanFactRowRequired(TypedDict):
     month: str
@@ -21350,6 +21852,28 @@ class FinanceBudgetPlanFactRow(_FinanceBudgetPlanFactRowRequired, total=False):
     fx_deviation: str
     needs_note: bool
     note: str
+
+class FinanceBudgetPnlSummary(TypedDict):
+    company_id: "UUID"
+    month: str
+    approved_number: int
+    rows: List["FinanceBudgetPnlSummaryRow"]
+
+class _FinanceBudgetPnlSummaryRowRequired(TypedDict):
+    id: str
+    kind: str
+    name: str
+    level: int
+    #: amount — сумма, percent — процент
+    format: str
+
+class FinanceBudgetPnlSummaryRow(_FinanceBudgetPnlSummaryRowRequired, total=False):
+    #: Системная строка макета: gross_profit, ebitda, net_profit и др.
+    system_row: str
+    plan: str
+    fact: str
+    #: Факт − план; только у сумм
+    deviation: str
 
 class FinanceBudgetRate(TypedDict):
     month: str
@@ -21474,6 +21998,10 @@ class _FinanceBudgetSettingRequired(TypedDict):
     control_enabled: bool
 
 class FinanceBudgetSetting(_FinanceBudgetSettingRequired, total=False):
+    #: Разрез бюджета юрлица: department — подразделение, cfo — ЦФО, project — проект. Значение разреза строки — в department_id
+    dimension: Literal['department', 'cfo', 'project']
+    #: Статьи «с нуля»: сумма только с расшифровкой, утверждение без неё — отказ; не передано — список не меняется
+    zero_based_items: List["UUID"]
     #: Окно лимита заявки: month — месяц, quarter — квартал месяца заявки
     control_period: Literal['month', 'quarter']
     control_mode: Literal['block', 'warn']
@@ -21766,7 +22294,7 @@ class _FinanceCloseAdvancesToExpenseResultResultsItemRequired(TypedDict):
     #: Аванс из запроса
     id: str
     #: Исход строки
-    status: Literal['closed', 'already_closed', 'not_found', 'item_required', 'period_closed', 'failed']
+    status: Literal['closed', 'already_closed', 'not_found', 'item_required', 'period_closed', 'supplier_vat', 'failed']
 
 class FinanceCloseAdvancesToExpenseResultResultsItem(_FinanceCloseAdvancesToExpenseResultResultsItemRequired, total=False):
     #: Почему строка не закрылась, словами
@@ -21997,6 +22525,8 @@ class FinanceConnectorSyncResult(TypedDict):
     connector: "FinanceConnector"
     imported: int
     skipped: int
+    #: Строки выписки, которые уже были в Акеде: дублей не создано
+    already: int
     message: str
 
 class FinanceConnectorSyncRun(TypedDict):
@@ -22289,6 +22819,31 @@ class FinanceFactoringRegistryPreview(TypedDict):
 
 FinanceFactoringRegistryRow = TypedDict("FinanceFactoringRegistryRow", {"registry": str, "buyer": str, "from": str, "to": str, "gross": str, "assigned": str, "supply_contract": str, "factoring_contract": str, "status": Literal['matched', 'choose', 'mismatch', 'not_found'], "found": str, "sales": List["FinanceFactoringOpenSale"]}, total=False)
 
+class _FinanceFinancingFactoringRequired(TypedDict):
+    contract: "UUID"
+    #: Номер договора факторинга
+    contract_number: str
+    contact: "UUID"
+    currency: str
+    #: Лимит финансирования — реквизит договора, десятичная строка
+    limit: str
+    #: Уступлено — сумма уступок долга покупателей этому фактору
+    assigned: str
+    #: Профинансировано — уступлено минус ждём от фактора
+    financed: str
+    #: Ждём от фактора — остаток его долга по расчётам
+    outstanding: str
+    #: С регрессом — признак договора
+    recourse: bool
+
+class FinanceFinancingFactoring(_FinanceFinancingFactoringRequired, total=False):
+    #: Юрлицо договора
+    company: Optional[str]
+
+class FinanceFinancingFactoringList(TypedDict):
+    count: int
+    results: List["FinanceFinancingFactoring"]
+
 class _FinanceFinancingLimitRequired(TypedDict):
     account: "UUID"
     #: Название счёта линии
@@ -22380,6 +22935,8 @@ class FinanceFixedAsset(_FinanceFixedAssetRequired, total=False):
     contract_currency: str
     #: Срок договора финансирования; null — не задан
     contract_valid_until: Optional[str]
+    #: Цена из проведённого получения предмета лизинга; null — получения нет
+    leasing_receipt_amount: Optional[str]
 
 class FinanceFixedAssetAcceptanceInput(TypedDict):
     #: Дата принятия к учёту
@@ -22778,6 +23335,16 @@ class FinanceLeasingReceiptInput(_FinanceLeasingReceiptInputRequired, total=Fals
     group_id: Optional[str]
     #: Дата получения; без поля — сегодня
     date: str
+
+class _FinanceLeasingReturnInputRequired(TypedDict):
+    #: Договор лизинга с выкупом
+    contract_id: str
+
+class FinanceLeasingReturnInput(_FinanceLeasingReturnInputRequired, total=False):
+    #: Дата возврата; пусто — сегодня
+    date: str
+    #: Статья прочих доходов для разницы, когда долг больше остаточной стоимости
+    income_item_id: Optional[str]
 
 class FinanceObligationDueDateInput(TypedDict):
     #: Срок оплаты ГГГГ-ММ-ДД; пустая строка снимает срок
@@ -23873,6 +24440,12 @@ class FinancePaymentRequest(_FinancePaymentRequestRequired, total=False):
     account_name: str
     contact_name: str
     item_name: str
+    #: Решение директора по строке реестра; нет — не решено
+    director_decision: Literal['approved', 'rejected']
+    #: Когда директор принял решение
+    director_decided_at: str
+    #: Кто принял решение
+    director_decided_by_name: str
     #: Прежние известные реквизиты при неподтверждённой смене счёта получателя
     payee_known_account: "FinancePaymentRequestPayeeKnownAccount"
     #: Первый по дате платёж, привязанный к заявке
@@ -25491,7 +26064,7 @@ class FinanceSettlementDocumentCreate(_FinanceSettlementDocumentCreateRequired, 
     amount: str
     #: Обязательна для долга, продажи и закупки
     due_date: str
-    #: Обязательно для зачёта аванса, распределения оплаты и возврата по продаже (продажа-основание)
+    #: Обязательно для зачёта аванса и распределения оплаты; у возврата по продаже — продажа-основание, без неё возврат проводится без основания по своим статье, сумме и налогу (ERP-1942)
     obligation_id: str
     #: Оплата-источник аванса либо обязательная оплата для распределения
     payment_id: str
@@ -25500,13 +26073,13 @@ class FinanceSettlementDocumentCreate(_FinanceSettlementDocumentCreateRequired, 
     advance_id: str
     #: Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя, у уступки долга покупателя (finance_receivable_assignment) — продажа, чей долг уступлен; контрагент уступки — фактор; пусто — без заказа
     order_id: str
-    #: Обязательна для продажи и закупки
+    #: Обязательна для продажи, закупки и возврата по продаже без основания (статья выручки, которую он снимает)
     pnl_item_id: str
     #: Путешествие или проект продажи и закупки
     project_id: str
     #: Обязательна только для аванса
     side: Literal['receivable_advance', 'payable_advance']
-    #: Только возврат по продаже: складской возврат от покупателя по этой продаже; без amount сумма — доля продажи по количеству
+    #: Только возврат по продаже: складской возврат от покупателя; без amount сумма — доля продажи по количеству, а без продажи — строки возврата по цене последней продажи товара покупателю
     stock_return_id: str
     comment: str
     #: Ключ идемпотентности сделки (только продажа и закупка): система-источник — учётная система клиента или ключ стороннего приложения
@@ -25515,7 +26088,7 @@ class FinanceSettlementDocumentCreate(_FinanceSettlementDocumentCreateRequired, 
     source_ref: str
     #: Идентификатор сделки в source_system; повтор того же (source_system, source_ref, external_id) возвращает уже созданный документ вместо второго
     external_id: str
-    #: Только закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаг 5.3). Обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне периода непустое значение — 400
+    #: Закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаг 5.3). Обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне периода непустое значение — 400. Возврат по продаже без основания: налог документа покупателя (ERP-1942); пусто — по ставке на дату
     vat_amount: str
     supplier_document: "SupplierDocument"
     #: Только продажа (ERP-1265): строки товаров и услуг. Сумма продажи — сумма строк; переданная рядом amount обязана с ней совпасть. Налог считается по строке — по виду товара строки и режиму юрлица на дату
@@ -25606,6 +26179,10 @@ class _FinanceStaffPositionRequired(TypedDict):
 class FinanceStaffPosition(_FinanceStaffPositionRequired, total=False):
     #: Дата закрытия позиции; с неё позиции нет в штатке и численности
     closed_on: str
+    #: Вилка оклада вакансии — «от», сумма с двумя знаками; нет поля — не задана (ERP-2139)
+    salary_from: str
+    #: Вилка оклада вакансии — «до»; нет поля — не задана
+    salary_to: str
 
 class FinanceStaffPositionInput(TypedDict, total=False):
     """Поля позиции; названия и id в теле сервер не читает"""
@@ -25624,6 +26201,10 @@ class FinanceStaffPositionInput(TypedDict, total=False):
     placement_id: str
     #: Позиция открыта; при заведении не передано — открыта, при правке — без изменений
     is_active: bool
+    #: Вилка оклада вакансии — «от»; пусто — снять. Неотрицательная, запятая читается как точка (ERP-2139)
+    salary_from: str
+    #: Вилка оклада вакансии — «до»; пусто — снять. Не меньше «от»
+    salary_to: str
 
 class FinanceStaffPositionList(TypedDict):
     results: List["FinanceStaffPosition"]
@@ -25635,6 +26216,31 @@ class _FinanceStaffPositionRemovalRequired(TypedDict):
 class FinanceStaffPositionRemoval(_FinanceStaffPositionRemovalRequired, total=False):
     #: Дата закрытия; только у closed
     closed_on: str
+
+class _FinanceStaffVacancyRequired(TypedDict):
+    #: UUID штатной позиции
+    position: str
+    #: Должность из справочника
+    position_name: str
+    #: Название позиции
+    title: str
+    #: UUID бизнеса
+    business: str
+    business_name: str
+    #: UUID юрлица; пусто — позиция без юрлица
+    company: str
+    company_name: str
+    #: Подразделение позиции
+    department: str
+
+class FinanceStaffVacancy(_FinanceStaffVacancyRequired, total=False):
+    #: Вилка оклада — «от»; нет поля — не задана
+    salary_from: str
+    #: Вилка оклада — «до»; нет поля — не задана
+    salary_to: str
+
+class FinanceStaffVacancyList(TypedDict):
+    results: List["FinanceStaffVacancy"]
 
 class _FinanceStaffingDismissalCreateRequired(TypedDict):
     #: Штатная позиция, с которой увольняют
@@ -26056,9 +26662,7 @@ class FinanceTaxRecipient(_FinanceTaxRecipientRequired, total=False):
 class FinanceTaxRecipientFromPaymentInput(TypedDict):
     transaction_id: "UUID"
 
-class FinanceTaxSettings(TypedDict):
-    """Настройка раздела «Налоги»."""
-
+class _FinanceTaxSettingsRequired(TypedDict):
     #: Статьи ДДС платежей налогов в порядке выбора; пусто — не настроены
     payment_item_ids: List[str]
     #: Получатели единого налогового счёта
@@ -26068,6 +26672,14 @@ class FinanceTaxSettings(TypedDict):
     #: Созданный документ и декларации из 1С проводятся сразу
     auto_post: bool
 
+class FinanceTaxSettings(_FinanceTaxSettingsRequired, total=False):
+    """Настройка раздела «Налоги»."""
+
+    #: Настройку не сохраняли — действуют значения по умолчанию (все статьи вида «Налоги», получатель ЕНС — Казначейство России)
+    defaults: bool
+    #: ЦФО налогов: «Налоги за месяц» ложатся в ОПиУ с ним; пусто — без ЦФО
+    cfo_id: str
+
 class FinanceTaxSettingsInput(TypedDict, total=False):
     """Настройка раздела «Налоги» целиком."""
 
@@ -26075,6 +26687,8 @@ class FinanceTaxSettingsInput(TypedDict, total=False):
     payment_item_ids: List[str]
     #: Получатели единого налогового счёта
     ens_recipients: List["FinanceTaxRecipient"]
+    #: ЦФО налогов (элемент справочника cfo); пусто — снять, не прислано — прежний
+    cfo_id: str
     #: Черновик заводится сам; не прислано — прежнее значение
     auto_create: bool
     #: Проводить сразу; не прислано — прежнее значение
@@ -26413,7 +27027,8 @@ class FinanceVATBookImport(_FinanceVATBookImportRequired, total=False):
     replaced_at: str
 
 class _FinanceVATBookMatchRequired(TypedDict):
-    status: Literal['matched', 'amount_differs', 'only_book', 'only_ours', 'not_deducted']
+    #: number_differs — один документ (ИНН, дата и налог совпали) с разными номерами в книге и у нас; наш номер — our_number (ERP-1930)
+    status: Literal['matched', 'amount_differs', 'only_book', 'only_ours', 'not_deducted', 'number_differs']
     inn: str
     number: str
     date: str
@@ -26424,6 +27039,8 @@ class _FinanceVATBookMatchRequired(TypedDict):
     our_rows: List["FinanceVATBookOurRow"]
 
 class FinanceVATBookMatch(_FinanceVATBookMatchRequired, total=False):
+    #: Наш номер документа при статусе number_differs
+    our_number: str
     group: bool
     kpp_differs: bool
     counterparty: str
@@ -27873,6 +28490,170 @@ class MarketplaceAdsAbsenceRequest(TypedDict, total=False):
     #: Магазины отчёта; пусто — все активные магазины площадки
     stores: List[str]
 
+class MarketplaceAllPnl(TypedDict):
+    period_kind: Literal['week', 'month']
+    year: int
+    #: Годы, за которые есть данные хоть у одной площадки, включая месяцы с загруженными отчётами Ламоды и Лэтуаль
+    years: List[int]
+    #: Самая поздняя выгрузка среди площадок
+    updated: Optional[str]
+    periods: List["MarketplaceAllPnlPeriod"]
+    rows: List["MarketplaceAllPnlRow"]
+    #: Итоги площадок по периодам: доход, прибыль, маржа и доля в доходе
+    platforms: List["MarketplaceAllPnlPlatform"]
+    #: Ключ — начало периода: каких площадок в колонке нет или чьи данные в ней неполны
+    gaps: Dict[str, List["MarketplaceAllPnlGap"]]
+    #: Площадки, чьё ОПиУ сейчас не ответило
+    unavailable: List[str]
+    #: Площадки с магазинами без данных за этот год
+    absent: List[str]
+    #: Площадки с месячными отчётами: в недельных колонках их нет
+    weekly_excluded: List[str]
+    #: Площадки, которые выбранный список товаров не отбирает: при group их в сводке нет
+    list_excluded: List[str]
+
+class _MarketplaceAllPnlGapRequired(TypedDict):
+    platform: Literal['ozon', 'wildberries', 'yandex', 'lamoda', 'letoile']
+    #: no_data — финансовых данных площадки за период ещё нет, площадки в колонке нет; no_report — отчёта за месяц нет; profit_unknown — прибыль не посчитана, площадки в колонке нет; partial — данные площадки по through; partial_report — отчёт пришёл не по всем магазинам
+    reason: Literal['no_data', 'no_report', 'profit_unknown', 'partial', 'partial_report']
+
+class MarketplaceAllPnlGap(_MarketplaceAllPnlGapRequired, total=False):
+    #: Причина площадки: services_no_reconcile, unmatched, no_rate и другие коды ОПиУ по отчётам
+    detail: str
+    through: str
+
+class MarketplaceAllPnlPeriod(TypedDict):
+    #: Понедельник недели или первое число месяца
+    key: str
+    #: Номер недели; у месяца может быть пустым — название месяца строит экран по start
+    label: str
+    sub: str
+    start: str
+    end: str
+
+class MarketplaceAllPnlPlatform(TypedDict):
+    platform: Literal['ozon', 'wildberries', 'yandex', 'lamoda', 'letoile']
+    #: Доход (выручка за вычетом возвратов); null — площадки нет в колонке
+    income: List[Optional[float]]
+    margin: List[Optional[float]]
+    margin_pct: List[Optional[float]]
+    #: Доля площадки в доходе колонки, %
+    income_share: List[Optional[float]]
+
+class _MarketplaceAllPnlRowRequired(TypedDict):
+    key: Literal['income', 'revenue', 'returns', 'variable', 'cogs', 'commission', 'logistics', 'ads', 'storage', 'other', 'taxes', 'margin', 'margin_pct']
+    kind: Literal['total', 'normal', 'percent']
+    #: Рубли (у margin_pct — проценты) по порядку periods; null — ни одна площадка не вошла в колонку. Расходы со знаком минус
+    values: List[Optional[float]]
+
+class MarketplaceAllPnlRow(_MarketplaceAllPnlRowRequired, total=False):
+    #: Доля статьи расходов от выручки периода, %; расход — плюсом
+    share: List[Optional[float]]
+    #: Вклад площадок в строку: площадка → значения по периодам
+    parts: Dict[str, List[Optional[float]]]
+
+class MarketplaceAllProducts(TypedDict):
+    #: Строк товара кабинета
+    count: int
+    #: Товаров с остатком или заказами за 14 дней
+    active: int
+    #: Площадки, чьи товары не прочитались
+    missing: List[str]
+    #: Площадки, у которых карточек больше предела одного чтения: часть не пришла
+    truncated: List[str]
+    results: List["MarketplaceAllProductsResultsItem"]
+
+class _MarketplaceAllProductsResultsItemRequired(TypedDict):
+    offer_id: str
+    name: str
+    image: str
+    #: Остаток всех карточек, шт
+    stock: int
+    #: Заказы всех карточек за 14 дней без отмен
+    orders_14d: int
+    #: На сколько дней хватит остатка при темпе заказов 14 дней; null — заказов не было
+    days_of_stock: Optional[float]
+    unlinked: bool
+    cards: List["MarketplaceAllProductsResultsItemCardsItem"]
+
+class MarketplaceAllProductsResultsItem(_MarketplaceAllProductsResultsItemRequired, total=False):
+    #: Позиция номенклатуры; нет у непривязанной карточки
+    product_id: str
+
+class _MarketplaceAllProductsResultsItemCardsItemRequired(TypedDict):
+    platform: Literal['ozon', 'wildberries', 'yandex']
+    store_id: str
+    offer_id: str
+    #: Цена карточки, как в «Товарах» площадки (у Ozon — цена продажи, если она известна)
+    price: str
+    stock: int
+    orders_14d: int
+
+class MarketplaceAllProductsResultsItemCardsItem(_MarketplaceAllProductsResultsItemCardsItemRequired, total=False):
+    #: Код карточки на площадке: nmID WB, SKU Ozon и Маркета
+    code: str
+
+class _MarketplaceAllStocksRequired(TypedDict):
+    #: Строк товара кабинета
+    count: int
+    #: Складов с остатком по всем площадкам
+    warehouse_count: int
+    #: Штук на складах всех площадок
+    total: int
+    #: Штук в пути к покупателю
+    to_client: int
+    platforms: List["MarketplaceAllStocksPlatform"]
+    results: List["MarketplaceAllStocksRow"]
+    #: Площадки, чьи остатки не прочитались
+    missing: List[str]
+    #: Площадки, чьи заказы за 14 дней не прочитались или пришли не целиком: запас их товаров посчитан без них; темп читается без search, только по списку товаров
+    tempo_missing: List[str]
+
+class MarketplaceAllStocks(_MarketplaceAllStocksRequired, total=False):
+    #: У площадки строк больше предела: отсутствие товара в ответе не значит, что остатка нет
+    truncated: bool
+
+class MarketplaceAllStocksPlatform(TypedDict):
+    platform: Literal['ozon', 'wildberries', 'yandex']
+    total: int
+    #: Складов с остатком
+    warehouses: int
+
+class _MarketplaceAllStocksRowRequired(TypedDict):
+    offer_id: str
+    name: str
+    image: str
+    total: int
+    to_client: int
+    #: Заказы всех карточек товара за 14 дней из «Товаров» площадок, включая карточки без остатка
+    orders_14d: int
+    #: На сколько дней хватит остатка при темпе заказов 14 дней; null — заказов не было
+    days_of_stock: Optional[float]
+    parts: List["MarketplaceAllStocksRowPartsItem"]
+    warehouses: List["MarketplaceAllStocksRowWarehousesItem"]
+    #: Артикулы сложенных карточек
+    codes: List[str]
+    unlinked: bool
+
+class MarketplaceAllStocksRow(_MarketplaceAllStocksRowRequired, total=False):
+    #: Позиция номенклатуры; нет у непривязанной карточки
+    product_id: str
+    #: Магазин непривязанной карточки — по нему открывается привязка
+    store_id: str
+    #: Площадка непривязанной карточки
+    platform: str
+
+class MarketplaceAllStocksRowPartsItem(TypedDict):
+    platform: str
+    qty: int
+    #: Доля площадки в остатке строки, %
+    share: float
+
+class MarketplaceAllStocksRowWarehousesItem(TypedDict):
+    platform: str
+    warehouse: str
+    qty: int
+
 MarketplaceBuyoutCohort = TypedDict("MarketplaceBuyoutCohort", {"from": str, "to": str, "bought": float, "base": float, "pct": Optional[float]}, total=False)
 
 class MarketplaceCardActivity(TypedDict):
@@ -28267,6 +29048,25 @@ class MarketplaceComponentFreshness(TypedDict, total=False):
     ads_orders: Optional[str]
     #: Карточки товаров
     products: Optional[str]
+
+class _MarketplaceDocumentEstimateRequired(TypedDict):
+    document_id: str
+    month: str
+    rows: int
+    unmatched_rows: int
+    undated_rows: int
+    missing_cost_units: float
+    missing_tax_rows: int
+    reasons: Dict[str, int]
+    missing_skus: List[str]
+
+class MarketplaceDocumentEstimate(_MarketplaceDocumentEstimateRequired, total=False):
+    foreign_vat: float
+    services: float
+    after_platform: float
+    cost: float
+    tax: float
+    profit: float
 
 class MarketplaceEconBaseRow(TypedDict, total=False):
     """Сырьё строки прайса в том виде в каком его отдаёт витрина ценообразования"""
@@ -29807,6 +30607,221 @@ class MarketplaceProductGroupPatch(TypedDict, total=False):
 
 MarketplaceProductGroupPlatform = Literal['ozon', 'wildberries']
 
+class MarketplacePromoChange(TypedDict):
+    #: Рост штук с промокодом к прошлому периоду, %
+    promo_qty: Optional[float]
+    #: Рост выручки с промокодом, %
+    promo_revenue: Optional[float]
+    #: Изменение доли, п.п.
+    share: Optional[float]
+    #: Рост скидки продавца, %
+    seller_discount: Optional[float]
+    #: Рост цены покупателя с промокодом, %
+    buyer_price: Optional[float]
+
+class MarketplacePromoCodeNameRequest(TypedDict):
+    #: Площадка промокода
+    platform: Literal['wildberries', 'wb', 'yandex', 'lamoda']
+    #: Код промокода площадки (code из promos)
+    code: str
+    #: Своё название; пустое — вернуть подпись площадки
+    name: str
+
+class MarketplacePromoDay(TypedDict):
+    day: str
+    promo_qty: float
+    promo_revenue: float
+    other_qty: float
+    other_revenue: float
+
+class _MarketplacePromoProductRequired(TypedDict):
+    unlinked: bool
+    platform: Literal['wildberries', 'yandex', 'lamoda']
+    #: Артикул продавца
+    offer_id: str
+    #: nmID WB, SKU Маркета или штрихкод Ламоды
+    code: str
+    name: str
+    image: str
+    #: Артикулы сложенных карточек
+    codes: List[str]
+    promo_qty: float
+    promo_revenue: float
+    #: Доля промокода в выручке товара, %
+    share: Optional[float]
+    #: Штук без какого-либо промокода
+    other_qty: float
+    other_revenue: float
+    promos: List["MarketplacePromoUse"]
+    #: Средняя цена штуки до промокода, ₽; null — площадка не передаёт скидку продавца
+    price_before: Optional[float]
+    #: Средняя цена продавца штуки — после промокода, до скидки площадки, ₽
+    seller_price: Optional[float]
+    #: Средняя цена, которую заплатил покупатель за штуку, ₽
+    buyer_price: Optional[float]
+    #: Скидка продавца по промокоду, ₽; null — площадка сумму не передаёт
+    seller_discount: Optional[float]
+    #: Размер промокода, % от цены до промокода; null — площадка не передаёт
+    discount_pct: Optional[float]
+    #: Скидка за счёт площадки, ₽: СПП WB, купон Ламоды, вознаграждение Маркета
+    platform_discount: Optional[float]
+    #: Скидка за счёт площадки, % от цены продавца
+    platform_pct: Optional[float]
+
+class MarketplacePromoProduct(_MarketplacePromoProductRequired, total=False):
+    #: Товар кабинета; нет у непривязанной карточки
+    product_id: str
+    #: Магазин непривязанной карточки
+    store_id: str
+    store_name: str
+
+MarketplacePromoReport = TypedDict("MarketplacePromoReport", {"platform": Literal['all', 'wildberries', 'yandex', 'lamoda', 'ozon', 'letoile'], "from": str, "to": str, "prev_from": str, "prev_to": str, "selected": str, "current": "MarketplacePromoTotals", "previous": Optional["MarketplacePromoTotals"], "change": "MarketplacePromoChange", "promos": List["MarketplacePromoRow"], "products": List["MarketplacePromoProduct"], "days": List["MarketplacePromoDay"], "sources": List["MarketplacePromoSource"]}, total=False)
+
+class MarketplacePromoRow(TypedDict):
+    #: Ключ промокода «площадка:код» — для параметра promo
+    key: str
+    platform: Literal['wildberries', 'yandex', 'lamoda']
+    #: Код площадки: ID промокода WB, идентификатор акции Маркета, coupon у Ламоды
+    code: str
+    kind: Literal['promocode', 'market_promocode', 'market_coupon', 'coupon']
+    #: Своё название кабинета; пусто — подпись площадки
+    name: str
+    qty: float
+    revenue: float
+    #: Доля во всей выручке периода, %
+    share: Optional[float]
+    #: Товаров с продажами по промокоду
+    products: int
+    first_day: str
+    last_day: str
+    #: Средняя цена штуки до промокода, ₽; null — площадка не передаёт скидку продавца
+    price_before: Optional[float]
+    #: Средняя цена продавца штуки — после промокода, до скидки площадки, ₽
+    seller_price: Optional[float]
+    #: Средняя цена, которую заплатил покупатель за штуку, ₽
+    buyer_price: Optional[float]
+    #: Скидка продавца по промокоду, ₽; null — площадка сумму не передаёт
+    seller_discount: Optional[float]
+    #: Размер промокода, % от цены до промокода; null — площадка не передаёт
+    discount_pct: Optional[float]
+    #: Скидка за счёт площадки, ₽: СПП WB, купон Ламоды, вознаграждение Маркета
+    platform_discount: Optional[float]
+    #: Скидка за счёт площадки, % от цены продавца
+    platform_pct: Optional[float]
+
+class _MarketplacePromoSourceRequired(TypedDict):
+    platform: Literal['wildberries', 'yandex', 'lamoda', 'ozon', 'letoile']
+    #: ready — промокоды в данных есть; no_data — площадка их не передаёт; failed — данные не прочитались
+    state: Literal['ready', 'no_data', 'failed']
+    #: Площадка передаёт скидку продавца
+    seller_discount: bool
+    #: Площадка передаёт скидку за свой счёт
+    platform_discount: bool
+
+class MarketplacePromoSource(_MarketplacePromoSourceRequired, total=False):
+    #: По чему считаются продажи
+    basis: Literal['sales_report', 'orders', 'commission_report']
+    #: С какого дня есть данные о промокодах
+    data_from: str
+    data_to: str
+    #: Площадка передаёт размер промокода
+    discount_size: bool
+    #: Строк без даты заказа в отчёте: взят день продажи
+    sale_day_lines: int
+
+class MarketplacePromoTotals(TypedDict):
+    #: Штук с промокодом, возвраты вычтены
+    promo_qty: float
+    #: Выручка с промокодом, ₽
+    promo_revenue: float
+    #: Все штуки площадок периода
+    qty: float
+    #: Вся выручка площадок периода, ₽
+    revenue: float
+    #: Доля выручки с промокодом, %
+    share: Optional[float]
+    #: Доля штук с промокодом, %
+    qty_share: Optional[float]
+    #: Средняя цена покупателя штуки без промокода, ₽
+    avg_other: Optional[float]
+    #: Средняя цена штуки до промокода, ₽; null — площадка не передаёт скидку продавца
+    price_before: Optional[float]
+    #: Средняя цена продавца штуки — после промокода, до скидки площадки, ₽
+    seller_price: Optional[float]
+    #: Средняя цена, которую заплатил покупатель за штуку, ₽
+    buyer_price: Optional[float]
+    #: Скидка продавца по промокоду, ₽; null — площадка сумму не передаёт
+    seller_discount: Optional[float]
+    #: Размер промокода, % от цены до промокода; null — площадка не передаёт
+    discount_pct: Optional[float]
+    #: Скидка за счёт площадки, ₽: СПП WB, купон Ламоды, вознаграждение Маркета
+    platform_discount: Optional[float]
+    #: Скидка за счёт площадки, % от цены продавца
+    platform_pct: Optional[float]
+
+class MarketplacePromoUse(TypedDict):
+    key: str
+    kind: Literal['promocode', 'market_promocode', 'market_coupon', 'coupon']
+    name: str
+    discount_pct: Optional[float]
+    qty: float
+    revenue: float
+
+class MarketplaceReportPnl(TypedDict):
+    platform: Literal['lamoda', 'letoile']
+    months: List[str]
+    rows: List["MarketplaceReportPnlRowsItem"]
+    coverage: Dict[str, "MarketplaceReportPnlCoverageValue"]
+    products: List["MarketplaceReportPnlProductsItem"]
+    days: List["MarketplaceReportPnlDaysItem"]
+
+class _MarketplaceReportPnlRowsItemRequired(TypedDict):
+    key: str
+    kind: Literal['money', 'subtotal', 'total', 'percent', 'info']
+    values: List[Optional[float]]
+
+class MarketplaceReportPnlRowsItem(_MarketplaceReportPnlRowsItemRequired, total=False):
+    share: List[Optional[float]]
+
+class MarketplaceReportPnlCoverageValue(TypedDict, total=False):
+    rows: int
+    undated: int
+    unmatched: int
+    missing_cost_units: float
+    missing_tax_rows: int
+    reasons: Dict[str, int]
+    missing_stores: List[str]
+
+class MarketplaceReportPnlProductsItem(TypedDict, total=False):
+    seller_sku: str
+    name: str
+    barcode: str
+    product_id: str
+    product_name: str
+    matched_by: Literal['', 'link', 'article', 'barcode']
+    sold: float
+    returned: float
+    revenue: float
+    commission: float
+    foreign_vat: float
+    services: Optional[float]
+    unit_cost: Optional[float]
+    cost: Optional[float]
+    tax: Optional[float]
+    profit: Optional[float]
+    margin: Optional[float]
+    reason: str
+
+class MarketplaceReportPnlDaysItem(TypedDict, total=False):
+    day: str
+    orders: int
+    sold: float
+    returned: float
+    revenue: float
+    returns_amount: float
+    #: Месяц ГГГГ-ММ строки без даты: у каждого месяца своя такая строка
+    month: str
+
 class MarketplaceSectionUsage(TypedDict):
     """Время и открытия раздела площадки за окно"""
 
@@ -31181,13 +32196,13 @@ class MarketplaceWeeklyFinancePostingResult(_MarketplaceWeeklyFinancePostingResu
 class _MarketplaceWeeklyFinanceRunRequired(TypedDict):
     run_id: str
     currency: str
-    #: Сколько заплатил покупатель — точная десятичная строка
+    #: Чек покупателя после скидки площадки — точная десятичная строка
     buyer_paid: str
-    #: Выручка книги по нашей цене реализации
+    #: Выручка книги и база налога: чек покупателя плюс доплата площадки
     revenue: str
     #: К перечислению после всех удержаний площадки
     payout: str
-    #: Удержания площадки одной статьёй: revenue − payout
+    #: Удержания площадки итогом: revenue − payout; разложение — charges
     expense: str
     cost_coverage: "MarketplaceStoreAccountingCostCoverage"
     week_start: str
@@ -31196,6 +32211,10 @@ class _MarketplaceWeeklyFinanceRunRequired(TypedDict):
     source_hash: str
 
 class MarketplaceWeeklyFinanceRun(_MarketplaceWeeklyFinanceRunRequired, total=False):
+    #: Деньги площадки сверх чека за её скидку (софинансирование Ozon); у WB 0. Входят в базу налога
+    compensation: str
+    #: Удержания площадки по видам с налогом по её документам; сумма amount равна expense. Пусто у недель, посчитанных до разложения
+    charges: List["MarketplaceWeeklyFinanceRunChargesItem"]
     #: Себестоимость недели; пусто — прочерк (причина в cost_coverage или cost_origin=stock_pending)
     cost: str
     #: Откуда себестоимость: manual — по ручным ставкам; stock_posted — проведено складом по партиям (FIFO/средняя) при передаче недели, продажа минус возврат; stock_pending — магазин ведёт себестоимость со склада, неделя ещё не передана, число даст проведение
@@ -31211,6 +32230,13 @@ class MarketplaceWeeklyFinanceRun(_MarketplaceWeeklyFinanceRunRequired, total=Fa
     expense_row_count: int
     #: Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж.
     zero_cost: List["MarketplaceWeeklyFinanceRunZeroCostItem"]
+
+class MarketplaceWeeklyFinanceRunChargesItem(TypedDict):
+    kind: Literal['fee', 'acquiring', 'logistics', 'storage', 'ads', 'penalty', 'loyalty', 'other']
+    #: Сумма удержания с налогом, знак как в отчёте площадки
+    amount: str
+    #: Налог внутри суммы по документу площадки; "0" — услуга без НДС
+    vat: str
 
 class _MarketplaceWeeklyFinanceRunTransferRequired(TypedDict):
     state: Literal['applied', 'refused']
@@ -31332,6 +32358,12 @@ class MarketplaceYandexPnl(_MarketplaceYandexPnlRequired, total=False):
     units_missing: Dict[str, float]
     #: Пояснение к неполноте источника
     note: str
+    #: Разбор строки «Прочие услуги» по названиям услуг; ключ — начало периода
+    breakdown: Dict[str, List["MarketplaceWbDecompOtherItem"]]
+    #: По какой день загружен отчёт Маркета по стоимости услуг — день последней услуги у отстающего магазина; пустая строка — у какого-то магазина отчёта нет. Позже этого дня строки услуг нулевые
+    services_through: str
+    #: Разбор строк услуг (commission, logistics, ads, storage, acceptance, acquiring) по названиям услуг: ключ — строка, затем начало периода
+    row_breakdown: Dict[str, Dict[str, List["MarketplaceWbDecompOtherItem"]]]
     #: Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические
     demo: bool
 
@@ -31370,7 +32402,14 @@ class _MarketplaceYandexProductRequired(TypedDict):
     price: str
     #: Цена до скидки decimal строкой; пустая строка когда её нет
     old_price: str
+    #: Доступно к продаже на складах Маркета (FBY)
     stock: int
+    #: Остаток на своём складе продавца (размещение FBS и DBS)
+    stock_fbs: int
+    #: Заказано штук за 14 дней по Москве, сегодня включительно, без отменённых
+    orders_14d: int
+    #: idle — «Не продаётся»: 0 заказов за 14 дней и stock + stock_fbs = 0; иначе active
+    activity: Literal['active', 'idle']
     status_name: str
     primary_image: str
     #: Первая ссылка витрины; пустая строка когда её нет
@@ -33253,6 +34292,48 @@ class MarkingPrintSkipped(TypedDict):
     spoiled: int
     #: Выбывших из оборота
     retired: int
+
+class MarkingProductCatalogCard(TypedDict):
+    #: GTIN товара (14 цифр); пусто — у товара нет GTIN
+    gtin: str
+    company_id: "UUID"
+    #: Карточка в каталоге; null — нет карточки, готовой к маркировке и обороту
+    card: Optional["MarkingProductCatalogCardCard"]
+
+class MarkingProductCatalogCardCard(TypedDict, total=False):
+    """Карточка в каталоге; null — нет карточки, готовой к маркировке и обороту"""
+
+    #: GTIN карточки
+    gtin: str
+    #: Наименование в каталоге
+    name: str
+    #: Товарный знак
+    brand: str
+    #: Товарная группа
+    product_group: str
+    #: Карточка готова к маркировке
+    good_mark_flag: bool
+    #: Карточка готова к обороту
+    good_turn_flag: bool
+    #: Карточка подписана
+    good_signed_flag: bool
+    #: Карточка набора
+    is_set: bool
+    #: Состав набора по карточке
+    set_items: List["MarkingProductCatalogCardCardSetItemsItem"]
+
+class _MarkingProductCatalogCardCardSetItemsItemRequired(TypedDict):
+    #: GTIN вложения (14 цифр)
+    gtin: str
+    #: Количество вложений
+    quantity: int
+
+class MarkingProductCatalogCardCardSetItemsItem(_MarkingProductCatalogCardCardSetItemsItemRequired, total=False):
+    product_id: "UUID"
+    #: Товар кабинета с этим GTIN
+    product_name: str
+    #: Артикул товара кабинета
+    product_sku: str
 
 class _MarkingProductLabelLineRequired(TypedDict):
     product_id: "UUID"
@@ -36358,6 +37439,88 @@ class StockDocumentFulfillmentSkipped(TypedDict):
     #: Почему исполнение не считается
     reason: str
 
+class StockDocumentKitAssembly(TypedDict):
+    id: "UUID"
+    number: str
+    status: Literal['draft', 'posted', 'cancelled']
+    date: str
+    #: Сколько наборов рождает сборка
+    qty: str
+
+class _StockDocumentKitBinRequired(TypedDict):
+    #: Сколько взять из этой ячейки и партии, в базовой единице
+    qty: str
+
+class StockDocumentKitBin(_StockDocumentKitBinRequired, total=False):
+    #: Ячейка; пусто — товар вне ячеек
+    bin_id: Optional["UUID"]
+    bin_code: str
+    bin_name: str
+    batch_code: str
+    expires_at: Optional[str]
+
+class _StockDocumentKitLineRequired(TypedDict):
+    #: Строки документа с этим набором
+    line_ids: List["UUID"]
+    product_id: "UUID"
+    spec_id: "UUID"
+    spec_version_id: "UUID"
+    spec_name: str
+    #: assembly — «Сборка», набор собирают документом сборки; kit — «Комплект», его собирает проведение документа расхода
+    spec_kind: Literal['assembly', 'kit']
+    #: Сколько набора в документе
+    need: str
+    #: Готовых наборов на складе расхода (физический остаток); у проведённого документа — 0
+    on_hand: str
+    #: Сколько наборов собрать сейчас: нужно минус готовые минус заведённые черновиками сборки
+    to_assemble: str
+    #: Сколько наборов уже заведено черновиками сборки под этот документ
+    drafted: str
+    #: enough — готовых хватает; assemble — собрать сборкой; components_short — компонентов не хватает; on_posting — «Комплект» соберёт проведение; drafted — сборка заведена черновиком, осталось отсканировать марки и провести
+    status: Literal['enough', 'assemble', 'components_short', 'on_posting', 'drafted']
+    parts: List["StockDocumentKitPart"]
+    #: Сборки этого набора под документ: черновики «Собрать наборы» и автосборки «Комплекта»
+    assemblies: List["StockDocumentKitAssembly"]
+
+class StockDocumentKitLine(_StockDocumentKitLineRequired, total=False):
+    product_sku: str
+    product_name: str
+    #: У набора своя марка ЧЗ
+    marked: bool
+
+class _StockDocumentKitPartRequired(TypedDict):
+    product_id: "UUID"
+    #: Сколько компонента на один набор, в базовой единице
+    per_set: str
+    #: Сколько компонента на всё количество набора в документе
+    total: str
+    #: Сколько компонента на наборы, которые собирают сейчас (готовых не хватает)
+    to_assemble: str
+    #: Свободно на складе расхода: остаток минус чужие резервы; обещанное заказу этой отгрузки входит
+    available: str
+    barcodes: List[str]
+    #: Откуда взять на наборы, которые собирают сейчас: план отбора листа подбора (FEFO, обход ячеек). Пусто у склада без ячеек
+    bins: List["StockDocumentKitBin"]
+
+class StockDocumentKitPart(_StockDocumentKitPartRequired, total=False):
+    product_sku: str
+    product_name: str
+    #: Вид номенклатуры компонента: goods — товар, material и semi_product — упаковка и материалы
+    product_kind: str
+    unit: str
+    #: Компонент маркируется ЧЗ: его марки сканируют в сборку набора
+    marked: bool
+    #: Свободного меньше, чем нужно на все наборы документа, которые собирают сейчас
+    short: bool
+
+class StockDocumentKits(TypedDict):
+    document_id: "UUID"
+    warehouse_id: "UUID"
+    bins_mode: Literal['off', 'soft', 'strict']
+    #: Склад расхода свой; на складе площадки наборы не собирают, план пуст
+    own: bool
+    lines: List["StockDocumentKitLine"]
+
 class _StockDocumentLandedCostTargetRequired(TypedDict):
     batch_id: "UUID"
     product_id: "UUID"
@@ -36603,6 +37766,8 @@ class StockDocumentPayload(_StockDocumentPayloadRequired, total=False):
     sellable_sources: bool
     #: Только stock_assembly (ERP-2184): документ расхода, под который собран «Комплект». Марки компонентов такого набора сканируют в сам расход, поэтому у сборки их не ждут. Ставит сборка наборов; у других видов — 400
     kit_source: Optional["UUID"]
+    #: Только stock_assembly (ERP-2137): отгрузка или перемещение, под которые сборку завело «Собрать наборы». Учётного смысла нет: по ссылке документ расхода находит свои сборки и не заводит вторую на то же количество. Ставит только сборка наборов; присланное при создании отклоняется (400), правка черновика сохраняет значение документа
+    kit_for: Optional["UUID"]
     #: Только stock_assembly с kit_source (ERP-2184 × ERP-2182): правило срока годности документа расхода, под который собран «Комплект», — те же поля, что у payload.posting.shelf_life: block_expired, min_remaining_pct, min_remaining_days, min_source (cabinet, contact, store, manual), basis, as_of (плановая дата отгрузки), soft. Сборка берёт компоненты только проходящие его (FEFO среди годных); не хватает — 400 shelf_life_below_minimum или batch_expired с партиями компонента. Ставит только сборка наборов под отгрузку или перемещение; присланное при создании отклоняется (400), правка сохраняет значение документа
     kit_shelf_life: Dict[str, Any]
     #: Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается
@@ -37395,8 +38560,8 @@ class _StockKitAssemblyLineRequired(TypedDict):
     spec_version_id: "UUID"
     spec_name: str
     spec_kind: Literal['assembly', 'kit']
-    #: enough — хватает; assemble — соберётся; components_short — не хватает компонентов; assembled — сборка заведена; on_posting — «Комплект» без post соберёт проведение документа расхода
-    status: Literal['enough', 'assemble', 'components_short', 'assembled', 'on_posting']
+    #: enough — хватает; assemble — соберётся; components_short — не хватает компонентов; assembled — сборка заведена; on_posting — «Комплект» без post соберёт проведение документа расхода; drafted — недостающее уже заведено черновиком сборки под этот документ, повтор второй сборки не заводит и называет её в document_id
+    status: Literal['enough', 'assemble', 'components_short', 'assembled', 'on_posting', 'drafted']
     components: List["StockKitComponentNeed"]
 
 class StockKitAssemblyLine(_StockKitAssemblyLineRequired, total=False):
@@ -37628,6 +38793,33 @@ class StockOrderPallets(_StockOrderPalletsRequired, total=False):
     #: Температура новой палеты из настройки сети
     temperature: str
 
+class StockOrderPickKit(TypedDict):
+    """Набор заказа, которого не хватает готовым (ERP-2137): его собирают, и лист ведёт к компонентам и упаковке"""
+
+    product_id: "UUID"
+    sku: str
+    name: str
+    spec_kind: Literal['assembly', 'kit']
+    #: Сколько наборов взять готовыми
+    ready: str
+    #: Сколько наборов собрать из компонентов
+    assemble: str
+    parts: List["StockOrderPickKitPart"]
+
+class _StockOrderPickKitPartRequired(TypedDict):
+    product_id: "UUID"
+    sku: str
+    name: str
+    #: Сколько на один набор, в базовой единице
+    per_set: str
+    #: Сколько на все собираемые наборы
+    qty: str
+
+class StockOrderPickKitPart(_StockOrderPickKitPartRequired, total=False):
+    #: Вид номенклатуры компонента: goods — товар, material и semi_product — упаковка и материалы
+    product_kind: str
+    unit: str
+
 class _StockOrderPickLineRequired(TypedDict):
     line_id: "UUID"
     product_id: "UUID"
@@ -37645,7 +38837,7 @@ class StockOrderPickLine(_StockOrderPickLineRequired, total=False):
     #: Причина недобора, которую назвал кладовщик
     pick_reason: Literal['not_found', 'defect', 'out_of_stock', 'customer_request', 'wrong_batch']
 
-class StockOrderPickPlan(TypedDict):
+class _StockOrderPickPlanRequired(TypedDict):
     order_id: "UUID"
     order_number: str
     warehouse_id: "UUID"
@@ -37654,6 +38846,10 @@ class StockOrderPickPlan(TypedDict):
     bins_mode: Literal['off', 'soft', 'strict']
     lines: List["StockOrderPickPlanLine"]
     shortages: List["StockOrderPickShortage"]
+
+class StockOrderPickPlan(_StockOrderPickPlanRequired, total=False):
+    #: Наборы, которых не хватает готовыми (ERP-2137): недостающее лист раскладывает на компоненты одним планом со всем заказом
+    kits: List["StockOrderPickKit"]
 
 class _StockOrderPickPlanLineRequired(TypedDict):
     #: Место строки в обходе: сначала товар вне ячеек, затем ячейки по порядку обхода склада, внутри ячейки — ранний срок годности
@@ -37674,8 +38870,10 @@ class StockOrderPickPlanLine(_StockOrderPickPlanLineRequired, total=False):
     batch_code: str
     #: Годен до у партии; нет поля — у партии нет срока
     expires_at: str
+    #: Наборы, в которые идёт товар как компонент (ERP-2137): их собирают из этой строки. Нет поля — товар берут сам по себе
+    for_kits: List["UUID"]
 
-class StockOrderPickShortage(TypedDict):
+class _StockOrderPickShortageRequired(TypedDict):
     product_id: "UUID"
     sku: str
     name: str
@@ -37683,6 +38881,10 @@ class StockOrderPickShortage(TypedDict):
     qty: str
     #: no_stock — на складе товара нет или он весь удержан; shelf_life — товар есть, но срок годности не проходит правило; reserved — товар обещан другим броням
     reason: Literal['no_stock', 'shelf_life', 'reserved']
+
+class StockOrderPickShortage(_StockOrderPickShortageRequired, total=False):
+    #: Наборы, которым не хватает этого компонента (ERP-2137)
+    for_kits: List["UUID"]
 
 class _StockOrderReservationHolderRequired(TypedDict):
     kind: Literal['order', 'wave', 'posting', 'manual']
@@ -40691,6 +41893,10 @@ class CoreUserEmployeesWithoutStaffingRequest(TypedDict, total=False):
     #: Только эти карточки из найденных; пусто — все найденные
     employee_ids: List["UUID"]
 
+class CoreHireCandidateRequest(TypedDict, total=False):
+    #: Дата приёма; не передана — без даты
+    employed_at: str
+
 class DashboardListMetricsResponse(TypedDict):
     count: int
     results: List["DashboardMetricDefinition"]
@@ -40853,6 +42059,14 @@ class FinanceGetProjectBudgetHistoryResponse(TypedDict):
     count: int
     results: List["FinanceProjectBudget"]
 
+class FinanceSaleReturnLastPriceResponse(TypedDict):
+    #: Есть ли продажа этого товара этому покупателю
+    found: bool
+    #: Цена за единицу с налогом в валюте учёта; пусто, если продажи нет
+    price: str
+    #: Дата той продажи (ГГГГ-ММ-ДД); пусто, если продажи нет
+    date: str
+
 class FinanceListAllocationRulesResponse(TypedDict, total=False):
     results: List["FinanceAllocationRule"]
 
@@ -40880,6 +42094,43 @@ class FinanceChangeActPnlItemRequest(TypedDict):
 class FinanceOffsetTradeAdvancesRequest(TypedDict, total=False):
     #: Авансы (id из advance-offer), которыми зачитывать; пусто — все свободные
     advance_ids: List["UUID"]
+
+class _FinanceCategorizeTransactionsRequestRequired(TypedDict):
+    #: Операции выписки, до 200
+    ids: List["UUID"]
+
+class FinanceCategorizeTransactionsRequest(_FinanceCategorizeTransactionsRequestRequired, total=False):
+    #: Статья ДДС
+    cashflow_item: Optional[str]
+    #: Контрагент
+    contact: Optional[str]
+    #: «За кого»
+    for_contact: Optional[str]
+    #: Проект
+    project: Optional[str]
+    #: Подразделение
+    department: Optional[str]
+    #: ЦФО
+    cfo: Optional[str]
+    #: Согласие на отмену зависимых документов
+    confirm_release: bool
+    #: Экран-источник правки для истории операции
+    origin: str
+
+class FinanceCategorizeTransactionsResponse(TypedDict):
+    results: List["FinanceCategorizeTransactionsResponseResultsItem"]
+
+class _FinanceCategorizeTransactionsResponseResultsItemRequired(TypedDict):
+    #: Операция
+    id: str
+    #: Исход строки
+    status: Literal['done', 'failed']
+
+class FinanceCategorizeTransactionsResponseResultsItem(_FinanceCategorizeTransactionsResponseResultsItemRequired, total=False):
+    #: Код отказа строки
+    code: str
+    #: Причина отказа на языке запроса
+    detail: str
 
 class _FinanceRepostTransactionsRequestRequired(TypedDict):
     ids: List["UUID"]
