@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 65835ed26937c617e018128914fb71b5b0936e74d3554f8de561f9e0f2ae6783).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bcd297a6b03665e964a57ed50ecaadcb826a9fa0a3f99a341cb40b6855d3a35).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -79,7 +79,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'bankCancelCashOperation': OperationSpec('POST', '/api/v1/bank/cash-operations/{id}/cancel', 'finance', 'preview', 'finance.cash_operations:write', False, False, ('id',), 'none', None, None),
     'bankCreateBonusScheme': OperationSpec('POST', '/api/v1/bank/staffing/bonus-schemes', 'finance', 'preview', 'finance.staffing:write', False, False, (), 'none', None, None),
     'bankCreateStaffPosition': OperationSpec('POST', '/api/v1/bank/staffing/positions', 'finance', 'preview', 'finance.staffing:write', False, False, (), 'none', None, None),
-    'bankCreateStaffingOrder': OperationSpec('POST', '/api/v1/bank/staffing/orders', 'finance', 'preview', 'finance.staffing:write', False, False, (), 'none', None, None),
+    'bankCreateStaffingOrder': OperationSpec('POST', '/api/v1/bank/staffing/orders', 'finance', 'preview', 'finance.staffing_orders:write', False, False, (), 'none', None, None),
     'bankDismissEmployee': OperationSpec('POST', '/api/v1/bank/staffing/dismissals', 'finance', 'preview', 'finance.staffing:write', False, False, (), 'none', None, None),
     'bankGetCashOperationCancelConsequences': OperationSpec('GET', '/api/v1/bank/cash-operations/{id}/cancel-consequences', 'finance', 'preview', 'finance.cash_operations:read', False, False, ('id',), 'none', None, None),
     'bankMarkTransactionDeleted': OperationSpec('POST', '/api/v1/bank/transactions/{id}/mark-deleted', 'finance', 'preview', 'finance.transactions:write', False, False, ('id',), 'none', None, None),
@@ -90,7 +90,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'bankResolveOneCConflict': OperationSpec('POST', '/api/v1/bank/exchange/items/{id}/onec-resolve', 'finance', 'preview', 'finance.exchange:write', False, False, ('id',), 'none', None, None),
     'bankRestoreTransaction': OperationSpec('POST', '/api/v1/bank/transactions/{id}/restore', 'finance', 'preview', 'finance.transactions:write', False, False, ('id',), 'none', None, None),
     'bankStaffHeadcount': OperationSpec('GET', '/api/v1/bank/staffing/headcount', 'finance', 'preview', 'finance.staffing:read', False, False, (), 'none', None, None),
-    'bankStaffPositions': OperationSpec('GET', '/api/v1/bank/staffing/positions', 'finance', 'preview', 'finance.staffing:read', False, False, (), 'none', None, None),
+    'bankStaffPositions': OperationSpec('GET', '/api/v1/bank/staffing/positions', 'finance', 'preview', 'finance.staffing_orders:read', False, False, (), 'none', None, None),
     'bankStaffVacancies': OperationSpec('GET', '/api/v1/bank/staffing/vacancies', 'finance', 'preview', 'finance.staffing_vacancies:read', False, False, (), 'none', None, None),
     'bankStaffingBonusOptions': OperationSpec('GET', '/api/v1/bank/staffing/bonus-bases', 'finance', 'preview', 'finance.staffing:read', False, False, (), 'none', None, None),
     'bankStaffingSheet': OperationSpec('GET', '/api/v1/bank/staffing/sheet', 'finance', 'preview', 'finance.staffing:read', False, False, (), 'none', None, None),
@@ -826,6 +826,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'docflowMailPapers': OperationSpec('GET', '/api/v1/docflow/mail-messages/{id}/papers', 'docflow', 'preview', 'docflow.flow:read', False, False, ('id',), 'none', None, None),
     'docflowMarkGovAnswered': OperationSpec('POST', '/api/v1/docflow/gov/documents/{id}/answered', 'docflow', 'preview', 'docflow.edo:write', False, False, ('id',), 'none', None, None),
     'docflowMarkMessageViewed': OperationSpec('POST', '/api/v1/docflow/messages/{id}/viewed', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
+    'docflowMergeContactUPDProfile': OperationSpec('PATCH', '/api/v1/docflow/contacts/{id}/upd-profile', 'docflow', 'preview', 'docflow.flow:write', False, False, ('id',), 'none', None, None),
     'docflowMyFlowAssignments': OperationSpec('GET', '/api/v1/docflow/flow/assignments', 'docflow', 'preview', 'docflow.flow:read|docflow.flow:approve|docflow.flow:request|docflow.edo:read', False, False, (), 'none', None, None),
     'docflowPackagePapers': OperationSpec('GET', '/api/v1/docflow/messages/{id}/papers', 'docflow', 'preview', 'docflow.edo:read', False, False, ('id',), 'none', None, None),
     'docflowPaymentBasisBalances': OperationSpec('GET', '/api/v1/docflow/payment-requests/basis-balances', 'docflow', 'preview', 'docflow.flow:request', False, False, (), 'none', None, None),
@@ -1010,7 +1011,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeCreatePnlLayout': OperationSpec('POST', '/api/v1/finance/pnl-layouts', 'finance', 'preview', 'finance.pnl_layouts:write', False, True, (), 'none', None, None),
     'financeCreateSettlementDocument': OperationSpec('POST', '/api/v1/finance/settlements/documents', 'finance', 'preview', 'finance.settlements:write', True, True, (), 'none', None, None),
     'financeCreateStaffPosition': OperationSpec('POST', '/api/v1/finance/staffing/positions', 'finance', 'preview', 'finance.staffing:write', False, False, (), 'none', None, None),
-    'financeCreateStaffingOrder': OperationSpec('POST', '/api/v1/finance/staffing/orders', 'finance', 'preview', 'finance.staffing:write', False, False, (), 'none', None, None),
+    'financeCreateStaffingOrder': OperationSpec('POST', '/api/v1/finance/staffing/orders', 'finance', 'preview', 'finance.staffing_orders:write', False, False, (), 'none', None, None),
     'financeCreateStatement': OperationSpec('POST', '/api/v1/finance/statements', 'finance', 'preview', 'finance.statements:write', False, True, (), 'none', None, None),
     'financeCreateStatementMailbox': OperationSpec('POST', '/api/v1/finance/statement-mailboxes', 'finance', 'preview', 'finance.connectors:write', False, False, (), 'none', None, None),
     'financeCreateTaxMonth': OperationSpec('POST', '/api/v1/finance/taxes/months', 'finance', 'preview', 'finance.period:write', False, True, (), 'none', None, None),
@@ -1025,6 +1026,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeDeleteOneCConnection': OperationSpec('DELETE', '/api/v1/finance/exchange/onec/connections/{id}', 'finance', 'preview', 'finance.exchange:write', False, True, ('id',), 'none', None, None),
     'financeDeletePnlLayout': OperationSpec('DELETE', '/api/v1/finance/pnl-layouts/{id}', 'finance', 'preview', 'finance.pnl_layouts:write', False, True, ('id',), 'none', None, None),
     'financeDeleteSettlementDocument': OperationSpec('DELETE', '/api/v1/finance/settlements/documents/{id}', 'finance', 'preview', 'finance.settlements:write', False, True, ('id',), 'none', None, None),
+    'financeDeleteStaffingOrder': OperationSpec('DELETE', '/api/v1/finance/staffing/orders/{id}', 'finance', 'preview', 'finance.staffing_orders:write', False, False, ('id',), 'none', None, None),
     'financeDeleteTaxMonth': OperationSpec('DELETE', '/api/v1/finance/taxes/months/{id}', 'finance', 'preview', 'finance.period:write', False, True, ('id',), 'none', None, None),
     'financeDismissEmployee': OperationSpec('POST', '/api/v1/finance/staffing/dismissals', 'finance', 'preview', 'finance.staffing:write', False, False, (), 'none', None, None),
     'financeDisposeFixedAsset': OperationSpec('POST', '/api/v1/finance/fixed-assets/{id}/disposal', 'finance', 'preview', 'finance.period:write', True, True, ('id',), 'none', None, None),
@@ -1221,11 +1223,13 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeSettlementAging': OperationSpec('GET', '/api/v1/finance/settlements/aging', 'finance', 'preview', 'finance.settlements:read', False, True, (), 'none', None, None),
     'financeSettlementReconciliationTurnover': OperationSpec('GET', '/api/v1/finance/settlements/reconciliation-turnover', 'finance', 'preview', 'finance.settlements:read', False, True, (), 'none', None, None),
     'financeStaffHeadcount': OperationSpec('GET', '/api/v1/finance/staffing/headcount', 'finance', 'preview', 'finance.staffing:read', False, False, (), 'none', None, None),
-    'financeStaffPositions': OperationSpec('GET', '/api/v1/finance/staffing/positions', 'finance', 'preview', 'finance.staffing:read', False, False, (), 'none', None, None),
+    'financeStaffPositions': OperationSpec('GET', '/api/v1/finance/staffing/positions', 'finance', 'preview', 'finance.staffing_orders:read', False, False, (), 'none', None, None),
     'financeStaffVacancies': OperationSpec('GET', '/api/v1/finance/staffing/vacancies', 'finance', 'preview', 'finance.staffing_vacancies:read', False, True, (), 'none', None, None),
     'financeStaffingBonusOptions': OperationSpec('GET', '/api/v1/finance/staffing/bonus-bases', 'finance', 'preview', 'finance.staffing:read', False, False, (), 'none', None, None),
+    'financeStaffingOrders': OperationSpec('GET', '/api/v1/finance/staffing/orders', 'finance', 'preview', 'finance.staffing_orders:read', False, False, (), 'none', None, None),
     'financeStaffingSheet': OperationSpec('GET', '/api/v1/finance/staffing/sheet', 'finance', 'preview', 'finance.staffing:read', False, False, (), 'none', None, None),
     'financeSubmitBudgetCorrection': OperationSpec('POST', '/api/v1/finance/budgets/corrections/{id}/submit', 'finance', 'preview', 'finance.budgets:write', False, True, ('id',), 'none', None, None),
+    'financeSubmitStaffingOrder': OperationSpec('POST', '/api/v1/finance/staffing/orders/{id}/submit', 'finance', 'preview', 'finance.staffing_orders:write', False, False, ('id',), 'none', None, None),
     'financeSwitchConnectorAccountsImport': OperationSpec('POST', '/api/v1/finance/connectors/{id}/accounts/import-switch', 'finance', 'preview', 'finance.connectors:write', False, True, ('id',), 'none', None, None),
     'financeSyncConnector': OperationSpec('POST', '/api/v1/finance/connectors/{id}/sync', 'finance', 'preview', 'finance.connectors:write', True, True, ('id',), 'none', None, None),
     'financeTakeAccountingRegistryEntry': OperationSpec('POST', '/api/v1/finance/accounting-registry/{id}/take', 'finance', 'preview', 'finance.accounting-registry:write', False, True, ('id',), 'none', None, None),
@@ -1252,6 +1256,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeUpdateTransactionResponsible': OperationSpec('PATCH', '/api/v1/finance/transactions/{id}/responsible', 'finance', 'preview', 'finance.transactions:write', False, True, ('id',), 'none', None, None),
     'financeUpdateVATQuarter': OperationSpec('PUT', '/api/v1/finance/vat-quarters/{id}', 'finance', 'preview', 'finance.period:write', False, True, ('id',), 'none', None, None),
     'financeWithdrawBudgetCorrection': OperationSpec('POST', '/api/v1/finance/budgets/corrections/{id}/withdraw', 'finance', 'preview', 'finance.budgets:write', False, True, ('id',), 'none', None, None),
+    'financeWithdrawStaffingOrder': OperationSpec('POST', '/api/v1/finance/staffing/orders/{id}/withdraw', 'finance', 'preview', 'finance.staffing_orders:write', False, False, ('id',), 'none', None, None),
     'financeWriteOffDebt': OperationSpec('POST', '/api/v1/finance/settlements/obligations/{id}/write-off', 'finance', 'preview', 'finance.settlements:write', True, True, ('id',), 'none', None, None),
     'invitationsCreate': OperationSpec('POST', '/api/v1/invitations', 'invitations', 'preview', 'settings.invite:write', False, False, (), 'none', None, None),
     'invitationsCreateBatch': OperationSpec('POST', '/api/v1/invitations/batch', 'invitations', 'preview', 'settings.invite:write', False, False, (), 'none', None, None),

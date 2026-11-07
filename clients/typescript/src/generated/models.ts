@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 65835ed26937c617e018128914fb71b5b0936e74d3554f8de561f9e0f2ae6783).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bcd297a6b03665e964a57ed50ecaadcb826a9fa0a3f99a341cb40b6855d3a35).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -5322,6 +5322,10 @@ export interface CoreActionRequestExecuteInputInputOrder {
   "contract_id"?: UUID;
   /** Канал продаж — запись справочника «Каналы продаж»: подбор цены берёт вид цены канала. Ozon-маркетплейс и Ozon-опт — разные каналы и при одном контрагенте */
   "channel_id"?: { [key: string]: unknown };
+  /** Период услуги по договору: YYYY-MM или YYYY-MM-DD (первый день); пустая строка — снять; не назван — прежний. Второй продажи на занятый период нет (409 core.trade.slot_taken), кроме дополнительной (ERP-2634) */
+  "service_period"?: string;
+  /** Дополнительная продажа вне графика договора: слот не занимает */
+  "extra_sale"?: boolean;
   /** Грузополучатель продажи — другой контрагент, которому везут товар; склад или филиал самого покупателя называют точкой доставки (consignee_point_id). Не назван при правке — остаётся прежний; нулевой идентификатор — снять, грузополучателем снова будет покупатель */
   "consignee_contact_id"?: { [key: string]: unknown };
   /** Точка доставки — склад или филиал грузополучателя, а если он не назван, самого покупателя; УПД берёт из неё КПП и адрес ГрузПолуч. Точка другого контрагента — 400. Не названа при правке — остаётся прежняя, пока грузополучатель тот же; нулевой идентификатор — снять */
@@ -7611,6 +7615,12 @@ export interface CoreOrder {
   "contract_id"?: UUID;
   "channel_id"?: UUID;
   "channel_name"?: string;
+  /** Первый день периода услуги продажи по договору — слот графика договора (ERP-2634); пусто — вне графика */
+  "service_period"?: string;
+  /** Дополнительная продажа вне графика договора: слот не занимает */
+  "extra_sale"?: boolean;
+  /** На тот же период услуги договора есть ещё живая продажа — дубль */
+  "slot_duplicate"?: boolean;
   /** Грузополучатель продажи — другой контрагент, которому везут товар; пусто — грузополучатель сам покупатель (или его точка доставки consignee_point_id) */
   "consignee_contact_id"?: { [key: string]: unknown };
   /** Название карточки грузополучателя — для экрана */
@@ -8037,6 +8047,10 @@ export interface CoreOrderInput {
   "contract_id"?: UUID;
   /** Канал продаж — запись справочника «Каналы продаж»: подбор цены берёт вид цены канала. Ozon-маркетплейс и Ozon-опт — разные каналы и при одном контрагенте */
   "channel_id"?: { [key: string]: unknown };
+  /** Период услуги по договору: YYYY-MM или YYYY-MM-DD (первый день); пустая строка — снять; не назван — прежний. Второй продажи на занятый период нет (409 core.trade.slot_taken), кроме дополнительной (ERP-2634) */
+  "service_period"?: string;
+  /** Дополнительная продажа вне графика договора: слот не занимает */
+  "extra_sale"?: boolean;
   /** Грузополучатель продажи — другой контрагент, которому везут товар; склад или филиал самого покупателя называют точкой доставки (consignee_point_id). Не назван при правке — остаётся прежний; нулевой идентификатор — снять, грузополучателем снова будет покупатель */
   "consignee_contact_id"?: { [key: string]: unknown };
   /** Точка доставки — склад или филиал грузополучателя, а если он не назван, самого покупателя; УПД берёт из неё КПП и адрес ГрузПолуч. Точка другого контрагента — 400. Не названа при правке — остаётся прежняя, пока грузополучатель тот же; нулевой идентификатор — снять */
@@ -8361,6 +8375,10 @@ export interface CoreOrderRevision {
   "contract_id"?: UUID;
   /** Канал продаж — запись справочника «Каналы продаж»: подбор цены берёт вид цены канала. Ozon-маркетплейс и Ozon-опт — разные каналы и при одном контрагенте */
   "channel_id"?: { [key: string]: unknown };
+  /** Период услуги по договору: YYYY-MM или YYYY-MM-DD (первый день); пустая строка — снять; не назван — прежний. Второй продажи на занятый период нет (409 core.trade.slot_taken), кроме дополнительной (ERP-2634) */
+  "service_period"?: string;
+  /** Дополнительная продажа вне графика договора: слот не занимает */
+  "extra_sale"?: boolean;
   /** Грузополучатель продажи — другой контрагент, которому везут товар; склад или филиал самого покупателя называют точкой доставки (consignee_point_id). Не назван при правке — остаётся прежний; нулевой идентификатор — снять, грузополучателем снова будет покупатель */
   "consignee_contact_id"?: { [key: string]: unknown };
   /** Точка доставки — склад или филиал грузополучателя, а если он не назван, самого покупателя; УПД берёт из неё КПП и адрес ГрузПолуч. Точка другого контрагента — 400. Не названа при правке — остаётся прежняя, пока грузополучатель тот же; нулевой идентификатор — снять */
@@ -12321,10 +12339,12 @@ export interface DocflowApprovalEvent {
 /** Строка очереди. Это НЕ урезанный предмет: ни файлов, ни строк, ни связей здесь нет — очередь открывают, чтобы решить, что открывать дальше. */
 export interface DocflowApprovalInboxItem {
   "approval_id": UUID;
+  /** Состояние прохода; список «Заявки на согласование» показывает и отправленные автором */
+  "state"?: "pending" | "approved" | "rejected" | "returned" | "cancelled";
   "subject": DocflowApprovalSubject;
   "subject_title": string;
   "subject_number"?: string;
-  /** Вид документа у владельца; для ядровой заявки это ключ действия. Добавляется только после отбора доступа и страницы. */
+  /** Вид документа у владельца; для ядровой заявки это ключ действия, для кадрового приказа — staffing_order или staffing_order_deleted (черновик удалён). Добавляется только после отбора доступа и страницы. */
   "subject_document_kind"?: string;
   "route_name"?: string;
   /** Разовый проход: согласующих выбрал автор (requested_name) */
@@ -22048,6 +22068,14 @@ export interface FinancePeriodCheck {
   "title": string;
   "detail": string;
   "passed": boolean;
+  "warning"?: boolean;
+  "links"?: Array<FinancePeriodCheckLink>;
+  "total"?: number;
+}
+
+export interface FinancePeriodCheckLink {
+  "label": string;
+  "url": string;
 }
 
 export interface FinancePeriodCheckPage {
@@ -23141,6 +23169,13 @@ export interface FinanceStaffingDismissalResult {
   "warnings": Array<"card_read_failed" | "card_archive_failed" | "access_close_failed" | "org_remove_failed">;
 }
 
+export interface FinanceStaffingOrderApproval {
+  /** Проход согласования документооборота */
+  "approval_id": string;
+  /** Состояние прохода: pending — на согласовании, returned — возвращён, rejected — отклонён, cancelled — отозван, approved — согласован и проведён */
+  "state": string;
+}
+
 export interface FinanceStaffingOrderCreate {
   /** UUID юрлица в шапке документа, none или пусто */
   "company"?: string;
@@ -23151,13 +23186,35 @@ export interface FinanceStaffingOrderCreate {
   "new_position"?: FinanceStaffPositionInput;
 }
 
+export interface FinanceStaffingOrderRequestList {
+  "results": Array<FinanceStaffingOrderRequestListResultsItem>;
+}
+
+export interface FinanceStaffingOrderRequestListResultsItem {
+  /** Документ расстановки */
+  "id": string;
+  "number": string;
+  "date": string;
+  "status": "draft" | "posted" | "cancelled";
+  "comment": string;
+  "author_name": string;
+  /** Последний проход согласования */
+  "approval_id": string;
+  "state": "pending" | "approved" | "rejected" | "returned" | "cancelled";
+  /** Юрлицо позиции; пусто — не оформлен */
+  "company_name": string;
+}
+
 export type FinanceStaffingOrderResult = CoreDocument | FinanceStaffingOrderWithPosition;
 
 export interface FinanceStaffingOrderWithPosition {
-  /** Проведённый документ расстановки */
+  /** Документ расстановки — проведённый или черновик под согласованием */
   "id": string;
   "number": string;
-  "position": FinanceStaffPosition;
+  /** posted — приказ проведён; draft — черновик на согласовании */
+  "status"?: "draft" | "posted";
+  "position"?: FinanceStaffPosition;
+  "approval"?: FinanceStaffingOrderApproval;
 }
 
 /** Строка расстановки; business, company и department сервер заполняет сам */
@@ -23654,6 +23711,8 @@ export interface FinanceTradeJournalRow {
   /** Состояние продажи или закупки по канону */
   "state"?: "draft" | "confirmed" | "executing" | "executed" | "closed" | "cancelled";
   "title"?: string;
+  /** Дубль: на тот же период услуги договора есть ещё живая продажа (ERP-2634) */
+  "slot_duplicate"?: boolean;
   "contract_id"?: string | null;
   "cabinet_status_name"?: string;
   /** Итог продажи или закупки, decimal string */
@@ -29342,7 +29401,7 @@ export interface MarketplaceWeeklyFinanceRun {
 }
 
 export interface MarketplaceWeeklyFinanceRunChargesItem {
-  "kind": "fee" | "acquiring" | "logistics" | "storage" | "ads" | "penalty" | "loyalty" | "other";
+  "kind": "fee" | "acquiring" | "logistics" | "storage" | "ads" | "penalty" | "loyalty" | "other" | "adjustment";
   /** Сумма удержания с налогом, знак как в отчёте площадки */
   "amount": string;
   /** Налог внутри суммы по документу площадки; "0" — услуга без НДС */
@@ -35147,6 +35206,14 @@ export interface StockDocumentPresentation {
   "products": Array<StockDocumentProductLabel>;
 }
 
+export interface StockDocumentProductCode {
+  "kind": "barcode" | "gtin" | "channel_article" | "manufacturer_article";
+  /** Источник кода: global, код канала продаж или пространство магазина «<площадка>:<магазин>:<поле>» */
+  "source_ref": string;
+  "value": string;
+  "is_primary": boolean;
+}
+
 /** Название, артикул, базовая единица, признак учёта без серий и срок годности точной номенклатуры из сохранённого документа. Не заменяет количество или явную единицу его строки. */
 export interface StockDocumentProductLabel {
   "id": UUID;
@@ -35157,6 +35224,8 @@ export interface StockDocumentProductLabel {
   "without_series": boolean;
   "shelf_life_value": number | null;
   "shelf_life_unit": "days" | "months" | "";
+  /** Только у открытого документа (GET /stock/documents/{id}), не у страницы журнала: действующие коды, по которым ищут товар в строках, — ШК, GTIN, артикулы каналов и производителя; основной первым в своём виде. Служебные ключи карточек площадок (chrt_id, imt_id) не приходят. */
+  "codes"?: Array<StockDocumentProductCode>;
 }
 
 /** Складской документ с необязательной вычисляемой проекцией названий. Чтение документа, область и маскирование стоимости применяются до проекции. */

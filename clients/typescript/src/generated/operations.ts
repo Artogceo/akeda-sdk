@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 65835ed26937c617e018128914fb71b5b0936e74d3554f8de561f9e0f2ae6783).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bcd297a6b03665e964a57ed50ecaadcb826a9fa0a3f99a341cb40b6855d3a35).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -370,7 +370,7 @@ export interface OperationTypes {
     body: models.FinanceStaffPositionInput;
     response: models.FinanceStaffPosition;
   };
-  /** POST /api/v1/bank/staffing/orders — Провести приказ расстановки штата (исторический адрес) */
+  /** POST /api/v1/bank/staffing/orders — Завести кадровый приказ расстановки штата (исторический адрес) */
   bankCreateStaffingOrder: {
     params: Record<string, never>;
     query: Record<string, never>;
@@ -5599,6 +5599,13 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
+  /** PATCH /api/v1/docflow/contacts/{id}/upd-profile — Изменить поля профиля реквизитов УПД покупателя */
+  docflowMergeContactUPDProfile: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.CoreUPDProfile;
+    response: models.DocflowContactUPDProfile;
+  };
   /** GET /api/v1/docflow/flow/assignments — Получить мои поручения по документам */
   docflowMyFlowAssignments: {
     params: Record<string, never>;
@@ -6887,7 +6894,7 @@ export interface OperationTypes {
     body: models.FinanceStaffPositionInput;
     response: models.FinanceStaffPosition;
   };
-  /** POST /api/v1/finance/staffing/orders — Провести приказ расстановки штата */
+  /** POST /api/v1/finance/staffing/orders — Завести кадровый приказ расстановки штата */
   financeCreateStaffingOrder: {
     params: Record<string, never>;
     query: Record<string, never>;
@@ -6991,6 +6998,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.CoreDocument;
+  };
+  /** DELETE /api/v1/finance/staffing/orders/{id} — Удалить черновик кадрового приказа */
+  financeDeleteStaffingOrder: {
+    params: { "id": string };
+    query: Record<string, never>;
+    body: never;
+    response: void;
   };
   /** DELETE /api/v1/finance/taxes/months/{id} — Удалить черновик «Налоги за месяц» */
   financeDeleteTaxMonth: {
@@ -8385,6 +8399,13 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceBonusOptions;
   };
+  /** GET /api/v1/finance/staffing/orders — Получить свои кадровые приказы на согласовании */
+  financeStaffingOrders: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.FinanceStaffingOrderRequestList;
+  };
   /** GET /api/v1/finance/staffing/sheet — Получить штатное расписание на дату */
   financeStaffingSheet: {
     params: Record<string, never>;
@@ -8398,6 +8419,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.FinanceBudgetCorrection;
+  };
+  /** POST /api/v1/finance/staffing/orders/{id}/submit — Отправить кадровый приказ на согласование */
+  financeSubmitStaffingOrder: {
+    params: { "id": string };
+    query: Record<string, never>;
+    body: never;
+    response: models.FinanceStaffingOrderApproval;
   };
   /** POST /api/v1/finance/connectors/{id}/accounts/import-switch — Включить или выключить импорт сразу у счетов подключения */
   financeSwitchConnectorAccountsImport: {
@@ -8580,6 +8608,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.FinanceBudgetCorrectionWithdraw;
     response: models.FinanceBudgetCorrection;
+  };
+  /** POST /api/v1/finance/staffing/orders/{id}/withdraw — Отозвать кадровый приказ с согласования */
+  financeWithdrawStaffingOrder: {
+    params: { "id": string };
+    query: Record<string, never>;
+    body: never;
+    response: void;
   };
   /** POST /api/v1/finance/settlements/obligations/{id}/write-off — Списать остаток долга */
   financeWriteOffDebt: {
@@ -13661,7 +13696,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   bankCancelCashOperation: { method: "POST", path: "/api/v1/bank/cash-operations/{id}/cancel", module: "finance", stage: "preview", permission: "finance.cash_operations:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   bankCreateBonusScheme: { method: "POST", path: "/api/v1/bank/staffing/bonus-schemes", module: "finance", stage: "preview", permission: "finance.staffing:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   bankCreateStaffPosition: { method: "POST", path: "/api/v1/bank/staffing/positions", module: "finance", stage: "preview", permission: "finance.staffing:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  bankCreateStaffingOrder: { method: "POST", path: "/api/v1/bank/staffing/orders", module: "finance", stage: "preview", permission: "finance.staffing:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  bankCreateStaffingOrder: { method: "POST", path: "/api/v1/bank/staffing/orders", module: "finance", stage: "preview", permission: "finance.staffing_orders:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   bankDismissEmployee: { method: "POST", path: "/api/v1/bank/staffing/dismissals", module: "finance", stage: "preview", permission: "finance.staffing:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   bankGetCashOperationCancelConsequences: { method: "GET", path: "/api/v1/bank/cash-operations/{id}/cancel-consequences", module: "finance", stage: "preview", permission: "finance.cash_operations:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   bankMarkTransactionDeleted: { method: "POST", path: "/api/v1/bank/transactions/{id}/mark-deleted", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -13672,7 +13707,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   bankResolveOneCConflict: { method: "POST", path: "/api/v1/bank/exchange/items/{id}/onec-resolve", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   bankRestoreTransaction: { method: "POST", path: "/api/v1/bank/transactions/{id}/restore", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   bankStaffHeadcount: { method: "GET", path: "/api/v1/bank/staffing/headcount", module: "finance", stage: "preview", permission: "finance.staffing:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  bankStaffPositions: { method: "GET", path: "/api/v1/bank/staffing/positions", module: "finance", stage: "preview", permission: "finance.staffing:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  bankStaffPositions: { method: "GET", path: "/api/v1/bank/staffing/positions", module: "finance", stage: "preview", permission: "finance.staffing_orders:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   bankStaffVacancies: { method: "GET", path: "/api/v1/bank/staffing/vacancies", module: "finance", stage: "preview", permission: "finance.staffing_vacancies:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   bankStaffingBonusOptions: { method: "GET", path: "/api/v1/bank/staffing/bonus-bases", module: "finance", stage: "preview", permission: "finance.staffing:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   bankStaffingSheet: { method: "GET", path: "/api/v1/bank/staffing/sheet", module: "finance", stage: "preview", permission: "finance.staffing:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14408,6 +14443,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   docflowMailPapers: { method: "GET", path: "/api/v1/docflow/mail-messages/{id}/papers", module: "docflow", stage: "preview", permission: "docflow.flow:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowMarkGovAnswered: { method: "POST", path: "/api/v1/docflow/gov/documents/{id}/answered", module: "docflow", stage: "preview", permission: "docflow.edo:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowMarkMessageViewed: { method: "POST", path: "/api/v1/docflow/messages/{id}/viewed", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  docflowMergeContactUPDProfile: { method: "PATCH", path: "/api/v1/docflow/contacts/{id}/upd-profile", module: "docflow", stage: "preview", permission: "docflow.flow:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowMyFlowAssignments: { method: "GET", path: "/api/v1/docflow/flow/assignments", module: "docflow", stage: "preview", permission: "docflow.flow:read|docflow.flow:approve|docflow.flow:request|docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowPackagePapers: { method: "GET", path: "/api/v1/docflow/messages/{id}/papers", module: "docflow", stage: "preview", permission: "docflow.edo:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   docflowPaymentBasisBalances: { method: "GET", path: "/api/v1/docflow/payment-requests/basis-balances", module: "docflow", stage: "preview", permission: "docflow.flow:request", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14592,7 +14628,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeCreatePnlLayout: { method: "POST", path: "/api/v1/finance/pnl-layouts", module: "finance", stage: "preview", permission: "finance.pnl_layouts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateSettlementDocument: { method: "POST", path: "/api/v1/finance/settlements/documents", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateStaffPosition: { method: "POST", path: "/api/v1/finance/staffing/positions", module: "finance", stage: "preview", permission: "finance.staffing:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeCreateStaffingOrder: { method: "POST", path: "/api/v1/finance/staffing/orders", module: "finance", stage: "preview", permission: "finance.staffing:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateStaffingOrder: { method: "POST", path: "/api/v1/finance/staffing/orders", module: "finance", stage: "preview", permission: "finance.staffing_orders:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateStatement: { method: "POST", path: "/api/v1/finance/statements", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateStatementMailbox: { method: "POST", path: "/api/v1/finance/statement-mailboxes", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateTaxMonth: { method: "POST", path: "/api/v1/finance/taxes/months", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14607,6 +14643,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeDeleteOneCConnection: { method: "DELETE", path: "/api/v1/finance/exchange/onec/connections/{id}", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeletePnlLayout: { method: "DELETE", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance.pnl_layouts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteSettlementDocument: { method: "DELETE", path: "/api/v1/finance/settlements/documents/{id}", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeDeleteStaffingOrder: { method: "DELETE", path: "/api/v1/finance/staffing/orders/{id}", module: "finance", stage: "preview", permission: "finance.staffing_orders:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteTaxMonth: { method: "DELETE", path: "/api/v1/finance/taxes/months/{id}", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDismissEmployee: { method: "POST", path: "/api/v1/finance/staffing/dismissals", module: "finance", stage: "preview", permission: "finance.staffing:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDisposeFixedAsset: { method: "POST", path: "/api/v1/finance/fixed-assets/{id}/disposal", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14803,11 +14840,13 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeSettlementAging: { method: "GET", path: "/api/v1/finance/settlements/aging", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSettlementReconciliationTurnover: { method: "GET", path: "/api/v1/finance/settlements/reconciliation-turnover", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeStaffHeadcount: { method: "GET", path: "/api/v1/finance/staffing/headcount", module: "finance", stage: "preview", permission: "finance.staffing:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
-  financeStaffPositions: { method: "GET", path: "/api/v1/finance/staffing/positions", module: "finance", stage: "preview", permission: "finance.staffing:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeStaffPositions: { method: "GET", path: "/api/v1/finance/staffing/positions", module: "finance", stage: "preview", permission: "finance.staffing_orders:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeStaffVacancies: { method: "GET", path: "/api/v1/finance/staffing/vacancies", module: "finance", stage: "preview", permission: "finance.staffing_vacancies:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeStaffingBonusOptions: { method: "GET", path: "/api/v1/finance/staffing/bonus-bases", module: "finance", stage: "preview", permission: "finance.staffing:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeStaffingOrders: { method: "GET", path: "/api/v1/finance/staffing/orders", module: "finance", stage: "preview", permission: "finance.staffing_orders:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeStaffingSheet: { method: "GET", path: "/api/v1/finance/staffing/sheet", module: "finance", stage: "preview", permission: "finance.staffing:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSubmitBudgetCorrection: { method: "POST", path: "/api/v1/finance/budgets/corrections/{id}/submit", module: "finance", stage: "preview", permission: "finance.budgets:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeSubmitStaffingOrder: { method: "POST", path: "/api/v1/finance/staffing/orders/{id}/submit", module: "finance", stage: "preview", permission: "finance.staffing_orders:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSwitchConnectorAccountsImport: { method: "POST", path: "/api/v1/finance/connectors/{id}/accounts/import-switch", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSyncConnector: { method: "POST", path: "/api/v1/finance/connectors/{id}/sync", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeTakeAccountingRegistryEntry: { method: "POST", path: "/api/v1/finance/accounting-registry/{id}/take", module: "finance", stage: "preview", permission: "finance.accounting-registry:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14834,6 +14873,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeUpdateTransactionResponsible: { method: "PATCH", path: "/api/v1/finance/transactions/{id}/responsible", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeUpdateVATQuarter: { method: "PUT", path: "/api/v1/finance/vat-quarters/{id}", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeWithdrawBudgetCorrection: { method: "POST", path: "/api/v1/finance/budgets/corrections/{id}/withdraw", module: "finance", stage: "preview", permission: "finance.budgets:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeWithdrawStaffingOrder: { method: "POST", path: "/api/v1/finance/staffing/orders/{id}/withdraw", module: "finance", stage: "preview", permission: "finance.staffing_orders:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeWriteOffDebt: { method: "POST", path: "/api/v1/finance/settlements/obligations/{id}/write-off", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   invitationsCreate: { method: "POST", path: "/api/v1/invitations", module: "invitations", stage: "preview", permission: "settings.invite:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   invitationsCreateBatch: { method: "POST", path: "/api/v1/invitations/batch", module: "invitations", stage: "preview", permission: "settings.invite:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

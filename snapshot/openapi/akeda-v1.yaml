@@ -66623,11 +66623,11 @@ paths:
         - Finance payroll
       operationId: financeStaffPositions
       summary: Получить справочник штатных позиций
-      description: 'Штатные позиции кабинета: бизнес, юрлицо, должность, подразделение и постановка в оргструктуру. Закрытые позиции остаются в выдаче — по ним начисляли. Порядок — юрлицо, подразделение, должность, название.'
+      description: 'Штатные позиции кабинета: бизнес, юрлицо, должность, подразделение и постановка в оргструктуру. Закрытые позиции остаются в выдаче — по ним начисляли. Порядок — юрлицо, подразделение, должность, название. Окладов в выдаче нет: список читает и право кадровых приказов finance.staffing_orders, входящее в раздел «Штат».'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: finance.staffing:read
+      x-akeda-permission: finance.staffing_orders:read
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -66958,16 +66958,45 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/finance/staffing/orders:
+    get:
+      tags:
+        - Finance payroll
+      operationId: financeStaffingOrders
+      summary: Получить свои кадровые приказы на согласовании
+      description: 'Кадровые приказы автора запроса, прошедшие через согласование: на маршруте, возвращённые, отклонённые и проведённые по визе. Удалённые черновики и приказы без прохода не входят. Автору с одним правом кадровых приказов очередь согласований кабинета не открыта — свои приказы он видит здесь. Только под /api/v1/finance.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.staffing_orders:read
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Свои кадровые приказы с состоянием прохода
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceStaffingOrderRequestList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
     post:
       tags:
         - Finance payroll
       operationId: financeCreateStaffingOrder
-      summary: Провести приказ расстановки штата
-      description: 'Заводит документ расстановки штата и сразу проводит его: с даты документа условия позиций в строках такие (оклад, ставка, премия, правила премии, официальная часть). Строка с сотрудником — приём: только свой человек из «Команды» с ИННом. С new_position — новая позиция и её первая расстановка одним действием, отказ откатывает обе записи. Закрытый период — 409 period_closed.'
+      summary: Завести кадровый приказ расстановки штата
+      description: 'Заводит документ расстановки штата — кадровый приказ: с даты документа условия позиций в строках такие (оклад, ставка, премия, правила премии, официальная часть). Строка с сотрудником — приём: только свой человек из «Команды» с ИННом. С new_position — новая позиция и её первая расстановка одним действием, отказ откатывает обе записи. Если к приказу подходит маршрут согласования документооборота (вид finance/staffing_order) или кабинет объявил вид требующим согласования, приказ остаётся черновиком (status draft) и уходит по маршруту — в ответе approval; финансы проводят его после последней визы. Без маршрута приказ проводится сразу. Право finance.staffing_orders:write входит в раздел «Штат». Закрытый период — 409 period_closed.'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: finance.staffing:write
+      x-akeda-permission: finance.staffing_orders:write
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -66982,13 +67011,130 @@ paths:
               $ref: '#/components/schemas/FinanceStaffingOrderCreate'
       responses:
         '201':
-          description: Проведённый документ расстановки; с new_position — номер и заведённая позиция
+          description: Проведённый документ расстановки; с new_position или под согласованием — номер, статус, позиция и проход согласования
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FinanceStaffingOrderResult'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/staffing/orders/{id}:
+    delete:
+      tags:
+        - Finance payroll
+      operationId: financeDeleteStaffingOrder
+      summary: Удалить черновик кадрового приказа
+      description: 'Удаляет черновик кадрового приказа — отклонённый, возвращённый, отозванный или ещё на согласовании: открытый проход снимается, документ помечается на удаление, история решений остаётся у прохода. Проведённый приказ — 409 finance.staffing_order.state.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.staffing_orders:write
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Черновик кадрового приказа
+      responses:
+        '204':
+          description: Проход снят; черновик помечен на удаление
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/staffing/orders/{id}/submit:
+    post:
+      tags:
+        - Finance payroll
+      operationId: financeSubmitStaffingOrder
+      summary: Отправить кадровый приказ на согласование
+      description: Отправляет по маршруту согласования возвращённый или отозванный черновик кадрового приказа (вид finance/staffing_order). После последней визы финансы проводят приказ сами. Проведённый приказ или не кадровый документ — 409 finance.staffing_order.state; маршрута нет — 409 с кодом отказа согласования.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.staffing_orders:write
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Черновик кадрового приказа
+      responses:
+        '200':
+          description: Проход согласования
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceStaffingOrderApproval'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/staffing/orders/{id}/withdraw:
+    post:
+      tags:
+        - Finance payroll
+      operationId: financeWithdrawStaffingOrder
+      summary: Отозвать кадровый приказ с согласования
+      description: Снимает открытый проход согласования кадрового приказа; черновик остаётся у автора, его можно поправить и отправить заново. Проведённый приказ — 409 finance.staffing_order.state.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.staffing_orders:write
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Черновик кадрового приказа
+      responses:
+        '204':
+          description: Проход снят; черновик остался у автора
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -67181,11 +67327,11 @@ paths:
         - Finance payroll
       operationId: bankStaffPositions
       summary: Получить справочник штатных позиций (исторический адрес)
-      description: Исторический адрес той же операции financeStaffPositions с тем же правом finance.staffing:read.
+      description: Исторический адрес той же операции financeStaffPositions с тем же правом finance.staffing_orders:read.
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: finance.staffing:read
+      x-akeda-permission: finance.staffing_orders:read
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -67520,12 +67666,12 @@ paths:
       tags:
         - Finance payroll
       operationId: bankCreateStaffingOrder
-      summary: Провести приказ расстановки штата (исторический адрес)
-      description: Исторический адрес той же операции financeCreateStaffingOrder с тем же правом finance.staffing:write.
+      summary: Завести кадровый приказ расстановки штата (исторический адрес)
+      description: Исторический адрес той же операции financeCreateStaffingOrder с тем же правом finance.staffing_orders:write.
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
-      x-akeda-permission: finance.staffing:write
+      x-akeda-permission: finance.staffing_orders:write
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -67540,7 +67686,7 @@ paths:
               $ref: '#/components/schemas/FinanceStaffingOrderCreate'
       responses:
         '201':
-          description: Проведённый документ расстановки; с new_position — номер и заведённая позиция
+          description: Проведённый документ расстановки; с new_position или под согласованием — номер, статус, позиция и проход согласования
           content:
             application/json:
               schema:
@@ -80309,6 +80455,51 @@ paths:
       x-akeda-audience: external
       summary: Изменить профиль реквизитов УПД покупателя
       description: 'Записывает профиль реквизитов УПД контрагента целиком (ERP-3123); пустой объект снимает свой профиль — действует профиль канала продаж. Значение не из перечня, повтор идентификатора доп. сведений, fixed без текста — 400 docflow.contact_paper_setting.invalid. Меняет только будущие сборки УПД: подписанный и отправленный файл остаётся прежним. Учётных записей не создаёт.'
+      security:
+        - erpUserToken: []
+        - mcpOAuth:
+            - akeda:delegate
+      x-akeda-module: docflow
+      x-akeda-release-stage: preview
+      x-akeda-permission: docflow.flow:write
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          description: Контрагент (core contact)
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoreUPDProfile'
+      responses:
+        '200':
+          description: Профиль после записи
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocflowContactUPDProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    patch:
+      tags:
+        - Docflow flow
+      operationId: docflowMergeContactUPDProfile
+      x-akeda-audience: external
+      summary: Изменить поля профиля реквизитов УПД покупателя
+      description: 'Правит профиль реквизитов УПД контрагента по полям: присланное поле заменяет своё (null снимает его), неприсланное остаётся прежним. Так правит одно-два поля агент; форма шлёт профиль целиком через PUT. Пустое тело — 400. Проверки значений и последствия — как у PUT.'
       security:
         - erpUserToken: []
         - mcpOAuth:
@@ -104365,6 +104556,16 @@ components:
           $ref: '#/components/schemas/UUID'
         channel_name:
           type: string
+        service_period:
+          type: string
+          format: date
+          description: Первый день периода услуги продажи по договору — слот графика договора (ERP-2634); пусто — вне графика
+        extra_sale:
+          type: boolean
+          description: 'Дополнительная продажа вне графика договора: слот не занимает'
+        slot_duplicate:
+          type: boolean
+          description: На тот же период услуги договора есть ещё живая продажа — дубль
         consignee_contact_id:
           description: Грузополучатель продажи — другой контрагент, которому везут товар; пусто — грузополучатель сам покупатель (или его точка доставки consignee_point_id)
           allOf:
@@ -105564,6 +105765,12 @@ components:
           description: 'Канал продаж — запись справочника «Каналы продаж»: подбор цены берёт вид цены канала. Ozon-маркетплейс и Ozon-опт — разные каналы и при одном контрагенте'
           allOf:
             - $ref: '#/components/schemas/UUID'
+        service_period:
+          type: string
+          description: 'Период услуги по договору: YYYY-MM или YYYY-MM-DD (первый день); пустая строка — снять; не назван — прежний. Второй продажи на занятый период нет (409 core.trade.slot_taken), кроме дополнительной (ERP-2634)'
+        extra_sale:
+          type: boolean
+          description: 'Дополнительная продажа вне графика договора: слот не занимает'
         consignee_contact_id:
           description: Грузополучатель продажи — другой контрагент, которому везут товар; склад или филиал самого покупателя называют точкой доставки (consignee_point_id). Не назван при правке — остаётся прежний; нулевой идентификатор — снять, грузополучателем снова будет покупатель
           allOf:
@@ -105698,6 +105905,12 @@ components:
           description: 'Канал продаж — запись справочника «Каналы продаж»: подбор цены берёт вид цены канала. Ozon-маркетплейс и Ozon-опт — разные каналы и при одном контрагенте'
           allOf:
             - $ref: '#/components/schemas/UUID'
+        service_period:
+          type: string
+          description: 'Период услуги по договору: YYYY-MM или YYYY-MM-DD (первый день); пустая строка — снять; не назван — прежний. Второй продажи на занятый период нет (409 core.trade.slot_taken), кроме дополнительной (ERP-2634)'
+        extra_sale:
+          type: boolean
+          description: 'Дополнительная продажа вне графика договора: слот не занимает'
         consignee_contact_id:
           description: Грузополучатель продажи — другой контрагент, которому везут товар; склад или филиал самого покупателя называют точкой доставки (consignee_point_id). Не назван при правке — остаётся прежний; нулевой идентификатор — снять, грузополучателем снова будет покупатель
           allOf:
@@ -118092,6 +118305,9 @@ components:
             - cancelled
         title:
           type: string
+        slot_duplicate:
+          type: boolean
+          description: 'Дубль: на тот же период услуги договора есть ещё живая продажа (ERP-2634)'
         contract_id:
           type:
             - string
@@ -126034,6 +126250,25 @@ components:
           type: string
         passed:
           type: boolean
+        warning:
+          type: boolean
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinancePeriodCheckLink'
+        total:
+          type: integer
+    FinancePeriodCheckLink:
+      type: object
+      additionalProperties: false
+      required:
+        - label
+        - url
+      properties:
+        label:
+          type: string
+        url:
+          type: string
     FinancePeriodCheckPage:
       type: object
       additionalProperties: false
@@ -139071,6 +139306,35 @@ components:
             - days
             - months
             - ''
+        codes:
+          type: array
+          description: 'Только у открытого документа (GET /stock/documents/{id}), не у страницы журнала: действующие коды, по которым ищут товар в строках, — ШК, GTIN, артикулы каналов и производителя; основной первым в своём виде. Служебные ключи карточек площадок (chrt_id, imt_id) не приходят.'
+          items:
+            $ref: '#/components/schemas/StockDocumentProductCode'
+    StockDocumentProductCode:
+      type: object
+      additionalProperties: false
+      readOnly: true
+      required:
+        - kind
+        - source_ref
+        - value
+        - is_primary
+      properties:
+        kind:
+          type: string
+          enum:
+            - barcode
+            - gtin
+            - channel_article
+            - manufacturer_article
+        source_ref:
+          type: string
+          description: 'Источник кода: global, код канала продаж или пространство магазина «<площадка>:<магазин>:<поле>»'
+        value:
+          type: string
+        is_primary:
+          type: boolean
     StockDocumentPage:
       type: object
       additionalProperties: false
@@ -156814,6 +157078,7 @@ components:
                   - penalty
                   - loyalty
                   - other
+                  - adjustment
               amount:
                 type: string
                 description: Сумма удержания с налогом, знак как в отчёте площадки
@@ -162486,18 +162751,95 @@ components:
       required:
         - id
         - number
-        - position
       properties:
         id:
           type: string
           format: uuid
-          description: Проведённый документ расстановки
+          description: Документ расстановки — проведённый или черновик под согласованием
         number:
           type: string
+        status:
+          type: string
+          enum:
+            - draft
+            - posted
+          description: posted — приказ проведён; draft — черновик на согласовании
         position:
           $ref: '#/components/schemas/FinanceStaffPosition'
+        approval:
+          $ref: '#/components/schemas/FinanceStaffingOrderApproval'
+    FinanceStaffingOrderRequestList:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - id
+              - number
+              - date
+              - status
+              - comment
+              - author_name
+              - approval_id
+              - state
+              - company_name
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: Документ расстановки
+              number:
+                type: string
+              date:
+                type: string
+                format: date
+              status:
+                type: string
+                enum:
+                  - draft
+                  - posted
+                  - cancelled
+              comment:
+                type: string
+              author_name:
+                type: string
+              approval_id:
+                type: string
+                format: uuid
+                description: Последний проход согласования
+              state:
+                type: string
+                enum:
+                  - pending
+                  - approved
+                  - rejected
+                  - returned
+                  - cancelled
+              company_name:
+                type: string
+                description: Юрлицо позиции; пусто — не оформлен
+    FinanceStaffingOrderApproval:
+      type: object
+      additionalProperties: false
+      required:
+        - approval_id
+        - state
+      properties:
+        approval_id:
+          type: string
+          format: uuid
+          description: Проход согласования документооборота
+        state:
+          type: string
+          description: 'Состояние прохода: pending — на согласовании, returned — возвращён, rejected — отклонён, cancelled — отозван, approved — согласован и проведён'
     FinanceStaffingOrderResult:
-      description: Документ расстановки либо, с new_position, его номер вместе с заведённой позицией
+      description: Документ расстановки либо, с new_position или под согласованием, его номер, статус, позиция и проход
       anyOf:
         - $ref: '#/components/schemas/CoreDocument'
         - $ref: '#/components/schemas/FinanceStaffingOrderWithPosition'
@@ -172061,6 +172403,15 @@ components:
       properties:
         approval_id:
           $ref: '#/components/schemas/UUID'
+        state:
+          type: string
+          enum:
+            - pending
+            - approved
+            - rejected
+            - returned
+            - cancelled
+          description: Состояние прохода; список «Заявки на согласование» показывает и отправленные автором
         subject:
           $ref: '#/components/schemas/DocflowApprovalSubject'
         subject_title:
@@ -172069,7 +172420,7 @@ components:
           type: string
         subject_document_kind:
           type: string
-          description: Вид документа у владельца; для ядровой заявки это ключ действия. Добавляется только после отбора доступа и страницы.
+          description: Вид документа у владельца; для ядровой заявки это ключ действия, для кадрового приказа — staffing_order или staffing_order_deleted (черновик удалён). Добавляется только после отбора доступа и страницы.
         route_name:
           type: string
         adhoc:

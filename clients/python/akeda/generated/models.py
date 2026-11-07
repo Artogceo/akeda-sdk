@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 65835ed26937c617e018128914fb71b5b0936e74d3554f8de561f9e0f2ae6783).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bcd297a6b03665e964a57ed50ecaadcb826a9fa0a3f99a341cb40b6855d3a35).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1809,6 +1809,7 @@ __all__ = [
     "FinancePayrollRunList",
     "FinancePayrollTerms",
     "FinancePeriodCheck",
+    "FinancePeriodCheckLink",
     "FinancePeriodCheckPage",
     "FinancePnlCoverage",
     "FinancePnlCoverageItem",
@@ -1906,7 +1907,10 @@ __all__ = [
     "FinanceStaffVacancyList",
     "FinanceStaffingDismissalCreate",
     "FinanceStaffingDismissalResult",
+    "FinanceStaffingOrderApproval",
     "FinanceStaffingOrderCreate",
+    "FinanceStaffingOrderRequestList",
+    "FinanceStaffingOrderRequestListResultsItem",
     "FinanceStaffingOrderResult",
     "FinanceStaffingOrderWithPosition",
     "FinanceStaffingRow",
@@ -2841,6 +2845,7 @@ __all__ = [
     "StockDocumentPosting",
     "StockDocumentPostingAccount",
     "StockDocumentPresentation",
+    "StockDocumentProductCode",
     "StockDocumentProductLabel",
     "StockDocumentRead",
     "StockDocumentRefs",
@@ -8574,6 +8579,10 @@ class CoreActionRequestExecuteInputInputOrder(_CoreActionRequestExecuteInputInpu
     contract_id: "UUID"
     #: Канал продаж — запись справочника «Каналы продаж»: подбор цены берёт вид цены канала. Ozon-маркетплейс и Ozon-опт — разные каналы и при одном контрагенте
     channel_id: Dict[str, Any]
+    #: Период услуги по договору: YYYY-MM или YYYY-MM-DD (первый день); пустая строка — снять; не назван — прежний. Второй продажи на занятый период нет (409 core.trade.slot_taken), кроме дополнительной (ERP-2634)
+    service_period: str
+    #: Дополнительная продажа вне графика договора: слот не занимает
+    extra_sale: bool
     #: Грузополучатель продажи — другой контрагент, которому везут товар; склад или филиал самого покупателя называют точкой доставки (consignee_point_id). Не назван при правке — остаётся прежний; нулевой идентификатор — снять, грузополучателем снова будет покупатель
     consignee_contact_id: Dict[str, Any]
     #: Точка доставки — склад или филиал грузополучателя, а если он не назван, самого покупателя; УПД берёт из неё КПП и адрес ГрузПолуч. Точка другого контрагента — 400. Не названа при правке — остаётся прежняя, пока грузополучатель тот же; нулевой идентификатор — снять
@@ -10868,6 +10877,12 @@ class CoreOrder(_CoreOrderRequired, total=False):
     contract_id: "UUID"
     channel_id: "UUID"
     channel_name: str
+    #: Первый день периода услуги продажи по договору — слот графика договора (ERP-2634); пусто — вне графика
+    service_period: str
+    #: Дополнительная продажа вне графика договора: слот не занимает
+    extra_sale: bool
+    #: На тот же период услуги договора есть ещё живая продажа — дубль
+    slot_duplicate: bool
     #: Грузополучатель продажи — другой контрагент, которому везут товар; пусто — грузополучатель сам покупатель (или его точка доставки consignee_point_id)
     consignee_contact_id: Dict[str, Any]
     #: Название карточки грузополучателя — для экрана
@@ -11284,6 +11299,10 @@ class CoreOrderInput(_CoreOrderInputRequired, total=False):
     contract_id: "UUID"
     #: Канал продаж — запись справочника «Каналы продаж»: подбор цены берёт вид цены канала. Ozon-маркетплейс и Ozon-опт — разные каналы и при одном контрагенте
     channel_id: Dict[str, Any]
+    #: Период услуги по договору: YYYY-MM или YYYY-MM-DD (первый день); пустая строка — снять; не назван — прежний. Второй продажи на занятый период нет (409 core.trade.slot_taken), кроме дополнительной (ERP-2634)
+    service_period: str
+    #: Дополнительная продажа вне графика договора: слот не занимает
+    extra_sale: bool
     #: Грузополучатель продажи — другой контрагент, которому везут товар; склад или филиал самого покупателя называют точкой доставки (consignee_point_id). Не назван при правке — остаётся прежний; нулевой идентификатор — снять, грузополучателем снова будет покупатель
     consignee_contact_id: Dict[str, Any]
     #: Точка доставки — склад или филиал грузополучателя, а если он не назван, самого покупателя; УПД берёт из неё КПП и адрес ГрузПолуч. Точка другого контрагента — 400. Не названа при правке — остаётся прежняя, пока грузополучатель тот же; нулевой идентификатор — снять
@@ -11616,6 +11635,10 @@ class CoreOrderRevision(_CoreOrderRevisionRequired, total=False):
     contract_id: "UUID"
     #: Канал продаж — запись справочника «Каналы продаж»: подбор цены берёт вид цены канала. Ozon-маркетплейс и Ozon-опт — разные каналы и при одном контрагенте
     channel_id: Dict[str, Any]
+    #: Период услуги по договору: YYYY-MM или YYYY-MM-DD (первый день); пустая строка — снять; не назван — прежний. Второй продажи на занятый период нет (409 core.trade.slot_taken), кроме дополнительной (ERP-2634)
+    service_period: str
+    #: Дополнительная продажа вне графика договора: слот не занимает
+    extra_sale: bool
     #: Грузополучатель продажи — другой контрагент, которому везут товар; склад или филиал самого покупателя называют точкой доставки (consignee_point_id). Не назван при правке — остаётся прежний; нулевой идентификатор — снять, грузополучателем снова будет покупатель
     consignee_contact_id: Dict[str, Any]
     #: Точка доставки — склад или филиал грузополучателя, а если он не назван, самого покупателя; УПД берёт из неё КПП и адрес ГрузПолуч. Точка другого контрагента — 400. Не названа при правке — остаётся прежняя, пока грузополучатель тот же; нулевой идентификатор — снять
@@ -15590,8 +15613,10 @@ class _DocflowApprovalInboxItemRequired(TypedDict):
 class DocflowApprovalInboxItem(_DocflowApprovalInboxItemRequired, total=False):
     """Строка очереди. Это НЕ урезанный предмет: ни файлов, ни строк, ни связей здесь нет — очередь открывают, чтобы решить, что открывать дальше."""
 
+    #: Состояние прохода; список «Заявки на согласование» показывает и отправленные автором
+    state: Literal['pending', 'approved', 'rejected', 'returned', 'cancelled']
     subject_number: str
-    #: Вид документа у владельца; для ядровой заявки это ключ действия. Добавляется только после отбора доступа и страницы.
+    #: Вид документа у владельца; для ядровой заявки это ключ действия, для кадрового приказа — staffing_order или staffing_order_deleted (черновик удалён). Добавляется только после отбора доступа и страницы.
     subject_document_kind: str
     route_name: str
     #: Разовый проход: согласующих выбрал автор (requested_name)
@@ -25302,11 +25327,20 @@ class FinancePayrollTerms(_FinancePayrollTermsRequired, total=False):
     #: Сотрудник ушёл внутри месяца начисления
     left: bool
 
-class FinancePeriodCheck(TypedDict):
+class _FinancePeriodCheckRequired(TypedDict):
     key: str
     title: str
     detail: str
     passed: bool
+
+class FinancePeriodCheck(_FinancePeriodCheckRequired, total=False):
+    warning: bool
+    links: List["FinancePeriodCheckLink"]
+    total: int
+
+class FinancePeriodCheckLink(TypedDict):
+    label: str
+    url: str
 
 class FinancePeriodCheckPage(TypedDict):
     #: Дата, на которую посчитаны проверки: присланная или сегодняшняя
@@ -26280,6 +26314,12 @@ class FinanceStaffingDismissalResult(_FinanceStaffingDismissalResultRequired, to
     #: Сколько постановок в оргструктуру снято
     org_placements_removed: int
 
+class FinanceStaffingOrderApproval(TypedDict):
+    #: Проход согласования документооборота
+    approval_id: str
+    #: Состояние прохода: pending — на согласовании, returned — возвращён, rejected — отклонён, cancelled — отозван, approved — согласован и проведён
+    state: str
+
 class _FinanceStaffingOrderCreateRequired(TypedDict):
     rows: List["FinanceStaffingRow"]
 
@@ -26291,13 +26331,35 @@ class FinanceStaffingOrderCreate(_FinanceStaffingOrderCreateRequired, total=Fals
     comment: str
     new_position: "FinanceStaffPositionInput"
 
-FinanceStaffingOrderResult = Union["CoreDocument", "FinanceStaffingOrderWithPosition"]
+class FinanceStaffingOrderRequestList(TypedDict):
+    results: List["FinanceStaffingOrderRequestListResultsItem"]
 
-class FinanceStaffingOrderWithPosition(TypedDict):
-    #: Проведённый документ расстановки
+class FinanceStaffingOrderRequestListResultsItem(TypedDict):
+    #: Документ расстановки
     id: str
     number: str
+    date: str
+    status: Literal['draft', 'posted', 'cancelled']
+    comment: str
+    author_name: str
+    #: Последний проход согласования
+    approval_id: str
+    state: Literal['pending', 'approved', 'rejected', 'returned', 'cancelled']
+    #: Юрлицо позиции; пусто — не оформлен
+    company_name: str
+
+FinanceStaffingOrderResult = Union["CoreDocument", "FinanceStaffingOrderWithPosition"]
+
+class _FinanceStaffingOrderWithPositionRequired(TypedDict):
+    #: Документ расстановки — проведённый или черновик под согласованием
+    id: str
+    number: str
+
+class FinanceStaffingOrderWithPosition(_FinanceStaffingOrderWithPositionRequired, total=False):
+    #: posted — приказ проведён; draft — черновик на согласовании
+    status: Literal['draft', 'posted']
     position: "FinanceStaffPosition"
+    approval: "FinanceStaffingOrderApproval"
 
 class _FinanceStaffingRowRequired(TypedDict):
     #: UUID штатной позиции; со new_position заменяется заведённой
@@ -26801,6 +26863,8 @@ class FinanceTradeJournalRow(_FinanceTradeJournalRowRequired, total=False):
     #: Состояние продажи или закупки по канону
     state: Literal['draft', 'confirmed', 'executing', 'executed', 'closed', 'cancelled']
     title: str
+    #: Дубль: на тот же период услуги договора есть ещё живая продажа (ERP-2634)
+    slot_duplicate: bool
     contract_id: Optional[str]
     cabinet_status_name: str
     #: Итог продажи или закупки, decimal string
@@ -32232,7 +32296,7 @@ class MarketplaceWeeklyFinanceRun(_MarketplaceWeeklyFinanceRunRequired, total=Fa
     zero_cost: List["MarketplaceWeeklyFinanceRunZeroCostItem"]
 
 class MarketplaceWeeklyFinanceRunChargesItem(TypedDict):
-    kind: Literal['fee', 'acquiring', 'logistics', 'storage', 'ads', 'penalty', 'loyalty', 'other']
+    kind: Literal['fee', 'acquiring', 'logistics', 'storage', 'ads', 'penalty', 'loyalty', 'other', 'adjustment']
     #: Сумма удержания с налогом, знак как в отчёте площадки
     amount: str
     #: Налог внутри суммы по документу площадки; "0" — услуга без НДС
@@ -37842,6 +37906,13 @@ class StockDocumentPresentation(_StockDocumentPresentationRequired, total=False)
     reason_code: str
     reason_label: str
 
+class StockDocumentProductCode(TypedDict):
+    kind: Literal['barcode', 'gtin', 'channel_article', 'manufacturer_article']
+    #: Источник кода: global, код канала продаж или пространство магазина «<площадка>:<магазин>:<поле>»
+    source_ref: str
+    value: str
+    is_primary: bool
+
 class _StockDocumentProductLabelRequired(TypedDict):
     id: "UUID"
     name: str
@@ -37855,6 +37926,8 @@ class StockDocumentProductLabel(_StockDocumentProductLabelRequired, total=False)
     """Название, артикул, базовая единица, признак учёта без серий и срок годности точной номенклатуры из сохранённого документа. Не заменяет количество или явную единицу его строки."""
 
     unit_id: "UUID"
+    #: Только у открытого документа (GET /stock/documents/{id}), не у страницы журнала: действующие коды, по которым ищут товар в строках, — ШК, GTIN, артикулы каналов и производителя; основной первым в своём виде. Служебные ключи карточек площадок (chrt_id, imt_id) не приходят.
+    codes: List["StockDocumentProductCode"]
 
 class _StockDocumentReadRequired(TypedDict):
     id: "UUID"

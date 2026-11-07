@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 65835ed26937c617e018128914fb71b5b0936e74d3554f8de561f9e0f2ae6783).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bcd297a6b03665e964a57ed50ecaadcb826a9fa0a3f99a341cb40b6855d3a35).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -5306,6 +5306,10 @@ type CoreActionRequestExecuteInputInputOrder struct {
 	ContractID   *UUID                  `json:"contract_id,omitempty"`
 	// ChannelID — Канал продаж — запись справочника «Каналы продаж»: подбор цены берёт вид цены канала. Ozon-маркетплейс и Ozon-опт — разные каналы и при одном контрагенте
 	ChannelID map[string]json.RawMessage `json:"channel_id,omitempty"`
+	// ServicePeriod — Период услуги по договору: YYYY-MM или YYYY-MM-DD (первый день); пустая строка — снять; не назван — прежний. Второй продажи на занятый период нет (409 core.trade.slot_taken), кроме дополнительной (ERP-2634)
+	ServicePeriod *string `json:"service_period,omitempty"`
+	// ExtraSale — Дополнительная продажа вне графика договора: слот не занимает
+	ExtraSale *bool `json:"extra_sale,omitempty"`
 	// ConsigneeContactID — Грузополучатель продажи — другой контрагент, которому везут товар; склад или филиал самого покупателя называют точкой доставки (consignee_point_id). Не назван при правке — остаётся прежний; нулевой идентификатор — снять, грузополучателем снова будет покупатель
 	ConsigneeContactID map[string]json.RawMessage `json:"consignee_contact_id,omitempty"`
 	// ConsigneePointID — Точка доставки — склад или филиал грузополучателя, а если он не назван, самого покупателя; УПД берёт из неё КПП и адрес ГрузПолуч. Точка другого контрагента — 400. Не названа при правке — остаётся прежняя, пока грузополучатель тот же; нулевой идентификатор — снять
@@ -7595,6 +7599,12 @@ type CoreOrder struct {
 	ContractID     *UUID              `json:"contract_id,omitempty"`
 	ChannelID      *UUID              `json:"channel_id,omitempty"`
 	ChannelName    *string            `json:"channel_name,omitempty"`
+	// ServicePeriod — Первый день периода услуги продажи по договору — слот графика договора (ERP-2634); пусто — вне графика
+	ServicePeriod *string `json:"service_period,omitempty"`
+	// ExtraSale — Дополнительная продажа вне графика договора: слот не занимает
+	ExtraSale *bool `json:"extra_sale,omitempty"`
+	// SlotDuplicate — На тот же период услуги договора есть ещё живая продажа — дубль
+	SlotDuplicate *bool `json:"slot_duplicate,omitempty"`
 	// ConsigneeContactID — Грузополучатель продажи — другой контрагент, которому везут товар; пусто — грузополучатель сам покупатель (или его точка доставки consignee_point_id)
 	ConsigneeContactID map[string]json.RawMessage `json:"consignee_contact_id,omitempty"`
 	// ConsigneeName — Название карточки грузополучателя — для экрана
@@ -8021,6 +8031,10 @@ type CoreOrderInput struct {
 	ContractID   *UUID                  `json:"contract_id,omitempty"`
 	// ChannelID — Канал продаж — запись справочника «Каналы продаж»: подбор цены берёт вид цены канала. Ozon-маркетплейс и Ozon-опт — разные каналы и при одном контрагенте
 	ChannelID map[string]json.RawMessage `json:"channel_id,omitempty"`
+	// ServicePeriod — Период услуги по договору: YYYY-MM или YYYY-MM-DD (первый день); пустая строка — снять; не назван — прежний. Второй продажи на занятый период нет (409 core.trade.slot_taken), кроме дополнительной (ERP-2634)
+	ServicePeriod *string `json:"service_period,omitempty"`
+	// ExtraSale — Дополнительная продажа вне графика договора: слот не занимает
+	ExtraSale *bool `json:"extra_sale,omitempty"`
 	// ConsigneeContactID — Грузополучатель продажи — другой контрагент, которому везут товар; склад или филиал самого покупателя называют точкой доставки (consignee_point_id). Не назван при правке — остаётся прежний; нулевой идентификатор — снять, грузополучателем снова будет покупатель
 	ConsigneeContactID map[string]json.RawMessage `json:"consignee_contact_id,omitempty"`
 	// ConsigneePointID — Точка доставки — склад или филиал грузополучателя, а если он не назван, самого покупателя; УПД берёт из неё КПП и адрес ГрузПолуч. Точка другого контрагента — 400. Не названа при правке — остаётся прежняя, пока грузополучатель тот же; нулевой идентификатор — снять
@@ -8345,6 +8359,10 @@ type CoreOrderRevision struct {
 	ContractID   *UUID                  `json:"contract_id,omitempty"`
 	// ChannelID — Канал продаж — запись справочника «Каналы продаж»: подбор цены берёт вид цены канала. Ozon-маркетплейс и Ozon-опт — разные каналы и при одном контрагенте
 	ChannelID map[string]json.RawMessage `json:"channel_id,omitempty"`
+	// ServicePeriod — Период услуги по договору: YYYY-MM или YYYY-MM-DD (первый день); пустая строка — снять; не назван — прежний. Второй продажи на занятый период нет (409 core.trade.slot_taken), кроме дополнительной (ERP-2634)
+	ServicePeriod *string `json:"service_period,omitempty"`
+	// ExtraSale — Дополнительная продажа вне графика договора: слот не занимает
+	ExtraSale *bool `json:"extra_sale,omitempty"`
 	// ConsigneeContactID — Грузополучатель продажи — другой контрагент, которому везут товар; склад или филиал самого покупателя называют точкой доставки (consignee_point_id). Не назван при правке — остаётся прежний; нулевой идентификатор — снять, грузополучателем снова будет покупатель
 	ConsigneeContactID map[string]json.RawMessage `json:"consignee_contact_id,omitempty"`
 	// ConsigneePointID — Точка доставки — склад или филиал грузополучателя, а если он не назван, самого покупателя; УПД берёт из неё КПП и адрес ГрузПолуч. Точка другого контрагента — 400. Не названа при правке — остаётся прежняя, пока грузополучатель тот же; нулевой идентификатор — снять
@@ -12296,11 +12314,13 @@ type DocflowApprovalEvent struct {
 
 // DocflowApprovalInboxItem — Строка очереди. Это НЕ урезанный предмет: ни файлов, ни строк, ни связей здесь нет — очередь открывают, чтобы решить, что открывать дальше.
 type DocflowApprovalInboxItem struct {
-	ApprovalID    UUID                   `json:"approval_id"`
+	ApprovalID UUID `json:"approval_id"`
+	// State — Состояние прохода; список «Заявки на согласование» показывает и отправленные автором
+	State         *string                `json:"state,omitempty"`
 	Subject       DocflowApprovalSubject `json:"subject"`
 	SubjectTitle  string                 `json:"subject_title"`
 	SubjectNumber *string                `json:"subject_number,omitempty"`
-	// SubjectDocumentKind — Вид документа у владельца; для ядровой заявки это ключ действия. Добавляется только после отбора доступа и страницы.
+	// SubjectDocumentKind — Вид документа у владельца; для ядровой заявки это ключ действия, для кадрового приказа — staffing_order или staffing_order_deleted (черновик удалён). Добавляется только после отбора доступа и страницы.
 	SubjectDocumentKind *string `json:"subject_document_kind,omitempty"`
 	RouteName           *string `json:"route_name,omitempty"`
 	// Adhoc — Разовый проход: согласующих выбрал автор (requested_name)
@@ -21995,10 +22015,18 @@ type FinancePayrollTerms struct {
 }
 
 type FinancePeriodCheck struct {
-	Key    string `json:"key"`
-	Title  string `json:"title"`
-	Detail string `json:"detail"`
-	Passed bool   `json:"passed"`
+	Key     string                   `json:"key"`
+	Title   string                   `json:"title"`
+	Detail  string                   `json:"detail"`
+	Passed  bool                     `json:"passed"`
+	Warning *bool                    `json:"warning,omitempty"`
+	Links   []FinancePeriodCheckLink `json:"links,omitempty"`
+	Total   *int64                   `json:"total,omitempty"`
+}
+
+type FinancePeriodCheckLink struct {
+	Label string `json:"label"`
+	URL   string `json:"url"`
 }
 
 type FinancePeriodCheckPage struct {
@@ -23092,6 +23120,13 @@ type FinanceStaffingDismissalResult struct {
 	Warnings []string `json:"warnings"`
 }
 
+type FinanceStaffingOrderApproval struct {
+	// ApprovalID — Проход согласования документооборота
+	ApprovalID string `json:"approval_id"`
+	// State — Состояние прохода: pending — на согласовании, returned — возвращён, rejected — отклонён, cancelled — отозван, approved — согласован и проведён
+	State string `json:"state"`
+}
+
 type FinanceStaffingOrderCreate struct {
 	// Company — UUID юрлица в шапке документа, none или пусто
 	Company *string `json:"company,omitempty"`
@@ -23102,13 +23137,35 @@ type FinanceStaffingOrderCreate struct {
 	NewPosition *FinanceStaffPositionInput `json:"new_position,omitempty"`
 }
 
+type FinanceStaffingOrderRequestList struct {
+	Results []FinanceStaffingOrderRequestListResultsItem `json:"results"`
+}
+
+type FinanceStaffingOrderRequestListResultsItem struct {
+	// ID — Документ расстановки
+	ID         string `json:"id"`
+	Number     string `json:"number"`
+	Date       string `json:"date"`
+	Status     string `json:"status"`
+	Comment    string `json:"comment"`
+	AuthorName string `json:"author_name"`
+	// ApprovalID — Последний проход согласования
+	ApprovalID string `json:"approval_id"`
+	State      string `json:"state"`
+	// CompanyName — Юрлицо позиции; пусто — не оформлен
+	CompanyName string `json:"company_name"`
+}
+
 type FinanceStaffingOrderResult = json.RawMessage
 
 type FinanceStaffingOrderWithPosition struct {
-	// ID — Проведённый документ расстановки
-	ID       string               `json:"id"`
-	Number   string               `json:"number"`
-	Position FinanceStaffPosition `json:"position"`
+	// ID — Документ расстановки — проведённый или черновик под согласованием
+	ID     string `json:"id"`
+	Number string `json:"number"`
+	// Status — posted — приказ проведён; draft — черновик на согласовании
+	Status   *string                       `json:"status,omitempty"`
+	Position *FinanceStaffPosition         `json:"position,omitempty"`
+	Approval *FinanceStaffingOrderApproval `json:"approval,omitempty"`
 }
 
 // FinanceStaffingRow — Строка расстановки; business, company и department сервер заполняет сам
@@ -23603,8 +23660,10 @@ type FinanceTradeJournalRow struct {
 	PaidStages    *int64  `json:"paid_stages,omitempty"`
 	Group         *string `json:"group,omitempty"`
 	// State — Состояние продажи или закупки по канону
-	State             *string `json:"state,omitempty"`
-	Title             *string `json:"title,omitempty"`
+	State *string `json:"state,omitempty"`
+	Title *string `json:"title,omitempty"`
+	// SlotDuplicate — Дубль: на тот же период услуги договора есть ещё живая продажа (ERP-2634)
+	SlotDuplicate     *bool   `json:"slot_duplicate,omitempty"`
 	ContractID        *string `json:"contract_id,omitempty"`
 	CabinetStatusName *string `json:"cabinet_status_name,omitempty"`
 	// Ordered — Итог продажи или закупки, decimal string
@@ -35052,6 +35111,14 @@ type StockDocumentPresentation struct {
 	Products          []StockDocumentProductLabel `json:"products"`
 }
 
+type StockDocumentProductCode struct {
+	Kind string `json:"kind"`
+	// SourceRef — Источник кода: global, код канала продаж или пространство магазина «<площадка>:<магазин>:<поле>»
+	SourceRef string `json:"source_ref"`
+	Value     string `json:"value"`
+	IsPrimary bool   `json:"is_primary"`
+}
+
 // StockDocumentProductLabel — Название, артикул, базовая единица, признак учёта без серий и срок годности точной номенклатуры из сохранённого документа. Не заменяет количество или явную единицу его строки.
 type StockDocumentProductLabel struct {
 	ID             UUID   `json:"id"`
@@ -35062,6 +35129,8 @@ type StockDocumentProductLabel struct {
 	WithoutSeries  bool   `json:"without_series"`
 	ShelfLifeValue *int64 `json:"shelf_life_value"`
 	ShelfLifeUnit  string `json:"shelf_life_unit"`
+	// Codes — Только у открытого документа (GET /stock/documents/{id}), не у страницы журнала: действующие коды, по которым ищут товар в строках, — ШК, GTIN, артикулы каналов и производителя; основной первым в своём виде. Служебные ключи карточек площадок (chrt_id, imt_id) не приходят.
+	Codes []StockDocumentProductCode `json:"codes,omitempty"`
 }
 
 // StockDocumentRead — Складской документ с необязательной вычисляемой проекцией названий. Чтение документа, область и маскирование стоимости применяются до проекции.
