@@ -8,9 +8,9 @@
 
 **Пересъём снимка снова работает.** С 30.10 робот пересъёма падал на
 `scripts/generate.py`, а CI репозитория был красным с 24.09. Снимок снят с
-релиза Akeda `56e6a52d53e6` (отпечаток
-`747b9e742fdcc7d586076a6d88a085062f2cccaf324dc303e63d722cceaa29a6`):
-1895 операций (30 `public`, 1865 `preview`), достижимых токеном установки — 1044.
+релиза Akeda `60515b791c33` (отпечаток
+`f0de94757ae5ac23c654faaebbd4f42ae6fbc08106101bf61a0358fe390ddf1a`):
+1940 операций (30 `public`, 1910 `preview`), достижимых токеном установки — 1081.
 
 - Ссылка внутрь схемы (`#/components/schemas/Схема/properties/поле`)
   разрешается в то, на что указывает, а не превращается в имя несуществующего
@@ -24,9 +24,14 @@
   объявляют его прямо в операции или обязательным вариантом, и клиенты
   отказывались послать им ключ. Раздел идемпотентности в
   [errors-and-limits](docs/errors-and-limits.md) догнал контракт: заголовок
-  читает 91 команда. Ушли из списка `docflowFlowAcceptFinanceAct`,
+  читает 93 команды, новые — `docflowFlowSalePaperExecution` и
+  `financeReturnLeasedAsset`. Ушли из списка `docflowFlowAcceptFinanceAct`,
   `docflowFlowCreateFinancePlan`, `docflowFlowUploadFile`,
   `stockCreatePurchaseOrder` — в контракте этих операций больше нет.
+- Робот пересъёма больше не может тихо сломать `main`: шаги и проверки живут в
+  `scripts/robot_refresh.sh`, в `main` уходит только снимок с зелёными тестами
+  Go, Python и TypeScript, иначе — ветка `robot/snapshot-<релиз>` и красный
+  прогон робота со ссылкой на pull request.
 
 **Снимок контракта `0.21.0-core-public` с `dev` Akeda** (отпечаток
 ``): 1086 операций (30 `public`, 1056 `preview`). Достижимых токеном

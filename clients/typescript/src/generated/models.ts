@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 3ba1ee6fc904a89363e6eb1a68db7e953521d041d595d51b2b405174b2fed205).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 65835ed26937c617e018128914fb71b5b0936e74d3554f8de561f9e0f2ae6783).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -5328,6 +5328,8 @@ export interface CoreActionRequestExecuteInputInputOrder {
   "consignee_point_id"?: { [key: string]: unknown };
   /** Переход права в продаже: shipment, acceptance, пустая строка — снять перекрытие; не прислано — не менять (ERP-2772) */
   "title_transfer"?: "" | "shipment" | "acceptance";
+  /** Условие оплаты продажи (ERP-2140): не прислано — у новой продажи условие контрагента, если своего payment_terms нет (ручной график главнее), у правки — прежнее; пустая строка — отвязать условие, график не трогать; UUID условия — построить график из условия и заменить им строки графика (строку с оплатами удалить нельзя — 409 core.trade.stage_in_use). Тот же UUID, что уже у продажи, график не перестраивает. Условие в архиве или чужое — 422. Закупка поле не читает */
+  "payment_condition_id"?: string;
   /** Причина продажи ниже минимальной цены; принимается только с правом core.price_below_min и пишется в журнал продажи */
   "price_below_min_reason"?: string;
   "project_id"?: UUID;
@@ -5798,6 +5800,10 @@ export interface CoreContact {
   "gln"?: string;
   /** НДС поставщика по умолчанию для закупок: «без НДС» или ставка (22%, 10%, 0%); подставляется в новые строки закупки; пусто — не задан (ERP-115) */
   "purchase_vat_rate"?: string;
+  /** Условие оплаты контрагента (ERP-2140): новая продажа строит из него график оплат; null — условия нет, график набирают руками */
+  "payment_condition_id"?: UUID | null;
+  /** Название условия оплаты; пусто — условия нет */
+  "payment_condition_name"?: string;
   /** Код системного контрагента (fns, sfr, bank:<БИК>). Только чтение. */
   "system_key"?: string;
   /** Что подсветить в реквизитах по правилу ИНН. Пусто — всё в порядке. */
@@ -5970,6 +5976,8 @@ export interface CoreContactCreate {
   "gln"?: string;
   /** НДС поставщика по умолчанию для закупок: «без НДС» или ставка (22%, 10%, 0%); пустая строка — снять (ERP-115) */
   "purchase_vat_rate"?: string;
+  /** Условие оплаты контрагента (ERP-2140): новая продажа строит из него график оплат. Не прислано — не менять; null или пустая строка — снять. Условие в архиве или чужое — 422 */
+  "payment_condition_id"?: UUID | "" | null;
   "custom"?: { [key: string]: unknown };
 }
 
@@ -6200,6 +6208,8 @@ export interface CoreContactPatch {
   "gln"?: string;
   /** НДС поставщика по умолчанию для закупок: «без НДС» или ставка (22%, 10%, 0%); пустая строка — снять (ERP-115) */
   "purchase_vat_rate"?: string;
+  /** Условие оплаты контрагента (ERP-2140): новая продажа строит из него график оплат. Не прислано — не менять; null или пустая строка — снять. Условие в архиве или чужое — 422 */
+  "payment_condition_id"?: UUID | "" | null;
   "custom"?: { [key: string]: unknown };
   "is_customer"?: boolean;
   "is_supplier"?: boolean;
@@ -6223,6 +6233,17 @@ export interface CoreContactPatchPostalAddress {
   "info": string;
 }
 
+export interface CoreContactsPaymentConditionInput {
+  "contact_ids": Array<UUID>;
+  /** Условие оплаты; null или пустая строка — снять условие */
+  "payment_condition_id": UUID | "" | null;
+}
+
+export interface CoreContactsPaymentConditionResult {
+  /** У скольких контрагентов условие изменилось */
+  "updated": number;
+}
+
 export interface CoreContractFinancing {
   /** Вид финансирования: возобновляемая и невозобновляемая кредитная линия, овердрафт, кредит, заём собственника, лизинг с выкупом, факторинг (ERP-3117) */
   "kind": "revolving_line" | "line" | "overdraft" | "loan" | "owner_loan" | "leasing" | "factoring";
@@ -6236,6 +6257,10 @@ export interface CoreContractFinancing {
   "leasing_buyout"?: boolean;
   /** Факторинг с регрессом: при неоплате покупателем долг возвращается к нам */
   "factoring_recourse"?: boolean;
+  /** Плановая дата выкупа лизинга; у других видов пусто */
+  "buyout_date"?: string;
+  /** Фактическая дата перехода права на предмет лизинга; пусто до выкупа */
+  "title_transferred_on"?: string;
 }
 
 export interface CoreContractList {
@@ -6775,12 +6800,16 @@ export interface CoreEmployee {
   "bank_bic"?: string;
   /** Счёт или карта выплаты; пусто у чужой карточки без права core.employee_requisites:read */
   "bank_account"?: string;
-  /** own — свой человек кабинета, external — внешний участник: интегратор, аутсорс; guest — гость-подрядчик: видит только задачи, чаты и папки, куда его позвали, места тарифа не занимает. Внешний и гость не стоят в оргструктуре и штате и руководителем не выбираются */
-  "affiliation": "own" | "external" | "guest";
+  /** own — свой человек кабинета, external — внешний участник: интегратор, аутсорс; guest — гость-подрядчик: видит только задачи, чаты и папки, куда его позвали, места тарифа не занимает; candidate — кандидат подбора, ещё не принятый. Внешний, гость и кандидат не стоят в оргструктуре и штате и руководителем не выбираются */
+  "affiliation": "own" | "external" | "guest" | "candidate";
   /** Контрагент-организация, от которой пришёл внешний участник */
   "organization_contact_id": string | null;
   /** Название организации внешнего участника */
   "organization_name": string;
+  /** Этап подбора кандидата: отклик, собеседование, оффер, принят, отказ; пусто — карточка не из подбора (ERP-2139) */
+  "hiring_stage"?: "" | "response" | "interview" | "offer" | "hired" | "rejected";
+  /** Вакансия кандидата — штатная позиция финансов */
+  "vacancy_position_id"?: string | null;
   /** Постановки в оргструктуру на сегодня; только в ответе одной карточки. Отдел и должность человека живут в постановках */
   "placements"?: Array<CoreOrgPlacement>;
 }
@@ -6942,10 +6971,14 @@ export interface CoreEmployeePatch {
   "bank_bic"?: string;
   /** Применяется только с правом core.employee_requisites:write */
   "bank_account"?: string;
-  /** Смена принадлежности. Внешнему и гостю нужна организация, иначе 400 core.employee.affiliation_invalid. Принятого в штат внешним или гостем не сделать — 409 core.employee.external_hired. Перевод гостя с доступом в own или external занимает место тарифа: мест нет — 409 core.employee.seat_limit */
-  "affiliation"?: "own" | "external" | "guest";
+  /** Смена принадлежности. Внешнему и гостю нужна организация, иначе 400 core.employee.affiliation_invalid. Принятого в штат внешним или гостем не сделать — 409 core.employee.external_hired. Перевод гостя с доступом в own или external занимает место тарифа: мест нет — 409 core.employee.seat_limit. Кандидатом становятся только при заведении, выходят — только coreHireCandidate */
+  "affiliation"?: "own" | "external" | "guest" | "candidate";
   /** Контрагент-организация внешнего участника; null снимает ссылку */
   "organization_contact_id"?: string | null;
+  /** Этап кандидата; «принят» ставит только coreHireCandidate. У не кандидата — 400 core.employee.hiring_stage_invalid */
+  "hiring_stage"?: "response" | "interview" | "offer" | "rejected";
+  /** Вакансия кандидата; null снимает */
+  "vacancy_position_id"?: string | null;
 }
 
 /** Реквизиты сотрудника для выплаты */
@@ -7139,10 +7172,20 @@ export interface CoreFinancingContract {
   /** Карточки договора больше нет, но продажи или закупки или расчёты на реквизит ссылаются */
   "retired"?: boolean;
   "financing"?: CoreContractFinancing;
+  /** Долг по договору — сальдо 66 в разрезе договора из книги, в валюте договора */
+  "debt": string;
   /** Кредитор — банк, фактор, лизингодатель, собственник */
   "contact_name": string;
   /** Юрлицо договора */
   "company_name"?: string;
+  /** Дата первого неоплаченного платежа графика; нет — графика нет или он погашен */
+  "next_payment_date"?: string;
+  /** Первый неоплаченный платёж графика: тело + проценты, десятичная строка в валюте договора */
+  "next_payment_amount"?: string;
+  /** Неоплаченных строк графика: оплачена строка, чьё накопленное тело покрыто погашением долга по договору */
+  "payments_left": number;
+  /** Всего строк графика */
+  "payments_total": number;
 }
 
 export interface CoreFinancingContractInput {
@@ -7163,6 +7206,36 @@ export interface CoreFinancingContractInput {
 
 export interface CoreFinancingContractList {
   "results": Array<CoreFinancingContract>;
+}
+
+/** Строка графика платежей. */
+export interface CoreFinancingPayment {
+  /** Дата платежа. */
+  "date": string;
+  /** Тело платежа — десятичная строка в валюте договора. */
+  "principal": string;
+  /** Проценты платежа — десятичная строка в валюте договора. */
+  "interest": string;
+}
+
+/** График платежей договора финансирования. */
+export interface CoreFinancingSchedule {
+  /** Строки графика по дате. */
+  "payments": Array<CoreFinancingPayment>;
+}
+
+/** Условия расчёта графика; пустые поля берутся из договора. */
+export interface CoreFinancingScheduleParams {
+  /** Способ погашения: annuity — равные платежи, differentiated — тело равными долями, bullet — всё тело в конце срока. */
+  "method": "annuity" | "differentiated" | "bullet";
+  /** Число помесячных платежей. */
+  "payments": number;
+  /** Сумма кредита; пусто — сумма договора. */
+  "amount"?: string;
+  /** Ставка, % годовых; пусто — ставка договора. */
+  "rate"?: string;
+  /** Дата выдачи; пусто — дата договора. Первый платёж — через месяц. */
+  "start"?: string;
 }
 
 export interface CoreFolder {
@@ -7548,6 +7621,10 @@ export interface CoreOrder {
   "consignee_point_name"?: string;
   /** Переход права, перекрытый в продаже: shipment, acceptance; пусто — по договору, контрагенту и каналу. Новая отгрузка замораживает выбранное правило (ERP-2772) */
   "title_transfer"?: "" | "shipment" | "acceptance";
+  /** Условие оплаты, из которого построен график продажи (ERP-2140); нет поля — график набран руками или условия нет */
+  "payment_condition_id"?: { [key: string]: unknown };
+  /** Название условия оплаты — для экрана */
+  "payment_condition_name"?: string;
   /** Номер договора продажи или закупки — для экрана */
   "contract_number"?: string;
   /** Дата договора продажи или закупки — для экрана */
@@ -7741,6 +7818,10 @@ export interface CoreOrderExecutedRevisionInput {
   "pnl_item_id"?: string | null;
   /** Проект заказа и его актов; долг, оплаты и зачёты переезжают в корзину нового проекта, зачтённый аванс другого проекта — отказ core.trade.executed_offset */
   "project_id"?: string | null;
+  /** Грузополучатель продажи — другой контрагент; null — сам покупатель. У закупки — отказ core.trade.executed_revision */
+  "consignee_contact_id"?: string | null;
+  /** Склад грузополучателя, а без него — покупателя; склад другого контрагента — отказ; null — снять. Смена грузополучателя без склада прежний склад снимает */
+  "consignee_point_id"?: string | null;
   /** Новая услуга строк-услуг; строку товара этой командой не меняют */
   "lines"?: Array<CoreOrderExecutedRevisionInputLinesItem>;
 }
@@ -7962,6 +8043,8 @@ export interface CoreOrderInput {
   "consignee_point_id"?: { [key: string]: unknown };
   /** Переход права в продаже: shipment, acceptance, пустая строка — снять перекрытие; не прислано — не менять (ERP-2772) */
   "title_transfer"?: "" | "shipment" | "acceptance";
+  /** Условие оплаты продажи (ERP-2140): не прислано — у новой продажи условие контрагента, если своего payment_terms нет (ручной график главнее), у правки — прежнее; пустая строка — отвязать условие, график не трогать; UUID условия — построить график из условия и заменить им строки графика (строку с оплатами удалить нельзя — 409 core.trade.stage_in_use). Тот же UUID, что уже у продажи, график не перестраивает. Условие в архиве или чужое — 422. Закупка поле не читает */
+  "payment_condition_id"?: string;
   /** Причина продажи ниже минимальной цены; принимается только с правом core.price_below_min и пишется в журнал продажи */
   "price_below_min_reason"?: string;
   "project_id"?: UUID;
@@ -8216,10 +8299,14 @@ export interface CoreOrderPaymentTerm {
   "title"?: string;
   "amount"?: string;
   "due_date"?: string;
-  /** '' — срок датой; after_stage — через delay_days после исполнения этапа stage_id */
-  "due_trigger"?: "" | "after_stage";
+  /** '' — срок датой; after_stage — через delay_days после исполнения этапа stage_id; after_execution — через delay_days после исполнения без этапа (отгрузки или акта), stage_id не задан */
+  "due_trigger"?: "" | "after_stage" | "after_execution";
   "stage_id"?: UUID;
   "delay_days"?: number;
+  /** Дни отсрочки строк after_stage и after_execution: пусто или calendar — календарные, working — рабочие по производственному календарю РФ. У строки датой не читается */
+  "delay_unit"?: "" | "calendar" | "working";
+  /** Строка условия оплаты, из которой построена строка графика (ERP-2140) */
+  "payment_condition_line_id"?: UUID;
   /** Доля итога документа в процентах, только на входе: строка без суммы получает сумму от итога с НДС, последняя такая строка добирает копейки */
   "share"?: string;
 }
@@ -8280,6 +8367,8 @@ export interface CoreOrderRevision {
   "consignee_point_id"?: { [key: string]: unknown };
   /** Переход права в продаже: shipment, acceptance, пустая строка — снять перекрытие; не прислано — не менять (ERP-2772) */
   "title_transfer"?: "" | "shipment" | "acceptance";
+  /** Условие оплаты продажи (ERP-2140): не прислано — у новой продажи условие контрагента, если своего payment_terms нет (ручной график главнее), у правки — прежнее; пустая строка — отвязать условие, график не трогать; UUID условия — построить график из условия и заменить им строки графика (строку с оплатами удалить нельзя — 409 core.trade.stage_in_use). Тот же UUID, что уже у продажи, график не перестраивает. Условие в архиве или чужое — 422. Закупка поле не читает */
+  "payment_condition_id"?: string;
   /** Причина продажи ниже минимальной цены; принимается только с правом core.price_below_min и пишется в журнал продажи */
   "price_below_min_reason"?: string;
   "project_id"?: UUID;
@@ -9143,6 +9232,53 @@ export interface CoreOwnershipVersion {
 export interface CoreOwnershipVersionInput {
   "valid_from": string;
   "owners": Array<CoreBusinessOwnerInput>;
+}
+
+/** Условие оплаты в справочнике модуля core: шаблон графика оплат продажи. Назначается в карточке контрагента; новая продажа строит из него свой график. */
+export interface CorePaymentCondition {
+  "id": UUID;
+  /** Название, которое видит менеджер, например «Предоплата 100 %» */
+  "name": string;
+  /** Условие в архиве: остаётся у контрагентов, но новая продажа его не берёт */
+  "archived": boolean;
+  /** Порядок в списке выбора */
+  "sort_order": number;
+  "lines": Array<CorePaymentConditionLine>;
+  /** Скольким контрагентам условие назначено */
+  "used_by": number;
+  "created_at"?: string;
+  "updated_at"?: string;
+}
+
+/** Условие оплаты. При создании нужны name и lines; при правке непереданное поле не меняется, lines заменяют строки целиком. */
+export interface CorePaymentConditionInput {
+  "name"?: string;
+  /** true — убрать в архив, false — вернуть */
+  "archived"?: boolean;
+  /** Порядок в списке; при создании без значения — в конец */
+  "sort_order"?: number;
+  "lines"?: Array<CorePaymentConditionLine>;
+}
+
+/** Строка условия оплаты: доля итога продажи или остаток, от чего считать срок и сколько дней. */
+export interface CorePaymentConditionLine {
+  "id"?: UUID;
+  /** Номер строки по порядку; на входе задаётся порядком массива */
+  "position"?: number;
+  /** Доля итога продажи с НДС в процентах, больше 0 и не больше 100, не точнее четырёх знаков («50», «33.3333»); null — «остаток»: одна последняя строка добирает всё, что не разложено долями */
+  "share"?: string | null;
+  /** От чего считать срок: confirm — от подтверждения продажи (дата продажи), execution — от исполнения (дата отгрузки или акта) */
+  "anchor": "confirm" | "execution";
+  /** Сколько дней после точки отсчёта */
+  "delay_days"?: number;
+  /** Дни: calendar — календарные, working — рабочие по производственному календарю РФ */
+  "day_kind"?: "calendar" | "working";
+  /** «До отгрузки — запрет»: склад не начнёт сборку, пока доля не оплачена. Только у строки confirm. Сейчас признак хранится и отдаётся, запрет сборки — следующим этапом */
+  "before_shipment"?: boolean;
+}
+
+export interface CorePaymentConditionPage {
+  "items": Array<CorePaymentCondition>;
 }
 
 export interface CorePhotoResult {
@@ -10980,6 +11116,10 @@ export interface CoreUPDProfile {
   "operation_kind"?: string;
   /** СвЛицПер из подписанта бумаги, если форма не назвала другого; не задано — да */
   "transfer_employee_from_signer"?: boolean;
+  /** Подписант по умолчанию, если форма отправки его не назвала: должность, ФИО полностью и СпосПодтПолном (authority). Сильнее руководителя из карточки юрлица, и у формы, и у бумаги по ЭДО из правила. Должность, фамилия, имя и authority обязательны вместе; 3 и 5 не принимаются: при них в файле нужны реквизиты доверенности, их вписывают в форме отправки. Пустой объект снимает значение канала — подписывает руководитель */
+  "signer"?: CoreUPDProfileSigner;
+  /** Кто передал товар (СвЛицПер/РабОргПрод), если форма отправки не назвала: должность и ФИО полностью, сильнее transfer_employee_from_signer. Должность, фамилия и имя обязательны вместе; передача агенту не получает. Пустой объект снимает значение канала */
+  "transfer_employee"?: CoreUPDProfileTransferEmployee;
   /** ЦенаТов в файле: two_digits — два знака, four_digits — четыре знака, exact — точная цена; пусто — two_digits. Суммы и итоги от неё не зависят */
   "price_rounding"?: "" | "two_digits" | "four_digits" | "exact";
   /** БанкРекв продавца со счёта бланка юрлица; не задано — да. seller_bank_account_id сильнее */
@@ -11022,6 +11162,23 @@ export interface CoreUPDProfile {
   "document_number_template"?: string;
   /** Обрезать номер по шаблону до стольких знаков; 0 — не обрезать */
   "document_number_max_length"?: number;
+}
+
+/** Подписант по умолчанию, если форма отправки его не назвала: должность, ФИО полностью и СпосПодтПолном (authority). Сильнее руководителя из карточки юрлица, и у формы, и у бумаги по ЭДО из правила. Должность, фамилия, имя и authority обязательны вместе; 3 и 5 не принимаются: при них в файле нужны реквизиты доверенности, их вписывают в форме отправки. Пустой объект снимает значение канала — подписывает руководитель */
+export interface CoreUPDProfileSigner {
+  "position"?: string;
+  "surname"?: string;
+  "name"?: string;
+  "patronymic"?: string;
+  "authority"?: "" | "1" | "2" | "4" | "6";
+}
+
+/** Кто передал товар (СвЛицПер/РабОргПрод), если форма отправки не назвала: должность и ФИО полностью, сильнее transfer_employee_from_signer. Должность, фамилия и имя обязательны вместе; передача агенту не получает. Пустой объект снимает значение канала */
+export interface CoreUPDProfileTransferEmployee {
+  "position"?: string;
+  "surname"?: string;
+  "name"?: string;
+  "patronymic"?: string;
 }
 
 /** Контакт продавца: телефон и почта; в карточке юрлица их нет. Пустой объект — не писать */
@@ -12105,7 +12262,7 @@ export interface DocflowApprovalChainStage {
   /** Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve */
   "stage_kind"?: "approve" | "acknowledge";
   "mode": "all" | "any";
-  "assignee_kind": "user" | "department" | "role" | "manager" | "department_head";
+  "assignee_kind": "user" | "department" | "role" | "manager" | "department_head" | "cfo_head" | "role_chain";
   "assignee_label"?: string;
   /** Лимит этапа: выполняется при сумме от этого значения */
   "min_amount"?: string;
@@ -12370,10 +12527,11 @@ export interface DocflowApprovalRouteStage {
   /** Порядок этапа в маршруте */
   "position": number;
   "title"?: string;
-  "assignee_kind": "user" | "department" | "role" | "manager" | "department_head";
+  "assignee_kind": "user" | "department" | "role" | "manager" | "department_head" | "cfo_head" | "role_chain";
   "assignee_user_id"?: number;
   "assignee_department_id"?: UUID;
   "assignee_role_id"?: UUID;
+  "assignee_role_ids"?: Array<UUID>;
   /** Только для department: спросить и сотрудников подотделов */
   "include_subdepartments"?: boolean;
   /** Как назначение читается человеком. Подставляется на чтении; в шаблоне не хранится */
@@ -12398,7 +12556,7 @@ export interface DocflowApprovalStage {
   /** Что делает этап: approve — согласует и держит маршрут; acknowledge — «ознакомиться»: извещает участников (нужно право docflow.flow:read), маршрут не держит, отказа не знает (ERP-1566). Пусто — approve */
   "stage_kind"?: "approve" | "acknowledge";
   "mode": "all" | "any";
-  "assignee_kind": "user" | "department" | "role" | "manager" | "department_head";
+  "assignee_kind": "user" | "department" | "role" | "manager" | "department_head" | "cfo_head" | "role_chain";
   "assignee_label"?: string;
   "min_amount"?: string;
   /** Снимок условия «только сверх лимита» */
@@ -13341,6 +13499,8 @@ export interface DocflowFlowCommercialTaxLine {
 
 /** Содержание бумаги: реквизиты и простой текст, если вид его поддерживает. */
 export interface DocflowFlowContent {
+  /** Ссылка документа в 1С: документ принят оттуда и обратно не отправляется */
+  "onec_ref"?: string;
   "title": string;
   /** Необязательный простой текст документа, до 100000 знаков Unicode. Непустой текст разрешён только для memo, letter, decree, directive, minutes и other. HTML отображается как текст. Отсутствие поля совместимо с историческими и загруженными бумагами. */
   "body"?: string;
@@ -14151,6 +14311,20 @@ export interface DocflowFlowResponsible {
   "employee_id": string;
   /** Доля в процентах десятичным текстом */
   "share": string;
+}
+
+export interface DocflowFlowSalePaperExecutionInput {
+  /** Версия карточки. */
+  "expected_version": number;
+  "execution_id"?: UUID;
+}
+
+export interface DocflowFlowSalePaperExecutionResult {
+  /** Карточка после команды. */
+  "document": { [key: string]: unknown };
+  "execution_id": UUID;
+  /** Карточка встала на уже проведённую реализацию. */
+  "attached": boolean;
 }
 
 /** Плановая сумма этапа работ или платежа. Ни выполнения, ни оплаты она не утверждает — это то, о чём договорились. */
@@ -15108,6 +15282,8 @@ export interface DocflowOrderImportPage {
 }
 
 export interface DocflowOrderInvoiceInput {
+  /** Документ, уже заведённый в 1С (`ref` из списка документов продажи в 1С): номер, дату и сумму даёт он, а в 1С документ не отправляется */
+  "onec_ref"?: string;
   /** Оплатить до */
   "due_date": string;
   "expected_until"?: string;
@@ -15125,6 +15301,28 @@ export interface DocflowOrderInvoiceInput {
   "payment_term_id"?: UUID;
   /** Сохранить черновиком вместо «Выставить» */
   "draft"?: boolean;
+}
+
+export interface DocflowOrderOneCPapers {
+  /** У юрлица продажи настроена база 1С */
+  "connected": boolean;
+  /** Документы покупателя в 1С, новые сверху */
+  "results": Array<DocflowOrderOneCPapersResultsItem>;
+}
+
+export interface DocflowOrderOneCPapersResultsItem {
+  /** Ссылка документа в 1С */
+  "ref": string;
+  /** Номер документа в 1С */
+  "number": string;
+  /** Дата документа в 1С */
+  "date": string;
+  /** Сумма документа в 1С */
+  "amount": string;
+  /** Покупатель в 1С */
+  "party_name"?: string;
+  /** Документ уже принят в Акеду */
+  "taken": boolean;
 }
 
 export interface DocflowOrderOutgoingUPD {
@@ -15181,6 +15379,8 @@ export interface DocflowOrderSetOrder {
 }
 
 export interface DocflowOrderUPDInput {
+  /** Документ, уже заведённый в 1С (`ref` из списка документов продажи в 1С): номер, дату и сумму даёт он, а в 1С документ не отправляется */
+  "onec_ref"?: string;
   /** Дата УПД; пусто — дата продажи или закупки */
   "date"?: string;
   /** Пусто — все услуги продажи или закупки; меньше — частичный УПД суммой */
@@ -16040,11 +16240,17 @@ export interface DocflowPreflight {
   "buyer": DocflowPreflightParty;
   /** Грузополучатель из заказа бумаги — филиал или склад покупателя. Нет — ГрузПолуч не пишется, грузополучатель сам покупатель */
   "consignee"?: DocflowPreflightConsignee;
+  /** Продажа бумаги, у которой меняют грузополучателя перед выпуском (правкой исполненного). Бумага по нескольким продажам — нет поля */
+  "consignee_order_id"?: string;
   /** Товарная таблица с посчитанным налогом. У ответного титула покупателя пуста: он отвечает на документ продавца, а не повторяет его */
   "lines": Array<DocflowPreflightLine>;
   "acceptance"?: DocflowBuyerAcceptance;
   /** Что соберётся, но не так, как настроено: у товара нет артикула покупателя и ушёл основной SKU (docflow.articles.fallback_sku), нет кода покупателя (docflow.articles.code_missing). Отправку не останавливают */
   "warnings"?: Array<DocflowIssue>;
+  /** Подписант из профиля реквизитов УПД покупателя (signer): форма предлагает его вместо руководителя из карточки юрлица, а без подписанта формы он и уходит. Нет — профиль подписанта не назвал */
+  "default_signer"?: DocflowPreflightDefaultSigner;
+  /** Кто передал товар по профилю реквизитов УПД покупателя (transfer_employee): форма предлагает его, а без значения формы он и уходит. Нет — профиль не назвал или это передача агенту */
+  "default_transfer_employee"?: DocflowPreflightDefaultTransferEmployee;
 }
 
 /** Грузополучатель из заказа бумаги — филиал или склад покупателя. Нет — ГрузПолуч не пишется, грузополучатель сам покупатель */
@@ -16060,6 +16266,24 @@ export interface DocflowPreflightConsignee {
   "address_hint": string;
   /** Только у продавца — руководитель своего юрлица из его карточки (у ИП — сам предприниматель без должности); форма предлагает его подписантом по нажатию */
   "head"?: SettingsCompanyHead;
+}
+
+/** Подписант из профиля реквизитов УПД покупателя (signer): форма предлагает его вместо руководителя из карточки юрлица, а без подписанта формы он и уходит. Нет — профиль подписанта не назвал */
+export interface DocflowPreflightDefaultSigner {
+  "position": string;
+  "surname": string;
+  "name": string;
+  "patronymic": string;
+  /** СпосПодтПолном: 1, 2, 4 или 6 */
+  "authority": string;
+}
+
+/** Кто передал товар по профилю реквизитов УПД покупателя (transfer_employee): форма предлагает его, а без значения формы он и уходит. Нет — профиль не назвал или это передача агенту */
+export interface DocflowPreflightDefaultTransferEmployee {
+  "position": string;
+  "surname": string;
+  "name": string;
+  "patronymic": string;
 }
 
 /** Учётный документ кабинета, который формализуем. */
@@ -16135,6 +16359,24 @@ export interface DocflowPreflightParty {
   "address_hint": string;
   /** Только у продавца — руководитель своего юрлица из его карточки (у ИП — сам предприниматель без должности); форма предлагает его подписантом по нажатию */
   "head"?: SettingsCompanyHead;
+}
+
+/** Работник продавца полным ФИО и должностью. */
+export interface DocflowPreflightPerson {
+  "position": string;
+  "surname": string;
+  "name": string;
+  "patronymic": string;
+}
+
+/** Подписант продавца полным ФИО, должностью и способом подтверждения полномочий. */
+export interface DocflowPreflightSigner {
+  "position": string;
+  "surname": string;
+  "name": string;
+  "patronymic": string;
+  /** СпосПодтПолном: 1, 2, 4 или 6 */
+  "authority": string;
 }
 
 /** Итоги товарной таблицы. Складываются из уже напечатанных строк, а не пересчитываются от исходных величин: итог обязан сойтись со строками до копейки. */
@@ -17102,15 +17344,18 @@ export interface FinanceAccountingEntry {
   /** Сумма документа на момент постановки в реестр */
   "amount": string;
   "status": FinanceAccountingStatus;
-  /** Номер документа в 1С; заполняется чтением статуса следующего этапа */
+  /** Номер документа в 1С; ставит чтение статуса из 1С */
   "onec_number": string;
-  /** Ссылка документа в 1С; заполняется чтением статуса следующего этапа */
+  /** Ссылка документа в 1С; ставит отправка документа */
   "onec_ref": string;
+  /** Причина отклонения — кнопкой реестра или комментарий бухгалтера в 1С */
   "reject_reason": string;
   /** Кто принял решение */
   "decided_by"?: number;
   "decided_by_name": string;
   "decided_at"?: string;
+  /** Документ изменён или отменён в Акеде после принятия в учёт; в 1С ничего не ушло */
+  "changed_after_accept": boolean;
   "created_at": string;
   "updated_at": string;
 }
@@ -17135,6 +17380,7 @@ export interface FinanceAccountingEntryCard {
   "decided_by"?: number;
   "decided_by_name": string;
   "decided_at"?: string;
+  "changed_after_accept": boolean;
   "created_at": string;
   "updated_at": string;
   "reference": FinanceAccountingReference;
@@ -17730,6 +17976,26 @@ export interface FinanceBudget {
   "regulation"?: FinanceBudgetRegulation;
 }
 
+export interface FinanceBudgetAllocationRule {
+  "source_cfo_id": UUID;
+  "source_cfo_name"?: string;
+  /** share — доли вручную, headcount — численность по штатному расписанию */
+  "base": "share" | "headcount";
+  "targets": Array<FinanceBudgetAllocationTarget>;
+}
+
+export interface FinanceBudgetAllocationTarget {
+  "cfo_id": UUID;
+  "cfo_name"?: string;
+  /** Доля в процентах при base = share */
+  "share"?: string;
+}
+
+export interface FinanceBudgetAllocations {
+  "company_id": UUID;
+  "rules": Array<FinanceBudgetAllocationRule>;
+}
+
 export interface FinanceBudgetAnomaly {
   "month": string;
   "item_id": UUID;
@@ -17737,6 +18003,11 @@ export interface FinanceBudgetAnomaly {
   "amount": string;
   "mean": string;
   "sigma": string;
+}
+
+export interface FinanceBudgetAssetModelInput {
+  "company_id": UUID;
+  "month": string;
 }
 
 export interface FinanceBudgetBalance {
@@ -17832,6 +18103,96 @@ export interface FinanceBudgetCompareRow {
   "diff": string;
 }
 
+export interface FinanceBudgetCopyYearInput {
+  "company_id": UUID;
+  "kind"?: "cashflow" | "pnl";
+  "month": string;
+  /** Поправка в процентах, от −100 до 1000; пусто — 0 */
+  "percent"?: string;
+}
+
+export interface FinanceBudgetCopyYearResult {
+  "budget": FinanceBudget;
+  "lines": number;
+  /** Строк статей «с нуля» не скопировано */
+  "skipped_zero_based": number;
+  /** Строк прежнего разреза бюджета не скопировано */
+  "skipped_dimension": number;
+}
+
+export interface FinanceBudgetCorrection {
+  "id": UUID;
+  "number": number;
+  "company_id": UUID;
+  "kind": "cashflow" | "pnl";
+  "month": string;
+  "status": "draft" | "pending" | "approved" | "rejected" | "withdrawn";
+  "reason": string;
+  "base_version_id": UUID;
+  "result_version_id"?: UUID;
+  "approval_id"?: UUID;
+  /** Итог изменения по строкам в валюте учёта */
+  "delta": string;
+  "created_by"?: number;
+  "created_at": string;
+  "lines": Array<FinanceBudgetCorrectionLine>;
+}
+
+export interface FinanceBudgetCorrectionInput {
+  "company_id": UUID;
+  "kind"?: "cashflow" | "pnl";
+  "month": string;
+  "reason": string;
+  "lines": Array<FinanceBudgetCorrectionLine>;
+}
+
+export interface FinanceBudgetCorrectionLine {
+  "month": string;
+  "item_id": UUID;
+  "item_name"?: string;
+  "department_id"?: UUID;
+  "department_name"?: string;
+  /** Код валюты строки; пусто — валюта учёта */
+  "currency"?: string;
+  /** Сумма утверждённой версии на момент заведения; заполняет сервер */
+  "before"?: string;
+  /** Новая сумма, не меньше нуля; ноль убирает ячейку из бюджета */
+  "after": string;
+}
+
+export interface FinanceBudgetCorrectionList {
+  "results": Array<FinanceBudgetCorrection>;
+}
+
+export interface FinanceBudgetCorrectionWithdraw {
+  "reason"?: string;
+}
+
+export interface FinanceBudgetDealModelInput {
+  "company_id": UUID;
+  "kind"?: "cashflow" | "pnl";
+  "month": string;
+  "item_id": UUID;
+}
+
+export interface FinanceBudgetDealPipeline {
+  "pipeline_id": UUID;
+  "pipeline_name"?: string;
+  "dimension_id"?: UUID;
+}
+
+export interface FinanceBudgetDealPipelines {
+  "company_id": UUID;
+  "pipelines": Array<FinanceBudgetDealPipeline>;
+  /** Действующие воронки CRM кабинета для выбора */
+  "available"?: Array<FinanceBudgetDealPipeline>;
+}
+
+export interface FinanceBudgetDealPipelinesInput {
+  "company_id": UUID;
+  "pipelines": Array<FinanceBudgetDealPipeline>;
+}
+
 export interface FinanceBudgetDriver {
   "id": UUID;
   "name": string;
@@ -17897,6 +18258,10 @@ export interface FinanceBudgetForm {
   "pnl_items": Array<FinanceBudgetItemReference>;
   /** Действующие подразделения для разреза бюджета. */
   "departments": Array<FinanceBudgetReference>;
+  /** Действующие ЦФО для разреза бюджета ЦФО. */
+  "cfos"?: Array<FinanceBudgetReference>;
+  /** Действующие проекты для разреза бюджета «проект». */
+  "projects"?: Array<FinanceBudgetReference>;
   /** Кандидаты ответственного за бюджет; не список согласующих. */
   "owners": Array<FinanceBudgetOwnerCandidate>;
 }
@@ -17963,6 +18328,40 @@ export interface FinanceBudgetItemReference {
   "pnl_sort_order": number;
 }
 
+export interface FinanceBudgetJustification {
+  "company_id": UUID;
+  "kind"?: "cashflow" | "pnl";
+  "month": string;
+  "item_id": UUID;
+  "item_name"?: string;
+  "department_id"?: UUID;
+  "positions": Array<FinanceBudgetJustificationPosition>;
+  /** Итог расшифровки, считает сервер */
+  "total"?: string;
+}
+
+export interface FinanceBudgetJustificationInput {
+  "company_id": UUID;
+  "kind"?: "cashflow" | "pnl";
+  "month": string;
+  "item_id": UUID;
+  "department_id"?: UUID;
+  "positions": Array<FinanceBudgetJustificationPosition>;
+}
+
+export interface FinanceBudgetJustificationList {
+  "results": Array<FinanceBudgetJustification>;
+}
+
+export interface FinanceBudgetJustificationPosition {
+  "name": string;
+  "quantity": string;
+  "price": string;
+  /** Количество × цена, считает сервер */
+  "amount"?: string;
+  "reason": string;
+}
+
 export interface FinanceBudgetLedgerOpening {
   "cash": string;
   "other_assets": string;
@@ -18024,6 +18423,8 @@ export interface FinanceBudgetPlanFact {
   "period_to": string;
   "approved_number": number;
   "currency": string;
+  /** Строки после распределения сервисных ЦФО */
+  "allocated"?: boolean;
   "rows": Array<FinanceBudgetPlanFactRow>;
 }
 
@@ -18046,6 +18447,28 @@ export interface FinanceBudgetPlanFactRow {
   "fx_deviation"?: string;
   "needs_note"?: boolean;
   "note"?: string;
+}
+
+export interface FinanceBudgetPnlSummary {
+  "company_id": UUID;
+  "month": string;
+  "approved_number": number;
+  "rows": Array<FinanceBudgetPnlSummaryRow>;
+}
+
+export interface FinanceBudgetPnlSummaryRow {
+  "id": string;
+  "kind": string;
+  "name": string;
+  "level": number;
+  /** amount — сумма, percent — процент */
+  "format": string;
+  /** Системная строка макета: gross_profit, ebitda, net_profit и др. */
+  "system_row"?: string;
+  "plan"?: string;
+  "fact"?: string;
+  /** Факт − план; только у сумм */
+  "deviation"?: string;
 }
 
 export interface FinanceBudgetRate {
@@ -18172,6 +18595,10 @@ export interface FinanceBudgetSetting {
   "company_id": UUID;
   "spend_basis": "approved" | "submitted";
   "carry_over": boolean;
+  /** Разрез бюджета юрлица: department — подразделение, cfo — ЦФО, project — проект. Значение разреза строки — в department_id */
+  "dimension"?: "department" | "cfo" | "project";
+  /** Статьи «с нуля»: сумма только с расшифровкой, утверждение без неё — отказ; не передано — список не меняется */
+  "zero_based_items"?: Array<UUID>;
   /** Окно лимита заявки: month — месяц, quarter — квартал месяца заявки */
   "control_period"?: "month" | "quarter";
   "control_enabled": boolean;
@@ -18486,7 +18913,7 @@ export interface FinanceCloseAdvancesToExpenseResultResultsItem {
   /** Аванс из запроса */
   "id": string;
   /** Исход строки */
-  "status": "closed" | "already_closed" | "not_found" | "item_required" | "period_closed" | "failed";
+  "status": "closed" | "already_closed" | "not_found" | "item_required" | "period_closed" | "supplier_vat" | "failed";
   /** Почему строка не закрылась, словами */
   "reason"?: string;
 }
@@ -18727,6 +19154,8 @@ export interface FinanceConnectorSyncResult {
   "connector": FinanceConnector;
   "imported": number;
   "skipped": number;
+  /** Строки выписки, которые уже были в Акеде: дублей не создано */
+  "already": number;
   "message": string;
 }
 
@@ -19045,6 +19474,31 @@ export interface FinanceFactoringRegistryRow {
   "sales": Array<FinanceFactoringOpenSale>;
 }
 
+export interface FinanceFinancingFactoring {
+  "contract": UUID;
+  /** Номер договора факторинга */
+  "contract_number": string;
+  "contact": UUID;
+  /** Юрлицо договора */
+  "company"?: string | null;
+  "currency": string;
+  /** Лимит финансирования — реквизит договора, десятичная строка */
+  "limit": string;
+  /** Уступлено — сумма уступок долга покупателей этому фактору */
+  "assigned": string;
+  /** Профинансировано — уступлено минус ждём от фактора */
+  "financed": string;
+  /** Ждём от фактора — остаток его долга по расчётам */
+  "outstanding": string;
+  /** С регрессом — признак договора */
+  "recourse": boolean;
+}
+
+export interface FinanceFinancingFactoringList {
+  "count": number;
+  "results": Array<FinanceFinancingFactoring>;
+}
+
 export interface FinanceFinancingLimit {
   "account": UUID;
   /** Название счёта линии */
@@ -19134,6 +19588,8 @@ export interface FinanceFixedAsset {
   "contract_currency"?: string;
   /** Срок договора финансирования; null — не задан */
   "contract_valid_until"?: string | null;
+  /** Цена из проведённого получения предмета лизинга; null — получения нет */
+  "leasing_receipt_amount"?: string | null;
 }
 
 export interface FinanceFixedAssetAcceptanceInput {
@@ -19531,6 +19987,15 @@ export interface FinanceLeasingReceiptInput {
   "date"?: string;
   /** Цена предмета без наценки и НДС */
   "amount": string;
+}
+
+export interface FinanceLeasingReturnInput {
+  /** Договор лизинга с выкупом */
+  "contract_id": string;
+  /** Дата возврата; пусто — сегодня */
+  "date"?: string;
+  /** Статья прочих доходов для разницы, когда долг больше остаточной стоимости */
+  "income_item_id"?: string | null;
 }
 
 export interface FinanceObligationDueDateInput {
@@ -20658,6 +21123,12 @@ export interface FinancePaymentRequest {
   "account_name"?: string;
   "contact_name"?: string;
   "item_name"?: string;
+  /** Решение директора по строке реестра; нет — не решено */
+  "director_decision"?: "approved" | "rejected";
+  /** Когда директор принял решение */
+  "director_decided_at"?: string;
+  /** Кто принял решение */
+  "director_decided_by_name"?: string;
   /** Прежние известные реквизиты при неподтверждённой смене счёта получателя */
   "payee_known_account"?: FinancePaymentRequestPayeeKnownAccount;
   "payee": FinancePaymentRequestPayee;
@@ -22448,7 +22919,7 @@ export interface FinanceSettlementDocumentCreate {
   "amount"?: string;
   /** Обязательна для долга, продажи и закупки */
   "due_date"?: string;
-  /** Обязательно для зачёта аванса, распределения оплаты и возврата по продаже (продажа-основание) */
+  /** Обязательно для зачёта аванса и распределения оплаты; у возврата по продаже — продажа-основание, без неё возврат проводится без основания по своим статье, сумме и налогу (ERP-1942) */
   "obligation_id"?: string;
   /** Оплата-источник аванса либо обязательная оплата для распределения */
   "payment_id"?: string;
@@ -22457,13 +22928,13 @@ export interface FinanceSettlementDocumentCreate {
   "advance_id"?: string;
   /** Продажа или закупка: у аванса — его заказ, у переноса аванса между контрагентами — заказ получателя, у уступки долга покупателя (finance_receivable_assignment) — продажа, чей долг уступлен; контрагент уступки — фактор; пусто — без заказа */
   "order_id"?: string;
-  /** Обязательна для продажи и закупки */
+  /** Обязательна для продажи, закупки и возврата по продаже без основания (статья выручки, которую он снимает) */
   "pnl_item_id"?: string;
   /** Путешествие или проект продажи и закупки */
   "project_id"?: string;
   /** Обязательна только для аванса */
   "side"?: "receivable_advance" | "payable_advance";
-  /** Только возврат по продаже: складской возврат от покупателя по этой продаже; без amount сумма — доля продажи по количеству */
+  /** Только возврат по продаже: складской возврат от покупателя; без amount сумма — доля продажи по количеству, а без продажи — строки возврата по цене последней продажи товара покупателю */
   "stock_return_id"?: string;
   "comment"?: string;
   /** Ключ идемпотентности сделки (только продажа и закупка): система-источник — учётная система клиента или ключ стороннего приложения */
@@ -22472,7 +22943,7 @@ export interface FinanceSettlementDocumentCreate {
   "source_ref"?: string;
   /** Идентификатор сделки в source_system; повтор того же (source_system, source_ref, external_id) возвращает уже созданный документ вместо второго */
   "external_id"?: string;
-  /** Только закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаг 5.3). Обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне периода непустое значение — 400 */
+  /** Закупка: «в т.ч. НДС» документа поставщика (ERP-484, подшаг 5.3). Обязательна, если на дату бизнес очищает суммы и юрлицо принимает налог к вычету; 0 — налог не выделен. Вне периода непустое значение — 400. Возврат по продаже без основания: налог документа покупателя (ERP-1942); пусто — по ставке на дату */
   "vat_amount"?: string;
   "supplier_document"?: SupplierDocument;
   /** Только продажа (ERP-1265): строки товаров и услуг. Сумма продажи — сумма строк; переданная рядом amount обязана с ней совпасть. Налог считается по строке — по виду товара строки и режиму юрлица на дату */
@@ -22570,6 +23041,10 @@ export interface FinanceStaffPosition {
   "is_active": boolean;
   /** Дата закрытия позиции; с неё позиции нет в штатке и численности */
   "closed_on"?: string;
+  /** Вилка оклада вакансии — «от», сумма с двумя знаками; нет поля — не задана (ERP-2139) */
+  "salary_from"?: string;
+  /** Вилка оклада вакансии — «до»; нет поля — не задана */
+  "salary_to"?: string;
 }
 
 /** Поля позиции; названия и id в теле сервер не читает */
@@ -22588,6 +23063,10 @@ export interface FinanceStaffPositionInput {
   "placement_id"?: string;
   /** Позиция открыта; при заведении не передано — открыта, при правке — без изменений */
   "is_active"?: boolean;
+  /** Вилка оклада вакансии — «от»; пусто — снять. Неотрицательная, запятая читается как точка (ERP-2139) */
+  "salary_from"?: string;
+  /** Вилка оклада вакансии — «до»; пусто — снять. Не меньше «от» */
+  "salary_to"?: string;
 }
 
 export interface FinanceStaffPositionList {
@@ -22599,6 +23078,31 @@ export interface FinanceStaffPositionRemoval {
   "result": "deleted" | "closed";
   /** Дата закрытия; только у closed */
   "closed_on"?: string;
+}
+
+export interface FinanceStaffVacancy {
+  /** UUID штатной позиции */
+  "position": string;
+  /** Должность из справочника */
+  "position_name": string;
+  /** Название позиции */
+  "title": string;
+  /** UUID бизнеса */
+  "business": string;
+  "business_name": string;
+  /** UUID юрлица; пусто — позиция без юрлица */
+  "company": string;
+  "company_name": string;
+  /** Подразделение позиции */
+  "department": string;
+  /** Вилка оклада — «от»; нет поля — не задана */
+  "salary_from"?: string;
+  /** Вилка оклада — «до»; нет поля — не задана */
+  "salary_to"?: string;
+}
+
+export interface FinanceStaffVacancyList {
+  "results": Array<FinanceStaffVacancy>;
 }
 
 export interface FinanceStaffingDismissalCreate {
@@ -23028,6 +23532,10 @@ export interface FinanceTaxSettings {
   "auto_create": boolean;
   /** Созданный документ и декларации из 1С проводятся сразу */
   "auto_post": boolean;
+  /** Настройку не сохраняли — действуют значения по умолчанию (все статьи вида «Налоги», получатель ЕНС — Казначейство России) */
+  "defaults"?: boolean;
+  /** ЦФО налогов: «Налоги за месяц» ложатся в ОПиУ с ним; пусто — без ЦФО */
+  "cfo_id"?: string;
 }
 
 /** Настройка раздела «Налоги» целиком. */
@@ -23036,6 +23544,8 @@ export interface FinanceTaxSettingsInput {
   "payment_item_ids"?: Array<string>;
   /** Получатели единого налогового счёта */
   "ens_recipients"?: Array<FinanceTaxRecipient>;
+  /** ЦФО налогов (элемент справочника cfo); пусто — снять, не прислано — прежний */
+  "cfo_id"?: string;
   /** Черновик заводится сам; не прислано — прежнее значение */
   "auto_create"?: boolean;
   /** Проводить сразу; не прислано — прежнее значение */
@@ -23370,9 +23880,12 @@ export interface FinanceVATBookImport {
 }
 
 export interface FinanceVATBookMatch {
-  "status": "matched" | "amount_differs" | "only_book" | "only_ours" | "not_deducted";
+  /** number_differs — один документ (ИНН, дата и налог совпали) с разными номерами в книге и у нас; наш номер — our_number (ERP-1930) */
+  "status": "matched" | "amount_differs" | "only_book" | "only_ours" | "not_deducted" | "number_differs";
   "inn": string;
   "number": string;
+  /** Наш номер документа при статусе number_differs */
+  "our_number"?: string;
   "date": string;
   "book_vat": string;
   "our_vat": string;
@@ -24811,6 +25324,171 @@ export interface MarketplaceAdsAbsenceRequest {
   "stores"?: Array<string>;
 }
 
+export interface MarketplaceAllPnl {
+  "period_kind": "week" | "month";
+  "year": number;
+  /** Годы, за которые есть данные хоть у одной площадки, включая месяцы с загруженными отчётами Ламоды и Лэтуаль */
+  "years": Array<number>;
+  /** Самая поздняя выгрузка среди площадок */
+  "updated": string | null;
+  "periods": Array<MarketplaceAllPnlPeriod>;
+  "rows": Array<MarketplaceAllPnlRow>;
+  /** Итоги площадок по периодам: доход, прибыль, маржа и доля в доходе */
+  "platforms": Array<MarketplaceAllPnlPlatform>;
+  /** Ключ — начало периода: каких площадок в колонке нет или чьи данные в ней неполны */
+  "gaps": { [key: string]: Array<MarketplaceAllPnlGap> };
+  /** Площадки, чьё ОПиУ сейчас не ответило */
+  "unavailable": Array<string>;
+  /** Площадки с магазинами без данных за этот год */
+  "absent": Array<string>;
+  /** Площадки с месячными отчётами: в недельных колонках их нет */
+  "weekly_excluded": Array<string>;
+  /** Площадки, которые выбранный список товаров не отбирает: при group их в сводке нет */
+  "list_excluded": Array<string>;
+}
+
+export interface MarketplaceAllPnlGap {
+  "platform": "ozon" | "wildberries" | "yandex" | "lamoda" | "letoile";
+  /** no_data — финансовых данных площадки за период ещё нет, площадки в колонке нет; no_report — отчёта за месяц нет; profit_unknown — прибыль не посчитана, площадки в колонке нет; partial — данные площадки по through; partial_report — отчёт пришёл не по всем магазинам */
+  "reason": "no_data" | "no_report" | "profit_unknown" | "partial" | "partial_report";
+  /** Причина площадки: services_no_reconcile, unmatched, no_rate и другие коды ОПиУ по отчётам */
+  "detail"?: string;
+  "through"?: string;
+}
+
+export interface MarketplaceAllPnlPeriod {
+  /** Понедельник недели или первое число месяца */
+  "key": string;
+  /** Номер недели; у месяца может быть пустым — название месяца строит экран по start */
+  "label": string;
+  "sub": string;
+  "start": string;
+  "end": string;
+}
+
+export interface MarketplaceAllPnlPlatform {
+  "platform": "ozon" | "wildberries" | "yandex" | "lamoda" | "letoile";
+  /** Доход (выручка за вычетом возвратов); null — площадки нет в колонке */
+  "income": Array<number | null>;
+  "margin": Array<number | null>;
+  "margin_pct": Array<number | null>;
+  /** Доля площадки в доходе колонки, % */
+  "income_share": Array<number | null>;
+}
+
+export interface MarketplaceAllPnlRow {
+  "key": "income" | "revenue" | "returns" | "variable" | "cogs" | "commission" | "logistics" | "ads" | "storage" | "other" | "taxes" | "margin" | "margin_pct";
+  "kind": "total" | "normal" | "percent";
+  /** Рубли (у margin_pct — проценты) по порядку periods; null — ни одна площадка не вошла в колонку. Расходы со знаком минус */
+  "values": Array<number | null>;
+  /** Доля статьи расходов от выручки периода, %; расход — плюсом */
+  "share"?: Array<number | null>;
+  /** Вклад площадок в строку: площадка → значения по периодам */
+  "parts"?: { [key: string]: Array<number | null> };
+}
+
+export interface MarketplaceAllProducts {
+  /** Строк товара кабинета */
+  "count": number;
+  /** Товаров с остатком или заказами за 14 дней */
+  "active": number;
+  /** Площадки, чьи товары не прочитались */
+  "missing": Array<string>;
+  /** Площадки, у которых карточек больше предела одного чтения: часть не пришла */
+  "truncated": Array<string>;
+  "results": Array<MarketplaceAllProductsResultsItem>;
+}
+
+export interface MarketplaceAllProductsResultsItem {
+  /** Позиция номенклатуры; нет у непривязанной карточки */
+  "product_id"?: string;
+  "offer_id": string;
+  "name": string;
+  "image": string;
+  /** Остаток всех карточек, шт */
+  "stock": number;
+  /** Заказы всех карточек за 14 дней без отмен */
+  "orders_14d": number;
+  /** На сколько дней хватит остатка при темпе заказов 14 дней; null — заказов не было */
+  "days_of_stock": number | null;
+  "unlinked": boolean;
+  "cards": Array<MarketplaceAllProductsResultsItemCardsItem>;
+}
+
+export interface MarketplaceAllProductsResultsItemCardsItem {
+  "platform": "ozon" | "wildberries" | "yandex";
+  "store_id": string;
+  "offer_id": string;
+  /** Код карточки на площадке: nmID WB, SKU Ozon и Маркета */
+  "code"?: string;
+  /** Цена карточки, как в «Товарах» площадки (у Ozon — цена продажи, если она известна) */
+  "price": string;
+  "stock": number;
+  "orders_14d": number;
+}
+
+export interface MarketplaceAllStocks {
+  /** Строк товара кабинета */
+  "count": number;
+  /** Складов с остатком по всем площадкам */
+  "warehouse_count": number;
+  /** Штук на складах всех площадок */
+  "total": number;
+  /** Штук в пути к покупателю */
+  "to_client": number;
+  "platforms": Array<MarketplaceAllStocksPlatform>;
+  "results": Array<MarketplaceAllStocksRow>;
+  /** Площадки, чьи остатки не прочитались */
+  "missing": Array<string>;
+  /** Площадки, чьи заказы за 14 дней не прочитались или пришли не целиком: запас их товаров посчитан без них; темп читается без search, только по списку товаров */
+  "tempo_missing": Array<string>;
+  /** У площадки строк больше предела: отсутствие товара в ответе не значит, что остатка нет */
+  "truncated"?: boolean;
+}
+
+export interface MarketplaceAllStocksPlatform {
+  "platform": "ozon" | "wildberries" | "yandex";
+  "total": number;
+  /** Складов с остатком */
+  "warehouses": number;
+}
+
+export interface MarketplaceAllStocksRow {
+  /** Позиция номенклатуры; нет у непривязанной карточки */
+  "product_id"?: string;
+  "offer_id": string;
+  "name": string;
+  "image": string;
+  "total": number;
+  "to_client": number;
+  /** Заказы всех карточек товара за 14 дней из «Товаров» площадок, включая карточки без остатка */
+  "orders_14d": number;
+  /** На сколько дней хватит остатка при темпе заказов 14 дней; null — заказов не было */
+  "days_of_stock": number | null;
+  "parts": Array<MarketplaceAllStocksRowPartsItem>;
+  "warehouses": Array<MarketplaceAllStocksRowWarehousesItem>;
+  /** Артикулы сложенных карточек */
+  "codes": Array<string>;
+  "unlinked": boolean;
+  /** Магазин непривязанной карточки — по нему открывается привязка */
+  "store_id"?: string;
+  /** Площадка непривязанной карточки */
+  "platform"?: string;
+}
+
+export interface MarketplaceAllStocksRowPartsItem {
+  "platform": string;
+  "qty": number;
+  /** Доля площадки в остатке строки, % */
+  "share": number;
+}
+
+export interface MarketplaceAllStocksRowWarehousesItem {
+  "platform": string;
+  "warehouse": string;
+  "qty": number;
+}
+
 /** Выкуп когорты заказов периода — тот же расчёт, что у воронки: доля выкупленных среди заказов, у которых успело решиться, выкуплены ли они (не позже сегодня−8), окно не короче 14 дней — короткий период добирает решённые дни раньше; у Ozon — FBO и FBS вместе */
 export interface MarketplaceBuyoutCohort {
   /** Первый день заказов когорты */
@@ -25197,6 +25875,24 @@ export interface MarketplaceComponentFreshness {
   "ads_orders"?: string | null;
   /** Карточки товаров */
   "products"?: string | null;
+}
+
+export interface MarketplaceDocumentEstimate {
+  "document_id": string;
+  "month": string;
+  "rows": number;
+  "unmatched_rows": number;
+  "undated_rows": number;
+  "missing_cost_units": number;
+  "missing_tax_rows": number;
+  "reasons": { [key: string]: number };
+  "foreign_vat"?: number;
+  "services"?: number;
+  "after_platform"?: number;
+  "cost"?: number;
+  "tax"?: number;
+  "profit"?: number;
+  "missing_skus": Array<string>;
 }
 
 /** Сырьё строки прайса в том виде в каком его отдаёт витрина ценообразования */
@@ -26883,6 +27579,244 @@ export interface MarketplaceProductGroupPatch {
 
 export type MarketplaceProductGroupPlatform = "ozon" | "wildberries";
 
+export interface MarketplacePromoChange {
+  /** Рост штук с промокодом к прошлому периоду, % */
+  "promo_qty": number | null;
+  /** Рост выручки с промокодом, % */
+  "promo_revenue": number | null;
+  /** Изменение доли, п.п. */
+  "share": number | null;
+  /** Рост скидки продавца, % */
+  "seller_discount": number | null;
+  /** Рост цены покупателя с промокодом, % */
+  "buyer_price": number | null;
+}
+
+export interface MarketplacePromoCodeNameRequest {
+  /** Площадка промокода */
+  "platform": "wildberries" | "wb" | "yandex" | "lamoda";
+  /** Код промокода площадки (code из promos) */
+  "code": string;
+  /** Своё название; пустое — вернуть подпись площадки */
+  "name": string;
+}
+
+export interface MarketplacePromoDay {
+  "day": string;
+  "promo_qty": number;
+  "promo_revenue": number;
+  "other_qty": number;
+  "other_revenue": number;
+}
+
+export interface MarketplacePromoProduct {
+  /** Товар кабинета; нет у непривязанной карточки */
+  "product_id"?: string;
+  "unlinked": boolean;
+  "platform": "wildberries" | "yandex" | "lamoda";
+  /** Магазин непривязанной карточки */
+  "store_id"?: string;
+  "store_name"?: string;
+  /** Артикул продавца */
+  "offer_id": string;
+  /** nmID WB, SKU Маркета или штрихкод Ламоды */
+  "code": string;
+  "name": string;
+  "image": string;
+  /** Артикулы сложенных карточек */
+  "codes": Array<string>;
+  "promo_qty": number;
+  "promo_revenue": number;
+  /** Доля промокода в выручке товара, % */
+  "share": number | null;
+  /** Штук без какого-либо промокода */
+  "other_qty": number;
+  "other_revenue": number;
+  "promos": Array<MarketplacePromoUse>;
+  /** Средняя цена штуки до промокода, ₽; null — площадка не передаёт скидку продавца */
+  "price_before": number | null;
+  /** Средняя цена продавца штуки — после промокода, до скидки площадки, ₽ */
+  "seller_price": number | null;
+  /** Средняя цена, которую заплатил покупатель за штуку, ₽ */
+  "buyer_price": number | null;
+  /** Скидка продавца по промокоду, ₽; null — площадка сумму не передаёт */
+  "seller_discount": number | null;
+  /** Размер промокода, % от цены до промокода; null — площадка не передаёт */
+  "discount_pct": number | null;
+  /** Скидка за счёт площадки, ₽: СПП WB, купон Ламоды, вознаграждение Маркета */
+  "platform_discount": number | null;
+  /** Скидка за счёт площадки, % от цены продавца */
+  "platform_pct": number | null;
+}
+
+export interface MarketplacePromoReport {
+  "platform": "all" | "wildberries" | "yandex" | "lamoda" | "ozon" | "letoile";
+  "from": string;
+  "to": string;
+  "prev_from": string;
+  "prev_to": string;
+  /** Ключ промокода, которым сужены товары и дни */
+  "selected"?: string;
+  "current": MarketplacePromoTotals;
+  /** Итог прошлого периода; null — данных за него нет */
+  "previous": MarketplacePromoTotals | null;
+  "change": MarketplacePromoChange;
+  "promos": Array<MarketplacePromoRow>;
+  "products": Array<MarketplacePromoProduct>;
+  "days": Array<MarketplacePromoDay>;
+  "sources": Array<MarketplacePromoSource>;
+}
+
+export interface MarketplacePromoRow {
+  /** Ключ промокода «площадка:код» — для параметра promo */
+  "key": string;
+  "platform": "wildberries" | "yandex" | "lamoda";
+  /** Код площадки: ID промокода WB, идентификатор акции Маркета, coupon у Ламоды */
+  "code": string;
+  "kind": "promocode" | "market_promocode" | "market_coupon" | "coupon";
+  /** Своё название кабинета; пусто — подпись площадки */
+  "name": string;
+  "qty": number;
+  "revenue": number;
+  /** Доля во всей выручке периода, % */
+  "share": number | null;
+  /** Товаров с продажами по промокоду */
+  "products": number;
+  "first_day": string;
+  "last_day": string;
+  /** Средняя цена штуки до промокода, ₽; null — площадка не передаёт скидку продавца */
+  "price_before": number | null;
+  /** Средняя цена продавца штуки — после промокода, до скидки площадки, ₽ */
+  "seller_price": number | null;
+  /** Средняя цена, которую заплатил покупатель за штуку, ₽ */
+  "buyer_price": number | null;
+  /** Скидка продавца по промокоду, ₽; null — площадка сумму не передаёт */
+  "seller_discount": number | null;
+  /** Размер промокода, % от цены до промокода; null — площадка не передаёт */
+  "discount_pct": number | null;
+  /** Скидка за счёт площадки, ₽: СПП WB, купон Ламоды, вознаграждение Маркета */
+  "platform_discount": number | null;
+  /** Скидка за счёт площадки, % от цены продавца */
+  "platform_pct": number | null;
+}
+
+export interface MarketplacePromoSource {
+  "platform": "wildberries" | "yandex" | "lamoda" | "ozon" | "letoile";
+  /** ready — промокоды в данных есть; no_data — площадка их не передаёт; failed — данные не прочитались */
+  "state": "ready" | "no_data" | "failed";
+  /** По чему считаются продажи */
+  "basis"?: "sales_report" | "orders" | "commission_report";
+  /** С какого дня есть данные о промокодах */
+  "data_from"?: string;
+  "data_to"?: string;
+  /** Площадка передаёт скидку продавца */
+  "seller_discount": boolean;
+  /** Площадка передаёт скидку за свой счёт */
+  "platform_discount": boolean;
+  /** Площадка передаёт размер промокода */
+  "discount_size"?: boolean;
+  /** Строк без даты заказа в отчёте: взят день продажи */
+  "sale_day_lines"?: number;
+}
+
+export interface MarketplacePromoTotals {
+  /** Штук с промокодом, возвраты вычтены */
+  "promo_qty": number;
+  /** Выручка с промокодом, ₽ */
+  "promo_revenue": number;
+  /** Все штуки площадок периода */
+  "qty": number;
+  /** Вся выручка площадок периода, ₽ */
+  "revenue": number;
+  /** Доля выручки с промокодом, % */
+  "share": number | null;
+  /** Доля штук с промокодом, % */
+  "qty_share": number | null;
+  /** Средняя цена покупателя штуки без промокода, ₽ */
+  "avg_other": number | null;
+  /** Средняя цена штуки до промокода, ₽; null — площадка не передаёт скидку продавца */
+  "price_before": number | null;
+  /** Средняя цена продавца штуки — после промокода, до скидки площадки, ₽ */
+  "seller_price": number | null;
+  /** Средняя цена, которую заплатил покупатель за штуку, ₽ */
+  "buyer_price": number | null;
+  /** Скидка продавца по промокоду, ₽; null — площадка сумму не передаёт */
+  "seller_discount": number | null;
+  /** Размер промокода, % от цены до промокода; null — площадка не передаёт */
+  "discount_pct": number | null;
+  /** Скидка за счёт площадки, ₽: СПП WB, купон Ламоды, вознаграждение Маркета */
+  "platform_discount": number | null;
+  /** Скидка за счёт площадки, % от цены продавца */
+  "platform_pct": number | null;
+}
+
+export interface MarketplacePromoUse {
+  "key": string;
+  "kind": "promocode" | "market_promocode" | "market_coupon" | "coupon";
+  "name": string;
+  "discount_pct": number | null;
+  "qty": number;
+  "revenue": number;
+}
+
+export interface MarketplaceReportPnl {
+  "platform": "lamoda" | "letoile";
+  "months": Array<string>;
+  "rows": Array<MarketplaceReportPnlRowsItem>;
+  "coverage": { [key: string]: MarketplaceReportPnlCoverageValue };
+  "products": Array<MarketplaceReportPnlProductsItem>;
+  "days": Array<MarketplaceReportPnlDaysItem>;
+}
+
+export interface MarketplaceReportPnlRowsItem {
+  "key": string;
+  "kind": "money" | "subtotal" | "total" | "percent" | "info";
+  "values": Array<number | null>;
+  "share"?: Array<number | null>;
+}
+
+export interface MarketplaceReportPnlCoverageValue {
+  "rows"?: number;
+  "undated"?: number;
+  "unmatched"?: number;
+  "missing_cost_units"?: number;
+  "missing_tax_rows"?: number;
+  "reasons"?: { [key: string]: number };
+  "missing_stores"?: Array<string>;
+}
+
+export interface MarketplaceReportPnlProductsItem {
+  "seller_sku"?: string;
+  "name"?: string;
+  "barcode"?: string;
+  "product_id"?: string;
+  "product_name"?: string;
+  "matched_by"?: "" | "link" | "article" | "barcode";
+  "sold"?: number;
+  "returned"?: number;
+  "revenue"?: number;
+  "commission"?: number;
+  "foreign_vat"?: number;
+  "services"?: number | null;
+  "unit_cost"?: number | null;
+  "cost"?: number | null;
+  "tax"?: number | null;
+  "profit"?: number | null;
+  "margin"?: number | null;
+  "reason"?: string;
+}
+
+export interface MarketplaceReportPnlDaysItem {
+  "day"?: string;
+  "orders"?: number;
+  "sold"?: number;
+  "returned"?: number;
+  "revenue"?: number;
+  "returns_amount"?: number;
+  /** Месяц ГГГГ-ММ строки без даты: у каждого месяца своя такая строка */
+  "month"?: string;
+}
+
 /** Время и открытия раздела площадки за окно */
 export interface MarketplaceSectionUsage {
   /** Площадка — ключ экрана */
@@ -28373,14 +29307,18 @@ export interface MarketplaceWeeklyFinancePostingResult {
 export interface MarketplaceWeeklyFinanceRun {
   "run_id": string;
   "currency": string;
-  /** Сколько заплатил покупатель — точная десятичная строка */
+  /** Чек покупателя после скидки площадки — точная десятичная строка */
   "buyer_paid": string;
-  /** Выручка книги по нашей цене реализации */
+  /** Деньги площадки сверх чека за её скидку (софинансирование Ozon); у WB 0. Входят в базу налога */
+  "compensation"?: string;
+  /** Выручка книги и база налога: чек покупателя плюс доплата площадки */
   "revenue": string;
   /** К перечислению после всех удержаний площадки */
   "payout": string;
-  /** Удержания площадки одной статьёй: revenue − payout */
+  /** Удержания площадки итогом: revenue − payout; разложение — charges */
   "expense": string;
+  /** Удержания площадки по видам с налогом по её документам; сумма amount равна expense. Пусто у недель, посчитанных до разложения */
+  "charges"?: Array<MarketplaceWeeklyFinanceRunChargesItem>;
   /** Себестоимость недели; пусто — прочерк (причина в cost_coverage или cost_origin=stock_pending) */
   "cost"?: string;
   "cost_coverage": MarketplaceStoreAccountingCostCoverage;
@@ -28401,6 +29339,14 @@ export interface MarketplaceWeeklyFinanceRun {
   "expense_row_count"?: number;
   /** Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж. */
   "zero_cost"?: Array<MarketplaceWeeklyFinanceRunZeroCostItem>;
+}
+
+export interface MarketplaceWeeklyFinanceRunChargesItem {
+  "kind": "fee" | "acquiring" | "logistics" | "storage" | "ads" | "penalty" | "loyalty" | "other";
+  /** Сумма удержания с налогом, знак как в отчёте площадки */
+  "amount": string;
+  /** Налог внутри суммы по документу площадки; "0" — услуга без НДС */
+  "vat": string;
 }
 
 /** Последняя попытка передать неделю в учёт — кнопкой или автоматическим обходом */
@@ -28543,6 +29489,12 @@ export interface MarketplaceYandexPnl {
   "units_missing"?: { [key: string]: number };
   /** Пояснение к неполноте источника */
   "note"?: string;
+  /** Разбор строки «Прочие услуги» по названиям услуг; ключ — начало периода */
+  "breakdown"?: { [key: string]: Array<MarketplaceWbDecompOtherItem> };
+  /** По какой день загружен отчёт Маркета по стоимости услуг — день последней услуги у отстающего магазина; пустая строка — у какого-то магазина отчёта нет. Позже этого дня строки услуг нулевые */
+  "services_through"?: string;
+  /** Разбор строк услуг (commission, logistics, ads, storage, acceptance, acquiring) по названиям услуг: ключ — строка, затем начало периода */
+  "row_breakdown"?: { [key: string]: { [key: string]: Array<MarketplaceWbDecompOtherItem> } };
   /** Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические */
   "demo"?: boolean;
 }
@@ -28587,7 +29539,14 @@ export interface MarketplaceYandexProduct {
   "price": string;
   /** Цена до скидки decimal строкой; пустая строка когда её нет */
   "old_price": string;
+  /** Доступно к продаже на складах Маркета (FBY) */
   "stock": number;
+  /** Остаток на своём складе продавца (размещение FBS и DBS) */
+  "stock_fbs": number;
+  /** Заказано штук за 14 дней по Москве, сегодня включительно, без отменённых */
+  "orders_14d": number;
+  /** idle — «Не продаётся»: 0 заказов за 14 дней и stock + stock_fbs = 0; иначе active */
+  "activity": "active" | "idle";
   "status_name": string;
   "primary_image": string;
   /** Первая ссылка витрины; пустая строка когда её нет */
@@ -30524,6 +31483,48 @@ export interface MarkingPrintSkipped {
   "spoiled": number;
   /** Выбывших из оборота */
   "retired": number;
+}
+
+export interface MarkingProductCatalogCard {
+  /** GTIN товара (14 цифр); пусто — у товара нет GTIN */
+  "gtin": string;
+  "company_id": UUID;
+  /** Карточка в каталоге; null — нет карточки, готовой к маркировке и обороту */
+  "card": MarkingProductCatalogCardCard | null;
+}
+
+/** Карточка в каталоге; null — нет карточки, готовой к маркировке и обороту */
+export interface MarkingProductCatalogCardCard {
+  /** GTIN карточки */
+  "gtin"?: string;
+  /** Наименование в каталоге */
+  "name"?: string;
+  /** Товарный знак */
+  "brand"?: string;
+  /** Товарная группа */
+  "product_group"?: string;
+  /** Карточка готова к маркировке */
+  "good_mark_flag"?: boolean;
+  /** Карточка готова к обороту */
+  "good_turn_flag"?: boolean;
+  /** Карточка подписана */
+  "good_signed_flag"?: boolean;
+  /** Карточка набора */
+  "is_set"?: boolean;
+  /** Состав набора по карточке */
+  "set_items"?: Array<MarkingProductCatalogCardCardSetItemsItem>;
+}
+
+export interface MarkingProductCatalogCardCardSetItemsItem {
+  /** GTIN вложения (14 цифр) */
+  "gtin": string;
+  /** Количество вложений */
+  "quantity": number;
+  "product_id"?: UUID;
+  /** Товар кабинета с этим GTIN */
+  "product_name"?: string;
+  /** Артикул товара кабинета */
+  "product_sku"?: string;
 }
 
 export interface MarkingProductLabelLine {
@@ -33734,6 +34735,87 @@ export interface StockDocumentFulfillmentSkipped {
   "reason": string;
 }
 
+export interface StockDocumentKitAssembly {
+  "id": UUID;
+  "number": string;
+  "status": "draft" | "posted" | "cancelled";
+  "date": string;
+  /** Сколько наборов рождает сборка */
+  "qty": string;
+}
+
+export interface StockDocumentKitBin {
+  /** Ячейка; пусто — товар вне ячеек */
+  "bin_id"?: UUID | null;
+  "bin_code"?: string;
+  "bin_name"?: string;
+  "batch_code"?: string;
+  "expires_at"?: string | null;
+  /** Сколько взять из этой ячейки и партии, в базовой единице */
+  "qty": string;
+}
+
+export interface StockDocumentKitLine {
+  /** Строки документа с этим набором */
+  "line_ids": Array<UUID>;
+  "product_id": UUID;
+  "product_sku"?: string;
+  "product_name"?: string;
+  "spec_id": UUID;
+  "spec_version_id": UUID;
+  "spec_name": string;
+  /** assembly — «Сборка», набор собирают документом сборки; kit — «Комплект», его собирает проведение документа расхода */
+  "spec_kind": "assembly" | "kit";
+  /** У набора своя марка ЧЗ */
+  "marked"?: boolean;
+  /** Сколько набора в документе */
+  "need": string;
+  /** Готовых наборов на складе расхода (физический остаток); у проведённого документа — 0 */
+  "on_hand": string;
+  /** Сколько наборов собрать сейчас: нужно минус готовые минус заведённые черновиками сборки */
+  "to_assemble": string;
+  /** Сколько наборов уже заведено черновиками сборки под этот документ */
+  "drafted": string;
+  /** enough — готовых хватает; assemble — собрать сборкой; components_short — компонентов не хватает; on_posting — «Комплект» соберёт проведение; drafted — сборка заведена черновиком, осталось отсканировать марки и провести */
+  "status": "enough" | "assemble" | "components_short" | "on_posting" | "drafted";
+  "parts": Array<StockDocumentKitPart>;
+  /** Сборки этого набора под документ: черновики «Собрать наборы» и автосборки «Комплекта» */
+  "assemblies": Array<StockDocumentKitAssembly>;
+}
+
+export interface StockDocumentKitPart {
+  "product_id": UUID;
+  "product_sku"?: string;
+  "product_name"?: string;
+  /** Вид номенклатуры компонента: goods — товар, material и semi_product — упаковка и материалы */
+  "product_kind"?: string;
+  "unit"?: string;
+  /** Компонент маркируется ЧЗ: его марки сканируют в сборку набора */
+  "marked"?: boolean;
+  /** Сколько компонента на один набор, в базовой единице */
+  "per_set": string;
+  /** Сколько компонента на всё количество набора в документе */
+  "total": string;
+  /** Сколько компонента на наборы, которые собирают сейчас (готовых не хватает) */
+  "to_assemble": string;
+  /** Свободно на складе расхода: остаток минус чужие резервы; обещанное заказу этой отгрузки входит */
+  "available": string;
+  /** Свободного меньше, чем нужно на все наборы документа, которые собирают сейчас */
+  "short"?: boolean;
+  "barcodes": Array<string>;
+  /** Откуда взять на наборы, которые собирают сейчас: план отбора листа подбора (FEFO, обход ячеек). Пусто у склада без ячеек */
+  "bins": Array<StockDocumentKitBin>;
+}
+
+export interface StockDocumentKits {
+  "document_id": UUID;
+  "warehouse_id": UUID;
+  "bins_mode": "off" | "soft" | "strict";
+  /** Склад расхода свой; на складе площадки наборы не собирают, план пуст */
+  "own": boolean;
+  "lines": Array<StockDocumentKitLine>;
+}
+
 /** Партия, на которую распределяются накладные расходы. */
 export interface StockDocumentLandedCostTarget {
   "batch_id": UUID;
@@ -33992,6 +35074,8 @@ export interface StockDocumentPayload {
   "sellable_sources"?: boolean;
   /** Только stock_assembly (ERP-2184): документ расхода, под который собран «Комплект». Марки компонентов такого набора сканируют в сам расход, поэтому у сборки их не ждут. Ставит сборка наборов; у других видов — 400 */
   "kit_source"?: UUID | null;
+  /** Только stock_assembly (ERP-2137): отгрузка или перемещение, под которые сборку завело «Собрать наборы». Учётного смысла нет: по ссылке документ расхода находит свои сборки и не заводит вторую на то же количество. Ставит только сборка наборов; присланное при создании отклоняется (400), правка черновика сохраняет значение документа */
+  "kit_for"?: UUID | null;
   /** Только stock_assembly с kit_source (ERP-2184 × ERP-2182): правило срока годности документа расхода, под который собран «Комплект», — те же поля, что у payload.posting.shelf_life: block_expired, min_remaining_pct, min_remaining_days, min_source (cabinet, contact, store, manual), basis, as_of (плановая дата отгрузки), soft. Сборка берёт компоненты только проходящие его (FEFO среди годных); не хватает — 400 shelf_life_below_minimum или batch_expired с партиями компонента. Ставит только сборка наборов под отгрузку или перемещение; присланное при создании отклоняется (400), правка сохраняет значение документа */
   "kit_shelf_life"?: { [key: string]: unknown };
   /** Итого по документу поставщика. Только проверка суммы строк: расхождение показывает экран, сохранение не останавливается */
@@ -34772,8 +35856,8 @@ export interface StockKitAssemblyLine {
   "spec_version_id": UUID;
   "spec_name": string;
   "spec_kind": "assembly" | "kit";
-  /** enough — хватает; assemble — соберётся; components_short — не хватает компонентов; assembled — сборка заведена; on_posting — «Комплект» без post соберёт проведение документа расхода */
-  "status": "enough" | "assemble" | "components_short" | "assembled" | "on_posting";
+  /** enough — хватает; assemble — соберётся; components_short — не хватает компонентов; assembled — сборка заведена; on_posting — «Комплект» без post соберёт проведение документа расхода; drafted — недостающее уже заведено черновиком сборки под этот документ, повтор второй сборки не заводит и называет её в document_id */
+  "status": "enough" | "assemble" | "components_short" | "assembled" | "on_posting" | "drafted";
   "components": Array<StockKitComponentNeed>;
   /** Вложенные «Комплекты», которые собираются раньше этого набора (ERP-2183): та же строка плана на уровень глубже */
   "nested"?: Array<StockKitAssemblyLine>;
@@ -34991,6 +36075,32 @@ export interface StockOrderPallets {
   "lines": Array<StockPalletPlaceLine>;
 }
 
+/** Набор заказа, которого не хватает готовым (ERP-2137): его собирают, и лист ведёт к компонентам и упаковке */
+export interface StockOrderPickKit {
+  "product_id": UUID;
+  "sku": string;
+  "name": string;
+  "spec_kind": "assembly" | "kit";
+  /** Сколько наборов взять готовыми */
+  "ready": string;
+  /** Сколько наборов собрать из компонентов */
+  "assemble": string;
+  "parts": Array<StockOrderPickKitPart>;
+}
+
+export interface StockOrderPickKitPart {
+  "product_id": UUID;
+  "sku": string;
+  "name": string;
+  /** Вид номенклатуры компонента: goods — товар, material и semi_product — упаковка и материалы */
+  "product_kind"?: string;
+  "unit"?: string;
+  /** Сколько на один набор, в базовой единице */
+  "per_set": string;
+  /** Сколько на все собираемые наборы */
+  "qty": string;
+}
+
 export interface StockOrderPickLine {
   "line_id": UUID;
   "product_id": UUID;
@@ -35016,6 +36126,8 @@ export interface StockOrderPickPlan {
   "bins_mode": "off" | "soft" | "strict";
   "lines": Array<StockOrderPickPlanLine>;
   "shortages": Array<StockOrderPickShortage>;
+  /** Наборы, которых не хватает готовыми (ERP-2137): недостающее лист раскладывает на компоненты одним планом со всем заказом */
+  "kits"?: Array<StockOrderPickKit>;
 }
 
 export interface StockOrderPickPlanLine {
@@ -35035,6 +36147,8 @@ export interface StockOrderPickPlanLine {
   "expires_at"?: string;
   /** Сколько взять, в базовой единице */
   "qty": string;
+  /** Наборы, в которые идёт товар как компонент (ERP-2137): их собирают из этой строки. Нет поля — товар берут сам по себе */
+  "for_kits"?: Array<UUID>;
 }
 
 export interface StockOrderPickShortage {
@@ -35045,6 +36159,8 @@ export interface StockOrderPickShortage {
   "qty": string;
   /** no_stock — на складе товара нет или он весь удержан; shelf_life — товар есть, но срок годности не проходит правило; reserved — товар обещан другим броням */
   "reason": "no_stock" | "shelf_life" | "reserved";
+  /** Наборы, которым не хватает этого компонента (ERP-2137) */
+  "for_kits"?: Array<UUID>;
 }
 
 export interface StockOrderReservationHolder {
@@ -38107,6 +39223,11 @@ export interface CoreUserEmployeesWithoutStaffingRequest {
   "employee_ids"?: Array<UUID>;
 }
 
+export interface CoreHireCandidateRequest {
+  /** Дата приёма; не передана — без даты */
+  "employed_at"?: string;
+}
+
 export interface DashboardListMetricsResponse {
   "count": number;
   "results": Array<DashboardMetricDefinition>;
@@ -38291,6 +39412,15 @@ export interface FinanceGetProjectBudgetHistoryResponse {
   "results": Array<FinanceProjectBudget>;
 }
 
+export interface FinanceSaleReturnLastPriceResponse {
+  /** Есть ли продажа этого товара этому покупателю */
+  "found": boolean;
+  /** Цена за единицу с налогом в валюте учёта; пусто, если продажи нет */
+  "price": string;
+  /** Дата той продажи (ГГГГ-ММ-ДД); пусто, если продажи нет */
+  "date": string;
+}
+
 export interface FinanceListAllocationRulesResponse {
   "results"?: Array<FinanceAllocationRule>;
 }
@@ -38320,6 +39450,42 @@ export interface FinanceChangeActPnlItemRequest {
 export interface FinanceOffsetTradeAdvancesRequest {
   /** Авансы (id из advance-offer), которыми зачитывать; пусто — все свободные */
   "advance_ids"?: Array<UUID>;
+}
+
+export interface FinanceCategorizeTransactionsRequest {
+  /** Операции выписки, до 200 */
+  "ids": Array<UUID>;
+  /** Статья ДДС */
+  "cashflow_item"?: string | null;
+  /** Контрагент */
+  "contact"?: string | null;
+  /** «За кого» */
+  "for_contact"?: string | null;
+  /** Проект */
+  "project"?: string | null;
+  /** Подразделение */
+  "department"?: string | null;
+  /** ЦФО */
+  "cfo"?: string | null;
+  /** Согласие на отмену зависимых документов */
+  "confirm_release"?: boolean;
+  /** Экран-источник правки для истории операции */
+  "origin"?: string;
+}
+
+export interface FinanceCategorizeTransactionsResponse {
+  "results": Array<FinanceCategorizeTransactionsResponseResultsItem>;
+}
+
+export interface FinanceCategorizeTransactionsResponseResultsItem {
+  /** Операция */
+  "id": string;
+  /** Исход строки */
+  "status": "done" | "failed";
+  /** Код отказа строки */
+  "code"?: string;
+  /** Причина отказа на языке запроса */
+  "detail"?: string;
 }
 
 export interface FinanceRepostTransactionsRequest {
