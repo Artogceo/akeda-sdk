@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bcd297a6b03665e964a57ed50ecaadcb826a9fa0a3f99a341cb40b6855d3a35).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ebf19014494a1971426cc36a4544c5a4c90ecd79024c0702eadf2a05fb0bfca2).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -143,6 +143,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'chatGetAttachment': OperationSpec('GET', '/api/v1/chat/conversations/{id}/attachments/{attachmentId}', 'chat', 'preview', 'chat:read', False, False, ('attachmentId', 'id',), 'none', None, None),
     'chatGetAttachmentUploadSession': OperationSpec('GET', '/api/v1/chat/upload-sessions/{sessionId}', 'chat', 'preview', 'chat:read', False, False, ('sessionId',), 'none', None, None),
     'chatGetConversation': OperationSpec('GET', '/api/v1/chat/conversations/{id}', 'chat', 'preview', 'chat:read', False, False, ('id',), 'none', None, None),
+    'chatLeaveGroup': OperationSpec('POST', '/api/v1/chat/conversations/{id}/leave', 'chat', 'preview', 'chat:write', False, False, ('id',), 'none', None, None),
     'chatListAttachments': OperationSpec('GET', '/api/v1/chat/conversations/{id}/attachments', 'chat', 'preview', 'chat:read', False, False, ('id',), 'cursor', 100, 50),
     'chatListConversationMembers': OperationSpec('GET', '/api/v1/chat/conversations/{id}/members', 'chat', 'preview', 'chat:read', False, False, ('id',), 'none', None, None),
     'chatListConversations': OperationSpec('GET', '/api/v1/chat/conversations', 'chat', 'preview', 'chat:read', False, False, (), 'cursor', 100, 50),
@@ -1781,6 +1782,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'stockPreviewImport': OperationSpec('POST', '/api/v1/stock/imports/{id}/preview', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),
     'stockPreviewReceiptCost': OperationSpec('POST', '/api/v1/stock/receipt-costs/preview', 'stock', 'preview', 'stock:write', False, True, (), 'none', None, None),
     'stockPreviewValuation': OperationSpec('POST', '/api/v1/stock/valuation/preview', 'stock', 'preview', 'stock:write', False, True, (), 'none', None, None),
+    'stockPreviewWarehouseBins': OperationSpec('POST', '/api/v1/stock/warehouses/{id}/bins/preview', 'stock', 'preview', 'stock.settings:write', False, True, ('id',), 'none', None, None),
     'stockPriceSuggestions': OperationSpec('GET', '/api/v1/stock/price-suggestions', 'stock', 'preview', 'stock:read', False, True, (), 'none', None, None),
     'stockProductCostComposition': OperationSpec('GET', '/api/v1/stock/products/{id}/cost-composition', 'stock', 'preview', 'stock:read', False, True, ('id',), 'none', None, None),
     'stockQuoteCarrierShipment': OperationSpec('POST', '/api/v1/stock/carrier-shipments/{id}/quote', 'stock', 'preview', 'stock:write', False, True, ('id',), 'none', None, None),

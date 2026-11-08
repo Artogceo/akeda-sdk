@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bcd297a6b03665e964a57ed50ecaadcb826a9fa0a3f99a341cb40b6855d3a35).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ebf19014494a1971426cc36a4544c5a4c90ecd79024c0702eadf2a05fb0bfca2).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -369,6 +369,7 @@ __all__ = [
     "ChatAttachmentPage",
     "ChatChangePinResult",
     "ChatConversation",
+    "ChatConversationSupportRequest",
     "ChatConversationCapabilities",
     "ChatConversationPage",
     "ChatCreateGroup",
@@ -415,10 +416,12 @@ __all__ = [
     "ChatSendMessageResult",
     "ChatSendVideoMeeting",
     "ChatSetReaction",
+    "ChatSupportRequest",
     "ChatUnreadMention",
     "ChatUnreadMentionPage",
     "ChatUnreadSpace",
     "ChatUnreadSummary",
+    "ChatUnreadSummarySupport",
     "ChatUploadInstructions",
     "ChatUploadSession",
     "ChatUploadSessionCreate",
@@ -2360,6 +2363,7 @@ __all__ = [
     "MarketplaceYandexOrdersProduct",
     "MarketplaceYandexPnl",
     "MarketplaceYandexPnlRange",
+    "MarketplaceYandexPnlCostOriginValue",
     "MarketplaceYandexPnlPeriod",
     "MarketplaceYandexPnlRow",
     "MarketplaceYandexProduct",
@@ -2758,6 +2762,8 @@ __all__ = [
     "StockBinPlaceSummaryList",
     "StockBinPlacement",
     "StockBinPlacementList",
+    "StockBinPreview",
+    "StockBinPreviewItem",
     "StockBinRef",
     "StockBinShelfLife",
     "StockBinSlice",
@@ -7807,6 +7813,10 @@ class ChatConversation(_ChatConversationRequired, total=False):
     capabilities: "ChatConversationCapabilities"
     #: До какого момента беседа молчит, если звук выключен на время: пока срок не вышел, notification_mode = muted. После срока поле пустое, а режим снова прежний
     notification_muted_until: Optional[str]
+    #: Заявка поддержки у беседы задачи-заявки (ERP-2152): по ней беседа относится к пространству «Поддержка», а не к «Чатам задач». У остальных бесед поля нет
+    support_request: "ChatConversationSupportRequest"
+    #: У личного чата «Техническая поддержка»: сколько обращений человека сейчас открыто (ERP-2152). Ноль — перед отправкой выбирают тему нового обращения. У остальных бесед поля нет
+    support_open_requests: int
     #: Какой режим вернётся, когда выйдет срок «без звука»; есть только пока срок идёт. По нему «Включить звук» возвращает прежний выбор
     notification_mode_after_mute: Optional[Literal['all', 'mentions', None]]
     origin: str
@@ -7817,6 +7827,29 @@ class ChatConversation(_ChatConversationRequired, total=False):
     avatar_url: str
     peer_user_id: Optional[int]
     peer_avatar_url: str
+
+class _ChatConversationSupportRequestRequired(TypedDict):
+    task_id: "UUID"
+    ticket_id: "UUID"
+    #: Код заявки, например SUP-012
+    identifier: str
+    #: Устойчивый код этапа; пусто — задачу увели на этап без кода
+    stage: Literal['', 'support.unassigned', 'support.in_progress', 'support.waiting', 'support.resolved', 'support.done']
+    #: Имя этапа, выбранное кабинетом
+    stage_name: str
+    executor_user_id: Optional[int]
+    executor_name: str
+    client_name: str
+    tenant_slug: str
+    #: Тема обращения из перечня ChatSendMessage.support_topic; пусто — тему не выбирали
+    topic: str
+    #: Мяч у нас, а человек ждёт дольше срока (по умолчанию рабочий день)
+    overdue: bool
+
+class ChatConversationSupportRequest(_ChatConversationSupportRequestRequired, total=False):
+    """Заявка поддержки у беседы задачи-заявки (ERP-2152): по ней беседа относится к пространству «Поддержка», а не к «Чатам задач». У остальных бесед поля нет"""
+
+    executor_avatar_url: str
 
 class _ChatConversationCapabilitiesRequired(TypedDict):
     canRead: bool
@@ -7833,6 +7866,10 @@ class _ChatConversationCapabilitiesRequired(TypedDict):
 class ChatConversationCapabilities(_ChatConversationCapabilitiesRequired, total=False):
     #: Можно записать голосовое или видеокружок и переслать такое сюда. В чатах задач и поддержки — нет: там только текст, файлы и снимки экрана
     canSendVoice: bool
+    #: Можно убрать другого участника: только у владельца группы, её создателя. Модератор и право кабинета chat:manage этого не дают
+    canRemoveMembers: bool
+    #: Можно выйти из группы самому: у любого участника живой группы. В прямом и архивном чате, в чатах задач и поддержки — нет
+    canLeave: bool
 
 class _ChatConversationPageRequired(TypedDict):
     items: List["ChatConversation"]
@@ -7933,11 +7970,11 @@ class ChatForwardedMessage(_ChatForwardedMessageRequired, total=False):
     forwarded_from_name: str
 
 class ChatMarkAllRead(TypedDict):
-    #: Раздел списка бесед: user — переписка людей без чатов задач.
-    scope: Literal['all', 'direct', 'group', 'task', 'user']
+    #: Раздел списка бесед: user — переписка людей без чатов задач; task — чаты задач без чатов заявок поддержки; support — чаты заявок поддержки (ERP-2152).
+    scope: Literal['all', 'direct', 'group', 'task', 'user', 'support']
 
 class ChatMarkAllReadResult(TypedDict):
-    scope: Literal['all', 'direct', 'group', 'task', 'user']
+    scope: Literal['all', 'direct', 'group', 'task', 'user', 'support']
     conversations_read: int
     mentions_read: int
     notifications_read: int
@@ -8119,6 +8156,8 @@ class ChatSendMessage(_ChatSendMessageRequired, total=False):
     reply_quote: str
     #: Сообщение формы «Сообщить об ошибке». В чате поддержки открывает новое обращение и новую заявку, даже если в беседе уже есть открытое; обычное сообщение продолжает открытое. В любой другой беседе — 400
     support_report: bool
+    #: Тема нового обращения (ERP-2152). Непустая тема открывает новое обращение и становится меткой заявки; обычное сообщение без темы продолжает открытое обращение. Вне чата поддержки или вне перечня — 400
+    support_topic: Literal['not_working', 'bug', 'question', 'idea', 'billing']
 
 class ChatSendMessageResult(TypedDict):
     message: "ChatMessage"
@@ -8131,6 +8170,29 @@ class ChatSendVideoMeeting(TypedDict):
 class ChatSetReaction(TypedDict):
     #: Закрытый список допустимых реакций.
     emoji: Literal['👍', '👎', '❤️', '🔥', '🎉', '😄', '🤝', '👌', '😂', '😮', '😢', '😡', '🙏', '👏', '✅', '❌', '👀', '💯', '🤔', '🙌', '💪', '🚀', '✍️', '😍', '😎', '🤯', '😱', '🏆', '⚡', '👋', '🤗', '🥳']
+
+class _ChatSupportRequestRequired(TypedDict):
+    task_id: "UUID"
+    ticket_id: "UUID"
+    #: Код заявки, например SUP-012
+    identifier: str
+    #: Устойчивый код этапа; пусто — задачу увели на этап без кода
+    stage: Literal['', 'support.unassigned', 'support.in_progress', 'support.waiting', 'support.resolved', 'support.done']
+    #: Имя этапа, выбранное кабинетом
+    stage_name: str
+    executor_user_id: Optional[int]
+    executor_name: str
+    client_name: str
+    tenant_slug: str
+    #: Тема обращения из перечня ChatSendMessage.support_topic; пусто — тему не выбирали
+    topic: str
+    #: Мяч у нас, а человек ждёт дольше срока (по умолчанию рабочий день)
+    overdue: bool
+
+class ChatSupportRequest(_ChatSupportRequestRequired, total=False):
+    """Заявка поддержки рядом с беседой задачи-заявки (ERP-2152): этап и его имя, ответственный, клиент, кабинет и тема. Ничего отсюда через чат не меняется: кнопки заявки зовут API задачника"""
+
+    executor_avatar_url: str
 
 class ChatUnreadMention(TypedDict):
     message_id: "UUID"
@@ -8145,9 +8207,21 @@ class ChatUnreadSpace(TypedDict):
     #: Сколько непрочитанных сообщений всего
     messages: int
 
-class ChatUnreadSummary(TypedDict):
+class _ChatUnreadSummaryRequired(TypedDict):
     chats: "ChatUnreadSpace"
     tasks: "ChatUnreadSpace"
+
+class ChatUnreadSummary(_ChatUnreadSummaryRequired, total=False):
+    #: Чаты заявок поддержки — пространство «Поддержка» внутреннего кабинета (ERP-2152). Из tasks они исключены
+    support: "ChatUnreadSummarySupport"
+
+class ChatUnreadSummarySupport(TypedDict):
+    """Чаты заявок поддержки — пространство «Поддержка» внутреннего кабинета (ERP-2152). Из tasks они исключены"""
+
+    #: Сколько бесед содержат непрочитанное
+    conversations: int
+    #: Сколько непрочитанных сообщений всего
+    messages: int
 
 class _ChatUploadInstructionsRequired(TypedDict):
     mode: Literal['post', 'parts', 'api']
@@ -22387,6 +22461,8 @@ class _FinanceConnectorRequired(TypedDict):
     updated_at: str
 
 class FinanceConnector(_FinanceConnectorRequired, total=False):
+    #: ГГГГ-ММ-ДД: дата учёта новых счетов; пусто — ручная привязка. Существующие карточки не меняются
+    auto_accounts_since: str
     #: До какого момента действует ключ приложения банка (client_secret); Акеда меняет его сама за неделю до срока. Пусто — срок неизвестен или у банка такого ключа нет
     app_secret_expires_at: Optional[str]
 
@@ -22446,6 +22522,8 @@ class _FinanceConnectorCreateRequired(TypedDict):
     provider: "FinanceConnectorProviderKey"
 
 class FinanceConnectorCreate(_FinanceConnectorCreateRequired, total=False):
+    #: ГГГГ-ММ-ДД: дата учёта новых счетов; пусто — ручная привязка. Существующие карточки не меняются
+    auto_accounts_since: str
     display_name: str
     company_name: str
     company: str
@@ -22466,6 +22544,8 @@ class FinanceConnectorPage(TypedDict):
     results: List["FinanceConnector"]
 
 class FinanceConnectorPatch(TypedDict, total=False):
+    #: ГГГГ-ММ-ДД: дата учёта новых счетов; пусто — ручная привязка. Существующие карточки не меняются
+    auto_accounts_since: str
     display_name: str
     company_name: str
     company: Optional[str]
@@ -32233,7 +32313,7 @@ class MarketplaceWeekHistoryItemError(_MarketplaceWeekHistoryItemErrorRequired, 
 
 MarketplaceWeekReasonCode = Literal['product_link_missing', 'opening_required', 'unknown_operations', 'writeoff_untracked', 'revision_decrease', 'cost_source_mismatch', 'accounting_settings_missing', 'stock_shortage', 'accounting_conflict', 'period_closed', 'tax_terms_missing', 'timeout', 'later_stock_expense', 'failed', 'report_revised']
 
-MarketplaceWeekStatus = Literal['posted', 'error', 'revised', 'waiting', 'waiting_stock', 'queued', 'empty', 'manual']
+MarketplaceWeekStatus = Literal['posted', 'error', 'revised', 'waiting', 'waiting_stock', 'queued', 'empty', 'manual', 'stock_unsupported']
 
 class _MarketplaceWeeklyFinanceOutcomeRequired(TypedDict):
     document_ids: List["UUID"]
@@ -32262,7 +32342,7 @@ class _MarketplaceWeeklyFinanceRunRequired(TypedDict):
     currency: str
     #: Чек покупателя после скидки площадки — точная десятичная строка
     buyer_paid: str
-    #: Выручка книги и база налога: чек покупателя плюс доплата площадки
+    #: Выручка книги и база налога: чек покупателя плюс доплата площадки; у Яндекс Маркета доплаты нет (его скидка — баллы, не деньги), и revenue равен buyer_paid
     revenue: str
     #: К перечислению после всех удержаний площадки
     payout: str
@@ -32275,7 +32355,7 @@ class _MarketplaceWeeklyFinanceRunRequired(TypedDict):
     source_hash: str
 
 class MarketplaceWeeklyFinanceRun(_MarketplaceWeeklyFinanceRunRequired, total=False):
-    #: Деньги площадки сверх чека за её скидку (софинансирование Ozon); у WB 0. Входят в базу налога
+    #: Деньги площадки сверх чека за её скидку (софинансирование Ozon); у WB и Яндекс Маркета 0. Входят в базу налога
     compensation: str
     #: Удержания площадки по видам с налогом по её документам; сумма amount равна expense. Пусто у недель, посчитанных до разложения
     charges: List["MarketplaceWeeklyFinanceRunChargesItem"]
@@ -32292,6 +32372,8 @@ class MarketplaceWeeklyFinanceRun(_MarketplaceWeeklyFinanceRunRequired, total=Fa
     captured_at: str
     row_count: int
     expense_row_count: int
+    #: Маркетинг Яндекс Маркета по отдельным договорам за неделю — сумма входящих УПД с НДС, датированных днями недели; точная десятичная строка. Справочно: в неделю учёта и её отпечаток не входит, в книгу расход ведёт разнесение УПД. Нет — маркетинга нет или магазин не единственный магазин Маркета своего юрлица
+    marketing: str
     #: Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж.
     zero_cost: List["MarketplaceWeeklyFinanceRunZeroCostItem"]
 
@@ -32406,7 +32488,7 @@ class _MarketplaceYandexPnlRequired(TypedDict):
     period_kind: Literal['week', 'month']
     #: В боевом ответе пустая строка; заполняется только в демо-ответе
     scheme: str
-    #: Момент последней синхронизации источника
+    #: Когда сборщик подтвердил самый отставший из трёх отчётов Маркета; в запасном расчёте — заказы
     updated: Optional[str]
     year: int
     #: Годы, за которые есть данные
@@ -32416,22 +32498,35 @@ class _MarketplaceYandexPnlRequired(TypedDict):
     rows: List["MarketplaceYandexPnlRow"]
 
 class MarketplaceYandexPnl(_MarketplaceYandexPnlRequired, total=False):
+    #: Откуда себестоимость периода, в знаке строки cogs: manual — ставки на день заказа; stock_posted — документы проведённых недель склада; stock_estimate — оценка склада непроведённой недели; temporary — недостающие штуки по временной цене; stock_opening — продажи до запуска склада по цене начального остатка. Поля нет, когда себестоимости за год нет
+    cost_origin: Dict[str, "MarketplaceYandexPnlCostOriginValue"]
+    freshness: "MarketplaceComponentFreshness"
+    data_through: "MarketplaceComponentDataThrough"
+    #: Хотя бы один из трёх отчётов Маркета не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
+    incomplete: bool
     #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
     cost_missing: Dict[str, float]
     #: Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
     units_missing: Dict[str, float]
     #: Пояснение к неполноте источника
     note: str
-    #: Разбор строки «Прочие услуги» по названиям услуг; ключ — начало периода
+    #: Разбор строки «Прочие услуги» по названиям услуг полной стоимостью; ключ — начало периода
     breakdown: Dict[str, List["MarketplaceWbDecompOtherItem"]]
     #: По какой день загружен отчёт Маркета по стоимости услуг — день последней услуги у отстающего магазина; пустая строка — у какого-то магазина отчёта нет. Позже этого дня строки услуг нулевые
     services_through: str
-    #: Разбор строк услуг (commission, logistics, ads, storage, acceptance, acquiring) по названиям услуг: ключ — строка, затем начало периода
+    #: Разбор строк услуг (commission, logistics, ads, storage, acceptance, acquiring) по названиям услуг полной стоимостью: ключ — строка, затем начало периода
     row_breakdown: Dict[str, Dict[str, List["MarketplaceWbDecompOtherItem"]]]
     #: Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические
     demo: bool
 
 MarketplaceYandexPnlRange = TypedDict("MarketplaceYandexPnlRange", {"from": str, "to": str}, total=False)
+
+class MarketplaceYandexPnlCostOriginValue(TypedDict, total=False):
+    manual: float
+    stock_posted: float
+    stock_estimate: float
+    temporary: float
+    stock_opening: float
 
 class MarketplaceYandexPnlPeriod(TypedDict):
     #: Первый день периода
@@ -32443,12 +32538,17 @@ class MarketplaceYandexPnlPeriod(TypedDict):
     start: str
     end: str
 
-class MarketplaceYandexPnlRow(TypedDict):
-    key: Literal['revenue', 'cancelled', 'income', 'payout', 'commission', 'logistics', 'cogs', 'taxes', 'variable', 'margin', 'pct_commission', 'pct_logistics', 'pct_cogs', 'margin_pct']
+class _MarketplaceYandexPnlRowRequired(TypedDict):
+    #: Строка отчёта. По отчётам Маркета: income (чек покупателя − возвраты + баллы Маркета), payout_share, payout (к перечислению деньгами по отчёту о платежах: платёж покупателя − возврат − оплата услуг Маркета + утеря; раскрывается по источникам в row_breakdown), payout_paid (из них выплачено платёжными поручениями; в row_breakdown — по п/п: номер, дата, сумма поручения, из неё за период), payout_pending (из них ожидает выплаты), revenue (чек покупателя по реализации, «доставлено»), returns, returns_share, points (баллы Маркета — скидка за счёт Маркета тех же строк, доход баллами), points_balance (баланс баллов за период: начислено − списано, справочно, не деньги; в row_breakdown — по источникам), services_money и netting (услуги деньгами и баллами, справочно), cancelled (справочно), variable, cogs, commission, logistics, ads, storage, acceptance, acquiring, other (услуги полной стоимостью: деньги + баллы), marketing (маркетинг по отдельным договорам Маркета — буст CPM, дополнительное стимулирование — по входящим УПД в ЭДО с НДС, на дату УПД; в отчётах площадки его нет, в «к перечислению» не входит, в переменные расходы и маржу входит; есть, когда в отчёт входят все магазины Маркета юрлица и нет отбора по артикулам; в row_breakdown — по УПД), loss_compensation, taxes (от чека), margin, margin_pct.
+    key: Literal['income', 'payout_share', 'payout', 'payout_paid', 'payout_pending', 'revenue', 'returns', 'returns_share', 'points', 'points_balance', 'services_money', 'netting', 'cancelled', 'variable', 'cogs', 'commission', 'logistics', 'ads', 'storage', 'acceptance', 'acquiring', 'other', 'marketing', 'loss_compensation', 'taxes', 'margin', 'margin_pct']
     label: str
     kind: Literal['total', 'subtotal', 'normal', 'percent']
     #: По одному значению на период в том же порядке; null означает, что показатель не считается
     values: List[Optional[float]]
+
+class MarketplaceYandexPnlRow(_MarketplaceYandexPnlRowRequired, total=False):
+    #: Доля строки от выручки периода (revenue, чек покупателя), % — у денежных строк между «Переменные расходы» и «Маржинальная прибыль»; поступление (возмещение утери) — с минусом
+    share: List[Optional[float]]
 
 class _MarketplaceYandexProductRequired(TypedDict):
     #: Составной ключ вида «UUID магазина двоеточие артикул»
@@ -36700,6 +36800,7 @@ class _StockBinInputRequired(TypedDict):
 class StockBinInput(_StockBinInputRequired, total=False):
     #: Название ячейки; необязательно
     name: str
+    #: Место в списке; 0 или не задано — следующее после уже заведённых ячеек места
     sort_order: int
 
 class StockBinList(TypedDict):
@@ -36740,6 +36841,40 @@ class StockBinPlacement(TypedDict):
 
 class StockBinPlacementList(TypedDict):
     results: List["StockBinPlacement"]
+
+class StockBinPreview(TypedDict):
+    #: Сколько кодов в пачке
+    total: int
+    #: Сколько ячеек будет заведено
+    new: int
+    #: Сколько кодов уже заведено в месте
+    exists: int
+    #: Сколько кодов не отличить на этикетке от других
+    twins: int
+    #: Сколько кодов повторяются в пачке
+    repeats: int
+    #: Сколько кодов нельзя завести
+    invalid: int
+    #: Коды по порядку пачки: первые 200 новых и все остальные
+    items: List["StockBinPreviewItem"]
+    #: Новых кодов больше 200 — перечислены первые
+    truncated: bool
+
+class _StockBinPreviewItemRequired(TypedDict):
+    #: Код пачки после обрезки пробелов по краям
+    code: str
+    #: new — новый; exists — ячейка с таким кодом в месте уже есть; twin — на этикетке не отличить от заведённой ячейки или от кода выше в пачке; repeat — тот же код уже был выше; invalid — код нельзя завести
+    status: Literal['new', 'exists', 'twin', 'repeat', 'invalid']
+
+class StockBinPreviewItem(_StockBinPreviewItemRequired, total=False):
+    #: Заведённая ячейка, с которой совпал код (exists, twin)
+    conflict_id: "UUID"
+    #: Код заведённой ячейки или код выше в пачке, с которым совпал этот
+    conflict_code: str
+    #: Название заведённой ячейки
+    conflict_name: str
+    #: Почему код нельзя завести (invalid)
+    message: str
 
 class StockBinRef(TypedDict):
     id: "UUID"
@@ -36838,13 +36973,15 @@ class StockBinSuggestions(TypedDict):
     direction: Literal['in', 'out']
     suggestions: List["StockBinSuggestion"]
 
-class _StockBinTemplateRequired(TypedDict):
-    #: Уровни кода по порядку, например ряд, стеллаж и полка; первый уровень меняется медленнее остальных
-    levels: List["StockBinTemplateLevel"]
+class StockBinTemplate(TypedDict, total=False):
+    """Пачка ячеек: либо уровни шаблона (levels), либо готовый список кодов (codes) — не то и другое вместе"""
 
-class StockBinTemplate(_StockBinTemplateRequired, total=False):
     #: Разделитель между уровнями; пустая строка — уровни пишутся слитно
     separator: str
+    #: Уровни кода по порядку, например ряд, стеллаж, полка и место; первый уровень меняется медленнее остальных
+    levels: List["StockBinTemplateLevel"]
+    #: Список кодов вместо уровней, в порядке списка: несмежные коды паллет, столбец из таблицы
+    codes: List[str]
 
 StockBinTemplateLevel = TypedDict("StockBinTemplateLevel", {"from": str, "to": str, "pad": int}, total=False)
 
@@ -38327,7 +38464,7 @@ class _StockImportApplyRequestRequired(TypedDict):
 
 class StockImportApplyRequest(_StockImportApplyRequestRequired, total=False):
     confirm_warnings: bool
-    #: Пропустить строки файла с ошибкой и применить остальные — только строки документа (document_items) в режимах create_only и upsert. Ошибка всего файла (строка 0) и режим replace не пропускаются; без флага любая ошибка — 409.
+    #: Пропустить строки файла с ошибкой и применить остальные — только строки документа (document_items) в режимах create_only и upsert и ячейки (bins). Ошибка всего файла (строка 0) и режим replace не пропускаются; без флага любая ошибка — 409.
     skip_errors: bool
 
 class _StockImportDiffRequired(TypedDict):
@@ -38364,7 +38501,7 @@ class StockImportInspectRequest(_StockImportInspectRequestRequired, total=False)
     #: Пустое значение берёт первый лист книги
     sheet_name: str
 
-StockImportKind = Literal['initial_stock', 'inventory_count', 'document_items', 'reorder_rules', 'kit_specs', 'agent_report_lines']
+StockImportKind = Literal['initial_stock', 'inventory_count', 'document_items', 'reorder_rules', 'kit_specs', 'agent_report_lines', 'bins']
 
 StockImportMapping = Union[Any, Any]
 
@@ -39367,6 +39504,8 @@ class StockProductBinsPlace(TypedDict):
     #: Склад зоны; пусто, если это сам склад
     warehouse_parent_name: str
     bins_mode: Literal['off', 'soft', 'strict']
+    #: Весь остаток товара в месте. У места без ячеек (bins_mode off) он весь лежит вне ячеек
+    stock_qty: str
     placed_qty: str
     unplaced_qty: str
     bins: List["StockBinContentRow"]

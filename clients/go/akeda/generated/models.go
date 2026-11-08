@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bcd297a6b03665e964a57ed50ecaadcb826a9fa0a3f99a341cb40b6855d3a35).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ebf19014494a1971426cc36a4544c5a4c90ecd79024c0702eadf2a05fb0bfca2).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -4515,6 +4515,10 @@ type ChatConversation struct {
 	NotificationMode string                        `json:"notification_mode"`
 	// NotificationMutedUntil — До какого момента беседа молчит, если звук выключен на время: пока срок не вышел, notification_mode = muted. После срока поле пустое, а режим снова прежний
 	NotificationMutedUntil *string `json:"notification_muted_until,omitempty"`
+	// SupportRequest — Заявка поддержки у беседы задачи-заявки (ERP-2152): по ней беседа относится к пространству «Поддержка», а не к «Чатам задач». У остальных бесед поля нет
+	SupportRequest *ChatConversationSupportRequest `json:"support_request,omitempty"`
+	// SupportOpenRequests — У личного чата «Техническая поддержка»: сколько обращений человека сейчас открыто (ERP-2152). Ноль — перед отправкой выбирают тему нового обращения. У остальных бесед поля нет
+	SupportOpenRequests *int64 `json:"support_open_requests,omitempty"`
 	// NotificationModeAfterMute — Какой режим вернётся, когда выйдет срок «без звука»; есть только пока срок идёт. По нему «Включить звук» возвращает прежний выбор
 	NotificationModeAfterMute *json.RawMessage `json:"notification_mode_after_mute,omitempty"`
 	MentionCount              int64            `json:"mention_count"`
@@ -4526,6 +4530,27 @@ type ChatConversation struct {
 	AvatarURL                 *string          `json:"avatar_url,omitempty"`
 	PeerUserID                *int64           `json:"peer_user_id,omitempty"`
 	PeerAvatarURL             *string          `json:"peer_avatar_url,omitempty"`
+}
+
+// ChatConversationSupportRequest — Заявка поддержки у беседы задачи-заявки (ERP-2152): по ней беседа относится к пространству «Поддержка», а не к «Чатам задач». У остальных бесед поля нет
+type ChatConversationSupportRequest struct {
+	TaskID   UUID `json:"task_id"`
+	TicketID UUID `json:"ticket_id"`
+	// Identifier — Код заявки, например SUP-012
+	Identifier string `json:"identifier"`
+	// Stage — Устойчивый код этапа; пусто — задачу увели на этап без кода
+	Stage string `json:"stage"`
+	// StageName — Имя этапа, выбранное кабинетом
+	StageName         string  `json:"stage_name"`
+	ExecutorUserID    *int64  `json:"executor_user_id"`
+	ExecutorName      string  `json:"executor_name"`
+	ExecutorAvatarURL *string `json:"executor_avatar_url,omitempty"`
+	ClientName        string  `json:"client_name"`
+	TenantSlug        string  `json:"tenant_slug"`
+	// Topic — Тема обращения из перечня ChatSendMessage.support_topic; пусто — тему не выбирали
+	Topic string `json:"topic"`
+	// Overdue — Мяч у нас, а человек ждёт дольше срока (по умолчанию рабочий день)
+	Overdue bool `json:"overdue"`
 }
 
 type ChatConversationCapabilities struct {
@@ -4541,6 +4566,10 @@ type ChatConversationCapabilities struct {
 	CanSetNotificationMode bool `json:"canSetNotificationMode"`
 	// CanSendVoice — Можно записать голосовое или видеокружок и переслать такое сюда. В чатах задач и поддержки — нет: там только текст, файлы и снимки экрана
 	CanSendVoice *bool `json:"canSendVoice,omitempty"`
+	// CanRemoveMembers — Можно убрать другого участника: только у владельца группы, её создателя. Модератор и право кабинета chat:manage этого не дают
+	CanRemoveMembers *bool `json:"canRemoveMembers,omitempty"`
+	// CanLeave — Можно выйти из группы самому: у любого участника живой группы. В прямом и архивном чате, в чатах задач и поддержки — нет
+	CanLeave *bool `json:"canLeave,omitempty"`
 }
 
 type ChatConversationPage struct {
@@ -4647,7 +4676,7 @@ type ChatForwardedMessage struct {
 }
 
 type ChatMarkAllRead struct {
-	// Scope — Раздел списка бесед: user — переписка людей без чатов задач.
+	// Scope — Раздел списка бесед: user — переписка людей без чатов задач; task — чаты задач без чатов заявок поддержки; support — чаты заявок поддержки (ERP-2152).
 	Scope string `json:"scope"`
 }
 
@@ -4848,6 +4877,8 @@ type ChatSendMessage struct {
 	ReplyQuote *string `json:"reply_quote,omitempty"`
 	// SupportReport — Сообщение формы «Сообщить об ошибке». В чате поддержки открывает новое обращение и новую заявку, даже если в беседе уже есть открытое; обычное сообщение продолжает открытое. В любой другой беседе — 400
 	SupportReport *bool `json:"support_report,omitempty"`
+	// SupportTopic — Тема нового обращения (ERP-2152). Непустая тема открывает новое обращение и становится меткой заявки; обычное сообщение без темы продолжает открытое обращение. Вне чата поддержки или вне перечня — 400
+	SupportTopic *string `json:"support_topic,omitempty"`
 }
 
 type ChatSendMessageResult struct {
@@ -4863,6 +4894,27 @@ type ChatSendVideoMeeting struct {
 type ChatSetReaction struct {
 	// Emoji — Закрытый список допустимых реакций.
 	Emoji string `json:"emoji"`
+}
+
+// ChatSupportRequest — Заявка поддержки рядом с беседой задачи-заявки (ERP-2152): этап и его имя, ответственный, клиент, кабинет и тема. Ничего отсюда через чат не меняется: кнопки заявки зовут API задачника
+type ChatSupportRequest struct {
+	TaskID   UUID `json:"task_id"`
+	TicketID UUID `json:"ticket_id"`
+	// Identifier — Код заявки, например SUP-012
+	Identifier string `json:"identifier"`
+	// Stage — Устойчивый код этапа; пусто — задачу увели на этап без кода
+	Stage string `json:"stage"`
+	// StageName — Имя этапа, выбранное кабинетом
+	StageName         string  `json:"stage_name"`
+	ExecutorUserID    *int64  `json:"executor_user_id"`
+	ExecutorName      string  `json:"executor_name"`
+	ExecutorAvatarURL *string `json:"executor_avatar_url,omitempty"`
+	ClientName        string  `json:"client_name"`
+	TenantSlug        string  `json:"tenant_slug"`
+	// Topic — Тема обращения из перечня ChatSendMessage.support_topic; пусто — тему не выбирали
+	Topic string `json:"topic"`
+	// Overdue — Мяч у нас, а человек ждёт дольше срока (по умолчанию рабочий день)
+	Overdue bool `json:"overdue"`
 }
 
 type ChatUnreadMention struct {
@@ -4884,6 +4936,16 @@ type ChatUnreadSpace struct {
 type ChatUnreadSummary struct {
 	Chats ChatUnreadSpace `json:"chats"`
 	Tasks ChatUnreadSpace `json:"tasks"`
+	// Support — Чаты заявок поддержки — пространство «Поддержка» внутреннего кабинета (ERP-2152). Из tasks они исключены
+	Support *ChatUnreadSummarySupport `json:"support,omitempty"`
+}
+
+// ChatUnreadSummarySupport — Чаты заявок поддержки — пространство «Поддержка» внутреннего кабинета (ERP-2152). Из tasks они исключены
+type ChatUnreadSummarySupport struct {
+	// Conversations — Сколько бесед содержат непрочитанное
+	Conversations int64 `json:"conversations"`
+	// Messages — Сколько непрочитанных сообщений всего
+	Messages int64 `json:"messages"`
 }
 
 type ChatUploadInstructions struct {
@@ -18928,6 +18990,8 @@ type FinanceCompanySuggestion struct {
 }
 
 type FinanceConnector struct {
+	// AutoAccountsSince — ГГГГ-ММ-ДД: дата учёта новых счетов; пусто — ручная привязка. Существующие карточки не меняются
+	AutoAccountsSince    *string                     `json:"auto_accounts_since,omitempty"`
 	ID                   UUID                        `json:"id"`
 	Provider             FinanceConnectorProviderKey `json:"provider"`
 	ProviderName         string                      `json:"provider_name"`
@@ -19025,10 +19089,12 @@ type FinanceConnectorAccountsImportSwitch struct {
 type FinanceConnectorAuthKind = string
 
 type FinanceConnectorCreate struct {
-	Provider    FinanceConnectorProviderKey `json:"provider"`
-	DisplayName *string                     `json:"display_name,omitempty"`
-	CompanyName *string                     `json:"company_name,omitempty"`
-	Company     *string                     `json:"company,omitempty"`
+	// AutoAccountsSince — ГГГГ-ММ-ДД: дата учёта новых счетов; пусто — ручная привязка. Существующие карточки не меняются
+	AutoAccountsSince *string                     `json:"auto_accounts_since,omitempty"`
+	Provider          FinanceConnectorProviderKey `json:"provider"`
+	DisplayName       *string                     `json:"display_name,omitempty"`
+	CompanyName       *string                     `json:"company_name,omitempty"`
+	Company           *string                     `json:"company,omitempty"`
 	// Credential — Банковский токен либо JSON с client_id/client_secret; никогда не передаётся через MCP
 	Credential      *string `json:"credential,omitempty"`
 	ImportDepthDays *int64  `json:"import_depth_days,omitempty"`
@@ -19047,9 +19113,11 @@ type FinanceConnectorPage struct {
 }
 
 type FinanceConnectorPatch struct {
-	DisplayName *string `json:"display_name,omitempty"`
-	CompanyName *string `json:"company_name,omitempty"`
-	Company     *string `json:"company,omitempty"`
+	// AutoAccountsSince — ГГГГ-ММ-ДД: дата учёта новых счетов; пусто — ручная привязка. Существующие карточки не меняются
+	AutoAccountsSince *string `json:"auto_accounts_since,omitempty"`
+	DisplayName       *string `json:"display_name,omitempty"`
+	CompanyName       *string `json:"company_name,omitempty"`
+	Company           *string `json:"company,omitempty"`
 	// Credential — Непустой новый секрет; пустая строка сохраняет прежний
 	Credential      *string `json:"credential,omitempty"`
 	ImportDepthDays *int64  `json:"import_depth_days,omitempty"`
@@ -29273,9 +29341,9 @@ type MarketplaceWeeklyFinanceRun struct {
 	Currency string `json:"currency"`
 	// BuyerPaid — Чек покупателя после скидки площадки — точная десятичная строка
 	BuyerPaid string `json:"buyer_paid"`
-	// Compensation — Деньги площадки сверх чека за её скидку (софинансирование Ozon); у WB 0. Входят в базу налога
+	// Compensation — Деньги площадки сверх чека за её скидку (софинансирование Ozon); у WB и Яндекс Маркета 0. Входят в базу налога
 	Compensation *string `json:"compensation,omitempty"`
-	// Revenue — Выручка книги и база налога: чек покупателя плюс доплата площадки
+	// Revenue — Выручка книги и база налога: чек покупателя плюс доплата площадки; у Яндекс Маркета доплаты нет (его скидка — баллы, не деньги), и revenue равен buyer_paid
 	Revenue string `json:"revenue"`
 	// Payout — К перечислению после всех удержаний площадки
 	Payout string `json:"payout"`
@@ -29301,6 +29369,8 @@ type MarketplaceWeeklyFinanceRun struct {
 	CapturedAt      *string                              `json:"captured_at,omitempty"`
 	RowCount        *int64                               `json:"row_count,omitempty"`
 	ExpenseRowCount *int64                               `json:"expense_row_count,omitempty"`
+	// Marketing — Маркетинг Яндекс Маркета по отдельным договорам за неделю — сумма входящих УПД с НДС, датированных днями недели; точная десятичная строка. Справочно: в неделю учёта и её отпечаток не входит, в книгу расход ведёт разнесение УПД. Нет — маркетинга нет или магазин не единственный магазин Маркета своего юрлица
+	Marketing *string `json:"marketing,omitempty"`
 	// ZeroCost — Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж.
 	ZeroCost []MarketplaceWeeklyFinanceRunZeroCostItem `json:"zero_cost,omitempty"`
 }
@@ -29439,7 +29509,7 @@ type MarketplaceYandexPnl struct {
 	PeriodKind string `json:"period_kind"`
 	// Scheme — В боевом ответе пустая строка; заполняется только в демо-ответе
 	Scheme string `json:"scheme"`
-	// Updated — Момент последней синхронизации источника
+	// Updated — Когда сборщик подтвердил самый отставший из трёх отчётов Маркета; в запасном расчёте — заказы
 	Updated *string `json:"updated"`
 	Year    int64   `json:"year"`
 	// Years — Годы, за которые есть данные
@@ -29447,17 +29517,23 @@ type MarketplaceYandexPnl struct {
 	Range   MarketplaceYandexPnlRange    `json:"range"`
 	Periods []MarketplaceYandexPnlPeriod `json:"periods"`
 	Rows    []MarketplaceYandexPnlRow    `json:"rows"`
+	// CostOrigin — Откуда себестоимость периода, в знаке строки cogs: manual — ставки на день заказа; stock_posted — документы проведённых недель склада; stock_estimate — оценка склада непроведённой недели; temporary — недостающие штуки по временной цене; stock_opening — продажи до запуска склада по цене начального остатка. Поля нет, когда себестоимости за год нет
+	CostOrigin  map[string]MarketplaceYandexPnlCostOriginValue `json:"cost_origin,omitempty"`
+	Freshness   *MarketplaceComponentFreshness                 `json:"freshness,omitempty"`
+	DataThrough *MarketplaceComponentDataThrough               `json:"data_through,omitempty"`
+	// Incomplete — Хотя бы один из трёх отчётов Маркета не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась
+	Incomplete *bool `json:"incomplete,omitempty"`
 	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
 	CostMissing map[string]float64 `json:"cost_missing,omitempty"`
 	// UnitsMissing — Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
 	UnitsMissing map[string]float64 `json:"units_missing,omitempty"`
 	// Note — Пояснение к неполноте источника
 	Note *string `json:"note,omitempty"`
-	// Breakdown — Разбор строки «Прочие услуги» по названиям услуг; ключ — начало периода
+	// Breakdown — Разбор строки «Прочие услуги» по названиям услуг полной стоимостью; ключ — начало периода
 	Breakdown map[string][]MarketplaceWbDecompOtherItem `json:"breakdown,omitempty"`
 	// ServicesThrough — По какой день загружен отчёт Маркета по стоимости услуг — день последней услуги у отстающего магазина; пустая строка — у какого-то магазина отчёта нет. Позже этого дня строки услуг нулевые
 	ServicesThrough *string `json:"services_through,omitempty"`
-	// RowBreakdown — Разбор строк услуг (commission, logistics, ads, storage, acceptance, acquiring) по названиям услуг: ключ — строка, затем начало периода
+	// RowBreakdown — Разбор строк услуг (commission, logistics, ads, storage, acceptance, acquiring) по названиям услуг полной стоимостью: ключ — строка, затем начало периода
 	RowBreakdown map[string]map[string][]MarketplaceWbDecompOtherItem `json:"row_breakdown,omitempty"`
 	// Demo — Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические
 	Demo *bool `json:"demo,omitempty"`
@@ -29466,6 +29542,14 @@ type MarketplaceYandexPnl struct {
 type MarketplaceYandexPnlRange struct {
 	From string `json:"from"`
 	To   string `json:"to"`
+}
+
+type MarketplaceYandexPnlCostOriginValue struct {
+	Manual        *float64 `json:"manual,omitempty"`
+	StockPosted   *float64 `json:"stock_posted,omitempty"`
+	StockEstimate *float64 `json:"stock_estimate,omitempty"`
+	Temporary     *float64 `json:"temporary,omitempty"`
+	StockOpening  *float64 `json:"stock_opening,omitempty"`
 }
 
 type MarketplaceYandexPnlPeriod struct {
@@ -29480,11 +29564,14 @@ type MarketplaceYandexPnlPeriod struct {
 }
 
 type MarketplaceYandexPnlRow struct {
+	// Key — Строка отчёта. По отчётам Маркета: income (чек покупателя − возвраты + баллы Маркета), payout_share, payout (к перечислению деньгами по отчёту о платежах: платёж покупателя − возврат − оплата услуг Маркета + утеря; раскрывается по источникам в row_breakdown), payout_paid (из них выплачено платёжными поручениями; в row_breakdown — по п/п: номер, дата, сумма поручения, из неё за период), payout_pending (из них ожидает выплаты), revenue (чек покупателя по реализации, «доставлено»), returns, returns_share, points (баллы Маркета — скидка за счёт Маркета тех же строк, доход баллами), points_balance (баланс баллов за период: начислено − списано, справочно, не деньги; в row_breakdown — по источникам), services_money и netting (услуги деньгами и баллами, справочно), cancelled (справочно), variable, cogs, commission, logistics, ads, storage, acceptance, acquiring, other (услуги полной стоимостью: деньги + баллы), marketing (маркетинг по отдельным договорам Маркета — буст CPM, дополнительное стимулирование — по входящим УПД в ЭДО с НДС, на дату УПД; в отчётах площадки его нет, в «к перечислению» не входит, в переменные расходы и маржу входит; есть, когда в отчёт входят все магазины Маркета юрлица и нет отбора по артикулам; в row_breakdown — по УПД), loss_compensation, taxes (от чека), margin, margin_pct.
 	Key   string `json:"key"`
 	Label string `json:"label"`
 	Kind  string `json:"kind"`
 	// Values — По одному значению на период в том же порядке; null означает, что показатель не считается
 	Values []*float64 `json:"values"`
+	// Share — Доля строки от выручки периода (revenue, чек покупателя), % — у денежных строк между «Переменные расходы» и «Маржинальная прибыль»; поступление (возмещение утери) — с минусом
+	Share []*float64 `json:"share,omitempty"`
 }
 
 type MarketplaceYandexProduct struct {
@@ -33885,8 +33972,9 @@ type StockBinInput struct {
 	// Code — Код ячейки; пробелы по краям отбрасываются
 	Code string `json:"code"`
 	// Name — Название ячейки; необязательно
-	Name      *string `json:"name,omitempty"`
-	SortOrder *int64  `json:"sort_order,omitempty"`
+	Name *string `json:"name,omitempty"`
+	// SortOrder — Место в списке; 0 или не задано — следующее после уже заведённых ячеек места
+	SortOrder *int64 `json:"sort_order,omitempty"`
 }
 
 type StockBinList struct {
@@ -33932,6 +34020,40 @@ type StockBinPlacement struct {
 
 type StockBinPlacementList struct {
 	Results []StockBinPlacement `json:"results"`
+}
+
+type StockBinPreview struct {
+	// Total — Сколько кодов в пачке
+	Total int64 `json:"total"`
+	// New — Сколько ячеек будет заведено
+	New int64 `json:"new"`
+	// Exists — Сколько кодов уже заведено в месте
+	Exists int64 `json:"exists"`
+	// Twins — Сколько кодов не отличить на этикетке от других
+	Twins int64 `json:"twins"`
+	// Repeats — Сколько кодов повторяются в пачке
+	Repeats int64 `json:"repeats"`
+	// Invalid — Сколько кодов нельзя завести
+	Invalid int64 `json:"invalid"`
+	// Items — Коды по порядку пачки: первые 200 новых и все остальные
+	Items []StockBinPreviewItem `json:"items"`
+	// Truncated — Новых кодов больше 200 — перечислены первые
+	Truncated bool `json:"truncated"`
+}
+
+type StockBinPreviewItem struct {
+	// Code — Код пачки после обрезки пробелов по краям
+	Code string `json:"code"`
+	// Status — new — новый; exists — ячейка с таким кодом в месте уже есть; twin — на этикетке не отличить от заведённой ячейки или от кода выше в пачке; repeat — тот же код уже был выше; invalid — код нельзя завести
+	Status string `json:"status"`
+	// ConflictID — Заведённая ячейка, с которой совпал код (exists, twin)
+	ConflictID *UUID `json:"conflict_id,omitempty"`
+	// ConflictCode — Код заведённой ячейки или код выше в пачке, с которым совпал этот
+	ConflictCode *string `json:"conflict_code,omitempty"`
+	// ConflictName — Название заведённой ячейки
+	ConflictName *string `json:"conflict_name,omitempty"`
+	// Message — Почему код нельзя завести (invalid)
+	Message *string `json:"message,omitempty"`
 }
 
 type StockBinRef struct {
@@ -34030,11 +34152,14 @@ type StockBinSuggestions struct {
 	Suggestions []StockBinSuggestion `json:"suggestions"`
 }
 
+// StockBinTemplate — Пачка ячеек: либо уровни шаблона (levels), либо готовый список кодов (codes) — не то и другое вместе
 type StockBinTemplate struct {
 	// Separator — Разделитель между уровнями; пустая строка — уровни пишутся слитно
 	Separator *string `json:"separator,omitempty"`
-	// Levels — Уровни кода по порядку, например ряд, стеллаж и полка; первый уровень меняется медленнее остальных
-	Levels []StockBinTemplateLevel `json:"levels"`
+	// Levels — Уровни кода по порядку, например ряд, стеллаж, полка и место; первый уровень меняется медленнее остальных
+	Levels []StockBinTemplateLevel `json:"levels,omitempty"`
+	// Codes — Список кодов вместо уровней, в порядке списка: несмежные коды паллет, столбец из таблицы
+	Codes []string `json:"codes,omitempty"`
 }
 
 type StockBinTemplateLevel struct {
@@ -35527,7 +35652,7 @@ type StockHandlingUnitSuggestionResult struct {
 type StockImportApplyRequest struct {
 	PreviewToken    string `json:"preview_token"`
 	ConfirmWarnings *bool  `json:"confirm_warnings,omitempty"`
-	// SkipErrors — Пропустить строки файла с ошибкой и применить остальные — только строки документа (document_items) в режимах create_only и upsert. Ошибка всего файла (строка 0) и режим replace не пропускаются; без флага любая ошибка — 409.
+	// SkipErrors — Пропустить строки файла с ошибкой и применить остальные — только строки документа (document_items) в режимах create_only и upsert и ячейки (bins). Ошибка всего файла (строка 0) и режим replace не пропускаются; без флага любая ошибка — 409.
 	SkipErrors *bool `json:"skip_errors,omitempty"`
 }
 
@@ -36583,12 +36708,14 @@ type StockProductBinsPlace struct {
 	WarehouseID   UUID   `json:"warehouse_id"`
 	WarehouseName string `json:"warehouse_name"`
 	// WarehouseParentName — Склад зоны; пусто, если это сам склад
-	WarehouseParentName string               `json:"warehouse_parent_name"`
-	BinsMode            string               `json:"bins_mode"`
-	PlacedQty           string               `json:"placed_qty"`
-	UnplacedQty         string               `json:"unplaced_qty"`
-	Bins                []StockBinContentRow `json:"bins"`
-	Unplaced            []StockBinSlice      `json:"unplaced"`
+	WarehouseParentName string `json:"warehouse_parent_name"`
+	BinsMode            string `json:"bins_mode"`
+	// StockQty — Весь остаток товара в месте. У места без ячеек (bins_mode off) он весь лежит вне ячеек
+	StockQty    string               `json:"stock_qty"`
+	PlacedQty   string               `json:"placed_qty"`
+	UnplacedQty string               `json:"unplaced_qty"`
+	Bins        []StockBinContentRow `json:"bins"`
+	Unplaced    []StockBinSlice      `json:"unplaced"`
 }
 
 // StockProductCostComposition — Себестоимость остатка товара по составляющим.

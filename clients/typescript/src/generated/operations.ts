@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bcd297a6b03665e964a57ed50ecaadcb826a9fa0a3f99a341cb40b6855d3a35).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ebf19014494a1971426cc36a4544c5a4c90ecd79024c0702eadf2a05fb0bfca2).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -817,6 +817,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.ChatConversation;
+  };
+  /** POST /api/v1/chat/conversations/{id}/leave — Выйти из группы */
+  chatLeaveGroup: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.ChatMemberChangeResult;
   };
   /** GET /api/v1/chat/conversations/{id}/attachments — Получить вложения доступного чата */
   chatListAttachments: {
@@ -9402,7 +9409,7 @@ export interface OperationTypes {
   };
   /** POST /api/v1/marketplace/{platform}/stores/{id}/finance/weeks/{weekStart}/apply — Передать завершённую неделю в учёт */
   marketplaceApplyWeeklyFinanceRun: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries"; "weekStart": string };
+    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" | "yandex"; "weekStart": string };
     query: Record<string, never>;
     body: never;
     response: models.MarketplaceWeeklyFinanceOutcome;
@@ -9689,7 +9696,7 @@ export interface OperationTypes {
   };
   /** GET /api/v1/marketplace/{platform}/stores/{id}/finance/weeks — Получить готовность недельных финансовых отчётов */
   marketplaceListWeeklyFinanceRuns: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" };
+    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" | "yandex" };
     query: Record<string, never>;
     body: never;
     response: models.MarketplaceWeeklyFinanceRuns;
@@ -9864,7 +9871,7 @@ export interface OperationTypes {
   };
   /** POST /api/v1/marketplace/{platform}/stores/{id}/finance/weeks/{weekStart}/repost — Перепровести неделю */
   marketplaceRepostWeeklyFinanceRun: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries"; "weekStart": string };
+    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" | "yandex"; "weekStart": string };
     query: Record<string, never>;
     body: never;
     response: models.MarketplaceWeeklyFinanceOutcome;
@@ -9913,14 +9920,14 @@ export interface OperationTypes {
   };
   /** POST /api/v1/marketplace/{platform}/stores/{id}/summary/recompute — Пересчитать данные площадки магазина */
   marketplaceStartStoreSummaryRecompute: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" };
+    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" | "yandex" };
     query: Record<string, never>;
     body: models.MarketplaceSummaryRecomputeRequest;
     response: models.MarketplaceSummaryRun;
   };
   /** GET /api/v1/marketplace/{platform}/stores/{id}/summary/status — Получить состояние пересчёта данных площадки магазина */
   marketplaceStoreSummaryStatus: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" };
+    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" | "yandex" };
     query: Record<string, never>;
     body: never;
     response: models.MarketplaceSummaryRun;
@@ -10123,7 +10130,7 @@ export interface OperationTypes {
   };
   /** GET /api/v1/marketplace/{platform}/stores/{id}/finance/weeks/history — Получить историю недель магазина в учёте */
   marketplaceWeeklyFinanceHistory: {
-    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" };
+    params: { "id": models.UUID; "platform": "ozon" | "wb" | "wildberries" | "yandex" };
     query: Record<string, never>;
     body: never;
     response: models.MarketplaceWeekHistory;
@@ -11577,7 +11584,7 @@ export interface OperationTypes {
     body: never;
     response: models.StockUploadFinishResult;
   };
-  /** POST /api/v1/stock/warehouses/{id}/bins/generate — Завести ячейки пачкой по шаблону */
+  /** POST /api/v1/stock/warehouses/{id}/bins/generate — Завести ячейки пачкой по шаблону или списку кодов */
   stockGenerateWarehouseBins: {
     params: { "id": models.UUID };
     query: Record<string, never>;
@@ -12283,6 +12290,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.StockValuationPreviewRequest;
     response: models.StockValuationResult;
+  };
+  /** POST /api/v1/stock/warehouses/{id}/bins/preview — Проверить пачку ячеек до создания */
+  stockPreviewWarehouseBins: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.StockBinTemplate;
+    response: models.StockBinPreview;
   };
   /** GET /api/v1/stock/price-suggestions — Подобрать цену по умолчанию для прихода без цены поставщика */
   stockPriceSuggestions: {
@@ -13760,6 +13774,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   chatGetAttachment: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments/{attachmentId}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatGetAttachmentUploadSession: { method: "GET", path: "/api/v1/chat/upload-sessions/{sessionId}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatGetConversation: { method: "GET", path: "/api/v1/chat/conversations/{id}", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  chatLeaveGroup: { method: "POST", path: "/api/v1/chat/conversations/{id}/leave", module: "chat", stage: "preview", permission: "chat:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatListAttachments: { method: "GET", path: "/api/v1/chat/conversations/{id}/attachments", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "cursor", pageSizeMax: 100, pageSizeDefault: 50 },
   chatListConversationMembers: { method: "GET", path: "/api/v1/chat/conversations/{id}/members", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   chatListConversations: { method: "GET", path: "/api/v1/chat/conversations", module: "chat", stage: "preview", permission: "chat:read", idempotent: false, installation: false, pagination: "cursor", pageSizeMax: 100, pageSizeDefault: 50 },
@@ -15398,6 +15413,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   stockPreviewImport: { method: "POST", path: "/api/v1/stock/imports/{id}/preview", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockPreviewReceiptCost: { method: "POST", path: "/api/v1/stock/receipt-costs/preview", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockPreviewValuation: { method: "POST", path: "/api/v1/stock/valuation/preview", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  stockPreviewWarehouseBins: { method: "POST", path: "/api/v1/stock/warehouses/{id}/bins/preview", module: "stock", stage: "preview", permission: "stock.settings:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockPriceSuggestions: { method: "GET", path: "/api/v1/stock/price-suggestions", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockProductCostComposition: { method: "GET", path: "/api/v1/stock/products/{id}/cost-composition", module: "stock", stage: "preview", permission: "stock:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   stockQuoteCarrierShipment: { method: "POST", path: "/api/v1/stock/carrier-shipments/{id}/quote", module: "stock", stage: "preview", permission: "stock:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

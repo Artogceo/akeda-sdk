@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 6bcd297a6b03665e964a57ed50ecaadcb826a9fa0a3f99a341cb40b6855d3a35).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ebf19014494a1971426cc36a4544c5a4c90ecd79024c0702eadf2a05fb0bfca2).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -4528,6 +4528,10 @@ export interface ChatConversation {
   "notification_mode": string;
   /** До какого момента беседа молчит, если звук выключен на время: пока срок не вышел, notification_mode = muted. После срока поле пустое, а режим снова прежний */
   "notification_muted_until"?: string | null;
+  /** Заявка поддержки у беседы задачи-заявки (ERP-2152): по ней беседа относится к пространству «Поддержка», а не к «Чатам задач». У остальных бесед поля нет */
+  "support_request"?: ChatConversationSupportRequest;
+  /** У личного чата «Техническая поддержка»: сколько обращений человека сейчас открыто (ERP-2152). Ноль — перед отправкой выбирают тему нового обращения. У остальных бесед поля нет */
+  "support_open_requests"?: number;
   /** Какой режим вернётся, когда выйдет срок «без звука»; есть только пока срок идёт. По нему «Включить звук» возвращает прежний выбор */
   "notification_mode_after_mute"?: "all" | "mentions" | null | null;
   "mention_count": number;
@@ -4539,6 +4543,27 @@ export interface ChatConversation {
   "avatar_url"?: string;
   "peer_user_id"?: number | null;
   "peer_avatar_url"?: string;
+}
+
+/** Заявка поддержки у беседы задачи-заявки (ERP-2152): по ней беседа относится к пространству «Поддержка», а не к «Чатам задач». У остальных бесед поля нет */
+export interface ChatConversationSupportRequest {
+  "task_id": UUID;
+  "ticket_id": UUID;
+  /** Код заявки, например SUP-012 */
+  "identifier": string;
+  /** Устойчивый код этапа; пусто — задачу увели на этап без кода */
+  "stage": "" | "support.unassigned" | "support.in_progress" | "support.waiting" | "support.resolved" | "support.done";
+  /** Имя этапа, выбранное кабинетом */
+  "stage_name": string;
+  "executor_user_id": number | null;
+  "executor_name": string;
+  "executor_avatar_url"?: string;
+  "client_name": string;
+  "tenant_slug": string;
+  /** Тема обращения из перечня ChatSendMessage.support_topic; пусто — тему не выбирали */
+  "topic": string;
+  /** Мяч у нас, а человек ждёт дольше срока (по умолчанию рабочий день) */
+  "overdue": boolean;
 }
 
 export interface ChatConversationCapabilities {
@@ -4554,6 +4579,10 @@ export interface ChatConversationCapabilities {
   "canSetNotificationMode": boolean;
   /** Можно записать голосовое или видеокружок и переслать такое сюда. В чатах задач и поддержки — нет: там только текст, файлы и снимки экрана */
   "canSendVoice"?: boolean;
+  /** Можно убрать другого участника: только у владельца группы, её создателя. Модератор и право кабинета chat:manage этого не дают */
+  "canRemoveMembers"?: boolean;
+  /** Можно выйти из группы самому: у любого участника живой группы. В прямом и архивном чате, в чатах задач и поддержки — нет */
+  "canLeave"?: boolean;
 }
 
 export interface ChatConversationPage {
@@ -4660,12 +4689,12 @@ export interface ChatForwardedMessage {
 }
 
 export interface ChatMarkAllRead {
-  /** Раздел списка бесед: user — переписка людей без чатов задач. */
-  "scope": "all" | "direct" | "group" | "task" | "user";
+  /** Раздел списка бесед: user — переписка людей без чатов задач; task — чаты задач без чатов заявок поддержки; support — чаты заявок поддержки (ERP-2152). */
+  "scope": "all" | "direct" | "group" | "task" | "user" | "support";
 }
 
 export interface ChatMarkAllReadResult {
-  "scope": "all" | "direct" | "group" | "task" | "user";
+  "scope": "all" | "direct" | "group" | "task" | "user" | "support";
   "conversations_read": number;
   "mentions_read": number;
   "notifications_read": number;
@@ -4861,6 +4890,8 @@ export interface ChatSendMessage {
   "reply_quote"?: string;
   /** Сообщение формы «Сообщить об ошибке». В чате поддержки открывает новое обращение и новую заявку, даже если в беседе уже есть открытое; обычное сообщение продолжает открытое. В любой другой беседе — 400 */
   "support_report"?: boolean;
+  /** Тема нового обращения (ERP-2152). Непустая тема открывает новое обращение и становится меткой заявки; обычное сообщение без темы продолжает открытое обращение. Вне чата поддержки или вне перечня — 400 */
+  "support_topic"?: "not_working" | "bug" | "question" | "idea" | "billing";
 }
 
 export interface ChatSendMessageResult {
@@ -4876,6 +4907,27 @@ export interface ChatSendVideoMeeting {
 export interface ChatSetReaction {
   /** Закрытый список допустимых реакций. */
   "emoji": "👍" | "👎" | "❤️" | "🔥" | "🎉" | "😄" | "🤝" | "👌" | "😂" | "😮" | "😢" | "😡" | "🙏" | "👏" | "✅" | "❌" | "👀" | "💯" | "🤔" | "🙌" | "💪" | "🚀" | "✍️" | "😍" | "😎" | "🤯" | "😱" | "🏆" | "⚡" | "👋" | "🤗" | "🥳";
+}
+
+/** Заявка поддержки рядом с беседой задачи-заявки (ERP-2152): этап и его имя, ответственный, клиент, кабинет и тема. Ничего отсюда через чат не меняется: кнопки заявки зовут API задачника */
+export interface ChatSupportRequest {
+  "task_id": UUID;
+  "ticket_id": UUID;
+  /** Код заявки, например SUP-012 */
+  "identifier": string;
+  /** Устойчивый код этапа; пусто — задачу увели на этап без кода */
+  "stage": "" | "support.unassigned" | "support.in_progress" | "support.waiting" | "support.resolved" | "support.done";
+  /** Имя этапа, выбранное кабинетом */
+  "stage_name": string;
+  "executor_user_id": number | null;
+  "executor_name": string;
+  "executor_avatar_url"?: string;
+  "client_name": string;
+  "tenant_slug": string;
+  /** Тема обращения из перечня ChatSendMessage.support_topic; пусто — тему не выбирали */
+  "topic": string;
+  /** Мяч у нас, а человек ждёт дольше срока (по умолчанию рабочий день) */
+  "overdue": boolean;
 }
 
 export interface ChatUnreadMention {
@@ -4897,6 +4949,16 @@ export interface ChatUnreadSpace {
 export interface ChatUnreadSummary {
   "chats": ChatUnreadSpace;
   "tasks": ChatUnreadSpace;
+  /** Чаты заявок поддержки — пространство «Поддержка» внутреннего кабинета (ERP-2152). Из tasks они исключены */
+  "support"?: ChatUnreadSummarySupport;
+}
+
+/** Чаты заявок поддержки — пространство «Поддержка» внутреннего кабинета (ERP-2152). Из tasks они исключены */
+export interface ChatUnreadSummarySupport {
+  /** Сколько бесед содержат непрочитанное */
+  "conversations": number;
+  /** Сколько непрочитанных сообщений всего */
+  "messages": number;
 }
 
 export interface ChatUploadInstructions {
@@ -18966,6 +19028,8 @@ export interface FinanceCompanySuggestion {
 }
 
 export interface FinanceConnector {
+  /** ГГГГ-ММ-ДД: дата учёта новых счетов; пусто — ручная привязка. Существующие карточки не меняются */
+  "auto_accounts_since"?: string;
   "id": UUID;
   "provider": FinanceConnectorProviderKey;
   "provider_name": string;
@@ -19063,6 +19127,8 @@ export interface FinanceConnectorAccountsImportSwitch {
 export type FinanceConnectorAuthKind = "token" | "client_credentials" | "oauth" | "oauth_mtls" | "directbank";
 
 export interface FinanceConnectorCreate {
+  /** ГГГГ-ММ-ДД: дата учёта новых счетов; пусто — ручная привязка. Существующие карточки не меняются */
+  "auto_accounts_since"?: string;
   "provider": FinanceConnectorProviderKey;
   "display_name"?: string;
   "company_name"?: string;
@@ -19085,6 +19151,8 @@ export interface FinanceConnectorPage {
 }
 
 export interface FinanceConnectorPatch {
+  /** ГГГГ-ММ-ДД: дата учёта новых счетов; пусто — ручная привязка. Существующие карточки не меняются */
+  "auto_accounts_since"?: string;
   "display_name"?: string;
   "company_name"?: string;
   "company"?: string | null;
@@ -29341,7 +29409,7 @@ export interface MarketplaceWeekHistoryItemError {
 
 export type MarketplaceWeekReasonCode = "product_link_missing" | "opening_required" | "unknown_operations" | "writeoff_untracked" | "revision_decrease" | "cost_source_mismatch" | "accounting_settings_missing" | "stock_shortage" | "accounting_conflict" | "period_closed" | "tax_terms_missing" | "timeout" | "later_stock_expense" | "failed" | "report_revised";
 
-export type MarketplaceWeekStatus = "posted" | "error" | "revised" | "waiting" | "waiting_stock" | "queued" | "empty" | "manual";
+export type MarketplaceWeekStatus = "posted" | "error" | "revised" | "waiting" | "waiting_stock" | "queued" | "empty" | "manual" | "stock_unsupported";
 
 export interface MarketplaceWeeklyFinanceOutcome {
   "document_ids": Array<UUID>;
@@ -29368,9 +29436,9 @@ export interface MarketplaceWeeklyFinanceRun {
   "currency": string;
   /** Чек покупателя после скидки площадки — точная десятичная строка */
   "buyer_paid": string;
-  /** Деньги площадки сверх чека за её скидку (софинансирование Ozon); у WB 0. Входят в базу налога */
+  /** Деньги площадки сверх чека за её скидку (софинансирование Ozon); у WB и Яндекс Маркета 0. Входят в базу налога */
   "compensation"?: string;
-  /** Выручка книги и база налога: чек покупателя плюс доплата площадки */
+  /** Выручка книги и база налога: чек покупателя плюс доплата площадки; у Яндекс Маркета доплаты нет (его скидка — баллы, не деньги), и revenue равен buyer_paid */
   "revenue": string;
   /** К перечислению после всех удержаний площадки */
   "payout": string;
@@ -29396,6 +29464,8 @@ export interface MarketplaceWeeklyFinanceRun {
   "captured_at"?: string;
   "row_count"?: number;
   "expense_row_count"?: number;
+  /** Маркетинг Яндекс Маркета по отдельным договорам за неделю — сумма входящих УПД с НДС, датированных днями недели; точная десятичная строка. Справочно: в неделю учёта и её отпечаток не входит, в книгу расход ведёт разнесение УПД. Нет — маркетинга нет или магазин не единственный магазин Маркета своего юрлица */
+  "marketing"?: string;
   /** Артикулы, проданные в дни, когда их себестоимость стояла 0 ₽. Неделя уходит в учёт, но без себестоимости этих продаж. */
   "zero_cost"?: Array<MarketplaceWeeklyFinanceRunZeroCostItem>;
 }
@@ -29534,7 +29604,7 @@ export interface MarketplaceYandexPnl {
   "period_kind": "week" | "month";
   /** В боевом ответе пустая строка; заполняется только в демо-ответе */
   "scheme": string;
-  /** Момент последней синхронизации источника */
+  /** Когда сборщик подтвердил самый отставший из трёх отчётов Маркета; в запасном расчёте — заказы */
   "updated": string | null;
   "year": number;
   /** Годы, за которые есть данные */
@@ -29542,17 +29612,23 @@ export interface MarketplaceYandexPnl {
   "range": MarketplaceYandexPnlRange;
   "periods": Array<MarketplaceYandexPnlPeriod>;
   "rows": Array<MarketplaceYandexPnlRow>;
+  /** Откуда себестоимость периода, в знаке строки cogs: manual — ставки на день заказа; stock_posted — документы проведённых недель склада; stock_estimate — оценка склада непроведённой недели; temporary — недостающие штуки по временной цене; stock_opening — продажи до запуска склада по цене начального остатка. Поля нет, когда себестоимости за год нет */
+  "cost_origin"?: { [key: string]: MarketplaceYandexPnlCostOriginValue };
+  "freshness"?: MarketplaceComponentFreshness;
+  "data_through"?: MarketplaceComponentDataThrough;
+  /** Хотя бы один из трёх отчётов Маркета не загружался успешно, последняя загрузка завершилась ошибкой или давно не запускалась */
+  "incomplete"?: boolean;
   /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть */
   "cost_missing"?: { [key: string]: number };
   /** Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon */
   "units_missing"?: { [key: string]: number };
   /** Пояснение к неполноте источника */
   "note"?: string;
-  /** Разбор строки «Прочие услуги» по названиям услуг; ключ — начало периода */
+  /** Разбор строки «Прочие услуги» по названиям услуг полной стоимостью; ключ — начало периода */
   "breakdown"?: { [key: string]: Array<MarketplaceWbDecompOtherItem> };
   /** По какой день загружен отчёт Маркета по стоимости услуг — день последней услуги у отстающего магазина; пустая строка — у какого-то магазина отчёта нет. Позже этого дня строки услуг нулевые */
   "services_through"?: string;
-  /** Разбор строк услуг (commission, logistics, ads, storage, acceptance, acquiring) по названиям услуг: ключ — строка, затем начало периода */
+  /** Разбор строк услуг (commission, logistics, ads, storage, acceptance, acquiring) по названиям услуг полной стоимостью: ключ — строка, затем начало периода */
   "row_breakdown"?: { [key: string]: { [key: string]: Array<MarketplaceWbDecompOtherItem> } };
   /** Присутствует и равно true только в офлайн-ответе без аналитической базы; цифры синтетические */
   "demo"?: boolean;
@@ -29561,6 +29637,14 @@ export interface MarketplaceYandexPnl {
 export interface MarketplaceYandexPnlRange {
   "from": string;
   "to": string;
+}
+
+export interface MarketplaceYandexPnlCostOriginValue {
+  "manual"?: number;
+  "stock_posted"?: number;
+  "stock_estimate"?: number;
+  "temporary"?: number;
+  "stock_opening"?: number;
 }
 
 export interface MarketplaceYandexPnlPeriod {
@@ -29575,11 +29659,14 @@ export interface MarketplaceYandexPnlPeriod {
 }
 
 export interface MarketplaceYandexPnlRow {
-  "key": "revenue" | "cancelled" | "income" | "payout" | "commission" | "logistics" | "cogs" | "taxes" | "variable" | "margin" | "pct_commission" | "pct_logistics" | "pct_cogs" | "margin_pct";
+  /** Строка отчёта. По отчётам Маркета: income (чек покупателя − возвраты + баллы Маркета), payout_share, payout (к перечислению деньгами по отчёту о платежах: платёж покупателя − возврат − оплата услуг Маркета + утеря; раскрывается по источникам в row_breakdown), payout_paid (из них выплачено платёжными поручениями; в row_breakdown — по п/п: номер, дата, сумма поручения, из неё за период), payout_pending (из них ожидает выплаты), revenue (чек покупателя по реализации, «доставлено»), returns, returns_share, points (баллы Маркета — скидка за счёт Маркета тех же строк, доход баллами), points_balance (баланс баллов за период: начислено − списано, справочно, не деньги; в row_breakdown — по источникам), services_money и netting (услуги деньгами и баллами, справочно), cancelled (справочно), variable, cogs, commission, logistics, ads, storage, acceptance, acquiring, other (услуги полной стоимостью: деньги + баллы), marketing (маркетинг по отдельным договорам Маркета — буст CPM, дополнительное стимулирование — по входящим УПД в ЭДО с НДС, на дату УПД; в отчётах площадки его нет, в «к перечислению» не входит, в переменные расходы и маржу входит; есть, когда в отчёт входят все магазины Маркета юрлица и нет отбора по артикулам; в row_breakdown — по УПД), loss_compensation, taxes (от чека), margin, margin_pct. */
+  "key": "income" | "payout_share" | "payout" | "payout_paid" | "payout_pending" | "revenue" | "returns" | "returns_share" | "points" | "points_balance" | "services_money" | "netting" | "cancelled" | "variable" | "cogs" | "commission" | "logistics" | "ads" | "storage" | "acceptance" | "acquiring" | "other" | "marketing" | "loss_compensation" | "taxes" | "margin" | "margin_pct";
   "label": string;
   "kind": "total" | "subtotal" | "normal" | "percent";
   /** По одному значению на период в том же порядке; null означает, что показатель не считается */
   "values": Array<number | null>;
+  /** Доля строки от выручки периода (revenue, чек покупателя), % — у денежных строк между «Переменные расходы» и «Маржинальная прибыль»; поступление (возмещение утери) — с минусом */
+  "share"?: Array<number | null>;
 }
 
 export interface MarketplaceYandexProduct {
@@ -33981,6 +34068,7 @@ export interface StockBinInput {
   "code": string;
   /** Название ячейки; необязательно */
   "name"?: string;
+  /** Место в списке; 0 или не задано — следующее после уже заведённых ячеек места */
   "sort_order"?: number;
 }
 
@@ -34027,6 +34115,40 @@ export interface StockBinPlacement {
 
 export interface StockBinPlacementList {
   "results": Array<StockBinPlacement>;
+}
+
+export interface StockBinPreview {
+  /** Сколько кодов в пачке */
+  "total": number;
+  /** Сколько ячеек будет заведено */
+  "new": number;
+  /** Сколько кодов уже заведено в месте */
+  "exists": number;
+  /** Сколько кодов не отличить на этикетке от других */
+  "twins": number;
+  /** Сколько кодов повторяются в пачке */
+  "repeats": number;
+  /** Сколько кодов нельзя завести */
+  "invalid": number;
+  /** Коды по порядку пачки: первые 200 новых и все остальные */
+  "items": Array<StockBinPreviewItem>;
+  /** Новых кодов больше 200 — перечислены первые */
+  "truncated": boolean;
+}
+
+export interface StockBinPreviewItem {
+  /** Код пачки после обрезки пробелов по краям */
+  "code": string;
+  /** new — новый; exists — ячейка с таким кодом в месте уже есть; twin — на этикетке не отличить от заведённой ячейки или от кода выше в пачке; repeat — тот же код уже был выше; invalid — код нельзя завести */
+  "status": "new" | "exists" | "twin" | "repeat" | "invalid";
+  /** Заведённая ячейка, с которой совпал код (exists, twin) */
+  "conflict_id"?: UUID;
+  /** Код заведённой ячейки или код выше в пачке, с которым совпал этот */
+  "conflict_code"?: string;
+  /** Название заведённой ячейки */
+  "conflict_name"?: string;
+  /** Почему код нельзя завести (invalid) */
+  "message"?: string;
 }
 
 export interface StockBinRef {
@@ -34125,11 +34247,14 @@ export interface StockBinSuggestions {
   "suggestions": Array<StockBinSuggestion>;
 }
 
+/** Пачка ячеек: либо уровни шаблона (levels), либо готовый список кодов (codes) — не то и другое вместе */
 export interface StockBinTemplate {
   /** Разделитель между уровнями; пустая строка — уровни пишутся слитно */
   "separator"?: string;
-  /** Уровни кода по порядку, например ряд, стеллаж и полка; первый уровень меняется медленнее остальных */
-  "levels": Array<StockBinTemplateLevel>;
+  /** Уровни кода по порядку, например ряд, стеллаж, полка и место; первый уровень меняется медленнее остальных */
+  "levels"?: Array<StockBinTemplateLevel>;
+  /** Список кодов вместо уровней, в порядке списка: несмежные коды паллет, столбец из таблицы */
+  "codes"?: Array<string>;
 }
 
 export interface StockBinTemplateLevel {
@@ -35622,7 +35747,7 @@ export interface StockHandlingUnitSuggestionResult {
 export interface StockImportApplyRequest {
   "preview_token": string;
   "confirm_warnings"?: boolean;
-  /** Пропустить строки файла с ошибкой и применить остальные — только строки документа (document_items) в режимах create_only и upsert. Ошибка всего файла (строка 0) и режим replace не пропускаются; без флага любая ошибка — 409. */
+  /** Пропустить строки файла с ошибкой и применить остальные — только строки документа (document_items) в режимах create_only и upsert и ячейки (bins). Ошибка всего файла (строка 0) и режим replace не пропускаются; без флага любая ошибка — 409. */
   "skip_errors"?: boolean;
 }
 
@@ -35656,7 +35781,7 @@ export interface StockImportInspectRequest {
   "header_row": number;
 }
 
-export type StockImportKind = "initial_stock" | "inventory_count" | "document_items" | "reorder_rules" | "kit_specs" | "agent_report_lines";
+export type StockImportKind = "initial_stock" | "inventory_count" | "document_items" | "reorder_rules" | "kit_specs" | "agent_report_lines" | "bins";
 
 export type StockImportMapping = unknown | unknown;
 
@@ -36680,6 +36805,8 @@ export interface StockProductBinsPlace {
   /** Склад зоны; пусто, если это сам склад */
   "warehouse_parent_name": string;
   "bins_mode": "off" | "soft" | "strict";
+  /** Весь остаток товара в месте. У места без ячеек (bins_mode off) он весь лежит вне ячеек */
+  "stock_qty": string;
   "placed_qty": string;
   "unplaced_qty": string;
   "bins": Array<StockBinContentRow>;
