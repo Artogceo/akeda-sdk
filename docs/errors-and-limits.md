@@ -72,14 +72,14 @@ go run ./cmd/akeda contract op coreListContacts
 #   листание      limit_offset (умолчание 100, потолок 500)
 ```
 
-## 3. Идемпотентность: 93 команды, а не все
+## 3. Идемпотентность: 94 команды, а не все
 
-Заголовок `Idempotency-Key` читает ровно 93 команды — полный список отдаёт
+Заголовок `Idempotency-Key` читает ровно 94 команды — полный список отдаёт
 `akeda.IdempotentOperations()`:
 
 - ядро: `coreChangeOwnerDocument`, `coreCloseAccountingPeriod`, `coreCreateActionRequest`, `coreCreateContact`, `coreCreateContactBankAccount`, `coreCreateContactDeliveryPoint`, `coreCreateDocument`, `coreCreateFinancingContract`, `coreCreateOwnerDocument`, `coreCreateProduct`, `coreCreatePurchase`, `coreCreateSale`, `coreCreateSupplierPriceSet`, `coreExecuteActionRequest`, `coreGenerateProductVariants`, `corePostDocument`, `coreSubmitActionRequest`, `coreWithdrawActionRequest`;
 - документооборот: `docflowAssignFlowDocument`, `docflowCreateFlowUploadSession`, `docflowFlowChangeDocument`, `docflowFlowCreateAccountingOriginal`, `docflowFlowCreateDocument`, `docflowFlowLinkAccountingDocument`, `docflowFlowSalePaperExecution`, `docflowFlowSupplierAct`, `docflowFlowUnlinkAccountingDocument`, `docflowIssueAdvanceInvoice`, `docflowIssueSaleAct`, `docflowIssueSaleInvoice`, `docflowIssueSaleUPD`, `docflowIssueShipmentUPD`, `docflowIssueUKD`, `docflowSalesActRelink`;
-- финансы: `financeAcceptFixedAsset`, `financeApplyImport`, `financeApplyRefundSettlement`, `financeAttachPaymentToReceipts`, `financeCloseAdvancesToExpense`, `financeCreateCashOperation`, `financeCreateDividendDecision`, `financeCreateSettlementDocument`, `financeDisposeFixedAsset`, `financeImpairFixedAsset`, `financeImportFixedAssets`, `financePostFixedAssetDepreciation`, `financeReceiveLeasedAsset`, `financeReturnLeasedAsset`, `financeSyncConnector`, `financeWriteOffDebt`;
+- финансы: `financeAcceptFixedAsset`, `financeApplyImport`, `financeApplyRefundSettlement`, `financeAttachPaymentToReceipts`, `financeCloseAdvancesToExpense`, `financeCreateCashOperation`, `financeCreateDividendDecision`, `financeCreateSettlementDocument`, `financeDisposeFixedAsset`, `financeImpairFixedAsset`, `financeImportFixedAssets`, `financeLoanInterestPost`, `financePostFixedAssetDepreciation`, `financeReceiveLeasedAsset`, `financeReturnLeasedAsset`, `financeSyncConnector`, `financeWriteOffDebt`;
 - склад: `stockAcceptShipment`, `stockApplyRegradeOffer`, `stockAssignCondition`, `stockCloseShipmentDiscrepancy`, `stockCreateAccountTransfer`, `stockCreateAssemblySpec`, `stockCreateClaimWriteoff`, `stockCreateDocument`, `stockCreateOpeningBalance`, `stockCreateOpeningCorrection`, `stockCreatePurchase`, `stockCreateReceiptCorrection`, `stockCreateReceiptCost`, `stockCreateTransitReceipt`, `stockMarkShipmentRefused`, `stockPostWithRebuild`, `stockResolveDiscrepancy`, `stockResolveTransitShipment`, `stockReviseWithRebuild`, `stockSettleNegativeBalances`, `stockShipSale`, `stockUpdateDocument`;
 - задачи: `tasksCreateProject`, `tasksCreateSection`, `tasksCreateTask`;
 - приложения: `appDocflowIssueSaleAct`, `appDocflowIssueSaleInvoice`, `appDocflowIssueSaleUPD`;

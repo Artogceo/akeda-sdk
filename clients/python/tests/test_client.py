@@ -280,6 +280,7 @@ def test_contract_facts_match_snapshot(snapshot_manifest: dict) -> None:
         "financeDisposeFixedAsset",
         "financeImpairFixedAsset",
         "financeImportFixedAssets",
+        "financeLoanInterestPost",
         "financePostFixedAssetDepreciation",
         "financeReceiveLeasedAsset",
         "financeReturnLeasedAsset",

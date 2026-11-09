@@ -28,6 +28,10 @@
   `financeReturnLeasedAsset`. Ушли из списка `docflowFlowAcceptFinanceAct`,
   `docflowFlowCreateFinancePlan`, `docflowFlowUploadFile`,
   `stockCreatePurchaseOrder` — в контракте этих операций больше нет.
+- Закреплённый список идемпотентных команд дополнен `financeLoanInterestPost`
+  (начисление процентов по займам): сервер читает его ключ, заголовок теперь
+  читают 94 команды. Без этого решения снимки релизов с `37b9bd9b5e1a` оставались
+  в ветках `robot/snapshot-*`, а `main` SDK не обновлялся.
 - Робот пересъёма больше не может тихо сломать `main`: шаги и проверки живут в
   `scripts/robot_refresh.sh`, в `main` уходит только снимок с зелёными тестами
   Go, Python и TypeScript, иначе — ветка `robot/snapshot-<релиз>` и красный
