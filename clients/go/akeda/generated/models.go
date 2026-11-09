@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 37b1ce2addd447d81663b83078f127720f4a13f5b610a4e89c943ed16d2ab18c).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eabb03b611b3faf161d5aca62708f4a793fddcad2acd7596f91e9b27d7082ec5).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -6311,6 +6311,8 @@ type CoreContractFinancing struct {
 	BuyoutDate *string `json:"buyout_date,omitempty"`
 	// TitleTransferredOn — Фактическая дата перехода права на предмет лизинга; пусто до выкупа
 	TitleTransferredOn *string `json:"title_transferred_on,omitempty"`
+	// DayBasis — База года процентов: actual — фактические дни года (365/366), 360 — финансовый год; пусто — фактические дни. По ней Акеда считает проценты линии и овердрафта без графика
+	DayBasis *string `json:"day_basis,omitempty"`
 }
 
 type CoreContractList struct {
@@ -17492,34 +17494,46 @@ type FinanceAccountingEntry struct {
 	// FileExportedBy — Кто выгрузил строку файлом
 	FileExportedBy     *int64 `json:"file_exported_by,omitempty"`
 	FileExportedByName string `json:"file_exported_by_name"`
-	CreatedAt          string `json:"created_at"`
-	UpdatedAt          string `json:"updated_at"`
+	// AwaitingSend — Взят в учёт, ждёт отправки: статус sent, а документ в 1С ещё не ушёл (ссылки 1С нет). «Отправлен» — только после фактической отправки
+	AwaitingSend *bool `json:"awaiting_send,omitempty"`
+	// SendError — Отказ 1С по документу строки, ждущей отправки: текст 1С или код отметки журнала обмена (finance.onec.*). Пусто — отказа нет
+	SendError *string `json:"send_error,omitempty"`
+	CreatedAt string  `json:"created_at"`
+	UpdatedAt string  `json:"updated_at"`
 }
 
 type FinanceAccountingEntryCard struct {
-	ID                 UUID                       `json:"id"`
-	CompanyID          UUID                       `json:"company_id"`
-	CompanyName        string                     `json:"company_name"`
-	ConnectionID       UUID                       `json:"connection_id"`
-	AccountingMode     FinanceOneCAccountingMode  `json:"accounting_mode"`
-	DocumentID         UUID                       `json:"document_id"`
-	DocumentKind       string                     `json:"document_kind"`
-	DocumentNumber     string                     `json:"document_number"`
-	DocumentDate       string                     `json:"document_date"`
-	ContactINN         string                     `json:"contact_inn"`
-	ContactName        string                     `json:"contact_name"`
-	Amount             string                     `json:"amount"`
-	Status             FinanceAccountingStatus    `json:"status"`
-	OnecNumber         string                     `json:"onec_number"`
-	OnecRef            string                     `json:"onec_ref"`
-	RejectReason       string                     `json:"reject_reason"`
-	DecidedBy          *int64                     `json:"decided_by,omitempty"`
-	DecidedByName      string                     `json:"decided_by_name"`
-	DecidedAt          *string                    `json:"decided_at,omitempty"`
-	ChangedAfterAccept bool                       `json:"changed_after_accept"`
-	CreatedAt          string                     `json:"created_at"`
-	UpdatedAt          string                     `json:"updated_at"`
-	Reference          FinanceAccountingReference `json:"reference"`
+	ID                 UUID                      `json:"id"`
+	CompanyID          UUID                      `json:"company_id"`
+	CompanyName        string                    `json:"company_name"`
+	ConnectionID       UUID                      `json:"connection_id"`
+	AccountingMode     FinanceOneCAccountingMode `json:"accounting_mode"`
+	DocumentID         UUID                      `json:"document_id"`
+	DocumentKind       string                    `json:"document_kind"`
+	DocumentNumber     string                    `json:"document_number"`
+	DocumentDate       string                    `json:"document_date"`
+	ContactINN         string                    `json:"contact_inn"`
+	ContactName        string                    `json:"contact_name"`
+	Amount             string                    `json:"amount"`
+	Status             FinanceAccountingStatus   `json:"status"`
+	OnecNumber         string                    `json:"onec_number"`
+	OnecRef            string                    `json:"onec_ref"`
+	RejectReason       string                    `json:"reject_reason"`
+	DecidedBy          *int64                    `json:"decided_by,omitempty"`
+	DecidedByName      string                    `json:"decided_by_name"`
+	DecidedAt          *string                   `json:"decided_at,omitempty"`
+	ChangedAfterAccept bool                      `json:"changed_after_accept"`
+	OnecAmountMismatch *string                   `json:"onec_amount_mismatch,omitempty"`
+	FileExportedAt     *string                   `json:"file_exported_at,omitempty"`
+	FileExportedBy     *int64                    `json:"file_exported_by,omitempty"`
+	FileExportedByName *string                   `json:"file_exported_by_name,omitempty"`
+	// AwaitingSend — Взят в учёт, ждёт отправки в 1С
+	AwaitingSend *bool `json:"awaiting_send,omitempty"`
+	// SendError — Отказ 1С по документу, ждущему отправки: текст 1С или код отметки журнала обмена
+	SendError *string                    `json:"send_error,omitempty"`
+	CreatedAt string                     `json:"created_at"`
+	UpdatedAt string                     `json:"updated_at"`
+	Reference FinanceAccountingReference `json:"reference"`
 }
 
 type FinanceAccountingPage struct {
@@ -17541,7 +17555,7 @@ type FinanceAccountingPosting struct {
 
 // FinanceAccountingReference — Справка Акеды по документу: чтение документа и основной книги, своих цифр нет. Чего в документе нет, то пусто.
 type FinanceAccountingReference struct {
-	// DocumentStatus — Состояние документа ядра сейчас
+	// DocumentStatus — Состояние документа сейчас: у документа ядра — его статус; у акта и УКД документооборота — по записи очереди отправки (posted — действует, cancelled — отменён)
 	DocumentStatus string `json:"document_status"`
 	ContactName    string `json:"contact_name"`
 	ContactINN     string `json:"contact_inn"`
@@ -17598,6 +17612,31 @@ type FinanceAccountingRulePage struct {
 	Limit   int64                   `json:"limit"`
 	Offset  int64                   `json:"offset"`
 	Results []FinanceAccountingRule `json:"results"`
+}
+
+type FinanceAccountingSendReport struct {
+	// Sent — Сколько документов ушло в 1С
+	Sent int64 `json:"sent"`
+	// Failed — Сколько документов 1С не приняла; причина и повтор — в журнале обмена
+	Failed int64 `json:"failed"`
+	// Skipped — Строки, которые не отправлялись
+	Skipped []FinanceAccountingSendReportSkippedItem `json:"skipped"`
+	// Errors — Строки, которые 1С не приняла, с текстом отказа
+	Errors []FinanceAccountingSendReportErrorsItem `json:"errors,omitempty"`
+}
+
+type FinanceAccountingSendReportSkippedItem struct {
+	EntryID        UUID   `json:"entry_id"`
+	DocumentNumber string `json:"document_number"`
+	// Reason — not_taken — ждёт «Взять в учёт»; already_done — уже отправлена или решено не отправлять; base_not_ready — база 1С не готова к обмену
+	Reason string `json:"reason"`
+}
+
+type FinanceAccountingSendReportErrorsItem struct {
+	EntryID        UUID   `json:"entry_id"`
+	DocumentNumber string `json:"document_number"`
+	// Message — Текст отказа 1С или код отметки журнала обмена (finance.onec.*)
+	Message string `json:"message"`
 }
 
 type FinanceAccountingStatus = string
@@ -20345,12 +20384,27 @@ type FinanceLoanInterestLine struct {
 	Number string `json:"number"`
 	// Amount — Проценты графика за месяц, десятичная строка
 	Amount string `json:"amount"`
+	// Source — Откуда сумма: schedule — проценты строк графика, daily — расчёт Акеды по ежедневному остатку линии без графика (ставка × остаток 66 / база года)
+	Source *string `json:"source,omitempty"`
 }
 
 type FinanceLoanInterestMonthInput struct {
 	CompanyID UUID `json:"company_id"`
 	// Month — Месяц ГГГГ-ММ
 	Month string `json:"month"`
+}
+
+type FinanceLoanInterestMonthReconcile struct {
+	// Month — Месяц ГГГГ-ММ
+	Month string `json:"month"`
+	// Calculated — Проценты месяца по правилу договора, как их начислит документ
+	Calculated string `json:"calculated"`
+	// Accrued — Проведено начислением месяца — кредит 66.04 по договору
+	Accrued string `json:"accrued"`
+	// BankPaid — Банк списал процентов датой в месяце — статья «Проценты по кредитам и займам» по договору
+	BankPaid string `json:"bank_paid"`
+	// Difference — Расчёт минус списанное банком; в учёт сама не правится
+	Difference string `json:"difference"`
 }
 
 type FinanceLoanInterestPreview struct {
@@ -20365,6 +20419,10 @@ type FinanceLoanInterestPreview struct {
 	// Accrual — Бизнес юрлица на методе начисления на конец месяца; false — кассовый метод, начисления нет
 	Accrual bool          `json:"accrual"`
 	Posted  *CoreDocument `json:"posted,omitempty"`
+}
+
+type FinanceLoanInterestReconciliation struct {
+	Months []FinanceLoanInterestMonthReconcile `json:"months"`
 }
 
 type FinanceObligationDueDateInput struct {
@@ -20515,7 +20573,7 @@ type FinanceOneCConnection struct {
 	LastError       *string                    `json:"last_error,omitempty"`
 	AccountingMode  FinanceOneCAccountingMode  `json:"accounting_mode"`
 	AccountingTrust FinanceOneCAccountingTrust `json:"accounting_trust"`
-	// AcceptsUnposted — База принимает документы непроведёнными; настройку читает отправка следующего этапа
+	// AcceptsUnposted — Оставлять в 1С непроведёнными — при выбранном режиме бухгалтера Акеда снимает проведение своего документа после загрузки, проведение бухгалтером считается принятием
 	AcceptsUnposted bool   `json:"accepts_unposted"`
 	CreatedAt       string `json:"created_at"`
 	UpdatedAt       string `json:"updated_at"`
@@ -20539,7 +20597,7 @@ type FinanceOneCConnectionInput struct {
 	ReceiveEnabled  *bool                       `json:"receive_enabled,omitempty"`
 	AccountingMode  *FinanceOneCAccountingMode  `json:"accounting_mode,omitempty"`
 	AccountingTrust *FinanceOneCAccountingTrust `json:"accounting_trust,omitempty"`
-	// AcceptsUnposted — База принимает документы непроведёнными; не передан — оставить как есть, у нового подключения выключено
+	// AcceptsUnposted — Оставлять в 1С непроведёнными; не передан — оставить как есть, у нового подключения включено
 	AcceptsUnposted *bool `json:"accepts_unposted,omitempty"`
 }
 
@@ -20732,6 +20790,13 @@ type FinanceOneCReceiveReport struct {
 type FinanceOneCResolve struct {
 	// Choice — Решение: keep_1c — оставить как в 1С, send_akeda — отправить версию Акеды поверх правки бухгалтера.
 	Choice string `json:"choice"`
+}
+
+type FinanceOneCSendReport struct {
+	// Sent — Сколько документов ушло в 1С
+	Sent int64 `json:"sent"`
+	// Failed — Сколько документов 1С не приняла; причина — в журнале обмена
+	Failed int64 `json:"failed"`
 }
 
 type FinanceOpenAdvance struct {
@@ -39866,6 +39931,11 @@ type FilesVersionContentLinkResponse struct {
 	SizeBytes *int64  `json:"size_bytes,omitempty"`
 	VersionID UUID    `json:"version_id"`
 	VersionNo int64   `json:"version_no"`
+}
+
+type FinanceSendAccountingRegistryEntriesRequest struct {
+	// Ids — Строки реестра
+	Ids []UUID `json:"ids"`
 }
 
 type FinanceListDividendAccessUsersResponse struct {

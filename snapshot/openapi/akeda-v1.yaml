@@ -24782,6 +24782,51 @@ paths:
           $ref: '#/components/responses/UnprocessableEntity'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v1/finance/financing/interest/reconciliation:
+    get:
+      tags:
+        - Finance accounts
+      operationId: financeLoanInterestReconciliation
+      summary: Получить сверку процентов договора с банком по месяцам
+      description: 'Сверка процентов договора финансирования по месяцам (ERP-3117, решение 08.11.2026): расчёт Акеды по правилу договора (график или ежедневный остаток линии), проведённое начисление 66.04 и списанное банком статьёй «Проценты по кредитам и займам» датой в месяце; разница — расчёт минус банк, в учёт сама не правится. Последние months месяцев по текущий включительно.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.financing:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: contract
+          in: query
+          required: true
+          description: Договор финансирования
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: months
+          in: query
+          description: Сколько месяцев, 1–24; по умолчанию 6
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 24
+      responses:
+        '200':
+          description: Сверка по месяцам
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceLoanInterestReconciliation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
   /api/v1/finance/acquiring/overview:
     get:
       tags:
@@ -28555,6 +28600,59 @@ paths:
           $ref: '#/components/responses/NotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/accounting-registry/send:
+    post:
+      tags:
+        - Finance exchange
+      operationId: financeSendAccountingRegistryEntries
+      summary: Отправить документы реестра в 1С сейчас
+      description: '«Отправить в 1С» (ERP-102, этап Э7): выбранные строки реестра уходят в базу 1С сразу, не дожидаясь прохода отправщика по расписанию и срока повтора. Уходит строка, взятая в учёт и ещё не отправленная (awaiting_send), а у базы «Бухгалтер в 1С» — и новая. Остальные строки не трогаются и перечислены в skipped с причиной: not_taken — ждёт «Взять в учёт», already_done — уже отправлена или по ней решено не отправлять, base_not_ready — база 1С не готова к обмену. failed — сколько документов 1С не приняла: причина и повтор — в журнале обмена. Строки чужих юрлиц не уходят и не упоминаются.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounting-registry:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - ids
+              properties:
+                ids:
+                  type: array
+                  minItems: 1
+                  maxItems: 200
+                  items:
+                    $ref: '#/components/schemas/UUID'
+                  description: Строки реестра
+      responses:
+        '200':
+          description: Итог отправки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceAccountingSendReport'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/finance/accounting-registry/{id}:
     get:
       tags:
@@ -28600,7 +28698,7 @@ paths:
         - Finance exchange
       operationId: financeTakeAccountingRegistryEntry
       summary: Взять документ реестра в учёт
-      description: 'Решение бухгалтера по новой строке реестра: статус sent. На этом этапе команда только ставит статус, документ в 1С не уходит: настоящая отправка — следующий этап. Работает только у базы в режиме «Бухгалтер в Акеде»; в режиме «Бухгалтер в 1С» и без режима — отказ 409.'
+      description: 'Решение бухгалтера по новой строке реестра: статус sent с awaiting_send = true — «взят в учёт, ждёт отправки». Документ уходит в 1С ближайшим проходом отправщика или сразу командой «Отправить в 1С» (financeSendAccountingRegistryEntries); после отправки awaiting_send = false и появляется onec_ref. Работает только у базы в режиме «Бухгалтер в Акеде»; в режиме «Бухгалтер в 1С» и без режима — отказ 409.'
       x-akeda-module: finance
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -29046,6 +29144,47 @@ paths:
                 $ref: '#/components/schemas/FinanceOneCReceiveReport'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/exchange/onec/connections/{id}/send:
+    post:
+      tags:
+        - Finance exchange
+      operationId: financeSendOneCNow
+      summary: Отправить в базу 1С сейчас
+      description: '«Отправить сейчас» (ERP-102, этап Э7): все ждущие документы базы уходят в 1С сразу — без расписания подключения и срока повтора. Перед отправкой проведённые закупки и авансовые отчёты встают в реестр бухгалтера и очередь. Реестр соблюдается: новая строка базы «Бухгалтер в Акеде», отклонённая, «не требует бухучёта» и принятая не уходят; документ, изменённый в 1С после прошлой отправки, ждёт решения в журнале обмена. sent — сколько ушло, failed — сколько 1С не приняла (причина — в журнале обмена).'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.exchange:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Итог отправки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOneCSendReport'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -108493,6 +108632,13 @@ components:
           type: string
           format: date
           description: Фактическая дата перехода права на предмет лизинга; пусто до выкупа
+        day_basis:
+          type: string
+          enum:
+            - ''
+            - actual
+            - '360'
+          description: 'База года процентов: actual — фактические дни года (365/366), 360 — финансовый год; пусто — фактические дни. По ней Акеда считает проценты линии и овердрафта без графика'
     CoreFinancingContract:
       allOf:
         - $ref: '#/components/schemas/CoreContractTerms'
@@ -122744,7 +122890,7 @@ components:
           $ref: '#/components/schemas/FinanceOneCAccountingTrust'
         accepts_unposted:
           type: boolean
-          description: База принимает документы непроведёнными; настройку читает отправка следующего этапа
+          description: Оставлять в 1С непроведёнными — при выбранном режиме бухгалтера Акеда снимает проведение своего документа после загрузки, проведение бухгалтером считается принятием
         created_at:
           type: string
           format: date-time
@@ -122866,7 +123012,7 @@ components:
           $ref: '#/components/schemas/FinanceOneCAccountingTrust'
         accepts_unposted:
           type: boolean
-          description: База принимает документы непроведёнными; не передан — оставить как есть, у нового подключения выключено
+          description: Оставлять в 1С непроведёнными; не передан — оставить как есть, у нового подключения включено
     FinanceAccountingStatus:
       type: string
       enum:
@@ -122966,6 +123112,12 @@ components:
           description: Кто выгрузил строку файлом
         file_exported_by_name:
           type: string
+        awaiting_send:
+          type: boolean
+          description: 'Взят в учёт, ждёт отправки: статус sent, а документ в 1С ещё не ушёл (ссылки 1С нет). «Отправлен» — только после фактической отправки'
+        send_error:
+          type: string
+          description: 'Отказ 1С по документу строки, ждущей отправки: текст 1С или код отметки журнала обмена (finance.onec.*). Пусто — отказа нет'
         created_at:
           type: string
           format: date-time
@@ -123118,7 +123270,7 @@ components:
       properties:
         document_status:
           type: string
-          description: Состояние документа ядра сейчас
+          description: 'Состояние документа сейчас: у документа ядра — его статус; у акта и УКД документооборота — по записи очереди отправки (posted — действует, cancelled — отменён)'
         contact_name:
           type: string
         contact_inn:
@@ -123214,6 +123366,22 @@ components:
           format: date-time
         changed_after_accept:
           type: boolean
+        onec_amount_mismatch:
+          type: string
+        file_exported_at:
+          type: string
+          format: date-time
+        file_exported_by:
+          type: integer
+          format: int64
+        file_exported_by_name:
+          type: string
+        awaiting_send:
+          type: boolean
+          description: Взят в учёт, ждёт отправки в 1С
+        send_error:
+          type: string
+          description: 'Отказ 1С по документу, ждущему отправки: текст 1С или код отметки журнала обмена'
         created_at:
           type: string
           format: date-time
@@ -123222,6 +123390,77 @@ components:
           format: date-time
         reference:
           $ref: '#/components/schemas/FinanceAccountingReference'
+    FinanceAccountingSendReport:
+      type: object
+      additionalProperties: false
+      required:
+        - sent
+        - failed
+        - skipped
+      properties:
+        sent:
+          type: integer
+          minimum: 0
+          description: Сколько документов ушло в 1С
+        failed:
+          type: integer
+          minimum: 0
+          description: Сколько документов 1С не приняла; причина и повтор — в журнале обмена
+        skipped:
+          type: array
+          description: Строки, которые не отправлялись
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - entry_id
+              - document_number
+              - reason
+            properties:
+              entry_id:
+                $ref: '#/components/schemas/UUID'
+              document_number:
+                type: string
+              reason:
+                type: string
+                enum:
+                  - not_taken
+                  - already_done
+                  - base_not_ready
+                description: not_taken — ждёт «Взять в учёт»; already_done — уже отправлена или решено не отправлять; base_not_ready — база 1С не готова к обмену
+        errors:
+          type: array
+          description: Строки, которые 1С не приняла, с текстом отказа
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - entry_id
+              - document_number
+              - message
+            properties:
+              entry_id:
+                $ref: '#/components/schemas/UUID'
+              document_number:
+                type: string
+              message:
+                type: string
+                description: Текст отказа 1С или код отметки журнала обмена (finance.onec.*)
+    FinanceOneCSendReport:
+      type: object
+      additionalProperties: false
+      required:
+        - sent
+        - failed
+      properties:
+        sent:
+          type: integer
+          minimum: 0
+          description: Сколько документов ушло в 1С
+        failed:
+          type: integer
+          minimum: 0
+          description: Сколько документов 1С не приняла; причина — в журнале обмена
     FinanceAccountingRejectInput:
       type: object
       additionalProperties: false
@@ -125536,6 +125775,12 @@ components:
         amount:
           type: string
           description: Проценты графика за месяц, десятичная строка
+        source:
+          type: string
+          enum:
+            - schedule
+            - daily
+          description: 'Откуда сумма: schedule — проценты строк графика, daily — расчёт Акеды по ежедневному остатку линии без графика (ставка × остаток 66 / база года)'
     FinanceLoanInterestPreview:
       type: object
       additionalProperties: false
@@ -125568,6 +125813,41 @@ components:
           description: Бизнес юрлица на методе начисления на конец месяца; false — кассовый метод, начисления нет
         posted:
           $ref: '#/components/schemas/CoreDocument'
+    FinanceLoanInterestReconciliation:
+      type: object
+      additionalProperties: false
+      required:
+        - months
+      properties:
+        months:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceLoanInterestMonthReconcile'
+    FinanceLoanInterestMonthReconcile:
+      type: object
+      additionalProperties: false
+      required:
+        - month
+        - calculated
+        - accrued
+        - bank_paid
+        - difference
+      properties:
+        month:
+          type: string
+          description: Месяц ГГГГ-ММ
+        calculated:
+          type: string
+          description: Проценты месяца по правилу договора, как их начислит документ
+        accrued:
+          type: string
+          description: Проведено начислением месяца — кредит 66.04 по договору
+        bank_paid:
+          type: string
+          description: Банк списал процентов датой в месяце — статья «Проценты по кредитам и займам» по договору
+        difference:
+          type: string
+          description: Расчёт минус списанное банком; в учёт сама не правится
     FinanceFinancingFactoringList:
       type: object
       additionalProperties: false

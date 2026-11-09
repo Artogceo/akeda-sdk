@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 37b1ce2addd447d81663b83078f127720f4a13f5b610a4e89c943ed16d2ab18c).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eabb03b611b3faf161d5aca62708f4a793fddcad2acd7596f91e9b27d7082ec5).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -7769,6 +7769,13 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceLoanInterestPreview;
   };
+  /** GET /api/v1/finance/financing/interest/reconciliation — Получить сверку процентов договора с банком по месяцам */
+  financeLoanInterestReconciliation: {
+    params: Record<string, never>;
+    query: { "contract": models.UUID; "months"?: number };
+    body: never;
+    response: models.FinanceLoanInterestReconciliation;
+  };
   /** GET /api/v1/finance/lookup/company — Сопоставить владельца счёта с юрлицом по ИНН */
   financeLookupCompany: {
     params: Record<string, never>;
@@ -8440,6 +8447,20 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.FinanceTaxSettingsInput;
     response: models.FinanceTaxSettings;
+  };
+  /** POST /api/v1/finance/accounting-registry/send — Отправить документы реестра в 1С сейчас */
+  financeSendAccountingRegistryEntries: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FinanceSendAccountingRegistryEntriesRequest;
+    response: models.FinanceAccountingSendReport;
+  };
+  /** POST /api/v1/finance/exchange/onec/connections/{id}/send — Отправить в базу 1С сейчас */
+  financeSendOneCNow: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.FinanceOneCSendReport;
   };
   /** POST /api/v1/finance/payment-registries/{id}/send — Отправить реестр платежей в банк */
   financeSendPaymentRegistry: {
@@ -14921,6 +14942,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeLoanInterestCancel: { method: "POST", path: "/api/v1/finance/financing/interest/cancel", module: "finance", stage: "preview", permission: "finance.financing:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeLoanInterestPost: { method: "POST", path: "/api/v1/finance/financing/interest", module: "finance", stage: "preview", permission: "finance.financing:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeLoanInterestPreview: { method: "GET", path: "/api/v1/finance/financing/interest", module: "finance", stage: "preview", permission: "finance.financing:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeLoanInterestReconciliation: { method: "GET", path: "/api/v1/finance/financing/interest/reconciliation", module: "finance", stage: "preview", permission: "finance.financing:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeLookupCompany: { method: "GET", path: "/api/v1/finance/lookup/company", module: "finance", stage: "preview", permission: "finance.lookup:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeLookupRequisites: { method: "GET", path: "/api/v1/finance/lookup/requisites", module: "finance", stage: "preview", permission: "finance.lookup:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeMapImport: { method: "PATCH", path: "/api/v1/finance/imports/{id}/mapping", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -15017,6 +15039,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeSavePnlLayout: { method: "PUT", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance.pnl_layouts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSaveProjectBudget: { method: "POST", path: "/api/v1/finance/project-budgets", module: "finance", stage: "preview", permission: "finance.project_budgets:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSaveTaxSettings: { method: "PUT", path: "/api/v1/finance/taxes/settings", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeSendAccountingRegistryEntries: { method: "POST", path: "/api/v1/finance/accounting-registry/send", module: "finance", stage: "preview", permission: "finance.accounting-registry:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeSendOneCNow: { method: "POST", path: "/api/v1/finance/exchange/onec/connections/{id}/send", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSendPaymentRegistry: { method: "POST", path: "/api/v1/finance/payment-registries/{id}/send", module: "finance", stage: "preview", permission: "finance.payment-requests:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSetAccountOpeningBalance: { method: "POST", path: "/api/v1/finance/accounts/{id}/opening-balance", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSetConnectorSyncSettings: { method: "PUT", path: "/api/v1/finance/connectors/sync-settings", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

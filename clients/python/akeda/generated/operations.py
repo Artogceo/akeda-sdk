@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 37b1ce2addd447d81663b83078f127720f4a13f5b610a4e89c943ed16d2ab18c).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eabb03b611b3faf161d5aca62708f4a793fddcad2acd7596f91e9b27d7082ec5).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1136,6 +1136,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeLoanInterestCancel': OperationSpec('POST', '/api/v1/finance/financing/interest/cancel', 'finance', 'preview', 'finance.financing:write', False, True, (), 'none', None, None),
     'financeLoanInterestPost': OperationSpec('POST', '/api/v1/finance/financing/interest', 'finance', 'preview', 'finance.financing:write', True, True, (), 'none', None, None),
     'financeLoanInterestPreview': OperationSpec('GET', '/api/v1/finance/financing/interest', 'finance', 'preview', 'finance.financing:read', False, True, (), 'none', None, None),
+    'financeLoanInterestReconciliation': OperationSpec('GET', '/api/v1/finance/financing/interest/reconciliation', 'finance', 'preview', 'finance.financing:read', False, True, (), 'none', None, None),
     'financeLookupCompany': OperationSpec('GET', '/api/v1/finance/lookup/company', 'finance', 'preview', 'finance.lookup:read', False, True, (), 'none', None, None),
     'financeLookupRequisites': OperationSpec('GET', '/api/v1/finance/lookup/requisites', 'finance', 'preview', 'finance.lookup:read', False, True, (), 'none', None, None),
     'financeMapImport': OperationSpec('PATCH', '/api/v1/finance/imports/{id}/mapping', 'finance', 'preview', 'finance.imports:write', False, True, ('id',), 'none', None, None),
@@ -1232,6 +1233,8 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeSavePnlLayout': OperationSpec('PUT', '/api/v1/finance/pnl-layouts/{id}', 'finance', 'preview', 'finance.pnl_layouts:write', False, True, ('id',), 'none', None, None),
     'financeSaveProjectBudget': OperationSpec('POST', '/api/v1/finance/project-budgets', 'finance', 'preview', 'finance.project_budgets:write', False, True, (), 'none', None, None),
     'financeSaveTaxSettings': OperationSpec('PUT', '/api/v1/finance/taxes/settings', 'finance', 'preview', 'finance.period:write', False, True, (), 'none', None, None),
+    'financeSendAccountingRegistryEntries': OperationSpec('POST', '/api/v1/finance/accounting-registry/send', 'finance', 'preview', 'finance.accounting-registry:write', False, True, (), 'none', None, None),
+    'financeSendOneCNow': OperationSpec('POST', '/api/v1/finance/exchange/onec/connections/{id}/send', 'finance', 'preview', 'finance.exchange:write', False, True, ('id',), 'none', None, None),
     'financeSendPaymentRegistry': OperationSpec('POST', '/api/v1/finance/payment-registries/{id}/send', 'finance', 'preview', 'finance.payment-requests:send', False, False, ('id',), 'none', None, None),
     'financeSetAccountOpeningBalance': OperationSpec('POST', '/api/v1/finance/accounts/{id}/opening-balance', 'finance', 'preview', 'finance.accounts:write', False, True, ('id',), 'none', None, None),
     'financeSetConnectorSyncSettings': OperationSpec('PUT', '/api/v1/finance/connectors/sync-settings', 'finance', 'preview', 'finance.connectors:write', False, True, (), 'none', None, None),

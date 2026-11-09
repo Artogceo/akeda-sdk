@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 37b1ce2addd447d81663b83078f127720f4a13f5b610a4e89c943ed16d2ab18c).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eabb03b611b3faf161d5aca62708f4a793fddcad2acd7596f91e9b27d7082ec5).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -6327,6 +6327,8 @@ export interface CoreContractFinancing {
   "buyout_date"?: string;
   /** Фактическая дата перехода права на предмет лизинга; пусто до выкупа */
   "title_transferred_on"?: string;
+  /** База года процентов: actual — фактические дни года (365/366), 360 — финансовый год; пусто — фактические дни. По ней Акеда считает проценты линии и овердрафта без графика */
+  "day_basis"?: "" | "actual" | "360";
 }
 
 export interface CoreContractList {
@@ -17530,6 +17532,10 @@ export interface FinanceAccountingEntry {
   /** Кто выгрузил строку файлом */
   "file_exported_by"?: number;
   "file_exported_by_name": string;
+  /** Взят в учёт, ждёт отправки: статус sent, а документ в 1С ещё не ушёл (ссылки 1С нет). «Отправлен» — только после фактической отправки */
+  "awaiting_send"?: boolean;
+  /** Отказ 1С по документу строки, ждущей отправки: текст 1С или код отметки журнала обмена (finance.onec.*). Пусто — отказа нет */
+  "send_error"?: string;
   "created_at": string;
   "updated_at": string;
 }
@@ -17555,6 +17561,14 @@ export interface FinanceAccountingEntryCard {
   "decided_by_name": string;
   "decided_at"?: string;
   "changed_after_accept": boolean;
+  "onec_amount_mismatch"?: string;
+  "file_exported_at"?: string;
+  "file_exported_by"?: number;
+  "file_exported_by_name"?: string;
+  /** Взят в учёт, ждёт отправки в 1С */
+  "awaiting_send"?: boolean;
+  /** Отказ 1С по документу, ждущему отправки: текст 1С или код отметки журнала обмена */
+  "send_error"?: string;
   "created_at": string;
   "updated_at": string;
   "reference": FinanceAccountingReference;
@@ -17579,7 +17593,7 @@ export interface FinanceAccountingPosting {
 
 /** Справка Акеды по документу: чтение документа и основной книги, своих цифр нет. Чего в документе нет, то пусто. */
 export interface FinanceAccountingReference {
-  /** Состояние документа ядра сейчас */
+  /** Состояние документа сейчас: у документа ядра — его статус; у акта и УКД документооборота — по записи очереди отправки (posted — действует, cancelled — отменён) */
   "document_status": string;
   "contact_name": string;
   "contact_inn": string;
@@ -17636,6 +17650,31 @@ export interface FinanceAccountingRulePage {
   "limit": number;
   "offset": number;
   "results": Array<FinanceAccountingRule>;
+}
+
+export interface FinanceAccountingSendReport {
+  /** Сколько документов ушло в 1С */
+  "sent": number;
+  /** Сколько документов 1С не приняла; причина и повтор — в журнале обмена */
+  "failed": number;
+  /** Строки, которые не отправлялись */
+  "skipped": Array<FinanceAccountingSendReportSkippedItem>;
+  /** Строки, которые 1С не приняла, с текстом отказа */
+  "errors"?: Array<FinanceAccountingSendReportErrorsItem>;
+}
+
+export interface FinanceAccountingSendReportSkippedItem {
+  "entry_id": UUID;
+  "document_number": string;
+  /** not_taken — ждёт «Взять в учёт»; already_done — уже отправлена или решено не отправлять; base_not_ready — база 1С не готова к обмену */
+  "reason": "not_taken" | "already_done" | "base_not_ready";
+}
+
+export interface FinanceAccountingSendReportErrorsItem {
+  "entry_id": UUID;
+  "document_number": string;
+  /** Текст отказа 1С или код отметки журнала обмена (finance.onec.*) */
+  "message": string;
 }
 
 export type FinanceAccountingStatus = "new" | "sent" | "accepted" | "rejected" | "not_required";
@@ -20383,12 +20422,27 @@ export interface FinanceLoanInterestLine {
   "number": string;
   /** Проценты графика за месяц, десятичная строка */
   "amount": string;
+  /** Откуда сумма: schedule — проценты строк графика, daily — расчёт Акеды по ежедневному остатку линии без графика (ставка × остаток 66 / база года) */
+  "source"?: "schedule" | "daily";
 }
 
 export interface FinanceLoanInterestMonthInput {
   "company_id": UUID;
   /** Месяц ГГГГ-ММ */
   "month": string;
+}
+
+export interface FinanceLoanInterestMonthReconcile {
+  /** Месяц ГГГГ-ММ */
+  "month": string;
+  /** Проценты месяца по правилу договора, как их начислит документ */
+  "calculated": string;
+  /** Проведено начислением месяца — кредит 66.04 по договору */
+  "accrued": string;
+  /** Банк списал процентов датой в месяце — статья «Проценты по кредитам и займам» по договору */
+  "bank_paid": string;
+  /** Расчёт минус списанное банком; в учёт сама не правится */
+  "difference": string;
 }
 
 export interface FinanceLoanInterestPreview {
@@ -20403,6 +20457,10 @@ export interface FinanceLoanInterestPreview {
   /** Бизнес юрлица на методе начисления на конец месяца; false — кассовый метод, начисления нет */
   "accrual": boolean;
   "posted"?: CoreDocument;
+}
+
+export interface FinanceLoanInterestReconciliation {
+  "months": Array<FinanceLoanInterestMonthReconcile>;
 }
 
 export interface FinanceObligationDueDateInput {
@@ -20553,7 +20611,7 @@ export interface FinanceOneCConnection {
   "last_error"?: string;
   "accounting_mode": FinanceOneCAccountingMode;
   "accounting_trust": FinanceOneCAccountingTrust;
-  /** База принимает документы непроведёнными; настройку читает отправка следующего этапа */
+  /** Оставлять в 1С непроведёнными — при выбранном режиме бухгалтера Акеда снимает проведение своего документа после загрузки, проведение бухгалтером считается принятием */
   "accepts_unposted": boolean;
   "created_at": string;
   "updated_at": string;
@@ -20577,7 +20635,7 @@ export interface FinanceOneCConnectionInput {
   "receive_enabled"?: boolean;
   "accounting_mode"?: FinanceOneCAccountingMode;
   "accounting_trust"?: FinanceOneCAccountingTrust;
-  /** База принимает документы непроведёнными; не передан — оставить как есть, у нового подключения выключено */
+  /** Оставлять в 1С непроведёнными; не передан — оставить как есть, у нового подключения включено */
   "accepts_unposted"?: boolean;
 }
 
@@ -20770,6 +20828,13 @@ export interface FinanceOneCReceiveReport {
 export interface FinanceOneCResolve {
   /** Решение: keep_1c — оставить как в 1С, send_akeda — отправить версию Акеды поверх правки бухгалтера. */
   "choice": "keep_1c" | "send_akeda";
+}
+
+export interface FinanceOneCSendReport {
+  /** Сколько документов ушло в 1С */
+  "sent": number;
+  /** Сколько документов 1С не приняла; причина — в журнале обмена */
+  "failed": number;
 }
 
 export interface FinanceOpenAdvance {
@@ -39983,6 +40048,11 @@ export interface FilesVersionContentLinkResponse {
   "size_bytes"?: number;
   "version_id": UUID;
   "version_no": number;
+}
+
+export interface FinanceSendAccountingRegistryEntriesRequest {
+  /** Строки реестра */
+  "ids": Array<UUID>;
 }
 
 export interface FinanceListDividendAccessUsersResponse {

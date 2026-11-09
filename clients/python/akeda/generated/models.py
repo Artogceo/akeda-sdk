@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 37b1ce2addd447d81663b83078f127720f4a13f5b610a4e89c943ed16d2ab18c).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eabb03b611b3faf161d5aca62708f4a793fddcad2acd7596f91e9b27d7082ec5).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1430,6 +1430,9 @@ __all__ = [
     "FinanceAccountingRejectInput",
     "FinanceAccountingRule",
     "FinanceAccountingRulePage",
+    "FinanceAccountingSendReport",
+    "FinanceAccountingSendReportSkippedItem",
+    "FinanceAccountingSendReportErrorsItem",
     "FinanceAccountingStatus",
     "FinanceAcquirer",
     "FinanceAcquirerInput",
@@ -1681,7 +1684,9 @@ __all__ = [
     "FinanceLeasingReturnInput",
     "FinanceLoanInterestLine",
     "FinanceLoanInterestMonthInput",
+    "FinanceLoanInterestMonthReconcile",
     "FinanceLoanInterestPreview",
+    "FinanceLoanInterestReconciliation",
     "FinanceObligationDueDateInput",
     "FinanceOffBooksSide",
     "FinanceOffBooksSideContactsItem",
@@ -1719,6 +1724,7 @@ __all__ = [
     "FinanceOneCReceivePreviewDeclarationsItemTaxesItem",
     "FinanceOneCReceiveReport",
     "FinanceOneCResolve",
+    "FinanceOneCSendReport",
     "FinanceOpenAdvance",
     "FinanceOpeningAdvanceVATRequest",
     "FinanceOpeningBalanceRequest",
@@ -3225,6 +3231,7 @@ __all__ = [
     "FilesListSharesResponse",
     "FilesCreateShortcutRequest",
     "FilesVersionContentLinkResponse",
+    "FinanceSendAccountingRegistryEntriesRequest",
     "FinanceListDividendAccessUsersResponse",
     "FinanceListDividendAccessUsersResponseResultsItem",
     "FinanceListDividendAutomationRunsResponse",
@@ -9636,6 +9643,8 @@ class CoreContractFinancing(_CoreContractFinancingRequired, total=False):
     buyout_date: str
     #: Фактическая дата перехода права на предмет лизинга; пусто до выкупа
     title_transferred_on: str
+    #: База года процентов: actual — фактические дни года (365/366), 360 — финансовый год; пусто — фактические дни. По ней Акеда считает проценты линии и овердрафта без графика
+    day_basis: Literal['', 'actual', '360']
 
 class CoreContractList(TypedDict):
     results: List["CoreContractTerms"]
@@ -21016,6 +21025,10 @@ class FinanceAccountingEntry(_FinanceAccountingEntryRequired, total=False):
     file_exported_at: str
     #: Кто выгрузил строку файлом
     file_exported_by: int
+    #: Взят в учёт, ждёт отправки: статус sent, а документ в 1С ещё не ушёл (ссылки 1С нет). «Отправлен» — только после фактической отправки
+    awaiting_send: bool
+    #: Отказ 1С по документу строки, ждущей отправки: текст 1С или код отметки журнала обмена (finance.onec.*). Пусто — отказа нет
+    send_error: str
 
 class _FinanceAccountingEntryCardRequired(TypedDict):
     id: "UUID"
@@ -21043,6 +21056,14 @@ class _FinanceAccountingEntryCardRequired(TypedDict):
 class FinanceAccountingEntryCard(_FinanceAccountingEntryCardRequired, total=False):
     decided_by: int
     decided_at: str
+    onec_amount_mismatch: str
+    file_exported_at: str
+    file_exported_by: int
+    file_exported_by_name: str
+    #: Взят в учёт, ждёт отправки в 1С
+    awaiting_send: bool
+    #: Отказ 1С по документу, ждущему отправки: текст 1С или код отметки журнала обмена
+    send_error: str
 
 class FinanceAccountingPage(TypedDict):
     #: Всего строк под отбором
@@ -21062,7 +21083,7 @@ class FinanceAccountingPosting(TypedDict):
 class FinanceAccountingReference(TypedDict):
     """Справка Акеды по документу: чтение документа и основной книги, своих цифр нет. Чего в документе нет, то пусто."""
 
-    #: Состояние документа ядра сейчас
+    #: Состояние документа сейчас: у документа ядра — его статус; у акта и УКД документооборота — по записи очереди отправки (posted — действует, cancelled — отменён)
     document_status: str
     contact_name: str
     contact_inn: str
@@ -21116,6 +21137,30 @@ class FinanceAccountingRulePage(TypedDict):
     limit: int
     offset: int
     results: List["FinanceAccountingRule"]
+
+class _FinanceAccountingSendReportRequired(TypedDict):
+    #: Сколько документов ушло в 1С
+    sent: int
+    #: Сколько документов 1С не приняла; причина и повтор — в журнале обмена
+    failed: int
+    #: Строки, которые не отправлялись
+    skipped: List["FinanceAccountingSendReportSkippedItem"]
+
+class FinanceAccountingSendReport(_FinanceAccountingSendReportRequired, total=False):
+    #: Строки, которые 1С не приняла, с текстом отказа
+    errors: List["FinanceAccountingSendReportErrorsItem"]
+
+class FinanceAccountingSendReportSkippedItem(TypedDict):
+    entry_id: "UUID"
+    document_number: str
+    #: not_taken — ждёт «Взять в учёт»; already_done — уже отправлена или решено не отправлять; base_not_ready — база 1С не готова к обмену
+    reason: Literal['not_taken', 'already_done', 'base_not_ready']
+
+class FinanceAccountingSendReportErrorsItem(TypedDict):
+    entry_id: "UUID"
+    document_number: str
+    #: Текст отказа 1С или код отметки журнала обмена (finance.onec.*)
+    message: str
 
 FinanceAccountingStatus = Literal['new', 'sent', 'accepted', 'rejected', 'not_required']
 
@@ -23777,7 +23822,7 @@ class FinanceLeasingReturnInput(_FinanceLeasingReturnInputRequired, total=False)
     #: Статья прочих доходов для разницы, когда долг больше остаточной стоимости
     income_item_id: Optional[str]
 
-class FinanceLoanInterestLine(TypedDict):
+class _FinanceLoanInterestLineRequired(TypedDict):
     contract_id: "UUID"
     contact_id: "UUID"
     #: Номер договора
@@ -23785,10 +23830,26 @@ class FinanceLoanInterestLine(TypedDict):
     #: Проценты графика за месяц, десятичная строка
     amount: str
 
+class FinanceLoanInterestLine(_FinanceLoanInterestLineRequired, total=False):
+    #: Откуда сумма: schedule — проценты строк графика, daily — расчёт Акеды по ежедневному остатку линии без графика (ставка × остаток 66 / база года)
+    source: Literal['schedule', 'daily']
+
 class FinanceLoanInterestMonthInput(TypedDict):
     company_id: "UUID"
     #: Месяц ГГГГ-ММ
     month: str
+
+class FinanceLoanInterestMonthReconcile(TypedDict):
+    #: Месяц ГГГГ-ММ
+    month: str
+    #: Проценты месяца по правилу договора, как их начислит документ
+    calculated: str
+    #: Проведено начислением месяца — кредит 66.04 по договору
+    accrued: str
+    #: Банк списал процентов датой в месяце — статья «Проценты по кредитам и займам» по договору
+    bank_paid: str
+    #: Расчёт минус списанное банком; в учёт сама не правится
+    difference: str
 
 class _FinanceLoanInterestPreviewRequired(TypedDict):
     company_id: "UUID"
@@ -23804,6 +23865,9 @@ class _FinanceLoanInterestPreviewRequired(TypedDict):
 
 class FinanceLoanInterestPreview(_FinanceLoanInterestPreviewRequired, total=False):
     posted: "CoreDocument"
+
+class FinanceLoanInterestReconciliation(TypedDict):
+    months: List["FinanceLoanInterestMonthReconcile"]
 
 class FinanceObligationDueDateInput(TypedDict):
     #: Срок оплаты ГГГГ-ММ-ДД; пустая строка снимает срок
@@ -23940,7 +24004,7 @@ class _FinanceOneCConnectionRequired(TypedDict):
     receive_daily_at: str
     accounting_mode: "FinanceOneCAccountingMode"
     accounting_trust: "FinanceOneCAccountingTrust"
-    #: База принимает документы непроведёнными; настройку читает отправка следующего этапа
+    #: Оставлять в 1С непроведёнными — при выбранном режиме бухгалтера Акеда снимает проведение своего документа после загрузки, проведение бухгалтером считается принятием
     accepts_unposted: bool
     created_at: str
     updated_at: str
@@ -23976,7 +24040,7 @@ class FinanceOneCConnectionInput(_FinanceOneCConnectionInputRequired, total=Fals
     receive_enabled: bool
     accounting_mode: "FinanceOneCAccountingMode"
     accounting_trust: "FinanceOneCAccountingTrust"
-    #: База принимает документы непроведёнными; не передан — оставить как есть, у нового подключения выключено
+    #: Оставлять в 1С непроведёнными; не передан — оставить как есть, у нового подключения включено
     accepts_unposted: bool
 
 class FinanceOneCConnectionPage(TypedDict):
@@ -24153,6 +24217,12 @@ class FinanceOneCReceiveReport(_FinanceOneCReceiveReportRequired, total=False):
 class FinanceOneCResolve(TypedDict):
     #: Решение: keep_1c — оставить как в 1С, send_akeda — отправить версию Акеды поверх правки бухгалтера.
     choice: Literal['keep_1c', 'send_akeda']
+
+class FinanceOneCSendReport(TypedDict):
+    #: Сколько документов ушло в 1С
+    sent: int
+    #: Сколько документов 1С не приняла; причина — в журнале обмена
+    failed: int
 
 class FinanceOpenAdvance(TypedDict):
     id: "UUID"
@@ -42685,6 +42755,10 @@ class _FilesVersionContentLinkResponseRequired(TypedDict):
 class FilesVersionContentLinkResponse(_FilesVersionContentLinkResponseRequired, total=False):
     expires_at: str
     size_bytes: int
+
+class FinanceSendAccountingRegistryEntriesRequest(TypedDict):
+    #: Строки реестра
+    ids: List["UUID"]
 
 class FinanceListDividendAccessUsersResponse(TypedDict, total=False):
     results: List["FinanceListDividendAccessUsersResponseResultsItem"]
