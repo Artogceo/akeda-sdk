@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0a8f29d494e322b5b699efbefc7e44a8d0cf5191cf24ab19c02b47d0ab4c7fa0).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 310d6ac882620a00ceffd909a98c90e37a09cfe315d8d55a5f015db137922f12).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1178,6 +1178,7 @@ __all__ = [
     "DocflowFlowInvoiceDuplicatesInput",
     "DocflowFlowInvoicePayee",
     "DocflowFlowInvoiceTerms",
+    "DocflowFlowInvoiceTermsSellerBank",
     "DocflowFlowKind",
     "DocflowFlowLineArticleInput",
     "DocflowFlowLineGTIN",
@@ -17421,6 +17422,8 @@ class DocflowFlowInvoiceTerms(TypedDict, total=False):
     contract_stage_id: "UUID"
     #: Строка графика оплат продажи, по которой выставлен счёт
     order_payment_term_id: "UUID"
+    #: Счёт нашего юрлица, выбранный в бумаге: реквизиты записаны снимком при выставлении; нет — счёт бланка
+    seller_bank: "DocflowFlowInvoiceTermsSellerBank"
     #: Договор, по которому выписан счёт: реквизит «Основание», а не связь
     basis_contract_id: "UUID"
     #: Допсоглашение-покупка или спецификация-партия, по которой выписан счёт
@@ -17433,6 +17436,21 @@ class DocflowFlowInvoiceTerms(TypedDict, total=False):
     distinct_from: List["UUID"]
     #: Счёт получателя — расчётный счёт контрагента карточки из справочника модуля core, на который просят платить по этому счёту. Ссылка, а не копия реквизитов. Пусто — счёт не выбран, и заявка на оплату берёт основной счёт контрагента. Счёт другого контрагента или выключенный (кроме уже стоявшего в карточке) — 400 docflow.flow.payee_account.
     payee_account_id: "UUID"
+
+class _DocflowFlowInvoiceTermsSellerBankRequired(TypedDict):
+    account_id: "UUID"
+    #: Номер счёта
+    account: str
+    #: БИК банка
+    bic: str
+    #: Название банка
+    name: str
+
+class DocflowFlowInvoiceTermsSellerBank(_DocflowFlowInvoiceTermsSellerBankRequired, total=False):
+    """Счёт нашего юрлица, выбранный в бумаге: реквизиты записаны снимком при выставлении; нет — счёт бланка"""
+
+    #: Корреспондентский счёт банка
+    corr_account: str
 
 DocflowFlowKind = Literal['contract', 'specification', 'amendment', 'invoice', 'act', 'upd', 'goods_waybill', 'transport_waybill', 'consignment_note', 'transport_order', 'tax_invoice', 'correction', 'return', 'discrepancy_act', 'reconciliation_act', 'power_of_attorney', 'letter', 'memo', 'decree', 'directive', 'minutes', 'other']
 
@@ -18906,6 +18924,8 @@ class DocflowOrderInvoiceInput(_DocflowOrderInvoiceInputRequired, total=False):
     title: str
     #: Строка графика оплат продажи, по которой выставлен счёт: запоминается в счёте; чужая строка — 409 docflow.sale.payment_term_unknown
     payment_term_id: "UUID"
+    #: Расчётный счёт юрлица продажи, на который просят заплатить; пусто — счёт бланка; чужой счёт — 409 docflow.sale.seller_account_unknown
+    seller_account_id: "UUID"
     #: Сохранить черновиком вместо «Выставить»
     draft: bool
 

@@ -170376,6 +170376,29 @@ components:
         order_payment_term_id:
           $ref: '#/components/schemas/UUID'
           description: Строка графика оплат продажи, по которой выставлен счёт
+        seller_bank:
+          type: object
+          description: 'Счёт нашего юрлица, выбранный в бумаге: реквизиты записаны снимком при выставлении; нет — счёт бланка'
+          required:
+            - account_id
+            - account
+            - bic
+            - name
+          properties:
+            account_id:
+              $ref: '#/components/schemas/UUID'
+            account:
+              type: string
+              description: Номер счёта
+            bic:
+              type: string
+              description: БИК банка
+            name:
+              type: string
+              description: Название банка
+            corr_account:
+              type: string
+              description: Корреспондентский счёт банка
         basis_contract_id:
           $ref: '#/components/schemas/UUID'
           description: 'Договор, по которому выписан счёт: реквизит «Основание», а не связь'
@@ -172251,6 +172274,9 @@ components:
         payment_term_id:
           $ref: '#/components/schemas/UUID'
           description: 'Строка графика оплат продажи, по которой выставлен счёт: запоминается в счёте; чужая строка — 409 docflow.sale.payment_term_unknown'
+        seller_account_id:
+          $ref: '#/components/schemas/UUID'
+          description: Расчётный счёт юрлица продажи, на который просят заплатить; пусто — счёт бланка; чужой счёт — 409 docflow.sale.seller_account_unknown
         draft:
           type: boolean
           description: Сохранить черновиком вместо «Выставить»
