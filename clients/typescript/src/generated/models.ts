@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a914ac44c864802784528d574dfa64b7418d61d3e9bbd94800728fac8869df91).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 37b1ce2addd447d81663b83078f127720f4a13f5b610a4e89c943ed16d2ab18c).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -12432,7 +12432,7 @@ export interface DocflowApprovalInboxItem {
   "overdue": boolean;
   /** Чью визу вы ставите, если это не ваша собственная */
   "on_behalf_of"?: string;
-  "on_behalf_via"?: "self" | "substitute" | "delegate" | "administrator";
+  "on_behalf_via"?: "self" | "substitute" | "delegate" | "administrator" | "superior";
   /** Истинно у собственной отправки, которую вернули на доработку */
   "returned_to_me": boolean;
   /** Строка этапа «ознакомиться»: решения не ждут, нужна отметка POST /approvals/{id}/acknowledge */
@@ -12513,7 +12513,7 @@ export interface DocflowApprovalReview {
   "actor_name"?: string;
   "decided_by"?: number;
   "decided_by_name"?: string;
-  "decided_via"?: "self" | "substitute" | "delegate" | "administrator";
+  "decided_via"?: "self" | "substitute" | "delegate" | "administrator" | "superior";
   "delegated_to"?: number;
   /** Пусто, пока человек не решил; acknowledge — отметка «ознакомлен» на этапе ознакомления */
   "decision"?: "approve" | "return" | "reject" | "acknowledge";
@@ -15509,8 +15509,16 @@ export interface DocflowOrderSetMember {
   "self"?: boolean;
   /** Входящий счёт оплачен своей закупкой: оплата закупки комплекта покрывает его сумму */
   "paid_by_order"?: boolean;
+  /** Оплата нашего выставленного счёта по поступлениям, отнесённым к счёту (ERP-2859). Пусто — денег не приходило */
+  "invoice_payment"?: DocflowOrderSetMemberInvoicePayment;
   /** Строка не этой сделки, а её договора (ERP-2083): сам договор и его допсоглашения и спецификации. Экран показывает их блоком «Связанные документы»; история сделки и отметка paid_by_order их не учитывают */
   "related"?: boolean;
+}
+
+/** Оплата нашего выставленного счёта по поступлениям, отнесённым к счёту (ERP-2859). Пусто — денег не приходило */
+export interface DocflowOrderSetMemberInvoicePayment {
+  "state"?: "partial" | "paid";
+  "paid_amount"?: string;
 }
 
 export interface DocflowOrderSetOrder {
@@ -17384,6 +17392,7 @@ export interface FinanceAccount {
   "connector": string | null;
   "connector_name": string;
   "connector_status": string;
+  "connector_health"?: FinanceConnectorHealth;
   "sync_enabled": boolean;
   "synced_at": string | null;
   "created_at": string;
@@ -18460,6 +18469,7 @@ export interface FinanceBudgetDriver {
   "name": string;
   "unit"?: string;
   "values": { [key: string]: string };
+  "actuals"?: { [key: string]: string };
   "base_id"?: UUID;
   "factor"?: string;
 }
@@ -18489,6 +18499,46 @@ export interface FinanceBudgetDriversApplyInput {
   "company_id": UUID;
   "kind": "cashflow" | "pnl";
   "month": string;
+}
+
+export interface FinanceBudgetFlex {
+  "kind": string;
+  "company_id": UUID;
+  "month": string;
+  "rows": Array<FinanceBudgetFlexRowsItem>;
+  "units": Array<FinanceBudgetFlexUnitsItem>;
+  "plan": string;
+  "flex": string;
+  "fact": string;
+  "volume_variance": string;
+  "price_variance": string;
+}
+
+export interface FinanceBudgetFlexRowsItem {
+  "item_id": UUID;
+  "item_name"?: string;
+  "department_id"?: UUID;
+  "driver_id": UUID;
+  "driver_name": string;
+  "unit"?: string;
+  "rate": string;
+  "plan_volume": string;
+  "fact_volume"?: string;
+  "plan": string;
+  "flex"?: string;
+  "fact": string;
+  "volume_variance"?: string;
+  "price_variance"?: string;
+  "no_fact_volume"?: boolean;
+}
+
+export interface FinanceBudgetFlexUnitsItem {
+  "unit": string;
+  "plan_volume": string;
+  "fact_volume": string;
+  "volume_variance": string;
+  "pure_volume": string;
+  "mix": string;
 }
 
 export interface FinanceBudgetForecast {
@@ -18524,6 +18574,8 @@ export interface FinanceBudgetForm {
   "cfos"?: Array<FinanceBudgetReference>;
   /** Действующие проекты для разреза бюджета «проект». */
   "projects"?: Array<FinanceBudgetReference>;
+  /** Папки контрагентов для разреза бюджета «группа контрагентов». */
+  "contact_groups"?: Array<FinanceBudgetReference>;
   /** Кандидаты ответственного за бюджет; не список согласующих. */
   "owners": Array<FinanceBudgetOwnerCandidate>;
 }
@@ -18802,6 +18854,7 @@ export interface FinanceBudgetScenario {
   "name": string;
   /** Основной сценарий вида: лимиты заявок и план-факт считаются от него */
   "is_main": boolean;
+  "personal"?: boolean;
 }
 
 export interface FinanceBudgetScenarioCompare {
@@ -18828,6 +18881,7 @@ export interface FinanceBudgetScenarioInput {
   "inflow_percent"?: string;
   /** Отдельная поправка выплат (у БДР — расходов), %; для сценариев «оптимистичный», «пессимистичный», «стресс» */
   "outflow_percent"?: string;
+  "personal"?: boolean;
 }
 
 export interface FinanceBudgetScenarioList {
@@ -18861,8 +18915,8 @@ export interface FinanceBudgetSetting {
   "company_id": UUID;
   "spend_basis": "approved" | "submitted";
   "carry_over": boolean;
-  /** Разрез бюджета юрлица: department — подразделение, cfo — ЦФО, project — проект. Значение разреза строки — в department_id */
-  "dimension"?: "department" | "cfo" | "project";
+  /** Разрез бюджета юрлица: department — подразделение, cfo — ЦФО, project — проект, contact_group — группа контрагентов (папка контрагента операции или заявки). Значение разреза строки — в department_id */
+  "dimension"?: "department" | "cfo" | "project" | "contact_group";
   /** Статьи «с нуля»: сумма только с расшифровкой, утверждение без неё — отказ; не передано — список не меняется */
   "zero_based_items"?: Array<UUID>;
   /** Окно лимита заявки: month — месяц, quarter — квартал месяца заявки */
@@ -18918,6 +18972,7 @@ export interface FinanceBudgetTargets {
   "period_from": string;
   "period_to": string;
   "rows": Array<FinanceBudgetTargetsRowsItem>;
+  "cascade"?: Array<FinanceBudgetTargetsCascadeItem>;
 }
 
 export interface FinanceBudgetTargetsRowsItem {
@@ -18930,6 +18985,21 @@ export interface FinanceBudgetTargetsRowsItem {
   "inflow_diff": string;
   "outflow_diff": string;
   "outflow_over": boolean;
+}
+
+export interface FinanceBudgetTargetsCascadeItem {
+  "dimension_id": UUID;
+  "parent_id"?: UUID;
+  "dimension_name": string;
+  "level": number;
+  "own_target": string;
+  "children_target": string;
+  "branch_target": string;
+  "unallocated": string;
+  "over_allocated": boolean;
+  "branch_plan": string;
+  "branch_diff": string;
+  "branch_over": boolean;
 }
 
 export interface FinanceBudgetVarianceNoteInput {
@@ -19265,6 +19335,7 @@ export interface FinanceConnector {
   "payments_supported": boolean;
   /** До какого момента действует ключ приложения банка (client_secret); Акеда меняет его сама за неделю до срока. Пусто — срок неизвестен или у банка такого ключа нет */
   "app_secret_expires_at"?: string | null;
+  "health"?: FinanceConnectorHealth;
   "last_sync_at": string | null;
   "last_sync_status": string;
   /** The provider's technical reply, verbatim — material for an investigation, not a message for the cabinet screen: it may carry machine keys such as "invalid_client". The portal operator reads it in full on the bank connectors page, while the cabinet card renders last_error_code instead. Empty when the failure was ours: an internal cause never reaches this field, it is logged and named by last_error_code instead. */
@@ -19346,6 +19417,16 @@ export interface FinanceConnectorCreate {
   "credential"?: string;
   "import_depth_days"?: number;
   "overlap_days"?: number;
+}
+
+/** Единый статус подключения банка (ERP-2404): одно значение для списка банков, выписки и «Юрлиц и счетов». */
+export interface FinanceConnectorHealth {
+  /** ok — работает; expiring — ключ или сертификат истекает в ближайшие 7 дней; action — не работает, нужен человек; off — отключено человеком */
+  "state": "ok" | "expiring" | "action" | "off";
+  /** Машинная причина: код ошибки банка finance.connector.* или app_secret_expiring, app_secret_expired, certificate_expiring, certificate_expired, reauth_required, awaiting_consent */
+  "reason"?: string;
+  /** Срок ключа или сертификата, о котором предупреждение */
+  "expires_at"?: string;
 }
 
 export interface FinanceConnectorMTLSStatus {
@@ -22651,6 +22732,15 @@ export interface FinanceProjectBudgetLine {
   "item_id": UUID;
   /** Положительная сумма или ноль; знак определяется статьёй */
   "amount": string;
+  /** График освоения строки по месяцам (ERP-985 п.10): месяц ГГГГ-ММ один раз, сумма графика равна amount. Нет — графика нет. */
+  "schedule"?: Array<FinanceProjectBudgetMonth>;
+}
+
+export interface FinanceProjectBudgetMonth {
+  /** Месяц графика ГГГГ-ММ. */
+  "month": string;
+  /** Сумма освоения в месяце. */
+  "amount": string;
 }
 
 export interface FinanceProjectLine {
@@ -22667,6 +22757,48 @@ export interface FinanceProjectReport {
   "currency": string;
   "company": string;
   "projects": Array<FinanceProject>;
+}
+
+export interface FinanceProjectSchedule {
+  "project_id": UUID;
+  "company_id": UUID;
+  /** Редакция бюджета проекта; 0 — бюджета нет. */
+  "revision": number;
+  /** Валюта бюджета проекта. */
+  "currency": string;
+  /** Месяцы графика и факта по порядку. */
+  "months": Array<string>;
+  /** Строки бюджета проекта с графиком. */
+  "rows": Array<FinanceProjectScheduleRow>;
+  /** Итоги плана и факта по месяцам. */
+  "totals": Array<FinanceProjectScheduleCell>;
+}
+
+export interface FinanceProjectScheduleCell {
+  /** Месяц ГГГГ-ММ. */
+  "month": string;
+  /** План графика освоения месяца. */
+  "plan": string;
+  /** Факт ОПиУ проекта месяца со знаком статьи: освоенное положительно. */
+  "actual": string;
+}
+
+export interface FinanceProjectScheduleRow {
+  "item_id": UUID;
+  /** Название статьи. */
+  "name": string;
+  /** Сумма строки бюджета проекта. */
+  "budget": string;
+  /** У строки есть график освоения. */
+  "scheduled": boolean;
+  /** Освоено фактом за все месяцы. */
+  "actual": string;
+  /** Остаток бюджета строки: бюджет минус освоено. */
+  "remaining": string;
+  /** Доля освоения, %; нет при нулевом бюджете. */
+  "absorbed_pct": string | null;
+  /** План и факт по месяцам графика. */
+  "months": Array<FinanceProjectScheduleCell>;
 }
 
 export interface FinancePurchaseSaleOrderInput {
@@ -39993,6 +40125,13 @@ export interface FinanceCategorizeTransactionsResponseResultsItem {
 
 export interface FinanceRepostTransactionsRequest {
   "ids": Array<UUID>;
+  "confirm_release"?: boolean;
+}
+
+export interface FinanceSetTransactionCardExpenseRequest {
+  /** Поставить (true) или снять (false) признак */
+  "enabled": boolean;
+  /** Согласие снять опиравшиеся на операцию погашения и аванс */
   "confirm_release"?: boolean;
 }
 

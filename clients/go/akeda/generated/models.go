@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a914ac44c864802784528d574dfa64b7418d61d3e9bbd94800728fac8869df91).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 37b1ce2addd447d81663b83078f127720f4a13f5b610a4e89c943ed16d2ab18c).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -15475,8 +15475,16 @@ type DocflowOrderSetMember struct {
 	Self          *bool `json:"self,omitempty"`
 	// PaidByOrder — Входящий счёт оплачен своей закупкой: оплата закупки комплекта покрывает его сумму
 	PaidByOrder *bool `json:"paid_by_order,omitempty"`
+	// InvoicePayment — Оплата нашего выставленного счёта по поступлениям, отнесённым к счёту (ERP-2859). Пусто — денег не приходило
+	InvoicePayment *DocflowOrderSetMemberInvoicePayment `json:"invoice_payment,omitempty"`
 	// Related — Строка не этой сделки, а её договора (ERP-2083): сам договор и его допсоглашения и спецификации. Экран показывает их блоком «Связанные документы»; история сделки и отметка paid_by_order их не учитывают
 	Related *bool `json:"related,omitempty"`
+}
+
+// DocflowOrderSetMemberInvoicePayment — Оплата нашего выставленного счёта по поступлениям, отнесённым к счёту (ERP-2859). Пусто — денег не приходило
+type DocflowOrderSetMemberInvoicePayment struct {
+	State      *string `json:"state,omitempty"`
+	PaidAmount *string `json:"paid_amount,omitempty"`
 }
 
 type DocflowOrderSetOrder struct {
@@ -17341,15 +17349,16 @@ type FinanceAccount struct {
 	// OpeningBalance — Decimal string
 	OpeningBalance string `json:"opening_balance"`
 	// Balance — Decimal string
-	Balance         string  `json:"balance"`
-	TxnCount        int64   `json:"txn_count"`
-	Connector       *string `json:"connector"`
-	ConnectorName   string  `json:"connector_name"`
-	ConnectorStatus string  `json:"connector_status"`
-	SyncEnabled     bool    `json:"sync_enabled"`
-	SyncedAt        *string `json:"synced_at"`
-	CreatedAt       string  `json:"created_at"`
-	UpdatedAt       string  `json:"updated_at"`
+	Balance         string                  `json:"balance"`
+	TxnCount        int64                   `json:"txn_count"`
+	Connector       *string                 `json:"connector"`
+	ConnectorName   string                  `json:"connector_name"`
+	ConnectorStatus string                  `json:"connector_status"`
+	ConnectorHealth *FinanceConnectorHealth `json:"connector_health,omitempty"`
+	SyncEnabled     bool                    `json:"sync_enabled"`
+	SyncedAt        *string                 `json:"synced_at"`
+	CreatedAt       string                  `json:"created_at"`
+	UpdatedAt       string                  `json:"updated_at"`
 	// BankBalance — Остаток по данным банка на момент `bank_balance_at`, decimal string. null — банк остатка не называл (счёт не подключён или остаток ещё не приходил): это не ноль, и сверять с ним нечего.
 	BankBalance *string `json:"bank_balance,omitempty"`
 	// BankBalanceAt — Когда банк назвал остаток `bank_balance`.
@@ -18418,12 +18427,13 @@ type FinanceBudgetDealPipelinesInput struct {
 }
 
 type FinanceBudgetDriver struct {
-	ID     UUID              `json:"id"`
-	Name   string            `json:"name"`
-	Unit   *string           `json:"unit,omitempty"`
-	Values map[string]string `json:"values"`
-	BaseID *UUID             `json:"base_id,omitempty"`
-	Factor *string           `json:"factor,omitempty"`
+	ID      UUID              `json:"id"`
+	Name    string            `json:"name"`
+	Unit    *string           `json:"unit,omitempty"`
+	Values  map[string]string `json:"values"`
+	Actuals map[string]string `json:"actuals,omitempty"`
+	BaseID  *UUID             `json:"base_id,omitempty"`
+	Factor  *string           `json:"factor,omitempty"`
 }
 
 type FinanceBudgetDriverRule struct {
@@ -18451,6 +18461,46 @@ type FinanceBudgetDriversApplyInput struct {
 	CompanyID UUID   `json:"company_id"`
 	Kind      string `json:"kind"`
 	Month     string `json:"month"`
+}
+
+type FinanceBudgetFlex struct {
+	Kind           string                       `json:"kind"`
+	CompanyID      UUID                         `json:"company_id"`
+	Month          string                       `json:"month"`
+	Rows           []FinanceBudgetFlexRowsItem  `json:"rows"`
+	Units          []FinanceBudgetFlexUnitsItem `json:"units"`
+	Plan           string                       `json:"plan"`
+	Flex           string                       `json:"flex"`
+	Fact           string                       `json:"fact"`
+	VolumeVariance string                       `json:"volume_variance"`
+	PriceVariance  string                       `json:"price_variance"`
+}
+
+type FinanceBudgetFlexRowsItem struct {
+	ItemID         UUID    `json:"item_id"`
+	ItemName       *string `json:"item_name,omitempty"`
+	DepartmentID   *UUID   `json:"department_id,omitempty"`
+	DriverID       UUID    `json:"driver_id"`
+	DriverName     string  `json:"driver_name"`
+	Unit           *string `json:"unit,omitempty"`
+	Rate           string  `json:"rate"`
+	PlanVolume     string  `json:"plan_volume"`
+	FactVolume     *string `json:"fact_volume,omitempty"`
+	Plan           string  `json:"plan"`
+	Flex           *string `json:"flex,omitempty"`
+	Fact           string  `json:"fact"`
+	VolumeVariance *string `json:"volume_variance,omitempty"`
+	PriceVariance  *string `json:"price_variance,omitempty"`
+	NoFactVolume   *bool   `json:"no_fact_volume,omitempty"`
+}
+
+type FinanceBudgetFlexUnitsItem struct {
+	Unit           string `json:"unit"`
+	PlanVolume     string `json:"plan_volume"`
+	FactVolume     string `json:"fact_volume"`
+	VolumeVariance string `json:"volume_variance"`
+	PureVolume     string `json:"pure_volume"`
+	Mix            string `json:"mix"`
 }
 
 type FinanceBudgetForecast struct {
@@ -18486,6 +18536,8 @@ type FinanceBudgetForm struct {
 	Cfos []FinanceBudgetReference `json:"cfos,omitempty"`
 	// Projects — Действующие проекты для разреза бюджета «проект».
 	Projects []FinanceBudgetReference `json:"projects,omitempty"`
+	// ContactGroups — Папки контрагентов для разреза бюджета «группа контрагентов».
+	ContactGroups []FinanceBudgetReference `json:"contact_groups,omitempty"`
 	// Owners — Кандидаты ответственного за бюджет; не список согласующих.
 	Owners []FinanceBudgetOwnerCandidate `json:"owners"`
 }
@@ -18763,7 +18815,8 @@ type FinanceBudgetScenario struct {
 	Kind string `json:"kind"`
 	Name string `json:"name"`
 	// IsMain — Основной сценарий вида: лимиты заявок и план-факт считаются от него
-	IsMain bool `json:"is_main"`
+	IsMain   bool  `json:"is_main"`
+	Personal *bool `json:"personal,omitempty"`
 }
 
 type FinanceBudgetScenarioCompare struct {
@@ -18790,6 +18843,7 @@ type FinanceBudgetScenarioInput struct {
 	InflowPercent *string `json:"inflow_percent,omitempty"`
 	// OutflowPercent — Отдельная поправка выплат (у БДР — расходов), %; для сценариев «оптимистичный», «пессимистичный», «стресс»
 	OutflowPercent *string `json:"outflow_percent,omitempty"`
+	Personal       *bool   `json:"personal,omitempty"`
 }
 
 type FinanceBudgetScenarioList struct {
@@ -18823,7 +18877,7 @@ type FinanceBudgetSetting struct {
 	CompanyID  UUID   `json:"company_id"`
 	SpendBasis string `json:"spend_basis"`
 	CarryOver  bool   `json:"carry_over"`
-	// Dimension — Разрез бюджета юрлица: department — подразделение, cfo — ЦФО, project — проект. Значение разреза строки — в department_id
+	// Dimension — Разрез бюджета юрлица: department — подразделение, cfo — ЦФО, project — проект, contact_group — группа контрагентов (папка контрагента операции или заявки). Значение разреза строки — в department_id
 	Dimension *string `json:"dimension,omitempty"`
 	// ZeroBasedItems — Статьи «с нуля»: сумма только с расшифровкой, утверждение без неё — отказ; не передано — список не меняется
 	ZeroBasedItems []UUID `json:"zero_based_items,omitempty"`
@@ -18874,12 +18928,13 @@ type FinanceBudgetSubmissions struct {
 }
 
 type FinanceBudgetTargets struct {
-	Kind       string                         `json:"kind"`
-	CompanyID  UUID                           `json:"company_id"`
-	ScenarioID UUID                           `json:"scenario_id"`
-	PeriodFrom string                         `json:"period_from"`
-	PeriodTo   string                         `json:"period_to"`
-	Rows       []FinanceBudgetTargetsRowsItem `json:"rows"`
+	Kind       string                            `json:"kind"`
+	CompanyID  UUID                              `json:"company_id"`
+	ScenarioID UUID                              `json:"scenario_id"`
+	PeriodFrom string                            `json:"period_from"`
+	PeriodTo   string                            `json:"period_to"`
+	Rows       []FinanceBudgetTargetsRowsItem    `json:"rows"`
+	Cascade    []FinanceBudgetTargetsCascadeItem `json:"cascade,omitempty"`
 }
 
 type FinanceBudgetTargetsRowsItem struct {
@@ -18892,6 +18947,21 @@ type FinanceBudgetTargetsRowsItem struct {
 	InflowDiff    string  `json:"inflow_diff"`
 	OutflowDiff   string  `json:"outflow_diff"`
 	OutflowOver   bool    `json:"outflow_over"`
+}
+
+type FinanceBudgetTargetsCascadeItem struct {
+	DimensionID    UUID   `json:"dimension_id"`
+	ParentID       *UUID  `json:"parent_id,omitempty"`
+	DimensionName  string `json:"dimension_name"`
+	Level          int64  `json:"level"`
+	OwnTarget      string `json:"own_target"`
+	ChildrenTarget string `json:"children_target"`
+	BranchTarget   string `json:"branch_target"`
+	Unallocated    string `json:"unallocated"`
+	OverAllocated  bool   `json:"over_allocated"`
+	BranchPlan     string `json:"branch_plan"`
+	BranchDiff     string `json:"branch_diff"`
+	BranchOver     bool   `json:"branch_over"`
 }
 
 type FinanceBudgetVarianceNoteInput struct {
@@ -19226,9 +19296,10 @@ type FinanceConnector struct {
 	// PaymentsSupported — Банк подключения принимает платёжные поручения по API
 	PaymentsSupported bool `json:"payments_supported"`
 	// AppSecretExpiresAt — До какого момента действует ключ приложения банка (client_secret); Акеда меняет его сама за неделю до срока. Пусто — срок неизвестен или у банка такого ключа нет
-	AppSecretExpiresAt *string `json:"app_secret_expires_at,omitempty"`
-	LastSyncAt         *string `json:"last_sync_at"`
-	LastSyncStatus     string  `json:"last_sync_status"`
+	AppSecretExpiresAt *string                 `json:"app_secret_expires_at,omitempty"`
+	Health             *FinanceConnectorHealth `json:"health,omitempty"`
+	LastSyncAt         *string                 `json:"last_sync_at"`
+	LastSyncStatus     string                  `json:"last_sync_status"`
 	// LastError — The provider's technical reply, verbatim — material for an investigation, not a message for the cabinet screen: it may carry machine keys such as "invalid_client". The portal operator reads it in full on the bank connectors page, while the cabinet card renders last_error_code instead. Empty when the failure was ours: an internal cause never reaches this field, it is logged and named by last_error_code instead.
 	LastError string `json:"last_error"`
 	// LastErrorCode — Machine code of the last failure, translated by the client. Present because the text is stored: it is written in whatever locale the background sync happened to run in, and only a finite code can be rendered in the reader's language.
@@ -19308,6 +19379,16 @@ type FinanceConnectorCreate struct {
 	Credential      *string `json:"credential,omitempty"`
 	ImportDepthDays *int64  `json:"import_depth_days,omitempty"`
 	OverlapDays     *int64  `json:"overlap_days,omitempty"`
+}
+
+// FinanceConnectorHealth — Единый статус подключения банка (ERP-2404): одно значение для списка банков, выписки и «Юрлиц и счетов».
+type FinanceConnectorHealth struct {
+	// State — ok — работает; expiring — ключ или сертификат истекает в ближайшие 7 дней; action — не работает, нужен человек; off — отключено человеком
+	State string `json:"state"`
+	// Reason — Машинная причина: код ошибки банка finance.connector.* или app_secret_expiring, app_secret_expired, certificate_expiring, certificate_expired, reauth_required, awaiting_consent
+	Reason *string `json:"reason,omitempty"`
+	// ExpiresAt — Срок ключа или сертификата, о котором предупреждение
+	ExpiresAt *string `json:"expires_at,omitempty"`
 }
 
 type FinanceConnectorMTLSStatus struct {
@@ -22602,6 +22683,15 @@ type FinanceProjectBudgetLine struct {
 	ItemID UUID `json:"item_id"`
 	// Amount — Положительная сумма или ноль; знак определяется статьёй
 	Amount string `json:"amount"`
+	// Schedule — График освоения строки по месяцам (ERP-985 п.10): месяц ГГГГ-ММ один раз, сумма графика равна amount. Нет — графика нет.
+	Schedule []FinanceProjectBudgetMonth `json:"schedule,omitempty"`
+}
+
+type FinanceProjectBudgetMonth struct {
+	// Month — Месяц графика ГГГГ-ММ.
+	Month string `json:"month"`
+	// Amount — Сумма освоения в месяце.
+	Amount string `json:"amount"`
 }
 
 type FinanceProjectLine struct {
@@ -22618,6 +22708,48 @@ type FinanceProjectReport struct {
 	Currency string           `json:"currency"`
 	Company  string           `json:"company"`
 	Projects []FinanceProject `json:"projects"`
+}
+
+type FinanceProjectSchedule struct {
+	ProjectID UUID `json:"project_id"`
+	CompanyID UUID `json:"company_id"`
+	// Revision — Редакция бюджета проекта; 0 — бюджета нет.
+	Revision int64 `json:"revision"`
+	// Currency — Валюта бюджета проекта.
+	Currency string `json:"currency"`
+	// Months — Месяцы графика и факта по порядку.
+	Months []string `json:"months"`
+	// Rows — Строки бюджета проекта с графиком.
+	Rows []FinanceProjectScheduleRow `json:"rows"`
+	// Totals — Итоги плана и факта по месяцам.
+	Totals []FinanceProjectScheduleCell `json:"totals"`
+}
+
+type FinanceProjectScheduleCell struct {
+	// Month — Месяц ГГГГ-ММ.
+	Month string `json:"month"`
+	// Plan — План графика освоения месяца.
+	Plan string `json:"plan"`
+	// Actual — Факт ОПиУ проекта месяца со знаком статьи: освоенное положительно.
+	Actual string `json:"actual"`
+}
+
+type FinanceProjectScheduleRow struct {
+	ItemID UUID `json:"item_id"`
+	// Name — Название статьи.
+	Name string `json:"name"`
+	// Budget — Сумма строки бюджета проекта.
+	Budget string `json:"budget"`
+	// Scheduled — У строки есть график освоения.
+	Scheduled bool `json:"scheduled"`
+	// Actual — Освоено фактом за все месяцы.
+	Actual string `json:"actual"`
+	// Remaining — Остаток бюджета строки: бюджет минус освоено.
+	Remaining string `json:"remaining"`
+	// AbsorbedPct — Доля освоения, %; нет при нулевом бюджете.
+	AbsorbedPct *string `json:"absorbed_pct"`
+	// Months — План и факт по месяцам графика.
+	Months []FinanceProjectScheduleCell `json:"months"`
 }
 
 type FinancePurchaseSaleOrderInput struct {
@@ -39877,6 +40009,13 @@ type FinanceCategorizeTransactionsResponseResultsItem struct {
 type FinanceRepostTransactionsRequest struct {
 	Ids            []UUID `json:"ids"`
 	ConfirmRelease *bool  `json:"confirm_release,omitempty"`
+}
+
+type FinanceSetTransactionCardExpenseRequest struct {
+	// Enabled — Поставить (true) или снять (false) признак
+	Enabled bool `json:"enabled"`
+	// ConfirmRelease — Согласие снять опиравшиеся на операцию погашения и аванс
+	ConfirmRelease *bool `json:"confirm_release,omitempty"`
 }
 
 type FinanceMarkTransactionDeletedRequest struct {

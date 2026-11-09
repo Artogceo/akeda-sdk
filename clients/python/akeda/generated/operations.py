@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a914ac44c864802784528d574dfa64b7418d61d3e9bbd94800728fac8869df91).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 37b1ce2addd447d81663b83078f127720f4a13f5b610a4e89c943ed16d2ab18c).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -949,6 +949,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeBudgetCorrections': OperationSpec('GET', '/api/v1/finance/budgets/corrections', 'finance', 'preview', 'finance.budgets:read', False, True, (), 'none', None, None),
     'financeBudgetDealPipelines': OperationSpec('GET', '/api/v1/finance/budgets/deal-pipelines', 'finance', 'preview', 'finance.budgets:read', False, True, (), 'none', None, None),
     'financeBudgetDrivers': OperationSpec('GET', '/api/v1/finance/budgets/drivers', 'finance', 'preview', 'finance.budgets:read', False, True, (), 'none', None, None),
+    'financeBudgetFlex': OperationSpec('GET', '/api/v1/finance/budgets/flex', 'finance', 'preview', 'finance.budgets:read', False, True, (), 'none', None, None),
     'financeBudgetForecast': OperationSpec('GET', '/api/v1/finance/budgets/forecast', 'finance', 'preview', 'finance.budgets:read', False, True, (), 'none', None, None),
     'financeBudgetForm': OperationSpec('GET', '/api/v1/finance/budgets/form', 'finance', 'preview', 'finance.budgets:read', False, True, (), 'none', None, None),
     'financeBudgetGroup': OperationSpec('GET', '/api/v1/finance/budgets/group', 'finance', 'preview', 'finance.budgets:read', False, True, (), 'none', None, None),
@@ -1042,6 +1043,8 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeFinancingLimits': OperationSpec('GET', '/api/v1/finance/financing/limits', 'finance', 'preview', 'finance.financing:read', False, True, (), 'none', None, None),
     'financeFixedAssetGroups': OperationSpec('GET', '/api/v1/finance/fixed-assets/groups', 'finance', 'preview', 'finance.period:read', False, True, (), 'none', None, None),
     'financeFixedAssets': OperationSpec('GET', '/api/v1/finance/fixed-assets', 'finance', 'preview', 'finance.period:read', False, True, (), 'none', None, None),
+    'financeForgetCashOperationRule': OperationSpec('DELETE', '/api/v1/finance/cash-operations/rules/{rule}', 'finance', 'preview', 'finance.cash_operations:write', False, True, ('rule',), 'none', None, None),
+    'financeForgetTransactionRule': OperationSpec('DELETE', '/api/v1/finance/transaction-rules/{rule}', 'finance', 'preview', 'finance.transactions:write', False, True, ('rule',), 'none', None, None),
     'financeGetAccount': OperationSpec('GET', '/api/v1/finance/accounts/{id}', 'finance', 'preview', 'finance.accounts:read', False, True, ('id',), 'none', None, None),
     'financeGetAccountReconciliation': OperationSpec('GET', '/api/v1/finance/accounts/{id}/reconciliation', 'finance', 'preview', 'finance.accounts:read', False, True, ('id',), 'none', None, None),
     'financeGetAccountingRegistryEntry': OperationSpec('GET', '/api/v1/finance/accounting-registry/{id}', 'finance', 'preview', 'finance.accounting-registry:read', False, True, ('id',), 'none', None, None),
@@ -1072,6 +1075,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeGetPnlReport': OperationSpec('GET', '/api/v1/finance/reports/pnl', 'finance', 'preview', 'finance.reports.pnl:read', False, True, (), 'none', None, None),
     'financeGetProjectBudgetHistory': OperationSpec('GET', '/api/v1/finance/project-budgets', 'finance', 'preview', 'finance.project_budgets:read', False, True, (), 'none', None, None),
     'financeGetProjectEconomics': OperationSpec('GET', '/api/v1/finance/reports/projects', 'finance', 'preview', 'finance.reports.projects:read', False, True, (), 'none', None, None),
+    'financeGetProjectSchedule': OperationSpec('GET', '/api/v1/finance/project-budgets/schedule', 'finance', 'preview', 'finance.project_budgets:read', False, True, (), 'none', None, None),
     'financeGetReconciliation': OperationSpec('GET', '/api/v1/finance/transactions/reconciliation', 'finance', 'preview', 'finance.transactions:read', False, True, (), 'none', None, None),
     'financeGetSettlementDocument': OperationSpec('GET', '/api/v1/finance/settlements/documents/{id}', 'finance', 'preview', 'finance.settlements:read', False, True, ('id',), 'none', None, None),
     'financeGetSettlementPosition': OperationSpec('GET', '/api/v1/finance/settlements/position', 'finance', 'preview', 'finance.settlements:read', False, True, (), 'none', None, None),
@@ -1083,6 +1087,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeGetTradeAdvance': OperationSpec('GET', '/api/v1/finance/trade-journal/advance', 'finance', 'preview', 'finance.reports.trade:read', False, True, (), 'none', None, None),
     'financeGetTradeJournal': OperationSpec('GET', '/api/v1/finance/trade-journal', 'finance', 'preview', 'finance.reports.trade:read', False, True, (), 'limit_offset', 500, 500),
     'financeGetTransaction': OperationSpec('GET', '/api/v1/finance/transactions/{id}', 'finance', 'preview', 'finance.transactions:read', False, True, ('id',), 'none', None, None),
+    'financeGetTrialBalanceAccountEntries': OperationSpec('GET', '/api/v1/finance/reports/trial-balance/account-entries', 'finance', 'preview', 'finance.reports.balance:read', False, True, (), 'none', None, None),
     'financeGetUnallocatedMoney': OperationSpec('GET', '/api/v1/finance/transactions/unallocated', 'finance', 'preview', 'finance.transactions:read', False, True, (), 'none', None, None),
     'financeGetVATQuarter': OperationSpec('GET', '/api/v1/finance/vat-quarters/{id}', 'finance', 'preview', 'finance.period:read', False, True, ('id',), 'none', None, None),
     'financeImpairFixedAsset': OperationSpec('POST', '/api/v1/finance/fixed-assets/{id}/impairment', 'finance', 'preview', 'finance.period:write', True, True, ('id',), 'none', None, None),
@@ -1236,6 +1241,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeSetPayrollPayoutMonth': OperationSpec('PUT', '/api/v1/finance/payroll/payout-months/{document}', 'finance', 'preview', 'finance.payroll:write', False, True, ('document',), 'none', None, None),
     'financeSetPurchaseSaleOrder': OperationSpec('PUT', '/api/v1/finance/purchases/{id}/sale-order', 'finance', 'preview', 'finance.operations:write', False, True, ('id',), 'none', None, None),
     'financeSetPurchaseSupplierDocument': OperationSpec('PATCH', '/api/v1/finance/settlements/documents/{id}/supplier-document', 'finance', 'preview', 'finance.settlements:write', False, True, ('id',), 'none', None, None),
+    'financeSetTransactionCardExpense': OperationSpec('POST', '/api/v1/finance/transactions/{id}/card-expense', 'finance', 'preview', 'finance.transactions:write', False, True, ('id',), 'none', None, None),
     'financeSetWalletOpeningBalance': OperationSpec('POST', '/api/v1/finance/wallets/{id}/opening-balance', 'finance', 'preview', 'finance.accounts:write', False, True, ('id',), 'none', None, None),
     'financeSettlementAging': OperationSpec('GET', '/api/v1/finance/settlements/aging', 'finance', 'preview', 'finance.settlements:read', False, True, (), 'none', None, None),
     'financeSettlementReconciliationTurnover': OperationSpec('GET', '/api/v1/finance/settlements/reconciliation-turnover', 'finance', 'preview', 'finance.settlements:read', False, True, (), 'none', None, None),

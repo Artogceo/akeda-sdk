@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a914ac44c864802784528d574dfa64b7418d61d3e9bbd94800728fac8869df91).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 37b1ce2addd447d81663b83078f127720f4a13f5b610a4e89c943ed16d2ab18c).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1282,6 +1282,7 @@ __all__ = [
     "DocflowOrderOneCPapersResultsItem",
     "DocflowOrderOutgoingUPD",
     "DocflowOrderSetMember",
+    "DocflowOrderSetMemberInvoicePayment",
     "DocflowOrderSetOrder",
     "DocflowOrderUPDInput",
     "DocflowOutgoingFile",
@@ -1508,6 +1509,9 @@ __all__ = [
     "FinanceBudgetDrivers",
     "FinanceBudgetDriversApplied",
     "FinanceBudgetDriversApplyInput",
+    "FinanceBudgetFlex",
+    "FinanceBudgetFlexRowsItem",
+    "FinanceBudgetFlexUnitsItem",
     "FinanceBudgetForecast",
     "FinanceBudgetForecastMonth",
     "FinanceBudgetForm",
@@ -1554,6 +1558,7 @@ __all__ = [
     "FinanceBudgetSubmissions",
     "FinanceBudgetTargets",
     "FinanceBudgetTargetsRowsItem",
+    "FinanceBudgetTargetsCascadeItem",
     "FinanceBudgetVarianceNoteInput",
     "FinanceBudgetVersions",
     "FinanceCancelConsentInput",
@@ -1589,6 +1594,7 @@ __all__ = [
     "FinanceConnectorAccountsImportSwitch",
     "FinanceConnectorAuthKind",
     "FinanceConnectorCreate",
+    "FinanceConnectorHealth",
     "FinanceConnectorMTLSStatus",
     "FinanceConnectorPage",
     "FinanceConnectorPatch",
@@ -1856,8 +1862,12 @@ __all__ = [
     "FinanceProjectBudget",
     "FinanceProjectBudgetInput",
     "FinanceProjectBudgetLine",
+    "FinanceProjectBudgetMonth",
     "FinanceProjectLine",
     "FinanceProjectReport",
+    "FinanceProjectSchedule",
+    "FinanceProjectScheduleCell",
+    "FinanceProjectScheduleRow",
     "FinancePurchaseSaleOrderInput",
     "FinanceReceiptCostAttachResult",
     "FinanceReceiptCostQueue",
@@ -3237,6 +3247,7 @@ __all__ = [
     "FinanceCategorizeTransactionsResponse",
     "FinanceCategorizeTransactionsResponseResultsItem",
     "FinanceRepostTransactionsRequest",
+    "FinanceSetTransactionCardExpenseRequest",
     "FinanceMarkTransactionDeletedRequest",
     "FinanceRepostTransactionRequest",
     "MailListAccountsResponse",
@@ -15733,7 +15744,7 @@ class DocflowApprovalInboxItem(_DocflowApprovalInboxItemRequired, total=False):
     due_at: str
     #: Чью визу вы ставите, если это не ваша собственная
     on_behalf_of: str
-    on_behalf_via: Literal['self', 'substitute', 'delegate', 'administrator']
+    on_behalf_via: Literal['self', 'substitute', 'delegate', 'administrator', 'superior']
     #: Строка этапа «ознакомиться»: решения не ждут, нужна отметка POST /approvals/{id}/acknowledge
     informational: bool
     #: Только у заявки на оплату: «Оплатить до»
@@ -15819,7 +15830,7 @@ class DocflowApprovalReview(_DocflowApprovalReviewRequired, total=False):
     actor_name: str
     decided_by: int
     decided_by_name: str
-    decided_via: Literal['self', 'substitute', 'delegate', 'administrator']
+    decided_via: Literal['self', 'substitute', 'delegate', 'administrator', 'superior']
     delegated_to: int
     #: Пусто, пока человек не решил; acknowledge — отметка «ознакомлен» на этапе ознакомления
     decision: Literal['approve', 'return', 'reject', 'acknowledge']
@@ -18932,8 +18943,16 @@ class DocflowOrderSetMember(_DocflowOrderSetMemberRequired, total=False):
     self: bool
     #: Входящий счёт оплачен своей закупкой: оплата закупки комплекта покрывает его сумму
     paid_by_order: bool
+    #: Оплата нашего выставленного счёта по поступлениям, отнесённым к счёту (ERP-2859). Пусто — денег не приходило
+    invoice_payment: "DocflowOrderSetMemberInvoicePayment"
     #: Строка не этой сделки, а её договора (ERP-2083): сам договор и его допсоглашения и спецификации. Экран показывает их блоком «Связанные документы»; история сделки и отметка paid_by_order их не учитывают
     related: bool
+
+class DocflowOrderSetMemberInvoicePayment(TypedDict, total=False):
+    """Оплата нашего выставленного счёта по поступлениям, отнесённым к счёту (ERP-2859). Пусто — денег не приходило"""
+
+    state: Literal['partial', 'paid']
+    paid_amount: str
 
 class _DocflowOrderSetOrderRequired(TypedDict):
     id: "UUID"
@@ -20861,6 +20880,7 @@ class _FinanceAccountRequired(TypedDict):
 class FinanceAccount(_FinanceAccountRequired, total=False):
     #: Бизнес, которому принадлежат деньги — у счёта из юрлица, у кассы из её карточки. null только у старого счёта без юрлица в кабинете с несколькими бизнесами.
     business: Optional[str]
+    connector_health: "FinanceConnectorHealth"
     #: Остаток по данным банка на момент `bank_balance_at`, decimal string. null — банк остатка не называл (счёт не подключён или остаток ещё не приходил): это не ноль, и сверять с ним нечего.
     bank_balance: Optional[str]
     #: Когда банк назвал остаток `bank_balance`.
@@ -21905,6 +21925,7 @@ class _FinanceBudgetDriverRequired(TypedDict):
 
 class FinanceBudgetDriver(_FinanceBudgetDriverRequired, total=False):
     unit: str
+    actuals: Dict[str, str]
     base_id: "UUID"
     factor: str
 
@@ -21932,6 +21953,45 @@ class FinanceBudgetDriversApplyInput(TypedDict):
     company_id: "UUID"
     kind: Literal['cashflow', 'pnl']
     month: str
+
+class FinanceBudgetFlex(TypedDict):
+    kind: str
+    company_id: "UUID"
+    month: str
+    rows: List["FinanceBudgetFlexRowsItem"]
+    units: List["FinanceBudgetFlexUnitsItem"]
+    plan: str
+    flex: str
+    fact: str
+    volume_variance: str
+    price_variance: str
+
+class _FinanceBudgetFlexRowsItemRequired(TypedDict):
+    item_id: "UUID"
+    driver_id: "UUID"
+    driver_name: str
+    rate: str
+    plan_volume: str
+    plan: str
+    fact: str
+
+class FinanceBudgetFlexRowsItem(_FinanceBudgetFlexRowsItemRequired, total=False):
+    item_name: str
+    department_id: "UUID"
+    unit: str
+    fact_volume: str
+    flex: str
+    volume_variance: str
+    price_variance: str
+    no_fact_volume: bool
+
+class FinanceBudgetFlexUnitsItem(TypedDict):
+    unit: str
+    plan_volume: str
+    fact_volume: str
+    volume_variance: str
+    pure_volume: str
+    mix: str
 
 FinanceBudgetForecast = TypedDict("FinanceBudgetForecast", {"company_id": "UUID", "from": str, "opening": str, "first_gap": str, "min_closing": str, "months": List["FinanceBudgetForecastMonth"]}, total=False)
 
@@ -21965,6 +22025,8 @@ class FinanceBudgetForm(_FinanceBudgetFormRequired, total=False):
     cfos: List["FinanceBudgetReference"]
     #: Действующие проекты для разреза бюджета «проект».
     projects: List["FinanceBudgetReference"]
+    #: Папки контрагентов для разреза бюджета «группа контрагентов».
+    contact_groups: List["FinanceBudgetReference"]
 
 class FinanceBudgetGroup(TypedDict):
     kind: Literal['cashflow', 'pnl']
@@ -22235,12 +22297,15 @@ class FinanceBudgetReservationInput(_FinanceBudgetReservationInputRequired, tota
 class FinanceBudgetReservations(TypedDict):
     results: List["FinanceBudgetReservation"]
 
-class FinanceBudgetScenario(TypedDict):
+class _FinanceBudgetScenarioRequired(TypedDict):
     id: "UUID"
     kind: Literal['cashflow', 'pnl', 'balance']
     name: str
     #: Основной сценарий вида: лимиты заявок и план-факт считаются от него
     is_main: bool
+
+class FinanceBudgetScenario(_FinanceBudgetScenarioRequired, total=False):
+    personal: bool
 
 class FinanceBudgetScenarioCompare(TypedDict):
     kind: Literal['cashflow', 'pnl']
@@ -22266,6 +22331,7 @@ class FinanceBudgetScenarioInput(_FinanceBudgetScenarioInputRequired, total=Fals
     inflow_percent: str
     #: Отдельная поправка выплат (у БДР — расходов), %; для сценариев «оптимистичный», «пессимистичный», «стресс»
     outflow_percent: str
+    personal: bool
 
 class FinanceBudgetScenarioList(TypedDict):
     results: List["FinanceBudgetScenario"]
@@ -22300,8 +22366,8 @@ class _FinanceBudgetSettingRequired(TypedDict):
     control_enabled: bool
 
 class FinanceBudgetSetting(_FinanceBudgetSettingRequired, total=False):
-    #: Разрез бюджета юрлица: department — подразделение, cfo — ЦФО, project — проект. Значение разреза строки — в department_id
-    dimension: Literal['department', 'cfo', 'project']
+    #: Разрез бюджета юрлица: department — подразделение, cfo — ЦФО, project — проект, contact_group — группа контрагентов (папка контрагента операции или заявки). Значение разреза строки — в department_id
+    dimension: Literal['department', 'cfo', 'project', 'contact_group']
     #: Статьи «с нуля»: сумма только с расшифровкой, утверждение без неё — отказ; не передано — список не меняется
     zero_based_items: List["UUID"]
     #: Окно лимита заявки: month — месяц, quarter — квартал месяца заявки
@@ -22349,13 +22415,16 @@ class FinanceBudgetSubmissionInput(_FinanceBudgetSubmissionInputRequired, total=
 class FinanceBudgetSubmissions(TypedDict):
     results: List["FinanceBudgetSubmission"]
 
-class FinanceBudgetTargets(TypedDict):
+class _FinanceBudgetTargetsRequired(TypedDict):
     kind: str
     company_id: "UUID"
     scenario_id: "UUID"
     period_from: str
     period_to: str
     rows: List["FinanceBudgetTargetsRowsItem"]
+
+class FinanceBudgetTargets(_FinanceBudgetTargetsRequired, total=False):
+    cascade: List["FinanceBudgetTargetsCascadeItem"]
 
 class _FinanceBudgetTargetsRowsItemRequired(TypedDict):
     target_inflow: str
@@ -22369,6 +22438,22 @@ class _FinanceBudgetTargetsRowsItemRequired(TypedDict):
 class FinanceBudgetTargetsRowsItem(_FinanceBudgetTargetsRowsItemRequired, total=False):
     dimension_id: "UUID"
     dimension_name: str
+
+class _FinanceBudgetTargetsCascadeItemRequired(TypedDict):
+    dimension_id: "UUID"
+    dimension_name: str
+    level: int
+    own_target: str
+    children_target: str
+    branch_target: str
+    unallocated: str
+    over_allocated: bool
+    branch_plan: str
+    branch_diff: str
+    branch_over: bool
+
+class FinanceBudgetTargetsCascadeItem(_FinanceBudgetTargetsCascadeItemRequired, total=False):
+    parent_id: "UUID"
 
 class _FinanceBudgetVarianceNoteInputRequired(TypedDict):
     company_id: "UUID"
@@ -22693,6 +22778,7 @@ class FinanceConnector(_FinanceConnectorRequired, total=False):
     auto_accounts_since: str
     #: До какого момента действует ключ приложения банка (client_secret); Акеда меняет его сама за неделю до срока. Пусто — срок неизвестен или у банка такого ключа нет
     app_secret_expires_at: Optional[str]
+    health: "FinanceConnectorHealth"
 
 class _FinanceConnectorAccountRequired(TypedDict):
     id: "UUID"
@@ -22759,6 +22845,18 @@ class FinanceConnectorCreate(_FinanceConnectorCreateRequired, total=False):
     credential: str
     import_depth_days: int
     overlap_days: int
+
+class _FinanceConnectorHealthRequired(TypedDict):
+    #: ok — работает; expiring — ключ или сертификат истекает в ближайшие 7 дней; action — не работает, нужен человек; off — отключено человеком
+    state: Literal['ok', 'expiring', 'action', 'off']
+
+class FinanceConnectorHealth(_FinanceConnectorHealthRequired, total=False):
+    """Единый статус подключения банка (ERP-2404): одно значение для списка банков, выписки и «Юрлиц и счетов»."""
+
+    #: Машинная причина: код ошибки банка finance.connector.* или app_secret_expiring, app_secret_expired, certificate_expiring, certificate_expired, reauth_required, awaiting_consent
+    reason: str
+    #: Срок ключа или сертификата, о котором предупреждение
+    expires_at: str
 
 class _FinanceConnectorMTLSStatusRequired(TypedDict):
     configured: bool
@@ -25914,9 +26012,19 @@ class FinanceProjectBudget(TypedDict):
 
 FinanceProjectBudgetInput = Union[Any, Any]
 
-class FinanceProjectBudgetLine(TypedDict):
+class _FinanceProjectBudgetLineRequired(TypedDict):
     item_id: "UUID"
     #: Положительная сумма или ноль; знак определяется статьёй
+    amount: str
+
+class FinanceProjectBudgetLine(_FinanceProjectBudgetLineRequired, total=False):
+    #: График освоения строки по месяцам (ERP-985 п.10): месяц ГГГГ-ММ один раз, сумма графика равна amount. Нет — графика нет.
+    schedule: List["FinanceProjectBudgetMonth"]
+
+class FinanceProjectBudgetMonth(TypedDict):
+    #: Месяц графика ГГГГ-ММ.
+    month: str
+    #: Сумма освоения в месяце.
     amount: str
 
 class FinanceProjectLine(TypedDict):
@@ -25932,6 +26040,45 @@ class FinanceProjectReport(TypedDict):
     currency: str
     company: str
     projects: List["FinanceProject"]
+
+class FinanceProjectSchedule(TypedDict):
+    project_id: "UUID"
+    company_id: "UUID"
+    #: Редакция бюджета проекта; 0 — бюджета нет.
+    revision: int
+    #: Валюта бюджета проекта.
+    currency: str
+    #: Месяцы графика и факта по порядку.
+    months: List[str]
+    #: Строки бюджета проекта с графиком.
+    rows: List["FinanceProjectScheduleRow"]
+    #: Итоги плана и факта по месяцам.
+    totals: List["FinanceProjectScheduleCell"]
+
+class FinanceProjectScheduleCell(TypedDict):
+    #: Месяц ГГГГ-ММ.
+    month: str
+    #: План графика освоения месяца.
+    plan: str
+    #: Факт ОПиУ проекта месяца со знаком статьи: освоенное положительно.
+    actual: str
+
+class FinanceProjectScheduleRow(TypedDict):
+    item_id: "UUID"
+    #: Название статьи.
+    name: str
+    #: Сумма строки бюджета проекта.
+    budget: str
+    #: У строки есть график освоения.
+    scheduled: bool
+    #: Освоено фактом за все месяцы.
+    actual: str
+    #: Остаток бюджета строки: бюджет минус освоено.
+    remaining: str
+    #: Доля освоения, %; нет при нулевом бюджете.
+    absorbed_pct: Optional[str]
+    #: План и факт по месяцам графика.
+    months: List["FinanceProjectScheduleCell"]
 
 class FinancePurchaseSaleOrderInput(TypedDict, total=False):
     #: Заказ покупателя; пусто или null — снять привязку
@@ -42668,6 +42815,14 @@ class _FinanceRepostTransactionsRequestRequired(TypedDict):
     ids: List["UUID"]
 
 class FinanceRepostTransactionsRequest(_FinanceRepostTransactionsRequestRequired, total=False):
+    confirm_release: bool
+
+class _FinanceSetTransactionCardExpenseRequestRequired(TypedDict):
+    #: Поставить (true) или снять (false) признак
+    enabled: bool
+
+class FinanceSetTransactionCardExpenseRequest(_FinanceSetTransactionCardExpenseRequestRequired, total=False):
+    #: Согласие снять опиравшиеся на операцию погашения и аванс
     confirm_release: bool
 
 class FinanceMarkTransactionDeletedRequest(TypedDict, total=False):
