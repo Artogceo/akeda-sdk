@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 310d6ac882620a00ceffd909a98c90e37a09cfe315d8d55a5f015db137922f12).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8778f55fccf0c28d3e32a4745a2c64c58f769d69432fcffa6fdba242675b9ea5).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -26831,6 +26831,12 @@ export interface MarketplaceFbsDeadlines {
   "default": boolean;
 }
 
+export interface MarketplaceFbsGroupTotal {
+  "group": "new" | "assembling" | "shipped" | "delivered" | "cancelled" | "returned" | "unknown";
+  "orders": number;
+  "qty": number;
+}
+
 /** Передача марок отправления в API площадки (ERP-1857) */
 export interface MarketplaceFbsMarksPublication {
   /** none — марок нет; not_sent — не переданы или передача не дошла; sent — площадка проверяет; accepted — приняты; rejected — отклонены */
@@ -26845,6 +26851,64 @@ export interface MarketplaceFbsMarksPublication {
   "checked_at": string | null;
   /** Марки менялись после последней передачи */
   "stale": boolean;
+}
+
+export interface MarketplaceFbsOrderLine {
+  "store_id": string;
+  /** Сборочное задание WB или отправление Ozon */
+  "order_id": string;
+  "created_at": string | null;
+  "offer_id": string;
+  /** chrt_id WB или sku Ozon */
+  "external_id": string;
+  "product_name": string;
+  "qty": number;
+  "status": string;
+  "seller_status": string;
+  "substatus": string;
+  "cancelled_after_ship": boolean;
+  "group": "new" | "assembling" | "shipped" | "delivered" | "cancelled" | "returned" | "unknown";
+  "return_pending"?: boolean;
+  "return_destination"?: string;
+  "return_document_id"?: UUID;
+  /** Что сделал склад с заказом (ERP-2885); pending — «Без нашей сборки»: человек отмечает такие заказы для «Передать в отгрузку». Нет поля — складские данные не получены */
+  "stock"?: "shipped" | "packed" | "pending" | "before_start" | "off" | "open";
+  "stock_document_id"?: UUID;
+  /** Площадка считает заказ отгруженным; заказ до запуска склада годен к передаче только с этим признаком */
+  "ready_to_ship"?: boolean;
+}
+
+export interface MarketplaceFbsOrderState {
+  "external_id": string;
+  "offer_id": string;
+  "shipped": number;
+  "redeemed": number;
+  "unredeemed": number;
+  "in_transit": number;
+  "source_rows": number;
+}
+
+export interface MarketplaceFbsOrdersView {
+  "platform": string;
+  "rows": Array<MarketplaceFbsOrderState>;
+  "shipped": number;
+  "redeemed": number;
+  "unredeemed": number;
+  "in_transit": number;
+  "unknown_statuses": Array<string>;
+  "from"?: string;
+  "to"?: string;
+  "groups": Array<MarketplaceFbsStatusGroup>;
+  "group_totals": Array<MarketplaceFbsGroupTotal>;
+  "group"?: string;
+  "orders": MarketplaceFbsOrdersViewOrders;
+}
+
+export interface MarketplaceFbsOrdersViewOrders {
+  "items": Array<MarketplaceFbsOrderLine>;
+  "total": number;
+  "limit": number;
+  "offset": number;
 }
 
 /** Сборка отправления у Ozon нашим вызовом /v4/posting/fbs/ship (ERP-2885) */
@@ -26933,6 +26997,30 @@ export interface MarketplaceFbsShelfReturn {
   "bin_code": string;
   "bin_name": string;
   "batch_code": string;
+}
+
+export interface MarketplaceFbsShipResult {
+  "document_id": UUID;
+  "number": string;
+  /** Заказы, переданные этим вызовом; 0 — все названные уже были переданы */
+  "orders": number;
+  "lines": number;
+  "qty": string;
+  /** Заказы, уже переданные в отгрузку раньше */
+  "skipped": number;
+  /** Позиции без связи с номенклатурой */
+  "unmatched"?: Array<string>;
+}
+
+export interface MarketplaceFbsStatusGroup {
+  "group": "new" | "assembling" | "shipped" | "delivered" | "cancelled" | "returned" | "unknown";
+  /** Сырой код площадки: wb_status у Wildberries, status у Ozon */
+  "status": string;
+  /** Состояние сборки продавца Wildberries (supplier_status); у Ozon пусто */
+  "seller_status": string;
+  "cancelled_after_ship": boolean;
+  "orders": number;
+  "qty": number;
 }
 
 export interface MarketplaceFbsStockStart {
@@ -40529,6 +40617,14 @@ export interface MarketplaceWbBalanceResponseStoresItem {
 export interface MarketplaceYandexCostTemplateResponse {
   "rows": Array<Array<string>>;
   "truncated": boolean;
+}
+
+export interface MarketplaceFbsOrdersShipRequest {
+  "store_id": UUID;
+  /** Номера заказов (order_id): только годные к передаче и ушедшие именно с этого склада */
+  "postings": Array<string>;
+  /** День отгрузки, не позже сегодня и не раньше самого позднего заказа; пусто — сегодня */
+  "shipped_on"?: string;
 }
 
 export interface MarkingCloseOrderRequest {

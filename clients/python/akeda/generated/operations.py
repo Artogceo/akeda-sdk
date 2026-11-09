@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 310d6ac882620a00ceffd909a98c90e37a09cfe315d8d55a5f015db137922f12).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8778f55fccf0c28d3e32a4745a2c64c58f769d69432fcffa6fdba242675b9ea5).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1424,6 +1424,8 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'marketplaceDocumentsReportPnl': OperationSpec('GET', '/api/v1/marketplace/documents/pnl', 'marketplace', 'preview', 'marketplace:read', False, True, (), 'none', None, None),
     'marketplaceEconQuote': OperationSpec('POST', '/api/v1/marketplace/econ/quote', 'marketplace', 'preview', 'marketplace:write', False, True, (), 'none', None, None),
     'marketplaceFbsCarriagesCreate': OperationSpec('POST', '/api/v1/marketplace/{platform}/fbs-carriages', 'marketplace', 'preview', 'marketplace:write', False, True, ('platform',), 'none', None, None),
+    'marketplaceFbsOrdersShip': OperationSpec('POST', '/api/v1/marketplace/{platform}/fbs-orders/ship', 'marketplace', 'preview', 'marketplace:write', False, True, ('platform',), 'none', None, None),
+    'marketplaceFbsOrdersView': OperationSpec('GET', '/api/v1/marketplace/{platform}/fbs-orders', 'marketplace', 'preview', 'marketplace:read', False, True, ('platform',), 'limit_offset', 500, 50),
     'marketplaceFbsQueue': OperationSpec('GET', '/api/v1/marketplace/{platform}/fbs-queue', 'marketplace', 'preview', 'marketplace:read', False, True, ('platform',), 'none', None, None),
     'marketplaceFbsSupplies': OperationSpec('GET', '/api/v1/marketplace/{platform}/fbs-supplies', 'marketplace', 'preview', 'marketplace:read', False, True, ('platform',), 'none', None, None),
     'marketplaceFbsSupplyAddOrders': OperationSpec('POST', '/api/v1/marketplace/{platform}/fbs-supplies/{id}/orders', 'marketplace', 'preview', 'marketplace:write', False, True, ('id', 'platform',), 'none', None, None),

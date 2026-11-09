@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 310d6ac882620a00ceffd909a98c90e37a09cfe315d8d55a5f015db137922f12).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8778f55fccf0c28d3e32a4745a2c64c58f769d69432fcffa6fdba242675b9ea5).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -26782,6 +26782,12 @@ type MarketplaceFbsDeadlines struct {
 	Default       bool   `json:"default"`
 }
 
+type MarketplaceFbsGroupTotal struct {
+	Group  string `json:"group"`
+	Orders int64  `json:"orders"`
+	Qty    int64  `json:"qty"`
+}
+
 // MarketplaceFbsMarksPublication — Передача марок отправления в API площадки (ERP-1857)
 type MarketplaceFbsMarksPublication struct {
 	// Status — none — марок нет; not_sent — не переданы или передача не дошла; sent — площадка проверяет; accepted — приняты; rejected — отклонены
@@ -26796,6 +26802,64 @@ type MarketplaceFbsMarksPublication struct {
 	CheckedAt     *string  `json:"checked_at"`
 	// Stale — Марки менялись после последней передачи
 	Stale bool `json:"stale"`
+}
+
+type MarketplaceFbsOrderLine struct {
+	StoreID string `json:"store_id"`
+	// OrderID — Сборочное задание WB или отправление Ozon
+	OrderID   string  `json:"order_id"`
+	CreatedAt *string `json:"created_at"`
+	OfferID   string  `json:"offer_id"`
+	// ExternalID — chrt_id WB или sku Ozon
+	ExternalID         string  `json:"external_id"`
+	ProductName        string  `json:"product_name"`
+	Qty                int64   `json:"qty"`
+	Status             string  `json:"status"`
+	SellerStatus       string  `json:"seller_status"`
+	Substatus          string  `json:"substatus"`
+	CancelledAfterShip bool    `json:"cancelled_after_ship"`
+	Group              string  `json:"group"`
+	ReturnPending      *bool   `json:"return_pending,omitempty"`
+	ReturnDestination  *string `json:"return_destination,omitempty"`
+	ReturnDocumentID   *UUID   `json:"return_document_id,omitempty"`
+	// Stock — Что сделал склад с заказом (ERP-2885); pending — «Без нашей сборки»: человек отмечает такие заказы для «Передать в отгрузку». Нет поля — складские данные не получены
+	Stock           *string `json:"stock,omitempty"`
+	StockDocumentID *UUID   `json:"stock_document_id,omitempty"`
+	// ReadyToShip — Площадка считает заказ отгруженным; заказ до запуска склада годен к передаче только с этим признаком
+	ReadyToShip *bool `json:"ready_to_ship,omitempty"`
+}
+
+type MarketplaceFbsOrderState struct {
+	ExternalID string `json:"external_id"`
+	OfferID    string `json:"offer_id"`
+	Shipped    int64  `json:"shipped"`
+	Redeemed   int64  `json:"redeemed"`
+	Unredeemed int64  `json:"unredeemed"`
+	InTransit  int64  `json:"in_transit"`
+	SourceRows int64  `json:"source_rows"`
+}
+
+type MarketplaceFbsOrdersView struct {
+	Platform        string                         `json:"platform"`
+	Rows            []MarketplaceFbsOrderState     `json:"rows"`
+	Shipped         int64                          `json:"shipped"`
+	Redeemed        int64                          `json:"redeemed"`
+	Unredeemed      int64                          `json:"unredeemed"`
+	InTransit       int64                          `json:"in_transit"`
+	UnknownStatuses []string                       `json:"unknown_statuses"`
+	From            *string                        `json:"from,omitempty"`
+	To              *string                        `json:"to,omitempty"`
+	Groups          []MarketplaceFbsStatusGroup    `json:"groups"`
+	GroupTotals     []MarketplaceFbsGroupTotal     `json:"group_totals"`
+	Group           *string                        `json:"group,omitempty"`
+	Orders          MarketplaceFbsOrdersViewOrders `json:"orders"`
+}
+
+type MarketplaceFbsOrdersViewOrders struct {
+	Items  []MarketplaceFbsOrderLine `json:"items"`
+	Total  int64                     `json:"total"`
+	Limit  int64                     `json:"limit"`
+	Offset int64                     `json:"offset"`
 }
 
 // MarketplaceFbsPlatformShip — Сборка отправления у Ozon нашим вызовом /v4/posting/fbs/ship (ERP-2885)
@@ -26884,6 +26948,30 @@ type MarketplaceFbsShelfReturn struct {
 	BinCode   string `json:"bin_code"`
 	BinName   string `json:"bin_name"`
 	BatchCode string `json:"batch_code"`
+}
+
+type MarketplaceFbsShipResult struct {
+	DocumentID UUID   `json:"document_id"`
+	Number     string `json:"number"`
+	// Orders — Заказы, переданные этим вызовом; 0 — все названные уже были переданы
+	Orders int64  `json:"orders"`
+	Lines  int64  `json:"lines"`
+	Qty    string `json:"qty"`
+	// Skipped — Заказы, уже переданные в отгрузку раньше
+	Skipped int64 `json:"skipped"`
+	// Unmatched — Позиции без связи с номенклатурой
+	Unmatched []string `json:"unmatched,omitempty"`
+}
+
+type MarketplaceFbsStatusGroup struct {
+	Group string `json:"group"`
+	// Status — Сырой код площадки: wb_status у Wildberries, status у Ozon
+	Status string `json:"status"`
+	// SellerStatus — Состояние сборки продавца Wildberries (supplier_status); у Ozon пусто
+	SellerStatus       string `json:"seller_status"`
+	CancelledAfterShip bool   `json:"cancelled_after_ship"`
+	Orders             int64  `json:"orders"`
+	Qty                int64  `json:"qty"`
 }
 
 type MarketplaceFbsStockStart struct {
@@ -40412,6 +40500,14 @@ type MarketplaceWbBalanceResponseStoresItem struct {
 type MarketplaceYandexCostTemplateResponse struct {
 	Rows      [][]string `json:"rows"`
 	Truncated bool       `json:"truncated"`
+}
+
+type MarketplaceFbsOrdersShipRequest struct {
+	StoreID UUID `json:"store_id"`
+	// Postings — Номера заказов (order_id): только годные к передаче и ушедшие именно с этого склада
+	Postings []string `json:"postings"`
+	// ShippedOn — День отгрузки, не позже сегодня и не раньше самого позднего заказа; пусто — сегодня
+	ShippedOn *string `json:"shipped_on,omitempty"`
 }
 
 type MarkingCloseOrderRequest struct {

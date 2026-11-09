@@ -104908,6 +104908,258 @@
         }
       }
     },
+    "/api/v1/marketplace/{platform}/fbs-orders": {
+      "get": {
+        "tags": [
+          "Marketplace stores"
+        ],
+        "operationId": "marketplaceFbsOrdersView",
+        "summary": "Получить заказы со своего склада",
+        "description": "Заказы схемы «товар у продавца» магазинов площадки: по позициям —\nсколько ушло с нашего склада, выкуплено, не выкуплено и едет (rows,\nпрежние итоги); по состояниям — группы new, assembling, shipped,\ndelivered, cancelled, returned, unknown с сырыми кодами площадки\n(groups, group_totals); по одному — страница заказов (orders).\nПериод from–to — по дате заказа (WB — создание задания, Ozon —\nin_process_at), to включительно; since — прежнее имя from. group\nсужает только список заказов. Это картина у площадки, а не учёт.\nПускает и просмотр склада (`stock:read` или `stock.shipment:read`):\nсборку FBS и поставки ведёт склад (ERP-2896).\nЗаказы одного дня для «Передать в отгрузку» — from и to этим днём, все\nстраницы limit=500; годны заказы со stock=pending и со\nstock=before_start при ready_to_ship=true.\n",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:read",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "platform",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ozon",
+                "wildberries"
+              ]
+            }
+          },
+          {
+            "name": "store_id",
+            "in": "query",
+            "description": "Магазин площадки; пусто — все магазины площадки",
+            "schema": {
+              "$ref": "#/components/schemas/UUID"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Начало периода по дате заказа",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Конец периода по дате заказа, включительно",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "deprecated": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "group",
+            "in": "query",
+            "description": "Состояние заказа: сужает только страницу заказов",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "new",
+                "assembling",
+                "shipped",
+                "delivered",
+                "cancelled",
+                "returned",
+                "unknown"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Заказов на странице",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 500,
+              "default": 50
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Сдвиг страницы",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Заказы площадки",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceFbsOrdersView"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/marketplace/{platform}/fbs-orders/ship": {
+      "post": {
+        "tags": [
+          "Marketplace stores"
+        ],
+        "operationId": "marketplaceFbsOrdersShip",
+        "summary": "Передать заказы FBS в отгрузку",
+        "description": "«Передать в отгрузку» (ERP-2885): разбор заказов, которые площадка\nсчитает отгруженными, а нашей сборки по ним нет. Берутся только\nназванные заказы: так человек подтверждает, что они ушли именно с\nэтого склада. Склад проводит одно перемещение «склад исполнения → В\nпути к покупателю (FBS)» и пишет связь «заказ → документ»; уже\nпереданные заказы считаются в skipped, повтор не задваивает.\nshipped_on — день документа при восстановлении прошлого: прошлый день\nтолько двигает товар, вывода кодов из оборота и дел по нему нет;\nпусто — сегодня по часам кабинета.\nПачка — не больше 4000 заказов за вызов (иначе 400\nmarketplace.fbs.ship_too_many): вызов — одна транзакция под замком\nмагазина. Отказ одного заказа отклоняет весь вызов: день раньше дня\nзаказа — 400 marketplace.fbs.ship_before_order, будущий день или не\nдата — 400 marketplace.fbs.ship_date, нет отмеченных — 400\nmarketplace.fbs.ship_nothing_chosen, нет склада, юрлица или\nсопоставления товара — 409 marketplace.fbs.ship_not_ready, отказ\nсклада — 409 словами склада.\nПускает и право склада «Отгрузка» (`stock.shipment:write`, его\nпокрывает `stock:write`): сборку FBS и поставки ведёт склад (ERP-2896).\n",
+        "x-akeda-module": "marketplace",
+        "x-akeda-release-stage": "preview",
+        "x-akeda-audience": "external",
+        "x-akeda-permission": "marketplace:write",
+        "security": [
+          {
+            "erpUserToken": []
+          },
+          {
+            "tenantApiKey": []
+          },
+          {
+            "mcpOAuth": [
+              "akeda:delegate"
+            ]
+          },
+          {
+            "installationToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "platform",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ozon",
+                "wildberries"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "store_id",
+                  "postings"
+                ],
+                "properties": {
+                  "store_id": {
+                    "$ref": "#/components/schemas/UUID"
+                  },
+                  "postings": {
+                    "type": "array",
+                    "description": "Номера заказов (order_id): только годные к передаче и ушедшие именно с этого склада",
+                    "minItems": 1,
+                    "maxItems": 4000,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "shipped_on": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "День отгрузки, не позже сегодня и не раньше самого позднего заказа; пусто — сегодня"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Документ передачи и сколько заказов пропущено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarketplaceFbsShipResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
     "/api/v1/marketplace/{platform}/supply-receipts": {
       "get": {
         "tags": [
@@ -279655,6 +279907,367 @@
           "amount": {
             "type": "string",
             "description": "Стоимость уехавшего по разложению проведения; пусто у черновика"
+          }
+        }
+      },
+      "MarketplaceFbsOrderState": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "external_id",
+          "offer_id",
+          "shipped",
+          "redeemed",
+          "unredeemed",
+          "in_transit",
+          "source_rows"
+        ],
+        "properties": {
+          "external_id": {
+            "type": "string"
+          },
+          "offer_id": {
+            "type": "string"
+          },
+          "shipped": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "redeemed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unredeemed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "in_transit": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "source_rows": {
+            "type": "integer"
+          }
+        }
+      },
+      "MarketplaceFbsStatusGroup": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "group",
+          "status",
+          "seller_status",
+          "cancelled_after_ship",
+          "orders",
+          "qty"
+        ],
+        "properties": {
+          "group": {
+            "type": "string",
+            "enum": [
+              "new",
+              "assembling",
+              "shipped",
+              "delivered",
+              "cancelled",
+              "returned",
+              "unknown"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "description": "Сырой код площадки: wb_status у Wildberries, status у Ozon"
+          },
+          "seller_status": {
+            "type": "string",
+            "description": "Состояние сборки продавца Wildberries (supplier_status); у Ozon пусто"
+          },
+          "cancelled_after_ship": {
+            "type": "boolean"
+          },
+          "orders": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "qty": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "MarketplaceFbsGroupTotal": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "group",
+          "orders",
+          "qty"
+        ],
+        "properties": {
+          "group": {
+            "type": "string",
+            "enum": [
+              "new",
+              "assembling",
+              "shipped",
+              "delivered",
+              "cancelled",
+              "returned",
+              "unknown"
+            ]
+          },
+          "orders": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "qty": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "MarketplaceFbsOrderLine": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "store_id",
+          "order_id",
+          "created_at",
+          "offer_id",
+          "external_id",
+          "product_name",
+          "qty",
+          "status",
+          "seller_status",
+          "substatus",
+          "cancelled_after_ship",
+          "group"
+        ],
+        "properties": {
+          "store_id": {
+            "type": "string"
+          },
+          "order_id": {
+            "type": "string",
+            "description": "Сборочное задание WB или отправление Ozon"
+          },
+          "created_at": {
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "offer_id": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string",
+            "description": "chrt_id WB или sku Ozon"
+          },
+          "product_name": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string"
+          },
+          "seller_status": {
+            "type": "string"
+          },
+          "substatus": {
+            "type": "string"
+          },
+          "cancelled_after_ship": {
+            "type": "boolean"
+          },
+          "group": {
+            "type": "string",
+            "enum": [
+              "new",
+              "assembling",
+              "shipped",
+              "delivered",
+              "cancelled",
+              "returned",
+              "unknown"
+            ]
+          },
+          "return_pending": {
+            "type": "boolean"
+          },
+          "return_destination": {
+            "type": "string"
+          },
+          "return_document_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "stock": {
+            "type": "string",
+            "enum": [
+              "shipped",
+              "packed",
+              "pending",
+              "before_start",
+              "off",
+              "open"
+            ],
+            "description": "Что сделал склад с заказом (ERP-2885); pending — «Без нашей сборки»: человек отмечает такие заказы для «Передать в отгрузку». Нет поля — складские данные не получены"
+          },
+          "stock_document_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "ready_to_ship": {
+            "type": "boolean",
+            "description": "Площадка считает заказ отгруженным; заказ до запуска склада годен к передаче только с этим признаком"
+          }
+        }
+      },
+      "MarketplaceFbsShipResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "document_id",
+          "number",
+          "orders",
+          "lines",
+          "qty",
+          "skipped"
+        ],
+        "properties": {
+          "document_id": {
+            "$ref": "#/components/schemas/UUID"
+          },
+          "number": {
+            "type": "string"
+          },
+          "orders": {
+            "type": "integer",
+            "description": "Заказы, переданные этим вызовом; 0 — все названные уже были переданы"
+          },
+          "lines": {
+            "type": "integer"
+          },
+          "qty": {
+            "type": "string"
+          },
+          "skipped": {
+            "type": "integer",
+            "description": "Заказы, уже переданные в отгрузку раньше"
+          },
+          "unmatched": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Позиции без связи с номенклатурой"
+          }
+        }
+      },
+      "MarketplaceFbsOrdersView": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "rows",
+          "shipped",
+          "redeemed",
+          "unredeemed",
+          "in_transit",
+          "unknown_statuses",
+          "groups",
+          "group_totals",
+          "orders"
+        ],
+        "properties": {
+          "platform": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceFbsOrderState"
+            }
+          },
+          "shipped": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "redeemed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unredeemed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "in_transit": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unknown_statuses": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceFbsStatusGroup"
+            }
+          },
+          "group_totals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceFbsGroupTotal"
+            }
+          },
+          "group": {
+            "type": "string"
+          },
+          "orders": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "items",
+              "total",
+              "limit",
+              "offset"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/MarketplaceFbsOrderLine"
+                }
+              },
+              "total": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "limit": {
+                "type": "integer"
+              },
+              "offset": {
+                "type": "integer"
+              }
+            }
           }
         }
       },

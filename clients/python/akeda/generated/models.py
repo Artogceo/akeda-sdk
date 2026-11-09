@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 310d6ac882620a00ceffd909a98c90e37a09cfe315d8d55a5f015db137922f12).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8778f55fccf0c28d3e32a4745a2c64c58f769d69432fcffa6fdba242675b9ea5).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -2200,7 +2200,12 @@ __all__ = [
     "MarketplaceEconWbInput",
     "MarketplaceFbsCarriageResult",
     "MarketplaceFbsDeadlines",
+    "MarketplaceFbsGroupTotal",
     "MarketplaceFbsMarksPublication",
+    "MarketplaceFbsOrderLine",
+    "MarketplaceFbsOrderState",
+    "MarketplaceFbsOrdersView",
+    "MarketplaceFbsOrdersViewOrders",
     "MarketplaceFbsPlatformShip",
     "MarketplaceFbsPostingsInput",
     "MarketplaceFbsQueueItem",
@@ -2208,6 +2213,8 @@ __all__ = [
     "MarketplaceFbsQueueView",
     "MarketplaceFbsQueueViewSummary",
     "MarketplaceFbsShelfReturn",
+    "MarketplaceFbsShipResult",
+    "MarketplaceFbsStatusGroup",
     "MarketplaceFbsStockStart",
     "MarketplaceFbsStoreRef",
     "MarketplaceFbsSuppliesView",
@@ -3302,6 +3309,7 @@ __all__ = [
     "MarketplaceWbBalanceResponse",
     "MarketplaceWbBalanceResponseStoresItem",
     "MarketplaceYandexCostTemplateResponse",
+    "MarketplaceFbsOrdersShipRequest",
     "MarkingCloseOrderRequest",
     "MarkingSpoilOrderCodesResponse",
     "SettingsSetMemberActiveRequest",
@@ -30081,6 +30089,11 @@ class MarketplaceFbsDeadlines(TypedDict):
     deadline_hours: int
     default: bool
 
+class MarketplaceFbsGroupTotal(TypedDict):
+    group: Literal['new', 'assembling', 'shipped', 'delivered', 'cancelled', 'returned', 'unknown']
+    orders: int
+    qty: int
+
 class _MarketplaceFbsMarksPublicationRequired(TypedDict):
     #: none — марок нет; not_sent — не переданы или передача не дошла; sent — площадка проверяет; accepted — приняты; rejected — отклонены
     status: Literal['none', 'not_sent', 'sent', 'accepted', 'rejected']
@@ -30098,6 +30111,49 @@ class MarketplaceFbsMarksPublication(_MarketplaceFbsMarksPublicationRequired, to
     error_code: str
     #: Слова площадки об отказе без кодов марок и ключей
     reason: str
+
+class _MarketplaceFbsOrderLineRequired(TypedDict):
+    store_id: str
+    #: Сборочное задание WB или отправление Ozon
+    order_id: str
+    created_at: Optional[str]
+    offer_id: str
+    #: chrt_id WB или sku Ozon
+    external_id: str
+    product_name: str
+    qty: int
+    status: str
+    seller_status: str
+    substatus: str
+    cancelled_after_ship: bool
+    group: Literal['new', 'assembling', 'shipped', 'delivered', 'cancelled', 'returned', 'unknown']
+
+class MarketplaceFbsOrderLine(_MarketplaceFbsOrderLineRequired, total=False):
+    return_pending: bool
+    return_destination: str
+    return_document_id: "UUID"
+    #: Что сделал склад с заказом (ERP-2885); pending — «Без нашей сборки»: человек отмечает такие заказы для «Передать в отгрузку». Нет поля — складские данные не получены
+    stock: Literal['shipped', 'packed', 'pending', 'before_start', 'off', 'open']
+    stock_document_id: "UUID"
+    #: Площадка считает заказ отгруженным; заказ до запуска склада годен к передаче только с этим признаком
+    ready_to_ship: bool
+
+class MarketplaceFbsOrderState(TypedDict):
+    external_id: str
+    offer_id: str
+    shipped: int
+    redeemed: int
+    unredeemed: int
+    in_transit: int
+    source_rows: int
+
+MarketplaceFbsOrdersView = TypedDict("MarketplaceFbsOrdersView", {"platform": str, "rows": List["MarketplaceFbsOrderState"], "shipped": int, "redeemed": int, "unredeemed": int, "in_transit": int, "unknown_statuses": List[str], "from": str, "to": str, "groups": List["MarketplaceFbsStatusGroup"], "group_totals": List["MarketplaceFbsGroupTotal"], "group": str, "orders": "MarketplaceFbsOrdersViewOrders"}, total=False)
+
+class MarketplaceFbsOrdersViewOrders(TypedDict):
+    items: List["MarketplaceFbsOrderLine"]
+    total: int
+    limit: int
+    offset: int
 
 class _MarketplaceFbsPlatformShipRequired(TypedDict):
     status: Literal['shipped', 'failed']
@@ -30189,6 +30245,30 @@ class MarketplaceFbsShelfReturn(TypedDict):
     bin_code: str
     bin_name: str
     batch_code: str
+
+class _MarketplaceFbsShipResultRequired(TypedDict):
+    document_id: "UUID"
+    number: str
+    #: Заказы, переданные этим вызовом; 0 — все названные уже были переданы
+    orders: int
+    lines: int
+    qty: str
+    #: Заказы, уже переданные в отгрузку раньше
+    skipped: int
+
+class MarketplaceFbsShipResult(_MarketplaceFbsShipResultRequired, total=False):
+    #: Позиции без связи с номенклатурой
+    unmatched: List[str]
+
+class MarketplaceFbsStatusGroup(TypedDict):
+    group: Literal['new', 'assembling', 'shipped', 'delivered', 'cancelled', 'returned', 'unknown']
+    #: Сырой код площадки: wb_status у Wildberries, status у Ozon
+    status: str
+    #: Состояние сборки продавца Wildberries (supplier_status); у Ozon пусто
+    seller_status: str
+    cancelled_after_ship: bool
+    orders: int
+    qty: int
 
 class MarketplaceFbsStockStart(TypedDict):
     #: Номер магазина на площадке
@@ -43225,6 +43305,15 @@ class MarketplaceWbBalanceResponseStoresItem(TypedDict):
 class MarketplaceYandexCostTemplateResponse(TypedDict):
     rows: List[List[str]]
     truncated: bool
+
+class _MarketplaceFbsOrdersShipRequestRequired(TypedDict):
+    store_id: "UUID"
+    #: Номера заказов (order_id): только годные к передаче и ушедшие именно с этого склада
+    postings: List[str]
+
+class MarketplaceFbsOrdersShipRequest(_MarketplaceFbsOrdersShipRequestRequired, total=False):
+    #: День отгрузки, не позже сегодня и не раньше самого позднего заказа; пусто — сегодня
+    shipped_on: str
 
 class MarkingCloseOrderRequest(TypedDict, total=False):
     #: Откреплённая подпись УКЭП (CMS в base64) тела из «Подготовить закрытие»

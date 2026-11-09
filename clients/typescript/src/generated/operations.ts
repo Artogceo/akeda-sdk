@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 310d6ac882620a00ceffd909a98c90e37a09cfe315d8d55a5f015db137922f12).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8778f55fccf0c28d3e32a4745a2c64c58f769d69432fcffa6fdba242675b9ea5).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -9785,6 +9785,20 @@ export interface OperationTypes {
     body: models.MarketplaceFbsPostingsInput;
     response: models.MarketplaceFbsCarriageResult;
   };
+  /** POST /api/v1/marketplace/{platform}/fbs-orders/ship — Передать заказы FBS в отгрузку */
+  marketplaceFbsOrdersShip: {
+    params: { "platform": "ozon" | "wildberries" };
+    query: Record<string, never>;
+    body: models.MarketplaceFbsOrdersShipRequest;
+    response: models.MarketplaceFbsShipResult;
+  };
+  /** GET /api/v1/marketplace/{platform}/fbs-orders — Получить заказы со своего склада */
+  marketplaceFbsOrdersView: {
+    params: { "platform": "ozon" | "wildberries" };
+    query: { "from"?: string; "group"?: "new" | "assembling" | "shipped" | "delivered" | "cancelled" | "returned" | "unknown"; "limit"?: number; "offset"?: number; "since"?: string; "store_id"?: models.UUID; "to"?: string };
+    body: never;
+    response: models.MarketplaceFbsOrdersView;
+  };
   /** GET /api/v1/marketplace/{platform}/fbs-queue — Получить очередь сборки FBS */
   marketplaceFbsQueue: {
     params: { "platform": "ozon" | "wildberries" };
@@ -15300,6 +15314,8 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   marketplaceDocumentsReportPnl: { method: "GET", path: "/api/v1/marketplace/documents/pnl", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceEconQuote: { method: "POST", path: "/api/v1/marketplace/econ/quote", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceFbsCarriagesCreate: { method: "POST", path: "/api/v1/marketplace/{platform}/fbs-carriages", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceFbsOrdersShip: { method: "POST", path: "/api/v1/marketplace/{platform}/fbs-orders/ship", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  marketplaceFbsOrdersView: { method: "GET", path: "/api/v1/marketplace/{platform}/fbs-orders", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 50 },
   marketplaceFbsQueue: { method: "GET", path: "/api/v1/marketplace/{platform}/fbs-queue", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceFbsSupplies: { method: "GET", path: "/api/v1/marketplace/{platform}/fbs-supplies", module: "marketplace", stage: "preview", permission: "marketplace:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   marketplaceFbsSupplyAddOrders: { method: "POST", path: "/api/v1/marketplace/{platform}/fbs-supplies/{id}/orders", module: "marketplace", stage: "preview", permission: "marketplace:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
