@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ebf19014494a1971426cc36a4544c5a4c90ecd79024c0702eadf2a05fb0bfca2).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a914ac44c864802784528d574dfa64b7418d61d3e9bbd94800728fac8869df91).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -6411,6 +6411,13 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceBudgetBridge;
   };
+  /** GET /api/v1/finance/budgets/capex — Получить инвестиционный бюджет */
+  financeBudgetCapex: {
+    params: Record<string, never>;
+    query: { "company_id": models.UUID; "month": string };
+    body: never;
+    response: models.FinanceBudgetCapex;
+  };
   /** POST /api/v1/finance/budgets/cashflow-from-pnl — Построить БДДС из БДР */
   financeBudgetCashflowFromPnl: {
     params: Record<string, never>;
@@ -6544,6 +6551,13 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceBudgetSubmissions;
   };
+  /** GET /api/v1/finance/budgets/targets — Сверить ориентиры сверху с планом */
+  financeBudgetTargets: {
+    params: Record<string, never>;
+    query: { "company_id": models.UUID; "kind"?: "cashflow" | "pnl"; "month": string; "scenario_id": models.UUID };
+    body: never;
+    response: models.FinanceBudgetTargets;
+  };
   /** GET /api/v1/finance/budgets/versions/{id} — Получить версию бюджета */
   financeBudgetVersion: {
     params: { "id": models.UUID };
@@ -6577,6 +6591,13 @@ export interface OperationTypes {
     params: Record<string, never>;
     query: Record<string, never>;
     body: models.FinanceFixedAssetMonthInput;
+    response: models.CoreDocument;
+  };
+  /** POST /api/v1/finance/opening/documents/{id}/cancel — Отменить документ «Ввод начальных остатков» */
+  financeCancelOpeningDocument: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
     response: models.CoreDocument;
   };
   /** POST /api/v1/finance/operations/{id}/cancel — Отменить текущий документ операции */
@@ -6852,6 +6873,13 @@ export interface OperationTypes {
     body: models.FinanceOpeningDebtRequest;
     response: models.CoreDocument;
   };
+  /** POST /api/v1/finance/opening/documents — Завести и провести документ «Ввод начальных остатков» */
+  financeCreateOpeningDocument: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FinanceCreateOpeningDocumentRequest;
+    response: models.CoreDocument;
+  };
   /** POST /api/v1/finance/operations — Завести продажу или закупку */
   financeCreateOperation: {
     params: Record<string, never>;
@@ -6985,6 +7013,13 @@ export interface OperationTypes {
     body: never;
     response: void;
   };
+  /** DELETE /api/v1/finance/exchange/onec/connections/{id}/accounting-rules/{rule} — Удалить правило сопоставления номенклатуры 1С */
+  financeDeleteOneCAccountingRule: {
+    params: { "id": models.UUID; "rule": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
   /** DELETE /api/v1/finance/exchange/onec/connections/{id} — Отключить базу 1С */
   financeDeleteOneCConnection: {
     params: { "id": models.UUID };
@@ -7110,6 +7145,27 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.FinanceAcquiringRegistry;
+  };
+  /** GET /api/v1/finance/reports/balance/account-entries — Проводки счёта денег или вложений для расшифровки баланса */
+  financeGetBalanceAccountEntries: {
+    params: Record<string, never>;
+    query: { "account": models.UUID; "company"?: models.UUID; "from"?: string; "offset"?: number; "on"?: string };
+    body: never;
+    response: models.CoreRegisterEntryPage;
+  };
+  /** GET /api/v1/finance/reports/balance/bank — Остатки денег баланса по банковским счетам */
+  financeGetBalanceBankMoney: {
+    params: Record<string, never>;
+    query: { "on"?: string };
+    body: never;
+    response: models.CoreRegisterBalancePage;
+  };
+  /** GET /api/v1/finance/reports/balance/cash — Остатки денег баланса по кассам */
+  financeGetBalanceCashMoney: {
+    params: Record<string, never>;
+    query: { "by"?: "business"; "on"?: string };
+    body: never;
+    response: models.CoreRegisterBalancePage;
   };
   /** GET /api/v1/finance/reports/balance — Построить управленческий баланс на дату */
   financeGetBalanceReport: {
@@ -7440,6 +7496,13 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceListAllocationRulesResponse;
   };
+  /** GET /api/v1/finance/cash-operations/documents — Документы кассовых операций для журнала «Касса» */
+  financeListCashOperationDocuments: {
+    params: Record<string, never>;
+    query: { "limit"?: number };
+    body: never;
+    response: models.CoreDocumentPage;
+  };
   /** GET /api/v1/finance/cash-operations — Прочитать журнал кассы */
   financeListCashOperations: {
     params: Record<string, never>;
@@ -7530,6 +7593,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.FinanceOneCConnectionPage;
+  };
+  /** GET /api/v1/finance/opening/documents — Документы «Ввод начальных остатков» */
+  financeListOpeningDocuments: {
+    params: Record<string, never>;
+    query: { "business"?: models.UUID; "q"?: string };
+    body: never;
+    response: models.CoreDocumentPage;
   };
   /** GET /api/v1/finance/payment-calendar/operations — Найти операции для подтверждения исполнения плана */
   financeListPaymentFacts: {
@@ -7643,6 +7713,27 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceVATQuarterPage;
   };
+  /** POST /api/v1/finance/financing/interest/cancel — Отменить начисление процентов за месяц */
+  financeLoanInterestCancel: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FinanceLoanInterestMonthInput;
+    response: models.CoreDocument;
+  };
+  /** POST /api/v1/finance/financing/interest — Начислить проценты за месяц */
+  financeLoanInterestPost: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FinanceLoanInterestMonthInput;
+    response: models.CoreDocument;
+  };
+  /** GET /api/v1/finance/financing/interest — Получить проценты к начислению за месяц */
+  financeLoanInterestPreview: {
+    params: Record<string, never>;
+    query: { "company": models.UUID; "month": string };
+    body: never;
+    response: models.FinanceLoanInterestPreview;
+  };
   /** GET /api/v1/finance/lookup/company — Сопоставить владельца счёта с юрлицом по ИНН */
   financeLookupCompany: {
     params: Record<string, never>;
@@ -7713,6 +7804,13 @@ export interface OperationTypes {
     body: models.FinanceOffsetTradeAdvancesRequest;
     response: { [key: string]: unknown };
   };
+  /** GET /api/v1/finance/exchange/onec/connections/{id}/accounting-rules — Получить правила сопоставления номенклатуры 1С */
+  financeOneCAccountingRules: {
+    params: { "id": models.UUID };
+    query: { "limit"?: number; "offset"?: number; "search"?: string };
+    body: never;
+    response: models.FinanceAccountingRulePage;
+  };
   /** GET /api/v1/finance/exchange/onec/connections/{id}/bank-reconciliation — Сверить банк с базой 1С */
   financeOneCBankReconciliation: {
     params: { "id": models.UUID };
@@ -7754,6 +7852,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.FinancePaymentRequestVersionInput;
     response: models.FinancePaymentRequest;
+  };
+  /** GET /api/v1/finance/payment-calendar/cash-check — Проверить, хватит ли денег на оплату */
+  financePaymentCashCheck: {
+    params: Record<string, never>;
+    query: { "account_id"?: models.UUID; "amount": string; "company_id": models.UUID; "currency"?: string; "due"?: string };
+    body: never;
+    response: models.FinancePaymentCashCheck;
   };
   /** GET /api/v1/finance/payment-registries — Список реестров платежей */
   financePaymentRegistries: {
@@ -8160,6 +8265,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.FinancePaymentRequestReworkInput;
     response: models.FinancePaymentRequest;
+  };
+  /** POST /api/v1/finance/budgets/chain — Выполнить цепочку расчётов бюджета */
+  financeRunBudgetChain: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: models.FinanceBudgetChainInput;
+    response: models.FinanceBudgetChainResult;
   };
   /** POST /api/v1/finance/dividends/automation/run — Запустить расчёт наступивших политик текущего кабинета */
   financeRunDividendAutomation: {
@@ -12084,7 +12196,7 @@ export interface OperationTypes {
   /** GET /api/v1/stock/documents — Получить журнал складских документов */
   stockListDocuments: {
     params: Record<string, never>;
-    query: { "comment"?: string; "company_id"?: models.UUID; "contact_id"?: models.UUID; "created_by"?: string; "date_from"?: string; "date_to"?: string; "department_id"?: models.UUID; "direction"?: "asc" | "desc"; "ids"?: string; "limit"?: number; "lines_from"?: number; "lines_to"?: number; "marketplace_shipment"?: "true"; "marketplace_store_id"?: models.UUID; "marks"?: "short"; "number"?: string; "offset"?: number; "pnl_item_id"?: models.UUID; "q"?: string; "qty_from"?: string; "qty_to"?: string; "reason_id"?: models.UUID; "receiver"?: string; "receiver_stores"?: string; "sale"?: string; "shelf_life_warning"?: boolean; "sort"?: "date" | "number" | "status" | "company" | "warehouse" | "contact" | "updated_at"; "status"?: models.CoreDocumentStatus; "supply"?: string; "transfer_kind"?: string; "type"?: models.StockDocumentTypeKey; "updated_from"?: string; "updated_to"?: string; "warehouse_from_ids"?: string; "warehouse_id"?: models.UUID; "warehouse_ids"?: string; "warehouse_to_ids"?: string; "without_company"?: boolean; "writeoff_request"?: "pending" | "ready" };
+    query: { "comment"?: string; "company_id"?: models.UUID; "contact_id"?: models.UUID; "created_by"?: string; "date_from"?: string; "date_to"?: string; "department_id"?: models.UUID; "direction"?: "asc" | "desc"; "ids"?: string; "limit"?: number; "lines_from"?: number; "lines_to"?: number; "marketplace_shipment"?: "true"; "marketplace_store_id"?: models.UUID; "marks"?: "short"; "number"?: string; "offset"?: number; "pnl_item_id"?: models.UUID; "q"?: string; "qty_from"?: string; "qty_to"?: string; "reason_id"?: models.UUID; "receiver"?: string; "receiver_stores"?: string; "sale"?: string; "shelf_life_warning"?: boolean; "sort"?: "date" | "number" | "status" | "company" | "warehouse" | "contact" | "updated_at"; "status"?: models.CoreDocumentStatus; "supply"?: string; "transfer_kind"?: string; "type"?: models.StockDocumentTypeKey; "updated_from"?: string; "updated_to"?: string; "warehouse_exclude_ids"?: string; "warehouse_from_exclude_ids"?: string; "warehouse_from_ids"?: string; "warehouse_id"?: models.UUID; "warehouse_ids"?: string; "warehouse_to_exclude_ids"?: string; "warehouse_to_ids"?: string; "without_company"?: boolean; "writeoff_request"?: "pending" | "ready" };
     body: never;
     response: models.StockDocumentPage;
   };
@@ -12175,7 +12287,7 @@ export interface OperationTypes {
   /** GET /api/v1/stock/transit-shipments — Получить отправки на склады с приёмкой */
   stockListTransitShipments: {
     params: Record<string, never>;
-    query: { "company_id"?: models.UUID; "date_from"?: string; "date_to"?: string; "limit"?: number; "number"?: string; "offset"?: number; "state"?: "open" | "awaiting" | "done" | "in_transit" | "partial" | "discrepancy" | "all"; "states"?: string; "warehouse_from_ids"?: string; "warehouse_id"?: models.UUID };
+    query: { "company_id"?: models.UUID; "date_from"?: string; "date_to"?: string; "limit"?: number; "number"?: string; "offset"?: number; "state"?: "open" | "awaiting" | "done" | "in_transit" | "partial" | "discrepancy" | "all"; "states"?: string; "warehouse_from_exclude_ids"?: string; "warehouse_from_ids"?: string; "warehouse_id"?: models.UUID };
     body: never;
     response: models.StockTransitShipmentPage;
   };
@@ -14573,6 +14685,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeBudgetAllocations: { method: "GET", path: "/api/v1/finance/budgets/allocations", module: "finance", stage: "preview", permission: "finance.budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeBudgetBalance: { method: "GET", path: "/api/v1/finance/budgets/balance", module: "finance", stage: "preview", permission: "finance.budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeBudgetBridge: { method: "GET", path: "/api/v1/finance/budgets/bridge", module: "finance", stage: "preview", permission: "finance.budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeBudgetCapex: { method: "GET", path: "/api/v1/finance/budgets/capex", module: "finance", stage: "preview", permission: "finance.budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeBudgetCashflowFromPnl: { method: "POST", path: "/api/v1/finance/budgets/cashflow-from-pnl", module: "finance", stage: "preview", permission: "finance.budgets:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeBudgetCellComments: { method: "GET", path: "/api/v1/finance/budgets/comments", module: "finance", stage: "preview", permission: "finance.budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeBudgetCorrection: { method: "GET", path: "/api/v1/finance/budgets/corrections/{id}", module: "finance", stage: "preview", permission: "finance.budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14592,11 +14705,13 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeBudgetScenarios: { method: "GET", path: "/api/v1/finance/budgets/scenarios", module: "finance", stage: "preview", permission: "finance.budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeBudgetSetting: { method: "GET", path: "/api/v1/finance/budgets/settings", module: "finance", stage: "preview", permission: "finance.budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeBudgetSubmissions: { method: "GET", path: "/api/v1/finance/budgets/submissions", module: "finance", stage: "preview", permission: "finance.budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeBudgetTargets: { method: "GET", path: "/api/v1/finance/budgets/targets", module: "finance", stage: "preview", permission: "finance.budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeBudgetVersion: { method: "GET", path: "/api/v1/finance/budgets/versions/{id}", module: "finance", stage: "preview", permission: "finance.budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeBudgetVersions: { method: "GET", path: "/api/v1/finance/budgets/versions", module: "finance", stage: "preview", permission: "finance.budgets:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCancelCashOperation: { method: "POST", path: "/api/v1/finance/cash-operations/{id}/cancel", module: "finance", stage: "preview", permission: "finance.cash_operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCancelExpenseReport: { method: "POST", path: "/api/v1/finance/accountable/reports/{id}/cancel", module: "finance", stage: "preview", permission: "finance.accountable:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCancelFixedAssetDepreciation: { method: "POST", path: "/api/v1/finance/fixed-assets/depreciation/cancel", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCancelOpeningDocument: { method: "POST", path: "/api/v1/finance/opening/documents/{id}/cancel", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCancelOperation: { method: "POST", path: "/api/v1/finance/operations/{id}/cancel", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCancelPaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans/{id}/cancel", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCancelPaymentRegistry: { method: "POST", path: "/api/v1/finance/payment-registries/{id}/cancel", module: "finance", stage: "preview", permission: "finance.payment-requests:plan", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14636,6 +14751,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeCreateOneCConnection: { method: "POST", path: "/api/v1/finance/exchange/onec/connections", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOpeningAdvanceVAT: { method: "POST", path: "/api/v1/finance/opening-debts/{id}/advance-vat", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOpeningDebt: { method: "POST", path: "/api/v1/finance/opening-debts", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeCreateOpeningDocument: { method: "POST", path: "/api/v1/finance/opening/documents", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOperation: { method: "POST", path: "/api/v1/finance/operations", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreateOperationAccrual: { method: "POST", path: "/api/v1/finance/operations/{id}/accruals", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCreatePaymentPlan: { method: "POST", path: "/api/v1/finance/payment-calendar/plans", module: "finance", stage: "preview", permission: "finance.payment_calendar:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14655,6 +14771,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeDeleteAccountStatement: { method: "DELETE", path: "/api/v1/finance/accounts/{id}/statements/{statementId}", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteAcquirer: { method: "DELETE", path: "/api/v1/finance/acquirers/{id}", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteConnector: { method: "DELETE", path: "/api/v1/finance/connectors/{id}", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeDeleteOneCAccountingRule: { method: "DELETE", path: "/api/v1/finance/exchange/onec/connections/{id}/accounting-rules/{rule}", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteOneCConnection: { method: "DELETE", path: "/api/v1/finance/exchange/onec/connections/{id}", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeletePnlLayout: { method: "DELETE", path: "/api/v1/finance/pnl-layouts/{id}", module: "finance", stage: "preview", permission: "finance.pnl_layouts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteSettlementDocument: { method: "DELETE", path: "/api/v1/finance/settlements/documents/{id}", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14673,6 +14790,9 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeGetAccountingRegistryEntry: { method: "GET", path: "/api/v1/finance/accounting-registry/{id}", module: "finance", stage: "preview", permission: "finance.accounting-registry:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetAcquiringOverview: { method: "GET", path: "/api/v1/finance/acquiring/overview", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetAcquiringRegistry: { method: "GET", path: "/api/v1/finance/acquiring/registries/{id}", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetBalanceAccountEntries: { method: "GET", path: "/api/v1/finance/reports/balance/account-entries", module: "finance", stage: "preview", permission: "finance.reports.balance:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetBalanceBankMoney: { method: "GET", path: "/api/v1/finance/reports/balance/bank", module: "finance", stage: "preview", permission: "finance.accounts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeGetBalanceCashMoney: { method: "GET", path: "/api/v1/finance/reports/balance/cash", module: "finance", stage: "preview", permission: "finance.cash_operations:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetBalanceReport: { method: "GET", path: "/api/v1/finance/reports/balance", module: "finance", stage: "preview", permission: "finance.reports.balance:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetCashOperationCancelConsequences: { method: "GET", path: "/api/v1/finance/cash-operations/{id}/cancel-consequences", module: "finance", stage: "preview", permission: "finance.cash_operations:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeGetCashflowReport: { method: "GET", path: "/api/v1/finance/reports/cashflow", module: "finance", stage: "preview", permission: "finance.reports.cashflow:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14720,6 +14840,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeListAccounts: { method: "GET", path: "/api/v1/finance/accounts", module: "finance", stage: "preview", permission: "finance.accounts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListAcquirers: { method: "GET", path: "/api/v1/finance/acquirers", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListAllocationRules: { method: "GET", path: "/api/v1/finance/settlements/allocation-rules", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListCashOperationDocuments: { method: "GET", path: "/api/v1/finance/cash-operations/documents", module: "finance", stage: "preview", permission: "finance.cash_operations:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 200 },
   financeListCashOperations: { method: "GET", path: "/api/v1/finance/cash-operations", module: "finance", stage: "preview", permission: "finance.cash_operations:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   financeListConnectorAccounts: { method: "GET", path: "/api/v1/finance/connectors/{id}/accounts", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListConnectorProviders: { method: "GET", path: "/api/v1/finance/connectors/providers", module: "finance", stage: "preview", permission: "finance.connectors:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14733,6 +14854,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeListDividendPolicies: { method: "GET", path: "/api/v1/finance/dividends/policies", module: "finance", stage: "preview", permission: "finance.dividends:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListExchangeJournal: { method: "GET", path: "/api/v1/finance/exchange/journal", module: "finance", stage: "preview", permission: "finance.exchange:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
   financeListOneCConnections: { method: "GET", path: "/api/v1/finance/exchange/onec/connections", module: "finance", stage: "preview", permission: "finance.exchange:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeListOpeningDocuments: { method: "GET", path: "/api/v1/finance/opening/documents", module: "finance", stage: "preview", permission: "finance.accounts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListPaymentFacts: { method: "GET", path: "/api/v1/finance/payment-calendar/operations", module: "finance", stage: "preview", permission: "finance.payment_calendar:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 200 },
   financeListPayrollAutomationRuns: { method: "GET", path: "/api/v1/finance/payroll/automation/runs", module: "finance", stage: "preview", permission: "finance.payroll:read", idempotent: false, installation: true, pagination: "limit", pageSizeMax: 500, pageSizeDefault: 100 },
   financeListPnlLayoutItems: { method: "GET", path: "/api/v1/finance/pnl-layouts/items", module: "finance", stage: "preview", permission: "finance.pnl_layouts:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14749,6 +14871,9 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeListTaxPayments: { method: "GET", path: "/api/v1/finance/taxes/payments", module: "finance", stage: "preview", permission: "finance.period:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeListTransactions: { method: "GET", path: "/api/v1/finance/transactions", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 500 },
   financeListVATQuarters: { method: "GET", path: "/api/v1/finance/vat-quarters", module: "finance", stage: "preview", permission: "finance.period:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: null },
+  financeLoanInterestCancel: { method: "POST", path: "/api/v1/finance/financing/interest/cancel", module: "finance", stage: "preview", permission: "finance.financing:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeLoanInterestPost: { method: "POST", path: "/api/v1/finance/financing/interest", module: "finance", stage: "preview", permission: "finance.financing:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeLoanInterestPreview: { method: "GET", path: "/api/v1/finance/financing/interest", module: "finance", stage: "preview", permission: "finance.financing:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeLookupCompany: { method: "GET", path: "/api/v1/finance/lookup/company", module: "finance", stage: "preview", permission: "finance.lookup:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeLookupRequisites: { method: "GET", path: "/api/v1/finance/lookup/requisites", module: "finance", stage: "preview", permission: "finance.lookup:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeMapImport: { method: "PATCH", path: "/api/v1/finance/imports/{id}/mapping", module: "finance", stage: "preview", permission: "finance.imports:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14759,12 +14884,14 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeMergeItem: { method: "POST", path: "/api/v1/finance/items/{id}/merge", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeNetPayrollParts: { method: "POST", path: "/api/v1/finance/payroll/parts/netting", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeOffsetTradeAdvances: { method: "POST", path: "/api/v1/finance/trade/{id}/advance-offset", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeOneCAccountingRules: { method: "GET", path: "/api/v1/finance/exchange/onec/connections/{id}/accounting-rules", module: "finance", stage: "preview", permission: "finance.exchange:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: 200 },
   financeOneCBankReconciliation: { method: "GET", path: "/api/v1/finance/exchange/onec/connections/{id}/bank-reconciliation", module: "finance", stage: "preview", permission: "finance.exchange:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeOneCMappings: { method: "GET", path: "/api/v1/finance/exchange/onec/connections/{id}/mappings", module: "finance", stage: "preview", permission: "finance.exchange:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeOneCPayrollReflectionOptions: { method: "GET", path: "/api/v1/finance/exchange/onec/payroll-reflection-options", module: "finance", stage: "preview", permission: "finance.exchange:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeOneCPayrollRegistry: { method: "GET", path: "/api/v1/finance/exchange/onec/payroll-registry", module: "finance", stage: "preview", permission: "finance.exchange:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeOneCPurchaseReconciliation: { method: "GET", path: "/api/v1/finance/exchange/onec/connections/{id}/purchase-reconciliation", module: "finance", stage: "preview", permission: "finance.exchange:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePayPaymentRequestRemainder: { method: "POST", path: "/api/v1/finance/payment-requests/{id}/pay-remainder", module: "finance", stage: "preview", permission: "finance.payment-requests:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financePaymentCashCheck: { method: "GET", path: "/api/v1/finance/payment-calendar/cash-check", module: "finance", stage: "preview", permission: "finance.payment_calendar:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePaymentRegistries: { method: "GET", path: "/api/v1/finance/payment-registries", module: "finance", stage: "preview", permission: "finance.payment-requests:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePaymentRegistry: { method: "GET", path: "/api/v1/finance/payment-registries/{id}", module: "finance", stage: "preview", permission: "finance.payment-requests:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financePaymentRequestAvailability: { method: "GET", path: "/api/v1/finance/payment-requests/{id}/availability", module: "finance", stage: "preview", permission: "finance.payment-requests:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14823,6 +14950,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeRestoreTransaction: { method: "POST", path: "/api/v1/finance/transactions/{id}/restore", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeReturnLeasedAsset: { method: "POST", path: "/api/v1/finance/fixed-assets/leasing-return", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeReturnPaymentRequestToRework: { method: "POST", path: "/api/v1/finance/payment-requests/{id}/return-to-rework", module: "finance", stage: "preview", permission: "finance.payment-requests:plan", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeRunBudgetChain: { method: "POST", path: "/api/v1/finance/budgets/chain", module: "finance", stage: "preview", permission: "finance.budgets:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeRunDividendAutomation: { method: "POST", path: "/api/v1/finance/dividends/automation/run", module: "finance", stage: "preview", permission: "finance.dividends:auto", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeRunPayrollAutomation: { method: "POST", path: "/api/v1/finance/payroll/automation/run", module: "finance", stage: "preview", permission: "finance.payroll:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSaleReturnLastPrice: { method: "GET", path: "/api/v1/finance/sale-returns/last-price", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

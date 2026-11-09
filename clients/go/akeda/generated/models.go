@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ebf19014494a1971426cc36a4544c5a4c90ecd79024c0702eadf2a05fb0bfca2).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a914ac44c864802784528d574dfa64b7418d61d3e9bbd94800728fac8869df91).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -7236,6 +7236,12 @@ type CoreFinancingContract struct {
 	PaymentsLeft int64 `json:"payments_left"`
 	// PaymentsTotal — Всего строк графика
 	PaymentsTotal int64 `json:"payments_total"`
+	// InterestAccrued — Начислено процентов — кредит 66.04 по договору (метод начисления, ERP-3117 «в»)
+	InterestAccrued *string `json:"interest_accrued,omitempty"`
+	// InterestPaid — Уплачено процентов — дебет 66.04 по договору
+	InterestPaid *string `json:"interest_paid,omitempty"`
+	// InterestPayable — Проценты к уплате — сальдо 66.04 по договору; тело — debt
+	InterestPayable *string `json:"interest_payable,omitempty"`
 }
 
 type CoreFinancingContractInput struct {
@@ -12884,6 +12890,25 @@ type DocflowBuyerAcceptance struct {
 	ExtraCodes []string `json:"extra_codes"`
 }
 
+type DocflowBuyerActPackage struct {
+	Act     string  `json:"act"`
+	Message UUID    `json:"message"`
+	Number  string  `json:"number"`
+	Date    *string `json:"date,omitempty"`
+	Amount  *string `json:"amount,omitempty"`
+	// DocType — Вид пакета словами оператора: Torg2, АктВыпВх
+	DocType   string  `json:"doc_type"`
+	StateName *string `json:"state_name,omitempty"`
+}
+
+// DocflowBuyerDiscrepancyDocument — Реквизиты документа, оформляющего расхождения (РеквДокРасх)
+type DocflowBuyerDiscrepancyDocument struct {
+	Name   *string `json:"name,omitempty"`
+	Number *string `json:"number,omitempty"`
+	Date   *string `json:"date,omitempty"`
+	Info   *string `json:"info,omitempty"`
+}
+
 // DocflowBuyerTitleInput — Ответный титул покупателя на входящий пакет. Сам пакет назван в адресе, реквизиты продавца сервер читает из его файла в пакете.
 type DocflowBuyerTitleInput struct {
 	// Result — КодИтога: 1 — принято без разногласий, 2 — с разногласиями, 3 — не принято
@@ -12905,6 +12930,42 @@ type DocflowBuyerTitleInput struct {
 	Signers      []DocflowSignerRequisites     `json:"signers,omitempty"`
 	File         *DocflowFileRequisites        `json:"file,omitempty"`
 	Extra        []DocflowTextInfoRequisites   `json:"extra,omitempty"`
+}
+
+// DocflowBuyerTitleResult — Итог приёмки покупателем по нашему исходящему УПД — разобранный титул покупателя (КодИтога, РеквДокРасх). Учёт не двигает: принятое на складе ведёт «Приёмка покупателем»
+type DocflowBuyerTitleResult struct {
+	Message    UUID  `json:"message"`
+	Attachment UUID  `json:"attachment"`
+	OrderID    *UUID `json:"order_id,omitempty"`
+	// CounterpartyINN — ИНН покупателя пакета
+	CounterpartyINN *string `json:"counterparty_inn,omitempty"`
+	// StateName — Состояние пакета словами оператора
+	StateName *string `json:"state_name,omitempty"`
+	// Number — Номер нашего УПД, как его назвал покупатель
+	Number string  `json:"number"`
+	Date   *string `json:"date,omitempty"`
+	// ResultCode — КодИтога как в файле: 1 принято, 2 с расхождениями, 3 не принято; пусто — итог не прочитан
+	ResultCode string `json:"result_code"`
+	Result     string `json:"result"`
+	// Operation — Содержание операции словами покупателя
+	Operation  *string `json:"operation,omitempty"`
+	AcceptedOn *string `json:"accepted_on,omitempty"`
+	// TitleAt — Когда покупатель составил титул: от него считаются сроки
+	TitleAt  *string                          `json:"title_at,omitempty"`
+	Document *DocflowBuyerDiscrepancyDocument `json:"document,omitempty"`
+	// Acts — Номера актов о расхождениях из титула: 1765/Б, 1765/Н
+	Acts []string `json:"acts"`
+	// ObjectBy — Возразить по акту до этого дня: 5 рабочих дней от титула (условия поставки Ozon); пусто — расхождений нет
+	ObjectBy *string `json:"object_by,omitempty"`
+	// PickupBy — Вывезти непринятое до этого дня: 14 дней от титула
+	PickupBy *string `json:"pickup_by,omitempty"`
+	// ActPackages — Входящие пакеты покупателя с этими номерами актов: формализованный ТОРГ-2 или скан акта
+	ActPackages []DocflowBuyerActPackage `json:"act_packages"`
+	// ResolvedAt — Человек отметил расхождение разобранным
+	ResolvedAt     *string `json:"resolved_at,omitempty"`
+	ResolvedBy     *int64  `json:"resolved_by,omitempty"`
+	ResolutionNote *string `json:"resolution_note,omitempty"`
+	ParsedAt       string  `json:"parsed_at"`
 }
 
 // DocflowCancellation — Соглашение сторон об аннулировании документа. Запускает его любая сторона, а решает вторая: согласие даёт состояние 22 «Документ аннулирован», отказ — состояние 40 «Аннулирование отклонено», при котором состояние самого документа НЕ меняется. Шаг цепочки выводится из ленты СОБЫТИЙ пакета, а не из кода состояния: состояние 27 «Ожидает аннулирования» оператор отдаёт только отдельным методом выборки по событиям.
@@ -14410,6 +14471,8 @@ type DocflowFlowSupplierActInput struct {
 	PNLItemID *UUID `json:"pnl_item_id,omitempty"`
 	// ActID — Уже проведённый акт поставщика этой закупки, не стоящий под другой бумагой
 	ActID *UUID `json:"act_id,omitempty"`
+	// ForContact — За кого: собственник, когда статья закупки — расчёты с собственником; пусто — единственный собственник бизнеса, при нескольких отказ 422 с полем for_contact
+	ForContact *UUID `json:"for_contact,omitempty"`
 	// ExpenseSchedule — Расход по графику (ERP-2634): период срока; только при методе начисления. Акт кладёт сумму без НДС на 97, расход ложится в ОПиУ по месяцам
 	ExpenseSchedule *DocflowFlowSupplierActInputExpenseSchedule `json:"expense_schedule,omitempty"`
 }
@@ -15307,6 +15370,8 @@ type DocflowOrderDocumentSet struct {
 	DealOrders []UUID `json:"deal_orders,omitempty"`
 	// EdoUpd — Только у комплекта сделки: исходящие УПД из зеркала ЭДО, отправленные мимо Akeda (ERP-3112). Связанный (linked) держит отправку УПД сделки, неоднозначный (ambiguous) ждёт выбора человека
 	EdoUpd []DocflowOrderOutgoingUPD `json:"edo_upd,omitempty"`
+	// BuyerTitles — Только у комплекта сделки: итог приёмки покупателем по её УПД из титула покупателя — принято, с расхождениями или не принято, акты о расхождениях и их пакеты, сроки возражения и вывоза, отметка «разобрано»
+	BuyerTitles []DocflowBuyerTitleResult `json:"buyer_titles,omitempty"`
 }
 
 type DocflowOrderImport struct {
@@ -16673,11 +16738,22 @@ type DocflowSupplierActForm struct {
 	VATDeductible bool `json:"vat_deductible"`
 	// PNLItems — Активные проводимые расходные статьи для выбора в этом акте
 	PNLItems []DocflowSupplierActFormPnlItemsItem `json:"pnl_items"`
+	// OwnerItem — Статья закупки — расчёты с собственником: окно спрашивает «За кого»
+	OwnerItem bool `json:"owner_item"`
+	// Owners — Собственники бизнеса на дату акта для поля «За кого»; один — подставляется заранее
+	Owners []DocflowSupplierActFormOwnersItem `json:"owners"`
 }
 
 type DocflowSupplierActFormPnlItemsItem struct {
 	ID UUID `json:"id"`
 	// Name — Наименование статьи
+	Name string `json:"name"`
+}
+
+type DocflowSupplierActFormOwnersItem struct {
+	// ID — Контрагент собственника
+	ID UUID `json:"id"`
+	// Name — Имя собственника
 	Name string `json:"name"`
 }
 
@@ -17399,7 +17475,14 @@ type FinanceAccountingEntry struct {
 	DecidedByName string  `json:"decided_by_name"`
 	DecidedAt     *string `json:"decided_at,omitempty"`
 	// ChangedAfterAccept — Документ изменён или отменён в Акеде после принятия в учёт; в 1С ничего не ушло
-	ChangedAfterAccept bool   `json:"changed_after_accept"`
+	ChangedAfterAccept bool `json:"changed_after_accept"`
+	// OnecAmountMismatch — Сумма документа в 1С, когда она отличается от суммы Акеды; пусто — совпадает или не сверялась. Только пометка, в учёт не пишется
+	OnecAmountMismatch string `json:"onec_amount_mismatch"`
+	// FileExportedAt — Когда строку последний раз выгрузили файлом формата ФНС (запасной канал «Загрузка из файла» в 1С). Статус строки выгрузка не меняет
+	FileExportedAt *string `json:"file_exported_at,omitempty"`
+	// FileExportedBy — Кто выгрузил строку файлом
+	FileExportedBy     *int64 `json:"file_exported_by,omitempty"`
+	FileExportedByName string `json:"file_exported_by_name"`
 	CreatedAt          string `json:"created_at"`
 	UpdatedAt          string `json:"updated_at"`
 }
@@ -17471,6 +17554,41 @@ type FinanceAccountingReference struct {
 type FinanceAccountingRejectInput struct {
 	// Reason — Причина отклонения; её читает сотрудник
 	Reason string `json:"reason"`
+}
+
+type FinanceAccountingRule struct {
+	ID           UUID `json:"id"`
+	ConnectionID UUID `json:"connection_id"`
+	// ContactINN — ИНН контрагента — часть ключа правила
+	ContactINN string `json:"contact_inn"`
+	// ContactName — Нынешнее имя контрагента с этим ИНН
+	ContactName string `json:"contact_name"`
+	// DocumentKind — Ключ вида документа Акеды
+	DocumentKind string `json:"document_kind"`
+	// PositionKind — Позиция Акеды: product — номенклатура строки, pnl_item — статья закупки услуг
+	PositionKind string `json:"position_kind"`
+	PositionID   UUID   `json:"position_id"`
+	// PositionName — Нынешнее название позиции Акеды
+	PositionName string `json:"position_name"`
+	// OnecNomenclatureRef — Ссылка номенклатуры в базе 1С — с ней уходит строка
+	OnecNomenclatureRef string `json:"onec_nomenclature_ref"`
+	// OnecNomenclatureName — Наименование номенклатуры в 1С
+	OnecNomenclatureName string `json:"onec_nomenclature_name"`
+	// OnecAccount — Счёт учёта или затрат из проведённого документа — справка, в 1С не передаётся
+	OnecAccount string `json:"onec_account"`
+	// Confirmations — Сколько проведённых бухгалтером документов подтвердили правило
+	Confirmations int64 `json:"confirmations"`
+	// ConfirmedAt — Последнее подтверждение
+	ConfirmedAt string `json:"confirmed_at"`
+	CreatedAt   string `json:"created_at"`
+}
+
+type FinanceAccountingRulePage struct {
+	// Count — Всего правил под отбором
+	Count   int64                   `json:"count"`
+	Limit   int64                   `json:"limit"`
+	Offset  int64                   `json:"offset"`
+	Results []FinanceAccountingRule `json:"results"`
 }
 
 type FinanceAccountingStatus = string
@@ -18087,6 +18205,35 @@ type FinanceBudgetBridgeMonth struct {
 	Cumulative string `json:"cumulative"`
 }
 
+type FinanceBudgetCapex struct {
+	CompanyID  UUID                         `json:"company_id"`
+	PeriodFrom string                       `json:"period_from"`
+	PeriodTo   string                       `json:"period_to"`
+	Currency   string                       `json:"currency"`
+	Months     []string                     `json:"months"`
+	Rows       []FinanceBudgetCapexRowsItem `json:"rows"`
+	Totals     []FinanceBudgetCapexMonth    `json:"totals"`
+	Plan       string                       `json:"plan"`
+	Fact       string                       `json:"fact"`
+	// Deviation — Факт минус план за период
+	Deviation string `json:"deviation"`
+}
+
+type FinanceBudgetCapexRowsItem struct {
+	ItemID    UUID                      `json:"item_id"`
+	ItemName  string                    `json:"item_name"`
+	Months    []FinanceBudgetCapexMonth `json:"months"`
+	Plan      string                    `json:"plan"`
+	Fact      string                    `json:"fact"`
+	Deviation string                    `json:"deviation"`
+}
+
+type FinanceBudgetCapexMonth struct {
+	Month string `json:"month"`
+	Plan  string `json:"plan"`
+	Fact  string `json:"fact"`
+}
+
 type FinanceBudgetCashflowFromPnl struct {
 	Budget       FinanceBudget `json:"budget"`
 	Lines        int64         `json:"lines"`
@@ -18126,6 +18273,39 @@ type FinanceBudgetCellCommentInput struct {
 
 type FinanceBudgetCellCommentList struct {
 	Results []FinanceBudgetCellComment `json:"results"`
+}
+
+type FinanceBudgetChainInput struct {
+	CompanyID UUID                               `json:"company_id"`
+	Kind      string                             `json:"kind"`
+	Month     string                             `json:"month"`
+	Steps     []FinanceBudgetChainInputStepsItem `json:"steps"`
+}
+
+type FinanceBudgetChainInputStepsItem struct {
+	Step string `json:"step"`
+	// Percent — Поправка копии с прошлого года, %
+	Percent *string                                  `json:"percent,omitempty"`
+	Payroll *FinanceBudgetChainInputStepsItemPayroll `json:"payroll,omitempty"`
+	ItemID  *UUID                                    `json:"item_id,omitempty"`
+}
+
+type FinanceBudgetChainInputStepsItemPayroll struct {
+	SalaryItemID        UUID    `json:"salary_item_id"`
+	ContributionsItemID *UUID   `json:"contributions_item_id,omitempty"`
+	ContributionsPct    *string `json:"contributions_pct,omitempty"`
+	IncludeVacant       *bool   `json:"include_vacant,omitempty"`
+}
+
+type FinanceBudgetChainResult struct {
+	Done   []FinanceBudgetChainResultDoneItem `json:"done"`
+	Budget FinanceBudget                      `json:"budget"`
+}
+
+type FinanceBudgetChainResultDoneItem struct {
+	Step   string `json:"step"`
+	Number int64  `json:"number"`
+	Lines  int64  `json:"lines"`
 }
 
 type FinanceBudgetCompare struct {
@@ -18606,6 +18786,10 @@ type FinanceBudgetScenarioInput struct {
 	Month     string  `json:"month"`
 	// Percent — Поправка к суммам основного сценария в процентах, от −100 до 1000
 	Percent string `json:"percent"`
+	// InflowPercent — Отдельная поправка поступлений (у БДР — доходов), %; задана она или outflow_percent — percent не применяется
+	InflowPercent *string `json:"inflow_percent,omitempty"`
+	// OutflowPercent — Отдельная поправка выплат (у БДР — расходов), %; для сценариев «оптимистичный», «пессимистичный», «стресс»
+	OutflowPercent *string `json:"outflow_percent,omitempty"`
 }
 
 type FinanceBudgetScenarioList struct {
@@ -18650,8 +18834,12 @@ type FinanceBudgetSetting struct {
 	TolerancePct    *string `json:"tolerance_pct,omitempty"`
 	ToleranceAmount *string `json:"tolerance_amount,omitempty"`
 	VarianceNotePct *string `json:"variance_note_pct,omitempty"`
-	ApproveDay      *int64  `json:"approve_day,omitempty"`
-	LockDay         *int64  `json:"lock_day,omitempty"`
+	// VarianceNormPct — Норма отклонения оплат от плана статьи, %; по умолчанию 15
+	VarianceNormPct *string `json:"variance_norm_pct,omitempty"`
+	// VarianceTargetPct — Цель отклонения оплат от плана статьи, % (не выше нормы); по умолчанию 10
+	VarianceTargetPct *string `json:"variance_target_pct,omitempty"`
+	ApproveDay        *int64  `json:"approve_day,omitempty"`
+	LockDay           *int64  `json:"lock_day,omitempty"`
 	// DepartmentPool — Статья кончилась — заявку проверяют по общему остатку подразделения за месяц, с этапом «только сверх лимита»
 	DepartmentPool *bool  `json:"department_pool,omitempty"`
 	OwnerID        *int64 `json:"owner_id,omitempty"`
@@ -18683,6 +18871,27 @@ type FinanceBudgetSubmissionInput struct {
 
 type FinanceBudgetSubmissions struct {
 	Results []FinanceBudgetSubmission `json:"results"`
+}
+
+type FinanceBudgetTargets struct {
+	Kind       string                         `json:"kind"`
+	CompanyID  UUID                           `json:"company_id"`
+	ScenarioID UUID                           `json:"scenario_id"`
+	PeriodFrom string                         `json:"period_from"`
+	PeriodTo   string                         `json:"period_to"`
+	Rows       []FinanceBudgetTargetsRowsItem `json:"rows"`
+}
+
+type FinanceBudgetTargetsRowsItem struct {
+	DimensionID   *UUID   `json:"dimension_id,omitempty"`
+	DimensionName *string `json:"dimension_name,omitempty"`
+	TargetInflow  string  `json:"target_inflow"`
+	TargetOutflow string  `json:"target_outflow"`
+	PlanInflow    string  `json:"plan_inflow"`
+	PlanOutflow   string  `json:"plan_outflow"`
+	InflowDiff    string  `json:"inflow_diff"`
+	OutflowDiff   string  `json:"outflow_diff"`
+	OutflowOver   bool    `json:"outflow_over"`
 }
 
 type FinanceBudgetVarianceNoteInput struct {
@@ -20048,6 +20257,35 @@ type FinanceLeasingReturnInput struct {
 	IncomeItemID *string `json:"income_item_id,omitempty"`
 }
 
+type FinanceLoanInterestLine struct {
+	ContractID UUID `json:"contract_id"`
+	ContactID  UUID `json:"contact_id"`
+	// Number — Номер договора
+	Number string `json:"number"`
+	// Amount — Проценты графика за месяц, десятичная строка
+	Amount string `json:"amount"`
+}
+
+type FinanceLoanInterestMonthInput struct {
+	CompanyID UUID `json:"company_id"`
+	// Month — Месяц ГГГГ-ММ
+	Month string `json:"month"`
+}
+
+type FinanceLoanInterestPreview struct {
+	CompanyID UUID `json:"company_id"`
+	// Month — Месяц ГГГГ-ММ
+	Month string `json:"month"`
+	// Date — Дата документа — последний день месяца
+	Date  string                    `json:"date"`
+	Lines []FinanceLoanInterestLine `json:"lines"`
+	// Total — Итого процентов, десятичная строка
+	Total string `json:"total"`
+	// Accrual — Бизнес юрлица на методе начисления на конец месяца; false — кассовый метод, начисления нет
+	Accrual bool          `json:"accrual"`
+	Posted  *CoreDocument `json:"posted,omitempty"`
+}
+
 type FinanceObligationDueDateInput struct {
 	// DueDate — Срок оплаты ГГГГ-ММ-ДД; пустая строка снимает срок
 	DueDate string `json:"due_date"`
@@ -20860,6 +21098,30 @@ type FinancePaymentCalendarSource struct {
 	Outflow    string                       `json:"outflow"`
 	Closing    string                       `json:"closing"`
 	Cells      []FinancePaymentCalendarCell `json:"cells"`
+}
+
+type FinancePaymentCashCheck struct {
+	CompanyID UUID   `json:"company_id"`
+	Currency  string `json:"currency"`
+	Due       string `json:"due"`
+	Amount    string `json:"amount"`
+	// CompanyNow — Деньги юрлица сегодня
+	CompanyNow string `json:"company_now"`
+	// CompanyAtDue — Прогноз денег юрлица к дате оплаты до этой заявки
+	CompanyAtDue string `json:"company_at_due"`
+	// AfterPayment — Остаток юрлица после этой оплаты
+	AfterPayment string  `json:"after_payment"`
+	AccountID    *UUID   `json:"account_id,omitempty"`
+	AccountName  *string `json:"account_name,omitempty"`
+	// AccountNow — Деньги на счёте списания сегодня
+	AccountNow *string `json:"account_now,omitempty"`
+	// AccountAtDue — Прогноз по счёту списания к дате оплаты
+	AccountAtDue *string `json:"account_at_due,omitempty"`
+	// Shortage — Сколько не хватает юрлицу
+	Shortage string `json:"shortage"`
+	Short    bool   `json:"short"`
+	// AccountShort — Юрлицу хватает, счёту списания — нет
+	AccountShort bool `json:"account_short"`
 }
 
 type FinancePaymentFact struct {
@@ -27864,6 +28126,8 @@ type MarketplaceReportPnlProductsItem struct {
 	Profit      *float64 `json:"profit,omitempty"`
 	Margin      *float64 `json:"margin,omitempty"`
 	Reason      *string  `json:"reason,omitempty"`
+	// ByDay — Продано штук по дням продажи (YYYY-MM-DD); строки без даты не входят.
+	ByDay map[string]float64 `json:"by_day,omitempty"`
 }
 
 type MarketplaceReportPnlDaysItem struct {
@@ -30182,6 +30446,35 @@ type MarkingCodeTraceEntry struct {
 	Direction     string `json:"direction"`
 	WarehouseID   *UUID  `json:"warehouse_id,omitempty"`
 	WarehouseToID *UUID  `json:"warehouse_to_id,omitempty"`
+	ContactID     *UUID  `json:"contact_id,omitempty"`
+	// ContactName — Контрагент документа: поставщик поступления, кому вернули товар (ERP-2002)
+	ContactName *string             `json:"contact_name,omitempty"`
+	Notice      *MarkingCodeWarning `json:"notice,omitempty"`
+}
+
+// MarkingCodeWarning — Предупреждение блока кодов документа. returned_to_other_supplier (ERP-2002) — не мешает проведению: марку возвращали поставщику документом return, а приходит она от другого поставщика (или приходом без поставщика). shortage_marks_unpicked (ERP-2099) — черновик списания части недостачи «в пути»: какие марки пропали, неизвестно, сами они не поставлены; в строке line не хватает missing марок, их вставляют из отправки basis и проводят.
+type MarkingCodeWarning struct {
+	Code   string `json:"code"`
+	Line   *UUID  `json:"line,omitempty"`
+	CodeID *UUID  `json:"code_id,omitempty"`
+	// Identity — Код идентификации марки без криптохвоста
+	Identity *string `json:"identity,omitempty"`
+	// Missing — Сколько марок не хватает в строке (shortage_marks_unpicked)
+	Missing *int64                 `json:"missing,omitempty"`
+	Return  *MarkingCodeWarningDoc `json:"return,omitempty"`
+	Basis   *MarkingCodeWarningDoc `json:"basis,omitempty"`
+}
+
+// MarkingCodeWarningDoc — Документ предупреждения: возврат поставщику (return) или отправка-основание (basis)
+type MarkingCodeWarningDoc struct {
+	DocumentID UUID `json:"document_id"`
+	// Type — Вид документа
+	Type      string  `json:"type"`
+	Number    *string `json:"number,omitempty"`
+	Date      *string `json:"date,omitempty"`
+	ContactID *UUID   `json:"contact_id,omitempty"`
+	// ContactName — Поставщик, которому вернули марку; нет поля — не назван
+	ContactName *string `json:"contact_name,omitempty"`
 }
 
 type MarkingCodesListInput struct {
@@ -30520,6 +30813,8 @@ type MarkingDocumentCodesSummary struct {
 	ExpectedUnavailable *bool `json:"expected_unavailable,omitempty"`
 	// ExpectedSource — Откуда ожидание: upd — входящий УПД поставщика; shipment — марки отгрузки, по которой оформлен возврат покупателя («не хватает» считается до количества возврата).
 	ExpectedSource *string `json:"expected_source,omitempty"`
+	// Warnings — Предупреждения по маркам (ERP-2002, ERP-2099); нет поля — предупреждений нет
+	Warnings []MarkingCodeWarning `json:"warnings,omitempty"`
 }
 
 type MarkingDocumentDraft struct {
@@ -31927,6 +32222,8 @@ type MarkingStockLineCode struct {
 	Identity    string `json:"identity"`
 	Gtin        string `json:"gtin"`
 	GismtStatus string `json:"gismt_status"`
+	// GismtOtherOwner — По последней проверке ЧЗ код числится за другим ИНН
+	GismtOtherOwner *bool `json:"gismt_other_owner,omitempty"`
 	// Expected — Код есть во входящем УПД поставщика
 	Expected bool `json:"expected"`
 }
@@ -35188,7 +35485,7 @@ type StockDocumentPayload struct {
 	WorkAmount       *string                         `json:"work_amount,omitempty"`
 	AllocationMethod *string                         `json:"allocation_method,omitempty"`
 	Targets          []StockDocumentLandedCostTarget `json:"targets,omitempty"`
-	// Posting — Разложение проведения по строкам и партиям, которое пишет сам движок. У разукомплектации на основании комплектации есть блок `disassembly_basis`: `document_id` и `number` основания, `amount` — фактически списанная сумма, `basis_amount` — сумма того же количества по основанию (рождённая сумма основания ÷ рождённое количество × разбираемое количество), `difference` — amount минус basis_amount, `weights` — веса частей по строкам (`line_id`, `weight`), по которым списанное разделено между частями. Веса и `basis_amount` — снимок первого проведения: пересчёт себестоимости цепочки их сохраняет и пересчитывает только `amount` и `difference`; отмена и повторное проведение считают всё заново. У приёмки по перемещению (ERP-2179) строка разложения несёт `surplus_qty` — принято сверх того, что было в пути (`qty` строки разложения меньше факта на эту величину), и `received_batch_id` — партию, рождённую серией по факту
+	// Posting — Разложение проведения по строкам и партиям, которое пишет сам движок. У разукомплектации на основании комплектации есть блок `disassembly_basis`: `document_id` и `number` основания, `amount` — фактически списанная сумма, `basis_amount` — сумма того же количества по основанию (рождённая сумма основания ÷ рождённое количество × разбираемое количество), `difference` — amount минус basis_amount, `weights` — веса частей по строкам (`line_id`, `weight`), по которым списанное разделено между частями. Веса и `basis_amount` — снимок первого проведения: пересчёт себестоимости цепочки их сохраняет и пересчитывает только `amount` и `difference`; отмена и повторное проведение считают всё заново. У приёмки по перемещению (ERP-2179) строка разложения несёт `surplus_qty` — принято сверх того, что было в пути (`qty` строки разложения меньше факта на эту величину), и `received_batch_id` — партию, рождённую серией по факту. У возврата излишка поставщику (ERP-2000) — `surplus_bins`: ячейки «К разбору», снятые при проведении, по строке приёмки-основания (снимок для перестройки цепочки)
 	Posting map[string]json.RawMessage `json:"posting,omitempty"`
 }
 
@@ -35461,7 +35758,7 @@ type StockExpiredStockRow struct {
 	Amount string `json:"amount"`
 	// WriteoffQuantity — Сколько списание возьмёт подбором: это количество попадает в черновик списания
 	WriteoffQuantity string `json:"writeoff_quantity"`
-	// UnavailableQuantity — Просрочка в недоступных единицах хранения: заблокированных, выведенных или числящихся на нескольких складах. В черновик списания не входит
+	// UnavailableQuantity — Просрочка в недоступных единицах хранения: заблокированных, выведенных или числящихся на нескольких складах (склад «в пути» перемещения с приёмкой при обычном месте вторым не считается). В черновик списания не входит
 	UnavailableQuantity string `json:"unavailable_quantity"`
 	// WriteoffBlocker — Почему строка не попадёт в черновик списания; null — попадёт
 	WriteoffBlocker *StockExpiredWriteoffBlocker `json:"writeoff_blocker"`
@@ -35592,16 +35889,17 @@ type StockHandlingUnit struct {
 	SourceLineID         UUID               `json:"source_line_id"`
 	Code                 string             `json:"code"`
 	InitialBaseQty       string             `json:"initial_base_qty"`
-	// RemainingBaseQty — Считается из движений регистра stock
+	// RemainingBaseQty — Остаток на месте единицы, из движений регистра stock. Хвост на складе «в пути» перемещения с приёмкой сюда не входит, пока у единицы есть обычный остаток
 	RemainingBaseQty string `json:"remaining_base_qty"`
-	// IsRemnant — Остаток меньше порога обрезка у единицы товара: вычисляется по остатку, а не хранится
+	// IsRemnant — Остаток меньше порога обрезка у единицы товара: вычисляется по остатку всей единицы вместе с хвостом в пути, а не хранится
 	IsRemnant bool `json:"is_remnant"`
 	// ReservedBaseQty — Считается из движений регистра stock_reserved
-	ReservedBaseQty string                  `json:"reserved_base_qty"`
-	Amount          string                  `json:"amount"`
-	Status          StockHandlingUnitStatus `json:"status"`
-	State           StockHandlingUnitState  `json:"state"`
-	// WarehouseID — Отдаётся только когда положительный остаток лежит в одном месте хранения
+	ReservedBaseQty string `json:"reserved_base_qty"`
+	// Amount — Стоимость остатка на месте единицы, из движений регистра stock; хвост в пути не входит, как и в remaining_base_qty
+	Amount string                  `json:"amount"`
+	Status StockHandlingUnitStatus `json:"status"`
+	State  StockHandlingUnitState  `json:"state"`
+	// WarehouseID — Отдаётся только когда положительный остаток лежит в одном месте хранения. Склад «в пути» перемещения с приёмкой — место единицы, только пока обычного остатка нет; иначе он вторым местом не считается
 	WarehouseID   *UUID                      `json:"warehouse_id,omitempty"`
 	WarehouseName string                     `json:"warehouse_name"`
 	Custom        map[string]json.RawMessage `json:"custom"`
@@ -37287,6 +37585,8 @@ type StockReportReservationLine struct {
 	UnbackedQty string `json:"unbacked_qty"`
 	// ExpiredQty — Decimal string. Часть unbacked_qty строки, вызванная просрочкой: товар лежит, но срок годности вышел к as_of (ERP-2149). Не больше unbacked_qty. Поля нет — просрочка ни при чём
 	ExpiredQty *string `json:"expired_qty,omitempty"`
+	// WarehouseID — Склад, где лежит эта часть остатка строки (ERP-2055). Перемещение с переездом резерва делит строку по складам: одна строка документа даёт столько записей с тем же basis_line_id, сколько складов держат её остаток. Поля нет — разрез без склада
+	WarehouseID *string `json:"warehouse_id,omitempty"`
 	// ActiveSpec — Действующий состав товара строки; null, если действующего состава у товара нет. Сам резерв состав не использует
 	ActiveSpec *StockReportReservationLineSpec `json:"active_spec"`
 }
@@ -39475,6 +39775,13 @@ type FinanceListDividendPoliciesResponse struct {
 type FinanceOneCMappingsResponse struct {
 	Count   int64                `json:"count"`
 	Results []FinanceOneCMapping `json:"results"`
+}
+
+type FinanceCreateOpeningDocumentRequest struct {
+	Date       string                     `json:"date"`
+	Comment    *string                    `json:"comment,omitempty"`
+	EntityRefs map[string]string          `json:"entity_refs,omitempty"`
+	Payload    map[string]json.RawMessage `json:"payload,omitempty"`
 }
 
 type FinanceConfirmPaymentRequestPayeeRequest struct {
