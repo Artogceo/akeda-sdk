@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ebf19014494a1971426cc36a4544c5a4c90ecd79024c0702eadf2a05fb0bfca2).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a914ac44c864802784528d574dfa64b7418d61d3e9bbd94800728fac8869df91).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -7252,6 +7252,12 @@ export interface CoreFinancingContract {
   "payments_left": number;
   /** Всего строк графика */
   "payments_total": number;
+  /** Начислено процентов — кредит 66.04 по договору (метод начисления, ERP-3117 «в») */
+  "interest_accrued"?: string;
+  /** Уплачено процентов — дебет 66.04 по договору */
+  "interest_paid"?: string;
+  /** Проценты к уплате — сальдо 66.04 по договору; тело — debt */
+  "interest_payable"?: string;
 }
 
 export interface CoreFinancingContractInput {
@@ -12908,6 +12914,25 @@ export interface DocflowBuyerAcceptance {
   "extra_codes": Array<string>;
 }
 
+export interface DocflowBuyerActPackage {
+  "act": string;
+  "message": UUID;
+  "number": string;
+  "date"?: string;
+  "amount"?: string;
+  /** Вид пакета словами оператора: Torg2, АктВыпВх */
+  "doc_type": string;
+  "state_name"?: string;
+}
+
+/** Реквизиты документа, оформляющего расхождения (РеквДокРасх) */
+export interface DocflowBuyerDiscrepancyDocument {
+  "name"?: string;
+  "number"?: string;
+  "date"?: string;
+  "info"?: string;
+}
+
 /** Ответный титул покупателя на входящий пакет. Сам пакет назван в адресе, реквизиты продавца сервер читает из его файла в пакете. */
 export interface DocflowBuyerTitleInput {
   /** КодИтога: 1 — принято без разногласий, 2 — с разногласиями, 3 — не принято */
@@ -12929,6 +12954,42 @@ export interface DocflowBuyerTitleInput {
   "signers"?: Array<DocflowSignerRequisites>;
   "file"?: DocflowFileRequisites;
   "extra"?: Array<DocflowTextInfoRequisites>;
+}
+
+/** Итог приёмки покупателем по нашему исходящему УПД — разобранный титул покупателя (КодИтога, РеквДокРасх). Учёт не двигает: принятое на складе ведёт «Приёмка покупателем» */
+export interface DocflowBuyerTitleResult {
+  "message": UUID;
+  "attachment": UUID;
+  "order_id"?: UUID;
+  /** ИНН покупателя пакета */
+  "counterparty_inn"?: string;
+  /** Состояние пакета словами оператора */
+  "state_name"?: string;
+  /** Номер нашего УПД, как его назвал покупатель */
+  "number": string;
+  "date"?: string;
+  /** КодИтога как в файле: 1 принято, 2 с расхождениями, 3 не принято; пусто — итог не прочитан */
+  "result_code": "" | "1" | "2" | "3";
+  "result": "accepted" | "discrepancy" | "rejected" | "unknown";
+  /** Содержание операции словами покупателя */
+  "operation"?: string;
+  "accepted_on"?: string;
+  /** Когда покупатель составил титул: от него считаются сроки */
+  "title_at"?: string;
+  "document"?: DocflowBuyerDiscrepancyDocument;
+  /** Номера актов о расхождениях из титула: 1765/Б, 1765/Н */
+  "acts": Array<string>;
+  /** Возразить по акту до этого дня: 5 рабочих дней от титула (условия поставки Ozon); пусто — расхождений нет */
+  "object_by"?: string;
+  /** Вывезти непринятое до этого дня: 14 дней от титула */
+  "pickup_by"?: string;
+  /** Входящие пакеты покупателя с этими номерами актов: формализованный ТОРГ-2 или скан акта */
+  "act_packages": Array<DocflowBuyerActPackage>;
+  /** Человек отметил расхождение разобранным */
+  "resolved_at"?: string;
+  "resolved_by"?: number;
+  "resolution_note"?: string;
+  "parsed_at": string;
 }
 
 /** Соглашение сторон об аннулировании документа. Запускает его любая сторона, а решает вторая: согласие даёт состояние 22 «Документ аннулирован», отказ — состояние 40 «Аннулирование отклонено», при котором состояние самого документа НЕ меняется. Шаг цепочки выводится из ленты СОБЫТИЙ пакета, а не из кода состояния: состояние 27 «Ожидает аннулирования» оператор отдаёт только отдельным методом выборки по событиям. */
@@ -14438,6 +14499,8 @@ export interface DocflowFlowSupplierActInput {
   "pnl_item_id"?: UUID;
   /** Уже проведённый акт поставщика этой закупки, не стоящий под другой бумагой */
   "act_id"?: UUID;
+  /** За кого: собственник, когда статья закупки — расчёты с собственником; пусто — единственный собственник бизнеса, при нескольких отказ 422 с полем for_contact */
+  "for_contact"?: UUID;
   /** Расход по графику (ERP-2634): период срока; только при методе начисления. Акт кладёт сумму без НДС на 97, расход ложится в ОПиУ по месяцам */
   "expense_schedule"?: DocflowFlowSupplierActInputExpenseSchedule;
 }
@@ -15341,6 +15404,8 @@ export interface DocflowOrderDocumentSet {
   "deal_orders"?: Array<UUID>;
   /** Только у комплекта сделки: исходящие УПД из зеркала ЭДО, отправленные мимо Akeda (ERP-3112). Связанный (linked) держит отправку УПД сделки, неоднозначный (ambiguous) ждёт выбора человека */
   "edo_upd"?: Array<DocflowOrderOutgoingUPD>;
+  /** Только у комплекта сделки: итог приёмки покупателем по её УПД из титула покупателя — принято, с расхождениями или не принято, акты о расхождениях и их пакеты, сроки возражения и вывоза, отметка «разобрано» */
+  "buyer_titles"?: Array<DocflowBuyerTitleResult>;
 }
 
 export interface DocflowOrderImport {
@@ -16711,11 +16776,22 @@ export interface DocflowSupplierActForm {
   "vat_deductible": boolean;
   /** Активные проводимые расходные статьи для выбора в этом акте */
   "pnl_items": Array<DocflowSupplierActFormPnlItemsItem>;
+  /** Статья закупки — расчёты с собственником: окно спрашивает «За кого» */
+  "owner_item": boolean;
+  /** Собственники бизнеса на дату акта для поля «За кого»; один — подставляется заранее */
+  "owners": Array<DocflowSupplierActFormOwnersItem>;
 }
 
 export interface DocflowSupplierActFormPnlItemsItem {
   "id": UUID;
   /** Наименование статьи */
+  "name": string;
+}
+
+export interface DocflowSupplierActFormOwnersItem {
+  /** Контрагент собственника */
+  "id": UUID;
+  /** Имя собственника */
   "name": string;
 }
 
@@ -17438,6 +17514,13 @@ export interface FinanceAccountingEntry {
   "decided_at"?: string;
   /** Документ изменён или отменён в Акеде после принятия в учёт; в 1С ничего не ушло */
   "changed_after_accept": boolean;
+  /** Сумма документа в 1С, когда она отличается от суммы Акеды; пусто — совпадает или не сверялась. Только пометка, в учёт не пишется */
+  "onec_amount_mismatch": string;
+  /** Когда строку последний раз выгрузили файлом формата ФНС (запасной канал «Загрузка из файла» в 1С). Статус строки выгрузка не меняет */
+  "file_exported_at"?: string;
+  /** Кто выгрузил строку файлом */
+  "file_exported_by"?: number;
+  "file_exported_by_name": string;
   "created_at": string;
   "updated_at": string;
 }
@@ -17509,6 +17592,41 @@ export interface FinanceAccountingReference {
 export interface FinanceAccountingRejectInput {
   /** Причина отклонения; её читает сотрудник */
   "reason": string;
+}
+
+export interface FinanceAccountingRule {
+  "id": UUID;
+  "connection_id": UUID;
+  /** ИНН контрагента — часть ключа правила */
+  "contact_inn": string;
+  /** Нынешнее имя контрагента с этим ИНН */
+  "contact_name": string;
+  /** Ключ вида документа Акеды */
+  "document_kind": string;
+  /** Позиция Акеды: product — номенклатура строки, pnl_item — статья закупки услуг */
+  "position_kind": "product" | "pnl_item";
+  "position_id": UUID;
+  /** Нынешнее название позиции Акеды */
+  "position_name": string;
+  /** Ссылка номенклатуры в базе 1С — с ней уходит строка */
+  "onec_nomenclature_ref": string;
+  /** Наименование номенклатуры в 1С */
+  "onec_nomenclature_name": string;
+  /** Счёт учёта или затрат из проведённого документа — справка, в 1С не передаётся */
+  "onec_account": string;
+  /** Сколько проведённых бухгалтером документов подтвердили правило */
+  "confirmations": number;
+  /** Последнее подтверждение */
+  "confirmed_at": string;
+  "created_at": string;
+}
+
+export interface FinanceAccountingRulePage {
+  /** Всего правил под отбором */
+  "count": number;
+  "limit": number;
+  "offset": number;
+  "results": Array<FinanceAccountingRule>;
 }
 
 export type FinanceAccountingStatus = "new" | "sent" | "accepted" | "rejected" | "not_required";
@@ -18125,6 +18243,35 @@ export interface FinanceBudgetBridgeMonth {
   "cumulative": string;
 }
 
+export interface FinanceBudgetCapex {
+  "company_id": UUID;
+  "period_from": string;
+  "period_to": string;
+  "currency": string;
+  "months": Array<string>;
+  "rows": Array<FinanceBudgetCapexRowsItem>;
+  "totals": Array<FinanceBudgetCapexMonth>;
+  "plan": string;
+  "fact": string;
+  /** Факт минус план за период */
+  "deviation": string;
+}
+
+export interface FinanceBudgetCapexRowsItem {
+  "item_id": UUID;
+  "item_name": string;
+  "months": Array<FinanceBudgetCapexMonth>;
+  "plan": string;
+  "fact": string;
+  "deviation": string;
+}
+
+export interface FinanceBudgetCapexMonth {
+  "month": string;
+  "plan": string;
+  "fact": string;
+}
+
 export interface FinanceBudgetCashflowFromPnl {
   "budget": FinanceBudget;
   "lines": number;
@@ -18164,6 +18311,39 @@ export interface FinanceBudgetCellCommentInput {
 
 export interface FinanceBudgetCellCommentList {
   "results": Array<FinanceBudgetCellComment>;
+}
+
+export interface FinanceBudgetChainInput {
+  "company_id": UUID;
+  "kind": "cashflow" | "pnl";
+  "month": string;
+  "steps": Array<FinanceBudgetChainInputStepsItem>;
+}
+
+export interface FinanceBudgetChainInputStepsItem {
+  "step": "copy_year" | "drivers" | "payroll" | "assets" | "deals";
+  /** Поправка копии с прошлого года, % */
+  "percent"?: string;
+  "payroll"?: FinanceBudgetChainInputStepsItemPayroll;
+  "item_id"?: UUID;
+}
+
+export interface FinanceBudgetChainInputStepsItemPayroll {
+  "salary_item_id": UUID;
+  "contributions_item_id"?: UUID;
+  "contributions_pct"?: string;
+  "include_vacant"?: boolean;
+}
+
+export interface FinanceBudgetChainResult {
+  "done": Array<FinanceBudgetChainResultDoneItem>;
+  "budget": FinanceBudget;
+}
+
+export interface FinanceBudgetChainResultDoneItem {
+  "step": string;
+  "number": number;
+  "lines": number;
 }
 
 export interface FinanceBudgetCompare {
@@ -18644,6 +18824,10 @@ export interface FinanceBudgetScenarioInput {
   "month": string;
   /** Поправка к суммам основного сценария в процентах, от −100 до 1000 */
   "percent": string;
+  /** Отдельная поправка поступлений (у БДР — доходов), %; задана она или outflow_percent — percent не применяется */
+  "inflow_percent"?: string;
+  /** Отдельная поправка выплат (у БДР — расходов), %; для сценариев «оптимистичный», «пессимистичный», «стресс» */
+  "outflow_percent"?: string;
 }
 
 export interface FinanceBudgetScenarioList {
@@ -18688,6 +18872,10 @@ export interface FinanceBudgetSetting {
   "tolerance_pct"?: string;
   "tolerance_amount"?: string;
   "variance_note_pct"?: string;
+  /** Норма отклонения оплат от плана статьи, %; по умолчанию 15 */
+  "variance_norm_pct"?: string;
+  /** Цель отклонения оплат от плана статьи, % (не выше нормы); по умолчанию 10 */
+  "variance_target_pct"?: string;
   "approve_day"?: number;
   "lock_day"?: number;
   /** Статья кончилась — заявку проверяют по общему остатку подразделения за месяц, с этапом «только сверх лимита» */
@@ -18721,6 +18909,27 @@ export interface FinanceBudgetSubmissionInput {
 
 export interface FinanceBudgetSubmissions {
   "results": Array<FinanceBudgetSubmission>;
+}
+
+export interface FinanceBudgetTargets {
+  "kind": string;
+  "company_id": UUID;
+  "scenario_id": UUID;
+  "period_from": string;
+  "period_to": string;
+  "rows": Array<FinanceBudgetTargetsRowsItem>;
+}
+
+export interface FinanceBudgetTargetsRowsItem {
+  "dimension_id"?: UUID;
+  "dimension_name"?: string;
+  "target_inflow": string;
+  "target_outflow": string;
+  "plan_inflow": string;
+  "plan_outflow": string;
+  "inflow_diff": string;
+  "outflow_diff": string;
+  "outflow_over": boolean;
 }
 
 export interface FinanceBudgetVarianceNoteInput {
@@ -20086,6 +20295,35 @@ export interface FinanceLeasingReturnInput {
   "income_item_id"?: string | null;
 }
 
+export interface FinanceLoanInterestLine {
+  "contract_id": UUID;
+  "contact_id": UUID;
+  /** Номер договора */
+  "number": string;
+  /** Проценты графика за месяц, десятичная строка */
+  "amount": string;
+}
+
+export interface FinanceLoanInterestMonthInput {
+  "company_id": UUID;
+  /** Месяц ГГГГ-ММ */
+  "month": string;
+}
+
+export interface FinanceLoanInterestPreview {
+  "company_id": UUID;
+  /** Месяц ГГГГ-ММ */
+  "month": string;
+  /** Дата документа — последний день месяца */
+  "date": string;
+  "lines": Array<FinanceLoanInterestLine>;
+  /** Итого процентов, десятичная строка */
+  "total": string;
+  /** Бизнес юрлица на методе начисления на конец месяца; false — кассовый метод, начисления нет */
+  "accrual": boolean;
+  "posted"?: CoreDocument;
+}
+
 export interface FinanceObligationDueDateInput {
   /** Срок оплаты ГГГГ-ММ-ДД; пустая строка снимает срок */
   "due_date": string;
@@ -20898,6 +21136,30 @@ export interface FinancePaymentCalendarSource {
   "outflow": string;
   "closing": string;
   "cells": Array<FinancePaymentCalendarCell>;
+}
+
+export interface FinancePaymentCashCheck {
+  "company_id": UUID;
+  "currency": string;
+  "due": string;
+  "amount": string;
+  /** Деньги юрлица сегодня */
+  "company_now": string;
+  /** Прогноз денег юрлица к дате оплаты до этой заявки */
+  "company_at_due": string;
+  /** Остаток юрлица после этой оплаты */
+  "after_payment": string;
+  "account_id"?: UUID;
+  "account_name"?: string;
+  /** Деньги на счёте списания сегодня */
+  "account_now"?: string;
+  /** Прогноз по счёту списания к дате оплаты */
+  "account_at_due"?: string;
+  /** Сколько не хватает юрлицу */
+  "shortage": string;
+  "short": boolean;
+  /** Юрлицу хватает, счёту списания — нет */
+  "account_short": boolean;
 }
 
 export interface FinancePaymentFact {
@@ -27931,6 +28193,8 @@ export interface MarketplaceReportPnlProductsItem {
   "profit"?: number | null;
   "margin"?: number | null;
   "reason"?: string;
+  /** Продано штук по дням продажи (YYYY-MM-DD); строки без даты не входят. */
+  "by_day"?: { [key: string]: number };
 }
 
 export interface MarketplaceReportPnlDaysItem {
@@ -30277,6 +30541,35 @@ export interface MarkingCodeTraceEntry {
   "direction": "in" | "out" | "transfer" | "";
   "warehouse_id"?: UUID;
   "warehouse_to_id"?: UUID;
+  "contact_id"?: UUID;
+  /** Контрагент документа: поставщик поступления, кому вернули товар (ERP-2002) */
+  "contact_name"?: string;
+  "notice"?: MarkingCodeWarning;
+}
+
+/** Предупреждение блока кодов документа. returned_to_other_supplier (ERP-2002) — не мешает проведению: марку возвращали поставщику документом return, а приходит она от другого поставщика (или приходом без поставщика). shortage_marks_unpicked (ERP-2099) — черновик списания части недостачи «в пути»: какие марки пропали, неизвестно, сами они не поставлены; в строке line не хватает missing марок, их вставляют из отправки basis и проводят. */
+export interface MarkingCodeWarning {
+  "code": "returned_to_other_supplier" | "shortage_marks_unpicked";
+  "line"?: UUID;
+  "code_id"?: UUID;
+  /** Код идентификации марки без криптохвоста */
+  "identity"?: string;
+  /** Сколько марок не хватает в строке (shortage_marks_unpicked) */
+  "missing"?: number;
+  "return"?: MarkingCodeWarningDoc;
+  "basis"?: MarkingCodeWarningDoc;
+}
+
+/** Документ предупреждения: возврат поставщику (return) или отправка-основание (basis) */
+export interface MarkingCodeWarningDoc {
+  "document_id": UUID;
+  /** Вид документа */
+  "type": string;
+  "number"?: string;
+  "date"?: string;
+  "contact_id"?: UUID;
+  /** Поставщик, которому вернули марку; нет поля — не назван */
+  "contact_name"?: string;
 }
 
 export interface MarkingCodesListInput {
@@ -30615,6 +30908,8 @@ export interface MarkingDocumentCodesSummary {
   "expected_unavailable"?: boolean;
   /** Откуда ожидание: upd — входящий УПД поставщика; shipment — марки отгрузки, по которой оформлен возврат покупателя («не хватает» считается до количества возврата). */
   "expected_source"?: "upd" | "shipment";
+  /** Предупреждения по маркам (ERP-2002, ERP-2099); нет поля — предупреждений нет */
+  "warnings"?: Array<MarkingCodeWarning>;
 }
 
 export interface MarkingDocumentDraft {
@@ -32022,6 +32317,8 @@ export interface MarkingStockLineCode {
   "identity": string;
   "gtin": string;
   "gismt_status": string;
+  /** По последней проверке ЧЗ код числится за другим ИНН */
+  "gismt_other_owner"?: boolean;
   /** Код есть во входящем УПД поставщика */
   "expected": boolean;
 }
@@ -35283,7 +35580,7 @@ export interface StockDocumentPayload {
   "work_amount"?: string;
   "allocation_method"?: "quantity" | "cost" | "manual";
   "targets"?: Array<StockDocumentLandedCostTarget>;
-  /** Разложение проведения по строкам и партиям, которое пишет сам движок. У разукомплектации на основании комплектации есть блок `disassembly_basis`: `document_id` и `number` основания, `amount` — фактически списанная сумма, `basis_amount` — сумма того же количества по основанию (рождённая сумма основания ÷ рождённое количество × разбираемое количество), `difference` — amount минус basis_amount, `weights` — веса частей по строкам (`line_id`, `weight`), по которым списанное разделено между частями. Веса и `basis_amount` — снимок первого проведения: пересчёт себестоимости цепочки их сохраняет и пересчитывает только `amount` и `difference`; отмена и повторное проведение считают всё заново. У приёмки по перемещению (ERP-2179) строка разложения несёт `surplus_qty` — принято сверх того, что было в пути (`qty` строки разложения меньше факта на эту величину), и `received_batch_id` — партию, рождённую серией по факту */
+  /** Разложение проведения по строкам и партиям, которое пишет сам движок. У разукомплектации на основании комплектации есть блок `disassembly_basis`: `document_id` и `number` основания, `amount` — фактически списанная сумма, `basis_amount` — сумма того же количества по основанию (рождённая сумма основания ÷ рождённое количество × разбираемое количество), `difference` — amount минус basis_amount, `weights` — веса частей по строкам (`line_id`, `weight`), по которым списанное разделено между частями. Веса и `basis_amount` — снимок первого проведения: пересчёт себестоимости цепочки их сохраняет и пересчитывает только `amount` и `difference`; отмена и повторное проведение считают всё заново. У приёмки по перемещению (ERP-2179) строка разложения несёт `surplus_qty` — принято сверх того, что было в пути (`qty` строки разложения меньше факта на эту величину), и `received_batch_id` — партию, рождённую серией по факту. У возврата излишка поставщику (ERP-2000) — `surplus_bins`: ячейки «К разбору», снятые при проведении, по строке приёмки-основания (снимок для перестройки цепочки) */
   "posting"?: { [key: string]: unknown };
 }
 
@@ -35556,7 +35853,7 @@ export interface StockExpiredStockRow {
   "amount": string;
   /** Сколько списание возьмёт подбором: это количество попадает в черновик списания */
   "writeoff_quantity": string;
-  /** Просрочка в недоступных единицах хранения: заблокированных, выведенных или числящихся на нескольких складах. В черновик списания не входит */
+  /** Просрочка в недоступных единицах хранения: заблокированных, выведенных или числящихся на нескольких складах (склад «в пути» перемещения с приёмкой при обычном месте вторым не считается). В черновик списания не входит */
   "unavailable_quantity": string;
   /** Почему строка не попадёт в черновик списания; null — попадёт */
   "writeoff_blocker": StockExpiredWriteoffBlocker | null;
@@ -35687,16 +35984,17 @@ export interface StockHandlingUnit {
   "source_line_id": UUID;
   "code": string;
   "initial_base_qty": string;
-  /** Считается из движений регистра stock */
+  /** Остаток на месте единицы, из движений регистра stock. Хвост на складе «в пути» перемещения с приёмкой сюда не входит, пока у единицы есть обычный остаток */
   "remaining_base_qty": string;
-  /** Остаток меньше порога обрезка у единицы товара: вычисляется по остатку, а не хранится */
+  /** Остаток меньше порога обрезка у единицы товара: вычисляется по остатку всей единицы вместе с хвостом в пути, а не хранится */
   "is_remnant": boolean;
   /** Считается из движений регистра stock_reserved */
   "reserved_base_qty": string;
+  /** Стоимость остатка на месте единицы, из движений регистра stock; хвост в пути не входит, как и в remaining_base_qty */
   "amount": string;
   "status": StockHandlingUnitStatus;
   "state": StockHandlingUnitState;
-  /** Отдаётся только когда положительный остаток лежит в одном месте хранения */
+  /** Отдаётся только когда положительный остаток лежит в одном месте хранения. Склад «в пути» перемещения с приёмкой — место единицы, только пока обычного остатка нет; иначе он вторым местом не считается */
   "warehouse_id"?: UUID | null;
   "warehouse_name": string;
   "custom": { [key: string]: unknown };
@@ -37398,6 +37696,8 @@ export interface StockReportReservationLine {
   "unbacked_qty": string;
   /** Decimal string. Часть unbacked_qty строки, вызванная просрочкой: товар лежит, но срок годности вышел к as_of (ERP-2149). Не больше unbacked_qty. Поля нет — просрочка ни при чём */
   "expired_qty"?: string;
+  /** Склад, где лежит эта часть остатка строки (ERP-2055). Перемещение с переездом резерва делит строку по складам: одна строка документа даёт столько записей с тем же basis_line_id, сколько складов держат её остаток. Поля нет — разрез без склада */
+  "warehouse_id"?: string;
   /** Действующий состав товара строки; null, если действующего состава у товара нет. Сам резерв состав не использует */
   "active_spec": StockReportReservationLineSpec | null;
 }
@@ -39592,6 +39892,13 @@ export interface FinanceListDividendPoliciesResponse {
 export interface FinanceOneCMappingsResponse {
   "count": number;
   "results": Array<FinanceOneCMapping>;
+}
+
+export interface FinanceCreateOpeningDocumentRequest {
+  "date": string;
+  "comment"?: string;
+  "entity_refs"?: { [key: string]: string };
+  "payload"?: { [key: string]: unknown };
 }
 
 export interface FinanceConfirmPaymentRequestPayeeRequest {

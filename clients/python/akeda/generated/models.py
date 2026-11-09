@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ebf19014494a1971426cc36a4544c5a4c90ecd79024c0702eadf2a05fb0bfca2).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 a914ac44c864802784528d574dfa64b7418d61d3e9bbd94800728fac8869df91).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1100,7 +1100,10 @@ __all__ = [
     "DocflowAttachment",
     "DocflowBankRequisites",
     "DocflowBuyerAcceptance",
+    "DocflowBuyerActPackage",
+    "DocflowBuyerDiscrepancyDocument",
     "DocflowBuyerTitleInput",
+    "DocflowBuyerTitleResult",
     "DocflowCancellation",
     "DocflowCancellationInput",
     "DocflowCertificate",
@@ -1366,6 +1369,7 @@ __all__ = [
     "DocflowStateCategory",
     "DocflowSupplierActForm",
     "DocflowSupplierActFormPnlItemsItem",
+    "DocflowSupplierActFormOwnersItem",
     "DocflowSupplierInvoiceDuplicate",
     "DocflowSupplierInvoiceDuplicateRequest",
     "DocflowSyncOutcome",
@@ -1423,6 +1427,8 @@ __all__ = [
     "FinanceAccountingPosting",
     "FinanceAccountingReference",
     "FinanceAccountingRejectInput",
+    "FinanceAccountingRule",
+    "FinanceAccountingRulePage",
     "FinanceAccountingStatus",
     "FinanceAcquirer",
     "FinanceAcquirerInput",
@@ -1471,11 +1477,19 @@ __all__ = [
     "FinanceBudgetBalanceMonth",
     "FinanceBudgetBridge",
     "FinanceBudgetBridgeMonth",
+    "FinanceBudgetCapex",
+    "FinanceBudgetCapexRowsItem",
+    "FinanceBudgetCapexMonth",
     "FinanceBudgetCashflowFromPnl",
     "FinanceBudgetCashflowFromPnlInput",
     "FinanceBudgetCellComment",
     "FinanceBudgetCellCommentInput",
     "FinanceBudgetCellCommentList",
+    "FinanceBudgetChainInput",
+    "FinanceBudgetChainInputStepsItem",
+    "FinanceBudgetChainInputStepsItemPayroll",
+    "FinanceBudgetChainResult",
+    "FinanceBudgetChainResultDoneItem",
     "FinanceBudgetCompare",
     "FinanceBudgetCompareRow",
     "FinanceBudgetCopyYearInput",
@@ -1538,6 +1552,8 @@ __all__ = [
     "FinanceBudgetSubmission",
     "FinanceBudgetSubmissionInput",
     "FinanceBudgetSubmissions",
+    "FinanceBudgetTargets",
+    "FinanceBudgetTargetsRowsItem",
     "FinanceBudgetVarianceNoteInput",
     "FinanceBudgetVersions",
     "FinanceCancelConsentInput",
@@ -1657,6 +1673,9 @@ __all__ = [
     "FinanceLeasingReceipt",
     "FinanceLeasingReceiptInput",
     "FinanceLeasingReturnInput",
+    "FinanceLoanInterestLine",
+    "FinanceLoanInterestMonthInput",
+    "FinanceLoanInterestPreview",
     "FinanceObligationDueDateInput",
     "FinanceOffBooksSide",
     "FinanceOffBooksSideContactsItem",
@@ -1725,6 +1744,7 @@ __all__ = [
     "FinancePaymentCalendarPeriod",
     "FinancePaymentCalendarRow",
     "FinancePaymentCalendarSource",
+    "FinancePaymentCashCheck",
     "FinancePaymentFact",
     "FinancePaymentFactCandidate",
     "FinancePaymentFactPage",
@@ -2415,6 +2435,8 @@ __all__ = [
     "MarkingCodeSyncState",
     "MarkingCodeTrace",
     "MarkingCodeTraceEntry",
+    "MarkingCodeWarning",
+    "MarkingCodeWarningDoc",
     "MarkingCodesListInput",
     "MarkingCodesListResult",
     "MarkingCodesListResultSkipsItem",
@@ -3201,6 +3223,7 @@ __all__ = [
     "FinanceListDividendOwnersResponseResultsItem",
     "FinanceListDividendPoliciesResponse",
     "FinanceOneCMappingsResponse",
+    "FinanceCreateOpeningDocumentRequest",
     "FinanceConfirmPaymentRequestPayeeRequest",
     "FinancePaymentRequestFactCandidatesResponse",
     "FinanceGetProjectBudgetHistoryResponse",
@@ -10510,6 +10533,12 @@ class CoreFinancingContract(_CoreFinancingContractRequired, total=False):
     next_payment_date: str
     #: Первый неоплаченный платёж графика: тело + проценты, десятичная строка в валюте договора
     next_payment_amount: str
+    #: Начислено процентов — кредит 66.04 по договору (метод начисления, ERP-3117 «в»)
+    interest_accrued: str
+    #: Уплачено процентов — дебет 66.04 по договору
+    interest_paid: str
+    #: Проценты к уплате — сальдо 66.04 по договору; тело — debt
+    interest_payable: str
 
 class _CoreFinancingContractInputRequired(TypedDict):
     financing: "CoreContractFinancing"
@@ -16212,6 +16241,26 @@ class DocflowBuyerAcceptance(TypedDict):
     #: Лишние коды без криптохвоста
     extra_codes: List[str]
 
+class _DocflowBuyerActPackageRequired(TypedDict):
+    act: str
+    message: "UUID"
+    number: str
+    #: Вид пакета словами оператора: Torg2, АктВыпВх
+    doc_type: str
+
+class DocflowBuyerActPackage(_DocflowBuyerActPackageRequired, total=False):
+    date: str
+    amount: str
+    state_name: str
+
+class DocflowBuyerDiscrepancyDocument(TypedDict, total=False):
+    """Реквизиты документа, оформляющего расхождения (РеквДокРасх)"""
+
+    name: str
+    number: str
+    date: str
+    info: str
+
 class DocflowBuyerTitleInput(TypedDict, total=False):
     """Ответный титул покупателя на входящий пакет. Сам пакет назван в адресе, реквизиты продавца сервер читает из его файла в пакете."""
 
@@ -16234,6 +16283,44 @@ class DocflowBuyerTitleInput(TypedDict, total=False):
     signers: List["DocflowSignerRequisites"]
     file: "DocflowFileRequisites"
     extra: List["DocflowTextInfoRequisites"]
+
+class _DocflowBuyerTitleResultRequired(TypedDict):
+    message: "UUID"
+    attachment: "UUID"
+    #: Номер нашего УПД, как его назвал покупатель
+    number: str
+    #: КодИтога как в файле: 1 принято, 2 с расхождениями, 3 не принято; пусто — итог не прочитан
+    result_code: Literal['', '1', '2', '3']
+    result: Literal['accepted', 'discrepancy', 'rejected', 'unknown']
+    #: Номера актов о расхождениях из титула: 1765/Б, 1765/Н
+    acts: List[str]
+    #: Входящие пакеты покупателя с этими номерами актов: формализованный ТОРГ-2 или скан акта
+    act_packages: List["DocflowBuyerActPackage"]
+    parsed_at: str
+
+class DocflowBuyerTitleResult(_DocflowBuyerTitleResultRequired, total=False):
+    """Итог приёмки покупателем по нашему исходящему УПД — разобранный титул покупателя (КодИтога, РеквДокРасх). Учёт не двигает: принятое на складе ведёт «Приёмка покупателем»"""
+
+    order_id: "UUID"
+    #: ИНН покупателя пакета
+    counterparty_inn: str
+    #: Состояние пакета словами оператора
+    state_name: str
+    date: str
+    #: Содержание операции словами покупателя
+    operation: str
+    accepted_on: str
+    #: Когда покупатель составил титул: от него считаются сроки
+    title_at: str
+    document: "DocflowBuyerDiscrepancyDocument"
+    #: Возразить по акту до этого дня: 5 рабочих дней от титула (условия поставки Ozon); пусто — расхождений нет
+    object_by: str
+    #: Вывезти непринятое до этого дня: 14 дней от титула
+    pickup_by: str
+    #: Человек отметил расхождение разобранным
+    resolved_at: str
+    resolved_by: int
+    resolution_note: str
 
 class DocflowCancellation(TypedDict):
     """Соглашение сторон об аннулировании документа. Запускает его любая сторона, а решает вторая: согласие даёт состояние 22 «Документ аннулирован», отказ — состояние 40 «Аннулирование отклонено», при котором состояние самого документа НЕ меняется. Шаг цепочки выводится из ленты СОБЫТИЙ пакета, а не из кода состояния: состояние 27 «Ожидает аннулирования» оператор отдаёт только отдельным методом выборки по событиям."""
@@ -17794,6 +17881,8 @@ class DocflowFlowSupplierActInput(_DocflowFlowSupplierActInputRequired, total=Fa
     pnl_item_id: "UUID"
     #: Уже проведённый акт поставщика этой закупки, не стоящий под другой бумагой
     act_id: "UUID"
+    #: За кого: собственник, когда статья закупки — расчёты с собственником; пусто — единственный собственник бизнеса, при нескольких отказ 422 с полем for_contact
+    for_contact: "UUID"
     #: Расход по графику (ERP-2634): период срока; только при методе начисления. Акт кладёт сумму без НДС на 97, расход ложится в ОПиУ по месяцам
     expense_schedule: "DocflowFlowSupplierActInputExpenseSchedule"
 
@@ -18735,6 +18824,8 @@ class DocflowOrderDocumentSet(_DocflowOrderDocumentSetRequired, total=False):
     deal_orders: List["UUID"]
     #: Только у комплекта сделки: исходящие УПД из зеркала ЭДО, отправленные мимо Akeda (ERP-3112). Связанный (linked) держит отправку УПД сделки, неоднозначный (ambiguous) ждёт выбора человека
     edo_upd: List["DocflowOrderOutgoingUPD"]
+    #: Только у комплекта сделки: итог приёмки покупателем по её УПД из титула покупателя — принято, с расхождениями или не принято, акты о расхождениях и их пакеты, сроки возражения и вывоза, отметка «разобрано»
+    buyer_titles: List["DocflowBuyerTitleResult"]
 
 class _DocflowOrderImportRequired(TypedDict):
     id: "UUID"
@@ -20158,10 +20249,20 @@ class DocflowSupplierActForm(TypedDict):
     vat_deductible: bool
     #: Активные проводимые расходные статьи для выбора в этом акте
     pnl_items: List["DocflowSupplierActFormPnlItemsItem"]
+    #: Статья закупки — расчёты с собственником: окно спрашивает «За кого»
+    owner_item: bool
+    #: Собственники бизнеса на дату акта для поля «За кого»; один — подставляется заранее
+    owners: List["DocflowSupplierActFormOwnersItem"]
 
 class DocflowSupplierActFormPnlItemsItem(TypedDict):
     id: "UUID"
     #: Наименование статьи
+    name: str
+
+class DocflowSupplierActFormOwnersItem(TypedDict):
+    #: Контрагент собственника
+    id: "UUID"
+    #: Имя собственника
     name: str
 
 class DocflowSupplierInvoiceDuplicate(TypedDict):
@@ -20881,6 +20982,9 @@ class _FinanceAccountingEntryRequired(TypedDict):
     decided_by_name: str
     #: Документ изменён или отменён в Акеде после принятия в учёт; в 1С ничего не ушло
     changed_after_accept: bool
+    #: Сумма документа в 1С, когда она отличается от суммы Акеды; пусто — совпадает или не сверялась. Только пометка, в учёт не пишется
+    onec_amount_mismatch: str
+    file_exported_by_name: str
     created_at: str
     updated_at: str
 
@@ -20888,6 +20992,10 @@ class FinanceAccountingEntry(_FinanceAccountingEntryRequired, total=False):
     #: Кто принял решение
     decided_by: int
     decided_at: str
+    #: Когда строку последний раз выгрузили файлом формата ФНС (запасной канал «Загрузка из файла» в 1С). Статус строки выгрузка не меняет
+    file_exported_at: str
+    #: Кто выгрузил строку файлом
+    file_exported_by: int
 
 class _FinanceAccountingEntryCardRequired(TypedDict):
     id: "UUID"
@@ -20955,6 +21063,39 @@ class FinanceAccountingReference(TypedDict):
 class FinanceAccountingRejectInput(TypedDict):
     #: Причина отклонения; её читает сотрудник
     reason: str
+
+class FinanceAccountingRule(TypedDict):
+    id: "UUID"
+    connection_id: "UUID"
+    #: ИНН контрагента — часть ключа правила
+    contact_inn: str
+    #: Нынешнее имя контрагента с этим ИНН
+    contact_name: str
+    #: Ключ вида документа Акеды
+    document_kind: str
+    #: Позиция Акеды: product — номенклатура строки, pnl_item — статья закупки услуг
+    position_kind: Literal['product', 'pnl_item']
+    position_id: "UUID"
+    #: Нынешнее название позиции Акеды
+    position_name: str
+    #: Ссылка номенклатуры в базе 1С — с ней уходит строка
+    onec_nomenclature_ref: str
+    #: Наименование номенклатуры в 1С
+    onec_nomenclature_name: str
+    #: Счёт учёта или затрат из проведённого документа — справка, в 1С не передаётся
+    onec_account: str
+    #: Сколько проведённых бухгалтером документов подтвердили правило
+    confirmations: int
+    #: Последнее подтверждение
+    confirmed_at: str
+    created_at: str
+
+class FinanceAccountingRulePage(TypedDict):
+    #: Всего правил под отбором
+    count: int
+    limit: int
+    offset: int
+    results: List["FinanceAccountingRule"]
 
 FinanceAccountingStatus = Literal['new', 'sent', 'accepted', 'rejected', 'not_required']
 
@@ -21547,6 +21688,32 @@ class FinanceBudgetBridgeMonth(TypedDict):
     difference: str
     cumulative: str
 
+class FinanceBudgetCapex(TypedDict):
+    company_id: "UUID"
+    period_from: str
+    period_to: str
+    currency: str
+    months: List[str]
+    rows: List["FinanceBudgetCapexRowsItem"]
+    totals: List["FinanceBudgetCapexMonth"]
+    plan: str
+    fact: str
+    #: Факт минус план за период
+    deviation: str
+
+class FinanceBudgetCapexRowsItem(TypedDict):
+    item_id: "UUID"
+    item_name: str
+    months: List["FinanceBudgetCapexMonth"]
+    plan: str
+    fact: str
+    deviation: str
+
+class FinanceBudgetCapexMonth(TypedDict):
+    month: str
+    plan: str
+    fact: str
+
 class FinanceBudgetCashflowFromPnl(TypedDict):
     budget: "FinanceBudget"
     lines: int
@@ -21586,6 +21753,38 @@ class FinanceBudgetCellCommentInput(_FinanceBudgetCellCommentInputRequired, tota
 
 class FinanceBudgetCellCommentList(TypedDict):
     results: List["FinanceBudgetCellComment"]
+
+class FinanceBudgetChainInput(TypedDict):
+    company_id: "UUID"
+    kind: Literal['cashflow', 'pnl']
+    month: str
+    steps: List["FinanceBudgetChainInputStepsItem"]
+
+class _FinanceBudgetChainInputStepsItemRequired(TypedDict):
+    step: Literal['copy_year', 'drivers', 'payroll', 'assets', 'deals']
+
+class FinanceBudgetChainInputStepsItem(_FinanceBudgetChainInputStepsItemRequired, total=False):
+    #: Поправка копии с прошлого года, %
+    percent: str
+    payroll: "FinanceBudgetChainInputStepsItemPayroll"
+    item_id: "UUID"
+
+class _FinanceBudgetChainInputStepsItemPayrollRequired(TypedDict):
+    salary_item_id: "UUID"
+
+class FinanceBudgetChainInputStepsItemPayroll(_FinanceBudgetChainInputStepsItemPayrollRequired, total=False):
+    contributions_item_id: "UUID"
+    contributions_pct: str
+    include_vacant: bool
+
+class FinanceBudgetChainResult(TypedDict):
+    done: List["FinanceBudgetChainResultDoneItem"]
+    budget: "FinanceBudget"
+
+class FinanceBudgetChainResultDoneItem(TypedDict):
+    step: str
+    number: int
+    lines: int
 
 class FinanceBudgetCompare(TypedDict):
     before: "FinanceBudget"
@@ -22063,6 +22262,10 @@ class _FinanceBudgetScenarioInputRequired(TypedDict):
 
 class FinanceBudgetScenarioInput(_FinanceBudgetScenarioInputRequired, total=False):
     kind: Literal['cashflow', 'pnl']
+    #: Отдельная поправка поступлений (у БДР — доходов), %; задана она или outflow_percent — percent не применяется
+    inflow_percent: str
+    #: Отдельная поправка выплат (у БДР — расходов), %; для сценариев «оптимистичный», «пессимистичный», «стресс»
+    outflow_percent: str
 
 class FinanceBudgetScenarioList(TypedDict):
     results: List["FinanceBudgetScenario"]
@@ -22107,6 +22310,10 @@ class FinanceBudgetSetting(_FinanceBudgetSettingRequired, total=False):
     tolerance_pct: str
     tolerance_amount: str
     variance_note_pct: str
+    #: Норма отклонения оплат от плана статьи, %; по умолчанию 15
+    variance_norm_pct: str
+    #: Цель отклонения оплат от плана статьи, % (не выше нормы); по умолчанию 10
+    variance_target_pct: str
     approve_day: int
     lock_day: int
     #: Статья кончилась — заявку проверяют по общему остатку подразделения за месяц, с этапом «только сверх лимита»
@@ -22141,6 +22348,27 @@ class FinanceBudgetSubmissionInput(_FinanceBudgetSubmissionInputRequired, total=
 
 class FinanceBudgetSubmissions(TypedDict):
     results: List["FinanceBudgetSubmission"]
+
+class FinanceBudgetTargets(TypedDict):
+    kind: str
+    company_id: "UUID"
+    scenario_id: "UUID"
+    period_from: str
+    period_to: str
+    rows: List["FinanceBudgetTargetsRowsItem"]
+
+class _FinanceBudgetTargetsRowsItemRequired(TypedDict):
+    target_inflow: str
+    target_outflow: str
+    plan_inflow: str
+    plan_outflow: str
+    inflow_diff: str
+    outflow_diff: str
+    outflow_over: bool
+
+class FinanceBudgetTargetsRowsItem(_FinanceBudgetTargetsRowsItemRequired, total=False):
+    dimension_id: "UUID"
+    dimension_name: str
 
 class _FinanceBudgetVarianceNoteInputRequired(TypedDict):
     company_id: "UUID"
@@ -23451,6 +23679,34 @@ class FinanceLeasingReturnInput(_FinanceLeasingReturnInputRequired, total=False)
     #: Статья прочих доходов для разницы, когда долг больше остаточной стоимости
     income_item_id: Optional[str]
 
+class FinanceLoanInterestLine(TypedDict):
+    contract_id: "UUID"
+    contact_id: "UUID"
+    #: Номер договора
+    number: str
+    #: Проценты графика за месяц, десятичная строка
+    amount: str
+
+class FinanceLoanInterestMonthInput(TypedDict):
+    company_id: "UUID"
+    #: Месяц ГГГГ-ММ
+    month: str
+
+class _FinanceLoanInterestPreviewRequired(TypedDict):
+    company_id: "UUID"
+    #: Месяц ГГГГ-ММ
+    month: str
+    #: Дата документа — последний день месяца
+    date: str
+    lines: List["FinanceLoanInterestLine"]
+    #: Итого процентов, десятичная строка
+    total: str
+    #: Бизнес юрлица на методе начисления на конец месяца; false — кассовый метод, начисления нет
+    accrual: bool
+
+class FinanceLoanInterestPreview(_FinanceLoanInterestPreviewRequired, total=False):
+    posted: "CoreDocument"
+
 class FinanceObligationDueDateInput(TypedDict):
     #: Срок оплаты ГГГГ-ММ-ДД; пустая строка снимает срок
     due_date: str
@@ -24197,6 +24453,31 @@ class FinancePaymentCalendarSource(TypedDict):
     outflow: str
     closing: str
     cells: List["FinancePaymentCalendarCell"]
+
+class _FinancePaymentCashCheckRequired(TypedDict):
+    company_id: "UUID"
+    currency: str
+    due: str
+    amount: str
+    #: Деньги юрлица сегодня
+    company_now: str
+    #: Прогноз денег юрлица к дате оплаты до этой заявки
+    company_at_due: str
+    #: Остаток юрлица после этой оплаты
+    after_payment: str
+    #: Сколько не хватает юрлицу
+    shortage: str
+    short: bool
+    #: Юрлицу хватает, счёту списания — нет
+    account_short: bool
+
+class FinancePaymentCashCheck(_FinancePaymentCashCheckRequired, total=False):
+    account_id: "UUID"
+    account_name: str
+    #: Деньги на счёте списания сегодня
+    account_now: str
+    #: Прогноз по счёту списания к дате оплаты
+    account_at_due: str
 
 class _FinancePaymentFactRequired(TypedDict):
     document_id: "UUID"
@@ -30955,6 +31236,8 @@ class MarketplaceReportPnlProductsItem(TypedDict, total=False):
     profit: Optional[float]
     margin: Optional[float]
     reason: str
+    #: Продано штук по дням продажи (YYYY-MM-DD); строки без даты не входят.
+    by_day: Dict[str, float]
 
 class MarketplaceReportPnlDaysItem(TypedDict, total=False):
     day: str
@@ -33139,6 +33422,26 @@ class _MarkingCodeTraceEntryRequired(TypedDict):
 class MarkingCodeTraceEntry(_MarkingCodeTraceEntryRequired, total=False):
     warehouse_id: "UUID"
     warehouse_to_id: "UUID"
+    contact_id: "UUID"
+    #: Контрагент документа: поставщик поступления, кому вернули товар (ERP-2002)
+    contact_name: str
+    notice: "MarkingCodeWarning"
+
+MarkingCodeWarning = TypedDict("MarkingCodeWarning", {"code": Literal['returned_to_other_supplier', 'shortage_marks_unpicked'], "line": "UUID", "code_id": "UUID", "identity": str, "missing": int, "return": "MarkingCodeWarningDoc", "basis": "MarkingCodeWarningDoc"}, total=False)
+
+class _MarkingCodeWarningDocRequired(TypedDict):
+    document_id: "UUID"
+    #: Вид документа
+    type: str
+
+class MarkingCodeWarningDoc(_MarkingCodeWarningDocRequired, total=False):
+    """Документ предупреждения: возврат поставщику (return) или отправка-основание (basis)"""
+
+    number: str
+    date: str
+    contact_id: "UUID"
+    #: Поставщик, которому вернули марку; нет поля — не назван
+    contact_name: str
 
 class MarkingCodesListInput(TypedDict):
     #: Марки по одной на строку — как со сканера
@@ -33459,6 +33762,8 @@ class MarkingDocumentCodesSummary(_MarkingDocumentCodesSummaryRequired, total=Fa
     expected_unavailable: bool
     #: Откуда ожидание: upd — входящий УПД поставщика; shipment — марки отгрузки, по которой оформлен возврат покупателя («не хватает» считается до количества возврата).
     expected_source: Literal['upd', 'shipment']
+    #: Предупреждения по маркам (ERP-2002, ERP-2099); нет поля — предупреждений нет
+    warnings: List["MarkingCodeWarning"]
 
 class _MarkingDocumentDraftRequired(TypedDict):
     id: "UUID"
@@ -34811,7 +35116,7 @@ class MarkingSpoilInput(_MarkingSpoilInputRequired, total=False):
 class MarkingStockCodes(TypedDict):
     items: List["MarkingCode"]
 
-class MarkingStockLineCode(TypedDict):
+class _MarkingStockLineCodeRequired(TypedDict):
     id: "UUID"
     #: Код без криптохвоста
     identity: str
@@ -34819,6 +35124,10 @@ class MarkingStockLineCode(TypedDict):
     gismt_status: str
     #: Код есть во входящем УПД поставщика
     expected: bool
+
+class MarkingStockLineCode(_MarkingStockLineCodeRequired, total=False):
+    #: По последней проверке ЧЗ код числится за другим ИНН
+    gismt_other_owner: bool
 
 class _MarkingStoredFileImportInputRequired(TypedDict):
     file_id: "UUID"
@@ -37992,7 +38301,7 @@ class StockDocumentPayload(_StockDocumentPayloadRequired, total=False):
     work_amount: str
     allocation_method: Literal['quantity', 'cost', 'manual']
     targets: List["StockDocumentLandedCostTarget"]
-    #: Разложение проведения по строкам и партиям, которое пишет сам движок. У разукомплектации на основании комплектации есть блок `disassembly_basis`: `document_id` и `number` основания, `amount` — фактически списанная сумма, `basis_amount` — сумма того же количества по основанию (рождённая сумма основания ÷ рождённое количество × разбираемое количество), `difference` — amount минус basis_amount, `weights` — веса частей по строкам (`line_id`, `weight`), по которым списанное разделено между частями. Веса и `basis_amount` — снимок первого проведения: пересчёт себестоимости цепочки их сохраняет и пересчитывает только `amount` и `difference`; отмена и повторное проведение считают всё заново. У приёмки по перемещению (ERP-2179) строка разложения несёт `surplus_qty` — принято сверх того, что было в пути (`qty` строки разложения меньше факта на эту величину), и `received_batch_id` — партию, рождённую серией по факту
+    #: Разложение проведения по строкам и партиям, которое пишет сам движок. У разукомплектации на основании комплектации есть блок `disassembly_basis`: `document_id` и `number` основания, `amount` — фактически списанная сумма, `basis_amount` — сумма того же количества по основанию (рождённая сумма основания ÷ рождённое количество × разбираемое количество), `difference` — amount минус basis_amount, `weights` — веса частей по строкам (`line_id`, `weight`), по которым списанное разделено между частями. Веса и `basis_amount` — снимок первого проведения: пересчёт себестоимости цепочки их сохраняет и пересчитывает только `amount` и `difference`; отмена и повторное проведение считают всё заново. У приёмки по перемещению (ERP-2179) строка разложения несёт `surplus_qty` — принято сверх того, что было в пути (`qty` строки разложения меньше факта на эту величину), и `received_batch_id` — партию, рождённую серией по факту. У возврата излишка поставщику (ERP-2000) — `surplus_bins`: ячейки «К разбору», снятые при проведении, по строке приёмки-основания (снимок для перестройки цепочки)
     posting: Dict[str, Any]
 
 class _StockDocumentPayloadIssueRequestRequired(TypedDict):
@@ -38276,7 +38585,7 @@ class StockExpiredStockRow(TypedDict):
     amount: str
     #: Сколько списание возьмёт подбором: это количество попадает в черновик списания
     writeoff_quantity: str
-    #: Просрочка в недоступных единицах хранения: заблокированных, выведенных или числящихся на нескольких складах. В черновик списания не входит
+    #: Просрочка в недоступных единицах хранения: заблокированных, выведенных или числящихся на нескольких складах (склад «в пути» перемещения с приёмкой при обычном месте вторым не считается). В черновик списания не входит
     unavailable_quantity: str
     #: Почему строка не попадёт в черновик списания; null — попадёт
     writeoff_blocker: Optional["StockExpiredWriteoffBlocker"]
@@ -38405,12 +38714,13 @@ class _StockHandlingUnitRequired(TypedDict):
     source_line_id: "UUID"
     code: str
     initial_base_qty: str
-    #: Считается из движений регистра stock
+    #: Остаток на месте единицы, из движений регистра stock. Хвост на складе «в пути» перемещения с приёмкой сюда не входит, пока у единицы есть обычный остаток
     remaining_base_qty: str
-    #: Остаток меньше порога обрезка у единицы товара: вычисляется по остатку, а не хранится
+    #: Остаток меньше порога обрезка у единицы товара: вычисляется по остатку всей единицы вместе с хвостом в пути, а не хранится
     is_remnant: bool
     #: Считается из движений регистра stock_reserved
     reserved_base_qty: str
+    #: Стоимость остатка на месте единицы, из движений регистра stock; хвост в пути не входит, как и в remaining_base_qty
     amount: str
     status: "StockHandlingUnitStatus"
     state: "StockHandlingUnitState"
@@ -38422,7 +38732,7 @@ class _StockHandlingUnitRequired(TypedDict):
 
 class StockHandlingUnit(_StockHandlingUnitRequired, total=False):
     business_id: "UUID"
-    #: Отдаётся только когда положительный остаток лежит в одном месте хранения
+    #: Отдаётся только когда положительный остаток лежит в одном месте хранения. Склад «в пути» перемещения с приёмкой — место единицы, только пока обычного остатка нет; иначе он вторым местом не считается
     warehouse_id: Optional["UUID"]
 
 class StockHandlingUnitCard(TypedDict):
@@ -40086,6 +40396,8 @@ class _StockReportReservationLineRequired(TypedDict):
 class StockReportReservationLine(_StockReportReservationLineRequired, total=False):
     #: Decimal string. Часть unbacked_qty строки, вызванная просрочкой: товар лежит, но срок годности вышел к as_of (ERP-2149). Не больше unbacked_qty. Поля нет — просрочка ни при чём
     expired_qty: str
+    #: Склад, где лежит эта часть остатка строки (ERP-2055). Перемещение с переездом резерва делит строку по складам: одна строка документа даёт столько записей с тем же basis_line_id, сколько складов держат её остаток. Поля нет — разрез без склада
+    warehouse_id: str
 
 class StockReportReservationLineSpec(TypedDict):
     """Действующая версия состава изделия у товара строки резерва."""
@@ -42259,6 +42571,14 @@ class FinanceListDividendPoliciesResponse(TypedDict, total=False):
 class FinanceOneCMappingsResponse(TypedDict):
     count: int
     results: List["FinanceOneCMapping"]
+
+class _FinanceCreateOpeningDocumentRequestRequired(TypedDict):
+    date: str
+
+class FinanceCreateOpeningDocumentRequest(_FinanceCreateOpeningDocumentRequestRequired, total=False):
+    comment: str
+    entity_refs: Dict[str, str]
+    payload: Dict[str, Any]
 
 class FinanceConfirmPaymentRequestPayeeRequest(TypedDict):
     #: Версия заявки при сверке реквизитов

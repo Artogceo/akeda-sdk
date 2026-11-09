@@ -388,6 +388,7 @@ func TestContractFactsMatchDocumentation(t *testing.T) {
 		"financeDisposeFixedAsset",
 		"financeImpairFixedAsset",
 		"financeImportFixedAssets",
+		"financeLoanInterestPost",
 		"financePostFixedAssetDepreciation",
 		"financeReceiveLeasedAsset",
 		"financeReturnLeasedAsset",

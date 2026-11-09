@@ -24648,6 +24648,140 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/v1/finance/financing/interest:
+    get:
+      tags:
+        - Finance accounts
+      operationId: financeLoanInterestPreview
+      summary: Получить проценты к начислению за месяц
+      description: 'Проценты графиков кредитов, займов и линий юрлица с датой платежа в месяце (ERP-3117 «в», решение 07.11.2026): строка на договор, итог, признак метода начисления бизнеса на конец месяца и уже проведённый документ месяца. На кассовом методе проценты признаются оплатой, начисления нет.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.financing:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: company
+          in: query
+          required: true
+          description: Юрлицо
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: month
+          in: query
+          required: true
+          description: Месяц ГГГГ-ММ
+          schema:
+            type: string
+            pattern: ^\d{4}-\d{2}$
+      responses:
+        '200':
+          description: Проценты к начислению
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceLoanInterestPreview'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+    post:
+      tags:
+        - Finance accounts
+      operationId: financeLoanInterestPost
+      summary: Начислить проценты за месяц
+      description: 'Заводит и проводит «Начисление процентов» юрлица за месяц: по каждому договору Дт 91.02 «Проценты по кредитам и займам» / Кт 66.04 «Проценты к уплате» с кредитором и договором. Только бизнесу на методе начисления; один документ на юрлицо и месяц. Оплата процентов той же статьёй затем гасит 66.04. Кассовый метод, повтор или пустой график — 422; закрытый период — 409 `period_closed`.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.financing:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceLoanInterestMonthInput'
+      responses:
+        '201':
+          description: Проведённое начисление
+          headers:
+            Idempotent-Replay:
+              $ref: '#/components/headers/IdempotentReplay'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocument'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/IdempotencyUnavailable'
+  /api/v1/finance/financing/interest/cancel:
+    post:
+      tags:
+        - Finance accounts
+      operationId: financeLoanInterestCancel
+      summary: Отменить начисление процентов за месяц
+      description: 'Отменяет проведённое «Начисление процентов» юрлица за месяц: проводки 91.02 / 66.04 снимаются. Начисления нет — 422; закрытый период — 409 `period_closed`.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.financing:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceLoanInterestMonthInput'
+      responses:
+        '200':
+          description: Отменённый документ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocument'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/finance/acquiring/overview:
     get:
       tags:
@@ -29030,6 +29164,105 @@ paths:
           $ref: '#/components/responses/NotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/exchange/onec/connections/{id}/accounting-rules:
+    get:
+      tags:
+        - Finance exchange
+      operationId: financeOneCAccountingRules
+      summary: Получить правила сопоставления номенклатуры 1С
+      description: 'Правила подключения базы 1С (ERP-102): позиция Акеды (номенклатура строки или статья закупки услуг) у контрагента по ИНН → номенклатура, которую бухгалтер поставил в проведённом документе 1С. Закупка с такой позицией уходит в 1С с этой номенклатурой по ссылке; при уровне доверия «по правилам автоматом» закупка, все строки которой покрыты правилами, уходит без «Взять в учёт». Последние подтверждённые — первыми.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.exchange:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: search
+          in: query
+          description: Часть ИНН или имени контрагента, позиции Акеды, номенклатуры или счёта 1С
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Правил на странице
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 200
+        - name: offset
+          in: query
+          description: Сколько правил пропустить
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Страница правил
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceAccountingRulePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/exchange/onec/connections/{id}/accounting-rules/{rule}:
+    delete:
+      tags:
+        - Finance exchange
+      operationId: financeDeleteOneCAccountingRule
+      summary: Удалить правило сопоставления номенклатуры 1С
+      description: 'Удаляет правило подключения: следующая закупка с этой позицией уйдёт в 1С строкой Акеды и при «по правилам автоматом» снова подождёт бухгалтера. Новое проведение такого документа в 1С выучит правило заново.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.exchange:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: rule
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Правило удалено
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/finance/exchange/onec/connections/{id}/bank-reconciliation:
     get:
       tags:
@@ -29990,6 +30223,171 @@ paths:
           $ref: '#/components/responses/NotFound'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/payment-calendar/cash-check:
+    get:
+      tags:
+        - Finance payment calendar
+      operationId: financePaymentCashCheck
+      summary: Проверить, хватит ли денег на оплату
+      description: 'Хватит ли денег юрлица и счёта списания к дате оплаты заявки: деньги сегодня, прогноз платёжного календаря к дате оплаты с уже запланированными приходами и оплатами, остаток после этой оплаты и нехватка. Юрлицу хватает, а счёту нет — account_short (нужен перевод между своими счетами). Только предупреждение: заявку не держит, ничего не хранит. Дата в прошлом считается на сегодня.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.payment_calendar:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: company_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: amount
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: currency
+          in: query
+          required: false
+          schema:
+            type: string
+            default: RUB
+        - name: due
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: account_id
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Проверка денег на оплату
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancePaymentCashCheck'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/budgets/capex:
+    get:
+      tags:
+        - Finance reports
+      operationId: financeBudgetCapex
+      summary: Получить инвестиционный бюджет
+      description: 'Инвестиционный бюджет (capex) юрлица за период бюджета, содержащий месяц: статьи БДДС раздела «Инвестиционная деятельность», план утверждённой версии основного сценария и факт по месяцам, итоги и отклонение «факт − план». Расчётный вид из план-факта БДДС; план правится в БДДС.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.budgets:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: company_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: ^[0-9]{4}-[0-9]{2}$
+      responses:
+        '200':
+          description: Инвестиционный бюджет
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceBudgetCapex'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/budgets/targets:
+    get:
+      tags:
+        - Finance reports
+      operationId: financeBudgetTargets
+      summary: Сверить ориентиры сверху с планом
+      description: 'Встречное планирование: сценарий-ориентир (scenario_id, не основной) против основного сценария вида за период, содержащий месяц, по значениям разреза бюджета юрлица — поступления и выплаты ориентира и плана (последние версии) и разница «план − ориентир»; outflow_over — выплаты плана выше ориентира. Внутренние переводы не считаются. Ориентиры — обычный сценарий, своего хранения нет.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.budgets:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: company_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: kind
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - cashflow
+              - pnl
+            default: cashflow
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: ^[0-9]{4}-[0-9]{2}$
+        - name: scenario_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Сверка ориентиров с планом
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceBudgetTargets'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/finance/budgets/pnl-summary:
     get:
       tags:
@@ -30622,6 +31020,48 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/budgets/chain:
+    post:
+      tags:
+        - Finance reports
+      operationId: financeRunBudgetChain
+      summary: Выполнить цепочку расчётов бюджета
+      description: 'Шаги по порядку одной командой: copy_year — копия с прошлого года ±percent, drivers — драйверы, payroll — модель ФОТ (статьи в payroll), assets — амортизация ОС (только БДР), deals — выручка из воронки CRM (item_id). Каждый шаг — тот же расчёт, что у отдельной кнопки, и кладёт новый черновик поверх предыдущего. Первый отказ останавливает цепочку: выполненные шаги остаются черновиками, ответ — отказ шага с полями chain_step (имя шага) и chain_step_index (номер с 1).'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.budgets:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceBudgetChainInput'
+      responses:
+        '200':
+          description: Выполненные шаги и итоговый черновик
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceBudgetChainResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/finance/budgets/deal-model:
@@ -36554,6 +36994,320 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/reports/balance/bank:
+    get:
+      tags:
+        - Finance reports
+      operationId: financeGetBalanceBankMoney
+      summary: Остатки денег баланса по банковским счетам
+      description: Остатки регистра денег по счетам на дату — расшифровка строк 51 и 52 баланса. Только счета в области права раздела «Счета».
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      x-akeda-permission: finance.accounts:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: 'on'
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Остатки по счетам
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreRegisterBalancePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/reports/balance/cash:
+    get:
+      tags:
+        - Finance reports
+      operationId: financeGetBalanceCashMoney
+      summary: Остатки денег баланса по кассам
+      description: Остатки регистра денег по кассам на дату — расшифровка строки 50 баланса. Только кассы в области права раздела «Кассы».
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      x-akeda-permission: finance.cash_operations:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: 'on'
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: by
+          in: query
+          description: business — остаток кассы ещё и по бизнесу
+          schema:
+            type: string
+            enum:
+              - business
+      responses:
+        '200':
+          description: Остатки по кассам
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreRegisterBalancePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/reports/balance/account-entries:
+    get:
+      tags:
+        - Finance reports
+      operationId: financeGetBalanceAccountEntries
+      summary: Проводки счёта денег или вложений для расшифровки баланса
+      description: Проводки счёта 00, 50, 51, 52, 55, 57 или 58 на дату, страницей по 300. Иной счёт — 403. Без права на зарплату сотрудник в разрезах не раскрывается.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      x-akeda-permission: finance.reports.balance:read
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: account
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: 'on'
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: from
+          in: query
+          description: Начало периода; пусто — с начала учёта
+          schema:
+            type: string
+            format: date
+        - name: company
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Проводки счёта
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreRegisterEntryPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/cash-operations/documents:
+    get:
+      tags:
+        - Finance accounts
+      operationId: financeListCashOperationDocuments
+      summary: Документы кассовых операций для журнала «Касса»
+      description: Учётные документы кассовых операций, только в области права раздела «Кассы».
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.cash_operations:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 200
+      responses:
+        '200':
+          description: Документы
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocumentPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/opening/documents:
+    get:
+      tags:
+        - Finance accounts
+      operationId: financeListOpeningDocuments
+      summary: Документы «Ввод начальных остатков»
+      description: Документы ввода начальных остатков с подписью q и бизнесом business, только в области права.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounts:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: business
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Документы
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocumentPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Finance accounts
+      operationId: financeCreateOpeningDocument
+      summary: Завести и провести документ «Ввод начальных остатков»
+      description: Заводит и проводит документ одной командой; отказ проведения черновика не оставляет.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounts:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - date
+              properties:
+                date:
+                  type: string
+                  format: date
+                comment:
+                  type: string
+                entity_refs:
+                  type: object
+                  additionalProperties:
+                    type: string
+                payload:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '201':
+          description: Проведённый документ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocument'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/finance/opening/documents/{id}/cancel:
+    post:
+      tags:
+        - Finance accounts
+      operationId: financeCancelOpeningDocument
+      summary: Отменить документ «Ввод начальных остатков»
+      description: Отменяет только документ ввода начальных остатков в области права; иной документ — 404.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounts:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Отменённый документ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoreDocument'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/finance/wallets/{id}/opening-balance:
@@ -45440,12 +46194,12 @@ paths:
             type: string
         - name: warehouse_from_ids
           in: query
-          description: 'Отбор столбца «Откуда» (ERP-2542): склады-отправители перемещения через запятую, точное сравнение (зоны узла вызывающий разворачивает сам); пусто — отбора нет. Вместе с warehouse_to_ids даёт входящие на склад, исходящие со склада и конкретную пару. Отбор серверный, счётчик и страницы считаются по нему'
+          description: 'Отбор столбца «Откуда» (ERP-2542): склады-отправители перемещения через запятую; склад берётся вместе с зонами и вложенными складами (ERP-2001); пусто — отбора нет. Вместе с warehouse_to_ids даёт входящие на склад, исходящие со склада и конкретную пару. Отбор серверный, счётчик и страницы считаются по нему'
           schema:
             type: string
         - name: warehouse_to_ids
           in: query
-          description: 'Отбор столбца «Куда» (ERP-2542): склады-получатели перемещения через запятую, точное сравнение; пусто — отбора нет'
+          description: 'Отбор столбца «Куда» (ERP-2542): склады-получатели перемещения через запятую, склад вместе с зонами и вложенными складами (ERP-2001); отправка на склад «в пути на склад» считается отправкой на сам склад; пусто — отбора нет'
           schema:
             type: string
         - name: writeoff_request
@@ -45465,6 +46219,21 @@ paths:
         - name: ids
           in: query
           description: UUID документов через запятую; не больше 200
+          schema:
+            type: string
+        - name: warehouse_exclude_ids
+          in: query
+          description: 'Отбор столбца «Склад» в режиме «все, кроме» (ERP-2023): исключённые склады через запятую. Документ остаётся, если в нём есть склад не из набора; документы без склада не попадают. Пусто — отбора нет'
+          schema:
+            type: string
+        - name: warehouse_from_exclude_ids
+          in: query
+          description: 'Отбор «Откуда» в режиме «все, кроме» (ERP-2023): исключённые склады-отправители через запятую, точное сравнение. Пусто — отбора нет'
+          schema:
+            type: string
+        - name: warehouse_to_exclude_ids
+          in: query
+          description: 'Отбор «Куда» в режиме «все, кроме» (ERP-2023): исключённые склады-получатели через запятую, точное сравнение; отправка «в пути на склад» исключается вместе со складом. Пусто — отбора нет'
           schema:
             type: string
       responses:
@@ -48739,7 +49508,7 @@ paths:
         - Stock warehouses
       operationId: stockSuggestWarehouseBins
       summary: Подсказать ячейки для прихода или расхода товара
-      description: 'direction=in — куда класть: сначала ячейки с этим товаром той же партии (same_batch), затем с этим товаром (same_product), затем ближайшие пустые активные ячейки (empty). direction=out — откуда брать: «не размещено» первым, затем ячейки по сроку годности партии (без срока — последними), затем по порядку обхода; у партии со сроком shelf_life.status показывает, проходит ли она правило срока кабинета. Не больше 10 подсказок; вместимость ячеек не считается. В месте без ячеек список пуст.'
+      description: 'direction=in — куда класть: сначала ячейки с этим товаром той же партии (same_batch), затем с этим товаром (same_product), затем ближайшие пустые активные ячейки (empty). direction=out — откуда брать: «не размещено» первым, затем ячейки по сроку годности партии (без срока — последними), затем по порядку обхода; у партии со сроком shelf_life.status показывает, проходит ли она правило срока кабинета. Не больше 10 мест (ячеек и «не размещено»): у direction=out все партии места идут вместе с ним, и ячейка со многими партиями не вытесняет остальные (ERP-2055); вместимость ячеек не считается. В месте без ячеек список пуст.'
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -50590,7 +51359,7 @@ paths:
         - Stock batches
       operationId: stockListExpiredStock
       summary: Получить просроченный остаток
-      description: 'Просроченный остаток на сегодня по календарю кабинета (ERP-1821): строки «юрлицо × склад × товар × состояние» с количеством, стоимостью и просроченными партиями. Партия просрочена, когда её «годен до» раньше сегодняшнего дня; в сам день срока товар ещё годен. Остаток без партии срока не имеет и сюда не попадает — так выглядит товар при скользящей средней без единиц хранения. Просрочка в недоступной единице хранения (заблокирована, выведена, числится на нескольких складах) названа отдельно в unavailable_quantity: списание подбором её не возьмёт. Сотрудник видит остаток только доступных ему юрлиц. Склады внешней стороны — склад площадки и товары в пути — не показываются: товаром на них распоряжается площадка; отбор по такому складу даёт пустой ответ. Строка, которую складской документ не примет, несёт причину в writeoff_blocker и ноль в writeoff_quantity: в списание она не попадёт. Итог totals считается по всей выборке, а не по странице.'
+      description: 'Просроченный остаток на сегодня по календарю кабинета (ERP-1821): строки «юрлицо × склад × товар × состояние» с количеством, стоимостью и просроченными партиями. Партия просрочена, когда её «годен до» раньше сегодняшнего дня; в сам день срока товар ещё годен. Остаток без партии срока не имеет и сюда не попадает — так выглядит товар при скользящей средней без единиц хранения. Просрочка в недоступной единице хранения (заблокирована, выведена, числится на нескольких складах; склад «в пути» перемещения с приёмкой при обычном месте вторым не считается) названа отдельно в unavailable_quantity: списание подбором её не возьмёт. Сотрудник видит остаток только доступных ему юрлиц. Склады внешней стороны — склад площадки и товары в пути — не показываются: товаром на них распоряжается площадка; отбор по такому складу даёт пустой ответ. Строка, которую складской документ не примет, несёт причину в writeoff_blocker и ноль в writeoff_quantity: в списание она не попадёт. Итог totals считается по всей выборке, а не по странице.'
       x-akeda-module: stock
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -51389,7 +52158,12 @@ paths:
             type: string
         - name: warehouse_from_ids
           in: query
-          description: Склады-отправители через запятую (ERP-2542)
+          description: Склады-отправители через запятую (ERP-2542); склад вместе с зонами и вложенными складами (ERP-2001)
+          schema:
+            type: string
+        - name: warehouse_from_exclude_ids
+          in: query
+          description: 'Склады-отправители, исключённые из отбора, через запятую (ERP-2023): режим «все, кроме», точное сравнение'
           schema:
             type: string
       responses:
@@ -85452,7 +86226,7 @@ paths:
         - Marking codes
       operationId: markingResolveReconcileItem
       summary: Отметить расхождение сверки разобранным
-      description: 'Ставит отметку «разобрано»: ключ действия (`written_off`, `received`, `introduced`, `withdrawn`, `returned`, `ignored` и т. п.), заметка и, если действие сделано документом, его id. Пустой `resolution` без заметки и документа снимает отметку. Сама отметка ничего не двигает: действие делается обычным документом склада или маркировки.'
+      description: 'Ставит отметку «разобрано»: ключ действия (`written_off`, `received`, `introduced`, `withdrawn`, `returned`, `disaggregated`, `ignored` и т. п.), заметка и, если действие сделано документом, его id. Пустой `resolution` без заметки и документа снимает отметку. Сама отметка ничего не двигает: действие делается обычным документом склада или маркировки.'
       x-akeda-module: marking
       x-akeda-release-stage: preview
       x-akeda-audience: external
@@ -107444,6 +108218,15 @@ components:
               type: integer
               minimum: 0
               description: Всего строк графика
+            interest_accrued:
+              type: string
+              description: Начислено процентов — кредит 66.04 по договору (метод начисления, ERP-3117 «в»)
+            interest_paid:
+              type: string
+              description: Уплачено процентов — дебет 66.04 по договору
+            interest_payable:
+              type: string
+              description: Проценты к уплате — сальдо 66.04 по договору; тело — debt
     CoreFinancingContractList:
       type: object
       additionalProperties: false
@@ -119774,6 +120557,12 @@ components:
           type: string
         variance_note_pct:
           type: string
+        variance_norm_pct:
+          type: string
+          description: Норма отклонения оплат от плана статьи, %; по умолчанию 15
+        variance_target_pct:
+          type: string
+          description: Цель отклонения оплат от плана статьи, % (не выше нормы); по умолчанию 10
         approve_day:
           type: integer
           minimum: 0
@@ -119858,6 +120647,84 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UUID'
+    FinanceBudgetChainInput:
+      type: object
+      additionalProperties: false
+      required:
+        - company_id
+        - kind
+        - month
+        - steps
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        kind:
+          type: string
+          enum:
+            - cashflow
+            - pnl
+        month:
+          type: string
+        steps:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - step
+            properties:
+              step:
+                type: string
+                enum:
+                  - copy_year
+                  - drivers
+                  - payroll
+                  - assets
+                  - deals
+              percent:
+                type: string
+                description: Поправка копии с прошлого года, %
+              payroll:
+                type: object
+                additionalProperties: false
+                required:
+                  - salary_item_id
+                properties:
+                  salary_item_id:
+                    $ref: '#/components/schemas/UUID'
+                  contributions_item_id:
+                    $ref: '#/components/schemas/UUID'
+                  contributions_pct:
+                    type: string
+                  include_vacant:
+                    type: boolean
+              item_id:
+                $ref: '#/components/schemas/UUID'
+    FinanceBudgetChainResult:
+      type: object
+      required:
+        - done
+        - budget
+      properties:
+        done:
+          type: array
+          items:
+            type: object
+            required:
+              - step
+              - number
+              - lines
+            properties:
+              step:
+                type: string
+              number:
+                type: integer
+              lines:
+                type: integer
+        budget:
+          $ref: '#/components/schemas/FinanceBudget'
     FinanceBudgetPayrollModelInput:
       type: object
       additionalProperties: false
@@ -119940,6 +120807,12 @@ components:
         percent:
           type: string
           description: Поправка к суммам основного сценария в процентах, от −100 до 1000
+        inflow_percent:
+          type: string
+          description: Отдельная поправка поступлений (у БДР — доходов), %; задана она или outflow_percent — percent не применяется
+        outflow_percent:
+          type: string
+          description: Отдельная поправка выплат (у БДР — расходов), %; для сценариев «оптимистичный», «пессимистичный», «стресс»
     FinanceBudgetScenarioCreated:
       type: object
       additionalProperties: false
@@ -120386,6 +121259,183 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FinanceBudgetJustification'
+    FinancePaymentCashCheck:
+      type: object
+      required:
+        - company_id
+        - currency
+        - due
+        - amount
+        - company_now
+        - company_at_due
+        - after_payment
+        - shortage
+        - short
+        - account_short
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        currency:
+          type: string
+        due:
+          type: string
+          format: date
+        amount:
+          type: string
+        company_now:
+          type: string
+          description: Деньги юрлица сегодня
+        company_at_due:
+          type: string
+          description: Прогноз денег юрлица к дате оплаты до этой заявки
+        after_payment:
+          type: string
+          description: Остаток юрлица после этой оплаты
+        account_id:
+          $ref: '#/components/schemas/UUID'
+        account_name:
+          type: string
+        account_now:
+          type: string
+          description: Деньги на счёте списания сегодня
+        account_at_due:
+          type: string
+          description: Прогноз по счёту списания к дате оплаты
+        shortage:
+          type: string
+          description: Сколько не хватает юрлицу
+        short:
+          type: boolean
+        account_short:
+          type: boolean
+          description: Юрлицу хватает, счёту списания — нет
+    FinanceBudgetCapexMonth:
+      type: object
+      required:
+        - month
+        - plan
+        - fact
+      properties:
+        month:
+          type: string
+        plan:
+          type: string
+        fact:
+          type: string
+    FinanceBudgetCapex:
+      type: object
+      required:
+        - company_id
+        - period_from
+        - period_to
+        - currency
+        - months
+        - rows
+        - totals
+        - plan
+        - fact
+        - deviation
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        period_from:
+          type: string
+        period_to:
+          type: string
+        currency:
+          type: string
+        months:
+          type: array
+          items:
+            type: string
+        rows:
+          type: array
+          items:
+            type: object
+            required:
+              - item_id
+              - item_name
+              - months
+              - plan
+              - fact
+              - deviation
+            properties:
+              item_id:
+                $ref: '#/components/schemas/UUID'
+              item_name:
+                type: string
+              months:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FinanceBudgetCapexMonth'
+              plan:
+                type: string
+              fact:
+                type: string
+              deviation:
+                type: string
+        totals:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceBudgetCapexMonth'
+        plan:
+          type: string
+        fact:
+          type: string
+        deviation:
+          type: string
+          description: Факт минус план за период
+    FinanceBudgetTargets:
+      type: object
+      required:
+        - kind
+        - company_id
+        - scenario_id
+        - period_from
+        - period_to
+        - rows
+      properties:
+        kind:
+          type: string
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        scenario_id:
+          $ref: '#/components/schemas/UUID'
+        period_from:
+          type: string
+        period_to:
+          type: string
+        rows:
+          type: array
+          items:
+            type: object
+            required:
+              - target_inflow
+              - target_outflow
+              - plan_inflow
+              - plan_outflow
+              - inflow_diff
+              - outflow_diff
+              - outflow_over
+            properties:
+              dimension_id:
+                $ref: '#/components/schemas/UUID'
+              dimension_name:
+                type: string
+              target_inflow:
+                type: string
+              target_outflow:
+                type: string
+              plan_inflow:
+                type: string
+              plan_outflow:
+                type: string
+              inflow_diff:
+                type: string
+              outflow_diff:
+                type: string
+              outflow_over:
+                type: boolean
     FinanceBudgetPnlSummary:
       type: object
       additionalProperties: false
@@ -121387,6 +122437,8 @@ components:
         - reject_reason
         - decided_by_name
         - changed_after_accept
+        - onec_amount_mismatch
+        - file_exported_by_name
         - created_at
         - updated_at
       properties:
@@ -121440,12 +122492,111 @@ components:
         changed_after_accept:
           type: boolean
           description: Документ изменён или отменён в Акеде после принятия в учёт; в 1С ничего не ушло
+        onec_amount_mismatch:
+          type: string
+          description: Сумма документа в 1С, когда она отличается от суммы Акеды; пусто — совпадает или не сверялась. Только пометка, в учёт не пишется
+        file_exported_at:
+          type: string
+          format: date-time
+          description: Когда строку последний раз выгрузили файлом формата ФНС (запасной канал «Загрузка из файла» в 1С). Статус строки выгрузка не меняет
+        file_exported_by:
+          type: integer
+          format: int64
+          description: Кто выгрузил строку файлом
+        file_exported_by_name:
+          type: string
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
+    FinanceAccountingRule:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - connection_id
+        - contact_inn
+        - contact_name
+        - document_kind
+        - position_kind
+        - position_id
+        - position_name
+        - onec_nomenclature_ref
+        - onec_nomenclature_name
+        - onec_account
+        - confirmations
+        - confirmed_at
+        - created_at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        connection_id:
+          $ref: '#/components/schemas/UUID'
+        contact_inn:
+          type: string
+          description: ИНН контрагента — часть ключа правила
+        contact_name:
+          type: string
+          description: Нынешнее имя контрагента с этим ИНН
+        document_kind:
+          type: string
+          description: Ключ вида документа Акеды
+        position_kind:
+          type: string
+          enum:
+            - product
+            - pnl_item
+          description: 'Позиция Акеды: product — номенклатура строки, pnl_item — статья закупки услуг'
+        position_id:
+          $ref: '#/components/schemas/UUID'
+        position_name:
+          type: string
+          description: Нынешнее название позиции Акеды
+        onec_nomenclature_ref:
+          type: string
+          description: Ссылка номенклатуры в базе 1С — с ней уходит строка
+        onec_nomenclature_name:
+          type: string
+          description: Наименование номенклатуры в 1С
+        onec_account:
+          type: string
+          description: Счёт учёта или затрат из проведённого документа — справка, в 1С не передаётся
+        confirmations:
+          type: integer
+          minimum: 1
+          description: Сколько проведённых бухгалтером документов подтвердили правило
+        confirmed_at:
+          type: string
+          format: date-time
+          description: Последнее подтверждение
+        created_at:
+          type: string
+          format: date-time
+    FinanceAccountingRulePage:
+      type: object
+      additionalProperties: false
+      required:
+        - count
+        - limit
+        - offset
+        - results
+      properties:
+        count:
+          type: integer
+          minimum: 0
+          description: Всего правил под отбором
+        limit:
+          type: integer
+          minimum: 1
+        offset:
+          type: integer
+          minimum: 0
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceAccountingRule'
     FinanceAccountingPage:
       type: object
       additionalProperties: false
@@ -123867,6 +125018,70 @@ components:
         recourse:
           type: boolean
           description: С регрессом — признак договора
+    FinanceLoanInterestMonthInput:
+      type: object
+      additionalProperties: false
+      required:
+        - company_id
+        - month
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        month:
+          type: string
+          pattern: ^\d{4}-\d{2}$
+          description: Месяц ГГГГ-ММ
+    FinanceLoanInterestLine:
+      type: object
+      additionalProperties: false
+      required:
+        - contract_id
+        - contact_id
+        - number
+        - amount
+      properties:
+        contract_id:
+          $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        number:
+          type: string
+          description: Номер договора
+        amount:
+          type: string
+          description: Проценты графика за месяц, десятичная строка
+    FinanceLoanInterestPreview:
+      type: object
+      additionalProperties: false
+      required:
+        - company_id
+        - month
+        - date
+        - lines
+        - total
+        - accrual
+      properties:
+        company_id:
+          $ref: '#/components/schemas/UUID'
+        month:
+          type: string
+          description: Месяц ГГГГ-ММ
+        date:
+          type: string
+          format: date
+          description: Дата документа — последний день месяца
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceLoanInterestLine'
+        total:
+          type: string
+          description: Итого процентов, десятичная строка
+        accrual:
+          type: boolean
+          description: Бизнес юрлица на методе начисления на конец месяца; false — кассовый метод, начисления нет
+        posted:
+          $ref: '#/components/schemas/CoreDocument'
     FinanceFinancingFactoringList:
       type: object
       additionalProperties: false
@@ -138129,7 +139344,7 @@ components:
         posting:
           type: object
           additionalProperties: true
-          description: 'Разложение проведения по строкам и партиям, которое пишет сам движок. У разукомплектации на основании комплектации есть блок `disassembly_basis`: `document_id` и `number` основания, `amount` — фактически списанная сумма, `basis_amount` — сумма того же количества по основанию (рождённая сумма основания ÷ рождённое количество × разбираемое количество), `difference` — amount минус basis_amount, `weights` — веса частей по строкам (`line_id`, `weight`), по которым списанное разделено между частями. Веса и `basis_amount` — снимок первого проведения: пересчёт себестоимости цепочки их сохраняет и пересчитывает только `amount` и `difference`; отмена и повторное проведение считают всё заново. У приёмки по перемещению (ERP-2179) строка разложения несёт `surplus_qty` — принято сверх того, что было в пути (`qty` строки разложения меньше факта на эту величину), и `received_batch_id` — партию, рождённую серией по факту'
+          description: 'Разложение проведения по строкам и партиям, которое пишет сам движок. У разукомплектации на основании комплектации есть блок `disassembly_basis`: `document_id` и `number` основания, `amount` — фактически списанная сумма, `basis_amount` — сумма того же количества по основанию (рождённая сумма основания ÷ рождённое количество × разбираемое количество), `difference` — amount минус basis_amount, `weights` — веса частей по строкам (`line_id`, `weight`), по которым списанное разделено между частями. Веса и `basis_amount` — снимок первого проведения: пересчёт себестоимости цепочки их сохраняет и пересчитывает только `amount` и `difference`; отмена и повторное проведение считают всё заново. У приёмки по перемещению (ERP-2179) строка разложения несёт `surplus_qty` — принято сверх того, что было в пути (`qty` строки разложения меньше факта на эту величину), и `received_batch_id` — партию, рождённую серией по факту. У возврата излишка поставщику (ERP-2000) — `surplus_bins`: ячейки «К разбору», снятые при проведении, по строке приёмки-основания (снимок для перестройки цепочки)'
     StockReceiptVATTermsInput:
       type: object
       additionalProperties: false
@@ -141081,15 +142296,16 @@ components:
           type: string
         remaining_base_qty:
           type: string
-          description: Считается из движений регистра stock
+          description: Остаток на месте единицы, из движений регистра stock. Хвост на складе «в пути» перемещения с приёмкой сюда не входит, пока у единицы есть обычный остаток
         is_remnant:
           type: boolean
-          description: 'Остаток меньше порога обрезка у единицы товара: вычисляется по остатку, а не хранится'
+          description: 'Остаток меньше порога обрезка у единицы товара: вычисляется по остатку всей единицы вместе с хвостом в пути, а не хранится'
         reserved_base_qty:
           type: string
           description: Считается из движений регистра stock_reserved
         amount:
           type: string
+          description: Стоимость остатка на месте единицы, из движений регистра stock; хвост в пути не входит, как и в remaining_base_qty
         status:
           $ref: '#/components/schemas/StockHandlingUnitStatus'
         state:
@@ -141098,7 +142314,7 @@ components:
           oneOf:
             - $ref: '#/components/schemas/UUID'
             - type: 'null'
-          description: Отдаётся только когда положительный остаток лежит в одном месте хранения
+          description: Отдаётся только когда положительный остаток лежит в одном месте хранения. Склад «в пути» перемещения с приёмкой — место единицы, только пока обычного остатка нет; иначе он вторым местом не считается
         warehouse_name:
           type: string
         custom:
@@ -141641,7 +142857,7 @@ components:
           description: 'Сколько списание возьмёт подбором: это количество попадает в черновик списания'
         unavailable_quantity:
           type: string
-          description: 'Просрочка в недоступных единицах хранения: заблокированных, выведенных или числящихся на нескольких складах. В черновик списания не входит'
+          description: 'Просрочка в недоступных единицах хранения: заблокированных, выведенных или числящихся на нескольких складах (склад «в пути» перемещения с приёмкой при обычном месте вторым не считается). В черновик списания не входит'
         writeoff_blocker:
           oneOf:
             - $ref: '#/components/schemas/StockExpiredWriteoffBlocker'
@@ -146602,6 +147818,10 @@ components:
         expired_qty:
           type: string
           description: 'Decimal string. Часть unbacked_qty строки, вызванная просрочкой: товар лежит, но срок годности вышел к as_of (ERP-2149). Не больше unbacked_qty. Поля нет — просрочка ни при чём'
+        warehouse_id:
+          type: string
+          format: uuid
+          description: 'Склад, где лежит эта часть остатка строки (ERP-2055). Перемещение с переездом резерва делит строку по складам: одна строка документа даёт столько записей с тем же basis_line_id, сколько складов держат её остаток. Поля нет — разрез без склада'
         active_spec:
           description: Действующий состав товара строки; null, если действующего состава у товара нет. Сам резерв состав не использует
           oneOf:
@@ -151427,6 +152647,11 @@ components:
                   - type: 'null'
               reason:
                 type: string
+              by_day:
+                type: object
+                additionalProperties:
+                  type: number
+                description: Продано штук по дням продажи (YYYY-MM-DD); строки без даты не входят.
         days:
           type: array
           items:
@@ -164953,6 +166178,139 @@ components:
           items:
             $ref: '#/components/schemas/DocflowOrderOutgoingUPD'
           description: 'Только у комплекта сделки: исходящие УПД из зеркала ЭДО, отправленные мимо Akeda (ERP-3112). Связанный (linked) держит отправку УПД сделки, неоднозначный (ambiguous) ждёт выбора человека'
+        buyer_titles:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowBuyerTitleResult'
+          description: 'Только у комплекта сделки: итог приёмки покупателем по её УПД из титула покупателя — принято, с расхождениями или не принято, акты о расхождениях и их пакеты, сроки возражения и вывоза, отметка «разобрано»'
+    DocflowBuyerTitleResult:
+      type: object
+      additionalProperties: false
+      description: 'Итог приёмки покупателем по нашему исходящему УПД — разобранный титул покупателя (КодИтога, РеквДокРасх). Учёт не двигает: принятое на складе ведёт «Приёмка покупателем»'
+      required:
+        - message
+        - attachment
+        - number
+        - result_code
+        - result
+        - acts
+        - act_packages
+        - parsed_at
+      properties:
+        message:
+          $ref: '#/components/schemas/UUID'
+        attachment:
+          $ref: '#/components/schemas/UUID'
+        order_id:
+          $ref: '#/components/schemas/UUID'
+        counterparty_inn:
+          type: string
+          description: ИНН покупателя пакета
+        state_name:
+          type: string
+          description: Состояние пакета словами оператора
+        number:
+          type: string
+          description: Номер нашего УПД, как его назвал покупатель
+        date:
+          type: string
+          format: date
+        result_code:
+          type: string
+          enum:
+            - ''
+            - '1'
+            - '2'
+            - '3'
+          description: 'КодИтога как в файле: 1 принято, 2 с расхождениями, 3 не принято; пусто — итог не прочитан'
+        result:
+          type: string
+          enum:
+            - accepted
+            - discrepancy
+            - rejected
+            - unknown
+        operation:
+          type: string
+          description: Содержание операции словами покупателя
+        accepted_on:
+          type: string
+          format: date
+        title_at:
+          type: string
+          format: date-time
+          description: 'Когда покупатель составил титул: от него считаются сроки'
+        document:
+          $ref: '#/components/schemas/DocflowBuyerDiscrepancyDocument'
+        acts:
+          type: array
+          items:
+            type: string
+          description: 'Номера актов о расхождениях из титула: 1765/Б, 1765/Н'
+        object_by:
+          type: string
+          format: date
+          description: 'Возразить по акту до этого дня: 5 рабочих дней от титула (условия поставки Ozon); пусто — расхождений нет'
+        pickup_by:
+          type: string
+          format: date
+          description: 'Вывезти непринятое до этого дня: 14 дней от титула'
+        act_packages:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocflowBuyerActPackage'
+          description: 'Входящие пакеты покупателя с этими номерами актов: формализованный ТОРГ-2 или скан акта'
+        resolved_at:
+          type: string
+          format: date-time
+          description: Человек отметил расхождение разобранным
+        resolved_by:
+          type: integer
+          format: int64
+        resolution_note:
+          type: string
+        parsed_at:
+          type: string
+          format: date-time
+    DocflowBuyerDiscrepancyDocument:
+      type: object
+      additionalProperties: false
+      description: Реквизиты документа, оформляющего расхождения (РеквДокРасх)
+      properties:
+        name:
+          type: string
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        info:
+          type: string
+    DocflowBuyerActPackage:
+      type: object
+      additionalProperties: false
+      required:
+        - act
+        - message
+        - number
+        - doc_type
+      properties:
+        act:
+          type: string
+        message:
+          $ref: '#/components/schemas/UUID'
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        amount:
+          type: string
+        doc_type:
+          type: string
+          description: 'Вид пакета словами оператора: Torg2, АктВыпВх'
+        state_name:
+          type: string
     DocflowOrderOutgoingUPD:
       type: object
       additionalProperties: false
@@ -168445,6 +169803,8 @@ components:
         - accounting_method
         - vat_deductible
         - pnl_items
+        - owner_item
+        - owners
       properties:
         order_id:
           $ref: '#/components/schemas/UUID'
@@ -168477,6 +169837,25 @@ components:
               name:
                 type: string
                 description: Наименование статьи
+        owner_item:
+          type: boolean
+          description: 'Статья закупки — расчёты с собственником: окно спрашивает «За кого»'
+        owners:
+          type: array
+          description: Собственники бизнеса на дату акта для поля «За кого»; один — подставляется заранее
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - id
+              - name
+            properties:
+              id:
+                $ref: '#/components/schemas/UUID'
+                description: Контрагент собственника
+              name:
+                type: string
+                description: Имя собственника
     DocflowFlowSupplierActInput:
       type: object
       additionalProperties: false
@@ -168506,6 +169885,9 @@ components:
         act_id:
           $ref: '#/components/schemas/UUID'
           description: Уже проведённый акт поставщика этой закупки, не стоящий под другой бумагой
+        for_contact:
+          $ref: '#/components/schemas/UUID'
+          description: 'За кого: собственник, когда статья закупки — расчёты с собственником; пусто — единственный собственник бизнеса, при нескольких отказ 422 с полем for_contact'
         expense_schedule:
           type: object
           additionalProperties: false
@@ -179281,6 +180663,62 @@ components:
           $ref: '#/components/schemas/UUID'
         warehouse_to_id:
           $ref: '#/components/schemas/UUID'
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        contact_name:
+          type: string
+          description: 'Контрагент документа: поставщик поступления, кому вернули товар (ERP-2002)'
+        notice:
+          $ref: '#/components/schemas/MarkingCodeWarning'
+    MarkingCodeWarning:
+      type: object
+      additionalProperties: false
+      description: 'Предупреждение блока кодов документа. returned_to_other_supplier (ERP-2002) — не мешает проведению: марку возвращали поставщику документом return, а приходит она от другого поставщика (или приходом без поставщика). shortage_marks_unpicked (ERP-2099) — черновик списания части недостачи «в пути»: какие марки пропали, неизвестно, сами они не поставлены; в строке line не хватает missing марок, их вставляют из отправки basis и проводят.'
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          enum:
+            - returned_to_other_supplier
+            - shortage_marks_unpicked
+        line:
+          $ref: '#/components/schemas/UUID'
+        code_id:
+          $ref: '#/components/schemas/UUID'
+        identity:
+          type: string
+          description: Код идентификации марки без криптохвоста
+        missing:
+          type: integer
+          description: Сколько марок не хватает в строке (shortage_marks_unpicked)
+        return:
+          $ref: '#/components/schemas/MarkingCodeWarningDoc'
+        basis:
+          $ref: '#/components/schemas/MarkingCodeWarningDoc'
+    MarkingCodeWarningDoc:
+      type: object
+      additionalProperties: false
+      description: 'Документ предупреждения: возврат поставщику (return) или отправка-основание (basis)'
+      required:
+        - document_id
+        - type
+      properties:
+        document_id:
+          $ref: '#/components/schemas/UUID'
+        type:
+          type: string
+          description: Вид документа
+        number:
+          type: string
+        date:
+          type: string
+          format: date
+        contact_id:
+          $ref: '#/components/schemas/UUID'
+        contact_name:
+          type: string
+          description: Поставщик, которому вернули марку; нет поля — не назван
     MarkingStockCodes:
       type: object
       additionalProperties: false
@@ -180897,6 +182335,9 @@ components:
           type: string
         gismt_status:
           type: string
+        gismt_other_owner:
+          type: boolean
+          description: По последней проверке ЧЗ код числится за другим ИНН
         expected:
           type: boolean
           description: Код есть во входящем УПД поставщика
@@ -181153,6 +182594,11 @@ components:
                 - upd
                 - shipment
               description: 'Откуда ожидание: upd — входящий УПД поставщика; shipment — марки отгрузки, по которой оформлен возврат покупателя («не хватает» считается до количества возврата).'
+            warnings:
+              type: array
+              items:
+                $ref: '#/components/schemas/MarkingCodeWarning'
+              description: Предупреждения по маркам (ERP-2002, ERP-2099); нет поля — предупреждений нет
     MarkingDocumentSummaryList:
       type: object
       additionalProperties: false
