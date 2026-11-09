@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eabb03b611b3faf161d5aca62708f4a793fddcad2acd7596f91e9b27d7082ec5).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0a8f29d494e322b5b699efbefc7e44a8d0cf5191cf24ab19c02b47d0ab4c7fa0).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -17459,6 +17459,30 @@ type FinanceAccountableBalances struct {
 	Rows []FinanceAccountableBalance `json:"rows"`
 }
 
+// FinanceAccountingAccounts — Счёт 1С и субконто строки, выбранные бухгалтером в Акеде (ERP-102, этап 2). Пусто — счета ставит 1С по номенклатуре
+type FinanceAccountingAccounts struct {
+	// AccountRef — Ссылка счёта плана счетов Хозрасчетный; пусто — снять выбор счёта
+	AccountRef  *string `json:"account_ref,omitempty"`
+	AccountCode *string `json:"account_code,omitempty"`
+	// CostItemRef — Статья затрат — если у счёта есть субконто «Статьи затрат»
+	CostItemRef *string `json:"cost_item_ref,omitempty"`
+	// DepartmentRef — Подразделение затрат строки
+	DepartmentRef *string `json:"department_ref,omitempty"`
+	// NomenclatureGroupRef — Номенклатурная группа — если у счёта есть такое субконто
+	NomenclatureGroupRef *string `json:"nomenclature_group_ref,omitempty"`
+}
+
+type FinanceAccountingChoiceInput struct {
+	Choices []FinanceAccountingChoiceInputChoicesItem `json:"choices"`
+}
+
+type FinanceAccountingChoiceInputChoicesItem struct {
+	Index int64 `json:"index"`
+	// OnecNomenclatureRef — Номенклатура 1С строки; пусто — оставить запомненную
+	OnecNomenclatureRef *string                    `json:"onec_nomenclature_ref,omitempty"`
+	OnecAccounts        *FinanceAccountingAccounts `json:"onec_accounts,omitempty"`
+}
+
 type FinanceAccountingEntry struct {
 	ID             UUID                      `json:"id"`
 	CompanyID      UUID                      `json:"company_id"`
@@ -17536,6 +17560,45 @@ type FinanceAccountingEntryCard struct {
 	Reference FinanceAccountingReference `json:"reference"`
 }
 
+type FinanceAccountingLine struct {
+	Index                int64                      `json:"index"`
+	PositionKind         string                     `json:"position_kind"`
+	PositionID           UUID                       `json:"position_id"`
+	PositionName         string                     `json:"position_name"`
+	Goods                bool                       `json:"goods"`
+	RuleID               *UUID                      `json:"rule_id,omitempty"`
+	OnecNomenclatureRef  string                     `json:"onec_nomenclature_ref"`
+	OnecNomenclatureName string                     `json:"onec_nomenclature_name"`
+	OnecNomenclatureCode *string                    `json:"onec_nomenclature_code,omitempty"`
+	Problem              *string                    `json:"problem,omitempty"`
+	OnecAccounts         *FinanceAccountingAccounts `json:"onec_accounts,omitempty"`
+	// OnecAccountName — Наименование выбранного счёта из снимка плана счетов (режим «Счета ставит: бухгалтер в Акеде»)
+	OnecAccountName           *string `json:"onec_account_name,omitempty"`
+	OnecCostItemName          *string `json:"onec_cost_item_name,omitempty"`
+	OnecDepartmentName        *string `json:"onec_department_name,omitempty"`
+	OnecNomenclatureGroupName *string `json:"onec_nomenclature_group_name,omitempty"`
+	// OnecAccountSubconto — Виды субконто выбранного счёта по снимку плана счетов
+	OnecAccountSubconto []FinanceAccountingLineOnecAccountSubcontoItem `json:"onec_account_subconto,omitempty"`
+	// AccountsProblem — Счёт или субконто помечены в 1С на удаление, удалены или не загружены
+	AccountsProblem *string `json:"accounts_problem,omitempty"`
+}
+
+type FinanceAccountingLineOnecAccountSubcontoItem struct {
+	Ref           string `json:"ref"`
+	Name          string `json:"name"`
+	TurnoversOnly *bool  `json:"turnovers_only,omitempty"`
+	// Kind — Вид, который заполняет Акеда; пусто — не заполняет
+	Kind *string `json:"kind,omitempty"`
+}
+
+type FinanceAccountingLines struct {
+	EntryID      UUID                    `json:"entry_id"`
+	ConnectionID UUID                    `json:"connection_id"`
+	AccountsBy   FinanceOneCAccountsBy   `json:"accounts_by"`
+	Editable     bool                    `json:"editable"`
+	Lines        []FinanceAccountingLine `json:"lines"`
+}
+
 type FinanceAccountingPage struct {
 	// Count — Всего строк под отбором
 	Count   int64                    `json:"count"`
@@ -17597,13 +17660,18 @@ type FinanceAccountingRule struct {
 	OnecNomenclatureRef string `json:"onec_nomenclature_ref"`
 	// OnecNomenclatureName — Наименование номенклатуры в 1С
 	OnecNomenclatureName string `json:"onec_nomenclature_name"`
-	// OnecAccount — Счёт учёта или затрат из проведённого документа — справка, в 1С не передаётся
-	OnecAccount string `json:"onec_account"`
+	// OnecAccount — Код счёта: выбранный бухгалтером в Акеде (уходит в 1С) или из проведённого документа — справка
+	OnecAccount  string                     `json:"onec_account"`
+	OnecAccounts *FinanceAccountingAccounts `json:"onec_accounts,omitempty"`
 	// Confirmations — Сколько проведённых бухгалтером документов подтвердили правило
 	Confirmations int64 `json:"confirmations"`
 	// ConfirmedAt — Последнее подтверждение
 	ConfirmedAt string `json:"confirmed_at"`
 	CreatedAt   string `json:"created_at"`
+}
+
+type FinanceAccountingRuleChangeInput struct {
+	OnecNomenclatureRef string `json:"onec_nomenclature_ref"`
 }
 
 type FinanceAccountingRulePage struct {
@@ -17637,6 +17705,13 @@ type FinanceAccountingSendReportErrorsItem struct {
 	DocumentNumber string `json:"document_number"`
 	// Message — Текст отказа 1С или код отметки журнала обмена (finance.onec.*)
 	Message string `json:"message"`
+}
+
+type FinanceAccountingSettingsInput struct {
+	AccountingMode  *FinanceOneCAccountingMode `json:"accounting_mode,omitempty"`
+	AccountingTrust *string                    `json:"accounting_trust,omitempty"`
+	AcceptsUnposted *bool                      `json:"accepts_unposted,omitempty"`
+	AccountsBy      *FinanceOneCAccountsBy     `json:"accounts_by,omitempty"`
 }
 
 type FinanceAccountingStatus = string
@@ -20468,6 +20543,8 @@ type FinanceOneCAccountingMode = string
 
 type FinanceOneCAccountingTrust = string
 
+type FinanceOneCAccountsBy = string
+
 type FinanceOneCBankAccount struct {
 	// AccountNumber — Номер расчётного счёта организации
 	AccountNumber string `json:"account_number"`
@@ -20529,6 +20606,60 @@ type FinanceOneCBankRow struct {
 	Notes []string `json:"notes"`
 }
 
+type FinanceOneCCatalogChange struct {
+	ID           UUID                   `json:"id"`
+	ConnectionID UUID                   `json:"connection_id"`
+	Catalog      FinanceOneCCatalogName `json:"catalog"`
+	Ref          string                 `json:"ref"`
+	Code         string                 `json:"code"`
+	Name         string                 `json:"name"`
+	Change       string                 `json:"change"`
+	At           string                 `json:"at"`
+}
+
+type FinanceOneCCatalogDiscrepancy struct {
+	RuleID               UUID   `json:"rule_id"`
+	ContactName          string `json:"contact_name"`
+	ContactINN           string `json:"contact_inn"`
+	PositionName         string `json:"position_name"`
+	OnecNomenclatureRef  string `json:"onec_nomenclature_ref"`
+	OnecNomenclatureName string `json:"onec_nomenclature_name"`
+	Problem              string `json:"problem"`
+}
+
+type FinanceOneCCatalogItem struct {
+	ConnectionID UUID                                 `json:"connection_id"`
+	Catalog      FinanceOneCCatalogName               `json:"catalog"`
+	Ref          string                               `json:"ref"`
+	ParentRef    string                               `json:"parent_ref"`
+	IsGroup      bool                                 `json:"is_group"`
+	Code         string                               `json:"code"`
+	Name         string                               `json:"name"`
+	FullName     *string                              `json:"full_name,omitempty"`
+	Article      *string                              `json:"article,omitempty"`
+	Kind         *string                              `json:"kind,omitempty"`
+	Unit         *string                              `json:"unit,omitempty"`
+	VATRate      *string                              `json:"vat_rate,omitempty"`
+	IsService    *bool                                `json:"is_service,omitempty"`
+	OffBalance   *bool                                `json:"off_balance,omitempty"`
+	Currency     *bool                                `json:"currency,omitempty"`
+	Quantity     *bool                                `json:"quantity,omitempty"`
+	Subconto     []FinanceOneCCatalogItemSubcontoItem `json:"subconto,omitempty"`
+	DeletionMark bool                                 `json:"deletion_mark"`
+	RemovedAt    *string                              `json:"removed_at,omitempty"`
+	SyncedAt     string                               `json:"synced_at"`
+	ChangedAt    string                               `json:"changed_at"`
+}
+
+type FinanceOneCCatalogItemSubcontoItem struct {
+	Ref           *string `json:"ref,omitempty"`
+	Name          *string `json:"name,omitempty"`
+	TurnoversOnly *bool   `json:"turnovers_only,omitempty"`
+	Kind          *string `json:"kind,omitempty"`
+}
+
+type FinanceOneCCatalogName = string
+
 type FinanceOneCCatalogOption struct {
 	// Ref — Ссылка элемента в 1С (Ref_Key)
 	Ref string `json:"ref"`
@@ -20538,6 +20669,38 @@ type FinanceOneCCatalogOption struct {
 	KPP *string `json:"kpp,omitempty"`
 	// Oktmo — ОКТМО регистрации
 	Oktmo *string `json:"oktmo,omitempty"`
+}
+
+type FinanceOneCCatalogOverview struct {
+	ConnectionID  UUID                            `json:"connection_id"`
+	SyncedAt      *string                         `json:"synced_at,omitempty"`
+	Catalogs      []FinanceOneCCatalogStat        `json:"catalogs"`
+	Changes       []FinanceOneCCatalogChange      `json:"changes"`
+	Discrepancies []FinanceOneCCatalogDiscrepancy `json:"discrepancies"`
+}
+
+type FinanceOneCCatalogPage struct {
+	Count   int64                    `json:"count"`
+	Limit   int64                    `json:"limit"`
+	Offset  int64                    `json:"offset"`
+	Results []FinanceOneCCatalogItem `json:"results"`
+}
+
+type FinanceOneCCatalogStat struct {
+	Catalog  FinanceOneCCatalogName `json:"catalog"`
+	Items    int64                  `json:"items"`
+	Groups   int64                  `json:"groups"`
+	Marked   int64                  `json:"marked"`
+	Removed  int64                  `json:"removed"`
+	SyncedAt *string                `json:"synced_at,omitempty"`
+	Error    *string                `json:"error,omitempty"`
+}
+
+type FinanceOneCCatalogSyncReport struct {
+	ConnectionID UUID                     `json:"connection_id"`
+	At           string                   `json:"at"`
+	Catalogs     []FinanceOneCCatalogStat `json:"catalogs"`
+	Changes      int64                    `json:"changes"`
 }
 
 type FinanceOneCConnection struct {
@@ -20574,9 +20737,11 @@ type FinanceOneCConnection struct {
 	AccountingMode  FinanceOneCAccountingMode  `json:"accounting_mode"`
 	AccountingTrust FinanceOneCAccountingTrust `json:"accounting_trust"`
 	// AcceptsUnposted — Оставлять в 1С непроведёнными — при выбранном режиме бухгалтера Акеда снимает проведение своего документа после загрузки, проведение бухгалтером считается принятием
-	AcceptsUnposted bool   `json:"accepts_unposted"`
-	CreatedAt       string `json:"created_at"`
-	UpdatedAt       string `json:"updated_at"`
+	AcceptsUnposted  bool                   `json:"accepts_unposted"`
+	AccountsBy       *FinanceOneCAccountsBy `json:"accounts_by,omitempty"`
+	CatalogsSyncedAt *string                `json:"catalogs_synced_at,omitempty"`
+	CreatedAt        string                 `json:"created_at"`
+	UpdatedAt        string                 `json:"updated_at"`
 }
 
 type FinanceOneCConnectionInput struct {
@@ -20598,7 +20763,8 @@ type FinanceOneCConnectionInput struct {
 	AccountingMode  *FinanceOneCAccountingMode  `json:"accounting_mode,omitempty"`
 	AccountingTrust *FinanceOneCAccountingTrust `json:"accounting_trust,omitempty"`
 	// AcceptsUnposted — Оставлять в 1С непроведёнными; не передан — оставить как есть, у нового подключения включено
-	AcceptsUnposted *bool `json:"accepts_unposted,omitempty"`
+	AcceptsUnposted *bool                  `json:"accepts_unposted,omitempty"`
+	AccountsBy      *FinanceOneCAccountsBy `json:"accounts_by,omitempty"`
 }
 
 type FinanceOneCConnectionPage struct {
@@ -21238,6 +21404,12 @@ type FinancePaymentCalendarSource struct {
 	Name     string                   `json:"name"`
 	Currency string                   `json:"currency"`
 	Opening  string                   `json:"opening"`
+	// SourceCurrency — Валюта счёта, когда валютный счёт показан в календаре валюты учёта; opening тогда — его остаток по курсу ЦБ на начало окна
+	SourceCurrency *string `json:"source_currency,omitempty"`
+	// SourceOpening — Остаток валютного счёта в его валюте на начало окна
+	SourceOpening *string `json:"source_opening,omitempty"`
+	// Rate — Курс ЦБ на начало окна, по которому пересчитан остаток валютного счёта
+	Rate *string `json:"rate,omitempty"`
 	// OverdueNet — Просроченное по месту хранения — приход минус выплата; на шкалу не ложится и входит в closing с первого дня окна
 	OverdueNet string                       `json:"overdue_net"`
 	Inflow     string                       `json:"inflow"`
@@ -39931,6 +40103,10 @@ type FilesVersionContentLinkResponse struct {
 	SizeBytes *int64  `json:"size_bytes,omitempty"`
 	VersionID UUID    `json:"version_id"`
 	VersionNo int64   `json:"version_no"`
+}
+
+type FinanceAccountingRegistryConnectionsResponse struct {
+	Results []FinanceOneCConnection `json:"results"`
 }
 
 type FinanceSendAccountingRegistryEntriesRequest struct {

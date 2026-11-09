@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eabb03b611b3faf161d5aca62708f4a793fddcad2acd7596f91e9b27d7082ec5).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0a8f29d494e322b5b699efbefc7e44a8d0cf5191cf24ab19c02b47d0ab4c7fa0).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -1422,17 +1422,25 @@ __all__ = [
     "FinanceAccountPatch",
     "FinanceAccountableBalance",
     "FinanceAccountableBalances",
+    "FinanceAccountingAccounts",
+    "FinanceAccountingChoiceInput",
+    "FinanceAccountingChoiceInputChoicesItem",
     "FinanceAccountingEntry",
     "FinanceAccountingEntryCard",
+    "FinanceAccountingLine",
+    "FinanceAccountingLineOnecAccountSubcontoItem",
+    "FinanceAccountingLines",
     "FinanceAccountingPage",
     "FinanceAccountingPosting",
     "FinanceAccountingReference",
     "FinanceAccountingRejectInput",
     "FinanceAccountingRule",
+    "FinanceAccountingRuleChangeInput",
     "FinanceAccountingRulePage",
     "FinanceAccountingSendReport",
     "FinanceAccountingSendReportSkippedItem",
     "FinanceAccountingSendReportErrorsItem",
+    "FinanceAccountingSettingsInput",
     "FinanceAccountingStatus",
     "FinanceAcquirer",
     "FinanceAcquirerInput",
@@ -1694,11 +1702,21 @@ __all__ = [
     "FinanceOffBooksSideContactsItemMonthsItemDocumentsItem",
     "FinanceOneCAccountingMode",
     "FinanceOneCAccountingTrust",
+    "FinanceOneCAccountsBy",
     "FinanceOneCBankAccount",
     "FinanceOneCBankLine",
     "FinanceOneCBankReconciliation",
     "FinanceOneCBankRow",
+    "FinanceOneCCatalogChange",
+    "FinanceOneCCatalogDiscrepancy",
+    "FinanceOneCCatalogItem",
+    "FinanceOneCCatalogItemSubcontoItem",
+    "FinanceOneCCatalogName",
     "FinanceOneCCatalogOption",
+    "FinanceOneCCatalogOverview",
+    "FinanceOneCCatalogPage",
+    "FinanceOneCCatalogStat",
+    "FinanceOneCCatalogSyncReport",
     "FinanceOneCConnection",
     "FinanceOneCConnectionInput",
     "FinanceOneCConnectionPage",
@@ -3231,6 +3249,7 @@ __all__ = [
     "FilesListSharesResponse",
     "FilesCreateShortcutRequest",
     "FilesVersionContentLinkResponse",
+    "FinanceAccountingRegistryConnectionsResponse",
     "FinanceSendAccountingRegistryEntriesRequest",
     "FinanceListDividendAccessUsersResponse",
     "FinanceListDividendAccessUsersResponseResultsItem",
@@ -20986,6 +21005,30 @@ class FinanceAccountableBalances(TypedDict):
     on: str
     rows: List["FinanceAccountableBalance"]
 
+class FinanceAccountingAccounts(TypedDict, total=False):
+    """Счёт 1С и субконто строки, выбранные бухгалтером в Акеде (ERP-102, этап 2). Пусто — счета ставит 1С по номенклатуре"""
+
+    #: Ссылка счёта плана счетов Хозрасчетный; пусто — снять выбор счёта
+    account_ref: str
+    account_code: str
+    #: Статья затрат — если у счёта есть субконто «Статьи затрат»
+    cost_item_ref: str
+    #: Подразделение затрат строки
+    department_ref: str
+    #: Номенклатурная группа — если у счёта есть такое субконто
+    nomenclature_group_ref: str
+
+class FinanceAccountingChoiceInput(TypedDict):
+    choices: List["FinanceAccountingChoiceInputChoicesItem"]
+
+class _FinanceAccountingChoiceInputChoicesItemRequired(TypedDict):
+    index: int
+
+class FinanceAccountingChoiceInputChoicesItem(_FinanceAccountingChoiceInputChoicesItemRequired, total=False):
+    #: Номенклатура 1С строки; пусто — оставить запомненную
+    onec_nomenclature_ref: str
+    onec_accounts: "FinanceAccountingAccounts"
+
 class _FinanceAccountingEntryRequired(TypedDict):
     id: "UUID"
     company_id: "UUID"
@@ -21065,6 +21108,46 @@ class FinanceAccountingEntryCard(_FinanceAccountingEntryCardRequired, total=Fals
     #: Отказ 1С по документу, ждущему отправки: текст 1С или код отметки журнала обмена
     send_error: str
 
+class _FinanceAccountingLineRequired(TypedDict):
+    index: int
+    position_kind: Literal['product', 'pnl_item']
+    position_id: "UUID"
+    position_name: str
+    goods: bool
+    onec_nomenclature_ref: str
+    onec_nomenclature_name: str
+
+class FinanceAccountingLine(_FinanceAccountingLineRequired, total=False):
+    rule_id: "UUID"
+    onec_nomenclature_code: str
+    problem: Literal['marked', 'removed', 'absent']
+    onec_accounts: "FinanceAccountingAccounts"
+    #: Наименование выбранного счёта из снимка плана счетов (режим «Счета ставит: бухгалтер в Акеде»)
+    onec_account_name: str
+    onec_cost_item_name: str
+    onec_department_name: str
+    onec_nomenclature_group_name: str
+    #: Виды субконто выбранного счёта по снимку плана счетов
+    onec_account_subconto: List["FinanceAccountingLineOnecAccountSubcontoItem"]
+    #: Счёт или субконто помечены в 1С на удаление, удалены или не загружены
+    accounts_problem: Literal['marked', 'removed', 'absent']
+
+class _FinanceAccountingLineOnecAccountSubcontoItemRequired(TypedDict):
+    ref: str
+    name: str
+
+class FinanceAccountingLineOnecAccountSubcontoItem(_FinanceAccountingLineOnecAccountSubcontoItemRequired, total=False):
+    turnovers_only: bool
+    #: Вид, который заполняет Акеда; пусто — не заполняет
+    kind: Literal['cost_items', 'nomenclature_groups', 'nomenclature']
+
+class FinanceAccountingLines(TypedDict):
+    entry_id: "UUID"
+    connection_id: "UUID"
+    accounts_by: "FinanceOneCAccountsBy"
+    editable: bool
+    lines: List["FinanceAccountingLine"]
+
 class FinanceAccountingPage(TypedDict):
     #: Всего строк под отбором
     count: int
@@ -21105,7 +21188,7 @@ class FinanceAccountingRejectInput(TypedDict):
     #: Причина отклонения; её читает сотрудник
     reason: str
 
-class FinanceAccountingRule(TypedDict):
+class _FinanceAccountingRuleRequired(TypedDict):
     id: "UUID"
     connection_id: "UUID"
     #: ИНН контрагента — часть ключа правила
@@ -21123,13 +21206,19 @@ class FinanceAccountingRule(TypedDict):
     onec_nomenclature_ref: str
     #: Наименование номенклатуры в 1С
     onec_nomenclature_name: str
-    #: Счёт учёта или затрат из проведённого документа — справка, в 1С не передаётся
+    #: Код счёта: выбранный бухгалтером в Акеде (уходит в 1С) или из проведённого документа — справка
     onec_account: str
     #: Сколько проведённых бухгалтером документов подтвердили правило
     confirmations: int
     #: Последнее подтверждение
     confirmed_at: str
     created_at: str
+
+class FinanceAccountingRule(_FinanceAccountingRuleRequired, total=False):
+    onec_accounts: "FinanceAccountingAccounts"
+
+class FinanceAccountingRuleChangeInput(TypedDict):
+    onec_nomenclature_ref: str
 
 class FinanceAccountingRulePage(TypedDict):
     #: Всего правил под отбором
@@ -21161,6 +21250,12 @@ class FinanceAccountingSendReportErrorsItem(TypedDict):
     document_number: str
     #: Текст отказа 1С или код отметки журнала обмена (finance.onec.*)
     message: str
+
+class FinanceAccountingSettingsInput(TypedDict, total=False):
+    accounting_mode: "FinanceOneCAccountingMode"
+    accounting_trust: str
+    accepts_unposted: bool
+    accounts_by: "FinanceOneCAccountsBy"
 
 FinanceAccountingStatus = Literal['new', 'sent', 'accepted', 'rejected', 'not_required']
 
@@ -23910,6 +24005,8 @@ FinanceOneCAccountingMode = Literal['', 'in_onec', 'in_akeda']
 
 FinanceOneCAccountingTrust = Literal['review_all', 'auto_by_rules']
 
+FinanceOneCAccountsBy = Literal['onec_nomenclature', 'accountant']
+
 class _FinanceOneCBankAccountRequired(TypedDict):
     #: Номер расчётного счёта организации
     account_number: str
@@ -23968,6 +24065,58 @@ class FinanceOneCBankRow(_FinanceOneCBankRowRequired, total=False):
     akeda: "FinanceOneCBankLine"
     onec: "FinanceOneCBankLine"
 
+class FinanceOneCCatalogChange(TypedDict):
+    id: "UUID"
+    connection_id: "UUID"
+    catalog: "FinanceOneCCatalogName"
+    ref: str
+    code: str
+    name: str
+    change: Literal['added', 'changed', 'marked', 'unmarked', 'removed']
+    at: str
+
+class FinanceOneCCatalogDiscrepancy(TypedDict):
+    rule_id: "UUID"
+    contact_name: str
+    contact_inn: str
+    position_name: str
+    onec_nomenclature_ref: str
+    onec_nomenclature_name: str
+    problem: Literal['marked', 'removed', 'absent']
+
+class _FinanceOneCCatalogItemRequired(TypedDict):
+    connection_id: "UUID"
+    catalog: "FinanceOneCCatalogName"
+    ref: str
+    parent_ref: str
+    is_group: bool
+    code: str
+    name: str
+    deletion_mark: bool
+    synced_at: str
+    changed_at: str
+
+class FinanceOneCCatalogItem(_FinanceOneCCatalogItemRequired, total=False):
+    full_name: str
+    article: str
+    kind: str
+    unit: str
+    vat_rate: str
+    is_service: bool
+    off_balance: bool
+    currency: bool
+    quantity: bool
+    subconto: List["FinanceOneCCatalogItemSubcontoItem"]
+    removed_at: str
+
+class FinanceOneCCatalogItemSubcontoItem(TypedDict, total=False):
+    ref: str
+    name: str
+    turnovers_only: bool
+    kind: Literal['cost_items', 'nomenclature_groups', 'nomenclature']
+
+FinanceOneCCatalogName = Literal['nomenclature', 'accounts', 'cost_items', 'departments', 'nomenclature_groups']
+
 class _FinanceOneCCatalogOptionRequired(TypedDict):
     #: Ссылка элемента в 1С (Ref_Key)
     ref: str
@@ -23979,6 +24128,38 @@ class FinanceOneCCatalogOption(_FinanceOneCCatalogOptionRequired, total=False):
     kpp: str
     #: ОКТМО регистрации
     oktmo: str
+
+class _FinanceOneCCatalogOverviewRequired(TypedDict):
+    connection_id: "UUID"
+    catalogs: List["FinanceOneCCatalogStat"]
+    changes: List["FinanceOneCCatalogChange"]
+    discrepancies: List["FinanceOneCCatalogDiscrepancy"]
+
+class FinanceOneCCatalogOverview(_FinanceOneCCatalogOverviewRequired, total=False):
+    synced_at: str
+
+class FinanceOneCCatalogPage(TypedDict):
+    count: int
+    limit: int
+    offset: int
+    results: List["FinanceOneCCatalogItem"]
+
+class _FinanceOneCCatalogStatRequired(TypedDict):
+    catalog: "FinanceOneCCatalogName"
+    items: int
+    groups: int
+    marked: int
+    removed: int
+
+class FinanceOneCCatalogStat(_FinanceOneCCatalogStatRequired, total=False):
+    synced_at: str
+    error: str
+
+class FinanceOneCCatalogSyncReport(TypedDict):
+    connection_id: "UUID"
+    at: str
+    catalogs: List["FinanceOneCCatalogStat"]
+    changes: int
 
 class _FinanceOneCConnectionRequired(TypedDict):
     id: "UUID"
@@ -24019,6 +24200,8 @@ class FinanceOneCConnection(_FinanceOneCConnectionRequired, total=False):
     #: Приём из 1С по расписанию включён: он пишет в учёт, поэтому по умолчанию выключен
     receive_enabled: bool
     last_error: str
+    accounts_by: "FinanceOneCAccountsBy"
+    catalogs_synced_at: str
 
 class _FinanceOneCConnectionInputRequired(TypedDict):
     company_id: "UUID"
@@ -24042,6 +24225,7 @@ class FinanceOneCConnectionInput(_FinanceOneCConnectionInputRequired, total=Fals
     accounting_trust: "FinanceOneCAccountingTrust"
     #: Оставлять в 1С непроведёнными; не передан — оставить как есть, у нового подключения включено
     accepts_unposted: bool
+    accounts_by: "FinanceOneCAccountsBy"
 
 class FinanceOneCConnectionPage(TypedDict):
     count: int
@@ -24609,7 +24793,7 @@ class FinancePaymentCalendarRow(_FinancePaymentCalendarRowRequired, total=False)
     request_status: Literal['planned', 'sent', 'awaiting_signature']
     fact: "FinancePaymentFact"
 
-class FinancePaymentCalendarSource(TypedDict):
+class _FinancePaymentCalendarSourceRequired(TypedDict):
     id: "UUID"
     kind: "FinancePaymentSourceKind"
     name: str
@@ -24621,6 +24805,14 @@ class FinancePaymentCalendarSource(TypedDict):
     outflow: str
     closing: str
     cells: List["FinancePaymentCalendarCell"]
+
+class FinancePaymentCalendarSource(_FinancePaymentCalendarSourceRequired, total=False):
+    #: Валюта счёта, когда валютный счёт показан в календаре валюты учёта; opening тогда — его остаток по курсу ЦБ на начало окна
+    source_currency: str
+    #: Остаток валютного счёта в его валюте на начало окна
+    source_opening: str
+    #: Курс ЦБ на начало окна, по которому пересчитан остаток валютного счёта
+    rate: str
 
 class _FinancePaymentCashCheckRequired(TypedDict):
     company_id: "UUID"
@@ -42755,6 +42947,9 @@ class _FilesVersionContentLinkResponseRequired(TypedDict):
 class FilesVersionContentLinkResponse(_FilesVersionContentLinkResponseRequired, total=False):
     expires_at: str
     size_bytes: int
+
+class FinanceAccountingRegistryConnectionsResponse(TypedDict):
+    results: List["FinanceOneCConnection"]
 
 class FinanceSendAccountingRegistryEntriesRequest(TypedDict):
     #: Строки реестра

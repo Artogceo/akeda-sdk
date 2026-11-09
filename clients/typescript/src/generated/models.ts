@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eabb03b611b3faf161d5aca62708f4a793fddcad2acd7596f91e9b27d7082ec5).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0a8f29d494e322b5b699efbefc7e44a8d0cf5191cf24ab19c02b47d0ab4c7fa0).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -17497,6 +17497,30 @@ export interface FinanceAccountableBalances {
   "rows": Array<FinanceAccountableBalance>;
 }
 
+/** Счёт 1С и субконто строки, выбранные бухгалтером в Акеде (ERP-102, этап 2). Пусто — счета ставит 1С по номенклатуре */
+export interface FinanceAccountingAccounts {
+  /** Ссылка счёта плана счетов Хозрасчетный; пусто — снять выбор счёта */
+  "account_ref"?: string;
+  "account_code"?: string;
+  /** Статья затрат — если у счёта есть субконто «Статьи затрат» */
+  "cost_item_ref"?: string;
+  /** Подразделение затрат строки */
+  "department_ref"?: string;
+  /** Номенклатурная группа — если у счёта есть такое субконто */
+  "nomenclature_group_ref"?: string;
+}
+
+export interface FinanceAccountingChoiceInput {
+  "choices": Array<FinanceAccountingChoiceInputChoicesItem>;
+}
+
+export interface FinanceAccountingChoiceInputChoicesItem {
+  "index": number;
+  /** Номенклатура 1С строки; пусто — оставить запомненную */
+  "onec_nomenclature_ref"?: string;
+  "onec_accounts"?: FinanceAccountingAccounts;
+}
+
 export interface FinanceAccountingEntry {
   "id": UUID;
   "company_id": UUID;
@@ -17574,6 +17598,45 @@ export interface FinanceAccountingEntryCard {
   "reference": FinanceAccountingReference;
 }
 
+export interface FinanceAccountingLine {
+  "index": number;
+  "position_kind": "product" | "pnl_item";
+  "position_id": UUID;
+  "position_name": string;
+  "goods": boolean;
+  "rule_id"?: UUID;
+  "onec_nomenclature_ref": string;
+  "onec_nomenclature_name": string;
+  "onec_nomenclature_code"?: string;
+  "problem"?: "marked" | "removed" | "absent";
+  "onec_accounts"?: FinanceAccountingAccounts;
+  /** Наименование выбранного счёта из снимка плана счетов (режим «Счета ставит: бухгалтер в Акеде») */
+  "onec_account_name"?: string;
+  "onec_cost_item_name"?: string;
+  "onec_department_name"?: string;
+  "onec_nomenclature_group_name"?: string;
+  /** Виды субконто выбранного счёта по снимку плана счетов */
+  "onec_account_subconto"?: Array<FinanceAccountingLineOnecAccountSubcontoItem>;
+  /** Счёт или субконто помечены в 1С на удаление, удалены или не загружены */
+  "accounts_problem"?: "marked" | "removed" | "absent";
+}
+
+export interface FinanceAccountingLineOnecAccountSubcontoItem {
+  "ref": string;
+  "name": string;
+  "turnovers_only"?: boolean;
+  /** Вид, который заполняет Акеда; пусто — не заполняет */
+  "kind"?: "cost_items" | "nomenclature_groups" | "nomenclature";
+}
+
+export interface FinanceAccountingLines {
+  "entry_id": UUID;
+  "connection_id": UUID;
+  "accounts_by": FinanceOneCAccountsBy;
+  "editable": boolean;
+  "lines": Array<FinanceAccountingLine>;
+}
+
 export interface FinanceAccountingPage {
   /** Всего строк под отбором */
   "count": number;
@@ -17635,13 +17698,18 @@ export interface FinanceAccountingRule {
   "onec_nomenclature_ref": string;
   /** Наименование номенклатуры в 1С */
   "onec_nomenclature_name": string;
-  /** Счёт учёта или затрат из проведённого документа — справка, в 1С не передаётся */
+  /** Код счёта: выбранный бухгалтером в Акеде (уходит в 1С) или из проведённого документа — справка */
   "onec_account": string;
+  "onec_accounts"?: FinanceAccountingAccounts;
   /** Сколько проведённых бухгалтером документов подтвердили правило */
   "confirmations": number;
   /** Последнее подтверждение */
   "confirmed_at": string;
   "created_at": string;
+}
+
+export interface FinanceAccountingRuleChangeInput {
+  "onec_nomenclature_ref": string;
 }
 
 export interface FinanceAccountingRulePage {
@@ -17675,6 +17743,13 @@ export interface FinanceAccountingSendReportErrorsItem {
   "document_number": string;
   /** Текст отказа 1С или код отметки журнала обмена (finance.onec.*) */
   "message": string;
+}
+
+export interface FinanceAccountingSettingsInput {
+  "accounting_mode"?: FinanceOneCAccountingMode;
+  "accounting_trust"?: string;
+  "accepts_unposted"?: boolean;
+  "accounts_by"?: FinanceOneCAccountsBy;
 }
 
 export type FinanceAccountingStatus = "new" | "sent" | "accepted" | "rejected" | "not_required";
@@ -20506,6 +20581,8 @@ export type FinanceOneCAccountingMode = "" | "in_onec" | "in_akeda";
 
 export type FinanceOneCAccountingTrust = "review_all" | "auto_by_rules";
 
+export type FinanceOneCAccountsBy = "onec_nomenclature" | "accountant";
+
 export interface FinanceOneCBankAccount {
   /** Номер расчётного счёта организации */
   "account_number": string;
@@ -20567,6 +20644,60 @@ export interface FinanceOneCBankRow {
   "notes": Array<"date" | "party" | "number" | "not_posted">;
 }
 
+export interface FinanceOneCCatalogChange {
+  "id": UUID;
+  "connection_id": UUID;
+  "catalog": FinanceOneCCatalogName;
+  "ref": string;
+  "code": string;
+  "name": string;
+  "change": "added" | "changed" | "marked" | "unmarked" | "removed";
+  "at": string;
+}
+
+export interface FinanceOneCCatalogDiscrepancy {
+  "rule_id": UUID;
+  "contact_name": string;
+  "contact_inn": string;
+  "position_name": string;
+  "onec_nomenclature_ref": string;
+  "onec_nomenclature_name": string;
+  "problem": "marked" | "removed" | "absent";
+}
+
+export interface FinanceOneCCatalogItem {
+  "connection_id": UUID;
+  "catalog": FinanceOneCCatalogName;
+  "ref": string;
+  "parent_ref": string;
+  "is_group": boolean;
+  "code": string;
+  "name": string;
+  "full_name"?: string;
+  "article"?: string;
+  "kind"?: string;
+  "unit"?: string;
+  "vat_rate"?: string;
+  "is_service"?: boolean;
+  "off_balance"?: boolean;
+  "currency"?: boolean;
+  "quantity"?: boolean;
+  "subconto"?: Array<FinanceOneCCatalogItemSubcontoItem>;
+  "deletion_mark": boolean;
+  "removed_at"?: string;
+  "synced_at": string;
+  "changed_at": string;
+}
+
+export interface FinanceOneCCatalogItemSubcontoItem {
+  "ref"?: string;
+  "name"?: string;
+  "turnovers_only"?: boolean;
+  "kind"?: "cost_items" | "nomenclature_groups" | "nomenclature";
+}
+
+export type FinanceOneCCatalogName = "nomenclature" | "accounts" | "cost_items" | "departments" | "nomenclature_groups";
+
 export interface FinanceOneCCatalogOption {
   /** Ссылка элемента в 1С (Ref_Key) */
   "ref": string;
@@ -20576,6 +20707,38 @@ export interface FinanceOneCCatalogOption {
   "kpp"?: string;
   /** ОКТМО регистрации */
   "oktmo"?: string;
+}
+
+export interface FinanceOneCCatalogOverview {
+  "connection_id": UUID;
+  "synced_at"?: string;
+  "catalogs": Array<FinanceOneCCatalogStat>;
+  "changes": Array<FinanceOneCCatalogChange>;
+  "discrepancies": Array<FinanceOneCCatalogDiscrepancy>;
+}
+
+export interface FinanceOneCCatalogPage {
+  "count": number;
+  "limit": number;
+  "offset": number;
+  "results": Array<FinanceOneCCatalogItem>;
+}
+
+export interface FinanceOneCCatalogStat {
+  "catalog": FinanceOneCCatalogName;
+  "items": number;
+  "groups": number;
+  "marked": number;
+  "removed": number;
+  "synced_at"?: string;
+  "error"?: string;
+}
+
+export interface FinanceOneCCatalogSyncReport {
+  "connection_id": UUID;
+  "at": string;
+  "catalogs": Array<FinanceOneCCatalogStat>;
+  "changes": number;
 }
 
 export interface FinanceOneCConnection {
@@ -20613,6 +20776,8 @@ export interface FinanceOneCConnection {
   "accounting_trust": FinanceOneCAccountingTrust;
   /** Оставлять в 1С непроведёнными — при выбранном режиме бухгалтера Акеда снимает проведение своего документа после загрузки, проведение бухгалтером считается принятием */
   "accepts_unposted": boolean;
+  "accounts_by"?: FinanceOneCAccountsBy;
+  "catalogs_synced_at"?: string;
   "created_at": string;
   "updated_at": string;
 }
@@ -20637,6 +20802,7 @@ export interface FinanceOneCConnectionInput {
   "accounting_trust"?: FinanceOneCAccountingTrust;
   /** Оставлять в 1С непроведёнными; не передан — оставить как есть, у нового подключения включено */
   "accepts_unposted"?: boolean;
+  "accounts_by"?: FinanceOneCAccountsBy;
 }
 
 export interface FinanceOneCConnectionPage {
@@ -21276,6 +21442,12 @@ export interface FinancePaymentCalendarSource {
   "name": string;
   "currency": string;
   "opening": string;
+  /** Валюта счёта, когда валютный счёт показан в календаре валюты учёта; opening тогда — его остаток по курсу ЦБ на начало окна */
+  "source_currency"?: string;
+  /** Остаток валютного счёта в его валюте на начало окна */
+  "source_opening"?: string;
+  /** Курс ЦБ на начало окна, по которому пересчитан остаток валютного счёта */
+  "rate"?: string;
   /** Просроченное по месту хранения — приход минус выплата; на шкалу не ложится и входит в closing с первого дня окна */
   "overdue_net": string;
   "inflow": string;
@@ -40048,6 +40220,10 @@ export interface FilesVersionContentLinkResponse {
   "size_bytes"?: number;
   "version_id": UUID;
   "version_no": number;
+}
+
+export interface FinanceAccountingRegistryConnectionsResponse {
+  "results": Array<FinanceOneCConnection>;
 }
 
 export interface FinanceSendAccountingRegistryEntriesRequest {

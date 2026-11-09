@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eabb03b611b3faf161d5aca62708f4a793fddcad2acd7596f91e9b27d7082ec5).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0a8f29d494e322b5b699efbefc7e44a8d0cf5191cf24ab19c02b47d0ab4c7fa0).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -910,6 +910,11 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeAcceptFixedAsset': OperationSpec('POST', '/api/v1/finance/fixed-assets/{id}/acceptance', 'finance', 'preview', 'finance.period:write', True, True, ('id',), 'none', None, None),
     'financeAcceptStatementMail': OperationSpec('POST', '/api/v1/finance/statement-mailboxes/{id}/mails/{mailId}/accept', 'finance', 'preview', 'finance.connectors:write', False, False, ('id', 'mailId',), 'none', None, None),
     'financeAccountableBalances': OperationSpec('GET', '/api/v1/finance/accountable/balances', 'finance', 'preview', 'finance.accountable:read', False, True, (), 'none', None, None),
+    'financeAccountingCatalog': OperationSpec('GET', '/api/v1/finance/accounting-registry/connections/{id}/catalogs/{catalog}', 'finance', 'preview', 'finance.accounting-registry:read', False, True, ('catalog', 'id',), 'limit_offset', 1000, None),
+    'financeAccountingCatalogOverview': OperationSpec('GET', '/api/v1/finance/accounting-registry/connections/{id}/catalogs', 'finance', 'preview', 'finance.accounting-registry:read', False, True, ('id',), 'none', None, None),
+    'financeAccountingRegistryConnections': OperationSpec('GET', '/api/v1/finance/accounting-registry/connections', 'finance', 'preview', 'finance.accounting-registry:read', False, True, (), 'none', None, None),
+    'financeAccountingRegistryLines': OperationSpec('GET', '/api/v1/finance/accounting-registry/{id}/lines', 'finance', 'preview', 'finance.accounting-registry:read', False, True, ('id',), 'none', None, None),
+    'financeAccountingRegistryRules': OperationSpec('GET', '/api/v1/finance/accounting-registry/connections/{id}/rules', 'finance', 'preview', 'finance.accounting-registry:read', False, True, ('id',), 'limit_offset', 500, None),
     'financeActBudgetSubmission': OperationSpec('POST', '/api/v1/finance/budgets/submissions', 'finance', 'preview', 'finance.budgets:write', False, True, (), 'none', None, None),
     'financeAddAllocationRule': OperationSpec('POST', '/api/v1/finance/settlements/allocation-rules', 'finance', 'preview', 'finance.settlements:write', False, True, (), 'none', None, None),
     'financeAddPaymentRegistryLine': OperationSpec('POST', '/api/v1/finance/payment-registries/{id}/lines', 'finance', 'preview', 'finance.payment-requests:plan', False, False, ('id',), 'none', None, None),
@@ -982,9 +987,11 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeCategorizeCashOperation': OperationSpec('POST', '/api/v1/finance/cash-operations/{id}/categorize', 'finance', 'preview', 'finance.cash_operations:write', False, True, ('id',), 'none', None, None),
     'financeCategorizeTransaction': OperationSpec('POST', '/api/v1/finance/transactions/{id}/categorize', 'finance', 'preview', 'finance.transactions:write', False, True, ('id',), 'none', None, None),
     'financeCategorizeTransactions': OperationSpec('POST', '/api/v1/finance/transactions/categorize', 'finance', 'preview', 'finance.transactions:write', False, True, (), 'none', None, None),
+    'financeChangeAccountingRegistryRule': OperationSpec('PATCH', '/api/v1/finance/accounting-registry/connections/{id}/rules/{rule}', 'finance', 'preview', 'finance.accounting-registry:write', False, True, ('id', 'rule',), 'none', None, None),
     'financeChangeActPnlItem': OperationSpec('POST', '/api/v1/finance/trade/acts/{id}/pnl-item', 'finance', 'preview', 'finance.operations:write', False, True, ('id',), 'none', None, None),
     'financeCheckConnectorStatement': OperationSpec('POST', '/api/v1/finance/connectors/{id}/accounts/{accountId}/check-statement', 'finance', 'preview', 'finance.connectors:write', False, True, ('accountId', 'id',), 'none', None, None),
     'financeCheckOneCConnection': OperationSpec('POST', '/api/v1/finance/exchange/onec/connections/{id}/check', 'finance', 'preview', 'finance.exchange:write', False, True, ('id',), 'none', None, None),
+    'financeChooseAccountingRegistryLines': OperationSpec('PUT', '/api/v1/finance/accounting-registry/{id}/lines', 'finance', 'preview', 'finance.accounting-registry:write', False, True, ('id',), 'none', None, None),
     'financeClassificationSuggestions': OperationSpec('GET', '/api/v1/finance/classification-suggestions', 'finance', 'preview', 'finance.transactions:read', False, True, (), 'limit_offset', 200, 50),
     'financeCloseAdvancesToExpense': OperationSpec('POST', '/api/v1/finance/settlements/closing-awaited/close-expense-batch', 'finance', 'preview', 'finance.settlements:write', True, True, (), 'none', None, None),
     'financeClosePaymentRequestShort': OperationSpec('POST', '/api/v1/finance/payment-requests/{id}/close-short', 'finance', 'preview', 'finance.payment-requests:plan', False, False, ('id',), 'none', None, None),
@@ -1027,6 +1034,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeDebtWriteOffOptions': OperationSpec('GET', '/api/v1/finance/settlements/obligations/{id}/write-off', 'finance', 'preview', 'finance.settlements:read', False, True, ('id',), 'none', None, None),
     'financeDeleteAccount': OperationSpec('DELETE', '/api/v1/finance/accounts/{id}', 'finance', 'preview', 'finance.accounts:write', False, True, ('id',), 'none', None, None),
     'financeDeleteAccountStatement': OperationSpec('DELETE', '/api/v1/finance/accounts/{id}/statements/{statementId}', 'finance', 'preview', 'finance.statements:write', False, True, ('id', 'statementId',), 'none', None, None),
+    'financeDeleteAccountingRegistryRule': OperationSpec('DELETE', '/api/v1/finance/accounting-registry/connections/{id}/rules/{rule}', 'finance', 'preview', 'finance.accounting-registry:write', False, True, ('id', 'rule',), 'none', None, None),
     'financeDeleteAcquirer': OperationSpec('DELETE', '/api/v1/finance/acquirers/{id}', 'finance', 'preview', 'finance.settlements:write', False, True, ('id',), 'none', None, None),
     'financeDeleteConnector': OperationSpec('DELETE', '/api/v1/finance/connectors/{id}', 'finance', 'preview', 'finance.connectors:write', False, True, ('id',), 'none', None, None),
     'financeDeleteOneCAccountingRule': OperationSpec('DELETE', '/api/v1/finance/exchange/onec/connections/{id}/accounting-rules/{rule}', 'finance', 'preview', 'finance.exchange:write', False, True, ('id', 'rule',), 'none', None, None),
@@ -1237,6 +1245,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeSendOneCNow': OperationSpec('POST', '/api/v1/finance/exchange/onec/connections/{id}/send', 'finance', 'preview', 'finance.exchange:write', False, True, ('id',), 'none', None, None),
     'financeSendPaymentRegistry': OperationSpec('POST', '/api/v1/finance/payment-registries/{id}/send', 'finance', 'preview', 'finance.payment-requests:send', False, False, ('id',), 'none', None, None),
     'financeSetAccountOpeningBalance': OperationSpec('POST', '/api/v1/finance/accounts/{id}/opening-balance', 'finance', 'preview', 'finance.accounts:write', False, True, ('id',), 'none', None, None),
+    'financeSetAccountingRegistrySettings': OperationSpec('PATCH', '/api/v1/finance/accounting-registry/connections/{id}/settings', 'finance', 'preview', 'finance.accounting-registry:write', False, True, ('id',), 'none', None, None),
     'financeSetConnectorSyncSettings': OperationSpec('PUT', '/api/v1/finance/connectors/sync-settings', 'finance', 'preview', 'finance.connectors:write', False, True, (), 'none', None, None),
     'financeSetObligationDueDate': OperationSpec('PATCH', '/api/v1/finance/settlements/obligations/{id}/due-date', 'finance', 'preview', 'finance.settlements:write', False, True, ('id',), 'none', None, None),
     'financeSetOneCMapping': OperationSpec('PUT', '/api/v1/finance/exchange/onec/connections/{id}/mappings', 'finance', 'preview', 'finance.exchange:write', False, True, ('id',), 'none', None, None),
@@ -1257,6 +1266,7 @@ OPERATIONS: Dict[str, OperationSpec] = {
     'financeSubmitBudgetCorrection': OperationSpec('POST', '/api/v1/finance/budgets/corrections/{id}/submit', 'finance', 'preview', 'finance.budgets:write', False, True, ('id',), 'none', None, None),
     'financeSubmitStaffingOrder': OperationSpec('POST', '/api/v1/finance/staffing/orders/{id}/submit', 'finance', 'preview', 'finance.staffing_orders:write', False, False, ('id',), 'none', None, None),
     'financeSwitchConnectorAccountsImport': OperationSpec('POST', '/api/v1/finance/connectors/{id}/accounts/import-switch', 'finance', 'preview', 'finance.connectors:write', False, True, ('id',), 'none', None, None),
+    'financeSyncAccountingCatalogs': OperationSpec('POST', '/api/v1/finance/accounting-registry/connections/{id}/catalogs/sync', 'finance', 'preview', 'finance.accounting-registry:write', False, True, ('id',), 'none', None, None),
     'financeSyncConnector': OperationSpec('POST', '/api/v1/finance/connectors/{id}/sync', 'finance', 'preview', 'finance.connectors:write', True, True, ('id',), 'none', None, None),
     'financeTakeAccountingRegistryEntry': OperationSpec('POST', '/api/v1/finance/accounting-registry/{id}/take', 'finance', 'preview', 'finance.accounting-registry:write', False, True, ('id',), 'none', None, None),
     'financeTradeAdvanceOffer': OperationSpec('GET', '/api/v1/finance/trade/{id}/advance-offer', 'finance', 'preview', 'finance.settlements:read', False, True, ('id',), 'none', None, None),

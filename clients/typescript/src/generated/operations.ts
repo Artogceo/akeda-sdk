@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 eabb03b611b3faf161d5aca62708f4a793fddcad2acd7596f91e9b27d7082ec5).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 0a8f29d494e322b5b699efbefc7e44a8d0cf5191cf24ab19c02b47d0ab4c7fa0).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -5567,7 +5567,7 @@ export interface OperationTypes {
   /** GET /api/v1/docflow/messages — Получить пакеты документов оператора */
   docflowListMessages: {
     params: Record<string, never>;
-    query: { "actions_due"?: "1"; "company"?: models.UUID; "connection"?: models.UUID; "contact"?: models.UUID; "counterparty_inn"?: string; "date_from"?: string; "date_to"?: string; "direction"?: "incoming" | "outgoing"; "limit"?: number; "offset"?: number; "state_category"?: models.DocflowStateCategory; "state_code"?: string };
+    query: { "actions_due"?: "1"; "company"?: models.UUID; "connection"?: models.UUID; "contact"?: models.UUID; "counterparty_inn"?: string; "date_from"?: string; "date_to"?: string; "direction"?: "incoming" | "outgoing"; "doc_type"?: string; "limit"?: number; "offset"?: number; "state_category"?: models.DocflowStateCategory; "state_code"?: string };
     body: never;
     response: models.DocflowMessageList;
   };
@@ -6187,6 +6187,41 @@ export interface OperationTypes {
     body: never;
     response: models.FinanceAccountableBalances;
   };
+  /** GET /api/v1/finance/accounting-registry/connections/{id}/catalogs/{catalog} — Справочник 1С базы */
+  financeAccountingCatalog: {
+    params: { "catalog": models.FinanceOneCCatalogName; "id": models.UUID };
+    query: { "items_only"?: boolean; "limit"?: number; "offset"?: number; "parent"?: string; "search"?: string; "with_deleted"?: boolean };
+    body: never;
+    response: models.FinanceOneCCatalogPage;
+  };
+  /** GET /api/v1/finance/accounting-registry/connections/{id}/catalogs — Сводка справочников 1С базы */
+  financeAccountingCatalogOverview: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.FinanceOneCCatalogOverview;
+  };
+  /** GET /api/v1/finance/accounting-registry/connections — Базы 1С раздела бухгалтера */
+  financeAccountingRegistryConnections: {
+    params: Record<string, never>;
+    query: Record<string, never>;
+    body: never;
+    response: models.FinanceAccountingRegistryConnectionsResponse;
+  };
+  /** GET /api/v1/finance/accounting-registry/{id}/lines — Разнесение документа реестра по номенклатуре 1С */
+  financeAccountingRegistryLines: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.FinanceAccountingLines;
+  };
+  /** GET /api/v1/finance/accounting-registry/connections/{id}/rules — Запомненный выбор номенклатуры 1С */
+  financeAccountingRegistryRules: {
+    params: { "id": models.UUID };
+    query: { "limit"?: number; "offset"?: number; "search"?: string };
+    body: never;
+    response: { [key: string]: unknown };
+  };
   /** POST /api/v1/finance/budgets/submissions — Сдать, принять или вернуть бюджет подразделения */
   financeActBudgetSubmission: {
     params: Record<string, never>;
@@ -6691,6 +6726,13 @@ export interface OperationTypes {
     body: models.FinanceCategorizeTransactionsRequest;
     response: models.FinanceCategorizeTransactionsResponse;
   };
+  /** PATCH /api/v1/finance/accounting-registry/connections/{id}/rules/{rule} — Изменить запомненный выбор номенклатуры 1С */
+  financeChangeAccountingRegistryRule: {
+    params: { "id": models.UUID; "rule": models.UUID };
+    query: Record<string, never>;
+    body: models.FinanceAccountingRuleChangeInput;
+    response: void;
+  };
   /** POST /api/v1/finance/trade/acts/{id}/pnl-item — Сменить статью доходов и расходов у проведённого акта */
   financeChangeActPnlItem: {
     params: { "id": models.UUID };
@@ -6711,6 +6753,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: never;
     response: models.FinanceOneCConnection;
+  };
+  /** PUT /api/v1/finance/accounting-registry/{id}/lines — Выбрать номенклатуру 1С по строкам документа реестра */
+  financeChooseAccountingRegistryLines: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.FinanceAccountingChoiceInput;
+    response: models.FinanceAccountingLines;
   };
   /** GET /api/v1/finance/classification-suggestions — Прочитать рекомендации расширений */
   financeClassificationSuggestions: {
@@ -7002,6 +7051,13 @@ export interface OperationTypes {
   /** DELETE /api/v1/finance/accounts/{id}/statements/{statementId} — Удалить выписку счёта */
   financeDeleteAccountStatement: {
     params: { "id": models.UUID; "statementId": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: void;
+  };
+  /** DELETE /api/v1/finance/accounting-registry/connections/{id}/rules/{rule} — Удалить запомненный выбор номенклатуры 1С */
+  financeDeleteAccountingRegistryRule: {
+    params: { "id": models.UUID; "rule": models.UUID };
     query: Record<string, never>;
     body: never;
     response: void;
@@ -8476,6 +8532,13 @@ export interface OperationTypes {
     body: models.FinanceOpeningBalanceRequest;
     response: models.FinanceAccount;
   };
+  /** PATCH /api/v1/finance/accounting-registry/connections/{id}/settings — Изменить настройки бухгалтера базы 1С */
+  financeSetAccountingRegistrySettings: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: models.FinanceAccountingSettingsInput;
+    response: models.FinanceOneCConnection;
+  };
   /** PUT /api/v1/finance/connectors/sync-settings — Изменить расписание синхронизации банков */
   financeSetConnectorSyncSettings: {
     params: Record<string, never>;
@@ -8615,6 +8678,13 @@ export interface OperationTypes {
     query: Record<string, never>;
     body: models.FinanceConnectorAccountsImportSwitch;
     response: models.FinanceConnectorAccountsImportResult;
+  };
+  /** POST /api/v1/finance/accounting-registry/connections/{id}/catalogs/sync — Обновить справочники 1С сейчас */
+  financeSyncAccountingCatalogs: {
+    params: { "id": models.UUID };
+    query: Record<string, never>;
+    body: never;
+    response: models.FinanceOneCCatalogSyncReport;
   };
   /** POST /api/v1/finance/connectors/{id}/sync — Запустить синхронизацию подключения вручную */
   financeSyncConnector: {
@@ -14716,6 +14786,11 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeAcceptFixedAsset: { method: "POST", path: "/api/v1/finance/fixed-assets/{id}/acceptance", module: "finance", stage: "preview", permission: "finance.period:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeAcceptStatementMail: { method: "POST", path: "/api/v1/finance/statement-mailboxes/{id}/mails/{mailId}/accept", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeAccountableBalances: { method: "GET", path: "/api/v1/finance/accountable/balances", module: "finance", stage: "preview", permission: "finance.accountable:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeAccountingCatalog: { method: "GET", path: "/api/v1/finance/accounting-registry/connections/{id}/catalogs/{catalog}", module: "finance", stage: "preview", permission: "finance.accounting-registry:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 1000, pageSizeDefault: null },
+  financeAccountingCatalogOverview: { method: "GET", path: "/api/v1/finance/accounting-registry/connections/{id}/catalogs", module: "finance", stage: "preview", permission: "finance.accounting-registry:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeAccountingRegistryConnections: { method: "GET", path: "/api/v1/finance/accounting-registry/connections", module: "finance", stage: "preview", permission: "finance.accounting-registry:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeAccountingRegistryLines: { method: "GET", path: "/api/v1/finance/accounting-registry/{id}/lines", module: "finance", stage: "preview", permission: "finance.accounting-registry:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeAccountingRegistryRules: { method: "GET", path: "/api/v1/finance/accounting-registry/connections/{id}/rules", module: "finance", stage: "preview", permission: "finance.accounting-registry:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 500, pageSizeDefault: null },
   financeActBudgetSubmission: { method: "POST", path: "/api/v1/finance/budgets/submissions", module: "finance", stage: "preview", permission: "finance.budgets:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeAddAllocationRule: { method: "POST", path: "/api/v1/finance/settlements/allocation-rules", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeAddPaymentRegistryLine: { method: "POST", path: "/api/v1/finance/payment-registries/{id}/lines", module: "finance", stage: "preview", permission: "finance.payment-requests:plan", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14788,9 +14863,11 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeCategorizeCashOperation: { method: "POST", path: "/api/v1/finance/cash-operations/{id}/categorize", module: "finance", stage: "preview", permission: "finance.cash_operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCategorizeTransaction: { method: "POST", path: "/api/v1/finance/transactions/{id}/categorize", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCategorizeTransactions: { method: "POST", path: "/api/v1/finance/transactions/categorize", module: "finance", stage: "preview", permission: "finance.transactions:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeChangeAccountingRegistryRule: { method: "PATCH", path: "/api/v1/finance/accounting-registry/connections/{id}/rules/{rule}", module: "finance", stage: "preview", permission: "finance.accounting-registry:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeChangeActPnlItem: { method: "POST", path: "/api/v1/finance/trade/acts/{id}/pnl-item", module: "finance", stage: "preview", permission: "finance.operations:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCheckConnectorStatement: { method: "POST", path: "/api/v1/finance/connectors/{id}/accounts/{accountId}/check-statement", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeCheckOneCConnection: { method: "POST", path: "/api/v1/finance/exchange/onec/connections/{id}/check", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeChooseAccountingRegistryLines: { method: "PUT", path: "/api/v1/finance/accounting-registry/{id}/lines", module: "finance", stage: "preview", permission: "finance.accounting-registry:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeClassificationSuggestions: { method: "GET", path: "/api/v1/finance/classification-suggestions", module: "finance", stage: "preview", permission: "finance.transactions:read", idempotent: false, installation: true, pagination: "limit_offset", pageSizeMax: 200, pageSizeDefault: 50 },
   financeCloseAdvancesToExpense: { method: "POST", path: "/api/v1/finance/settlements/closing-awaited/close-expense-batch", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeClosePaymentRequestShort: { method: "POST", path: "/api/v1/finance/payment-requests/{id}/close-short", module: "finance", stage: "preview", permission: "finance.payment-requests:plan", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -14833,6 +14910,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeDebtWriteOffOptions: { method: "GET", path: "/api/v1/finance/settlements/obligations/{id}/write-off", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteAccount: { method: "DELETE", path: "/api/v1/finance/accounts/{id}", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteAccountStatement: { method: "DELETE", path: "/api/v1/finance/accounts/{id}/statements/{statementId}", module: "finance", stage: "preview", permission: "finance.statements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeDeleteAccountingRegistryRule: { method: "DELETE", path: "/api/v1/finance/accounting-registry/connections/{id}/rules/{rule}", module: "finance", stage: "preview", permission: "finance.accounting-registry:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteAcquirer: { method: "DELETE", path: "/api/v1/finance/acquirers/{id}", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteConnector: { method: "DELETE", path: "/api/v1/finance/connectors/{id}", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeDeleteOneCAccountingRule: { method: "DELETE", path: "/api/v1/finance/exchange/onec/connections/{id}/accounting-rules/{rule}", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -15043,6 +15121,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeSendOneCNow: { method: "POST", path: "/api/v1/finance/exchange/onec/connections/{id}/send", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSendPaymentRegistry: { method: "POST", path: "/api/v1/finance/payment-registries/{id}/send", module: "finance", stage: "preview", permission: "finance.payment-requests:send", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSetAccountOpeningBalance: { method: "POST", path: "/api/v1/finance/accounts/{id}/opening-balance", module: "finance", stage: "preview", permission: "finance.accounts:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeSetAccountingRegistrySettings: { method: "PATCH", path: "/api/v1/finance/accounting-registry/connections/{id}/settings", module: "finance", stage: "preview", permission: "finance.accounting-registry:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSetConnectorSyncSettings: { method: "PUT", path: "/api/v1/finance/connectors/sync-settings", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSetObligationDueDate: { method: "PATCH", path: "/api/v1/finance/settlements/obligations/{id}/due-date", module: "finance", stage: "preview", permission: "finance.settlements:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSetOneCMapping: { method: "PUT", path: "/api/v1/finance/exchange/onec/connections/{id}/mappings", module: "finance", stage: "preview", permission: "finance.exchange:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
@@ -15063,6 +15142,7 @@ export const operationSpecs: Record<OperationId, OperationSpec> = {
   financeSubmitBudgetCorrection: { method: "POST", path: "/api/v1/finance/budgets/corrections/{id}/submit", module: "finance", stage: "preview", permission: "finance.budgets:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSubmitStaffingOrder: { method: "POST", path: "/api/v1/finance/staffing/orders/{id}/submit", module: "finance", stage: "preview", permission: "finance.staffing_orders:write", idempotent: false, installation: false, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSwitchConnectorAccountsImport: { method: "POST", path: "/api/v1/finance/connectors/{id}/accounts/import-switch", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
+  financeSyncAccountingCatalogs: { method: "POST", path: "/api/v1/finance/accounting-registry/connections/{id}/catalogs/sync", module: "finance", stage: "preview", permission: "finance.accounting-registry:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeSyncConnector: { method: "POST", path: "/api/v1/finance/connectors/{id}/sync", module: "finance", stage: "preview", permission: "finance.connectors:write", idempotent: true, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeTakeAccountingRegistryEntry: { method: "POST", path: "/api/v1/finance/accounting-registry/{id}/take", module: "finance", stage: "preview", permission: "finance.accounting-registry:write", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },
   financeTradeAdvanceOffer: { method: "GET", path: "/api/v1/finance/trade/{id}/advance-offer", module: "finance", stage: "preview", permission: "finance.settlements:read", idempotent: false, installation: true, pagination: "none", pageSizeMax: null, pageSizeDefault: null },

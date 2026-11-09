@@ -28823,6 +28823,473 @@ paths:
           $ref: '#/components/responses/Conflict'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/accounting-registry/{id}/lines:
+    get:
+      tags:
+        - Finance exchange
+      operationId: financeAccountingRegistryLines
+      summary: Разнесение документа реестра по номенклатуре 1С
+      description: Строки документа реестра (позиции Акеды) и выбранная по каждой номенклатура 1С из запомненного выбора. problem — marked (помечена в 1С на удаление), removed (удалена в 1С) или absent (нет в загруженном справочнике). editable — выбор можно менять (строка новая).
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounting-registry:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Разнесение
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceAccountingLines'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    put:
+      tags:
+        - Finance exchange
+      operationId: financeChooseAccountingRegistryLines
+      summary: Выбрать номенклатуру 1С по строкам документа реестра
+      description: Выбор бухгалтера по строкам новой строки реестра. Каждый выбор запоминается (запомненный выбор базы, правило сопоставления), и отправка подставит номенклатуру в документ 1С. Номенклатура должна быть загружена, не группой и не помеченной на удаление — иначе 422. Документ, уже взятый в учёт, — 409.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounting-registry:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceAccountingChoiceInput'
+      responses:
+        '200':
+          description: Разнесение после выбора
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceAccountingLines'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/accounting-registry/connections:
+    get:
+      tags:
+        - Finance exchange
+      operationId: financeAccountingRegistryConnections
+      summary: Базы 1С раздела бухгалтера
+      description: Подключения 1С кабинета, видимые по области права (чужое юрлицо скрыто), с настройками работы бухгалтера. Секретов нет.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounting-registry:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Базы 1С
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - results
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FinanceOneCConnection'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/accounting-registry/connections/{id}/settings:
+    patch:
+      tags:
+        - Finance exchange
+      operationId: financeSetAccountingRegistrySettings
+      summary: Изменить настройки бухгалтера базы 1С
+      description: 'Вкладка «Настройки»: режим работы бухгалтера, доверие, «Оставлять в 1С непроведёнными» и «Счета ставит» (onec_nomenclature — 1С по номенклатуре; accountant — бухгалтер в Акеде, этап 2). Адрес, учётная запись и состав обмена не меняются. Не переданное поле остаётся как есть.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounting-registry:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceAccountingSettingsInput'
+      responses:
+        '200':
+          description: Подключение после правки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOneCConnection'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/accounting-registry/connections/{id}/catalogs:
+    get:
+      tags:
+        - Finance exchange
+      operationId: financeAccountingCatalogOverview
+      summary: Сводка справочников 1С базы
+      description: 'Сколько элементов, групп, помеченных и удалённых в каждом загруженном справочнике 1С (номенклатура, план счетов, статьи затрат, подразделения, номенклатурные группы), журнал изменений за сутки и расхождения: запомненный выбор, номенклатура которого помечена в 1С на удаление, удалена или не загружена.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounting-registry:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Сводка
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOneCCatalogOverview'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/accounting-registry/connections/{id}/catalogs/sync:
+    post:
+      tags:
+        - Finance exchange
+      operationId: financeSyncAccountingCatalogs
+      summary: Обновить справочники 1С сейчас
+      description: 'Загружает справочники базы 1С по OData (только чтение) и сверяет со снимком Акеды: новые, изменённые, помеченные на удаление и исчезнувшие элементы попадают в журнал. Тот же прогон делает тикер модуля раз в день утром. Сбой одного справочника — в его error, остальные загружаются.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounting-registry:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Итог загрузки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOneCCatalogSyncReport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/accounting-registry/connections/{id}/catalogs/{catalog}:
+    get:
+      tags:
+        - Finance exchange
+      operationId: financeAccountingCatalog
+      summary: Справочник 1С базы
+      description: Страница загруженного справочника 1С. parent — содержимое группы (пусто — корень), search — подстрока наименования, кода или артикула, items_only — без групп, with_deleted — с помеченными на удаление и удалёнными в 1С.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounting-registry:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: catalog
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/FinanceOneCCatalogName'
+        - name: parent
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: items_only
+          in: query
+          schema:
+            type: boolean
+        - name: with_deleted
+          in: query
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Страница справочника
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinanceOneCCatalogPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/accounting-registry/connections/{id}/rules:
+    get:
+      tags:
+        - Finance exchange
+      operationId: financeAccountingRegistryRules
+      summary: Запомненный выбор номенклатуры 1С
+      description: 'Правила сопоставления базы для раздела бухгалтера: позиция Акеды у контрагента → номенклатура 1С. Выучены по проведённым документам или выбраны в разнесении.'
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounting-registry:read
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Страница правил
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/v1/finance/accounting-registry/connections/{id}/rules/{rule}:
+    patch:
+      tags:
+        - Finance exchange
+      operationId: financeChangeAccountingRegistryRule
+      summary: Изменить запомненный выбор номенклатуры 1С
+      description: Другая номенклатура 1С для правила; счёт справки сбрасывается (его поставит 1С). Номенклатура должна быть загружена и не помечена на удаление — иначе 422.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounting-registry:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: rule
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceAccountingRuleChangeInput'
+      responses:
+        '204':
+          description: Изменено
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    delete:
+      tags:
+        - Finance exchange
+      operationId: financeDeleteAccountingRegistryRule
+      summary: Удалить запомненный выбор номенклатуры 1С
+      description: Следующий документ с этой позицией уйдёт без выбранной номенклатуры и подождёт бухгалтера.
+      x-akeda-module: finance
+      x-akeda-release-stage: preview
+      x-akeda-audience: external
+      x-akeda-permission: finance.accounting-registry:write
+      security:
+        - erpUserToken: []
+        - tenantApiKey: []
+        - mcpOAuth:
+            - akeda:delegate
+        - installationToken: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: rule
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '204':
+          description: Удалено
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /api/v1/finance/exchange/onec/connections:
     get:
       tags:
@@ -75775,6 +76242,10 @@ paths:
             type: integer
             minimum: 0
             default: 0
+        - name: doc_type
+          in: query
+          schema:
+            type: string
       responses:
         '200':
           description: Страница пакетов
@@ -122891,6 +123362,11 @@ components:
         accepts_unposted:
           type: boolean
           description: Оставлять в 1С непроведёнными — при выбранном режиме бухгалтера Акеда снимает проведение своего документа после загрузки, проведение бухгалтером считается принятием
+        accounts_by:
+          $ref: '#/components/schemas/FinanceOneCAccountsBy'
+        catalogs_synced_at:
+          type: string
+          format: date-time
         created_at:
           type: string
           format: date-time
@@ -123013,6 +123489,8 @@ components:
         accepts_unposted:
           type: boolean
           description: Оставлять в 1С непроведёнными; не передан — оставить как есть, у нового подключения включено
+        accounts_by:
+          $ref: '#/components/schemas/FinanceOneCAccountsBy'
     FinanceAccountingStatus:
       type: string
       enum:
@@ -123175,7 +123653,9 @@ components:
           description: Наименование номенклатуры в 1С
         onec_account:
           type: string
-          description: Счёт учёта или затрат из проведённого документа — справка, в 1С не передаётся
+          description: 'Код счёта: выбранный бухгалтером в Акеде (уходит в 1С) или из проведённого документа — справка'
+        onec_accounts:
+          $ref: '#/components/schemas/FinanceAccountingAccounts'
         confirmations:
           type: integer
           minimum: 1
@@ -123471,6 +123951,405 @@ components:
           type: string
           minLength: 1
           description: Причина отклонения; её читает сотрудник
+    FinanceOneCCatalogName:
+      type: string
+      enum:
+        - nomenclature
+        - accounts
+        - cost_items
+        - departments
+        - nomenclature_groups
+    FinanceOneCAccountsBy:
+      type: string
+      enum:
+        - onec_nomenclature
+        - accountant
+    FinanceOneCCatalogItem:
+      type: object
+      required:
+        - connection_id
+        - catalog
+        - ref
+        - parent_ref
+        - is_group
+        - code
+        - name
+        - deletion_mark
+        - synced_at
+        - changed_at
+      properties:
+        connection_id:
+          $ref: '#/components/schemas/UUID'
+        catalog:
+          $ref: '#/components/schemas/FinanceOneCCatalogName'
+        ref:
+          type: string
+        parent_ref:
+          type: string
+        is_group:
+          type: boolean
+        code:
+          type: string
+        name:
+          type: string
+        full_name:
+          type: string
+        article:
+          type: string
+        kind:
+          type: string
+        unit:
+          type: string
+        vat_rate:
+          type: string
+        is_service:
+          type: boolean
+        off_balance:
+          type: boolean
+        currency:
+          type: boolean
+        quantity:
+          type: boolean
+        subconto:
+          type: array
+          items:
+            type: object
+            properties:
+              ref:
+                type: string
+              name:
+                type: string
+              turnovers_only:
+                type: boolean
+              kind:
+                type: string
+                enum:
+                  - cost_items
+                  - nomenclature_groups
+                  - nomenclature
+        deletion_mark:
+          type: boolean
+        removed_at:
+          type: string
+          format: date-time
+        synced_at:
+          type: string
+          format: date-time
+        changed_at:
+          type: string
+          format: date-time
+    FinanceOneCCatalogPage:
+      type: object
+      required:
+        - count
+        - limit
+        - offset
+        - results
+      properties:
+        count:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceOneCCatalogItem'
+    FinanceOneCCatalogStat:
+      type: object
+      required:
+        - catalog
+        - items
+        - groups
+        - marked
+        - removed
+      properties:
+        catalog:
+          $ref: '#/components/schemas/FinanceOneCCatalogName'
+        items:
+          type: integer
+        groups:
+          type: integer
+        marked:
+          type: integer
+        removed:
+          type: integer
+        synced_at:
+          type: string
+          format: date-time
+        error:
+          type: string
+    FinanceOneCCatalogChange:
+      type: object
+      required:
+        - id
+        - connection_id
+        - catalog
+        - ref
+        - code
+        - name
+        - change
+        - at
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        connection_id:
+          $ref: '#/components/schemas/UUID'
+        catalog:
+          $ref: '#/components/schemas/FinanceOneCCatalogName'
+        ref:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        change:
+          type: string
+          enum:
+            - added
+            - changed
+            - marked
+            - unmarked
+            - removed
+        at:
+          type: string
+          format: date-time
+    FinanceOneCCatalogDiscrepancy:
+      type: object
+      required:
+        - rule_id
+        - contact_name
+        - contact_inn
+        - position_name
+        - onec_nomenclature_ref
+        - onec_nomenclature_name
+        - problem
+      properties:
+        rule_id:
+          $ref: '#/components/schemas/UUID'
+        contact_name:
+          type: string
+        contact_inn:
+          type: string
+        position_name:
+          type: string
+        onec_nomenclature_ref:
+          type: string
+        onec_nomenclature_name:
+          type: string
+        problem:
+          type: string
+          enum:
+            - marked
+            - removed
+            - absent
+    FinanceOneCCatalogOverview:
+      type: object
+      required:
+        - connection_id
+        - catalogs
+        - changes
+        - discrepancies
+      properties:
+        connection_id:
+          $ref: '#/components/schemas/UUID'
+        synced_at:
+          type: string
+          format: date-time
+        catalogs:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceOneCCatalogStat'
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceOneCCatalogChange'
+        discrepancies:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceOneCCatalogDiscrepancy'
+    FinanceOneCCatalogSyncReport:
+      type: object
+      required:
+        - connection_id
+        - at
+        - catalogs
+        - changes
+      properties:
+        connection_id:
+          $ref: '#/components/schemas/UUID'
+        at:
+          type: string
+          format: date-time
+        catalogs:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceOneCCatalogStat'
+        changes:
+          type: integer
+    FinanceAccountingLine:
+      type: object
+      required:
+        - index
+        - position_kind
+        - position_id
+        - position_name
+        - goods
+        - onec_nomenclature_ref
+        - onec_nomenclature_name
+      properties:
+        index:
+          type: integer
+        position_kind:
+          type: string
+          enum:
+            - product
+            - pnl_item
+        position_id:
+          $ref: '#/components/schemas/UUID'
+        position_name:
+          type: string
+        goods:
+          type: boolean
+        rule_id:
+          $ref: '#/components/schemas/UUID'
+        onec_nomenclature_ref:
+          type: string
+        onec_nomenclature_name:
+          type: string
+        onec_nomenclature_code:
+          type: string
+        problem:
+          type: string
+          enum:
+            - marked
+            - removed
+            - absent
+        onec_accounts:
+          $ref: '#/components/schemas/FinanceAccountingAccounts'
+        onec_account_name:
+          type: string
+          description: 'Наименование выбранного счёта из снимка плана счетов (режим «Счета ставит: бухгалтер в Акеде»)'
+        onec_cost_item_name:
+          type: string
+        onec_department_name:
+          type: string
+        onec_nomenclature_group_name:
+          type: string
+        onec_account_subconto:
+          type: array
+          description: Виды субконто выбранного счёта по снимку плана счетов
+          items:
+            type: object
+            required:
+              - ref
+              - name
+            properties:
+              ref:
+                type: string
+              name:
+                type: string
+              turnovers_only:
+                type: boolean
+              kind:
+                type: string
+                enum:
+                  - cost_items
+                  - nomenclature_groups
+                  - nomenclature
+                description: Вид, который заполняет Акеда; пусто — не заполняет
+        accounts_problem:
+          type: string
+          enum:
+            - marked
+            - removed
+            - absent
+          description: Счёт или субконто помечены в 1С на удаление, удалены или не загружены
+    FinanceAccountingAccounts:
+      type: object
+      additionalProperties: false
+      description: Счёт 1С и субконто строки, выбранные бухгалтером в Акеде (ERP-102, этап 2). Пусто — счета ставит 1С по номенклатуре
+      properties:
+        account_ref:
+          type: string
+          description: Ссылка счёта плана счетов Хозрасчетный; пусто — снять выбор счёта
+        account_code:
+          type: string
+          readOnly: true
+        cost_item_ref:
+          type: string
+          description: Статья затрат — если у счёта есть субконто «Статьи затрат»
+        department_ref:
+          type: string
+          description: Подразделение затрат строки
+        nomenclature_group_ref:
+          type: string
+          description: Номенклатурная группа — если у счёта есть такое субконто
+    FinanceAccountingLines:
+      type: object
+      required:
+        - entry_id
+        - connection_id
+        - accounts_by
+        - editable
+        - lines
+      properties:
+        entry_id:
+          $ref: '#/components/schemas/UUID'
+        connection_id:
+          $ref: '#/components/schemas/UUID'
+        accounts_by:
+          $ref: '#/components/schemas/FinanceOneCAccountsBy'
+        editable:
+          type: boolean
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinanceAccountingLine'
+    FinanceAccountingChoiceInput:
+      type: object
+      additionalProperties: false
+      required:
+        - choices
+      properties:
+        choices:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - index
+            properties:
+              index:
+                type: integer
+                minimum: 0
+              onec_nomenclature_ref:
+                type: string
+                description: Номенклатура 1С строки; пусто — оставить запомненную
+              onec_accounts:
+                $ref: '#/components/schemas/FinanceAccountingAccounts'
+    FinanceAccountingRuleChangeInput:
+      type: object
+      additionalProperties: false
+      required:
+        - onec_nomenclature_ref
+      properties:
+        onec_nomenclature_ref:
+          type: string
+          minLength: 1
+    FinanceAccountingSettingsInput:
+      type: object
+      additionalProperties: false
+      properties:
+        accounting_mode:
+          $ref: '#/components/schemas/FinanceOneCAccountingMode'
+        accounting_trust:
+          type: string
+        accepts_unposted:
+          type: boolean
+        accounts_by:
+          $ref: '#/components/schemas/FinanceOneCAccountsBy'
     FinanceOneCAccountingMode:
       type: string
       enum:
@@ -128277,6 +129156,15 @@ components:
           type: string
         opening:
           type: string
+        source_currency:
+          type: string
+          description: Валюта счёта, когда валютный счёт показан в календаре валюты учёта; opening тогда — его остаток по курсу ЦБ на начало окна
+        source_opening:
+          type: string
+          description: Остаток валютного счёта в его валюте на начало окна
+        rate:
+          type: string
+          description: Курс ЦБ на начало окна, по которому пересчитан остаток валютного счёта
         overdue_net:
           type: string
           description: Просроченное по месту хранения — приход минус выплата; на шкалу не ложится и входит в closing с первого дня окна
