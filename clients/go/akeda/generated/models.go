@@ -1,5 +1,5 @@
 // Сгенерировано scripts/generate.py. Руками не править.
-// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8778f55fccf0c28d3e32a4745a2c64c58f769d69432fcffa6fdba242675b9ea5).
+// Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 153f25dae0fd740d9f21259bf7e32cfa3685fde2e76e99c58332f9842dc57c67).
 // Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 package generated
@@ -1425,6 +1425,50 @@ type CRMCardMailThread struct {
 	Messages []CRMMailMessage `json:"messages,omitempty"`
 }
 
+// CRMCardPin — Запись, закреплённая наверху истории изменений сделки или лида
+type CRMCardPin struct {
+	ID         UUID   `json:"id"`
+	EntityType string `json:"entity_type"`
+	EntityID   UUID   `json:"entity_id"`
+	ItemKind   string `json:"item_kind"`
+	ItemID     UUID   `json:"item_id"`
+	// PinnedBy — Кто закрепил
+	PinnedBy     int64   `json:"pinned_by"`
+	PinnedByName *string `json:"pinned_by_name,omitempty"`
+	PinnedAt     string  `json:"pinned_at"`
+	// Title — Название дела, текст комментария или имя файла; у задачи пусто
+	Title string `json:"title"`
+	// At — Срок дела, время комментария или загрузки файла
+	At *string `json:"at,omitempty"`
+	// EndsAt — Конец встречи у дела
+	EndsAt *string `json:"ends_at,omitempty"`
+	// ActorID — Ответственный за дело, автор комментария или загрузивший файл
+	ActorID   *int64  `json:"actor_id,omitempty"`
+	ActorName *string `json:"actor_name,omitempty"`
+	// Kind — Вид дела из справочника «Виды дел»
+	Kind *string `json:"kind,omitempty"`
+	// Done — Дело выполнено
+	Done      *bool  `json:"done,omitempty"`
+	SizeBytes *int64 `json:"size_bytes,omitempty"`
+	// ScanStatus — Вердикт антивируса для файла: clean, skipped, pending, infected
+	ScanStatus *string `json:"scan_status,omitempty"`
+	ExternalID *UUID   `json:"external_id,omitempty"`
+	// Meta — Подробности комментария: упомянутые через «@» коллеги
+	Meta map[string]json.RawMessage `json:"meta,omitempty"`
+}
+
+// CRMCardPinInput — Что закрепить в истории изменений
+type CRMCardPinInput struct {
+	// ItemKind — Вид записи: дело, комментарий, файл или связь с задачей
+	ItemKind string `json:"item_kind"`
+	ItemID   UUID   `json:"item_id"`
+}
+
+// CRMCardPinList — Закреплённое в истории изменений, последние сверху
+type CRMCardPinList struct {
+	Items []CRMCardPin `json:"items"`
+}
+
 type CRMCatalogPage struct {
 	Results []CRMCatalogProduct `json:"results"`
 	Limit   int64               `json:"limit"`
@@ -2276,6 +2320,8 @@ type CRMImportMapping struct {
 	DefaultStage      *UUID             `json:"default_stage,omitempty"`
 	DefaultLossReason *UUID             `json:"default_loss_reason,omitempty"`
 	DefaultCurrency   *string           `json:"default_currency,omitempty"`
+	// SkipUnmappedDeals — Не переносить сделки с этапов, которым не выбрана пара в кабинете (обычно воронки источника, которых в Akeda нет, например архивные), вместе с их делами, заметками и задачами; клиенты переносятся как обычно
+	SkipUnmappedDeals *bool `json:"skip_unmapped_deals,omitempty"`
 	// UpdateExisting — Повторный перенос обновляет уже перенесённые записи: поле из источника ложится в карточку, если в Akeda его после прошлого переноса не правили (ERP-1619)
 	UpdateExisting *bool `json:"update_existing,omitempty"`
 	// Fields — Куда ложатся свои поля источника: ключ — «вид записи:поле источника», вид — customer, lead или deal
@@ -2286,6 +2332,10 @@ type CRMImportMapping struct {
 	TaskGroups map[string]CRMImportTaskGroupTarget `json:"task_groups,omitempty"`
 	// StandaloneTasks — Переносить и задачи источника без сделки и лида — в модуль «Задачи», без карточки CRM (ERP-2932)
 	StandaloneTasks *bool `json:"standalone_tasks,omitempty"`
+	// TaskFilesLater — Перенести файлы задач потом: задачи и комментарии заводятся сразу без файлов, файлы к ним докачиваются, когда все задачи перенесены; до конца докачки перенос идёт
+	TaskFilesLater *bool `json:"task_files_later,omitempty"`
+	// SkipTaskChat — Не переносить переписку «Чата задачи» новой карточки Битрикс24 (сообщения и их файлы, без служебных); по умолчанию она переносится комментариями задачи, старые комментарии — как раньше
+	SkipTaskChat *bool `json:"skip_task_chat,omitempty"`
 }
 
 type CRMImportMappingInput struct {
@@ -2296,7 +2346,7 @@ type CRMImportMappingInput struct {
 type CRMImportNameFormat = string
 
 type CRMImportOptions struct {
-	// Values — owners, stages, lead_stages, sources, currencies, loss_reasons; source_tasks — число задач источника (ERP-2891), только если они есть
+	// Values — owners, stages, lead_stages, sources, currencies, loss_reasons; source_tasks — число задач источника (ERP-2891), только если они есть; в нём chat — задачи с перепиской «Чата задачи», chat_closed — задачи, чей чат портал не отдал
 	Values      map[string][]CRMImportValue `json:"values"`
 	Members     []CRMUserRef                `json:"members"`
 	Pipelines   []CRMPipeline               `json:"pipelines"`
@@ -5257,9 +5307,9 @@ type CoreActionJournalEntry struct {
 	ActorName string `json:"actor_name"`
 	// Module — Модуль-владелец объекта
 	Module string `json:"module"`
-	// Action — created, edited, posted, reposted, unposted, cancelled, marked_deleted, unmarked_deleted, deleted, rebuilt, shelf_life_set, period_closed, period_reopened
+	// Action — created, edited, posted, reposted, unposted, cancelled, marked_deleted, unmarked_deleted, deleted, rebuilt, rebuild_refused, shelf_life_set, period_closed, period_reopened, marking_changed
 	Action string `json:"action"`
-	// ObjectType — Вид объекта: document, period
+	// ObjectType — Вид объекта: document, period, product, product_category
 	ObjectType string `json:"object_type"`
 	ObjectID   *UUID  `json:"object_id,omitempty"`
 	// ObjectLabel — Подпись объекта на момент действия, например вид и номер документа
@@ -5700,6 +5750,8 @@ type CoreCabinetPreferences struct {
 	LogoURL *string `json:"logo_url,omitempty"`
 	// InternalBarcodePrefix — Префикс внутренних штрихкодов EAN-13 (200–299), с ним работает «Сгенерировать». Пусто при сохранении — оставить прежний.
 	InternalBarcodePrefix *string `json:"internal_barcode_prefix,omitempty"`
+	// TemplatePeriodMode — Как считать период нового месячного шаблона продажи, платежа или закупки: первый месяц целиком, первый неполный — по дням или скользящий месяц. Пусто при сохранении — оставить прежний.
+	TemplatePeriodMode *string `json:"template_period_mode,omitempty"`
 }
 
 type CoreChange struct {
@@ -5854,6 +5906,8 @@ type CoreContact struct {
 	PaymentConditionID *UUID `json:"payment_condition_id,omitempty"`
 	// PaymentConditionName — Название условия оплаты; пусто — условия нет
 	PaymentConditionName *string `json:"payment_condition_name,omitempty"`
+	// ResponsibleUserID — Закреплён за сотрудником (id пользователя); null — ничей, виден всем. Роль «Контрагенты — только свои» видит закреплённых за собой и ничьих; новый контрагент закрепляется за создателем
+	ResponsibleUserID *int64 `json:"responsible_user_id,omitempty"`
 	// SystemKey — Код системного контрагента (fns, sfr, bank:<БИК>). Только чтение.
 	SystemKey *string `json:"system_key,omitempty"`
 	// RequisitesIssue — Что подсветить в реквизитах по правилу ИНН. Пусто — всё в порядке.
@@ -6281,6 +6335,28 @@ type CoreContactPatchPostalAddress struct {
 	// Flat — Офис или помещение
 	Flat string `json:"flat"`
 	Info string `json:"info"`
+}
+
+type CoreContactResponsibleEvent struct {
+	ID *UUID `json:"id,omitempty"`
+	// FromUserID — За кем был закреплён; null — ничей
+	FromUserID *int64 `json:"from_user_id,omitempty"`
+	// ToUserID — За кем закреплён теперь; null — закрепление снято
+	ToUserID *int64 `json:"to_user_id,omitempty"`
+	// ActorUserID — Кто передал
+	ActorUserID *int64  `json:"actor_user_id,omitempty"`
+	CreatedAt   *string `json:"created_at,omitempty"`
+}
+
+type CoreContactResponsibleHistory struct {
+	Results []CoreContactResponsibleEvent `json:"results,omitempty"`
+}
+
+type CoreContactsAssignInput struct {
+	// Ids — Контрагенты, которых закрепляют
+	Ids []UUID `json:"ids"`
+	// UserID — Сотрудник (id пользователя), за которым закрепляют; null или не прислан — снять закрепление
+	UserID *int64 `json:"user_id,omitempty"`
 }
 
 type CoreContactsPaymentConditionInput struct {
@@ -7683,6 +7759,8 @@ type CoreOrder struct {
 	ConsigneePointID map[string]json.RawMessage `json:"consignee_point_id,omitempty"`
 	// ConsigneePointName — Название точки доставки — для экрана
 	ConsigneePointName *string `json:"consignee_point_name,omitempty"`
+	// ConsigneePointAddress — Адрес точки доставки строкой
+	ConsigneePointAddress *string `json:"consignee_point_address,omitempty"`
 	// TitleTransfer — Переход права, перекрытый в продаже: shipment, acceptance; пусто — по договору, контрагенту и каналу. Новая отгрузка замораживает выбранное правило (ERP-2772)
 	TitleTransfer *string `json:"title_transfer,omitempty"`
 	// PaymentConditionID — Условие оплаты, из которого построен график продажи (ERP-2140); нет поля — график набран руками или условия нет
@@ -8626,9 +8704,10 @@ type CoreOrderTemplateActions struct {
 	InvoiceDays     *int64                     `json:"invoice_days,omitempty"`
 	InvoiceDelivery *CoreOrderTemplateDelivery `json:"invoice_delivery,omitempty"`
 	ClosingDelivery *CoreOrderTemplateDelivery `json:"closing_delivery,omitempty"`
-	Closing         *string                    `json:"closing,omitempty"`
-	ClosingWhen     *string                    `json:"closing_when,omitempty"`
-	ClosingDays     *int64                     `json:"closing_days,omitempty"`
+	// Closing — upd и act — только у шаблона с юрлицом; business_act — упрощённый акт на бизнес, только без юрлица
+	Closing     *string `json:"closing,omitempty"`
+	ClosingWhen *string `json:"closing_when,omitempty"`
+	ClosingDays *int64  `json:"closing_days,omitempty"`
 	// Invoices — Invoices of the period sale as a list; replaces single invoice fields. Monthly and quarterly templates only.
 	Invoices []CoreOrderTemplateInvoice `json:"invoices,omitempty"`
 	// Closings — Closing documents of the period sale as a list; replaces single closing fields.
@@ -8636,6 +8715,7 @@ type CoreOrderTemplateActions struct {
 }
 
 type CoreOrderTemplateClosing struct {
+	// Kind — upd и act — только у шаблона с юрлицом; business_act — упрощённый акт на бизнес, только без юрлица (422 core.order_template.closing_needs_company / business_act_has_company)
 	Kind     string                     `json:"kind"`
 	Date     CoreOrderTemplatePaperDate `json:"date"`
 	Delivery *CoreOrderTemplateDelivery `json:"delivery,omitempty"`
@@ -8705,8 +8785,16 @@ type CoreOrderTemplateRun struct {
 	InvoiceDate *string `json:"invoice_date,omitempty"`
 	ClosingDate *string `json:"closing_date,omitempty"`
 	// Amount — Period sale amount by template lines and dated prices.
-	Amount *string                     `json:"amount,omitempty"`
-	Papers []CoreOrderTemplateRunPaper `json:"papers,omitempty"`
+	Amount *string `json:"amount,omitempty"`
+	// ServiceFrom — Service period start (prorated and rolling modes).
+	ServiceFrom *string `json:"service_from,omitempty"`
+	// ServiceUntil — Service period end, inclusive.
+	ServiceUntil *string `json:"service_until,omitempty"`
+	// Days — Partial first month: billed days.
+	Days *int64 `json:"days,omitempty"`
+	// PeriodDays — Partial first month: days in the month.
+	PeriodDays *int64                      `json:"period_days,omitempty"`
+	Papers     []CoreOrderTemplateRunPaper `json:"papers,omitempty"`
 }
 
 type CoreOrderTemplateRunPaper struct {
@@ -8723,6 +8811,8 @@ type CoreOrderTemplateSchedule struct {
 	Period string `json:"period"`
 	// ServicePeriodOffset — Service period relative to the scheduled run: previous, current or next. Changes the period in document and service names; document dates and run identity stay unchanged.
 	ServicePeriodOffset *int64 `json:"service_period_offset,omitempty"`
+	// PeriodMode — How to count a monthly period: calendar_full (empty) — calendar month, the first one in full; calendar_prorated — the first partial month is billed at once from the start date as price × remaining days / days in month, then the regular schedule; rolling — month counted from the start date. Monthly templates only; a new template without it takes the workspace default.
+	PeriodMode *string `json:"period_mode,omitempty"`
 	// Day — Число месяца или день недели ISO (1 — понедельник).
 	Day   int64   `json:"day"`
 	From  string  `json:"from"`
@@ -10790,7 +10880,8 @@ type CoreSalesChannel struct {
 	// ReserveOverAvailable — Резерв сверх свободного остатка для заказов канала (ERP-2885): block — нельзя, warn — можно с предупреждением. Пустая строка — как в настройке склада кабинета.
 	ReserveOverAvailable string `json:"reserve_over_available"`
 	// ShipMultiple — Квант канала (ERP-083): кратность отгрузки в штуках, целое от 2; пусто — кванта нет. Некратное количество отгрузка называет предупреждением.
-	ShipMultiple string `json:"ship_multiple"`
+	ShipMultiple string  `json:"ship_multiple"`
+	ShipWeekday  *string `json:"ship_weekday,omitempty"`
 	// WarehouseNote — Текст для склада (ERP-083): новая продажа канала без своего комментария для склада получает его при заведении.
 	WarehouseNote string `json:"warehouse_note"`
 	// WaybillCopies — Экземпляров транспортной накладной канала (ERP-095), целое от 1 до 10; пусто — как в правилах перевозок.
@@ -10853,6 +10944,7 @@ type CoreSalesChannelCreate struct {
 	ReserveOverAvailable *string `json:"reserve_over_available,omitempty"`
 	// ShipMultiple — Квант канала (ERP-083): кратность отгрузки в штуках, целое от 2; пусто или null — снять.
 	ShipMultiple *string `json:"ship_multiple,omitempty"`
+	ShipWeekday  *string `json:"ship_weekday,omitempty"`
 	// WarehouseNote — Текст для склада (ERP-083), до 2000 знаков; пусто или null — снять.
 	WarehouseNote *string `json:"warehouse_note,omitempty"`
 	// WaybillCopies — Экземпляров транспортной накладной (ERP-095), целое от 1 до 10; пусто или null — снять.
@@ -10946,6 +11038,7 @@ type CoreSalesChannelPatch struct {
 	ReserveOverAvailable *string `json:"reserve_over_available,omitempty"`
 	// ShipMultiple — Квант канала (ERP-083): кратность отгрузки в штуках, целое от 2; пусто или null — снять.
 	ShipMultiple *string `json:"ship_multiple,omitempty"`
+	ShipWeekday  *string `json:"ship_weekday,omitempty"`
 	// WarehouseNote — Текст для склада (ERP-083), до 2000 знаков; пусто или null — снять.
 	WarehouseNote *string `json:"warehouse_note,omitempty"`
 	// WaybillCopies — Экземпляров транспортной накладной (ERP-095), целое от 1 до 10; пусто или null — снять.
@@ -10961,6 +11054,16 @@ type CoreSalesChannelPatch struct {
 }
 
 type CoreSalesChannelPriceMode = string
+
+type CoreSalesChannelProductMultiple struct {
+	ChannelID    UUID   `json:"channel_id"`
+	ProductID    UUID   `json:"product_id"`
+	ShipMultiple string `json:"ship_multiple"`
+}
+
+type CoreSalesChannelProductMultipleInput struct {
+	ShipMultiple *string `json:"ship_multiple,omitempty"`
+}
 
 type CoreSalesChannelRef struct {
 	ID   UUID   `json:"id"`
@@ -11152,6 +11255,8 @@ type CoreUPDProfile struct {
 	LineTextInfo []CoreUPDTextInfoRule `json:"line_text_info,omitempty"`
 	// MarksMode — Режим кодов идёт от товара: группа с передачей по GTIN — ГТИН и КолВедМарк, поштучная — КИЗ даже в опте, неполный скан поштучной строки — отказ; значение решает, что делать со сканом строки по GTIN. kiz — кодами КИЗ и НомУпак (без единого скана остаётся количеством, неполный скан — отказ); package — отсканированные коды упаковки в НомУпак, без них количеством и без отказа; count и пусто — количеством; none — не передавать: ни кодов, ни количества, неполный скан не отказ, коды формы отправки всё равно уходят
 	MarksMode *string `json:"marks_mode,omitempty"`
+	// MarkingCase — Особый случай передачи маркированного товара по умолчанию (ERP-2712): own_use — для собственных нужд покупателя, gratuitous — безвозмездно, production — для производства (СвВыбытияМАРК 1/2/3), storage — хранение без смены собственника (ВидОборотаМАРК 9). Те же значения, что marking_case формы отправки, и выбор формы сильнее. Пишется, только когда в УПД есть маркированные строки. Пусто — обычная продажа
+	MarkingCase *string `json:"marking_case,omitempty"`
 	// CheckPriceVsOrder — Сверять цену строки с заказом сети из Контур.EDI: расхождение — предупреждение предпросмотра; нет заказа или в нём нет цены — сверять не с чем
 	CheckPriceVsOrder *bool `json:"check_price_vs_order,omitempty"`
 	// BuyerKPPFromPoint — КПП покупателя (СвПокуп) из точки доставки, если он у неё есть и точка принадлежит покупателю
@@ -11913,7 +12018,7 @@ type DocflowAcceptedDocument struct {
 	ID UUID `json:"id"`
 	// Number — Наш номер из нумератора кабинета. Номер продавца лежит в содержимом документа: занять им наш сквозной счётчик значит однажды получить два своих документа с одним номером от двух разных поставщиков
 	Number string `json:"number"`
-	// Date — Дата документа ГГГГ-ММ-ДД. По умолчанию это дата документа поставщика: операция произошла тогда, когда её совершил он, и датировать её днём приёмки значит поставить факт не в тот период
+	// Date — Дата учёта ГГГГ-ММ-ДД: день приёмки, по умолчанию сегодня (ERP-2673). Дата и номер документа поставщика хранятся отдельно и уходят в 1С входящими
 	Date string `json:"date"`
 	// TypeKey — Ключ вида документа; у приёмки docflow_incoming
 	TypeKey string `json:"type_key"`
@@ -12449,6 +12554,8 @@ type DocflowApprovalPolicy struct {
 	AccountingPost *bool `json:"accounting_post,omitempty"`
 	// ApprovedPurchasePayment — Оплата по закупке из согласованной заявки: route — по маршруту заявок на оплату (умолчание); calendar или treasury — без повторного согласования, сразу в платёжный календарь или в очередь казначея, если закупка не дороже согласованной суммы заявки. Только у вида «заявка на оплату». Не задано при сохранении — прежнее значение.
 	ApprovedPurchasePayment *string `json:"approved_purchase_payment,omitempty"`
+	// RequestFields — Поля разрезов заявки в регламенте: ключ cfo, project или department; off — не показывать, optional — необязательное, required — без него заявку не отправить. Нет ключа — необязательное. Только у вида «заявка на оплату». Не задано при сохранении — прежнее значение.
+	RequestFields map[string]string `json:"request_fields,omitempty"`
 }
 
 // DocflowApprovalPolicyInput — Обязательность согласования у ОДНОГО вида предмета, а не глобальный выключатель кабинета: у заявки на оплату согласование может быть обязательным, а у письма контрагенту — нет.
@@ -12464,6 +12571,8 @@ type DocflowApprovalPolicyInput struct {
 	AccountingPost *bool `json:"accounting_post,omitempty"`
 	// ApprovedPurchasePayment — Оплата по закупке из согласованной заявки: route — по маршруту заявок на оплату (умолчание); calendar или treasury — без повторного согласования, сразу в платёжный календарь или в очередь казначея, если закупка не дороже согласованной суммы заявки. Только у вида «заявка на оплату». Не задано при сохранении — прежнее значение.
 	ApprovedPurchasePayment *string `json:"approved_purchase_payment,omitempty"`
+	// RequestFields — Поля разрезов заявки в регламенте: ключ cfo, project или department; off — не показывать, optional — необязательное, required — без него заявку не отправить. Нет ключа — необязательное. Только у вида «заявка на оплату». Не задано при сохранении — прежнее значение.
+	RequestFields map[string]string `json:"request_fields,omitempty"`
 }
 
 // DocflowApprovalReasonOption — Узкие метаданные причины операции; они не дают права читать справочники или складскую оценку.
@@ -12612,6 +12721,8 @@ type DocflowApprovalRouteStage struct {
 	MinAmount *string `json:"min_amount,omitempty"`
 	// OverBudgetOnly — Только сверх лимита: этап выполняется, только если заявку на оплату провели сверх лимита бюджета кнопкой «Сверх лимита»; туда ставят генерального директора
 	OverBudgetOnly *bool `json:"over_budget_only,omitempty"`
+	// RequireItem — Статья обязательна: согласующий этапа ставит статью заявки на оплату сам (PUT …/payment-requests/{id}/item), а согласовать без статьи нельзя (409 docflow.approval.item_required). Если признака нет ни на одном этапе, заявка проходит маршрут без статьи
+	RequireItem *bool `json:"require_item,omitempty"`
 }
 
 // DocflowApprovalStage — Этап ПРОХОДА: кого спросили на самом деле. Состояние skipped означает «этап не выполняется, его лимит по сумме не достигнут»; строка всё равно есть, чтобы человек видел, ПОЧЕМУ финансового директора не спросили.
@@ -12627,6 +12738,8 @@ type DocflowApprovalStage struct {
 	MinAmount     *string `json:"min_amount,omitempty"`
 	// OverBudgetOnly — Снимок условия «только сверх лимита»
 	OverBudgetOnly *bool `json:"over_budget_only,omitempty"`
+	// RequireItem — Снимок признака «статья обязательна»
+	RequireItem *bool `json:"require_item,omitempty"`
 	// AuthorReplaced — По маршруту этап согласовывал бы сам автор; вместо него спрашивают его руководителя
 	AuthorReplaced *bool   `json:"author_replaced,omitempty"`
 	DueHours       *int64  `json:"due_hours,omitempty"`
@@ -13271,6 +13384,652 @@ type DocflowDocumentRefRequisites struct {
 	DocID *string `json:"doc_id,omitempty"`
 	// Info — РеквДопСведДок
 	Info *string `json:"info,omitempty"`
+}
+
+type DocflowEdiArchiveInput struct {
+	Archived bool `json:"archived"`
+}
+
+type DocflowEdiAvailability struct {
+	ChannelID   *UUID  `json:"channel_id"`
+	ChannelName string `json:"channel_name"`
+	// WarehouseID — Склад отгрузки из карточки канала
+	WarehouseID   *UUID  `json:"warehouse_id"`
+	WarehouseName string `json:"warehouse_name"`
+	// StockCheck — soft — нехватка видна, подтвердить можно; strict — нельзя больше доступного
+	StockCheck string `json:"stock_check"`
+	// StockCheckSource — Откуда режим; пусто — канала нет
+	StockCheckSource string `json:"stock_check_source"`
+	// OnlyCondition — Канал отгружает только из этого состояния товара
+	OnlyCondition *string `json:"only_condition,omitempty"`
+	// Reason — Почему не определён остаток всей заявки
+	Reason    *string                                  `json:"reason,omitempty"`
+	ShelfLife *DocflowEdiAvailabilityShelfLifeVariant2 `json:"shelf_life"`
+	// Shortage — Хотя бы одной строке не хватает заказанного
+	Shortage bool                         `json:"shortage"`
+	Lines    []DocflowEdiAvailabilityLine `json:"lines"`
+}
+
+type DocflowEdiAvailabilityShelfLifeVariant2 struct {
+	HasMinimum       bool    `json:"has_minimum"`
+	MinRemainingPct  *string `json:"min_remaining_pct,omitempty"`
+	MinRemainingDays *int64  `json:"min_remaining_days,omitempty"`
+	Scaled           *bool   `json:"scaled,omitempty"`
+	Source           string  `json:"source"`
+	// AsOf — Дата оценки партий
+	AsOf *string `json:"as_of,omitempty"`
+}
+
+type DocflowEdiAvailabilityEnvelope struct {
+	Availability DocflowEdiAvailability `json:"availability"`
+}
+
+type DocflowEdiAvailabilityLine struct {
+	// N — Номер строки заявки
+	N int64 `json:"n"`
+	// Ordered — Заказано, штук
+	Ordered   string  `json:"ordered"`
+	ProductID *UUID   `json:"product_id,omitempty"`
+	State     string  `json:"state"`
+	Reason    *string `json:"reason,omitempty"`
+	// Available — Что остаётся на строку с учётом срока годности; null — не определено, это не ноль
+	Available *string `json:"available"`
+	// ProductAvailable — Весь остаток товара с учётом срока годности
+	ProductAvailable *string `json:"product_available"`
+	// Free — Свободно без порога срока годности
+	Free *string `json:"free"`
+	// BelowShelfLife — Годное, но отсечённое порогом срока годности
+	BelowShelfLife *string `json:"below_shelf_life"`
+	// Shortage — На сколько заказанное больше доступного
+	Shortage *string `json:"shortage"`
+}
+
+type DocflowEdiBatchInput struct {
+	// Ids — Заявки, отмеченные в списке
+	Ids []UUID `json:"ids"`
+	// Archived — Только для archive-batch: убрать в архив (по умолчанию) или вернуть
+	Archived *bool `json:"archived,omitempty"`
+}
+
+type DocflowEdiBatchReport struct {
+	Results     []DocflowEdiBatchRow `json:"results"`
+	Created     int64                `json:"created"`
+	Exists      int64                `json:"exists"`
+	ItemUnknown int64                `json:"item_unknown"`
+	Failed      int64                `json:"failed"`
+}
+
+type DocflowEdiBatchRow struct {
+	ID          UUID    `json:"id"`
+	OrderNumber *string `json:"order_number,omitempty"`
+	PartnerName *string `json:"partner_name,omitempty"`
+	// Outcome — Заказ заведён; уже был; ни один товар не сопоставлен; отказ
+	Outcome string `json:"outcome"`
+	// Code — Код отказа или пометки внимания
+	Code *string `json:"code,omitempty"`
+	// Reason — Причина отказа словами
+	Reason  *string `json:"reason,omitempty"`
+	English *string `json:"english,omitempty"`
+	OrderID *UUID   `json:"order_id,omitempty"`
+	// AttentionCode — Пометка внимания заявки после действия
+	AttentionCode *string `json:"attention_code,omitempty"`
+}
+
+type DocflowEdiCatalogList struct {
+	Items []map[string]json.RawMessage `json:"items"`
+}
+
+type DocflowEdiCatalogMatch struct {
+	PartnerGln string  `json:"partner_gln"`
+	Gtin       *string `json:"gtin,omitempty"`
+	BuyerCode  *string `json:"buyer_code,omitempty"`
+	ProductID  UUID    `json:"product_id"`
+}
+
+type DocflowEdiCatalogMatchResult struct {
+	// Matched — Сколько строк заявок сопоставлено
+	Matched int64 `json:"matched"`
+}
+
+type DocflowEdiChangeDecision struct {
+	Decision string `json:"decision"`
+}
+
+type DocflowEdiConfirmInput struct {
+	Lines []DocflowEdiStepLine `json:"lines,omitempty"`
+}
+
+type DocflowEdiConnection struct {
+	ID           UUID    `json:"id"`
+	CompanyID    UUID    `json:"company_id"`
+	AppClientID  *string `json:"app_client_id,omitempty"`
+	OauthAccount *string `json:"oauth_account,omitempty"`
+	// SignedIn — Вход в Контур есть: Akeda сама обновляет доступ
+	SignedIn      *bool   `json:"signed_in,omitempty"`
+	PartyID       *string `json:"party_id,omitempty"`
+	PartyGln      *string `json:"party_gln,omitempty"`
+	PartyName     *string `json:"party_name,omitempty"`
+	BoxID         *string `json:"box_id,omitempty"`
+	BoxIsTest     *bool   `json:"box_is_test,omitempty"`
+	Mode          string  `json:"mode"`
+	Enabled       bool    `json:"enabled"`
+	HistoryFrom   *string `json:"history_from,omitempty"`
+	LastRunAt     *string `json:"last_run_at,omitempty"`
+	LastSuccessAt *string `json:"last_success_at,omitempty"`
+	// LastCode — Итог последнего опроса: ok, partial, unauthorized, forbidden, not_configured, unavailable, rate_limited, failed
+	LastCode  *string `json:"last_code,omitempty"`
+	LastError *string `json:"last_error,omitempty"`
+	// DeliveryReceipt — Отмечать у Контура получение заявки (MessageDeliveryFinished): сеть видит её доставленной. По умолчанию выключено
+	DeliveryReceipt *bool               `json:"delivery_receipt,omitempty"`
+	Partners        []DocflowEdiPartner `json:"partners,omitempty"`
+}
+
+type DocflowEdiConnectionEnvelope struct {
+	Connection DocflowEdiConnection `json:"connection"`
+}
+
+type DocflowEdiConnectionInput struct {
+	CompanyID *UUID `json:"company_id,omitempty"`
+	// ClientID — Идентификатор приложения в Кабинете интегратора Контура
+	ClientID *string `json:"client_id,omitempty"`
+	// ClientSecret — Секретный ключ приложения; только при замене
+	ClientSecret *string `json:"client_secret,omitempty"`
+	// RefreshToken — Refresh-токен входа Контура под пользователем с доступом к ящику; только при замене
+	RefreshToken *string `json:"refresh_token,omitempty"`
+	Mode         *string `json:"mode,omitempty"`
+	Enabled      *bool   `json:"enabled,omitempty"`
+	HistoryFrom  *string `json:"history_from,omitempty"`
+	// ResponsibleUserID — Ответственный за заявки; 0 снимает назначение.
+	ResponsibleUserID *int64 `json:"responsible_user_id,omitempty"`
+	// BoxTest — Подключиться к тестовому ящику организации
+	BoxTest *bool `json:"box_test,omitempty"`
+	// DeliveryReceipt — Отмечать у Контура получение заявки; не передано — не меняется
+	DeliveryReceipt *bool `json:"delivery_receipt,omitempty"`
+}
+
+type DocflowEdiConnectionList struct {
+	Connections []DocflowEdiConnection `json:"connections"`
+	// AkedaApp — У платформы своё приложение Контур.EDI: ключи приложения вводить не нужно
+	AkedaApp *bool `json:"akeda_app,omitempty"`
+}
+
+type DocflowEdiDesadvInput struct {
+	// Number — Номер накладной; пусто — номер УПД Akeda по отгрузке, а нет УПД при одной отгрузке — УПД выпускается по ней и номер берётся из реестра счетов-фактур
+	Number *string `json:"number,omitempty"`
+	// Date — Дата накладной; пусто — дата УПД, иначе последней отгрузки склада
+	Date        *string `json:"date,omitempty"`
+	DeliveryAt  *string `json:"delivery_at,omitempty"`
+	DriverName  *string `json:"driver_name,omitempty"`
+	DriverPhone *string `json:"driver_phone,omitempty"`
+	Vehicle     *string `json:"vehicle,omitempty"`
+	// VehicleBrand — Марка машины (transportation/vehicleBrand)
+	VehicleBrand *string              `json:"vehicle_brand,omitempty"`
+	Trailer      *string              `json:"trailer,omitempty"`
+	Lines        []DocflowEdiStepLine `json:"lines,omitempty"`
+	// TransportWaybillNumber — Транспортная накладная; пусто — номер накладной (УПД)
+	TransportWaybillNumber *string `json:"transport_waybill_number,omitempty"`
+	// TransportWaybillDate — Дата транспортной накладной; пусто — дата накладной
+	TransportWaybillDate *string `json:"transport_waybill_date,omitempty"`
+	// Goods — Части строк; сильнее lines и подстановки склада
+	Goods   []DocflowEdiGoods  `json:"goods,omitempty"`
+	Pallets []DocflowEdiPallet `json:"pallets,omitempty"`
+}
+
+type DocflowEdiDiadocDocument struct {
+	EdoMessageID UUID `json:"edo_message_id"`
+	ConnectionID UUID `json:"connection_id"`
+	// Provider — Оператор ЭДО: diadoc, saby
+	Provider string `json:"provider"`
+	// ExternalID — Идентификатор пакета у оператора (письмо Диадока)
+	ExternalID string `json:"external_id"`
+	Direction  string `json:"direction"`
+	// DocType — Тип документа словами оператора
+	DocType    string `json:"doc_type"`
+	DocSubtype string `json:"doc_subtype"`
+	// Kind — Вид пакета нашими словами; transfer — УПД и накладные
+	Kind   string `json:"kind"`
+	Number string `json:"number"`
+	// Date — Дата документа ГГГГ-ММ-ДД; пусто — нет
+	Date     string  `json:"date"`
+	Amount   *string `json:"amount,omitempty"`
+	Currency *string `json:"currency,omitempty"`
+	// StateCode — Состояние пакета кодом оператора (из зеркала ЭДО)
+	StateCode string `json:"state_code"`
+	// StateName — Состояние пакета словами оператора
+	StateName   string  `json:"state_name"`
+	LastEventAt *string `json:"last_event_at,omitempty"`
+	// Sources — Чем найдена связь: письмо из события ленты Контура, сверка с продажей заявки
+	Sources []string `json:"sources"`
+	// MatchStatus — У связи через продажу: linked или ambiguous (продажу выбирает человек в карточке пакета)
+	MatchStatus *string `json:"match_status,omitempty"`
+	MatchMethod *string `json:"match_method,omitempty"`
+	// DiadocURL — Ссылка Контура на документ в Диадоке (https), если её принесло событие
+	DiadocURL *string `json:"diadoc_url,omitempty"`
+	// EdiMessages — Сообщения EDI, чьи события назвали письмо пакета
+	EdiMessages []UUID `json:"edi_messages"`
+}
+
+type DocflowEdiDiadocDocuments struct {
+	Documents []DocflowEdiDiadocDocument `json:"documents"`
+	// Missing — Письма Диадока из событий, которых нет в зеркале ЭДО (ЭДО не подключено или пакет ещё не пришёл)
+	Missing []DocflowEdiDiadocLetter `json:"missing"`
+}
+
+type DocflowEdiDiadocLetter struct {
+	LetterID string  `json:"letter_id"`
+	URL      *string `json:"url,omitempty"`
+	At       *string `json:"at,omitempty"`
+	Messages []UUID  `json:"messages"`
+}
+
+type DocflowEdiEdoLinks struct {
+	Orders   []DocflowEdiEdoLinksOrdersItem   `json:"orders"`
+	Messages []DocflowEdiEdoLinksMessagesItem `json:"messages"`
+}
+
+type DocflowEdiEdoLinksOrdersItem struct {
+	ID          UUID     `json:"id"`
+	OrderNumber string   `json:"order_number"`
+	PartnerName string   `json:"partner_name"`
+	PartnerGln  string   `json:"partner_gln"`
+	Stage       string   `json:"stage"`
+	DocsStage   *string  `json:"docs_stage,omitempty"`
+	Sources     []string `json:"sources"`
+}
+
+type DocflowEdiEdoLinksMessagesItem struct {
+	ID         UUID    `json:"id"`
+	Direction  string  `json:"direction"`
+	DocType    string  `json:"doc_type"`
+	DocNumber  string  `json:"doc_number"`
+	State      string  `json:"state"`
+	At         *string `json:"at,omitempty"`
+	EdiOrderID *UUID   `json:"edi_order_id,omitempty"`
+}
+
+type DocflowEdiFill struct {
+	Step               string               `json:"step"`
+	State              string               `json:"state"`
+	Number             *string              `json:"number,omitempty"`
+	Date               *string              `json:"date,omitempty"`
+	DeliveryNoteNumber *string              `json:"delivery_note_number,omitempty"`
+	DeliveryNoteDate   *string              `json:"delivery_note_date,omitempty"`
+	ActualDeliveryAt   *string              `json:"actual_delivery_at,omitempty"`
+	Lines              []DocflowEdiFillLine `json:"lines"`
+	Goods              []DocflowEdiGoods    `json:"goods"`
+	Pallets            []DocflowEdiPallet   `json:"pallets"`
+	Required           []string             `json:"required"`
+	// WaybillFromUpd — У сети ТН по умолчанию = номер и дата УПД: форма подставляет их в «Транспортная накладная»
+	WaybillFromUpd *bool `json:"waybill_from_upd,omitempty"`
+}
+
+type DocflowEdiFillEnvelope struct {
+	Fill DocflowEdiFill `json:"fill"`
+}
+
+type DocflowEdiFillLine struct {
+	N int64 `json:"n"`
+	// Quantity — Что подставлено; пусто — подставить нечего
+	Quantity string `json:"quantity"`
+	// Limit — Больше заявить нельзя; пусто — предела нет
+	Limit           *string `json:"limit,omitempty"`
+	NetPrice        *string `json:"net_price,omitempty"`
+	NetPriceWithVAT *string `json:"net_price_with_vat,omitempty"`
+	VATRate         *string `json:"vat_rate,omitempty"`
+	PriceMissing    *bool   `json:"price_missing,omitempty"`
+}
+
+// DocflowEdiGoods — Часть строки заявки со своей партией и палетой.
+type DocflowEdiGoods struct {
+	N int64 `json:"n"`
+	// Quantity — В штуках
+	Quantity      string  `json:"quantity"`
+	Batch         *string `json:"batch,omitempty"`
+	ProducedAt    *string `json:"produced_at,omitempty"`
+	ExpiresAt     *string `json:"expires_at,omitempty"`
+	ShelfLifeDays *string `json:"shelf_life_days,omitempty"`
+	// Country — Код страны из двух букв
+	Country *string `json:"country,omitempty"`
+	// CustomsNumber — Номер таможенной декларации партии: customsDeclarationNumber сообщения
+	CustomsNumber   *string `json:"customs_number,omitempty"`
+	Manufacturer    *string `json:"manufacturer,omitempty"`
+	UnitGrossWeight *string `json:"unit_gross_weight,omitempty"`
+	UnitNetWeight   *string `json:"unit_net_weight,omitempty"`
+	// ConformityNumber — Документ соответствия строки: серия и номер. Не номер таможенной декларации
+	ConformityNumber     *string `json:"conformity_number,omitempty"`
+	ConformityDate       *string `json:"conformity_date,omitempty"`
+	ConformityValidUntil *string `json:"conformity_valid_until,omitempty"`
+	PackageType          *string `json:"package_type,omitempty"`
+	PackageQuantity      *string `json:"package_quantity,omitempty"`
+	// Pallet — Номер палеты с единицы; 0 или нет — без палеты
+	Pallet *int64                     `json:"pallet,omitempty"`
+	Marks  []DocflowEdiGoodsMarksItem `json:"marks,omitempty"`
+}
+
+type DocflowEdiGoodsMarksItem struct {
+	Type  *string `json:"type,omitempty"`
+	Value string  `json:"value"`
+}
+
+type DocflowEdiHistoryInput struct {
+	// Before — Граница: заявки раньше неё. Пусто — момент подключения
+	Before *string `json:"before,omitempty"`
+	// DryRun — Только посчитать, ничего не менять
+	DryRun *bool `json:"dry_run,omitempty"`
+}
+
+type DocflowEdiHistoryReport struct {
+	Before string `json:"before"`
+	// Matched — Сколько заявок подходит
+	Matched int64 `json:"matched"`
+	// Archived — Сколько убрано в архив
+	Archived int64 `json:"archived"`
+	DryRun   bool  `json:"dry_run"`
+}
+
+type DocflowEdiInvoicInput struct {
+	Number *string `json:"number,omitempty"`
+	// Date — Дата счёта; пусто — дата накладной
+	Date             *string              `json:"date,omitempty"`
+	Function         *string              `json:"function,omitempty"`
+	Lines            []DocflowEdiStepLine `json:"lines,omitempty"`
+	ActualDeliveryAt *string              `json:"actual_delivery_at,omitempty"`
+	Goods            []DocflowEdiGoods    `json:"goods,omitempty"`
+	Pallets          []DocflowEdiPallet   `json:"pallets,omitempty"`
+}
+
+type DocflowEdiMarkInput struct {
+	State  string  `json:"state"`
+	Status *string `json:"status,omitempty"`
+	Number *string `json:"number,omitempty"`
+	// Date — Дата документа в Контуре
+	Date  *string              `json:"date,omitempty"`
+	Lines []DocflowEdiStepLine `json:"lines,omitempty"`
+}
+
+type DocflowEdiMatchInput struct {
+	ProductID UUID `json:"product_id"`
+}
+
+type DocflowEdiMessage struct {
+	ID               UUID                       `json:"id"`
+	MessageID        string                     `json:"message_id"`
+	CirculationID    *string                    `json:"circulation_id,omitempty"`
+	Direction        string                     `json:"direction"`
+	DocType          string                     `json:"doc_type"`
+	DocNumber        *string                    `json:"doc_number,omitempty"`
+	DocDate          *string                    `json:"doc_date,omitempty"`
+	PartnerGln       *string                    `json:"partner_gln,omitempty"`
+	PartnerName      *string                    `json:"partner_name,omitempty"`
+	DeliveryPointGln *string                    `json:"delivery_point_gln,omitempty"`
+	OrderNumber      *string                    `json:"order_number,omitempty"`
+	EdiOrderID       *UUID                      `json:"edi_order_id,omitempty"`
+	State            string                     `json:"state"`
+	StateDetail      map[string]json.RawMessage `json:"state_detail,omitempty"`
+	FileName         *string                    `json:"file_name,omitempty"`
+	IsTest           *bool                      `json:"is_test,omitempty"`
+	SentAt           *string                    `json:"sent_at,omitempty"`
+}
+
+type DocflowEdiMessageCard struct {
+	Message  DocflowEdiMessage          `json:"message"`
+	Party    map[string]json.RawMessage `json:"party"`
+	History  []DocflowEdiMessageEvent   `json:"history"`
+	Statuses []DocflowEdiMessageEvent   `json:"statuses"`
+	Related  []DocflowEdiMessage        `json:"related"`
+	// ResendStep — Шаг заявки, который можно «Отправить заново» по этому сообщению: наш ответ сети, шаг failed, сеть в полном обмене. Отправка — кнопкой формы шага в карточке заявки. Нет поля — нельзя
+	ResendStep *string `json:"resend_step,omitempty"`
+	// BasisStep — Шаг заявки для «Взять за основу»: исходящий ответ сети (из Akeda или другой программы), шаг ещё открыт, заявка не отменена, сеть в полном обмене. Открывает форму шага, заполненную из заявки и продажи; сети уходит только кнопкой формы. Нет поля — нельзя
+	BasisStep *string `json:"basis_step,omitempty"`
+}
+
+type DocflowEdiMessageEvent struct {
+	ID *string `json:"id,omitempty"`
+	// State — Что случилось: состояние доставки, документа Диадока (upd_*, diadoc_*, signed_by_me*), ГИС МТ (gismt_ok, gismt_progress, gismt_error), poa_status, sender_receipt, traceability_lost, universal_message, recognized, document_created, processing_times, delivery_finished, delivery_finish_failed; kontur_event — событие незнакомого типа (тип в type)
+	State string  `json:"state"`
+	At    *string `json:"at,omitempty"`
+	// Reasons — Ошибки и отказы — тексты Контура
+	Reasons []string `json:"reasons,omitempty"`
+	// Type — Тип события Контура (MessageBoxEventType)
+	Type *string `json:"type,omitempty"`
+	// Kind — Вид события ГИС МТ (revocation, fixation, fixation_cancel) или доверенности (recipient, sender)
+	Kind *string `json:"kind,omitempty"`
+	// Notes — Пояснения Контура: предупреждения проверки, описание статуса
+	Notes []string `json:"notes,omitempty"`
+	// URL — Документ в веб-интерфейсе Диадока
+	URL *string `json:"url,omitempty"`
+	// Data — Значения для подписи: doc_type, group, title_status, status, total_seconds, need_receipt; письмо, ящик и документ Диадока — diadoc_letter_id, diadoc_box_id, diadoc_document_id
+	Data map[string]string `json:"data,omitempty"`
+}
+
+type DocflowEdiMessageList struct {
+	Messages []DocflowEdiMessage `json:"messages"`
+}
+
+type DocflowEdiOrder struct {
+	ID           UUID    `json:"id"`
+	ConnectionID *UUID   `json:"connection_id,omitempty"`
+	PartnerGln   string  `json:"partner_gln"`
+	PartnerName  *string `json:"partner_name,omitempty"`
+	OrderNumber  string  `json:"order_number"`
+	OrderDate    *string `json:"order_date,omitempty"`
+	EdiStatus    *string `json:"edi_status,omitempty"`
+	Revision     *string `json:"revision,omitempty"`
+	Stage        string  `json:"stage"`
+	// DocsStage — Этап документов: приёмка без счёта; счёт не дошёл или УПД отклонён (отказ, уточнение, ошибка роуминга); черновик УПД в Диадоке; УПД ждёт подписи покупателя; подписан; подписан с разногласиями; аннулирован. Пусто — пометки нет
+	DocsStage  *string `json:"docs_stage,omitempty"`
+	ArchivedAt *string `json:"archived_at,omitempty"`
+	// UpdPath — Путь УПД сети заявки: edi — УПД строит Контур.EDI из счёта, наш УПД через ЭДО не уходит; edo — наш УПД через ЭДО
+	UpdPath *string `json:"upd_path,omitempty"`
+	// Steps — Шаги ответа ordrsp, desadv, recadv, invoic: состояние, номер, когда, строки; auto=true у «Не нужно», поставленного набором ответов сети. Шаг upd — УПД в Диадоке по событиям ленты: state (draft, awaiting, signed, partly_signed, rejected, revoked, deleted), status (последнее событие, как состояние сообщения upd_*), message_id, at, detail (причины)
+	Steps          map[string]json.RawMessage   `json:"steps"`
+	Parties        map[string]json.RawMessage   `json:"parties,omitempty"`
+	ShipToGln      *string                      `json:"ship_to_gln,omitempty"`
+	ShipToName     *string                      `json:"ship_to_name,omitempty"`
+	ShipToAddress  *string                      `json:"ship_to_address,omitempty"`
+	DeliveryAt     *string                      `json:"delivery_at,omitempty"`
+	ShipDate       *string                      `json:"ship_date,omitempty"`
+	ContractNumber *string                      `json:"contract_number,omitempty"`
+	Currency       *string                      `json:"currency,omitempty"`
+	Total          *string                      `json:"total,omitempty"`
+	Items          []map[string]json.RawMessage `json:"items"`
+	Receiving      map[string]json.RawMessage   `json:"receiving,omitempty"`
+	OrderID        *UUID                        `json:"order_id,omitempty"`
+	// AttentionCode — Что требует человека; пусто — ничего. По документам Диадока: upd_rejected, upd_partly_signed, upd_amendment_requested, upd_revocation_requested, upd_roaming_error, diadoc_post_failed, gismt_error
+	AttentionCode *string `json:"attention_code,omitempty"`
+	// AttentionDetail — Подробности пометки: reasons — тексты Контура, event — тип события, doc_type, diadoc_url, kind
+	AttentionDetail map[string]json.RawMessage `json:"attention_detail,omitempty"`
+	Edits           *DocflowEdiOrderEdits      `json:"edits,omitempty"`
+}
+
+type DocflowEdiOrderCard struct {
+	Order    DocflowEdiOrder     `json:"order"`
+	Messages []DocflowEdiMessage `json:"messages"`
+	Partner  DocflowEdiPartner   `json:"partner"`
+}
+
+// DocflowEdiOrderEdits — Правки заявки у нас; пусто — без правок
+type DocflowEdiOrderEdits struct {
+	Lines []DocflowEdiOrderEditsLinesItem `json:"lines,omitempty"`
+	// DeliveryAt — Когда привезём
+	DeliveryAt *string `json:"delivery_at,omitempty"`
+	// ShipTo — Другое место доставки: точка покупателя с GLN (13 цифр). Уходит сети в ответе и становится грузополучателем продажи
+	ShipTo *DocflowEdiOrderEditsShipTo `json:"ship_to,omitempty"`
+	// Comment — Комментарий: уходит сети в ответе и в продажу
+	Comment *string `json:"comment,omitempty"`
+	At      *string `json:"at,omitempty"`
+	By      *int64  `json:"by,omitempty"`
+}
+
+type DocflowEdiOrderEditsLinesItem struct {
+	// N — Номер строки заявки
+	N int64 `json:"n"`
+	// Quantity — Количество в штуках; 0 — строку не везём
+	Quantity *string `json:"quantity,omitempty"`
+	// PiecePrice — Цена за штуку без НДС
+	PiecePrice *string `json:"piece_price,omitempty"`
+	// VATRate — Ставка НДС
+	VATRate *string `json:"vat_rate,omitempty"`
+	// Reason — Причина изменения строки для ответа сети
+	Reason *string `json:"reason,omitempty"`
+}
+
+// DocflowEdiOrderEditsShipTo — Другое место доставки: точка покупателя с GLN (13 цифр). Уходит сети в ответе и становится грузополучателем продажи
+type DocflowEdiOrderEditsShipTo struct {
+	Gln        *string `json:"gln,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	INN        *string `json:"inn,omitempty"`
+	KPP        *string `json:"kpp,omitempty"`
+	Address    *string `json:"address,omitempty"`
+	RegionCode *string `json:"region_code,omitempty"`
+}
+
+type DocflowEdiOrderEnvelope struct {
+	Order DocflowEdiOrder `json:"order"`
+}
+
+type DocflowEdiOrderList struct {
+	Orders     []DocflowEdiOrder                   `json:"orders"`
+	Counts     []DocflowEdiOrderListCountsItem     `json:"counts"`
+	DocsCounts []DocflowEdiOrderListDocsCountsItem `json:"docs_counts"`
+	Attention  int64                               `json:"attention"`
+	Archived   int64                               `json:"archived"`
+	Total      int64                               `json:"total"`
+}
+
+type DocflowEdiOrderListCountsItem struct {
+	Stage *string `json:"stage,omitempty"`
+	Count *int64  `json:"count,omitempty"`
+}
+
+type DocflowEdiOrderListDocsCountsItem struct {
+	Stage *string `json:"stage,omitempty"`
+	Count *int64  `json:"count,omitempty"`
+}
+
+type DocflowEdiOrdrspInput struct {
+	Status     *string              `json:"status,omitempty"`
+	DeliveryAt *string              `json:"delivery_at,omitempty"`
+	Reason     *string              `json:"reason,omitempty"`
+	Lines      []DocflowEdiStepLine `json:"lines,omitempty"`
+}
+
+// DocflowEdiPallet — Палета сообщения. Веса в килограммах, высота в сантиметрах, температура в градусах Цельсия.
+type DocflowEdiPallet struct {
+	Sscc        *string `json:"sscc,omitempty"`
+	NetWeight   *string `json:"net_weight,omitempty"`
+	GrossWeight *string `json:"gross_weight,omitempty"`
+	Height      *string `json:"height,omitempty"`
+	Temperature *string `json:"temperature,omitempty"`
+}
+
+type DocflowEdiPartner struct {
+	ID           UUID                             `json:"id"`
+	ConnectionID *UUID                            `json:"connection_id,omitempty"`
+	PartnerID    *string                          `json:"partner_id,omitempty"`
+	Gln          string                           `json:"gln"`
+	Name         string                           `json:"name"`
+	Documents    []DocflowEdiPartnerDocumentsItem `json:"documents,omitempty"`
+	ChannelID    *UUID                            `json:"channel_id,omitempty"`
+	ContactID    *UUID                            `json:"contact_id,omitempty"`
+	// Mode — Пусто — как у подключения
+	Mode           string `json:"mode"`
+	OrderCreate    string `json:"order_create"`
+	UpdPath        string `json:"upd_path"`
+	ShortageCloses bool   `json:"shortage_closes"`
+	// RequiredFields — Что сеть считает обязательным: шаг (desadv, invoic) → поля формы
+	RequiredFields map[string][]string `json:"required_fields,omitempty"`
+	// CardFields — Что сеть берёт из карточки товара. Пусто — вес, срок и страна подставляются, документ соответствия не передаётся
+	CardFields *DocflowEdiPartnerCardFields `json:"card_fields,omitempty"`
+	// ReplyPlan — Набор ответов с умолчаниями: шаг (ordrsp, desadv, invoic) → нужен ли ответ из Akeda
+	ReplyPlan map[string]bool `json:"reply_plan,omitempty"`
+}
+
+type DocflowEdiPartnerDocumentsItem struct {
+	Type      *string `json:"type,omitempty"`
+	Direction *string `json:"direction,omitempty"`
+}
+
+// DocflowEdiPartnerCardFields — Что сеть берёт из карточки товара. Пусто — вес, срок и страна подставляются, документ соответствия не передаётся
+type DocflowEdiPartnerCardFields struct {
+	// Off — Реквизиты карточки, которые этой сети не подставляются
+	Off []string `json:"off,omitempty"`
+	// Conformity — Передавать сети документ соответствия из карточки товара
+	Conformity *bool `json:"conformity,omitempty"`
+	// PalletTemperature — Температура новой палеты
+	PalletTemperature *string `json:"pallet_temperature,omitempty"`
+	// PalletNetWeight — Нетто новой палеты, кг: положительное число. Палете с названным нетто не подставляется
+	PalletNetWeight *string `json:"pallet_net_weight,omitempty"`
+	// Replies — Набор ответов из Akeda: шаг (ordrsp, desadv, invoic) → send или skip. Шага нет — умолчание: счёт не нужен при пути УПД edo, остальное — по документам, которые сеть принимает
+	Replies map[string]string `json:"replies,omitempty"`
+	// WaybillFromUpd — Транспортная накладная по умолчанию = номер и дата УПД (так у Магнита); выключено — ТН уходит, только если её назвали
+	WaybillFromUpd *bool `json:"waybill_from_upd,omitempty"`
+	// InvoiceBoxes — Коробов в строке и в счёте INVOIC (так у Магнита); выключено — только в отгрузке
+	InvoiceBoxes *bool `json:"invoice_boxes,omitempty"`
+}
+
+type DocflowEdiPartnerEnvelope struct {
+	Partner DocflowEdiPartner `json:"partner"`
+}
+
+type DocflowEdiPartnerPatch struct {
+	// ResponsibleUserID — Свой ответственный у сети; 0 — как у подключения.
+	ResponsibleUserID *int64  `json:"responsible_user_id,omitempty"`
+	ChannelID         *UUID   `json:"channel_id,omitempty"`
+	ContactID         *UUID   `json:"contact_id,omitempty"`
+	Mode              *string `json:"mode,omitempty"`
+	OrderCreate       *string `json:"order_create,omitempty"`
+	UpdPath           *string `json:"upd_path,omitempty"`
+	ShortageCloses    *bool   `json:"shortage_closes,omitempty"`
+	// RequiredFields — Обязательные поля сети целиком: шаг (desadv, invoic) → поля формы
+	RequiredFields map[string][]string `json:"required_fields,omitempty"`
+	// CardFields — Что сеть берёт из карточки товара. Пусто — вес, срок и страна подставляются, документ соответствия не передаётся
+	CardFields *DocflowEdiPartnerPatchCardFields `json:"card_fields,omitempty"`
+	// Replies — Набор ответов из Akeda: шаг (ordrsp, desadv, invoic) → send, skip или пусто (умолчание). Шаги без записи не меняются; открытые заявки сети получают или теряют «Не нужно» по настройке
+	Replies map[string]string `json:"replies,omitempty"`
+	// WaybillFromUpd — ТН по умолчанию = номер и дата УПД
+	WaybillFromUpd *bool `json:"waybill_from_upd,omitempty"`
+	// InvoiceBoxes — Коробов в строке и в счёте INVOIC
+	InvoiceBoxes *bool `json:"invoice_boxes,omitempty"`
+}
+
+// DocflowEdiPartnerPatchCardFields — Что сеть берёт из карточки товара. Пусто — вес, срок и страна подставляются, документ соответствия не передаётся
+type DocflowEdiPartnerPatchCardFields struct {
+	// Off — Реквизиты карточки, которые этой сети не подставляются
+	Off []string `json:"off,omitempty"`
+	// Conformity — Передавать сети документ соответствия из карточки товара
+	Conformity *bool `json:"conformity,omitempty"`
+	// PalletTemperature — Температура новой палеты
+	PalletTemperature *string `json:"pallet_temperature,omitempty"`
+	// PalletNetWeight — Нетто новой палеты, кг: положительное число. Палете с названным нетто не подставляется
+	PalletNetWeight *string `json:"pallet_net_weight,omitempty"`
+	// Replies — Этим полем не меняется, только replies ниже. Набор ответов из Akeda: шаг (ordrsp, desadv, invoic) → send или skip. Шага нет — умолчание: счёт не нужен при пути УПД edo, остальное — по документам, которые сеть принимает
+	Replies map[string]string `json:"replies,omitempty"`
+	// WaybillFromUpd — Этим полем не меняется. Транспортная накладная по умолчанию = номер и дата УПД (так у Магнита); выключено — ТН уходит, только если её назвали
+	WaybillFromUpd *bool `json:"waybill_from_upd,omitempty"`
+	// InvoiceBoxes — Этим полем не меняется. Коробов в строке и в счёте INVOIC (так у Магнита); выключено — только в отгрузке
+	InvoiceBoxes *bool `json:"invoice_boxes,omitempty"`
+}
+
+type DocflowEdiPayerList struct {
+	Payers []map[string]json.RawMessage `json:"payers"`
+}
+
+type DocflowEdiPlaceList struct {
+	Places []map[string]json.RawMessage `json:"places"`
+}
+
+type DocflowEdiRematchResult struct {
+	// Changed — Сколько заявок изменилось
+	Changed int64 `json:"changed"`
+}
+
+type DocflowEdiStepLine struct {
+	// N — Номер строки заявки
+	N int64 `json:"n"`
+	// Quantity — Количество в штуках
+	Quantity string  `json:"quantity"`
+	Reason   *string `json:"reason,omitempty"`
 }
 
 // DocflowElectronicPoARequisites — СвДоверЭл: машиночитаемая доверенность. Формат требует её ровно при способе подтверждения полномочий 3 и запрещает при остальных.
@@ -13933,7 +14692,7 @@ type DocflowFlowInvoicePayee struct {
 	ContactName string `json:"contact_name"`
 	// AccountID — Расчётный счёт контрагента, по которому платить; нет — у контрагента нет включённого счёта
 	AccountID *UUID `json:"account_id,omitempty"`
-	// AccountSource — Откуда счёт: card — выбран в карточке счёта, contact_default — в карточке не выбран и взят основной счёт контрагента, none — у контрагента нет ни одного включённого счёта, budget — платёж в бюджет: счёт казначейства взят из файла поручения.
+	// AccountSource — Откуда счёт: card — выбран в карточке счёта, document — в карточке не выбран и взят счёт, напечатанный в самом входящем документе (ссылкой на такой же счёт контрагента или реквизитами документа), contact_default — в карточке не выбран, документ счёта не называет, взят основной счёт контрагента, none — у контрагента нет ни одного включённого счёта, budget — платёж в бюджет: счёт казначейства взят из файла поручения.
 	AccountSource string `json:"account_source"`
 	// Accounts — Включённые счета контрагента — из них выбирают другой
 	Accounts []CoreContactBankAccount `json:"accounts"`
@@ -14792,7 +15551,7 @@ type DocflowIntakeCounterpartyOption struct {
 
 // DocflowIntakeInput — Решение человека, которым подтверждается приёмка. Сам пакет назван в адресе. Решения по строкам приезжают СПИСКОМ, а не картой «номер → товар»: пропуск строки — это тоже решение, и картой его пришлось бы выражать отсутствием ключа, то есть неотличимо от «человек про эту строку не сказал ничего», а разница между ними принципиальная.
 type DocflowIntakeInput struct {
-	// Date — Дата учётного документа ГГГГ-ММ-ДД. Пусто — берётся дата документа поставщика: она и есть дата операции
+	// Date — Дата учёта ГГГГ-ММ-ДД. Пусто — сегодня (ERP-2673); дата документа поставщика хранится отдельно и уходит в 1С входящей
 	Date *string `json:"date,omitempty"`
 	// Contact — Контрагент. Пусто — берётся тот, с кем свело зеркало
 	Contact *UUID `json:"contact,omitempty"`
@@ -15551,6 +16310,287 @@ type DocflowOutgoingInput struct {
 	Files []DocflowOutgoingFile `json:"files,omitempty"`
 }
 
+type DocflowOzonRetailApproval struct {
+	// Lines — Сколько согласовать по SKU Ozon; строки нет — сколько просил Ozon; 0 — строка убирается; больше просьбы нельзя
+	Lines []DocflowOzonRetailApprovalLinesItem `json:"lines,omitempty"`
+}
+
+type DocflowOzonRetailApprovalLinesItem struct {
+	OzonID   int64  `json:"ozon_id"`
+	Quantity string `json:"quantity"`
+}
+
+type DocflowOzonRetailCargo struct {
+	ID int64 `json:"id"`
+	// Type — Тип грузоместа у Ozon
+	Type    int64  `json:"type"`
+	Barcode string `json:"barcode"`
+}
+
+type DocflowOzonRetailCargoContentInput struct {
+	Cargos []DocflowOzonRetailCargoContentInputCargosItem `json:"cargos"`
+}
+
+type DocflowOzonRetailCargoContentInputCargosItem struct {
+	CargoID int64                                                   `json:"cargo_id"`
+	Items   []DocflowOzonRetailCargoContentInputCargosItemItemsItem `json:"items"`
+}
+
+type DocflowOzonRetailCargoContentInputCargosItemItemsItem struct {
+	OzonID   int64 `json:"ozon_id"`
+	Quantity int64 `json:"quantity"`
+}
+
+type DocflowOzonRetailCargoList struct {
+	Cargos []DocflowOzonRetailCargo `json:"cargos"`
+}
+
+type DocflowOzonRetailDriverList struct {
+	Drivers []DocflowOzonRetailVehiclePass `json:"drivers"`
+}
+
+type DocflowOzonRetailGate struct {
+	Allowed bool `json:"allowed"`
+	// Reasons — Коды Ozon, почему нельзя: NoWaybill, WaybillWithErrors, WaybillInProcess, InvalidOrderState и др.
+	Reasons []string `json:"reasons"`
+}
+
+type DocflowOzonRetailItem struct {
+	// OzonID — SKU Ozon
+	OzonID  int64  `json:"ozon_id"`
+	Barcode string `json:"barcode"`
+	Article string `json:"article"`
+	Name    string `json:"name"`
+	// Quantity — Сколько просит Ozon
+	Quantity string `json:"quantity"`
+	// Price — Цена Ozon с НДС
+	Price     string  `json:"price"`
+	Unit      *string `json:"unit,omitempty"`
+	ProductID *UUID   `json:"product_id,omitempty"`
+	// ShipmentType — Тип отгрузки строки, как пришёл из Ozon (shipmentType: General и др.); нет — Ozon не назвал
+	ShipmentType *string `json:"shipment_type,omitempty"`
+	// Quant — Квант строки (quant); нет — Ozon не назвал или назвал 0
+	Quant *string `json:"quant,omitempty"`
+	// BulkShipmentType — Режим приёмки строки складом Ozon (bulkAcceptanceAttributes.bulkShipmentType: Exemplar — поштучно и др.)
+	BulkShipmentType *string `json:"bulk_shipment_type,omitempty"`
+	// BulkQuant — Квант приёмки (bulkAcceptanceAttributes.quant)
+	BulkQuant *string `json:"bulk_quant,omitempty"`
+}
+
+type DocflowOzonRetailOrder struct {
+	ID UUID `json:"id"`
+	// OzonOrderID — Номер заказа на поставку в Ozon
+	OzonOrderID    int64   `json:"ozon_order_id"`
+	DocumentNumber string  `json:"document_number"`
+	DocumentDate   *string `json:"document_date"`
+	// OzonState — Статус в Ozon как пришёл: RetailOnConfirmation, DeliveryPreparation, RetailCompleted и т. п.
+	OzonState string `json:"ozon_state"`
+	// OrderID — Заказ покупателя; null — ещё не заведён: продажа заводится только по согласованному заказу (ERP-2154)
+	OrderID *UUID `json:"order_id"`
+	// IsXdock — Поставка через кросс-докинг
+	IsXdock                bool   `json:"is_xdock"`
+	SupplyWarehouseID      int64  `json:"supply_warehouse_id"`
+	SupplyWarehouseName    string `json:"supply_warehouse_name"`
+	SupplyWarehouseAddress string `json:"supply_warehouse_address"`
+	// StorageWarehouseID — Склад хранения: куда товар идёт в итоге, грузополучатель УПД. 0 — опрос ещё не читал
+	StorageWarehouseID      int64  `json:"storage_warehouse_id"`
+	StorageWarehouseName    string `json:"storage_warehouse_name"`
+	StorageWarehouseAddress string `json:"storage_warehouse_address"`
+	// ContractID — Номер договора в Ozon (contractInfo.contractId); 0 — Ozon договор не назвал
+	ContractID int64 `json:"contract_id"`
+	// ContractName — Договор поставки, по которому Ozon сделал заказ (contractInfo.contractName, только в списке новых заказов): «ЗАКУП ИР-7008667/26 от 01.09.2026»; по номеру из названия продажа ставится на карточку договора. Заказу, который опрос не застал новым, — договор, названный Ozon в других заказах кабинета; пусто — договора нет
+	ContractName string `json:"contract_name"`
+	// Currency — Валюта заказа Ozon (currency, только список активных); пусто — Ozon не назвал
+	Currency string `json:"currency"`
+	// IsSuperEconom — Заказ SuperEconom
+	IsSuperEconom bool `json:"is_super_econom"`
+	// DestinationDeliveryDate — Прибытие на конечный склад (destinationDeliveryDateLocal, кросс-докинг)
+	DestinationDeliveryDate *string `json:"destination_delivery_date"`
+	// TimeslotFrom — Начало времени поставки во времени склада Ozon
+	TimeslotFrom      *string `json:"timeslot_from"`
+	TimeslotTo        *string `json:"timeslot_to"`
+	TimeslotConfirmed bool    `json:"timeslot_confirmed"`
+	// TimeslotID — Интервал, который Ozon предлагает подтвердить
+	TimeslotID   string                        `json:"timeslot_id"`
+	Items        []DocflowOzonRetailItem       `json:"items"`
+	Supply       DocflowOzonRetailSupply       `json:"supply"`
+	Waybill      DocflowOzonRetailWaybill      `json:"waybill"`
+	PackageUnits DocflowOzonRetailPackageUnits `json:"package_units"`
+	VehiclePass  DocflowOzonRetailVehiclePass  `json:"vehicle_pass"`
+	// AttentionCode — Что требует человека: item_unknown (часть товаров не узнана — заказ заведён без них, список в attention_detail.items), changed_during_picking (Ozon изменил состав во время сборки — заказ не переписан), picked_over_approved (Ozon согласовал меньше собранного, поправьте сборку), cancelled_after_picking (заказ отменён после начала сборки: собранное вернуть на полки), below_shipped, cancelled_after_shipment, cancel_blocked, acceptance_refused, completed_not_shipped, import_failed, consignee_incomplete (у карточки склада Ozon нет КПП или адреса по графам), consignee_unknown_warehouse (Ozon не назвал склад поставки — грузополучатель не определён), contract_missing (Ozon назвал договор, а продажа на нём не стоит: attention_detail.contract — номер, reason — not_found, карточки договора нет, или rejected, карточка к продаже не подошла); пусто — всё сходится
+	AttentionCode string `json:"attention_code"`
+	// AttentionDetail — Подробности: нераспознанные строки (items) или причина (reason)
+	AttentionDetail map[string]json.RawMessage `json:"attention_detail"`
+	LastSeenAt      string                     `json:"last_seen_at"`
+	UpdatedAt       string                     `json:"updated_at"`
+}
+
+type DocflowOzonRetailOrderEnvelope struct {
+	Order DocflowOzonRetailOrder `json:"order"`
+}
+
+type DocflowOzonRetailPackageUnits struct {
+	Boxes   int64   `json:"boxes"`
+	Pallets int64   `json:"pallets"`
+	SentAt  *string `json:"sent_at,omitempty"`
+}
+
+type DocflowOzonRetailRejection struct {
+	Reason  string  `json:"reason"`
+	Comment *string `json:"comment,omitempty"`
+}
+
+type DocflowOzonRetailSaleBrief struct {
+	ID UUID `json:"id"`
+	// Number — Номер продажи
+	Number string `json:"number"`
+	// Status — Статус продажи: draft, confirmed, done, cancelled
+	Status string `json:"status"`
+	// Ordered — Сумма продажи
+	Ordered string `json:"ordered"`
+	// Executed — Сколько из суммы продажи отгружено
+	Executed string `json:"executed"`
+}
+
+type DocflowOzonRetailStateEnvelope struct {
+	State DocflowOzonRetailSyncState `json:"state"`
+	Steps *DocflowOzonRetailSteps    `json:"steps,omitempty"`
+}
+
+// DocflowOzonRetailSteps — Какие шаги оформления поставки делаются из Akeda, а не в Retail Center (ERP-2927); включаются в подключении
+type DocflowOzonRetailSteps struct {
+	// Approval — Согласование, изменение состава, отклонение, подтверждение времени поставки
+	Approval bool `json:"approval"`
+	// Supply — Грузоместа и палетные ярлыки
+	Supply bool `json:"supply"`
+	// VehiclePass — Пропуск водителю
+	VehiclePass bool `json:"vehicle_pass"`
+}
+
+type DocflowOzonRetailSupply struct {
+	Labels          *DocflowOzonRetailGate `json:"labels,omitempty"`
+	VehiclePass     *DocflowOzonRetailGate `json:"vehicle_pass,omitempty"`
+	Timeslot        *DocflowOzonRetailGate `json:"timeslot,omitempty"`
+	HasPackageUnits bool                   `json:"has_package_units"`
+	// HasProperWaybills — Ozon принял УПД
+	HasProperWaybills bool `json:"has_proper_waybills"`
+	HasVehicleInfo    bool `json:"has_vehicle_info"`
+}
+
+// DocflowOzonRetailSupplyOrder — Заказ на поставку Ozon раздела «Ozon 1P» (ERP-2154): поля заказа Ozon, сумма состава и краткая наша продажа
+type DocflowOzonRetailSupplyOrder struct {
+	ID UUID `json:"id"`
+	// OzonOrderID — Номер заказа на поставку в Ozon
+	OzonOrderID    int64   `json:"ozon_order_id"`
+	DocumentNumber string  `json:"document_number"`
+	DocumentDate   *string `json:"document_date"`
+	// OzonState — Статус в Ozon как пришёл: RetailOnConfirmation, DeliveryPreparation, RetailCompleted и т. п.
+	OzonState string `json:"ozon_state"`
+	// OrderID — Заказ покупателя; null — ещё не заведён: продажа заводится только по согласованному заказу (ERP-2154)
+	OrderID *UUID `json:"order_id"`
+	// IsXdock — Поставка через кросс-докинг
+	IsXdock                bool   `json:"is_xdock"`
+	SupplyWarehouseID      int64  `json:"supply_warehouse_id"`
+	SupplyWarehouseName    string `json:"supply_warehouse_name"`
+	SupplyWarehouseAddress string `json:"supply_warehouse_address"`
+	// StorageWarehouseID — Склад хранения: куда товар идёт в итоге, грузополучатель УПД. 0 — опрос ещё не читал
+	StorageWarehouseID      int64  `json:"storage_warehouse_id"`
+	StorageWarehouseName    string `json:"storage_warehouse_name"`
+	StorageWarehouseAddress string `json:"storage_warehouse_address"`
+	// ContractID — Номер договора в Ozon (contractInfo.contractId); 0 — Ozon договор не назвал
+	ContractID int64 `json:"contract_id"`
+	// ContractName — Договор поставки, по которому Ozon сделал заказ (contractInfo.contractName, только в списке новых заказов): «ЗАКУП ИР-7008667/26 от 01.09.2026»; по номеру из названия продажа ставится на карточку договора. Заказу, который опрос не застал новым, — договор, названный Ozon в других заказах кабинета; пусто — договора нет
+	ContractName string `json:"contract_name"`
+	// Currency — Валюта заказа Ozon (currency, только список активных); пусто — Ozon не назвал
+	Currency string `json:"currency"`
+	// IsSuperEconom — Заказ SuperEconom
+	IsSuperEconom bool `json:"is_super_econom"`
+	// DestinationDeliveryDate — Прибытие на конечный склад (destinationDeliveryDateLocal, кросс-докинг)
+	DestinationDeliveryDate *string `json:"destination_delivery_date"`
+	// TimeslotFrom — Начало времени поставки во времени склада Ozon
+	TimeslotFrom      *string `json:"timeslot_from"`
+	TimeslotTo        *string `json:"timeslot_to"`
+	TimeslotConfirmed bool    `json:"timeslot_confirmed"`
+	// TimeslotID — Интервал, который Ozon предлагает подтвердить
+	TimeslotID   string                        `json:"timeslot_id"`
+	Items        []DocflowOzonRetailItem       `json:"items"`
+	Supply       DocflowOzonRetailSupply       `json:"supply"`
+	Waybill      DocflowOzonRetailWaybill      `json:"waybill"`
+	PackageUnits DocflowOzonRetailPackageUnits `json:"package_units"`
+	VehiclePass  DocflowOzonRetailVehiclePass  `json:"vehicle_pass"`
+	// AttentionCode — Что требует человека: item_unknown (часть товаров не узнана — заказ заведён без них, список в attention_detail.items), changed_during_picking (Ozon изменил состав во время сборки — заказ не переписан), picked_over_approved (Ozon согласовал меньше собранного, поправьте сборку), cancelled_after_picking (заказ отменён после начала сборки: собранное вернуть на полки), below_shipped, cancelled_after_shipment, cancel_blocked, acceptance_refused, completed_not_shipped, import_failed, consignee_incomplete (у карточки склада Ozon нет КПП или адреса по графам), consignee_unknown_warehouse (Ozon не назвал склад поставки — грузополучатель не определён), contract_missing (Ozon назвал договор, а продажа на нём не стоит: attention_detail.contract — номер, reason — not_found, карточки договора нет, или rejected, карточка к продаже не подошла); пусто — всё сходится
+	AttentionCode string `json:"attention_code"`
+	// AttentionDetail — Подробности: нераспознанные строки (items) или причина (reason)
+	AttentionDetail map[string]json.RawMessage `json:"attention_detail"`
+	LastSeenAt      string                     `json:"last_seen_at"`
+	UpdatedAt       string                     `json:"updated_at"`
+	// Amount — Сумма состава Ozon: Σ количество × цена Ozon, два знака; пусто — Ozon состав ещё не отдал
+	Amount string `json:"amount"`
+	// Sale — Наша продажа; null — заказ ещё не согласован или продажа не прочитана
+	Sale *DocflowOzonRetailSaleBrief `json:"sale"`
+	// CompanyID — Юрлицо подключения Ozon Retail; null — подключения нет
+	CompanyID *UUID `json:"company_id"`
+	// WarehouseID — Склад, с которого продажа встанет в резерв: склад отгрузки канала, без канала — склад подключения; null — не выбран. По нему считается свободный остаток к согласованию
+	WarehouseID *UUID `json:"warehouse_id"`
+	// DiscrepancyOpen — Сколько УПД продажи Ozon подписал с расхождениями или не принял, а человек ещё не отметил разобранными
+	DiscrepancyOpen *int64 `json:"discrepancy_open,omitempty"`
+}
+
+type DocflowOzonRetailSupplyOrderCard struct {
+	Order DocflowOzonRetailSupplyOrder `json:"order"`
+	Steps DocflowOzonRetailSteps       `json:"steps"`
+	// Connected — Подключение к Ozon Retail есть и включено
+	Connected bool `json:"connected"`
+}
+
+type DocflowOzonRetailSupplyOrderPage struct {
+	Orders []DocflowOzonRetailSupplyOrder `json:"orders"`
+	// Total — Сколько заказов под отбором без страницы
+	Total int64 `json:"total"`
+}
+
+type DocflowOzonRetailSyncState struct {
+	LastRunAt     *string `json:"last_run_at"`
+	LastSuccessAt *string `json:"last_success_at"`
+	// LastCode — ok, credentials_rejected, ip_forbidden, rate_limited, unavailable, not_configured; пусто — опроса не было
+	LastCode      string `json:"last_code"`
+	OrdersSeen    int64  `json:"orders_seen"`
+	OrdersChanged int64  `json:"orders_changed"`
+}
+
+type DocflowOzonRetailVehiclePass struct {
+	// DriverName — ФИО, 5–50 русских или латинских букв
+	DriverName string `json:"driver_name"`
+	// DriverPhone — Телефон; уходит в Ozon цифрами 7XXXXXXXXXX
+	DriverPhone  string `json:"driver_phone"`
+	VehicleModel string `json:"vehicle_model"`
+	// VehicleNumber — 4–19 цифр и букв с латинским двойником
+	VehicleNumber string  `json:"vehicle_number"`
+	SentAt        *string `json:"sent_at,omitempty"`
+}
+
+// DocflowOzonRetailWaybill — Итог проверки УПД Ozon (последний загруженный УПД и покрытие заказа)
+type DocflowOzonRetailWaybill struct {
+	CheckedAt *string `json:"checked_at,omitempty"`
+	Count     int64   `json:"count"`
+	// State — Состояние проверки как пришло от Ozon
+	State      *string                        `json:"state,omitempty"`
+	IsEdo      bool                           `json:"is_edo"`
+	Number     *string                        `json:"number,omitempty"`
+	Date       *string                        `json:"date,omitempty"`
+	Messages   []string                       `json:"messages,omitempty"`
+	NotMatched []DocflowOzonRetailWaybillItem `json:"not_matched,omitempty"`
+	AllCovered bool                           `json:"all_covered"`
+	Covered    int64                          `json:"covered"`
+	Total      int64                          `json:"total"`
+}
+
+type DocflowOzonRetailWaybillItem struct {
+	Code     string `json:"code"`
+	Name     string `json:"name"`
+	Quantity string `json:"quantity"`
+}
+
 // DocflowPackageContract — Договор контрагента, который можно выбрать основанием бумаги.
 type DocflowPackageContract struct {
 	// ID — Карточка договора в документообороте
@@ -15815,6 +16855,7 @@ type DocflowPaymentDetails struct {
 	Contact *UUID `json:"contact"`
 	// ContactName — Имя этой карточки в кабинете. origin=auto — записанное решение (человека или синхронизации), проверять его незачем; origin=guess — найдено по реквизитам прямо сейчас и нигде не записано, форма ставит рядом «проверьте».
 	ContactName DocflowPaymentDetailsContactName `json:"contact_name"`
+	Foreign     *DocflowPaymentForeign           `json:"foreign,omitempty"`
 	Amount      DocflowPaymentField              `json:"amount"`
 	Currency    DocflowPaymentField              `json:"currency"`
 	// DueDate — Срок оплаты в форме ГГГГ-ММ-ДД из первого доступного источника: «оплатить до» из самого счёта; иначе дата счёта плюс отсрочка по условиям оплаты контрагента у модуля finance (finance_counterparty_terms на дату счёта); иначе дата счёта плюс отсрочка, которую finance применяет без заведённых условий. Всегда origin=guess — за срок отвечает человек. Пусто только без даты счёта: прибавлять отсрочку не к чему.
@@ -15867,6 +16908,14 @@ type DocflowPaymentField struct {
 	Origin string `json:"origin"`
 }
 
+// DocflowPaymentForeign — Реквизиты иностранного получателя из счёта: SWIFT, IBAN, страна банка и банк-посредник; нет — иностранных реквизитов не найдено
+type DocflowPaymentForeign struct {
+	Swift            DocflowPaymentField `json:"swift"`
+	Iban             DocflowPaymentField `json:"iban"`
+	Country          DocflowPaymentField `json:"country"`
+	IntermediaryBank DocflowPaymentField `json:"intermediary_bank"`
+}
+
 // DocflowPaymentInvoiceDocument — Счёт, уже лежащий файлом в карточке документооборота
 type DocflowPaymentInvoiceDocument struct {
 	// DocumentID — Карточка документооборота, в которую загружен файл счёта
@@ -15896,29 +16945,42 @@ type DocflowPaymentRequest struct {
 	// CompanyID — Юрлицо-плательщик; нулевой UUID — заявка без юрлица (ERP-3107)
 	CompanyID UUID `json:"company_id"`
 	// BusinessID — Бизнес заявки (ERP-3107)
-	BusinessID  *UUID                      `json:"business_id,omitempty"`
-	CompanyName string                     `json:"company_name"`
-	ContactID   *UUID                      `json:"contact_id,omitempty"`
-	ContactName string                     `json:"contact_name"`
-	ItemID      *UUID                      `json:"item_id,omitempty"`
-	ItemName    string                     `json:"item_name"`
-	Payee       DocflowPaymentRequestPayee `json:"payee"`
-	Amount      string                     `json:"amount"`
-	Currency    string                     `json:"currency"`
-	DueDate     string                     `json:"due_date"`
-	Purpose     string                     `json:"purpose"`
+	BusinessID  *UUID                         `json:"business_id,omitempty"`
+	CompanyName string                        `json:"company_name"`
+	ContactID   *UUID                         `json:"contact_id,omitempty"`
+	ContactName string                        `json:"contact_name"`
+	ItemID      *UUID                         `json:"item_id,omitempty"`
+	ItemName    string                        `json:"item_name"`
+	Payee       DocflowPaymentRequestPayee    `json:"payee"`
+	Foreign     *DocflowPaymentRequestForeign `json:"foreign,omitempty"`
+	Rate        *DocflowPaymentRequestRate    `json:"rate,omitempty"`
+	Amount      string                        `json:"amount"`
+	// PayMode — Как платят по счёту: весь счёт, часть или частями по графику
+	PayMode *string `json:"pay_mode,omitempty"`
+	// InvoiceTotal — Сумма счёта при частичной оплате или графике; amount — к оплате
+	InvoiceTotal *string `json:"invoice_total,omitempty"`
+	// Parts — График оплаты при pay_mode=schedule: части по дате с номером строки очереди казначея (номер заявки и «/N») и ходом оплаты каждой части
+	Parts    []DocflowPaymentRequestPartsItem `json:"parts,omitempty"`
+	Currency string                           `json:"currency"`
+	DueDate  string                           `json:"due_date"`
+	Purpose  string                           `json:"purpose"`
 	// Justification — Обоснование автора для согласующего
 	Justification string `json:"justification"`
+	// ContractText — Договор словами, вписанный вручную; пусто — договор выбран из справочника (basis.contract_id) или не назван
+	ContractText string `json:"contract_text"`
 	// Priority — Приоритет оплаты
 	Priority string `json:"priority"`
 	// PaymentMethod — Форма оплаты
 	PaymentMethod string `json:"payment_method"`
-	// DepartmentID — Подразделение заявки; нет — подразделение автора
+	// DepartmentID — Отдел заявки (оргструктура); нет — не назван
 	DepartmentID   *UUID   `json:"department_id,omitempty"`
 	DepartmentName *string `json:"department_name,omitempty"`
 	// ProjectID — Проект заявки (справочник ядра «Проекты»)
 	ProjectID   *UUID   `json:"project_id,omitempty"`
 	ProjectName *string `json:"project_name,omitempty"`
+	// CfoID — ЦФО расхода (справочник ядра «ЦФО»); нет — ЦФО отдела заявки
+	CfoID   *UUID   `json:"cfo_id,omitempty"`
+	CfoName *string `json:"cfo_name,omitempty"`
 	// VATRate — Ставка НДС: пусто — не указана, none — без НДС
 	VATRate *string `json:"vat_rate,omitempty"`
 	// VATAmount — Сумма НДС
@@ -15955,6 +17017,8 @@ type DocflowPaymentRequest struct {
 	Budget *DocflowPaymentRequestBudget `json:"budget,omitempty"`
 	// CanSubmitOverBudget — Можно ли отправить заявку сверх лимита: право docflow.flow:over_budget, заявка — черновик или на доработке
 	CanSubmitOverBudget *bool `json:"can_submit_over_budget,omitempty"`
+	// CanSetItem — Можно ли сейчас проставить статью: человек согласует текущий этап «статья обязательна» заявки на согласовании
+	CanSetItem *bool `json:"can_set_item,omitempty"`
 	// CanRepeat — Можно ли повторить отклонённую или отозванную заявку новым черновиком
 	CanRepeat *bool `json:"can_repeat,omitempty"`
 	// BasisBalance — Остаток бумаги-основания: заявлено, оплачено, осталось; только в карточке заявки, у ручного основания нет
@@ -15981,6 +17045,16 @@ type DocflowPaymentRequest struct {
 	CanEdit           bool   `json:"can_edit"`
 	CanSubmit         bool   `json:"can_submit"`
 	CanCancel         bool   `json:"can_cancel"`
+}
+
+type DocflowPaymentRequestPartsItem struct {
+	LineNo           *int64                        `json:"line_no,omitempty"`
+	DueDate          *string                       `json:"due_date,omitempty"`
+	Amount           *string                       `json:"amount,omitempty"`
+	Number           *string                       `json:"number,omitempty"`
+	FinanceRequestID *UUID                         `json:"finance_request_id,omitempty"`
+	Progress         *string                       `json:"progress,omitempty"`
+	Payment          *DocflowPaymentRequestPayment `json:"payment,omitempty"`
 }
 
 type DocflowPaymentRequestBasis struct {
@@ -16042,27 +17116,59 @@ type DocflowPaymentRequestBudget struct {
 	DepartmentRemaining *string `json:"department_remaining,omitempty"`
 }
 
+// DocflowPaymentRequestForeign — Реквизиты иностранного получателя: вместо ИНН, КПП и БИК — SWIFT и IBAN; платёж в валюте счёта
+type DocflowPaymentRequestForeign struct {
+	// Swift — SWIFT (BIC) банка получателя, 8 или 11 знаков; пробелы и регистр приводятся сервером
+	Swift string `json:"swift"`
+	// Iban — IBAN получателя; без IBAN нужен номер счёта в payee.account
+	Iban *string `json:"iban,omitempty"`
+	// Country — Страна банка получателя
+	Country *string `json:"country,omitempty"`
+	// IntermediaryBank — Банк-посредник (SWIFT, название), если нужен
+	IntermediaryBank *string `json:"intermediary_bank,omitempty"`
+	// PayeeAddress — Адрес получателя для заявления на перевод (поле 59 SWIFT)
+	PayeeAddress *string `json:"payee_address,omitempty"`
+	// OperationCode — Код вида валютной операции по Инструкции ЦБ 181-И, пять цифр
+	OperationCode *string `json:"operation_code,omitempty"`
+	// ContractNumber — Уникальный номер контракта, если контракт поставлен на учёт
+	ContractNumber *string `json:"contract_number,omitempty"`
+	// Charges — Кто платит комиссии банков (поле 71A SWIFT): OUR — плательщик, SHA — каждый свою, BEN — получатель; по умолчанию SHA
+	Charges *string `json:"charges,omitempty"`
+}
+
 type DocflowPaymentRequestInput struct {
 	// CompanyID — Юрлицо-плательщик; null — заявка без юрлица, по бизнесу business_id (ERP-3107)
 	CompanyID *UUID `json:"company_id,omitempty"`
 	// BusinessID — Бизнес заявки без юрлица; при названном юрлице бизнес берётся из него
-	BusinessID *UUID                      `json:"business_id,omitempty"`
-	ContactID  *UUID                      `json:"contact_id,omitempty"`
-	ItemID     *UUID                      `json:"item_id,omitempty"`
-	Payee      DocflowPaymentRequestPayee `json:"payee"`
+	BusinessID *UUID                         `json:"business_id,omitempty"`
+	ContactID  *UUID                         `json:"contact_id,omitempty"`
+	ItemID     *UUID                         `json:"item_id,omitempty"`
+	Payee      DocflowPaymentRequestPayee    `json:"payee"`
+	Foreign    *DocflowPaymentRequestForeign `json:"foreign,omitempty"`
+	Rate       *DocflowPaymentRequestRate    `json:"rate,omitempty"`
 	// Amount — Сумма; не больше двух знаков копеек, лишние нули отбрасываются
-	Amount   string  `json:"amount"`
-	Currency *string `json:"currency,omitempty"`
-	DueDate  string  `json:"due_date"`
-	Purpose  string  `json:"purpose"`
+	Amount string `json:"amount"`
+	// PayMode — Как платят по счёту: full — весь счёт, part — часть суммы счёта, schedule — частями по графику parts (ERP-2729)
+	PayMode *string `json:"pay_mode,omitempty"`
+	// InvoiceTotal — Сумма счёта при pay_mode=part или schedule; amount — к оплате, не больше неё. У full не передаётся
+	InvoiceTotal *string `json:"invoice_total,omitempty"`
+	// Parts — График при pay_mode=schedule: от двух строк «дата — сумма», каждая не больше суммы счёта, сумма строк равна amount; срок заявки — дата первой строки. Одна заявка согласуется один раз, после согласования каждая строка уходит в очередь казначея отдельно. У других режимов не передаётся
+	Parts    []DocflowPaymentRequestInputPartsItem `json:"parts,omitempty"`
+	Currency *string                               `json:"currency,omitempty"`
+	DueDate  string                                `json:"due_date"`
+	Purpose  string                                `json:"purpose"`
 	// Priority — Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP
 	Priority *string `json:"priority,omitempty"`
 	// PaymentMethod — Форма оплаты: безналичная или наличные (без банковских реквизитов, платит касса)
 	PaymentMethod *string `json:"payment_method,omitempty"`
 	// Justification — Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
 	Justification *string `json:"justification,omitempty"`
-	// DepartmentID — Подразделение заявки из справочника «Подразделения»; по нему подбирается маршрут согласования и руководитель подразделения. Не задано при заведении — подразделение автора
+	// ContractText — Договор словами, когда его нет среди договоров контрагента (выбранный договор — basis.contract_id); длиннее — 422 docflow.payment_request.field с field contract_text
+	ContractText *string `json:"contract_text,omitempty"`
+	// DepartmentID — Отдел заявки из оргструктуры; по нему подбирается маршрут согласования и руководитель отдела. Не задано — отдел не назван, по автору не подставляется. Регламент может сделать поле обязательным (request_fields.department)
 	DepartmentID *UUID `json:"department_id,omitempty"`
+	// CfoID — ЦФО расхода из справочника ядра «ЦФО»: этап «Ответственный ЦФО» и бюджет ЦФО берут его, а не ЦФО отдела. Элемент не из справочника, а также пусто при обязательном ЦФО в регламенте (request_fields.cfo) — 422 docflow.payment_request.field с полем cfo_id
+	CfoID *UUID `json:"cfo_id,omitempty"`
 	// ProjectID — Проект заявки из справочника ядра «Проекты» — тот же разрез, что у операций финансов и заказов. Уходит в строку очереди финансов и оттуда в пустое поле банковской операции. Элемент не из справочника — 422 docflow.payment_request.field с полем project_id
 	ProjectID *UUID `json:"project_id,omitempty"`
 	// VATRate — Ставка НДС: пусто — не указана, none — без НДС, иначе процент
@@ -16077,11 +17183,23 @@ type DocflowPaymentRequestInput struct {
 	InvoiceCard  *DocflowPaymentRequestInvoiceCard `json:"invoice_card,omitempty"`
 }
 
+type DocflowPaymentRequestInputPartsItem struct {
+	DueDate string `json:"due_date"`
+	Amount  string `json:"amount"`
+}
+
 // DocflowPaymentRequestInvoiceCard — Счёт, принесённый файлом: карточка входящего счёта, которая заводится вместе с заявкой одной транзакцией и становится её основанием (basis docflow / flow_document). Юрлицо и контрагент — заявки, контрагент обязателен (иначе 422 с полем contact_id). Нужно право docflow.flow:write; отказ правила карточки — её отказом. Только при заведении заявки, правка поле не принимает
 type DocflowPaymentRequestInvoiceCard struct {
 	// Kind — Вид карточки: счёт или «Прочее» (платёжка 1С)
 	Kind    *string            `json:"kind,omitempty"`
 	Content DocflowFlowContent `json:"content"`
+}
+
+type DocflowPaymentRequestItemInput struct {
+	// Version — Версия заявки, которую видел человек
+	Version int64 `json:"version"`
+	// ItemID — Статья, которую ставит согласующий
+	ItemID UUID `json:"item_id"`
 }
 
 type DocflowPaymentRequestList struct {
@@ -16151,6 +17269,16 @@ type DocflowPaymentRequestPayment struct {
 	ClosedShortReason *string `json:"closed_short_reason,omitempty"`
 	// ExportedToFile — Платёжка выгружена файлом для банк-клиента, по API в банк не уходила; ход заявки — exported
 	ExportedToFile *bool `json:"exported_to_file,omitempty"`
+}
+
+// DocflowPaymentRequestRate — Курс оплаты рублями счёта в валюте российскому получателю; у рублёвой заявки и иностранного получателя не хранится
+type DocflowPaymentRequestRate struct {
+	// Mode — cbr_payment_day — по курсу ЦБ РФ на день оплаты; fixed — по названному курсу
+	Mode string `json:"mode"`
+	// Rate — Рублей за единицу валюты; обязателен у fixed
+	Rate *string `json:"rate,omitempty"`
+	// RubAmount — Сумма платежа в рублях; считает сервер у fixed, у cbr_payment_day пусто до оплаты
+	RubAmount *string `json:"rub_amount,omitempty"`
 }
 
 type DocflowPaymentRequestReworkInput struct {
@@ -16286,6 +17414,22 @@ type DocflowPaymentRequestScheduleUpdate struct {
 	Version int64 `json:"version"`
 }
 
+type DocflowPaymentRequestSettings struct {
+	// DefaultDueDays — Срок оплаты новой заявки — сегодня плюс столько календарных дней; null — не подставлять
+	DefaultDueDays *int64 `json:"default_due_days"`
+	// MinDueDays — Регламент: срок оплаты не раньше сегодня плюс столько календарных дней; отправка заявки с более ранним сроком — 422 docflow.payment_request.due_too_soon; null — без ограничения
+	MinDueDays *int64 `json:"min_due_days"`
+	// CanEdit — Вправе ли спросивший менять настройку
+	CanEdit bool `json:"can_edit"`
+}
+
+type DocflowPaymentRequestSettingsInput struct {
+	// DefaultDueDays — Срок оплаты новой заявки — сегодня плюс столько календарных дней; null — не подставлять
+	DefaultDueDays *int64 `json:"default_due_days"`
+	// MinDueDays — Регламент: срок оплаты не раньше сегодня плюс столько календарных дней; не передано или null — без ограничения
+	MinDueDays *int64 `json:"min_due_days,omitempty"`
+}
+
 type DocflowPaymentRequestStatus = string
 
 // DocflowPaymentRequestSuggestion — Подсказка заявки по основанию: статья каскадом, проект, подразделение и договор. Ставится только в пустые поля формы; ничего не записано
@@ -16314,23 +17458,35 @@ type DocflowPaymentRequestUpdate struct {
 	// CompanyID — Юрлицо-плательщик; null — заявка без юрлица, по бизнесу business_id (ERP-3107)
 	CompanyID *UUID `json:"company_id,omitempty"`
 	// BusinessID — Бизнес заявки без юрлица; при названном юрлице бизнес берётся из него
-	BusinessID *UUID                      `json:"business_id,omitempty"`
-	ContactID  *UUID                      `json:"contact_id,omitempty"`
-	ItemID     *UUID                      `json:"item_id,omitempty"`
-	Payee      DocflowPaymentRequestPayee `json:"payee"`
+	BusinessID *UUID                         `json:"business_id,omitempty"`
+	ContactID  *UUID                         `json:"contact_id,omitempty"`
+	ItemID     *UUID                         `json:"item_id,omitempty"`
+	Payee      DocflowPaymentRequestPayee    `json:"payee"`
+	Foreign    *DocflowPaymentRequestForeign `json:"foreign,omitempty"`
+	Rate       *DocflowPaymentRequestRate    `json:"rate,omitempty"`
 	// Amount — Сумма; не больше двух знаков копеек, лишние нули отбрасываются
-	Amount   string  `json:"amount"`
-	Currency *string `json:"currency,omitempty"`
-	DueDate  string  `json:"due_date"`
-	Purpose  string  `json:"purpose"`
+	Amount string `json:"amount"`
+	// PayMode — Как платят по счёту: full — весь счёт, part — часть суммы счёта, schedule — частями по графику parts (ERP-2729)
+	PayMode *string `json:"pay_mode,omitempty"`
+	// InvoiceTotal — Сумма счёта при pay_mode=part или schedule; amount — к оплате, не больше неё. У full не передаётся
+	InvoiceTotal *string `json:"invoice_total,omitempty"`
+	// Parts — График при pay_mode=schedule: от двух строк «дата — сумма», каждая не больше суммы счёта, сумма строк равна amount; срок заявки — дата первой строки. Одна заявка согласуется один раз, после согласования каждая строка уходит в очередь казначея отдельно. У других режимов не передаётся
+	Parts    []DocflowPaymentRequestUpdatePartsItem `json:"parts,omitempty"`
+	Currency *string                                `json:"currency,omitempty"`
+	DueDate  string                                 `json:"due_date"`
+	Purpose  string                                 `json:"purpose"`
 	// Priority — Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP
 	Priority *string `json:"priority,omitempty"`
 	// PaymentMethod — Форма оплаты: безналичная или наличные (без банковских реквизитов, платит касса)
 	PaymentMethod *string `json:"payment_method,omitempty"`
 	// Justification — Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
 	Justification *string `json:"justification,omitempty"`
-	// DepartmentID — Подразделение заявки из справочника «Подразделения»; по нему подбирается маршрут согласования и руководитель подразделения. Не задано при заведении — подразделение автора
+	// ContractText — Договор словами, когда его нет среди договоров контрагента (выбранный договор — basis.contract_id); длиннее — 422 docflow.payment_request.field с field contract_text
+	ContractText *string `json:"contract_text,omitempty"`
+	// DepartmentID — Отдел заявки из оргструктуры; по нему подбирается маршрут согласования и руководитель отдела. Не задано — отдел не назван, по автору не подставляется. Регламент может сделать поле обязательным (request_fields.department)
 	DepartmentID *UUID `json:"department_id,omitempty"`
+	// CfoID — ЦФО расхода из справочника ядра «ЦФО»: этап «Ответственный ЦФО» и бюджет ЦФО берут его, а не ЦФО отдела. Элемент не из справочника, а также пусто при обязательном ЦФО в регламенте (request_fields.cfo) — 422 docflow.payment_request.field с полем cfo_id
+	CfoID *UUID `json:"cfo_id,omitempty"`
 	// ProjectID — Проект заявки из справочника ядра «Проекты» — тот же разрез, что у операций финансов и заказов. Уходит в строку очереди финансов и оттуда в пустое поле банковской операции. Элемент не из справочника — 422 docflow.payment_request.field с полем project_id
 	ProjectID *UUID `json:"project_id,omitempty"`
 	// VATRate — Ставка НДС: пусто — не указана, none — без НДС, иначе процент
@@ -16344,6 +17500,11 @@ type DocflowPaymentRequestUpdate struct {
 	Basis        *DocflowPaymentRequestBasis       `json:"basis,omitempty"`
 	InvoiceCard  *DocflowPaymentRequestInvoiceCard `json:"invoice_card,omitempty"`
 	Version      int64                             `json:"version"`
+}
+
+type DocflowPaymentRequestUpdatePartsItem struct {
+	DueDate string `json:"due_date"`
+	Amount  string `json:"amount"`
 }
 
 type DocflowPaymentRequestVersion struct {
@@ -16389,6 +17550,8 @@ type DocflowPreflight struct {
 	Warnings []DocflowIssue `json:"warnings,omitempty"`
 	// DefaultSigner — Подписант из профиля реквизитов УПД покупателя (signer): форма предлагает его вместо руководителя из карточки юрлица, а без подписанта формы он и уходит. Нет — профиль подписанта не назвал
 	DefaultSigner *DocflowPreflightDefaultSigner `json:"default_signer,omitempty"`
+	// DefaultMarkingCase — Особый случай маркировки из профиля реквизитов УПД покупателя (marking_case): уйдёт в файл, если форма не назвала свой. Только когда в документе есть маркированные строки. Нет — профиль случая не назвал или маркированного товара нет
+	DefaultMarkingCase *string `json:"default_marking_case,omitempty"`
 	// DefaultTransferEmployee — Кто передал товар по профилю реквизитов УПД покупателя (transfer_employee): форма предлагает его, а без значения формы он и уходит. Нет — профиль не назвал или это передача агенту
 	DefaultTransferEmployee *DocflowPreflightDefaultTransferEmployee `json:"default_transfer_employee,omitempty"`
 }
@@ -16570,7 +17733,7 @@ type DocflowRequisites struct {
 	Signers          []DocflowSignerRequisites          `json:"signers,omitempty"`
 	// Extra — ИнфПолФХЖ1: дополнительные сведения факта хозяйственной жизни
 	Extra []DocflowTextInfoRequisites `json:"extra,omitempty"`
-	// MarkingCase — Особый случай передачи маркированного товара: выбытие для собственных нужд, безвозмездно или для производства (СвВыбытияМАРК 1/2/3) либо хранение без смены собственника (ВидОборотаМАРК 9). Уходит парой ИнфПолФХЖ1, если её не вписали сами. Не задан — обычная продажа
+	// MarkingCase — Особый случай передачи маркированного товара: выбытие для собственных нужд, безвозмездно или для производства (СвВыбытияМАРК 1/2/3) либо хранение без смены собственника (ВидОборотаМАРК 9). Уходит парой ИнфПолФХЖ1, если её не вписали сами. Не задан — случай из профиля реквизитов УПД покупателя, а без него обычная продажа; sale — обычная продажа явно, сильнее профиля
 	MarkingCase *string                 `json:"marking_case,omitempty"`
 	Lines       []DocflowLineRequisites `json:"lines,omitempty"`
 }
@@ -16614,10 +17777,12 @@ type DocflowSalesOrder struct {
 	ConsigneePointID map[string]json.RawMessage `json:"consignee_point_id,omitempty"`
 	// ConsigneePointName — Название точки доставки
 	ConsigneePointName *string `json:"consignee_point_name,omitempty"`
-	Number             *string `json:"number,omitempty"`
-	Title              string  `json:"title"`
-	Status             string  `json:"status"`
-	StatusID           *UUID   `json:"status_id,omitempty"`
+	// ConsigneePointAddress — Адрес точки доставки строкой
+	ConsigneePointAddress *string `json:"consignee_point_address,omitempty"`
+	Number                *string `json:"number,omitempty"`
+	Title                 string  `json:"title"`
+	Status                string  `json:"status"`
+	StatusID              *UUID   `json:"status_id,omitempty"`
 	// StatusName — Имя статуса, которое придумал кабинет
 	StatusName *string                 `json:"status_name,omitempty"`
 	FunnelID   *UUID                   `json:"funnel_id,omitempty"`
@@ -16765,9 +17930,11 @@ type DocflowSupplierActForm struct {
 	VATDeductible bool `json:"vat_deductible"`
 	// PNLItems — Активные проводимые расходные статьи для выбора в этом акте
 	PNLItems []DocflowSupplierActFormPnlItemsItem `json:"pnl_items"`
-	// OwnerItem — Статья закупки — расчёты с собственником: окно спрашивает «За кого»
+	// OwnerItem — Статья закупки — расчёты с собственником, зарплата или подотчёт: окно спрашивает «За кого»
 	OwnerItem bool `json:"owner_item"`
-	// Owners — Собственники бизнеса на дату акта для поля «За кого»; один — подставляется заранее
+	// PersonKind — Чья статья: owner — собственник, payroll и accountable — сотрудник
+	PersonKind *string `json:"person_kind,omitempty"`
+	// Owners — Варианты поля «За кого»: собственники бизнеса на дату акта (один подставляется заранее) или сотрудники для зарплаты и подотчёта
 	Owners []DocflowSupplierActFormOwnersItem `json:"owners"`
 }
 
@@ -16852,6 +18019,21 @@ type DocflowTemplatePastActs struct {
 	Items  []DocflowTemplatePastAct `json:"items"`
 	Issued int64                    `json:"issued"`
 	Failed int64                    `json:"failed"`
+}
+
+type DocflowTemplateRunNow struct {
+	OrderID UUID `json:"order_id"`
+	// Number — Номер продажи
+	Number string `json:"number"`
+	// Created — true — продажа создана этим вызовом; false — уже была создана раньше
+	Created bool                 `json:"created"`
+	Run     CoreOrderTemplateRun `json:"run"`
+	// Invoices — Сколько счетов выпущено
+	Invoices int64 `json:"invoices"`
+	// Closings — Сколько закрывающих бумаг выпущено
+	Closings int64 `json:"closings"`
+	// PaperError — Почему бумага не выпущена; продажа при этом создана
+	PaperError *string `json:"paper_error,omitempty"`
 }
 
 // DocflowTextInfoRequisites — Пара «идентификатор — значение» дополнительных сведений.
@@ -17368,8 +18550,10 @@ type FinanceAccount struct {
 	// OpeningBalance — Decimal string
 	OpeningBalance string `json:"opening_balance"`
 	// Balance — Decimal string
-	Balance         string                  `json:"balance"`
-	TxnCount        int64                   `json:"txn_count"`
+	Balance  string `json:"balance"`
+	TxnCount int64  `json:"txn_count"`
+	// PeriodTxnCount — Число операций счёта за период запроса (period_from–period_to); есть только когда период передан.
+	PeriodTxnCount  *int64                  `json:"period_txn_count,omitempty"`
 	Connector       *string                 `json:"connector"`
 	ConnectorName   string                  `json:"connector_name"`
 	ConnectorStatus string                  `json:"connector_status"`
@@ -17382,6 +18566,8 @@ type FinanceAccount struct {
 	BankBalance *string `json:"bank_balance,omitempty"`
 	// BankBalanceAt — Когда банк назвал остаток `bank_balance`.
 	BankBalanceAt *string `json:"bank_balance_at,omitempty"`
+	// BankPending — Сумма операций в обработке у банка (ERP-2727), decimal string: доступный остаток `bank_balance` минус проведённый. Блокировки по карте и списания при нехватке денег; в выписке их ещё нет. Учёт сверяется с `bank_balance − bank_pending`. null — банк проведённый остаток не назвал.
+	BankPending *string `json:"bank_pending,omitempty"`
 	// BankClosedAt — Когда счёт закрыт банком. null — счёт действующий.
 	BankClosedAt *string `json:"bank_closed_at,omitempty"`
 	// InUseSince — «Используется с»: с какой даты счёт принадлежит бизнесу. Операции раньше неё коннектор не запрашивает, загрузка файла пропускает, ручной ввод отклоняет. Поля нет — ограничения нет.
@@ -20418,6 +21604,100 @@ type FinanceInUseSinceCutResult struct {
 	Removed int64          `json:"removed"`
 }
 
+type FinanceInternalServiceGenerateInput struct {
+	// Month — Месяц документов YYYY-MM
+	Month string `json:"month"`
+}
+
+type FinanceInternalServiceGenerateResult struct {
+	// Month — Месяц документов YYYY-MM
+	Month   string                                            `json:"month"`
+	Results []FinanceInternalServiceGenerateResultResultsItem `json:"results"`
+}
+
+type FinanceInternalServiceGenerateResultResultsItem struct {
+	// TemplateID — UUID шаблона
+	TemplateID string `json:"template_id"`
+	// Name — Название шаблона
+	Name string `json:"name"`
+	// Status — created — создан; existing — уже был; empty — нет получателей; failed — ошибка
+	Status string `json:"status"`
+	// Number — Номер документа
+	Number *string `json:"number,omitempty"`
+	// DocumentID — UUID документа
+	DocumentID *string `json:"document_id,omitempty"`
+	// Error — Текст ошибки
+	Error *string `json:"error,omitempty"`
+}
+
+type FinanceInternalServiceTemplate struct {
+	// Name — Название шаблона
+	Name string `json:"name"`
+	// BusinessID — UUID бизнеса
+	BusinessID string `json:"business_id"`
+	// CompanyID — UUID юрлица; пусто — без юрлица
+	CompanyID *string `json:"company_id,omitempty"`
+	// PerformerCfoID — UUID ЦФО-исполнителя
+	PerformerCfoID string `json:"performer_cfo_id"`
+	// ProductID — UUID услуги из номенклатуры
+	ProductID *string `json:"product_id,omitempty"`
+	// Mode — fixed — строки шаблона; headcount — цена за единицу на численность занятых позиций ЦФО
+	Mode string `json:"mode"`
+	// UnitPrice — Цена за единицу десятичной строкой; для headcount обязательна и больше нуля
+	UnitPrice *string `json:"unit_price,omitempty"`
+	// Lines — Получатели и цены; только для fixed
+	Lines []FinanceInternalServiceTemplateLine `json:"lines,omitempty"`
+	// ValidFrom — Начало действия YYYY-MM-DD; приводится к первому числу месяца
+	ValidFrom string `json:"valid_from"`
+	// ValidTo — Конец действия YYYY-MM-DD; пусто — бессрочно
+	ValidTo *string `json:"valid_to,omitempty"`
+	// Active — Шаблон действует
+	Active bool `json:"active"`
+	// ID — UUID шаблона
+	ID string `json:"id"`
+	// LastError — Последняя ошибка генерации документа
+	LastError *string `json:"last_error,omitempty"`
+}
+
+// FinanceInternalServiceTemplateInput — Шаблон внутренней услуги без идентификатора
+type FinanceInternalServiceTemplateInput struct {
+	// Name — Название шаблона
+	Name string `json:"name"`
+	// BusinessID — UUID бизнеса
+	BusinessID string `json:"business_id"`
+	// CompanyID — UUID юрлица; пусто — без юрлица
+	CompanyID *string `json:"company_id,omitempty"`
+	// PerformerCfoID — UUID ЦФО-исполнителя
+	PerformerCfoID string `json:"performer_cfo_id"`
+	// ProductID — UUID услуги из номенклатуры
+	ProductID *string `json:"product_id,omitempty"`
+	// Mode — fixed — строки шаблона; headcount — цена за единицу на численность занятых позиций ЦФО
+	Mode string `json:"mode"`
+	// UnitPrice — Цена за единицу десятичной строкой; для headcount обязательна и больше нуля
+	UnitPrice *string `json:"unit_price,omitempty"`
+	// Lines — Получатели и цены; только для fixed
+	Lines []FinanceInternalServiceTemplateLine `json:"lines,omitempty"`
+	// ValidFrom — Начало действия YYYY-MM-DD; приводится к первому числу месяца
+	ValidFrom string `json:"valid_from"`
+	// ValidTo — Конец действия YYYY-MM-DD; пусто — бессрочно
+	ValidTo *string `json:"valid_to,omitempty"`
+	// Active — Шаблон действует
+	Active *bool `json:"active,omitempty"`
+}
+
+type FinanceInternalServiceTemplateLine struct {
+	// Cfo — UUID ЦФО-получателя
+	Cfo string `json:"cfo"`
+	// Quantity — Количество десятичной строкой
+	Quantity string `json:"quantity"`
+	// Price — Цена десятичной строкой
+	Price string `json:"price"`
+}
+
+type FinanceInternalServiceTemplateList struct {
+	Results []FinanceInternalServiceTemplate `json:"results"`
+}
+
 type FinanceItemMergeRequest struct {
 	TargetID UUID `json:"target_id"`
 }
@@ -21828,6 +23108,8 @@ type FinancePaymentRequest struct {
 	Queued bool `json:"queued"`
 	// AwaitingSchedule — Согласованная заявка ждёт даты платежа у казначея
 	AwaitingSchedule bool `json:"awaiting_schedule"`
+	// SchedulePart — Часть графика оплаты заявки «Документов» (ERP-2729): казначей переносит дату и оплачивает, но не отклоняет, не возвращает на доработку и не отменяет — график отменяют в заявке
+	SchedulePart *bool `json:"schedule_part,omitempty"`
 	// CanSend — Можно ли отправить в банк
 	CanSend bool `json:"can_send"`
 	// SendBlockReason — Почему отправить нельзя
@@ -21845,12 +23127,26 @@ type FinancePaymentRequest struct {
 	ProjectName *string `json:"project_name,omitempty"`
 	// ContractTitle — Договор основания словами (source.contract_id), снимком на момент приёма заявки
 	ContractTitle *string `json:"contract_title,omitempty"`
+	// Foreign — Получатель иностранный: платят в валюте заявки со счёта в этой валюте
+	Foreign *bool `json:"foreign,omitempty"`
+	// Rate — Как валютную заявку «Документов» российскому получателю платят рублями; у заявки без режима — по курсу ЦБ на день оплаты. Нет — платят в валюте заявки
+	Rate *FinancePaymentRequestRate `json:"rate,omitempty"`
+	// PayCurrency — Валюта счёта списания: RUB у валютной заявки российскому получателю, иначе валюта заявки
+	PayCurrency *string `json:"pay_currency,omitempty"`
 }
 
 // FinancePaymentRequestPayeeKnownAccount — Прежние известные реквизиты при неподтверждённой смене счёта получателя
 type FinancePaymentRequestPayeeKnownAccount struct {
 	Account string `json:"account"`
 	BIC     string `json:"bic"`
+}
+
+// FinancePaymentRequestRate — Как валютную заявку «Документов» российскому получателю платят рублями; у заявки без режима — по курсу ЦБ на день оплаты. Нет — платят в валюте заявки
+type FinancePaymentRequestRate struct {
+	// Mode — cbr_payment_day — по курсу ЦБ на день оплаты, fixed — по названному курсу
+	Mode string `json:"mode"`
+	// Rate — Названный курс, рублей за единицу валюты; только у fixed
+	Rate *string `json:"rate,omitempty"`
 }
 
 // FinancePaymentRequestApproval — Чем и кем согласована заявка модуля docflow.
@@ -22700,6 +23996,11 @@ type FinancePeriodCheckPage struct {
 	Checks []FinancePeriodCheck `json:"checks"`
 }
 
+type FinancePlacementNoSalary struct {
+	// NoSalary — true — поставить отметку «без оклада осознанно», false — снять
+	NoSalary bool `json:"no_salary"`
+}
+
 type FinancePnlCoverage struct {
 	Missing    []FinancePnlCoverageItem `json:"missing"`
 	Duplicated []FinancePnlCoverageItem `json:"duplicated"`
@@ -23058,6 +24359,30 @@ type FinanceReconciliationAccount struct {
 	Difference    *string                             `json:"difference,omitempty"`
 	Days          []FinanceReconciliationDay          `json:"days"`
 	StatementGaps []FinanceReconciliationStatementGap `json:"statement_gaps"`
+	// BeforeInUse — Операции счёта раньше даты «Используется с»: сверка их не учитывает. Нет поля — таких операций нет (ERP-2727)
+	BeforeInUse *FinanceReconciliationAccountBeforeInUse `json:"before_in_use,omitempty"`
+	// Journal — Журнал сверки по дням: каждый день, на который банк назвал остаток (ответ банка при загрузке или конечный остаток выписки), и наш расчёт на тот же день; свежие сверху, не больше 90 (ERP-2727)
+	Journal []FinanceReconciliationAccountJournalItem `json:"journal,omitempty"`
+	// DivergedSince — Первый день текущего расхождения с банком; нет поля — последняя точка журнала сошлась
+	DivergedSince *string `json:"diverged_since,omitempty"`
+	// LastMatched — Последний день журнала, когда остаток сошёлся с банком
+	LastMatched *string `json:"last_matched,omitempty"`
+}
+
+// FinanceReconciliationAccountBeforeInUse — Операции счёта раньше даты «Используется с»: сверка их не учитывает. Нет поля — таких операций нет (ERP-2727)
+type FinanceReconciliationAccountBeforeInUse struct {
+	Since string `json:"since"`
+	From  string `json:"from"`
+	Count int64  `json:"count"`
+}
+
+type FinanceReconciliationAccountJournalItem struct {
+	Date       string `json:"date"`
+	Source     string `json:"source"`
+	Theirs     string `json:"theirs"`
+	Ours       string `json:"ours"`
+	Difference string `json:"difference"`
+	LoadedAt   string `json:"loaded_at"`
 }
 
 type FinanceReconciliationDay struct {
@@ -23704,6 +25029,8 @@ type FinanceStaffHeadcount struct {
 	// Total — Всего занятых позиций
 	Total   int64                              `json:"total"`
 	Results []FinanceStaffHeadcountResultsItem `json:"results"`
+	// Skipped — Подразделения, не попавшие в получатели, с причиной
+	Skipped []FinanceStaffHeadcountSkippedItem `json:"skipped"`
 }
 
 type FinanceStaffHeadcountResultsItem struct {
@@ -23711,6 +25038,18 @@ type FinanceStaffHeadcountResultsItem struct {
 	Cfo       string `json:"cfo"`
 	CfoName   string `json:"cfo_name"`
 	Headcount int64  `json:"headcount"`
+}
+
+type FinanceStaffHeadcountSkippedItem struct {
+	// Department — Название подразделения
+	Department string `json:"department"`
+	// Cfo — UUID ЦФО; пусто — ЦФО нет
+	Cfo     string `json:"cfo"`
+	CfoName string `json:"cfo_name"`
+	// Reason — vacant — все позиции свободны; no_cfo — у отдела и родителей нет ЦФО; no_department — позиции без подразделения
+	Reason    string `json:"reason"`
+	Headcount int64  `json:"headcount"`
+	Vacant    int64  `json:"vacant"`
 }
 
 type FinanceStaffPosition struct {
@@ -24580,6 +25919,33 @@ type FinanceUnallocatedScope struct {
 type FinanceUnallocatedSummary struct {
 	Total  FinanceUnallocatedMoney   `json:"total"`
 	Scopes []FinanceUnallocatedScope `json:"scopes"`
+}
+
+type FinanceUnstaffedPlacement struct {
+	// PlacementID — UUID постановки
+	PlacementID string `json:"placement_id"`
+	// EmployeeID — UUID сотрудника
+	EmployeeID string `json:"employee_id"`
+	// EmployeeName — ФИО сотрудника
+	EmployeeName string `json:"employee_name"`
+	// DepartmentID — UUID подразделения постановки
+	DepartmentID string `json:"department_id"`
+	// DepartmentLabel — Название подразделения
+	DepartmentLabel string `json:"department_label"`
+	// PositionTitle — Должность в постановке
+	PositionTitle string `json:"position_title"`
+	// Since — Дата постановки
+	Since string `json:"since"`
+	// NoSalary — Отметка «без оклада осознанно» — проверка закрытия о постановке молчит
+	NoSalary bool `json:"no_salary"`
+	// NoSalaryBy — Кто поставил отметку
+	NoSalaryBy *string `json:"no_salary_by,omitempty"`
+	// NoSalaryAt — Когда поставлена отметка
+	NoSalaryAt *string `json:"no_salary_at,omitempty"`
+}
+
+type FinanceUnstaffedPlacementList struct {
+	Results []FinanceUnstaffedPlacement `json:"results"`
 }
 
 type FinanceVATBookImport struct {
@@ -26038,6 +27404,35 @@ type ManagedChecklistPatch struct {
 	Items []ManagedChecklistItem `json:"items"`
 }
 
+// MarketplaceAds — Реклама площадки за период. totals и prev_totals — суммы (spend, views, clicks, carts, orders, orders_sum); ratios и prev_ratios — доли (ctr, cpc, cpm, cr, cpo, drr, drr_all), null без базы; series — ряды по дням той же длины, что days; campaigns — кампании с показателями, товарами, средней ставкой, остатком, расходом по дням (spark) и подсветками (flags: no_stock, no_orders, drr_high, spend_growth, ctr_low, no_spend, scale_up); stores — магазины с режимом manage или control.
+type MarketplaceAds struct {
+	Platform       string                       `json:"platform"`
+	From           *string                      `json:"from,omitempty"`
+	To             *string                      `json:"to,omitempty"`
+	Days           []string                     `json:"days"`
+	Totals         map[string]float64           `json:"totals,omitempty"`
+	PrevTotals     map[string]float64           `json:"prev_totals,omitempty"`
+	Ratios         map[string]*float64          `json:"ratios,omitempty"`
+	PrevRatios     map[string]*float64          `json:"prev_ratios,omitempty"`
+	OrdersAll      *float64                     `json:"orders_all,omitempty"`
+	Series         map[string][]*float64        `json:"series,omitempty"`
+	Rules          map[string]json.RawMessage   `json:"rules,omitempty"`
+	Traffic        *bool                        `json:"traffic,omitempty"`
+	Complete       *bool                        `json:"complete,omitempty"`
+	CmpTotals      map[string]float64           `json:"cmp_totals,omitempty"`
+	CmpRatios      map[string]*float64          `json:"cmp_ratios,omitempty"`
+	CompareThrough *string                      `json:"compare_through,omitempty"`
+	DataThrough    *string                      `json:"data_through,omitempty"`
+	Campaigns      []map[string]json.RawMessage `json:"campaigns"`
+	Stores         []MarketplaceAdsStoresItem   `json:"stores,omitempty"`
+}
+
+type MarketplaceAdsStoresItem struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Mode string `json:"mode"`
+}
+
 type MarketplaceAdsAbsence struct {
 	// Through — По какой день включительно ответ действует
 	Through string `json:"through"`
@@ -27294,6 +28689,153 @@ type MarketplaceInitialLoadDataset struct {
 	PeriodDays *int64 `json:"period_days,omitempty"`
 }
 
+// MarketplaceLamodaOrdersOverview — Сводка заказов Ламоды — те же поля, что у сводки Яндекс Маркета, и разбивка по статусам.
+type MarketplaceLamodaOrdersOverview struct {
+	// Day — Последний день периода
+	Day string `json:"day"`
+	// From — Первый день периода
+	From string `json:"from"`
+	// To — Последний день периода включительно
+	To string `json:"to"`
+	// ChartFrom — Первый день графика: не позже from и не меньше 14 дней до to
+	ChartFrom string `json:"chart_from"`
+	// Updated — Последняя запись заказов сборщиком
+	Updated *string                            `json:"updated"`
+	Kpi     MarketplaceLamodaOrdersOverviewKpi `json:"kpi"`
+	// Daily — Дни от chart_from по to; дни без заказов заполнены нулями
+	Daily []MarketplaceYandexOrdersDay `json:"daily"`
+	// Products — Товары периода по убыванию суммы заказов: offer_id — артикул продавца (нет его — SKU Ламоды), units, total, sales_units, sales_total, stock — остаток FBO
+	Products []map[string]json.RawMessage `json:"products"`
+	// Statuses — Заказы периода по статусу Ламоды, с отменами
+	Statuses []MarketplaceLamodaOrdersOverviewStatusesItem `json:"statuses"`
+}
+
+type MarketplaceLamodaOrdersOverviewKpi struct {
+	Orders MarketplaceYandexOrdersKpi `json:"orders"`
+	Sales  MarketplaceYandexOrdersKpi `json:"sales"`
+}
+
+type MarketplaceLamodaOrdersOverviewStatusesItem struct {
+	// Status — Статус заказа Ламоды (OrderResponseStatusEnum)
+	Status string `json:"status"`
+	// Orders — Заказов
+	Orders int64 `json:"orders"`
+	// Units — Позиций (штук)
+	Units int64 `json:"units"`
+	// Sum — Сумма позиций по цене покупателя
+	Sum string `json:"sum"`
+}
+
+// MarketplaceLamodaReceiptPlan — Готовый расчёт приёмки, ещё не проведённый на складе (временно, до новой логики склада)
+type MarketplaceLamodaReceiptPlan struct {
+	// ClosedAt — Когда Ламода закрыла поставку
+	ClosedAt string `json:"closed_at"`
+	// Lines — Строки приёмки: по строке отправки или излишком без основания
+	Lines []MarketplaceLamodaReceiptPlanLinesItem `json:"lines"`
+	// TransitDocumentID — Наша отправка «в пути» на склад Ламоды
+	TransitDocumentID string `json:"transit_document_id"`
+	// TransitNumber — Номер отправки
+	TransitNumber string `json:"transit_number"`
+	// ByNumber — Отправка узнана по номеру поставки: непринятое станет недостачей
+	ByNumber bool `json:"by_number"`
+	// AcceptedQty — Принять, шт.
+	AcceptedQty string `json:"accepted_qty"`
+	// MissingQty — Недостача отправки, шт.
+	MissingQty string `json:"missing_qty"`
+	// SurplusQty — Излишек сверх отправки, шт.
+	SurplusQty string `json:"surplus_qty"`
+}
+
+type MarketplaceLamodaReceiptPlanLinesItem struct {
+	// BasisLineID — Строка отправки; нет — излишек сверх отправки
+	BasisLineID *string `json:"basis_line_id,omitempty"`
+	// ProductID — Товар номенклатуры
+	ProductID string `json:"product_id"`
+	// Qty — Принять, шт.
+	Qty string `json:"qty"`
+}
+
+// MarketplaceLamodaReceiptSetting — Автоприёмка и её последняя смена из истории настройки
+type MarketplaceLamodaReceiptSetting struct {
+	// AutoReceipt — Автоприёмка включена
+	AutoReceipt bool `json:"auto_receipt"`
+	// ChangedBy — Кто последним менял настройку; 0 — система или смены не было
+	ChangedBy int64 `json:"changed_by"`
+	// ChangedByName — Имя того, кто менял
+	ChangedByName string `json:"changed_by_name"`
+	// ChangedAt — Когда менял; null — смены не было
+	ChangedAt *string `json:"changed_at"`
+	// Pending — Сколько готовых расчётов ждало приёмки в момент смены
+	Pending int64 `json:"pending"`
+}
+
+type MarketplaceLamodaSupplies struct {
+	// InTransit — Поставок к отгрузке и на приёмке (этапы shipping и acceptance)
+	InTransit int64 `json:"in_transit"`
+	// Updated — Последняя запись поставок сборщиком
+	Updated *string `json:"updated"`
+	// AutoReceipt — Приёмка на складе включена настройкой кабинета; иначе только расчёт receipt_plan
+	AutoReceipt bool `json:"auto_receipt"`
+	// Pending — Готовых расчётов без нашего документа приёмки: столько поставок проведёт обход после включения автоприёмки
+	Pending        *int64                           `json:"pending,omitempty"`
+	ReceiptSetting *MarketplaceLamodaReceiptSetting `json:"receipt_setting,omitempty"`
+	// Supplies — Поставки по убыванию плановой даты
+	Supplies []MarketplaceLamodaSuppliesSuppliesItem `json:"supplies"`
+}
+
+type MarketplaceLamodaSuppliesSuppliesItem struct {
+	// StoreID — Магазин Ламоды
+	StoreID string `json:"store_id"`
+	// StoreName — Название магазина
+	StoreName *string `json:"store_name,omitempty"`
+	// ShipmentID — Код поставки Ламоды
+	ShipmentID string `json:"shipment_id"`
+	// Number — Наш номер поставки (externalShipmentId), у PUSY — номер УПД
+	Number string `json:"number"`
+	// Status — Статус поставки Ламоды (FBOShipmentStatusEnum)
+	Status string `json:"status"`
+	// Stage — Этап: заводится, к отгрузке, на приёмке, закрыта, отменена
+	Stage string `json:"stage"`
+	// PlannedDate — Плановая дата поставки
+	PlannedDate *string `json:"planned_date,omitempty"`
+	// CreatedAt — Когда поставка создана
+	CreatedAt *string `json:"created_at,omitempty"`
+	// ClosedAt — Когда поставка перешла в CLOSED
+	ClosedAt *string `json:"closed_at,omitempty"`
+	// Warehouse — Склад Ламоды: SOFINO или BYKOVO
+	Warehouse string `json:"warehouse"`
+	// PriceSum — Сумма поставки
+	PriceSum *string `json:"price_sum,omitempty"`
+	// Planned — Заявлено, шт.
+	Planned *int64 `json:"planned,omitempty"`
+	// Accepted — Принято, шт.
+	Accepted *int64 `json:"accepted,omitempty"`
+	// Received — Получено, шт.
+	Received *int64 `json:"received,omitempty"`
+	// Missing — Недостача, шт.
+	Missing *int64 `json:"missing,omitempty"`
+	// Surplus — Излишек, шт.
+	Surplus *int64 `json:"surplus,omitempty"`
+	// Damaged — Брак, шт.
+	Damaged *int64 `json:"damaged,omitempty"`
+	// Items — Товары поставки: sku, ean, name, seller_sku, product_id и product_sku сопоставленного товара номенклатуры, planned, accepted, received, missing, surplus, damaged, price
+	Items []map[string]json.RawMessage `json:"items"`
+	// History — История статусов по времени
+	History []MarketplaceLamodaSuppliesSuppliesItemHistoryItem `json:"history"`
+	// ReceiptDocumentID — Наша приёмка на складе Ламоды
+	ReceiptDocumentID *string `json:"receipt_document_id,omitempty"`
+	// Reason — Почему закрытая поставка ещё не принята; received_in_stock — склад принял нашу отправку сам, приёмки модуля не будет
+	Reason      *string                       `json:"reason,omitempty"`
+	ReceiptPlan *MarketplaceLamodaReceiptPlan `json:"receipt_plan,omitempty"`
+}
+
+type MarketplaceLamodaSuppliesSuppliesItemHistoryItem struct {
+	// Status — Статус
+	Status string `json:"status"`
+	// At — Когда
+	At string `json:"at"`
+}
+
 type MarketplaceOpeningApplyRequest struct {
 	CompanyID *UUID `json:"company_id,omitempty"`
 	StoreID   *UUID `json:"store_id,omitempty"`
@@ -27564,6 +29106,10 @@ type MarketplaceOzonDecompositionCell struct {
 	MarginPct        *float64 `json:"margin_pct"`
 	// Roi — Прибыль к себестоимости по модулю, %; null без себестоимости
 	Roi *float64 `json:"roi"`
+	// CostMissingUnits — Проданные штуки без известной себестоимости: посчитаны с нулевой закупкой
+	CostMissingUnits *int64 `json:"cost_missing_units,omitempty"`
+	// CostCoveragePct — Доля проданных штук с известной себестоимостью, %, округление вниз; меньше 100 — маржа и ROI неполные; null без продаж
+	CostCoveragePct *float64 `json:"cost_coverage_pct,omitempty"`
 	// RrRevenue — Выручка спроецированная на весь период
 	RrRevenue int64 `json:"rr_revenue"`
 	// RrProfit — Прибыль спроецированная на период; разовое не проецируется
@@ -27871,6 +29417,8 @@ type MarketplaceOzonFunnelDailySeries struct {
 	AdSpend         []*float64 `json:"adSpend"`
 	DrrOrders       []*float64 `json:"drrOrders"`
 	DrrSales        []*float64 `json:"drrSales"`
+	AdOrdersSum     []*float64 `json:"adOrdersSum,omitempty"`
+	DrrAdOrders     []*float64 `json:"drrAdOrders,omitempty"`
 	Margin          []*float64 `json:"margin"`
 	MarginSheet     []*float64 `json:"marginSheet"`
 	BuyoutRate      []*float64 `json:"buyoutRate,omitempty"`
@@ -27969,6 +29517,14 @@ type MarketplaceOzonOrdersKpi struct {
 	// DeltaSum — Изменение к тому же времени накануне в процентах
 	DeltaSum *float64 `json:"delta_sum"`
 	DeltaQty *float64 `json:"delta_qty"`
+	// PrevSum — Сумма прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at)
+	PrevSum *string `json:"prev_sum,omitempty"`
+	// PrevQty — Штуки прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at)
+	PrevQty *int64 `json:"prev_qty,omitempty"`
+	// CutAt — Период ещё идёт: оба отрезка режутся по этому моменту (последняя проверка сборщика, время по Москве; у сводки площадок — раннее из них). Для «Сегодня» delta_sum и delta_qty — к вчера на то же время. Поля нет, когда сравниваются целые дни, отсечка не в последнем дне периода или у источника нет времени суток (выкуп Ozon и Маркета)
+	CutAt *string `json:"cut_at,omitempty"`
+	// NoCut — Период ещё идёт, а честной отсечки нет: за последний день данных ещё нет или время проверки сборщика неизвестно. Сравнения нет — delta_sum и delta_qty пусты, cut_at нет
+	NoCut *bool `json:"no_cut,omitempty"`
 }
 
 type MarketplaceOzonOrdersOverview struct {
@@ -28036,6 +29592,8 @@ type MarketplaceOzonPnl struct {
 	Breakdown map[string][]MarketplaceOzonDecompositionOtherItem `json:"breakdown,omitempty"`
 	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
 	CostMissing map[string]float64 `json:"cost_missing,omitempty"`
+	// CostCoverage — Доля проданных штук периода с известной себестоимостью, %, округление вниз; меньше 100 — маржа периода неполная. Ключ — начало периода; поля нет у периодов без продаж
+	CostCoverage map[string]float64 `json:"cost_coverage,omitempty"`
 	// UnitsMissing — Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
 	UnitsMissing map[string]float64               `json:"units_missing,omitempty"`
 	Freshness    *MarketplaceComponentFreshness   `json:"freshness,omitempty"`
@@ -28670,6 +30228,7 @@ type MarketplaceStore struct {
 	YmAPIKeySet           bool `json:"ym_api_key_set"`
 	LamodaClientIDSet     bool `json:"lamoda_client_id_set"`
 	LamodaClientSecretSet bool `json:"lamoda_client_secret_set"`
+	LamodaSellerIDSet     bool `json:"lamoda_seller_id_set"`
 	LetoileClientIDSet    bool `json:"letoile_client_id_set"`
 	LetoileAPIKeySet      bool `json:"letoile_api_key_set"`
 	ProxySet              bool `json:"proxy_set"`
@@ -28898,6 +30457,8 @@ type MarketplaceStoreInput struct {
 	// LamodaClientID — client_id Ламоды; он же отпечаток аккаунта — второй магазин с тем же client_id не заводится
 	LamodaClientID     *string `json:"lamoda_client_id,omitempty"`
 	LamodaClientSecret *string `json:"lamoda_client_secret,omitempty"`
+	// LamodaSellerID — Seller Shop ID из кабинета Ламоды («Настройки аккаунта → Общая информация»): sellerId методов данных Seller API v2
+	LamodaSellerID *string `json:"lamoda_seller_id,omitempty"`
 	// LetoileClientID — Необязательный Client ID Sellers API Лэтуаль; вводится вместе с API-ключом
 	LetoileClientID *string `json:"letoile_client_id,omitempty"`
 	// LetoileAPIKey — Необязательный ключ каталога Лэтуаль; вводится вместе с Client ID и пока не проверяется
@@ -28942,6 +30503,8 @@ type MarketplaceStorePatch struct {
 	LamodaClientID *string `json:"lamoda_client_id,omitempty"`
 	// LamodaClientSecret — Пустая строка сохраняет прежний секрет
 	LamodaClientSecret *string `json:"lamoda_client_secret,omitempty"`
+	// LamodaSellerID — Пустая строка сохраняет прежний номер
+	LamodaSellerID *string `json:"lamoda_seller_id,omitempty"`
 	// LetoileClientID — Необязательный Client ID Sellers API Лэтуаль; пустая строка сохраняет прежнее значение
 	LetoileClientID *string `json:"letoile_client_id,omitempty"`
 	// LetoileAPIKey — Необязательный API-ключ Лэтуаль; пустая строка сохраняет прежнее значение
@@ -29662,6 +31225,10 @@ type MarketplaceWbMetricCell struct {
 	MarginPct *float64 `json:"margin_pct"`
 	// Roi — Прибыль к себестоимости по модулю, %; null без себестоимости
 	Roi *float64 `json:"roi"`
+	// CostMissingUnits — Проданные штуки без известной себестоимости: посчитаны с нулевой закупкой
+	CostMissingUnits *int64 `json:"cost_missing_units,omitempty"`
+	// CostCoveragePct — Доля проданных штук с известной себестоимостью, %, округление вниз; меньше 100 — маржа и ROI неполные; null без продаж
+	CostCoveragePct *float64 `json:"cost_coverage_pct,omitempty"`
 	// Deliveries — Доставки покупателю в штуках по строкам логистики отчёта; null — штук доставки за период нет в своде
 	Deliveries *int64 `json:"deliveries"`
 	// BackDeliveries — Обратные доставки в штуках по строкам логистики отчёта; null — штук доставки за период нет в своде
@@ -29689,6 +31256,14 @@ type MarketplaceWbOrdersKpi struct {
 	DeltaSum *float64 `json:"delta_sum"`
 	// DeltaQty — Изменение к предыдущему дню в процентах
 	DeltaQty *float64 `json:"delta_qty"`
+	// PrevSum — Сумма прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at)
+	PrevSum *string `json:"prev_sum,omitempty"`
+	// PrevQty — Штуки прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at)
+	PrevQty *int64 `json:"prev_qty,omitempty"`
+	// CutAt — Период ещё идёт: оба отрезка режутся по этому моменту (последняя проверка сборщика, время по Москве; у сводки площадок — раннее из них). Для «Сегодня» delta_sum и delta_qty — к вчера на то же время. Поля нет, когда сравниваются целые дни, отсечка не в последнем дне периода или у источника нет времени суток (выкуп Ozon и Маркета)
+	CutAt *string `json:"cut_at,omitempty"`
+	// NoCut — Период ещё идёт, а честной отсечки нет: за последний день данных ещё нет или время проверки сборщика неизвестно. Сравнения нет — delta_sum и delta_qty пусты, cut_at нет
+	NoCut *bool `json:"no_cut,omitempty"`
 }
 
 type MarketplaceWbOrdersOverview struct {
@@ -29762,6 +31337,8 @@ type MarketplaceWbPnl struct {
 	Breakdown map[string][]MarketplaceWbDecompOtherItem `json:"breakdown,omitempty"`
 	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. У магазина «себестоимость со склада» — штуки непереданных недель, которые склад не оценил (проданные и вернувшиеся порознь). Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
 	CostMissing map[string]float64 `json:"cost_missing,omitempty"`
+	// CostCoverage — Доля проданных штук периода с известной себестоимостью, %, округление вниз; меньше 100 — маржа периода неполная. Ключ — начало периода; поля нет у периодов без продаж
+	CostCoverage map[string]float64 `json:"cost_coverage,omitempty"`
 	// UnitsMissing — Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
 	UnitsMissing map[string]float64 `json:"units_missing,omitempty"`
 	// CostOrigin — Откуда себестоимость периода (ERP-2139). Ключ — начало периода, значение — суммы в знаке строки cogs (расход — минус), их сумма равна строке: manual — по ставкам; stock_posted — документы проведённых недель склада магазина «себестоимость со склада», неделя целиком в периоде своего воскресенья; stock_estimate — оценка склада тем же подбором партий, что при передаче недели; temporary — оценка недостающих штук по временной цене; возврат — сторно доли оценки недели продажи; stock_opening — продажи до запуска склада площадки без ставки: (продано − возвращено) × цена начального остатка товара на складе площадки (ERP-2615). Продажи склада без связи артикула с товаром или без цены считаются в cost_missing. Поля нет, когда себестоимости за год нет
@@ -30184,6 +31761,14 @@ type MarketplaceYandexOrdersKpi struct {
 	DeltaSum *float64 `json:"delta_sum"`
 	// DeltaQty — Изменение количества ко вчерашнему дню в процентах; null когда вчера было пусто
 	DeltaQty *float64 `json:"delta_qty"`
+	// PrevSum — Сумма прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at)
+	PrevSum *string `json:"prev_sum,omitempty"`
+	// PrevQty — Штуки прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at)
+	PrevQty *int64 `json:"prev_qty,omitempty"`
+	// CutAt — Период ещё идёт: оба отрезка режутся по этому моменту (последняя проверка сборщика, время по Москве; у сводки площадок — раннее из них). Для «Сегодня» delta_sum и delta_qty — к вчера на то же время. Поля нет, когда сравниваются целые дни, отсечка не в последнем дне периода или у источника нет времени суток (выкуп Ozon и Маркета)
+	CutAt *string `json:"cut_at,omitempty"`
+	// NoCut — Период ещё идёт, а честной отсечки нет: за последний день данных ещё нет или время проверки сборщика неизвестно. Сравнения нет — delta_sum и delta_qty пусты, cut_at нет
+	NoCut *bool `json:"no_cut,omitempty"`
 }
 
 type MarketplaceYandexOrdersOverview struct {
@@ -30263,6 +31848,8 @@ type MarketplaceYandexPnl struct {
 	Incomplete *bool `json:"incomplete,omitempty"`
 	// CostMissing — Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
 	CostMissing map[string]float64 `json:"cost_missing,omitempty"`
+	// CostCoverage — Доля проданных штук периода с известной себестоимостью, %, округление вниз; меньше 100 — маржа периода неполная. Ключ — начало периода; поля нет у периодов без продаж
+	CostCoverage map[string]float64 `json:"cost_coverage,omitempty"`
 	// UnitsMissing — Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
 	UnitsMissing map[string]float64 `json:"units_missing,omitempty"`
 	// Note — Пояснение к неполноте источника
@@ -30763,11 +32350,13 @@ type MarkingCode struct {
 	GismtProducedOn *string `json:"gismt_produced_on,omitempty"`
 	// GismtExpiresOn — Срок годности по сведениям ЧЗ: ближайший, если сроков несколько
 	GismtExpiresOn *string `json:"gismt_expires_on,omitempty"`
-	ID             UUID    `json:"id"`
-	CompanyID      UUID    `json:"company_id"`
-	CompanyName    string  `json:"company_name"`
-	ProductID      *UUID   `json:"product_id,omitempty"`
-	ProductName    string  `json:"product_name"`
+	// ApplyBy — Последний день нанесения (ERP-2707): у кода заказа с оплатой при нанесении, пока не нанесён и не испорчен; нет поля — срока нет
+	ApplyBy     *string `json:"apply_by,omitempty"`
+	ID          UUID    `json:"id"`
+	CompanyID   UUID    `json:"company_id"`
+	CompanyName string  `json:"company_name"`
+	ProductID   *UUID   `json:"product_id,omitempty"`
+	ProductName string  `json:"product_name"`
 	// Group — Ключ товарной группы
 	Group string `json:"group"`
 	// Kind — Вид кода (единица или агрегат)
@@ -30812,15 +32401,21 @@ type MarkingCodeOrder struct {
 	// Status — orderStatus СУЗ как есть
 	Status string `json:"status"`
 	// StatusText — Статус словами на языке запроса с причиной отказа
-	StatusText   string                 `json:"status_text"`
-	StatusReason string                 `json:"status_reason"`
-	CreatedAt    string                 `json:"created_at"`
-	OmsCreatedAt *string                `json:"oms_created_at"`
-	ExpiresAt    *string                `json:"expires_at"`
-	LastSyncedAt *string                `json:"last_synced_at"`
-	CreatedBy    *int64                 `json:"created_by"`
-	Items        []MarkingCodeOrderItem `json:"items"`
-	Quantity     int64                  `json:"quantity"`
+	StatusText   string  `json:"status_text"`
+	StatusReason string  `json:"status_reason"`
+	CreatedAt    string  `json:"created_at"`
+	OmsCreatedAt *string `json:"oms_created_at"`
+	ExpiresAt    *string `json:"expires_at"`
+	LastSyncedAt *string `json:"last_synced_at"`
+	CreatedBy    *int64  `json:"created_by"`
+	// Basis — Закупка, по которой заказаны коды; null — заказ без основания
+	Basis *MarkingOrderBasis `json:"basis"`
+	// ApplyBy — До какого дня нанести коды, иначе ГИС МТ их аннулирует: оплата при нанесении — 60 дней от эмиссии; null — срока нет
+	ApplyBy *string `json:"apply_by"`
+	// Unapplied — Полученные коды без принятого отчёта о нанесении и без отметки «испорчен»
+	Unapplied int64                  `json:"unapplied"`
+	Items     []MarkingCodeOrderItem `json:"items"`
+	Quantity  int64                  `json:"quantity"`
 	// Received — Сколько кодов выдала СУЗ
 	Received int64 `json:"received"`
 	// Unparsed — Из выданных — не легли в реестр; разбираются заново
@@ -31215,11 +32810,13 @@ type MarkingDocumentCodeLine struct {
 	Mode   string `json:"mode"`
 	Group  string `json:"group"`
 	// Required — Сколько кодов ждёт строка
-	Required   int64                  `json:"required"`
-	Assigned   int64                  `json:"assigned"`
-	Strictness MarkingStrictness      `json:"strictness"`
-	Status     string                 `json:"status"`
-	Codes      []MarkingStockLineCode `json:"codes"`
+	Required int64 `json:"required"`
+	Assigned int64 `json:"assigned"`
+	// OutOfCirculation — Сколько из assigned не в обороте у юрлица; в зачёт строки они не идут
+	OutOfCirculation *int64                 `json:"out_of_circulation,omitempty"`
+	Strictness       MarkingStrictness      `json:"strictness"`
+	Status           string                 `json:"status"`
+	Codes            []MarkingStockLineCode `json:"codes"`
 	// Expected — Сколько кодов единиц ждём по входящему УПД; 0 — ожидания нет
 	Expected int64 `json:"expected"`
 	// ExpectedCodes — Ожидаемые коды без криптохвоста
@@ -31364,11 +32961,13 @@ type MarkingDocumentParams struct {
 	ProducerINN           *string          `json:"producer_inn,omitempty"`
 	Paid                  *bool            `json:"paid,omitempty"`
 	ProductionDate        *string          `json:"production_date,omitempty"`
-	ProductionType        *string          `json:"production_type,omitempty"`
-	TnvedCode             *string          `json:"tnved_code,omitempty"`
-	CertificateType       *string          `json:"certificate_type,omitempty"`
-	CertificateNumber     *string          `json:"certificate_number,omitempty"`
-	CertificateDate       *string          `json:"certificate_date,omitempty"`
+	// ExpirationDate — Корректировка сведений (cis_info_change) — срок годности, ГГГГ-ММ-ДД; только группам, которым его даёт ЧЗ
+	ExpirationDate    *string `json:"expiration_date,omitempty"`
+	ProductionType    *string `json:"production_type,omitempty"`
+	TnvedCode         *string `json:"tnved_code,omitempty"`
+	CertificateType   *string `json:"certificate_type,omitempty"`
+	CertificateNumber *string `json:"certificate_number,omitempty"`
+	CertificateDate   *string `json:"certificate_date,omitempty"`
 	// DeclarationNumber — Ввод импорта (introduce_import) — регистрационный номер ДТ «XXXXXXXX/ДДММГГ/XXXXXXX»
 	DeclarationNumber *string `json:"declaration_number,omitempty"`
 	// DeclarationDate — Ввод импорта — дата регистрации ДТ, ГГГГ-ММ-ДД; совпадает с датой в номере
@@ -31377,6 +32976,8 @@ type MarkingDocumentParams struct {
 	PreviousCodes map[string]string `json:"previous_codes,omitempty"`
 	// UnitSerialNumber — Формирование упаковки — код короба «00» + SSCC; формирование набора — код набора (КИН), скан или без криптохвоста
 	UnitSerialNumber *string `json:"unit_serial_number,omitempty"`
+	// Sets — Формирование наборов (sets_aggregation) — несколько наборов одним документом: код набора и его вложения (окно сборки сканом)
+	Sets []MarkingSetUnit `json:"sets,omitempty"`
 	// GtinLines — Вывод по GTIN (withdrawal_gtin, LK_GTIN_RECEIPT): строки «GTIN — количество — общая стоимость»; повтор GTIN складывается. Кодов у такого документа нет
 	GtinLines []MarkingGTINLine `json:"gtin_lines,omitempty"`
 }
@@ -31943,6 +33544,19 @@ type MarkingLabelRequest struct {
 	RepeatJobs []UUID `json:"repeat_jobs,omitempty"`
 }
 
+// MarkingLabelSheet — Полотно своего шаблона: этикетки сеткой на листе для производителя и типографии; вся сетка с отступом и зазорами помещается на лист
+type MarkingLabelSheet struct {
+	PageWidthMm  float64 `json:"page_width_mm"`
+	PageHeightMm float64 `json:"page_height_mm"`
+	Cols         int64   `json:"cols"`
+	// Rows — Колонок × рядов — не больше 2 500 на листе
+	Rows      int64    `json:"rows"`
+	OffsetXMm *float64 `json:"offset_x_mm,omitempty"`
+	OffsetYMm *float64 `json:"offset_y_mm,omitempty"`
+	GapXMm    *float64 `json:"gap_x_mm,omitempty"`
+	GapYMm    *float64 `json:"gap_y_mm,omitempty"`
+}
+
 type MarkingLabelTemplate struct {
 	Key string `json:"key"`
 	// Name — Название на языке запроса
@@ -31963,12 +33577,13 @@ type MarkingLabelTemplate struct {
 type MarkingLabelTemplateInput struct {
 	Name *string `json:"name,omitempty"`
 	Size *string `json:"size,omitempty"`
-	// WidthMm — Свой размер (size = custom), шаг 0,5 мм
+	// WidthMm — Свой размер (size = custom), шаг 0,5 мм; меньше 15 мм — только марка
 	WidthMm  *float64            `json:"width_mm,omitempty"`
 	HeightMm *float64            `json:"height_mm,omitempty"`
 	Format   *string             `json:"format,omitempty"`
 	Channel  *string             `json:"channel,omitempty"`
 	Blocks   []MarkingLabelBlock `json:"blocks,omitempty"`
+	Sheet    *MarkingLabelSheet  `json:"sheet,omitempty"`
 	// CopyFrom — Шаблон-образец копии; копия шаблона строками встаёт на холст
 	CopyFrom *string `json:"copy_from,omitempty"`
 }
@@ -32039,9 +33654,10 @@ type MarkingLabelTemplateRecord struct {
 	// Channel — Канал продаж шаблона: чья карточка даёт штрихкод и артикулы, когда у документа канала нет
 	Channel *string `json:"channel,omitempty"`
 	// Preset — Вариант оформления системного шаблона
-	Preset    *string `json:"preset,omitempty"`
-	IsActive  bool    `json:"is_active"`
-	UpdatedAt *string `json:"updated_at,omitempty"`
+	Preset    *string            `json:"preset,omitempty"`
+	Sheet     *MarkingLabelSheet `json:"sheet,omitempty"`
+	IsActive  bool               `json:"is_active"`
+	UpdatedAt *string            `json:"updated_at,omitempty"`
 }
 
 type MarkingLabelTemplateRef struct {
@@ -32057,6 +33673,7 @@ type MarkingLabelTemplateUpdate struct {
 	Format   string              `json:"format"`
 	Channel  *string             `json:"channel,omitempty"`
 	Blocks   []MarkingLabelBlock `json:"blocks"`
+	Sheet    *MarkingLabelSheet  `json:"sheet,omitempty"`
 }
 
 type MarkingLabelTemplateUsage struct {
@@ -32102,6 +33719,16 @@ type MarkingModListModsItem struct {
 	Address       string   `json:"address"`
 	INN           *string  `json:"inn,omitempty"`
 	ProductGroups []string `json:"product_groups,omitempty"`
+}
+
+type MarkingOrderBasis struct {
+	ID UUID `json:"id"`
+	// Number — Номер закупки; пусто — службу заказов не удалось спросить
+	Number string `json:"number"`
+	// Date — Дата закупки
+	Date string `json:"date"`
+	// ContactName — Поставщик
+	ContactName *string `json:"contact_name,omitempty"`
 }
 
 type MarkingOrderCode struct {
@@ -32169,14 +33796,16 @@ type MarkingOrderInput struct {
 	CompanyID     UUID   `json:"company_id"`
 	ProductGroup  string `json:"product_group"`
 	ReleaseMethod string `json:"release_method"`
-	// CisType — Вид кода всех строк; пусто — UNIT
+	// CisType — Вид кода всех строк; пусто — по профилю товара (набор — SET; прочее — UNIT)
 	CisType       *string `json:"cis_type,omitempty"`
 	ContactPerson *string `json:"contact_person,omitempty"`
 	// PaymentType — Оплата кодов (attributes.paymentType): 1 — при эмиссии, 2 — при нанесении, 0 или нет поля — не передавать. Только у групп с выбором оплаты; REAPPLY ставит 1 сам
 	PaymentType *int64 `json:"payment_type,omitempty"`
 	// Signature — Откреплённая подпись УКЭП (CMS в base64) тела заказа из «Подготовить заказ»; СУЗ без неё заказ отклоняет
-	Signature *string                      `json:"signature,omitempty"`
-	Items     []MarkingOrderInputItemsItem `json:"items"`
+	Signature *string `json:"signature,omitempty"`
+	// BasisOrderID — Закупка (заказ поставщику), по которой заказываются коды: заказ кодов её помнит. Только закупка юрлица заказа, не отменённая
+	BasisOrderID *UUID                        `json:"basis_order_id,omitempty"`
+	Items        []MarkingOrderInputItemsItem `json:"items"`
 }
 
 type MarkingOrderInputItemsItem struct {
@@ -32309,12 +33938,20 @@ type MarkingProductCatalogCard struct {
 	// Gtin — GTIN товара (14 цифр); пусто — у товара нет GTIN
 	Gtin      string `json:"gtin"`
 	CompanyID UUID   `json:"company_id"`
+	// CheckedAt — Когда ответ записан в снимок каталога
+	CheckedAt *string `json:"checked_at,omitempty"`
+	// ProductTnved — Код ТН ВЭД из карточки товара кабинета
+	ProductTnved *string `json:"product_tnved,omitempty"`
+	// TnvedMismatch — ТН ВЭД товара расходится с ТН ВЭД карточки в каталоге
+	TnvedMismatch bool `json:"tnved_mismatch"`
 	// Card — Карточка в каталоге; null — нет карточки, готовой к маркировке и обороту
 	Card *MarkingProductCatalogCardCard `json:"card"`
 }
 
 // MarkingProductCatalogCardCard — Карточка в каталоге; null — нет карточки, готовой к маркировке и обороту
 type MarkingProductCatalogCardCard struct {
+	// Tnved — Код ТН ВЭД карточки; пусто — ЧЗ его не вернул
+	Tnved *string `json:"tnved,omitempty"`
 	// Gtin — GTIN карточки
 	Gtin *string `json:"gtin,omitempty"`
 	// Name — Наименование в каталоге
@@ -32641,6 +34278,13 @@ type MarkingSeqRange struct {
 	Count int64 `json:"count"`
 }
 
+type MarkingSetUnit struct {
+	// Set — Код набора (КИН)
+	Set string `json:"set"`
+	// Items — Коды вложений
+	Items []string `json:"items"`
+}
+
 type MarkingShortDocumentCounts struct {
 	Results []MarkingShortDocumentCountsResultsItem `json:"results"`
 }
@@ -32659,7 +34303,7 @@ type MarkingSignDuties struct {
 }
 
 type MarkingSignDuty struct {
-	// Kind — Вывод по отгрузке FBS, заказы без марок или возврат в оборот по невыкупу
+	// Kind — Вывод по отгрузке FBS, заказы без марок, возврат в оборот по невыкупу, коды, которые надо нанести до срока, или черновики формирования наборов
 	Kind      string `json:"kind"`
 	CompanyID UUID   `json:"company_id"`
 	// CompanyName — Название юрлица
@@ -32700,6 +34344,8 @@ type MarkingStockLineCode struct {
 	GismtOtherOwner *bool `json:"gismt_other_owner,omitempty"`
 	// Expected — Код есть во входящем УПД поставщика
 	Expected bool `json:"expected"`
+	// Circulation — Марка расхода не в обороте у юрлица: out — по ЧЗ выбыла, списана, не найдена или за другим ИНН; not_loaded — коды юрлица загружены из ЧЗ, а этой среди них нет. Нет поля — марка годится или о ней ничего не известно
+	Circulation *string `json:"circulation,omitempty"`
 }
 
 type MarkingStoredFileImportInput struct {
@@ -34336,7 +35982,7 @@ type StockAssemblySpec struct {
 	Version *int64  `json:"version,omitempty"`
 	Name    *string `json:"name,omitempty"`
 	Status  *string `json:"status,omitempty"`
-	// Kind — Вид состава: assembly — «Сборка», production — «Производство», kit — «Комплект»: набор, который отдельно не хранят — проведение отгрузки или перемещения со своего склада само заводит и проводит его сборку на недостающее количество (ERP-2111). Хранится у версии: следующая редакция может сменить вид. Набор со своей маркой ЧЗ «Комплектом» быть не может — 400, только «Сборка» заранее (ERP-2183). Вложенный «Комплект» собирается раньше внешнего
+	// Kind — Вид состава: assembly — «Сборка», production — «Производство», kit — «Комплект»: набор, который отдельно не хранят — проведение отгрузки или перемещения со своего склада само заводит и проводит его сборку на недостающее количество (ERP-2111). Хранится у версии: следующая редакция может сменить вид. Набор со своей маркой ЧЗ «Комплектом» быть не может — 400, только «Сборка» заранее (ERP-2183). Вложенный «Комплект» собирается раньше внешнего. channel_packaging — «Упаковка под канал» (ERP-2720): что кладут в одну упаковку для канала продаж и какой материал на неё идёт, без выходного товара; отгрузка под каналом сама списывает материал документом «Списание» с причиной «Упаковка под канал»
 	Kind        *string `json:"kind,omitempty"`
 	ProductID   *UUID   `json:"product_id,omitempty"`
 	ProductSKU  *string `json:"product_sku,omitempty"`
@@ -34344,15 +35990,23 @@ type StockAssemblySpec struct {
 	// ProductHasGtin — У набора есть свой GTIN (ERP-2183): карточка подсказывает вид «Сборка»
 	ProductHasGtin *bool `json:"product_has_gtin,omitempty"`
 	// ProductMarked — У набора есть действующая группа маркировки ЧЗ (ERP-2183): вид «Комплект» запрещён
-	ProductMarked *bool                   `json:"product_marked,omitempty"`
-	Unit          *string                 `json:"unit,omitempty"`
-	OutputQty     *string                 `json:"output_qty,omitempty"`
-	Comment       *string                 `json:"comment,omitempty"`
-	CreatedAt     *string                 `json:"created_at,omitempty"`
-	UpdatedAt     *string                 `json:"updated_at,omitempty"`
-	ActivatedAt   *string                 `json:"activated_at,omitempty"`
-	ArchivedAt    *string                 `json:"archived_at,omitempty"`
-	Lines         []StockAssemblySpecLine `json:"lines,omitempty"`
+	ProductMarked *bool   `json:"product_marked,omitempty"`
+	Unit          *string `json:"unit,omitempty"`
+	// OutputQty — Сколько выходного товара даёт состав. У нормы упаковки под канал на все товары — штук товара в упаковке (N); пусто — по кванту товара или канала. У нормы с названными товарами пусто: число штук стоит у товара
+	OutputQty *string `json:"output_qty,omitempty"`
+	// Comment — Комментарий версии. У нормы упаковки под канал — задание складу (ТЗ): его видят лист подбора, ТСД и «К отгрузке»
+	Comment *string `json:"comment,omitempty"`
+	// ChannelID — Канал продаж нормы упаковки (ERP-2720); у других видов поля нет
+	ChannelID *UUID `json:"channel_id,omitempty"`
+	// ChannelName — Название канала нормы упаковки
+	ChannelName *string `json:"channel_name,omitempty"`
+	// Scope — Состав одной упаковки нормы под канал (ERP-2720): товары и сколько каждого кладут в упаковку. Пусто — все товары канала, каждый своей упаковкой; товар, названный в норме, берёт её вместо общей нормы канала
+	Scope       []StockAssemblySpecScopeProduct `json:"scope,omitempty"`
+	CreatedAt   *string                         `json:"created_at,omitempty"`
+	UpdatedAt   *string                         `json:"updated_at,omitempty"`
+	ActivatedAt *string                         `json:"activated_at,omitempty"`
+	ArchivedAt  *string                         `json:"archived_at,omitempty"`
+	Lines       []StockAssemblySpecLine         `json:"lines,omitempty"`
 	// ArchivedVersions — Версии, которые это действие убрало в архив: активация архивирует прежнюю действующую версию того же товара — своей или другой спецификации. Поле есть только в ответе смены состояния; отсутствует, если в архив ничего не ушло
 	ArchivedVersions []StockAssemblySpecArchivedVersion `json:"archived_versions,omitempty"`
 }
@@ -34364,18 +36018,28 @@ type StockAssemblySpecArchivedVersion struct {
 	Version int64  `json:"version"`
 }
 
-// StockAssemblySpecCreate — Новая версия состава. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком.
+// StockAssemblySpecCreate — Новая версия состава. product_id и output_qty обязательны у всех видов, кроме нормы упаковки под канал — у неё вместо них channel_id. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком.
 type StockAssemblySpecCreate struct {
 	// SpecID — Спецификация, к которой заводится следующая редакция. Должна существовать в кабинете, а product_id — совпадать с её выходным товаром; состояние прежних версий не важно — редакцию заводят и от архивной. Пусто — новая спецификация
 	SpecID *UUID  `json:"spec_id,omitempty"`
 	Name   string `json:"name"`
-	// Kind — Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство», kit — «Комплект»: набор, который собирается при отгрузке или перемещении (ERP-2111)
+	// Kind — Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство», kit — «Комплект»: набор, который собирается при отгрузке или перемещении (ERP-2111), channel_packaging — «Упаковка под канал»: норма материала на N шт товара канала (ERP-2720)
 	Kind      *string `json:"kind,omitempty"`
-	ProductID UUID    `json:"product_id"`
+	ProductID *UUID   `json:"product_id,omitempty"`
 	// OutputQty — Сколько выходного товара даёт этот состав
-	OutputQty string                             `json:"output_qty"`
-	Comment   *string                            `json:"comment,omitempty"`
-	Lines     []StockAssemblySpecCreateLinesItem `json:"lines"`
+	OutputQty *string `json:"output_qty,omitempty"`
+	Comment   *string `json:"comment,omitempty"`
+	// ChannelID — Канал продаж нормы упаковки; обязателен у channel_packaging и не задаётся у других видов (ERP-2720)
+	ChannelID *UUID `json:"channel_id,omitempty"`
+	// Scope — Состав одной упаковки нормы под канал: товары и сколько каждого кладут в упаковку. Пусто — все товары канала, каждый своей упаковкой. У нормы из нескольких товаров qty обязателен у каждого. Товар может быть только в одной действующей норме канала
+	Scope []StockAssemblySpecCreateScopeItem `json:"scope,omitempty"`
+	Lines []StockAssemblySpecCreateLinesItem `json:"lines"`
+}
+
+type StockAssemblySpecCreateScopeItem struct {
+	ProductID UUID `json:"product_id"`
+	// Qty — Штук товара в одной упаковке; пусто — квант товара или канала (только у нормы одного товара)
+	Qty *string `json:"qty,omitempty"`
 }
 
 type StockAssemblySpecCreateLinesItem struct {
@@ -34422,6 +36086,14 @@ type StockAssemblySpecRef struct {
 	Kind *string `json:"kind,omitempty"`
 }
 
+type StockAssemblySpecScopeProduct struct {
+	ProductID   UUID    `json:"product_id"`
+	ProductSKU  *string `json:"product_sku,omitempty"`
+	ProductName *string `json:"product_name,omitempty"`
+	// Qty — Штук товара в одной упаковке; пусто — квант товара или канала (только у нормы одного товара)
+	Qty *string `json:"qty,omitempty"`
+}
+
 type StockAssemblySpecStatus struct {
 	Status string `json:"status"`
 }
@@ -34429,14 +36101,24 @@ type StockAssemblySpecStatus struct {
 // StockAssemblySpecUpdate — Полная замена реквизитов и состава черновика. Номер версии и спецификация, к которой она относится, не меняются. Проверки те же, что при заведении версии.
 type StockAssemblySpecUpdate struct {
 	Name string `json:"name"`
-	// Kind — Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство», kit — «Комплект»: набор, который собирается при отгрузке или перемещении (ERP-2111)
+	// Kind — Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство», kit — «Комплект»: набор, который собирается при отгрузке или перемещении (ERP-2111), channel_packaging — «Упаковка под канал»: норма материала на N шт товара канала (ERP-2720)
 	Kind *string `json:"kind,omitempty"`
 	// ProductID — Выходной товар. Сменить его можно только у единственной версии спецификации: другой товар при нескольких версиях — это другая спецификация
-	ProductID UUID `json:"product_id"`
+	ProductID *UUID `json:"product_id,omitempty"`
 	// OutputQty — Сколько выходного товара даёт этот состав
-	OutputQty string                             `json:"output_qty"`
-	Comment   *string                            `json:"comment,omitempty"`
-	Lines     []StockAssemblySpecUpdateLinesItem `json:"lines"`
+	OutputQty *string `json:"output_qty,omitempty"`
+	Comment   *string `json:"comment,omitempty"`
+	// ChannelID — Канал продаж нормы упаковки; обязателен у channel_packaging и не задаётся у других видов (ERP-2720)
+	ChannelID *UUID `json:"channel_id,omitempty"`
+	// Scope — Состав одной упаковки нормы под канал: товары и сколько каждого кладут в упаковку. Пусто — все товары канала, каждый своей упаковкой. У нормы из нескольких товаров qty обязателен у каждого. Товар может быть только в одной действующей норме канала
+	Scope []StockAssemblySpecUpdateScopeItem `json:"scope,omitempty"`
+	Lines []StockAssemblySpecUpdateLinesItem `json:"lines"`
+}
+
+type StockAssemblySpecUpdateScopeItem struct {
+	ProductID UUID `json:"product_id"`
+	// Qty — Штук товара в одной упаковке; пусто — квант товара или канала (только у нормы одного товара)
+	Qty *string `json:"qty,omitempty"`
 }
 
 type StockAssemblySpecUpdateLinesItem struct {
@@ -34445,6 +36127,37 @@ type StockAssemblySpecUpdateLinesItem struct {
 	ProductUomID *UUID   `json:"product_uom_id,omitempty"`
 	Qty          string  `json:"qty"`
 	Share        *string `json:"share,omitempty"`
+}
+
+// StockAutoBatch — Партия и сколько из неё возьмёт строка.
+type StockAutoBatch struct {
+	BatchID UUID `json:"batch_id"`
+	// BatchCode — Серия партии; пусто — без серии
+	BatchCode string `json:"batch_code"`
+	// ExpiresAt — Годен до; null — срока нет
+	ExpiresAt *string `json:"expires_at"`
+	// Qty — Сколько возьмёт строка, в базовой единице
+	Qty string `json:"qty"`
+	// Expired — Партия просрочена на дату документа и уйдёт с пометкой в проведении
+	Expired bool `json:"expired"`
+}
+
+// StockAutoBatchLine — Партии одной строки в порядке подбора.
+type StockAutoBatchLine struct {
+	LineID UUID `json:"line_id"`
+	// Batches — Партии строки; части одной партии из разных ячеек сложены
+	Batches []StockAutoBatch `json:"batches"`
+}
+
+// StockAutoBatchShortage — Нехватка строки из отказа откатываемого проведения: свободное посчитал проводчик — с резервом, порогом срока, прошлыми строками того же товара, ячейками и единицами хранения.
+type StockAutoBatchShortage struct {
+	// LineID — Строка документа; null — нехватка не из подбора строки
+	LineID    *UUID `json:"line_id"`
+	ProductID UUID  `json:"product_id"`
+	// Requested — Сколько нужно, в базовой единице
+	Requested string `json:"requested"`
+	// Available — Сколько свободно, в базовой единице
+	Available string `json:"available"`
 }
 
 type StockAvailability struct {
@@ -35106,6 +36819,47 @@ type StockCarrierWeight struct {
 	WeightG int64 `json:"weight_g"`
 }
 
+// StockChannelPackagingHint — Упаковка под канал у строки товара (ERP-2720): задание складу и сколько упаковок взять. Считает сервер по действующей норме; у проведённой отгрузки — что списано
+type StockChannelPackagingHint struct {
+	// SpecID — Норма упаковки: товары одной упаковки несут один id
+	SpecID *UUID `json:"spec_id,omitempty"`
+	// SpecName — Название нормы упаковки
+	SpecName *string `json:"spec_name,omitempty"`
+	// Note — Задание складу (ТЗ) из нормы
+	Note *string `json:"note,omitempty"`
+	// PerPack — Штук товара в упаковке: из нормы, иначе квант
+	PerPack *string `json:"per_pack,omitempty"`
+	// Packs — Сколько упаковок: целая часть минимума по товарам упаковки (в отгрузке / штук в упаковке)
+	Packs     *string                                  `json:"packs,omitempty"`
+	Materials []StockChannelPackagingHintMaterialsItem `json:"materials,omitempty"`
+	// Products — Состав упаковки из нескольких товаров (2 X + 3 Y в коробку); у нормы одного товара поля нет
+	Products []StockChannelPackagingProduct `json:"products,omitempty"`
+	// Leftover — Сколько этого товара не входит в целые упаковки: предупреждение, проведение не запрещено
+	Leftover *string `json:"leftover,omitempty"`
+	// Problem — Почему упаковку не посчитать (в норме нет «Штук в упаковке», а кванта нет): проведение откажет
+	Problem *string `json:"problem,omitempty"`
+}
+
+type StockChannelPackagingHintMaterialsItem struct {
+	ProductID   *UUID   `json:"product_id,omitempty"`
+	ProductName *string `json:"product_name,omitempty"`
+	Unit        *string `json:"unit,omitempty"`
+	// Qty — Сколько материала списать, в базовой единице
+	Qty *string `json:"qty,omitempty"`
+}
+
+type StockChannelPackagingProduct struct {
+	ProductID   UUID    `json:"product_id"`
+	ProductSKU  *string `json:"product_sku,omitempty"`
+	ProductName *string `json:"product_name,omitempty"`
+	// Qty — Сколько товара в отгрузке, в базовой единице; 0 — товар упаковки, которого в отгрузке нет
+	Qty string `json:"qty"`
+	// PerPack — Штук товара в одной упаковке
+	PerPack string `json:"per_pack"`
+	// Leftover — Сколько товара не вошло в целые упаковки
+	Leftover *string `json:"leftover,omitempty"`
+}
+
 // StockClaimWriteoffCreate — Тело черновика списания претензии поставщику по недостаче приёмки.
 type StockClaimWriteoffCreate struct {
 	BasisID UUID `json:"basis_id"`
@@ -35125,7 +36879,7 @@ type StockCompanyPolicy struct {
 	DefaultWarehouseID *UUID  `json:"default_warehouse_id"`
 	// ClosedThrough — Учёт бизнеса юрлица закрыт по эту дату включительно — дата закрытия книги, одна на бизнес и для склада; null — период не закрыт
 	ClosedThrough *string `json:"closed_through"`
-	// ManualBatchChoice — Ручной выбор партии в строке расхода (ERP-1788). По умолчанию false — «Авто»: партию выбирает метод учёта (срок годности, затем дата прихода). Действует только при costing_method fifo
+	// ManualBatchChoice — Ручной выбор партии в строке расхода (ERP-1788). С ERP-2106 по умолчанию true при costing_method fifo; строка всё равно начинается с «Авто» — партию выбирает метод учёта (срок годности, затем дата прихода), а выбор руками лишь доступен. Действует только при costing_method fifo
 	ManualBatchChoice *bool  `json:"manual_batch_choice,omitempty"`
 	UpdatedAt         string `json:"updated_at"`
 }
@@ -35519,6 +37273,17 @@ type StockDiscrepancySummary struct {
 	DocumentIds []UUID `json:"document_ids"`
 }
 
+// StockDocumentAutoBatches — Что возьмёт «Авто» в черновике (ERP-2106): разложение откатываемого проведения по строкам.
+type StockDocumentAutoBatches struct {
+	DocumentID UUID `json:"document_id"`
+	// Status — ready — разложение посчитано; refused — проведение сейчас отказало, причину называет «Что мешает»; unavailable — не черновик или вид документа без выбора партии
+	Status string `json:"status"`
+	// Lines — Строки документа с партиями; пусто, когда status не ready
+	Lines []StockAutoBatchLine `json:"lines"`
+	// Shortages — Строки, которым проведению не хватило товара, с числами отказа (status refused); пусто — нехватки нет или отказ другого рода
+	Shortages []StockAutoBatchShortage `json:"shortages"`
+}
+
 type StockDocumentBinMove struct {
 	ProductID   UUID   `json:"product_id"`
 	ProductSKU  string `json:"product_sku"`
@@ -35898,13 +37663,15 @@ type StockDocumentPayload struct {
 	ShelfLife           *StockDocumentShelfLife `json:"shelf_life,omitempty"`
 	// ShipDate — Плановая дата отгрузки (ERP-2182): только у stock_shipment и stock_transfer. Партии строк оцениваются правилом срока годности на неё — порог остаточного срока и просрочка; позже даты документа — на неё, пусто или раньше — на дату документа. Дата ложится в снимок проведения (posting.shelf_life.as_of). У прочих видов — 400 ship_date_not_applicable, не дата — 400 ship_date_invalid. Отгрузка по заказу покупателя берёт дату поставки заказа
 	ShipDate *string `json:"ship_date,omitempty"`
+	// AutoPost — Отгрузка проведена складом по факту канала с API (ERP-2730): источник, событие, его дата и ссылка. Ставит только сервер; в создании и правке поле не принимается
+	AutoPost *StockDocumentPayloadAutoPost `json:"auto_post,omitempty"`
 	// PreferredConditionID — Предпочтительное состояние товара (ERP-2507): только у stock_shipment, у прочих видов снимается. Строки без выбранного состояния («Авто») берут сначала его, затем любое годное по сроку (FEFO), затем по приходу; не замок — нехватку добирает остальное годное. Отгрузка по продаже канала ставит состояние канала; правка без поля его сохраняет
 	PreferredConditionID map[string]json.RawMessage `json:"preferred_condition_id,omitempty"`
 	// IssueRequest — Только у stock_writeoff (ERP-2886): черновик передан заявкой на внутреннее потребление — автор нажал «Отправить заявку», и списание ждёт согласования или выдачи складом. Ставит и снимает только сервер: дверь «Отправить заявку», отзыв, возврат и отказ согласования. Присланное в создании или правке значение не читается, правка черновика хранит лежащее в нём
 	IssueRequest *StockDocumentPayloadIssueRequest `json:"issue_request,omitempty"`
 	// ExpiredWriteoff — Черновик списания завело действие «Списать просроченное» (ERP-1821). По признаку повторный вызов действия узнаёт свой непроведённый черновик. Документ с признаком списывает только просрочку: если подбор взял бы слой, не просроченный на дату документа, проведение отвечает 400 с кодом expired_writeoff_stale. Ставит признак только само действие: присланный при создании признак отклоняется (400), правка документа сохраняет значение, уже лежащее в нём
 	ExpiredWriteoff *bool `json:"expired_writeoff,omitempty"`
-	// MarketplaceShipment — Реквизиты «Отгрузки на маркетплейс» (ERP-2137): площадка и номер её поставки. Только у stock_transfer со ссылкой marketplace_store; получатель — склад «В пути на площадку», отправитель — свой склад. Номер необязателен: обход модуля маркетплейсов привязывает проведённую отгрузку к поставке по цифрам номера и второго перемещения не заводит
+	// MarketplaceShipment — Реквизиты «Отгрузки на маркетплейс» (ERP-2137): площадка и номер её поставки. Только у stock_transfer со ссылкой marketplace_store; получатель — склад «В пути на площадку» (у Lamoda и Лэтуаль — склад площадки или его «в пути»), отправитель — свой склад. Номер необязателен: обход модуля маркетплейсов привязывает проведённую отгрузку к поставке по цифрам номера и второго перемещения не заводит
 	MarketplaceShipment *StockDocumentPayloadMarketplaceShipment `json:"marketplace_shipment,omitempty"`
 	// MarketplaceClaim — Списание недостачи приёмки площадки претензией к ней (ERP-2138): стоимость уходит в долг площадки по претензии (сторона расчётов claim, Дт 60.01 claim / Кт 41), а не в расход. Ставит только раздел «Расхождения приёмки»; присланное при создании значение отклоняется (400), правка сохраняет значение документа
 	MarketplaceClaim *bool `json:"marketplace_claim,omitempty"`
@@ -35963,6 +37730,14 @@ type StockDocumentPayload struct {
 	Posting map[string]json.RawMessage `json:"posting,omitempty"`
 }
 
+// StockDocumentPayloadAutoPost — Отгрузка проведена складом по факту канала с API (ERP-2730): источник, событие, его дата и ссылка. Ставит только сервер; в создании и правке поле не принимается
+type StockDocumentPayloadAutoPost struct {
+	Source    *string `json:"source,omitempty"`
+	Event     *string `json:"event,omitempty"`
+	EventDate *string `json:"event_date,omitempty"`
+	Ref       *string `json:"ref,omitempty"`
+}
+
 // StockDocumentPayloadIssueRequest — Только у stock_writeoff (ERP-2886): черновик передан заявкой на внутреннее потребление — автор нажал «Отправить заявку», и списание ждёт согласования или выдачи складом. Ставит и снимает только сервер: дверь «Отправить заявку», отзыв, возврат и отказ согласования. Присланное в создании или правке значение не читается, правка черновика хранит лежащее в нём
 type StockDocumentPayloadIssueRequest struct {
 	// RequestedBy — Кто передал заявку: id пользователя
@@ -35973,7 +37748,7 @@ type StockDocumentPayloadIssueRequest struct {
 	ReadyAt *string `json:"ready_at,omitempty"`
 }
 
-// StockDocumentPayloadMarketplaceShipment — Реквизиты «Отгрузки на маркетплейс» (ERP-2137): площадка и номер её поставки. Только у stock_transfer со ссылкой marketplace_store; получатель — склад «В пути на площадку», отправитель — свой склад. Номер необязателен: обход модуля маркетплейсов привязывает проведённую отгрузку к поставке по цифрам номера и второго перемещения не заводит
+// StockDocumentPayloadMarketplaceShipment — Реквизиты «Отгрузки на маркетплейс» (ERP-2137): площадка и номер её поставки. Только у stock_transfer со ссылкой marketplace_store; получатель — склад «В пути на площадку» (у Lamoda и Лэтуаль — склад площадки или его «в пути»), отправитель — свой склад. Номер необязателен: обход модуля маркетплейсов привязывает проведённую отгрузку к поставке по цифрам номера и второго перемещения не заводит
 type StockDocumentPayloadMarketplaceShipment struct {
 	Platform string `json:"platform"`
 	// SupplyNumber — Номер поставки площадки, например WB-GI-12345678
@@ -36002,9 +37777,13 @@ type StockDocumentPresentation struct {
 	WarehouseName     *string                     `json:"warehouse_name,omitempty"`
 	WarehouseFromName *string                     `json:"warehouse_from_name,omitempty"`
 	WarehouseToName   *string                     `json:"warehouse_to_name,omitempty"`
+	DeliveryPoint     *string                     `json:"delivery_point,omitempty"`
 	ReasonCode        *string                     `json:"reason_code,omitempty"`
 	ReasonLabel       *string                     `json:"reason_label,omitempty"`
 	Products          []StockDocumentProductLabel `json:"products"`
+	ShipMultiples     map[string]string           `json:"ship_multiples,omitempty"`
+	// ChannelPackaging — Упаковка под канал по товарам открытой отгрузки (ERP-2720): ключ — id товара
+	ChannelPackaging map[string]StockChannelPackagingHint `json:"channel_packaging,omitempty"`
 }
 
 type StockDocumentProductCode struct {
@@ -36064,7 +37843,7 @@ type StockDocumentRefs struct {
 	WarehouseTo map[string]json.RawMessage `json:"warehouse_to,omitempty"`
 	// Contact — Контрагент документа: поставщик приёмки и возврата поставщику, покупатель отгрузки и возврата покупателя. У stock_writeoff — получатель (ERP-2886): кому отдали товар при внутреннем потреблении (сеть, партнёр). Необязателен; названный — действующий контрагент кабинета. Уходит в книгу разрезом контрагента, в условие «контрагент» маршрута согласования заявки и в черновик вывода из оборота маркировки
 	Contact map[string]json.RawMessage `json:"contact,omitempty"`
-	// MarketplaceStore — Магазин площадки у «Отгрузки на маркетплейс» (ERP-2137): перемещение со своего склада на склад «В пути на площадку» (inbound_mode external_transit). Только у stock_transfer и только вместе с payload.marketplace_shipment; в книгу не попадает
+	// MarketplaceStore — Магазин площадки у «Отгрузки на маркетплейс» (ERP-2137): перемещение со своего склада на склад «В пути на площадку» (inbound_mode external_transit), у Lamoda и Лэтуаль — на склад площадки (external_receipt) или его склад «в пути». Только у stock_transfer и только вместе с payload.marketplace_shipment; в книгу не попадает
 	MarketplaceStore map[string]json.RawMessage `json:"marketplace_store,omitempty"`
 	// Project — Проект (справочник projects разреза учёта project). Несут заявка на закупку и закупка: закупка без проекта берёт его из заявок-оснований с одним проектом (ERP-2548). Несут также stock_receipt и stock_shipment без заказа: проект заказа, который склад заводит при проведении (ERP-2014). У stock_writeoff и stock_capitalization — проект самого расхода или дохода без заказа, попадает в разрез проводки и начисления ОПиУ (ERP-2936). Разрез должен вестись в кабинете на дату документа; обязательный разрез кабинет требует при проведении, иначе проведение отвечает 400 с названием разреза. У приёмки и отгрузки с заказом или основанием поле стирается, у прочих видов — 400
 	Project map[string]json.RawMessage `json:"project,omitempty"`
@@ -36218,9 +37997,11 @@ type StockExpiredStockRow struct {
 	// WarehouseID — Склад, на котором лежит остаток; у склада с зонами — зона
 	WarehouseID   map[string]json.RawMessage `json:"warehouse_id"`
 	WarehouseName string                     `json:"warehouse_name"`
-	ProductID     UUID                       `json:"product_id"`
-	ProductSKU    string                     `json:"product_sku"`
-	ProductName   string                     `json:"product_name"`
+	// WarehouseParentName — Склад зоны; пусто, когда остаток лежит на самом складе
+	WarehouseParentName string `json:"warehouse_parent_name"`
+	ProductID           UUID   `json:"product_id"`
+	ProductSKU          string `json:"product_sku"`
+	ProductName         string `json:"product_name"`
 	// Unit — Базовая единица товара
 	Unit string `json:"unit"`
 	// ConditionID — Состояние товара; null — «Основное»
@@ -36268,6 +38049,8 @@ type StockExpiredWriteoffDraft struct {
 	CompanyName   string `json:"company_name"`
 	WarehouseID   UUID   `json:"warehouse_id"`
 	WarehouseName string `json:"warehouse_name"`
+	// WarehouseParentName — Склад зоны; пусто — сам склад
+	WarehouseParentName string `json:"warehouse_parent_name"`
 	// Lines — Число строк черновика
 	Lines int64 `json:"lines"`
 	// Quantity — Количество по строкам черновика в базовых единицах, десятичная строка. У прежнего черновика — как в самом документе: его могли поправить
@@ -36284,13 +38067,15 @@ type StockExpiredWriteoffDrafts struct {
 	Skipped []StockExpiredWriteoffSkipped `json:"skipped"`
 }
 
-// StockExpiredWriteoffDraftsInput — Отборы действия «Списать просроченное» — те же, что у чтения просроченного остатка. Пустое тело — весь доступный остаток.
+// StockExpiredWriteoffDraftsInput — Отборы действия «Списать просроченное» — те же, что у чтения просроченного остатка. Пустое тело — весь доступный остаток; когда отбор захватывает больше одного видимого действующего юрлица, нужен company_id или without_company=true («Без юрлица»).
 type StockExpiredWriteoffDraftsInput struct {
 	BusinessID *UUID `json:"business_id,omitempty"`
 	CompanyID  *UUID `json:"company_id,omitempty"`
 	// WarehouseID — Склад вместе с его зонами
 	WarehouseID map[string]json.RawMessage `json:"warehouse_id,omitempty"`
 	ProductID   *UUID                      `json:"product_id,omitempty"`
+	// WithoutCompany — Только остаток без юрлица («Без юрлица»): явный выбор вместо company_id, правило обязательного юрлица тогда не действует. Вместе с company_id — 400 stock.expired_stock.filter_conflict
+	WithoutCompany *bool `json:"without_company,omitempty"`
 }
 
 // StockExpiredWriteoffSkipped — Просрочка, по которой действие «Списать просроченное» черновик не создало, с причиной (ERP-1821).
@@ -36302,10 +38087,12 @@ type StockExpiredWriteoffSkipped struct {
 	CompanyName   string `json:"company_name"`
 	WarehouseID   UUID   `json:"warehouse_id"`
 	WarehouseName string `json:"warehouse_name"`
-	ProductID     UUID   `json:"product_id"`
-	ProductSKU    string `json:"product_sku"`
-	ProductName   string `json:"product_name"`
-	Unit          string `json:"unit"`
+	// WarehouseParentName — Склад зоны; пусто — сам склад
+	WarehouseParentName string `json:"warehouse_parent_name"`
+	ProductID           UUID   `json:"product_id"`
+	ProductSKU          string `json:"product_sku"`
+	ProductName         string `json:"product_name"`
+	Unit                string `json:"unit"`
 	// ConditionID — Состояние товара; null — «Основное»
 	ConditionID   *UUID  `json:"condition_id"`
 	ConditionName string `json:"condition_name"`
@@ -36773,6 +38560,8 @@ type StockMarketplaceSettings struct {
 	Picking string `json:"picking"`
 	// UnredeemedTarget — Куда приходуется невыкуп: platform — остаётся у площадки, fulfilment_warehouse — возвращается на склад исполнения
 	UnredeemedTarget string `json:"unredeemed_target"`
+	// ShipByPlatform — Заказы FBS, принятые площадкой, проводятся сами
+	ShipByPlatform bool `json:"ship_by_platform"`
 	// SupplyTransit — Отправленное на площадку видно товаром в пути до её приёмки
 	SupplyTransit bool `json:"supply_transit"`
 	// MinShelfLifePct — Порог остаточного срока годности поставок магазина, % срока: десятичная строка. null — действует порог кабинета
@@ -36812,6 +38601,8 @@ type StockMarketplaceSettingsInput struct {
 	Picking string `json:"picking"`
 	// UnredeemedTarget — Куда приходовать невыкуп; fulfilment_warehouse требует склада исполнения
 	UnredeemedTarget string `json:"unredeemed_target"`
+	// ShipByPlatform — Проводить заказы FBS, принятые площадкой, без действия человека; нужен склад исполнения
+	ShipByPlatform *bool `json:"ship_by_platform,omitempty"`
 	// SupplyTransit — Товар в пути до приёмки площадкой: отправленное на площадку видно товаром в пути, пока она его не приняла
 	SupplyTransit *bool `json:"supply_transit,omitempty"`
 	// MinShelfLifePct — Порог остаточного срока поставок магазина, % срока: больше 0 и не больше 100, не точнее сотых
@@ -36924,6 +38715,41 @@ type StockOpeningCorrectionCreateItemsItem struct {
 	ExpiresAt *string `json:"expires_at,omitempty"`
 }
 
+// StockOpeningCorrectionPostInput — Тело проведения корректировки начального остатка (ERP-084).
+type StockOpeningCorrectionPostInput struct {
+	// Preview — true — предпросмотр без записи: режим, у каких документов и на сколько меняется себестоимость, где остаток уходит в минус
+	Preview *bool `json:"preview,omitempty"`
+}
+
+// StockOpeningCorrectionPostResult — Предпросмотр или итог проведения корректировки начального остатка: перестройка цепочки и режим (ERP-084).
+type StockOpeningCorrectionPostResult struct {
+	Status string `json:"status"`
+	// From — С какой даты перестраивается цепочка бизнеса
+	From string `json:"from"`
+	// Documents — Документы пакета
+	Documents []StockPostRebuildDocument `json:"documents"`
+	// RepostedDocuments — Документы, которые цепочка перепровела, по порядку
+	RepostedDocuments []StockPostRebuildDocument `json:"reposted_documents,omitempty"`
+	// Reposted — Сколько документов цепочки перепроведено
+	Reposted int64 `json:"reposted"`
+	// Changes — Документы, у которых меняется стоимость ушедшего
+	Changes []StockPostRebuildChange `json:"changes"`
+	// TotalBefore — Стоимость ушедшего по всей цепочке до перестройки
+	TotalBefore string `json:"total_before"`
+	// TotalAfter — Та же стоимость после
+	TotalAfter string                     `json:"total_after"`
+	Shortages  []StockPostRebuildShortage `json:"shortages,omitempty"`
+	Failures   []StockPostRebuildFailure  `json:"failures,omitempty"`
+	// Skipped — Документы вида без транзакционного проводчика: остались как есть
+	Skipped *int64 `json:"skipped,omitempty"`
+	// Mode — repost — ввод остатков в открытом периоде: он и цепочка по товарам строк перепроводятся; period — ввод остатков в закрытой книге: разница признаётся датой корректировки
+	Mode string `json:"mode"`
+	// Basis — Ввод начальных остатков, который корректировка правит
+	Basis StockPostRebuildDocument `json:"basis"`
+	// ClosedThrough — Дата закрытия книги бизнеса; пусто — книга открыта
+	ClosedThrough *string `json:"closed_through,omitempty"`
+}
+
 // StockOrderFulfillmentExportRequest — Заказ продажи для выгрузки «Исполнение заказа» (ERP-1979).
 type StockOrderFulfillmentExportRequest struct {
 	// SalesOrderID — Заказ продажи, по отгрузкам которого собирается файл
@@ -37013,7 +38839,9 @@ type StockOrderPickPlanLine struct {
 	BinCode *string                    `json:"bin_code,omitempty"`
 	BinName *string                    `json:"bin_name,omitempty"`
 	// BatchCode — Серия партии; нет поля — партия без серии
-	BatchCode *string `json:"batch_code,omitempty"`
+	BatchCode        *string                    `json:"batch_code,omitempty"`
+	ShipMultiple     *string                    `json:"ship_multiple,omitempty"`
+	ChannelPackaging *StockChannelPackagingHint `json:"channel_packaging,omitempty"`
 	// ExpiresAt — Годен до у партии; нет поля — у партии нет срока
 	ExpiresAt *string `json:"expires_at,omitempty"`
 	// Qty — Сколько взять, в базовой единице
@@ -37144,6 +38972,10 @@ type StockOrderShipInput struct {
 type StockOrderShipInputLinesItem struct {
 	ItemID   UUID   `json:"item_id"`
 	Quantity string `json:"quantity"`
+	// PickGtin — GTIN для товара с несколькими GTIN: какой забрать; пусто — подбор сборки
+	PickGtin *string `json:"pick_gtin,omitempty"`
+	// BinAllocations — Из каких ячеек взято (ERP-2771): скан ячейки на ТСД перед товаром. Количество — в базовой единице, сумма не больше quantity; ячейка принадлежит складу отгрузки, в нём включены ячейки. Названная ячейка сужает подбор партий до того, что в ней лежит; остальное количество проведение подберёт само. Пусто — ячейки и партии подбирает проведение
+	BinAllocations []StockDocumentLineBinAllocation `json:"bin_allocations,omitempty"`
 }
 
 type StockOrderShipment struct {
@@ -37173,12 +39005,13 @@ type StockOrderShipmentLine struct {
 }
 
 type StockOrderShipping struct {
-	OrderID     UUID    `json:"order_id"`
-	Number      string  `json:"number"`
-	Date        string  `json:"date"`
-	State       string  `json:"state"`
-	ContactID   UUID    `json:"contact_id"`
-	ContactName *string `json:"contact_name,omitempty"`
+	OrderID         UUID    `json:"order_id"`
+	Number          string  `json:"number"`
+	Date            string  `json:"date"`
+	State           string  `json:"state"`
+	ContactID       UUID    `json:"contact_id"`
+	ContactName     *string `json:"contact_name,omitempty"`
+	ChannelShipDate *string `json:"channel_ship_date,omitempty"`
 	// PlannedShipDate — Плановая дата отгрузки продажи (дата поставки заказа, ERP-2876): на неё лист подбора и проведение оценивают остаточный срок; GET …/sale-shelf-life спрашивают на ту же дату. Нет поля — даты нет
 	PlannedShipDate *string `json:"planned_ship_date,omitempty"`
 	CompanyID       *UUID   `json:"company_id,omitempty"`
@@ -37210,12 +39043,18 @@ type StockOrderShipping struct {
 	ConsigneeName *string `json:"consignee_name,omitempty"`
 	// ConsigneePointName — Точка доставки грузополучателя (ERP-098).
 	ConsigneePointName *string `json:"consignee_point_name,omitempty"`
+	// AwaitingConfirmation — Заказ передан складу до подтверждения источником (ERP-2683) — собирать можно, отгружать и выпускать УПД нельзя.
+	AwaitingConfirmation *bool `json:"awaiting_confirmation,omitempty"`
+	// AwaitingHandover — Правило заказа ждёт «Передать на склад», а менеджер его ещё не нажал (ERP-2722): «Собрать» отвечает 409 stock.order.awaits_handover, начать сборку склад не может
+	AwaitingHandover *bool `json:"awaiting_handover,omitempty"`
 	// PickRequired — Склад отгрузки работает в режиме «через сборку» (ERP-2771): «Отгрузить сразу» по продаже нет, отгружает кладовщик из сборки или с ТСД
 	PickRequired bool `json:"pick_required"`
 	// DueDate — Срок заказа для склада (ERP-2874), вычисляется: срок задания складу, если его поставили руками, иначе дата поставки заказа; срока нет — поля нет. Срок самого задания остаётся в task.due_date
 	DueDate *string `json:"due_date,omitempty"`
 	// DueSource — Откуда срок: task — поставлен в задании складу, order — взят из даты поставки заказа; срока нет — поля нет (ERP-2874)
 	DueSource *string `json:"due_source,omitempty"`
+	// CreatedAt — Когда заказ завели в системе (ERP-2723): лист «К отгрузке» показывает его рядом с датой заказа и плановой отгрузкой
+	CreatedAt *string `json:"created_at,omitempty"`
 	// Task — Задание складу: распоряжение, исполнитель, срок и приоритет. Нет поля — задание никто не ставил
 	Task *StockShippingTask `json:"task,omitempty"`
 }
@@ -37255,7 +39094,9 @@ type StockOrderShippingLine struct {
 	ShippedQty   string  `json:"shipped_qty"`
 	RemainingQty string  `json:"remaining_qty"`
 	// ReservedQty — ERP-2581: сколько из остатка строки обеспечено бронью с товаром на складе; раскладка по порядку строк, не больше остатка. Комплект без остатка считается по броне компонентов: обеспечено столько комплектов, сколько набирается из неё. Нет поля — бронь не посчитана
-	ReservedQty *string `json:"reserved_qty,omitempty"`
+	ReservedQty      *string                    `json:"reserved_qty,omitempty"`
+	ShipMultiple     *string                    `json:"ship_multiple,omitempty"`
+	ChannelPackaging *StockChannelPackagingHint `json:"channel_packaging,omitempty"`
 	// ShortQty — ERP-2581: сколько из остатка строки не обеспечено (остаток минус reserved_qty)
 	ShortQty *string `json:"short_qty,omitempty"`
 }
@@ -37416,6 +39257,8 @@ type StockPostRebuildInput struct {
 	Preview *bool `json:"preview,omitempty"`
 	// Action — post (по умолчанию) — провести черновики задним числом; cancel — распровести проведённые вместе с поздними
 	Action *string `json:"action,omitempty"`
+	// ConfirmPartialPick — Явное решение отгрузить черновики пакета без полного набора: собрано меньше нужного или у маркированной строки заказа не все марки. Без него — отказ stock.picking.partial_unconfirmed или marking.pick_marks_missing
+	ConfirmPartialPick *bool `json:"confirm_partial_pick,omitempty"`
 }
 
 type StockPostRebuildResult struct {
@@ -37424,6 +39267,8 @@ type StockPostRebuildResult struct {
 	From string `json:"from"`
 	// Documents — Документы пакета
 	Documents []StockPostRebuildDocument `json:"documents"`
+	// RepostedDocuments — Документы, которые цепочка перепровела, по порядку
+	RepostedDocuments []StockPostRebuildDocument `json:"reposted_documents,omitempty"`
 	// Reposted — Сколько документов цепочки перепроведено
 	Reposted int64 `json:"reposted"`
 	// Changes — Документы, у которых меняется стоимость ушедшего
@@ -38427,7 +40272,7 @@ type StockSettings struct {
 	ShelfLifeBasis string `json:"shelf_life_basis"`
 	// ShelfLifeChosenBelowMinimum — Партия ниже порога остаточного срока, выбранная в строке руками (ERP-2182): block — отказ проведения shelf_life_below_minimum, по умолчанию; warn — проводится, пометка в posting.shelf_life_warnings и в журнале. Просроченное не отгружается ни в одном режиме; «Авто» берёт только проходящие порог партии
 	ShelfLifeChosenBelowMinimum string `json:"shelf_life_chosen_below_minimum"`
-	// ReceiptShelfLifeDates — Срок и серия при поступлении (ERP-3047): block — поступление, ввод остатков и оприходование товара со сроком годности без серии и «Годен до» не проводятся, по умолчанию (правило ERP-2708); warn — проводятся, недостающее по строкам видно в «Что мешает действию» предупреждением
+	// ReceiptShelfLifeDates — Срок и партия при поступлении (ERP-3047): block — поступление, ввод остатков и оприходование товара со сроком годности без партии и «Годен до» не проводятся, по умолчанию (правило ERP-2708); warn — проводятся, недостающее по строкам видно в «Что мешает действию» предупреждением
 	ReceiptShelfLifeDates string `json:"receipt_shelf_life_dates"`
 	// ShelfGradeCriticalPct — Градация ОСГ (ERP-2182): ниже — красная (critical). Десятичная строка больше 0 и меньше shelf_grade_warning_pct; по умолчанию 30. Только показ отчётов и отборов
 	ShelfGradeCriticalPct string `json:"shelf_grade_critical_pct"`
@@ -38548,7 +40393,7 @@ type StockSettingsPatch struct {
 	ShelfLifeBasis *string `json:"shelf_life_basis,omitempty"`
 	// ShelfLifeChosenBelowMinimum — Выбранная руками партия ниже порога: block — отказ, warn — пометка (ERP-2182)
 	ShelfLifeChosenBelowMinimum *string `json:"shelf_life_chosen_below_minimum,omitempty"`
-	// ReceiptShelfLifeDates — Срок и серия при поступлении: block — не проводить без них, warn — проводить с предупреждением (ERP-3047); иначе 400 receipt_shelf_life_dates_invalid
+	// ReceiptShelfLifeDates — Срок и партия при поступлении: block — не проводить без них, warn — проводить с предупреждением (ERP-3047); иначе 400 receipt_shelf_life_dates_invalid
 	ReceiptShelfLifeDates *string `json:"receipt_shelf_life_dates,omitempty"`
 	// ShelfGradeCriticalPct — Градация ОСГ «красная ниже», %: больше 0, не точнее сотых. Пара сверяется с сохранённой жёлтой: 400 shelf_grades_invalid
 	ShelfGradeCriticalPct *string `json:"shelf_grade_critical_pct,omitempty"`
@@ -39180,6 +41025,10 @@ type StockWarehouse struct {
 	BinsCount int64 `json:"bins_count"`
 	// ShippingMode — Режим отгрузки по заказам (ERP-2771): direct — «Отгрузить» по заказу доступна сразу; pick_required — режим «через сборку»: отгрузку по заказу проводит только кладовщик из сборки. Меняется действием shipping-mode. У зоны поле показывает режим её склада (ERP-3063): своего режима у зоны нет
 	ShippingMode string `json:"shipping_mode"`
+	// ShipmentFact — «Кто подтверждает отгрузку» по факту канала (ERP-2730): manual — человек (умолчание), сигнал не проводит; picked — склад в Akeda, проводится собранное; order — внешний склад, отгрузка по заказу. Меняется действием shipment-fact. У зоны — значение её склада
+	ShipmentFact *string `json:"shipment_fact,omitempty"`
+	// ShipmentFactSince — Когда склад перевели во «внешний» (ERP-2730): более ранний факт канала сам по заказу не проводится
+	ShipmentFactSince *string `json:"shipment_fact_since,omitempty"`
 	// LaunchPending — Склад готовится к запуску (ERP-2885): двигает его только ввод начального остатка и его корректировка, автоматика (резерв при загрузке заказа) его пропускает. Меняется действиями launch/prepare и launch
 	LaunchPending bool `json:"launch_pending"`
 	// LaunchedOn — Дата запуска склада (ERP-2885): документы склада раньше неё, кроме ввода остатка, не проводятся. Пусто — склад работал до появления запуска
@@ -40107,6 +41956,15 @@ type DocflowLookupParticipantResponse struct {
 	Name *string `json:"name,omitempty"`
 }
 
+type DocflowEdiPeopleResponse struct {
+	People []DocflowEdiPeopleResponsePeopleItem `json:"people"`
+}
+
+type DocflowEdiPeopleResponsePeopleItem struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+}
+
 type DocflowFlowContactStatsResponse struct {
 	Items []DocflowFlowContactStatsResponseItemsItem `json:"items"`
 }
@@ -40274,6 +42132,18 @@ type FinanceConfirmPaymentRequestPayeeRequest struct {
 
 type FinancePaymentRequestFactCandidatesResponse struct {
 	Results []FinancePaymentFactCandidate `json:"results"`
+}
+
+type FinanceChangePaymentRequestPayeeAccountRequest struct {
+	// ExpectedVersion — Версия заявки при выборе счёта
+	ExpectedVersion int64 `json:"expected_version"`
+	// ContactAccountID — Сохранённый счёт контрагента заявки
+	ContactAccountID UUID `json:"contact_account_id"`
+}
+
+type FinanceRefreshPaymentRequestPayeeBankRequest struct {
+	// ExpectedVersion — Версия заявки
+	ExpectedVersion int64 `json:"expected_version"`
 }
 
 type FinanceGetProjectBudgetHistoryResponse struct {
@@ -40543,6 +42413,32 @@ type StockListDocumentAuthorsResponse struct {
 type StockListDocumentAuthorsResponseResultsItem struct {
 	ID   int64  `json:"id"`
 	Name string `json:"name"`
+}
+
+type StockPostDocumentResponse struct {
+	ID              UUID                       `json:"id"`
+	TypeID          UUID                       `json:"type_id"`
+	TypeKey         string                     `json:"type_key"`
+	TypeName        string                     `json:"type_name"`
+	Number          string                     `json:"number"`
+	Date            string                     `json:"date"`
+	Status          CoreDocumentStatus         `json:"status"`
+	BasisType       *UUID                      `json:"basis_type"`
+	BasisID         *UUID                      `json:"basis_id"`
+	BasisNumber     string                     `json:"basis_number"`
+	EntityRefs      map[string]json.RawMessage `json:"entity_refs"`
+	Payload         map[string]json.RawMessage `json:"payload"`
+	Comment         string                     `json:"comment"`
+	IsMarkedDeleted bool                       `json:"is_marked_deleted"`
+	CreatedBy       *int64                     `json:"created_by"`
+	CreatedByName   string                     `json:"created_by_name"`
+	CreatedAt       string                     `json:"created_at"`
+	UpdatedAt       string                     `json:"updated_at"`
+	PostedAt        string                     `json:"posted_at"`
+	CancelledAt     string                     `json:"cancelled_at"`
+	// Custom — Значения своих полей кабинета (графы вида core.document.<ключ вида>). Отдаёт карточка документа; списки поле не несут
+	Custom  map[string]json.RawMessage `json:"custom,omitempty"`
+	Rebuild *StockPostRebuildResult    `json:"rebuild,omitempty"`
 }
 
 type StockLaunchWarehouseRequest struct {
