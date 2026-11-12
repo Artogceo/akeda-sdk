@@ -1,6 +1,6 @@
 /*
  * Сгенерировано scripts/generate.py. Руками не править.
- * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8778f55fccf0c28d3e32a4745a2c64c58f769d69432fcffa6fdba242675b9ea5).
+ * Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 ac52ea518a7c801a534ba0a8941f88408a44655b9823b4b70eb139890020c2e5).
  * Рантайм клиента написан руками и живёт рядом; здесь только типы.
  */
 
@@ -1438,6 +1438,50 @@ export interface CRMCardMailThread {
   "messages"?: Array<CRMMailMessage>;
 }
 
+/** Запись, закреплённая наверху истории изменений сделки или лида */
+export interface CRMCardPin {
+  "id": UUID;
+  "entity_type": "lead" | "deal";
+  "entity_id": UUID;
+  "item_kind": "engagement" | "note" | "file" | "task";
+  "item_id": UUID;
+  /** Кто закрепил */
+  "pinned_by": number;
+  "pinned_by_name"?: string;
+  "pinned_at": string;
+  /** Название дела, текст комментария или имя файла; у задачи пусто */
+  "title": string;
+  /** Срок дела, время комментария или загрузки файла */
+  "at"?: string;
+  /** Конец встречи у дела */
+  "ends_at"?: string;
+  /** Ответственный за дело, автор комментария или загрузивший файл */
+  "actor_id"?: number;
+  "actor_name"?: string;
+  /** Вид дела из справочника «Виды дел» */
+  "kind"?: string;
+  /** Дело выполнено */
+  "done"?: boolean;
+  "size_bytes"?: number;
+  /** Вердикт антивируса для файла: clean, skipped, pending, infected */
+  "scan_status"?: string;
+  "external_id"?: UUID;
+  /** Подробности комментария: упомянутые через «@» коллеги */
+  "meta"?: { [key: string]: unknown };
+}
+
+/** Что закрепить в истории изменений */
+export interface CRMCardPinInput {
+  /** Вид записи: дело, комментарий, файл или связь с задачей */
+  "item_kind": "engagement" | "note" | "file" | "task";
+  "item_id": UUID;
+}
+
+/** Закреплённое в истории изменений, последние сверху */
+export interface CRMCardPinList {
+  "items": Array<CRMCardPin>;
+}
+
 export interface CRMCatalogPage {
   "results": Array<CRMCatalogProduct>;
   "limit": number;
@@ -2289,6 +2333,8 @@ export interface CRMImportMapping {
   "default_stage"?: UUID;
   "default_loss_reason"?: UUID;
   "default_currency"?: string;
+  /** Не переносить сделки с этапов, которым не выбрана пара в кабинете (обычно воронки источника, которых в Akeda нет, например архивные), вместе с их делами, заметками и задачами; клиенты переносятся как обычно */
+  "skip_unmapped_deals"?: boolean;
   /** Повторный перенос обновляет уже перенесённые записи: поле из источника ложится в карточку, если в Akeda его после прошлого переноса не правили (ERP-1619) */
   "update_existing"?: boolean;
   /** Куда ложатся свои поля источника: ключ — «вид записи:поле источника», вид — customer, lead или deal */
@@ -2299,6 +2345,10 @@ export interface CRMImportMapping {
   "task_groups"?: { [key: string]: CRMImportTaskGroupTarget };
   /** Переносить и задачи источника без сделки и лида — в модуль «Задачи», без карточки CRM (ERP-2932) */
   "standalone_tasks"?: boolean;
+  /** Перенести файлы задач потом: задачи и комментарии заводятся сразу без файлов, файлы к ним докачиваются, когда все задачи перенесены; до конца докачки перенос идёт */
+  "task_files_later"?: boolean;
+  /** Не переносить переписку «Чата задачи» новой карточки Битрикс24 (сообщения и их файлы, без служебных); по умолчанию она переносится комментариями задачи, старые комментарии — как раньше */
+  "skip_task_chat"?: boolean;
 }
 
 export interface CRMImportMappingInput {
@@ -2309,7 +2359,7 @@ export interface CRMImportMappingInput {
 export type CRMImportNameFormat = "first_last" | "last_first" | "first_middle_last" | "last_first_middle";
 
 export interface CRMImportOptions {
-  /** owners, stages, lead_stages, sources, currencies, loss_reasons; source_tasks — число задач источника (ERP-2891), только если они есть */
+  /** owners, stages, lead_stages, sources, currencies, loss_reasons; source_tasks — число задач источника (ERP-2891), только если они есть; в нём chat — задачи с перепиской «Чата задачи», chat_closed — задачи, чей чат портал не отдал */
   "values": { [key: string]: Array<CRMImportValue> };
   "members": Array<CRMUserRef>;
   "pipelines": Array<CRMPipeline>;
@@ -5273,9 +5323,9 @@ export interface CoreActionJournalEntry {
   "actor_name": string;
   /** Модуль-владелец объекта */
   "module": string;
-  /** created, edited, posted, reposted, unposted, cancelled, marked_deleted, unmarked_deleted, deleted, rebuilt, shelf_life_set, period_closed, period_reopened */
+  /** created, edited, posted, reposted, unposted, cancelled, marked_deleted, unmarked_deleted, deleted, rebuilt, rebuild_refused, shelf_life_set, period_closed, period_reopened, marking_changed */
   "action": string;
-  /** Вид объекта: document, period */
+  /** Вид объекта: document, period, product, product_category */
   "object_type": string;
   "object_id"?: UUID | null;
   /** Подпись объекта на момент действия, например вид и номер документа */
@@ -5716,6 +5766,8 @@ export interface CoreCabinetPreferences {
   "logo_url"?: string;
   /** Префикс внутренних штрихкодов EAN-13 (200–299), с ним работает «Сгенерировать». Пусто при сохранении — оставить прежний. */
   "internal_barcode_prefix"?: string;
+  /** Как считать период нового месячного шаблона продажи, платежа или закупки: первый месяц целиком, первый неполный — по дням или скользящий месяц. Пусто при сохранении — оставить прежний. */
+  "template_period_mode"?: "calendar_full" | "calendar_prorated" | "rolling";
 }
 
 export interface CoreChange {
@@ -5870,6 +5922,8 @@ export interface CoreContact {
   "payment_condition_id"?: UUID | null;
   /** Название условия оплаты; пусто — условия нет */
   "payment_condition_name"?: string;
+  /** Закреплён за сотрудником (id пользователя); null — ничей, виден всем. Роль «Контрагенты — только свои» видит закреплённых за собой и ничьих; новый контрагент закрепляется за создателем */
+  "responsible_user_id"?: number | null;
   /** Код системного контрагента (fns, sfr, bank:<БИК>). Только чтение. */
   "system_key"?: string;
   /** Что подсветить в реквизитах по правилу ИНН. Пусто — всё в порядке. */
@@ -6297,6 +6351,28 @@ export interface CoreContactPatchPostalAddress {
   /** Офис или помещение */
   "flat": string;
   "info": string;
+}
+
+export interface CoreContactResponsibleEvent {
+  "id"?: UUID;
+  /** За кем был закреплён; null — ничей */
+  "from_user_id"?: number | null;
+  /** За кем закреплён теперь; null — закрепление снято */
+  "to_user_id"?: number | null;
+  /** Кто передал */
+  "actor_user_id"?: number | null;
+  "created_at"?: string;
+}
+
+export interface CoreContactResponsibleHistory {
+  "results"?: Array<CoreContactResponsibleEvent>;
+}
+
+export interface CoreContactsAssignInput {
+  /** Контрагенты, которых закрепляют */
+  "ids": Array<UUID>;
+  /** Сотрудник (id пользователя), за которым закрепляют; null или не прислан — снять закрепление */
+  "user_id"?: number | null;
 }
 
 export interface CoreContactsPaymentConditionInput {
@@ -7699,6 +7775,8 @@ export interface CoreOrder {
   "consignee_point_id"?: { [key: string]: unknown };
   /** Название точки доставки — для экрана */
   "consignee_point_name"?: string;
+  /** Адрес точки доставки строкой */
+  "consignee_point_address"?: string;
   /** Переход права, перекрытый в продаже: shipment, acceptance; пусто — по договору, контрагенту и каналу. Новая отгрузка замораживает выбранное правило (ERP-2772) */
   "title_transfer"?: "" | "shipment" | "acceptance";
   /** Условие оплаты, из которого построен график продажи (ERP-2140); нет поля — график набран руками или условия нет */
@@ -8642,7 +8720,8 @@ export interface CoreOrderTemplateActions {
   "invoice_days"?: number;
   "invoice_delivery"?: CoreOrderTemplateDelivery;
   "closing_delivery"?: CoreOrderTemplateDelivery;
-  "closing"?: "" | "upd" | "act";
+  /** upd и act — только у шаблона с юрлицом; business_act — упрощённый акт на бизнес, только без юрлица */
+  "closing"?: "" | "upd" | "act" | "business_act";
   "closing_when"?: "" | "on_order" | "after_days" | "period_end";
   "closing_days"?: number;
   /** Invoices of the period sale as a list; replaces single invoice fields. Monthly and quarterly templates only. */
@@ -8652,7 +8731,8 @@ export interface CoreOrderTemplateActions {
 }
 
 export interface CoreOrderTemplateClosing {
-  "kind": "upd" | "act";
+  /** upd и act — только у шаблона с юрлицом; business_act — упрощённый акт на бизнес, только без юрлица (422 core.order_template.closing_needs_company / business_act_has_company) */
+  "kind": "upd" | "act" | "business_act";
   "date": CoreOrderTemplatePaperDate;
   "delivery"?: CoreOrderTemplateDelivery;
 }
@@ -8722,6 +8802,14 @@ export interface CoreOrderTemplateRun {
   "closing_date"?: string;
   /** Period sale amount by template lines and dated prices. */
   "amount"?: string;
+  /** Service period start (prorated and rolling modes). */
+  "service_from"?: string;
+  /** Service period end, inclusive. */
+  "service_until"?: string;
+  /** Partial first month: billed days. */
+  "days"?: number;
+  /** Partial first month: days in the month. */
+  "period_days"?: number;
   "papers"?: Array<CoreOrderTemplateRunPaper>;
 }
 
@@ -8739,6 +8827,8 @@ export interface CoreOrderTemplateSchedule {
   "period": "month" | "quarter" | "week";
   /** Service period relative to the scheduled run: previous, current or next. Changes the period in document and service names; document dates and run identity stay unchanged. */
   "service_period_offset"?: number;
+  /** How to count a monthly period: calendar_full (empty) — calendar month, the first one in full; calendar_prorated — the first partial month is billed at once from the start date as price × remaining days / days in month, then the regular schedule; rolling — month counted from the start date. Monthly templates only; a new template without it takes the workspace default. */
+  "period_mode"?: "" | "calendar_full" | "calendar_prorated" | "rolling";
   /** Число месяца или день недели ISO (1 — понедельник). */
   "day": number;
   "from": string;
@@ -10807,6 +10897,7 @@ export interface CoreSalesChannel {
   "reserve_over_available": "" | "block" | "warn";
   /** Квант канала (ERP-083): кратность отгрузки в штуках, целое от 2; пусто — кванта нет. Некратное количество отгрузка называет предупреждением. */
   "ship_multiple": string;
+  "ship_weekday"?: "" | "1" | "2" | "3" | "4" | "5" | "6" | "7";
   /** Текст для склада (ERP-083): новая продажа канала без своего комментария для склада получает его при заведении. */
   "warehouse_note": string;
   /** Экземпляров транспортной накладной канала (ERP-095), целое от 1 до 10; пусто — как в правилах перевозок. */
@@ -10869,6 +10960,7 @@ export interface CoreSalesChannelCreate {
   "reserve_over_available"?: "" | "block" | "warn" | null;
   /** Квант канала (ERP-083): кратность отгрузки в штуках, целое от 2; пусто или null — снять. */
   "ship_multiple"?: string | null;
+  "ship_weekday"?: string | null;
   /** Текст для склада (ERP-083), до 2000 знаков; пусто или null — снять. */
   "warehouse_note"?: string | null;
   /** Экземпляров транспортной накладной (ERP-095), целое от 1 до 10; пусто или null — снять. */
@@ -10962,6 +11054,7 @@ export interface CoreSalesChannelPatch {
   "reserve_over_available"?: "" | "block" | "warn" | null;
   /** Квант канала (ERP-083): кратность отгрузки в штуках, целое от 2; пусто или null — снять. */
   "ship_multiple"?: string | null;
+  "ship_weekday"?: string | null;
   /** Текст для склада (ERP-083), до 2000 знаков; пусто или null — снять. */
   "warehouse_note"?: string | null;
   /** Экземпляров транспортной накладной (ERP-095), целое от 1 до 10; пусто или null — снять. */
@@ -10977,6 +11070,16 @@ export interface CoreSalesChannelPatch {
 }
 
 export type CoreSalesChannelPriceMode = "" | "required" | "not_needed";
+
+export interface CoreSalesChannelProductMultiple {
+  "channel_id": UUID;
+  "product_id": UUID;
+  "ship_multiple": string;
+}
+
+export interface CoreSalesChannelProductMultipleInput {
+  "ship_multiple"?: string | null;
+}
 
 export interface CoreSalesChannelRef {
   "id": UUID;
@@ -11168,6 +11271,8 @@ export interface CoreUPDProfile {
   "line_text_info"?: Array<CoreUPDTextInfoRule>;
   /** Режим кодов идёт от товара: группа с передачей по GTIN — ГТИН и КолВедМарк, поштучная — КИЗ даже в опте, неполный скан поштучной строки — отказ; значение решает, что делать со сканом строки по GTIN. kiz — кодами КИЗ и НомУпак (без единого скана остаётся количеством, неполный скан — отказ); package — отсканированные коды упаковки в НомУпак, без них количеством и без отказа; count и пусто — количеством; none — не передавать: ни кодов, ни количества, неполный скан не отказ, коды формы отправки всё равно уходят */
   "marks_mode"?: "" | "kiz" | "count" | "package" | "none";
+  /** Особый случай передачи маркированного товара по умолчанию (ERP-2712): own_use — для собственных нужд покупателя, gratuitous — безвозмездно, production — для производства (СвВыбытияМАРК 1/2/3), storage — хранение без смены собственника (ВидОборотаМАРК 9). Те же значения, что marking_case формы отправки, и выбор формы сильнее. Пишется, только когда в УПД есть маркированные строки. Пусто — обычная продажа */
+  "marking_case"?: "" | "own_use" | "gratuitous" | "production" | "storage";
   /** Сверять цену строки с заказом сети из Контур.EDI: расхождение — предупреждение предпросмотра; нет заказа или в нём нет цены — сверять не с чем */
   "check_price_vs_order"?: boolean;
   /** КПП покупателя (СвПокуп) из точки доставки, если он у неё есть и точка принадлежит покупателю */
@@ -11933,7 +12038,7 @@ export interface DocflowAcceptedDocument {
   "id": UUID;
   /** Наш номер из нумератора кабинета. Номер продавца лежит в содержимом документа: занять им наш сквозной счётчик значит однажды получить два своих документа с одним номером от двух разных поставщиков */
   "number": string;
-  /** Дата документа ГГГГ-ММ-ДД. По умолчанию это дата документа поставщика: операция произошла тогда, когда её совершил он, и датировать её днём приёмки значит поставить факт не в тот период */
+  /** Дата учёта ГГГГ-ММ-ДД: день приёмки, по умолчанию сегодня (ERP-2673). Дата и номер документа поставщика хранятся отдельно и уходят в 1С входящими */
   "date": string;
   /** Ключ вида документа; у приёмки docflow_incoming */
   "type_key": string;
@@ -12473,6 +12578,8 @@ export interface DocflowApprovalPolicy {
   "accounting_post"?: boolean;
   /** Оплата по закупке из согласованной заявки: route — по маршруту заявок на оплату (умолчание); calendar или treasury — без повторного согласования, сразу в платёжный календарь или в очередь казначея, если закупка не дороже согласованной суммы заявки. Только у вида «заявка на оплату». Не задано при сохранении — прежнее значение. */
   "approved_purchase_payment"?: "route" | "calendar" | "treasury";
+  /** Поля разрезов заявки в регламенте: ключ cfo, project или department; off — не показывать, optional — необязательное, required — без него заявку не отправить. Нет ключа — необязательное. Только у вида «заявка на оплату». Не задано при сохранении — прежнее значение. */
+  "request_fields"?: { [key: string]: "off" | "optional" | "required" };
 }
 
 /** Обязательность согласования у ОДНОГО вида предмета, а не глобальный выключатель кабинета: у заявки на оплату согласование может быть обязательным, а у письма контрагенту — нет. */
@@ -12488,6 +12595,8 @@ export interface DocflowApprovalPolicyInput {
   "accounting_post"?: boolean;
   /** Оплата по закупке из согласованной заявки: route — по маршруту заявок на оплату (умолчание); calendar или treasury — без повторного согласования, сразу в платёжный календарь или в очередь казначея, если закупка не дороже согласованной суммы заявки. Только у вида «заявка на оплату». Не задано при сохранении — прежнее значение. */
   "approved_purchase_payment"?: "route" | "calendar" | "treasury";
+  /** Поля разрезов заявки в регламенте: ключ cfo, project или department; off — не показывать, optional — необязательное, required — без него заявку не отправить. Нет ключа — необязательное. Только у вида «заявка на оплату». Не задано при сохранении — прежнее значение. */
+  "request_fields"?: { [key: string]: "off" | "optional" | "required" };
 }
 
 /** Узкие метаданные причины операции; они не дают права читать справочники или складскую оценку. */
@@ -12636,6 +12745,8 @@ export interface DocflowApprovalRouteStage {
   "min_amount"?: string;
   /** Только сверх лимита: этап выполняется, только если заявку на оплату провели сверх лимита бюджета кнопкой «Сверх лимита»; туда ставят генерального директора */
   "over_budget_only"?: boolean;
+  /** Статья обязательна: согласующий этапа ставит статью заявки на оплату сам (PUT …/payment-requests/{id}/item), а согласовать без статьи нельзя (409 docflow.approval.item_required). Если признака нет ни на одном этапе, заявка проходит маршрут без статьи */
+  "require_item"?: boolean;
 }
 
 /** Этап ПРОХОДА: кого спросили на самом деле. Состояние skipped означает «этап не выполняется, его лимит по сумме не достигнут»; строка всё равно есть, чтобы человек видел, ПОЧЕМУ финансового директора не спросили. */
@@ -12651,6 +12762,8 @@ export interface DocflowApprovalStage {
   "min_amount"?: string;
   /** Снимок условия «только сверх лимита» */
   "over_budget_only"?: boolean;
+  /** Снимок признака «статья обязательна» */
+  "require_item"?: boolean;
   /** По маршруту этап согласовывал бы сам автор; вместо него спрашивают его руководителя */
   "author_replaced"?: boolean;
   "due_hours"?: number;
@@ -13297,6 +13410,652 @@ export interface DocflowDocumentRefRequisites {
   "info"?: string;
 }
 
+export interface DocflowEdiArchiveInput {
+  "archived": boolean;
+}
+
+export interface DocflowEdiAvailability {
+  "channel_id": UUID | null;
+  "channel_name": string;
+  /** Склад отгрузки из карточки канала */
+  "warehouse_id": UUID | null;
+  "warehouse_name": string;
+  /** soft — нехватка видна, подтвердить можно; strict — нельзя больше доступного */
+  "stock_check": "soft" | "strict";
+  /** Откуда режим; пусто — канала нет */
+  "stock_check_source": "" | "channel" | "cabinet";
+  /** Канал отгружает только из этого состояния товара */
+  "only_condition"?: string;
+  /** Почему не определён остаток всей заявки */
+  "reason"?: "no_channel" | "no_warehouse" | "warehouse_unusable" | "stock_off" | "no_access";
+  "shelf_life": DocflowEdiAvailabilityShelfLifeVariant2 | null;
+  /** Хотя бы одной строке не хватает заказанного */
+  "shortage": boolean;
+  "lines": Array<DocflowEdiAvailabilityLine>;
+}
+
+export interface DocflowEdiAvailabilityShelfLifeVariant2 {
+  "has_minimum": boolean;
+  "min_remaining_pct"?: string;
+  "min_remaining_days"?: number;
+  "scaled"?: boolean;
+  "source": "contact" | "cabinet" | "none";
+  /** Дата оценки партий */
+  "as_of"?: string;
+}
+
+export interface DocflowEdiAvailabilityEnvelope {
+  "availability": DocflowEdiAvailability;
+}
+
+export interface DocflowEdiAvailabilityLine {
+  /** Номер строки заявки */
+  "n": number;
+  /** Заказано, штук */
+  "ordered": string;
+  "product_id"?: UUID;
+  "state": "known" | "undetermined";
+  "reason"?: "no_channel" | "no_warehouse" | "no_product" | "warehouse_unusable" | "stock_off" | "no_access";
+  /** Что остаётся на строку с учётом срока годности; null — не определено, это не ноль */
+  "available": string | null;
+  /** Весь остаток товара с учётом срока годности */
+  "product_available": string | null;
+  /** Свободно без порога срока годности */
+  "free": string | null;
+  /** Годное, но отсечённое порогом срока годности */
+  "below_shelf_life": string | null;
+  /** На сколько заказанное больше доступного */
+  "shortage": string | null;
+}
+
+export interface DocflowEdiBatchInput {
+  /** Заявки, отмеченные в списке */
+  "ids": Array<UUID>;
+  /** Только для archive-batch: убрать в архив (по умолчанию) или вернуть */
+  "archived"?: boolean;
+}
+
+export interface DocflowEdiBatchReport {
+  "results": Array<DocflowEdiBatchRow>;
+  "created": number;
+  "exists": number;
+  "item_unknown": number;
+  "failed": number;
+}
+
+export interface DocflowEdiBatchRow {
+  "id": UUID;
+  "order_number"?: string;
+  "partner_name"?: string;
+  /** Заказ заведён; уже был; ни один товар не сопоставлен; отказ */
+  "outcome": "created" | "exists" | "item_unknown" | "failed";
+  /** Код отказа или пометки внимания */
+  "code"?: string;
+  /** Причина отказа словами */
+  "reason"?: string;
+  "english"?: string;
+  "order_id"?: UUID;
+  /** Пометка внимания заявки после действия */
+  "attention_code"?: string;
+}
+
+export interface DocflowEdiCatalogList {
+  "items": Array<{ [key: string]: unknown }>;
+}
+
+export interface DocflowEdiCatalogMatch {
+  "partner_gln": string;
+  "gtin"?: string;
+  "buyer_code"?: string;
+  "product_id": UUID;
+}
+
+export interface DocflowEdiCatalogMatchResult {
+  /** Сколько строк заявок сопоставлено */
+  "matched": number;
+}
+
+export interface DocflowEdiChangeDecision {
+  "decision": "accept" | "keep";
+}
+
+export interface DocflowEdiConfirmInput {
+  "lines"?: Array<DocflowEdiStepLine>;
+}
+
+export interface DocflowEdiConnection {
+  "id": UUID;
+  "company_id": UUID;
+  "app_client_id"?: string;
+  "oauth_account"?: string;
+  /** Вход в Контур есть: Akeda сама обновляет доступ */
+  "signed_in"?: boolean;
+  "party_id"?: string;
+  "party_gln"?: string;
+  "party_name"?: string;
+  "box_id"?: string;
+  "box_is_test"?: boolean;
+  "mode": "watch" | "orders" | "full";
+  "enabled": boolean;
+  "history_from"?: string | null;
+  "last_run_at"?: string | null;
+  "last_success_at"?: string | null;
+  /** Итог последнего опроса: ok, partial, unauthorized, forbidden, not_configured, unavailable, rate_limited, failed */
+  "last_code"?: string;
+  "last_error"?: string;
+  /** Отмечать у Контура получение заявки (MessageDeliveryFinished): сеть видит её доставленной. По умолчанию выключено */
+  "delivery_receipt"?: boolean;
+  "partners"?: Array<DocflowEdiPartner>;
+}
+
+export interface DocflowEdiConnectionEnvelope {
+  "connection": DocflowEdiConnection;
+}
+
+export interface DocflowEdiConnectionInput {
+  "company_id"?: UUID;
+  /** Идентификатор приложения в Кабинете интегратора Контура */
+  "client_id"?: string;
+  /** Секретный ключ приложения; только при замене */
+  "client_secret"?: string;
+  /** Refresh-токен входа Контура под пользователем с доступом к ящику; только при замене */
+  "refresh_token"?: string;
+  "mode"?: "watch" | "orders" | "full";
+  "enabled"?: boolean;
+  "history_from"?: string;
+  /** Ответственный за заявки; 0 снимает назначение. */
+  "responsible_user_id"?: number;
+  /** Подключиться к тестовому ящику организации */
+  "box_test"?: boolean;
+  /** Отмечать у Контура получение заявки; не передано — не меняется */
+  "delivery_receipt"?: boolean;
+}
+
+export interface DocflowEdiConnectionList {
+  "connections": Array<DocflowEdiConnection>;
+  /** У платформы своё приложение Контур.EDI: ключи приложения вводить не нужно */
+  "akeda_app"?: boolean;
+}
+
+export interface DocflowEdiDesadvInput {
+  /** Номер накладной; пусто — номер УПД Akeda по отгрузке, а нет УПД при одной отгрузке — УПД выпускается по ней и номер берётся из реестра счетов-фактур */
+  "number"?: string;
+  /** Дата накладной; пусто — дата УПД, иначе последней отгрузки склада */
+  "date"?: string;
+  "delivery_at"?: string;
+  "driver_name"?: string;
+  "driver_phone"?: string;
+  "vehicle"?: string;
+  /** Марка машины (transportation/vehicleBrand) */
+  "vehicle_brand"?: string;
+  "trailer"?: string;
+  "lines"?: Array<DocflowEdiStepLine>;
+  /** Транспортная накладная; пусто — номер накладной (УПД) */
+  "transport_waybill_number"?: string;
+  /** Дата транспортной накладной; пусто — дата накладной */
+  "transport_waybill_date"?: string;
+  /** Части строк; сильнее lines и подстановки склада */
+  "goods"?: Array<DocflowEdiGoods>;
+  "pallets"?: Array<DocflowEdiPallet>;
+}
+
+export interface DocflowEdiDiadocDocument {
+  "edo_message_id": UUID;
+  "connection_id": UUID;
+  /** Оператор ЭДО: diadoc, saby */
+  "provider": string;
+  /** Идентификатор пакета у оператора (письмо Диадока) */
+  "external_id": string;
+  "direction": "incoming" | "outgoing";
+  /** Тип документа словами оператора */
+  "doc_type": string;
+  "doc_subtype": string;
+  /** Вид пакета нашими словами; transfer — УПД и накладные */
+  "kind": "invoice" | "contract" | "transfer" | "letter" | "other";
+  "number": string;
+  /** Дата документа ГГГГ-ММ-ДД; пусто — нет */
+  "date": string;
+  "amount"?: string;
+  "currency"?: string;
+  /** Состояние пакета кодом оператора (из зеркала ЭДО) */
+  "state_code": string;
+  /** Состояние пакета словами оператора */
+  "state_name": string;
+  "last_event_at"?: string;
+  /** Чем найдена связь: письмо из события ленты Контура, сверка с продажей заявки */
+  "sources": Array<"edi_event" | "sales_order">;
+  /** У связи через продажу: linked или ambiguous (продажу выбирает человек в карточке пакета) */
+  "match_status"?: "linked" | "ambiguous";
+  "match_method"?: "order_ref" | "buyer_date_amount" | "manual";
+  /** Ссылка Контура на документ в Диадоке (https), если её принесло событие */
+  "diadoc_url"?: string;
+  /** Сообщения EDI, чьи события назвали письмо пакета */
+  "edi_messages": Array<UUID>;
+}
+
+export interface DocflowEdiDiadocDocuments {
+  "documents": Array<DocflowEdiDiadocDocument>;
+  /** Письма Диадока из событий, которых нет в зеркале ЭДО (ЭДО не подключено или пакет ещё не пришёл) */
+  "missing": Array<DocflowEdiDiadocLetter>;
+}
+
+export interface DocflowEdiDiadocLetter {
+  "letter_id": string;
+  "url"?: string;
+  "at"?: string;
+  "messages": Array<UUID>;
+}
+
+export interface DocflowEdiEdoLinks {
+  "orders": Array<DocflowEdiEdoLinksOrdersItem>;
+  "messages": Array<DocflowEdiEdoLinksMessagesItem>;
+}
+
+export interface DocflowEdiEdoLinksOrdersItem {
+  "id": UUID;
+  "order_number": string;
+  "partner_name": string;
+  "partner_gln": string;
+  "stage": string;
+  "docs_stage"?: string;
+  "sources": Array<"edi_event" | "sales_order">;
+}
+
+export interface DocflowEdiEdoLinksMessagesItem {
+  "id": UUID;
+  "direction": "in" | "out";
+  "doc_type": string;
+  "doc_number": string;
+  "state": string;
+  "at"?: string;
+  "edi_order_id"?: UUID;
+}
+
+export interface DocflowEdiFill {
+  "step": "desadv" | "invoic";
+  "state": "shipped" | "not_shipped" | "no_order" | "stock_off";
+  "number"?: string;
+  "date"?: string;
+  "delivery_note_number"?: string;
+  "delivery_note_date"?: string;
+  "actual_delivery_at"?: string;
+  "lines": Array<DocflowEdiFillLine>;
+  "goods": Array<DocflowEdiGoods>;
+  "pallets": Array<DocflowEdiPallet>;
+  "required": Array<string>;
+  /** У сети ТН по умолчанию = номер и дата УПД: форма подставляет их в «Транспортная накладная» */
+  "waybill_from_upd"?: boolean;
+}
+
+export interface DocflowEdiFillEnvelope {
+  "fill": DocflowEdiFill;
+}
+
+export interface DocflowEdiFillLine {
+  "n": number;
+  /** Что подставлено; пусто — подставить нечего */
+  "quantity": string;
+  /** Больше заявить нельзя; пусто — предела нет */
+  "limit"?: string;
+  "net_price"?: string;
+  "net_price_with_vat"?: string;
+  "vat_rate"?: string;
+  "price_missing"?: boolean;
+}
+
+/** Часть строки заявки со своей партией и палетой. */
+export interface DocflowEdiGoods {
+  "n": number;
+  /** В штуках */
+  "quantity": string;
+  "batch"?: string;
+  "produced_at"?: string;
+  "expires_at"?: string;
+  "shelf_life_days"?: string;
+  /** Код страны из двух букв */
+  "country"?: string;
+  /** Номер таможенной декларации партии: customsDeclarationNumber сообщения */
+  "customs_number"?: string;
+  "manufacturer"?: string;
+  "unit_gross_weight"?: string;
+  "unit_net_weight"?: string;
+  /** Документ соответствия строки: серия и номер. Не номер таможенной декларации */
+  "conformity_number"?: string;
+  "conformity_date"?: string;
+  "conformity_valid_until"?: string;
+  "package_type"?: string;
+  "package_quantity"?: string;
+  /** Номер палеты с единицы; 0 или нет — без палеты */
+  "pallet"?: number;
+  "marks"?: Array<DocflowEdiGoodsMarksItem>;
+}
+
+export interface DocflowEdiGoodsMarksItem {
+  "type"?: string;
+  "value": string;
+}
+
+export interface DocflowEdiHistoryInput {
+  /** Граница: заявки раньше неё. Пусто — момент подключения */
+  "before"?: string;
+  /** Только посчитать, ничего не менять */
+  "dry_run"?: boolean;
+}
+
+export interface DocflowEdiHistoryReport {
+  "before": string;
+  /** Сколько заявок подходит */
+  "matched": number;
+  /** Сколько убрано в архив */
+  "archived": number;
+  "dry_run": boolean;
+}
+
+export interface DocflowEdiInvoicInput {
+  "number"?: string;
+  /** Дата счёта; пусто — дата накладной */
+  "date"?: string;
+  "function"?: "INVDOP" | "INV" | "DOP";
+  "lines"?: Array<DocflowEdiStepLine>;
+  "actual_delivery_at"?: string;
+  "goods"?: Array<DocflowEdiGoods>;
+  "pallets"?: Array<DocflowEdiPallet>;
+}
+
+export interface DocflowEdiMarkInput {
+  "state": "kontur" | "skipped";
+  "status"?: "Accepted" | "Changed" | "Rejected";
+  "number"?: string;
+  /** Дата документа в Контуре */
+  "date"?: string;
+  "lines"?: Array<DocflowEdiStepLine>;
+}
+
+export interface DocflowEdiMatchInput {
+  "product_id": UUID;
+}
+
+export interface DocflowEdiMessage {
+  "id": UUID;
+  "message_id": string;
+  "circulation_id"?: string;
+  "direction": "in" | "out";
+  "doc_type": string;
+  "doc_number"?: string;
+  "doc_date"?: string | null;
+  "partner_gln"?: string;
+  "partner_name"?: string;
+  "delivery_point_gln"?: string;
+  "order_number"?: string;
+  "edi_order_id"?: UUID | null;
+  "state": string;
+  "state_detail"?: { [key: string]: unknown };
+  "file_name"?: string;
+  "is_test"?: boolean;
+  "sent_at"?: string | null;
+}
+
+export interface DocflowEdiMessageCard {
+  "message": DocflowEdiMessage;
+  "party": { [key: string]: unknown };
+  "history": Array<DocflowEdiMessageEvent>;
+  "statuses": Array<DocflowEdiMessageEvent>;
+  "related": Array<DocflowEdiMessage>;
+  /** Шаг заявки, который можно «Отправить заново» по этому сообщению: наш ответ сети, шаг failed, сеть в полном обмене. Отправка — кнопкой формы шага в карточке заявки. Нет поля — нельзя */
+  "resend_step"?: "ordrsp" | "desadv" | "invoic";
+  /** Шаг заявки для «Взять за основу»: исходящий ответ сети (из Akeda или другой программы), шаг ещё открыт, заявка не отменена, сеть в полном обмене. Открывает форму шага, заполненную из заявки и продажи; сети уходит только кнопкой формы. Нет поля — нельзя */
+  "basis_step"?: "ordrsp" | "desadv" | "invoic";
+}
+
+export interface DocflowEdiMessageEvent {
+  "id"?: string;
+  /** Что случилось: состояние доставки, документа Диадока (upd_*, diadoc_*, signed_by_me*), ГИС МТ (gismt_ok, gismt_progress, gismt_error), poa_status, sender_receipt, traceability_lost, universal_message, recognized, document_created, processing_times, delivery_finished, delivery_finish_failed; kontur_event — событие незнакомого типа (тип в type) */
+  "state": string;
+  "at"?: string;
+  /** Ошибки и отказы — тексты Контура */
+  "reasons"?: Array<string>;
+  /** Тип события Контура (MessageBoxEventType) */
+  "type"?: string;
+  /** Вид события ГИС МТ (revocation, fixation, fixation_cancel) или доверенности (recipient, sender) */
+  "kind"?: string;
+  /** Пояснения Контура: предупреждения проверки, описание статуса */
+  "notes"?: Array<string>;
+  /** Документ в веб-интерфейсе Диадока */
+  "url"?: string;
+  /** Значения для подписи: doc_type, group, title_status, status, total_seconds, need_receipt; письмо, ящик и документ Диадока — diadoc_letter_id, diadoc_box_id, diadoc_document_id */
+  "data"?: { [key: string]: string };
+}
+
+export interface DocflowEdiMessageList {
+  "messages": Array<DocflowEdiMessage>;
+}
+
+export interface DocflowEdiOrder {
+  "id": UUID;
+  "connection_id"?: UUID;
+  "partner_gln": string;
+  "partner_name"?: string;
+  "order_number": string;
+  "order_date"?: string | null;
+  "edi_status"?: string;
+  "revision"?: string;
+  "stage": "new" | "confirmed" | "rejected" | "shipped" | "received" | "cancelled";
+  /** Этап документов: приёмка без счёта; счёт не дошёл или УПД отклонён (отказ, уточнение, ошибка роуминга); черновик УПД в Диадоке; УПД ждёт подписи покупателя; подписан; подписан с разногласиями; аннулирован. Пусто — пометки нет */
+  "docs_stage"?: "" | "prepared" | "rejected" | "draft" | "awaiting_signature" | "signed" | "partly_signed" | "revoked";
+  "archived_at"?: string | null;
+  /** Путь УПД сети заявки: edi — УПД строит Контур.EDI из счёта, наш УПД через ЭДО не уходит; edo — наш УПД через ЭДО */
+  "upd_path"?: "edi" | "edo";
+  /** Шаги ответа ordrsp, desadv, recadv, invoic: состояние, номер, когда, строки; auto=true у «Не нужно», поставленного набором ответов сети. Шаг upd — УПД в Диадоке по событиям ленты: state (draft, awaiting, signed, partly_signed, rejected, revoked, deleted), status (последнее событие, как состояние сообщения upd_*), message_id, at, detail (причины) */
+  "steps": { [key: string]: unknown };
+  "parties"?: { [key: string]: unknown };
+  "ship_to_gln"?: string;
+  "ship_to_name"?: string;
+  "ship_to_address"?: string;
+  "delivery_at"?: string | null;
+  "ship_date"?: string | null;
+  "contract_number"?: string;
+  "currency"?: string;
+  "total"?: string;
+  "items": Array<{ [key: string]: unknown }>;
+  "receiving"?: { [key: string]: unknown };
+  "order_id"?: UUID | null;
+  /** Что требует человека; пусто — ничего. По документам Диадока: upd_rejected, upd_partly_signed, upd_amendment_requested, upd_revocation_requested, upd_roaming_error, diadoc_post_failed, gismt_error */
+  "attention_code"?: string;
+  /** Подробности пометки: reasons — тексты Контура, event — тип события, doc_type, diadoc_url, kind */
+  "attention_detail"?: { [key: string]: unknown };
+  "edits"?: DocflowEdiOrderEdits;
+}
+
+export interface DocflowEdiOrderCard {
+  "order": DocflowEdiOrder;
+  "messages": Array<DocflowEdiMessage>;
+  "partner": DocflowEdiPartner;
+}
+
+/** Правки заявки у нас; пусто — без правок */
+export interface DocflowEdiOrderEdits {
+  "lines"?: Array<DocflowEdiOrderEditsLinesItem>;
+  /** Когда привезём */
+  "delivery_at"?: string | null;
+  /** Другое место доставки: точка покупателя с GLN (13 цифр). Уходит сети в ответе и становится грузополучателем продажи */
+  "ship_to"?: DocflowEdiOrderEditsShipTo;
+  /** Комментарий: уходит сети в ответе и в продажу */
+  "comment"?: string;
+  "at"?: string;
+  "by"?: number;
+}
+
+export interface DocflowEdiOrderEditsLinesItem {
+  /** Номер строки заявки */
+  "n": number;
+  /** Количество в штуках; 0 — строку не везём */
+  "quantity"?: string;
+  /** Цена за штуку без НДС */
+  "piece_price"?: string;
+  /** Ставка НДС */
+  "vat_rate"?: "" | "0" | "5" | "7" | "10" | "20" | "22" | "NOT_APPLICABLE";
+  /** Причина изменения строки для ответа сети */
+  "reason"?: string;
+}
+
+/** Другое место доставки: точка покупателя с GLN (13 цифр). Уходит сети в ответе и становится грузополучателем продажи */
+export interface DocflowEdiOrderEditsShipTo {
+  "gln"?: string;
+  "name"?: string;
+  "inn"?: string;
+  "kpp"?: string;
+  "address"?: string;
+  "region_code"?: string;
+}
+
+export interface DocflowEdiOrderEnvelope {
+  "order": DocflowEdiOrder;
+}
+
+export interface DocflowEdiOrderList {
+  "orders": Array<DocflowEdiOrder>;
+  "counts": Array<DocflowEdiOrderListCountsItem>;
+  "docs_counts": Array<DocflowEdiOrderListDocsCountsItem>;
+  "attention": number;
+  "archived": number;
+  "total": number;
+}
+
+export interface DocflowEdiOrderListCountsItem {
+  "stage"?: string;
+  "count"?: number;
+}
+
+export interface DocflowEdiOrderListDocsCountsItem {
+  "stage"?: string;
+  "count"?: number;
+}
+
+export interface DocflowEdiOrdrspInput {
+  "status"?: "Accepted" | "Changed" | "Rejected";
+  "delivery_at"?: string;
+  "reason"?: string;
+  "lines"?: Array<DocflowEdiStepLine>;
+}
+
+/** Палета сообщения. Веса в килограммах, высота в сантиметрах, температура в градусах Цельсия. */
+export interface DocflowEdiPallet {
+  "sscc"?: string;
+  "net_weight"?: string;
+  "gross_weight"?: string;
+  "height"?: string;
+  "temperature"?: string;
+}
+
+export interface DocflowEdiPartner {
+  "id": UUID;
+  "connection_id"?: UUID;
+  "partner_id"?: string;
+  "gln": string;
+  "name": string;
+  "documents"?: Array<DocflowEdiPartnerDocumentsItem>;
+  "channel_id"?: UUID | null;
+  "contact_id"?: UUID | null;
+  /** Пусто — как у подключения */
+  "mode": string;
+  "order_create": "auto" | "button" | "none";
+  "upd_path": "edi" | "edo";
+  "shortage_closes": boolean;
+  /** Что сеть считает обязательным: шаг (desadv, invoic) → поля формы */
+  "required_fields"?: { [key: string]: Array<string> };
+  /** Что сеть берёт из карточки товара. Пусто — вес, срок и страна подставляются, документ соответствия не передаётся */
+  "card_fields"?: DocflowEdiPartnerCardFields;
+  /** Набор ответов с умолчаниями: шаг (ordrsp, desadv, invoic) → нужен ли ответ из Akeda */
+  "reply_plan"?: { [key: string]: boolean };
+}
+
+export interface DocflowEdiPartnerDocumentsItem {
+  "type"?: string;
+  "direction"?: "FromMe" | "ToMe" | "Bidirectional";
+}
+
+/** Что сеть берёт из карточки товара. Пусто — вес, срок и страна подставляются, документ соответствия не передаётся */
+export interface DocflowEdiPartnerCardFields {
+  /** Реквизиты карточки, которые этой сети не подставляются */
+  "off"?: Array<"unit_weight" | "shelf_life" | "country">;
+  /** Передавать сети документ соответствия из карточки товара */
+  "conformity"?: boolean;
+  /** Температура новой палеты */
+  "pallet_temperature"?: string;
+  /** Нетто новой палеты, кг: положительное число. Палете с названным нетто не подставляется */
+  "pallet_net_weight"?: string;
+  /** Набор ответов из Akeda: шаг (ordrsp, desadv, invoic) → send или skip. Шага нет — умолчание: счёт не нужен при пути УПД edo, остальное — по документам, которые сеть принимает */
+  "replies"?: { [key: string]: "send" | "skip" };
+  /** Транспортная накладная по умолчанию = номер и дата УПД (так у Магнита); выключено — ТН уходит, только если её назвали */
+  "waybill_from_upd"?: boolean;
+  /** Коробов в строке и в счёте INVOIC (так у Магнита); выключено — только в отгрузке */
+  "invoice_boxes"?: boolean;
+}
+
+export interface DocflowEdiPartnerEnvelope {
+  "partner": DocflowEdiPartner;
+}
+
+export interface DocflowEdiPartnerPatch {
+  /** Свой ответственный у сети; 0 — как у подключения. */
+  "responsible_user_id"?: number;
+  "channel_id"?: UUID;
+  "contact_id"?: UUID;
+  "mode"?: "" | "watch" | "orders" | "full";
+  "order_create"?: "auto" | "button" | "none";
+  "upd_path"?: "edi" | "edo";
+  "shortage_closes"?: boolean;
+  /** Обязательные поля сети целиком: шаг (desadv, invoic) → поля формы */
+  "required_fields"?: { [key: string]: Array<string> };
+  /** Что сеть берёт из карточки товара. Пусто — вес, срок и страна подставляются, документ соответствия не передаётся */
+  "card_fields"?: DocflowEdiPartnerPatchCardFields;
+  /** Набор ответов из Akeda: шаг (ordrsp, desadv, invoic) → send, skip или пусто (умолчание). Шаги без записи не меняются; открытые заявки сети получают или теряют «Не нужно» по настройке */
+  "replies"?: { [key: string]: "" | "send" | "skip" };
+  /** ТН по умолчанию = номер и дата УПД */
+  "waybill_from_upd"?: boolean;
+  /** Коробов в строке и в счёте INVOIC */
+  "invoice_boxes"?: boolean;
+}
+
+/** Что сеть берёт из карточки товара. Пусто — вес, срок и страна подставляются, документ соответствия не передаётся */
+export interface DocflowEdiPartnerPatchCardFields {
+  /** Реквизиты карточки, которые этой сети не подставляются */
+  "off"?: Array<"unit_weight" | "shelf_life" | "country">;
+  /** Передавать сети документ соответствия из карточки товара */
+  "conformity"?: boolean;
+  /** Температура новой палеты */
+  "pallet_temperature"?: string;
+  /** Нетто новой палеты, кг: положительное число. Палете с названным нетто не подставляется */
+  "pallet_net_weight"?: string;
+  /** Этим полем не меняется, только replies ниже. Набор ответов из Akeda: шаг (ordrsp, desadv, invoic) → send или skip. Шага нет — умолчание: счёт не нужен при пути УПД edo, остальное — по документам, которые сеть принимает */
+  "replies"?: { [key: string]: "send" | "skip" };
+  /** Этим полем не меняется. Транспортная накладная по умолчанию = номер и дата УПД (так у Магнита); выключено — ТН уходит, только если её назвали */
+  "waybill_from_upd"?: boolean;
+  /** Этим полем не меняется. Коробов в строке и в счёте INVOIC (так у Магнита); выключено — только в отгрузке */
+  "invoice_boxes"?: boolean;
+}
+
+export interface DocflowEdiPayerList {
+  "payers": Array<{ [key: string]: unknown }>;
+}
+
+export interface DocflowEdiPlaceList {
+  "places": Array<{ [key: string]: unknown }>;
+}
+
+export interface DocflowEdiRematchResult {
+  /** Сколько заявок изменилось */
+  "changed": number;
+}
+
+export interface DocflowEdiStepLine {
+  /** Номер строки заявки */
+  "n": number;
+  /** Количество в штуках */
+  "quantity": string;
+  "reason"?: string;
+}
+
 /** СвДоверЭл: машиночитаемая доверенность. Формат требует её ровно при способе подтверждения полномочий 3 и запрещает при остальных. */
 export interface DocflowElectronicPoARequisites {
   /** НомДовер, 36 символов */
@@ -13579,7 +14338,7 @@ export interface DocflowFlowAssignmentPerson {
 export interface DocflowFlowChangeInput {
   /** Версия, которую видел клиент. Разошлась — 409 docflow.flow.version_conflict */
   "expected_version": number;
-  "action": "save" | "link" | "unlink" | "remove_file" | "register" | "revise" | "archive" | "restore" | "delete" | "custom" | "articles" | "invoice_distinct" | "renew" | "decline_renewal" | "registration";
+  "action": "save" | "link" | "unlink" | "remove_file" | "register" | "revise" | "archive" | "restore" | "delete" | "custom" | "articles" | "invoice_distinct" | "renew" | "decline_renewal" | "registration" | "annul_upd";
   "registration"?: DocflowFlowRegistrationInput;
   "content"?: DocflowFlowContent;
   /** Для action=custom: значения своих полей целиком. Правятся у черновика и зарегистрированной карточки; значение, не подходящее к типу графы, — 422 с названиями граф */
@@ -13957,8 +14716,8 @@ export interface DocflowFlowInvoicePayee {
   "contact_name": string;
   /** Расчётный счёт контрагента, по которому платить; нет — у контрагента нет включённого счёта */
   "account_id"?: UUID;
-  /** Откуда счёт: card — выбран в карточке счёта, contact_default — в карточке не выбран и взят основной счёт контрагента, none — у контрагента нет ни одного включённого счёта, budget — платёж в бюджет: счёт казначейства взят из файла поручения. */
-  "account_source": "card" | "contact_default" | "none" | "budget";
+  /** Откуда счёт: card — выбран в карточке счёта, document — в карточке не выбран и взят счёт, напечатанный в самом входящем документе (ссылкой на такой же счёт контрагента или реквизитами документа), contact_default — в карточке не выбран, документ счёта не называет, взят основной счёт контрагента, none — у контрагента нет ни одного включённого счёта, budget — платёж в бюджет: счёт казначейства взят из файла поручения. */
+  "account_source": "card" | "contact_default" | "document" | "none" | "budget";
   /** Включённые счета контрагента — из них выбирают другой */
   "accounts": Array<CoreContactBankAccount>;
   /** Реквизиты для платёжки: наименование, ИНН и КПП — из карточки контрагента, счёт и банк — из выбранного счёта, корсчёт — по БИК. У платежа в бюджет (КБК назван или счёт казначейский 03…) — ровно как в файле поручения: получателя называет казначейство */
@@ -14826,7 +15585,7 @@ export interface DocflowIntakeCounterpartyOption {
 
 /** Решение человека, которым подтверждается приёмка. Сам пакет назван в адресе. Решения по строкам приезжают СПИСКОМ, а не картой «номер → товар»: пропуск строки — это тоже решение, и картой его пришлось бы выражать отсутствием ключа, то есть неотличимо от «человек про эту строку не сказал ничего», а разница между ними принципиальная. */
 export interface DocflowIntakeInput {
-  /** Дата учётного документа ГГГГ-ММ-ДД. Пусто — берётся дата документа поставщика: она и есть дата операции */
+  /** Дата учёта ГГГГ-ММ-ДД. Пусто — сегодня (ERP-2673); дата документа поставщика хранится отдельно и уходит в 1С входящей */
   "date"?: string;
   /** Контрагент. Пусто — берётся тот, с кем свело зеркало */
   "contact"?: UUID | null;
@@ -15585,6 +16344,287 @@ export interface DocflowOutgoingInput {
   "files"?: Array<DocflowOutgoingFile>;
 }
 
+export interface DocflowOzonRetailApproval {
+  /** Сколько согласовать по SKU Ozon; строки нет — сколько просил Ozon; 0 — строка убирается; больше просьбы нельзя */
+  "lines"?: Array<DocflowOzonRetailApprovalLinesItem>;
+}
+
+export interface DocflowOzonRetailApprovalLinesItem {
+  "ozon_id": number;
+  "quantity": string;
+}
+
+export interface DocflowOzonRetailCargo {
+  "id": number;
+  /** Тип грузоместа у Ozon */
+  "type": number;
+  "barcode": string;
+}
+
+export interface DocflowOzonRetailCargoContentInput {
+  "cargos": Array<DocflowOzonRetailCargoContentInputCargosItem>;
+}
+
+export interface DocflowOzonRetailCargoContentInputCargosItem {
+  "cargo_id": number;
+  "items": Array<DocflowOzonRetailCargoContentInputCargosItemItemsItem>;
+}
+
+export interface DocflowOzonRetailCargoContentInputCargosItemItemsItem {
+  "ozon_id": number;
+  "quantity": number;
+}
+
+export interface DocflowOzonRetailCargoList {
+  "cargos": Array<DocflowOzonRetailCargo>;
+}
+
+export interface DocflowOzonRetailDriverList {
+  "drivers": Array<DocflowOzonRetailVehiclePass>;
+}
+
+export interface DocflowOzonRetailGate {
+  "allowed": boolean;
+  /** Коды Ozon, почему нельзя: NoWaybill, WaybillWithErrors, WaybillInProcess, InvalidOrderState и др. */
+  "reasons": Array<string>;
+}
+
+export interface DocflowOzonRetailItem {
+  /** SKU Ozon */
+  "ozon_id": number;
+  "barcode": string;
+  "article": string;
+  "name": string;
+  /** Сколько просит Ozon */
+  "quantity": string;
+  /** Цена Ozon с НДС */
+  "price": string;
+  "unit"?: string;
+  "product_id"?: UUID;
+  /** Тип отгрузки строки, как пришёл из Ozon (shipmentType: General и др.); нет — Ozon не назвал */
+  "shipment_type"?: string;
+  /** Квант строки (quant); нет — Ozon не назвал или назвал 0 */
+  "quant"?: string;
+  /** Режим приёмки строки складом Ozon (bulkAcceptanceAttributes.bulkShipmentType: Exemplar — поштучно и др.) */
+  "bulk_shipment_type"?: string;
+  /** Квант приёмки (bulkAcceptanceAttributes.quant) */
+  "bulk_quant"?: string;
+}
+
+export interface DocflowOzonRetailOrder {
+  "id": UUID;
+  /** Номер заказа на поставку в Ozon */
+  "ozon_order_id": number;
+  "document_number": string;
+  "document_date": string | null;
+  /** Статус в Ozon как пришёл: RetailOnConfirmation, DeliveryPreparation, RetailCompleted и т. п. */
+  "ozon_state": string;
+  /** Заказ покупателя; null — ещё не заведён: продажа заводится только по согласованному заказу (ERP-2154) */
+  "order_id": UUID | null;
+  /** Поставка через кросс-докинг */
+  "is_xdock": boolean;
+  "supply_warehouse_id": number;
+  "supply_warehouse_name": string;
+  "supply_warehouse_address": string;
+  /** Склад хранения: куда товар идёт в итоге, грузополучатель УПД. 0 — опрос ещё не читал */
+  "storage_warehouse_id": number;
+  "storage_warehouse_name": string;
+  "storage_warehouse_address": string;
+  /** Номер договора в Ozon (contractInfo.contractId); 0 — Ozon договор не назвал */
+  "contract_id": number;
+  /** Договор поставки, по которому Ozon сделал заказ (contractInfo.contractName, только в списке новых заказов): «ЗАКУП ИР-7008667/26 от 01.09.2026»; по номеру из названия продажа ставится на карточку договора. Заказу, который опрос не застал новым, — договор, названный Ozon в других заказах кабинета; пусто — договора нет */
+  "contract_name": string;
+  /** Валюта заказа Ozon (currency, только список активных); пусто — Ozon не назвал */
+  "currency": string;
+  /** Заказ SuperEconom */
+  "is_super_econom": boolean;
+  /** Прибытие на конечный склад (destinationDeliveryDateLocal, кросс-докинг) */
+  "destination_delivery_date": string | null;
+  /** Начало времени поставки во времени склада Ozon */
+  "timeslot_from": string | null;
+  "timeslot_to": string | null;
+  "timeslot_confirmed": boolean;
+  /** Интервал, который Ozon предлагает подтвердить */
+  "timeslot_id": string;
+  "items": Array<DocflowOzonRetailItem>;
+  "supply": DocflowOzonRetailSupply;
+  "waybill": DocflowOzonRetailWaybill;
+  "package_units": DocflowOzonRetailPackageUnits;
+  "vehicle_pass": DocflowOzonRetailVehiclePass;
+  /** Что требует человека: item_unknown (часть товаров не узнана — заказ заведён без них, список в attention_detail.items), changed_during_picking (Ozon изменил состав во время сборки — заказ не переписан), picked_over_approved (Ozon согласовал меньше собранного, поправьте сборку), cancelled_after_picking (заказ отменён после начала сборки: собранное вернуть на полки), below_shipped, cancelled_after_shipment, cancel_blocked, acceptance_refused, completed_not_shipped, import_failed, consignee_incomplete (у карточки склада Ozon нет КПП или адреса по графам), consignee_unknown_warehouse (Ozon не назвал склад поставки — грузополучатель не определён), contract_missing (Ozon назвал договор, а продажа на нём не стоит: attention_detail.contract — номер, reason — not_found, карточки договора нет, или rejected, карточка к продаже не подошла); пусто — всё сходится */
+  "attention_code": string;
+  /** Подробности: нераспознанные строки (items) или причина (reason) */
+  "attention_detail": { [key: string]: unknown };
+  "last_seen_at": string;
+  "updated_at": string;
+}
+
+export interface DocflowOzonRetailOrderEnvelope {
+  "order": DocflowOzonRetailOrder;
+}
+
+export interface DocflowOzonRetailPackageUnits {
+  "boxes": number;
+  "pallets": number;
+  "sent_at"?: string;
+}
+
+export interface DocflowOzonRetailRejection {
+  "reason": "other" | "min_sum" | "no_stock" | "suspended";
+  "comment"?: string;
+}
+
+export interface DocflowOzonRetailSaleBrief {
+  "id": UUID;
+  /** Номер продажи */
+  "number": string;
+  /** Статус продажи: draft, confirmed, done, cancelled */
+  "status": string;
+  /** Сумма продажи */
+  "ordered": string;
+  /** Сколько из суммы продажи отгружено */
+  "executed": string;
+}
+
+export interface DocflowOzonRetailStateEnvelope {
+  "state": DocflowOzonRetailSyncState;
+  "steps"?: DocflowOzonRetailSteps;
+}
+
+/** Какие шаги оформления поставки делаются из Akeda, а не в Retail Center (ERP-2927); включаются в подключении */
+export interface DocflowOzonRetailSteps {
+  /** Согласование, изменение состава, отклонение, подтверждение времени поставки */
+  "approval": boolean;
+  /** Грузоместа и палетные ярлыки */
+  "supply": boolean;
+  /** Пропуск водителю */
+  "vehicle_pass": boolean;
+}
+
+export interface DocflowOzonRetailSupply {
+  "labels"?: DocflowOzonRetailGate;
+  "vehicle_pass"?: DocflowOzonRetailGate;
+  "timeslot"?: DocflowOzonRetailGate;
+  "has_package_units": boolean;
+  /** Ozon принял УПД */
+  "has_proper_waybills": boolean;
+  "has_vehicle_info": boolean;
+}
+
+/** Заказ на поставку Ozon раздела «Ozon 1P» (ERP-2154): поля заказа Ozon, сумма состава и краткая наша продажа */
+export interface DocflowOzonRetailSupplyOrder {
+  "id": UUID;
+  /** Номер заказа на поставку в Ozon */
+  "ozon_order_id": number;
+  "document_number": string;
+  "document_date": string | null;
+  /** Статус в Ozon как пришёл: RetailOnConfirmation, DeliveryPreparation, RetailCompleted и т. п. */
+  "ozon_state": string;
+  /** Заказ покупателя; null — ещё не заведён: продажа заводится только по согласованному заказу (ERP-2154) */
+  "order_id": UUID | null;
+  /** Поставка через кросс-докинг */
+  "is_xdock": boolean;
+  "supply_warehouse_id": number;
+  "supply_warehouse_name": string;
+  "supply_warehouse_address": string;
+  /** Склад хранения: куда товар идёт в итоге, грузополучатель УПД. 0 — опрос ещё не читал */
+  "storage_warehouse_id": number;
+  "storage_warehouse_name": string;
+  "storage_warehouse_address": string;
+  /** Номер договора в Ozon (contractInfo.contractId); 0 — Ozon договор не назвал */
+  "contract_id": number;
+  /** Договор поставки, по которому Ozon сделал заказ (contractInfo.contractName, только в списке новых заказов): «ЗАКУП ИР-7008667/26 от 01.09.2026»; по номеру из названия продажа ставится на карточку договора. Заказу, который опрос не застал новым, — договор, названный Ozon в других заказах кабинета; пусто — договора нет */
+  "contract_name": string;
+  /** Валюта заказа Ozon (currency, только список активных); пусто — Ozon не назвал */
+  "currency": string;
+  /** Заказ SuperEconom */
+  "is_super_econom": boolean;
+  /** Прибытие на конечный склад (destinationDeliveryDateLocal, кросс-докинг) */
+  "destination_delivery_date": string | null;
+  /** Начало времени поставки во времени склада Ozon */
+  "timeslot_from": string | null;
+  "timeslot_to": string | null;
+  "timeslot_confirmed": boolean;
+  /** Интервал, который Ozon предлагает подтвердить */
+  "timeslot_id": string;
+  "items": Array<DocflowOzonRetailItem>;
+  "supply": DocflowOzonRetailSupply;
+  "waybill": DocflowOzonRetailWaybill;
+  "package_units": DocflowOzonRetailPackageUnits;
+  "vehicle_pass": DocflowOzonRetailVehiclePass;
+  /** Что требует человека: item_unknown (часть товаров не узнана — заказ заведён без них, список в attention_detail.items), changed_during_picking (Ozon изменил состав во время сборки — заказ не переписан), picked_over_approved (Ozon согласовал меньше собранного, поправьте сборку), cancelled_after_picking (заказ отменён после начала сборки: собранное вернуть на полки), below_shipped, cancelled_after_shipment, cancel_blocked, acceptance_refused, completed_not_shipped, import_failed, consignee_incomplete (у карточки склада Ozon нет КПП или адреса по графам), consignee_unknown_warehouse (Ozon не назвал склад поставки — грузополучатель не определён), contract_missing (Ozon назвал договор, а продажа на нём не стоит: attention_detail.contract — номер, reason — not_found, карточки договора нет, или rejected, карточка к продаже не подошла); пусто — всё сходится */
+  "attention_code": string;
+  /** Подробности: нераспознанные строки (items) или причина (reason) */
+  "attention_detail": { [key: string]: unknown };
+  "last_seen_at": string;
+  "updated_at": string;
+  /** Сумма состава Ozon: Σ количество × цена Ozon, два знака; пусто — Ozon состав ещё не отдал */
+  "amount": string;
+  /** Наша продажа; null — заказ ещё не согласован или продажа не прочитана */
+  "sale": DocflowOzonRetailSaleBrief | null;
+  /** Юрлицо подключения Ozon Retail; null — подключения нет */
+  "company_id": UUID | null;
+  /** Склад, с которого продажа встанет в резерв: склад отгрузки канала, без канала — склад подключения; null — не выбран. По нему считается свободный остаток к согласованию */
+  "warehouse_id": UUID | null;
+  /** Сколько УПД продажи Ozon подписал с расхождениями или не принял, а человек ещё не отметил разобранными */
+  "discrepancy_open"?: number;
+}
+
+export interface DocflowOzonRetailSupplyOrderCard {
+  "order": DocflowOzonRetailSupplyOrder;
+  "steps": DocflowOzonRetailSteps;
+  /** Подключение к Ozon Retail есть и включено */
+  "connected": boolean;
+}
+
+export interface DocflowOzonRetailSupplyOrderPage {
+  "orders": Array<DocflowOzonRetailSupplyOrder>;
+  /** Сколько заказов под отбором без страницы */
+  "total": number;
+}
+
+export interface DocflowOzonRetailSyncState {
+  "last_run_at": string | null;
+  "last_success_at": string | null;
+  /** ok, credentials_rejected, ip_forbidden, rate_limited, unavailable, not_configured; пусто — опроса не было */
+  "last_code": string;
+  "orders_seen": number;
+  "orders_changed": number;
+}
+
+export interface DocflowOzonRetailVehiclePass {
+  /** ФИО, 5–50 русских или латинских букв */
+  "driver_name": string;
+  /** Телефон; уходит в Ozon цифрами 7XXXXXXXXXX */
+  "driver_phone": string;
+  "vehicle_model": string;
+  /** 4–19 цифр и букв с латинским двойником */
+  "vehicle_number": string;
+  "sent_at"?: string;
+}
+
+/** Итог проверки УПД Ozon (последний загруженный УПД и покрытие заказа) */
+export interface DocflowOzonRetailWaybill {
+  "checked_at"?: string;
+  "count": number;
+  /** Состояние проверки как пришло от Ozon */
+  "state"?: string;
+  "is_edo": boolean;
+  "number"?: string;
+  "date"?: string;
+  "messages"?: Array<string>;
+  "not_matched"?: Array<DocflowOzonRetailWaybillItem>;
+  "all_covered": boolean;
+  "covered": number;
+  "total": number;
+}
+
+export interface DocflowOzonRetailWaybillItem {
+  "code": string;
+  "name": string;
+  "quantity": string;
+}
+
 /** Договор контрагента, который можно выбрать основанием бумаги. */
 export interface DocflowPackageContract {
   /** Карточка договора в документообороте */
@@ -15849,6 +16889,7 @@ export interface DocflowPaymentDetails {
   "contact": UUID | null;
   /** Имя этой карточки в кабинете. origin=auto — записанное решение (человека или синхронизации), проверять его незачем; origin=guess — найдено по реквизитам прямо сейчас и нигде не записано, форма ставит рядом «проверьте». */
   "contact_name": DocflowPaymentDetailsContactName;
+  "foreign"?: DocflowPaymentForeign;
   "amount": DocflowPaymentField;
   "currency": DocflowPaymentField;
   /** Срок оплаты в форме ГГГГ-ММ-ДД из первого доступного источника: «оплатить до» из самого счёта; иначе дата счёта плюс отсрочка по условиям оплаты контрагента у модуля finance (finance_counterparty_terms на дату счёта); иначе дата счёта плюс отсрочка, которую finance применяет без заведённых условий. Всегда origin=guess — за срок отвечает человек. Пусто только без даты счёта: прибавлять отсрочку не к чему. */
@@ -15901,6 +16942,14 @@ export interface DocflowPaymentField {
   "origin": "auto" | "guess" | "none";
 }
 
+/** Реквизиты иностранного получателя из счёта: SWIFT, IBAN, страна банка и банк-посредник; нет — иностранных реквизитов не найдено */
+export interface DocflowPaymentForeign {
+  "swift": DocflowPaymentField;
+  "iban": DocflowPaymentField;
+  "country": DocflowPaymentField;
+  "intermediary_bank": DocflowPaymentField;
+}
+
 /** Счёт, уже лежащий файлом в карточке документооборота */
 export interface DocflowPaymentInvoiceDocument {
   /** Карточка документооборота, в которую загружен файл счёта */
@@ -15937,22 +16986,35 @@ export interface DocflowPaymentRequest {
   "item_id"?: UUID;
   "item_name": string;
   "payee": DocflowPaymentRequestPayee;
+  "foreign"?: DocflowPaymentRequestForeign;
+  "rate"?: DocflowPaymentRequestRate;
   "amount": string;
+  /** Как платят по счёту: весь счёт, часть или частями по графику */
+  "pay_mode"?: "full" | "part" | "schedule";
+  /** Сумма счёта при частичной оплате или графике; amount — к оплате */
+  "invoice_total"?: string;
+  /** График оплаты при pay_mode=schedule: части по дате с номером строки очереди казначея (номер заявки и «/N») и ходом оплаты каждой части */
+  "parts"?: Array<DocflowPaymentRequestPartsItem>;
   "currency": string;
   "due_date": string;
   "purpose": string;
   /** Обоснование автора для согласующего */
   "justification": string;
+  /** Договор словами, вписанный вручную; пусто — договор выбран из справочника (basis.contract_id) или не назван */
+  "contract_text": string;
   /** Приоритет оплаты */
   "priority": "high" | "normal" | "low";
   /** Форма оплаты */
   "payment_method": "bank" | "cash";
-  /** Подразделение заявки; нет — подразделение автора */
+  /** Отдел заявки (оргструктура); нет — не назван */
   "department_id"?: UUID;
   "department_name"?: string;
   /** Проект заявки (справочник ядра «Проекты») */
   "project_id"?: UUID;
   "project_name"?: string;
+  /** ЦФО расхода (справочник ядра «ЦФО»); нет — ЦФО отдела заявки */
+  "cfo_id"?: UUID;
+  "cfo_name"?: string;
   /** Ставка НДС: пусто — не указана, none — без НДС */
   "vat_rate"?: "" | "none" | "0" | "5" | "7" | "10" | "20" | "22";
   /** Сумма НДС */
@@ -15989,6 +17051,8 @@ export interface DocflowPaymentRequest {
   "budget"?: DocflowPaymentRequestBudget;
   /** Можно ли отправить заявку сверх лимита: право docflow.flow:over_budget, заявка — черновик или на доработке */
   "can_submit_over_budget"?: boolean;
+  /** Можно ли сейчас проставить статью: человек согласует текущий этап «статья обязательна» заявки на согласовании */
+  "can_set_item"?: boolean;
   /** Можно ли повторить отклонённую или отозванную заявку новым черновиком */
   "can_repeat"?: boolean;
   /** Остаток бумаги-основания: заявлено, оплачено, осталось; только в карточке заявки, у ручного основания нет */
@@ -16015,6 +17079,16 @@ export interface DocflowPaymentRequest {
   "can_edit": boolean;
   "can_submit": boolean;
   "can_cancel": boolean;
+}
+
+export interface DocflowPaymentRequestPartsItem {
+  "line_no"?: number;
+  "due_date"?: string;
+  "amount"?: string;
+  "number"?: string;
+  "finance_request_id"?: UUID;
+  "progress"?: string;
+  "payment"?: DocflowPaymentRequestPayment;
 }
 
 export interface DocflowPaymentRequestBasis {
@@ -16076,6 +17150,26 @@ export interface DocflowPaymentRequestBudget {
   "department_remaining"?: string;
 }
 
+/** Реквизиты иностранного получателя: вместо ИНН, КПП и БИК — SWIFT и IBAN; платёж в валюте счёта */
+export interface DocflowPaymentRequestForeign {
+  /** SWIFT (BIC) банка получателя, 8 или 11 знаков; пробелы и регистр приводятся сервером */
+  "swift": string;
+  /** IBAN получателя; без IBAN нужен номер счёта в payee.account */
+  "iban"?: string;
+  /** Страна банка получателя */
+  "country"?: string;
+  /** Банк-посредник (SWIFT, название), если нужен */
+  "intermediary_bank"?: string;
+  /** Адрес получателя для заявления на перевод (поле 59 SWIFT) */
+  "payee_address"?: string;
+  /** Код вида валютной операции по Инструкции ЦБ 181-И, пять цифр */
+  "operation_code"?: string;
+  /** Уникальный номер контракта, если контракт поставлен на учёт */
+  "contract_number"?: string;
+  /** Кто платит комиссии банков (поле 71A SWIFT): OUR — плательщик, SHA — каждый свою, BEN — получатель; по умолчанию SHA */
+  "charges"?: "OUR" | "SHA" | "BEN";
+}
+
 export interface DocflowPaymentRequestInput {
   /** Юрлицо-плательщик; null — заявка без юрлица, по бизнесу business_id (ERP-3107) */
   "company_id"?: UUID | null;
@@ -16084,8 +17178,16 @@ export interface DocflowPaymentRequestInput {
   "contact_id"?: UUID | null;
   "item_id"?: UUID | null;
   "payee": DocflowPaymentRequestPayee;
+  "foreign"?: DocflowPaymentRequestForeign;
+  "rate"?: DocflowPaymentRequestRate;
   /** Сумма; не больше двух знаков копеек, лишние нули отбрасываются */
   "amount": string;
+  /** Как платят по счёту: full — весь счёт, part — часть суммы счёта, schedule — частями по графику parts (ERP-2729) */
+  "pay_mode"?: "full" | "part" | "schedule";
+  /** Сумма счёта при pay_mode=part или schedule; amount — к оплате, не больше неё. У full не передаётся */
+  "invoice_total"?: string;
+  /** График при pay_mode=schedule: от двух строк «дата — сумма», каждая не больше суммы счёта, сумма строк равна amount; срок заявки — дата первой строки. Одна заявка согласуется один раз, после согласования каждая строка уходит в очередь казначея отдельно. У других режимов не передаётся */
+  "parts"?: Array<DocflowPaymentRequestInputPartsItem>;
   "currency"?: string;
   "due_date": string;
   "purpose": string;
@@ -16095,8 +17197,12 @@ export interface DocflowPaymentRequestInput {
   "payment_method"?: "bank" | "cash";
   /** Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет */
   "justification"?: string;
-  /** Подразделение заявки из справочника «Подразделения»; по нему подбирается маршрут согласования и руководитель подразделения. Не задано при заведении — подразделение автора */
+  /** Договор словами, когда его нет среди договоров контрагента (выбранный договор — basis.contract_id); длиннее — 422 docflow.payment_request.field с field contract_text */
+  "contract_text"?: string;
+  /** Отдел заявки из оргструктуры; по нему подбирается маршрут согласования и руководитель отдела. Не задано — отдел не назван, по автору не подставляется. Регламент может сделать поле обязательным (request_fields.department) */
   "department_id"?: UUID | null;
+  /** ЦФО расхода из справочника ядра «ЦФО»: этап «Ответственный ЦФО» и бюджет ЦФО берут его, а не ЦФО отдела. Элемент не из справочника, а также пусто при обязательном ЦФО в регламенте (request_fields.cfo) — 422 docflow.payment_request.field с полем cfo_id */
+  "cfo_id"?: UUID | null;
   /** Проект заявки из справочника ядра «Проекты» — тот же разрез, что у операций финансов и заказов. Уходит в строку очереди финансов и оттуда в пустое поле банковской операции. Элемент не из справочника — 422 docflow.payment_request.field с полем project_id */
   "project_id"?: UUID | null;
   /** Ставка НДС: пусто — не указана, none — без НДС, иначе процент */
@@ -16111,11 +17217,23 @@ export interface DocflowPaymentRequestInput {
   "invoice_card"?: DocflowPaymentRequestInvoiceCard;
 }
 
+export interface DocflowPaymentRequestInputPartsItem {
+  "due_date": string;
+  "amount": string;
+}
+
 /** Счёт, принесённый файлом: карточка входящего счёта, которая заводится вместе с заявкой одной транзакцией и становится её основанием (basis docflow / flow_document). Юрлицо и контрагент — заявки, контрагент обязателен (иначе 422 с полем contact_id). Нужно право docflow.flow:write; отказ правила карточки — её отказом. Только при заведении заявки, правка поле не принимает */
 export interface DocflowPaymentRequestInvoiceCard {
   /** Вид карточки: счёт или «Прочее» (платёжка 1С) */
   "kind"?: "invoice" | "other";
   "content": DocflowFlowContent;
+}
+
+export interface DocflowPaymentRequestItemInput {
+  /** Версия заявки, которую видел человек */
+  "version": number;
+  /** Статья, которую ставит согласующий */
+  "item_id": UUID;
 }
 
 export interface DocflowPaymentRequestList {
@@ -16185,6 +17303,16 @@ export interface DocflowPaymentRequestPayment {
   "closed_short_reason"?: string;
   /** Платёжка выгружена файлом для банк-клиента, по API в банк не уходила; ход заявки — exported */
   "exported_to_file"?: boolean;
+}
+
+/** Курс оплаты рублями счёта в валюте российскому получателю; у рублёвой заявки и иностранного получателя не хранится */
+export interface DocflowPaymentRequestRate {
+  /** cbr_payment_day — по курсу ЦБ РФ на день оплаты; fixed — по названному курсу */
+  "mode": "cbr_payment_day" | "fixed";
+  /** Рублей за единицу валюты; обязателен у fixed */
+  "rate"?: string;
+  /** Сумма платежа в рублях; считает сервер у fixed, у cbr_payment_day пусто до оплаты */
+  "rub_amount"?: string;
 }
 
 export interface DocflowPaymentRequestReworkInput {
@@ -16320,6 +17448,22 @@ export interface DocflowPaymentRequestScheduleUpdate {
   "version": number;
 }
 
+export interface DocflowPaymentRequestSettings {
+  /** Срок оплаты новой заявки — сегодня плюс столько календарных дней; null — не подставлять */
+  "default_due_days": number | null;
+  /** Регламент: срок оплаты не раньше сегодня плюс столько календарных дней; отправка заявки с более ранним сроком — 422 docflow.payment_request.due_too_soon; null — без ограничения */
+  "min_due_days": number | null;
+  /** Вправе ли спросивший менять настройку */
+  "can_edit": boolean;
+}
+
+export interface DocflowPaymentRequestSettingsInput {
+  /** Срок оплаты новой заявки — сегодня плюс столько календарных дней; null — не подставлять */
+  "default_due_days": number | null;
+  /** Регламент: срок оплаты не раньше сегодня плюс столько календарных дней; не передано или null — без ограничения */
+  "min_due_days"?: number | null;
+}
+
 export type DocflowPaymentRequestStatus = "draft" | "on_approval" | "rework" | "approved" | "rejected" | "cancelled";
 
 /** Подсказка заявки по основанию: статья каскадом, проект, подразделение и договор. Ставится только в пустые поля формы; ничего не записано */
@@ -16352,8 +17496,16 @@ export interface DocflowPaymentRequestUpdate {
   "contact_id"?: UUID | null;
   "item_id"?: UUID | null;
   "payee": DocflowPaymentRequestPayee;
+  "foreign"?: DocflowPaymentRequestForeign;
+  "rate"?: DocflowPaymentRequestRate;
   /** Сумма; не больше двух знаков копеек, лишние нули отбрасываются */
   "amount": string;
+  /** Как платят по счёту: full — весь счёт, part — часть суммы счёта, schedule — частями по графику parts (ERP-2729) */
+  "pay_mode"?: "full" | "part" | "schedule";
+  /** Сумма счёта при pay_mode=part или schedule; amount — к оплате, не больше неё. У full не передаётся */
+  "invoice_total"?: string;
+  /** График при pay_mode=schedule: от двух строк «дата — сумма», каждая не больше суммы счёта, сумма строк равна amount; срок заявки — дата первой строки. Одна заявка согласуется один раз, после согласования каждая строка уходит в очередь казначея отдельно. У других режимов не передаётся */
+  "parts"?: Array<DocflowPaymentRequestUpdatePartsItem>;
   "currency"?: string;
   "due_date": string;
   "purpose": string;
@@ -16363,8 +17515,12 @@ export interface DocflowPaymentRequestUpdate {
   "payment_method"?: "bank" | "cash";
   /** Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет */
   "justification"?: string;
-  /** Подразделение заявки из справочника «Подразделения»; по нему подбирается маршрут согласования и руководитель подразделения. Не задано при заведении — подразделение автора */
+  /** Договор словами, когда его нет среди договоров контрагента (выбранный договор — basis.contract_id); длиннее — 422 docflow.payment_request.field с field contract_text */
+  "contract_text"?: string;
+  /** Отдел заявки из оргструктуры; по нему подбирается маршрут согласования и руководитель отдела. Не задано — отдел не назван, по автору не подставляется. Регламент может сделать поле обязательным (request_fields.department) */
   "department_id"?: UUID | null;
+  /** ЦФО расхода из справочника ядра «ЦФО»: этап «Ответственный ЦФО» и бюджет ЦФО берут его, а не ЦФО отдела. Элемент не из справочника, а также пусто при обязательном ЦФО в регламенте (request_fields.cfo) — 422 docflow.payment_request.field с полем cfo_id */
+  "cfo_id"?: UUID | null;
   /** Проект заявки из справочника ядра «Проекты» — тот же разрез, что у операций финансов и заказов. Уходит в строку очереди финансов и оттуда в пустое поле банковской операции. Элемент не из справочника — 422 docflow.payment_request.field с полем project_id */
   "project_id"?: UUID | null;
   /** Ставка НДС: пусто — не указана, none — без НДС, иначе процент */
@@ -16378,6 +17534,11 @@ export interface DocflowPaymentRequestUpdate {
   "basis"?: DocflowPaymentRequestBasis;
   "invoice_card"?: DocflowPaymentRequestInvoiceCard;
   "version": number;
+}
+
+export interface DocflowPaymentRequestUpdatePartsItem {
+  "due_date": string;
+  "amount": string;
 }
 
 export interface DocflowPaymentRequestVersion {
@@ -16423,6 +17584,8 @@ export interface DocflowPreflight {
   "warnings"?: Array<DocflowIssue>;
   /** Подписант из профиля реквизитов УПД покупателя (signer): форма предлагает его вместо руководителя из карточки юрлица, а без подписанта формы он и уходит. Нет — профиль подписанта не назвал */
   "default_signer"?: DocflowPreflightDefaultSigner;
+  /** Особый случай маркировки из профиля реквизитов УПД покупателя (marking_case): уйдёт в файл, если форма не назвала свой. Только когда в документе есть маркированные строки. Нет — профиль случая не назвал или маркированного товара нет */
+  "default_marking_case"?: "own_use" | "gratuitous" | "production" | "storage";
   /** Кто передал товар по профилю реквизитов УПД покупателя (transfer_employee): форма предлагает его, а без значения формы он и уходит. Нет — профиль не назвал или это передача агенту */
   "default_transfer_employee"?: DocflowPreflightDefaultTransferEmployee;
 }
@@ -16608,8 +17771,8 @@ export interface DocflowRequisites {
   "signers"?: Array<DocflowSignerRequisites>;
   /** ИнфПолФХЖ1: дополнительные сведения факта хозяйственной жизни */
   "extra"?: Array<DocflowTextInfoRequisites>;
-  /** Особый случай передачи маркированного товара: выбытие для собственных нужд, безвозмездно или для производства (СвВыбытияМАРК 1/2/3) либо хранение без смены собственника (ВидОборотаМАРК 9). Уходит парой ИнфПолФХЖ1, если её не вписали сами. Не задан — обычная продажа */
-  "marking_case"?: "own_use" | "gratuitous" | "production" | "storage";
+  /** Особый случай передачи маркированного товара: выбытие для собственных нужд, безвозмездно или для производства (СвВыбытияМАРК 1/2/3) либо хранение без смены собственника (ВидОборотаМАРК 9). Уходит парой ИнфПолФХЖ1, если её не вписали сами. Не задан — случай из профиля реквизитов УПД покупателя, а без него обычная продажа; sale — обычная продажа явно, сильнее профиля */
+  "marking_case"?: "sale" | "own_use" | "gratuitous" | "production" | "storage";
   "lines"?: Array<DocflowLineRequisites>;
 }
 
@@ -16652,6 +17815,8 @@ export interface DocflowSalesOrder {
   "consignee_point_id"?: { [key: string]: unknown };
   /** Название точки доставки */
   "consignee_point_name"?: string;
+  /** Адрес точки доставки строкой */
+  "consignee_point_address"?: string;
   "number"?: string;
   "title": string;
   "status": "draft" | "confirmed" | "done" | "cancelled";
@@ -16803,9 +17968,11 @@ export interface DocflowSupplierActForm {
   "vat_deductible": boolean;
   /** Активные проводимые расходные статьи для выбора в этом акте */
   "pnl_items": Array<DocflowSupplierActFormPnlItemsItem>;
-  /** Статья закупки — расчёты с собственником: окно спрашивает «За кого» */
+  /** Статья закупки — расчёты с собственником, зарплата или подотчёт: окно спрашивает «За кого» */
   "owner_item": boolean;
-  /** Собственники бизнеса на дату акта для поля «За кого»; один — подставляется заранее */
+  /** Чья статья: owner — собственник, payroll и accountable — сотрудник */
+  "person_kind"?: "owner" | "payroll" | "accountable";
+  /** Варианты поля «За кого»: собственники бизнеса на дату акта (один подставляется заранее) или сотрудники для зарплаты и подотчёта */
   "owners": Array<DocflowSupplierActFormOwnersItem>;
 }
 
@@ -16890,6 +18057,21 @@ export interface DocflowTemplatePastActs {
   "items": Array<DocflowTemplatePastAct>;
   "issued": number;
   "failed": number;
+}
+
+export interface DocflowTemplateRunNow {
+  "order_id": UUID;
+  /** Номер продажи */
+  "number": string;
+  /** true — продажа создана этим вызовом; false — уже была создана раньше */
+  "created": boolean;
+  "run": CoreOrderTemplateRun;
+  /** Сколько счетов выпущено */
+  "invoices": number;
+  /** Сколько закрывающих бумаг выпущено */
+  "closings": number;
+  /** Почему бумага не выпущена; продажа при этом создана */
+  "paper_error"?: string;
 }
 
 /** Пара «идентификатор — значение» дополнительных сведений. */
@@ -17408,6 +18590,8 @@ export interface FinanceAccount {
   /** Decimal string */
   "balance": string;
   "txn_count": number;
+  /** Число операций счёта за период запроса (period_from–period_to); есть только когда период передан. */
+  "period_txn_count"?: number;
   "connector": string | null;
   "connector_name": string;
   "connector_status": string;
@@ -17420,6 +18604,8 @@ export interface FinanceAccount {
   "bank_balance"?: string | null;
   /** Когда банк назвал остаток `bank_balance`. */
   "bank_balance_at"?: string | null;
+  /** Сумма операций в обработке у банка (ERP-2727), decimal string: доступный остаток `bank_balance` минус проведённый. Блокировки по карте и списания при нехватке денег; в выписке их ещё нет. Учёт сверяется с `bank_balance − bank_pending`. null — банк проведённый остаток не назвал. */
+  "bank_pending"?: string | null;
   /** Когда счёт закрыт банком. null — счёт действующий. */
   "bank_closed_at"?: string | null;
   /** «Используется с»: с какой даты счёт принадлежит бизнесу. Операции раньше неё коннектор не запрашивает, загрузка файла пропускает, ручной ввод отклоняет. Поля нет — ограничения нет. */
@@ -20456,6 +21642,100 @@ export interface FinanceInUseSinceCutResult {
   "removed": number;
 }
 
+export interface FinanceInternalServiceGenerateInput {
+  /** Месяц документов YYYY-MM */
+  "month": string;
+}
+
+export interface FinanceInternalServiceGenerateResult {
+  /** Месяц документов YYYY-MM */
+  "month": string;
+  "results": Array<FinanceInternalServiceGenerateResultResultsItem>;
+}
+
+export interface FinanceInternalServiceGenerateResultResultsItem {
+  /** UUID шаблона */
+  "template_id": string;
+  /** Название шаблона */
+  "name": string;
+  /** created — создан; existing — уже был; empty — нет получателей; failed — ошибка */
+  "status": "created" | "existing" | "empty" | "failed";
+  /** Номер документа */
+  "number"?: string;
+  /** UUID документа */
+  "document_id"?: string;
+  /** Текст ошибки */
+  "error"?: string;
+}
+
+export interface FinanceInternalServiceTemplate {
+  /** Название шаблона */
+  "name": string;
+  /** UUID бизнеса */
+  "business_id": string;
+  /** UUID юрлица; пусто — без юрлица */
+  "company_id"?: string;
+  /** UUID ЦФО-исполнителя */
+  "performer_cfo_id": string;
+  /** UUID услуги из номенклатуры */
+  "product_id"?: string;
+  /** fixed — строки шаблона; headcount — цена за единицу на численность занятых позиций ЦФО */
+  "mode": "fixed" | "headcount";
+  /** Цена за единицу десятичной строкой; для headcount обязательна и больше нуля */
+  "unit_price"?: string;
+  /** Получатели и цены; только для fixed */
+  "lines"?: Array<FinanceInternalServiceTemplateLine>;
+  /** Начало действия YYYY-MM-DD; приводится к первому числу месяца */
+  "valid_from": string;
+  /** Конец действия YYYY-MM-DD; пусто — бессрочно */
+  "valid_to"?: string;
+  /** Шаблон действует */
+  "active": boolean;
+  /** UUID шаблона */
+  "id": string;
+  /** Последняя ошибка генерации документа */
+  "last_error"?: string;
+}
+
+/** Шаблон внутренней услуги без идентификатора */
+export interface FinanceInternalServiceTemplateInput {
+  /** Название шаблона */
+  "name": string;
+  /** UUID бизнеса */
+  "business_id": string;
+  /** UUID юрлица; пусто — без юрлица */
+  "company_id"?: string;
+  /** UUID ЦФО-исполнителя */
+  "performer_cfo_id": string;
+  /** UUID услуги из номенклатуры */
+  "product_id"?: string;
+  /** fixed — строки шаблона; headcount — цена за единицу на численность занятых позиций ЦФО */
+  "mode": "fixed" | "headcount";
+  /** Цена за единицу десятичной строкой; для headcount обязательна и больше нуля */
+  "unit_price"?: string;
+  /** Получатели и цены; только для fixed */
+  "lines"?: Array<FinanceInternalServiceTemplateLine>;
+  /** Начало действия YYYY-MM-DD; приводится к первому числу месяца */
+  "valid_from": string;
+  /** Конец действия YYYY-MM-DD; пусто — бессрочно */
+  "valid_to"?: string;
+  /** Шаблон действует */
+  "active"?: boolean;
+}
+
+export interface FinanceInternalServiceTemplateLine {
+  /** UUID ЦФО-получателя */
+  "cfo": string;
+  /** Количество десятичной строкой */
+  "quantity": string;
+  /** Цена десятичной строкой */
+  "price": string;
+}
+
+export interface FinanceInternalServiceTemplateList {
+  "results": Array<FinanceInternalServiceTemplate>;
+}
+
 export interface FinanceItemMergeRequest {
   "target_id": UUID;
 }
@@ -21866,6 +23146,8 @@ export interface FinancePaymentRequest {
   "queued": boolean;
   /** Согласованная заявка ждёт даты платежа у казначея */
   "awaiting_schedule": boolean;
+  /** Часть графика оплаты заявки «Документов» (ERP-2729): казначей переносит дату и оплачивает, но не отклоняет, не возвращает на доработку и не отменяет — график отменяют в заявке */
+  "schedule_part"?: boolean;
   /** Можно ли отправить в банк */
   "can_send": boolean;
   /** Почему отправить нельзя */
@@ -21883,12 +23165,26 @@ export interface FinancePaymentRequest {
   "project_name"?: string;
   /** Договор основания словами (source.contract_id), снимком на момент приёма заявки */
   "contract_title"?: string;
+  /** Получатель иностранный: платят в валюте заявки со счёта в этой валюте */
+  "foreign"?: boolean;
+  /** Как валютную заявку «Документов» российскому получателю платят рублями; у заявки без режима — по курсу ЦБ на день оплаты. Нет — платят в валюте заявки */
+  "rate"?: FinancePaymentRequestRate;
+  /** Валюта счёта списания: RUB у валютной заявки российскому получателю, иначе валюта заявки */
+  "pay_currency"?: string;
 }
 
 /** Прежние известные реквизиты при неподтверждённой смене счёта получателя */
 export interface FinancePaymentRequestPayeeKnownAccount {
   "account": string;
   "bic": string;
+}
+
+/** Как валютную заявку «Документов» российскому получателю платят рублями; у заявки без режима — по курсу ЦБ на день оплаты. Нет — платят в валюте заявки */
+export interface FinancePaymentRequestRate {
+  /** cbr_payment_day — по курсу ЦБ на день оплаты, fixed — по названному курсу */
+  "mode": "cbr_payment_day" | "fixed";
+  /** Названный курс, рублей за единицу валюты; только у fixed */
+  "rate"?: string;
 }
 
 /** Чем и кем согласована заявка модуля docflow. */
@@ -22749,6 +24045,11 @@ export interface FinancePeriodCheckPage {
   "checks": Array<FinancePeriodCheck>;
 }
 
+export interface FinancePlacementNoSalary {
+  /** true — поставить отметку «без оклада осознанно», false — снять */
+  "no_salary": boolean;
+}
+
 export interface FinancePnlCoverage {
   "missing": Array<FinancePnlCoverageItem>;
   "duplicated": Array<FinancePnlCoverageItem>;
@@ -23107,6 +24408,30 @@ export interface FinanceReconciliationAccount {
   "difference"?: string;
   "days": Array<FinanceReconciliationDay>;
   "statement_gaps": Array<FinanceReconciliationStatementGap>;
+  /** Операции счёта раньше даты «Используется с»: сверка их не учитывает. Нет поля — таких операций нет (ERP-2727) */
+  "before_in_use"?: FinanceReconciliationAccountBeforeInUse;
+  /** Журнал сверки по дням: каждый день, на который банк назвал остаток (ответ банка при загрузке или конечный остаток выписки), и наш расчёт на тот же день; свежие сверху, не больше 90 (ERP-2727) */
+  "journal"?: Array<FinanceReconciliationAccountJournalItem>;
+  /** Первый день текущего расхождения с банком; нет поля — последняя точка журнала сошлась */
+  "diverged_since"?: string;
+  /** Последний день журнала, когда остаток сошёлся с банком */
+  "last_matched"?: string;
+}
+
+/** Операции счёта раньше даты «Используется с»: сверка их не учитывает. Нет поля — таких операций нет (ERP-2727) */
+export interface FinanceReconciliationAccountBeforeInUse {
+  "since": string;
+  "from": string;
+  "count": number;
+}
+
+export interface FinanceReconciliationAccountJournalItem {
+  "date": string;
+  "source": "bank" | "statement";
+  "theirs": string;
+  "ours": string;
+  "difference": string;
+  "loaded_at": string;
 }
 
 export interface FinanceReconciliationDay {
@@ -23753,6 +25078,8 @@ export interface FinanceStaffHeadcount {
   /** Всего занятых позиций */
   "total": number;
   "results": Array<FinanceStaffHeadcountResultsItem>;
+  /** Подразделения, не попавшие в получатели, с причиной */
+  "skipped": Array<FinanceStaffHeadcountSkippedItem>;
 }
 
 export interface FinanceStaffHeadcountResultsItem {
@@ -23760,6 +25087,18 @@ export interface FinanceStaffHeadcountResultsItem {
   "cfo": string;
   "cfo_name": string;
   "headcount": number;
+}
+
+export interface FinanceStaffHeadcountSkippedItem {
+  /** Название подразделения */
+  "department": string;
+  /** UUID ЦФО; пусто — ЦФО нет */
+  "cfo": string;
+  "cfo_name": string;
+  /** vacant — все позиции свободны; no_cfo — у отдела и родителей нет ЦФО; no_department — позиции без подразделения */
+  "reason": "vacant" | "no_cfo" | "no_department";
+  "headcount": number;
+  "vacant": number;
 }
 
 export interface FinanceStaffPosition {
@@ -24629,6 +25968,33 @@ export interface FinanceUnallocatedScope {
 export interface FinanceUnallocatedSummary {
   "total": FinanceUnallocatedMoney;
   "scopes": Array<FinanceUnallocatedScope>;
+}
+
+export interface FinanceUnstaffedPlacement {
+  /** UUID постановки */
+  "placement_id": string;
+  /** UUID сотрудника */
+  "employee_id": string;
+  /** ФИО сотрудника */
+  "employee_name": string;
+  /** UUID подразделения постановки */
+  "department_id": string;
+  /** Название подразделения */
+  "department_label": string;
+  /** Должность в постановке */
+  "position_title": string;
+  /** Дата постановки */
+  "since": string;
+  /** Отметка «без оклада осознанно» — проверка закрытия о постановке молчит */
+  "no_salary": boolean;
+  /** Кто поставил отметку */
+  "no_salary_by"?: string;
+  /** Когда поставлена отметка */
+  "no_salary_at"?: string;
+}
+
+export interface FinanceUnstaffedPlacementList {
+  "results": Array<FinanceUnstaffedPlacement>;
 }
 
 export interface FinanceVATBookImport {
@@ -26087,6 +27453,43 @@ export interface ManagedChecklistPatch {
   "items": Array<ManagedChecklistItem>;
 }
 
+/**
+ * Реклама площадки за период. totals и prev_totals — суммы (spend, views,
+ * clicks, carts, orders, orders_sum); ratios и prev_ratios — доли (ctr,
+ * cpc, cpm, cr, cpo, drr, drr_all), null без базы; series — ряды по дням
+ * той же длины, что days; campaigns — кампании с показателями, товарами,
+ * средней ставкой, остатком, расходом по дням (spark) и подсветками
+ * (flags: no_stock, no_orders, drr_high, spend_growth, ctr_low, no_spend,
+ * scale_up); stores — магазины с режимом manage или control.
+ */
+export interface MarketplaceAds {
+  "platform": string;
+  "from"?: string;
+  "to"?: string;
+  "days": Array<string>;
+  "totals"?: { [key: string]: number };
+  "prev_totals"?: { [key: string]: number } | null;
+  "ratios"?: { [key: string]: number | null };
+  "prev_ratios"?: { [key: string]: number | null } | null;
+  "orders_all"?: number;
+  "series"?: { [key: string]: Array<number | null> };
+  "rules"?: { [key: string]: unknown };
+  "traffic"?: boolean;
+  "complete"?: boolean;
+  "cmp_totals"?: { [key: string]: number } | null;
+  "cmp_ratios"?: { [key: string]: number | null } | null;
+  "compare_through"?: string;
+  "data_through"?: string;
+  "campaigns": Array<{ [key: string]: unknown }>;
+  "stores"?: Array<MarketplaceAdsStoresItem>;
+}
+
+export interface MarketplaceAdsStoresItem {
+  "id": string;
+  "name": string;
+  "mode": "manage" | "control";
+}
+
 export interface MarketplaceAdsAbsence {
   /** По какой день включительно ответ действует */
   "through": string;
@@ -27343,6 +28746,153 @@ export interface MarketplaceInitialLoadDataset {
   "period_days"?: number;
 }
 
+/** Сводка заказов Ламоды — те же поля, что у сводки Яндекс Маркета, и разбивка по статусам. */
+export interface MarketplaceLamodaOrdersOverview {
+  /** Последний день периода */
+  "day": string;
+  /** Первый день периода */
+  "from": string;
+  /** Последний день периода включительно */
+  "to": string;
+  /** Первый день графика: не позже from и не меньше 14 дней до to */
+  "chart_from": string;
+  /** Последняя запись заказов сборщиком */
+  "updated": string | null;
+  "kpi": MarketplaceLamodaOrdersOverviewKpi;
+  /** Дни от chart_from по to; дни без заказов заполнены нулями */
+  "daily": Array<MarketplaceYandexOrdersDay>;
+  /** Товары периода по убыванию суммы заказов: offer_id — артикул продавца (нет его — SKU Ламоды), units, total, sales_units, sales_total, stock — остаток FBO */
+  "products": Array<{ [key: string]: unknown }>;
+  /** Заказы периода по статусу Ламоды, с отменами */
+  "statuses": Array<MarketplaceLamodaOrdersOverviewStatusesItem>;
+}
+
+export interface MarketplaceLamodaOrdersOverviewKpi {
+  "orders": MarketplaceYandexOrdersKpi;
+  "sales": MarketplaceYandexOrdersKpi;
+}
+
+export interface MarketplaceLamodaOrdersOverviewStatusesItem {
+  /** Статус заказа Ламоды (OrderResponseStatusEnum) */
+  "status": string;
+  /** Заказов */
+  "orders": number;
+  /** Позиций (штук) */
+  "units": number;
+  /** Сумма позиций по цене покупателя */
+  "sum": string;
+}
+
+/** Готовый расчёт приёмки, ещё не проведённый на складе (временно, до новой логики склада) */
+export interface MarketplaceLamodaReceiptPlan {
+  /** Когда Ламода закрыла поставку */
+  "closed_at": string;
+  /** Строки приёмки: по строке отправки или излишком без основания */
+  "lines": Array<MarketplaceLamodaReceiptPlanLinesItem>;
+  /** Наша отправка «в пути» на склад Ламоды */
+  "transit_document_id": string;
+  /** Номер отправки */
+  "transit_number": string;
+  /** Отправка узнана по номеру поставки: непринятое станет недостачей */
+  "by_number": boolean;
+  /** Принять, шт. */
+  "accepted_qty": string;
+  /** Недостача отправки, шт. */
+  "missing_qty": string;
+  /** Излишек сверх отправки, шт. */
+  "surplus_qty": string;
+}
+
+export interface MarketplaceLamodaReceiptPlanLinesItem {
+  /** Строка отправки; нет — излишек сверх отправки */
+  "basis_line_id"?: string;
+  /** Товар номенклатуры */
+  "product_id": string;
+  /** Принять, шт. */
+  "qty": string;
+}
+
+/** Автоприёмка и её последняя смена из истории настройки */
+export interface MarketplaceLamodaReceiptSetting {
+  /** Автоприёмка включена */
+  "auto_receipt": boolean;
+  /** Кто последним менял настройку; 0 — система или смены не было */
+  "changed_by": number;
+  /** Имя того, кто менял */
+  "changed_by_name": string;
+  /** Когда менял; null — смены не было */
+  "changed_at": string | null;
+  /** Сколько готовых расчётов ждало приёмки в момент смены */
+  "pending": number;
+}
+
+export interface MarketplaceLamodaSupplies {
+  /** Поставок к отгрузке и на приёмке (этапы shipping и acceptance) */
+  "in_transit": number;
+  /** Последняя запись поставок сборщиком */
+  "updated": string | null;
+  /** Приёмка на складе включена настройкой кабинета; иначе только расчёт receipt_plan */
+  "auto_receipt": boolean;
+  /** Готовых расчётов без нашего документа приёмки: столько поставок проведёт обход после включения автоприёмки */
+  "pending"?: number;
+  "receipt_setting"?: MarketplaceLamodaReceiptSetting;
+  /** Поставки по убыванию плановой даты */
+  "supplies": Array<MarketplaceLamodaSuppliesSuppliesItem>;
+}
+
+export interface MarketplaceLamodaSuppliesSuppliesItem {
+  /** Магазин Ламоды */
+  "store_id": string;
+  /** Название магазина */
+  "store_name"?: string;
+  /** Код поставки Ламоды */
+  "shipment_id": string;
+  /** Наш номер поставки (externalShipmentId), у PUSY — номер УПД */
+  "number": string;
+  /** Статус поставки Ламоды (FBOShipmentStatusEnum) */
+  "status": string;
+  /** Этап: заводится, к отгрузке, на приёмке, закрыта, отменена */
+  "stage": "preparing" | "shipping" | "acceptance" | "closed" | "cancelled";
+  /** Плановая дата поставки */
+  "planned_date"?: string | null;
+  /** Когда поставка создана */
+  "created_at"?: string | null;
+  /** Когда поставка перешла в CLOSED */
+  "closed_at"?: string | null;
+  /** Склад Ламоды: SOFINO или BYKOVO */
+  "warehouse": string;
+  /** Сумма поставки */
+  "price_sum"?: string | null;
+  /** Заявлено, шт. */
+  "planned"?: number;
+  /** Принято, шт. */
+  "accepted"?: number;
+  /** Получено, шт. */
+  "received"?: number;
+  /** Недостача, шт. */
+  "missing"?: number;
+  /** Излишек, шт. */
+  "surplus"?: number;
+  /** Брак, шт. */
+  "damaged"?: number;
+  /** Товары поставки: sku, ean, name, seller_sku, product_id и product_sku сопоставленного товара номенклатуры, planned, accepted, received, missing, surplus, damaged, price */
+  "items": Array<{ [key: string]: unknown }>;
+  /** История статусов по времени */
+  "history": Array<MarketplaceLamodaSuppliesSuppliesItemHistoryItem>;
+  /** Наша приёмка на складе Ламоды */
+  "receipt_document_id"?: string;
+  /** Почему закрытая поставка ещё не принята; received_in_stock — склад принял нашу отправку сам, приёмки модуля не будет */
+  "reason"?: "not_closed" | "no_closed_at" | "items_stale" | "nothing_accepted" | "unmatched_products" | "no_transit" | "ambiguous_transit" | "no_warehouse" | "no_company" | "check_failed" | "received_in_stock";
+  "receipt_plan"?: MarketplaceLamodaReceiptPlan;
+}
+
+export interface MarketplaceLamodaSuppliesSuppliesItemHistoryItem {
+  /** Статус */
+  "status": string;
+  /** Когда */
+  "at": string;
+}
+
 export interface MarketplaceOpeningApplyRequest {
   "company_id"?: UUID;
   "store_id"?: UUID;
@@ -27613,6 +29163,10 @@ export interface MarketplaceOzonDecompositionCell {
   "margin_pct": number | null;
   /** Прибыль к себестоимости по модулю, %; null без себестоимости */
   "roi": number | null;
+  /** Проданные штуки без известной себестоимости: посчитаны с нулевой закупкой */
+  "cost_missing_units"?: number;
+  /** Доля проданных штук с известной себестоимостью, %, округление вниз; меньше 100 — маржа и ROI неполные; null без продаж */
+  "cost_coverage_pct"?: number | null;
   /** Выручка спроецированная на весь период */
   "rr_revenue": number;
   /** Прибыль спроецированная на период; разовое не проецируется */
@@ -27939,6 +29493,8 @@ export interface MarketplaceOzonFunnelDailySeries {
   "adSpend": Array<number | null>;
   "drrOrders": Array<number | null>;
   "drrSales": Array<number | null>;
+  "adOrdersSum"?: Array<number | null>;
+  "drrAdOrders"?: Array<number | null>;
   "margin": Array<number | null>;
   "marginSheet": Array<number | null>;
   "buyoutRate"?: Array<number | null>;
@@ -28036,6 +29592,14 @@ export interface MarketplaceOzonOrdersKpi {
   /** Изменение к тому же времени накануне в процентах */
   "delta_sum": number | null;
   "delta_qty": number | null;
+  /** Сумма прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at) */
+  "prev_sum"?: string;
+  /** Штуки прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at) */
+  "prev_qty"?: number;
+  /** Период ещё идёт: оба отрезка режутся по этому моменту (последняя проверка сборщика, время по Москве; у сводки площадок — раннее из них). Для «Сегодня» delta_sum и delta_qty — к вчера на то же время. Поля нет, когда сравниваются целые дни, отсечка не в последнем дне периода или у источника нет времени суток (выкуп Ozon и Маркета) */
+  "cut_at"?: string;
+  /** Период ещё идёт, а честной отсечки нет: за последний день данных ещё нет или время проверки сборщика неизвестно. Сравнения нет — delta_sum и delta_qty пусты, cut_at нет */
+  "no_cut"?: boolean;
 }
 
 export interface MarketplaceOzonOrdersOverview {
@@ -28103,6 +29667,8 @@ export interface MarketplaceOzonPnl {
   "breakdown"?: { [key: string]: Array<MarketplaceOzonDecompositionOtherItem> };
   /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть */
   "cost_missing"?: { [key: string]: number };
+  /** Доля проданных штук периода с известной себестоимостью, %, округление вниз; меньше 100 — маржа периода неполная. Ключ — начало периода; поля нет у периодов без продаж */
+  "cost_coverage"?: { [key: string]: number };
   /** Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon */
   "units_missing"?: { [key: string]: number };
   "freshness"?: MarketplaceComponentFreshness;
@@ -28737,6 +30303,7 @@ export interface MarketplaceStore {
   "ym_api_key_set": boolean;
   "lamoda_client_id_set": boolean;
   "lamoda_client_secret_set": boolean;
+  "lamoda_seller_id_set": boolean;
   "letoile_client_id_set": boolean;
   "letoile_api_key_set": boolean;
   "proxy_set": boolean;
@@ -28965,6 +30532,8 @@ export interface MarketplaceStoreInput {
   /** client_id Ламоды; он же отпечаток аккаунта — второй магазин с тем же client_id не заводится */
   "lamoda_client_id"?: string;
   "lamoda_client_secret"?: string;
+  /** Seller Shop ID из кабинета Ламоды («Настройки аккаунта → Общая информация»): sellerId методов данных Seller API v2 */
+  "lamoda_seller_id"?: string;
   /** Необязательный Client ID Sellers API Лэтуаль; вводится вместе с API-ключом */
   "letoile_client_id"?: string;
   /** Необязательный ключ каталога Лэтуаль; вводится вместе с Client ID и пока не проверяется */
@@ -29009,6 +30578,8 @@ export interface MarketplaceStorePatch {
   "lamoda_client_id"?: string;
   /** Пустая строка сохраняет прежний секрет */
   "lamoda_client_secret"?: string;
+  /** Пустая строка сохраняет прежний номер */
+  "lamoda_seller_id"?: string;
   /** Необязательный Client ID Sellers API Лэтуаль; пустая строка сохраняет прежнее значение */
   "letoile_client_id"?: string;
   /** Необязательный API-ключ Лэтуаль; пустая строка сохраняет прежнее значение */
@@ -29757,6 +31328,10 @@ export interface MarketplaceWbMetricCell {
   "margin_pct": number | null;
   /** Прибыль к себестоимости по модулю, %; null без себестоимости */
   "roi": number | null;
+  /** Проданные штуки без известной себестоимости: посчитаны с нулевой закупкой */
+  "cost_missing_units"?: number;
+  /** Доля проданных штук с известной себестоимостью, %, округление вниз; меньше 100 — маржа и ROI неполные; null без продаж */
+  "cost_coverage_pct"?: number | null;
   /** Доставки покупателю в штуках по строкам логистики отчёта; null — штук доставки за период нет в своде */
   "deliveries": number | null;
   /** Обратные доставки в штуках по строкам логистики отчёта; null — штук доставки за период нет в своде */
@@ -29784,6 +31359,14 @@ export interface MarketplaceWbOrdersKpi {
   "delta_sum": number | null;
   /** Изменение к предыдущему дню в процентах */
   "delta_qty": number | null;
+  /** Сумма прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at) */
+  "prev_sum"?: string;
+  /** Штуки прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at) */
+  "prev_qty"?: number;
+  /** Период ещё идёт: оба отрезка режутся по этому моменту (последняя проверка сборщика, время по Москве; у сводки площадок — раннее из них). Для «Сегодня» delta_sum и delta_qty — к вчера на то же время. Поля нет, когда сравниваются целые дни, отсечка не в последнем дне периода или у источника нет времени суток (выкуп Ozon и Маркета) */
+  "cut_at"?: string;
+  /** Период ещё идёт, а честной отсечки нет: за последний день данных ещё нет или время проверки сборщика неизвестно. Сравнения нет — delta_sum и delta_qty пусты, cut_at нет */
+  "no_cut"?: boolean;
 }
 
 export interface MarketplaceWbOrdersOverview {
@@ -29857,6 +31440,8 @@ export interface MarketplaceWbPnl {
   "breakdown"?: { [key: string]: Array<MarketplaceWbDecompOtherItem> };
   /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. У магазина «себестоимость со склада» — штуки непереданных недель, которые склад не оценил (проданные и вернувшиеся порознь). Ключ — начало периода; поля нет, когда у всех продаж года ставка есть */
   "cost_missing"?: { [key: string]: number };
+  /** Доля проданных штук периода с известной себестоимостью, %, округление вниз; меньше 100 — маржа периода неполная. Ключ — начало периода; поля нет у периодов без продаж */
+  "cost_coverage"?: { [key: string]: number };
   /** Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon */
   "units_missing"?: { [key: string]: number };
   /** Откуда себестоимость периода (ERP-2139). Ключ — начало периода, значение — суммы в знаке строки cogs (расход — минус), их сумма равна строке: manual — по ставкам; stock_posted — документы проведённых недель склада магазина «себестоимость со склада», неделя целиком в периоде своего воскресенья; stock_estimate — оценка склада тем же подбором партий, что при передаче недели; temporary — оценка недостающих штук по временной цене; возврат — сторно доли оценки недели продажи; stock_opening — продажи до запуска склада площадки без ставки: (продано − возвращено) × цена начального остатка товара на складе площадки (ERP-2615). Продажи склада без связи артикула с товаром или без цены считаются в cost_missing. Поля нет, когда себестоимости за год нет */
@@ -30279,6 +31864,14 @@ export interface MarketplaceYandexOrdersKpi {
   "delta_sum": number | null;
   /** Изменение количества ко вчерашнему дню в процентах; null когда вчера было пусто */
   "delta_qty": number | null;
+  /** Сумма прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at) */
+  "prev_sum"?: string;
+  /** Штуки прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at) */
+  "prev_qty"?: number;
+  /** Период ещё идёт: оба отрезка режутся по этому моменту (последняя проверка сборщика, время по Москве; у сводки площадок — раннее из них). Для «Сегодня» delta_sum и delta_qty — к вчера на то же время. Поля нет, когда сравниваются целые дни, отсечка не в последнем дне периода или у источника нет времени суток (выкуп Ozon и Маркета) */
+  "cut_at"?: string;
+  /** Период ещё идёт, а честной отсечки нет: за последний день данных ещё нет или время проверки сборщика неизвестно. Сравнения нет — delta_sum и delta_qty пусты, cut_at нет */
+  "no_cut"?: boolean;
 }
 
 export interface MarketplaceYandexOrdersOverview {
@@ -30358,6 +31951,8 @@ export interface MarketplaceYandexPnl {
   "incomplete"?: boolean;
   /** Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть */
   "cost_missing"?: { [key: string]: number };
+  /** Доля проданных штук периода с известной себестоимостью, %, округление вниз; меньше 100 — маржа периода неполная. Ключ — начало периода; поля нет у периодов без продаж */
+  "cost_coverage"?: { [key: string]: number };
   /** Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon */
   "units_missing"?: { [key: string]: number };
   /** Пояснение к неполноте источника */
@@ -30858,6 +32453,8 @@ export interface MarkingCode {
   "gismt_produced_on"?: string;
   /** Срок годности по сведениям ЧЗ: ближайший, если сроков несколько */
   "gismt_expires_on"?: string;
+  /** Последний день нанесения (ERP-2707): у кода заказа с оплатой при нанесении, пока не нанесён и не испорчен; нет поля — срока нет */
+  "apply_by"?: string;
   "id": UUID;
   "company_id": UUID;
   "company_name": string;
@@ -30914,6 +32511,12 @@ export interface MarkingCodeOrder {
   "expires_at": string | null;
   "last_synced_at": string | null;
   "created_by": number | null;
+  /** Закупка, по которой заказаны коды; null — заказ без основания */
+  "basis": MarkingOrderBasis | null;
+  /** До какого дня нанести коды, иначе ГИС МТ их аннулирует: оплата при нанесении — 60 дней от эмиссии; null — срока нет */
+  "apply_by": string | null;
+  /** Полученные коды без принятого отчёта о нанесении и без отметки «испорчен» */
+  "unapplied": number;
   "items": Array<MarkingCodeOrderItem> | null;
   "quantity": number;
   /** Сколько кодов выдала СУЗ */
@@ -31312,6 +32915,8 @@ export interface MarkingDocumentCodeLine {
   /** Сколько кодов ждёт строка */
   "required": number;
   "assigned": number;
+  /** Сколько из assigned не в обороте у юрлица; в зачёт строки они не идут */
+  "out_of_circulation"?: number;
   "strictness": MarkingStrictness;
   "status": "ok" | "missing" | "excess" | "not_required";
   "codes": Array<MarkingStockLineCode> | null;
@@ -31436,7 +33041,7 @@ export interface MarkingDocumentDraftInputExtraBasesItem {
   "id": string;
 }
 
-export type MarkingDocumentKind = "withdrawal" | "withdrawal_cancel" | "withdrawal_gtin" | "withdrawal_gtin_cancel" | "return" | "introduce" | "introduce_contract" | "introduce_remains" | "introduce_import" | "remark" | "cancel_codes" | "aggregation" | "disaggregation" | "sets_aggregation";
+export type MarkingDocumentKind = "withdrawal" | "withdrawal_cancel" | "withdrawal_gtin" | "withdrawal_gtin_cancel" | "return" | "introduce" | "introduce_contract" | "introduce_remains" | "introduce_import" | "remark" | "cancel_codes" | "aggregation" | "disaggregation" | "sets_aggregation" | "cis_info_change";
 
 /** Параметры вида документа; незнакомое поле — отказ */
 export interface MarkingDocumentParams {
@@ -31459,6 +33064,8 @@ export interface MarkingDocumentParams {
   "producer_inn"?: string;
   "paid"?: boolean;
   "production_date"?: string;
+  /** Корректировка сведений (cis_info_change) — срок годности, ГГГГ-ММ-ДД; только группам, которым его даёт ЧЗ */
+  "expiration_date"?: string;
   "production_type"?: string;
   "tnved_code"?: string;
   "certificate_type"?: string;
@@ -31472,6 +33079,8 @@ export interface MarkingDocumentParams {
   "previous_codes"?: { [key: string]: string };
   /** Формирование упаковки — код короба «00» + SSCC; формирование набора — код набора (КИН), скан или без криптохвоста */
   "unit_serial_number"?: string;
+  /** Формирование наборов (sets_aggregation) — несколько наборов одним документом: код набора и его вложения (окно сборки сканом) */
+  "sets"?: Array<MarkingSetUnit>;
   /** Вывод по GTIN (withdrawal_gtin, LK_GTIN_RECEIPT): строки «GTIN — количество — общая стоимость»; повтор GTIN складывается. Кодов у такого документа нет */
   "gtin_lines"?: Array<MarkingGTINLine>;
 }
@@ -32038,6 +33647,19 @@ export interface MarkingLabelRequest {
   "repeat_jobs"?: Array<UUID>;
 }
 
+/** Полотно своего шаблона: этикетки сеткой на листе для производителя и типографии; вся сетка с отступом и зазорами помещается на лист */
+export interface MarkingLabelSheet {
+  "page_width_mm": number;
+  "page_height_mm": number;
+  "cols": number;
+  /** Колонок × рядов — не больше 2 500 на листе */
+  "rows": number;
+  "offset_x_mm"?: number;
+  "offset_y_mm"?: number;
+  "gap_x_mm"?: number;
+  "gap_y_mm"?: number;
+}
+
 export interface MarkingLabelTemplate {
   "key": string;
   /** Название на языке запроса */
@@ -32058,12 +33680,13 @@ export interface MarkingLabelTemplate {
 export interface MarkingLabelTemplateInput {
   "name"?: string;
   "size"?: string;
-  /** Свой размер (size = custom), шаг 0,5 мм */
+  /** Свой размер (size = custom), шаг 0,5 мм; меньше 15 мм — только марка */
   "width_mm"?: number;
   "height_mm"?: number;
   "format"?: "" | "datamatrix" | "ean13" | "code128" | "auto";
   "channel"?: string;
   "blocks"?: Array<MarkingLabelBlock>;
+  "sheet"?: MarkingLabelSheet;
   /** Шаблон-образец копии; копия шаблона строками встаёт на холст */
   "copy_from"?: string;
 }
@@ -32135,6 +33758,7 @@ export interface MarkingLabelTemplateRecord {
   "channel"?: string;
   /** Вариант оформления системного шаблона */
   "preset"?: string;
+  "sheet"?: MarkingLabelSheet;
   "is_active": boolean;
   "updated_at"?: string;
 }
@@ -32152,6 +33776,7 @@ export interface MarkingLabelTemplateUpdate {
   "format": "datamatrix" | "ean13" | "code128" | "auto";
   "channel"?: string;
   "blocks": Array<MarkingLabelBlock>;
+  "sheet"?: MarkingLabelSheet;
 }
 
 export interface MarkingLabelTemplateUsage {
@@ -32197,6 +33822,16 @@ export interface MarkingModListModsItem {
   "address": string;
   "inn"?: string;
   "product_groups"?: Array<string>;
+}
+
+export interface MarkingOrderBasis {
+  "id": UUID;
+  /** Номер закупки; пусто — службу заказов не удалось спросить */
+  "number": string;
+  /** Дата закупки */
+  "date": string;
+  /** Поставщик */
+  "contact_name"?: string;
 }
 
 export interface MarkingOrderCode {
@@ -32264,13 +33899,15 @@ export interface MarkingOrderInput {
   "company_id": UUID;
   "product_group": string;
   "release_method": "PRODUCTION" | "IMPORT" | "REMAINS" | "REMARK" | "COMMISSION" | "REAPPLY";
-  /** Вид кода всех строк; пусто — UNIT */
+  /** Вид кода всех строк; пусто — по профилю товара (набор — SET; прочее — UNIT) */
   "cis_type"?: "" | "UNIT" | "GROUP" | "SET" | "BUNDLE";
   "contact_person"?: string;
   /** Оплата кодов (attributes.paymentType): 1 — при эмиссии, 2 — при нанесении, 0 или нет поля — не передавать. Только у групп с выбором оплаты; REAPPLY ставит 1 сам */
   "payment_type"?: number;
   /** Откреплённая подпись УКЭП (CMS в base64) тела заказа из «Подготовить заказ»; СУЗ без неё заказ отклоняет */
   "signature"?: string;
+  /** Закупка (заказ поставщику), по которой заказываются коды: заказ кодов её помнит. Только закупка юрлица заказа, не отменённая */
+  "basis_order_id"?: UUID;
   "items": Array<MarkingOrderInputItemsItem>;
 }
 
@@ -32404,12 +34041,20 @@ export interface MarkingProductCatalogCard {
   /** GTIN товара (14 цифр); пусто — у товара нет GTIN */
   "gtin": string;
   "company_id": UUID;
+  /** Когда ответ записан в снимок каталога */
+  "checked_at"?: string;
+  /** Код ТН ВЭД из карточки товара кабинета */
+  "product_tnved"?: string;
+  /** ТН ВЭД товара расходится с ТН ВЭД карточки в каталоге */
+  "tnved_mismatch": boolean;
   /** Карточка в каталоге; null — нет карточки, готовой к маркировке и обороту */
   "card": MarkingProductCatalogCardCard | null;
 }
 
 /** Карточка в каталоге; null — нет карточки, готовой к маркировке и обороту */
 export interface MarkingProductCatalogCardCard {
+  /** Код ТН ВЭД карточки; пусто — ЧЗ его не вернул */
+  "tnved"?: string;
   /** GTIN карточки */
   "gtin"?: string;
   /** Наименование в каталоге */
@@ -32736,6 +34381,13 @@ export interface MarkingSeqRange {
   "count": number;
 }
 
+export interface MarkingSetUnit {
+  /** Код набора (КИН) */
+  "set": string;
+  /** Коды вложений */
+  "items": Array<string>;
+}
+
 export interface MarkingShortDocumentCounts {
   "results": Array<MarkingShortDocumentCountsResultsItem>;
 }
@@ -32754,8 +34406,8 @@ export interface MarkingSignDuties {
 }
 
 export interface MarkingSignDuty {
-  /** Вывод по отгрузке FBS, заказы без марок или возврат в оборот по невыкупу */
-  "kind": "withdrawal" | "unmarked" | "return" | "codes_ready" | "application_draft" | "introduction_draft";
+  /** Вывод по отгрузке FBS, заказы без марок, возврат в оборот по невыкупу, коды, которые надо нанести до срока, или черновики формирования наборов */
+  "kind": "withdrawal" | "unmarked" | "return" | "codes_ready" | "application_draft" | "introduction_draft" | "codes_expiring" | "sets_draft";
   "company_id": UUID;
   /** Название юрлица */
   "company_name"?: string;
@@ -32795,6 +34447,8 @@ export interface MarkingStockLineCode {
   "gismt_other_owner"?: boolean;
   /** Код есть во входящем УПД поставщика */
   "expected": boolean;
+  /** Марка расхода не в обороте у юрлица: out — по ЧЗ выбыла, списана, не найдена или за другим ИНН; not_loaded — коды юрлица загружены из ЧЗ, а этой среди них нет. Нет поля — марка годится или о ней ничего не известно */
+  "circulation"?: "out" | "not_loaded";
 }
 
 export interface MarkingStoredFileImportInput {
@@ -34431,8 +36085,8 @@ export interface StockAssemblySpec {
   "version"?: number;
   "name"?: string;
   "status"?: "draft" | "active" | "archived";
-  /** Вид состава: assembly — «Сборка», production — «Производство», kit — «Комплект»: набор, который отдельно не хранят — проведение отгрузки или перемещения со своего склада само заводит и проводит его сборку на недостающее количество (ERP-2111). Хранится у версии: следующая редакция может сменить вид. Набор со своей маркой ЧЗ «Комплектом» быть не может — 400, только «Сборка» заранее (ERP-2183). Вложенный «Комплект» собирается раньше внешнего */
-  "kind"?: "assembly" | "production" | "kit";
+  /** Вид состава: assembly — «Сборка», production — «Производство», kit — «Комплект»: набор, который отдельно не хранят — проведение отгрузки или перемещения со своего склада само заводит и проводит его сборку на недостающее количество (ERP-2111). Хранится у версии: следующая редакция может сменить вид. Набор со своей маркой ЧЗ «Комплектом» быть не может — 400, только «Сборка» заранее (ERP-2183). Вложенный «Комплект» собирается раньше внешнего. channel_packaging — «Упаковка под канал» (ERP-2720): что кладут в одну упаковку для канала продаж и какой материал на неё идёт, без выходного товара; отгрузка под каналом сама списывает материал документом «Списание» с причиной «Упаковка под канал» */
+  "kind"?: "assembly" | "production" | "kit" | "channel_packaging";
   "product_id"?: UUID;
   "product_sku"?: string;
   "product_name"?: string;
@@ -34441,8 +36095,16 @@ export interface StockAssemblySpec {
   /** У набора есть действующая группа маркировки ЧЗ (ERP-2183): вид «Комплект» запрещён */
   "product_marked"?: boolean;
   "unit"?: string;
+  /** Сколько выходного товара даёт состав. У нормы упаковки под канал на все товары — штук товара в упаковке (N); пусто — по кванту товара или канала. У нормы с названными товарами пусто: число штук стоит у товара */
   "output_qty"?: string;
+  /** Комментарий версии. У нормы упаковки под канал — задание складу (ТЗ): его видят лист подбора, ТСД и «К отгрузке» */
   "comment"?: string;
+  /** Канал продаж нормы упаковки (ERP-2720); у других видов поля нет */
+  "channel_id"?: UUID;
+  /** Название канала нормы упаковки */
+  "channel_name"?: string;
+  /** Состав одной упаковки нормы под канал (ERP-2720): товары и сколько каждого кладут в упаковку. Пусто — все товары канала, каждый своей упаковкой; товар, названный в норме, берёт её вместо общей нормы канала */
+  "scope"?: Array<StockAssemblySpecScopeProduct>;
   "created_at"?: string;
   "updated_at"?: string;
   "activated_at"?: string;
@@ -34459,18 +36121,28 @@ export interface StockAssemblySpecArchivedVersion {
   "version": number;
 }
 
-/** Новая версия состава. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком. */
+/** Новая версия состава. product_id и output_qty обязательны у всех видов, кроме нормы упаковки под канал — у неё вместо них channel_id. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком. */
 export interface StockAssemblySpecCreate {
   /** Спецификация, к которой заводится следующая редакция. Должна существовать в кабинете, а product_id — совпадать с её выходным товаром; состояние прежних версий не важно — редакцию заводят и от архивной. Пусто — новая спецификация */
   "spec_id"?: UUID;
   "name": string;
-  /** Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство», kit — «Комплект»: набор, который собирается при отгрузке или перемещении (ERP-2111) */
-  "kind"?: "assembly" | "production" | "kit";
-  "product_id": UUID;
+  /** Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство», kit — «Комплект»: набор, который собирается при отгрузке или перемещении (ERP-2111), channel_packaging — «Упаковка под канал»: норма материала на N шт товара канала (ERP-2720) */
+  "kind"?: "assembly" | "production" | "kit" | "channel_packaging";
+  "product_id"?: UUID;
   /** Сколько выходного товара даёт этот состав */
-  "output_qty": string;
+  "output_qty"?: string;
   "comment"?: string;
+  /** Канал продаж нормы упаковки; обязателен у channel_packaging и не задаётся у других видов (ERP-2720) */
+  "channel_id"?: UUID;
+  /** Состав одной упаковки нормы под канал: товары и сколько каждого кладут в упаковку. Пусто — все товары канала, каждый своей упаковкой. У нормы из нескольких товаров qty обязателен у каждого. Товар может быть только в одной действующей норме канала */
+  "scope"?: Array<StockAssemblySpecCreateScopeItem>;
   "lines": Array<StockAssemblySpecCreateLinesItem>;
+}
+
+export interface StockAssemblySpecCreateScopeItem {
+  "product_id": UUID;
+  /** Штук товара в одной упаковке; пусто — квант товара или канала (только у нормы одного товара) */
+  "qty"?: string;
 }
 
 export interface StockAssemblySpecCreateLinesItem {
@@ -34517,6 +36189,14 @@ export interface StockAssemblySpecRef {
   "kind"?: "assembly" | "production" | "kit";
 }
 
+export interface StockAssemblySpecScopeProduct {
+  "product_id": UUID;
+  "product_sku"?: string;
+  "product_name"?: string;
+  /** Штук товара в одной упаковке; пусто — квант товара или канала (только у нормы одного товара) */
+  "qty"?: string;
+}
+
 export interface StockAssemblySpecStatus {
   "status": "active" | "archived";
 }
@@ -34524,14 +36204,24 @@ export interface StockAssemblySpecStatus {
 /** Полная замена реквизитов и состава черновика. Номер версии и спецификация, к которой она относится, не меняются. Проверки те же, что при заведении версии. */
 export interface StockAssemblySpecUpdate {
   "name": string;
-  /** Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство», kit — «Комплект»: набор, который собирается при отгрузке или перемещении (ERP-2111) */
-  "kind"?: "assembly" | "production" | "kit";
+  /** Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство», kit — «Комплект»: набор, который собирается при отгрузке или перемещении (ERP-2111), channel_packaging — «Упаковка под канал»: норма материала на N шт товара канала (ERP-2720) */
+  "kind"?: "assembly" | "production" | "kit" | "channel_packaging";
   /** Выходной товар. Сменить его можно только у единственной версии спецификации: другой товар при нескольких версиях — это другая спецификация */
-  "product_id": UUID;
+  "product_id"?: UUID;
   /** Сколько выходного товара даёт этот состав */
-  "output_qty": string;
+  "output_qty"?: string;
   "comment"?: string;
+  /** Канал продаж нормы упаковки; обязателен у channel_packaging и не задаётся у других видов (ERP-2720) */
+  "channel_id"?: UUID;
+  /** Состав одной упаковки нормы под канал: товары и сколько каждого кладут в упаковку. Пусто — все товары канала, каждый своей упаковкой. У нормы из нескольких товаров qty обязателен у каждого. Товар может быть только в одной действующей норме канала */
+  "scope"?: Array<StockAssemblySpecUpdateScopeItem>;
   "lines": Array<StockAssemblySpecUpdateLinesItem>;
+}
+
+export interface StockAssemblySpecUpdateScopeItem {
+  "product_id": UUID;
+  /** Штук товара в одной упаковке; пусто — квант товара или канала (только у нормы одного товара) */
+  "qty"?: string;
 }
 
 export interface StockAssemblySpecUpdateLinesItem {
@@ -34540,6 +36230,37 @@ export interface StockAssemblySpecUpdateLinesItem {
   "product_uom_id"?: UUID;
   "qty": string;
   "share"?: string;
+}
+
+/** Партия и сколько из неё возьмёт строка. */
+export interface StockAutoBatch {
+  "batch_id": UUID;
+  /** Серия партии; пусто — без серии */
+  "batch_code": string;
+  /** Годен до; null — срока нет */
+  "expires_at": string | null;
+  /** Сколько возьмёт строка, в базовой единице */
+  "qty": string;
+  /** Партия просрочена на дату документа и уйдёт с пометкой в проведении */
+  "expired": boolean;
+}
+
+/** Партии одной строки в порядке подбора. */
+export interface StockAutoBatchLine {
+  "line_id": UUID;
+  /** Партии строки; части одной партии из разных ячеек сложены */
+  "batches": Array<StockAutoBatch>;
+}
+
+/** Нехватка строки из отказа откатываемого проведения: свободное посчитал проводчик — с резервом, порогом срока, прошлыми строками того же товара, ячейками и единицами хранения. */
+export interface StockAutoBatchShortage {
+  /** Строка документа; null — нехватка не из подбора строки */
+  "line_id": UUID | null;
+  "product_id": UUID;
+  /** Сколько нужно, в базовой единице */
+  "requested": string;
+  /** Сколько свободно, в базовой единице */
+  "available": string;
 }
 
 export interface StockAvailability {
@@ -35201,6 +36922,47 @@ export interface StockCarrierWeight {
   "weight_g": number;
 }
 
+/** Упаковка под канал у строки товара (ERP-2720): задание складу и сколько упаковок взять. Считает сервер по действующей норме; у проведённой отгрузки — что списано */
+export interface StockChannelPackagingHint {
+  /** Норма упаковки: товары одной упаковки несут один id */
+  "spec_id"?: UUID;
+  /** Название нормы упаковки */
+  "spec_name"?: string;
+  /** Задание складу (ТЗ) из нормы */
+  "note"?: string;
+  /** Штук товара в упаковке: из нормы, иначе квант */
+  "per_pack"?: string;
+  /** Сколько упаковок: целая часть минимума по товарам упаковки (в отгрузке / штук в упаковке) */
+  "packs"?: string;
+  "materials"?: Array<StockChannelPackagingHintMaterialsItem>;
+  /** Состав упаковки из нескольких товаров (2 X + 3 Y в коробку); у нормы одного товара поля нет */
+  "products"?: Array<StockChannelPackagingProduct>;
+  /** Сколько этого товара не входит в целые упаковки: предупреждение, проведение не запрещено */
+  "leftover"?: string;
+  /** Почему упаковку не посчитать (в норме нет «Штук в упаковке», а кванта нет): проведение откажет */
+  "problem"?: string;
+}
+
+export interface StockChannelPackagingHintMaterialsItem {
+  "product_id"?: UUID;
+  "product_name"?: string;
+  "unit"?: string;
+  /** Сколько материала списать, в базовой единице */
+  "qty"?: string;
+}
+
+export interface StockChannelPackagingProduct {
+  "product_id": UUID;
+  "product_sku"?: string;
+  "product_name"?: string;
+  /** Сколько товара в отгрузке, в базовой единице; 0 — товар упаковки, которого в отгрузке нет */
+  "qty": string;
+  /** Штук товара в одной упаковке */
+  "per_pack": string;
+  /** Сколько товара не вошло в целые упаковки */
+  "leftover"?: string;
+}
+
 /** Тело черновика списания претензии поставщику по недостаче приёмки. */
 export interface StockClaimWriteoffCreate {
   "basis_id": UUID;
@@ -35220,7 +36982,7 @@ export interface StockCompanyPolicy {
   "default_warehouse_id": UUID | null;
   /** Учёт бизнеса юрлица закрыт по эту дату включительно — дата закрытия книги, одна на бизнес и для склада; null — период не закрыт */
   "closed_through": string | null;
-  /** Ручной выбор партии в строке расхода (ERP-1788). По умолчанию false — «Авто»: партию выбирает метод учёта (срок годности, затем дата прихода). Действует только при costing_method fifo */
+  /** Ручной выбор партии в строке расхода (ERP-1788). С ERP-2106 по умолчанию true при costing_method fifo; строка всё равно начинается с «Авто» — партию выбирает метод учёта (срок годности, затем дата прихода), а выбор руками лишь доступен. Действует только при costing_method fifo */
   "manual_batch_choice"?: boolean;
   "updated_at": string;
 }
@@ -35614,6 +37376,17 @@ export interface StockDiscrepancySummary {
   "document_ids": Array<UUID>;
 }
 
+/** Что возьмёт «Авто» в черновике (ERP-2106): разложение откатываемого проведения по строкам. */
+export interface StockDocumentAutoBatches {
+  "document_id": UUID;
+  /** ready — разложение посчитано; refused — проведение сейчас отказало, причину называет «Что мешает»; unavailable — не черновик или вид документа без выбора партии */
+  "status": "ready" | "refused" | "unavailable";
+  /** Строки документа с партиями; пусто, когда status не ready */
+  "lines": Array<StockAutoBatchLine>;
+  /** Строки, которым проведению не хватило товара, с числами отказа (status refused); пусто — нехватки нет или отказ другого рода */
+  "shortages": Array<StockAutoBatchShortage>;
+}
+
 export interface StockDocumentBinMove {
   "product_id": UUID;
   "product_sku": string;
@@ -35993,13 +37766,15 @@ export interface StockDocumentPayload {
   "shelf_life"?: StockDocumentShelfLife;
   /** Плановая дата отгрузки (ERP-2182): только у stock_shipment и stock_transfer. Партии строк оцениваются правилом срока годности на неё — порог остаточного срока и просрочка; позже даты документа — на неё, пусто или раньше — на дату документа. Дата ложится в снимок проведения (posting.shelf_life.as_of). У прочих видов — 400 ship_date_not_applicable, не дата — 400 ship_date_invalid. Отгрузка по заказу покупателя берёт дату поставки заказа */
   "ship_date"?: string;
+  /** Отгрузка проведена складом по факту канала с API (ERP-2730): источник, событие, его дата и ссылка. Ставит только сервер; в создании и правке поле не принимается */
+  "auto_post"?: StockDocumentPayloadAutoPost;
   /** Предпочтительное состояние товара (ERP-2507): только у stock_shipment, у прочих видов снимается. Строки без выбранного состояния («Авто») берут сначала его, затем любое годное по сроку (FEFO), затем по приходу; не замок — нехватку добирает остальное годное. Отгрузка по продаже канала ставит состояние канала; правка без поля его сохраняет */
   "preferred_condition_id"?: { [key: string]: unknown };
   /** Только у stock_writeoff (ERP-2886): черновик передан заявкой на внутреннее потребление — автор нажал «Отправить заявку», и списание ждёт согласования или выдачи складом. Ставит и снимает только сервер: дверь «Отправить заявку», отзыв, возврат и отказ согласования. Присланное в создании или правке значение не читается, правка черновика хранит лежащее в нём */
   "issue_request"?: StockDocumentPayloadIssueRequest;
   /** Черновик списания завело действие «Списать просроченное» (ERP-1821). По признаку повторный вызов действия узнаёт свой непроведённый черновик. Документ с признаком списывает только просрочку: если подбор взял бы слой, не просроченный на дату документа, проведение отвечает 400 с кодом expired_writeoff_stale. Ставит признак только само действие: присланный при создании признак отклоняется (400), правка документа сохраняет значение, уже лежащее в нём */
   "expired_writeoff"?: boolean;
-  /** Реквизиты «Отгрузки на маркетплейс» (ERP-2137): площадка и номер её поставки. Только у stock_transfer со ссылкой marketplace_store; получатель — склад «В пути на площадку», отправитель — свой склад. Номер необязателен: обход модуля маркетплейсов привязывает проведённую отгрузку к поставке по цифрам номера и второго перемещения не заводит */
+  /** Реквизиты «Отгрузки на маркетплейс» (ERP-2137): площадка и номер её поставки. Только у stock_transfer со ссылкой marketplace_store; получатель — склад «В пути на площадку» (у Lamoda и Лэтуаль — склад площадки или его «в пути»), отправитель — свой склад. Номер необязателен: обход модуля маркетплейсов привязывает проведённую отгрузку к поставке по цифрам номера и второго перемещения не заводит */
   "marketplace_shipment"?: StockDocumentPayloadMarketplaceShipment;
   /** Списание недостачи приёмки площадки претензией к ней (ERP-2138): стоимость уходит в долг площадки по претензии (сторона расчётов claim, Дт 60.01 claim / Кт 41), а не в расход. Ставит только раздел «Расхождения приёмки»; присланное при создании значение отклоняется (400), правка сохраняет значение документа */
   "marketplace_claim"?: boolean;
@@ -36058,6 +37833,14 @@ export interface StockDocumentPayload {
   "posting"?: { [key: string]: unknown };
 }
 
+/** Отгрузка проведена складом по факту канала с API (ERP-2730): источник, событие, его дата и ссылка. Ставит только сервер; в создании и правке поле не принимается */
+export interface StockDocumentPayloadAutoPost {
+  "source"?: "yandex_kit" | "ozon_retail" | "edi";
+  "event"?: string;
+  "event_date"?: string;
+  "ref"?: string;
+}
+
 /** Только у stock_writeoff (ERP-2886): черновик передан заявкой на внутреннее потребление — автор нажал «Отправить заявку», и списание ждёт согласования или выдачи складом. Ставит и снимает только сервер: дверь «Отправить заявку», отзыв, возврат и отказ согласования. Присланное в создании или правке значение не читается, правка черновика хранит лежащее в нём */
 export interface StockDocumentPayloadIssueRequest {
   /** Кто передал заявку: id пользователя */
@@ -36068,9 +37851,9 @@ export interface StockDocumentPayloadIssueRequest {
   "ready_at"?: string;
 }
 
-/** Реквизиты «Отгрузки на маркетплейс» (ERP-2137): площадка и номер её поставки. Только у stock_transfer со ссылкой marketplace_store; получатель — склад «В пути на площадку», отправитель — свой склад. Номер необязателен: обход модуля маркетплейсов привязывает проведённую отгрузку к поставке по цифрам номера и второго перемещения не заводит */
+/** Реквизиты «Отгрузки на маркетплейс» (ERP-2137): площадка и номер её поставки. Только у stock_transfer со ссылкой marketplace_store; получатель — склад «В пути на площадку» (у Lamoda и Лэтуаль — склад площадки или его «в пути»), отправитель — свой склад. Номер необязателен: обход модуля маркетплейсов привязывает проведённую отгрузку к поставке по цифрам номера и второго перемещения не заводит */
 export interface StockDocumentPayloadMarketplaceShipment {
-  "platform": "ozon" | "wildberries";
+  "platform": "ozon" | "wildberries" | "yandex" | "lamoda" | "letoile";
   /** Номер поставки площадки, например WB-GI-12345678 */
   "supply_number"?: string;
 }
@@ -36097,9 +37880,13 @@ export interface StockDocumentPresentation {
   "warehouse_name"?: string;
   "warehouse_from_name"?: string;
   "warehouse_to_name"?: string;
+  "delivery_point"?: string;
   "reason_code"?: string;
   "reason_label"?: string;
   "products": Array<StockDocumentProductLabel>;
+  "ship_multiples"?: { [key: string]: string };
+  /** Упаковка под канал по товарам открытой отгрузки (ERP-2720): ключ — id товара */
+  "channel_packaging"?: { [key: string]: StockChannelPackagingHint };
 }
 
 export interface StockDocumentProductCode {
@@ -36159,7 +37946,7 @@ export interface StockDocumentRefs {
   "warehouse_to"?: { [key: string]: unknown };
   /** Контрагент документа: поставщик приёмки и возврата поставщику, покупатель отгрузки и возврата покупателя. У stock_writeoff — получатель (ERP-2886): кому отдали товар при внутреннем потреблении (сеть, партнёр). Необязателен; названный — действующий контрагент кабинета. Уходит в книгу разрезом контрагента, в условие «контрагент» маршрута согласования заявки и в черновик вывода из оборота маркировки */
   "contact"?: { [key: string]: unknown };
-  /** Магазин площадки у «Отгрузки на маркетплейс» (ERP-2137): перемещение со своего склада на склад «В пути на площадку» (inbound_mode external_transit). Только у stock_transfer и только вместе с payload.marketplace_shipment; в книгу не попадает */
+  /** Магазин площадки у «Отгрузки на маркетплейс» (ERP-2137): перемещение со своего склада на склад «В пути на площадку» (inbound_mode external_transit), у Lamoda и Лэтуаль — на склад площадки (external_receipt) или его склад «в пути». Только у stock_transfer и только вместе с payload.marketplace_shipment; в книгу не попадает */
   "marketplace_store"?: { [key: string]: unknown };
   /** Проект (справочник projects разреза учёта project). Несут заявка на закупку и закупка: закупка без проекта берёт его из заявок-оснований с одним проектом (ERP-2548). Несут также stock_receipt и stock_shipment без заказа: проект заказа, который склад заводит при проведении (ERP-2014). У stock_writeoff и stock_capitalization — проект самого расхода или дохода без заказа, попадает в разрез проводки и начисления ОПиУ (ERP-2936). Разрез должен вестись в кабинете на дату документа; обязательный разрез кабинет требует при проведении, иначе проведение отвечает 400 с названием разреза. У приёмки и отгрузки с заказом или основанием поле стирается, у прочих видов — 400 */
   "project"?: { [key: string]: unknown };
@@ -36313,6 +38100,8 @@ export interface StockExpiredStockRow {
   /** Склад, на котором лежит остаток; у склада с зонами — зона */
   "warehouse_id": { [key: string]: unknown };
   "warehouse_name": string;
+  /** Склад зоны; пусто, когда остаток лежит на самом складе */
+  "warehouse_parent_name": string;
   "product_id": UUID;
   "product_sku": string;
   "product_name": string;
@@ -36363,6 +38152,8 @@ export interface StockExpiredWriteoffDraft {
   "company_name": string;
   "warehouse_id": UUID;
   "warehouse_name": string;
+  /** Склад зоны; пусто — сам склад */
+  "warehouse_parent_name": string;
   /** Число строк черновика */
   "lines": number;
   /** Количество по строкам черновика в базовых единицах, десятичная строка. У прежнего черновика — как в самом документе: его могли поправить */
@@ -36379,13 +38170,15 @@ export interface StockExpiredWriteoffDrafts {
   "skipped": Array<StockExpiredWriteoffSkipped>;
 }
 
-/** Отборы действия «Списать просроченное» — те же, что у чтения просроченного остатка. Пустое тело — весь доступный остаток. */
+/** Отборы действия «Списать просроченное» — те же, что у чтения просроченного остатка. Пустое тело — весь доступный остаток; когда отбор захватывает больше одного видимого действующего юрлица, нужен company_id или without_company=true («Без юрлица»). */
 export interface StockExpiredWriteoffDraftsInput {
   "business_id"?: UUID;
   "company_id"?: UUID;
   /** Склад вместе с его зонами */
   "warehouse_id"?: { [key: string]: unknown };
   "product_id"?: UUID;
+  /** Только остаток без юрлица («Без юрлица»): явный выбор вместо company_id, правило обязательного юрлица тогда не действует. Вместе с company_id — 400 stock.expired_stock.filter_conflict */
+  "without_company"?: boolean;
 }
 
 /** Просрочка, по которой действие «Списать просроченное» черновик не создало, с причиной (ERP-1821). */
@@ -36397,6 +38190,8 @@ export interface StockExpiredWriteoffSkipped {
   "company_name": string;
   "warehouse_id": UUID;
   "warehouse_name": string;
+  /** Склад зоны; пусто — сам склад */
+  "warehouse_parent_name": string;
   "product_id": UUID;
   "product_sku": string;
   "product_name": string;
@@ -36868,6 +38663,8 @@ export interface StockMarketplaceSettings {
   "picking": "self" | "fulfilment";
   /** Куда приходуется невыкуп: platform — остаётся у площадки, fulfilment_warehouse — возвращается на склад исполнения */
   "unredeemed_target": "platform" | "fulfilment_warehouse";
+  /** Заказы FBS, принятые площадкой, проводятся сами */
+  "ship_by_platform": boolean;
   /** Отправленное на площадку видно товаром в пути до её приёмки */
   "supply_transit": boolean;
   /** Порог остаточного срока годности поставок магазина, % срока: десятичная строка. null — действует порог кабинета */
@@ -36907,6 +38704,8 @@ export interface StockMarketplaceSettingsInput {
   "picking": "self" | "fulfilment";
   /** Куда приходовать невыкуп; fulfilment_warehouse требует склада исполнения */
   "unredeemed_target": "platform" | "fulfilment_warehouse";
+  /** Проводить заказы FBS, принятые площадкой, без действия человека; нужен склад исполнения */
+  "ship_by_platform"?: boolean;
   /** Товар в пути до приёмки площадкой: отправленное на площадку видно товаром в пути, пока она его не приняла */
   "supply_transit"?: boolean;
   /** Порог остаточного срока поставок магазина, % срока: больше 0 и не больше 100, не точнее сотых */
@@ -37019,6 +38818,41 @@ export interface StockOpeningCorrectionCreateItemsItem {
   "expires_at"?: string;
 }
 
+/** Тело проведения корректировки начального остатка (ERP-084). */
+export interface StockOpeningCorrectionPostInput {
+  /** true — предпросмотр без записи: режим, у каких документов и на сколько меняется себестоимость, где остаток уходит в минус */
+  "preview"?: boolean;
+}
+
+/** Предпросмотр или итог проведения корректировки начального остатка: перестройка цепочки и режим (ERP-084). */
+export interface StockOpeningCorrectionPostResult {
+  "status": "preview" | "completed" | "refused";
+  /** С какой даты перестраивается цепочка бизнеса */
+  "from": string;
+  /** Документы пакета */
+  "documents": Array<StockPostRebuildDocument>;
+  /** Документы, которые цепочка перепровела, по порядку */
+  "reposted_documents"?: Array<StockPostRebuildDocument>;
+  /** Сколько документов цепочки перепроведено */
+  "reposted": number;
+  /** Документы, у которых меняется стоимость ушедшего */
+  "changes": Array<StockPostRebuildChange>;
+  /** Стоимость ушедшего по всей цепочке до перестройки */
+  "total_before": string;
+  /** Та же стоимость после */
+  "total_after": string;
+  "shortages"?: Array<StockPostRebuildShortage>;
+  "failures"?: Array<StockPostRebuildFailure>;
+  /** Документы вида без транзакционного проводчика: остались как есть */
+  "skipped"?: number;
+  /** repost — ввод остатков в открытом периоде: он и цепочка по товарам строк перепроводятся; period — ввод остатков в закрытой книге: разница признаётся датой корректировки */
+  "mode": "repost" | "period";
+  /** Ввод начальных остатков, который корректировка правит */
+  "basis": StockPostRebuildDocument;
+  /** Дата закрытия книги бизнеса; пусто — книга открыта */
+  "closed_through"?: string;
+}
+
 /** Заказ продажи для выгрузки «Исполнение заказа» (ERP-1979). */
 export interface StockOrderFulfillmentExportRequest {
   /** Заказ продажи, по отгрузкам которого собирается файл */
@@ -37109,6 +38943,8 @@ export interface StockOrderPickPlanLine {
   "bin_name"?: string;
   /** Серия партии; нет поля — партия без серии */
   "batch_code"?: string;
+  "ship_multiple"?: string;
+  "channel_packaging"?: StockChannelPackagingHint;
   /** Годен до у партии; нет поля — у партии нет срока */
   "expires_at"?: string;
   /** Сколько взять, в базовой единице */
@@ -37239,6 +39075,10 @@ export interface StockOrderShipInput {
 export interface StockOrderShipInputLinesItem {
   "item_id": UUID;
   "quantity": string;
+  /** GTIN для товара с несколькими GTIN: какой забрать; пусто — подбор сборки */
+  "pick_gtin"?: string;
+  /** Из каких ячеек взято (ERP-2771): скан ячейки на ТСД перед товаром. Количество — в базовой единице, сумма не больше quantity; ячейка принадлежит складу отгрузки, в нём включены ячейки. Названная ячейка сужает подбор партий до того, что в ней лежит; остальное количество проведение подберёт само. Пусто — ячейки и партии подбирает проведение */
+  "bin_allocations"?: Array<StockDocumentLineBinAllocation>;
 }
 
 export interface StockOrderShipment {
@@ -37274,6 +39114,7 @@ export interface StockOrderShipping {
   "state": string;
   "contact_id": UUID;
   "contact_name"?: string;
+  "channel_ship_date"?: string;
   /** Плановая дата отгрузки продажи (дата поставки заказа, ERP-2876): на неё лист подбора и проведение оценивают остаточный срок; GET …/sale-shelf-life спрашивают на ту же дату. Нет поля — даты нет */
   "planned_ship_date"?: string;
   "company_id"?: UUID;
@@ -37305,12 +39146,18 @@ export interface StockOrderShipping {
   "consignee_name"?: string;
   /** Точка доставки грузополучателя (ERP-098). */
   "consignee_point_name"?: string;
+  /** Заказ передан складу до подтверждения источником (ERP-2683) — собирать можно, отгружать и выпускать УПД нельзя. */
+  "awaiting_confirmation"?: boolean;
+  /** Правило заказа ждёт «Передать на склад», а менеджер его ещё не нажал (ERP-2722): «Собрать» отвечает 409 stock.order.awaits_handover, начать сборку склад не может */
+  "awaiting_handover"?: boolean;
   /** Склад отгрузки работает в режиме «через сборку» (ERP-2771): «Отгрузить сразу» по продаже нет, отгружает кладовщик из сборки или с ТСД */
   "pick_required": boolean;
   /** Срок заказа для склада (ERP-2874), вычисляется: срок задания складу, если его поставили руками, иначе дата поставки заказа; срока нет — поля нет. Срок самого задания остаётся в task.due_date */
   "due_date"?: string;
   /** Откуда срок: task — поставлен в задании складу, order — взят из даты поставки заказа; срока нет — поля нет (ERP-2874) */
   "due_source"?: "task" | "order";
+  /** Когда заказ завели в системе (ERP-2723): лист «К отгрузке» показывает его рядом с датой заказа и плановой отгрузкой */
+  "created_at"?: string;
   /** Задание складу: распоряжение, исполнитель, срок и приоритет. Нет поля — задание никто не ставил */
   "task"?: StockShippingTask;
 }
@@ -37351,6 +39198,8 @@ export interface StockOrderShippingLine {
   "remaining_qty": string;
   /** ERP-2581: сколько из остатка строки обеспечено бронью с товаром на складе; раскладка по порядку строк, не больше остатка. Комплект без остатка считается по броне компонентов: обеспечено столько комплектов, сколько набирается из неё. Нет поля — бронь не посчитана */
   "reserved_qty"?: string;
+  "ship_multiple"?: string;
+  "channel_packaging"?: StockChannelPackagingHint;
   /** ERP-2581: сколько из остатка строки не обеспечено (остаток минус reserved_qty) */
   "short_qty"?: string;
 }
@@ -37511,6 +39360,8 @@ export interface StockPostRebuildInput {
   "preview"?: boolean;
   /** post (по умолчанию) — провести черновики задним числом; cancel — распровести проведённые вместе с поздними */
   "action"?: "post" | "cancel";
+  /** Явное решение отгрузить черновики пакета без полного набора: собрано меньше нужного или у маркированной строки заказа не все марки. Без него — отказ stock.picking.partial_unconfirmed или marking.pick_marks_missing */
+  "confirm_partial_pick"?: boolean;
 }
 
 export interface StockPostRebuildResult {
@@ -37519,6 +39370,8 @@ export interface StockPostRebuildResult {
   "from": string;
   /** Документы пакета */
   "documents": Array<StockPostRebuildDocument>;
+  /** Документы, которые цепочка перепровела, по порядку */
+  "reposted_documents"?: Array<StockPostRebuildDocument>;
   /** Сколько документов цепочки перепроведено */
   "reposted": number;
   /** Документы, у которых меняется стоимость ушедшего */
@@ -38538,7 +40391,7 @@ export interface StockSettings {
   "shelf_life_basis": "days" | "months";
   /** Партия ниже порога остаточного срока, выбранная в строке руками (ERP-2182): block — отказ проведения shelf_life_below_minimum, по умолчанию; warn — проводится, пометка в posting.shelf_life_warnings и в журнале. Просроченное не отгружается ни в одном режиме; «Авто» берёт только проходящие порог партии */
   "shelf_life_chosen_below_minimum": "block" | "warn";
-  /** Срок и серия при поступлении (ERP-3047): block — поступление, ввод остатков и оприходование товара со сроком годности без серии и «Годен до» не проводятся, по умолчанию (правило ERP-2708); warn — проводятся, недостающее по строкам видно в «Что мешает действию» предупреждением */
+  /** Срок и партия при поступлении (ERP-3047): block — поступление, ввод остатков и оприходование товара со сроком годности без партии и «Годен до» не проводятся, по умолчанию (правило ERP-2708); warn — проводятся, недостающее по строкам видно в «Что мешает действию» предупреждением */
   "receipt_shelf_life_dates": "block" | "warn";
   /** Градация ОСГ (ERP-2182): ниже — красная (critical). Десятичная строка больше 0 и меньше shelf_grade_warning_pct; по умолчанию 30. Только показ отчётов и отборов */
   "shelf_grade_critical_pct": string;
@@ -38659,7 +40512,7 @@ export interface StockSettingsPatch {
   "shelf_life_basis"?: "days" | "months";
   /** Выбранная руками партия ниже порога: block — отказ, warn — пометка (ERP-2182) */
   "shelf_life_chosen_below_minimum"?: "block" | "warn";
-  /** Срок и серия при поступлении: block — не проводить без них, warn — проводить с предупреждением (ERP-3047); иначе 400 receipt_shelf_life_dates_invalid */
+  /** Срок и партия при поступлении: block — не проводить без них, warn — проводить с предупреждением (ERP-3047); иначе 400 receipt_shelf_life_dates_invalid */
   "receipt_shelf_life_dates"?: "block" | "warn";
   /** Градация ОСГ «красная ниже», %: больше 0, не точнее сотых. Пара сверяется с сохранённой жёлтой: 400 shelf_grades_invalid */
   "shelf_grade_critical_pct"?: string;
@@ -39291,6 +41144,10 @@ export interface StockWarehouse {
   "bins_count": number;
   /** Режим отгрузки по заказам (ERP-2771): direct — «Отгрузить» по заказу доступна сразу; pick_required — режим «через сборку»: отгрузку по заказу проводит только кладовщик из сборки. Меняется действием shipping-mode. У зоны поле показывает режим её склада (ERP-3063): своего режима у зоны нет */
   "shipping_mode": "direct" | "pick_required";
+  /** «Кто подтверждает отгрузку» по факту канала (ERP-2730): manual — человек (умолчание), сигнал не проводит; picked — склад в Akeda, проводится собранное; order — внешний склад, отгрузка по заказу. Меняется действием shipment-fact. У зоны — значение её склада */
+  "shipment_fact"?: "manual" | "picked" | "order";
+  /** Когда склад перевели во «внешний» (ERP-2730): более ранний факт канала сам по заказу не проводится */
+  "shipment_fact_since"?: string | null;
   /** Склад готовится к запуску (ERP-2885): двигает его только ввод начального остатка и его корректировка, автоматика (резерв при загрузке заказа) его пропускает. Меняется действиями launch/prepare и launch */
   "launch_pending": boolean;
   /** Дата запуска склада (ERP-2885): документы склада раньше неё, кроме ввода остатка, не проводятся. Пусто — склад работал до появления запуска */
@@ -40224,6 +42081,15 @@ export interface DocflowLookupParticipantResponse {
   "name"?: string;
 }
 
+export interface DocflowEdiPeopleResponse {
+  "people": Array<DocflowEdiPeopleResponsePeopleItem>;
+}
+
+export interface DocflowEdiPeopleResponsePeopleItem {
+  "id": number;
+  "name": string;
+}
+
 export interface DocflowFlowContactStatsResponse {
   "items": Array<DocflowFlowContactStatsResponseItemsItem>;
 }
@@ -40273,6 +42139,11 @@ export interface DocflowLinkIntakeCounterpartyRequest {
 
 export interface DocflowRefreshMessageResponse {
   "refreshed": boolean;
+}
+
+export interface DocflowRunSaleTemplateNowRequest {
+  /** Плановая дата выбранного срабатывания; без неё — ближайшее несозданное */
+  "date"?: string;
 }
 
 export interface DocflowYandexKitMarkShippedRequest {
@@ -40391,6 +42262,18 @@ export interface FinanceConfirmPaymentRequestPayeeRequest {
 
 export interface FinancePaymentRequestFactCandidatesResponse {
   "results": Array<FinancePaymentFactCandidate>;
+}
+
+export interface FinanceChangePaymentRequestPayeeAccountRequest {
+  /** Версия заявки при выборе счёта */
+  "expected_version": number;
+  /** Сохранённый счёт контрагента заявки */
+  "contact_account_id": UUID;
+}
+
+export interface FinanceRefreshPaymentRequestPayeeBankRequest {
+  /** Версия заявки */
+  "expected_version": number;
 }
 
 export interface FinanceGetProjectBudgetHistoryResponse {
@@ -40660,6 +42543,32 @@ export interface StockListDocumentAuthorsResponse {
 export interface StockListDocumentAuthorsResponseResultsItem {
   "id": number;
   "name": string;
+}
+
+export interface StockPostDocumentResponse {
+  "id": UUID;
+  "type_id": UUID;
+  "type_key": string;
+  "type_name": string;
+  "number": string;
+  "date": string;
+  "status": CoreDocumentStatus;
+  "basis_type": UUID | null;
+  "basis_id": UUID | null;
+  "basis_number": string;
+  "entity_refs": { [key: string]: unknown };
+  "payload": { [key: string]: unknown };
+  "comment": string;
+  "is_marked_deleted": boolean;
+  "created_by": number | null;
+  "created_by_name": string;
+  "created_at": string;
+  "updated_at": string;
+  "posted_at": string;
+  "cancelled_at": string;
+  /** Значения своих полей кабинета (графы вида core.document.<ключ вида>). Отдаёт карточка документа; списки поле не несут */
+  "custom"?: { [key: string]: unknown };
+  "rebuild"?: StockPostRebuildResult;
 }
 
 export interface StockLaunchWarehouseRequest {
