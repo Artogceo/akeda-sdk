@@ -1,5 +1,5 @@
 # Сгенерировано scripts/generate.py. Руками не править.
-# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 8778f55fccf0c28d3e32a4745a2c64c58f769d69432fcffa6fdba242675b9ea5).
+# Источник: snapshot/openapi/akeda-v1.json (контракт 0.21.0-core-public, sha256 b7536c752b37b3edf754075816e84a0ac16bc614323f653d091b48de1173adcf).
 # Рантайм клиента написан руками и живёт рядом; здесь только типы.
 
 from __future__ import annotations
@@ -135,6 +135,9 @@ __all__ = [
     "CRMCardMailList",
     "CRMCardMailSendRequest",
     "CRMCardMailThread",
+    "CRMCardPin",
+    "CRMCardPinInput",
+    "CRMCardPinList",
     "CRMCatalogPage",
     "CRMCatalogProduct",
     "CRMContactRef",
@@ -349,6 +352,7 @@ __all__ = [
     "CalendarEventPatch",
     "CalendarEventResponseInput",
     "CalendarExternalCalendar",
+    "CalendarGuestInviteLink",
     "CalendarInvitation",
     "CalendarInvitationPage",
     "CalendarMember",
@@ -468,6 +472,9 @@ __all__ = [
     "CoreActionRequestForm",
     "CoreActionRequestFormResult",
     "CoreActionRequestInput",
+    "CoreActionRequestOnHand",
+    "CoreActionRequestOnHandCondition",
+    "CoreActionRequestOnHandRow",
     "CoreActionRequestPage",
     "CoreActionRequestReference",
     "CoreActionRequestReferencePage",
@@ -523,6 +530,9 @@ __all__ = [
     "CoreContactDeliveryPointPatch",
     "CoreContactEmployeeInput",
     "CoreContactEntityType",
+    "CoreContactForeignAccount",
+    "CoreContactForeignAccountCreate",
+    "CoreContactForeignAccountPatch",
     "CoreContactKind",
     "CoreContactMergeBlocked",
     "CoreContactMergeDocument",
@@ -533,6 +543,9 @@ __all__ = [
     "CoreContactPage",
     "CoreContactPatch",
     "CoreContactPatchPostalAddress",
+    "CoreContactResponsibleEvent",
+    "CoreContactResponsibleHistory",
+    "CoreContactsAssignInput",
     "CoreContactsPaymentConditionInput",
     "CoreContactsPaymentConditionResult",
     "CoreContractFinancing",
@@ -687,6 +700,7 @@ __all__ = [
     "CoreOrderCostForInput",
     "CoreOrderCounterparty",
     "CoreOrderDealPaper",
+    "CoreOrderDropRemainderInput",
     "CoreOrderEvent",
     "CoreOrderExecutedRevisionInput",
     "CoreOrderExecutedRevisionInputLinesItem",
@@ -940,6 +954,8 @@ __all__ = [
     "CoreSalesChannelPage",
     "CoreSalesChannelPatch",
     "CoreSalesChannelPriceMode",
+    "CoreSalesChannelProductMultiple",
+    "CoreSalesChannelProductMultipleInput",
     "CoreSalesChannelRef",
     "CoreSalesChannelScheme",
     "CoreSalesChannelStoreWarehouse",
@@ -1129,6 +1145,65 @@ __all__ = [
     "DocflowDocumentCommentList",
     "DocflowDocumentCommentMention",
     "DocflowDocumentRefRequisites",
+    "DocflowEdiArchiveInput",
+    "DocflowEdiAvailability",
+    "DocflowEdiAvailabilityShelfLifeVariant2",
+    "DocflowEdiAvailabilityEnvelope",
+    "DocflowEdiAvailabilityLine",
+    "DocflowEdiBatchInput",
+    "DocflowEdiBatchReport",
+    "DocflowEdiBatchRow",
+    "DocflowEdiCatalogList",
+    "DocflowEdiCatalogMatch",
+    "DocflowEdiCatalogMatchResult",
+    "DocflowEdiChangeDecision",
+    "DocflowEdiConfirmInput",
+    "DocflowEdiConnection",
+    "DocflowEdiConnectionEnvelope",
+    "DocflowEdiConnectionInput",
+    "DocflowEdiConnectionList",
+    "DocflowEdiDesadvInput",
+    "DocflowEdiDiadocDocument",
+    "DocflowEdiDiadocDocuments",
+    "DocflowEdiDiadocLetter",
+    "DocflowEdiEdoLinks",
+    "DocflowEdiEdoLinksOrdersItem",
+    "DocflowEdiEdoLinksMessagesItem",
+    "DocflowEdiFill",
+    "DocflowEdiFillEnvelope",
+    "DocflowEdiFillLine",
+    "DocflowEdiGoods",
+    "DocflowEdiGoodsMarksItem",
+    "DocflowEdiHistoryInput",
+    "DocflowEdiHistoryReport",
+    "DocflowEdiInvoicInput",
+    "DocflowEdiMarkInput",
+    "DocflowEdiMatchInput",
+    "DocflowEdiMessage",
+    "DocflowEdiMessageCard",
+    "DocflowEdiMessageEvent",
+    "DocflowEdiMessageList",
+    "DocflowEdiOrder",
+    "DocflowEdiOrderCard",
+    "DocflowEdiOrderEdits",
+    "DocflowEdiOrderEditsLinesItem",
+    "DocflowEdiOrderEditsShipTo",
+    "DocflowEdiOrderEnvelope",
+    "DocflowEdiOrderList",
+    "DocflowEdiOrderListCountsItem",
+    "DocflowEdiOrderListDocsCountsItem",
+    "DocflowEdiOrdrspInput",
+    "DocflowEdiPallet",
+    "DocflowEdiPartner",
+    "DocflowEdiPartnerDocumentsItem",
+    "DocflowEdiPartnerCardFields",
+    "DocflowEdiPartnerEnvelope",
+    "DocflowEdiPartnerPatch",
+    "DocflowEdiPartnerPatchCardFields",
+    "DocflowEdiPayerList",
+    "DocflowEdiPlaceList",
+    "DocflowEdiRematchResult",
+    "DocflowEdiStepLine",
     "DocflowElectronicPoARequisites",
     "DocflowEmployeeRequisites",
     "DocflowEvent",
@@ -1288,6 +1363,31 @@ __all__ = [
     "DocflowOrderUPDInput",
     "DocflowOutgoingFile",
     "DocflowOutgoingInput",
+    "DocflowOzonRetailApproval",
+    "DocflowOzonRetailApprovalLinesItem",
+    "DocflowOzonRetailCargo",
+    "DocflowOzonRetailCargoContentInput",
+    "DocflowOzonRetailCargoContentInputCargosItem",
+    "DocflowOzonRetailCargoContentInputCargosItemItemsItem",
+    "DocflowOzonRetailCargoList",
+    "DocflowOzonRetailDriverList",
+    "DocflowOzonRetailGate",
+    "DocflowOzonRetailItem",
+    "DocflowOzonRetailOrder",
+    "DocflowOzonRetailOrderEnvelope",
+    "DocflowOzonRetailPackageUnits",
+    "DocflowOzonRetailRejection",
+    "DocflowOzonRetailSaleBrief",
+    "DocflowOzonRetailStateEnvelope",
+    "DocflowOzonRetailSteps",
+    "DocflowOzonRetailSupply",
+    "DocflowOzonRetailSupplyOrder",
+    "DocflowOzonRetailSupplyOrderCard",
+    "DocflowOzonRetailSupplyOrderPage",
+    "DocflowOzonRetailSyncState",
+    "DocflowOzonRetailVehiclePass",
+    "DocflowOzonRetailWaybill",
+    "DocflowOzonRetailWaybillItem",
     "DocflowPackageContract",
     "DocflowPackagePaper",
     "DocflowPackagePaperParent2",
@@ -1314,21 +1414,27 @@ __all__ = [
     "DocflowPaymentDetailsDueDate",
     "DocflowPaymentDocumentRequisites",
     "DocflowPaymentField",
+    "DocflowPaymentForeign",
     "DocflowPaymentInvoiceDocument",
     "DocflowPaymentParty",
     "DocflowPaymentRequest",
+    "DocflowPaymentRequestPartsItem",
     "DocflowPaymentRequestBasis",
     "DocflowPaymentRequestBrief",
     "DocflowPaymentRequestBriefRow",
     "DocflowPaymentRequestBudget",
+    "DocflowPaymentRequestForeign",
     "DocflowPaymentRequestInput",
+    "DocflowPaymentRequestInputPartsItem",
     "DocflowPaymentRequestInvoiceCard",
+    "DocflowPaymentRequestItemInput",
     "DocflowPaymentRequestList",
     "DocflowPaymentRequestOrder",
     "DocflowPaymentRequestPayee",
     "DocflowPaymentRequestPayeeRefresh",
     "DocflowPaymentRequestPayeeRefreshInput",
     "DocflowPaymentRequestPayment",
+    "DocflowPaymentRequestRate",
     "DocflowPaymentRequestReworkInput",
     "DocflowPaymentRequestRoutePreview",
     "DocflowPaymentRequestSchedule",
@@ -1338,10 +1444,13 @@ __all__ = [
     "DocflowPaymentRequestScheduleRule",
     "DocflowPaymentRequestScheduleStatusInput",
     "DocflowPaymentRequestScheduleUpdate",
+    "DocflowPaymentRequestSettings",
+    "DocflowPaymentRequestSettingsInput",
     "DocflowPaymentRequestStatus",
     "DocflowPaymentRequestSuggestion",
     "DocflowPaymentRequestSuggestionItemVariant2",
     "DocflowPaymentRequestUpdate",
+    "DocflowPaymentRequestUpdatePartsItem",
     "DocflowPaymentRequestVersion",
     "DocflowPersonRequisites",
     "DocflowPreflight",
@@ -1377,6 +1486,7 @@ __all__ = [
     "DocflowSyncOutcome",
     "DocflowTemplatePastAct",
     "DocflowTemplatePastActs",
+    "DocflowTemplateRunNow",
     "DocflowTextInfoRequisites",
     "DocflowTitle",
     "DocflowTitleList",
@@ -1686,6 +1796,13 @@ __all__ = [
     "FinanceInUseSinceCutLine",
     "FinanceInUseSinceCutPreview",
     "FinanceInUseSinceCutResult",
+    "FinanceInternalServiceGenerateInput",
+    "FinanceInternalServiceGenerateResult",
+    "FinanceInternalServiceGenerateResultResultsItem",
+    "FinanceInternalServiceTemplate",
+    "FinanceInternalServiceTemplateInput",
+    "FinanceInternalServiceTemplateLine",
+    "FinanceInternalServiceTemplateList",
     "FinanceItemMergeRequest",
     "FinanceItemMergeResult",
     "FinanceLeasingReceipt",
@@ -1797,6 +1914,7 @@ __all__ = [
     "FinancePaymentRegistryView",
     "FinancePaymentRequest",
     "FinancePaymentRequestPayeeKnownAccount",
+    "FinancePaymentRequestRate",
     "FinancePaymentRequestApproval",
     "FinancePaymentRequestAttachInput",
     "FinancePaymentRequestAvailability",
@@ -1865,6 +1983,7 @@ __all__ = [
     "FinancePeriodCheck",
     "FinancePeriodCheckLink",
     "FinancePeriodCheckPage",
+    "FinancePlacementNoSalary",
     "FinancePnlCoverage",
     "FinancePnlCoverageItem",
     "FinancePnlEntry",
@@ -1899,6 +2018,8 @@ __all__ = [
     "FinanceReceiptCostQueueResultsItem",
     "FinanceReconciliation",
     "FinanceReconciliationAccount",
+    "FinanceReconciliationAccountBeforeInUse",
+    "FinanceReconciliationAccountJournalItem",
     "FinanceReconciliationDay",
     "FinanceReconciliationDayReason",
     "FinanceReconciliationSource",
@@ -1957,6 +2078,7 @@ __all__ = [
     "FinanceSettlementSourcePage",
     "FinanceStaffHeadcount",
     "FinanceStaffHeadcountResultsItem",
+    "FinanceStaffHeadcountSkippedItem",
     "FinanceStaffPosition",
     "FinanceStaffPositionInput",
     "FinanceStaffPositionList",
@@ -2022,6 +2144,8 @@ __all__ = [
     "FinanceUnallocatedMoney",
     "FinanceUnallocatedScope",
     "FinanceUnallocatedSummary",
+    "FinanceUnstaffedPlacement",
+    "FinanceUnstaffedPlacementList",
     "FinanceVATBookImport",
     "FinanceVATBookMatch",
     "FinanceVATBookOurRow",
@@ -2143,6 +2267,8 @@ __all__ = [
     "MailThread",
     "ManagedChecklistItem",
     "ManagedChecklistPatch",
+    "MarketplaceAds",
+    "MarketplaceAdsStoresItem",
     "MarketplaceAdsAbsence",
     "MarketplaceAdsAbsenceRequest",
     "MarketplaceAllPnl",
@@ -2188,6 +2314,8 @@ __all__ = [
     "MarketplaceCatalogWritten",
     "MarketplaceComponentDataThrough",
     "MarketplaceComponentFreshness",
+    "MarketplaceCostHistory",
+    "MarketplaceCostHistoryEntry",
     "MarketplaceDocumentEstimate",
     "MarketplaceEconBaseRow",
     "MarketplaceEconOverrides",
@@ -2198,6 +2326,11 @@ __all__ = [
     "MarketplaceEconQuoteRow",
     "MarketplaceEconResult",
     "MarketplaceEconWbInput",
+    "MarketplaceFbsActions",
+    "MarketplaceFbsActionsItemsItem",
+    "MarketplaceFbsAutoShipPreview",
+    "MarketplaceFbsAutoShipPreviewProductsItem",
+    "MarketplaceFbsAutoShipRun",
     "MarketplaceFbsCarriageResult",
     "MarketplaceFbsDeadlines",
     "MarketplaceFbsGroupTotal",
@@ -2208,6 +2341,8 @@ __all__ = [
     "MarketplaceFbsOrdersViewOrders",
     "MarketplaceFbsPlatformShip",
     "MarketplaceFbsPostingsInput",
+    "MarketplaceFbsProblems",
+    "MarketplaceFbsProblemsItemsItem",
     "MarketplaceFbsQueueItem",
     "MarketplaceFbsQueueLine",
     "MarketplaceFbsQueueView",
@@ -2217,9 +2352,12 @@ __all__ = [
     "MarketplaceFbsStatusGroup",
     "MarketplaceFbsStockStart",
     "MarketplaceFbsStoreRef",
+    "MarketplaceFbsStoreSettings",
+    "MarketplaceFbsStoreSettingsInput",
     "MarketplaceFbsSuppliesView",
     "MarketplaceFbsSupply",
     "MarketplaceFbsSupplyOrdersItem",
+    "MarketplaceFbsSupplySkippedItem",
     "MarketplaceFbsSupplyShippingSuggested",
     "MarketplaceFbsSupplyCreateInput",
     "MarketplaceFbsSupplyEnvelope",
@@ -2241,6 +2379,26 @@ __all__ = [
     "MarketplaceFbsWavePickResult",
     "MarketplaceFunnelDailyReference",
     "MarketplaceInitialLoadDataset",
+    "MarketplaceLamodaCatalog",
+    "MarketplaceLamodaCatalogItem",
+    "MarketplaceLamodaCatalogPromotion",
+    "MarketplaceLamodaIlliquidSummary",
+    "MarketplaceLamodaOrdersOverview",
+    "MarketplaceLamodaOrdersOverviewKpi",
+    "MarketplaceLamodaOrdersOverviewStatusesItem",
+    "MarketplaceLamodaReceiptPlan",
+    "MarketplaceLamodaReceiptPlanLinesItem",
+    "MarketplaceLamodaStockReconciliation",
+    "MarketplaceLamodaStockReconciliationRowsItem",
+    "MarketplaceLamodaSupplies",
+    "MarketplaceLamodaSuppliesSuppliesItem",
+    "MarketplaceLamodaSuppliesSuppliesItemHistoryItem",
+    "MarketplaceLetoileAcceptance",
+    "MarketplaceLetoileActLine",
+    "MarketplaceLetoileSaleRequest",
+    "MarketplaceLetoileSupplies",
+    "MarketplaceLetoileSupplyAct",
+    "MarketplaceLetoileTransit",
     "MarketplaceOpeningApplyRequest",
     "MarketplaceOpeningApplyResult",
     "MarketplaceOpeningDocument",
@@ -2262,6 +2420,12 @@ __all__ = [
     "MarketplaceOzonDecompositionOtherPage",
     "MarketplaceOzonDecompositionPeriod",
     "MarketplaceOzonFbs",
+    "MarketplaceOzonFbsErrorCounts",
+    "MarketplaceOzonFbsErrorIndex",
+    "MarketplaceOzonFbsErrorIndexStore",
+    "MarketplaceOzonFbsErrorPosting",
+    "MarketplaceOzonFbsErrorRates",
+    "MarketplaceOzonFbsErrorZone",
     "MarketplaceOzonFbsFunnelStage",
     "MarketplaceOzonFbsPosting",
     "MarketplaceOzonFbsPostingItem",
@@ -2319,6 +2483,9 @@ __all__ = [
     "MarketplacePromoSource",
     "MarketplacePromoTotals",
     "MarketplacePromoUse",
+    "MarketplaceReportCalendar",
+    "MarketplaceReportCalendarRequiredItem",
+    "MarketplaceReportCalendarMonth",
     "MarketplaceReportPnl",
     "MarketplaceReportPnlRowsItem",
     "MarketplaceReportPnlCoverageValue",
@@ -2326,6 +2493,7 @@ __all__ = [
     "MarketplaceReportPnlDaysItem",
     "MarketplaceSectionUsage",
     "MarketplaceSectionUsageList",
+    "MarketplaceStockBlock",
     "MarketplaceStore",
     "MarketplaceStoreCredential",
     "MarketplaceStoreAccounting",
@@ -2347,13 +2515,36 @@ __all__ = [
     "MarketplaceSummaryRecomputeRequest",
     "MarketplaceSummaryRun",
     "MarketplaceSummaryRunDataset",
+    "MarketplaceSupplyCheck",
+    "MarketplaceSupplyCheckIssuesItem",
+    "MarketplaceSupplyNomenclature",
+    "MarketplaceSupplyNomenclatureResultsItem",
+    "MarketplaceSupplyOrder",
+    "MarketplaceSupplyOrderApprove",
+    "MarketplaceSupplyOrderCollected",
+    "MarketplaceSupplyOrderEvent",
+    "MarketplaceSupplyOrderInput",
+    "MarketplaceSupplyOrderInputLinesItem",
+    "MarketplaceSupplyOrderLine",
+    "MarketplaceSupplyOrderPage",
+    "MarketplaceSupplyOrderPlatformMismatch",
+    "MarketplaceSupplyOrderPlatformNumber",
+    "MarketplaceSupplyOrderUPD",
+    "MarketplaceSupplyOrderView",
+    "MarketplaceSupplyPlatformMatch",
     "MarketplaceSupplyReceipt",
     "MarketplaceSupplyReceiptLine",
     "MarketplaceSupplyReceiptView",
+    "MarketplaceSupplySendPlan",
+    "MarketplaceSupplySendPlanRequest",
+    "MarketplaceSupplySendPlanRequestItemsItem",
+    "MarketplaceSupplySendPlanRequestItemsItemPrice",
     "MarketplaceSupplyShipmentCreateInput",
     "MarketplaceSupplyShipmentDraft",
     "MarketplaceSupplyShipmentLine",
     "MarketplaceSupplyShipmentUnmatched",
+    "MarketplaceSupplyStockPart",
+    "MarketplaceSupplyUPD",
     "MarketplaceSyncJobStore",
     "MarketplaceWbCardAdDay",
     "MarketplaceWbCardBoard",
@@ -2376,6 +2567,7 @@ __all__ = [
     "MarketplaceWbFbsFunnelStage",
     "MarketplaceWbFbsOrder",
     "MarketplaceWbFbsTiles",
+    "MarketplaceWbFbsToAssemble",
     "MarketplaceWbFbsWarehouse",
     "MarketplaceWbFunnel",
     "MarketplaceWbFunnelDaily",
@@ -2559,6 +2751,7 @@ __all__ = [
     "MarkingLabelFile",
     "MarkingLabelOrderSelection",
     "MarkingLabelRequest",
+    "MarkingLabelSheet",
     "MarkingLabelTemplate",
     "MarkingLabelTemplateInput",
     "MarkingLabelTemplateList",
@@ -2574,6 +2767,7 @@ __all__ = [
     "MarkingLabelTemplatesLimits",
     "MarkingModList",
     "MarkingModListModsItem",
+    "MarkingOrderBasis",
     "MarkingOrderCode",
     "MarkingOrderCodes",
     "MarkingOrderGtinSummary",
@@ -2622,6 +2816,7 @@ __all__ = [
     "MarkingScanDocumentInput",
     "MarkingScanDocumentResult",
     "MarkingSeqRange",
+    "MarkingSetUnit",
     "MarkingShortDocumentCounts",
     "MarkingShortDocumentCountsResultsItem",
     "MarkingSignDuties",
@@ -2793,13 +2988,19 @@ __all__ = [
     "StockAssemblySpec",
     "StockAssemblySpecArchivedVersion",
     "StockAssemblySpecCreate",
+    "StockAssemblySpecCreateScopeItem",
     "StockAssemblySpecCreateLinesItem",
     "StockAssemblySpecLine",
     "StockAssemblySpecPage",
     "StockAssemblySpecRef",
+    "StockAssemblySpecScopeProduct",
     "StockAssemblySpecStatus",
     "StockAssemblySpecUpdate",
+    "StockAssemblySpecUpdateScopeItem",
     "StockAssemblySpecUpdateLinesItem",
+    "StockAutoBatch",
+    "StockAutoBatchLine",
+    "StockAutoBatchShortage",
     "StockAvailability",
     "StockAvailabilityList",
     "StockBatch",
@@ -2842,6 +3043,8 @@ __all__ = [
     "StockCarrierCity",
     "StockCarrierCityList",
     "StockCarrierIDs",
+    "StockCarrierIntake",
+    "StockCarrierIntakeInput",
     "StockCarrierPlanInput",
     "StockCarrierPoint",
     "StockCarrierPointList",
@@ -2854,6 +3057,9 @@ __all__ = [
     "StockCarrierShipmentPage",
     "StockCarrierStatus",
     "StockCarrierWeight",
+    "StockChannelPackagingHint",
+    "StockChannelPackagingHintMaterialsItem",
+    "StockChannelPackagingProduct",
     "StockClaimWriteoffCreate",
     "StockCompanyPolicy",
     "StockCompanyPolicyPage",
@@ -2885,6 +3091,7 @@ __all__ = [
     "StockDiscrepancyResolveLine",
     "StockDiscrepancyResolveResult",
     "StockDiscrepancySummary",
+    "StockDocumentAutoBatches",
     "StockDocumentBinMove",
     "StockDocumentCreate",
     "StockDocumentCreateTypeKey",
@@ -2910,6 +3117,7 @@ __all__ = [
     "StockDocumentPage",
     "StockDocumentPatch",
     "StockDocumentPayload",
+    "StockDocumentPayloadAutoPost",
     "StockDocumentPayloadIssueRequest",
     "StockDocumentPayloadMarketplaceShipment",
     "StockDocumentPosting",
@@ -2994,6 +3202,8 @@ __all__ = [
     "StockOpeningBalanceCreate",
     "StockOpeningCorrectionCreate",
     "StockOpeningCorrectionCreateItemsItem",
+    "StockOpeningCorrectionPostInput",
+    "StockOpeningCorrectionPostResult",
     "StockOrderFulfillmentExportRequest",
     "StockOrderPallets",
     "StockOrderPickKit",
@@ -3061,6 +3271,7 @@ __all__ = [
     "StockReorderRuleInput",
     "StockReorderRulePage",
     "StockReorderRulePatch",
+    "StockReportCategoryTotal",
     "StockReportColumn",
     "StockReportDrilldown",
     "StockReportDrilldownEntry",
@@ -3120,6 +3331,9 @@ __all__ = [
     "StockShippingTaskInput",
     "StockSupplier",
     "StockSupplierPage",
+    "StockTaskMarks",
+    "StockTaskMarksInput",
+    "StockTaskSubject",
     "StockTransitAwaiting",
     "StockTransitAwaitingWarehouse",
     "StockTransitBlocked",
@@ -3139,6 +3353,7 @@ __all__ = [
     "StockTransitShippedBatch",
     "StockTransitStockList",
     "StockTransitStockRow",
+    "StockUnitQuantity",
     "StockUploadFinishResult",
     "StockUserWarehouse",
     "StockUserWarehousePage",
@@ -3240,6 +3455,8 @@ __all__ = [
     "DashboardListMetricsResponse",
     "DocflowLookupParticipantRequest",
     "DocflowLookupParticipantResponse",
+    "DocflowEdiPeopleResponse",
+    "DocflowEdiPeopleResponsePeopleItem",
     "DocflowFlowContactStatsResponse",
     "DocflowFlowContactStatsResponseItemsItem",
     "DocflowFlowDocumentRevisionsResponse",
@@ -3249,6 +3466,7 @@ __all__ = [
     "DocflowPreviewMessageActionResponseNextItem",
     "DocflowLinkIntakeCounterpartyRequest",
     "DocflowRefreshMessageResponse",
+    "DocflowRunSaleTemplateNowRequest",
     "DocflowYandexKitMarkShippedRequest",
     "FilesContentLinkResponse",
     "FilesListVersionsResponse",
@@ -3270,7 +3488,10 @@ __all__ = [
     "FinanceCreateOpeningDocumentRequest",
     "FinanceConfirmPaymentRequestPayeeRequest",
     "FinancePaymentRequestFactCandidatesResponse",
+    "FinanceChangePaymentRequestPayeeAccountRequest",
+    "FinanceRefreshPaymentRequestPayeeBankRequest",
     "FinanceGetProjectBudgetHistoryResponse",
+    "FinancePurchaseLinkPaymentRequest",
     "FinanceSaleReturnLastPriceResponse",
     "FinanceListAllocationRulesResponse",
     "FinanceLinkPaymentToNewOrderRequest",
@@ -3317,6 +3538,7 @@ __all__ = [
     "StockCleanupSeriesRequest",
     "StockListDocumentAuthorsResponse",
     "StockListDocumentAuthorsResponseResultsItem",
+    "StockPostDocumentResponse",
     "StockLaunchWarehouseRequest",
     "StockWarehouseRelaunchPlanResponse",
     "StockWarehouseRelaunchPlanResponseDocumentsItem",
@@ -4782,6 +5004,52 @@ class CRMCardMailThread(_CRMCardMailThreadRequired, total=False):
     #: Письма переписки от старых к новым
     messages: List["CRMMailMessage"]
 
+class _CRMCardPinRequired(TypedDict):
+    id: "UUID"
+    entity_type: Literal['lead', 'deal']
+    entity_id: "UUID"
+    item_kind: Literal['engagement', 'note', 'file', 'task']
+    item_id: "UUID"
+    #: Кто закрепил
+    pinned_by: int
+    pinned_at: str
+    #: Название дела, текст комментария или имя файла; у задачи пусто
+    title: str
+
+class CRMCardPin(_CRMCardPinRequired, total=False):
+    """Запись, закреплённая наверху истории изменений сделки или лида"""
+
+    pinned_by_name: str
+    #: Срок дела, время комментария или загрузки файла
+    at: str
+    #: Конец встречи у дела
+    ends_at: str
+    #: Ответственный за дело, автор комментария или загрузивший файл
+    actor_id: int
+    actor_name: str
+    #: Вид дела из справочника «Виды дел»
+    kind: str
+    #: Дело выполнено
+    done: bool
+    size_bytes: int
+    #: Вердикт антивируса для файла: clean, skipped, pending, infected
+    scan_status: str
+    external_id: "UUID"
+    #: Подробности комментария: упомянутые через «@» коллеги
+    meta: Dict[str, Any]
+
+class CRMCardPinInput(TypedDict):
+    """Что закрепить в истории изменений"""
+
+    #: Вид записи: дело, комментарий, файл или связь с задачей
+    item_kind: Literal['engagement', 'note', 'file', 'task']
+    item_id: "UUID"
+
+class CRMCardPinList(TypedDict):
+    """Закреплённое в истории изменений, последние сверху"""
+
+    items: List["CRMCardPin"]
+
 class CRMCatalogPage(TypedDict):
     results: List["CRMCatalogProduct"]
     limit: int
@@ -5644,6 +5912,8 @@ class CRMImportMapping(TypedDict, total=False):
     default_stage: "UUID"
     default_loss_reason: "UUID"
     default_currency: str
+    #: Не переносить сделки с этапов, которым не выбрана пара в кабинете (обычно воронки источника, которых в Akeda нет, например архивные), вместе с их делами, заметками и задачами; клиенты переносятся как обычно
+    skip_unmapped_deals: bool
     #: Повторный перенос обновляет уже перенесённые записи: поле из источника ложится в карточку, если в Akeda его после прошлого переноса не правили (ERP-1619)
     update_existing: bool
     #: Куда ложатся свои поля источника: ключ — «вид записи:поле источника», вид — customer, lead или deal
@@ -5654,6 +5924,10 @@ class CRMImportMapping(TypedDict, total=False):
     task_groups: Dict[str, "CRMImportTaskGroupTarget"]
     #: Переносить и задачи источника без сделки и лида — в модуль «Задачи», без карточки CRM (ERP-2932)
     standalone_tasks: bool
+    #: Перенести файлы задач потом: задачи и комментарии заводятся сразу без файлов, файлы к ним докачиваются, когда все задачи перенесены; до конца докачки перенос идёт
+    task_files_later: bool
+    #: Не переносить переписку «Чата задачи» новой карточки Битрикс24 (сообщения и их файлы, без служебных); по умолчанию она переносится комментариями задачи, старые комментарии — как раньше
+    skip_task_chat: bool
 
 class CRMImportMappingInput(TypedDict):
     revision: int
@@ -5662,7 +5936,7 @@ class CRMImportMappingInput(TypedDict):
 CRMImportNameFormat = Literal['first_last', 'last_first', 'first_middle_last', 'last_first_middle']
 
 class _CRMImportOptionsRequired(TypedDict):
-    #: owners, stages, lead_stages, sources, currencies, loss_reasons; source_tasks — число задач источника (ERP-2891), только если они есть
+    #: owners, stages, lead_stages, sources, currencies, loss_reasons; source_tasks — число задач источника (ERP-2891), только если они есть; в нём chat — задачи с перепиской «Чата задачи», chat_closed — задачи, чей чат портал не отдал
     values: Dict[str, List["CRMImportValue"]]
     members: List["CRMUserRef"]
     pipelines: List["CRMPipeline"]
@@ -7410,6 +7684,8 @@ class _CalendarBookingLinkRequired(TypedDict):
     description: str
     calendar_source: Literal['booking']
     export_target: str
+    #: Видеовстреча каждой записи: пусто — без неё, telemost — новая комната Телемоста владельца (при отказе — его постоянная ссылка), personal — постоянная ссылка владельца.
+    conference_mode: Literal['', 'telemost', 'personal']
     timezone: str
     duration_min: int
     buffer_min: int
@@ -7436,6 +7712,8 @@ class CalendarBookingLinkCreate(TypedDict, total=False):
     #: Нормализуется сервером в booking
     calendar_source: str
     export_target: str
+    #: Видеовстреча каждой записи: пусто — без неё, telemost — новая комната Телемоста владельца (при отказе — его постоянная ссылка), personal — постоянная ссылка владельца.
+    conference_mode: Literal['', 'none', 'telemost', 'personal']
     timezone: str
     duration_min: int
     buffer_min: int
@@ -7465,6 +7743,8 @@ class CalendarBookingLinkPatch(TypedDict, total=False):
     #: Нормализуется сервером в booking
     calendar_source: str
     export_target: str
+    #: Видеовстреча каждой записи: пусто — без неё, telemost — новая комната Телемоста владельца (при отказе — его постоянная ссылка), personal — постоянная ссылка владельца.
+    conference_mode: Literal['', 'none', 'telemost', 'personal']
     timezone: str
     duration_min: int
     buffer_min: int
@@ -7718,6 +7998,22 @@ class CalendarExternalCalendar(_CalendarExternalCalendarRequired, total=False):
     read_only: bool
     writable: bool
     export: bool
+
+class _CalendarGuestInviteLinkRequired(TypedDict):
+    token: str
+    #: Полный адрес страницы встречи для гостя
+    url: str
+    title: str
+    starts_at: str
+    ends_at: str
+    timezone: str
+    all_day: bool
+
+class CalendarGuestInviteLink(_CalendarGuestInviteLinkRequired, total=False):
+    location: str
+    conference_url: str
+    conference_provider: Literal['telemost', 'personal', 'link']
+    organizer_name: str
 
 class CalendarInvitation(TypedDict):
     event_id: "UUID"
@@ -8015,6 +8311,10 @@ class _ChatForwardedAttachmentRequired(TypedDict):
 
 class ChatForwardedAttachment(_ChatForwardedAttachmentRequired, total=False):
     scan_error_code: str
+    #: Ширина фото на экране в пикселях (с поворотом EXIF), измеренная при загрузке. Только у media_kind=image и только вместе с image_height; нет — старое вложение или HEIF/AVIF, клиент измеряет картинку сам
+    image_width: int
+    #: Высота фото на экране в пикселях; пара к image_width. По пропорции клиент резервирует место под фото до загрузки картинки
+    image_height: int
 
 class _ChatForwardedMessageRequired(TypedDict):
     id: "UUID"
@@ -8601,9 +8901,9 @@ class _CoreActionJournalEntryRequired(TypedDict):
     actor_name: str
     #: Модуль-владелец объекта
     module: str
-    #: created, edited, posted, reposted, unposted, cancelled, marked_deleted, unmarked_deleted, deleted, rebuilt, shelf_life_set, period_closed, period_reopened
+    #: created, edited, posted, reposted, unposted, cancelled, marked_deleted, unmarked_deleted, deleted, rebuilt, rebuild_refused, shelf_life_set, period_closed, period_reopened, marking_changed
     action: str
-    #: Вид объекта: document, period
+    #: Вид объекта: document, period, product, product_category
     object_type: str
     #: Подпись объекта на момент действия, например вид и номер документа
     object_label: str
@@ -8784,7 +9084,7 @@ class CoreActionRequestForm(TypedDict, total=False):
     basis_documents: List["CoreActionRequestReference"]
     conditions: List["StockCondition"]
 
-CoreActionRequestFormResult = Union["CoreActionRequestForm", "CoreActionRequestReferencePage"]
+CoreActionRequestFormResult = Union["CoreActionRequestForm", "CoreActionRequestReferencePage", "CoreActionRequestOnHand"]
 
 class _CoreActionRequestInputRequired(TypedDict):
     action_key: str
@@ -8797,6 +9097,30 @@ class CoreActionRequestInput(_CoreActionRequestInputRequired, total=False):
     title: str
     provenance: "CoreActionProvenance"
     expected_revision: int
+
+class CoreActionRequestOnHand(TypedDict):
+    """Ответ part=on_hand — сколько товаров строк лежит на выбранном складе."""
+
+    on_hand: List["CoreActionRequestOnHandRow"]
+
+class CoreActionRequestOnHandCondition(TypedDict):
+    #: Состояние; null — «Основное».
+    condition_id: Optional["UUID"]
+    on_hand: str
+    reserved: str
+
+class CoreActionRequestOnHandRow(TypedDict):
+    """Остаток одного товара. Только количества — без стоимости, держателей резерва и номеров документов."""
+
+    product_id: "UUID"
+    #: Состояние, к которому относятся on_hand и reserved; null — «Основное».
+    condition_id: Optional["UUID"]
+    #: Лежит на складе, с резервом и просроченным.
+    on_hand: str
+    #: Из него в резерве.
+    reserved: str
+    #: Разбивка по состояниям склада; пусто — у товара только «Основное».
+    conditions: List["CoreActionRequestOnHandCondition"]
 
 class CoreActionRequestPage(TypedDict):
     results: List["CoreActionRequest"]
@@ -9062,6 +9386,8 @@ class CoreCabinetPreferences(_CoreCabinetPreferencesRequired, total=False):
     logo_url: str
     #: Префикс внутренних штрихкодов EAN-13 (200–299), с ним работает «Сгенерировать». Пусто при сохранении — оставить прежний.
     internal_barcode_prefix: str
+    #: Как считать период нового месячного шаблона продажи, платежа или закупки: первый месяц целиком, первый неполный — по дням или скользящий месяц. Пусто при сохранении — оставить прежний.
+    template_period_mode: Literal['calendar_full', 'calendar_prorated', 'rolling']
 
 class CoreChange(TypedDict):
     #: Имя сущности из реестра ленты (core.contact)
@@ -9216,6 +9542,8 @@ class CoreContact(_CoreContactRequired, total=False):
     payment_condition_id: Optional["UUID"]
     #: Название условия оплаты; пусто — условия нет
     payment_condition_name: str
+    #: Закреплён за сотрудником (id пользователя); null — ничей, виден всем. Роль «Контрагенты — только свои» видит закреплённых за собой и ничьих; новый контрагент закрепляется за создателем
+    responsible_user_id: Optional[int]
     #: Код системного контрагента (fns, sfr, bank:<БИК>). Только чтение.
     system_key: str
     #: Что подсветить в реквизитах по правилу ИНН. Пусто — всё в порядке.
@@ -9502,6 +9830,71 @@ class CoreContactEmployeeInput(TypedDict):
 
 CoreContactEntityType = Literal['legal', 'individual', 'sole_prop']
 
+class CoreContactForeignAccount(TypedDict):
+    """Счёт иностранного контрагента в справочнике модуля core."""
+
+    id: "UUID"
+    #: Контрагент, которому принадлежит счёт
+    contact_id: "UUID"
+    #: IBAN или номер счёта без пробелов, верхний регистр
+    account: str
+    #: SWIFT/BIC банка, 8 или 11 символов; может быть пустым
+    swift: str
+    #: Название банка
+    bank_name: str
+    #: Страна банка, код ISO
+    bank_country: str
+    #: Валюта счёта, код ISO 4217
+    currency: str
+    #: Комментарий к счёту
+    comment: str
+    #: Основной счёт; у контрагента он один
+    is_default: bool
+    #: Выключенный счёт не предлагается новым документам
+    is_active: bool
+    #: Когда счёт заведён: отметка времени базы текстом
+    created_at: str
+    #: Когда счёт последний раз менялся: отметка времени базы текстом
+    updated_at: str
+
+class _CoreContactForeignAccountCreateRequired(TypedDict):
+    #: IBAN или номер счёта
+    account: str
+
+class CoreContactForeignAccountCreate(_CoreContactForeignAccountCreateRequired, total=False):
+    #: SWIFT/BIC банка, 8 или 11 символов
+    swift: str
+    #: Название банка
+    bank_name: str
+    #: Страна банка, код ISO
+    bank_country: str
+    #: Валюта счёта, код ISO 4217
+    currency: str
+    #: Комментарий к счёту
+    comment: str
+    #: Сделать счёт основным
+    is_default: bool
+
+class CoreContactForeignAccountPatch(TypedDict, total=False):
+    """Правка счёта; непереданные поля остаются прежними."""
+
+    #: Новый IBAN или номер счёта
+    account: str
+    #: Новый SWIFT/BIC банка
+    swift: str
+    #: Название банка
+    bank_name: str
+    #: Страна банка, код ISO
+    bank_country: str
+    #: Валюта счёта, код ISO 4217
+    currency: str
+    #: Комментарий к счёту
+    comment: str
+    #: true делает счёт основным, false ничего не меняет
+    is_default: bool
+    #: false выключает счёт, true включает снова
+    is_active: bool
+
 CoreContactKind = Literal['client', 'supplier', 'both']
 
 class CoreContactMergeBlocked(TypedDict, total=False):
@@ -9642,6 +10035,27 @@ class CoreContactPatchPostalAddress(TypedDict):
     #: Офис или помещение
     flat: str
     info: str
+
+class CoreContactResponsibleEvent(TypedDict, total=False):
+    id: "UUID"
+    #: За кем был закреплён; null — ничей
+    from_user_id: Optional[int]
+    #: За кем закреплён теперь; null — закрепление снято
+    to_user_id: Optional[int]
+    #: Кто передал
+    actor_user_id: Optional[int]
+    created_at: str
+
+class CoreContactResponsibleHistory(TypedDict, total=False):
+    results: List["CoreContactResponsibleEvent"]
+
+class _CoreContactsAssignInputRequired(TypedDict):
+    #: Контрагенты, которых закрепляют
+    ids: List["UUID"]
+
+class CoreContactsAssignInput(_CoreContactsAssignInputRequired, total=False):
+    #: Сотрудник (id пользователя), за которым закрепляют; null или не прислан — снять закрепление
+    user_id: Optional[int]
 
 class CoreContactsPaymentConditionInput(TypedDict):
     contact_ids: List["UUID"]
@@ -10705,7 +11119,8 @@ CoreGLAccountType = Literal['asset', 'liability', 'equity', 'income', 'expense']
 
 class _CoreGLMappingRequired(TypedDict):
     id: "UUID"
-    subject_type: Literal['item', 'money_account', 'contact', 'product', 'document_type', 'acquiring_clearing', 'warehouse']
+    #: product_kind_* — правило вида номенклатуры (ERP-2821), без subject_id; warehouse — прежнее правило склада, новых не заводят
+    subject_type: Literal['item', 'money_account', 'contact', 'product', 'document_type', 'acquiring_clearing', 'warehouse', 'product_kind_goods', 'product_kind_material', 'product_kind_semi_product']
     account_id: "UUID"
     account_code: str
     account_name: str
@@ -10718,7 +11133,8 @@ class CoreGLMapping(_CoreGLMappingRequired, total=False):
     valid_to: str
 
 class _CoreGLMappingCreateRequired(TypedDict):
-    subject_type: Literal['item', 'money_account', 'contact', 'product', 'document_type', 'acquiring_clearing', 'warehouse']
+    #: Счёт запасов задаёт вид номенклатуры (ERP-2821): product_kind_goods, product_kind_material, product_kind_semi_product — без subject_id. warehouse отвергается 400 core.gl_mapping.warehouse_retired: склад больше не задаёт счёт.
+    subject_type: Literal['item', 'money_account', 'contact', 'product', 'document_type', 'acquiring_clearing', 'warehouse', 'product_kind_goods', 'product_kind_material', 'product_kind_semi_product']
     account_id: "UUID"
 
 class CoreGLMappingCreate(_CoreGLMappingCreateRequired, total=False):
@@ -11042,6 +11458,8 @@ class CoreOrder(_CoreOrderRequired, total=False):
     consignee_point_id: Dict[str, Any]
     #: Название точки доставки — для экрана
     consignee_point_name: str
+    #: Адрес точки доставки строкой
+    consignee_point_address: str
     #: Переход права, перекрытый в продаже: shipment, acceptance; пусто — по договору, контрагенту и каналу. Новая отгрузка замораживает выбранное правило (ERP-2772)
     title_transfer: Literal['', 'shipment', 'acceptance']
     #: Условие оплаты, из которого построен график продажи (ERP-2140); нет поля — график набран руками или условия нет
@@ -11196,6 +11614,10 @@ class CoreOrderDealPaper(_CoreOrderDealPaperRequired, total=False):
     number: str
     date: str
     title: str
+
+class CoreOrderDropRemainderInput(TypedDict, total=False):
+    #: Версия продажи, которую видел человек; другая — 409 core.trade.changed. 0 или пусто — без проверки
+    expected_version: int
 
 class _CoreOrderEventRequired(TypedDict):
     id: "UUID"
@@ -11982,7 +12404,8 @@ class CoreOrderTemplateActions(TypedDict, total=False):
     invoice_days: int
     invoice_delivery: "CoreOrderTemplateDelivery"
     closing_delivery: "CoreOrderTemplateDelivery"
-    closing: Literal['', 'upd', 'act']
+    #: upd и act — только у шаблона с юрлицом; business_act — упрощённый акт на бизнес, только без юрлица
+    closing: Literal['', 'upd', 'act', 'business_act']
     closing_when: Literal['', 'on_order', 'after_days', 'period_end']
     closing_days: int
     #: Invoices of the period sale as a list; replaces single invoice fields. Monthly and quarterly templates only.
@@ -11991,7 +12414,8 @@ class CoreOrderTemplateActions(TypedDict, total=False):
     closings: List["CoreOrderTemplateClosing"]
 
 class _CoreOrderTemplateClosingRequired(TypedDict):
-    kind: Literal['upd', 'act']
+    #: upd и act — только у шаблона с юрлицом; business_act — упрощённый акт на бизнес, только без юрлица (422 core.order_template.closing_needs_company / business_act_has_company)
+    kind: Literal['upd', 'act', 'business_act']
     date: "CoreOrderTemplatePaperDate"
 
 class CoreOrderTemplateClosing(_CoreOrderTemplateClosingRequired, total=False):
@@ -12061,6 +12485,14 @@ class CoreOrderTemplateRun(_CoreOrderTemplateRunRequired, total=False):
     closing_date: str
     #: Period sale amount by template lines and dated prices.
     amount: str
+    #: Service period start (prorated and rolling modes).
+    service_from: str
+    #: Service period end, inclusive.
+    service_until: str
+    #: Partial first month: billed days.
+    days: int
+    #: Partial first month: days in the month.
+    period_days: int
     papers: List["CoreOrderTemplateRunPaper"]
 
 class _CoreOrderTemplateRunPaperRequired(TypedDict):
@@ -12074,7 +12506,7 @@ class CoreOrderTemplateRunPaper(_CoreOrderTemplateRunPaperRequired, total=False)
     due_date: str
     amount: str
 
-CoreOrderTemplateSchedule = TypedDict("CoreOrderTemplateSchedule", {"period": Literal['month', 'quarter', 'week'], "service_period_offset": int, "day": int, "from": str, "until": str, "line_prices": List["CoreOrderTemplateLinePrice"]}, total=False)
+CoreOrderTemplateSchedule = TypedDict("CoreOrderTemplateSchedule", {"period": Literal['month', 'quarter', 'week'], "service_period_offset": int, "period_mode": Literal['', 'calendar_full', 'calendar_prorated', 'rolling'], "day": int, "from": str, "until": str, "line_prices": List["CoreOrderTemplateLinePrice"]}, total=False)
 
 class CoreOrderTemplateStateInput(TypedDict):
     state: Literal['active', 'paused', 'archived']
@@ -13411,7 +13843,7 @@ class _CoreProductExportColumnRequired(TypedDict):
     header: str
     #: Группа в окне выгрузки: main — основное, codes — коды и штрихкоды, channels — каналы продаж, size — вес и габариты, trade — НДС, страна и таможня, storage — срок, серии и маркировка, custom — доп. поля, service — служебные (ID справочников, семейство, оси варианта)
     group: Literal['main', 'codes', 'channels', 'size', 'trade', 'storage', 'custom', 'service']
-    #: Столбец пишется всегда — ключ обновления или обязательное поле
+    #: Столбец пишется всегда: у выгрузки — ключ обновления или обязательное поле, у шаблона — обязательное поле
     locked: bool
     #: Столбец входит в стандартную выгрузку — рабочий набор без выбора галочками
     standard: bool
@@ -13419,6 +13851,8 @@ class _CoreProductExportColumnRequired(TypedDict):
     filled: int
 
 class CoreProductExportColumn(_CoreProductExportColumnRequired, total=False):
+    #: Столбец входит в набор «Рабочие» — выбор по умолчанию: обязательные и стандартные поля и заполненные хотя бы у 5 % строк кабинета (флаг и список — если значения разные); служебные — нет, у шаблона нет и ID
+    working: bool
     #: Код канала продаж у колонки канала
     channel: str
     #: Название канала продаж у колонки канала
@@ -13437,6 +13871,10 @@ class CoreProductExportRequest(_CoreProductExportRequestRequired, total=False):
     channels: List[str]
     #: Ключи отмеченных столбцов из coreListProductExportColumns; пусто — все. Ключ обновления и обязательные столбцы пишутся всегда, неизвестный ключ пропускается
     columns: List[str]
+    #: Отмеченные позиции: в файл идут они, варианты отмеченных семейств и (в файле семейств) семейства отмеченных вариантов; пусто — без отбора по отметкам. Важнее filter
+    product_ids: List["UUID"]
+    #: Текущий поиск и отбор списка строкой параметров coreListProducts (q, status, kind, folder, marking, custom, profile…): в файл идут все позиции под отбором, без страниц; пусто — вся номенклатура
+    filter: str
 
 class CoreProductFieldDefinition(TypedDict):
     id: "UUID"
@@ -14173,6 +14611,7 @@ class CoreSalesChannel(_CoreSalesChannelRequired, total=False):
     #: Вид цены канала (attrs.price_type_id, ERP-2489): им подбор цен даёт цену продажи канала.
     price_type_id: Optional["UUID"]
     price_type: Optional["CoreSalesChannelRef"]
+    ship_weekday: Literal['', '1', '2', '3', '4', '5', '6', '7']
     #: Заказ на склад (ERP-098): manager — ждёт передачи менеджером, auto — идёт в «К отгрузке» сам, пусто — как в настройках склада.
     warehouse_handover: Literal['', 'auto', 'manager']
     upd_profile: "CoreUPDProfile"
@@ -14220,6 +14659,7 @@ class CoreSalesChannelCreate(_CoreSalesChannelCreateRequired, total=False):
     reserve_over_available: Optional[Literal['', 'block', 'warn']]
     #: Квант канала (ERP-083): кратность отгрузки в штуках, целое от 2; пусто или null — снять.
     ship_multiple: Optional[str]
+    ship_weekday: Optional[str]
     #: Текст для склада (ERP-083), до 2000 знаков; пусто или null — снять.
     warehouse_note: Optional[str]
     #: Экземпляров транспортной накладной (ERP-095), целое от 1 до 10; пусто или null — снять.
@@ -14307,6 +14747,7 @@ class CoreSalesChannelPatch(TypedDict, total=False):
     reserve_over_available: Optional[Literal['', 'block', 'warn']]
     #: Квант канала (ERP-083): кратность отгрузки в штуках, целое от 2; пусто или null — снять.
     ship_multiple: Optional[str]
+    ship_weekday: Optional[str]
     #: Текст для склада (ERP-083), до 2000 знаков; пусто или null — снять.
     warehouse_note: Optional[str]
     #: Экземпляров транспортной накладной (ERP-095), целое от 1 до 10; пусто или null — снять.
@@ -14321,6 +14762,14 @@ class CoreSalesChannelPatch(TypedDict, total=False):
     upd_profile: Optional["CoreUPDProfile"]
 
 CoreSalesChannelPriceMode = Literal['', 'required', 'not_needed']
+
+class CoreSalesChannelProductMultiple(TypedDict):
+    channel_id: "UUID"
+    product_id: "UUID"
+    ship_multiple: str
+
+class CoreSalesChannelProductMultipleInput(TypedDict, total=False):
+    ship_multiple: Optional[str]
 
 class _CoreSalesChannelRefRequired(TypedDict):
     id: "UUID"
@@ -14516,6 +14965,8 @@ class CoreUPDProfile(TypedDict, total=False):
     line_text_info: List["CoreUPDTextInfoRule"]
     #: Режим кодов идёт от товара: группа с передачей по GTIN — ГТИН и КолВедМарк, поштучная — КИЗ даже в опте, неполный скан поштучной строки — отказ; значение решает, что делать со сканом строки по GTIN. kiz — кодами КИЗ и НомУпак (без единого скана остаётся количеством, неполный скан — отказ); package — отсканированные коды упаковки в НомУпак, без них количеством и без отказа; count и пусто — количеством; none — не передавать: ни кодов, ни количества, неполный скан не отказ, коды формы отправки всё равно уходят
     marks_mode: Literal['', 'kiz', 'count', 'package', 'none']
+    #: Особый случай передачи маркированного товара по умолчанию (ERP-2712): own_use — для собственных нужд покупателя, gratuitous — безвозмездно, production — для производства (СвВыбытияМАРК 1/2/3), storage — хранение без смены собственника (ВидОборотаМАРК 9). Те же значения, что marking_case формы отправки, и выбор формы сильнее. Пишется, только когда в УПД есть маркированные строки. Пусто — обычная продажа
+    marking_case: Literal['', 'own_use', 'gratuitous', 'production', 'storage']
     #: Сверять цену строки с заказом сети из Контур.EDI: расхождение — предупреждение предпросмотра; нет заказа или в нём нет цены — сверять не с чем
     check_price_vs_order: bool
     #: КПП покупателя (СвПокуп) из точки доставки, если он у неё есть и точка принадлежит покупателю
@@ -15255,7 +15706,7 @@ class DocflowAcceptedDocument(TypedDict):
     id: "UUID"
     #: Наш номер из нумератора кабинета. Номер продавца лежит в содержимом документа: занять им наш сквозной счётчик значит однажды получить два своих документа с одним номером от двух разных поставщиков
     number: str
-    #: Дата документа ГГГГ-ММ-ДД. По умолчанию это дата документа поставщика: операция произошла тогда, когда её совершил он, и датировать её днём приёмки значит поставить факт не в тот период
+    #: Дата учёта ГГГГ-ММ-ДД: день приёмки, по умолчанию сегодня (ERP-2673). Дата и номер документа поставщика хранятся отдельно и уходят в 1С входящими
     date: str
     #: Ключ вида документа; у приёмки docflow_incoming
     type_key: str
@@ -15819,6 +16270,8 @@ class DocflowApprovalPolicy(_DocflowApprovalPolicyRequired, total=False):
     accounting_post: bool
     #: Оплата по закупке из согласованной заявки: route — по маршруту заявок на оплату (умолчание); calendar или treasury — без повторного согласования, сразу в платёжный календарь или в очередь казначея, если закупка не дороже согласованной суммы заявки. Только у вида «заявка на оплату». Не задано при сохранении — прежнее значение.
     approved_purchase_payment: Literal['route', 'calendar', 'treasury']
+    #: Поля разрезов заявки в регламенте: ключ cfo, project или department; off — не показывать, optional — необязательное, required — без него заявку не отправить. Нет ключа — необязательное. Только у вида «заявка на оплату». Не задано при сохранении — прежнее значение.
+    request_fields: Dict[str, Literal['off', 'optional', 'required']]
 
 class _DocflowApprovalPolicyInputRequired(TypedDict):
     subject_module: Literal['docflow', 'finance', 'stock']
@@ -15836,6 +16289,8 @@ class DocflowApprovalPolicyInput(_DocflowApprovalPolicyInputRequired, total=Fals
     accounting_post: bool
     #: Оплата по закупке из согласованной заявки: route — по маршруту заявок на оплату (умолчание); calendar или treasury — без повторного согласования, сразу в платёжный календарь или в очередь казначея, если закупка не дороже согласованной суммы заявки. Только у вида «заявка на оплату». Не задано при сохранении — прежнее значение.
     approved_purchase_payment: Literal['route', 'calendar', 'treasury']
+    #: Поля разрезов заявки в регламенте: ключ cfo, project или department; off — не показывать, optional — необязательное, required — без него заявку не отправить. Нет ключа — необязательное. Только у вида «заявка на оплату». Не задано при сохранении — прежнее значение.
+    request_fields: Dict[str, Literal['off', 'optional', 'required']]
 
 class _DocflowApprovalReasonOptionRequired(TypedDict):
     code: str
@@ -15992,6 +16447,8 @@ class DocflowApprovalRouteStage(_DocflowApprovalRouteStageRequired, total=False)
     min_amount: str
     #: Только сверх лимита: этап выполняется, только если заявку на оплату провели сверх лимита бюджета кнопкой «Сверх лимита»; туда ставят генерального директора
     over_budget_only: bool
+    #: Статья обязательна: согласующий этапа ставит статью заявки на оплату сам (PUT …/payment-requests/{id}/item), а согласовать без статьи нельзя (409 docflow.approval.item_required). Если признака нет ни на одном этапе, заявка проходит маршрут без статьи
+    require_item: bool
 
 class _DocflowApprovalStageRequired(TypedDict):
     id: "UUID"
@@ -16012,6 +16469,8 @@ class DocflowApprovalStage(_DocflowApprovalStageRequired, total=False):
     min_amount: str
     #: Снимок условия «только сверх лимита»
     over_budget_only: bool
+    #: Снимок признака «статья обязательна»
+    require_item: bool
     #: По маршруту этап согласовывал бы сам автор; вместо него спрашивают его руководителя
     author_replaced: bool
     due_hours: int
@@ -16686,6 +17145,649 @@ class DocflowDocumentRefRequisites(TypedDict, total=False):
     #: РеквДопСведДок
     info: str
 
+class DocflowEdiArchiveInput(TypedDict):
+    archived: bool
+
+class _DocflowEdiAvailabilityRequired(TypedDict):
+    channel_id: Optional["UUID"]
+    channel_name: str
+    #: Склад отгрузки из карточки канала
+    warehouse_id: Optional["UUID"]
+    warehouse_name: str
+    #: soft — нехватка видна, подтвердить можно; strict — нельзя больше доступного
+    stock_check: Literal['soft', 'strict']
+    #: Откуда режим; пусто — канала нет
+    stock_check_source: Literal['', 'channel', 'cabinet']
+    shelf_life: Optional["DocflowEdiAvailabilityShelfLifeVariant2"]
+    #: Хотя бы одной строке не хватает заказанного
+    shortage: bool
+    lines: List["DocflowEdiAvailabilityLine"]
+
+class DocflowEdiAvailability(_DocflowEdiAvailabilityRequired, total=False):
+    #: Канал отгружает только из этого состояния товара
+    only_condition: str
+    #: Почему не определён остаток всей заявки
+    reason: Literal['no_channel', 'no_warehouse', 'warehouse_unusable', 'stock_off', 'no_access']
+
+class _DocflowEdiAvailabilityShelfLifeVariant2Required(TypedDict):
+    has_minimum: bool
+    source: Literal['contact', 'cabinet', 'none']
+
+class DocflowEdiAvailabilityShelfLifeVariant2(_DocflowEdiAvailabilityShelfLifeVariant2Required, total=False):
+    min_remaining_pct: str
+    min_remaining_days: int
+    scaled: bool
+    #: Дата оценки партий
+    as_of: str
+
+class DocflowEdiAvailabilityEnvelope(TypedDict):
+    availability: "DocflowEdiAvailability"
+
+class _DocflowEdiAvailabilityLineRequired(TypedDict):
+    #: Номер строки заявки
+    n: int
+    #: Заказано, штук
+    ordered: str
+    state: Literal['known', 'undetermined']
+    #: Что остаётся на строку с учётом срока годности; null — не определено, это не ноль
+    available: Optional[str]
+    #: Весь остаток товара с учётом срока годности
+    product_available: Optional[str]
+    #: Свободно без порога срока годности
+    free: Optional[str]
+    #: Годное, но отсечённое порогом срока годности
+    below_shelf_life: Optional[str]
+    #: На сколько заказанное больше доступного
+    shortage: Optional[str]
+
+class DocflowEdiAvailabilityLine(_DocflowEdiAvailabilityLineRequired, total=False):
+    product_id: "UUID"
+    reason: Literal['no_channel', 'no_warehouse', 'no_product', 'warehouse_unusable', 'stock_off', 'no_access']
+
+class _DocflowEdiBatchInputRequired(TypedDict):
+    #: Заявки, отмеченные в списке
+    ids: List["UUID"]
+
+class DocflowEdiBatchInput(_DocflowEdiBatchInputRequired, total=False):
+    #: Только для archive-batch: убрать в архив (по умолчанию) или вернуть
+    archived: bool
+
+class DocflowEdiBatchReport(TypedDict):
+    results: List["DocflowEdiBatchRow"]
+    created: int
+    exists: int
+    item_unknown: int
+    failed: int
+
+class _DocflowEdiBatchRowRequired(TypedDict):
+    id: "UUID"
+    #: Заказ заведён; уже был; ни один товар не сопоставлен; отказ
+    outcome: Literal['created', 'exists', 'item_unknown', 'failed']
+
+class DocflowEdiBatchRow(_DocflowEdiBatchRowRequired, total=False):
+    order_number: str
+    partner_name: str
+    #: Код отказа или пометки внимания
+    code: str
+    #: Причина отказа словами
+    reason: str
+    english: str
+    order_id: "UUID"
+    #: Пометка внимания заявки после действия
+    attention_code: str
+
+class DocflowEdiCatalogList(TypedDict):
+    items: List[Dict[str, Any]]
+
+class _DocflowEdiCatalogMatchRequired(TypedDict):
+    partner_gln: str
+    product_id: "UUID"
+
+class DocflowEdiCatalogMatch(_DocflowEdiCatalogMatchRequired, total=False):
+    gtin: str
+    buyer_code: str
+
+class DocflowEdiCatalogMatchResult(TypedDict):
+    #: Сколько строк заявок сопоставлено
+    matched: int
+
+class DocflowEdiChangeDecision(TypedDict):
+    decision: Literal['accept', 'keep']
+
+class DocflowEdiConfirmInput(TypedDict, total=False):
+    lines: List["DocflowEdiStepLine"]
+
+class _DocflowEdiConnectionRequired(TypedDict):
+    id: "UUID"
+    company_id: "UUID"
+    mode: Literal['watch', 'orders', 'full']
+    enabled: bool
+
+class DocflowEdiConnection(_DocflowEdiConnectionRequired, total=False):
+    app_client_id: str
+    oauth_account: str
+    #: Вход в Контур есть: Akeda сама обновляет доступ
+    signed_in: bool
+    party_id: str
+    party_gln: str
+    party_name: str
+    box_id: str
+    box_is_test: bool
+    history_from: Optional[str]
+    last_run_at: Optional[str]
+    last_success_at: Optional[str]
+    #: Итог последнего опроса: ok, partial, unauthorized, forbidden, not_configured, unavailable, rate_limited, failed
+    last_code: str
+    last_error: str
+    #: Отмечать у Контура получение заявки (MessageDeliveryFinished): сеть видит её доставленной. По умолчанию выключено
+    delivery_receipt: bool
+    partners: List["DocflowEdiPartner"]
+
+class DocflowEdiConnectionEnvelope(TypedDict):
+    connection: "DocflowEdiConnection"
+
+class DocflowEdiConnectionInput(TypedDict, total=False):
+    company_id: "UUID"
+    #: Идентификатор приложения в Кабинете интегратора Контура
+    client_id: str
+    #: Секретный ключ приложения; только при замене
+    client_secret: str
+    #: Refresh-токен входа Контура под пользователем с доступом к ящику; только при замене
+    refresh_token: str
+    mode: Literal['watch', 'orders', 'full']
+    enabled: bool
+    history_from: str
+    #: Ответственный за заявки; 0 снимает назначение.
+    responsible_user_id: int
+    #: Подключиться к тестовому ящику организации
+    box_test: bool
+    #: Отмечать у Контура получение заявки; не передано — не меняется
+    delivery_receipt: bool
+
+class _DocflowEdiConnectionListRequired(TypedDict):
+    connections: List["DocflowEdiConnection"]
+
+class DocflowEdiConnectionList(_DocflowEdiConnectionListRequired, total=False):
+    #: У платформы своё приложение Контур.EDI: ключи приложения вводить не нужно
+    akeda_app: bool
+
+class DocflowEdiDesadvInput(TypedDict, total=False):
+    #: Номер накладной; пусто — номер УПД Akeda по отгрузке, а нет УПД при одной отгрузке — УПД выпускается по ней и номер берётся из реестра счетов-фактур
+    number: str
+    #: Дата накладной; пусто — дата УПД, иначе последней отгрузки склада
+    date: str
+    delivery_at: str
+    driver_name: str
+    driver_phone: str
+    vehicle: str
+    #: Марка машины (transportation/vehicleBrand)
+    vehicle_brand: str
+    trailer: str
+    lines: List["DocflowEdiStepLine"]
+    #: Транспортная накладная; пусто — номер накладной (УПД)
+    transport_waybill_number: str
+    #: Дата транспортной накладной; пусто — дата накладной
+    transport_waybill_date: str
+    #: Части строк; сильнее lines и подстановки склада
+    goods: List["DocflowEdiGoods"]
+    pallets: List["DocflowEdiPallet"]
+
+class _DocflowEdiDiadocDocumentRequired(TypedDict):
+    edo_message_id: "UUID"
+    connection_id: "UUID"
+    #: Оператор ЭДО: diadoc, saby
+    provider: str
+    #: Идентификатор пакета у оператора (письмо Диадока)
+    external_id: str
+    direction: Literal['incoming', 'outgoing']
+    #: Тип документа словами оператора
+    doc_type: str
+    doc_subtype: str
+    #: Вид пакета нашими словами; transfer — УПД и накладные
+    kind: Literal['invoice', 'contract', 'transfer', 'letter', 'other']
+    number: str
+    #: Дата документа ГГГГ-ММ-ДД; пусто — нет
+    date: str
+    #: Состояние пакета кодом оператора (из зеркала ЭДО)
+    state_code: str
+    #: Состояние пакета словами оператора
+    state_name: str
+    #: Чем найдена связь: письмо из события ленты Контура, сверка с продажей заявки
+    sources: List[Literal['edi_event', 'sales_order']]
+    #: Сообщения EDI, чьи события назвали письмо пакета
+    edi_messages: List["UUID"]
+
+class DocflowEdiDiadocDocument(_DocflowEdiDiadocDocumentRequired, total=False):
+    amount: str
+    currency: str
+    last_event_at: str
+    #: У связи через продажу: linked или ambiguous (продажу выбирает человек в карточке пакета)
+    match_status: Literal['linked', 'ambiguous']
+    match_method: Literal['order_ref', 'buyer_date_amount', 'manual']
+    #: Ссылка Контура на документ в Диадоке (https), если её принесло событие
+    diadoc_url: str
+
+class DocflowEdiDiadocDocuments(TypedDict):
+    documents: List["DocflowEdiDiadocDocument"]
+    #: Письма Диадока из событий, которых нет в зеркале ЭДО (ЭДО не подключено или пакет ещё не пришёл)
+    missing: List["DocflowEdiDiadocLetter"]
+
+class _DocflowEdiDiadocLetterRequired(TypedDict):
+    letter_id: str
+    messages: List["UUID"]
+
+class DocflowEdiDiadocLetter(_DocflowEdiDiadocLetterRequired, total=False):
+    url: str
+    at: str
+
+class DocflowEdiEdoLinks(TypedDict):
+    orders: List["DocflowEdiEdoLinksOrdersItem"]
+    messages: List["DocflowEdiEdoLinksMessagesItem"]
+
+class _DocflowEdiEdoLinksOrdersItemRequired(TypedDict):
+    id: "UUID"
+    order_number: str
+    partner_name: str
+    partner_gln: str
+    stage: str
+    sources: List[Literal['edi_event', 'sales_order']]
+
+class DocflowEdiEdoLinksOrdersItem(_DocflowEdiEdoLinksOrdersItemRequired, total=False):
+    docs_stage: str
+
+class _DocflowEdiEdoLinksMessagesItemRequired(TypedDict):
+    id: "UUID"
+    direction: Literal['in', 'out']
+    doc_type: str
+    doc_number: str
+    state: str
+
+class DocflowEdiEdoLinksMessagesItem(_DocflowEdiEdoLinksMessagesItemRequired, total=False):
+    at: str
+    edi_order_id: "UUID"
+
+class _DocflowEdiFillRequired(TypedDict):
+    step: Literal['desadv', 'invoic']
+    state: Literal['shipped', 'not_shipped', 'no_order', 'stock_off']
+    lines: List["DocflowEdiFillLine"]
+    goods: List["DocflowEdiGoods"]
+    pallets: List["DocflowEdiPallet"]
+    required: List[str]
+
+class DocflowEdiFill(_DocflowEdiFillRequired, total=False):
+    number: str
+    date: str
+    delivery_note_number: str
+    delivery_note_date: str
+    actual_delivery_at: str
+    #: У сети ТН по умолчанию = номер и дата УПД: форма подставляет их в «Транспортная накладная»
+    waybill_from_upd: bool
+    #: Палеты ведёт склад (VAP-040): SSCC, вес и коробки берутся из палет заказа и в форме не правятся; до проведения отгрузки pallets — палеты склада без раскладки строк
+    pallets_from_stock: bool
+
+class DocflowEdiFillEnvelope(TypedDict):
+    fill: "DocflowEdiFill"
+
+class _DocflowEdiFillLineRequired(TypedDict):
+    n: int
+    #: Что подставлено; пусто — подставить нечего
+    quantity: str
+
+class DocflowEdiFillLine(_DocflowEdiFillLineRequired, total=False):
+    #: Больше заявить нельзя; пусто — предела нет
+    limit: str
+    net_price: str
+    net_price_with_vat: str
+    vat_rate: str
+    price_missing: bool
+
+class _DocflowEdiGoodsRequired(TypedDict):
+    n: int
+    #: В штуках
+    quantity: str
+
+class DocflowEdiGoods(_DocflowEdiGoodsRequired, total=False):
+    """Часть строки заявки со своей партией и палетой."""
+
+    batch: str
+    produced_at: str
+    expires_at: str
+    shelf_life_days: str
+    #: Код страны из двух букв
+    country: str
+    #: Номер таможенной декларации партии: customsDeclarationNumber сообщения
+    customs_number: str
+    manufacturer: str
+    unit_gross_weight: str
+    unit_net_weight: str
+    #: Документ соответствия строки: серия и номер. Не номер таможенной декларации
+    conformity_number: str
+    conformity_date: str
+    conformity_valid_until: str
+    package_type: str
+    package_quantity: str
+    #: Номер палеты с единицы; 0 или нет — без палеты
+    pallet: int
+    marks: List["DocflowEdiGoodsMarksItem"]
+
+class _DocflowEdiGoodsMarksItemRequired(TypedDict):
+    value: str
+
+class DocflowEdiGoodsMarksItem(_DocflowEdiGoodsMarksItemRequired, total=False):
+    type: str
+
+class DocflowEdiHistoryInput(TypedDict, total=False):
+    #: Граница: заявки раньше неё. Пусто — момент подключения
+    before: str
+    #: Только посчитать, ничего не менять
+    dry_run: bool
+
+class DocflowEdiHistoryReport(TypedDict):
+    before: str
+    #: Сколько заявок подходит
+    matched: int
+    #: Сколько убрано в архив
+    archived: int
+    dry_run: bool
+
+class DocflowEdiInvoicInput(TypedDict, total=False):
+    number: str
+    #: Дата счёта; пусто — дата накладной
+    date: str
+    function: Literal['INVDOP', 'INV', 'DOP']
+    lines: List["DocflowEdiStepLine"]
+    actual_delivery_at: str
+    goods: List["DocflowEdiGoods"]
+    pallets: List["DocflowEdiPallet"]
+
+class _DocflowEdiMarkInputRequired(TypedDict):
+    state: Literal['kontur', 'skipped']
+
+class DocflowEdiMarkInput(_DocflowEdiMarkInputRequired, total=False):
+    status: Literal['Accepted', 'Changed', 'Rejected']
+    number: str
+    #: Дата документа в Контуре
+    date: str
+    lines: List["DocflowEdiStepLine"]
+
+class DocflowEdiMatchInput(TypedDict):
+    product_id: "UUID"
+
+class _DocflowEdiMessageRequired(TypedDict):
+    id: "UUID"
+    message_id: str
+    direction: Literal['in', 'out']
+    doc_type: str
+    state: str
+
+class DocflowEdiMessage(_DocflowEdiMessageRequired, total=False):
+    circulation_id: str
+    doc_number: str
+    doc_date: Optional[str]
+    partner_gln: str
+    partner_name: str
+    delivery_point_gln: str
+    order_number: str
+    edi_order_id: Optional["UUID"]
+    state_detail: Dict[str, Any]
+    file_name: str
+    is_test: bool
+    sent_at: Optional[str]
+
+class _DocflowEdiMessageCardRequired(TypedDict):
+    message: "DocflowEdiMessage"
+    party: Dict[str, Any]
+    history: List["DocflowEdiMessageEvent"]
+    statuses: List["DocflowEdiMessageEvent"]
+    related: List["DocflowEdiMessage"]
+
+class DocflowEdiMessageCard(_DocflowEdiMessageCardRequired, total=False):
+    #: Шаг заявки, который можно «Отправить заново» по этому сообщению: наш ответ сети, шаг failed, сеть в полном обмене. Отправка — кнопкой формы шага в карточке заявки. Нет поля — нельзя
+    resend_step: Literal['ordrsp', 'desadv', 'invoic']
+    #: Шаг заявки для «Взять за основу»: исходящий ответ сети (из Akeda или другой программы), шаг ещё открыт, заявка не отменена, сеть в полном обмене. Открывает форму шага, заполненную из заявки и продажи; сети уходит только кнопкой формы. Нет поля — нельзя
+    basis_step: Literal['ordrsp', 'desadv', 'invoic']
+
+class _DocflowEdiMessageEventRequired(TypedDict):
+    #: Что случилось: состояние доставки, документа Диадока (upd_*, diadoc_*, signed_by_me*), ГИС МТ (gismt_ok, gismt_progress, gismt_error), poa_status, sender_receipt, traceability_lost, universal_message, recognized, document_created, processing_times, delivery_finished, delivery_finish_failed; kontur_event — событие незнакомого типа (тип в type)
+    state: str
+
+class DocflowEdiMessageEvent(_DocflowEdiMessageEventRequired, total=False):
+    id: str
+    at: str
+    #: Ошибки и отказы — тексты Контура
+    reasons: List[str]
+    #: Тип события Контура (MessageBoxEventType)
+    type: str
+    #: Вид события ГИС МТ (revocation, fixation, fixation_cancel) или доверенности (recipient, sender)
+    kind: str
+    #: Пояснения Контура: предупреждения проверки, описание статуса
+    notes: List[str]
+    #: Документ в веб-интерфейсе Диадока
+    url: str
+    #: Значения для подписи: doc_type, group, title_status, status, total_seconds, need_receipt; письмо, ящик и документ Диадока — diadoc_letter_id, diadoc_box_id, diadoc_document_id
+    data: Dict[str, str]
+
+class DocflowEdiMessageList(TypedDict):
+    messages: List["DocflowEdiMessage"]
+
+class _DocflowEdiOrderRequired(TypedDict):
+    id: "UUID"
+    partner_gln: str
+    order_number: str
+    stage: Literal['new', 'confirmed', 'rejected', 'shipped', 'received', 'cancelled']
+    #: Шаги ответа ordrsp, desadv, recadv, invoic: состояние, номер, когда, строки; auto=true у «Не нужно», поставленного набором ответов сети. Шаг upd — УПД в Диадоке по событиям ленты: state (draft, awaiting, signed, partly_signed, rejected, revoked, deleted), status (последнее событие, как состояние сообщения upd_*), message_id, at, detail (причины)
+    steps: Dict[str, Any]
+    items: List[Dict[str, Any]]
+
+class DocflowEdiOrder(_DocflowEdiOrderRequired, total=False):
+    connection_id: "UUID"
+    partner_name: str
+    order_date: Optional[str]
+    edi_status: str
+    revision: str
+    #: Этап документов: приёмка без счёта; счёт не дошёл или УПД отклонён (отказ, уточнение, ошибка роуминга); черновик УПД в Диадоке; УПД ждёт подписи покупателя; подписан; подписан с разногласиями; аннулирован. Пусто — пометки нет
+    docs_stage: Literal['', 'prepared', 'rejected', 'draft', 'awaiting_signature', 'signed', 'partly_signed', 'revoked']
+    archived_at: Optional[str]
+    #: Путь УПД сети заявки: edi — УПД строит Контур.EDI из счёта, наш УПД через ЭДО не уходит; edo — наш УПД через ЭДО
+    upd_path: Literal['edi', 'edo']
+    parties: Dict[str, Any]
+    ship_to_gln: str
+    ship_to_name: str
+    ship_to_address: str
+    delivery_at: Optional[str]
+    ship_date: Optional[str]
+    contract_number: str
+    currency: str
+    total: str
+    receiving: Dict[str, Any]
+    order_id: Optional["UUID"]
+    #: Что требует человека; пусто — ничего. По документам Диадока: upd_rejected, upd_partly_signed, upd_amendment_requested, upd_revocation_requested, upd_roaming_error, diadoc_post_failed, gismt_error
+    attention_code: str
+    #: Подробности пометки: reasons — тексты Контура, event — тип события, doc_type, diadoc_url, kind
+    attention_detail: Dict[str, Any]
+    edits: "DocflowEdiOrderEdits"
+
+class DocflowEdiOrderCard(TypedDict):
+    order: "DocflowEdiOrder"
+    messages: List["DocflowEdiMessage"]
+    partner: "DocflowEdiPartner"
+
+class DocflowEdiOrderEdits(TypedDict, total=False):
+    """Правки заявки у нас; пусто — без правок"""
+
+    lines: List["DocflowEdiOrderEditsLinesItem"]
+    #: Когда привезём
+    delivery_at: Optional[str]
+    #: Другое место доставки: точка покупателя с GLN (13 цифр). Уходит сети в ответе и становится грузополучателем продажи
+    ship_to: "DocflowEdiOrderEditsShipTo"
+    #: Комментарий: уходит сети в ответе и в продажу
+    comment: str
+    at: str
+    by: int
+
+class _DocflowEdiOrderEditsLinesItemRequired(TypedDict):
+    #: Номер строки заявки
+    n: int
+
+class DocflowEdiOrderEditsLinesItem(_DocflowEdiOrderEditsLinesItemRequired, total=False):
+    #: Количество в штуках; 0 — строку не везём
+    quantity: str
+    #: Цена за штуку без НДС
+    piece_price: str
+    #: Ставка НДС
+    vat_rate: Literal['', '0', '5', '7', '10', '20', '22', 'NOT_APPLICABLE']
+    #: Причина изменения строки для ответа сети
+    reason: str
+
+class DocflowEdiOrderEditsShipTo(TypedDict, total=False):
+    """Другое место доставки: точка покупателя с GLN (13 цифр). Уходит сети в ответе и становится грузополучателем продажи"""
+
+    gln: str
+    name: str
+    inn: str
+    kpp: str
+    address: str
+    region_code: str
+
+class DocflowEdiOrderEnvelope(TypedDict):
+    order: "DocflowEdiOrder"
+
+class DocflowEdiOrderList(TypedDict):
+    orders: List["DocflowEdiOrder"]
+    counts: List["DocflowEdiOrderListCountsItem"]
+    docs_counts: List["DocflowEdiOrderListDocsCountsItem"]
+    attention: int
+    archived: int
+    total: int
+
+class DocflowEdiOrderListCountsItem(TypedDict, total=False):
+    stage: str
+    count: int
+
+class DocflowEdiOrderListDocsCountsItem(TypedDict, total=False):
+    stage: str
+    count: int
+
+class DocflowEdiOrdrspInput(TypedDict, total=False):
+    status: Literal['Accepted', 'Changed', 'Rejected']
+    delivery_at: str
+    reason: str
+    lines: List["DocflowEdiStepLine"]
+
+class DocflowEdiPallet(TypedDict, total=False):
+    """Палета сообщения. Веса в килограммах, высота в сантиметрах, температура в градусах Цельсия."""
+
+    sscc: str
+    net_weight: str
+    gross_weight: str
+    height: str
+    temperature: str
+
+class _DocflowEdiPartnerRequired(TypedDict):
+    id: "UUID"
+    gln: str
+    name: str
+    #: Пусто — как у подключения
+    mode: str
+    order_create: Literal['auto', 'button', 'none']
+    upd_path: Literal['edi', 'edo']
+    shortage_closes: bool
+
+class DocflowEdiPartner(_DocflowEdiPartnerRequired, total=False):
+    connection_id: "UUID"
+    partner_id: str
+    documents: List["DocflowEdiPartnerDocumentsItem"]
+    channel_id: Optional["UUID"]
+    contact_id: Optional["UUID"]
+    #: Что сеть считает обязательным: шаг (desadv, invoic) → поля формы
+    required_fields: Dict[str, List[str]]
+    #: Что сеть берёт из карточки товара. Пусто — вес, срок и страна подставляются, документ соответствия не передаётся
+    card_fields: "DocflowEdiPartnerCardFields"
+    #: Набор ответов с умолчаниями: шаг (ordrsp, desadv, invoic) → нужен ли ответ из Akeda
+    reply_plan: Dict[str, bool]
+
+class DocflowEdiPartnerDocumentsItem(TypedDict, total=False):
+    type: str
+    direction: Literal['FromMe', 'ToMe', 'Bidirectional']
+
+class DocflowEdiPartnerCardFields(TypedDict, total=False):
+    """Что сеть берёт из карточки товара. Пусто — вес, срок и страна подставляются, документ соответствия не передаётся"""
+
+    #: Реквизиты карточки, которые этой сети не подставляются
+    off: List[Literal['unit_weight', 'shelf_life', 'country']]
+    #: Передавать сети документ соответствия из карточки товара
+    conformity: bool
+    #: Температура новой палеты
+    pallet_temperature: str
+    #: Нетто новой палеты, кг: положительное число. Палете с названным нетто не подставляется
+    pallet_net_weight: str
+    #: Набор ответов из Akeda: шаг (ordrsp, desadv, invoic) → send или skip. Шага нет — умолчание: счёт не нужен при пути УПД edo, остальное — по документам, которые сеть принимает
+    replies: Dict[str, Literal['send', 'skip']]
+    #: Транспортная накладная по умолчанию = номер и дата УПД (так у Магнита); выключено — ТН уходит, только если её назвали
+    waybill_from_upd: bool
+    #: Коробов в строке и в счёте INVOIC (так у Магнита); выключено — только в отгрузке
+    invoice_boxes: bool
+
+class DocflowEdiPartnerEnvelope(TypedDict):
+    partner: "DocflowEdiPartner"
+
+class DocflowEdiPartnerPatch(TypedDict, total=False):
+    #: Свой ответственный у сети; 0 — как у подключения.
+    responsible_user_id: int
+    channel_id: "UUID"
+    contact_id: "UUID"
+    mode: Literal['', 'watch', 'orders', 'full']
+    order_create: Literal['auto', 'button', 'none']
+    upd_path: Literal['edi', 'edo']
+    shortage_closes: bool
+    #: Обязательные поля сети целиком: шаг (desadv, invoic) → поля формы
+    required_fields: Dict[str, List[str]]
+    #: Что сеть берёт из карточки товара. Пусто — вес, срок и страна подставляются, документ соответствия не передаётся
+    card_fields: "DocflowEdiPartnerPatchCardFields"
+    #: Набор ответов из Akeda: шаг (ordrsp, desadv, invoic) → send, skip или пусто (умолчание). Шаги без записи не меняются; открытые заявки сети получают или теряют «Не нужно» по настройке
+    replies: Dict[str, Literal['', 'send', 'skip']]
+    #: ТН по умолчанию = номер и дата УПД
+    waybill_from_upd: bool
+    #: Коробов в строке и в счёте INVOIC
+    invoice_boxes: bool
+
+class DocflowEdiPartnerPatchCardFields(TypedDict, total=False):
+    """Что сеть берёт из карточки товара. Пусто — вес, срок и страна подставляются, документ соответствия не передаётся"""
+
+    #: Реквизиты карточки, которые этой сети не подставляются
+    off: List[Literal['unit_weight', 'shelf_life', 'country']]
+    #: Передавать сети документ соответствия из карточки товара
+    conformity: bool
+    #: Температура новой палеты
+    pallet_temperature: str
+    #: Нетто новой палеты, кг: положительное число. Палете с названным нетто не подставляется
+    pallet_net_weight: str
+    #: Этим полем не меняется, только replies ниже. Набор ответов из Akeda: шаг (ordrsp, desadv, invoic) → send или skip. Шага нет — умолчание: счёт не нужен при пути УПД edo, остальное — по документам, которые сеть принимает
+    replies: Dict[str, Literal['send', 'skip']]
+    #: Этим полем не меняется. Транспортная накладная по умолчанию = номер и дата УПД (так у Магнита); выключено — ТН уходит, только если её назвали
+    waybill_from_upd: bool
+    #: Этим полем не меняется. Коробов в строке и в счёте INVOIC (так у Магнита); выключено — только в отгрузке
+    invoice_boxes: bool
+
+class DocflowEdiPayerList(TypedDict):
+    payers: List[Dict[str, Any]]
+
+class DocflowEdiPlaceList(TypedDict):
+    places: List[Dict[str, Any]]
+
+class DocflowEdiRematchResult(TypedDict):
+    #: Сколько заявок изменилось
+    changed: int
+
+class _DocflowEdiStepLineRequired(TypedDict):
+    #: Номер строки заявки
+    n: int
+    #: Количество в штуках
+    quantity: str
+
+class DocflowEdiStepLine(_DocflowEdiStepLineRequired, total=False):
+    reason: str
+
 class DocflowElectronicPoARequisites(TypedDict, total=False):
     """СвДоверЭл: машиночитаемая доверенность. Формат требует её ровно при способе подтверждения полномочий 3 и запрещает при остальных."""
 
@@ -16981,7 +18083,7 @@ class DocflowFlowAssignmentPerson(TypedDict):
 class _DocflowFlowChangeInputRequired(TypedDict):
     #: Версия, которую видел клиент. Разошлась — 409 docflow.flow.version_conflict
     expected_version: int
-    action: Literal['save', 'link', 'unlink', 'remove_file', 'register', 'revise', 'archive', 'restore', 'delete', 'custom', 'articles', 'invoice_distinct', 'renew', 'decline_renewal', 'registration']
+    action: Literal['save', 'link', 'unlink', 'remove_file', 'register', 'revise', 'archive', 'restore', 'delete', 'custom', 'articles', 'invoice_distinct', 'renew', 'decline_renewal', 'registration', 'annul_upd']
 
 class DocflowFlowChangeInput(_DocflowFlowChangeInputRequired, total=False):
     """Одна команда правки. Поля, не относящиеся к названному действию, отвергаются, а не игнорируются: запрос, просящий две разные вещи сразу, сам не знает, чего хочет."""
@@ -17211,6 +18313,8 @@ class DocflowFlowDocument(_DocflowFlowDocumentRequired, total=False):
     commercial_tax: List["DocflowFlowCommercialTaxLine"]
     #: Только в ответе чтения текущей редакции входящего счёта, по которому платим мы: живые карточки (черновик или зарегистрированная) того же контрагента и даты с тем же номером или суммой, заведённые раньше этой. Подсказка «похоже, этот счёт уже заведён», не запрет; нет похожих — поля нет. В редакцию документа не записывается
     possible_duplicates: List["DocflowFlowInvoiceDuplicate"]
+    #: Только в ответе чтения текущей редакции черновика или архивной накладной М-15: все документы склада, по которым она выпущена, отменены или удалены. Ссылка на них не мешает удалить карточку и снимается вместе с ней. В редакцию документа не записывается
+    source_cancelled: bool
     edo: "DocflowFlowEDOState"
     #: Конверты, которыми карточка уходила и приходила. Заполняется только при чтении карточки и в редакцию не пишется: связь живёт своей строкой, её правит синхронизация, а редакция неизменяема
     edo_links: List["DocflowFlowEDOLink"]
@@ -17386,8 +18490,8 @@ class _DocflowFlowInvoicePayeeRequired(TypedDict):
     contact_id: "UUID"
     #: Имя контрагента
     contact_name: str
-    #: Откуда счёт: card — выбран в карточке счёта, contact_default — в карточке не выбран и взят основной счёт контрагента, none — у контрагента нет ни одного включённого счёта, budget — платёж в бюджет: счёт казначейства взят из файла поручения.
-    account_source: Literal['card', 'contact_default', 'none', 'budget']
+    #: Откуда счёт: card — выбран в карточке счёта, document — в карточке не выбран и взят счёт, напечатанный в самом входящем документе (ссылкой на такой же счёт контрагента или реквизитами документа), contact_default — в карточке не выбран, документ счёта не называет, взят основной счёт контрагента, none — у контрагента нет ни одного включённого счёта, budget — платёж в бюджет: счёт казначейства взят из файла поручения.
+    account_source: Literal['card', 'contact_default', 'document', 'none', 'budget']
     #: Включённые счета контрагента — из них выбирают другой
     accounts: List["CoreContactBankAccount"]
     #: Реквизиты для платёжки: наименование, ИНН и КПП — из карточки контрагента, счёт и банк — из выбранного счёта, корсчёт — по БИК. У платежа в бюджет (КБК назван или счёт казначейский 03…) — ровно как в файле поручения: получателя называет казначейство
@@ -17813,6 +18917,10 @@ class DocflowFlowReference(_DocflowFlowReferenceRequired, total=False):
     entity_type: str
     #: Ключ системного контрагента (ФНС, СФР, банк); у обычных пуст
     system_key: str
+    #: Код статьи; приходит только у статьи заявки на оплату, когда заполнен
+    code: str
+    #: Группа ДДС статьи; приходит только у статьи заявки на оплату, когда статья в группе
+    group: str
 
 class DocflowFlowReferencePage(TypedDict):
     items: List["DocflowFlowReference"]
@@ -18255,7 +19363,7 @@ class DocflowIntakeCounterpartyOption(TypedDict):
 class DocflowIntakeInput(TypedDict, total=False):
     """Решение человека, которым подтверждается приёмка. Сам пакет назван в адресе. Решения по строкам приезжают СПИСКОМ, а не картой «номер → товар»: пропуск строки — это тоже решение, и картой его пришлось бы выражать отсутствием ключа, то есть неотличимо от «человек про эту строку не сказал ничего», а разница между ними принципиальная."""
 
-    #: Дата учётного документа ГГГГ-ММ-ДД. Пусто — берётся дата документа поставщика: она и есть дата операции
+    #: Дата учёта ГГГГ-ММ-ДД. Пусто — сегодня (ERP-2673); дата документа поставщика хранится отдельно и уходит в 1С входящей
     date: str
     #: Контрагент. Пусто — берётся тот, с кем свело зеркало
     contact: Optional["UUID"]
@@ -19054,8 +20162,285 @@ class DocflowOutgoingInput(_DocflowOutgoingInputRequired, total=False):
     requisites: "DocflowRequisites"
     #: Примечание документа у оператора
     comment: str
+    #: Только неформализованная отправка через Диадок — не просить ответную подпись контрагента (письмо, уведомление). По умолчанию Диадок её просит у всех файлов, кроме письма и счёта (ERP-2787)
+    no_recipient_signature: bool
     #: Произвольные файлы рядом с формализованным: договор, спецификация, скан доверенности. Оператор их не разбирает и печатную форму по ним не строит. Уходят по одному после титула: у оператора предел на файл и на запрос, а договор со сканами берёт его легко. На предполётной проверке не участвуют
     files: List["DocflowOutgoingFile"]
+
+class DocflowOzonRetailApproval(TypedDict, total=False):
+    #: Сколько согласовать по SKU Ozon; строки нет — сколько просил Ozon; 0 — строка убирается; больше просьбы нельзя
+    lines: List["DocflowOzonRetailApprovalLinesItem"]
+
+class DocflowOzonRetailApprovalLinesItem(TypedDict):
+    ozon_id: int
+    quantity: str
+
+class DocflowOzonRetailCargo(TypedDict):
+    id: int
+    #: Тип грузоместа у Ozon
+    type: int
+    barcode: str
+
+class DocflowOzonRetailCargoContentInput(TypedDict):
+    cargos: List["DocflowOzonRetailCargoContentInputCargosItem"]
+
+class DocflowOzonRetailCargoContentInputCargosItem(TypedDict):
+    cargo_id: int
+    items: List["DocflowOzonRetailCargoContentInputCargosItemItemsItem"]
+
+class DocflowOzonRetailCargoContentInputCargosItemItemsItem(TypedDict):
+    ozon_id: int
+    quantity: int
+
+class DocflowOzonRetailCargoList(TypedDict):
+    cargos: List["DocflowOzonRetailCargo"]
+
+class DocflowOzonRetailDriverList(TypedDict):
+    drivers: List["DocflowOzonRetailVehiclePass"]
+
+class DocflowOzonRetailGate(TypedDict):
+    allowed: bool
+    #: Коды Ozon, почему нельзя: NoWaybill, WaybillWithErrors, WaybillInProcess, InvalidOrderState и др.
+    reasons: List[str]
+
+class _DocflowOzonRetailItemRequired(TypedDict):
+    #: SKU Ozon
+    ozon_id: int
+    barcode: str
+    article: str
+    name: str
+    #: Сколько просит Ozon
+    quantity: str
+    #: Цена Ozon с НДС
+    price: str
+
+class DocflowOzonRetailItem(_DocflowOzonRetailItemRequired, total=False):
+    unit: str
+    product_id: "UUID"
+    #: Тип отгрузки строки, как пришёл из Ozon (shipmentType: General и др.); нет — Ozon не назвал
+    shipment_type: str
+    #: Квант строки (quant); нет — Ozon не назвал или назвал 0
+    quant: str
+    #: Режим приёмки строки складом Ozon (bulkAcceptanceAttributes.bulkShipmentType: Exemplar — поштучно и др.)
+    bulk_shipment_type: str
+    #: Квант приёмки (bulkAcceptanceAttributes.quant)
+    bulk_quant: str
+
+class DocflowOzonRetailOrder(TypedDict):
+    id: "UUID"
+    #: Номер заказа на поставку в Ozon
+    ozon_order_id: int
+    document_number: str
+    document_date: Optional[str]
+    #: Статус в Ozon как пришёл: RetailOnConfirmation, DeliveryPreparation, RetailCompleted и т. п.
+    ozon_state: str
+    #: Заказ покупателя; null — ещё не заведён: продажа заводится только по согласованному заказу (ERP-2154)
+    order_id: Optional["UUID"]
+    #: Поставка через кросс-докинг
+    is_xdock: bool
+    supply_warehouse_id: int
+    supply_warehouse_name: str
+    supply_warehouse_address: str
+    #: Склад хранения: куда товар идёт в итоге, грузополучатель УПД. 0 — опрос ещё не читал
+    storage_warehouse_id: int
+    storage_warehouse_name: str
+    storage_warehouse_address: str
+    #: Номер договора в Ozon (contractInfo.contractId); 0 — Ozon договор не назвал
+    contract_id: int
+    #: Договор поставки, по которому Ozon сделал заказ (contractInfo.contractName, только в списке новых заказов): «ЗАКУП ИР-7008667/26 от 01.09.2026»; по номеру из названия продажа ставится на карточку договора. Заказу, который опрос не застал новым, — договор, названный Ozon в других заказах кабинета; пусто — договора нет
+    contract_name: str
+    #: Валюта заказа Ozon (currency, только список активных); пусто — Ozon не назвал
+    currency: str
+    #: Заказ SuperEconom
+    is_super_econom: bool
+    #: Прибытие на конечный склад (destinationDeliveryDateLocal, кросс-докинг)
+    destination_delivery_date: Optional[str]
+    #: Начало времени поставки во времени склада Ozon
+    timeslot_from: Optional[str]
+    timeslot_to: Optional[str]
+    timeslot_confirmed: bool
+    #: Интервал, который Ozon предлагает подтвердить
+    timeslot_id: str
+    items: List["DocflowOzonRetailItem"]
+    supply: "DocflowOzonRetailSupply"
+    waybill: "DocflowOzonRetailWaybill"
+    package_units: "DocflowOzonRetailPackageUnits"
+    vehicle_pass: "DocflowOzonRetailVehiclePass"
+    #: Что требует человека: item_unknown (часть товаров не узнана — заказ заведён без них, список в attention_detail.items), changed_during_picking (Ozon изменил состав во время сборки — заказ не переписан), picked_over_approved (Ozon согласовал меньше собранного, поправьте сборку), cancelled_after_picking (заказ отменён после начала сборки: собранное вернуть на полки), below_shipped, cancelled_after_shipment, cancel_blocked, acceptance_refused, completed_not_shipped, import_failed, consignee_incomplete (у карточки склада Ozon нет КПП или адреса по графам), consignee_unknown_warehouse (Ozon не назвал склад поставки — грузополучатель не определён), contract_missing (Ozon назвал договор, а продажа на нём не стоит: attention_detail.contract — номер, reason — not_found, карточки договора нет, или rejected, карточка к продаже не подошла); пусто — всё сходится
+    attention_code: str
+    #: Подробности: нераспознанные строки (items) или причина (reason)
+    attention_detail: Dict[str, Any]
+    last_seen_at: str
+    updated_at: str
+
+class DocflowOzonRetailOrderEnvelope(TypedDict):
+    order: "DocflowOzonRetailOrder"
+
+class _DocflowOzonRetailPackageUnitsRequired(TypedDict):
+    boxes: int
+    pallets: int
+
+class DocflowOzonRetailPackageUnits(_DocflowOzonRetailPackageUnitsRequired, total=False):
+    sent_at: str
+
+class _DocflowOzonRetailRejectionRequired(TypedDict):
+    reason: Literal['other', 'min_sum', 'no_stock', 'suspended']
+
+class DocflowOzonRetailRejection(_DocflowOzonRetailRejectionRequired, total=False):
+    comment: str
+
+class DocflowOzonRetailSaleBrief(TypedDict):
+    id: "UUID"
+    #: Номер продажи
+    number: str
+    #: Статус продажи: draft, confirmed, done, cancelled
+    status: str
+    #: Сумма продажи
+    ordered: str
+    #: Сколько из суммы продажи отгружено
+    executed: str
+
+class _DocflowOzonRetailStateEnvelopeRequired(TypedDict):
+    state: "DocflowOzonRetailSyncState"
+
+class DocflowOzonRetailStateEnvelope(_DocflowOzonRetailStateEnvelopeRequired, total=False):
+    steps: "DocflowOzonRetailSteps"
+
+class DocflowOzonRetailSteps(TypedDict):
+    """Какие шаги оформления поставки делаются из Akeda, а не в Retail Center (ERP-2927); включаются в подключении"""
+
+    #: Согласование, изменение состава, отклонение, подтверждение времени поставки
+    approval: bool
+    #: Грузоместа и палетные ярлыки
+    supply: bool
+    #: Пропуск водителю
+    vehicle_pass: bool
+
+class _DocflowOzonRetailSupplyRequired(TypedDict):
+    has_package_units: bool
+    #: Ozon принял УПД
+    has_proper_waybills: bool
+    has_vehicle_info: bool
+
+class DocflowOzonRetailSupply(_DocflowOzonRetailSupplyRequired, total=False):
+    labels: "DocflowOzonRetailGate"
+    vehicle_pass: "DocflowOzonRetailGate"
+    timeslot: "DocflowOzonRetailGate"
+
+class _DocflowOzonRetailSupplyOrderRequired(TypedDict):
+    id: "UUID"
+    #: Номер заказа на поставку в Ozon
+    ozon_order_id: int
+    document_number: str
+    document_date: Optional[str]
+    #: Статус в Ozon как пришёл: RetailOnConfirmation, DeliveryPreparation, RetailCompleted и т. п.
+    ozon_state: str
+    #: Заказ покупателя; null — ещё не заведён: продажа заводится только по согласованному заказу (ERP-2154)
+    order_id: Optional["UUID"]
+    #: Поставка через кросс-докинг
+    is_xdock: bool
+    supply_warehouse_id: int
+    supply_warehouse_name: str
+    supply_warehouse_address: str
+    #: Склад хранения: куда товар идёт в итоге, грузополучатель УПД. 0 — опрос ещё не читал
+    storage_warehouse_id: int
+    storage_warehouse_name: str
+    storage_warehouse_address: str
+    #: Номер договора в Ozon (contractInfo.contractId); 0 — Ozon договор не назвал
+    contract_id: int
+    #: Договор поставки, по которому Ozon сделал заказ (contractInfo.contractName, только в списке новых заказов): «ЗАКУП ИР-7008667/26 от 01.09.2026»; по номеру из названия продажа ставится на карточку договора. Заказу, который опрос не застал новым, — договор, названный Ozon в других заказах кабинета; пусто — договора нет
+    contract_name: str
+    #: Валюта заказа Ozon (currency, только список активных); пусто — Ozon не назвал
+    currency: str
+    #: Заказ SuperEconom
+    is_super_econom: bool
+    #: Прибытие на конечный склад (destinationDeliveryDateLocal, кросс-докинг)
+    destination_delivery_date: Optional[str]
+    #: Начало времени поставки во времени склада Ozon
+    timeslot_from: Optional[str]
+    timeslot_to: Optional[str]
+    timeslot_confirmed: bool
+    #: Интервал, который Ozon предлагает подтвердить
+    timeslot_id: str
+    items: List["DocflowOzonRetailItem"]
+    supply: "DocflowOzonRetailSupply"
+    waybill: "DocflowOzonRetailWaybill"
+    package_units: "DocflowOzonRetailPackageUnits"
+    vehicle_pass: "DocflowOzonRetailVehiclePass"
+    #: Что требует человека: item_unknown (часть товаров не узнана — заказ заведён без них, список в attention_detail.items), changed_during_picking (Ozon изменил состав во время сборки — заказ не переписан), picked_over_approved (Ozon согласовал меньше собранного, поправьте сборку), cancelled_after_picking (заказ отменён после начала сборки: собранное вернуть на полки), below_shipped, cancelled_after_shipment, cancel_blocked, acceptance_refused, completed_not_shipped, import_failed, consignee_incomplete (у карточки склада Ozon нет КПП или адреса по графам), consignee_unknown_warehouse (Ozon не назвал склад поставки — грузополучатель не определён), contract_missing (Ozon назвал договор, а продажа на нём не стоит: attention_detail.contract — номер, reason — not_found, карточки договора нет, или rejected, карточка к продаже не подошла); пусто — всё сходится
+    attention_code: str
+    #: Подробности: нераспознанные строки (items) или причина (reason)
+    attention_detail: Dict[str, Any]
+    last_seen_at: str
+    updated_at: str
+    #: Сумма состава Ozon: Σ количество × цена Ozon, два знака; пусто — Ozon состав ещё не отдал
+    amount: str
+    #: Наша продажа; null — заказ ещё не согласован или продажа не прочитана
+    sale: Optional["DocflowOzonRetailSaleBrief"]
+    #: Юрлицо подключения Ozon Retail; null — подключения нет
+    company_id: Optional["UUID"]
+    #: Склад, с которого продажа встанет в резерв: склад отгрузки канала, без канала — склад подключения; null — не выбран. По нему считается свободный остаток к согласованию
+    warehouse_id: Optional["UUID"]
+
+class DocflowOzonRetailSupplyOrder(_DocflowOzonRetailSupplyOrderRequired, total=False):
+    """Заказ на поставку Ozon раздела «Ozon 1P» (ERP-2154): поля заказа Ozon, сумма состава и краткая наша продажа"""
+
+    #: Сколько УПД продажи Ozon подписал с расхождениями или не принял, а человек ещё не отметил разобранными
+    discrepancy_open: int
+
+class DocflowOzonRetailSupplyOrderCard(TypedDict):
+    order: "DocflowOzonRetailSupplyOrder"
+    steps: "DocflowOzonRetailSteps"
+    #: Подключение к Ozon Retail есть и включено
+    connected: bool
+
+class DocflowOzonRetailSupplyOrderPage(TypedDict):
+    orders: List["DocflowOzonRetailSupplyOrder"]
+    #: Сколько заказов под отбором без страницы
+    total: int
+
+class DocflowOzonRetailSyncState(TypedDict):
+    last_run_at: Optional[str]
+    last_success_at: Optional[str]
+    #: ok, credentials_rejected, ip_forbidden, rate_limited, unavailable, not_configured; пусто — опроса не было
+    last_code: str
+    orders_seen: int
+    orders_changed: int
+
+class _DocflowOzonRetailVehiclePassRequired(TypedDict):
+    #: ФИО, 5–50 русских или латинских букв
+    driver_name: str
+    #: Телефон; уходит в Ozon цифрами 7XXXXXXXXXX
+    driver_phone: str
+    vehicle_model: str
+    #: 4–19 цифр и букв с латинским двойником
+    vehicle_number: str
+
+class DocflowOzonRetailVehiclePass(_DocflowOzonRetailVehiclePassRequired, total=False):
+    sent_at: str
+
+class _DocflowOzonRetailWaybillRequired(TypedDict):
+    count: int
+    is_edo: bool
+    all_covered: bool
+    covered: int
+    total: int
+
+class DocflowOzonRetailWaybill(_DocflowOzonRetailWaybillRequired, total=False):
+    """Итог проверки УПД Ozon (последний загруженный УПД и покрытие заказа)"""
+
+    checked_at: str
+    #: Состояние проверки как пришло от Ozon
+    state: str
+    number: str
+    date: str
+    messages: List[str]
+    not_matched: List["DocflowOzonRetailWaybillItem"]
+
+class DocflowOzonRetailWaybillItem(TypedDict):
+    code: str
+    name: str
+    quantity: str
 
 class _DocflowPackageContractRequired(TypedDict):
     #: Карточка договора в документообороте
@@ -19356,6 +20741,7 @@ class _DocflowPaymentDetailsRequired(TypedDict):
 class DocflowPaymentDetails(_DocflowPaymentDetailsRequired, total=False):
     """Платёжные реквизиты входящего счёта. Назначение платежа здесь НЕ собрано: строка «оплата по счёту такому-то за то-то» — текст на языке человека, и складывает её интерфейс из частей, которые приезжают ниже отдельно (номер, дата, основание, предмет, налог)."""
 
+    foreign: "DocflowPaymentForeign"
     #: НАША карточка договора, к которой привязан конверт. Рядом с basis, а не вместо него: basis — строка из чужой бумаги («по договору №17»), contract — карточка в кабинете, по которой договор открывается. Строку в карточку сервер не превращает: угадывать договор по номеру из PDF значит однажды повесить платёж на чужую бумагу. Заполнено только там, где связь «конверт ↔ карточка» уже записана человеком и договор ровно один; два договора дают null — выбирать за человека нельзя.
     contract: Optional["UUID"]
     #: Налог «в том числе» или «сверху» по итогам бумаги (ERP-2733): «Итого» плюс налог дают сумму к оплате — added; нет поля — бумага этого не показывает
@@ -19393,6 +20779,14 @@ class DocflowPaymentField(TypedDict):
     value: str
     #: auto — поле из подписанного файла обмена или найденное в нашем справочнике, проверять его незачем. guess — вытащено якорными правилами из текста чужой бумаги: почти всегда верно, но отвечает за платёж человек, и форма ставит рядом «проверьте». none — поле пустое.
     origin: Literal['auto', 'guess', 'none']
+
+class DocflowPaymentForeign(TypedDict):
+    """Реквизиты иностранного получателя из счёта: SWIFT, IBAN, страна банка и банк-посредник; нет — иностранных реквизитов не найдено"""
+
+    swift: "DocflowPaymentField"
+    iban: "DocflowPaymentField"
+    country: "DocflowPaymentField"
+    intermediary_bank: "DocflowPaymentField"
 
 class _DocflowPaymentInvoiceDocumentRequired(TypedDict):
     #: Карточка документооборота, в которую загружен файл счёта
@@ -19434,6 +20828,8 @@ class _DocflowPaymentRequestRequired(TypedDict):
     purpose: str
     #: Обоснование автора для согласующего
     justification: str
+    #: Договор словами, вписанный вручную; пусто — договор выбран из справочника (basis.contract_id) или не назван
+    contract_text: str
     #: Приоритет оплаты
     priority: Literal['high', 'normal', 'low']
     #: Форма оплаты
@@ -19458,12 +20854,23 @@ class DocflowPaymentRequest(_DocflowPaymentRequestRequired, total=False):
     business_id: "UUID"
     contact_id: "UUID"
     item_id: "UUID"
-    #: Подразделение заявки; нет — подразделение автора
+    foreign: "DocflowPaymentRequestForeign"
+    rate: "DocflowPaymentRequestRate"
+    #: Как платят по счёту: весь счёт, часть или частями по графику
+    pay_mode: Literal['full', 'part', 'schedule']
+    #: Сумма счёта при частичной оплате или графике; amount — к оплате
+    invoice_total: str
+    #: График оплаты при pay_mode=schedule: части по дате с номером строки очереди казначея (номер заявки и «/N») и ходом оплаты каждой части
+    parts: List["DocflowPaymentRequestPartsItem"]
+    #: Отдел заявки (оргструктура); нет — не назван
     department_id: "UUID"
     department_name: str
     #: Проект заявки (справочник ядра «Проекты»)
     project_id: "UUID"
     project_name: str
+    #: ЦФО расхода (справочник ядра «ЦФО»); нет — ЦФО отдела заявки
+    cfo_id: "UUID"
+    cfo_name: str
     #: Ставка НДС: пусто — не указана, none — без НДС
     vat_rate: Literal['', 'none', '0', '5', '7', '10', '20', '22']
     #: Сумма НДС
@@ -19500,6 +20907,8 @@ class DocflowPaymentRequest(_DocflowPaymentRequestRequired, total=False):
     budget: "DocflowPaymentRequestBudget"
     #: Можно ли отправить заявку сверх лимита: право docflow.flow:over_budget, заявка — черновик или на доработке
     can_submit_over_budget: bool
+    #: Можно ли сейчас проставить статью: человек согласует текущий этап «статья обязательна» заявки на согласовании
+    can_set_item: bool
     #: Можно ли повторить отклонённую или отозванную заявку новым черновиком
     can_repeat: bool
     #: Остаток бумаги-основания: заявлено, оплачено, осталось; только в карточке заявки, у ручного основания нет
@@ -19512,6 +20921,15 @@ class DocflowPaymentRequest(_DocflowPaymentRequestRequired, total=False):
     #: Строка очереди оплат модуля finance, куда ушла согласованная заявка
     finance_request_id: "UUID"
     created_by: int
+
+class DocflowPaymentRequestPartsItem(TypedDict, total=False):
+    line_no: int
+    due_date: str
+    amount: str
+    number: str
+    finance_request_id: "UUID"
+    progress: str
+    payment: "DocflowPaymentRequestPayment"
 
 class DocflowPaymentRequestBasis(TypedDict, total=False):
     #: Модуль основания
@@ -19572,6 +20990,28 @@ class DocflowPaymentRequestBudget(_DocflowPaymentRequestBudgetRequired, total=Fa
     #: Общий остаток подразделения по всем статьям выплат, когда остатка статьи не хватило и включён запасной лимит
     department_remaining: str
 
+class _DocflowPaymentRequestForeignRequired(TypedDict):
+    #: SWIFT (BIC) банка получателя, 8 или 11 знаков; пробелы и регистр приводятся сервером
+    swift: str
+
+class DocflowPaymentRequestForeign(_DocflowPaymentRequestForeignRequired, total=False):
+    """Реквизиты иностранного получателя: вместо ИНН, КПП и БИК — SWIFT и IBAN; платёж в валюте счёта"""
+
+    #: IBAN получателя; без IBAN нужен номер счёта в payee.account
+    iban: str
+    #: Страна банка получателя
+    country: str
+    #: Банк-посредник (SWIFT, название), если нужен
+    intermediary_bank: str
+    #: Адрес получателя для заявления на перевод (поле 59 SWIFT)
+    payee_address: str
+    #: Код вида валютной операции по Инструкции ЦБ 181-И, пять цифр
+    operation_code: str
+    #: Уникальный номер контракта, если контракт поставлен на учёт
+    contract_number: str
+    #: Кто платит комиссии банков (поле 71A SWIFT): OUR — плательщик, SHA — каждый свою, BEN — получатель; по умолчанию SHA
+    charges: Literal['OUR', 'SHA', 'BEN']
+
 class _DocflowPaymentRequestInputRequired(TypedDict):
     payee: "DocflowPaymentRequestPayee"
     #: Сумма; не больше двух знаков копеек, лишние нули отбрасываются
@@ -19586,6 +21026,14 @@ class DocflowPaymentRequestInput(_DocflowPaymentRequestInputRequired, total=Fals
     business_id: Optional["UUID"]
     contact_id: Optional["UUID"]
     item_id: Optional["UUID"]
+    foreign: "DocflowPaymentRequestForeign"
+    rate: "DocflowPaymentRequestRate"
+    #: Как платят по счёту: full — весь счёт, part — часть суммы счёта, schedule — частями по графику parts (ERP-2729)
+    pay_mode: Literal['full', 'part', 'schedule']
+    #: Сумма счёта при pay_mode=part или schedule; amount — к оплате, не больше неё. У full не передаётся
+    invoice_total: str
+    #: График при pay_mode=schedule: от двух строк «дата — сумма», каждая не больше суммы счёта, сумма строк равна amount; срок заявки — дата первой строки. Одна заявка согласуется один раз, после согласования каждая строка уходит в очередь казначея отдельно. У других режимов не передаётся
+    parts: List["DocflowPaymentRequestInputPartsItem"]
     currency: str
     #: Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP
     priority: Literal['high', 'normal', 'low']
@@ -19593,8 +21041,12 @@ class DocflowPaymentRequestInput(_DocflowPaymentRequestInputRequired, total=Fals
     payment_method: Literal['bank', 'cash']
     #: Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
     justification: str
-    #: Подразделение заявки из справочника «Подразделения»; по нему подбирается маршрут согласования и руководитель подразделения. Не задано при заведении — подразделение автора
+    #: Договор словами, когда его нет среди договоров контрагента (выбранный договор — basis.contract_id); длиннее — 422 docflow.payment_request.field с field contract_text
+    contract_text: str
+    #: Отдел заявки из оргструктуры; по нему подбирается маршрут согласования и руководитель отдела. Не задано — отдел не назван, по автору не подставляется. Регламент может сделать поле обязательным (request_fields.department)
     department_id: Optional["UUID"]
+    #: ЦФО расхода из справочника ядра «ЦФО»: этап «Ответственный ЦФО» и бюджет ЦФО берут его, а не ЦФО отдела. Элемент не из справочника, а также пусто при обязательном ЦФО в регламенте (request_fields.cfo) — 422 docflow.payment_request.field с полем cfo_id
+    cfo_id: Optional["UUID"]
     #: Проект заявки из справочника ядра «Проекты» — тот же разрез, что у операций финансов и заказов. Уходит в строку очереди финансов и оттуда в пустое поле банковской операции. Элемент не из справочника — 422 docflow.payment_request.field с полем project_id
     project_id: Optional["UUID"]
     #: Ставка НДС: пусто — не указана, none — без НДС, иначе процент
@@ -19608,6 +21060,10 @@ class DocflowPaymentRequestInput(_DocflowPaymentRequestInputRequired, total=Fals
     basis: "DocflowPaymentRequestBasis"
     invoice_card: "DocflowPaymentRequestInvoiceCard"
 
+class DocflowPaymentRequestInputPartsItem(TypedDict):
+    due_date: str
+    amount: str
+
 class _DocflowPaymentRequestInvoiceCardRequired(TypedDict):
     content: "DocflowFlowContent"
 
@@ -19616,6 +21072,12 @@ class DocflowPaymentRequestInvoiceCard(_DocflowPaymentRequestInvoiceCardRequired
 
     #: Вид карточки: счёт или «Прочее» (платёжка 1С)
     kind: Literal['invoice', 'other']
+
+class DocflowPaymentRequestItemInput(TypedDict):
+    #: Версия заявки, которую видел человек
+    version: int
+    #: Статья, которую ставит согласующий
+    item_id: "UUID"
 
 class DocflowPaymentRequestList(TypedDict):
     results: List["DocflowPaymentRequest"]
@@ -19689,6 +21151,18 @@ class DocflowPaymentRequestPayment(_DocflowPaymentRequestPaymentRequired, total=
     closed_short_reason: str
     #: Платёжка выгружена файлом для банк-клиента, по API в банк не уходила; ход заявки — exported
     exported_to_file: bool
+
+class _DocflowPaymentRequestRateRequired(TypedDict):
+    #: cbr_payment_day — по курсу ЦБ РФ на день оплаты; fixed — по названному курсу
+    mode: Literal['cbr_payment_day', 'fixed']
+
+class DocflowPaymentRequestRate(_DocflowPaymentRequestRateRequired, total=False):
+    """Курс оплаты рублями счёта в валюте российскому получателю; у рублёвой заявки и иностранного получателя не хранится"""
+
+    #: Рублей за единицу валюты; обязателен у fixed
+    rate: str
+    #: Сумма платежа в рублях; считает сервер у fixed, у cbr_payment_day пусто до оплаты
+    rub_amount: str
 
 class _DocflowPaymentRequestReworkInputRequired(TypedDict):
     #: Версия заявки, которую видел человек
@@ -19828,6 +21302,22 @@ class DocflowPaymentRequestScheduleUpdate(_DocflowPaymentRequestScheduleUpdateRe
     #: draft — черновик автору; submit — сразу на согласование
     mode: Literal['draft', 'submit']
 
+class DocflowPaymentRequestSettings(TypedDict):
+    #: Срок оплаты новой заявки — сегодня плюс столько календарных дней; null — не подставлять
+    default_due_days: Optional[int]
+    #: Регламент: срок оплаты не раньше сегодня плюс столько календарных дней; отправка заявки с более ранним сроком — 422 docflow.payment_request.due_too_soon; null — без ограничения
+    min_due_days: Optional[int]
+    #: Вправе ли спросивший менять настройку
+    can_edit: bool
+
+class _DocflowPaymentRequestSettingsInputRequired(TypedDict):
+    #: Срок оплаты новой заявки — сегодня плюс столько календарных дней; null — не подставлять
+    default_due_days: Optional[int]
+
+class DocflowPaymentRequestSettingsInput(_DocflowPaymentRequestSettingsInputRequired, total=False):
+    #: Регламент: срок оплаты не раньше сегодня плюс столько календарных дней; не передано или null — без ограничения
+    min_due_days: Optional[int]
+
 DocflowPaymentRequestStatus = Literal['draft', 'on_approval', 'rework', 'approved', 'rejected', 'cancelled']
 
 class DocflowPaymentRequestSuggestion(TypedDict, total=False):
@@ -19868,6 +21358,14 @@ class DocflowPaymentRequestUpdate(_DocflowPaymentRequestUpdateRequired, total=Fa
     business_id: Optional["UUID"]
     contact_id: Optional["UUID"]
     item_id: Optional["UUID"]
+    foreign: "DocflowPaymentRequestForeign"
+    rate: "DocflowPaymentRequestRate"
+    #: Как платят по счёту: full — весь счёт, part — часть суммы счёта, schedule — частями по графику parts (ERP-2729)
+    pay_mode: Literal['full', 'part', 'schedule']
+    #: Сумма счёта при pay_mode=part или schedule; amount — к оплате, не больше неё. У full не передаётся
+    invoice_total: str
+    #: График при pay_mode=schedule: от двух строк «дата — сумма», каждая не больше суммы счёта, сумма строк равна amount; срок заявки — дата первой строки. Одна заявка согласуется один раз, после согласования каждая строка уходит в очередь казначея отдельно. У других режимов не передаётся
+    parts: List["DocflowPaymentRequestUpdatePartsItem"]
     currency: str
     #: Приоритет оплаты, как в заявке на расходование денежных средств 1С:ERP
     priority: Literal['high', 'normal', 'low']
@@ -19875,8 +21373,12 @@ class DocflowPaymentRequestUpdate(_DocflowPaymentRequestUpdateRequired, total=Fa
     payment_method: Literal['bank', 'cash']
     #: Обоснование — какую задачу решает платёж и почему сейчас; читает согласующий. Черновик сохраняется без него, отправка на согласование — нет
     justification: str
-    #: Подразделение заявки из справочника «Подразделения»; по нему подбирается маршрут согласования и руководитель подразделения. Не задано при заведении — подразделение автора
+    #: Договор словами, когда его нет среди договоров контрагента (выбранный договор — basis.contract_id); длиннее — 422 docflow.payment_request.field с field contract_text
+    contract_text: str
+    #: Отдел заявки из оргструктуры; по нему подбирается маршрут согласования и руководитель отдела. Не задано — отдел не назван, по автору не подставляется. Регламент может сделать поле обязательным (request_fields.department)
     department_id: Optional["UUID"]
+    #: ЦФО расхода из справочника ядра «ЦФО»: этап «Ответственный ЦФО» и бюджет ЦФО берут его, а не ЦФО отдела. Элемент не из справочника, а также пусто при обязательном ЦФО в регламенте (request_fields.cfo) — 422 docflow.payment_request.field с полем cfo_id
+    cfo_id: Optional["UUID"]
     #: Проект заявки из справочника ядра «Проекты» — тот же разрез, что у операций финансов и заказов. Уходит в строку очереди финансов и оттуда в пустое поле банковской операции. Элемент не из справочника — 422 docflow.payment_request.field с полем project_id
     project_id: Optional["UUID"]
     #: Ставка НДС: пусто — не указана, none — без НДС, иначе процент
@@ -19889,6 +21391,10 @@ class DocflowPaymentRequestUpdate(_DocflowPaymentRequestUpdateRequired, total=Fa
     payment_order: "FinancePaymentOrderFields"
     basis: "DocflowPaymentRequestBasis"
     invoice_card: "DocflowPaymentRequestInvoiceCard"
+
+class DocflowPaymentRequestUpdatePartsItem(TypedDict):
+    due_date: str
+    amount: str
 
 class DocflowPaymentRequestVersion(TypedDict):
     #: Версия заявки, которую видел человек
@@ -19935,6 +21441,8 @@ class DocflowPreflight(_DocflowPreflightRequired, total=False):
     warnings: List["DocflowIssue"]
     #: Подписант из профиля реквизитов УПД покупателя (signer): форма предлагает его вместо руководителя из карточки юрлица, а без подписанта формы он и уходит. Нет — профиль подписанта не назвал
     default_signer: "DocflowPreflightDefaultSigner"
+    #: Особый случай маркировки из профиля реквизитов УПД покупателя (marking_case): уйдёт в файл, если форма не назвала свой. Только когда в документе есть маркированные строки. Нет — профиль случая не назвал или маркированного товара нет
+    default_marking_case: Literal['own_use', 'gratuitous', 'production', 'storage']
     #: Кто передал товар по профилю реквизитов УПД покупателя (transfer_employee): форма предлагает его, а без значения формы он и уходит. Нет — профиль не назвал или это передача агенту
     default_transfer_employee: "DocflowPreflightDefaultTransferEmployee"
 
@@ -20123,8 +21631,8 @@ class DocflowRequisites(TypedDict, total=False):
     signers: List["DocflowSignerRequisites"]
     #: ИнфПолФХЖ1: дополнительные сведения факта хозяйственной жизни
     extra: List["DocflowTextInfoRequisites"]
-    #: Особый случай передачи маркированного товара: выбытие для собственных нужд, безвозмездно или для производства (СвВыбытияМАРК 1/2/3) либо хранение без смены собственника (ВидОборотаМАРК 9). Уходит парой ИнфПолФХЖ1, если её не вписали сами. Не задан — обычная продажа
-    marking_case: Literal['own_use', 'gratuitous', 'production', 'storage']
+    #: Особый случай передачи маркированного товара: выбытие для собственных нужд, безвозмездно или для производства (СвВыбытияМАРК 1/2/3) либо хранение без смены собственника (ВидОборотаМАРК 9). Уходит парой ИнфПолФХЖ1, если её не вписали сами. Не задан — случай из профиля реквизитов УПД покупателя, а без него обычная продажа; sale — обычная продажа явно, сильнее профиля
+    marking_case: Literal['sale', 'own_use', 'gratuitous', 'production', 'storage']
     lines: List["DocflowLineRequisites"]
 
 class DocflowRequisitesConsignee(TypedDict, total=False):
@@ -20188,6 +21696,8 @@ class DocflowSalesOrder(_DocflowSalesOrderRequired, total=False):
     consignee_point_id: Dict[str, Any]
     #: Название точки доставки
     consignee_point_name: str
+    #: Адрес точки доставки строкой
+    consignee_point_address: str
     number: str
     status_id: "UUID"
     #: Имя статуса, которое придумал кабинет
@@ -20313,7 +21823,7 @@ class DocflowStageAction(_DocflowStageActionRequired, total=False):
 
 DocflowStateCategory = Literal['in_work', 'awaiting_signature', 'cancellation_requested', 'cancellation_refused', 'draft', 'error', 'signer_invalid', 'approved', 'rejected', 'cancelled', 'interrupted']
 
-class DocflowSupplierActForm(TypedDict):
+class _DocflowSupplierActFormRequired(TypedDict):
     #: Проверенная закупка
     order_id: "UUID"
     #: Дата действия возвращённой политики
@@ -20324,10 +21834,14 @@ class DocflowSupplierActForm(TypedDict):
     vat_deductible: bool
     #: Активные проводимые расходные статьи для выбора в этом акте
     pnl_items: List["DocflowSupplierActFormPnlItemsItem"]
-    #: Статья закупки — расчёты с собственником: окно спрашивает «За кого»
+    #: Статья закупки — расчёты с собственником, зарплата или подотчёт: окно спрашивает «За кого»
     owner_item: bool
-    #: Собственники бизнеса на дату акта для поля «За кого»; один — подставляется заранее
+    #: Варианты поля «За кого»: собственники бизнеса на дату акта (один подставляется заранее) или сотрудники для зарплаты и подотчёта
     owners: List["DocflowSupplierActFormOwnersItem"]
+
+class DocflowSupplierActForm(_DocflowSupplierActFormRequired, total=False):
+    #: Чья статья: owner — собственник, payroll и accountable — сотрудник
+    person_kind: Literal['owner', 'payroll', 'accountable']
 
 class DocflowSupplierActFormPnlItemsItem(TypedDict):
     id: "UUID"
@@ -20409,6 +21923,22 @@ class DocflowTemplatePastActs(TypedDict):
     items: List["DocflowTemplatePastAct"]
     issued: int
     failed: int
+
+class _DocflowTemplateRunNowRequired(TypedDict):
+    order_id: "UUID"
+    #: Номер продажи
+    number: str
+    #: true — продажа создана этим вызовом; false — уже была создана раньше
+    created: bool
+    run: "CoreOrderTemplateRun"
+    #: Сколько счетов выпущено
+    invoices: int
+    #: Сколько закрывающих бумаг выпущено
+    closings: int
+
+class DocflowTemplateRunNow(_DocflowTemplateRunNowRequired, total=False):
+    #: Почему бумага не выпущена; продажа при этом создана
+    paper_error: str
 
 class DocflowTextInfoRequisites(TypedDict, total=False):
     """Пара «идентификатор — значение» дополнительных сведений."""
@@ -20936,11 +22466,15 @@ class _FinanceAccountRequired(TypedDict):
 class FinanceAccount(_FinanceAccountRequired, total=False):
     #: Бизнес, которому принадлежат деньги — у счёта из юрлица, у кассы из её карточки. null только у старого счёта без юрлица в кабинете с несколькими бизнесами.
     business: Optional[str]
+    #: Число операций счёта за период запроса (period_from–period_to); есть только когда период передан.
+    period_txn_count: int
     connector_health: "FinanceConnectorHealth"
     #: Остаток по данным банка на момент `bank_balance_at`, decimal string. null — банк остатка не называл (счёт не подключён или остаток ещё не приходил): это не ноль, и сверять с ним нечего.
     bank_balance: Optional[str]
     #: Когда банк назвал остаток `bank_balance`.
     bank_balance_at: Optional[str]
+    #: Сумма операций в обработке у банка (ERP-2727), decimal string: доступный остаток `bank_balance` минус проведённый. Блокировки по карте и списания при нехватке денег; в выписке их ещё нет. Учёт сверяется с `bank_balance − bank_pending`. null — банк проведённый остаток не назвал.
+    bank_pending: Optional[str]
     #: Когда счёт закрыт банком. null — счёт действующий.
     bank_closed_at: Optional[str]
     #: «Используется с»: с какой даты счёт принадлежит бизнесу. Операции раньше неё коннектор не запрашивает, загрузка файла пропускает, ручной ввод отклоняет. Поля нет — ограничения нет.
@@ -22567,6 +24101,10 @@ class FinanceBudgetSubmission(_FinanceBudgetSubmissionRequired, total=False):
     responsible_name: str
     comment: str
     updated_at: str
+    #: Смотрящий правит строки части: без сужения — да; ответственный за часть при назначенном ответственном за бюджет — только свои части.
+    can_edit: bool
+    #: Смотрящий принимает, возвращает части и назначает срок: нет у ответственного за часть, правящего только свои части.
+    can_review: bool
 
 class _FinanceBudgetSubmissionInputRequired(TypedDict):
     company_id: "UUID"
@@ -23894,6 +25432,100 @@ class FinanceInUseSinceCutPreview(_FinanceInUseSinceCutPreviewRequired, total=Fa
 class FinanceInUseSinceCutResult(TypedDict):
     account: "FinanceAccount"
     removed: int
+
+class FinanceInternalServiceGenerateInput(TypedDict):
+    #: Месяц документов YYYY-MM
+    month: str
+
+class FinanceInternalServiceGenerateResult(TypedDict):
+    #: Месяц документов YYYY-MM
+    month: str
+    results: List["FinanceInternalServiceGenerateResultResultsItem"]
+
+class _FinanceInternalServiceGenerateResultResultsItemRequired(TypedDict):
+    #: UUID шаблона
+    template_id: str
+    #: Название шаблона
+    name: str
+    #: created — создан; existing — уже был; empty — нет получателей; failed — ошибка
+    status: Literal['created', 'existing', 'empty', 'failed']
+
+class FinanceInternalServiceGenerateResultResultsItem(_FinanceInternalServiceGenerateResultResultsItemRequired, total=False):
+    #: Номер документа
+    number: str
+    #: UUID документа
+    document_id: str
+    #: Текст ошибки
+    error: str
+
+class _FinanceInternalServiceTemplateRequired(TypedDict):
+    #: Название шаблона
+    name: str
+    #: UUID бизнеса
+    business_id: str
+    #: UUID ЦФО-исполнителя
+    performer_cfo_id: str
+    #: fixed — строки шаблона; headcount — цена за единицу на численность занятых позиций ЦФО
+    mode: Literal['fixed', 'headcount']
+    #: Начало действия YYYY-MM-DD; приводится к первому числу месяца
+    valid_from: str
+    #: Шаблон действует
+    active: bool
+    #: UUID шаблона
+    id: str
+
+class FinanceInternalServiceTemplate(_FinanceInternalServiceTemplateRequired, total=False):
+    #: UUID юрлица; пусто — без юрлица
+    company_id: str
+    #: UUID услуги из номенклатуры
+    product_id: str
+    #: Цена за единицу десятичной строкой; для headcount обязательна и больше нуля
+    unit_price: str
+    #: Получатели и цены; только для fixed
+    lines: List["FinanceInternalServiceTemplateLine"]
+    #: Конец действия YYYY-MM-DD; пусто — бессрочно
+    valid_to: str
+    #: Последняя ошибка генерации документа
+    last_error: str
+
+class _FinanceInternalServiceTemplateInputRequired(TypedDict):
+    #: Название шаблона
+    name: str
+    #: UUID бизнеса
+    business_id: str
+    #: UUID ЦФО-исполнителя
+    performer_cfo_id: str
+    #: fixed — строки шаблона; headcount — цена за единицу на численность занятых позиций ЦФО
+    mode: Literal['fixed', 'headcount']
+    #: Начало действия YYYY-MM-DD; приводится к первому числу месяца
+    valid_from: str
+
+class FinanceInternalServiceTemplateInput(_FinanceInternalServiceTemplateInputRequired, total=False):
+    """Шаблон внутренней услуги без идентификатора"""
+
+    #: UUID юрлица; пусто — без юрлица
+    company_id: str
+    #: UUID услуги из номенклатуры
+    product_id: str
+    #: Цена за единицу десятичной строкой; для headcount обязательна и больше нуля
+    unit_price: str
+    #: Получатели и цены; только для fixed
+    lines: List["FinanceInternalServiceTemplateLine"]
+    #: Конец действия YYYY-MM-DD; пусто — бессрочно
+    valid_to: str
+    #: Шаблон действует
+    active: bool
+
+class FinanceInternalServiceTemplateLine(TypedDict):
+    #: UUID ЦФО-получателя
+    cfo: str
+    #: Количество десятичной строкой
+    quantity: str
+    #: Цена десятичной строкой
+    price: str
+
+class FinanceInternalServiceTemplateList(TypedDict):
+    results: List["FinanceInternalServiceTemplate"]
 
 class FinanceItemMergeRequest(TypedDict):
     target_id: "UUID"
@@ -25247,6 +26879,8 @@ class FinancePaymentRequest(_FinancePaymentRequestRequired, total=False):
     #: Кому передана открытая заявка; нет — автор
     responsible_id: int
     responsible_name: str
+    #: Часть графика оплаты заявки «Документов» (ERP-2729): казначей переносит дату и оплачивает, но не отклоняет, не возвращает на доработку и не отменяет — график отменяют в заявке
+    schedule_part: bool
     #: Почему отправить нельзя
     send_block_reason: str
     approval: "FinancePaymentRequestApproval"
@@ -25262,12 +26896,28 @@ class FinancePaymentRequest(_FinancePaymentRequestRequired, total=False):
     project_name: str
     #: Договор основания словами (source.contract_id), снимком на момент приёма заявки
     contract_title: str
+    #: Получатель иностранный: платят в валюте заявки со счёта в этой валюте
+    foreign: bool
+    #: Как валютную заявку «Документов» российскому получателю платят рублями; у заявки без режима — по курсу ЦБ на день оплаты. Нет — платят в валюте заявки
+    rate: "FinancePaymentRequestRate"
+    #: Валюта счёта списания: RUB у валютной заявки российскому получателю, иначе валюта заявки
+    pay_currency: str
 
 class FinancePaymentRequestPayeeKnownAccount(TypedDict):
     """Прежние известные реквизиты при неподтверждённой смене счёта получателя"""
 
     account: str
     bic: str
+
+class _FinancePaymentRequestRateRequired(TypedDict):
+    #: cbr_payment_day — по курсу ЦБ на день оплаты, fixed — по названному курсу
+    mode: Literal['cbr_payment_day', 'fixed']
+
+class FinancePaymentRequestRate(_FinancePaymentRequestRateRequired, total=False):
+    """Как валютную заявку «Документов» российскому получателю платят рублями; у заявки без режима — по курсу ЦБ на день оплаты. Нет — платят в валюте заявки"""
+
+    #: Названный курс, рублей за единицу валюты; только у fixed
+    rate: str
 
 class _FinancePaymentRequestApprovalRequired(TypedDict):
     #: Модуль, где согласована заявка
@@ -26096,6 +27746,10 @@ class FinancePeriodCheckPage(TypedDict):
     on: str
     checks: List["FinancePeriodCheck"]
 
+class FinancePlacementNoSalary(TypedDict):
+    #: true — поставить отметку «без оклада осознанно», false — снять
+    no_salary: bool
+
 class _FinancePnlCoverageRequired(TypedDict):
     missing: List["FinancePnlCoverageItem"]
     duplicated: List["FinancePnlCoverageItem"]
@@ -26421,6 +28075,24 @@ class FinanceReconciliationAccount(_FinanceReconciliationAccountRequired, total=
     source: "FinanceReconciliationSource"
     #: Decimal string — наш расчёт минус банк. Отсутствует вместе с `theirs`: разница с тем, чего не сказали, не равна нулю.
     difference: str
+    #: Операции счёта раньше даты «Используется с»: сверка их не учитывает. Нет поля — таких операций нет (ERP-2727)
+    before_in_use: "FinanceReconciliationAccountBeforeInUse"
+    #: Журнал сверки по дням: каждый день, на который банк назвал остаток (ответ банка при загрузке или конечный остаток выписки), и наш расчёт на тот же день; свежие сверху, не больше 90 (ERP-2727)
+    journal: List["FinanceReconciliationAccountJournalItem"]
+    #: Первый день текущего расхождения с банком; нет поля — последняя точка журнала сошлась
+    diverged_since: str
+    #: Последний день журнала, когда остаток сошёлся с банком
+    last_matched: str
+
+FinanceReconciliationAccountBeforeInUse = TypedDict("FinanceReconciliationAccountBeforeInUse", {"since": str, "from": str, "count": int}, total=False)
+
+class FinanceReconciliationAccountJournalItem(TypedDict):
+    date: str
+    source: Literal['bank', 'statement']
+    theirs: str
+    ours: str
+    difference: str
+    loaded_at: str
 
 class FinanceReconciliationDay(TypedDict):
     date: str
@@ -26979,12 +28651,25 @@ class FinanceStaffHeadcount(TypedDict):
     #: Всего занятых позиций
     total: int
     results: List["FinanceStaffHeadcountResultsItem"]
+    #: Подразделения, не попавшие в получатели, с причиной
+    skipped: List["FinanceStaffHeadcountSkippedItem"]
 
 class FinanceStaffHeadcountResultsItem(TypedDict):
     #: UUID ЦФО
     cfo: str
     cfo_name: str
     headcount: int
+
+class FinanceStaffHeadcountSkippedItem(TypedDict):
+    #: Название подразделения
+    department: str
+    #: UUID ЦФО; пусто — ЦФО нет
+    cfo: str
+    cfo_name: str
+    #: vacant — все позиции свободны; no_cfo — у отдела и родителей нет ЦФО; no_department — позиции без подразделения
+    reason: Literal['vacant', 'no_cfo', 'no_department']
+    headcount: int
+    vacant: int
 
 class _FinanceStaffPositionRequired(TypedDict):
     #: UUID штатной позиции
@@ -27863,6 +29548,33 @@ class FinanceUnallocatedScope(TypedDict):
 class FinanceUnallocatedSummary(TypedDict):
     total: "FinanceUnallocatedMoney"
     scopes: List["FinanceUnallocatedScope"]
+
+class _FinanceUnstaffedPlacementRequired(TypedDict):
+    #: UUID постановки
+    placement_id: str
+    #: UUID сотрудника
+    employee_id: str
+    #: ФИО сотрудника
+    employee_name: str
+    #: UUID подразделения постановки
+    department_id: str
+    #: Название подразделения
+    department_label: str
+    #: Должность в постановке
+    position_title: str
+    #: Дата постановки
+    since: str
+    #: Отметка «без оклада осознанно» — проверка закрытия о постановке молчит
+    no_salary: bool
+
+class FinanceUnstaffedPlacement(_FinanceUnstaffedPlacementRequired, total=False):
+    #: Кто поставил отметку
+    no_salary_by: str
+    #: Когда поставлена отметка
+    no_salary_at: str
+
+class FinanceUnstaffedPlacementList(TypedDict):
+    results: List["FinanceUnstaffedPlacement"]
 
 class _FinanceVATBookImportRequired(TypedDict):
     id: str
@@ -29342,6 +31054,13 @@ class ManagedChecklistPatch(TypedDict):
     #: Пустой массив удаляет только группу с переданным id.
     items: List["ManagedChecklistItem"]
 
+MarketplaceAds = TypedDict("MarketplaceAds", {"platform": str, "from": str, "to": str, "days": List[str], "totals": Dict[str, float], "prev_totals": Optional[Dict[str, float]], "ratios": Dict[str, Optional[float]], "prev_ratios": Optional[Dict[str, Optional[float]]], "orders_all": float, "series": Dict[str, List[Optional[float]]], "rules": Dict[str, Any], "traffic": bool, "complete": bool, "cmp_totals": Optional[Dict[str, float]], "cmp_ratios": Optional[Dict[str, Optional[float]]], "compare_through": str, "compare_unavailable": bool, "stats_from": str, "data_through": str, "campaigns": List[Dict[str, Any]], "stores": List["MarketplaceAdsStoresItem"]}, total=False)
+
+class MarketplaceAdsStoresItem(TypedDict):
+    id: str
+    name: str
+    mode: Literal['manage', 'control']
+
 class MarketplaceAdsAbsence(TypedDict):
     #: По какой день включительно ответ действует
     through: str
@@ -29352,7 +31071,7 @@ class MarketplaceAdsAbsenceRequest(TypedDict, total=False):
     #: Магазины отчёта; пусто — все активные магазины площадки
     stores: List[str]
 
-class MarketplaceAllPnl(TypedDict):
+class _MarketplaceAllPnlRequired(TypedDict):
     period_kind: Literal['week', 'month']
     year: int
     #: Годы, за которые есть данные хоть у одной площадки, включая месяцы с загруженными отчётами Ламоды и Лэтуаль
@@ -29374,6 +31093,10 @@ class MarketplaceAllPnl(TypedDict):
     #: Площадки, которые выбранный список товаров не отбирает: при group их в сводке нет
     list_excluded: List[str]
 
+class MarketplaceAllPnl(_MarketplaceAllPnlRequired, total=False):
+    #: Можно ли верить марже по колонкам (econ.MarginStateOf по сложенным штукам площадок): пусто — как есть, approx — «≈», unknown — «—»
+    margin_state: List[Literal['', 'approx', 'unknown']]
+
 class _MarketplaceAllPnlGapRequired(TypedDict):
     platform: Literal['ozon', 'wildberries', 'yandex', 'lamoda', 'letoile']
     #: no_data — финансовых данных площадки за период ещё нет, площадки в колонке нет; no_report — отчёта за месяц нет; profit_unknown — прибыль не посчитана, площадки в колонке нет; partial — данные площадки по through; partial_report — отчёт пришёл не по всем магазинам
@@ -29393,7 +31116,7 @@ class MarketplaceAllPnlPeriod(TypedDict):
     start: str
     end: str
 
-class MarketplaceAllPnlPlatform(TypedDict):
+class _MarketplaceAllPnlPlatformRequired(TypedDict):
     platform: Literal['ozon', 'wildberries', 'yandex', 'lamoda', 'letoile']
     #: Доход (выручка за вычетом возвратов); null — площадки нет в колонке
     income: List[Optional[float]]
@@ -29402,6 +31125,10 @@ class MarketplaceAllPnlPlatform(TypedDict):
     #: Доля площадки в доходе колонки, %
     income_share: List[Optional[float]]
 
+class MarketplaceAllPnlPlatform(_MarketplaceAllPnlPlatformRequired, total=False):
+    #: Можно ли верить марже по колонкам (econ.MarginStateOf по сложенным штукам площадок): пусто — как есть, approx — «≈», unknown — «—»
+    margin_state: List[Literal['', 'approx', 'unknown']]
+
 class _MarketplaceAllPnlRowRequired(TypedDict):
     key: Literal['income', 'revenue', 'returns', 'variable', 'cogs', 'commission', 'logistics', 'ads', 'storage', 'other', 'taxes', 'margin', 'margin_pct']
     kind: Literal['total', 'normal', 'percent']
@@ -29409,7 +31136,7 @@ class _MarketplaceAllPnlRowRequired(TypedDict):
     values: List[Optional[float]]
 
 class MarketplaceAllPnlRow(_MarketplaceAllPnlRowRequired, total=False):
-    #: Доля статьи расходов от выручки периода, %; расход — плюсом
+    #: Доля статьи расходов от дохода периода, %; расход — плюсом
     share: List[Optional[float]]
     #: Вклад площадок в строку: площадка → значения по периодам
     parts: Dict[str, List[Optional[float]]]
@@ -29911,6 +31638,30 @@ class MarketplaceComponentFreshness(TypedDict, total=False):
     #: Карточки товаров
     products: Optional[str]
 
+class MarketplaceCostHistory(TypedDict):
+    #: Версии ставки, новые сверху
+    results: List["MarketplaceCostHistoryEntry"]
+
+class _MarketplaceCostHistoryEntryRequired(TypedDict):
+    #: Цена за единицу, десятичная строка
+    cost: str
+    #: С какого дня действует
+    valid_from: str
+    #: Действует сейчас; срок прочих — до начала следующей версии
+    current: bool
+    #: manual — ставка магазина без склада; temporary — временная цена товара, которого не было на складе
+    source: Literal['manual', 'temporary']
+    #: Заведена без даты и пересчитала непереданные недели
+    recalculated: bool
+    #: Когда заведена
+    changed_at: str
+
+class MarketplaceCostHistoryEntry(_MarketplaceCostHistoryEntryRequired, total=False):
+    #: Примечание
+    note: str
+    #: Кто завёл; нет — ставка заведена до записи автора
+    changed_by: str
+
 class _MarketplaceDocumentEstimateRequired(TypedDict):
     document_id: str
     month: str
@@ -30076,6 +31827,56 @@ class MarketplaceEconWbInput(TypedDict):
     adEx: float
     tax: float
 
+class MarketplaceFbsActions(TypedDict):
+    items: List["MarketplaceFbsActionsItemsItem"]
+
+class _MarketplaceFbsActionsItemsItemRequired(TypedDict):
+    id: "UUID"
+    store_id: "UUID"
+    supply_id: Optional["UUID"]
+    action: Literal['auto_wave', 'day_supply_add', 'move_next_day', 'marks_check', 'boxes', 'handover', 'handover_pending', 'handover_confirmed', 'modes']
+    result: Literal['ok', 'failed', 'pending', 'skipped']
+    #: Кто; пусто — автоматика.
+    actor_id: Optional[int]
+    detail: Dict[str, Any]
+    created_at: str
+
+class MarketplaceFbsActionsItemsItem(_MarketplaceFbsActionsItemsItemRequired, total=False):
+    actor_name: str
+
+MarketplaceFbsAutoShipPreview = TypedDict("MarketplaceFbsAutoShipPreview", {"store_id": "UUID", "since": str, "from": str, "orders": int, "units": int, "already_shipped": int, "short_orders": int, "unmatched": int, "unmatched_orders": List[str], "products": List["MarketplaceFbsAutoShipPreviewProductsItem"], "blockers": List[Literal['no_warehouse', 'ship_by_platform_off', 'no_since']]}, total=False)
+
+class MarketplaceFbsAutoShipPreviewProductsItem(TypedDict):
+    product_id: "UUID"
+    sku: str
+    name: str
+    orders: int
+    #: Заказано штук.
+    units: int
+    #: Будет проведено штук.
+    posted: int
+    #: Остаток склада исполнения.
+    on_hand: str
+    #: Не хватит штук.
+    short: int
+
+class _MarketplaceFbsAutoShipRunRequired(TypedDict):
+    ran_at: str
+    #: Сколько заказов проведено обходом.
+    posted: int
+    #: Сколько заказов ждут остатка.
+    short_count: int
+    #: Сколько заказов без сопоставленного товара.
+    unmatched_count: int
+    #: Первые 50 номеров заказов, ждущих остатка.
+    short: List[str]
+    #: Первые 50 номеров заказов без товара.
+    unmatched: List[str]
+
+class MarketplaceFbsAutoShipRun(_MarketplaceFbsAutoShipRunRequired, total=False):
+    #: Код сбоя обхода; пусто — без сбоя.
+    error_code: str
+
 class MarketplaceFbsCarriageResult(TypedDict):
     supplies: List["MarketplaceFbsSupply"]
     #: Наши готовые отправления, которые Ozon в отгрузку не взял
@@ -30171,6 +31972,28 @@ class _MarketplaceFbsPostingsInputRequired(TypedDict):
 class MarketplaceFbsPostingsInput(_MarketplaceFbsPostingsInputRequired, total=False):
     #: Номера отправлений; пусто — все готовые
     postings: List[str]
+
+class MarketplaceFbsProblems(TypedDict):
+    platform: str
+    items: List["MarketplaceFbsProblemsItemsItem"]
+
+class _MarketplaceFbsProblemsItemsItemRequired(TypedDict):
+    code: Literal['store_no_warehouse', 'orders_older_30_days', 'auto_ship_no_since', 'auto_ship_short', 'auto_ship_unmatched', 'handover_pending', 'handover_failed', 'handover_missed', 'handover_interrupted', 'marks_supply', 'wb_postponed', 'wb_cancel_after_handover', 'wb_carrier_cancel', 'wb_seller_cancel_penalty', 'wb_status_unknown']
+    #: Код места исправления.
+    reason: str
+    store_id: "UUID"
+    store_name: str
+    count: int
+    #: Первые номера заказов.
+    sample: List[str]
+
+class MarketplaceFbsProblemsItemsItem(_MarketplaceFbsProblemsItemsItemRequired, total=False):
+    since: str
+    supply_id: "UUID"
+    #: Номер поставки у площадки.
+    supply: str
+    #: Код отказа площадки при передаче.
+    error: str
 
 class _MarketplaceFbsQueueItemRequired(TypedDict):
     posting: str
@@ -30287,6 +32110,57 @@ class MarketplaceFbsStoreRef(_MarketplaceFbsStoreRefRequired, total=False):
     #: Код отказа ключа магазина на запись — стикеров и поставки не будет
     write_key_issue: str
 
+class _MarketplaceFbsStoreSettingsRequired(TypedDict):
+    store_id: "UUID"
+    #: Час забора по дням недели.
+    pickup_hours: Dict[str, str]
+    buffer_minutes: Optional[int]
+    ship_point: str
+    transition_on: Optional[str]
+    #: Проводить заказы, созданные с этой даты; null — выключено.
+    auto_ship_since: Optional[str]
+    updated_at: Optional[str]
+    updated_by: Optional[int]
+    #: Час забора задан хотя бы на один день.
+    auto_modes_ready: bool
+    #: Склад включил «проводить по статусам площадки».
+    ship_by_platform: bool
+    #: У магазина выбран склад исполнения.
+    fulfilment_warehouse: bool
+    #: Обход сейчас проводит заказы магазина.
+    auto_ship_active: bool
+    last_run: Optional["MarketplaceFbsAutoShipRun"]
+
+class MarketplaceFbsStoreSettings(_MarketplaceFbsStoreSettingsRequired, total=False):
+    #: Акеда ведёт поставки магазина (переход с кабинета WB сделан).
+    akeda_managed: bool
+    #: Волны: руками или по расписанию.
+    wave_mode: Literal['manual', 'auto']
+    #: Передача в доставку: руками, с подтверждением менеджера или сама.
+    handover_mode: Literal['manual', 'confirm', 'auto']
+    wave_interval_minutes: Optional[int]
+    wave_start: Optional[str]
+    handover_lead_minutes: Optional[int]
+    pickup_boxes: Optional[int]
+
+class MarketplaceFbsStoreSettingsInput(TypedDict, total=False):
+    #: Час забора по дням недели (mon…sun → ЧЧ:ММ).
+    pickup_hours: Dict[str, str]
+    #: Буфер до забора, минут.
+    buffer_minutes: Optional[int]
+    #: Пункт отгрузки.
+    ship_point: Literal['', 'wb_warehouse', 'sorting_center', 'pickup_point']
+    #: День перехода с кабинета WB на Akeda.
+    transition_on: Optional[str]
+    #: Авто-волна раз в N минут; пусто — 60.
+    wave_interval_minutes: Optional[int]
+    #: Первая авто-волна дня, ЧЧ:ММ; пусто — 08:00.
+    wave_start: Optional[str]
+    #: Передача за N минут до часа забора; пусто — 30.
+    handover_lead_minutes: Optional[int]
+    #: Грузомест на поставку ПВЗ.
+    pickup_boxes: Optional[int]
+
 class _MarketplaceFbsSuppliesViewRequired(TypedDict):
     platform: Literal['ozon', 'wildberries']
     supplies: List["MarketplaceFbsSupply"]
@@ -30329,6 +32203,18 @@ class _MarketplaceFbsSupplyRequired(TypedDict):
 class MarketplaceFbsSupply(_MarketplaceFbsSupplyRequired, total=False):
     last_error: str
     last_reason: str
+    #: Поставку кабинета закрыл обход по выгрузке; export_canceled — все задания отменены.
+    closed_by: Literal['export', 'export_canceled']
+    #: День отсечки поставки дня.
+    day_on: str
+    #: Поставка дня или поставка заданий, чьи марки не прошли.
+    purpose: Literal['day', 'marks']
+    #: Отсечка идёт (добавлять нельзя), передача ждёт подтверждения менеджера или площадка отказала.
+    handover_state: Literal['preparing', 'pending', 'failed']
+    #: Код отказа площадки при передаче.
+    handover_error: str
+    #: Задания последнего добавления, которые не добавлены (ERP-2782): canceled — отменено, other_supply — уже в другой поставке, в том числе кабинета площадки; Akeda его не переносит.
+    skipped: List["MarketplaceFbsSupplySkippedItem"]
     #: Подсказка открытой поставке: способ и пункт последней поставки магазина, дата — сегодня
     shipping_suggested: "MarketplaceFbsSupplyShippingSuggested"
     #: Штрихкод отгрузки Ozon (скан при передаче)
@@ -30359,6 +32245,14 @@ class MarketplaceFbsSupplyOrdersItem(_MarketplaceFbsSupplyOrdersItemRequired, to
     platform_accepted: bool
     #: Ozon не принял отправление при передаче (not_accepted): на разбор
     platform_rejected: bool
+
+class _MarketplaceFbsSupplySkippedItemRequired(TypedDict):
+    posting: str
+    reason: Literal['canceled', 'other_supply']
+
+class MarketplaceFbsSupplySkippedItem(_MarketplaceFbsSupplySkippedItemRequired, total=False):
+    #: Номер чужой поставки у площадки.
+    supply_external: str
 
 class MarketplaceFbsSupplyShippingSuggested(TypedDict):
     """Подсказка открытой поставке: способ и пункт последней поставки магазина, дата — сегодня"""
@@ -30570,6 +32464,339 @@ class MarketplaceInitialLoadDataset(_MarketplaceInitialLoadDatasetRequired, tota
     reason: str
     #: Окно счёта строк в днях; только у заказов
     period_days: int
+
+class _MarketplaceLamodaCatalogRequired(TypedDict):
+    #: Каталог есть у сборщика; false — пусто: сборщик ещё не выкачен или магазин Ламоды у него не заведён
+    available: bool
+    #: Размерные карточки Ламоды
+    items: List["MarketplaceLamodaCatalogItem"]
+    #: Вопросы покупателей без ответа (NEW, IN_PROGRESS), на которые ещё можно ответить; null — вопросов у сборщика нет
+    questions_unanswered: Optional[int]
+    #: Когда сборщик последний раз изменил каталог
+    synced_at: Optional[str]
+
+class MarketplaceLamodaCatalog(_MarketplaceLamodaCatalogRequired, total=False):
+    #: Карточек больше предела 20000: хвост не пришёл
+    truncated: bool
+
+class MarketplaceLamodaCatalogItem(TypedDict):
+    store_id: "UUID"
+    #: Магазин
+    store_name: str
+    #: Размерный артикул продавца (externalSku)
+    seller_sku: str
+    #: Артикул модели у продавца (externalParentSku)
+    seller_parent_sku: str
+    #: Размерный SKU Ламоды
+    lamoda_sku: str
+    #: SKU модели в Ламоде (parentSku)
+    parent_sku: str
+    #: Штрихкод
+    barcode: str
+    #: Название
+    name: str
+    #: Бренд
+    brand: str
+    #: Категория на русском, уровни через « / »
+    category: str
+    #: Статус карточки Ламоды: ONLINE, INACTIVE, OUT_OF_STOCK, NEED_ACTION, PHOTOSHOOT_PENDING
+    status: str
+    #: Цена без скидки, ₽
+    price: Optional[float]
+    #: Цена продажи сейчас, ₽: со скидкой продавца, если она действует
+    current_price: Optional[float]
+    #: Минимальная цена Ламоды по категории товара, ₽; null — правила нет
+    min_price: Optional[float]
+    #: Статус обработки цены Ламодой: OK, PROCESSING, ERROR, QUARANTINE (нужно подтверждение в кабинете Ламоды)
+    price_status: str
+    #: Показ или экспорт на сайт Ламоды ограничен
+    restricted: bool
+    #: Действующие акции Ламоды с этим товаром
+    promotions: List["MarketplaceLamodaCatalogPromotion"]
+
+class MarketplaceLamodaCatalogPromotion(TypedDict):
+    #: Акция Ламоды
+    id: str
+    #: Название акции
+    name: str
+    #: Начало акции
+    active_from: Optional[str]
+    #: Конец акции
+    active_to: Optional[str]
+    #: Скидка по акции, %
+    discount_percent: Optional[int]
+    #: Цена товара в акции, ₽
+    promo_price: Optional[float]
+
+class MarketplaceLamodaIlliquidSummary(TypedDict):
+    #: Последний день снимка сводки (МСК)
+    snapshot_date: str
+    #: Ликвидный остаток по всем товарам, шт
+    liquid: Optional[int]
+    #: Заблокированный остаток, шт
+    blocked: Optional[int]
+    #: Доля заблокированного, % — только при одном магазине
+    blocked_percent: Optional[int]
+    #: Заблокировано из-за кода маркировки Data Matrix, шт
+    datamatrix_count: Optional[int]
+
+MarketplaceLamodaOrdersOverview = TypedDict("MarketplaceLamodaOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "kpi": "MarketplaceLamodaOrdersOverviewKpi", "daily": List["MarketplaceYandexOrdersDay"], "products": List[Dict[str, Any]], "statuses": List["MarketplaceLamodaOrdersOverviewStatusesItem"]}, total=False)
+
+class MarketplaceLamodaOrdersOverviewKpi(TypedDict):
+    orders: "MarketplaceYandexOrdersKpi"
+    sales: "MarketplaceYandexOrdersKpi"
+
+class MarketplaceLamodaOrdersOverviewStatusesItem(TypedDict):
+    #: Статус заказа Ламоды (OrderResponseStatusEnum)
+    status: str
+    #: Заказов
+    orders: int
+    #: Позиций (штук)
+    units: int
+    #: Сумма позиций по цене покупателя
+    sum: str
+
+class MarketplaceLamodaReceiptPlan(TypedDict):
+    """Готовый расчёт приёмки, ещё не проведённый на складе: обход его не провёл (нет ставки, отказ склада)"""
+
+    #: Когда Ламода закрыла поставку
+    closed_at: str
+    #: Строки приёмки: по строке отправки или излишком без основания
+    lines: List["MarketplaceLamodaReceiptPlanLinesItem"]
+    #: Наша отправка «в пути» на склад Ламоды
+    transit_document_id: str
+    #: Номер отправки
+    transit_number: str
+    #: Отправка узнана по номеру поставки: непринятое станет недостачей
+    by_number: bool
+    #: Принять, шт.
+    accepted_qty: str
+    #: Недостача отправки, шт.
+    missing_qty: str
+    #: Излишек сверх отправки, шт.
+    surplus_qty: str
+
+class _MarketplaceLamodaReceiptPlanLinesItemRequired(TypedDict):
+    #: Товар номенклатуры
+    product_id: str
+    #: Принять, шт.
+    qty: str
+
+class MarketplaceLamodaReceiptPlanLinesItem(_MarketplaceLamodaReceiptPlanLinesItemRequired, total=False):
+    #: Строка отправки; нет — излишек сверх отправки
+    basis_line_id: str
+
+class _MarketplaceLamodaStockReconciliationRequired(TypedDict):
+    platform: Literal['lamoda']
+    store_id: str
+    #: День последнего снимка YYYY-MM-DD; пусто — снимков нет
+    snapshot_date: str
+    #: Почему часть сверки не посчитана
+    reasons: List[Literal['no_snapshot', 'no_warehouse', 'store_not_bound']]
+    matched: int
+    mismatched: int
+    #: Позиций снимка без товара номенклатуры
+    unmatched: int
+    rows: List["MarketplaceLamodaStockReconciliationRowsItem"]
+
+class MarketplaceLamodaStockReconciliation(_MarketplaceLamodaStockReconciliationRequired, total=False):
+    #: День последнего снимка Ламоды
+    snapshot_at: Optional[str]
+    #: Склад Ламоды магазина в нашем учёте
+    warehouse_id: Optional[str]
+
+class _MarketplaceLamodaStockReconciliationRowsItemRequired(TypedDict):
+    #: Артикул продавца или SKU Ламоды
+    external_id: str
+    external_name: str
+    #: Наш учёт, штук; пусто — неизвестно
+    ours: str
+    #: У Ламоды, штук; пусто — нет снимка
+    theirs: str
+    #: Наш учёт минус Ламода; пусто — не считается
+    difference: str
+    state: Literal['matched', 'mismatch', 'ours_only', 'theirs_only', 'unmatched_product', 'no_snapshot', 'no_warehouse']
+
+class MarketplaceLamodaStockReconciliationRowsItem(_MarketplaceLamodaStockReconciliationRowsItemRequired, total=False):
+    product_id: Optional[str]
+    product_sku: str
+    product_name: str
+    store_id: Optional[str]
+    store_name: str
+    company_id: Optional[str]
+    company_name: str
+    unit_cost: str
+    ours_value: str
+
+class MarketplaceLamodaSupplies(TypedDict):
+    #: Поставок к отгрузке и на приёмке (этапы shipping и acceptance)
+    in_transit: int
+    #: Последняя запись поставок сборщиком
+    updated: Optional[str]
+    #: Поставки по убыванию плановой даты
+    supplies: List["MarketplaceLamodaSuppliesSuppliesItem"]
+
+class _MarketplaceLamodaSuppliesSuppliesItemRequired(TypedDict):
+    #: Магазин Ламоды
+    store_id: str
+    #: Код поставки Ламоды
+    shipment_id: str
+    #: Наш номер поставки (externalShipmentId), у PUSY — номер УПД
+    number: str
+    #: Статус поставки Ламоды (FBOShipmentStatusEnum)
+    status: str
+    #: Этап: заводится, к отгрузке, на приёмке, закрыта, отменена
+    stage: Literal['preparing', 'shipping', 'acceptance', 'closed', 'cancelled']
+    #: Склад Ламоды: SOFINO или BYKOVO
+    warehouse: str
+    #: Товары поставки: sku, ean, name, seller_sku, product_id и product_sku сопоставленного товара номенклатуры, planned, accepted, received, missing, surplus, damaged, price
+    items: List[Dict[str, Any]]
+    #: История статусов по времени
+    history: List["MarketplaceLamodaSuppliesSuppliesItemHistoryItem"]
+
+class MarketplaceLamodaSuppliesSuppliesItem(_MarketplaceLamodaSuppliesSuppliesItemRequired, total=False):
+    #: Название магазина
+    store_name: str
+    #: Плановая дата поставки
+    planned_date: Optional[str]
+    #: Когда поставка создана
+    created_at: Optional[str]
+    #: Когда поставка перешла в CLOSED
+    closed_at: Optional[str]
+    #: Сумма поставки
+    price_sum: Optional[str]
+    #: Заявлено, шт.
+    planned: int
+    #: Принято, шт.
+    accepted: int
+    #: Получено, шт.
+    received: int
+    #: Недостача, шт.
+    missing: int
+    #: Излишек, шт.
+    surplus: int
+    #: Брак, шт.
+    damaged: int
+    #: Наша приёмка на складе Ламоды
+    receipt_document_id: str
+    #: Почему закрытая поставка ещё не принята; received_in_stock — склад принял нашу отправку сам, приёмки модуля не будет; before_accounting — Ламода закрыла поставку до даты запуска склада магазина в учёте (история: товар в начальном остатке, приёмки не будет)
+    reason: Literal['not_closed', 'no_closed_at', 'items_stale', 'nothing_accepted', 'lines_not_accepted', 'unmatched_products', 'no_transit', 'ambiguous_transit', 'no_warehouse', 'no_company', 'check_failed', 'received_in_stock', 'before_accounting']
+    receipt_plan: "MarketplaceLamodaReceiptPlan"
+
+class MarketplaceLamodaSuppliesSuppliesItemHistoryItem(TypedDict):
+    #: Статус
+    status: str
+    #: Когда
+    at: str
+
+class _MarketplaceLetoileAcceptanceRequired(TypedDict):
+    #: Магазин Лэтуаль
+    store_id: str
+    #: Документ уведомления
+    document_id: str
+    #: Номер уведомления
+    act_number: str
+    #: Дата уведомления
+    act_date: str
+    #: Номер заявки Лэтуаль из шапки
+    request_number: str
+    #: Строки уведомления
+    lines: List["MarketplaceLetoileActLine"]
+    #: Брак всего, шт
+    defect_qty: str
+    #: Недостача всего, шт
+    missing_qty: str
+    #: Излишек всего, шт
+    surplus_qty: str
+    #: Наши отправки «в пути», к которым относится приёмка
+    transits: List["MarketplaceLetoileTransit"]
+    #: Отправки узнаны по номеру заявки; false — по дню отгрузки и товарам
+    by_number: bool
+
+class MarketplaceLetoileAcceptance(_MarketplaceLetoileAcceptanceRequired, total=False):
+    """Итог приёмки по уведомлению; нет — ещё не посчитан"""
+
+    #: Дата заявки — день отгрузки
+    request_date: str
+    #: Заявка на реализацию АЛ_П3_… из шапки
+    sale_request: str
+    #: Пакет ЭДО
+    edo_message_id: str
+    #: Почему отправка не найдена: no_transit, no_warehouse, no_company, check_failed
+    reason: str
+
+class _MarketplaceLetoileActLineRequired(TypedDict):
+    #: Товар
+    name: str
+    #: Внешний артикул товара
+    sku: str
+    #: Брак, шт
+    defect: str
+    #: Недостача, шт
+    missing: str
+    #: Излишек, шт
+    surplus: str
+
+class MarketplaceLetoileActLine(_MarketplaceLetoileActLineRequired, total=False):
+    #: Номер грузоместа
+    place: str
+    #: Наш товар; нет — артикул не сопоставлен
+    product_id: str
+    #: Примечание
+    note: str
+
+class _MarketplaceLetoileSaleRequestRequired(TypedDict):
+    #: Документ в «Документах площадок»
+    document_id: str
+    #: Магазин Лэтуаль
+    store_id: str
+    #: Название магазина
+    store_name: str
+    #: Номер заявки АЛ_П3_…; пусто — не найден в файле
+    number: str
+    #: Месяц пакета ЭДО, ГГГГ-ММ
+    month: str
+    #: Имя файла
+    file_name: str
+
+class MarketplaceLetoileSaleRequest(_MarketplaceLetoileSaleRequestRequired, total=False):
+    #: Пакет ЭДО
+    edo_message_id: str
+
+class MarketplaceLetoileSupplies(TypedDict):
+    #: Уведомления о несоответствии с итогом приёмки
+    acts: List["MarketplaceLetoileSupplyAct"]
+    #: Заявки на реализацию
+    requests: List["MarketplaceLetoileSaleRequest"]
+
+class _MarketplaceLetoileSupplyActRequired(TypedDict):
+    #: Документ в «Документах площадок»
+    document_id: str
+    #: Магазин Лэтуаль
+    store_id: str
+    #: Название магазина
+    store_name: str
+    #: Номер уведомления (ACT…)
+    number: str
+    #: Имя файла
+    file_name: str
+    #: Откуда файл: edo — из ЭДО, upload — загружен вручную
+    source: str
+
+class MarketplaceLetoileSupplyAct(_MarketplaceLetoileSupplyActRequired, total=False):
+    #: Дата уведомления
+    date: str
+    #: Пакет ЭДО
+    edo_message_id: str
+    acceptance: "MarketplaceLetoileAcceptance"
+
+class MarketplaceLetoileTransit(TypedDict):
+    #: Отправка склада «в пути»
+    document_id: str
+    #: Номер отправки
+    number: str
+    #: Дата отправки, ГГГГ-ММ-ДД
+    date: str
 
 class MarketplaceOpeningApplyRequest(TypedDict, total=False):
     company_id: "UUID"
@@ -30830,18 +33057,21 @@ class _MarketplaceOzonDecompositionCellRequired(TypedDict):
     returns: int
     returns_pct: Optional[float]
     commission: int
+    #: Комиссия к доходу, %; null при доходе не больше нуля
     commission_pct: Optional[float]
     logistics: int
     logistics_per_unit: Optional[float]
     acquiring: int
     internal_ad: int
     external_ad: int
+    #: Вся реклама (внутренняя и внешняя) к доходу, %; null при доходе не больше нуля
     drr: Optional[float]
     cogs: int
     other_premium: int
     tax: int
     expenses: int
     profit: int
+    #: Прибыль к доходу (выручка − возвраты), %; null при доходе не больше нуля
     margin_pct: Optional[float]
     #: Прибыль к себестоимости по модулю, %; null без себестоимости
     roi: Optional[float]
@@ -30851,6 +33081,20 @@ class _MarketplaceOzonDecompositionCellRequired(TypedDict):
     rr_profit: int
 
 class MarketplaceOzonDecompositionCell(_MarketplaceOzonDecompositionCellRequired, total=False):
+    #: Заказано штук за блок — тот же счёт, что у «План-факта»; нет у Ozon с отбором схемы
+    orders: int
+    #: Сумма заказов за блок, ₽ — тот же счёт, что у «План-факта»
+    orders_sum: int
+    #: Доход: выручка минус возвраты — база маржи, ДРР и долей (AKE-259)
+    income: int
+    #: Проданные штуки без известной себестоимости: посчитаны с нулевой закупкой
+    cost_missing_units: int
+    #: Доля проданных штук с известной себестоимостью, %, округление вниз; меньше 100 — маржа и ROI неполные; null без продаж
+    cost_coverage_pct: Optional[float]
+    #: Можно ли верить прибыли и марже (econ.MarginStateOf): approx — себестоимость у 50–99,9 % продаж, экран ставит «≈»; unknown — меньше 50 %, вместо маржи «—»; null — себестоимость у всех продаж
+    margin_state: Optional[Literal['approx', 'unknown', None]]
+    #: Доход спроецированный на весь период — база доли прогнозной прибыли
+    rr_income: int
     #: Идентификатор периода; появляется только в totals
     id: str
 
@@ -30892,7 +33136,94 @@ class MarketplaceOzonDecompositionPeriod(TypedDict):
     run_rate_factor: float
     totals: "MarketplaceOzonDecompositionCell"
 
-MarketplaceOzonFbs = TypedDict("MarketplaceOzonFbs", {"platform": Literal['ozon'], "source": Literal['oz_orders_fbs'], "from": str, "to": str, "totals": "MarketplaceOzonFbsTotals", "funnel": List["MarketplaceOzonFbsFunnelStage"], "tiles": "MarketplaceOzonFbsTiles", "queue": "MarketplaceOzonFbsQueue", "histogram": List["MarketplaceOzonFbsSpeedBucket"], "warehouses": List["MarketplaceOzonFbsWarehouse"], "rows": List["MarketplaceOzonFbsPosting"], "note": str, "analytics": bool, "stock_starts": List["MarketplaceFbsStockStart"], "stock_pending": int, "stock_unavailable": bool}, total=False)
+MarketplaceOzonFbs = TypedDict("MarketplaceOzonFbs", {"platform": Literal['ozon'], "source": Literal['oz_orders_fbs'], "from": str, "to": str, "totals": "MarketplaceOzonFbsTotals", "funnel": List["MarketplaceOzonFbsFunnelStage"], "tiles": "MarketplaceOzonFbsTiles", "queue": "MarketplaceOzonFbsQueue", "histogram": List["MarketplaceOzonFbsSpeedBucket"], "warehouses": List["MarketplaceOzonFbsWarehouse"], "rows": List["MarketplaceOzonFbsPosting"], "note": str, "analytics": bool, "stock_starts": List["MarketplaceFbsStockStart"], "stock_pending": int, "stock_unavailable": bool, "error_index": "MarketplaceOzonFbsErrorIndex"}, total=False)
+
+class MarketplaceOzonFbsErrorCounts(TypedDict):
+    #: Просрочки за период
+    delay: int
+    #: Отмены по вине продавца за период
+    cancellation: int
+    #: Ошибки без указанного типа
+    other: int
+
+class _MarketplaceOzonFbsErrorIndexRequired(TypedDict):
+    #: false — сборщик ещё не отдаёт индекс (нет таблицы или прав); остальных полей тогда нет
+    available: bool
+
+class MarketplaceOzonFbsErrorIndex(_MarketplaceOzonFbsErrorIndexRequired, total=False):
+    """Индекс ошибок Ozon FBS и rFBS: с 19.11.2026 от него зависит штраф за просрочку и отмену вместо рекомендованного слота"""
+
+    stores: List["MarketplaceOzonFbsErrorIndexStore"]
+    #: Отправления текущего расчётного периода, повлиявшие на индекс, новые сверху; не больше 100
+    postings: List["MarketplaceOzonFbsErrorPosting"]
+    #: true — отправлений больше, чем в списке
+    postings_cut: bool
+    counts: "MarketplaceOzonFbsErrorCounts"
+    #: Сумма штрафа Ozon за обработку ошибок по отправлениям периода без льготного статуса, ₽
+    charge_sum: int
+    rates: "MarketplaceOzonFbsErrorRates"
+    #: Шкала штрафа Ozon с 19.11.2026, от меньшего индекса к большему
+    zones: List["MarketplaceOzonFbsErrorZone"]
+    #: Потолок штрафа за просрочку одного отправления, ₽
+    delay_cap: int
+    #: Потолок штрафа за отмену одного отправления, ₽
+    cancel_cap: int
+
+class _MarketplaceOzonFbsErrorIndexStoreRequired(TypedDict):
+    store_name: str
+    #: Индекс ошибок за расчётный период как в API Ozon: единица (проценты или доли) в документации не названа
+    index: Optional[float]
+    #: Расходы на обработку ошибок за период
+    costs_sum: Optional[float]
+    #: Когда сборщик последний раз увидел изменение
+    synced_at: str
+
+class MarketplaceOzonFbsErrorIndexStore(_MarketplaceOzonFbsErrorIndexStoreRequired, total=False):
+    #: Начало расчётного периода
+    period_from: str
+    #: Конец расчётного периода
+    period_to: str
+    #: Код валюты расходов
+    currency: str
+
+class _MarketplaceOzonFbsErrorPostingRequired(TypedDict):
+    #: Номер отправления
+    posting: str
+    store_name: str
+    #: SELLER_DELAY — просрочка, SELLER_CANCELLATION — отмена по вине продавца, UNSPECIFIED — не указан
+    type: str
+    #: Когда возникла ошибка
+    error_at: str
+    #: У отправления льготный статус: штрафа нет
+    grace: bool
+    #: Процент стоимости обработки от стоимости отправления
+    charge_percent: Optional[float]
+    #: Стоимость обработки ошибки
+    charge_price: Optional[float]
+    #: Стоимость товара в отправлении
+    product_price: Optional[float]
+
+class MarketplaceOzonFbsErrorPosting(_MarketplaceOzonFbsErrorPostingRequired, total=False):
+    #: Схема доставки: FBS, rFBS или erFBS
+    schema: str
+    #: Код валюты стоимости обработки
+    currency: str
+
+class MarketplaceOzonFbsErrorRates(TypedDict):
+    #: Процент штрафа за просрочку у последнего отправления без льготы; null — таких нет
+    delay: Optional[float]
+    #: Процент штрафа за отмену у последнего отправления без льготы; null — таких нет
+    cancellation: Optional[float]
+
+class MarketplaceOzonFbsErrorZone(TypedDict):
+    #: Нижняя граница индекса, %
+    from_pct: float
+    #: Верхняя граница индекса включительно, %; 0 — без верхней границы
+    to_pct: float
+    #: Штраф за просрочку, % от стоимости товаров отправления
+    delay_pct: float
+    #: Штраф за отмену, % от стоимости товаров отправления
+    cancel_pct: float
 
 class MarketplaceOzonFbsFunnelStage(TypedDict):
     key: Literal['new', 'work', 'way', 'pvz', 'delivered', 'cancelled', 'problem']
@@ -31006,7 +33337,7 @@ class MarketplaceOzonFbsWarehouse(TypedDict):
 
 MarketplaceOzonFunnel = TypedDict("MarketplaceOzonFunnel", {"platform": Literal['ozon'], "source": Literal['ozon_analytics'], "from": str, "to": str, "totals": "MarketplaceOzonFunnelTotals", "rows": List["MarketplaceOzonFunnelRow"], "note": str, "analytics": bool}, total=False)
 
-MarketplaceOzonFunnelDaily = TypedDict("MarketplaceOzonFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "summary": Dict[str, Dict[str, Optional[float]]], "pulse": Dict[str, Any], "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['ozon'], "source": Literal['ozon_orders_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": "MarketplaceOzonFunnelDailySeries", "totals": "MarketplaceOzonFunnelDailyTotals", "card": "MarketplaceOzonFunnelDailyCard", "articles": List["MarketplaceOzonFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "partial": List[str], "dataThrough": Dict[str, Optional[str]], "computedAt": str, "note": str, "analytics": bool}, total=False)
+MarketplaceOzonFunnelDaily = TypedDict("MarketplaceOzonFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "summary": Dict[str, Dict[str, Optional[float]]], "pulse": Dict[str, Any], "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['ozon'], "source": Literal['ozon_orders_and_finance'], "estimateModel": Literal['sales_and_orders_weekly'], "sku": str, "from": str, "to": str, "days": List[str], "series": "MarketplaceOzonFunnelDailySeries", "totals": "MarketplaceOzonFunnelDailyTotals", "card": "MarketplaceOzonFunnelDailyCard", "articles": List["MarketplaceOzonFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "partial": List[str], "dataThrough": Dict[str, Optional[str]], "todayOrders": Optional["MarketplaceWbOrdersKpi"], "todaySales": Optional["MarketplaceWbOrdersKpi"], "computedAt": str, "note": str, "analytics": bool}, total=False)
 
 class _MarketplaceOzonFunnelDailyArticleRequired(TypedDict):
     sku: str
@@ -31084,6 +33415,8 @@ class _MarketplaceOzonFunnelDailySeriesRequired(TypedDict):
 class MarketplaceOzonFunnelDailySeries(_MarketplaceOzonFunnelDailySeriesRequired, total=False):
     """Каждый ряд — значение на каждый день окна в том же порядке что days. Ряды без источника заполнены null целиком."""
 
+    adOrdersSum: List[Optional[float]]
+    drrAdOrders: List[Optional[float]]
     buyoutRate: List[Optional[float]]
     expectedUnits: List[Optional[float]]
     expectedRevenue: List[Optional[float]]
@@ -31165,7 +33498,7 @@ class MarketplaceOzonOrdersDailyRow(TypedDict):
     sales_sum: str
     sales_qty: int
 
-class MarketplaceOzonOrdersKpi(TypedDict):
+class _MarketplaceOzonOrdersKpiRequired(TypedDict):
     #: Decimal string
     sum: str
     qty: int
@@ -31173,7 +33506,17 @@ class MarketplaceOzonOrdersKpi(TypedDict):
     delta_sum: Optional[float]
     delta_qty: Optional[float]
 
-MarketplaceOzonOrdersOverview = TypedDict("MarketplaceOzonOrdersOverview", {"computedAt": str, "day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "scheme": Literal['all', 'fbo', 'fbs'], "kpi": Dict[str, "MarketplaceOzonOrdersKpi"], "daily": List["MarketplaceOzonOrdersDailyRow"], "products": List["MarketplaceOzonOrdersProductRow"], "summary_total": Dict[str, int], "buyout": "MarketplaceBuyoutCohort"}, total=False)
+class MarketplaceOzonOrdersKpi(_MarketplaceOzonOrdersKpiRequired, total=False):
+    #: Сумма прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at)
+    prev_sum: str
+    #: Штуки прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at)
+    prev_qty: int
+    #: Период ещё идёт: оба отрезка режутся по этому моменту (последняя проверка сборщика, время по Москве; у сводки площадок — раннее из них). Для «Сегодня» delta_sum и delta_qty — к вчера на то же время. Поля нет, когда сравниваются целые дни, отсечка не в последнем дне периода или у источника нет времени суток (выкуп Ozon и Маркета)
+    cut_at: str
+    #: Период ещё идёт, а честной отсечки нет: за последний день данных ещё нет или время проверки сборщика неизвестно. Сравнения нет — delta_sum и delta_qty пусты, cut_at нет
+    no_cut: bool
+
+MarketplaceOzonOrdersOverview = TypedDict("MarketplaceOzonOrdersOverview", {"computedAt": str, "day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "scheme": Literal['all', 'fbo', 'fbs'], "kpi": Dict[str, "MarketplaceOzonOrdersKpi"], "daily": List["MarketplaceOzonOrdersDailyRow"], "products": List["MarketplaceOzonOrdersProductRow"], "summary_total": Dict[str, int], "sales_summary_total": Dict[str, int], "buyout": "MarketplaceBuyoutCohort"}, total=False)
 
 class _MarketplaceOzonOrdersProductRowRequired(TypedDict):
     #: Внешний числовой идентификатор магазина
@@ -31192,6 +33535,10 @@ class _MarketplaceOzonOrdersProductRowRequired(TypedDict):
     status_name: str
 
 class MarketplaceOzonOrdersProductRow(_MarketplaceOzonOrdersProductRowRequired, total=False):
+    #: Остаток на складах Ozon (FBO), шт
+    stock: int
+    #: Остаток своего склада продавца (FBS), шт; в stock не входит
+    stock_fbs: int
     #: Продано (выкуплено) штук за период — тот же источник, что у kpi.sales
     sales_units: int
     #: Выручка продаж за период decimal строкой — тот же источник, что у kpi.sales
@@ -31200,6 +33547,10 @@ class MarketplaceOzonOrdersProductRow(_MarketplaceOzonOrdersProductRowRequired, 
     by_day: Dict[str, int]
     #: Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук
     summary: Dict[str, int]
+    #: Продано штук по дням периода (?summary=1): день ГГГГ-ММ-ДД → шт
+    sales_by_day: Dict[str, int]
+    #: Продажи по неделям и месяцам (?summary=1): окно (w3, w2, w1, prev_month, month) → продано штук
+    sales_summary: Dict[str, int]
 
 class _MarketplaceOzonPnlRequired(TypedDict):
     period_kind: Literal['week', 'month']
@@ -31220,6 +33571,10 @@ class MarketplaceOzonPnl(_MarketplaceOzonPnlRequired, total=False):
     breakdown: Dict[str, List["MarketplaceOzonDecompositionOtherItem"]]
     #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
     cost_missing: Dict[str, float]
+    #: Доля проданных штук периода с известной себестоимостью, %, округление вниз; меньше 100 — маржа периода неполная. Ключ — начало периода; поля нет у периодов без продаж
+    cost_coverage: Dict[str, float]
+    #: Можно ли верить марже периода (econ.MarginStateOf): approx — «≈», unknown — «—». Ключ — начало периода; у периодов с полной себестоимостью ключа нет
+    margin_state: Dict[str, Literal['approx', 'unknown']]
     #: Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
     units_missing: Dict[str, float]
     freshness: "MarketplaceComponentFreshness"
@@ -31331,6 +33686,12 @@ class _MarketplaceOzonProductRequired(TypedDict):
     cost_source: Literal['manual', 'stock']
 
 class MarketplaceOzonProduct(_MarketplaceOzonProductRequired, total=False):
+    #: Сумма заказов за то же окно, что orders_14d, decimal строкой; null — источник не ответил
+    orders_sum_14d: Optional[str]
+    #: Продано (выкуплено) штук за то же окно, что orders_14d, — правило продаж «Заказов»; null — источник не ответил
+    sales_units_14d: Optional[int]
+    #: Выручка продаж за то же окно, что orders_14d, decimal строкой; null — источник не ответил
+    sales_sum_14d: Optional[str]
     #: Только в режиме склада: in_stock — цена партии, которая спишется следующей на складе площадки (при средней — средняя); own_stock — на складе площадки товара нет, цена партии, которая спишется следующей на своих складах юрлица (склад — cost_warehouse_name); out_of_stock — остатка нет нигде, цена последней списанной со склада площадки партии; missing — цены нет, причина в cost_reason
     cost_status: Literal['in_stock', 'own_stock', 'out_of_stock', 'missing']
     #: Почему цены нет: артикул магазина не связан с товаром; склад площадки не заведён или у юрлица на нём нет движений; товара на складе площадки не было; у площадки склада в учёте нет
@@ -31400,15 +33761,30 @@ class _MarketplaceOzonStockProductRequired(TypedDict):
     name: str
     image: str
     total: int
+    #: Склады площадки (FBO/FBY): из них сложен total
     warehouses: List["MarketplaceOzonStockWarehouse"]
 
 class MarketplaceOzonStockProduct(_MarketplaceOzonStockProductRequired, total=False):
+    #: Остаток своего склада продавца (FBS/DBS), шт; в total не входит
+    fbs: int
+    #: Раскладка своего склада продавца (FBS/DBS) по складам
+    fbs_warehouses: List["MarketplaceOzonStockWarehouse"]
     #: Товар в пути к покупателю, шт
     to_client: int
     #: Выкуп, % — когорта созревших заказов, как у воронки; нет — поля нет
     buyout_pct: float
     #: Остаток с возвратом невыкупленного из того, что в пути: остаток + в пути × (1 − выкуп)
     effective: float
+    #: Заказано штук в день за последние 7 полных дней по Москве без отменённых до отгрузки — темп для «хватит на N дн», одно правило у всех площадок; нет заказов — поля нет
+    orders_per_day: float
+    #: На сколько дней хватит остатка с возвратами (effective) при темпе orders_per_day, с точностью до десятой; нет темпа — поля нет
+    cover_days: float
+    #: На сколько дней хватит своего склада (fbs) при темпе orders_per_day, с точностью до десятой; нет темпа или своего склада — поля нет
+    fbs_cover_days: float
+    #: Только Ламода: заблокированные единицы товара на последний снимок (GET /v2/stocks/illiquid); в total не входят
+    blocked: int
+    #: Только Ламода: заблокированные единицы по причинам, крупные вперёд
+    blocks: List["MarketplaceStockBlock"]
 
 class _MarketplaceOzonStockWarehouseRequired(TypedDict):
     warehouse: str
@@ -31416,6 +33792,8 @@ class _MarketplaceOzonStockWarehouseRequired(TypedDict):
 
 class MarketplaceOzonStockWarehouse(_MarketplaceOzonStockWarehouseRequired, total=False):
     cluster: str
+    #: На сколько дней хватит остатка склада при темпе товара orders_per_day (заказы приходят без склада), с точностью до десятой; нет темпа — поля нет
+    cover_days: float
 
 class _MarketplaceOzonStocksPageRequired(TypedDict):
     count: int
@@ -31426,6 +33804,15 @@ class _MarketplaceOzonStocksPageRequired(TypedDict):
 class MarketplaceOzonStocksPage(_MarketplaceOzonStocksPageRequired, total=False):
     #: Строк «товар × склад» больше предела 8000: хвост артикулов не пришёл, отсутствие товара не значит «остатка нет»
     truncated: bool
+    #: Итог складов площадки (FBO/FBY) по товарам ответа, шт
+    total_fbo: int
+    #: Итог своего склада продавца (FBS/DBS) по товарам ответа, шт
+    total_fbs: int
+    #: Остаток своего склада не прочитался: ноль в fbs не значит «пусто»
+    fbs_unavailable: bool
+    #: Только Ламода: всего заблокированных единиц в выборке
+    blocked: int
+    illiquid: "MarketplaceLamodaIlliquidSummary"
 
 class MarketplaceOzonSyncJob(TypedDict):
     id: "UUID"
@@ -31609,7 +33996,7 @@ class MarketplacePromoProduct(_MarketplacePromoProductRequired, total=False):
     store_id: str
     store_name: str
 
-MarketplacePromoReport = TypedDict("MarketplacePromoReport", {"platform": Literal['all', 'wildberries', 'yandex', 'lamoda', 'ozon', 'letoile'], "from": str, "to": str, "prev_from": str, "prev_to": str, "selected": str, "current": "MarketplacePromoTotals", "previous": Optional["MarketplacePromoTotals"], "change": "MarketplacePromoChange", "promos": List["MarketplacePromoRow"], "products": List["MarketplacePromoProduct"], "days": List["MarketplacePromoDay"], "sources": List["MarketplacePromoSource"]}, total=False)
+MarketplacePromoReport = TypedDict("MarketplacePromoReport", {"platform": Literal['all', 'wildberries', 'yandex', 'lamoda', 'ozon', 'letoile'], "from": str, "to": str, "prev_from": str, "prev_to": str, "selected": str, "current": "MarketplacePromoTotals", "previous": Optional["MarketplacePromoTotals"], "change": "MarketplacePromoChange", "compare_as_of": str, "no_compare": Literal['report_lag'], "promos": List["MarketplacePromoRow"], "products": List["MarketplacePromoProduct"], "days": List["MarketplacePromoDay"], "sources": List["MarketplacePromoSource"]}, total=False)
 
 class MarketplacePromoRow(TypedDict):
     #: Ключ промокода «площадка:код» — для параметра promo
@@ -31701,6 +34088,49 @@ class MarketplacePromoUse(TypedDict):
     qty: float
     revenue: float
 
+class _MarketplaceReportCalendarRequired(TypedDict):
+    platform: Literal['lamoda', 'letoile']
+    store_id: str
+    year: int
+    #: Обязательные отчёты месяца; годится любой вид из kinds
+    required: List["MarketplaceReportCalendarRequiredItem"]
+    #: Первый месяц работы магазина YYYY-MM; пусто — магазин не начал
+    start: str
+    #: Двенадцать месяцев года
+    months: List["MarketplaceReportCalendarMonth"]
+    #: Закрытые месяцы с пробелами за все годы
+    gaps: List["MarketplaceReportCalendarMonth"]
+
+class MarketplaceReportCalendar(_MarketplaceReportCalendarRequired, total=False):
+    #: Обязательные отчёты, которые у магазина приходят сами (последний взят из ЭДО)
+    auto: List[Literal['sales_report', 'reconcile']]
+
+class _MarketplaceReportCalendarRequiredItemRequired(TypedDict):
+    key: Literal['sales_report', 'reconcile']
+    kinds: List[str]
+
+class MarketplaceReportCalendarRequiredItem(_MarketplaceReportCalendarRequiredItemRequired, total=False):
+    #: День следующего месяца, к которому отчёт приходит
+    due_day: int
+
+class _MarketplaceReportCalendarMonthRequired(TypedDict):
+    #: Месяц YYYY-MM
+    month: str
+    #: Статус месяца
+    state: Literal['complete', 'partial', 'missing', 'expected', 'open', 'before_start']
+    #: Виды документов месяца, которые уже лежат
+    present: List[str]
+    #: Каких обязательных отчётов нет после срока
+    missing: List[Literal['sales_report', 'reconcile']]
+
+class MarketplaceReportCalendarMonth(_MarketplaceReportCalendarMonthRequired, total=False):
+    #: Каких отчётов нет, но срок ещё не наступил
+    waiting: List[Literal['sales_report', 'reconcile']]
+    #: YYYY-MM-DD — до какого дня придут ждущие отчёты
+    due: str
+    #: Из missing и waiting — те, что Акеда забирает сама из ЭДО
+    auto: List[Literal['sales_report', 'reconcile']]
+
 class MarketplaceReportPnl(TypedDict):
     platform: Literal['lamoda', 'letoile']
     months: List[str]
@@ -31783,6 +34213,14 @@ class MarketplaceSectionUsageList(TypedDict):
     count: int
     results: List["MarketplaceSectionUsage"]
 
+class MarketplaceStockBlock(TypedDict):
+    #: Код причины блокировки Ламоды (reason), например DM — нет кода маркировки
+    reason: str
+    #: Причина блокировки словами (reasonDescription)
+    description: str
+    #: Заблокированных единиц, шт
+    qty: int
+
 class _MarketplaceStoreRequired(TypedDict):
     id: "UUID"
     #: Платформа задаётся маршрутом, а не телом запроса
@@ -31808,6 +34246,7 @@ class _MarketplaceStoreRequired(TypedDict):
     ym_api_key_set: bool
     lamoda_client_id_set: bool
     lamoda_client_secret_set: bool
+    lamoda_seller_id_set: bool
     letoile_client_id_set: bool
     letoile_api_key_set: bool
     proxy_set: bool
@@ -31823,6 +34262,8 @@ class MarketplaceStore(_MarketplaceStoreRequired, total=False):
     external_id: int
     tax: "MarketplaceStoreTax"
     cost: "MarketplaceStoreCost"
+    #: Seller Shop ID Ламоды — номер магазина, не секрет; ключи Ламоды отдаются только признаками *_set
+    lamoda_seller_id: str
     config_synced_at: str
     #: Стенд не боевой: магазин у сборщика общий с боевым стендом, поэтому выключение и удаление меняют только этот кабинет, а загрузки у сборщика продолжаются
     collector_local_only: bool
@@ -32030,6 +34471,8 @@ class MarketplaceStoreInitialLoad(_MarketplaceStoreInitialLoadRequired, total=Fa
     reason: str
     #: Безопасный код состояния подключения
     connection_error_code: str
+    #: Необязательные загрузки, чей последний прогон не удался; ни ключ, ни готовность они не держат. prices-spp-wb — витрина Wildberries (цены витрины и СПП). Поля нет, если сбоев нет
+    optional_failed: List[Literal['prices-spp-wb']]
 
 class _MarketplaceStoreInputRequired(TypedDict):
     name: str
@@ -32059,6 +34502,8 @@ class MarketplaceStoreInput(_MarketplaceStoreInputRequired, total=False):
     #: client_id Ламоды; он же отпечаток аккаунта — второй магазин с тем же client_id не заводится
     lamoda_client_id: str
     lamoda_client_secret: str
+    #: Seller Shop ID из кабинета Ламоды («Настройки аккаунта → Общая информация»): sellerId методов данных Seller API v2
+    lamoda_seller_id: str
     #: Необязательный Client ID Sellers API Лэтуаль; вводится вместе с API-ключом
     letoile_client_id: str
     #: Необязательный ключ каталога Лэтуаль; вводится вместе с Client ID и пока не проверяется
@@ -32102,6 +34547,8 @@ class MarketplaceStorePatch(TypedDict, total=False):
     lamoda_client_id: str
     #: Пустая строка сохраняет прежний секрет
     lamoda_client_secret: str
+    #: Пустая строка сохраняет прежний номер
+    lamoda_seller_id: str
     #: Необязательный Client ID Sellers API Лэтуаль; пустая строка сохраняет прежнее значение
     letoile_client_id: str
     #: Необязательный API-ключ Лэтуаль; пустая строка сохраняет прежнее значение
@@ -32156,6 +34603,8 @@ class MarketplaceStoreWriteKey(_MarketplaceStoreWriteKeyRequired, total=False):
     mask: str
     #: Тип токена Wildberries
     kind: Literal['basic', 'personal', 'test', 'service', 'unknown']
+    #: Имя того, кто задал ключ; пусто — имя не найдено.
+    set_by_name: str
     #: Итог последней проверки без записи
     check_result: Literal['ready', 'no_write_scope', 'rejected', 'unchecked', 'unavailable']
     #: Итог последней передачи марок
@@ -32190,6 +34639,349 @@ class MarketplaceSummaryRunDataset(_MarketplaceSummaryRunDatasetRequired, total=
     reason: str
     updated_at: str
 
+class MarketplaceSupplyCheck(TypedDict):
+    """Итог сверки перед отправкой."""
+
+    #: Ошибок нет
+    ok: bool
+    #: Строк
+    lines: int
+    #: Штук
+    units: int
+    #: Сумма, ₽
+    amount: str
+    #: Находки
+    issues: List["MarketplaceSupplyCheckIssuesItem"]
+
+class _MarketplaceSupplyCheckIssuesItemRequired(TypedDict):
+    #: Ошибка или пометка
+    level: Literal['error', 'warn']
+    #: Находка; price_below_lamoda_min — пометка: цена ниже минимальной цены Ламоды по категории товара (value — минимальная цена), поставку не запрещает
+    code: Literal['upd_missing', 'upd_too_long', 'upd_chars', 'not_collected', 'sku_duplicate', 'sku_lookalike', 'sku_unknown', 'sku_mixed_script', 'ean_invalid', 'price_low', 'price_below_lamoda_min', 'empty', 'too_many_skus', 'too_many_units']
+
+class MarketplaceSupplyCheckIssuesItem(_MarketplaceSupplyCheckIssuesItemRequired, total=False):
+    #: Артикул
+    sku: str
+    #: Значение
+    value: str
+
+class MarketplaceSupplyNomenclature(TypedDict):
+    """Номенклатура магазина для формы поставки."""
+
+    #: Склады-отправители
+    warehouses: List["MarketplaceSupplyStockPart"]
+    #: Склады площадки для формы: у Ламоды коды, у WB, Ozon и Маркета — склады прошлых поставок магазина по данным сборщика в области бизнеса человека, частые первыми
+    platform_warehouses: List[str]
+    #: Позиции
+    results: List["MarketplaceSupplyNomenclatureResultsItem"]
+
+class _MarketplaceSupplyNomenclatureResultsItemRequired(TypedDict):
+    #: Артикул продавца
+    seller_sku: str
+    #: Название
+    name: str
+    #: EAN
+    ean: str
+    #: Остаток по складам
+    stock: List["MarketplaceSupplyStockPart"]
+    #: Остаток всего
+    stock_total: str
+
+class MarketplaceSupplyNomenclatureResultsItem(_MarketplaceSupplyNomenclatureResultsItemRequired, total=False):
+    #: Товар номенклатуры
+    product_id: Optional[str]
+    #: Артикул товара номенклатуры
+    product_sku: str
+    #: Фото товара
+    photo_file_id: Optional[str]
+    #: Цена в прошлой поставке
+    last_price: str
+
+class _MarketplaceSupplyOrderRequired(TypedDict):
+    #: Поставка
+    id: str
+    #: Магазин
+    store_id: str
+    #: Площадка
+    platform: Literal['lamoda']
+    #: Номер в кабинете: П-1, П-2…
+    number: str
+    #: Статус
+    status: Literal['draft', 'assembly', 'assembled', 'approved', 'sending', 'sent', 'send_failed', 'send_unknown', 'in_transit', 'receiving', 'accepted', 'accepted_diff', 'cancelled']
+    #: Заливка строки: черновик, в работе, всё в порядке, ждёт решения, расхождения приёмки, приёмка идёт или отменена
+    tone: Literal['draft', 'work', 'ok', 'alert', 'diff', 'quiet']
+    #: Склад площадки (SOFINO, BYKOVO)
+    warehouse: str
+    #: Плановая дата по слоту
+    planned_date: str
+    #: Срок сборки
+    assembly_due: str
+    #: Состав
+    lines: List["MarketplaceSupplyOrderLine"]
+    #: Заявлено штук
+    planned_qty: int
+    #: Сумма по цене площадки, ₽
+    amount: str
+
+class MarketplaceSupplyOrder(_MarketplaceSupplyOrderRequired, total=False):
+    """Поставка на склад площадки."""
+
+    #: Слот из кабинета площадки словами
+    slot: str
+    #: Склад-отправитель
+    source_warehouse_id: Optional[str]
+    #: Задание складу — черновик перемещения
+    transfer_id: Optional[str]
+    #: Номер перемещения
+    transfer_number: str
+    #: Номер УПД передачи
+    upd_number: str
+    #: Номер поставки у площадки
+    platform_shipment_id: str
+    #: Статус поставки у площадки
+    platform_status: str
+    #: Ждёт решения по данным площадки: она отменила, отклонила или отменяет созданную у неё поставку (строка красная); нет поля — нет
+    alert: Literal['platform_cancelled', 'platform_rejected', 'platform_cancel_pending']
+    #: Отмену, объявленную площадкой, можно подтвердить у нас: поставка создана или в пути и ждёт решения; нет поля — нельзя
+    platform_cancel: bool
+    #: Комментарий
+    comment: str
+    #: Ответственный — создавший
+    responsible_id: int
+    #: Имя ответственного
+    responsible_name: str
+    #: Наблюдатель — старший менеджер
+    observer_id: Optional[int]
+    #: Имя наблюдателя
+    observer_name: str
+    #: Заведена
+    created_at: str
+    #: Изменена
+    updated_at: str
+    #: Собрано штук; пусто — факта нет
+    collected_qty: Optional[int]
+
+class MarketplaceSupplyOrderApprove(TypedDict, total=False):
+    """Согласие с собранным."""
+
+    #: Проверили и согласны отгрузить собранное
+    agree_mismatch: bool
+
+class MarketplaceSupplyOrderCollected(TypedDict):
+    """Факт сборки по строкам."""
+
+    #: Артикул → собрано штук
+    collected: Dict[str, int]
+
+class _MarketplaceSupplyOrderEventRequired(TypedDict):
+    #: Строка
+    id: str
+    #: Вид
+    kind: Literal['status', 'edit', 'send', 'file', 'upd']
+    #: Было
+    from_status: str
+    #: Стало
+    to_status: str
+    #: Кто
+    actor_id: int
+    #: Имя
+    actor_name: str
+    #: Пояснение готовым текстом; у строк с note_code пусто
+    note: str
+    #: Код пояснения: текст строит экран по словарю; пусто — готовый текст в note
+    note_code: Literal['', 'lamoda_awaiting_decision', 'lamoda_cancel_confirmed', 'lamoda_cancel_restored', 'platform_number_reset', 'platform_mismatch_accepted']
+    #: Итог отправки площадке
+    result: Literal['', 'unknown', 'ok', 'failed']
+    #: Ответ площадки без ключа: код и текст
+    platform_answer: str
+    #: Когда
+    created_at: str
+
+class MarketplaceSupplyOrderEvent(_MarketplaceSupplyOrderEventRequired, total=False):
+    """Строка истории поставки."""
+
+    #: Параметры пояснения по коду, например status — статус Ламоды
+    note_args: Dict[str, str]
+
+class _MarketplaceSupplyOrderInputRequired(TypedDict):
+    #: Магазин
+    store_id: str
+    #: Склад площадки: SOFINO или BYKOVO
+    warehouse: str
+    #: Плановая дата
+    planned_date: str
+    #: Строки
+    lines: List["MarketplaceSupplyOrderInputLinesItem"]
+
+class MarketplaceSupplyOrderInput(_MarketplaceSupplyOrderInputRequired, total=False):
+    """Реквизиты и состав черновика."""
+
+    #: Слот словами
+    slot: str
+    #: Срок сборки; пусто — накануне поставки
+    assembly_due: str
+    #: Склад-отправитель
+    source_warehouse_id: Optional[str]
+    #: Комментарий
+    comment: str
+    #: Версия поставки (её updated_at), с которой открыта форма правки; поставку с тех пор изменили — 409 marketplace.supply.wrong_status. Пусто — без сверки
+    updated_at: str
+
+class _MarketplaceSupplyOrderInputLinesItemRequired(TypedDict):
+    #: Артикул продавца
+    seller_sku: str
+    #: Штук; 0 — строка пропускается
+    qty: int
+
+class MarketplaceSupplyOrderInputLinesItem(_MarketplaceSupplyOrderInputLinesItemRequired, total=False):
+    #: Цена для площадки (РРЦ), ₽
+    price: str
+
+class _MarketplaceSupplyOrderLineRequired(TypedDict):
+    #: Артикул продавца посимвольно, как у площадки
+    seller_sku: str
+    #: Название
+    name: str
+    #: EAN-13
+    ean: str
+    #: Заявлено штук
+    planned: int
+    #: Стоимость единицы для площадки (РРЦ), ₽ с копейками
+    price: str
+
+class MarketplaceSupplyOrderLine(_MarketplaceSupplyOrderLineRequired, total=False):
+    """Строка поставки."""
+
+    #: Товар номенклатуры
+    product_id: Optional[str]
+    #: Собрано складом; пусто — факта нет
+    collected: Optional[int]
+
+class MarketplaceSupplyOrderPage(TypedDict):
+    """Поставки и склады площадки."""
+
+    #: Поставки
+    results: List["MarketplaceSupplyOrder"]
+    #: Коды складов Ламоды; у других площадок пусто
+    warehouses: List[str]
+
+class MarketplaceSupplyOrderPlatformMismatch(TypedDict):
+    """Номер поставки площадки с проверенным расхождением."""
+
+    #: Номер поставки площадки, например 41539911 или WB-GI-41539911
+    number: str
+    #: Расхождение с поставкой площадки проверено; false — обычный отказ
+    mismatch_checked: bool
+
+class MarketplaceSupplyOrderPlatformNumber(TypedDict):
+    """Номер поставки из кабинета площадки."""
+
+    #: Номер поставки площадки, например 41539911 или WB-GI-41539911
+    number: str
+
+class MarketplaceSupplyOrderUPD(TypedDict):
+    """Номер УПД передачи."""
+
+    #: Номер УПД
+    number: str
+
+class _MarketplaceSupplyOrderViewRequired(TypedDict):
+    #: Поставка
+    id: str
+    #: Магазин
+    store_id: str
+    #: Площадка
+    platform: Literal['lamoda']
+    #: Номер в кабинете: П-1, П-2…
+    number: str
+    #: Статус
+    status: Literal['draft', 'assembly', 'assembled', 'approved', 'sending', 'sent', 'send_failed', 'send_unknown', 'in_transit', 'receiving', 'accepted', 'accepted_diff', 'cancelled']
+    #: Заливка строки: черновик, в работе, всё в порядке, ждёт решения, расхождения приёмки, приёмка идёт или отменена
+    tone: Literal['draft', 'work', 'ok', 'alert', 'diff', 'quiet']
+    #: Склад площадки (SOFINO, BYKOVO)
+    warehouse: str
+    #: Плановая дата по слоту
+    planned_date: str
+    #: Срок сборки
+    assembly_due: str
+    #: Состав
+    lines: List["MarketplaceSupplyOrderLine"]
+    #: Заявлено штук
+    planned_qty: int
+    #: Сумма по цене площадки, ₽
+    amount: str
+    #: История
+    events: List["MarketplaceSupplyOrderEvent"]
+    #: Состояние перемещения у склада: draft, posted; пусто — задания нет
+    transfer_status: str
+    #: Отменённую подтверждением отмены Ламоды поставку администратор может вернуть из архива (POST …/restore)
+    platform_restore: bool
+
+class MarketplaceSupplyOrderView(_MarketplaceSupplyOrderViewRequired, total=False):
+    """Поставка с историей и состоянием задания складу."""
+
+    #: Слот из кабинета площадки словами
+    slot: str
+    #: Склад-отправитель
+    source_warehouse_id: Optional[str]
+    #: Задание складу — черновик перемещения
+    transfer_id: Optional[str]
+    #: Номер перемещения
+    transfer_number: str
+    #: Номер УПД передачи
+    upd_number: str
+    #: Номер поставки у площадки
+    platform_shipment_id: str
+    #: Статус поставки у площадки
+    platform_status: str
+    #: Ждёт решения по данным площадки: она отменила, отклонила или отменяет созданную у неё поставку (строка красная); нет поля — нет
+    alert: Literal['platform_cancelled', 'platform_rejected', 'platform_cancel_pending']
+    #: Отмену, объявленную площадкой, можно подтвердить у нас: поставка создана или в пути и ждёт решения; нет поля — нельзя
+    platform_cancel: bool
+    #: Комментарий
+    comment: str
+    #: Ответственный — создавший
+    responsible_id: int
+    #: Имя ответственного
+    responsible_name: str
+    #: Наблюдатель — старший менеджер
+    observer_id: Optional[int]
+    #: Имя наблюдателя
+    observer_name: str
+    #: Заведена
+    created_at: str
+    #: Изменена
+    updated_at: str
+    #: Собрано штук; пусто — факта нет
+    collected_qty: Optional[int]
+    upd: "MarketplaceSupplyUPD"
+
+class _MarketplaceSupplyPlatformMatchRequired(TypedDict):
+    #: У сборщика есть поставки магазина; false — сверять не с чем
+    known: bool
+    #: Поставка площадки с этим номером в магазине есть
+    found: bool
+    #: Заявлено у площадки, штук
+    declared: int
+    #: Принято площадкой, штук
+    accepted: int
+    #: Сколько везёт наша поставка — собрано, без факта заявлено
+    ours: int
+
+class MarketplaceSupplyPlatformMatch(_MarketplaceSupplyPlatformMatchRequired, total=False):
+    """Что нашлось у площадки по номеру поставки."""
+
+    #: Номер у площадки
+    number: str
+    #: Склад площадки
+    warehouse: str
+    #: Когда поставку завели у площадки
+    created_at: Optional[str]
+    #: Когда площадка её приняла; пусто — ещё не приняла
+    accepted_at: Optional[str]
+    #: Почему номер не подойдёт; нет поля — подойдёт
+    problem: Literal['number_taken', 'number_unknown', 'number_closed', 'number_mismatch', 'number_unlinked', 'number_no_declared']
+
 class _MarketplaceSupplyReceiptRequired(TypedDict):
     store_id: "UUID"
     store_name: str
@@ -32219,6 +35011,8 @@ class _MarketplaceSupplyReceiptRequired(TypedDict):
     state: Literal['ready', 'not_ready', 'received', 'empty', 'in_transit', 'before_opening', 'virtual']
 
 class MarketplaceSupplyReceipt(_MarketplaceSupplyReceiptRequired, total=False):
+    #: На какой день площадка ждёт поставку: слот Маркета и Ozon, плановая дата Wildberries. Нет поля — площадка даты не дала
+    planned_at: str
     document_number: str
     dispatch_document_number: str
     #: Дата нашей отгрузки — «Ушло от нас» на экране. Пусто без отгрузки
@@ -32227,6 +35021,8 @@ class MarketplaceSupplyReceipt(_MarketplaceSupplyReceiptRequired, total=False):
     #: Отгрузка найдена по номеру поставки, выбранному в документе, но связь ещё не записана: её запишут обход или приёмка. Поставка уже считается нашей
     dispatch_pending: bool
     opening_at: str
+    #: Поставка в пути дольше предела (35 дней с отправки): сколько дней площадка её не принимает. Она зависла и ждёт решения, в in_transit не входит. Нет поля — не зависла
+    stale_days: int
 
 class _MarketplaceSupplyReceiptLineRequired(TypedDict):
     #: Товар номенклатуры; null — позиция не сопоставлена
@@ -32256,8 +35052,62 @@ class MarketplaceSupplyReceiptView(TypedDict):
     ready: int
     not_ready: int
     received: int
+    #: Поставок в пути; зависшие сверх предела сюда не входят
     in_transit: int
     before_opening: int
+    #: Поставок в пути дольше предела (stale_days у поставки): зависли и ждут решения
+    stale: int
+
+class _MarketplaceSupplySendPlanRequired(TypedDict):
+    #: Поставка
+    supply_id: str
+    check: "MarketplaceSupplyCheck"
+    #: Номер поставки у площадки сейчас; пусто — нет
+    before: str
+    #: Площадка создаст черновик; у Ламоды — нет
+    draft: bool
+    #: Отпечаток запроса для отправки
+    expect: str
+    #: Запрос FBOShipmentCreateRequest Seller API Ламоды без ключа
+    request: "MarketplaceSupplySendPlanRequest"
+
+class MarketplaceSupplySendPlan(_MarketplaceSupplySendPlanRequired, total=False):
+    """План создания поставки у площадки."""
+
+    #: Прошлая отправка без ответа: повтор только с checked
+    unknown: bool
+
+class MarketplaceSupplySendPlanRequest(TypedDict, total=False):
+    """Запрос FBOShipmentCreateRequest Seller API Ламоды без ключа"""
+
+    #: Seller Shop ID
+    sellerId: str
+    #: Склад
+    warehouseCode: str
+    #: Номер УПД
+    externalShipmentId: str
+    #: Плановая дата
+    plannedDate: str
+    #: Позиции
+    items: List["MarketplaceSupplySendPlanRequestItemsItem"]
+
+class MarketplaceSupplySendPlanRequestItemsItem(TypedDict, total=False):
+    #: Артикул продавца
+    externalSku: str
+    #: Штук
+    quantity: int
+    #: Цена
+    price: "MarketplaceSupplySendPlanRequestItemsItemPrice"
+    #: EAN
+    ean: str
+
+class MarketplaceSupplySendPlanRequestItemsItemPrice(TypedDict, total=False):
+    """Цена"""
+
+    #: Копейки
+    amount: int
+    #: Валюта
+    currency: str
 
 class _MarketplaceSupplyShipmentCreateInputRequired(TypedDict):
     store_id: "UUID"
@@ -32309,6 +35159,36 @@ class _MarketplaceSupplyShipmentUnmatchedRequired(TypedDict):
 
 class MarketplaceSupplyShipmentUnmatched(_MarketplaceSupplyShipmentUnmatchedRequired, total=False):
     external_name: str
+
+class _MarketplaceSupplyStockPartRequired(TypedDict):
+    #: Склад
+    warehouse_id: str
+    #: Название
+    warehouse: str
+    #: Свой склад или склад фулфилмента
+    kind: Literal['own', 'fulfilment']
+
+class MarketplaceSupplyStockPart(_MarketplaceSupplyStockPartRequired, total=False):
+    """Остаток на одном складе."""
+
+    #: Штук
+    qty: str
+
+class _MarketplaceSupplyUPDRequired(TypedDict):
+    #: Адрес экрана приложения, где человек выпускает УПД передачи и открывает выпущенный
+    issue_path: str
+
+class MarketplaceSupplyUPD(_MarketplaceSupplyUPDRequired, total=False):
+    """УПД передачи по заданию складу у документооборота; поля нет — бумаги по заданию не бывает или документооборот выключен."""
+
+    #: Карточка УПД в документообороте; поля нет — ещё не выпущен
+    document_id: str
+    #: Номер выпущенного УПД
+    number: str
+    #: Дата выпущенного УПД
+    date: str
+    #: Путь бумаги: выпущен, подписан, отправлен, принят, отказ; пусто — не выпущен
+    status: Literal['', 'issued', 'signed', 'sent', 'accepted', 'refused']
 
 class MarketplaceSyncJobStore(TypedDict):
     id: "UUID"
@@ -32553,7 +35433,7 @@ class MarketplaceWbFacets(TypedDict):
     subjects: List[str]
     brands: List[str]
 
-MarketplaceWbFbs = TypedDict("MarketplaceWbFbs", {"platform": Literal['wb'], "source": Literal['wb_orders_fbs'], "from": str, "to": str, "totals": "MarketplaceOzonFbsTotals", "funnel": List["MarketplaceWbFbsFunnelStage"], "tiles": "MarketplaceWbFbsTiles", "queue": "MarketplaceOzonFbsQueue", "histogram": List[Any], "warehouses": List["MarketplaceWbFbsWarehouse"], "rows": List["MarketplaceWbFbsOrder"], "rows_cut": bool, "last_order_at": Optional[str], "analytics": bool, "stock_starts": List["MarketplaceFbsStockStart"], "stock_pending": int, "stock_unavailable": bool}, total=False)
+MarketplaceWbFbs = TypedDict("MarketplaceWbFbs", {"platform": Literal['wb'], "source": Literal['wb_orders_fbs'], "from": str, "to": str, "totals": "MarketplaceOzonFbsTotals", "funnel": List["MarketplaceWbFbsFunnelStage"], "tiles": "MarketplaceWbFbsTiles", "queue": "MarketplaceOzonFbsQueue", "histogram": List[Any], "warehouses": List["MarketplaceWbFbsWarehouse"], "rows": List["MarketplaceWbFbsOrder"], "rows_cut": bool, "last_order_at": Optional[str], "analytics": bool, "stock_starts": List["MarketplaceFbsStockStart"], "stock_pending": int, "stock_unavailable": bool, "to_assemble": "MarketplaceWbFbsToAssemble"}, total=False)
 
 class MarketplaceWbFbsFunnelStage(TypedDict):
     #: Этап; returned — невыкуп после нашей отгрузки
@@ -32614,6 +35494,20 @@ class MarketplaceWbFbsTiles(TypedDict):
     #: Времени передачи в доставку у задания WB нет
     avg_process_hrs: None
 
+class MarketplaceWbFbsToAssemble(TypedDict):
+    """Что по FBS требует действия: новые задания без поставки. Задание на сборке или с поставкой в выгрузке уже в поставке WB и сюда не входит"""
+
+    #: Новые задания без поставки
+    new: int
+    #: Из них старше базового срока кабинета (norm_hours)
+    over_norm: int
+    #: Из них после крайнего срока: площадка отменяет задание и штрафует
+    overdue: int
+    #: Задания на сборке или с поставкой в выгрузке: уже в поставке WB, в «ждут сборки» не входят
+    in_supply: int
+    #: Базовый срок кабинета в часах от создания задания (пороги «Сборки FBS»)
+    norm_hours: int
+
 class MarketplaceWbFbsWarehouse(TypedDict):
     #: Название склада продавца, иначе его номер
     warehouse: str
@@ -32624,7 +35518,7 @@ class MarketplaceWbFbsWarehouse(TypedDict):
 
 MarketplaceWbFunnel = TypedDict("MarketplaceWbFunnel", {"platform": Literal['wildberries'], "store": str, "source": Literal['jam', 'v3', 'v3_pending'], "from": str, "to": str, "totals": "MarketplaceWbFunnelTotals", "rows": List["MarketplaceWbFunnelRow"], "note": str, "analytics": bool}, total=False)
 
-MarketplaceWbFunnelDaily = TypedDict("MarketplaceWbFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "summary": Dict[str, Dict[str, Optional[float]]], "pulse": Dict[str, Any], "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['wb', 'yandex'], "source": Literal['wb_orders_sales_and_finance', 'ym_orders'], "estimateModel": Literal['sales_and_orders_weekly', 'orders_only'], "sku": str, "from": str, "to": str, "days": List[str], "series": Dict[str, List[Optional[float]]], "totals": Dict[str, List[Optional[float]]], "card": "MarketplaceWbFunnelDailyCard", "articles": List["MarketplaceWbFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "partial": List[str], "dataThrough": Dict[str, Optional[str]], "computedAt": str, "note": str, "analytics": bool}, total=False)
+MarketplaceWbFunnelDaily = TypedDict("MarketplaceWbFunnelDaily", {"slice": str, "sliceValue": str, "sliceLabel": str, "slices": Dict[str, List[Dict[str, Any]]], "breakdown": List[Dict[str, Any]], "articlesTruncated": bool, "summary": Dict[str, Dict[str, Optional[float]]], "pulse": Dict[str, Any], "groupBy": str, "groups": List[Dict[str, Any]], "platform": Literal['wb', 'yandex'], "source": Literal['wb_orders_sales_and_finance', 'ym_orders'], "estimateModel": Literal['sales_and_orders_weekly', 'orders_only'], "sku": str, "from": str, "to": str, "days": List[str], "series": Dict[str, List[Optional[float]]], "totals": Dict[str, List[Optional[float]]], "card": "MarketplaceWbFunnelDailyCard", "articles": List["MarketplaceWbFunnelDailyArticle"], "references": Dict[str, "MarketplaceFunnelDailyReference"], "partial": List[str], "dataThrough": Dict[str, Optional[str]], "todayOrders": Optional["MarketplaceWbOrdersKpi"], "todaySales": Optional["MarketplaceWbOrdersKpi"], "computedAt": str, "note": str, "analytics": bool}, total=False)
 
 class _MarketplaceWbFunnelDailyArticleRequired(TypedDict):
     #: Артикул поставщика
@@ -32713,6 +35607,7 @@ class _MarketplaceWbMetricCellRequired(TypedDict):
     returns_pct: Optional[float]
     #: Вознаграждение WB как разница выплаты и дохода
     commission: int
+    #: Комиссия к доходу, %; null при доходе не больше нуля
     commission_pct: Optional[float]
     logistics: int
     logistics_per_unit: Optional[int]
@@ -32727,12 +35622,13 @@ class _MarketplaceWbMetricCellRequired(TypedDict):
     other: int
     #: Внутренняя реклама WB
     internal_ad: int
-    #: Доля рекламных расходов в выручке
+    #: Реклама к доходу (выручка − возвраты), %; null при доходе не больше нуля
     drr: Optional[float]
     cogs: int
     tax: int
     expenses: int
     profit: int
+    #: Прибыль к доходу (выручка − возвраты), %; null при доходе не больше нуля
     margin_pct: Optional[float]
     #: Прибыль к себестоимости по модулю, %; null без себестоимости
     roi: Optional[float]
@@ -32752,6 +35648,20 @@ class MarketplaceWbMetricCell(_MarketplaceWbMetricCellRequired, total=False):
 
     #: Идентификатор блока; присутствует только в итогах периода
     id: str
+    #: Заказано штук за блок — тот же счёт, что у «План-факта»; нет у Ozon с отбором схемы
+    orders: int
+    #: Сумма заказов за блок, ₽ — тот же счёт, что у «План-факта»
+    orders_sum: int
+    #: Доход: выручка минус возвраты — база маржи, ДРР и долей (AKE-259)
+    income: int
+    #: Проданные штуки без известной себестоимости: посчитаны с нулевой закупкой
+    cost_missing_units: int
+    #: Доля проданных штук с известной себестоимостью, %, округление вниз; меньше 100 — маржа и ROI неполные; null без продаж
+    cost_coverage_pct: Optional[float]
+    #: Можно ли верить прибыли и марже (econ.MarginStateOf): approx — себестоимость у 50–99,9 % продаж, экран ставит «≈»; unknown — меньше 50 %, вместо маржи «—»; null — себестоимость у всех продаж
+    margin_state: Optional[Literal['approx', 'unknown', None]]
+    #: Доход спроецированный на весь период — база доли прогнозной прибыли
+    rr_income: int
 
 class MarketplaceWbOrdersDay(TypedDict):
     date: str
@@ -32760,7 +35670,7 @@ class MarketplaceWbOrdersDay(TypedDict):
     sales_sum: str
     sales_qty: int
 
-class MarketplaceWbOrdersKpi(TypedDict):
+class _MarketplaceWbOrdersKpiRequired(TypedDict):
     sum: str
     qty: int
     #: Изменение к предыдущему дню в процентах
@@ -32768,7 +35678,17 @@ class MarketplaceWbOrdersKpi(TypedDict):
     #: Изменение к предыдущему дню в процентах
     delta_qty: Optional[float]
 
-MarketplaceWbOrdersOverview = TypedDict("MarketplaceWbOrdersOverview", {"computedAt": str, "day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "kpi": "MarketplaceWbOrdersOverviewKpi", "daily": List["MarketplaceWbOrdersDay"], "products": List["MarketplaceWbOrdersProduct"], "summary_total": Dict[str, int], "demo": bool, "buyout": "MarketplaceBuyoutCohort"}, total=False)
+class MarketplaceWbOrdersKpi(_MarketplaceWbOrdersKpiRequired, total=False):
+    #: Сумма прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at)
+    prev_sum: str
+    #: Штуки прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at)
+    prev_qty: int
+    #: Период ещё идёт: оба отрезка режутся по этому моменту (последняя проверка сборщика, время по Москве; у сводки площадок — раннее из них). Для «Сегодня» delta_sum и delta_qty — к вчера на то же время. Поля нет, когда сравниваются целые дни, отсечка не в последнем дне периода или у источника нет времени суток (выкуп Ozon и Маркета)
+    cut_at: str
+    #: Период ещё идёт, а честной отсечки нет: за последний день данных ещё нет или время проверки сборщика неизвестно. Сравнения нет — delta_sum и delta_qty пусты, cut_at нет
+    no_cut: bool
+
+MarketplaceWbOrdersOverview = TypedDict("MarketplaceWbOrdersOverview", {"computedAt": str, "day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "kpi": "MarketplaceWbOrdersOverviewKpi", "daily": List["MarketplaceWbOrdersDay"], "products": List["MarketplaceWbOrdersProduct"], "summary_total": Dict[str, int], "sales_summary_total": Dict[str, int], "demo": bool, "buyout": "MarketplaceBuyoutCohort"}, total=False)
 
 class MarketplaceWbOrdersOverviewKpi(TypedDict):
     orders: "MarketplaceWbOrdersKpi"
@@ -32790,6 +35710,10 @@ class _MarketplaceWbOrdersProductRequired(TypedDict):
     brand: str
 
 class MarketplaceWbOrdersProduct(_MarketplaceWbOrdersProductRequired, total=False):
+    #: Остаток на складах WB (FBO), шт
+    stock: int
+    #: Остаток своего склада продавца (FBS), шт; в stock не входит
+    stock_fbs: int
     #: Продано (выкуплено) штук за период — тот же источник, что у kpi.sales
     sales_units: int
     #: Выручка продаж за период decimal строкой — тот же источник, что у kpi.sales
@@ -32798,6 +35722,10 @@ class MarketplaceWbOrdersProduct(_MarketplaceWbOrdersProductRequired, total=Fals
     by_day: Dict[str, int]
     #: Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук
     summary: Dict[str, int]
+    #: Продано штук по дням периода (?summary=1): день ГГГГ-ММ-ДД → шт
+    sales_by_day: Dict[str, int]
+    #: Продажи по неделям и месяцам (?summary=1): окно (w3, w2, w1, prev_month, month) → продано штук
+    sales_summary: Dict[str, int]
 
 class _MarketplaceWbPnlRequired(TypedDict):
     period_kind: Literal['week', 'month']
@@ -32819,6 +35747,10 @@ class MarketplaceWbPnl(_MarketplaceWbPnlRequired, total=False):
     breakdown: Dict[str, List["MarketplaceWbDecompOtherItem"]]
     #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. У магазина «себестоимость со склада» — штуки непереданных недель, которые склад не оценил (проданные и вернувшиеся порознь). Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
     cost_missing: Dict[str, float]
+    #: Доля проданных штук периода с известной себестоимостью, %, округление вниз; меньше 100 — маржа периода неполная. Ключ — начало периода; поля нет у периодов без продаж
+    cost_coverage: Dict[str, float]
+    #: Можно ли верить марже периода (econ.MarginStateOf): approx — «≈», unknown — «—». Ключ — начало периода; у периодов с полной себестоимостью ключа нет
+    margin_state: Dict[str, Literal['approx', 'unknown']]
     #: Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
     units_missing: Dict[str, float]
     #: Откуда себестоимость периода (ERP-2139). Ключ — начало периода, значение — суммы в знаке строки cogs (расход — минус), их сумма равна строке: manual — по ставкам; stock_posted — документы проведённых недель склада магазина «себестоимость со склада», неделя целиком в периоде своего воскресенья; stock_estimate — оценка склада тем же подбором партий, что при передаче недели; temporary — оценка недостающих штук по временной цене; возврат — сторно доли оценки недели продажи; stock_opening — продажи до запуска склада площадки без ставки: (продано − возвращено) × цена начального остатка товара на складе площадки (ERP-2615). Продажи склада без связи артикула с товаром или без цены считаются в cost_missing. Поля нет, когда себестоимости за год нет
@@ -32936,6 +35868,12 @@ class _MarketplaceWbProductRequired(TypedDict):
     cost_source: Literal['manual', 'stock']
 
 class MarketplaceWbProduct(_MarketplaceWbProductRequired, total=False):
+    #: Сумма заказов за то же окно, что orders_14d, decimal строкой; null — источник не ответил
+    orders_sum_14d: Optional[str]
+    #: Продано (выкуплено) штук за то же окно, что orders_14d, — правило продаж «Заказов»; null — источник не ответил
+    sales_units_14d: Optional[int]
+    #: Выручка продаж за то же окно, что orders_14d, decimal строкой; null — источник не ответил
+    sales_sum_14d: Optional[str]
     #: Только в режиме склада: in_stock — цена партии, которая спишется следующей на складе площадки (при средней — средняя); own_stock — на складе площадки товара нет, цена партии, которая спишется следующей на своих складах юрлица (склад — cost_warehouse_name); out_of_stock — остатка нет нигде, цена последней списанной со склада площадки партии; missing — цены нет, причина в cost_reason
     cost_status: Literal['in_stock', 'own_stock', 'out_of_stock', 'missing']
     #: Почему цены нет: артикул магазина не связан с товаром; склад площадки не заведён или у юрлица на нём нет движений; товара на складе площадки не было; у площадки склада в учёте нет
@@ -33020,6 +35958,10 @@ class MarketplaceWbStockProduct(_MarketplaceWbStockProductRequired, total=False)
     buyout_pct: float
     #: Остаток с возвратом невыкупленного из того, что в пути: остаток + в пути × (1 − выкуп)
     effective: float
+    #: Заказано штук в день за последние 7 полных дней по Москве без отменённых до отгрузки — темп для «хватит на N дн», одно правило у всех площадок; нет заказов — поля нет
+    orders_per_day: float
+    #: На сколько дней хватит остатка с возвратами (effective) при темпе orders_per_day, с точностью до десятой; нет темпа — поля нет
+    cover_days: float
 
 class _MarketplaceWbStockWarehouseRequired(TypedDict):
     warehouse: str
@@ -33028,6 +35970,8 @@ class _MarketplaceWbStockWarehouseRequired(TypedDict):
 class MarketplaceWbStockWarehouse(_MarketplaceWbStockWarehouseRequired, total=False):
     #: Кластер склада; у Wildberries не заполняется и в ответ не попадает
     cluster: str
+    #: На сколько дней хватит остатка склада при темпе товара orders_per_day (заказы приходят без склада), с точностью до десятой; нет темпа — поля нет
+    cover_days: float
 
 class _MarketplaceWeekDocumentRequired(TypedDict):
     role: Literal['revenue', 'revenue_storno', 'payout', 'stock_sale', 'stock_return', 'manual_cost', 'manual_cost_storno']
@@ -33128,6 +36072,8 @@ class MarketplaceWeeklyFinancePostingResult(_MarketplaceWeeklyFinancePostingResu
     #: Отдельный документ сторно прежней управленческой себестоимости при явном перепроведении
     cogs_storno_document_id: "UUID"
     cost_version_id: "UUID"
+    #: Отправления с возвратом FBS после выкупа, которые неделя не оприходовала: в недельной отгрузке нет цены их товара
+    cogs_unpriced_returns: List[str]
 
 class _MarketplaceWeeklyFinanceRunRequired(TypedDict):
     run_id: str
@@ -33230,7 +36176,7 @@ class MarketplaceYandexOrdersDay(TypedDict):
     sales_sum: str
     sales_qty: int
 
-class MarketplaceYandexOrdersKpi(TypedDict):
+class _MarketplaceYandexOrdersKpiRequired(TypedDict):
     #: Сумма decimal строкой
     sum: str
     qty: int
@@ -33239,7 +36185,17 @@ class MarketplaceYandexOrdersKpi(TypedDict):
     #: Изменение количества ко вчерашнему дню в процентах; null когда вчера было пусто
     delta_qty: Optional[float]
 
-MarketplaceYandexOrdersOverview = TypedDict("MarketplaceYandexOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "kpi": "MarketplaceYandexOrdersOverviewKpi", "daily": List["MarketplaceYandexOrdersDay"], "products": List["MarketplaceYandexOrdersProduct"], "summary_total": Dict[str, int], "demo": bool, "buyout": "MarketplaceBuyoutCohort"}, total=False)
+class MarketplaceYandexOrdersKpi(_MarketplaceYandexOrdersKpiRequired, total=False):
+    #: Сумма прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at)
+    prev_sum: str
+    #: Штуки прошлого отрезка той же длины; у идущего периода — до того же времени суток (cut_at)
+    prev_qty: int
+    #: Период ещё идёт: оба отрезка режутся по этому моменту (последняя проверка сборщика, время по Москве; у сводки площадок — раннее из них). Для «Сегодня» delta_sum и delta_qty — к вчера на то же время. Поля нет, когда сравниваются целые дни, отсечка не в последнем дне периода или у источника нет времени суток (выкуп Ozon и Маркета)
+    cut_at: str
+    #: Период ещё идёт, а честной отсечки нет: за последний день данных ещё нет или время проверки сборщика неизвестно. Сравнения нет — delta_sum и delta_qty пусты, cut_at нет
+    no_cut: bool
+
+MarketplaceYandexOrdersOverview = TypedDict("MarketplaceYandexOrdersOverview", {"day": str, "from": str, "to": str, "chart_from": str, "updated": Optional[str], "kpi": "MarketplaceYandexOrdersOverviewKpi", "daily": List["MarketplaceYandexOrdersDay"], "products": List["MarketplaceYandexOrdersProduct"], "summary_total": Dict[str, int], "sales_summary_total": Dict[str, int], "demo": bool, "buyout": "MarketplaceBuyoutCohort"}, total=False)
 
 class MarketplaceYandexOrdersOverviewKpi(TypedDict):
     orders: "MarketplaceYandexOrdersKpi"
@@ -33275,6 +36231,10 @@ class MarketplaceYandexOrdersProduct(_MarketplaceYandexOrdersProductRequired, to
     by_day: Dict[str, int]
     #: Недели и месяцы (?summary=1): окно (w3, w2, w1, prev_month, month) → заказано штук
     summary: Dict[str, int]
+    #: Продано штук по дням периода (?summary=1): день ГГГГ-ММ-ДД → шт
+    sales_by_day: Dict[str, int]
+    #: Продажи по неделям и месяцам (?summary=1): окно (w3, w2, w1, prev_month, month) → продано штук
+    sales_summary: Dict[str, int]
 
 class _MarketplaceYandexPnlRequired(TypedDict):
     period_kind: Literal['week', 'month']
@@ -33298,6 +36258,12 @@ class MarketplaceYandexPnl(_MarketplaceYandexPnlRequired, total=False):
     incomplete: bool
     #: Сколько штук продано в периоде без действующей ставки себестоимости: они посчитаны с нулевой закупкой, маржа периода завышена. Ключ — начало периода; поля нет, когда у всех продаж года ставка есть
     cost_missing: Dict[str, float]
+    #: Доля проданных штук периода с известной себестоимостью, %, округление вниз; меньше 100 — маржа периода неполная. Ключ — начало периода; поля нет у периодов без продаж
+    cost_coverage: Dict[str, float]
+    #: Можно ли верить марже периода (econ.MarginStateOf): approx — «≈», unknown — «—». Ключ — начало периода; у периодов с полной себестоимостью ключа нет
+    margin_state: Dict[str, Literal['approx', 'unknown']]
+    #: Периоды с услугами Маркета, но без строк отчёта о реализации: продажи неизвестны, прибыли и маржи у них нет (null), экран пишет «нет данных о продажах»
+    no_sales: List[str]
     #: Выручка периода, по которой площадка не прислала количество проданных штук (ERP-1217): себестоимость посчитана нулём, маржа завышена. Ключ — начало периода. Заполняется только для Ozon
     units_missing: Dict[str, float]
     #: Пояснение к неполноте источника
@@ -33382,6 +36348,12 @@ class _MarketplaceYandexProductRequired(TypedDict):
     cost_source: Literal['manual', 'stock']
 
 class MarketplaceYandexProduct(_MarketplaceYandexProductRequired, total=False):
+    #: Сумма заказов за то же окно, что orders_14d, decimal строкой; null — источник не ответил
+    orders_sum_14d: Optional[str]
+    #: Продано (выкуплено) штук за то же окно, что orders_14d, — правило продаж «Заказов»; null — источник не ответил
+    sales_units_14d: Optional[int]
+    #: Выручка продаж за то же окно, что orders_14d, decimal строкой; null — источник не ответил
+    sales_sum_14d: Optional[str]
     #: Только в режиме склада: in_stock — цена партии, которая спишется следующей на складе площадки (при средней — средняя); own_stock — на складе площадки товара нет, цена партии, которая спишется следующей на своих складах юрлица (склад — cost_warehouse_name); out_of_stock — остатка нет нигде, цена последней списанной со склада площадки партии; missing — цены нет, причина в cost_reason
     cost_status: Literal['in_stock', 'own_stock', 'out_of_stock', 'missing']
     #: Почему цены нет: артикул магазина не связан с товаром; склад площадки не заведён или у юрлица на нём нет движений; товара на складе площадки не было; у площадки склада в учёте нет
@@ -33800,6 +36772,8 @@ class MarkingCode(_MarkingCodeRequired, total=False):
     gismt_produced_on: str
     #: Срок годности по сведениям ЧЗ: ближайший, если сроков несколько
     gismt_expires_on: str
+    #: Последний день нанесения (ERP-2707): у кода заказа с оплатой при нанесении, пока не нанесён и не испорчен; нет поля — срока нет
+    apply_by: str
     product_id: "UUID"
     import_id: "UUID"
     order_id: "UUID"
@@ -33832,6 +36806,12 @@ class MarkingCodeOrder(TypedDict):
     expires_at: Optional[str]
     last_synced_at: Optional[str]
     created_by: Optional[int]
+    #: Закупка, по которой заказаны коды; null — заказ без основания
+    basis: Optional["MarkingOrderBasis"]
+    #: До какого дня нанести коды, иначе ГИС МТ их аннулирует: оплата при нанесении — 60 дней от эмиссии; null — срока нет
+    apply_by: Optional[str]
+    #: Полученные коды без принятого отчёта о нанесении и без отметки «испорчен»
+    unapplied: int
     items: Optional[List["MarkingCodeOrderItem"]]
     quantity: int
     #: Сколько кодов выдала СУЗ
@@ -34213,6 +37193,8 @@ class _MarkingDocumentCodeLineRequired(TypedDict):
     extra: int
 
 class MarkingDocumentCodeLine(_MarkingDocumentCodeLineRequired, total=False):
+    #: Сколько из assigned не в обороте у юрлица; в зачёт строки они не идут
+    out_of_circulation: int
     #: Проведённое списание: объёмно-сортовая строка по GTIN для вывода из оборота по GTIN
     gtin_parts: List["MarkingDocumentCodeLineGtinPartsItem"]
     #: Проведённое списание: себестоимость единицы строки в копейках
@@ -34324,7 +37306,7 @@ class MarkingDocumentDraftInputExtraBasesItem(TypedDict):
     type: str
     id: str
 
-MarkingDocumentKind = Literal['withdrawal', 'withdrawal_cancel', 'withdrawal_gtin', 'withdrawal_gtin_cancel', 'return', 'introduce', 'introduce_contract', 'introduce_remains', 'introduce_import', 'remark', 'cancel_codes', 'aggregation', 'disaggregation', 'sets_aggregation']
+MarkingDocumentKind = Literal['withdrawal', 'withdrawal_cancel', 'withdrawal_gtin', 'withdrawal_gtin_cancel', 'return', 'introduce', 'introduce_contract', 'introduce_remains', 'introduce_import', 'remark', 'cancel_codes', 'aggregation', 'disaggregation', 'sets_aggregation', 'cis_info_change']
 
 class MarkingDocumentParams(TypedDict, total=False):
     """Параметры вида документа; незнакомое поле — отказ"""
@@ -34348,6 +37330,8 @@ class MarkingDocumentParams(TypedDict, total=False):
     producer_inn: str
     paid: bool
     production_date: str
+    #: Корректировка сведений (cis_info_change) — срок годности, ГГГГ-ММ-ДД; только группам, которым его даёт ЧЗ
+    expiration_date: str
     production_type: str
     tnved_code: str
     certificate_type: str
@@ -34361,6 +37345,8 @@ class MarkingDocumentParams(TypedDict, total=False):
     previous_codes: Dict[str, str]
     #: Формирование упаковки — код короба «00» + SSCC; формирование набора — код набора (КИН), скан или без криптохвоста
     unit_serial_number: str
+    #: Формирование наборов (sets_aggregation) — несколько наборов одним документом: код набора и его вложения (окно сборки сканом)
+    sets: List["MarkingSetUnit"]
     #: Вывод по GTIN (withdrawal_gtin, LK_GTIN_RECEIPT): строки «GTIN — количество — общая стоимость»; повтор GTIN складывается. Кодов у такого документа нет
     gtin_lines: List["MarkingGTINLine"]
 
@@ -34921,6 +37907,21 @@ class MarkingLabelRequest(_MarkingLabelRequestRequired, total=False):
     #: Повтор окна печати (ERP-3043): коды этих записей журнала печатаются ещё раз дубликатом с причиной note; code_ids, order и scan_raw не нужны
     repeat_jobs: List["UUID"]
 
+class _MarkingLabelSheetRequired(TypedDict):
+    page_width_mm: float
+    page_height_mm: float
+    cols: int
+    #: Колонок × рядов — не больше 2 500 на листе
+    rows: int
+
+class MarkingLabelSheet(_MarkingLabelSheetRequired, total=False):
+    """Полотно своего шаблона: этикетки сеткой на листе для производителя и типографии; вся сетка с отступом и зазорами помещается на лист"""
+
+    offset_x_mm: float
+    offset_y_mm: float
+    gap_x_mm: float
+    gap_y_mm: float
+
 class MarkingLabelTemplate(TypedDict):
     key: str
     #: Название на языке запроса
@@ -34940,12 +37941,13 @@ class MarkingLabelTemplate(TypedDict):
 class MarkingLabelTemplateInput(TypedDict, total=False):
     name: str
     size: str
-    #: Свой размер (size = custom), шаг 0,5 мм
+    #: Свой размер (size = custom), шаг 0,5 мм; меньше 15 мм — только марка
     width_mm: float
     height_mm: float
     format: Literal['', 'datamatrix', 'ean13', 'code128', 'auto']
     channel: str
     blocks: List["MarkingLabelBlock"]
+    sheet: "MarkingLabelSheet"
     #: Шаблон-образец копии; копия шаблона строками встаёт на холст
     copy_from: str
 
@@ -35018,6 +38020,7 @@ class MarkingLabelTemplateRecord(_MarkingLabelTemplateRecordRequired, total=Fals
     channel: str
     #: Вариант оформления системного шаблона
     preset: str
+    sheet: "MarkingLabelSheet"
     updated_at: str
 
 class MarkingLabelTemplateRef(TypedDict):
@@ -35034,6 +38037,7 @@ class MarkingLabelTemplateUpdate(_MarkingLabelTemplateUpdateRequired, total=Fals
     width_mm: float
     height_mm: float
     channel: str
+    sheet: "MarkingLabelSheet"
 
 class MarkingLabelTemplateUsage(TypedDict):
     #: По умолчанию для всего остального
@@ -35076,6 +38080,17 @@ class _MarkingModListModsItemRequired(TypedDict):
 class MarkingModListModsItem(_MarkingModListModsItemRequired, total=False):
     inn: str
     product_groups: List[str]
+
+class _MarkingOrderBasisRequired(TypedDict):
+    id: "UUID"
+    #: Номер закупки; пусто — службу заказов не удалось спросить
+    number: str
+    #: Дата закупки
+    date: str
+
+class MarkingOrderBasis(_MarkingOrderBasisRequired, total=False):
+    #: Поставщик
+    contact_name: str
 
 class MarkingOrderCode(TypedDict):
     id: "UUID"
@@ -35142,13 +38157,15 @@ class _MarkingOrderInputRequired(TypedDict):
     items: List["MarkingOrderInputItemsItem"]
 
 class MarkingOrderInput(_MarkingOrderInputRequired, total=False):
-    #: Вид кода всех строк; пусто — UNIT
+    #: Вид кода всех строк; пусто — по профилю товара (набор — SET; прочее — UNIT)
     cis_type: Literal['', 'UNIT', 'GROUP', 'SET', 'BUNDLE']
     contact_person: str
     #: Оплата кодов (attributes.paymentType): 1 — при эмиссии, 2 — при нанесении, 0 или нет поля — не передавать. Только у групп с выбором оплаты; REAPPLY ставит 1 сам
     payment_type: int
     #: Откреплённая подпись УКЭП (CMS в base64) тела заказа из «Подготовить заказ»; СУЗ без неё заказ отклоняет
     signature: str
+    #: Закупка (заказ поставщику), по которой заказываются коды: заказ кодов её помнит. Только закупка юрлица заказа, не отменённая
+    basis_order_id: "UUID"
 
 class _MarkingOrderInputItemsItemRequired(TypedDict):
     #: GTIN из 14 цифр
@@ -35271,16 +38288,26 @@ class MarkingPrintSkipped(TypedDict):
     #: Выбывших из оборота
     retired: int
 
-class MarkingProductCatalogCard(TypedDict):
+class _MarkingProductCatalogCardRequired(TypedDict):
     #: GTIN товара (14 цифр); пусто — у товара нет GTIN
     gtin: str
     company_id: "UUID"
+    #: ТН ВЭД товара расходится с ТН ВЭД карточки в каталоге
+    tnved_mismatch: bool
     #: Карточка в каталоге; null — нет карточки, готовой к маркировке и обороту
     card: Optional["MarkingProductCatalogCardCard"]
+
+class MarkingProductCatalogCard(_MarkingProductCatalogCardRequired, total=False):
+    #: Когда ответ записан в снимок каталога
+    checked_at: str
+    #: Код ТН ВЭД из карточки товара кабинета
+    product_tnved: str
 
 class MarkingProductCatalogCardCard(TypedDict, total=False):
     """Карточка в каталоге; null — нет карточки, готовой к маркировке и обороту"""
 
+    #: Код ТН ВЭД карточки; пусто — ЧЗ его не вернул
+    tnved: str
     #: GTIN карточки
     gtin: str
     #: Наименование в каталоге
@@ -35578,6 +38605,12 @@ class MarkingScanDocumentResult(TypedDict):
 
 MarkingSeqRange = TypedDict("MarkingSeqRange", {"gtin": str, "from": int, "to": int, "count": int}, total=False)
 
+class MarkingSetUnit(TypedDict):
+    #: Код набора (КИН)
+    set: str
+    #: Коды вложений
+    items: List[str]
+
 class MarkingShortDocumentCounts(TypedDict):
     results: List["MarkingShortDocumentCountsResultsItem"]
 
@@ -35593,8 +38626,8 @@ class MarkingSignDuties(TypedDict):
     overdue: int
 
 class _MarkingSignDutyRequired(TypedDict):
-    #: Вывод по отгрузке FBS, заказы без марок или возврат в оборот по невыкупу
-    kind: Literal['withdrawal', 'unmarked', 'return', 'codes_ready', 'application_draft', 'introduction_draft']
+    #: Вывод по отгрузке FBS, заказы без марок, возврат в оборот по невыкупу, коды, которые надо нанести до срока, или черновики формирования наборов
+    kind: Literal['withdrawal', 'unmarked', 'return', 'codes_ready', 'application_draft', 'introduction_draft', 'codes_expiring', 'sets_draft']
     company_id: "UUID"
     #: День отгрузки (вывод) или невыкупа (возврат)
     day: str
@@ -35637,6 +38670,8 @@ class _MarkingStockLineCodeRequired(TypedDict):
 class MarkingStockLineCode(_MarkingStockLineCodeRequired, total=False):
     #: По последней проверке ЧЗ код числится за другим ИНН
     gismt_other_owner: bool
+    #: Марка расхода не в обороте у юрлица: out — по ЧЗ выбыла, списана, не найдена или за другим ИНН; not_loaded — коды юрлица загружены из ЧЗ, а этой среди них нет. Нет поля — марка годится или о ней ничего не известно
+    circulation: Literal['out', 'not_loaded']
 
 class _MarkingStoredFileImportInputRequired(TypedDict):
     file_id: "UUID"
@@ -37213,8 +40248,8 @@ class StockAssemblySpec(TypedDict, total=False):
     version: int
     name: str
     status: Literal['draft', 'active', 'archived']
-    #: Вид состава: assembly — «Сборка», production — «Производство», kit — «Комплект»: набор, который отдельно не хранят — проведение отгрузки или перемещения со своего склада само заводит и проводит его сборку на недостающее количество (ERP-2111). Хранится у версии: следующая редакция может сменить вид. Набор со своей маркой ЧЗ «Комплектом» быть не может — 400, только «Сборка» заранее (ERP-2183). Вложенный «Комплект» собирается раньше внешнего
-    kind: Literal['assembly', 'production', 'kit']
+    #: Вид состава: assembly — «Сборка», production — «Производство», kit — «Комплект»: набор, который отдельно не хранят — проведение отгрузки или перемещения со своего склада само заводит и проводит его сборку на недостающее количество (ERP-2111). Хранится у версии: следующая редакция может сменить вид. Набор со своей маркой ЧЗ «Комплектом» быть не может — 400, только «Сборка» заранее (ERP-2183). Вложенный «Комплект» собирается раньше внешнего. channel_packaging — «Упаковка под канал» (ERP-2720): что кладут в одну упаковку для канала продаж и какой материал на неё идёт, без выходного товара; отгрузка под каналом сама списывает материал документом «Списание» с причиной «Упаковка под канал»
+    kind: Literal['assembly', 'production', 'kit', 'channel_packaging']
     product_id: "UUID"
     product_sku: str
     product_name: str
@@ -37223,8 +40258,16 @@ class StockAssemblySpec(TypedDict, total=False):
     #: У набора есть действующая группа маркировки ЧЗ (ERP-2183): вид «Комплект» запрещён
     product_marked: bool
     unit: str
+    #: Сколько выходного товара даёт состав. У нормы упаковки под канал на все товары — штук товара в упаковке (N); пусто — по кванту товара или канала. У нормы с названными товарами пусто: число штук стоит у товара
     output_qty: str
+    #: Комментарий версии. У нормы упаковки под канал — задание складу (ТЗ): его видят лист подбора, ТСД и «К отгрузке»
     comment: str
+    #: Канал продаж нормы упаковки (ERP-2720); у других видов поля нет
+    channel_id: "UUID"
+    #: Название канала нормы упаковки
+    channel_name: str
+    #: Состав одной упаковки нормы под канал (ERP-2720): товары и сколько каждого кладут в упаковку. Пусто — все товары канала, каждый своей упаковкой; товар, названный в норме, берёт её вместо общей нормы канала
+    scope: List["StockAssemblySpecScopeProduct"]
     created_at: str
     updated_at: str
     activated_at: str
@@ -37241,19 +40284,30 @@ class StockAssemblySpecArchivedVersion(TypedDict):
 
 class _StockAssemblySpecCreateRequired(TypedDict):
     name: str
-    product_id: "UUID"
-    #: Сколько выходного товара даёт этот состав
-    output_qty: str
     lines: List["StockAssemblySpecCreateLinesItem"]
 
 class StockAssemblySpecCreate(_StockAssemblySpecCreateRequired, total=False):
-    """Новая версия состава. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком."""
+    """Новая версия состава. product_id и output_qty обязательны у всех видов, кроме нормы упаковки под канал — у неё вместо них channel_id. Пустой `spec_id` заводит новую спецификацию, названный — следующую редакцию существующей. Версия рождается черновиком."""
 
     #: Спецификация, к которой заводится следующая редакция. Должна существовать в кабинете, а product_id — совпадать с её выходным товаром; состояние прежних версий не важно — редакцию заводят и от архивной. Пусто — новая спецификация
     spec_id: "UUID"
-    #: Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство», kit — «Комплект»: набор, который собирается при отгрузке или перемещении (ERP-2111)
-    kind: Literal['assembly', 'production', 'kit']
+    #: Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство», kit — «Комплект»: набор, который собирается при отгрузке или перемещении (ERP-2111), channel_packaging — «Упаковка под канал»: норма материала на N шт товара канала (ERP-2720)
+    kind: Literal['assembly', 'production', 'kit', 'channel_packaging']
+    product_id: "UUID"
+    #: Сколько выходного товара даёт этот состав
+    output_qty: str
     comment: str
+    #: Канал продаж нормы упаковки; обязателен у channel_packaging и не задаётся у других видов (ERP-2720)
+    channel_id: "UUID"
+    #: Состав одной упаковки нормы под канал: товары и сколько каждого кладут в упаковку. Пусто — все товары канала, каждый своей упаковкой. У нормы из нескольких товаров qty обязателен у каждого. Товар может быть только в одной действующей норме канала
+    scope: List["StockAssemblySpecCreateScopeItem"]
+
+class _StockAssemblySpecCreateScopeItemRequired(TypedDict):
+    product_id: "UUID"
+
+class StockAssemblySpecCreateScopeItem(_StockAssemblySpecCreateScopeItemRequired, total=False):
+    #: Штук товара в одной упаковке; пусто — квант товара или канала (только у нормы одного товара)
+    qty: str
 
 class _StockAssemblySpecCreateLinesItemRequired(TypedDict):
     product_id: "UUID"
@@ -37302,23 +40356,43 @@ class StockAssemblySpecRef(_StockAssemblySpecRefRequired, total=False):
     #: Вид версии состава на момент заполнения документа; ставит сервер
     kind: Literal['assembly', 'production', 'kit']
 
+class _StockAssemblySpecScopeProductRequired(TypedDict):
+    product_id: "UUID"
+
+class StockAssemblySpecScopeProduct(_StockAssemblySpecScopeProductRequired, total=False):
+    product_sku: str
+    product_name: str
+    #: Штук товара в одной упаковке; пусто — квант товара или канала (только у нормы одного товара)
+    qty: str
+
 class StockAssemblySpecStatus(TypedDict):
     status: Literal['active', 'archived']
 
 class _StockAssemblySpecUpdateRequired(TypedDict):
     name: str
-    #: Выходной товар. Сменить его можно только у единственной версии спецификации: другой товар при нескольких версиях — это другая спецификация
-    product_id: "UUID"
-    #: Сколько выходного товара даёт этот состав
-    output_qty: str
     lines: List["StockAssemblySpecUpdateLinesItem"]
 
 class StockAssemblySpecUpdate(_StockAssemblySpecUpdateRequired, total=False):
     """Полная замена реквизитов и состава черновика. Номер версии и спецификация, к которой она относится, не меняются. Проверки те же, что при заведении версии."""
 
-    #: Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство», kit — «Комплект»: набор, который собирается при отгрузке или перемещении (ERP-2111)
-    kind: Literal['assembly', 'production', 'kit']
+    #: Вид состава: assembly — «Сборка» (по умолчанию), production — «Производство», kit — «Комплект»: набор, который собирается при отгрузке или перемещении (ERP-2111), channel_packaging — «Упаковка под канал»: норма материала на N шт товара канала (ERP-2720)
+    kind: Literal['assembly', 'production', 'kit', 'channel_packaging']
+    #: Выходной товар. Сменить его можно только у единственной версии спецификации: другой товар при нескольких версиях — это другая спецификация
+    product_id: "UUID"
+    #: Сколько выходного товара даёт этот состав
+    output_qty: str
     comment: str
+    #: Канал продаж нормы упаковки; обязателен у channel_packaging и не задаётся у других видов (ERP-2720)
+    channel_id: "UUID"
+    #: Состав одной упаковки нормы под канал: товары и сколько каждого кладут в упаковку. Пусто — все товары канала, каждый своей упаковкой. У нормы из нескольких товаров qty обязателен у каждого. Товар может быть только в одной действующей норме канала
+    scope: List["StockAssemblySpecUpdateScopeItem"]
+
+class _StockAssemblySpecUpdateScopeItemRequired(TypedDict):
+    product_id: "UUID"
+
+class StockAssemblySpecUpdateScopeItem(_StockAssemblySpecUpdateScopeItemRequired, total=False):
+    #: Штук товара в одной упаковке; пусто — квант товара или канала (только у нормы одного товара)
+    qty: str
 
 class _StockAssemblySpecUpdateLinesItemRequired(TypedDict):
     product_id: "UUID"
@@ -37328,6 +40402,37 @@ class StockAssemblySpecUpdateLinesItem(_StockAssemblySpecUpdateLinesItemRequired
     #: Единица товара, в которой задано qty; пусто — базовая единица карточки
     product_uom_id: "UUID"
     share: str
+
+class StockAutoBatch(TypedDict):
+    """Партия и сколько из неё возьмёт строка."""
+
+    batch_id: "UUID"
+    #: Серия партии; пусто — без серии
+    batch_code: str
+    #: Годен до; null — срока нет
+    expires_at: Optional[str]
+    #: Сколько возьмёт строка, в базовой единице
+    qty: str
+    #: Партия просрочена на дату документа и уйдёт с пометкой в проведении
+    expired: bool
+
+class StockAutoBatchLine(TypedDict):
+    """Партии одной строки в порядке подбора."""
+
+    line_id: "UUID"
+    #: Партии строки; части одной партии из разных ячеек сложены
+    batches: List["StockAutoBatch"]
+
+class StockAutoBatchShortage(TypedDict):
+    """Нехватка строки из отказа откатываемого проведения: свободное посчитал проводчик — с резервом, порогом срока, прошлыми строками того же товара, ячейками и единицами хранения."""
+
+    #: Строка документа; null — нехватка не из подбора строки
+    line_id: Optional["UUID"]
+    product_id: "UUID"
+    #: Сколько нужно, в базовой единице
+    requested: str
+    #: Сколько свободно, в базовой единице
+    available: str
 
 class _StockAvailabilityRequired(TypedDict):
     product_id: "UUID"
@@ -37822,13 +40927,54 @@ class StockCarrierCityList(TypedDict):
 class StockCarrierIDs(TypedDict, total=False):
     ids: List["UUID"]
 
+class _StockCarrierIntakeRequired(TypedDict):
+    #: requested — заявка заведена в СДЭК; failed — СДЭК отказал (error_text); cancelled — отменена
+    state: Literal['requested', 'failed', 'cancelled']
+    #: Номер заявки СДЭК
+    number: str
+    #: День приезда курьера, ГГГГ-ММ-ДД
+    date: str
+    #: Окно приезда курьера: с, ЧЧ:ММ
+    time_from: str
+    #: Окно приезда курьера: до, ЧЧ:ММ
+    time_to: str
+    #: Подсказка курьеру
+    comment: str
+    #: Код статуса заявки у СДЭК: ACCEPTED, CREATED, APPOINTED_COURIER, DONE, REMOVED…
+    status_code: str
+    status_name: str
+
+class StockCarrierIntake(_StockCarrierIntakeRequired, total=False):
+    """Заявка на вызов курьера СДЭК к отправителю; нет поля — курьера не вызывали"""
+
+    #: Идентификатор заявки в СДЭК
+    external_id: str
+    status_at: str
+    #: Текст отказа СДЭК
+    error_text: str
+    requested_at: str
+
+class _StockCarrierIntakeInputRequired(TypedDict):
+    #: День приезда курьера, ГГГГ-ММ-ДД, не раньше сегодняшнего по Москве
+    intake_date: str
+    #: Окно приезда: с, ЧЧ:ММ
+    time_from: str
+    #: Окно приезда: до, ЧЧ:ММ
+    time_to: str
+
+class StockCarrierIntakeInput(_StockCarrierIntakeInputRequired, total=False):
+    #: Подсказка курьеру: подъезд, ворота, кого спросить
+    comment: str
+    #: Курьер звонит перед приездом
+    need_call: bool
+
 class _StockCarrierPlanInputRequired(TypedDict):
     delivery_mode: Literal['point', 'door']
 
 class StockCarrierPlanInput(_StockCarrierPlanInputRequired, total=False):
     #: Заказ покупателя; ровно одно из order_id и document_id
     order_id: Dict[str, Any]
-    #: Заявка на списание
+    #: Заявка на списание или перемещение
     document_id: Dict[str, Any]
     recipient_name: str
     recipient_phone: str
@@ -37840,6 +40986,16 @@ class StockCarrierPlanInput(_StockCarrierPlanInputRequired, total=False):
     point_address: str
     #: Адрес (delivery_mode door)
     address: str
+    #: Забор курьером СДЭК с адреса отправителя
+    pickup: bool
+    #: Код города СДЭК, откуда забрать посылку (pickup)
+    from_city_code: int
+    from_city_name: str
+    #: Адрес, откуда курьер забирает посылку (pickup)
+    from_address: str
+    #: Кто отдаёт посылку курьеру; пусто — отправитель из настроек СДЭК
+    sender_name: str
+    sender_phone: str
 
 class StockCarrierPoint(TypedDict):
     #: Код пункта СДЭК
@@ -37864,9 +41020,22 @@ class StockCarrierQuote(TypedDict):
     #: Срок до, рабочих дней
     period_max: int
 
-class StockCarrierRecipient(TypedDict):
+class _StockCarrierRecipientRequired(TypedDict):
     name: str
     phone: str
+
+class StockCarrierRecipient(_StockCarrierRecipientRequired, total=False):
+    #: Склад-источник перемещения
+    from_warehouse: str
+    #: Адрес склада-источника из его карточки
+    from_address: str
+    #: Ответственный склада-источника: кто отдаёт посылку курьеру
+    sender_name: str
+    sender_phone: str
+    #: Склад-получатель перемещения
+    to_warehouse: str
+    #: Адрес склада-получателя из его карточки
+    to_address: str
 
 class StockCarrierRefreshResult(TypedDict):
     items: List["StockCarrierShipment"]
@@ -37877,7 +41046,7 @@ class _StockCarrierSendInputRequired(TypedDict):
     weight_g: int
 
 class StockCarrierSendInput(_StockCarrierSendInputRequired, total=False):
-    #: Проведённая отгрузка продажи или выдача по заявке; пусто — последняя отгрузка продажи без посылки
+    #: Проведённая отгрузка продажи, выдача по заявке или перемещение; пусто — последняя отгрузка продажи без посылки
     document_id: Dict[str, Any]
 
 class _StockCarrierShipmentRequired(TypedDict):
@@ -37892,6 +41061,14 @@ class _StockCarrierShipmentRequired(TypedDict):
     point_code: str
     point_address: str
     address: str
+    #: Посылку забирает курьер СДЭК с адреса from_address, а не склад сдаёт её в пункт
+    pickup: bool
+    from_city_name: str
+    #: Откуда курьер забирает посылку
+    from_address: str
+    #: Кто отдаёт посылку курьеру
+    sender_name: str
+    sender_phone: str
     #: Номер СДЭК (трек)
     track_number: str
     #: Код статуса СДЭК
@@ -37911,6 +41088,8 @@ class StockCarrierShipment(_StockCarrierShipmentRequired, total=False):
     contact_id: "UUID"
     contact_name: str
     city_code: int
+    from_city_code: int
+    intake: "StockCarrierIntake"
     weight_g: int
     tariff_code: int
     #: Идентификатор заказа в СДЭК
@@ -37954,10 +41133,55 @@ class StockCarrierStatus(TypedDict):
     tariff_point: int
     #: Тариф до двери по умолчанию
     tariff_door: int
+    #: Тариф при заборе курьером до пункта выдачи (дверь-склад)
+    tariff_pickup_point: int
+    #: Тариф при заборе курьером до двери (дверь-дверь)
+    tariff_pickup_door: int
 
 class StockCarrierWeight(TypedDict):
     #: Вес посылки в граммах
     weight_g: int
+
+class StockChannelPackagingHint(TypedDict, total=False):
+    """Упаковка под канал у строки товара (ERP-2720): задание складу и сколько упаковок взять. Считает сервер по действующей норме; у проведённой отгрузки — что списано"""
+
+    #: Норма упаковки: товары одной упаковки несут один id
+    spec_id: "UUID"
+    #: Название нормы упаковки
+    spec_name: str
+    #: Задание складу (ТЗ) из нормы
+    note: str
+    #: Штук товара в упаковке: из нормы, иначе квант
+    per_pack: str
+    #: Сколько упаковок: целая часть минимума по товарам упаковки (в отгрузке / штук в упаковке)
+    packs: str
+    materials: List["StockChannelPackagingHintMaterialsItem"]
+    #: Состав упаковки из нескольких товаров (2 X + 3 Y в коробку); у нормы одного товара поля нет
+    products: List["StockChannelPackagingProduct"]
+    #: Сколько этого товара не входит в целые упаковки: предупреждение, проведение не запрещено
+    leftover: str
+    #: Почему упаковку не посчитать (в норме нет «Штук в упаковке», а кванта нет): проведение откажет
+    problem: str
+
+class StockChannelPackagingHintMaterialsItem(TypedDict, total=False):
+    product_id: "UUID"
+    product_name: str
+    unit: str
+    #: Сколько материала списать, в базовой единице
+    qty: str
+
+class _StockChannelPackagingProductRequired(TypedDict):
+    product_id: "UUID"
+    #: Сколько товара в отгрузке, в базовой единице; 0 — товар упаковки, которого в отгрузке нет
+    qty: str
+    #: Штук товара в одной упаковке
+    per_pack: str
+
+class StockChannelPackagingProduct(_StockChannelPackagingProductRequired, total=False):
+    product_sku: str
+    product_name: str
+    #: Сколько товара не вошло в целые упаковки
+    leftover: str
 
 class _StockClaimWriteoffCreateRequired(TypedDict):
     basis_id: "UUID"
@@ -37983,7 +41207,7 @@ class _StockCompanyPolicyRequired(TypedDict):
     updated_at: str
 
 class StockCompanyPolicy(_StockCompanyPolicyRequired, total=False):
-    #: Ручной выбор партии в строке расхода (ERP-1788). По умолчанию false — «Авто»: партию выбирает метод учёта (срок годности, затем дата прихода). Действует только при costing_method fifo
+    #: Ручной выбор партии в строке расхода (ERP-1788). С ERP-2106 по умолчанию true при costing_method fifo; строка всё равно начинается с «Авто» — партию выбирает метод учёта (срок годности, затем дата прихода), а выбор руками лишь доступен. Действует только при costing_method fifo
     manual_batch_choice: bool
 
 class StockCompanyPolicyPage(TypedDict):
@@ -38382,6 +41606,17 @@ class StockDiscrepancySummary(TypedDict):
     #: Документы (приёмки, отправки и отгрузки), у которых есть такие строки
     document_ids: List["UUID"]
 
+class StockDocumentAutoBatches(TypedDict):
+    """Что возьмёт «Авто» в черновике (ERP-2106): разложение откатываемого проведения по строкам."""
+
+    document_id: "UUID"
+    #: ready — разложение посчитано; refused — проведение сейчас отказало, причину называет «Что мешает»; unavailable — не черновик или вид документа без выбора партии
+    status: Literal['ready', 'refused', 'unavailable']
+    #: Строки документа с партиями; пусто, когда status не ready
+    lines: List["StockAutoBatchLine"]
+    #: Строки, которым проведению не хватило товара, с числами отказа (status refused); пусто — нехватки нет или отказ другого рода
+    shortages: List["StockAutoBatchShortage"]
+
 class StockDocumentBinMove(TypedDict):
     product_id: "UUID"
     product_sku: str
@@ -38749,13 +41984,15 @@ class StockDocumentPayload(_StockDocumentPayloadRequired, total=False):
     shelf_life: "StockDocumentShelfLife"
     #: Плановая дата отгрузки (ERP-2182): только у stock_shipment и stock_transfer. Партии строк оцениваются правилом срока годности на неё — порог остаточного срока и просрочка; позже даты документа — на неё, пусто или раньше — на дату документа. Дата ложится в снимок проведения (posting.shelf_life.as_of). У прочих видов — 400 ship_date_not_applicable, не дата — 400 ship_date_invalid. Отгрузка по заказу покупателя берёт дату поставки заказа
     ship_date: str
+    #: Отгрузка проведена складом по факту канала с API (ERP-2730): источник, событие, его дата и ссылка. Ставит только сервер; в создании и правке поле не принимается
+    auto_post: "StockDocumentPayloadAutoPost"
     #: Предпочтительное состояние товара (ERP-2507): только у stock_shipment, у прочих видов снимается. Строки без выбранного состояния («Авто») берут сначала его, затем любое годное по сроку (FEFO), затем по приходу; не замок — нехватку добирает остальное годное. Отгрузка по продаже канала ставит состояние канала; правка без поля его сохраняет
     preferred_condition_id: Dict[str, Any]
     #: Только у stock_writeoff (ERP-2886): черновик передан заявкой на внутреннее потребление — автор нажал «Отправить заявку», и списание ждёт согласования или выдачи складом. Ставит и снимает только сервер: дверь «Отправить заявку», отзыв, возврат и отказ согласования. Присланное в создании или правке значение не читается, правка черновика хранит лежащее в нём
     issue_request: "StockDocumentPayloadIssueRequest"
     #: Черновик списания завело действие «Списать просроченное» (ERP-1821). По признаку повторный вызов действия узнаёт свой непроведённый черновик. Документ с признаком списывает только просрочку: если подбор взял бы слой, не просроченный на дату документа, проведение отвечает 400 с кодом expired_writeoff_stale. Ставит признак только само действие: присланный при создании признак отклоняется (400), правка документа сохраняет значение, уже лежащее в нём
     expired_writeoff: bool
-    #: Реквизиты «Отгрузки на маркетплейс» (ERP-2137): площадка и номер её поставки. Только у stock_transfer со ссылкой marketplace_store; получатель — склад «В пути на площадку», отправитель — свой склад. Номер необязателен: обход модуля маркетплейсов привязывает проведённую отгрузку к поставке по цифрам номера и второго перемещения не заводит
+    #: Реквизиты «Отгрузки на маркетплейс» (ERP-2137): площадка и номер её поставки. Только у stock_transfer со ссылкой marketplace_store; получатель — склад «В пути на площадку» (у Lamoda и Лэтуаль — склад площадки или его «в пути»), отправитель — свой склад. Номер необязателен: обход модуля маркетплейсов привязывает проведённую отгрузку к поставке по цифрам номера и второго перемещения не заводит
     marketplace_shipment: "StockDocumentPayloadMarketplaceShipment"
     #: Списание недостачи приёмки площадки претензией к ней (ERP-2138): стоимость уходит в долг площадки по претензии (сторона расчётов claim, Дт 60.01 claim / Кт 41), а не в расход. Ставит только раздел «Расхождения приёмки»; присланное при создании значение отклоняется (400), правка сохраняет значение документа
     marketplace_claim: bool
@@ -38813,6 +42050,14 @@ class StockDocumentPayload(_StockDocumentPayloadRequired, total=False):
     #: Разложение проведения по строкам и партиям, которое пишет сам движок. У разукомплектации на основании комплектации есть блок `disassembly_basis`: `document_id` и `number` основания, `amount` — фактически списанная сумма, `basis_amount` — сумма того же количества по основанию (рождённая сумма основания ÷ рождённое количество × разбираемое количество), `difference` — amount минус basis_amount, `weights` — веса частей по строкам (`line_id`, `weight`), по которым списанное разделено между частями. Веса и `basis_amount` — снимок первого проведения: пересчёт себестоимости цепочки их сохраняет и пересчитывает только `amount` и `difference`; отмена и повторное проведение считают всё заново. У приёмки по перемещению (ERP-2179) строка разложения несёт `surplus_qty` — принято сверх того, что было в пути (`qty` строки разложения меньше факта на эту величину), и `received_batch_id` — партию, рождённую серией по факту. У возврата излишка поставщику (ERP-2000) — `surplus_bins`: ячейки «К разбору», снятые при проведении, по строке приёмки-основания (снимок для перестройки цепочки)
     posting: Dict[str, Any]
 
+class StockDocumentPayloadAutoPost(TypedDict, total=False):
+    """Отгрузка проведена складом по факту канала с API (ERP-2730): источник, событие, его дата и ссылка. Ставит только сервер; в создании и правке поле не принимается"""
+
+    source: Literal['yandex_kit', 'ozon_retail', 'edi']
+    event: str
+    event_date: str
+    ref: str
+
 class _StockDocumentPayloadIssueRequestRequired(TypedDict):
     #: Кто передал заявку: id пользователя
     requested_by: int
@@ -38826,10 +42071,10 @@ class StockDocumentPayloadIssueRequest(_StockDocumentPayloadIssueRequestRequired
     ready_at: str
 
 class _StockDocumentPayloadMarketplaceShipmentRequired(TypedDict):
-    platform: Literal['ozon', 'wildberries']
+    platform: Literal['ozon', 'wildberries', 'yandex', 'lamoda', 'letoile']
 
 class StockDocumentPayloadMarketplaceShipment(_StockDocumentPayloadMarketplaceShipmentRequired, total=False):
-    """Реквизиты «Отгрузки на маркетплейс» (ERP-2137): площадка и номер её поставки. Только у stock_transfer со ссылкой marketplace_store; получатель — склад «В пути на площадку», отправитель — свой склад. Номер необязателен: обход модуля маркетплейсов привязывает проведённую отгрузку к поставке по цифрам номера и второго перемещения не заводит"""
+    """Реквизиты «Отгрузки на маркетплейс» (ERP-2137): площадка и номер её поставки. Только у stock_transfer со ссылкой marketplace_store; получатель — склад «В пути на площадку» (у Lamoda и Лэтуаль — склад площадки или его «в пути»), отправитель — свой склад. Номер необязателен: обход модуля маркетплейсов привязывает проведённую отгрузку к поставке по цифрам номера и второго перемещения не заводит"""
 
     #: Номер поставки площадки, например WB-GI-12345678
     supply_number: str
@@ -38858,8 +42103,12 @@ class StockDocumentPresentation(_StockDocumentPresentationRequired, total=False)
     warehouse_name: str
     warehouse_from_name: str
     warehouse_to_name: str
+    delivery_point: str
     reason_code: str
     reason_label: str
+    ship_multiples: Dict[str, str]
+    #: Упаковка под канал по товарам открытой отгрузки (ERP-2720): ключ — id товара
+    channel_packaging: Dict[str, "StockChannelPackagingHint"]
 
 class StockDocumentProductCode(TypedDict):
     kind: Literal['barcode', 'gtin', 'channel_article', 'manufacturer_article']
@@ -38924,7 +42173,7 @@ class StockDocumentRefs(_StockDocumentRefsRequired, total=False):
     warehouse_to: Dict[str, Any]
     #: Контрагент документа: поставщик приёмки и возврата поставщику, покупатель отгрузки и возврата покупателя. У stock_writeoff — получатель (ERP-2886): кому отдали товар при внутреннем потреблении (сеть, партнёр). Необязателен; названный — действующий контрагент кабинета. Уходит в книгу разрезом контрагента, в условие «контрагент» маршрута согласования заявки и в черновик вывода из оборота маркировки
     contact: Dict[str, Any]
-    #: Магазин площадки у «Отгрузки на маркетплейс» (ERP-2137): перемещение со своего склада на склад «В пути на площадку» (inbound_mode external_transit). Только у stock_transfer и только вместе с payload.marketplace_shipment; в книгу не попадает
+    #: Магазин площадки у «Отгрузки на маркетплейс» (ERP-2137): перемещение со своего склада на склад «В пути на площадку» (inbound_mode external_transit), у Lamoda и Лэтуаль — на склад площадки (external_receipt) или его склад «в пути». Только у stock_transfer и только вместе с payload.marketplace_shipment; в книгу не попадает
     marketplace_store: Dict[str, Any]
     #: Проект (справочник projects разреза учёта project). Несут заявка на закупку и закупка: закупка без проекта берёт его из заявок-оснований с одним проектом (ERP-2548). Несут также stock_receipt и stock_shipment без заказа: проект заказа, который склад заводит при проведении (ERP-2014). У stock_writeoff и stock_capitalization — проект самого расхода или дохода без заказа, попадает в разрез проводки и начисления ОПиУ (ERP-2936). Разрез должен вестись в кабинете на дату документа; обязательный разрез кабинет требует при проведении, иначе проведение отвечает 400 с названием разреза. У приёмки и отгрузки с заказом или основанием поле стирается, у прочих видов — 400
     project: Dict[str, Any]
@@ -39080,6 +42329,8 @@ class StockExpiredStockRow(TypedDict):
     #: Склад, на котором лежит остаток; у склада с зонами — зона
     warehouse_id: Dict[str, Any]
     warehouse_name: str
+    #: Склад зоны; пусто, когда остаток лежит на самом складе
+    warehouse_parent_name: str
     product_id: "UUID"
     product_sku: str
     product_name: str
@@ -39129,6 +42380,8 @@ class StockExpiredWriteoffDraft(TypedDict):
     company_name: str
     warehouse_id: "UUID"
     warehouse_name: str
+    #: Склад зоны; пусто — сам склад
+    warehouse_parent_name: str
     #: Число строк черновика
     lines: int
     #: Количество по строкам черновика в базовых единицах, десятичная строка. У прежнего черновика — как в самом документе: его могли поправить
@@ -39144,13 +42397,15 @@ class StockExpiredWriteoffDrafts(TypedDict):
     skipped: List["StockExpiredWriteoffSkipped"]
 
 class StockExpiredWriteoffDraftsInput(TypedDict, total=False):
-    """Отборы действия «Списать просроченное» — те же, что у чтения просроченного остатка. Пустое тело — весь доступный остаток."""
+    """Отборы действия «Списать просроченное» — те же, что у чтения просроченного остатка. Пустое тело — весь доступный остаток; когда отбор захватывает больше одного видимого действующего юрлица, нужен company_id или without_company=true («Без юрлица»)."""
 
     business_id: "UUID"
     company_id: "UUID"
     #: Склад вместе с его зонами
     warehouse_id: Dict[str, Any]
     product_id: "UUID"
+    #: Только остаток без юрлица («Без юрлица»): явный выбор вместо company_id, правило обязательного юрлица тогда не действует. Вместе с company_id — 400 stock.expired_stock.filter_conflict
+    without_company: bool
 
 class StockExpiredWriteoffSkipped(TypedDict):
     """Просрочка, по которой действие «Списать просроченное» черновик не создало, с причиной (ERP-1821)."""
@@ -39162,6 +42417,8 @@ class StockExpiredWriteoffSkipped(TypedDict):
     company_name: str
     warehouse_id: "UUID"
     warehouse_name: str
+    #: Склад зоны; пусто — сам склад
+    warehouse_parent_name: str
     product_id: "UUID"
     product_sku: str
     product_name: str
@@ -39189,7 +42446,7 @@ class StockExport(_StockExportRequired, total=False):
     target_document_id: "UUID"
     created_by: int
 
-StockExportKind = Literal['initial_stock', 'inventory_count', 'document_items', 'reorder_rules', 'stock_report', 'kit_specs', 'series_sheet', 'order_fulfillment', 'period_sheet']
+StockExportKind = Literal['initial_stock', 'inventory_count', 'document_items', 'reorder_rules', 'stock_report', 'kit_specs', 'series_sheet', 'order_fulfillment', 'period_sheet', 'opening_correction']
 
 class _StockExportRequestRequired(TypedDict):
     kind: "StockExportKind"
@@ -39288,7 +42545,7 @@ class StockImportApplyRequest(_StockImportApplyRequestRequired, total=False):
 
 class _StockImportDiffRequired(TypedDict):
     row: int
-    #: initial_stock всегда create; document_items — create для новой строки и в режиме replace, update или unchanged для строки по ID строки; inventory_count — update или unchanged по строке снимка «товар × состояние»; reorder_rules — create для нового ключа, update или unchanged для существующего правила; kit_specs — create, update (новая версия состава) или unchanged. unchanged применение пропускает
+    #: initial_stock всегда create; document_items — create для новой строки и в режиме replace, update или unchanged для строки по ID строки; inventory_count — update или unchanged по строке снимка «товар × состояние»; reorder_rules — create для нового ключа, update или unchanged для существующего правила; kit_specs — create, update (новая версия состава) или unchanged; opening_correction — update (before — прежние значения строки ввода) или unchanged. unchanged применение пропускает
     action: Literal['create', 'update', 'unchanged']
 
 class StockImportDiff(_StockImportDiffRequired, total=False):
@@ -39320,7 +42577,7 @@ class StockImportInspectRequest(_StockImportInspectRequestRequired, total=False)
     #: Пустое значение берёт первый лист книги
     sheet_name: str
 
-StockImportKind = Literal['initial_stock', 'inventory_count', 'document_items', 'reorder_rules', 'kit_specs', 'agent_report_lines', 'bins']
+StockImportKind = Literal['initial_stock', 'inventory_count', 'document_items', 'reorder_rules', 'kit_specs', 'agent_report_lines', 'bins', 'opening_correction']
 
 StockImportMapping = Union[Any, Any]
 
@@ -39637,6 +42894,8 @@ class _StockMarketplaceSettingsRequired(TypedDict):
     picking: Literal['self', 'fulfilment']
     #: Куда приходуется невыкуп: platform — остаётся у площадки, fulfilment_warehouse — возвращается на склад исполнения
     unredeemed_target: Literal['platform', 'fulfilment_warehouse']
+    #: Заказы FBS, принятые площадкой, проводятся сами
+    ship_by_platform: bool
     #: Отправленное на площадку видно товаром в пути до её приёмки
     supply_transit: bool
     #: Порог остаточного срока годности поставок магазина, % срока: десятичная строка. null — действует порог кабинета
@@ -39684,6 +42943,8 @@ class StockMarketplaceSettingsInput(_StockMarketplaceSettingsInputRequired, tota
 
     #: Склад исполнения: действующий склад кабинета; для picking=fulfilment — внешний склад партнёра, для picking=self — свой. null — схема не включена
     fulfilment_warehouse_id: Optional["UUID"]
+    #: Проводить заказы FBS, принятые площадкой, без действия человека; нужен склад исполнения
+    ship_by_platform: bool
     #: Товар в пути до приёмки площадкой: отправленное на площадку видно товаром в пути, пока она его не приняла
     supply_transit: bool
     #: Порог остаточного срока поставок магазина, % срока: больше 0 и не больше 100, не точнее сотых
@@ -39799,6 +43060,14 @@ class StockOpeningCorrectionCreateItemsItem(_StockOpeningCorrectionCreateItemsIt
     #: Новое «годен до» YYYY-MM-DD; пустая строка снимает дату. Не прислано — не меняется
     expires_at: str
 
+class StockOpeningCorrectionPostInput(TypedDict, total=False):
+    """Тело проведения корректировки начального остатка (ERP-084)."""
+
+    #: true — предпросмотр без записи: режим, у каких документов и на сколько меняется себестоимость, где остаток уходит в минус
+    preview: bool
+
+StockOpeningCorrectionPostResult = TypedDict("StockOpeningCorrectionPostResult", {"status": Literal['preview', 'completed', 'refused'], "from": str, "documents": List["StockPostRebuildDocument"], "reposted_documents": List["StockPostRebuildDocument"], "reposted": int, "changes": List["StockPostRebuildChange"], "total_before": str, "total_after": str, "shortages": List["StockPostRebuildShortage"], "failures": List["StockPostRebuildFailure"], "skipped": int, "mode": Literal['repost', 'period'], "basis": "StockPostRebuildDocument", "closed_through": str}, total=False)
+
 class StockOrderFulfillmentExportRequest(TypedDict):
     """Заказ продажи для выгрузки «Исполнение заказа» (ERP-1979)."""
 
@@ -39897,6 +43166,8 @@ class StockOrderPickPlanLine(_StockOrderPickPlanLineRequired, total=False):
     bin_name: str
     #: Серия партии; нет поля — партия без серии
     batch_code: str
+    ship_multiple: str
+    channel_packaging: "StockChannelPackagingHint"
     #: Годен до у партии; нет поля — у партии нет срока
     expires_at: str
     #: Наборы, в которые идёт товар как компонент (ERP-2137): их собирают из этой строки. Нет поля — товар берут сам по себе
@@ -40027,9 +43298,15 @@ class StockOrderShipInput(_StockOrderShipInputRequired, total=False):
     #: Собрать, а не провести: черновик отгрузки — сборка. Строка немаркированного товара получает qty — сколько нужно и picked_qty 0 (скан прибавляет к собранному, проведение отгружает собранное), маркированного — собирается марками. Черновик по продаже уже есть — вернётся он
     assemble: bool
 
-class StockOrderShipInputLinesItem(TypedDict):
+class _StockOrderShipInputLinesItemRequired(TypedDict):
     item_id: "UUID"
     quantity: str
+
+class StockOrderShipInputLinesItem(_StockOrderShipInputLinesItemRequired, total=False):
+    #: GTIN для товара с несколькими GTIN: какой забрать; пусто — подбор сборки
+    pick_gtin: str
+    #: Из каких ячеек взято (ERP-2771): скан ячейки на ТСД перед товаром. Количество — в базовой единице, сумма не больше quantity; ячейка принадлежит складу отгрузки, в нём включены ячейки. Названная ячейка сужает подбор партий до того, что в ней лежит; остальное количество проведение подберёт само. Пусто — ячейки и партии подбирает проведение
+    bin_allocations: List["StockDocumentLineBinAllocation"]
 
 class _StockOrderShipmentRequired(TypedDict):
     id: "UUID"
@@ -40072,6 +43349,7 @@ class _StockOrderShippingRequired(TypedDict):
 
 class StockOrderShipping(_StockOrderShippingRequired, total=False):
     contact_name: str
+    channel_ship_date: str
     #: Плановая дата отгрузки продажи (дата поставки заказа, ERP-2876): на неё лист подбора и проведение оценивают остаточный срок; GET …/sale-shelf-life спрашивают на ту же дату. Нет поля — даты нет
     planned_ship_date: str
     company_id: "UUID"
@@ -40099,10 +43377,16 @@ class StockOrderShipping(_StockOrderShippingRequired, total=False):
     consignee_name: str
     #: Точка доставки грузополучателя (ERP-098).
     consignee_point_name: str
+    #: Заказ передан складу до подтверждения источником (ERP-2683) — собирать можно, отгружать и выпускать УПД нельзя.
+    awaiting_confirmation: bool
+    #: Правило заказа ждёт «Передать на склад», а менеджер его ещё не нажал (ERP-2722): «Собрать» отвечает 409 stock.order.awaits_handover, начать сборку склад не может
+    awaiting_handover: bool
     #: Срок заказа для склада (ERP-2874), вычисляется: срок задания складу, если его поставили руками, иначе дата поставки заказа; срока нет — поля нет. Срок самого задания остаётся в task.due_date
     due_date: str
     #: Откуда срок: task — поставлен в задании складу, order — взят из даты поставки заказа; срока нет — поля нет (ERP-2874)
     due_source: Literal['task', 'order']
+    #: Когда заказ завели в системе (ERP-2723): лист «К отгрузке» показывает его рядом с датой заказа и плановой отгрузкой
+    created_at: str
     #: Задание складу: распоряжение, исполнитель, срок и приоритет. Нет поля — задание никто не ставил
     task: "StockShippingTask"
 
@@ -40147,6 +43431,8 @@ class StockOrderShippingLine(_StockOrderShippingLineRequired, total=False):
     unit: str
     #: ERP-2581: сколько из остатка строки обеспечено бронью с товаром на складе; раскладка по порядку строк, не больше остатка. Комплект без остатка считается по броне компонентов: обеспечено столько комплектов, сколько набирается из неё. Нет поля — бронь не посчитана
     reserved_qty: str
+    ship_multiple: str
+    channel_packaging: "StockChannelPackagingHint"
     #: ERP-2581: сколько из остатка строки не обеспечено (остаток минус reserved_qty)
     short_qty: str
 
@@ -40188,6 +43474,8 @@ class _StockPalletPlaceLineRequired(TypedDict):
 
 class StockPalletPlaceLine(_StockPalletPlaceLineRequired, total=False):
     unit: str
+    #: Штук в коробе сети из строки заявки (VAP-040); нет поля — сеть короб не назвала
+    box_size: str
 
 StockPeriodSheetExportRequest = TypedDict("StockPeriodSheetExportRequest", {"from": str, "to": str, "search": str, "business_id": "UUID", "company_id": "UUID", "product_id": "UUID", "warehouse_ids": List["UUID"], "group": Literal['series', 'product']}, total=False)
 
@@ -40278,8 +43566,10 @@ class StockPostRebuildInput(_StockPostRebuildInputRequired, total=False):
     preview: bool
     #: post (по умолчанию) — провести черновики задним числом; cancel — распровести проведённые вместе с поздними
     action: Literal['post', 'cancel']
+    #: Явное решение отгрузить черновики пакета без полного набора: собрано меньше нужного или у маркированной строки заказа не все марки. Без него — отказ stock.picking.partial_unconfirmed или marking.pick_marks_missing
+    confirm_partial_pick: bool
 
-StockPostRebuildResult = TypedDict("StockPostRebuildResult", {"status": Literal['preview', 'completed', 'refused'], "from": str, "documents": List["StockPostRebuildDocument"], "reposted": int, "changes": List["StockPostRebuildChange"], "total_before": str, "total_after": str, "shortages": List["StockPostRebuildShortage"], "failures": List["StockPostRebuildFailure"], "skipped": int}, total=False)
+StockPostRebuildResult = TypedDict("StockPostRebuildResult", {"status": Literal['preview', 'completed', 'refused'], "from": str, "documents": List["StockPostRebuildDocument"], "reposted_documents": List["StockPostRebuildDocument"], "reposted": int, "changes": List["StockPostRebuildChange"], "total_before": str, "total_after": str, "shortages": List["StockPostRebuildShortage"], "failures": List["StockPostRebuildFailure"], "skipped": int}, total=False)
 
 class _StockPostRebuildShortageRequired(TypedDict):
     document: "StockPostRebuildDocument"
@@ -40670,6 +43960,18 @@ class StockReorderRulePatch(TypedDict, total=False):
     preferred_supplier_id: Optional["UUID"]
     is_active: bool
 
+class _StockReportCategoryTotalRequired(TypedDict):
+    #: null — товары без категории
+    category_id: Optional["UUID"]
+    positions: int
+    by_unit: List["StockUnitQuantity"]
+
+class StockReportCategoryTotal(_StockReportCategoryTotalRequired, total=False):
+    """Подытог группы строк по категории товара (ERP-2812) по всей выборке под отбором страницы: число позиций товарного разреза, сумма и остаток без товара в пути по каждой единице. Вложенные категории стоят своими группами."""
+
+    #: Decimal string; без права stock.valuation:read поля нет
+    amount: str
+
 class StockReportColumn(TypedDict):
     """Столбец сводной клетки: склад или юрлицо. Итог столбца посчитан по всей выборке строк, и сумма итогов всех столбцов равна итогу отчёта по каждому складываемому показателю; единица итога у столбца своя. У юрлица business_id обязателен, а пустой id значит «Без юрлица» этого бизнеса (ERP-704). У склада пустой id — остаток без склада, parent_id есть у зоны, когда зоны не свёрнуты."""
 
@@ -40744,7 +44046,11 @@ class StockReportExportRequest(TypedDict, total=False):
     warehouse_id: "UUID"
     warehouse_ids: List["UUID"]
     product_id: "UUID"
+    #: Категория товара вместе с вложенными или none — только товары без категории, как в GET (ERP-2812)
+    category_id: str
     custom_fields: Dict[str, str]
+    #: Вид номенклатуры: goods, semi_product, material; пусто — все виды, как product_kind отчёта
+    product_kind: List[Literal['goods', 'service', 'material', 'semi_product']]
     without_company: bool
     rollup_zones: bool
     below_minimum: bool
@@ -40810,6 +44116,8 @@ class _StockReportPageRequired(TypedDict):
     column_axis: Literal['metrics', 'warehouse', 'company']
 
 class StockReportPage(_StockReportPageRequired, total=False):
+    #: Только при group_by_category=true: подытоги групп по категориям всей выборки, без постраничного окна
+    category_totals: List["StockReportCategoryTotal"]
     #: Только у сводной клетки: строки страницы. Строка, у которой в текущем окне нет ячеек, без этого списка пропала бы из ответа, хотя count её считает
     rows: List["StockReportRow"]
     #: Только у сводной клетки: окно столбцов в порядке сервера. Столбцы — ключи ячеек всех отобранных строк, а не строк страницы
@@ -41073,14 +44381,18 @@ class StockReportUnitTotal(_StockReportUnitTotalRequired, total=False):
     #: Decimal string. Просроченная часть blocked этой единицы (ERP-1821)
     expired: str
 
-class StockReportWarehouseTotal(TypedDict):
-    """Сумма по складу под тем же отбором, что и страница отчёта. Дерево складов показывает эти числа рядом с именами узлов; считать их отдельным запросом нельзя — он не знал бы про отборы экрана и расходился бы с таблицей."""
-
+class _StockReportWarehouseTotalRequired(TypedDict):
     warehouse_id: "UUID"
-    #: Decimal string
+    #: Decimal string. Сумма всех единиц склада: число имеет смысл, только когда единица одна; разложение — в by_unit
     on_hand: str
     #: Decimal string
     amount: str
+
+class StockReportWarehouseTotal(_StockReportWarehouseTotalRequired, total=False):
+    """Сумма по складу под тем же отбором, что и страница отчёта. Дерево складов показывает эти числа рядом с именами узлов; считать их отдельным запросом нельзя — он не знал бы про отборы экрана и расходился бы с таблицей."""
+
+    #: Остаток склада по каждой единице измерения (ERP-2812): метры со штуками в одно число не складываются
+    by_unit: List["StockUnitQuantity"]
 
 class _StockReservationHoldRequired(TypedDict):
     document_id: "UUID"
@@ -41278,7 +44590,7 @@ class _StockSettingsRequired(TypedDict):
     shelf_life_basis: Literal['days', 'months']
     #: Партия ниже порога остаточного срока, выбранная в строке руками (ERP-2182): block — отказ проведения shelf_life_below_minimum, по умолчанию; warn — проводится, пометка в posting.shelf_life_warnings и в журнале. Просроченное не отгружается ни в одном режиме; «Авто» берёт только проходящие порог партии
     shelf_life_chosen_below_minimum: Literal['block', 'warn']
-    #: Срок и серия при поступлении (ERP-3047): block — поступление, ввод остатков и оприходование товара со сроком годности без серии и «Годен до» не проводятся, по умолчанию (правило ERP-2708); warn — проводятся, недостающее по строкам видно в «Что мешает действию» предупреждением
+    #: Срок и партия при поступлении (ERP-3047): block — поступление, ввод остатков и оприходование товара со сроком годности без партии и «Годен до» не проводятся, по умолчанию (правило ERP-2708); warn — проводятся, недостающее по строкам видно в «Что мешает действию» предупреждением
     receipt_shelf_life_dates: Literal['block', 'warn']
     #: Градация ОСГ (ERP-2182): ниже — красная (critical). Десятичная строка больше 0 и меньше shelf_grade_warning_pct; по умолчанию 30. Только показ отчётов и отборов
     shelf_grade_critical_pct: str
@@ -41401,7 +44713,7 @@ class StockSettingsPatch(TypedDict, total=False):
     shelf_life_basis: Literal['days', 'months']
     #: Выбранная руками партия ниже порога: block — отказ, warn — пометка (ERP-2182)
     shelf_life_chosen_below_minimum: Literal['block', 'warn']
-    #: Срок и серия при поступлении: block — не проводить без них, warn — проводить с предупреждением (ERP-3047); иначе 400 receipt_shelf_life_dates_invalid
+    #: Срок и партия при поступлении: block — не проводить без них, warn — проводить с предупреждением (ERP-3047); иначе 400 receipt_shelf_life_dates_invalid
     receipt_shelf_life_dates: Literal['block', 'warn']
     #: Градация ОСГ «красная ниже», %: больше 0, не точнее сотых. Пара сверяется с сохранённой жёлтой: 400 shelf_grades_invalid
     shelf_grade_critical_pct: str
@@ -41521,10 +44833,16 @@ class _StockShipmentPalletLineRequired(TypedDict):
 class StockShipmentPalletLine(_StockShipmentPalletLineRequired, total=False):
     title: str
     unit: str
+    #: Коробов товара на палете, как ввёл склад (VAP-040); нет поля — сообщение сети и паллетный лист считают по коробу заявки, неполный короб — целый
+    boxes: int
 
-class StockShipmentPalletLineInput(TypedDict):
+class _StockShipmentPalletLineInputRequired(TypedDict):
     product_id: "UUID"
     qty: str
+
+class StockShipmentPalletLineInput(_StockShipmentPalletLineInputRequired, total=False):
+    #: Коробов товара на палете (VAP-040): целое от 1 до числа штук; не передано — считать по коробу заявки
+    boxes: int
 
 class StockShipmentPalletPatch(TypedDict, total=False):
     #: Новый состав целиком
@@ -41560,7 +44878,7 @@ class _StockShippingTaskRequired(TypedDict):
     updated_at: str
 
 class StockShippingTask(_StockShippingTaskRequired, total=False):
-    """Задание складу по заказу покупателя (ERP-2771): распоряжение, исполнитель, срок и приоритет. Не документ и не учётный факт"""
+    """Задание складу по заказу покупателя (ERP-2771) или по любой строке «Заданий» (ERP-2811): распоряжение, исполнитель, срок, приоритет, кто открыл. Не документ и не учётный факт"""
 
     #: Распоряжение «Передать на склад»: когда заказ передан складу. Нет поля — задание завёл сам склад
     requested_at: str
@@ -41574,6 +44892,14 @@ class StockShippingTask(_StockShippingTaskRequired, total=False):
     due_date: str
     #: Когда исполнитель взял задание в работу; новый исполнитель снимает отметку
     taken_at: str
+    #: Вид строки «Заданий» (ERP-2811): заказ покупателя, заявка документооборота, приёмка по закупке или приёмка перемещения
+    subject_kind: Literal['order', 'request', 'purchase', 'transfer']
+    subject_id: "UUID"
+    #: Когда человек склада впервые открыл строку; нет поля — строка «новое»
+    seen_at: str
+    #: Кто первым открыл строку
+    seen_by: int
+    seen_by_name: str
 
 class StockShippingTaskInput(TypedDict, total=False):
     """Частичная правка задания складу: не переданное поле не меняется"""
@@ -41593,6 +44919,18 @@ class StockSupplier(TypedDict):
 class StockSupplierPage(TypedDict):
     count: int
     results: List["StockSupplier"]
+
+class StockTaskMarks(TypedDict):
+    results: List["StockShippingTask"]
+
+class StockTaskMarksInput(TypedDict):
+    items: List["StockTaskSubject"]
+
+class StockTaskSubject(TypedDict):
+    """Строка раздела «Задания» (ERP-2811): вид и идентификатор записи"""
+
+    kind: Literal['order', 'request', 'purchase', 'transfer']
+    id: "UUID"
 
 class StockTransitAwaiting(TypedDict):
     """Сводка «ждут приёмки» по складам-получателям (ERP-2179)"""
@@ -41954,6 +45292,11 @@ class StockTransitStockRow(_StockTransitStockRowRequired, total=False):
     product_name: str
     unit: str
 
+class StockUnitQuantity(TypedDict):
+    unit: str
+    #: Decimal string
+    quantity: str
+
 StockUploadFinishResult = TypedDict("StockUploadFinishResult", {"session": "TransferSession", "import": "StockImportRun"}, total=False)
 
 class StockUserWarehouse(TypedDict):
@@ -42052,12 +45395,20 @@ class _StockWarehouseRequired(TypedDict):
     updated_at: str
 
 class StockWarehouse(_StockWarehouseRequired, total=False):
+    #: «Кто подтверждает отгрузку» по факту канала (ERP-2730): manual — человек (умолчание), сигнал не проводит; picked — склад в Akeda, проводится собранное; order — внешний склад, отгрузка по заказу. Меняется действием shipment-fact. У зоны — значение её склада
+    shipment_fact: Literal['manual', 'picked', 'order']
+    #: Когда склад перевели во «внешний» (ERP-2730): более ранний факт канала сам по заказу не проводится
+    shipment_fact_since: Optional[str]
     #: Склад агента или комиссионера (ERP-2178): посредник, который ведёт склад по договору комиссии. Перемещение на такой склад — передача на комиссию, по нему выпускается УПД ДОП с признаком 00005. null — обычный склад
     agent_contact_id: Optional["UUID"]
     #: Договор с посредником — основание УПД передачи; без посредника не задаётся, снятый посредник снимает и договор
     agent_contract_id: Optional["UUID"]
     #: Подразделение склада (ERP-2950): списание, оприходование излишков и акты инвентаризации без заказа берут его, если подразделение не назвали документ и причина списания; ЦФО — по умолчанию подразделения. null — не подставляется
     department_id: Optional["UUID"]
+    #: Можно уходить в минус (ERP-2686): расход со склада и его зон — отгрузка, перемещение (в том числе сборка FBS), списание, комплектация — берёт недостающее партией недостачи по последней известной цене для любого вида номенклатуры; приход на склад гасит долг
+    allows_negative: bool
+    #: Брать товар из-под резерва (ERP-2686): расходы со склада и его зон, которые проводятся, даже если товар держит резерв, — отгрузка покупателю (снимает для склада запрет кабинета block_shipment_over_free), перемещение (в том числе сборка FBS), сборка наборов, смена состояния, пересортица. Резерв остаётся без товара и виден в сводке резервов необеспеченным. Пусто — резерв твёрдый, такие расходы отказывают
+    reserve_take_ops: List[Literal['shipment', 'transfer', 'assembly', 'condition_change', 'regrade']]
     #: Юрлица, у которых этот склад выбран складом по умолчанию в политике склада (ERP-2423). Только в списке складов; нет таких юрлиц — поля нет
     default_for_company_ids: List["UUID"]
 
@@ -42108,6 +45459,10 @@ class StockWarehouseInput(_StockWarehouseInputRequired, total=False):
     agent_contract_id: Optional["UUID"]
     #: Подразделение склада (ERP-2950): списание, оприходование излишков и акты инвентаризации без заказа берут его, если подразделение не назвали документ и причина списания; ЦФО — по умолчанию подразделения. null — не подставляется
     department_id: Optional["UUID"]
+    #: Можно уходить в минус (ERP-2686): расход со склада и его зон — отгрузка, перемещение (в том числе сборка FBS), списание, комплектация — берёт недостающее партией недостачи по последней известной цене для любого вида номенклатуры; приход на склад гасит долг
+    allows_negative: bool
+    #: Брать товар из-под резерва (ERP-2686): расходы со склада и его зон, которые проводятся, даже если товар держит резерв, — отгрузка покупателю (снимает для склада запрет кабинета block_shipment_over_free), перемещение (в том числе сборка FBS), сборка наборов, смена состояния, пересортица. Резерв остаётся без товара и виден в сводке резервов необеспеченным. Пусто — резерв твёрдый, такие расходы отказывают
+    reserve_take_ops: List[Literal['shipment', 'transfer', 'assembly', 'condition_change', 'regrade']]
 
 class StockWarehousePage(TypedDict):
     count: int
@@ -42132,6 +45487,10 @@ class StockWarehousePatch(TypedDict, total=False):
     agent_contract_id: Optional["UUID"]
     #: Подразделение склада (ERP-2950): списание, оприходование излишков и акты инвентаризации без заказа берут его, если подразделение не назвали документ и причина списания; ЦФО — по умолчанию подразделения. null — не подставляется
     department_id: Optional["UUID"]
+    #: Можно уходить в минус (ERP-2686): расход со склада и его зон — отгрузка, перемещение (в том числе сборка FBS), списание, комплектация — берёт недостающее партией недостачи по последней известной цене для любого вида номенклатуры; приход на склад гасит долг
+    allows_negative: bool
+    #: Брать товар из-под резерва (ERP-2686): расходы со склада и его зон, которые проводятся, даже если товар держит резерв, — отгрузка покупателю (снимает для склада запрет кабинета block_shipment_over_free), перемещение (в том числе сборка FBS), сборка наборов, смена состояния, пересортица. Резерв остаётся без товара и виден в сводке резервов необеспеченным. Пусто — резерв твёрдый, такие расходы отказывают
+    reserve_take_ops: List[Literal['shipment', 'transfer', 'assembly', 'condition_change', 'regrade']]
 
 class StockWarehouseShippingModeInput(TypedDict):
     #: direct — «Отгрузить» по заказу доступна сразу; pick_required — отгрузку по заказу проводит только кладовщик из сборки (ERP-2771)
@@ -42956,6 +46315,13 @@ class DocflowLookupParticipantResponse(_DocflowLookupParticipantResponseRequired
     #: Название организации у оператора
     name: str
 
+class DocflowEdiPeopleResponse(TypedDict):
+    people: List["DocflowEdiPeopleResponsePeopleItem"]
+
+class DocflowEdiPeopleResponsePeopleItem(TypedDict):
+    id: int
+    name: str
+
 class DocflowFlowContactStatsResponse(TypedDict):
     items: List["DocflowFlowContactStatsResponseItemsItem"]
 
@@ -42999,6 +46365,10 @@ class DocflowLinkIntakeCounterpartyRequest(TypedDict):
 
 class DocflowRefreshMessageResponse(TypedDict):
     refreshed: bool
+
+class DocflowRunSaleTemplateNowRequest(TypedDict, total=False):
+    #: Плановая дата выбранного срабатывания; без неё — ближайшее несозданное
+    date: str
 
 class DocflowYandexKitMarkShippedRequest(TypedDict, total=False):
     #: Заказы покупателя, которые курьер забрал; пусто — все собранные заказы службы
@@ -43103,9 +46473,27 @@ class FinanceConfirmPaymentRequestPayeeRequest(TypedDict):
 class FinancePaymentRequestFactCandidatesResponse(TypedDict):
     results: List["FinancePaymentFactCandidate"]
 
+class FinanceChangePaymentRequestPayeeAccountRequest(TypedDict):
+    #: Версия заявки при выборе счёта
+    expected_version: int
+    #: Сохранённый счёт контрагента заявки
+    contact_account_id: "UUID"
+
+class FinanceRefreshPaymentRequestPayeeBankRequest(TypedDict):
+    #: Версия заявки
+    expected_version: int
+
 class FinanceGetProjectBudgetHistoryResponse(TypedDict):
     count: int
     results: List["FinanceProjectBudget"]
+
+class _FinancePurchaseLinkPaymentRequestRequired(TypedDict):
+    payment_id: "UUID"
+
+class FinancePurchaseLinkPaymentRequest(_FinancePurchaseLinkPaymentRequestRequired, total=False):
+    amount: str
+    preview: bool
+    confirm_release: bool
 
 class FinanceSaleReturnLastPriceResponse(TypedDict):
     #: Есть ли продажа этого товара этому покупателю
@@ -43342,6 +46730,33 @@ class StockListDocumentAuthorsResponse(TypedDict):
 class StockListDocumentAuthorsResponseResultsItem(TypedDict):
     id: int
     name: str
+
+class _StockPostDocumentResponseRequired(TypedDict):
+    id: "UUID"
+    type_id: "UUID"
+    type_key: str
+    type_name: str
+    number: str
+    date: str
+    status: "CoreDocumentStatus"
+    basis_type: Optional["UUID"]
+    basis_id: Optional["UUID"]
+    basis_number: str
+    entity_refs: Dict[str, Any]
+    payload: Dict[str, Any]
+    comment: str
+    is_marked_deleted: bool
+    created_by: Optional[int]
+    created_by_name: str
+    created_at: str
+    updated_at: str
+    posted_at: str
+    cancelled_at: str
+
+class StockPostDocumentResponse(_StockPostDocumentResponseRequired, total=False):
+    #: Значения своих полей кабинета (графы вида core.document.<ключ вида>). Отдаёт карточка документа; списки поле не несут
+    custom: Dict[str, Any]
+    rebuild: "StockPostRebuildResult"
 
 class StockLaunchWarehouseRequest(TypedDict, total=False):
     #: Дата запуска; пусто — день последнего ввода остатка или сегодня
